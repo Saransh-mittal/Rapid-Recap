@@ -9,17 +9,17 @@ import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
-  const [items, setItems] = useState([]);
-  const [page, setPage] = useState(1);
+  const [items, setItems] = useState(state.items);
+  const [page, setPage] = useState(state.page + 1);
   const [load, setLoad] = useState(true);
   const { startDrag, drag, endDrag } = useDrag();
   const navigate = useNavigate();
   async function fetchData() {
     try {
       const response = await axios.get(`/api/articles?page=${page}&pageSize=9`);
-
+      dispatch({ type: "PAGE", payloadPage: page });
+      dispatch({ type: "ITEMS", payloadItems: [...items, ...response.data] });
       setItems((prev) => [...prev, ...response.data]);
-
       setLoad(false);
     } catch (error) {
       // Handle errors
@@ -34,7 +34,7 @@ const Home = () => {
         document.documentElement.scrollHeight
       ) {
         setLoad(true);
-
+        dispatch({ type: "PAGE", payloadPage: page + 1 });
         setPage((ele) => ele + 1);
       }
     } catch (error) {

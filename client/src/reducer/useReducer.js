@@ -1,6 +1,10 @@
 export const Reducer = (state, action) => {
   switch (action.type) {
     // Define your action types and their corresponding state updates
+    case "ITEMS":
+      return { ...state, items: action.payloadItems };
+    case "PAGE":
+      return { ...state, page: action.payloadPage };
     case "SHOW":
       return { ...state, show: true };
     case "UNSHOW":

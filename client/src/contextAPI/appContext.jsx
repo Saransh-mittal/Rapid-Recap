@@ -23,6 +23,8 @@ const initialState = {
   forgotPassword: false,
   verifyEmail: false,
   focusedNavLink: 0,
+  page: 0,
+  items: [],
   // ...
 };
 // async function init() {
