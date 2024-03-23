@@ -1,0 +1,5 @@
+get the content(rewrite the content and it should be full depiction of the original content, do not cut the content) on the url and replace the mainText with it and then return the whole object and write the full link not hyperlinks.
+
+Please do not condense the content it should be full.
+
+return the whole object only.

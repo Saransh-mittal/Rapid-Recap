@@ -14,7 +14,7 @@ const {
   solvedQuizzesCount,
   dailActivity,
   calculateUserRank,
-  // calculateUserIQScores,
+  //calculateUserIQScores,
 } = require("../controllers/user");
 const Authenticate = require("../middleware/authenticate");
 

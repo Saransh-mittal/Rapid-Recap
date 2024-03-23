@@ -201,6 +201,14 @@ const updatePercentilesOnQuizDeactivation = async ({ id }) => {
   // Update user percentile based on their position in the sorted array
   await Promise.all(
     attempts.map(async (attempt, index) => {
+      if (
+        !attempt ||
+        !attempt.article ||
+        !attempt.article.quiz ||
+        !attempt.articleDifficulty
+      ) {
+        return; // Skip this attempt
+      }
       const percentile = ((totalAttempts - index) / totalAttempts) * 100;
       attempt.userPercentile = percentile;
       // Save updated attempt

@@ -390,10 +390,17 @@ const calculateUserIQScores = async (req, res) => {
 
       for (const attempt of quizAttempts) {
         // Check if quiz attempt, quiz, and article exist
-        if (!attempt || !attempt.article || !attempt.article.quiz) {
+        if (
+          !attempt ||
+          !attempt.article ||
+          !attempt.article.quiz ||
+          !attempt.articleDifficulty
+        ) {
+          //console.log("Inside IF", attempt);
           console.error("Invalid quiz attempt data.");
           continue; // Skip this attempt
         }
+        //console.log("Outside IF", attempt);
 
         // Check if the quiz attempt is valid based on its creation date and quiz activity
         // if (
@@ -404,10 +411,12 @@ const calculateUserIQScores = async (req, res) => {
         await updatePercentilesOnQuizDeactivation({
           id: attempt.article._id,
         });
+
         //   attempt.article.quiz.isActive = false;
         //   await attempt.article.quiz.save();
         // }
         // Calculate score for the quiz attempt (Wi * Pi)
+
         const quizScore = attempt.articleDifficulty * attempt.userPercentile;
         userScore += quizScore;
         //}
@@ -429,6 +438,8 @@ const calculateUserIQScores = async (req, res) => {
     // Calculate and update IQ scores for each user
     console.log("\nCalculating IQ scores...\n");
     const updateProgress2 = progressBar(userScores.length);
+    userScores.sort((a, b) => b.userScore - a.userScore);
+    let rank = 1;
     for (const user of userScores) {
       if (!user || !user.user) {
         console.error("Invalid user data.");
@@ -440,7 +451,16 @@ const calculateUserIQScores = async (req, res) => {
       const IQScore = 100 + 15 * normalizedScore;
       const updatedUser = await User.findById(user.user._id);
       updatedUser.IQ_score = Math.round(IQScore);
+
+      const dailyIQ = new DailyIQ({
+        user: updatedUser._id,
+        IQ_score: Math.round(IQScore),
+        dailyRank: `${rank}/${userScores.length}`,
+      });
+      await dailyIQ.save();
+      updatedUser.dailyIQScores.push(dailyIQ._id);
       await updatedUser.save();
+      rank++;
       updateProgress2();
     }
 
