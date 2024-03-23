@@ -1,0 +1,2 @@
+# RapidRecap
+News Analyzer
