@@ -69,7 +69,7 @@ const DailyActivity = () => {
     const monthsToShow = MONTHS_IN_YEAR; // Total number of months to show
 
     // Calculate the starting month index
-    let startingMonthIndex = currentMonthIndex - 5;
+    let startingMonthIndex = currentMonthIndex - 11;
     let startingYear = year;
     if (startingMonthIndex < 0) {
       startingMonthIndex += MONTHS_IN_YEAR;
@@ -215,17 +215,29 @@ const DailyActivity = () => {
       {isLoading ? (
         <Text>Loading...</Text>
       ) : (
-        <Flex
-          overflow={"hidden"}
-          p={0}
-          m={0}
-          w={"100%"}
-          justifyContent={"center"}
-        >
-          {calendarData.map((data, id) =>
-            renderCalendarBody(data.month, data.days)
-          )}
-        </Flex>
+        <>
+          <Box
+            flexDirection={"column"}
+            width={"100%"}
+            marginStart={"15px"}
+            marginBottom={"20px"}
+          >
+            <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+              Daily Activity
+            </Text>
+          </Box>
+          <Flex
+            overflow={"hidden"}
+            p={0}
+            m={0}
+            w={"100%"}
+            justifyContent={"center"}
+          >
+            {calendarData.map((data, id) =>
+              renderCalendarBody(data.month, data.days)
+            )}
+          </Flex>
+        </>
       )}
     </Box>
   );
