@@ -7,6 +7,7 @@ import Arrow from "/images/arrow.png";
 import Lightning from "./RankAndSocietySubCompnents/Lightning"; // Import the Lightning component
 import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 import { AppContext } from "../../contextAPI/appContext";
+import Loading from "../miscellaneous/Loading";
 
 const RankAndSociety = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -36,7 +37,7 @@ const RankAndSociety = () => {
       ml={6}
     >
       {isLoading ? (
-        <Text>Loading...</Text>
+        <Loading />
       ) : (
         <>
           <Box flexDirection={"column"} width={"100%"}>

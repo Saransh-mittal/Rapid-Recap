@@ -17,6 +17,11 @@ const {
   calculateTopPercent,
   calculateLabelsAndData,
   calculatePercentilesOfEachBar,
+  getUserIQScoreHistory,
+  currentTopPercentOfUser,
+  getSolvedQuizzesCount,
+  getDailyActivity,
+  calculateUserRank,
 } = require("../utils/user");
 
 const registerUser = async (req, res) => {
@@ -473,140 +478,140 @@ const calculateUserIQScores = async (req, res) => {
   }
 };
 
-// Controller function to get user's IQ score history
-const getUserIQScoreHistory = async (req, res) => {
-  try {
-    const userId = req.user._id; // Assuming you pass userId in the URL parameters
+// // Controller function to get user's IQ score history
+// const getUserIQScoreHistory = async (req, res) => {
+//   try {
+//     const userId = req.user._id; // Assuming you pass userId in the URL parameters
 
-    // Find the user by ID
-    const user = await User.findById(userId);
+//     // Find the user by ID
+//     const user = await User.findById(userId);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
 
-    // Populate the dailyIQScores array to get the actual IQ score documents
-    await user.populate("dailyIQScores");
+//     // Populate the dailyIQScores array to get the actual IQ score documents
+//     await user.populate("dailyIQScores");
 
-    // Extract relevant information from the populated array
-    const iqScoresHistory = user.dailyIQScores.map((score) => ({
-      date: formatDate(score.date),
-      IQScore: score.IQ_score,
-      dailyRank: score.dailyRank,
-    }));
-    const sortedIQScoresHistory = iqScoresHistory.sort((a, b) => {
-      // Convert the date strings to Date objects for comparison
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateA - dateB; // dates are equal
-    });
-    // Send the IQ score history to the frontend
-    res.status(200).json({ IQ_score_history: sortedIQScoresHistory });
-  } catch (error) {
-    console.error("Error fetching user IQ score history:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+//     // Extract relevant information from the populated array
+//     const iqScoresHistory = user.dailyIQScores.map((score) => ({
+//       date: formatDate(score.date),
+//       IQScore: score.IQ_score,
+//       dailyRank: score.dailyRank,
+//     }));
+//     const sortedIQScoresHistory = iqScoresHistory.sort((a, b) => {
+//       // Convert the date strings to Date objects for comparison
+//       const dateA = new Date(a.date);
+//       const dateB = new Date(b.date);
+//       return dateA - dateB; // dates are equal
+//     });
+//     // Send the IQ score history to the frontend
+//     res.status(200).json({ IQ_score_history: sortedIQScoresHistory });
+//   } catch (error) {
+//     console.error("Error fetching user IQ score history:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
 
-// Controller function to Current Percentile in IQ Scores
-const currentTopPercentOfUser = async (req, res) => {
-  try {
-    const userID = req.user._id;
-    const users = await User.find({});
-    const user = await User.findById(userID);
-    const USER_IQ = user.IQ_score;
-    const IQScores = users.filter((u) => u.IQ_score > 0).map((u) => u.IQ_score);
-    const Top_Percentage = calculateTopPercent(USER_IQ, IQScores);
-    const { filteredLabels, filteredIQData } = calculateLabelsAndData(IQScores);
-    const percentileData = calculatePercentilesOfEachBar(
-      IQScores,
-      filteredLabels,
-      filteredIQData
-    );
+// // Controller function to Current Percentile in IQ Scores
+// const currentTopPercentOfUser = async (req, res) => {
+//   try {
+//     const userID = req.user._id;
+//     const users = await User.find({});
+//     const user = await User.findById(userID);
+//     const USER_IQ = user.IQ_score;
+//     const IQScores = users.filter((u) => u.IQ_score > 0).map((u) => u.IQ_score);
+//     const Top_Percentage = calculateTopPercent(USER_IQ, IQScores);
+//     const { filteredLabels, filteredIQData } = calculateLabelsAndData(IQScores);
+//     const percentileData = calculatePercentilesOfEachBar(
+//       IQScores,
+//       filteredLabels,
+//       filteredIQData
+//     );
 
-    res.status(200).json({
-      Top_Percentage,
-      percentileData,
-      filteredLabels,
-      filteredIQData,
-      USER_IQ,
-    });
-  } catch (error) {
-    console.error("Error fetching user IQ score history:", error);
-  }
-};
+//     res.status(200).json({
+//       Top_Percentage,
+//       percentileData,
+//       filteredLabels,
+//       filteredIQData,
+//       USER_IQ,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching user IQ score history:", error);
+//   }
+// };
 
-const solvedQuizzesCount = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const user = await User.findById(userId);
-    const totalSolvedQuiz = user.quizAttempts.length;
-    const users = await User.find({});
-    const easyQuizzesCount = user.easyQuizCount;
-    const mediumQuizzesCount = user.mediumQuizCount;
-    const hardQuizzesCount = user.hardQuizCount;
-    // number of users solved less than easyQuizzesCount
-    const easyBeatsPercentage =
-      (users.filter((u) => u.easyQuizCount < easyQuizzesCount).length /
-        users.length) *
-      100;
-    const medBeatsPercentage =
-      (users.filter((u) => u.mediumQuizCount < mediumQuizzesCount).length /
-        users.length) *
-      100;
-    const hardBeatsPercentage =
-      (users.filter((u) => u.hardQuizCount < hardQuizzesCount).length /
-        users.length) *
-      100;
-    res.status(200).json({
-      solvedQuizzesCount: totalSolvedQuiz,
-      easy: { easyQuizzesCount, easyBeatsPercentage },
-      medium: { mediumQuizzesCount, medBeatsPercentage },
-      hard: { hardQuizzesCount, hardBeatsPercentage },
-    });
-  } catch (error) {
-    console.error("Error fetching user IQ score history:", error.message);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+// const solvedQuizzesCount = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+//     const user = await User.findById(userId);
+//     const totalSolvedQuiz = user.quizAttempts.length;
+//     const users = await User.find({});
+//     const easyQuizzesCount = user.easyQuizCount;
+//     const mediumQuizzesCount = user.mediumQuizCount;
+//     const hardQuizzesCount = user.hardQuizCount;
+//     // number of users solved less than easyQuizzesCount
+//     const easyBeatsPercentage =
+//       (users.filter((u) => u.easyQuizCount < easyQuizzesCount).length /
+//         users.length) *
+//       100;
+//     const medBeatsPercentage =
+//       (users.filter((u) => u.mediumQuizCount < mediumQuizzesCount).length /
+//         users.length) *
+//       100;
+//     const hardBeatsPercentage =
+//       (users.filter((u) => u.hardQuizCount < hardQuizzesCount).length /
+//         users.length) *
+//       100;
+//     res.status(200).json({
+//       solvedQuizzesCount: totalSolvedQuiz,
+//       easy: { easyQuizzesCount, easyBeatsPercentage },
+//       medium: { mediumQuizzesCount, medBeatsPercentage },
+//       hard: { hardQuizzesCount, hardBeatsPercentage },
+//     });
+//   } catch (error) {
+//     console.error("Error fetching user IQ score history:", error.message);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
 
-const dailActivity = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const user = await User.findById(userId);
-    const quizAttempts = await QuizAttempt.find({ user: userId });
+// const dailActivity = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+//     const user = await User.findById(userId);
+//     const quizAttempts = await QuizAttempt.find({ user: userId });
 
-    const dailyActivity = quizAttempts.map((attempt) => ({
-      date: attempt.createdAt,
-    }));
+//     const dailyActivity = quizAttempts.map((attempt) => ({
+//       date: attempt.createdAt,
+//     }));
 
-    res.status(200).json({ dailyActivity });
-  } catch (error) {
-    console.error("Error fetching user Daily activity history:", error.message);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+//     res.status(200).json({ dailyActivity });
+//   } catch (error) {
+//     console.error("Error fetching user Daily activity history:", error.message);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
 
-const calculateUserRank = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const users = await User.find({}).sort({ IQ_score: -1 });
-    //console.log(users);
-    const userIndex = users.findIndex(
-      (user) => user._id.toString() === userId.toString()
-    );
-    //console.log(userIndex);
-    if (userIndex === -1) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    const rank = userIndex + 1;
+// const calculateUserRank = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+//     const users = await User.find({}).sort({ IQ_score: -1 });
+//     //console.log(users);
+//     const userIndex = users.findIndex(
+//       (user) => user._id.toString() === userId.toString()
+//     );
+//     //console.log(userIndex);
+//     if (userIndex === -1) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+//     const rank = userIndex + 1;
 
-    return res.status(200).json({ rank });
-  } catch (error) {
-    res.status(500).json({ error: "Error calculate the Rank" });
-    console.log(error.message);
-  }
-};
+//     return res.status(200).json({ rank });
+//   } catch (error) {
+//     res.status(500).json({ error: "Error calculate the Rank" });
+//     console.log(error.message);
+//   }
+// };
 
 const leaderBoard = async (req, res) => {
   try {
@@ -642,6 +647,64 @@ const leaderBoard = async (req, res) => {
   }
 };
 
+const profile = async (req, res) => {
+  try {
+    const inGameName = req.params.inGameName;
+    //console.log(inGameName);
+    const u = await User.findOne({ inGameName });
+    const userId = u._id;
+    // Fetch user information
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Get IQ score history
+    const iqScoresHistory = await getUserIQScoreHistory(userId);
+
+    // Calculate current top percentage
+    const {
+      Top_Percentage,
+      percentileData,
+      filteredLabels,
+      filteredIQData,
+      USER_IQ,
+    } = await currentTopPercentOfUser(userId);
+
+    // Get solved quizzes count and percentages
+    const solvedQuizzes = await getSolvedQuizzesCount(userId);
+
+    // Get daily activity
+    const dailyActivity = await getDailyActivity(userId);
+
+    // Calculate user rank
+    const rank = await calculateUserRank(userId);
+
+    res.status(200).json({
+      lineGraph: iqScoresHistory,
+      barGraph: {
+        Top_Percentage,
+        percentileData,
+        filteredLabels,
+        filteredIQData,
+        USER_IQ,
+      },
+      solvedQuizzes,
+      dailyActivity,
+      leftProfileView: {
+        rank,
+        name: user.name,
+        inGameName: user.inGameName,
+        pic: user.pic,
+        bio: user.bio,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -652,10 +715,11 @@ module.exports = {
   forgotPassword,
   handleGoogleLogin,
   calculateUserIQScores,
-  getUserIQScoreHistory,
-  currentTopPercentOfUser,
-  solvedQuizzesCount,
-  dailActivity,
-  calculateUserRank,
+  //getUserIQScoreHistory,
+  //currentTopPercentOfUser,
+  // solvedQuizzesCount,
+  // dailActivity,
+  //calculateUserRank,
   leaderBoard,
+  profile,
 };

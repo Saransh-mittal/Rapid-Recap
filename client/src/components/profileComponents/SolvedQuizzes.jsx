@@ -1,17 +1,10 @@
-import {
-  Box,
-  Flex,
-  Heading,
-  Progress,
-  Stack,
-  Text,
-  useToast,
-} from "@chakra-ui/react";
+import { Box, Flex, Progress, Stack, Text, useToast } from "@chakra-ui/react";
 import React, { useEffect } from "react";
 import axios from "axios";
 import { useState } from "react";
+import Loading from "../miscellaneous/Loading";
 
-const SolvedQuizzes = () => {
+const SolvedQuizzes = ({ solvedQuizzes }) => {
   const toast = useToast();
   const [solvedQuizzesCount, setSolvedQuizzesCount] = useState(0);
   const [easySolved, setEasySolved] = useState(0);
@@ -20,8 +13,8 @@ const SolvedQuizzes = () => {
   const [isLoading, setIsLoading] = useState(true);
   const fetchSolvedQuizzes = async () => {
     try {
-      const response = await axios.get("/api/user/solvedQuizzesCount");
-      const data = response.data;
+      //const response = await axios.get("/api/user/solvedQuizzesCount");
+      const data = solvedQuizzes;
       setSolvedQuizzesCount(data.solvedQuizzesCount);
       setEasySolved(data.easy);
       setMediumSolved(data.medium);
@@ -54,7 +47,7 @@ const SolvedQuizzes = () => {
       mr={10}
     >
       {isLoading ? (
-        <Text>...loading</Text>
+        <Loading />
       ) : (
         <>
           <Box flexDirection={"column"} width={"100%"} marginStart={"15px"}>

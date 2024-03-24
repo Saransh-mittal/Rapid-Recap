@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Flex, Grid, Text, Tooltip, useToast } from "@chakra-ui/react";
 import axios from "axios";
+import Loading from "../miscellaneous/Loading";
 
 const DAYS_IN_WEEK = 7;
 const MONTHS_IN_YEAR = 12;
@@ -19,7 +20,7 @@ const MONTH_NAMES = [
   "Dec",
 ];
 
-const DailyActivity = () => {
+const DailyActivity = ({ dailyAct }) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -29,9 +30,9 @@ const DailyActivity = () => {
 
   const fetchDailyActivity = async () => {
     try {
-      const response = await axios.get("/api/user/dailyActivity");
+      //const response = await axios.get("/api/user/dailyActivity");
       //console.log(response.data);
-      const data = response.data.dailyActivity.map((activity) => {
+      const data = dailyAct.map((activity) => {
         return formatDate(new Date(activity.date));
       });
       //console.log(data);
@@ -213,7 +214,7 @@ const DailyActivity = () => {
   return (
     <Box m={0} pt={3}>
       {isLoading ? (
-        <Text>Loading...</Text>
+        <Loading />
       ) : (
         <>
           <Box
