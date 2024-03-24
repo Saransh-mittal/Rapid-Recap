@@ -8,7 +8,6 @@ import {
   TableContainer,
   Tbody,
   Td,
-  Text,
   Th,
   Thead,
   Tr,
@@ -17,6 +16,7 @@ import {
 import React, { useEffect, useState } from "react";
 import medalIcon from "../assets/medal.png";
 import axios from "axios";
+import Loading from "../components/miscellaneous/Loading";
 
 const LeaderBoard = () => {
   const toast = useToast();
@@ -54,7 +54,7 @@ const LeaderBoard = () => {
         flexDirection={"column"}
       >
         {isLoading ? (
-          <Text>Loading...</Text>
+          <Loading />
         ) : (
           <>
             <Heading>

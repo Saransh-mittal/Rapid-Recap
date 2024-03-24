@@ -33,9 +33,12 @@ const ProfileDropDownMenu = ({ handleLogout, toProfile, refProfile }) => {
         p={"0"}
         borderColor={"#27374D"} // Set border color to black
       >
-        <NavLink w={"75px"} to={toProfile} ref={refProfile}>
+        <NavLink
+          w={"75px"}
+          to={`${toProfile}/${state.user.inGameName}`}
+          ref={refProfile}
+        >
           <MenuItem
-
             as="div"
             display={"flex"}
             justifyContent={"center"}

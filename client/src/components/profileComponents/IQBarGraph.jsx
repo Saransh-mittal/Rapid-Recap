@@ -4,8 +4,9 @@ import { Flex, Image, Text, useToast } from "@chakra-ui/react";
 import Chart from "chart.js/auto";
 import "chartjs-adapter-date-fns";
 import axios from "axios";
+import Loading from "../miscellaneous/Loading";
 
-const IQBarGraph = () => {
+const IQBarGraph = ({ barGraph }) => {
   const [USER_IQ, setUSER_IQ] = useState(null); // [USER_IQ, setUSER_IQ
   const [TOP_PERCENT, setTOP_PERCENT] = useState(null);
   const [filteredIQData, setFilteredIQData] = useState(null);
@@ -102,28 +103,28 @@ const IQBarGraph = () => {
   const chartRef = useRef(null);
   const fetchBarIQData = async () => {
     try {
-      const response = await axios.get(`/api/user/currentTopPercentOfUser`);
+      //const response = await axios.get(`/api/user/currentTopPercentOfUser`);
 
-      setUSER_IQ(response.data.USER_IQ);
-      setTOP_PERCENT(response.data.Top_Percentage);
-      setHoveredPercentile(response.data.Top_Percentage);
-      setPercentileData(response.data.percentileData);
-      setFilteredLabels(response.data.filteredLabels);
-      setFilteredIQData(response.data.filteredIQData);
+      setUSER_IQ(barGraph.USER_IQ);
+      setTOP_PERCENT(barGraph.Top_Percentage);
+      setHoveredPercentile(barGraph.Top_Percentage);
+      setPercentileData(barGraph.percentileData);
+      setFilteredLabels(barGraph.filteredLabels);
+      setFilteredIQData(barGraph.filteredIQData);
       setChartData({
-        labels: response.data.filteredLabels,
+        labels: barGraph.filteredLabels,
         datasets: [
           {
             label: "Number of People",
-            data: response.data.filteredIQData,
-            backgroundColor: response.data.filteredLabels.map((threshold) => {
+            data: barGraph.filteredIQData,
+            backgroundColor: barGraph.filteredLabels.map((threshold) => {
               const [lowerBound, upperBound] = threshold.split("-").map(Number);
 
               //console.log(USER_IQ, lowerBound, upperBound);
 
               // Check if USER_IQ falls within the range
-              return response.data.USER_IQ < lowerBound + 10 &&
-                response.data.USER_IQ >= lowerBound
+              return barGraph.USER_IQ < lowerBound + 10 &&
+                barGraph.USER_IQ >= lowerBound
                 ? "#776B5D"
                 : "#DED0B6";
             }),
@@ -218,7 +219,7 @@ const IQBarGraph = () => {
       }}
     >
       {isLoading ? (
-        <Text>...Loading</Text>
+        <Loading />
       ) : filteredLabels.length === 0 ? (
         <Flex
           w={"100%"}
