@@ -5,8 +5,9 @@ import Chart from "chart.js/auto";
 import moment from "moment";
 import "chartjs-adapter-date-fns";
 import axios from "axios";
+import Loading from "../miscellaneous/Loading";
 
-const IQLineGraph = () => {
+const IQLineGraph = ({ lineGraph }) => {
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
   const [IQScoreHistory, setIQScoreHistory] = useState([]);
@@ -89,33 +90,26 @@ const IQLineGraph = () => {
 
   const fetchIQData = async () => {
     try {
-      const response = await axios.get(`/api/user/getUserIQScoreHistory`);
+      //const response = await axios.get(`/api/user/getUserIQScoreHistory`);
       //console.log(response.data);
-      if (response.data.IQ_score_history.length === 0) {
+      if (lineGraph.length === 0) {
         return;
       }
-      const dateString =
-        response.data.IQ_score_history[
-          response.data.IQ_score_history.length - 1
-        ].date; // Assuming the date format is "YYYY:MM:DD"
+      const dateString = lineGraph[lineGraph.length - 1].date; // Assuming the date format is "YYYY:MM:DD"
 
       const newDateString = nextDateFunc(dateString);
       setIQScoreHistory((prev) => [
         { date: null, IQScore: null, dailyRank: null },
-        ...response.data.IQ_score_history,
+        ...lineGraph,
         { date: newDateString, IQScore: null, dailyRank: null },
       ]);
-      const minimumIQ = Math.min(
-        ...response.data.IQ_score_history.map((entry) => entry.IQScore)
-      );
-      const maximumIQ = Math.max(
-        ...response.data.IQ_score_history.map((entry) => entry.IQScore)
-      );
+      const minimumIQ = Math.min(...lineGraph.map((entry) => entry.IQScore));
+      const maximumIQ = Math.max(...lineGraph.map((entry) => entry.IQScore));
       // Convert the date string to a Date object
 
       const IQData = [
         { date: null, IQScore: null, dailyRank: null },
-        ...response.data.IQ_score_history,
+        ...lineGraph,
         { date: newDateString, IQScore: null, dailyRank: null },
       ];
       setChartData({
@@ -274,7 +268,7 @@ const IQLineGraph = () => {
       }}
     >
       {isLoading ? (
-        <Text>...Loading</Text>
+        <Loading />
       ) : IQScoreHistory.length === 0 ? (
         <Flex
           w={"100%"}

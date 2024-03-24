@@ -10,16 +10,17 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
+import Loading from "../miscellaneous/Loading";
 
-const LeftProfileBox = () => {
+const LeftProfileBox = ({ leftProfileView }) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [rank, setRank] = useState(null);
   const { state, dispatch } = useContext(AppContext);
   const fetchRank = async () => {
     try {
-      const response = await axios.get("/api/user/calculateUserRank");
-      setRank(response.data.rank);
+      //const response = await axios.get("/api/user/calculateUserRank");
+      setRank(leftProfileView.rank);
     } catch (error) {
       toast({
         title: "Error",
@@ -41,7 +42,7 @@ const LeftProfileBox = () => {
     <>
       <Flex w={"100%"}>
         <Image
-          src={state.user.pic}
+          src={leftProfileView.pic}
           alt="Profile"
           borderRadius="10%"
           width="80px"
@@ -50,13 +51,13 @@ const LeftProfileBox = () => {
         />
         <Box margin={"5px"}>
           <Heading as="h4" size={"md"}>
-            {state.user.name}
+            {leftProfileView.name}
           </Heading>
           <Heading as="h6" fontSize={"12px"}>
-            {state.user.inGameName}
+            {leftProfileView.inGameName}
           </Heading>
           {isLoading ? (
-            <Text>Loading...</Text>
+            <Loading />
           ) : (
             <Heading as="h6" fontSize={"12px"}>
               Rank : {rank}
@@ -65,7 +66,7 @@ const LeftProfileBox = () => {
         </Box>
       </Flex>
       <Box marginTop={"10px"} w={{ lg: "300px", base: "100%" }}>
-        <Text align={"justify"}>{state.user.bio}</Text>
+        <Text align={"justify"}>{leftProfileView.bio}</Text>
         <Button
           size="md"
           height="35px"

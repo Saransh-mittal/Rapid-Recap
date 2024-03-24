@@ -9,12 +9,13 @@ const {
   resendOTP,
   forgotPassword,
   handleGoogleLogin,
-  getUserIQScoreHistory,
-  currentTopPercentOfUser,
-  solvedQuizzesCount,
-  dailActivity,
-  calculateUserRank,
+  // getUserIQScoreHistory,
+  // currentTopPercentOfUser,
+  // solvedQuizzesCount,
+  // dailActivity,
+  // calculateUserRank,
   leaderBoard,
+  profile,
   //calculateUserIQScores,
 } = require("../controllers/user");
 const Authenticate = require("../middleware/authenticate");
@@ -27,13 +28,14 @@ router.route("/loginCheck").get(Authenticate, loginCheck);
 router.route("/resendOTP").post(resendOTP);
 router.route("/forgotPassword").post(forgotPassword);
 router.route("/handleGoogleLogin").post(handleGoogleLogin);
-router.route("/getUserIQScoreHistory").get(Authenticate, getUserIQScoreHistory);
-router
-  .route("/currentTopPercentOfUser")
-  .get(Authenticate, currentTopPercentOfUser);
-router.route("/solvedQuizzesCount").get(Authenticate, solvedQuizzesCount);
-router.route("/dailyActivity").get(Authenticate, dailActivity);
-router.route("/calculateUserRank").get(Authenticate, calculateUserRank);
+// router.route("/getUserIQScoreHistory").get(Authenticate, getUserIQScoreHistory);
+// router
+//   .route("/currentTopPercentOfUser")
+//   .get(Authenticate, currentTopPercentOfUser);
+// router.route("/solvedQuizzesCount").get(Authenticate, solvedQuizzesCount);
+// router.route("/dailyActivity").get(Authenticate, dailActivity);
+// router.route("/calculateUserRank").get(Authenticate, calculateUserRank);
 router.route("/leaderboard").get(leaderBoard);
+router.route("/profile/:inGameName").get(profile);
 //router.route("/calculateUserIQScores").get(calculateUserIQScores);
 module.exports = router;

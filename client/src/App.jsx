@@ -21,7 +21,7 @@ const App = () => {
         <Route persistent path="/" element={<Home />} />
         <Route exact path="/article/:id" element={<Article />} />
         {/* <Route exact path="/about" element={<About />} /> */}
-        <Route exact path="/profile" element={<Profile />} />
+        <Route exact path="/profile/:inGameName" element={<Profile />} />
         <Route exact path="/signin" element={<Signin />} />
         <Route exact path="/register" element={<Register />} />
         <Route exact path="/contact" element={<Contact />} />
