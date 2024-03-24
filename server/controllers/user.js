@@ -607,7 +607,41 @@ const calculateUserRank = async (req, res) => {
     console.log(error.message);
   }
 };
-//module.exports = router;
+
+const leaderBoard = async (req, res) => {
+  try {
+    const users = await User.find({})
+      .sort({ IQ_score: -1 })
+      .limit(5)
+      .populate("quizAttempts");
+    //AVG. RQM SCORES
+    const result = [];
+
+    users.forEach((user) => {
+      let sum = 0;
+      const { name, inGameName, IQ_score, pic, _id } = user;
+      for (let i = 0; i < user.quizAttempts.length; i++) {
+        sum += user.quizAttempts[i].RQM_score;
+      }
+      const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
+      const quizSubmissions = user.quizAttempts.length;
+      result.push({
+        _id,
+        RQM_avg,
+        name,
+        inGameName,
+        IQ_score,
+        pic,
+        quizSubmissions,
+      });
+    });
+    res.status(200).json({ users: result });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching the Leaderboard" });
+    console.log(error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -623,4 +657,5 @@ module.exports = {
   solvedQuizzesCount,
   dailActivity,
   calculateUserRank,
+  leaderBoard,
 };
