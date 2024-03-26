@@ -10,13 +10,16 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
+import EditProfileModal from "./EditProfileModal";
 import Loading from "../miscellaneous/Loading";
 
 const LeftProfileBox = ({ leftProfileView }) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [rank, setRank] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { state, dispatch } = useContext(AppContext);
+  const [profileData, setProfileData] = useState({});
   const fetchRank = async () => {
     try {
       //const response = await axios.get("/api/user/calculateUserRank");
@@ -38,6 +41,22 @@ const LeftProfileBox = ({ leftProfileView }) => {
     //console.log(state.user);
     fetchRank();
   }, []);
+  const handleEditClick = () => {
+    // Set profile data for modal
+    setProfileData({
+      name: leftProfileView.name,
+      profilePicture: leftProfileView.pic,
+      bio: leftProfileView.bio,
+    });
+    // Open the modal
+    setIsEditModalOpen(true);
+  };
+
+  const handleSubmitModal = (formData) => {
+    // Add logic to handle form submission (e.g., updating profile data)
+    console.log("Form data submitted:", formData);
+  };
+  
   return (
     <>
       <Flex w={"100%"}>
@@ -81,10 +100,17 @@ const LeftProfileBox = ({ leftProfileView }) => {
               color: "#11324D", // Change text color to white on hover
             },
           }}
+          onClick={handleEditClick}
         >
           Edit Profile
         </Button>
       </Box>
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        profileData={profileData}
+        onSubmit={handleSubmitModal}
+      />
     </>
   );
 };
