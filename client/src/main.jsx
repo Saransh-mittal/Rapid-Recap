@@ -6,13 +6,13 @@ import { AppProvider } from "./contextAPI/appContext";
 import { ChakraProvider } from "@chakra-ui/react";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AppProvider>
-        <ChakraProvider>
-          <App />
-        </ChakraProvider>
-      </AppProvider>
-    </BrowserRouter>
-  </React.StrictMode>
+  //<React.StrictMode>
+  <BrowserRouter>
+    <AppProvider>
+      <ChakraProvider>
+        <App />
+      </ChakraProvider>
+    </AppProvider>
+  </BrowserRouter>
+  //</React.StrictMode>
 );
