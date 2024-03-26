@@ -8,6 +8,10 @@ const quizSchema = new mongoose.Schema({
   para1: {
     questions: [
       {
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          default: () => new mongoose.Types.ObjectId(), // Use a function to generate new ObjectId
+        },
         question: {
           type: String,
           required: true,
@@ -43,6 +47,10 @@ const quizSchema = new mongoose.Schema({
   para2: {
     questions: [
       {
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          default: () => new mongoose.Types.ObjectId(), // Use a function to generate new ObjectId
+        },
         question: {
           type: String,
           required: true,
@@ -78,6 +86,10 @@ const quizSchema = new mongoose.Schema({
   para3: {
     questions: [
       {
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          default: () => new mongoose.Types.ObjectId(), // Use a function to generate new ObjectId
+        },
         question: {
           type: String,
           required: true,
