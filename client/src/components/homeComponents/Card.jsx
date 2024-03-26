@@ -1,9 +1,14 @@
 import { Slide } from "@chakra-ui/react";
 import { useRef, useContext } from "react";
 import { AppContext } from "../../contextAPI/appContext";
-import Alt_img from "../../assets/alt_image.jpg";
+import imageData from "../../assets/AltNewsImage";
 
 const Card = ({ newsNumber, data }) => {
+  const alt_img = imageData.find(
+    (img) =>
+      img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
+  ).image;
+  //console.log(alt_img);
   const { state, dispatch } = useContext(AppContext);
   const cardWrapper = useRef(null);
   const card = useRef(null);
@@ -69,11 +74,11 @@ const Card = ({ newsNumber, data }) => {
           <div className="cards" ref={card}>
             <div className="img-box">
               <img
-                src={data.imgURL[0]}
+                src={data.imgURL[0] ? data.imgURL[0] : alt_img}
                 alt=""
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = Alt_img;
+                  e.target.src = alt_img;
                 }}
               />
             </div>

@@ -1,6 +1,7 @@
 const User = require("../model/userSchema");
 const Article = require("../model/articleSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
+const Quiz = require("../model/quizSchema");
 
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken } = req.body;
@@ -42,6 +43,7 @@ const saveAttempt = async (req, res) => {
     if (quizAttempt) {
       throw new Error("User has already attempted the quiz for the article.");
     }
+
     const questions = quizData.questions;
     const correctAnswers = questions.map((question) => question.answer);
     let score = correctAnswers.reduce((acc, answer, index) => {
@@ -63,11 +65,13 @@ const saveAttempt = async (req, res) => {
     const newQuizAttempt = new QuizAttempt({
       user: userId,
       article: articleId,
-      responses: userResponses.map((userAnswer, index) => ({
-        questionId: questions[index]._id, // Assuming each question has a unique ID
-        userAnswer,
-        isCorrect: userAnswer === correctAnswers[index],
-      })),
+      responses: userResponses.map((userAnswer, index) => {
+        return {
+          questionId: questions[index]._id, // Assuming each question has a unique ID
+          userAnswer,
+          isCorrect: userAnswer === correctAnswers[index],
+        };
+      }),
       RQM_score,
       articleDifficulty,
     });
@@ -156,4 +160,65 @@ const givenQuiz = async (req, res) => {
   }
 };
 
-module.exports = { saveAttempt, getPercentile, givenQuiz };
+const getQuizSummary = async (req, res) => {
+  //console.log("getQuizSummary");
+  const articleId = req.params.articleId;
+  const userId = req.user._id;
+  try {
+    const quizAttempt = await QuizAttempt.findOne({
+      user: userId,
+      article: articleId,
+    });
+    const quiz = await Quiz.findOne({ article: articleId });
+    if (!quizAttempt) {
+      throw new Error("User has not attempted the quiz for the article.");
+    }
+    const { responses } = quizAttempt;
+    const result = [];
+    for (let i = 0; i < responses.length; i++) {
+      const question = responses[i];
+
+      const { questionId, userAnswer } = question;
+
+      // find question in the model Quiz in para1, para2 and para3 of the questionId
+      let found = false;
+      let para = 1;
+      let questionIndex = 0;
+      let fullQuestion = {};
+      while (!found && para <= 3) {
+        const paraQuestions = quiz[`para${para}`].questions;
+        //console.log(paraQuestions[0]._id.toString());
+        questionIndex = paraQuestions.findIndex((q) => {
+          //console.log(questionId.toString());
+          //console.log(q._id.toString());
+
+          return q._id.toString() === questionId.toString();
+        });
+        if (questionIndex !== -1) {
+          fullQuestion = paraQuestions[questionIndex];
+          found = true;
+        } else {
+          para++;
+        }
+      }
+      const { options, answer, explanation } = fullQuestion;
+      // console.log(userAnswer);
+      // console.log(question.isCorrect);
+      // console.log(fullQuestion);
+      result.push({
+        question: fullQuestion.question,
+        options,
+        answer,
+        explanation,
+        userAnswer,
+        isCorrect: question.isCorrect,
+      });
+    }
+    res.status(200).json({ result });
+  } catch (error) {
+    res.status(400).json({ error: error.message || "Something went wrong" });
+    console.error(error);
+  }
+};
+
+module.exports = { saveAttempt, getPercentile, givenQuiz, getQuizSummary };
