@@ -52,6 +52,7 @@ const registerUser = async (req, res) => {
         .json({ error: "Phone no. should be of 10 digits" });
     }
     const user = new User({
+      inGameName,
       name,
       email,
       phone,
