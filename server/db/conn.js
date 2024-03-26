@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
-// const articlesData = require("../ArticleHealthData.json");
+// const articlesData = require("../../articlesBusiness.json");
 
 mongoose
   .connect(DB)

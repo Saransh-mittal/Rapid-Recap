@@ -4,9 +4,9 @@ const genQuiz = ({ fullQuiz, title }) => {
   const selectedQuestions = [];
   // Add one question from each non-empty para to selectedQuestions
   //console.log(fullQuiz);
-  let para1 = JSON.parse(JSON.stringify(fullQuiz.para1));
-  let para2 = JSON.parse(JSON.stringify(fullQuiz.para2));
-  let para3 = JSON.parse(JSON.stringify(fullQuiz.para3));
+  let para1 = fullQuiz.para1;
+  let para2 = fullQuiz.para2;
+  let para3 = fullQuiz.para3;
   let paragraphs = { para1, para2, para3 };
   for (let i = 1; i <= 3; i++) {
     const para = paragraphs[`para${i}`];
@@ -39,6 +39,7 @@ const genQuiz = ({ fullQuiz, title }) => {
     title: title,
     questions: selectedQuestions,
   };
+  //console.log(quiz);
   return quiz;
 };
 const generateQuestionsForQuiz = async ({ title, author, mainText }) => {

@@ -28,7 +28,6 @@ const articleSchema = new mongoose.Schema(
     imgURL: [
       {
         type: String,
-        required: true,
       },
     ],
     quiz: {

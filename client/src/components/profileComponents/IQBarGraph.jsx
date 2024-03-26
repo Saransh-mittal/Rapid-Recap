@@ -220,7 +220,7 @@ const IQBarGraph = ({ barGraph }) => {
     >
       {isLoading ? (
         <Loading />
-      ) : filteredLabels.length === 0 ? (
+      ) : USER_IQ === 0 ? (
         <Flex
           w={"100%"}
           justifyContent={"center"}

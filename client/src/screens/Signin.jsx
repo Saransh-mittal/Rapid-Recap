@@ -43,7 +43,7 @@ export default function Sigin() {
         data,
         inGameName,
       });
-      console.log(response);
+      //console.log(response);
       if (response.status === 201) {
         dispatch({ type: "UNSHOW" });
         dispatch({
@@ -76,7 +76,7 @@ export default function Sigin() {
   };
 
   const forgotPassword = async () => {
-    console.log("forgotPassword");
+    //console.log("forgotPassword");
     try {
       setLoad({ submitLoad: false, forgotLoad: true });
       const response = await axios.post(`/api/user/resendOTP`, {
@@ -247,7 +247,7 @@ export default function Sigin() {
                           "/api/user/handleGoogleLogin",
                           { credentialResponse, inGameName }
                         );
-                        console.log(response);
+                        //console.log(response);
                         if (response.status === 201) {
                           dispatch({ type: "UNSHOW" });
                           dispatch({

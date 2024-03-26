@@ -20,13 +20,20 @@ import {
 import Loading from "../components/miscellaneous/Loading";
 import Quiz from "../components/articleComponents/Quiz";
 import GenerateQuizButton from "../components/articleComponents/GenerateQuizButton";
-import medalIcon from "../assets/medal.png";
+
 import QuizExpired from "../components/articleComponents/QuizExpired";
 import Alt_img from "../assets/alt_image.jpg";
+import GivenQuiz from "../components/articleComponents/GivenQuiz";
+import imageData from "../assets/AltNewsImage";
 
 const Article = () => {
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
+  const data = state.news;
+  const alt_image = imageData.find(
+    (img) =>
+      img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
+  ).image;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -53,6 +60,8 @@ const Article = () => {
       setLatestNews(news.data);
       //console.log(news.data);
       setArticle(response.data.newArticle);
+      //console.log(response.data.newArticle.imgURL);
+
       setQuizExpired(response.data.quizExpired);
     } catch (error) {
       // Handle errors
@@ -133,7 +142,6 @@ const Article = () => {
   }, [givenQuiz]);
   useEffect(() => {
     if (textRef.current) {
-      //console.log(textRef.current.getBoundingClientRect().height);
       setTextHeight(textRef.current.getBoundingClientRect().height);
     }
     if (articleRef.current) {
@@ -141,14 +149,8 @@ const Article = () => {
     }
   }, [article]);
 
-  // const closeInstructionModal = () => {
-  //   setShowInstruction(false);
-  // };
-
   return (
     <>
-      {/* {!givenQuiz && showInstruction
-      ? <InstructionModal onClose={closeInstructionModal} /> : null} */}
       {showQuiz && !givenQuiz ? (
         <Quiz
           article={article}
@@ -241,7 +243,7 @@ const Article = () => {
                             display: "none",
                           },
                         }}
-                        src={article.imgURL}
+                        src={data.imgURL[0] ? data.imgURL[0] : alt_image}
                         alt="Article Image"
                         borderRadius="md"
                         float={"left"}
@@ -249,7 +251,7 @@ const Article = () => {
                         height={`${textHeight}px`}
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = Alt_img;
+                          e.target.src = alt_image;
                           e.target.style.height = `${textHeight}px`;
                         }}
                       />
@@ -270,7 +272,7 @@ const Article = () => {
                           display: "none",
                         },
                       }}
-                      src={article.imgURL}
+                      src={data.imgURL[0] ? data.imgURL[0] : alt_image}
                       alt="Article Image"
                       borderRadius="md"
                       marginBottom="5"
@@ -279,7 +281,7 @@ const Article = () => {
                       height={`${textHeight}px`}
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = Alt_img;
+                        e.target.src = alt_image;
                         e.target.style.height = `${textHeight}px`;
                       }}
                     />
@@ -304,66 +306,11 @@ const Article = () => {
             >
               {givenQuiz ? (
                 <>
-                  <Flex
-                    flexDirection="column"
-                    alignItems="center"
-                    bgGradient="linear-gradient(-180deg, #1A374D, #406882  58%, #6998AB 99%)"
-                    color="white"
-                    borderRadius="lg"
-                    p={6}
-                    boxShadow="5px 4px 8px rgba(0, 0, 0, 0.5)"
-                    marginBottom={5}
-                  >
-                    <Heading
-                      as="h6"
-                      size="xl"
-                      textAlign="center"
-                      mb={3}
-                      color="#B1D0E0"
-                    >
-                      Quiz Performance
-                    </Heading>
-                    <Flex flexDirection="column" alignItems="center">
-                      <Heading
-                        textAlign={"center"}
-                        as="h6"
-                        fontSize="20px"
-                        mt={2}
-                        mb={2}
-                        color="#D4ECDD"
-                      >
-                        Current Percentile: {percentile}%
-                      </Heading>
-                      <Heading
-                        textAlign={"center"}
-                        as="h6"
-                        fontSize="20px"
-                        mb={4}
-                        color="#D4ECDD"
-                      >
-                        <Flex gap={"10px"}>
-                          <Tooltip
-                            color={"grey.300"}
-                            label="This is the Rapid Quiz Mastery(RQM) score. It is calculated based on the number of correct answers, time taken to complete the quiz and the difficulty level of the overall quiz. The higher the RQM-Score, the better the performance."
-                            aria-label="A tooltip"
-                            textAlign={"justify"}
-                            rounded={"md"}
-                            p={"10px"}
-                            bg={"#EEF5FF"}
-                          >
-                            <Image
-                              src={medalIcon}
-                              alt="Rating"
-                              width={"25px"}
-                              height={"25px"}
-                              bg={"none"}
-                            />
-                          </Tooltip>
-                          RQM-Score: {RQM_score}
-                        </Flex>
-                      </Heading>
-                    </Flex>
-                  </Flex>
+                  <GivenQuiz
+                    articleId={id}
+                    percentile={percentile}
+                    RQM_score={RQM_score}
+                  />
                 </>
               ) : onGoingQuiz ? (
                 <Heading

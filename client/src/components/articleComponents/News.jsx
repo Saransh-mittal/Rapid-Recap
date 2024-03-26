@@ -2,11 +2,16 @@ import { useRef, useContext, useEffect } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import { Button, Image } from "@chakra-ui/react";
 import { Link, useNavigate } from "react-router-dom";
-import Alt_img from "../../assets/alt_image.jpg";
+
+import imageData from "../../assets/AltNewsImage";
 
 const News = () => {
   const { state, dispatch } = useContext(AppContext);
   const data = state.news;
+  const alt_image = imageData.find(
+    (img) =>
+      img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
+  ).image;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,11 +28,11 @@ const News = () => {
       }}
     >
       <Image
-        src={data.imgURL[0]}
+        src={data.imgURL[0] ? data.imgURL[0] : alt_image}
         style={{ width: "92%", marginTop: "1rem" }}
         onError={(e) => {
           e.target.onerror = null;
-          e.target.src = Alt_img;
+          e.target.src = alt_image;
         }}
       />
       <div style={{ width: "92%" }}>

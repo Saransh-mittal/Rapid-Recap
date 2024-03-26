@@ -52,6 +52,7 @@ const registerUser = async (req, res) => {
         .json({ error: "Phone no. should be of 10 digits" });
     }
     const user = new User({
+      inGameName,
       name,
       email,
       phone,
@@ -72,7 +73,7 @@ const registerUser = async (req, res) => {
 
     const transporter = await mailTransporter();
     await transporter.sendMail({
-      from: "20ucs174@lnmiit.ac.in",
+      from: "rapidrecap2k23@gmail.com",
       to: user.email,
       subject: "OTP for verification",
       text: `Your OTP for verification`,
@@ -80,6 +81,7 @@ const registerUser = async (req, res) => {
     });
     return res.status(201).json({ message: "Registered Successfully" });
   } catch (err) {
+    res.status(500).send("Internal Server Error");
     console.log(err);
   }
 };
@@ -152,8 +154,9 @@ const loginCheck = async (req, res) => {
 
 const verifyUser = async (req, res) => {
   const { otp, email } = req.body;
-
+  // type of forgotPassword is string
   const forgotPassword = req.query.forgotPassword;
+
   try {
     const user = await User.findOne({ email: email });
     if (!user) throw new Error("No user found");
@@ -161,7 +164,7 @@ const verifyUser = async (req, res) => {
     if (!userid || !otp.trim()) throw new Error("No user or otp provided");
     if (!isValidObjectId(userid)) throw new Error("Invalid user");
 
-    if (user.verified && !forgotPassword)
+    if (user.verified && forgotPassword === "false")
       throw new Error("User already verified");
 
     const token = await VerificationToken.findOne({ owner: userid });
@@ -174,15 +177,18 @@ const verifyUser = async (req, res) => {
     user.verified = true;
     await VerificationToken.findByIdAndDelete(token._id);
     await user.save();
+    //console.log("Email verified successfully");
 
-    if (!forgotPassword) {
+    if (forgotPassword === "false") {
+      //console.log("Sending email");
       const transporter = await mailTransporter();
       await transporter.sendMail({
-        from: "20ucs174@lnmiit.ac.in",
+        from: "rapidrecap2k23@gmail.com",
         to: user.email,
         subject: "Welcom to Rapid Recap",
         html: "<h1>Welcome to Rapid Recap. Your account has been verified successfully</h1>",
       });
+      //console.log("Email sent");
     }
     res.status(201).json({ message: "Email verified successfully" });
   } catch (error) {
@@ -223,7 +229,7 @@ const resendOTP = async (req, res) => {
     await verificationToken.save();
     const transporter = await mailTransporter();
     await transporter.sendMail({
-      from: "20ucs174@lnmiit.ac.in",
+      from: "rapidrecap2k23@gmail.com",
       to: user.email,
       subject: "OTP for verification",
       text: `Your OTP for verification`,
