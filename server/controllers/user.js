@@ -28,7 +28,7 @@ const registerUser = async (req, res) => {
   //console.log(req.body);
   const { name, email, phone, password, cpassword, inGameName } = req.body;
 
-  if (name || !email || !phone || !password || !cpassword || !inGameName)
+  if (!name || !email || !phone || !password || !cpassword || !inGameName)
     return res.status(422).json({ error: "Please fill the required field" });
   // inGameName cannot have spaces
   if (inGameName.includes(" "))
