@@ -4,6 +4,11 @@ import { AppContext } from "../../contextAPI/appContext";
 import imageData from "../../assets/AltNewsImage";
 
 const Card = ({ newsNumber, data }) => {
+  //console.log("card :", data);
+  const newArticle = {
+    ...data,
+    imgURL: data.imgURL[0],
+  };
   const alt_img = imageData.find(
     (img) =>
       img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
@@ -53,7 +58,7 @@ const Card = ({ newsNumber, data }) => {
           // )
           //console.log(`hi`);
           dispatch({ type: "showModal", payloadModal: true });
-          dispatch({ type: "setNews", payloadNews: data });
+          dispatch({ type: "setNews", payloadNews: newArticle });
         }}
         onMouseMove={mousemove}
         onMouseLeave={mouseleave}

@@ -30,6 +30,7 @@ const Article = () => {
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const data = state.news;
+  console.log("data : ", data);
   const alt_image = imageData.find(
     (img) =>
       img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
@@ -60,7 +61,7 @@ const Article = () => {
       setLatestNews(news.data);
       //console.log(news.data);
       setArticle(response.data.newArticle);
-      //console.log(response.data.newArticle.imgURL);
+      console.log("Fetched: ", response.data.newArticle);
 
       setQuizExpired(response.data.quizExpired);
     } catch (error) {
@@ -243,7 +244,15 @@ const Article = () => {
                             display: "none",
                           },
                         }}
-                        src={data.imgURL[0] ? data.imgURL[0] : alt_image}
+                        src={
+                          typeof data.imgURL === "Array" &&
+                          data.imgURL.length > 0 &&
+                          data.imgURL[0]
+                            ? data.imgURL[0]
+                            : typeof data.imgURL !== "Array" && data.imgURL
+                            ? data.imgURL
+                            : alt_image
+                        }
                         alt="Article Image"
                         borderRadius="md"
                         float={"left"}
@@ -272,7 +281,15 @@ const Article = () => {
                           display: "none",
                         },
                       }}
-                      src={data.imgURL[0] ? data.imgURL[0] : alt_image}
+                      src={
+                        typeof data.imgURL === "Array" &&
+                        data.imgURL.length > 0 &&
+                        data.imgURL[0]
+                          ? data.imgURL[0]
+                          : typeof data.imgURL !== "Array" && data.imgURL
+                          ? data.imgURL
+                          : alt_image
+                      }
                       alt="Article Image"
                       borderRadius="md"
                       marginBottom="5"
