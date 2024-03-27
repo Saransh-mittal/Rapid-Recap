@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppContext } from "../../contextAPI/appContext";
+import UploadProfilePicture from "./UploadProfilePicture";
 import {
   Button,
   Modal,
@@ -17,7 +18,8 @@ import {
   Box,
 } from "@chakra-ui/react";
 
-const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
+
+const EditProfileModal = ({ isOpen, onClose, profileData,setProfileData, onSubmit }) => {
   const {state}= React.useContext(AppContext);
   const [formData, setFormData] = useState(profileData);
 
@@ -28,20 +30,31 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
       [name]: value,
     }));
   };
+  // useEffect(()=>{
+  //   console.log(profileData);
+  // },[])
+ 
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-      setFormData((prevData) => ({
-        ...prevData,
-        profilePicture: file,
-      }));
-    }
+  // const handleImageChange = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setPreviewImage(reader.result);
+  //     };
+  //     reader.readAsDataURL(file);
+  //     setFormData((prevData) => ({
+  //       ...prevData,
+  //       profilePicture: file,
+  //     }));
+  //   }
+  // };
+
+  const handleImageUpload = (imageUrl) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      pic: imageUrl,
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -51,7 +64,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={()=>{onClose(); setProfileData(null);}} size="xl">
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Edit Profile</ModalHeader>
@@ -59,20 +72,24 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
         <ModalBody>
           <Box display="flex" justifyContent="center" mb={4}>
             <Image
-              src={state.user.pic}
+              src={formData.pic}
               alt="Profile Picture"
               boxSize="150px"
               borderRadius="full"
               mb={4}
             />
           </Box>
+          {/* <FormControl mb={4}>
+            <FormLabel>Upload Profile Picture</FormLabel>
+            <UploadProfilePicture onUpload={handleImageUpload} />
+          </FormControl> */}
           <FormControl mb={4}>
             <FormLabel>Upload Profile Picture</FormLabel>
             <Input
               type="file"
-              name="profilePicture"
+              name="pic"
               accept="image/*"
-              onChange={handleImageChange}
+              onChange={handleImageUpload}
             />
           </FormControl>
           <FormControl mb={4}>
@@ -80,7 +97,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
             <Input
               type="text"
               name="name"
-              value={state.user.name}
+              value={formData.name}
               onChange={handleInputChange}
             />
           </FormControl>
@@ -88,7 +105,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
             <FormLabel>Bio</FormLabel>
             <Textarea
               name="bio"
-              value={state.user.bio}
+              value={formData.bio}
               onChange={handleInputChange}
             />
           </FormControl>

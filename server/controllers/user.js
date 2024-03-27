@@ -573,6 +573,7 @@ const profile = async (req, res) => {
 const editProfile = async (req, res) => {
   const { name, bio, pic } = req.body;
   try {
+    //console.log(req.body);
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
