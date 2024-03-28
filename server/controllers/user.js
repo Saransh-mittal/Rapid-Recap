@@ -1,6 +1,7 @@
 const User = require("../model/userSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const DailyIQ = require("../model/dailyIQSchema");
+const clodinary=require('../utils/cloudinary');
 const bcrypt = require("bcryptjs");
 const {
   generateOtp,
@@ -574,6 +575,11 @@ const editProfile = async (req, res) => {
   const { name, bio, pic } = req.body;
   try {
     //console.log(req.body);
+    const result=await clodinary.uploader.upload(pic,{
+      folder:"ProfilePics",
+      width:300,
+      crop:"scale"
+    })
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
