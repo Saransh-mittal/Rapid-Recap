@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import Modal from "./Modal";
 import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
+
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
   const [items, setItems] = useState(state.items);

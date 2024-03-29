@@ -1,6 +1,20 @@
+import { useEffect } from "react";
 import TimelineItem from "./TimelineItem";
-
+import { useShepherdTour } from "react-shepherd";
+import stepsTutorialHome from "./stepsTutorialHome";
+const tourOptions = {
+  defaultStepOptions: {
+    cancelIcon: {
+      enabled: true,
+    },
+  },
+  useModalOverlay: true,
+};
 const Timeline = ({ data }) => {
+  const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
+  useEffect(() => {
+    tour.start();
+  }, []);
   return (
     <div className="px-5">
       <div className="timeline-container">
