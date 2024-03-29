@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AppContext } from "../../contextAPI/appContext";
-import UploadProfilePicture from "./UploadProfilePicture";
+;
 import {
   Button,
   Modal,
@@ -17,6 +17,7 @@ import {
   Image,
   Box,
 } from "@chakra-ui/react";
+import axios from "axios";
 
 
 const EditProfileModal = ({ isOpen, onClose, profileData,setProfileData, onSubmit }) => {
@@ -30,38 +31,31 @@ const EditProfileModal = ({ isOpen, onClose, profileData,setProfileData, onSubmi
       [name]: value,
     }));
   };
-  // useEffect(()=>{
-  //   console.log(profileData);
-  // },[])
- 
-
-  // const handleImageChange = (e) => {
-  //   const file = e.target.files[0];
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => {
-  //       setPreviewImage(reader.result);
-  //     };
-  //     reader.readAsDataURL(file);
-  //     setFormData((prevData) => ({
-  //       ...prevData,
-  //       profilePicture: file,
-  //     }));
-  //   }
-  // };
-
-  const handleImageUpload = (imageUrl) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      pic: imageUrl,
-    }));
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+  
     onSubmit(formData);
     onClose();
   };
+
+  const submitImage = async (e)=>{
+   
+    try{
+      const img = e.target.files[0];
+      const data = new FormData();
+    data.append("file",img);
+    data.append("upload_preset","ProfilePics");
+    data.append("cloud_name","dxstsrnbs")
+    const response = await axios.post("https://api.cloudinary.com/v1_1/dxstsrnbs/image/upload",data);
+    //console.log(response.data);
+    const pic = response.data.url;
+    setFormData({...formData,pic});
+    }
+    catch(e){
+      console.log(e);
+    }
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={()=>{onClose(); setProfileData(null);}} size="xl">
@@ -79,18 +73,18 @@ const EditProfileModal = ({ isOpen, onClose, profileData,setProfileData, onSubmi
               mb={4}
             />
           </Box>
-          {/* <FormControl mb={4}>
-            <FormLabel>Upload Profile Picture</FormLabel>
-            <UploadProfilePicture onUpload={handleImageUpload} />
-          </FormControl> */}
+
           <FormControl mb={4}>
             <FormLabel>Upload Profile Picture</FormLabel>
             <Input
               type="file"
               name="pic"
               accept="image/*"
-              onChange={handleImageUpload}
+   
+              onChange={submitImage}
+           
             />
+   
           </FormControl>
           <FormControl mb={4}>
             <FormLabel>Name</FormLabel>
