@@ -6,13 +6,5 @@ export default defineConfig({
   build: {
     target: "esnext",
   },
-  server: {
-    proxy: {
-      "/api": {
-        target: "", // Replace with your backend server URL
-        changeOrigin: true,
-      },
-    },
-  },
   plugins: [react()],
 });

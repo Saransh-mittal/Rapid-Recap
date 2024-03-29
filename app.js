@@ -28,6 +28,15 @@ require("./db/conn");
 //require("./utils/update.utils/name.update");
 // ---------------------------
 
+app.use(express.json());
+require("./scheduler/userIQScoreScheduler");
+const PORT = process.env.PORT || 3000;
+authRouter.use(cookieParser());
+authRouter.use("/user", userRoutes);
+authRouter.use("/articles", articleRoutes);
+authRouter.use("/quiz", quizRoutes);
+app.use("/api", authRouter);
+
 // -----Production-----
 app.use(express.static(path.join(__dirname, "./client/dist")));
 app.get("*", function (_, res) {
@@ -39,14 +48,6 @@ app.get("*", function (_, res) {
   );
 });
 // --------------------
-app.use(express.json());
-require("./scheduler/userIQScoreScheduler");
-const PORT = process.env.PORT || 3000;
-authRouter.use(cookieParser());
-authRouter.use("/user", userRoutes);
-authRouter.use("/articles", articleRoutes);
-authRouter.use("/quiz", quizRoutes);
-app.use("/api", authRouter);
 
 app.listen(PORT, () => {
   console.log(`Listening to port no. ${PORT}`);
