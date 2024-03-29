@@ -5,6 +5,7 @@ const articleRoutes = require("./router/articleRoutes");
 const quizRoutes = require("./router/quizRoutes");
 const authRouter = express.Router();
 const cookieParser = require("cookie-parser");
+const path = require("path");
 
 dotenv.config({ path: "./config.env" });
 const app = express();
@@ -26,9 +27,21 @@ require("./db/conn");
 //require("./utils/update.utils/quizCountUpdate.update");
 //require("./utils/update.utils/name.update");
 // ---------------------------
+
+// -----Production-----
+app.use(express.static(path.join(__dirname, "./client/dist")));
+app.get("*", function (_, res) {
+  res.sendFile(
+    path.join(__dirname, "./client/dist/index.html"),
+    function (err) {
+      res.status(500).send(err);
+    }
+  );
+});
+// --------------------
 app.use(express.json());
 require("./scheduler/userIQScoreScheduler");
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);
 authRouter.use("/articles", articleRoutes);
