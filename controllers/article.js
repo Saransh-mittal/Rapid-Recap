@@ -6,7 +6,7 @@ const {
   updatePercentilesOnQuizDeactivation,
 } = require("../utils/quiz");
 const { breakArticleIntoParagraphs } = require("../utils/article");
-const NewsAPI = require("newsapi");
+//const NewsAPI = require("newsapi");
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9 } = req.query;
