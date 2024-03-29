@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
-// const articlesData = require("../../articleEntertainment.json");
+// const articlesData = require("../../articleHealth.json");
 
 mongoose
   .connect(DB)
@@ -25,5 +25,5 @@ mongoose
 //   }
 // }
 
-// Call the function to save articles to the database
+// // Call the function to save articles to the database
 // saveArticlesToDB();
