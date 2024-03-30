@@ -23,6 +23,7 @@
     "chart.js": "^4.4.2",
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^3.4.0",
+    "dotenv": "^16.4.5",
     "framer-motion": "^10.18.0",
     "jquery": "^3.7.1",
     "jwt-decode": "^4.0.0",
