@@ -328,3 +328,93 @@ section {
     }
 }
 
+.shepherd-active {
+  content: "";
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.9 ;
+  /* Semi-transparent black */
+  z-index: 999;
+  /* Ensure it's behind the Shepherd modal but above other content */
+}
+.custom-class-name-1 {
+  border-radius: 15px;
+  opacity: 1 !important;
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%);
+  background-color: orange;
+  z-index: 999999;
+  color: white;
+  min-height: 200px;
+  padding: 20px;
+  border: none;
+  outline: none;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Add a strong shadow */
+}
+.shepherd-title{
+  margin-top: 25px;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: black; /* Change the color to black for better visibility on the orange background */
+  text-align: center;
+
+}
+.shepherd-text{
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: black; /* Change the color to black for better visibility on the orange background */
+  text-align: center;
+}
+
+.shepherd-cancel-icon{
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+
+.shepherd-footer{
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-top: 20px;
+}
+
+.shepherd-footer button{
+  padding: 5px;
+  font-weight: 700;
+  color: white;
+  background-color: #5918df;
+  border: none;
+  cursor: pointer;
+  width: 100px;
+}
+
+.card-guide {
+  left: 35% !important;
+  border-radius: 15px;
+  opacity: 1 !important;
+  background-color: orange;
+  z-index: 999999;
+  color: white;
+  max-width: 25rem;
+  padding: 20px;
+  border: none;
+  outline: none;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  /* Add a strong shadow */
+}
+
+.highlighted-card-0 {
+  /* Define your highlight styles here */
+  opacity: 1 !important;
+  /* Red border as highlight */
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+}

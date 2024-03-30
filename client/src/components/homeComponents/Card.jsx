@@ -47,9 +47,9 @@ const Card = ({ newsNumber, data }) => {
   };
 
   return (
-    <div className="containers">
+    <div className={`containers`}>
       <div
-        className="cardWrapper"
+        className={`cardWrapper`}
         ref={cardWrapper}
         onClick={() => {
           // window.open(

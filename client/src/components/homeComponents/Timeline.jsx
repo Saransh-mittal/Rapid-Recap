@@ -13,6 +13,36 @@ const tourOptions = {
 const Timeline = ({ data }) => {
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
   useEffect(() => {
+    const body = document.querySelector("body");
+
+    const handleTourStart = () => {
+      body.classList.add("shepherd-active");
+    };
+
+    const handleTourComplete = () => {
+      body.classList.remove("shepherd-active");
+    };
+
+    const handleTourCancel = () => {
+      body.style.overflow = "auto";
+      body.classList.remove("shepherd-active");
+      const containers = document.querySelector(".containers");
+      containers.classList.remove("highlighted-card-0");
+      containers.style.boxShadow = "none";
+    };
+
+    tour.on("start", handleTourStart);
+    tour.on("complete", handleTourComplete);
+    tour.on("cancel", handleTourCancel);
+
+    return () => {
+      tour.off("start", handleTourStart);
+      tour.off("complete", handleTourComplete);
+      tour.off("cancel", handleTourCancel);
+    };
+  }, [tour]);
+
+  useEffect(() => {
     tour.start();
   }, []);
   return (
