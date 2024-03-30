@@ -52,24 +52,11 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
     pic: {
-      public_id:{
-        type:String,
-        required:true
-      },
-      url:{
-        type:String,
-        required:true,
-        default:
-          "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
-        
-      }
+      type: "String",
+      required: true,
+      default:
+        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     },
-    // pic: {
-    //   type: "String",
-    //   required: true,
-    //   default:
-    //     "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
-    // },
     bio: {
       type: String,
       default: "",
