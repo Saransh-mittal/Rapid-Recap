@@ -53,11 +53,8 @@ const Navbar = () => {
   return (
     <nav
       className="navbar navbar-expand-lg navbar-light bg-light px-5"
-      onMouseDown={startDrag}
       onTouchStart={startDrag}
-      onMouseMove={(e) => drag(e)}
       onTouchMove={(e) => drag(e.touches[0])}
-      onMouseUp={endDrag}
       onTouchEnd={endDrag}
     >
       <div className="container-fluid">

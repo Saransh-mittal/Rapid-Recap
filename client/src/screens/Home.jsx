@@ -63,11 +63,8 @@ const Home = () => {
 
   return (
     <div
-      onMouseDown={startDrag}
       onTouchStart={startDrag}
-      onMouseMove={(e) => drag(e)}
       onTouchMove={(e) => drag(e.touches[0])}
-      onMouseUp={endDrag}
       onTouchEnd={endDrag}
     >
       {state.modal && (
