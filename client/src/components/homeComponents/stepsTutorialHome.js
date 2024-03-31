@@ -1,7 +1,7 @@
 const stepsTutorialHome = [
   {
     id: "intro",
-    attachTo: { element: ".timeline-container", on: "center" },
+    attachTo: { element: ".timeline-container" },
     beforeShowPromise: function () {
       return new Promise(function (resolve) {
         setTimeout(function () {
@@ -35,6 +35,12 @@ const stepsTutorialHome = [
     when: {
       show: () => {
         console.log("show step");
+        const overlay = document.createElement("div");
+        overlay.classList.add("custom-overlay");
+        document.querySelector(".timeline").appendChild(overlay);
+        const body = document.querySelector("body");
+        body.style.overflow = "auto"; // Reapply scroll behavior
+        // console.log(body);
       },
       hide: () => {
         console.log("hide step");
@@ -67,21 +73,15 @@ const stepsTutorialHome = [
     when: {
       show: () => {
         console.log("show step");
-        const timeline = document.querySelector(".timeline");
-        timeline.style.overflow = "auto"; // Reapply scroll behavior
+        const body = document.querySelector("body");
+        body.style.overflow = "auto"; // Reapply scroll behavior
+        document.body.style.backgroundColor = "transparent";
+        const timelineItem = document.querySelector(".timeline-item");
+
+        timelineItem.style.zIndex = "9999";
       },
       hide: () => {
         console.log("hide step");
-      },
-      cancel: () => {
-        console.log("exit step");
-        const timeline = document.querySelector(".timeline");
-        timeline.classList.remove("shepherd-active");
-        timeline.style.overflow = "auto"; // Reapply scroll behavior
-        const cardWrapper = document.querySelector(".cardWrapper");
-        if (cardWrapper) {
-          cardWrapper.classList.remove("highlighted");
-        }
       },
     },
   },
@@ -107,7 +107,7 @@ const stepsTutorialHome = [
       show: () => {
         console.log("show step");
 
-        const cardWrapper = document.querySelector(".containers");
+        const cardWrapper = document.querySelector(".timeline-item");
         if (cardWrapper) {
           cardWrapper.classList.add("highlighted-card-0");
 
@@ -134,15 +134,21 @@ const stepsTutorialHome = [
             behavior: "smooth",
           });
         }
+        const targetElement = document.querySelector(".timeline-item");
 
-        const shepherdActive = document.querySelector(".shepherd-active");
-        shepherdActive.style.overflow = "hidden"; // Reapply fixed position
+        targetElement.style.filter = "brightness(1.5)";
+        targetElement.style.position = "relative";
+        targetElement.style.zIndex = "9999999";
+        console.log(targetElement);
+        const body = document.querySelector("body");
+        // console.log(timeline);
+        body.style.overflow = "hidden"; // Reapply fixed position
       },
       hide: () => {
         console.log("hide step");
-        const timeline = document.querySelector(".timeline");
-        timeline.style.overflow = "auto"; // Reapply scroll behavior
-        const containers = document.querySelector(".containers");
+        const body = document.querySelector("body");
+        body.style.overflow = "auto"; // Reapply scroll behavior
+        const containers = document.querySelector(".timeline-item");
         console.log(containers);
         containers.classList.remove("highlighted-card-0");
       },

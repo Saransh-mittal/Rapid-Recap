@@ -14,7 +14,7 @@ const Timeline = ({ data }) => {
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
   useEffect(() => {
     const timeline = document.querySelector(".timeline");
-
+    const body = document.querySelector("body");
     const handleTourStart = () => {
       timeline.classList.add("shepherd-active");
     };
@@ -24,11 +24,17 @@ const Timeline = ({ data }) => {
     };
 
     const handleTourCancel = () => {
-      timeline.style.overflow = "auto";
+      body.style.overflow = "auto";
       timeline.classList.remove("shepherd-active");
-      const containers = document.querySelector(".containers");
-      containers.classList.remove("highlighted-card-0");
-      containers.style.boxShadow = "none";
+      const timelineItem = document.querySelector(".timeline-item");
+      if (timelineItem.classList.contains("highlighted-card-0")) {
+        timelineItem.classList.remove("highlighted-card-0");
+        timelineItem.style.boxShadow = "none";
+        timelineItem.style.filter = "brightness(1)";
+      }
+
+      const overlay = document.querySelector(".custom-overlay");
+      overlay.remove();
     };
 
     tour.on("start", handleTourStart);
