@@ -67,17 +67,17 @@ const stepsTutorialHome = [
     when: {
       show: () => {
         console.log("show step");
-        const body = document.querySelector("body");
-        body.style.overflow = "auto"; // Reapply scroll behavior
+        const timeline = document.querySelector(".timeline");
+        timeline.style.overflow = "auto"; // Reapply scroll behavior
       },
       hide: () => {
         console.log("hide step");
       },
       cancel: () => {
         console.log("exit step");
-        const body = document.querySelector("body");
-        body.classList.remove("shepherd-active");
-        body.style.overflow = "auto"; // Reapply scroll behavior
+        const timeline = document.querySelector(".timeline");
+        timeline.classList.remove("shepherd-active");
+        timeline.style.overflow = "auto"; // Reapply scroll behavior
         const cardWrapper = document.querySelector(".cardWrapper");
         if (cardWrapper) {
           cardWrapper.classList.remove("highlighted");
@@ -140,8 +140,8 @@ const stepsTutorialHome = [
       },
       hide: () => {
         console.log("hide step");
-        const body = document.querySelector("body");
-        body.style.overflow = "auto"; // Reapply scroll behavior
+        const timeline = document.querySelector(".timeline");
+        timeline.style.overflow = "auto"; // Reapply scroll behavior
         const containers = document.querySelector(".containers");
         console.log(containers);
         containers.classList.remove("highlighted-card-0");

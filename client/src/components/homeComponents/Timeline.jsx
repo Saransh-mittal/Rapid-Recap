@@ -13,19 +13,19 @@ const tourOptions = {
 const Timeline = ({ data }) => {
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
   useEffect(() => {
-    const body = document.querySelector("body");
+    const timeline = document.querySelector(".timeline");
 
     const handleTourStart = () => {
-      body.classList.add("shepherd-active");
+      timeline.classList.add("shepherd-active");
     };
 
     const handleTourComplete = () => {
-      body.classList.remove("shepherd-active");
+      timeline.classList.remove("shepherd-active");
     };
 
     const handleTourCancel = () => {
-      body.style.overflow = "auto";
-      body.classList.remove("shepherd-active");
+      timeline.style.overflow = "auto";
+      timeline.classList.remove("shepherd-active");
       const containers = document.querySelector(".containers");
       containers.classList.remove("highlighted-card-0");
       containers.style.boxShadow = "none";
@@ -46,7 +46,7 @@ const Timeline = ({ data }) => {
     tour.start();
   }, []);
   return (
-    <div className="px-5">
+    <div className="px-5 timeline">
       <div className="timeline-container">
         <div className="intro">
           <div className="info">
