@@ -21,17 +21,20 @@ const Home = () => {
       dispatch({ type: "PAGE", payloadPage: page });
       dispatch({ type: "ITEMS", payloadItems: [...items, ...response.data] });
       setItems((prev) => [...prev, ...response.data]);
-      setLoad(false);
+      
     } catch (error) {
       // Handle errors
       console.log(error.message);
+    }
+    finally{
+      setLoad(false);
     }
   }
 
   const handleScroll = async () => {
     try {
       if (
-        window.innerHeight + document.documentElement.scrollTop + 1 >
+        window.innerHeight + document.documentElement.scrollTop + 10 >
         document.documentElement.scrollHeight
       ) {
         setLoad(true);
@@ -74,7 +77,7 @@ const Home = () => {
           <News />
         </Modal>
       )}
-      <Timeline data={items} />
+      {state.user && <Timeline data={items} />}
       {load && <Loading />}
     </div>
   );

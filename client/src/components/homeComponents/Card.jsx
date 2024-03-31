@@ -7,12 +7,12 @@ const Card = ({ newsNumber, data }) => {
   //console.log("card :", data);
   const newArticle = {
     ...data,
-    imgURL: data.imgURL[0],
+    imgURL: data?.imgURL[0],
   };
   const alt_img = imageData.find(
     (img) =>
-      img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
-  ).image;
+      img.category.toLocaleLowerCase() === data?.category?.toLocaleLowerCase()
+  )?.image
   //console.log(alt_img);
   const { state, dispatch } = useContext(AppContext);
   const cardWrapper = useRef(null);
@@ -65,7 +65,7 @@ const Card = ({ newsNumber, data }) => {
       >
         <div className="project-meta" ref={project_meta}>
           <div className=" projects">
-            <span className="block-reveal__text">{data.title}</span>
+            <span className="block-reveal__text">{data?.title}</span>
           </div>
           <div className="divider"></div>
           <div className="project-nav">
@@ -79,7 +79,7 @@ const Card = ({ newsNumber, data }) => {
           <div className="cards" ref={card}>
             <div className="img-box">
               <img
-                src={data.imgURL[0] ? data.imgURL[0] : alt_img}
+                src={data?.imgURL[0] ? data?.imgURL[0] : alt_img}
                 alt=""
                 onError={(e) => {
                   e.target.onerror = null;
@@ -90,9 +90,9 @@ const Card = ({ newsNumber, data }) => {
             <div className="contents text-white">
               <h2> Click here to know More </h2>
               <p>
-                {data.mainText[0].length > 135
-                  ? `${data.mainText[0].substring(0, 135)}...`
-                  : data.mainText[0]}
+                {data?.mainText[0].length > 135
+                  ? `${data?.mainText[0].substring(0, 135)}...`
+                  : data?.mainText[0]}
               </p>
             </div>
           </div>

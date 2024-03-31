@@ -7,7 +7,7 @@ const stepsTutorialHome = [
         setTimeout(function () {
           window.scrollTo(0, 0);
           resolve();
-        }, 1000);
+        }, 500);
       });
     },
     buttons: [
@@ -32,20 +32,6 @@ const stepsTutorialHome = [
     text: [
       "Stay informed, challenge your mind, and boost your IQ with our app's dynamic news, quizzes, and personalized scores. Join the intelligence revolution!",
     ],
-    when: {
-      show: () => {
-        console.log("show step");
-        const overlay = document.createElement("div");
-        overlay.classList.add("custom-overlay");
-        document.querySelector(".timeline").appendChild(overlay);
-        const body = document.querySelector("body");
-        body.style.overflow = "auto"; // Reapply scroll behavior
-        // console.log(body);
-      },
-      hide: () => {
-        console.log("hide step");
-      },
-    },
   },
   {
     id: "iq_explanation",
@@ -70,20 +56,6 @@ const stepsTutorialHome = [
       },
     ],
     classes: "custom-class-name-1 custom-class-name-2",
-    when: {
-      show: () => {
-        console.log("show step");
-        const body = document.querySelector("body");
-        body.style.overflow = "auto"; // Reapply scroll behavior
-        document.body.style.backgroundColor = "transparent";
-        const timelineItem = document.querySelector(".timeline-item");
-
-        timelineItem.style.zIndex = "9999";
-      },
-      hide: () => {
-        console.log("hide step");
-      },
-    },
   },
   {
     id: "news_card",
@@ -105,8 +77,6 @@ const stepsTutorialHome = [
     classes: "card-guide",
     when: {
       show: () => {
-        console.log("show step");
-
         const cardWrapper = document.querySelector(".timeline-item");
         if (cardWrapper) {
           cardWrapper.classList.add("highlighted-card-0");
@@ -133,23 +103,15 @@ const stepsTutorialHome = [
             top: newScrollTop,
             behavior: "smooth",
           });
+          const img = document.createElement("img");
+          img.src = "../../../images/click.png"; // Replace with your image path
+          img.alt = "Hand Click Sign";
+          img.classList.add("hand-click-img");
+          cardWrapper.appendChild(img);
         }
-        const targetElement = document.querySelector(".timeline-item");
-
-        targetElement.style.filter = "brightness(1.5)";
-        targetElement.style.position = "relative";
-        targetElement.style.zIndex = "9999999";
-        console.log(targetElement);
-        const body = document.querySelector("body");
-        // console.log(timeline);
-        body.style.overflow = "hidden"; // Reapply fixed position
       },
       hide: () => {
-        console.log("hide step");
-        const body = document.querySelector("body");
-        body.style.overflow = "auto"; // Reapply scroll behavior
         const containers = document.querySelector(".timeline-item");
-        console.log(containers);
         containers.classList.remove("highlighted-card-0");
       },
     },

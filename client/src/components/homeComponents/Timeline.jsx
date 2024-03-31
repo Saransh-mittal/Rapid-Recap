@@ -14,27 +14,58 @@ const Timeline = ({ data }) => {
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
   useEffect(() => {
     const timeline = document.querySelector(".timeline");
+    const nav = document.querySelector(".navbar");
     const body = document.querySelector("body");
     const handleTourStart = () => {
       timeline.classList.add("shepherd-active");
+      nav.classList.add("shepherd-active");
+      body.style.overflow = "hidden"; // Reapply scroll behavior
+      const overlay = document.createElement("div");
+        overlay.classList.add("custom-overlay");
+        const overlayNav = document.createElement("div");
+        overlayNav.classList.add("custom-overlay-nav");
+        document.querySelector(".timeline").appendChild(overlay);
+        document.querySelector(".navbar").appendChild(overlayNav);
     };
 
     const handleTourComplete = () => {
+
+      body.style.overflow = "auto";
       timeline.classList.remove("shepherd-active");
+      nav.classList.remove("shepherd-active");
+      const timelineItem = document.querySelector(".timeline-item");
+      if (timelineItem.classList.contains("highlighted-card-0")) {
+        timelineItem.classList.remove("highlighted-card-0");
+      }
+      const overlay = document.querySelector(".custom-overlay");
+      if(overlay)
+      overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if(overlayNav)
+      overlayNav.remove();
+      const img = document.querySelector(".hand-click-img");
+      if (img) {
+        img.remove();
+      }
     };
 
     const handleTourCancel = () => {
       body.style.overflow = "auto";
       timeline.classList.remove("shepherd-active");
+      nav.classList.remove("shepherd-active");
       const timelineItem = document.querySelector(".timeline-item");
       if (timelineItem.classList.contains("highlighted-card-0")) {
         timelineItem.classList.remove("highlighted-card-0");
-        timelineItem.style.boxShadow = "none";
-        timelineItem.style.filter = "brightness(1)";
       }
 
       const overlay = document.querySelector(".custom-overlay");
       overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      overlayNav.remove();
+      const img = document.querySelector(".hand-click-img");
+      if (img) {
+        img.remove();
+      }
     };
 
     tour.on("start", handleTourStart);
@@ -79,7 +110,7 @@ const Timeline = ({ data }) => {
             //console.log(item.dateTime);
             return (
               <div className="col-md-6 col-lg-4 item" key={id}>
-                <TimelineItem newsNumber={id} data={item} />
+                <TimelineItem newsNumber={id} data={item} tourComplete={tour.complete} />
               </div>
             );
           })}

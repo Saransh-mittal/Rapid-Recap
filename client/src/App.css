@@ -222,14 +222,6 @@ section {
   margin: 40px 0;
 }
 
-.timeline-container::after {
-  background-color: #5918df;
-  content: '';
-  position: absolute;
-  left: calc(20% - 2px); 
-  width: 1px;
-  height: 100%;
-}
 
 .timeline-item {
   margin-top: 5rem;
@@ -347,7 +339,6 @@ section {
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%);
-  background-color: orange;
   z-index: 999999;
   color: white;
   min-height: 200px;
@@ -355,19 +346,20 @@ section {
   border: none;
   outline: none;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Add a strong shadow */
+  background-image: linear-gradient(-180deg, #4a525d, #1a2839);
 }
 .shepherd-title{
   margin-top: 25px;
   font-size: 1.7rem;
   font-weight: 700;
-  color: black; /* Change the color to black for better visibility on the orange background */
+
   text-align: center;
 
 }
 .shepherd-text{
   font-size: 1.2rem;
   font-weight: 700;
-  color: black; /* Change the color to black for better visibility on the orange background */
+  
   text-align: center;
 }
 
@@ -399,10 +391,10 @@ section {
 }
 
 .card-guide {
-  left: 35% !important;
+  left: 37% !important;
   border-radius: 15px;
   opacity: 1 !important;
-  background-color: orange;
+  background-image: linear-gradient(-180deg, #4a525d, #1a2839);
   z-index: 999999;
   color: white;
   max-width: 25rem;
@@ -410,7 +402,30 @@ section {
   border: none;
   outline: none;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  /* Add a strong shadow */
+  position: relative; /* Ensure relative positioning for absolute positioning of the hand */
+}
+
+.hand-click-img {
+  width: 60px; /* Adjust size as needed */
+  height: 60px;
+  opacity: 0; /* Initially hide the hand */
+  z-index: 9999999;
+  bottom: -20%;
+  right: -10%;
+  position: absolute;
+  background-color: transparent;
+  filter: brightness(1.8);
+}
+
+.hand-click-img {
+  opacity: 1; /* Show the hand on hover */
+  animation: moveHand 2s infinite; /* Adjust duration and timing as needed */
+}
+
+@keyframes moveHand {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(10px) translateY(10px); } /* Adjust distance */
+  100% { transform: translateX(0) translateY(0); }
 }
 
 .highlighted-card-0 {
@@ -418,9 +433,24 @@ section {
   opacity: 1 !important;
   /* Red border as highlight */
   box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  filter : brightness(1.8);
+  position : relative;
+  z-index: 9999999 !important;
 }
 
 .custom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  /* semi-transparent black */
+  z-index: 9999;
+  /* ensure it's above other content */
+}
+
+.custom-overlay-nav {
   position: fixed;
   top: 0;
   left: 0;

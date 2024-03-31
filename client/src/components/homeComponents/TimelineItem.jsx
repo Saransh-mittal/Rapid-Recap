@@ -1,12 +1,15 @@
+import Loading from "../miscellaneous/Loading";
 import Card from "./Card";
 
-const TimelineItem = ({ newsNumber, data }) => {
+const TimelineItem = ({ newsNumber, data, tourComplete }) => {
   return (
-    <div className="timeline-item">
-      <div className="timeline-item-content">
-        <Card newsNumber={newsNumber} data={data} />
-      </div>
-    </div>
+    <>
+        <div className="timeline-item" onClick={() => tourComplete()}>
+          <div className="timeline-item-content">
+            <Card newsNumber={newsNumber} data={data} />
+          </div>
+        </div>
+    </>
   );
 };
 
