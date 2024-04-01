@@ -12,11 +12,6 @@ const stepsTutorialHome = [
     },
     buttons: [
       {
-        classes: "shepherd-button-secondary",
-        text: "Exit",
-        type: "cancel",
-      },
-      {
         classes: "shepherd-button-primary",
         text: "Next",
         type: "next",
@@ -26,7 +21,7 @@ const stepsTutorialHome = [
     highlightClass: "highlight",
     scrollTo: false,
     cancelIcon: {
-      enabled: true,
+      enabled: false,
     },
     title: "Welcome to Rapid Recap!",
     text: [
@@ -40,12 +35,7 @@ const stepsTutorialHome = [
     text: "Your IQ isn't just a number; it's a dynamic reflection of your quiz performance, recalibrated daily for precision.",
     buttons: [
       {
-        classes: "shepherd-button-secondary",
-        text: "Exit",
-        type: "cancel",
-      },
-      {
-        classes: "shepherd-button-primary",
+        classes: "shepherd-button-primary-back",
         text: "Back",
         type: "back",
       },
@@ -56,12 +46,18 @@ const stepsTutorialHome = [
       },
     ],
     classes: "custom-class-name-1 custom-class-name-2",
+    cancelIcon: {
+      enabled: false,
+    },
   },
   {
     id: "news_card",
-    attachTo: { element: ".containers", on: "right" },
+    attachTo: {
+      element: ".containers",
+      on: window.innerWidth <= 1028 ? "bottom" : "right",
+    },
     title: "Explore News",
-    text: "Discover insightful news stories! Click on a card to delve into the article, then challenge yourself with a quiz.",
+    text: "Discover insightful news stories! Click on the card to delve into the article, then challenge yourself with a quiz.",
     buttons: [
       {
         classes: "shepherd-button-secondary",
@@ -69,7 +65,7 @@ const stepsTutorialHome = [
         type: "cancel",
       },
       {
-        classes: "shepherd-button-primary",
+        classes: "shepherd-button-primary-back",
         text: "Back",
         type: "back",
       },
@@ -113,6 +109,10 @@ const stepsTutorialHome = [
       hide: () => {
         const containers = document.querySelector(".timeline-item");
         containers.classList.remove("highlighted-card-0");
+        const img = document.querySelector(".hand-click-img");
+        if (img) {
+          img.remove();
+        }
       },
     },
   },

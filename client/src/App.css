@@ -402,19 +402,31 @@ section {
   border: none;
   outline: none;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  position: relative; /* Ensure relative positioning for absolute positioning of the hand */
+  
+}
+
+@media only screen and (max-width: 1028px) {
+  .card-guide {
+   
+    /* Remove left positioning */
+    /* Remove max-width */
+    left: 3.5% !important;
+    top: 19% ;
+    /* Adjust padding */
+  }
 }
 
 .hand-click-img {
   width: 60px; /* Adjust size as needed */
   height: 60px;
-  opacity: 0; /* Initially hide the hand */
   z-index: 9999999;
-  bottom: -20%;
-  right: -10%;
+  bottom: -5%;
+  right: -18%;
   position: absolute;
   background-color: transparent;
   filter: brightness(1.8);
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
 }
 
 .hand-click-img {
@@ -423,19 +435,29 @@ section {
 }
 
 @keyframes moveHand {
-  0% { transform: translateX(0) translateY(0); }
-  50% { transform: translateX(10px) translateY(10px); } /* Adjust distance */
-  100% { transform: translateX(0) translateY(0); }
+  0% { transform: translateX(-10px) translateY(-10px); }
+  50% { transform: translateX(5px) translateY(5px); } /* Adjust distance */
+  100% { transform: translateX(-10px) translateY(-10px); }
 }
 
 .highlighted-card-0 {
   /* Define your highlight styles here */
-  opacity: 1 !important;
+  
   /* Red border as highlight */
   box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
-  filter : brightness(1.8);
-  position : relative;
+  position: relative;
   z-index: 9999999 !important;
+  animation: blink-animation 1s infinite alternate; 
+}
+
+@keyframes blink-animation {
+  0% {
+    filter: brightness(1.2);
+  }
+
+  100% {
+    filter: brightness(1.8);
+  }
 }
 
 .custom-overlay {
@@ -460,4 +482,76 @@ section {
   /* semi-transparent black */
   z-index: 9999;
   /* ensure it's above other content */
+}
+
+.shepherd-button-primary{
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+}
+
+.step-1 {
+  filter: brightness(100%) !important;
+  border-radius: 15px;
+  top: 50% !important;
+  left: 50% !important;
+  opacity: 1 !important;
+  transform: translate(-50%, -50%);
+  z-index: 99999999 !important;
+  color: white;
+  min-height: 200px;
+  padding: 20px;
+  border: none;
+  outline: none;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  /* Add a strong shadow */
+  background-image: linear-gradient(-180deg, #4a525d, #1a2839);
+}
+
+.step-2 {
+ 
+  border-radius: 15px;
+  opacity: 1 !important;
+  background-image: linear-gradient(-180deg, #4a525d, #1a2839);
+  z-index: 999999;
+  color: white;
+  max-width: 25rem;
+  padding: 20px;
+  border: none;
+  outline: none;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.highlighted-article {
+  /* Define your highlight styles here */
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  position: relative;
+  animation: blink-animation-article 1s infinite alternate;
+}
+
+@keyframes blink-animation-article {
+  0% {
+    filter: brightness(1.2);
+  }
+
+  100% {
+    filter: brightness(1.8);
+  }
+}
+
+.highlighted-button-0 {
+  /* Define your highlight styles here */
+
+  /* Red border as highlight */
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  position: relative;
+  animation: blink-animation-button 1s infinite alternate;
+}
+
+@keyframes blink-animation-button {
+  0% {
+    filter: brightness(1.2);
+  }
+
+  100% {
+    filter: brightness(1.8);
+  }
 }

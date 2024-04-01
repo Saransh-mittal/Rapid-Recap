@@ -25,16 +25,26 @@ import QuizExpired from "../components/articleComponents/QuizExpired";
 import Alt_img from "../assets/alt_image.jpg";
 import GivenQuiz from "../components/articleComponents/GivenQuiz";
 import imageData from "../assets/AltNewsImage";
+import { useShepherdTour } from "react-shepherd";
+import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle";
+const tourOptions = {
+  defaultStepOptions: {
+    cancelIcon: {
+      enabled: true,
+    },
+  },
+  useModalOverlay: true,
+};
 
 const Article = () => {
+  const tour = useShepherdTour({ tourOptions, steps: stepsGuideArticle });
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const data = state.news;
-  console.log("data : ", data);
   const alt_image = imageData.find(
     (img) =>
       img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
-  ).image;
+  )?.image;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -57,12 +67,10 @@ const Article = () => {
     try {
       const response = await axios.get(`/api/articles/article/${id}`);
       const news = await axios.get(`/api/articles?page=1&pageSize=9`);
-      //console.log(response.data);
+
       setLatestNews(news.data);
       //console.log(news.data);
       setArticle(response.data.newArticle);
-      console.log("Fetched: ", response.data.newArticle);
-
       setQuizExpired(response.data.quizExpired);
     } catch (error) {
       // Handle errors
@@ -135,8 +143,61 @@ const Article = () => {
   };
 
   useEffect(() => {
+    const body = document.querySelector("body");
+    const handleTourStart = () => {
+      body.style.overflow = "hidden"; // Reapply scroll behavior
+      const overlay = document.createElement("div");
+      overlay.classList.add("custom-overlay");
+      const overlayNav = document.createElement("div");
+      overlayNav.classList.add("custom-overlay-nav");
+      document.querySelector(".article-page")?.appendChild(overlay);
+      document.querySelector(".navbar").appendChild(overlayNav);
+    };
+
+    const handleTourComplete = () => {
+      body.style.overflow = "auto";
+      const generateQuizButton = document.querySelector(
+        ".generate-quiz-button"
+      );
+      if (generateQuizButton) {
+        generateQuizButton.classList.remove("highlighted-button-0");
+      }
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+    };
+
+    const handleTourCancel = () => {
+      body.style.overflow = "auto";
+      const generateQuizButton = document.querySelector(
+        ".generate-quiz-button"
+      );
+      if (generateQuizButton) {
+        generateQuizButton.classList.remove("highlighted-button-0");
+      }
+
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+    };
+
+    tour.on("start", handleTourStart);
+    tour.on("complete", handleTourComplete);
+    tour.on("cancel", handleTourCancel);
+
+    return () => {
+      tour.off("start", handleTourStart);
+      tour.off("complete", handleTourComplete);
+      tour.off("cancel", handleTourCancel);
+    };
+  }, [tour]);
+
+  useEffect(() => {
     fetchArticle();
     checkOnGoingQuiz();
+    tour.start();
   }, []);
   useEffect(() => {
     isQuizGiven();
@@ -148,7 +209,7 @@ const Article = () => {
     if (articleRef.current) {
       setArticleHeight(articleRef.current.getBoundingClientRect().height);
     }
-  }, [article]);
+  }, [article, textHeight]);
 
   return (
     <>
@@ -166,7 +227,21 @@ const Article = () => {
       {load ? (
         <Loading />
       ) : (
-        <>
+        <Flex className="article-page">
+          <Box
+            marginLeft={{ base: "20px", md: "80px" }}
+            position={"absolute"}
+            top={"6rem"}
+            border={"solid"}
+            p={1}
+            borderRadius="5px"
+            boxShadow="md"
+            cursor="pointer"
+            _hover={{ bg: "#37474f", color: "#f0f0f0" }}
+            onClick={() => navigate(-1)}
+          >
+            <ArrowBackIcon />
+          </Box>
           <Grid
             templateColumns={
               window.innerWidth > 820 ? "minmax(0, 9fr) 5fr" : "1fr"
@@ -177,20 +252,7 @@ const Article = () => {
             marginTop={{ base: "50px", md: "0px" }}
           >
             {article && (
-              <GridItem w="100%">
-                <Box
-                  position={"absolute"}
-                  top={"6rem"}
-                  border={"solid"}
-                  p={1}
-                  borderRadius="5px"
-                  boxShadow="md"
-                  cursor="pointer"
-                  _hover={{ bg: "#37474f", color: "#f0f0f0" }}
-                  onClick={() => navigate(-1)}
-                >
-                  <ArrowBackIcon />
-                </Box>
+              <GridItem w="100%" className="article-container">
                 <Heading
                   align="left"
                   letterSpacing={1}
@@ -395,14 +457,14 @@ const Article = () => {
                             width="100px"
                             mr={3}
                             mt={-3}
-                            height={"100%"}
+                            height={"60px"}
                             float="left"
                             src={item.imgURL}
                             alt="Article img"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = Alt_img;
-                              e.target.style.height = `${textHeight}px`;
+                              e.target.style.height = `100%`;
                             }}
                           />
                           <Text mt={2}>{item.title}</Text>
@@ -495,7 +557,7 @@ const Article = () => {
               />
             )}
           </Grid>
-        </>
+        </Flex>
       )}
     </>
   );
