@@ -10,7 +10,18 @@ import DailyActivity from "../components/profileComponents/DailyActivity";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import Loading from "../components/miscellaneous/Loading";
+import { useShepherdTour } from "react-shepherd";
+import stepsTutorialProfile from "../components/profileComponents/stepsTutorialProfile";
+const tourOptions = {
+  defaultStepOptions: {
+    cancelIcon: {
+      enabled: true,
+    },
+  },
+  useModalOverlay: true,
+};
 export default function Profile() {
+  const tour = useShepherdTour({ tourOptions, steps: stepsTutorialProfile });
   const { inGameName } = useParams();
   const { state, dispatch } = useContext(AppContext);
   const [user, setUser] = useState({});
@@ -29,9 +40,85 @@ export default function Profile() {
   };
 
   useEffect(() => {
+    const body = document.querySelector("body");
+    const handleTourStart = () => {
+      body.style.overflow = "hidden"; // Reapply scroll behavior
+      const overlay = document.createElement("div");
+      overlay.classList.add("custom-overlay");
+      const overlayNav = document.createElement("div");
+      overlayNav.classList.add("custom-overlay-nav");
+      document.querySelector(".profile-info")?.appendChild(overlay);
+      document.querySelector(".profile-info")?.classList.add("shepherd-active");
+      document.querySelector(".navbar").appendChild(overlayNav);
+      document.querySelector(".navbar").classList.add("shepherd-active");
+    };
+
+    const handleTourComplete = () => {
+      body.style.overflow = "auto";
+      const dailyAct = document.querySelector(".daily-activity");
+      if (dailyAct) {
+        dailyAct.classList.remove("highlighted-card-1");
+      }
+      const navbar = document.querySelector(".navbar");
+      navbar.classList.remove("shepherd-active");
+      const leftProfileBox = document.querySelector(".left-profile-box");
+      leftProfileBox.classList.remove("shepherd-active");
+      const iqBarGraph = document.querySelector(".iq-bar-graph");
+      const iqlineGraph = document.querySelector(".iq-line-graph");
+      const solvedQuizzes = document.querySelector(".solved-quizzes");
+      const rankAndSociety = document.querySelector(".rank-and-society");
+
+      iqBarGraph.classList.remove("shepherd-active");
+      iqlineGraph.classList.remove("shepherd-active");
+      solvedQuizzes.classList.remove("shepherd-active");
+      rankAndSociety.classList.remove("shepherd-active");
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+    };
+
+    const handleTourCancel = () => {
+      body.style.overflow = "auto";
+      const dailyAct = document.querySelector(".daily-activity");
+      if (dailyAct) {
+        dailyAct.classList.remove("highlighted-card-1");
+      }
+      const navbar = document.querySelector(".navbar");
+      navbar.classList.remove("shepherd-active");
+      const leftProfileBox = document.querySelector(".left-profile-box");
+      leftProfileBox.classList.remove("shepherd-active");
+      const iqBarGraph = document.querySelector(".iq-bar-graph");
+      const iqlineGraph = document.querySelector(".iq-line-graph");
+      const solvedQuizzes = document.querySelector(".solved-quizzes");
+      const rankAndSociety = document.querySelector(".rank-and-society");
+
+      iqBarGraph.classList.remove("shepherd-active");
+      iqlineGraph.classList.remove("shepherd-active");
+      solvedQuizzes.classList.remove("shepherd-active");
+      rankAndSociety.classList.remove("shepherd-active");
+
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+    };
+
+    tour.on("start", handleTourStart);
+    tour.on("complete", handleTourComplete);
+    tour.on("cancel", handleTourCancel);
+
+    return () => {
+      tour.off("start", handleTourStart);
+      tour.off("complete", handleTourComplete);
+      tour.off("cancel", handleTourCancel);
+    };
+  }, [tour]);
+  useEffect(() => {
     //console.log(state.user);
     fetchProfile();
     setUser(state.user);
+    tour.start();
   }, []);
 
   return (
@@ -42,6 +129,7 @@ export default function Profile() {
         marginInline={{ base: "0", xl: "6.5%" }}
         alignItems={{ base: "center", md: "normal" }}
         justifyContent={{ base: "center", md: "center", lg: "normal" }}
+        className="profile-info"
       >
         {isLoading ? (
           <Loading />
@@ -76,6 +164,7 @@ export default function Profile() {
               justifyContent={"center"}
               alignItems={"center"}
               borderRadius="10px"
+              className="right-profile-box"
             >
               <Flex
                 w={"100%"}
@@ -117,6 +206,7 @@ export default function Profile() {
                     boxShadow:
                       "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
                   }}
+                  className="solved-quizzes"
                 >
                   <SolvedQuizzes solvedQuizzes={profile.solvedQuizzes} />
                 </Flex>
@@ -130,6 +220,7 @@ export default function Profile() {
                     boxShadow:
                       "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
                   }}
+                  className="rank-and-society"
                 >
                   <RankAndSociety />
                 </Flex>
@@ -146,6 +237,7 @@ export default function Profile() {
                   boxShadow:
                     "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
                 }}
+                className="daily-activity"
               >
                 <DailyActivity dailyAct={profile.dailyActivity} />
               </Box>
