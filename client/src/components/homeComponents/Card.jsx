@@ -9,10 +9,11 @@ const Card = ({ newsNumber, data }) => {
     ...data,
     imgURL: data?.imgURL[0],
   };
-  const alt_img = imageData.find(
-    (img) =>
-      img.category.toLocaleLowerCase() === data?.category?.toLocaleLowerCase()
-  )?.image
+  const alt_img = imageData.find((img) => {
+    return (
+      img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
+    );
+  })?.image;
   //console.log(alt_img);
   const { state, dispatch } = useContext(AppContext);
   const cardWrapper = useRef(null);

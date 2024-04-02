@@ -15,6 +15,10 @@ const imageData = [
     image: techNews,
   },
   {
+    category: "science",
+    image: techNews,
+  },
+  {
     category: "business",
     image: businessNews,
   },
