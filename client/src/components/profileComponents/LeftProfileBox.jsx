@@ -90,7 +90,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
   // useEffect(()=>{},[rerender]);
   
   return (
-    <>
+    <Flex className="left-profile-box" flexDirection={"column"}>
       <Flex w={"100%"}>
         <Image
           src={profileData.pic}
@@ -137,6 +137,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
           Edit Profile
         </Button>
       </Box>
+
       {profileData && <EditProfileModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -144,7 +145,8 @@ const LeftProfileBox = ({ leftProfileView }) => {
         onSubmit={handleSubmitModal}
         setProfileData={setProfileData}
       />}
-    </>
+
+    </Flex>
   );
 };
 

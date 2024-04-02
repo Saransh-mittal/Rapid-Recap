@@ -321,15 +321,8 @@ section {
 }
 
 .shepherd-active {
-  content: "";
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
  filter: brightness(50%);
   /* Semi-transparent black */
-  z-index: 999;
-  /* Ensure it's behind the Shepherd modal but above other content */
 }
 .custom-class-name-1 {
   filter: brightness(100%) !important;
@@ -553,5 +546,58 @@ section {
 
   100% {
     filter: brightness(1.8);
+  }
+}
+
+.profile-info-step1{
+    filter: brightness(100%) !important;
+      border-radius: 15px;
+     
+      left: 50% !important;
+      opacity: 1 !important;
+      transform: translate(-50%, -50%);
+      z-index: 99999999 !important;
+      color: white;
+      min-height: 200px;
+      padding: 20px;
+      border: none;
+      outline: none;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      /* Add a strong shadow */
+      background-image: linear-gradient(-180deg, #4a525d, #1a2839);
+}
+
+.profile-info-step2-and-ahead{
+  filter: brightness(100%) !important;
+    border-radius: 15px;;
+    z-index: 99999999 !important;
+    color: white;
+    min-height: 200px;
+    max-width: 400px;
+    padding: 20px;
+    border: none;
+    outline: none;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    /* Add a strong shadow */
+    background-image: linear-gradient(-180deg, #4a525d, #1a2839);
+}
+
+.highlighted-card-1 {
+  /* Define your highlight styles here */
+
+  /* Red border as highlight */
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  position: relative;
+  z-index: 999 !important;
+  animation: blink-animation-1 1s infinite alternate;
+}
+
+@keyframes blink-animation-1 {
+  0% {
+    filter: brightness(1);
+  }
+
+  100% {
+    filter: brightness(1.4);
   }
 }
