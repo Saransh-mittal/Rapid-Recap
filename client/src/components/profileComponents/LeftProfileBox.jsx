@@ -10,13 +10,17 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
+import EditProfileModal from "./EditProfileModal";
 import Loading from "../miscellaneous/Loading";
 
-const LeftProfileBox = ({ leftProfileView }) => {
+const LeftProfileBox = ({ leftProfileView,setRerender }) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [rank, setRank] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { state, dispatch } = useContext(AppContext);
+  const [profileData, setProfileData] = useState(null);
+
   const fetchRank = async () => {
     try {
       //const response = await axios.get("/api/user/calculateUserRank");
@@ -28,6 +32,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
         status: "error",
         duration: 9000,
         isClosable: true,
+        position:"top"
       });
       console.log(error.response.data.error);
     } finally {
@@ -38,6 +43,42 @@ const LeftProfileBox = ({ leftProfileView }) => {
     //console.log(state.user);
     fetchRank();
   }, []);
+  const handleEditClick = () => {
+    // Set profile data for modal
+    setProfileData({
+      name: leftProfileView.name,
+      pic: leftProfileView.pic,
+      bio: leftProfileView.bio,
+    });
+    // Open the modal
+    setIsEditModalOpen(true);
+  };
+
+  const handleSubmitModal = async(formData) => {
+    // Add logic to handle form submission (e.g., updating profile data)
+    try{
+      console.log("enetred handleSubmitModal :",formData);
+      const response = await axios.post(`/api/user/editProfile`,formData);
+      console.log(response.data);
+    }
+    catch(e){
+      toast({
+        title: "Error",
+        description: "Something went wrong in fetching Rank",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+        position:"top"
+      });
+      console.error(e);
+    }
+    finally{
+      setRerender((prev)=>!prev);
+    }
+  };
+
+  // useEffect(()=>{},[rerender]);
+  
   return (
     <>
       <Flex w={"100%"}>
@@ -81,10 +122,18 @@ const LeftProfileBox = ({ leftProfileView }) => {
               color: "#11324D", // Change text color to white on hover
             },
           }}
+          onClick={handleEditClick}
         >
           Edit Profile
         </Button>
       </Box>
+      {profileData && <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        profileData={profileData}
+        onSubmit={handleSubmitModal}
+        setProfileData={setProfileData}
+      />}
     </>
   );
 };
