@@ -13,13 +13,17 @@ import axios from "axios";
 import EditProfileModal from "./EditProfileModal";
 import Loading from "../miscellaneous/Loading";
 
-const LeftProfileBox = ({ leftProfileView,setRerender }) => {
+const LeftProfileBox = ({ leftProfileView }) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [rank, setRank] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { state, dispatch } = useContext(AppContext);
-  const [profileData, setProfileData] = useState(null);
+  const [profileData, setProfileData] = useState({
+    name: leftProfileView.name,
+    pic: leftProfileView.pic,
+    bio: leftProfileView.bio,
+  });
 
   const fetchRank = async () => {
     try {
@@ -57,9 +61,18 @@ const LeftProfileBox = ({ leftProfileView,setRerender }) => {
   const handleSubmitModal = async(formData) => {
     // Add logic to handle form submission (e.g., updating profile data)
     try{
-      console.log("enetred handleSubmitModal :",formData);
       const response = await axios.post(`/api/user/editProfile`,formData);
-      console.log(response.data);
+      if(response.status === 200){
+        toast({
+          title: "Success",
+          description: "Profile Updated Successfully",
+          status: "success",
+          duration: 9000,
+          isClosable: true,
+          position:"top"
+        })
+      }
+      setProfileData(formData);
     }
     catch(e){
       toast({
@@ -72,9 +85,6 @@ const LeftProfileBox = ({ leftProfileView,setRerender }) => {
       });
       console.error(e);
     }
-    finally{
-      setRerender((prev)=>!prev);
-    }
   };
 
   // useEffect(()=>{},[rerender]);
@@ -83,7 +93,7 @@ const LeftProfileBox = ({ leftProfileView,setRerender }) => {
     <>
       <Flex w={"100%"}>
         <Image
-          src={leftProfileView.pic}
+          src={profileData.pic}
           alt="Profile"
           borderRadius="10%"
           width="80px"
@@ -92,7 +102,7 @@ const LeftProfileBox = ({ leftProfileView,setRerender }) => {
         />
         <Box margin={"5px"}>
           <Heading as="h4" size={"md"}>
-            {leftProfileView.name}
+            {profileData.name}
           </Heading>
           <Heading as="h6" fontSize={"12px"}>
             {leftProfileView.inGameName}
@@ -107,7 +117,7 @@ const LeftProfileBox = ({ leftProfileView,setRerender }) => {
         </Box>
       </Flex>
       <Box marginTop={"10px"} w={{ lg: "300px", base: "100%" }}>
-        <Text align={"justify"}>{leftProfileView.bio}</Text>
+        <Text align={"justify"}>{profileData.bio}</Text>
         <Button
           size="md"
           height="35px"

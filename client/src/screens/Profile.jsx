@@ -16,7 +16,7 @@ export default function Profile() {
   const [user, setUser] = useState({});
   const [profile, setProfile] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [rerender, setRerender] = useState(false);
+  //const [rerender, setRerender] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -33,7 +33,7 @@ export default function Profile() {
     //console.log(state.user);
     fetchProfile();
     setUser(state.user);
-  }, [rerender]);
+  }, []);
 
 
   return (
@@ -64,7 +64,7 @@ export default function Profile() {
                   "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
               }}
             >
-              <LeftProfileBox setRerender={setRerender} leftProfileView={profile.leftProfileView} />
+              <LeftProfileBox leftProfileView={profile.leftProfileView} />
             </Flex>
             <Flex
               w={{
