@@ -426,6 +426,11 @@ const calculateUserIQScores = async (req, res) => {
         userScore += quizScore;
         //}
       }
+      // add userScore in the user also
+      const u = await User.findById(user._id);
+      u.userScore = userScore;
+      await u.save();
+
       sumOfUserScores += userScore;
       // Add user score to the array
       userScores.push({ user, userScore });
@@ -588,6 +593,60 @@ const editProfile = async (req, res) => {
   }
 };
 
+const expectedIQScore = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const quizAttempts = await QuizAttempt.find({ user: userId }).populate({
+      path: "article",
+      populate: { path: "quiz" },
+    });
+    let userScore = 0;
+    const cntOfQuizAttempts = quizAttempts.length;
+    //console.log(quizAttempts);
+    for (const attempt of quizAttempts) {
+      if (
+        !attempt ||
+        !attempt.article ||
+        !attempt.article.quiz ||
+        !attempt.articleDifficulty
+      ) {
+        console.error("Invalid quiz attempt data.");
+        continue;
+      }
+      await updatePercentilesOnQuizDeactivation({
+        id: attempt.article._id,
+      });
+
+      // Calculate score for the quiz attempt (Wi * Pi)
+
+      const quizScore = attempt.articleDifficulty * attempt.userPercentile;
+      userScore += quizScore;
+    }
+
+    userScore = (userScore / cntOfQuizAttempts) * 10;
+
+    // IQscore > 0 users
+    const users = await User.find({
+      userScore: { $gt: 0 },
+    });
+    let sumOfUserScores = users.reduce((acc, user) => acc + user.userScore, 0);
+    sumOfUserScores += userScore;
+    const meanOfUserScores = sumOfUserScores / users.length;
+    let sumOfSquares = users.reduce(
+      (acc, user) => acc + Math.pow(user.userScore - meanOfUserScores, 2),
+      0
+    );
+    sumOfSquares += Math.pow(userScore - meanOfUserScores, 2);
+    const standardDeviation = Math.sqrt(sumOfSquares / users.length);
+    const normalizedScore = (userScore - meanOfUserScores) / standardDeviation;
+    const ExpectedIQScore = Math.round(100 + 15 * normalizedScore);
+    res.status(200).json({ ExpectedIQScore });
+  } catch (error) {
+    console.error("Error calculating user IQ expected score:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -601,4 +660,5 @@ module.exports = {
   editProfile,
   leaderBoard,
   profile,
+  expectedIQScore,
 };
