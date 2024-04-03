@@ -52,11 +52,58 @@ const LeaderBoard = () => {
   }, []);
 
   useEffect(() => {
+    const body = document.querySelector("body");
+    const handleTourStart = () => {
+      body.style.overflow = "hidden"; // Reapply scroll behavior
+      const overlay = document.createElement("div");
+      overlay.classList.add("custom-overlay");
+      const overlayNav = document.createElement("div");
+      overlayNav.classList.add("custom-overlay-nav");
+      document.querySelector(".leaderboard")?.appendChild(overlay);
+      document.querySelector(".leaderboard")?.classList.add("shepherd-active");
+      document.querySelector(".navbar").appendChild(overlayNav);
+      document.querySelector(".navbar").classList.add("shepherd-active");
+    };
+
+    const handleTourComplete = () => {
+      body.style.overflow = "auto";
+      const navbar = document.querySelector(".navbar");
+      navbar.classList.remove("shepherd-active");
+      document.querySelector(".leaderboard")?.classList.remove("shepherd-active");
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+    };
+
+    const handleTourCancel = () => {
+      body.style.overflow = "auto";
+      const navbar = document.querySelector(".navbar");
+      navbar.classList.remove("shepherd-active");
+      document.querySelector(".leaderboard")?.classList.remove("shepherd-active");
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+    };
+
+    tour.on("start", handleTourStart);
+    tour.on("complete", handleTourComplete);
+    tour.on("cancel", handleTourCancel);
+
+    return () => {
+      tour.off("start", handleTourStart);
+      tour.off("complete", handleTourComplete);
+      tour.off("cancel", handleTourCancel);
+    };
+  }, [tour]);
+
+  useEffect(() => {
     tour.start();
   }, []);
 
   return (
-    <Flex minH={"85vh"} justifyContent={"center"}>
+    <Flex minH={"85vh"} justifyContent={"center"} className="leaderboard">
       <Flex margin={"20px"} justifyContent={"center"} w={"80%"} flexDirection={"column"}>
         {isLoading ? (
           <Loading />
@@ -69,7 +116,7 @@ const LeaderBoard = () => {
                 <Image src={medalIcon} alt="Rating" width={"35px"} height={"35px"} bg={"none"} />
               </Flex>
             </Heading>
-            <TableContainer width={"100%"}>
+            <TableContainer width={"100%"} className="mainBoard">
               <Table variant={"unstyled"}>
                 <TableCaption color={"white"} placement="top">
                   "Where Champions Stand Out!"
@@ -161,17 +208,59 @@ export default LeaderBoard;
 const stepsLeaderBoard = [
   {
     id: "introduction",
-    attachTo: { element: "h2", on: "bottom" },
+    attachTo: { element: ".leaderboard", on: "bottom" },
     title: "Welcome to Leaderboard",
     text: "This is where the champions stand out! Click 'Next' to explore more.",
     buttons: [{ text: "Next", type: "next" }],
+    classes:"custom-class-name-1",
+    cancelIcon: {
+      enabled: false,
+    },
   },
   {
     id: "exploring-table",
-    attachTo: { element: "thead", on: "bottom" },
+    attachTo: { element: ".mainBoard", on: "top" },
     title: "Exploring the Leaderboard Table",
     text: "Here you can see the details of the top performers. Take a look and understand the columns.",
     buttons: [{ text: "Back", type: "back" }, { text: "Next", type: "next" }],
+    classes:"custom-class-name-2",
+    when: {
+      show: () => {
+        const mainBoard = document.querySelector(".mainBoard");
+        console.log(mainBoard);
+         mainBoard.classList.add("highlighted-card-1");
+
+          const windowHeight = window.innerHeight;
+          const cardWrapperRect = mainBoard.getBoundingClientRect();
+          const topOffset = cardWrapperRect.top;
+          const newScrollTop =
+            window.scrollY +
+            topOffset -
+            windowHeight / 2 +
+            cardWrapperRect.height / 2;
+
+          // Scroll to the new position with smooth behavior
+          window.scrollTo({
+            top: newScrollTop,
+            behavior: "smooth",
+          });
+          const img = document.createElement("img");
+          img.src = "../../images/click.png"; // Replace with your image path
+          img.alt = "Hand Click Sign";
+          img.classList.add("hand-click-img-leaderboard");
+          mainBoard.appendChild(img);
+          document.querySelector(".leaderboard")?.classList.remove("shepherd-active");
+        },
+        hide: () => {
+          document.querySelector(".leaderboard")?.classList.add("shepherd-active");
+          const mainBoard = document.querySelector(".mainBoard");
+          mainBoard.classList.remove("highlighted-card-1");
+          const img = document.querySelector(".hand-click-img-leaderboard");
+          if (img) {
+            img.remove();
+          }
+        },
+      },
   },
   {
     id: "understanding-entry",
@@ -179,6 +268,7 @@ const stepsLeaderBoard = [
     title: "Understanding Leaderboard Entries",
     text: "Each row represents a user with their respective stats. Click 'Exit' to end the tour.",
     buttons: [{ text: "Exit", type: "cancel" }],
+    classes:"custom-class-name-1",
   },
 ];
 

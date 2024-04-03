@@ -1,7 +1,7 @@
 const stepsTutorialProfile = [
   {
     id: "step1",
-    highlightClass: "highlight",
+    // highlightClass: "highlight",
     attachTo: { element: ".profile-info", on: "right" },
     title: "View Profile Info",
     text: "Explore your profile information and settings.",
