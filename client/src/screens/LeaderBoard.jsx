@@ -143,7 +143,7 @@ const LeaderBoard = () => {
                     </Th>
                   </Tr>
                 </Thead>
-                <Tbody marginTop={"20px"}>
+                <Tbody marginTop={"20px"} className="Entries">
                   {leaders.map((leader, index) => (
                     <Tr height={"80px"} key={leader._id}>
                       <Td textAlign={"center"}>
@@ -224,26 +224,14 @@ const stepsLeaderBoard = [
     text: "Here you can see the details of the top performers. Take a look and understand the columns.",
     buttons: [{ text: "Back", type: "back" }, { text: "Next", type: "next" }],
     classes:"custom-class-name-2",
+    cancelIcon: {
+      enabled: false,
+    },
     when: {
       show: () => {
         const mainBoard = document.querySelector(".mainBoard");
         console.log(mainBoard);
          mainBoard.classList.add("highlighted-card-1");
-
-          const windowHeight = window.innerHeight;
-          const cardWrapperRect = mainBoard.getBoundingClientRect();
-          const topOffset = cardWrapperRect.top;
-          const newScrollTop =
-            window.scrollY +
-            topOffset -
-            windowHeight / 2 +
-            cardWrapperRect.height / 2;
-
-          // Scroll to the new position with smooth behavior
-          window.scrollTo({
-            top: newScrollTop,
-            behavior: "smooth",
-          });
           const img = document.createElement("img");
           img.src = "../../images/click.png"; // Replace with your image path
           img.alt = "Hand Click Sign";
@@ -264,11 +252,58 @@ const stepsLeaderBoard = [
   },
   {
     id: "understanding-entry",
-    attachTo: { element: "tbody tr:nth-child(1)", on: "top" },
+    attachTo: { element: ".mainBoard", on: "top" },
     title: "Understanding Leaderboard Entries",
     text: "Each row represents a user with their respective stats. Click 'Exit' to end the tour.",
     buttons: [{ text: "Exit", type: "cancel" }],
-    classes:"custom-class-name-1",
+    classes:"custom-class-name-2",
+    cancelIcon: {
+      enabled: false,
+    },
+    when: {
+      show: () => {
+        const mainBoard = document.querySelector(".Entries");
+        console.log(mainBoard);
+         mainBoard.classList.add("highlighted-card-1");
+
+          const img1 = document.createElement("img");
+          img1.src = "../../images/click.png"; // Replace with your image path
+          img1.alt = "Hand Click Sign";
+          img1.classList.add("hand-click-img-rank-1");
+          mainBoard.appendChild(img1);
+
+          const img2 = document.createElement("img");
+          img2.src = "../../images/click.png"; // Replace with your image path
+          img2.alt = "Hand Click Sign";
+          img2.classList.add("hand-click-img-rank-2");
+          mainBoard.appendChild(img2);
+
+          const img3 = document.createElement("img");
+          img3.src = "../../images/click.png"; // Replace with your image path
+          img3.alt = "Hand Click Sign";
+          img3.classList.add("hand-click-img-rank-3");
+          mainBoard.appendChild(img3);
+          
+          document.querySelector(".Entries")?.classList.remove("shepherd-active");
+        },
+        hide: () => {
+          document.querySelector(".Entries")?.classList.add("shepherd-active");
+          const mainBoard = document.querySelector(".mainBoard");
+          mainBoard.classList.remove("highlighted-card-1");
+          const img1 = document.querySelector(".hand-click-img-rank-1");
+          if (img1) {
+            img1.remove();
+          }
+          const img2 = document.querySelector(".hand-click-img-rank-2");
+          if (img2) {
+            img1.remove();
+          }
+          const img3 = document.querySelector(".hand-click-img-rank-3");
+          if (img3) {
+            img1.remove();
+          }
+        },
+      },
   },
 ];
 

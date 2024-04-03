@@ -347,6 +347,7 @@ section {
     z-index: 99999999 !important;
     color: white;
     min-height: 100px;
+    /* max-height: 200px; */
     max-width: 800px;
     padding: 20px;
     border: none;
@@ -625,10 +626,74 @@ section {
   box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
   border-radius: 50%;
   opacity: 1; /* Show the hand on hover */
+  top: 10px; /* Adjust the top position */
+  left: 20px; /* Adjust the left position */
+  transform: rotate(180deg);
+  display: inline-block;
   animation: moveHand 2s infinite; /* Adjust duration and timing as needed */
 }
 @keyframes moveHand {
   0% { transform: translateX(-10px) translateY(-10px); }
-  50% { transform: translateX(5px) translateY(5px); } /* Adjust distance */
+  50% { transform: translateX(5px) translateY(5px); }
+  100% { transform: translateX(-10px) translateY(-10px); }
+}
+.hand-click-img-rank-1 {
+  width: 60px; /* Adjust size as needed */
+  height: 60px;
+  z-index: 9999999;
+  position: absolute;
+  background-color: transparent;
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  opacity: 1; /* Show the hand on hover */
+  top: 20px; /* Adjust the top position */
+  left: 20px; /* Adjust the left position */
+  transform: rotate(180deg);
+  display: inline-block;
+  animation: moveHand 2s infinite; /* Adjust duration and timing as needed */
+}
+@keyframes moveHand {
+  0% { transform: translateX(-10px) translateY(-10px); }
+  50% { transform: translateX(5px) translateY(5px); }
+  100% { transform: translateX(-10px) translateY(-10px); }
+}
+.hand-click-img-rank-2 {
+  width: 60px; /* Adjust size as needed */
+  height: 60px;
+  z-index: 9999999;
+  position: absolute;
+  background-color: transparent;
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  opacity: 1; /* Show the hand on hover */
+  top: 120px; /* Adjust the top position */
+  left: 20px; /* Adjust the left position */
+  transform: rotate(180deg);
+  display: inline-block;
+  animation: moveHand 2s infinite; /* Adjust duration and timing as needed */
+}
+@keyframes moveHand {
+  0% { transform: translateX(-10px) translateY(-10px); }
+  50% { transform: translateX(5px) translateY(5px); }
+  100% { transform: translateX(-10px) translateY(-10px); }
+}
+.hand-click-img-rank-3 {
+  width: 60px; /* Adjust size as needed */
+  height: 60px;
+  z-index: 9999999;
+  position: absolute;
+  background-color: transparent;
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  opacity: 1; /* Show the hand on hover */
+  top: 220px; /* Adjust the top position */
+  left: 20px; /* Adjust the left position */
+  transform: rotate(180deg);
+  display: inline-block;
+  animation: moveHand 2s infinite; /* Adjust duration and timing as needed */
+}
+@keyframes moveHand {
+  0% { transform: translateX(-10px) translateY(-10px); }
+  50% { transform: translateX(5px) translateY(5px); }
   100% { transform: translateX(-10px) translateY(-10px); }
 }
