@@ -27,6 +27,7 @@ import GivenQuiz from "../components/articleComponents/GivenQuiz";
 import imageData from "../assets/AltNewsImage";
 import { useShepherdTour } from "react-shepherd";
 import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle";
+import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
 const tourOptions = {
   defaultStepOptions: {
     cancelIcon: {
@@ -61,6 +62,8 @@ const Article = () => {
   const [RQM_score, setRQM_score] = useState(null);
   const [onGoingQuiz, setOnGoingQuiz] = useState(false);
   const [quizExpired, setQuizExpired] = useState(false);
+  const [showExpectedIQ, setShowExpectedIQ] = useState(false);
+  const [expectedIQ, setExpectedIQ] = useState(null);
   //const [showInstruction, setShowInstruction] = useState(false);
 
   const fetchArticle = async () => {
@@ -142,6 +145,57 @@ const Article = () => {
     }
   };
 
+  const getExpectedIQ = async () => {
+    try {
+      const articlePage = document?.querySelector(".article-page");
+      document.querySelector("body").style.overflow = "hidden"; // Remove scroll behavior from body
+      const overlay = document.createElement("div");
+      overlay.classList.add("custom-overlay");
+      const overlayNav = document.createElement("div");
+      overlayNav.classList.add("custom-overlay-nav");
+      articlePage?.appendChild(overlay);
+      document.querySelector(".navbar").appendChild(overlayNav);
+      articlePage?.classList.add("shepherd-active");
+      const loadingOverlay = document.createElement("div");
+      loadingOverlay.classList.add("loading-overlay");
+      const spinnerContainer = document.createElement("div");
+      spinnerContainer.classList.add("spinner-container");
+      const loadingSpinner = document.createElement("div");
+      loadingSpinner.classList.add("loading-spinner");
+      spinnerContainer.appendChild(loadingSpinner);
+      loadingOverlay.appendChild(spinnerContainer);
+      articlePage?.appendChild(loadingOverlay);
+      const response = await axios.get(`/api/user/expectedIQScore`);
+      setShowExpectedIQ(true);
+      setExpectedIQ(response.data.ExpectedIQScore);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error.response.data.error || "Error checking for expected IQ",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      console.log(error.message);
+    } finally {
+      // Remove loading overlay
+      const loadingOverlay = document.querySelector(".loading-overlay");
+      if (loadingOverlay) {
+        loadingOverlay.remove();
+      }
+      // Restore scroll behavior
+      document.querySelector("body").style.overflow = "auto";
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+      const articlePage = document?.querySelector(".article-page");
+      articlePage?.classList.remove("shepherd-active");
+    }
+  };
+
   useEffect(() => {
     const body = document.querySelector("body");
     const handleTourStart = () => {
@@ -197,8 +251,11 @@ const Article = () => {
   useEffect(() => {
     fetchArticle();
     checkOnGoingQuiz();
-    tour.start();
+    //tour.start();
   }, []);
+  // useEffect(() => {
+  //   getExpectedIQ();
+  // }, [load]);
   useEffect(() => {
     isQuizGiven();
   }, [givenQuiz]);
@@ -213,6 +270,12 @@ const Article = () => {
 
   return (
     <>
+      {showExpectedIQ && expectedIQ ? (
+        <ExpectedIQModal
+          expectedIQ={expectedIQ}
+          setShowExpectedIQ={setShowExpectedIQ}
+        />
+      ) : null}
       {showQuiz && !givenQuiz ? (
         <Quiz
           article={article}
@@ -221,6 +284,7 @@ const Article = () => {
           ofShowQuiz={() => {
             setShowQuiz(false);
             setGivenQuiz(true);
+            getExpectedIQ();
           }}
         />
       ) : null}
@@ -252,7 +316,10 @@ const Article = () => {
             marginTop={{ base: "50px", md: "0px" }}
           >
             {article && (
-              <GridItem w="100%" className="article-container">
+              <GridItem
+                w="100%"
+                className="article-container"
+              >
                 <Heading
                   align="left"
                   letterSpacing={1}
@@ -289,8 +356,14 @@ const Article = () => {
                   </span>
                 </Heading>
                 {article.mainText.length === 3 ? (
-                  <Box marginTop={5} ref={articleRef}>
-                    <Text align="justify" letterSpacing={0}>
+                  <Box
+                    marginTop={5}
+                    ref={articleRef}
+                  >
+                    <Text
+                      align="justify"
+                      letterSpacing={0}
+                    >
                       {article.mainText[0]}
                     </Text>
                     <Box
@@ -327,16 +400,26 @@ const Article = () => {
                         }}
                       />
 
-                      <Text ref={textRef} align="justify" letterSpacing={0}>
+                      <Text
+                        ref={textRef}
+                        align="justify"
+                        letterSpacing={0}
+                      >
                         {article.mainText[1]}
                       </Text>
                     </Box>
-                    <Text align="justify" letterSpacing={0}>
+                    <Text
+                      align="justify"
+                      letterSpacing={0}
+                    >
                       {article.mainText[2]}
                     </Text>
                   </Box>
                 ) : (
-                  <Box marginTop={8} ref={articleRef}>
+                  <Box
+                    marginTop={8}
+                    ref={articleRef}
+                  >
                     <Image
                       css={{
                         "@media screen and (max-width: 1366px)": {
@@ -365,10 +448,17 @@ const Article = () => {
                       }}
                     />
 
-                    <Text ref={textRef} align="left" letterSpacing={1}>
+                    <Text
+                      ref={textRef}
+                      align="left"
+                      letterSpacing={1}
+                    >
                       {article.mainText[0]}
                     </Text>
-                    <Text align="left" letterSpacing={1}>
+                    <Text
+                      align="left"
+                      letterSpacing={1}
+                    >
                       {article.mainText[1]}
                     </Text>
                   </Box>
@@ -500,7 +590,10 @@ const Article = () => {
                   >
                     Explore Your Quiz Performance
                   </Heading>
-                  <Flex flexDirection="column" alignItems="center">
+                  <Flex
+                    flexDirection="column"
+                    alignItems="center"
+                  >
                     <Heading
                       textAlign={"left"}
                       as="h6"

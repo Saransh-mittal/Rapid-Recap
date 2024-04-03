@@ -602,7 +602,6 @@ const expectedIQScore = async (req, res) => {
     });
     let userScore = 0;
     const cntOfQuizAttempts = quizAttempts.length;
-    //console.log(quizAttempts);
     for (const attempt of quizAttempts) {
       if (
         !attempt ||
@@ -610,21 +609,36 @@ const expectedIQScore = async (req, res) => {
         !attempt.article.quiz ||
         !attempt.articleDifficulty
       ) {
-        console.error("Invalid quiz attempt data.");
+        //console.error("Invalid quiz attempt data.");
         continue;
       }
-      await updatePercentilesOnQuizDeactivation({
-        id: attempt.article._id,
-      });
-
-      // Calculate score for the quiz attempt (Wi * Pi)
-
-      const quizScore = attempt.articleDifficulty * attempt.userPercentile;
+      let percentile = attempt.userPercentile;
+      if (!percentile) {
+        // calculate percentile
+        const quizAttempts = await QuizAttempt.find({
+          article: attempt.article._id,
+        });
+        const sortedQuizAttempts = quizAttempts.sort(
+          (a, b) => b.RQM_score - a.RQM_score
+        );
+        const userAttempt = sortedQuizAttempts.find(
+          (attempt) => attempt.user.toString() === userId
+        );
+        if (!userAttempt) {
+          throw new Error("User has not attempted the quiz for the article.");
+        }
+        const userPosition = sortedQuizAttempts.indexOf(userAttempt);
+        const totalAttempts = sortedQuizAttempts.length;
+        const userPercentile =
+          ((totalAttempts - userPosition) / totalAttempts) * 100;
+        userAttempt.userPercentile = userPercentile;
+        percentile = userPercentile;
+        await userAttempt.save();
+      }
+      const quizScore = attempt.articleDifficulty * percentile;
       userScore += quizScore;
     }
-
     userScore = (userScore / cntOfQuizAttempts) * 10;
-
     // IQscore > 0 users
     const users = await User.find({
       userScore: { $gt: 0 },
