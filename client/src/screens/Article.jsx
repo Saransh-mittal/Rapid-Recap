@@ -251,7 +251,7 @@ const Article = () => {
   useEffect(() => {
     fetchArticle();
     checkOnGoingQuiz();
-    //tour.start();
+    tour.start();
   }, []);
   // useEffect(() => {
   //   getExpectedIQ();
@@ -284,7 +284,7 @@ const Article = () => {
           ofShowQuiz={() => {
             setShowQuiz(false);
             setGivenQuiz(true);
-            getExpectedIQ();
+            state.user.IQ_score === 0 && getExpectedIQ();
           }}
         />
       ) : null}
@@ -316,10 +316,7 @@ const Article = () => {
             marginTop={{ base: "50px", md: "0px" }}
           >
             {article && (
-              <GridItem
-                w="100%"
-                className="article-container"
-              >
+              <GridItem w="100%" className="article-container">
                 <Heading
                   align="left"
                   letterSpacing={1}
@@ -356,14 +353,8 @@ const Article = () => {
                   </span>
                 </Heading>
                 {article.mainText.length === 3 ? (
-                  <Box
-                    marginTop={5}
-                    ref={articleRef}
-                  >
-                    <Text
-                      align="justify"
-                      letterSpacing={0}
-                    >
+                  <Box marginTop={5} ref={articleRef}>
+                    <Text align="justify" letterSpacing={0}>
                       {article.mainText[0]}
                     </Text>
                     <Box
@@ -400,26 +391,16 @@ const Article = () => {
                         }}
                       />
 
-                      <Text
-                        ref={textRef}
-                        align="justify"
-                        letterSpacing={0}
-                      >
+                      <Text ref={textRef} align="justify" letterSpacing={0}>
                         {article.mainText[1]}
                       </Text>
                     </Box>
-                    <Text
-                      align="justify"
-                      letterSpacing={0}
-                    >
+                    <Text align="justify" letterSpacing={0}>
                       {article.mainText[2]}
                     </Text>
                   </Box>
                 ) : (
-                  <Box
-                    marginTop={8}
-                    ref={articleRef}
-                  >
+                  <Box marginTop={8} ref={articleRef}>
                     <Image
                       css={{
                         "@media screen and (max-width: 1366px)": {
@@ -448,17 +429,10 @@ const Article = () => {
                       }}
                     />
 
-                    <Text
-                      ref={textRef}
-                      align="left"
-                      letterSpacing={1}
-                    >
+                    <Text ref={textRef} align="left" letterSpacing={1}>
                       {article.mainText[0]}
                     </Text>
-                    <Text
-                      align="left"
-                      letterSpacing={1}
-                    >
+                    <Text align="left" letterSpacing={1}>
                       {article.mainText[1]}
                     </Text>
                   </Box>
@@ -590,10 +564,7 @@ const Article = () => {
                   >
                     Explore Your Quiz Performance
                   </Heading>
-                  <Flex
-                    flexDirection="column"
-                    alignItems="center"
-                  >
+                  <Flex flexDirection="column" alignItems="center">
                     <Heading
                       textAlign={"left"}
                       as="h6"
