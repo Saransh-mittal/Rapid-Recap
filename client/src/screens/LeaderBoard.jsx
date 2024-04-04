@@ -95,7 +95,7 @@ const LeaderBoard = () => {
                       Name
                     </Th>
                     <Th textAlign={"center"} bg={"blue.300"}>
-                      ID
+                      In Game Name
                     </Th>
                     <Th textAlign={"center"} bg={"orange.300"}>
                       IQ Scores

@@ -497,9 +497,9 @@ const calculateUserIQScores = async (req, res) => {
 
 const leaderBoard = async (req, res) => {
   try {
-    const users = await User.find({})
+    const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
       .sort({ IQ_score: -1 })
-      .limit(5)
+      .limit(50)
       .populate("quizAttempts");
     //AVG. RQM SCORES
     const result = [];
