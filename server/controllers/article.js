@@ -200,7 +200,7 @@ const getArticleQuizStatus = async (req, res) => {
       (status) => status.userId.toString() === userId
     );
     if (!userStatus) {
-      throw new Error("User not found");
+      return res.status(200).json({ status: false });
     }
     res.status(200).json({ status: userStatus.status });
   } catch (error) {

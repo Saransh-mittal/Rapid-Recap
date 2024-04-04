@@ -119,30 +119,30 @@ const Article = () => {
   };
 
   const checkOnGoingQuiz = async () => {
-    const hasBeenCalled = localStorage.getItem("isQuizGivenCalled");
-    if (!hasBeenCalled) {
-      try {
-        const response = await axios.get(`/api/articles/quizStatus/${id}`);
-        if (response.data.status) {
-          setOnGoingQuiz(true);
-        } else {
-          setOnGoingQuiz(false);
-        }
-      } catch (error) {
-        toast({
-          title: "Error",
-          description:
-            error.response.data.error || "Error checking for on going quiz",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-          position: "top",
-        });
-        console.log(error.message);
-      } finally {
-        localStorage.setItem("isQuizGivenCalled", true);
+    //const hasBeenCalled = localStorage.getItem("isQuizGivenCalled");
+    //if (!hasBeenCalled) {
+    try {
+      const response = await axios.get(`/api/articles/quizStatus/${id}`);
+      if (response.data.status) {
+        setOnGoingQuiz(true);
+      } else {
+        setOnGoingQuiz(false);
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error.response.data.error || "Error checking for on going quiz",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      console.log(error.message);
+    } finally {
+      localStorage.setItem("isQuizGivenCalled", true);
     }
+    //}
   };
 
   const getExpectedIQ = async () => {
