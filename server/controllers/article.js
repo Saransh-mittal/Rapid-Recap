@@ -41,6 +41,7 @@ const getArticle = async (req, res) => {
     //console.log(paragraphs);
     //article.mainText = paragraphs;
     const newArticle = {
+      category: article.category,
       title: article.title,
       mainText: paragraphs,
       author: article.author,

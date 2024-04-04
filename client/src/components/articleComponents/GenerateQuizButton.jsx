@@ -12,6 +12,7 @@ const GenerateQuizButton = ({ onClick, css }) => {
       borderRadius="xl"
       backgroundColor="#2A2F4F"
       marginBottom="2rem"
+      className="generate-quiz-button"
     >
       <Text
         fontSize="18px"

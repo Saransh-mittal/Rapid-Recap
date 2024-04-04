@@ -6,7 +6,7 @@ const useDrag = () => {
   const startX = useRef(0);
   const isDragging = useRef(false);
   const { state, dispatch, navLinkRefs } = useContext(AppContext);
-  const threshold = 50;
+  const threshold = 500;
 
   const onDragRight = (nextIndex) => {
     navLinkRefs.current[nextIndex].click();

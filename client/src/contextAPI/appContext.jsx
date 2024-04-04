@@ -15,11 +15,41 @@ async function showState() {
   }
 }
 
+function parseURL(url) {
+  // Split the URL by slashes
+  const segments = url.split("/");
+
+  // The segment after the base URL will indicate the route
+  const route = segments[3];
+  const id = segments[4];
+
+  // Check if the route matches any of the known routes
+  return { route, id };
+}
+
+async function currentArticle() {
+  try {
+    const url = window.location.href;
+
+    const { route, id } = parseURL(url);
+    if (route === "article") {
+      const response = await axios.get(`/api/articles/article/${id}`);
+
+      return { news: response.data.newArticle };
+    } //const response = await axios.get(`/api/news/currentArticle`);
+    //return response.data;
+    return { news: {} };
+  } catch (error) {
+    console.log(error.message);
+    return { news: {} };
+  }
+}
+
 const initialState = {
   // Define your initial state properties here
   ...(await showState()),
+  ...(await currentArticle()),
   modal: false,
-  news: {},
   forgotPassword: false,
   verifyEmail: false,
   focusedNavLink: 0,

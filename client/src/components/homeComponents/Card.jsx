@@ -4,10 +4,16 @@ import { AppContext } from "../../contextAPI/appContext";
 import imageData from "../../assets/AltNewsImage";
 
 const Card = ({ newsNumber, data }) => {
-  const alt_img = imageData.find(
-    (img) =>
+  //console.log("card :", data);
+  const newArticle = {
+    ...data,
+    imgURL: data?.imgURL[0],
+  };
+  const alt_img = imageData.find((img) => {
+    return (
       img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
-  ).image;
+    );
+  })?.image;
   //console.log(alt_img);
   const { state, dispatch } = useContext(AppContext);
   const cardWrapper = useRef(null);
@@ -42,9 +48,9 @@ const Card = ({ newsNumber, data }) => {
   };
 
   return (
-    <div className="containers">
+    <div className={`containers`}>
       <div
-        className="cardWrapper"
+        className={`cardWrapper`}
         ref={cardWrapper}
         onClick={() => {
           // window.open(
@@ -53,14 +59,14 @@ const Card = ({ newsNumber, data }) => {
           // )
           //console.log(`hi`);
           dispatch({ type: "showModal", payloadModal: true });
-          dispatch({ type: "setNews", payloadNews: data });
+          dispatch({ type: "setNews", payloadNews: newArticle });
         }}
         onMouseMove={mousemove}
         onMouseLeave={mouseleave}
       >
         <div className="project-meta" ref={project_meta}>
           <div className=" projects">
-            <span className="block-reveal__text">{data.title}</span>
+            <span className="block-reveal__text">{data?.title}</span>
           </div>
           <div className="divider"></div>
           <div className="project-nav">
@@ -74,7 +80,7 @@ const Card = ({ newsNumber, data }) => {
           <div className="cards" ref={card}>
             <div className="img-box">
               <img
-                src={data.imgURL[0] ? data.imgURL[0] : alt_img}
+                src={data?.imgURL[0] ? data?.imgURL[0] : alt_img}
                 alt=""
                 onError={(e) => {
                   e.target.onerror = null;
@@ -85,9 +91,9 @@ const Card = ({ newsNumber, data }) => {
             <div className="contents text-white">
               <h2> Click here to know More </h2>
               <p>
-                {data.mainText[0].length > 135
-                  ? `${data.mainText[0].substring(0, 135)}...`
-                  : data.mainText[0]}
+                {data?.mainText[0].length > 135
+                  ? `${data?.mainText[0].substring(0, 135)}...`
+                  : data?.mainText[0]}
               </p>
             </div>
           </div>

@@ -28,7 +28,7 @@ const News = () => {
       }}
     >
       <Image
-        src={data.imgURL[0] ? data.imgURL[0] : alt_image}
+        src={data.imgURL ? data.imgURL : alt_image}
         style={{ width: "92%", marginTop: "1rem" }}
         onError={(e) => {
           e.target.onerror = null;
@@ -54,6 +54,7 @@ const News = () => {
             style={{
               maxWidth: "100%",
               transition: "background-color 0.3s, color 0.3s",
+              boxShadow: "0 0 10px 5px rgba(255, 255, 255, 0.7)",
             }}
             onClick={() => dispatch({ type: "showModal", payloadModal: false })}
           >

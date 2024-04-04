@@ -39,7 +39,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
     fetchRank();
   }, []);
   return (
-    <>
+    <Flex className="left-profile-box" flexDirection={"column"}>
       <Flex w={"100%"}>
         <Image
           src={leftProfileView.pic}
@@ -85,7 +85,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
           Edit Profile
         </Button>
       </Box>
-    </>
+    </Flex>
   );
 };
 

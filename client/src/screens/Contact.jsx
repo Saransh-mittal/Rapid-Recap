@@ -28,11 +28,8 @@ const Contact = () => {
   return (
     <div
       style={{ minHeight: "77vh" }}
-      onMouseDown={startDrag}
       onTouchStart={startDrag}
-      onMouseMove={(e) => drag(e)}
       onTouchMove={(e) => drag(e.touches[0])}
-      onMouseUp={endDrag}
       onTouchEnd={endDrag}
     >
       <div className="container-fluid px-5 my-5">

@@ -228,7 +228,7 @@ const DailyActivity = ({ dailyAct }) => {
             </Text>
           </Box>
           <Flex
-            overflow={"hidden"}
+            overflow={"auto"}
             p={0}
             m={0}
             w={"100%"}

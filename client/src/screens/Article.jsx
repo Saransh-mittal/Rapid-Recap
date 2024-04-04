@@ -25,15 +25,27 @@ import QuizExpired from "../components/articleComponents/QuizExpired";
 import Alt_img from "../assets/alt_image.jpg";
 import GivenQuiz from "../components/articleComponents/GivenQuiz";
 import imageData from "../assets/AltNewsImage";
+import { useShepherdTour } from "react-shepherd";
+import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle";
+import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
+const tourOptions = {
+  defaultStepOptions: {
+    cancelIcon: {
+      enabled: true,
+    },
+  },
+  useModalOverlay: true,
+};
 
 const Article = () => {
+  const tour = useShepherdTour({ tourOptions, steps: stepsGuideArticle });
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const data = state.news;
   const alt_image = imageData.find(
     (img) =>
       img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
-  ).image;
+  )?.image;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -50,18 +62,18 @@ const Article = () => {
   const [RQM_score, setRQM_score] = useState(null);
   const [onGoingQuiz, setOnGoingQuiz] = useState(false);
   const [quizExpired, setQuizExpired] = useState(false);
+  const [showExpectedIQ, setShowExpectedIQ] = useState(false);
+  const [expectedIQ, setExpectedIQ] = useState(null);
   //const [showInstruction, setShowInstruction] = useState(false);
 
   const fetchArticle = async () => {
     try {
       const response = await axios.get(`/api/articles/article/${id}`);
       const news = await axios.get(`/api/articles?page=1&pageSize=9`);
-      //console.log(response.data);
+
       setLatestNews(news.data);
       //console.log(news.data);
       setArticle(response.data.newArticle);
-      //console.log(response.data.newArticle.imgURL);
-
       setQuizExpired(response.data.quizExpired);
     } catch (error) {
       // Handle errors
@@ -133,10 +145,117 @@ const Article = () => {
     }
   };
 
+  const getExpectedIQ = async () => {
+    try {
+      const articlePage = document?.querySelector(".article-page");
+      document.querySelector("body").style.overflow = "hidden"; // Remove scroll behavior from body
+      const overlay = document.createElement("div");
+      overlay.classList.add("custom-overlay");
+      const overlayNav = document.createElement("div");
+      overlayNav.classList.add("custom-overlay-nav");
+      articlePage?.appendChild(overlay);
+      document.querySelector(".navbar").appendChild(overlayNav);
+      articlePage?.classList.add("shepherd-active");
+      const loadingOverlay = document.createElement("div");
+      loadingOverlay.classList.add("loading-overlay");
+      const spinnerContainer = document.createElement("div");
+      spinnerContainer.classList.add("spinner-container");
+      const loadingSpinner = document.createElement("div");
+      loadingSpinner.classList.add("loading-spinner");
+      spinnerContainer.appendChild(loadingSpinner);
+      loadingOverlay.appendChild(spinnerContainer);
+      articlePage?.appendChild(loadingOverlay);
+      const response = await axios.get(`/api/user/expectedIQScore`);
+      setShowExpectedIQ(true);
+      setExpectedIQ(response.data.ExpectedIQScore);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error.response.data.error || "Error checking for expected IQ",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      console.log(error.message);
+    } finally {
+      // Remove loading overlay
+      const loadingOverlay = document.querySelector(".loading-overlay");
+      if (loadingOverlay) {
+        loadingOverlay.remove();
+      }
+      // Restore scroll behavior
+      document.querySelector("body").style.overflow = "auto";
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+      const articlePage = document?.querySelector(".article-page");
+      articlePage?.classList.remove("shepherd-active");
+    }
+  };
+
+  useEffect(() => {
+    const body = document.querySelector("body");
+    const handleTourStart = () => {
+      body.style.overflow = "hidden"; // Reapply scroll behavior
+      const overlay = document.createElement("div");
+      overlay.classList.add("custom-overlay");
+      const overlayNav = document.createElement("div");
+      overlayNav.classList.add("custom-overlay-nav");
+      document.querySelector(".article-page")?.appendChild(overlay);
+      document.querySelector(".navbar").appendChild(overlayNav);
+    };
+
+    const handleTourComplete = () => {
+      body.style.overflow = "auto";
+      const generateQuizButton = document.querySelector(
+        ".generate-quiz-button"
+      );
+      if (generateQuizButton) {
+        generateQuizButton.classList.remove("highlighted-button-0");
+      }
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+    };
+
+    const handleTourCancel = () => {
+      body.style.overflow = "auto";
+      const generateQuizButton = document.querySelector(
+        ".generate-quiz-button"
+      );
+      if (generateQuizButton) {
+        generateQuizButton.classList.remove("highlighted-button-0");
+      }
+
+      const overlay = document.querySelector(".custom-overlay");
+      if (overlay) overlay.remove();
+      const overlayNav = document.querySelector(".custom-overlay-nav");
+      if (overlayNav) overlayNav.remove();
+    };
+
+    tour.on("start", handleTourStart);
+    tour.on("complete", handleTourComplete);
+    tour.on("cancel", handleTourCancel);
+
+    return () => {
+      tour.off("start", handleTourStart);
+      tour.off("complete", handleTourComplete);
+      tour.off("cancel", handleTourCancel);
+    };
+  }, [tour]);
+
   useEffect(() => {
     fetchArticle();
     checkOnGoingQuiz();
+    //tour.start();
   }, []);
+  // useEffect(() => {
+  //   getExpectedIQ();
+  // }, [load]);
   useEffect(() => {
     isQuizGiven();
   }, [givenQuiz]);
@@ -147,10 +266,16 @@ const Article = () => {
     if (articleRef.current) {
       setArticleHeight(articleRef.current.getBoundingClientRect().height);
     }
-  }, [article]);
+  }, [article, textHeight]);
 
   return (
     <>
+      {showExpectedIQ && expectedIQ ? (
+        <ExpectedIQModal
+          expectedIQ={expectedIQ}
+          setShowExpectedIQ={setShowExpectedIQ}
+        />
+      ) : null}
       {showQuiz && !givenQuiz ? (
         <Quiz
           article={article}
@@ -159,13 +284,28 @@ const Article = () => {
           ofShowQuiz={() => {
             setShowQuiz(false);
             setGivenQuiz(true);
+            getExpectedIQ();
           }}
         />
       ) : null}
       {load ? (
         <Loading />
       ) : (
-        <>
+        <Flex className="article-page">
+          <Box
+            marginLeft={{ base: "20px", md: "80px" }}
+            position={"absolute"}
+            top={"6rem"}
+            border={"solid"}
+            p={1}
+            borderRadius="5px"
+            boxShadow="md"
+            cursor="pointer"
+            _hover={{ bg: "#37474f", color: "#f0f0f0" }}
+            onClick={() => navigate(-1)}
+          >
+            <ArrowBackIcon />
+          </Box>
           <Grid
             templateColumns={
               window.innerWidth > 820 ? "minmax(0, 9fr) 5fr" : "1fr"
@@ -176,20 +316,10 @@ const Article = () => {
             marginTop={{ base: "50px", md: "0px" }}
           >
             {article && (
-              <GridItem w="100%">
-                <Box
-                  position={"absolute"}
-                  top={"6rem"}
-                  border={"solid"}
-                  p={1}
-                  borderRadius="5px"
-                  boxShadow="md"
-                  cursor="pointer"
-                  _hover={{ bg: "#37474f", color: "#f0f0f0" }}
-                  onClick={() => navigate(-1)}
-                >
-                  <ArrowBackIcon />
-                </Box>
+              <GridItem
+                w="100%"
+                className="article-container"
+              >
                 <Heading
                   align="left"
                   letterSpacing={1}
@@ -226,8 +356,14 @@ const Article = () => {
                   </span>
                 </Heading>
                 {article.mainText.length === 3 ? (
-                  <Box marginTop={5} ref={articleRef}>
-                    <Text align="justify" letterSpacing={0}>
+                  <Box
+                    marginTop={5}
+                    ref={articleRef}
+                  >
+                    <Text
+                      align="justify"
+                      letterSpacing={0}
+                    >
                       {article.mainText[0]}
                     </Text>
                     <Box
@@ -243,7 +379,15 @@ const Article = () => {
                             display: "none",
                           },
                         }}
-                        src={data.imgURL[0] ? data.imgURL[0] : alt_image}
+                        src={
+                          typeof data.imgURL === "Array" &&
+                          data.imgURL.length > 0 &&
+                          data.imgURL[0]
+                            ? data.imgURL[0]
+                            : typeof data.imgURL !== "Array" && data.imgURL
+                            ? data.imgURL
+                            : alt_image
+                        }
                         alt="Article Image"
                         borderRadius="md"
                         float={"left"}
@@ -256,23 +400,41 @@ const Article = () => {
                         }}
                       />
 
-                      <Text ref={textRef} align="justify" letterSpacing={0}>
+                      <Text
+                        ref={textRef}
+                        align="justify"
+                        letterSpacing={0}
+                      >
                         {article.mainText[1]}
                       </Text>
                     </Box>
-                    <Text align="justify" letterSpacing={0}>
+                    <Text
+                      align="justify"
+                      letterSpacing={0}
+                    >
                       {article.mainText[2]}
                     </Text>
                   </Box>
                 ) : (
-                  <Box marginTop={8} ref={articleRef}>
+                  <Box
+                    marginTop={8}
+                    ref={articleRef}
+                  >
                     <Image
                       css={{
                         "@media screen and (max-width: 1366px)": {
                           display: "none",
                         },
                       }}
-                      src={data.imgURL[0] ? data.imgURL[0] : alt_image}
+                      src={
+                        typeof data.imgURL === "Array" &&
+                        data.imgURL.length > 0 &&
+                        data.imgURL[0]
+                          ? data.imgURL[0]
+                          : typeof data.imgURL !== "Array" && data.imgURL
+                          ? data.imgURL
+                          : alt_image
+                      }
                       alt="Article Image"
                       borderRadius="md"
                       marginBottom="5"
@@ -286,10 +448,17 @@ const Article = () => {
                       }}
                     />
 
-                    <Text ref={textRef} align="left" letterSpacing={1}>
+                    <Text
+                      ref={textRef}
+                      align="left"
+                      letterSpacing={1}
+                    >
                       {article.mainText[0]}
                     </Text>
-                    <Text align="left" letterSpacing={1}>
+                    <Text
+                      align="left"
+                      letterSpacing={1}
+                    >
                       {article.mainText[1]}
                     </Text>
                   </Box>
@@ -378,14 +547,14 @@ const Article = () => {
                             width="100px"
                             mr={3}
                             mt={-3}
-                            height={"100%"}
+                            height={"60px"}
                             float="left"
                             src={item.imgURL}
                             alt="Article img"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = Alt_img;
-                              e.target.style.height = `${textHeight}px`;
+                              e.target.style.height = `100%`;
                             }}
                           />
                           <Text mt={2}>{item.title}</Text>
@@ -421,7 +590,10 @@ const Article = () => {
                   >
                     Explore Your Quiz Performance
                   </Heading>
-                  <Flex flexDirection="column" alignItems="center">
+                  <Flex
+                    flexDirection="column"
+                    alignItems="center"
+                  >
                     <Heading
                       textAlign={"left"}
                       as="h6"
@@ -478,7 +650,7 @@ const Article = () => {
               />
             )}
           </Grid>
-        </>
+        </Flex>
       )}
     </>
   );

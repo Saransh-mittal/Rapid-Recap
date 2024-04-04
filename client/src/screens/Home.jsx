@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import Modal from "./Modal";
 import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
+
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
   const [items, setItems] = useState(state.items);
@@ -20,17 +21,20 @@ const Home = () => {
       dispatch({ type: "PAGE", payloadPage: page });
       dispatch({ type: "ITEMS", payloadItems: [...items, ...response.data] });
       setItems((prev) => [...prev, ...response.data]);
-      setLoad(false);
+      
     } catch (error) {
       // Handle errors
       console.log(error.message);
+    }
+    finally{
+      setLoad(false);
     }
   }
 
   const handleScroll = async () => {
     try {
       if (
-        window.innerHeight + document.documentElement.scrollTop + 1 >
+        window.innerHeight + document.documentElement.scrollTop + 10 >
         document.documentElement.scrollHeight
       ) {
         setLoad(true);
@@ -62,11 +66,8 @@ const Home = () => {
 
   return (
     <div
-      onMouseDown={startDrag}
       onTouchStart={startDrag}
-      onMouseMove={(e) => drag(e)}
       onTouchMove={(e) => drag(e.touches[0])}
-      onMouseUp={endDrag}
       onTouchEnd={endDrag}
     >
       {state.modal && (
@@ -76,7 +77,7 @@ const Home = () => {
           <News />
         </Modal>
       )}
-      <Timeline data={items} />
+      {state.user && <Timeline data={items} />}
       {load && <Loading />}
     </div>
   );
