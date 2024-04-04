@@ -522,6 +522,15 @@ const leaderBoard = async (req, res) => {
         quizSubmissions,
       });
     });
+    result.sort((a, b) => {
+      if (a.IQ_score !== b.IQ_score) {
+        return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
+      } else if (a.quizSubmissions !== b.quizSubmissions) {
+        return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
+      } else {
+        return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
+      }
+    });
     res.status(200).json({ users: result });
   } catch (error) {
     res.status(500).json({ error: "Error fetching the Leaderboard" });

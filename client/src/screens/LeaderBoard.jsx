@@ -46,7 +46,10 @@ const LeaderBoard = () => {
     fetchLearderBoard();
   }, []);
   return (
-    <Flex minH={"85vh"} justifyContent={"center"}>
+    <Flex
+      minH={"85vh"}
+      justifyContent={"center"}
+    >
       <Flex
         margin={"20px"}
         justifyContent={"center"}
@@ -82,28 +85,50 @@ const LeaderBoard = () => {
             </Heading>
             <TableContainer width={"100%"}>
               <Table variant={"unstyled"}>
-                <TableCaption color={"white"} placement="top">
+                <TableCaption
+                  color={"white"}
+                  placement="top"
+                >
                   "Where Champions Stand Out!"
                 </TableCaption>
 
                 <Thead>
                   <Tr boxShadow={"dark-lg"}>
-                    <Th textAlign={"center"} bg={"green.300"} color={"white"}>
+                    <Th
+                      textAlign={"center"}
+                      bg={"green.300"}
+                      color={"white"}
+                    >
                       Rank
                     </Th>
-                    <Th textAlign={"center"} bg={"red.300"}>
+                    <Th
+                      textAlign={"center"}
+                      bg={"red.300"}
+                    >
                       Name
                     </Th>
-                    <Th textAlign={"center"} bg={"blue.300"}>
+                    <Th
+                      textAlign={"center"}
+                      bg={"blue.300"}
+                    >
                       In Game Name
                     </Th>
-                    <Th textAlign={"center"} bg={"orange.300"}>
+                    <Th
+                      textAlign={"center"}
+                      bg={"orange.300"}
+                    >
                       IQ Scores
                     </Th>
-                    <Th textAlign={"center"} bg={"teal.300"}>
+                    <Th
+                      textAlign={"center"}
+                      bg={"teal.300"}
+                    >
                       Quiz Submissions
                     </Th>
-                    <Th textAlign={"center"} bg={"pink.300"}>
+                    <Th
+                      textAlign={"center"}
+                      bg={"pink.300"}
+                    >
                       Avg. RQM Scores
                     </Th>
                   </Tr>
@@ -113,7 +138,20 @@ const LeaderBoard = () => {
                   {leaders.length > 0 &&
                     leaders.map((leader, index) => {
                       return (
-                        <Tr height={"80px"} key={leader._id}>
+                        <Tr
+                          height={"80px"}
+                          key={leader._id}
+                          onClick={() => {
+                            window.location.href = `/profile/${leader.inGameName}`;
+                          }}
+                          _hover={{
+                            backgroundImage:
+                              "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                            boxShadow:
+                              "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+                          }}
+                          cursor={"pointer"}
+                        >
                           <Td textAlign={"center"}>
                             <Flex
                               justifyContent={"center"}

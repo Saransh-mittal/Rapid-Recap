@@ -39,7 +39,10 @@ const LeftProfileBox = ({ leftProfileView }) => {
     fetchRank();
   }, []);
   return (
-    <Flex className="left-profile-box" flexDirection={"column"}>
+    <Flex
+      className="left-profile-box"
+      flexDirection={"column"}
+    >
       <Flex w={"100%"}>
         <Image
           src={leftProfileView.pic}
@@ -50,40 +53,54 @@ const LeftProfileBox = ({ leftProfileView }) => {
           marginRight="20px"
         />
         <Box margin={"5px"}>
-          <Heading as="h4" size={"md"}>
+          <Heading
+            as="h4"
+            size={"md"}
+          >
             {leftProfileView.name}
           </Heading>
-          <Heading as="h6" fontSize={"12px"}>
+          <Heading
+            as="h6"
+            fontSize={"12px"}
+          >
             {leftProfileView.inGameName}
           </Heading>
           {isLoading ? (
             <Loading />
           ) : (
-            <Heading as="h6" fontSize={"12px"}>
+            <Heading
+              as="h6"
+              fontSize={"12px"}
+            >
               Rank : {rank}
             </Heading>
           )}
         </Box>
       </Flex>
-      <Box marginTop={"10px"} w={{ lg: "300px", base: "100%" }}>
+      <Box
+        marginTop={"10px"}
+        w={{ lg: "300px", base: "100%" }}
+      >
         <Text align={"justify"}>{leftProfileView.bio}</Text>
-        <Button
-          size="md"
-          height="35px"
-          width="90%"
-          border="5px"
-          borderColor="green.200"
-          backgroundColor="#F2D8D8" // Initial background color
-          color="#374259" // Initial text color
-          css={{
-            "&:hover": {
-              backgroundColor: "#316B83", // Change background color to green on hover
-              color: "#11324D", // Change text color to white on hover
-            },
-          }}
-        >
-          Edit Profile
-        </Button>
+        {window.location.pathname.split("/").pop() === state.user.inGameName ? (
+          <Button
+            size="md"
+            height="35px"
+            width="90%"
+            border="5px"
+            borderColor="green.200"
+            backgroundColor="#F2D8D8" // Initial background color
+            color="#374259" // Initial text color
+            css={{
+              "&:hover": {
+                backgroundColor: "#316B83", // Change background color to green on hover
+                color: "#11324D", // Change text color to white on hover
+              },
+            }}
+          >
+            Edit Profile
+          </Button>
+        ) : null}
       </Box>
     </Flex>
   );
