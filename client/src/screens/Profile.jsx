@@ -27,6 +27,7 @@ export default function Profile() {
   const [user, setUser] = useState({});
   const [profile, setProfile] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  //const [rerender, setRerender] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -120,6 +121,7 @@ export default function Profile() {
     setUser(state.user);
     tour.start();
   }, []);
+
 
   return (
     <>
