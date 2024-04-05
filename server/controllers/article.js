@@ -146,7 +146,9 @@ const getQuiz = async (req, res) => {
     const timer =
       Math.min(
         5,
-        response.para1.length + response.para2.length + response.para3.length
+        response.para1.questions.length +
+          response.para2.questions.length +
+          response.para3.questions.length
       ) * 10;
     const newQuiz = new Quiz({
       article: articleId,
