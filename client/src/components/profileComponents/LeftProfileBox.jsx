@@ -36,7 +36,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
         status: "error",
         duration: 9000,
         isClosable: true,
-        position:"top"
+        position: "top",
       });
       console.log(error.response.data.error);
     } finally {
@@ -46,7 +46,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
   useEffect(() => {
     //console.log(state.user);
     fetchRank();
-  }, []);
+  }, [leftProfileView]);
   const handleEditClick = () => {
     // Set profile data for modal
     setProfileData({
@@ -58,39 +58,38 @@ const LeftProfileBox = ({ leftProfileView }) => {
     setIsEditModalOpen(true);
   };
 
-  const handleSubmitModal = async(formData) => {
+  const handleSubmitModal = async (formData) => {
     // Add logic to handle form submission (e.g., updating profile data)
-    try{
-      const response = await axios.post(`/api/user/editProfile`,formData);
-      if(response.status === 200){
+    try {
+      const response = await axios.post(`/api/user/editProfile`, formData);
+      if (response.status === 200) {
         toast({
           title: "Success",
           description: "Profile Updated Successfully",
           status: "success",
           duration: 9000,
           isClosable: true,
-          position:"top"
-        })
+          position: "top",
+        });
       }
       setProfileData(formData);
-    }
-    catch(e){
+    } catch (e) {
       toast({
         title: "Error",
         description: "Something went wrong in fetching Rank",
         status: "error",
         duration: 9000,
         isClosable: true,
-        position:"top"
+        position: "top",
       });
       console.error(e);
     }
   };
-
-  // useEffect(()=>{},[rerender]);
-  
   return (
-    <Flex className="left-profile-box" flexDirection={"column"}>
+    <Flex
+      className="left-profile-box"
+      flexDirection={"column"}
+    >
       <Flex w={"100%"}>
         <Image
           src={profileData.pic}
@@ -101,51 +100,66 @@ const LeftProfileBox = ({ leftProfileView }) => {
           marginRight="20px"
         />
         <Box margin={"5px"}>
-          <Heading as="h4" size={"md"}>
+          <Heading
+            as="h4"
+            size={"md"}
+          >
             {profileData.name}
           </Heading>
-          <Heading as="h6" fontSize={"12px"}>
+          <Heading
+            as="h6"
+            fontSize={"12px"}
+          >
             {leftProfileView.inGameName}
           </Heading>
           {isLoading ? (
             <Loading />
           ) : (
-            <Heading as="h6" fontSize={"12px"}>
+            <Heading
+              as="h6"
+              fontSize={"12px"}
+            >
               Rank : {rank}
             </Heading>
           )}
         </Box>
       </Flex>
-      <Box marginTop={"10px"} w={{ lg: "300px", base: "100%" }}>
+      <Box
+        marginTop={"10px"}
+        w={{ lg: "300px", base: "100%" }}
+      >
         <Text align={"justify"}>{profileData.bio}</Text>
-        <Button
-          size="md"
-          height="35px"
-          width="90%"
-          border="5px"
-          borderColor="green.200"
-          backgroundColor="#F2D8D8" // Initial background color
-          color="#374259" // Initial text color
-          css={{
-            "&:hover": {
-              backgroundColor: "#316B83", // Change background color to green on hover
-              color: "#11324D", // Change text color to white on hover
-            },
-          }}
-          onClick={handleEditClick}
-        >
-          Edit Profile
-        </Button>
+        {window.location.pathname.split("/").pop() === state.user.inGameName ? (
+          <Button
+            size="md"
+            height="35px"
+            width="90%"
+            border="5px"
+            borderColor="green.200"
+            backgroundColor="#F2D8D8" // Initial background color
+            color="#374259" // Initial text color
+            css={{
+              "&:hover": {
+                backgroundColor: "#316B83", // Change background color to green on hover
+                color: "#11324D", // Change text color to white on hover
+              },
+            }}
+            onClick={handleEditClick}
+          >
+            Edit Profile
+          </Button>
+        ) : null}
       </Box>
 
-      {profileData && <EditProfileModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        profileData={profileData}
-        onSubmit={handleSubmitModal}
-        setProfileData={setProfileData}
-      />}
-
+      {profileData && (
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          profileData={profileData}
+          onSubmit={handleSubmitModal}
+          setProfileData={setProfileData}
+        />
+      )}
     </Flex>
   );
 };

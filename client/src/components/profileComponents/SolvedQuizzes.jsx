@@ -35,7 +35,7 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
   };
   useEffect(() => {
     fetchSolvedQuizzes();
-  }, []);
+  }, [solvedQuizzes]);
   return (
     <Flex
       margin="10px"
@@ -50,13 +50,26 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
         <Loading />
       ) : (
         <>
-          <Box flexDirection={"column"} width={"100%"} marginStart={"15px"}>
-            <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+          <Box
+            flexDirection={"column"}
+            width={"100%"}
+            marginStart={"15px"}
+          >
+            <Text
+              textAlign={"left"}
+              color={"#9CAFAA"}
+              p={0}
+              m={0}
+            >
               Solved Quizzes
             </Text>
           </Box>
           <Flex width={"100%"}>
-            <Flex w={"80%"} justifyContent={"center"} alignItems={"center"}>
+            <Flex
+              w={"80%"}
+              justifyContent={"center"}
+              alignItems={"center"}
+            >
               <Flex
                 borderWidth={"5px"}
                 borderRadius={"50%"}
@@ -98,9 +111,15 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
               justifyContent={"center"}
               alignItems={"center"}
             >
-              <Stack spacing={5} w={"100%"}>
+              <Stack
+                spacing={5}
+                w={"100%"}
+              >
                 <Box>
-                  <Flex justifyContent={"space-between"} marginBottom={"5px"}>
+                  <Flex
+                    justifyContent={"space-between"}
+                    marginBottom={"5px"}
+                  >
                     <Text
                       marginBottom={0}
                       marginTop={"1px"}
@@ -141,7 +160,10 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
                   />
                 </Box>
                 <Box>
-                  <Flex justifyContent={"space-between"} marginBottom={"5px"}>
+                  <Flex
+                    justifyContent={"space-between"}
+                    marginBottom={"5px"}
+                  >
                     <Text
                       textAlign={"left"}
                       marginBottom={0}
@@ -182,7 +204,10 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
                   />
                 </Box>
                 <Box>
-                  <Flex justifyContent={"space-between"} marginBottom={"5px"}>
+                  <Flex
+                    justifyContent={"space-between"}
+                    marginBottom={"5px"}
+                  >
                     <Text
                       textAlign={"left"}
                       marginBottom={0}

@@ -373,6 +373,31 @@ const calculateUserIQScores = async (req, res) => {
       },
     ]);
     console.log("\nFetched users.\n");
+
+    const uniqueArticleIds = await QuizAttempt.aggregate([
+      { $group: { _id: "$article" } }, // Group by the article field
+      { $project: { _id: 0, articleId: "$_id" } }, // Project only the article IDs
+    ]);
+
+    console.log("\nUpdating percentiles on quiz...\n");
+    await Promise.all(
+      uniqueArticleIds.map(async (doc) => {
+        // Check if the quiz attempt is valid based on its creation date and quiz activity
+        // if (
+        //   attempt.article.quiz.createdAt.getTime() + 24 * 60 * 60 * 1000 <
+        //   Date.now()
+        // ) {
+        //if (attempt.article.quiz.isActive) {
+        await updatePercentilesOnQuizDeactivation({
+          id: doc.articleId,
+        });
+
+        //   attempt.article.quiz.isActive = false;
+        //   await attempt.article.quiz.save();
+        // }
+      })
+    );
+    console.log("\nUpdated percentiles on quiz.\n");
     // Array to store user scores
     const userScores = [];
     let sumOfUserScores = 0;
@@ -407,19 +432,6 @@ const calculateUserIQScores = async (req, res) => {
         }
         //console.log("Outside IF", attempt);
 
-        // Check if the quiz attempt is valid based on its creation date and quiz activity
-        // if (
-        //   attempt.article.quiz.createdAt.getTime() + 24 * 60 * 60 * 1000 <
-        //   Date.now()
-        // ) {
-        //if (attempt.article.quiz.isActive) {
-        await updatePercentilesOnQuizDeactivation({
-          id: attempt.article._id,
-        });
-
-        //   attempt.article.quiz.isActive = false;
-        //   await attempt.article.quiz.save();
-        // }
         // Calculate score for the quiz attempt (Wi * Pi)
 
         const quizScore = attempt.articleDifficulty * attempt.userPercentile;
@@ -485,9 +497,9 @@ const calculateUserIQScores = async (req, res) => {
 
 const leaderBoard = async (req, res) => {
   try {
-    const users = await User.find({})
+    const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
       .sort({ IQ_score: -1 })
-      .limit(5)
+      .limit(50)
       .populate("quizAttempts");
     //AVG. RQM SCORES
     const result = [];
@@ -509,6 +521,15 @@ const leaderBoard = async (req, res) => {
         pic,
         quizSubmissions,
       });
+    });
+    result.sort((a, b) => {
+      if (a.IQ_score !== b.IQ_score) {
+        return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
+      } else if (a.quizSubmissions !== b.quizSubmissions) {
+        return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
+      } else {
+        return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
+      }
     });
     res.status(200).json({ users: result });
   } catch (error) {
