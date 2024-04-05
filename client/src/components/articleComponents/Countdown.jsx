@@ -17,7 +17,6 @@ const Countdown = ({
     const decrementTimer = () => {
       setTimer((prevTimer) => {
         const newTimer = prevTimer - 1;
-        setTimeTaken((prevTimeTaken) => prevTimeTaken + 1);
         if (newTimer === 0) {
           onTimerExhausted();
         } else {
@@ -32,7 +31,13 @@ const Countdown = ({
     }
 
     return () => clearTimeout(timerId);
-  }, [timer, start, submitted, onTimerExhausted, setTimeTaken, initialTimer]);
+  }, [timer, start, submitted, onTimerExhausted, initialTimer]);
+
+  useEffect(() => {
+    if (start && !submitted) {
+      setTimeTaken((prevTimeTaken) => prevTimeTaken + 1); // Update time taken
+    }
+  }, [timer, start, submitted, setTimeTaken]);
 
   const dynamicStyles = {
     dotRotation: `rotate(${(360 * timer) / initialTimer}deg)`,
