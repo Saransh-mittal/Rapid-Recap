@@ -37,7 +37,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
   useEffect(() => {
     //console.log(state.user);
     fetchRank();
-  }, []);
+  }, [leftProfileView]);
   return (
     <Flex
       className="left-profile-box"

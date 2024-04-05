@@ -24,11 +24,11 @@ export default function Profile() {
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialProfile });
   const { inGameName } = useParams();
   const { state, dispatch } = useContext(AppContext);
-  const [user, setUser] = useState({});
   const [profile, setProfile] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async () => {
+    setIsLoading(true);
     try {
       const response = await axios.get(`/api/user/profile/${inGameName}`);
       setProfile(() => response.data);
@@ -115,11 +115,9 @@ export default function Profile() {
     };
   }, [tour]);
   useEffect(() => {
-    //console.log(state.user);
     fetchProfile();
-    setUser(state.user);
-    tour.start();
-  }, []);
+    //tour.start();
+  }, [inGameName]);
 
   return (
     <>
@@ -222,7 +220,7 @@ export default function Profile() {
                   }}
                   className="rank-and-society"
                 >
-                  <RankAndSociety />
+                  <RankAndSociety USER_IQ={profile?.barGraph?.USER_IQ} />
                 </Flex>
               </Flex>
               <Box

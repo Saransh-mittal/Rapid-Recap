@@ -150,7 +150,7 @@ const IQBarGraph = ({ barGraph }) => {
   };
   useEffect(() => {
     fetchBarIQData();
-  }, []);
+  }, [barGraph]);
   useEffect(() => {
     const chartCanvas = chartRef.current?.canvas;
     const handleMouseLeave = () => {
@@ -241,17 +241,36 @@ const IQBarGraph = ({ barGraph }) => {
       ) : (
         <>
           <Flex width={"100%"}>
-            <Flex marginStart={"15px"} flexDirection={"column"}>
-              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+            <Flex
+              marginStart={"15px"}
+              flexDirection={"column"}
+            >
+              <Text
+                textAlign={"left"}
+                color={"#9CAFAA"}
+                p={0}
+                m={0}
+              >
                 Top
               </Text>
-              <Text textAlign={"left"} fontSize={"1.5rem"}>
+              <Text
+                textAlign={"left"}
+                fontSize={"1.5rem"}
+              >
                 {hoveredPercentile}%
               </Text>
             </Flex>
             {currentData && currentData.range && currentData.count ? (
-              <Flex marginLeft={"40px"} flexDirection={"column"}>
-                <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+              <Flex
+                marginLeft={"40px"}
+                flexDirection={"column"}
+              >
+                <Text
+                  textAlign={"left"}
+                  color={"#9CAFAA"}
+                  p={0}
+                  m={0}
+                >
                   {currentData.range}
                 </Text>
 
@@ -259,9 +278,17 @@ const IQBarGraph = ({ barGraph }) => {
               </Flex>
             ) : null}
           </Flex>
-          <Flex height={"150px"} width={"100%"} justifyContent={"center"}>
+          <Flex
+            height={"150px"}
+            width={"100%"}
+            justifyContent={"center"}
+          >
             {chartData && (
-              <Bar ref={chartRef} data={chartData} options={options} />
+              <Bar
+                ref={chartRef}
+                data={chartData}
+                options={options}
+              />
             )}
           </Flex>
         </>
