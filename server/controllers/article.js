@@ -106,6 +106,13 @@ const getQuiz = async (req, res) => {
         await article.save();
         throw new Error("Quiz not found, Please try again.");
       }
+      const timer =
+        Math.min(
+          5,
+          fullQuiz.para1.questions.length +
+            fullQuiz.para2.questions.length +
+            fullQuiz.para3.questions.length
+        ) * 10;
       // if (fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()) {
       //   if (fullQuiz.isActive) {
       //     await updatePercentilesOnQuizDeactivation({ id: article._id });
@@ -117,6 +124,7 @@ const getQuiz = async (req, res) => {
       return res.status(200).json({
         expired: false,
         message: "Quiz Questions generated successfully",
+        timer,
       });
     }
     const response = await generateQuestionsForQuiz({
@@ -125,6 +133,21 @@ const getQuiz = async (req, res) => {
       mainText,
     });
     //console.log(response);
+    if (
+      !response ||
+      !response.para1 ||
+      !response.para2 ||
+      !response.para3 ||
+      !response.overAllDifficulty
+    ) {
+      throw new Error("Quiz not generated");
+    }
+    // Calculate timer according to 10 sec per question
+    const timer =
+      Math.min(
+        5,
+        response.para1.length + response.para2.length + response.para3.length
+      ) * 10;
     const newQuiz = new Quiz({
       article: articleId,
       para1: response.para1,
@@ -135,7 +158,9 @@ const getQuiz = async (req, res) => {
     await newQuiz.save();
     article.quiz = newQuiz._id;
     await article.save();
-    res.status(200).json({ message: "Quiz Questions generated successfully" });
+    res
+      .status(200)
+      .json({ message: "Quiz Questions generated successfully", timer });
   } catch (error) {
     res.status(400).json({ error: "Something went wrong! Please try again" });
     console.log(error.message);

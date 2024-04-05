@@ -12,22 +12,27 @@ const Countdown = ({
   const [timer, setTimer] = useState(initialTimer);
 
   useEffect(() => {
-    if (!start || submitted || timer === 0) return;
+    let timerId;
 
-    const intervalId = setInterval(() => {
+    const decrementTimer = () => {
       setTimer((prevTimer) => {
         const newTimer = prevTimer - 1;
         setTimeTaken((prevTimeTaken) => prevTimeTaken + 1);
         if (newTimer === 0) {
-          clearInterval(intervalId);
           onTimerExhausted();
+        } else {
+          timerId = setTimeout(decrementTimer, 1000);
         }
         return newTimer;
       });
-    }, 1000);
+    };
 
-    return () => clearInterval(intervalId);
-  }, [timer, start, submitted, onTimerExhausted, setTimeTaken]);
+    if (start && !submitted && timer > 0) {
+      timerId = setTimeout(decrementTimer, 1000);
+    }
+
+    return () => clearTimeout(timerId);
+  }, [timer, start, submitted, onTimerExhausted, setTimeTaken, initialTimer]);
 
   const dynamicStyles = {
     dotRotation: `rotate(${(360 * timer) / initialTimer}deg)`,
@@ -49,7 +54,11 @@ const Countdown = ({
             style={{ transform: dynamicStyles.dotRotation }}
           ></div>
           <svg>
-            <circle cx="70" cy="70" r="70" />
+            <circle
+              cx="70"
+              cy="70"
+              r="70"
+            />
             <circle
               strokeDashoffset={dynamicStyles.loadingPercent}
               cx="70"
@@ -60,7 +69,11 @@ const Countdown = ({
         </div>
       ) : (
         <Box marginTop="20px">
-          <Heading as="h6" fontSize="30px" color={dynamicStyles.color}>
+          <Heading
+            as="h6"
+            fontSize="30px"
+            color={dynamicStyles.color}
+          >
             {timer > 0
               ? `Submitted in ${initialTimer - timer} Secs`
               : "!! Time's Up !!"}
