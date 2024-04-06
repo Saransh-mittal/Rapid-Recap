@@ -2,6 +2,9 @@ import { useEffect } from "react";
 import TimelineItem from "./TimelineItem";
 import { useShepherdTour } from "react-shepherd";
 import stepsTutorialHome from "./stepsTutorialHome";
+import axios from "axios";
+import { useToast } from "@chakra-ui/react";
+
 const tourOptions = {
   defaultStepOptions: {
     cancelIcon: {
@@ -12,6 +15,41 @@ const tourOptions = {
 };
 const Timeline = ({ data }) => {
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
+  const toast=useToast();
+  const isTutorialTakenCheck=async()=>{
+    try{
+      const Page = "homePage";
+      const response=await axios.get(`/api/user/isTutorialTakenCheck/${Page}`);
+      console.log(response.data);
+      if(response.data.status) tour.start();
+    }catch(err){
+      toast({
+        title: "Error in Checking tutorial taken",
+        description: err,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }
+  const isTutorialTakenUpdate=async()=>{
+    try{
+      const page = "homePage";
+      const response=await axios.post(`/api/user/isTutorialTakenUpdate`,{page});
+      console.log(response.data);
+
+    }catch(err){
+      toast({
+        title: "Error in updating tutorial taken",
+        description: err,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }
   useEffect(() => {
     const timeline = document.querySelector(".timeline");
     const nav = document.querySelector(".navbar");
@@ -47,6 +85,7 @@ const Timeline = ({ data }) => {
       if (img) {
         img.remove();
       }
+      isTutorialTakenUpdate();
     };
 
     const handleTourCancel = () => {
@@ -66,6 +105,7 @@ const Timeline = ({ data }) => {
       if (img) {
         img.remove();
       }
+      isTutorialTakenUpdate();
     };
 
     tour.on("start", handleTourStart);
@@ -80,7 +120,8 @@ const Timeline = ({ data }) => {
   }, [tour]);
 
   useEffect(() => {
-    tour.start();
+    isTutorialTakenCheck();
+    
   }, []);
   return (
     <div className="px-5 timeline">

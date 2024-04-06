@@ -91,6 +91,13 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    tutorial: {
+      homePage: {type: Boolean, default:true},
+      articlePage: {type: Boolean, default:true},
+      profilePage: {type: Boolean, default:true},
+      leaderBoardPage: {type: Boolean, default:true},
+    },
+
   },
   { collection: "Users" }
 );
