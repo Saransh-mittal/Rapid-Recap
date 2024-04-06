@@ -7,26 +7,31 @@ import { useNavigate } from "react-router-dom";
 import Modal from "./Modal";
 import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
+import { debounce } from "lodash";
 
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
   const [items, setItems] = useState(state.items);
   const [page, setPage] = useState(state.page + 1);
   const [load, setLoad] = useState(true);
+  const [initialRender, setInitialRender] = useState(true);
   const { startDrag, drag, endDrag } = useDrag();
   const navigate = useNavigate();
   async function fetchData() {
     try {
-      const response = await axios.get(`/api/articles?page=${page}&pageSize=9`);
-      dispatch({ type: "PAGE", payloadPage: page });
-      dispatch({ type: "ITEMS", payloadItems: [...items, ...response.data] });
+      const response = await axios.get(
+        `/api/articles?page=${page}&pageSize=9&category=${state.category}`
+      );
+      dispatch({ type: "PAGE", payloadPage: page - 1 });
+      dispatch({
+        type: "ITEMS",
+        payloadItems: [...state.items, ...response.data],
+      });
+
       setItems((prev) => [...prev, ...response.data]);
-      
     } catch (error) {
-      // Handle errors
       console.log(error.message);
-    }
-    finally{
+    } finally {
       setLoad(false);
     }
   }
@@ -38,7 +43,6 @@ const Home = () => {
         document.documentElement.scrollHeight
       ) {
         setLoad(true);
-        dispatch({ type: "PAGE", payloadPage: page + 1 });
         setPage((ele) => ele + 1);
       }
     } catch (error) {
@@ -51,18 +55,36 @@ const Home = () => {
       navigate("/signin");
     }
   };
-
+  const debouncedHandleScroll = debounce(handleScroll, 300);
+  useEffect(() => {
+    if (initialRender) {
+      setInitialRender(false);
+    }
+    window.addEventListener("scroll", debouncedHandleScroll);
+    return () => window.removeEventListener("scroll", debouncedHandleScroll);
+  }, []);
+  useEffect(() => {
+    if (items.length < page * 9) fetchData();
+    else setLoad(false);
+  }, [page]);
   useEffect(() => {
     handleLoginAlert();
   }, [state.show]);
   useEffect(() => {
-    fetchData();
-  }, [page]);
-
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    if (!initialRender) {
+      const currPage = page;
+      dispatch({ type: "PAGE", payloadPage: 0 });
+      dispatch({ type: "ITEMS", payloadItems: [] });
+      setPage(() => 1);
+      //setCategory(() => state.category);
+      setItems(() => []);
+      setLoad(true);
+      if (currPage === 1)
+        setTimeout(() => {
+          fetchData();
+        }, 0);
+    }
+  }, [state.category]);
 
   return (
     <div
@@ -83,4 +105,4 @@ const Home = () => {
   );
 };
 
-export default React.memo(Home);
+export default Home;

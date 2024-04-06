@@ -21,15 +21,14 @@ const Timeline = ({ data }) => {
       nav.classList.add("shepherd-active");
       body.style.overflow = "hidden"; // Reapply scroll behavior
       const overlay = document.createElement("div");
-        overlay.classList.add("custom-overlay");
-        const overlayNav = document.createElement("div");
-        overlayNav.classList.add("custom-overlay-nav");
-        document.querySelector(".timeline").appendChild(overlay);
-        document.querySelector(".navbar").appendChild(overlayNav);
+      overlay.classList.add("custom-overlay");
+      const overlayNav = document.createElement("div");
+      overlayNav.classList.add("custom-overlay-nav");
+      document.querySelector(".timeline").appendChild(overlay);
+      document.querySelector(".navbar").appendChild(overlayNav);
     };
 
     const handleTourComplete = () => {
-
       body.style.overflow = "auto";
       timeline.classList.remove("shepherd-active");
       nav.classList.remove("shepherd-active");
@@ -38,11 +37,9 @@ const Timeline = ({ data }) => {
         timelineItem.classList.remove("highlighted-card-0");
       }
       const overlay = document.querySelector(".custom-overlay");
-      if(overlay)
-      overlay.remove();
+      if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
-      if(overlayNav)
-      overlayNav.remove();
+      if (overlayNav) overlayNav.remove();
       const img = document.querySelector(".hand-click-img");
       if (img) {
         img.remove();
@@ -110,7 +107,11 @@ const Timeline = ({ data }) => {
             //console.log(item.dateTime);
             return (
               <div className="col-md-6 col-lg-4 item" key={id}>
-                <TimelineItem newsNumber={id} data={item} tourComplete={tour.complete} />
+                <TimelineItem
+                  newsNumber={id}
+                  data={item}
+                  tourComplete={tour.complete}
+                />
               </div>
             );
           })}

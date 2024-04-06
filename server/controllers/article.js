@@ -9,9 +9,12 @@ const { breakArticleIntoParagraphs } = require("../utils/article");
 const NewsAPI = require("newsapi");
 
 const allArticles = async (req, res) => {
-  const { page = 1, pageSize = 9 } = req.query;
+  const { page = 1, pageSize = 9, category = "general" } = req.query;
+  //console.log(page, pageSize, category);
   try {
-    const article = await Article.find({})
+    const article = await Article.find({
+      category: { $regex: new RegExp("^" + category, "i") },
+    })
       .sort({
         dateTime: -1,
         "sentiments.compound": -1,

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import {
   Drawer,
   DrawerBody,
@@ -10,8 +10,10 @@ import {
   UnorderedList,
   ListItem,
 } from "@chakra-ui/react";
+import { AppContext } from "../../contextAPI/appContext";
 
 const Categories = ({ setShowCategory }) => {
+  const { state, dispatch } = useContext(AppContext);
   const { isOpen, onOpen, onClose } = useDisclosure();
   useEffect(() => {
     onOpen();
@@ -44,10 +46,7 @@ const Categories = ({ setShowCategory }) => {
       >
         <DrawerCloseButton />
         <DrawerHeader marginTop={"20px"}>Categories</DrawerHeader>
-        <DrawerBody
-          overflow={"hidden"}
-          marginTop={"50px"}
-        >
+        <DrawerBody overflow={"hidden"} marginTop={"50px"}>
           <UnorderedList
             height={"40%"}
             justifyContent={"space-between"}
@@ -63,8 +62,28 @@ const Categories = ({ setShowCategory }) => {
                   boxShadow:
                     "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
                   fontSize: "1.2rem",
+                  transition: "box-shadow 0.3s ease-in-out",
                 }}
                 cursor={"pointer"}
+                onClick={() => {
+                  dispatch({
+                    type: "setCategory",
+                    payloadCategory: item.toLocaleLowerCase(),
+                  });
+                  onClose();
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = "scale(0.90)";
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+                onTouchStart={(e) => {
+                  e.currentTarget.style.transform = "scale(0.90)";
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
               >
                 {item}
               </ListItem>

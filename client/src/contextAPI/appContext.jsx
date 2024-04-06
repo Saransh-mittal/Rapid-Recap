@@ -55,6 +55,7 @@ const initialState = {
   focusedNavLink: 0,
   page: 0,
   items: [],
+  category: "general",
   // ...
 };
 // async function init() {
