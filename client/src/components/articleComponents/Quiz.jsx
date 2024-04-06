@@ -24,6 +24,7 @@ import SubmittedQuizInterface from "./quizComponents/SubmittedQuizInterface";
 
 const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [timer, setTimer] = useState(50);
   const [submitted, setSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState([]);
   const [score, setScore] = useState(0);
@@ -128,6 +129,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
 
   const fetchQuiz = async () => {
     //fetch quiz data from api
+    setLoad(true);
     try {
       //console.log(article._id);
       const articleId = article._id;
@@ -135,6 +137,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
       if (response.data.expired) {
         throw new Error("Quiz is already expired.");
       }
+      setTimer(() => response.data.timer);
       setLoad(false);
       toast({
         title: "Quiz Generated Successfully!",
@@ -255,7 +258,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
               marginBottom={load ? "10px" : "0"} // remove this when skeleton isLoaded
             >
               <Countdown
-                initialTimer={50}
+                initialTimer={timer}
                 onTimerExhausted={() => handleSubmitQuiz()}
                 submitted={submitted}
                 setTimeTaken={setTimeTaken}
@@ -298,13 +301,22 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
                   />
                 </>
               ) : (
-                <SubmittedQuizInterface isOpen={isOpen} score={score} />
+                <SubmittedQuizInterface
+                  isOpen={isOpen}
+                  score={score}
+                />
               )}
             </ModalBody>
           )}
-          <Flex flexDirection={"column"} color={"white"}>
+          <Flex
+            flexDirection={"column"}
+            color={"white"}
+          >
             {load && (
-              <Text size={"lg"} color={"black"}>
+              <Text
+                size={"lg"}
+                color={"black"}
+              >
                 Quiz is generating. Wait for the start button....
               </Text>
             )}

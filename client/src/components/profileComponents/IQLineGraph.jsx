@@ -217,7 +217,7 @@ const IQLineGraph = ({ lineGraph }) => {
 
   useEffect(() => {
     fetchIQData();
-  }, []);
+  }, [lineGraph]);
   useEffect(() => {
     if (chartData)
       setChartData((prevChartData) => ({
@@ -291,15 +291,28 @@ const IQLineGraph = ({ lineGraph }) => {
         <>
           <Flex justifyContent={"space-between"}>
             <Flex flexDirection={"column"}>
-              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+              <Text
+                textAlign={"left"}
+                color={"#9CAFAA"}
+                p={0}
+                m={0}
+              >
                 IQ Score
               </Text>
-              <Text textAlign={"left"} fontSize={"1.5rem"}>
+              <Text
+                textAlign={"left"}
+                fontSize={"1.5rem"}
+              >
                 {hoveredData?.IQScore}
               </Text>
             </Flex>
             <Flex flexDirection={"column"}>
-              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+              <Text
+                textAlign={"left"}
+                color={"#9CAFAA"}
+                p={0}
+                m={0}
+              >
                 Date
               </Text>
               <Text textAlign={"left"}>
@@ -307,7 +320,12 @@ const IQLineGraph = ({ lineGraph }) => {
               </Text>
             </Flex>
             <Flex flexDirection={"column"}>
-              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+              <Text
+                textAlign={"left"}
+                color={"#9CAFAA"}
+                p={0}
+                m={0}
+              >
                 Daily Rank
               </Text>
               <Text textAlign={"left"}>{hoveredData?.dailyRank}</Text>
@@ -324,7 +342,11 @@ const IQLineGraph = ({ lineGraph }) => {
             p={0}
             m={0}
           >
-            <Line ref={chartRef} data={chartData} options={chartOptions} />
+            <Line
+              ref={chartRef}
+              data={chartData}
+              options={chartOptions}
+            />
           </Flex>
         </>
       )}

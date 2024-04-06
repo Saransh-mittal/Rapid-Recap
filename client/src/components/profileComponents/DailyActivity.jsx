@@ -148,8 +148,17 @@ const DailyActivity = ({ dailyAct }) => {
   const calendarData = generateCalendarData(currentYear, currentMonth);
   function renderCalendarBody(month, allDays) {
     return (
-      <Flex direction={{ base: "column" }} key={month} p={0} m={0}>
-        <Flex h={"80px"} p={0} m={0}>
+      <Flex
+        direction={{ base: "column" }}
+        key={month}
+        p={0}
+        m={0}
+      >
+        <Flex
+          h={"80px"}
+          p={0}
+          m={0}
+        >
           <Flex
             p={0}
             m={0}
@@ -209,10 +218,13 @@ const DailyActivity = ({ dailyAct }) => {
 
   useEffect(() => {
     fetchDailyActivity();
-  }, []);
+  }, [dailyAct]);
 
   return (
-    <Box m={0} pt={3}>
+    <Box
+      m={0}
+      pt={3}
+    >
       {isLoading ? (
         <Loading />
       ) : (
@@ -223,7 +235,12 @@ const DailyActivity = ({ dailyAct }) => {
             marginStart={"15px"}
             marginBottom={"20px"}
           >
-            <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+            <Text
+              textAlign={"left"}
+              color={"#9CAFAA"}
+              p={0}
+              m={0}
+            >
               Daily Activity
             </Text>
           </Box>

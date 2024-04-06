@@ -24,25 +24,28 @@ const News = () => {
       style={{
         backgroundColor: "#1a1a2e",
         color: "#253547",
-        minHeight: "90vh",
+        minHeight: "90vh", 
+        // maxWidth: "80vh",
       }}
-    >
+      >
       <Image
         src={data.imgURL ? data.imgURL : alt_image}
-        style={{ width: "92%", marginTop: "1rem" }}
+        style={{ width: "92%", marginTop: "1rem", maxWidth:"80vh" }}
         onError={(e) => {
           e.target.onerror = null;
           e.target.src = alt_image;
         }}
-      />
-      <div style={{ width: "92%" }}>
+        />
+      <div 
+        className="d-flex justify-content-center flex-column align-items-center"
+      style={{ width: "92%" }}>
         <h1
           className="mt-3 mb-3"
-          style={{ color: "#f0f0f0", textAlign: "center" }}
+          style={{ color: "#f0f0f0", textAlign: "center", maxWidth:"150vh" }}
         >
           {data.title}
         </h1>
-        <p className="mb-2" style={{ color: "#f0f0f0", textAlign: "justify" }}>
+        <p className="mb-2" style={{ color: "#f0f0f0", textAlign: "center", maxWidth:"150vh" }}>
           {data.mainText.length > 1000
             ? `${data.mainText.substring(0, 1000)}...`
             : data.mainText}

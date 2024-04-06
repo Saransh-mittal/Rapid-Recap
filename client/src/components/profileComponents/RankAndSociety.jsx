@@ -9,13 +9,12 @@ import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 import { AppContext } from "../../contextAPI/appContext";
 import Loading from "../miscellaneous/Loading";
 
-const RankAndSociety = () => {
+const RankAndSociety = ({ USER_IQ = 0 }) => {
   const { state, dispatch } = useContext(AppContext);
   const [circleAndSociety, setCircleAndSociety] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    const user = state.user;
-    const userIQ = user.IQ_score;
+    const userIQ = USER_IQ;
     const circleAndSocietyData = CircleAndSocietyData;
     const userCircleAndSociety = circleAndSocietyData.filter(
       (data) =>
@@ -25,7 +24,7 @@ const RankAndSociety = () => {
 
     setCircleAndSociety(...userCircleAndSociety);
     setIsLoading(false);
-  }, []);
+  }, [USER_IQ]);
   return (
     <Flex
       margin="10px"
@@ -40,12 +39,24 @@ const RankAndSociety = () => {
         <Loading />
       ) : (
         <>
-          <Box flexDirection={"column"} width={"100%"}>
-            <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+          <Box
+            flexDirection={"column"}
+            width={"100%"}
+          >
+            <Text
+              textAlign={"left"}
+              color={"#9CAFAA"}
+              p={0}
+              m={0}
+            >
               Society and Circle
             </Text>
           </Box>
-          <Flex mt={5} flexDirection={"column"} w={"100%"}>
+          <Flex
+            mt={5}
+            flexDirection={"column"}
+            w={"100%"}
+          >
             <Flex width={"100%"}>
               <Flex
                 justifyContent={"center"}
@@ -86,7 +97,10 @@ const RankAndSociety = () => {
                   src={Arrow}
                 />
               </Flex>
-              <Flex w={"100%"} position={"relative"}>
+              <Flex
+                w={"100%"}
+                position={"relative"}
+              >
                 <Flex
                   w={"100%"}
                   position={"absolute"}
@@ -96,13 +110,28 @@ const RankAndSociety = () => {
                   top={"2.7rem"}
                   right={"0.5rem"}
                 >
-                  <Text color={"#9CAFAA"} fontSize={"0.8rem"} p={0} m={0}>
+                  <Text
+                    color={"#9CAFAA"}
+                    fontSize={"0.8rem"}
+                    p={0}
+                    m={0}
+                  >
                     {circleAndSociety.IQ_Lower}
                   </Text>
-                  <Text color={"#9CAFAA"} fontSize={"0.8rem"} p={0} m={0}>
+                  <Text
+                    color={"#9CAFAA"}
+                    fontSize={"0.8rem"}
+                    p={0}
+                    m={0}
+                  >
                     to
                   </Text>
-                  <Text color={"#9CAFAA"} fontSize={"0.8rem"} p={0} m={0}>
+                  <Text
+                    color={"#9CAFAA"}
+                    fontSize={"0.8rem"}
+                    p={0}
+                    m={0}
+                  >
                     {circleAndSociety.IQ_Upper} IQ
                   </Text>
                 </Flex>
