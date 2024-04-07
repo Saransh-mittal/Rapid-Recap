@@ -8,12 +8,13 @@ import Modal from "./Modal";
 import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
 import { debounce } from "lodash";
+import { useToast } from "@chakra-ui/react";
 
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
   const [items, setItems] = useState(state.items);
   const [page, setPage] = useState(state.page + 1);
-  const [initialRender, setInitialRender] = useState(true);
+  const toast = useToast();
   const [load, setLoad] = useState(true);
   const { startDrag, drag, endDrag } = useDrag();
   const navigate = useNavigate();
@@ -54,101 +55,70 @@ const Home = () => {
   };
 
   const handleLoginAlert = () => {
-    if (state.show === true) {
+    if (state.show) {
       navigate("/signin");
+      toast({
+        title: "Please Sign In First",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
     }
   };
-  const debouncedHandleScroll = debounce(handleScroll, 300);
-  useEffect(() => {
-    //setInitialRender(false);
-    if (!category || category === "") {
-      console.log("navigating to general");
-      navigate("/general");
-    }
-    console.log("initial useEffect");
-    dispatch({ type: "homeInitialRender" });
-    window.addEventListener("scroll", debouncedHandleScroll);
-    return () => window.removeEventListener("scroll", debouncedHandleScroll);
-  }, []);
-  useEffect(() => {
-    // console.log(
-    //   state.category,
-    //   category,
-    //   "page : ",
-    //   page,
-    //   "items : ",
-    //   items.length
-    // );
-    console.log("on Page change useEffect");
-    if (items.length < page * 9) {
-      console.log("fetching data");
-      fetchData();
-    } else setLoad(false);
-  }, [page]);
   useEffect(() => {
     handleLoginAlert();
   }, [state.show]);
+  const debouncedHandleScroll = debounce(handleScroll, 300);
   useEffect(() => {
-    //console.log(category);
-    //if (state.items.length > 0 && state.items[0].category !== category) {
-    //console.log("category changed", "initialRender : ", initialRender);
-    console.log("category change useEffect");
-    if (state.category !== category) {
-      setLoad(true);
-      dispatch({ type: "category", payloadCategory: category });
-      console.log(
-        state.category,
-        category,
-        "page : ",
-        page,
-        "items : ",
-        state.items.length
-      );
-      dispatch({ type: "PAGE", payloadPage: 0 });
-      dispatch({
-        type: "ITEMS",
-        payloadItems: [],
-      });
+    if (!state.show) {
+      //setInitialRender(false);
+      if (!category || category === "") {
+        navigate("/general");
+      }
+      dispatch({ type: "homeInitialRender" });
+      window.addEventListener("scroll", debouncedHandleScroll);
     }
+    return () => window.removeEventListener("scroll", debouncedHandleScroll);
+  }, []);
+  useEffect(() => {
+    if (!state.show) {
+      if (items.length < page * 9) {
+        fetchData();
+      } else setLoad(false);
+    }
+  }, [page]);
 
-    //}
-    //}
-    return () => {
-      //cleanup
-      // if (state.category !== category) {
-      //   dispatch({ type: "PAGE", payloadPage: 0 });
-      //   dispatch({
-      //     type: "ITEMS",
-      //     payloadItems: [],
-      //   });
-      // }
-    };
+  useEffect(() => {
+    if (!state.show) {
+      if (state.category !== category) {
+        setLoad(true);
+        dispatch({ type: "category", payloadCategory: category });
+        dispatch({ type: "PAGE", payloadPage: 0 });
+        dispatch({
+          type: "ITEMS",
+          payloadItems: [],
+        });
+      }
+    }
   }, [category]);
 
   useEffect(() => {
-    console.log("items change useEffect");
-    const currPage = state.page;
-    if (
-      currPage === 0 &&
-      !state.homeInitialRender &&
-      state.items.length === 0 &&
-      state.category === category
-    ) {
-      console.log("fetching data");
-      console.log(
-        "items.length : ",
-        state.items.length,
-        "page : ",
-        currPage,
-        "local Items.length : ",
-        items.length
-      );
-      setPage(() => 1);
-      setItems(() => []);
-      if (page === 1)
-        setTimeout(() => {
-          fetchData();
-        }, 0);
+    if (!state.show) {
+      const currPage = state.page;
+      if (
+        currPage === 0 &&
+        !state.homeInitialRender &&
+        state.items.length === 0 &&
+        state.category === category
+      ) {
+        setPage(() => 1);
+        setItems(() => []);
+        if (page === 1)
+          setTimeout(() => {
+            fetchData();
+          }, 0);
+      }
     }
   }, [state.items, state.page, state.category]);
 
@@ -165,7 +135,7 @@ const Home = () => {
           <News />
         </Modal>
       )}
-      {state.user && <Timeline data={items} />}
+      {!state.show && <Timeline data={items} />}
       {load && <Loading />}
     </div>
   );

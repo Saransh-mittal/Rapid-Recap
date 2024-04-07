@@ -22,7 +22,7 @@ const Timeline = ({ data }) => {
       const response = await axios.get(
         `/api/user/isTutorialTakenCheck/${Page}`
       );
-      console.log(response.data);
+
       if (response.data.status) tour.start();
     } catch (err) {
       toast({
@@ -38,10 +38,9 @@ const Timeline = ({ data }) => {
   const isTutorialTakenUpdate = async () => {
     try {
       const page = "homePage";
-      const response = await axios.post(`/api/user/isTutorialTakenUpdate`, {
+      await axios.post(`/api/user/isTutorialTakenUpdate`, {
         page,
       });
-      console.log(response.data);
     } catch (err) {
       toast({
         title: "Error in updating tutorial taken",
@@ -149,10 +148,7 @@ const Timeline = ({ data }) => {
           {data.map((item, id) => {
             //console.log(item.dateTime);
             return (
-              <div
-                className="col-md-6 col-lg-4 item"
-                key={id}
-              >
+              <div className="col-md-6 col-lg-4 item" key={id}>
                 <TimelineItem
                   newsNumber={id}
                   data={item}

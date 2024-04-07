@@ -62,10 +62,7 @@ const Navbar = () => {
       onTouchEnd={endDrag}
     >
       <div className="container-fluid">
-        <NavLink
-          to="/"
-          className="navbar-brand"
-        >
+        <NavLink to="/" className="navbar-brand">
           📻 Rapid Recap
         </NavLink>
         <button
@@ -79,23 +76,17 @@ const Navbar = () => {
         >
           <span className="navbar-toggler-icon"></span>
         </button>
-        <div
-          className="collapse navbar-collapse"
-          id="navbarNav"
-        >
+        <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav">
             {navItems.map((item, index) => (
-              <li
-                className="nav-item"
-                key={index}
-              >
+              <li className="nav-item" key={index}>
                 {item.label === "Profile" && !state.show ? (
                   <ProfileDropDownMenu
                     handleLogout={handleLogout}
                     toProfile={item.to}
                     refProfile={(ref) => (navLinkRefs.current[index] = ref)}
                   />
-                ) : item.label === "category" ? (
+                ) : item.label === "category" && !state.show ? (
                   <>
                     <Button
                       colorScheme="teal"
@@ -108,7 +99,8 @@ const Navbar = () => {
                     )}
                   </>
                 ) : (
-                  item.label !== "Profile" && (
+                  item.label !== "Profile" &&
+                  item.label !== "category" && (
                     <NavLink
                       to={item.to}
                       className="nav-link"
@@ -122,10 +114,7 @@ const Navbar = () => {
             ))}
             {state.show && (
               <li className="nav-item">
-                <NavLink
-                  to="/signin"
-                  className="nav-link"
-                >
+                <NavLink to="/signin" className="nav-link">
                   Sign In
                 </NavLink>
               </li>

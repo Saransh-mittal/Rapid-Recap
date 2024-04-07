@@ -15,13 +15,17 @@ import {
 } from "@chakra-ui/react";
 import medalIcon from "../assets/medal.png";
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useShepherdTour } from "react-shepherd";
 import Loading from "../components/miscellaneous/Loading";
 import stepsLeaderBoard from "../components/leaderBoardComponents/stepsLeaderBoard"; // Assuming stepsLeaderBoard.js is in the same directory
 import { tourOptions } from "../components/leaderBoardComponents/stepsLeaderBoard";
+import { AppContext } from "../contextAPI/appContext";
+import { useNavigate } from "react-router-dom";
 
 const LeaderBoard = () => {
+  const navigate = useNavigate();
+  const { state } = useContext(AppContext);
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [leaders, setLeaders] = useState(null);
@@ -30,13 +34,15 @@ const LeaderBoard = () => {
     steps: stepsLeaderBoard,
   });
 
-  const isTutorialTakenCheck=async()=>{
-    try{
+  const isTutorialTakenCheck = async () => {
+    try {
       const Page = "leaderBoardPage";
-      const response=await axios.get(`/api/user/isTutorialTakenCheck/${Page}`);
+      const response = await axios.get(
+        `/api/user/isTutorialTakenCheck/${Page}`
+      );
       console.log(response.data);
-      if(response.data.status) tour.start();
-    }catch(err){
+      if (response.data.status) tour.start();
+    } catch (err) {
       toast({
         title: "Error in Checking tutorial taken",
         description: err,
@@ -46,14 +52,15 @@ const LeaderBoard = () => {
         position: "top",
       });
     }
-  }
-  const isTutorialTakenUpdate=async()=>{
-    try{
+  };
+  const isTutorialTakenUpdate = async () => {
+    try {
       const page = "leaderBoardPage";
-      const response=await axios.post(`/api/user/isTutorialTakenUpdate`,{page});
+      const response = await axios.post(`/api/user/isTutorialTakenUpdate`, {
+        page,
+      });
       console.log(response.data);
-
-    }catch(err){
+    } catch (err) {
       toast({
         title: "Error in updating tutorial taken",
         description: err,
@@ -63,7 +70,7 @@ const LeaderBoard = () => {
         position: "top",
       });
     }
-  }
+  };
 
   const fetchLeaderBoard = async () => {
     try {
@@ -83,9 +90,26 @@ const LeaderBoard = () => {
       setIsLoading(false);
     }
   };
-
+  const handleLoginAlert = () => {
+    if (state.show) {
+      navigate("/signin");
+      toast({
+        title: "Please Sign In First",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  };
   useEffect(() => {
-    fetchLeaderBoard();
+    handleLoginAlert();
+  }, [state.show]);
+  useEffect(() => {
+    if (!state.show) {
+      fetchLeaderBoard();
+      isTutorialTakenCheck();
+    }
   }, []);
 
   useEffect(() => {
@@ -141,11 +165,6 @@ const LeaderBoard = () => {
       tour.off("cancel", handleTourCancel);
     };
   }, [tour]);
-
-  useEffect(() => {
-    // tour.start();
-    isTutorialTakenCheck();
-  }, []);
 
   return (
     <Flex minH={"85vh"} justifyContent={"center"} className="leaderboard">
