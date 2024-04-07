@@ -66,6 +66,41 @@ const Article = () => {
   const [expectedIQ, setExpectedIQ] = useState(null);
   //const [showInstruction, setShowInstruction] = useState(false);
 
+  const isTutorialTakenCheck=async()=>{
+    try{
+      const Page = "articlePage";
+      const response=await axios.get(`/api/user/isTutorialTakenCheck/${Page}`);
+      console.log(response.data);
+      if(response.data.status) tour.start();
+    }catch(err){
+      toast({
+        title: "Error in Checking tutorial taken",
+        description: err,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }
+  const isTutorialTakenUpdate=async()=>{
+    try{
+      const page = "articlePage";
+      const response=await axios.post(`/api/user/isTutorialTakenUpdate`,{page});
+      console.log(response.data);
+
+    }catch(err){
+      toast({
+        title: "Error in updating tutorial taken",
+        description: err,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }
+
   const fetchArticle = async () => {
     try {
       const response = await axios.get(`/api/articles/article/${id}`);
@@ -220,6 +255,7 @@ const Article = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
+      isTutorialTakenUpdate();
     };
 
     const handleTourCancel = () => {
@@ -235,6 +271,7 @@ const Article = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
+      isTutorialTakenUpdate();
     };
 
     tour.on("start", handleTourStart);
@@ -251,7 +288,8 @@ const Article = () => {
   useEffect(() => {
     fetchArticle();
     checkOnGoingQuiz();
-    tour.start();
+    isTutorialTakenCheck();
+    // tour.start();
   }, []);
   // useEffect(() => {
   //   getExpectedIQ();
