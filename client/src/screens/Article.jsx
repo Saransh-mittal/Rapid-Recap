@@ -66,13 +66,15 @@ const Article = () => {
   const [expectedIQ, setExpectedIQ] = useState(null);
   //const [showInstruction, setShowInstruction] = useState(false);
 
-  const isTutorialTakenCheck=async()=>{
-    try{
+  const isTutorialTakenCheck = async () => {
+    try {
       const Page = "articlePage";
-      const response=await axios.get(`/api/user/isTutorialTakenCheck/${Page}`);
+      const response = await axios.get(
+        `/api/user/isTutorialTakenCheck/${Page}`
+      );
       console.log(response.data);
-      if(response.data.status) tour.start();
-    }catch(err){
+      if (response.data.status) tour.start();
+    } catch (err) {
       toast({
         title: "Error in Checking tutorial taken",
         description: err,
@@ -82,14 +84,15 @@ const Article = () => {
         position: "top",
       });
     }
-  }
-  const isTutorialTakenUpdate=async()=>{
-    try{
+  };
+  const isTutorialTakenUpdate = async () => {
+    try {
       const page = "articlePage";
-      const response=await axios.post(`/api/user/isTutorialTakenUpdate`,{page});
+      const response = await axios.post(`/api/user/isTutorialTakenUpdate`, {
+        page,
+      });
       console.log(response.data);
-
-    }catch(err){
+    } catch (err) {
       toast({
         title: "Error in updating tutorial taken",
         description: err,
@@ -99,7 +102,7 @@ const Article = () => {
         position: "top",
       });
     }
-  }
+  };
 
   const fetchArticle = async () => {
     try {
@@ -354,7 +357,10 @@ const Article = () => {
             marginTop={{ base: "50px", md: "0px" }}
           >
             {article && (
-              <GridItem w="100%" className="article-container">
+              <GridItem
+                w="100%"
+                className="article-container"
+              >
                 <Heading
                   align="left"
                   letterSpacing={1}
@@ -391,8 +397,14 @@ const Article = () => {
                   </span>
                 </Heading>
                 {article.mainText.length === 3 ? (
-                  <Box marginTop={5} ref={articleRef}>
-                    <Text align="justify" letterSpacing={0}>
+                  <Box
+                    marginTop={5}
+                    ref={articleRef}
+                  >
+                    <Text
+                      align="justify"
+                      letterSpacing={0}
+                    >
                       {article.mainText[0]}
                     </Text>
                     <Box
@@ -429,16 +441,26 @@ const Article = () => {
                         }}
                       />
 
-                      <Text ref={textRef} align="justify" letterSpacing={0}>
+                      <Text
+                        ref={textRef}
+                        align="justify"
+                        letterSpacing={0}
+                      >
                         {article.mainText[1]}
                       </Text>
                     </Box>
-                    <Text align="justify" letterSpacing={0}>
+                    <Text
+                      align="justify"
+                      letterSpacing={0}
+                    >
                       {article.mainText[2]}
                     </Text>
                   </Box>
                 ) : (
-                  <Box marginTop={8} ref={articleRef}>
+                  <Box
+                    marginTop={8}
+                    ref={articleRef}
+                  >
                     <Image
                       css={{
                         "@media screen and (max-width: 1366px)": {
@@ -467,10 +489,17 @@ const Article = () => {
                       }}
                     />
 
-                    <Text ref={textRef} align="left" letterSpacing={1}>
+                    <Text
+                      ref={textRef}
+                      align="left"
+                      letterSpacing={1}
+                    >
                       {article.mainText[0]}
                     </Text>
-                    <Text align="left" letterSpacing={1}>
+                    <Text
+                      align="left"
+                      letterSpacing={1}
+                    >
                       {article.mainText[1]}
                     </Text>
                   </Box>
@@ -578,51 +607,16 @@ const Article = () => {
             </GridItem>
             {givenQuiz ? (
               <>
-                <Flex
+                <GivenQuiz
+                  articleId={id}
+                  percentile={percentile}
+                  RQM_score={RQM_score}
                   css={{
                     "@media screen and (min-width: 821px)": {
                       display: "none",
                     },
                   }}
-                  flexDirection="column"
-                  alignItems="center"
-                  bgGradient="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-                  color="white"
-                  borderRadius="lg"
-                  p={6}
-                  boxShadow="0 4px 8px rgba(0, 0, 0, 0.1)"
-                  marginBottom={5}
-                >
-                  <Heading
-                    as="h6"
-                    size="lg"
-                    textAlign="center"
-                    mb={4}
-                    color="cyan.400"
-                  >
-                    Explore Your Quiz Performance
-                  </Heading>
-                  <Flex flexDirection="column" alignItems="center">
-                    <Heading
-                      textAlign={"left"}
-                      as="h6"
-                      fontSize="20px"
-                      mb={2}
-                      color="green.300"
-                    >
-                      Current Percentile: {percentile}%
-                    </Heading>
-                    <Heading
-                      textAlign={"left"}
-                      as="h6"
-                      fontSize="20px"
-                      mb={4}
-                      color="green.300"
-                    >
-                      RQM-Score: {RQM_score}
-                    </Heading>
-                  </Flex>
-                </Flex>
+                />
               </>
             ) : onGoingQuiz ? (
               <Heading

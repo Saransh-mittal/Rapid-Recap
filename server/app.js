@@ -19,6 +19,7 @@ require("./db/conn");
 // ------Deleteion utils------
 //require("./utils/deletion.utils/removeUser.del");
 //require("./utils/deletion.utils/removeDailIQField.del");
+//require("./utils/deletion.utils/quizGivenByUserDeletion");
 // ---------------------------
 
 // -----Update Collection-----

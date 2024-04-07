@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import QuizGivenSummary from "./quizComponents/QuizGivenSummary";
 
-const GivenQuiz = ({ percentile, RQM_score, articleId }) => {
+const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [showQuizSummary, setShowQuizSummary] = useState(false);
   return (
@@ -23,11 +23,21 @@ const GivenQuiz = ({ percentile, RQM_score, articleId }) => {
       p={6}
       boxShadow="5px 4px 8px rgba(0, 0, 0, 0.5)"
       marginBottom={5}
+      css={css}
     >
-      <Heading as="h6" size="xl" textAlign="center" mb={3} color="#B1D0E0">
+      <Heading
+        as="h6"
+        size="xl"
+        textAlign="center"
+        mb={3}
+        color="#B1D0E0"
+      >
         Quiz Performance
       </Heading>
-      <Flex flexDirection="column" alignItems="center">
+      <Flex
+        flexDirection="column"
+        alignItems="center"
+      >
         <Heading
           textAlign={"center"}
           as="h6"

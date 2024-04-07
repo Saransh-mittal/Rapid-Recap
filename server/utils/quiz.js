@@ -1,45 +1,91 @@
 const OpenAI = require("openai");
 const QuizAttempt = require("../model/quizAttemptSchema");
-const genQuiz = ({ fullQuiz, title }) => {
-  const selectedQuestions = [];
-  // Add one question from each non-empty para to selectedQuestions
-  //console.log(fullQuiz);
-  let para1 = fullQuiz.para1;
-  let para2 = fullQuiz.para2;
-  let para3 = fullQuiz.para3;
-  let paragraphs = { para1, para2, para3 };
-  for (let i = 1; i <= 3; i++) {
-    const para = paragraphs[`para${i}`];
-    if (para.questions.length > 0) {
-      const randomIndex = Math.floor(Math.random() * para.questions.length);
-      selectedQuestions.push(para.questions[randomIndex]);
-      paragraphs[`para${i}`].questions.splice(randomIndex, 1);
-    }
-  }
+const Quiz = require("../model/quizSchema");
+const genQuiz = async ({ fullQuiz, title }) => {
+  const selectedQuestions = new Set(); // Using a Set to ensure uniqueness
+
+  // Loop through each paragraph
   const len = Math.min(
     5,
     fullQuiz.para1.questions.length +
       fullQuiz.para2.questions.length +
       fullQuiz.para3.questions.length
   );
-  while (selectedQuestions.length < len) {
-    const randomPara = Math.floor(Math.random() * 3) + 1;
-    const para = paragraphs[`para${randomPara}`];
-
-    if (
-      para.questions.length > 0 &&
-      !selectedQuestions.some((q) => q === para.questions[0])
-    ) {
-      const randomIndex = Math.floor(Math.random() * para.questions.length);
-      selectedQuestions.push(para.questions[randomIndex]);
-      paragraphs[`para${randomPara}`].questions.splice(randomIndex, 1);
+  const paraNames = [];
+  for (let paraName in fullQuiz) {
+    if (paraName.startsWith("para")) {
+      paraNames.push(paraName);
+      const para = fullQuiz[paraName];
+      while (para.questions.length > 0) {
+        // Loop through each question in the paragraph
+        // randomly select a question
+        const question =
+          para.questions[Math.floor(Math.random() * para.questions.length)];
+        const questionId = question._id.toString(); // Convert ObjectId to string for comparison
+        // Add the question's ID to the selectedQuestions Set if it's not already there
+        if (!selectedQuestions.has(questionId)) {
+          selectedQuestions.add(questionId);
+          // If we have enough questions, break out of the loop
+          break;
+        }
+        para.questions = para.questions.filter(
+          (q) => q._id.toString() !== questionId
+        );
+      }
+      if (selectedQuestions.size >= 3) {
+        break;
+      }
     }
   }
+
+  // Loop through each paragraph to select remaining questions randomly
+  while (selectedQuestions.size < len) {
+    const randomParaName =
+      paraNames[Math.floor(Math.random() * paraNames.length)];
+    const para = fullQuiz[randomParaName];
+
+    while (para.questions.length > 0 && selectedQuestions.size < len) {
+      // Select a random question from the paragraph
+      const randomIndex = Math.floor(Math.random() * para.questions.length);
+      const randomQuestion = para.questions[randomIndex];
+      const questionId = randomQuestion._id.toString(); // Convert ObjectId to string for comparison
+
+      // Add the question's ID to the selectedQuestions Set if it's not already there
+      if (!selectedQuestions.has(questionId)) {
+        selectedQuestions.add(questionId);
+        // If we have enough questions, break out of the loop
+        break;
+      }
+      // Remove the selected question from the paragraph
+      para.questions = para.questions.filter(
+        (q) => q._id.toString() !== questionId
+      );
+    }
+  }
+  // Convert Set back to array
+  const selectedQuestionsArray = Array.from(selectedQuestions);
+  const originalFullQuiz = await Quiz.findById(fullQuiz._id);
+  // Create the quiz object
   const quiz = {
     title: title,
-    questions: selectedQuestions,
+    questions: selectedQuestionsArray.map((questionId) => {
+      // Find the question object by its ID
+      for (let paraName in originalFullQuiz) {
+        if (paraName.startsWith("para")) {
+          const para = originalFullQuiz[paraName];
+
+          // found question using included
+          const foundQuestion = para.questions.filter((question) => {
+            return question._id.toString() === questionId;
+          })[0];
+          if (foundQuestion) {
+            return foundQuestion;
+          }
+        }
+      }
+    }),
   };
-  //console.log(quiz);
+
   return quiz;
 };
 const generateQuestionsForQuiz = async ({ title, author, mainText }) => {

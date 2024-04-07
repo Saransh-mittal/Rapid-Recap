@@ -116,6 +116,12 @@ const getQuiz = async (req, res) => {
             fullQuiz.para2.questions.length +
             fullQuiz.para3.questions.length
         ) * 10;
+      // console.log(
+      //   timer,
+      //   fullQuiz.para1.questions.length +
+      //     fullQuiz.para2.questions.length +
+      //     fullQuiz.para3.questions.length
+      // );
       // if (fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()) {
       //   if (fullQuiz.isActive) {
       //     await updatePercentilesOnQuizDeactivation({ id: article._id });
@@ -153,6 +159,7 @@ const getQuiz = async (req, res) => {
           response.para2.questions.length +
           response.para3.questions.length
       ) * 10;
+
     const newQuiz = new Quiz({
       article: articleId,
       para1: response.para1,
@@ -201,7 +208,7 @@ const startQuiz = async (req, res) => {
         await article.save();
         throw new Error("Quiz not found, Please try again.");
       }
-      const quiz = genQuiz({ fullQuiz, title });
+      const quiz = await genQuiz({ fullQuiz, title });
       if (quiz.questions.length <= 2) {
         throw new Error("Article is too short for a quiz");
       }
@@ -214,7 +221,7 @@ const startQuiz = async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({ error: error.message || "Something went wrong" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
