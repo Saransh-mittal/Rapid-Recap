@@ -15,14 +15,16 @@ const tourOptions = {
 };
 const Timeline = ({ data }) => {
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
-  const toast=useToast();
-  const isTutorialTakenCheck=async()=>{
-    try{
+  const toast = useToast();
+  const isTutorialTakenCheck = async () => {
+    try {
       const Page = "homePage";
-      const response=await axios.get(`/api/user/isTutorialTakenCheck/${Page}`);
+      const response = await axios.get(
+        `/api/user/isTutorialTakenCheck/${Page}`
+      );
       console.log(response.data);
-      if(response.data.status) tour.start();
-    }catch(err){
+      if (response.data.status) tour.start();
+    } catch (err) {
       toast({
         title: "Error in Checking tutorial taken",
         description: err,
@@ -32,14 +34,15 @@ const Timeline = ({ data }) => {
         position: "top",
       });
     }
-  }
-  const isTutorialTakenUpdate=async()=>{
-    try{
+  };
+  const isTutorialTakenUpdate = async () => {
+    try {
       const page = "homePage";
-      const response=await axios.post(`/api/user/isTutorialTakenUpdate`,{page});
+      const response = await axios.post(`/api/user/isTutorialTakenUpdate`, {
+        page,
+      });
       console.log(response.data);
-
-    }catch(err){
+    } catch (err) {
       toast({
         title: "Error in updating tutorial taken",
         description: err,
@@ -49,7 +52,7 @@ const Timeline = ({ data }) => {
         position: "top",
       });
     }
-  }
+  };
   useEffect(() => {
     const timeline = document.querySelector(".timeline");
     const nav = document.querySelector(".navbar");
@@ -59,15 +62,14 @@ const Timeline = ({ data }) => {
       nav.classList.add("shepherd-active");
       body.style.overflow = "hidden"; // Reapply scroll behavior
       const overlay = document.createElement("div");
-        overlay.classList.add("custom-overlay");
-        const overlayNav = document.createElement("div");
-        overlayNav.classList.add("custom-overlay-nav");
-        document.querySelector(".timeline").appendChild(overlay);
-        document.querySelector(".navbar").appendChild(overlayNav);
+      overlay.classList.add("custom-overlay");
+      const overlayNav = document.createElement("div");
+      overlayNav.classList.add("custom-overlay-nav");
+      document.querySelector(".timeline").appendChild(overlay);
+      document.querySelector(".navbar").appendChild(overlayNav);
     };
 
     const handleTourComplete = () => {
-
       body.style.overflow = "auto";
       timeline.classList.remove("shepherd-active");
       nav.classList.remove("shepherd-active");
@@ -76,11 +78,9 @@ const Timeline = ({ data }) => {
         timelineItem.classList.remove("highlighted-card-0");
       }
       const overlay = document.querySelector(".custom-overlay");
-      if(overlay)
-      overlay.remove();
+      if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
-      if(overlayNav)
-      overlayNav.remove();
+      if (overlayNav) overlayNav.remove();
       const img = document.querySelector(".hand-click-img");
       if (img) {
         img.remove();
@@ -121,7 +121,6 @@ const Timeline = ({ data }) => {
 
   useEffect(() => {
     isTutorialTakenCheck();
-    
   }, []);
   return (
     <div className="px-5 timeline">
@@ -150,8 +149,15 @@ const Timeline = ({ data }) => {
           {data.map((item, id) => {
             //console.log(item.dateTime);
             return (
-              <div className="col-md-6 col-lg-4 item" key={id}>
-                <TimelineItem newsNumber={id} data={item} tourComplete={tour.complete} />
+              <div
+                className="col-md-6 col-lg-4 item"
+                key={id}
+              >
+                <TimelineItem
+                  newsNumber={id}
+                  data={item}
+                  tourComplete={tour.complete}
+                />
               </div>
             );
           })}
