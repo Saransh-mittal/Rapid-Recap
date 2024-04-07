@@ -77,7 +77,7 @@ const Timeline = ({ data }) => {
   }, [tour]);
 
   useEffect(() => {
-    tour.start();
+    //tour.start();
   }, []);
   return (
     <div className="px-5 timeline">
@@ -106,7 +106,10 @@ const Timeline = ({ data }) => {
           {data.map((item, id) => {
             //console.log(item.dateTime);
             return (
-              <div className="col-md-6 col-lg-4 item" key={id}>
+              <div
+                className="col-md-6 col-lg-4 item"
+                key={id}
+              >
                 <TimelineItem
                   newsNumber={id}
                   data={item}

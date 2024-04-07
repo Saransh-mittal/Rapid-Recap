@@ -21,9 +21,11 @@ export const Reducer = (state, action) => {
       return { ...state, user: action.payloadUser };
     case "setFocusedNavLink":
       return { ...state, focusedNavLink: action.payloadFocusedNavLink };
-    case "setCategory":
-      return { ...state, category: action.payloadCategory };
     // Add more cases for other actions
+    case "homeInitialRender":
+      return { ...state, homeInitialRender: false };
+    case "category":
+      return { ...state, category: action.payloadCategory };
     default:
       return state;
   }

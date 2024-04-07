@@ -11,10 +11,12 @@ import {
   ListItem,
 } from "@chakra-ui/react";
 import { AppContext } from "../../contextAPI/appContext";
+import { useNavigate } from "react-router-dom";
 
 const Categories = ({ setShowCategory }) => {
   const { state, dispatch } = useContext(AppContext);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const navigate = useNavigate();
   useEffect(() => {
     onOpen();
   }, []);
@@ -46,7 +48,10 @@ const Categories = ({ setShowCategory }) => {
       >
         <DrawerCloseButton />
         <DrawerHeader marginTop={"20px"}>Categories</DrawerHeader>
-        <DrawerBody overflow={"hidden"} marginTop={"50px"}>
+        <DrawerBody
+          overflow={"hidden"}
+          marginTop={"50px"}
+        >
           <UnorderedList
             height={"40%"}
             justifyContent={"space-between"}
@@ -66,10 +71,12 @@ const Categories = ({ setShowCategory }) => {
                 }}
                 cursor={"pointer"}
                 onClick={() => {
-                  dispatch({
-                    type: "setCategory",
-                    payloadCategory: item.toLocaleLowerCase(),
-                  });
+                  // dispatch({
+                  //   type: "category",
+                  //   payloadCategory: item.toLocaleLowerCase(),
+                  // });
+
+                  navigate(`/${item.toLowerCase()}`);
                   onClose();
                 }}
                 onMouseDown={(e) => {

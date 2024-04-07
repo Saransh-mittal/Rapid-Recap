@@ -18,7 +18,6 @@ async function showState() {
 function parseURL(url) {
   // Split the URL by slashes
   const segments = url.split("/");
-
   // The segment after the base URL will indicate the route
   const route = segments[3];
   const id = segments[4];
@@ -45,6 +44,14 @@ async function currentArticle() {
   }
 }
 
+//function to get initial category from home url
+function getCategory() {
+  const url = window.location.href;
+  const { route } = parseURL(url);
+
+  return route;
+}
+const category = getCategory();
 const initialState = {
   // Define your initial state properties here
   ...(await showState()),
@@ -55,7 +62,8 @@ const initialState = {
   focusedNavLink: 0,
   page: 0,
   items: [],
-  category: "general",
+  homeInitialRender: true,
+  category: !category && category !== "" ? category : "general",
   // ...
 };
 // async function init() {
