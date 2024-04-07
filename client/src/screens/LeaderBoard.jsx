@@ -107,11 +107,7 @@ const LeaderBoard = () => {
   }, []);
 
   return (
-    <Flex
-      minH={"85vh"}
-      justifyContent={"center"}
-      className="leaderboard"
-    >
+    <Flex minH={"85vh"} justifyContent={"center"} className="leaderboard">
       <Flex
         margin={"20px"}
         justifyContent={"center"}
@@ -145,67 +141,39 @@ const LeaderBoard = () => {
                 />
               </Flex>
             </Heading>
-            <TableContainer
-              width={"100%"}
-              className="mainBoard"
-            >
+            <TableContainer width={"100%"} className="mainBoard">
               <Table variant={"unstyled"}>
-                <TableCaption
-                  color={"white"}
-                  placement="top"
-                >
+                <TableCaption color={"white"} placement="top">
                   "Where Champions Stand Out!"
                 </TableCaption>
                 <Thead>
                   <Tr boxShadow={"dark-lg"}>
-                    <Th
-                      textAlign={"center"}
-                      bg={"green.300"}
-                      color={"white"}
-                    >
+                    <Th textAlign={"center"} bg={"green.300"} color={"white"}>
                       Rank
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"red.300"}
-                    >
+                    <Th textAlign={"center"} bg={"red.300"}>
                       Name
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"blue.300"}
-                    >
+                    <Th textAlign={"center"} bg={"blue.300"}>
                       In Game Name
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"orange.300"}
-                    >
+                    <Th textAlign={"center"} bg={"orange.300"}>
                       IQ Scores
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"teal.300"}
-                    >
+                    <Th textAlign={"center"} bg={"teal.300"}>
                       Quiz Submissions
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"pink.300"}
-                    >
+                    <Th textAlign={"center"} bg={"pink.300"}>
                       Avg. RQM Scores
                     </Th>
                   </Tr>
                 </Thead>
 
-                <Tbody
-                  marginTop={"20px"}
-                  className="Entries"
-                >
+                <Tbody marginTop={"20px"} className="Entries">
                   {leaders.length > 0 &&
                     leaders.map((leader, index) => {
                       return (
-                        <Tr
+                        <Tr // Clickable row to the profile of the user
                           height={"80px"}
                           key={leader._id}
                           onClick={() => {
