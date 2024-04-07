@@ -28,6 +28,41 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   //const [rerender, setRerender] = useState(false);
 
+  const isTutorialTakenCheck=async()=>{
+    try{
+      const Page = "profilePage";
+      const response=await axios.get(`/api/user/isTutorialTakenCheck/${Page}`);
+      console.log(response.data);
+      if(response.data.status) tour.start();
+    }catch(err){
+      toast({
+        title: "Error in Checking tutorial taken",
+        description: err,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }
+  const isTutorialTakenUpdate=async()=>{
+    try{
+      const page = "profilePage";
+      const response=await axios.post(`/api/user/isTutorialTakenUpdate`,{page});
+      console.log(response.data);
+
+    }catch(err){
+      toast({
+        title: "Error in updating tutorial taken",
+        description: err,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }
+
   const fetchProfile = async () => {
     setIsLoading(true);
     try {
@@ -77,6 +112,7 @@ export default function Profile() {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
+      isTutorialTakenUpdate();
     };
 
     const handleTourCancel = () => {
@@ -103,6 +139,7 @@ export default function Profile() {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
+      isTutorialTakenUpdate();
     };
 
     tour.on("start", handleTourStart);
@@ -117,7 +154,8 @@ export default function Profile() {
   }, [tour]);
   useEffect(() => {
     fetchProfile();
-    tour.start();
+    // tour.start();
+    isTutorialTakenCheck();
   }, [inGameName]);
 
   return (
