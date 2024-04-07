@@ -30,6 +30,41 @@ const LeaderBoard = () => {
     steps: stepsLeaderBoard,
   });
 
+  const isTutorialTakenCheck=async()=>{
+    try{
+      const Page = "leaderBoardPage";
+      const response=await axios.get(`/api/user/isTutorialTakenCheck/${Page}`);
+      console.log(response.data);
+      if(response.data.status) tour.start();
+    }catch(err){
+      toast({
+        title: "Error in Checking tutorial taken",
+        description: err,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }
+  const isTutorialTakenUpdate=async()=>{
+    try{
+      const page = "leaderBoardPage";
+      const response=await axios.post(`/api/user/isTutorialTakenUpdate`,{page});
+      console.log(response.data);
+
+    }catch(err){
+      toast({
+        title: "Error in updating tutorial taken",
+        description: err,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }
+
   const fetchLeaderBoard = async () => {
     try {
       const response = await axios.get("/api/user/leaderboard");
@@ -79,6 +114,7 @@ const LeaderBoard = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
+      isTutorialTakenUpdate();
     };
 
     const handleTourCancel = () => {
@@ -92,6 +128,7 @@ const LeaderBoard = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
+      isTutorialTakenUpdate();
     };
 
     tour.on("start", handleTourStart);
@@ -106,7 +143,8 @@ const LeaderBoard = () => {
   }, [tour]);
 
   useEffect(() => {
-    tour.start();
+    // tour.start();
+    isTutorialTakenCheck();
   }, []);
 
   return (
