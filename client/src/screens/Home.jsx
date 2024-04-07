@@ -145,11 +145,12 @@ const Home = () => {
       );
       setPage(() => 1);
       setItems(() => []);
-      setTimeout(() => {
-        fetchData();
-      }, 0);
+      if (page === 1)
+        setTimeout(() => {
+          fetchData();
+        }, 0);
     }
-  }, [state.items]);
+  }, [state.items, state.page, state.category]);
 
   return (
     <div
