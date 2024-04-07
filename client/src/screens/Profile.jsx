@@ -26,6 +26,7 @@ export default function Profile() {
   const { state, dispatch } = useContext(AppContext);
   const [profile, setProfile] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  //const [rerender, setRerender] = useState(false);
 
   const fetchProfile = async () => {
     setIsLoading(true);
@@ -116,7 +117,7 @@ export default function Profile() {
   }, [tour]);
   useEffect(() => {
     fetchProfile();
-    //tour.start();
+    tour.start();
   }, [inGameName]);
 
   return (
