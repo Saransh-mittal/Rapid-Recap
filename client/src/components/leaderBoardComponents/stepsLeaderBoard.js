@@ -50,7 +50,7 @@ const stepsLeaderBoard = [
       { text: "Back", type: "back" },
       { text: "Next", type: "next" },
     ],
-    classes:"custom-class-name-2",
+    classes: "custom-class-name-2",
     cancelIcon: {
       enabled: false,
     },
@@ -58,38 +58,41 @@ const stepsLeaderBoard = [
       show: () => {
         const mainBoard = document.querySelector(".mainBoard");
         // console.log(mainBoard);
-         mainBoard.classList.add("highlighted-card-1");
-         const img = document.createElement("img");
+        mainBoard.classList.add("highlighted-card-1");
+        const img = document.createElement("img");
         img.src = "../../images/arrow1.png"; // Replace with your image path
         img.alt = "Hand Click Sign";
         img.classList.add("hand-click-img-leaderboard");
         mainBoard.appendChild(img);
 
-          document.querySelector(".mainBoard")?.classList.remove("shepherd-active");
-        },
-        hide: () => {
-          const mainBoard = document.querySelector(".mainBoard");
-          mainBoard.classList.remove("highlighted-card-1");
-          const img = document.querySelector(".hand-click-img-leaderboard");
+        document
+          .querySelector(".mainBoard")
+          ?.classList.remove("shepherd-active");
+      },
+      hide: () => {
+        const mainBoard = document.querySelector(".mainBoard");
+        mainBoard.classList.remove("highlighted-card-1");
+        const img = document.querySelector(".hand-click-img-leaderboard");
         if (img) {
           img.remove();
         }
-        },
       },
+    },
   },
   {
     id: "understanding-entry",
     title: "End of Tour",
     text: "Here you can see the details of the top performers.  Click 'Exit' to end the tour.",
-    buttons: [{ text: "Back", type: "back" },{ text: "Exit", type: "cancel" }],
-    classes:"custom-class-name-2",
+    buttons: [
+      { text: "Back", type: "back" },
+      { text: "Exit", type: "cancel" },
+    ],
+    classes: "custom-class-name-2",
     cancelIcon: {
       enabled: false,
     },
   },
 ];
-
-export default stepsLeaderBoard;
 
 const tourOptions = {
   defaultStepOptions: {
@@ -99,3 +102,6 @@ const tourOptions = {
   },
   useModalOverlay: true,
 };
+
+export default stepsLeaderBoard;
+export { tourOptions };

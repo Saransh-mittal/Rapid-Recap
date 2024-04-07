@@ -682,34 +682,32 @@ const expectedIQScore = async (req, res) => {
   }
 };
 
-const tutorialTakenCheck= async(req,res)=>{
-  const page=req.params.Page;
-  const userId=req.user._id;
-  
-  try{
-    const user= await User.findById(userId);
-    console.log(user.tutorial[page], page);
-    res.status(200).json({status: user.tutorial[page]});
-  }
-  catch (error) {
+const tutorialTakenCheck = async (req, res) => {
+  const page = req.params.Page;
+  const userId = req.user._id;
+
+  try {
+    const user = await User.findById(userId);
+    //console.log(user.tutorial[page], page);
+    res.status(200).json({ status: user.tutorial[page] });
+  } catch (error) {
     console.error("Error in saving is the user is firstTimer:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-const tutorialTakenUpdate= async(req,res)=>{
+const tutorialTakenUpdate = async (req, res) => {
   // const data=req.body;
-  const page=req.body.page;
-  const userId=req.user._id;
-  console.log(req.body);
-  try{
-    const user=await User.findById(userId);
-    console.log(user.tutorial[page], page);
-    user.tutorial[page]=false;
+  const page = req.body.page;
+  const userId = req.user._id;
+  //console.log(req.body);
+  try {
+    const user = await User.findById(userId);
+    //console.log(user.tutorial[page], page);
+    user.tutorial[page] = false;
     await user.save();
-    res.status(200).json({status: "Success"});
-  }
-  catch (error) {
+    res.status(200).json({ status: "Success" });
+  } catch (error) {
     console.error("Error in saving is the user is firstTimer:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }

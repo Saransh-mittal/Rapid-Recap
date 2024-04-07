@@ -18,9 +18,8 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { useShepherdTour } from "react-shepherd";
 import Loading from "../components/miscellaneous/Loading";
-import stepsLeaderBoard from '../components/leaderBoardComponents/stepsLeaderBoard'; // Assuming stepsLeaderBoard.js is in the same directory
-
-const tourOptions = stepsLeaderBoard.tourOptions;
+import stepsLeaderBoard from "../components/leaderBoardComponents/stepsLeaderBoard"; // Assuming stepsLeaderBoard.js is in the same directory
+import { tourOptions } from "../components/leaderBoardComponents/stepsLeaderBoard";
 
 const LeaderBoard = () => {
   const toast = useToast();
@@ -72,7 +71,7 @@ const LeaderBoard = () => {
       body.style.overflow = "auto";
       const navbar = document.querySelector(".navbar");
       navbar.classList.remove("shepherd-active");
-      
+
       document
         .querySelector(".leaderboard")
         ?.classList.remove("shepherd-active");
@@ -111,11 +110,7 @@ const LeaderBoard = () => {
   }, []);
 
   return (
-    <Flex
-      minH={"85vh"}
-      justifyContent={"center"}
-      className="leaderboard"
-    >
+    <Flex minH={"85vh"} justifyContent={"center"} className="leaderboard">
       <Flex
         margin={"20px"}
         justifyContent={"center"}
@@ -149,54 +144,29 @@ const LeaderBoard = () => {
                 />
               </Flex>
             </Heading>
-            <TableContainer
-              width={"100%"}
-              className="mainBoard"
-            >
+            <TableContainer width={"100%"} className="mainBoard">
               <Table variant={"unstyled"}>
-                <TableCaption
-                  color={"white"}
-                  placement="top"
-                >
+                <TableCaption color={"white"} placement="top">
                   "Where Champions Stand Out!"
                 </TableCaption>
                 <Thead>
                   <Tr boxShadow={"dark-lg"}>
-                    <Th
-                      textAlign={"center"}
-                      bg={"green.300"}
-                      color={"white"}
-                    >
+                    <Th textAlign={"center"} bg={"green.300"} color={"white"}>
                       Rank
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"red.300"}
-                    >
+                    <Th textAlign={"center"} bg={"red.300"}>
                       Name
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"blue.300"}
-                    >
+                    <Th textAlign={"center"} bg={"blue.300"}>
                       In Game Name
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"orange.300"}
-                    >
+                    <Th textAlign={"center"} bg={"orange.300"}>
                       IQ Scores
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"teal.300"}
-                    >
+                    <Th textAlign={"center"} bg={"teal.300"}>
                       Quiz Submissions
                     </Th>
-                    <Th
-                      textAlign={"center"}
-                      bg={"pink.300"}
-                    >
+                    <Th textAlign={"center"} bg={"pink.300"}>
                       Avg. RQM Scores
                     </Th>
                   </Tr>
@@ -263,113 +233,120 @@ const LeaderBoard = () => {
 
 export default LeaderBoard;
 
-const stepsLeaderBoard = [
-  {
-    id: "introduction",
-    attachTo: { element: ".leaderboard", on: "bottom" },
-    title: "Welcome to Leaderboard",
-    text: "This is where the champions stand out! Click 'Next' to explore more.",
-    buttons: [{ text: "Next", type: "next" }],
-    classes:"custom-class-name-1",
-    cancelIcon: {
-      enabled: false,
-    },
-  },
-  {
-    id: "exploring-table",
-    attachTo: { element: ".mainBoard", on: "top" },
-    title: "Exploring the Leaderboard Table",
-    text: "Here you can see the details of the top performers. Take a look and understand the columns.",
-    buttons: [{ text: "Back", type: "back" }, { text: "Next", type: "next" }],
-    classes:"custom-class-name-2",
-    cancelIcon: {
-      enabled: false,
-    },
-    when: {
-      show: () => {
-        const mainBoard = document.querySelector(".mainBoard");
-        console.log(mainBoard);
-         mainBoard.classList.add("highlighted-card-1");
-          const img = document.createElement("img");
-          img.src = "../../images/click.png"; // Replace with your image path
-          img.alt = "Hand Click Sign";
-          img.classList.add("hand-click-img-leaderboard");
-          mainBoard.appendChild(img);
-          document.querySelector(".leaderboard")?.classList.remove("shepherd-active");
-        },
-        hide: () => {
-          document.querySelector(".leaderboard")?.classList.add("shepherd-active");
-          const mainBoard = document.querySelector(".mainBoard");
-          mainBoard.classList.remove("highlighted-card-1");
-          const img = document.querySelector(".hand-click-img-leaderboard");
-          if (img) {
-            img.remove();
-          }
-        },
-      },
-  },
-  {
-    id: "understanding-entry",
-    attachTo: { element: ".mainBoard", on: "top" },
-    title: "Understanding Leaderboard Entries",
-    text: "Each row represents a user with their respective stats. Click 'Exit' to end the tour.",
-    buttons: [{ text: "Exit", type: "cancel" }],
-    classes:"custom-class-name-2",
-    cancelIcon: {
-      enabled: false,
-    },
-    when: {
-      show: () => {
-        const mainBoard = document.querySelector(".Entries");
-        console.log(mainBoard);
-         mainBoard.classList.add("highlighted-card-1");
+// const stepsLeaderBoard = [
+//   {
+//     id: "introduction",
+//     attachTo: { element: ".leaderboard", on: "bottom" },
+//     title: "Welcome to Leaderboard",
+//     text: "This is where the champions stand out! Click 'Next' to explore more.",
+//     buttons: [{ text: "Next", type: "next" }],
+//     classes: "custom-class-name-1",
+//     cancelIcon: {
+//       enabled: false,
+//     },
+//   },
+//   {
+//     id: "exploring-table",
+//     attachTo: { element: ".mainBoard", on: "top" },
+//     title: "Exploring the Leaderboard Table",
+//     text: "Here you can see the details of the top performers. Take a look and understand the columns.",
+//     buttons: [
+//       { text: "Back", type: "back" },
+//       { text: "Next", type: "next" },
+//     ],
+//     classes: "custom-class-name-2",
+//     cancelIcon: {
+//       enabled: false,
+//     },
+//     when: {
+//       show: () => {
+//         const mainBoard = document.querySelector(".mainBoard");
+//         console.log(mainBoard);
+//         mainBoard.classList.add("highlighted-card-1");
+//         const img = document.createElement("img");
+//         img.src = "../../images/click.png"; // Replace with your image path
+//         img.alt = "Hand Click Sign";
+//         img.classList.add("hand-click-img-leaderboard");
+//         mainBoard.appendChild(img);
+//         document
+//           .querySelector(".leaderboard")
+//           ?.classList.remove("shepherd-active");
+//       },
+//       hide: () => {
+//         document
+//           .querySelector(".leaderboard")
+//           ?.classList.add("shepherd-active");
+//         const mainBoard = document.querySelector(".mainBoard");
+//         mainBoard.classList.remove("highlighted-card-1");
+//         const img = document.querySelector(".hand-click-img-leaderboard");
+//         if (img) {
+//           img.remove();
+//         }
+//       },
+//     },
+//   },
+//   {
+//     id: "understanding-entry",
+//     attachTo: { element: ".mainBoard", on: "top" },
+//     title: "Understanding Leaderboard Entries",
+//     text: "Each row represents a user with their respective stats. Click 'Exit' to end the tour.",
+//     buttons: [{ text: "Exit", type: "cancel" }],
+//     classes: "custom-class-name-2",
+//     cancelIcon: {
+//       enabled: false,
+//     },
+//     when: {
+//       show: () => {
+//         const mainBoard = document.querySelector(".Entries");
+//         console.log(mainBoard);
+//         mainBoard.classList.add("highlighted-card-1");
 
-          const img1 = document.createElement("img");
-          img1.src = "../../images/click.png"; // Replace with your image path
-          img1.alt = "Hand Click Sign";
-          img1.classList.add("hand-click-img-rank-1");
-          mainBoard.appendChild(img1);
+//         const img1 = document.createElement("img");
+//         img1.src = "../../images/click.png"; // Replace with your image path
+//         img1.alt = "Hand Click Sign";
+//         img1.classList.add("hand-click-img-rank-1");
+//         mainBoard.appendChild(img1);
 
-          const img2 = document.createElement("img");
-          img2.src = "../../images/click.png"; // Replace with your image path
-          img2.alt = "Hand Click Sign";
-          img2.classList.add("hand-click-img-rank-2");
-          mainBoard.appendChild(img2);
+//         const img2 = document.createElement("img");
+//         img2.src = "../../images/click.png"; // Replace with your image path
+//         img2.alt = "Hand Click Sign";
+//         img2.classList.add("hand-click-img-rank-2");
+//         mainBoard.appendChild(img2);
 
-          const img3 = document.createElement("img");
-          img3.src = "../../images/click.png"; // Replace with your image path
-          img3.alt = "Hand Click Sign";
-          img3.classList.add("hand-click-img-rank-3");
-          mainBoard.appendChild(img3);
-          
-          document.querySelector(".Entries")?.classList.remove("shepherd-active");
-        },
-        hide: () => {
-          document.querySelector(".Entries")?.classList.add("shepherd-active");
-          const mainBoard = document.querySelector(".mainBoard");
-          mainBoard.classList.remove("highlighted-card-1");
-          const img1 = document.querySelector(".hand-click-img-rank-1");
-          if (img1) {
-            img1.remove();
-          }
-          const img2 = document.querySelector(".hand-click-img-rank-2");
-          if (img2) {
-            img1.remove();
-          }
-          const img3 = document.querySelector(".hand-click-img-rank-3");
-          if (img3) {
-            img1.remove();
-          }
-        },
-      },
-  },
-];
+//         const img3 = document.createElement("img");
+//         img3.src = "../../images/click.png"; // Replace with your image path
+//         img3.alt = "Hand Click Sign";
+//         img3.classList.add("hand-click-img-rank-3");
+//         mainBoard.appendChild(img3);
 
-const tourOptions = {
-  defaultStepOptions: {
-    cancelIcon: {
-      enabled: true,
-    },
-  },
-  useModalOverlay: true,
-};
+//         document.querySelector(".Entries")?.classList.remove("shepherd-active");
+//       },
+//       hide: () => {
+//         document.querySelector(".Entries")?.classList.add("shepherd-active");
+//         const mainBoard = document.querySelector(".mainBoard");
+//         mainBoard.classList.remove("highlighted-card-1");
+//         const img1 = document.querySelector(".hand-click-img-rank-1");
+//         if (img1) {
+//           img1.remove();
+//         }
+//         const img2 = document.querySelector(".hand-click-img-rank-2");
+//         if (img2) {
+//           img1.remove();
+//         }
+//         const img3 = document.querySelector(".hand-click-img-rank-3");
+//         if (img3) {
+//           img1.remove();
+//         }
+//       },
+//     },
+//   },
+// ];
+
+// const tourOptions = {
+//   defaultStepOptions: {
+//     cancelIcon: {
+//       enabled: true,
+//     },
+//   },
+//   useModalOverlay: true,
+// };
