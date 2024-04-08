@@ -31,7 +31,7 @@ require("./db/conn");
 
 // -----Bot utils-----
 //require("./utils/bot.utils/generateFakeUsers");
-require("./utils/bot.utils/generateFakeQuizAttempts");
+//require("./utils/bot.utils/generateFakeQuizAttempts");
 // -------------------
 app.use(express.json());
 require("./scheduler/userIQScoreScheduler");
