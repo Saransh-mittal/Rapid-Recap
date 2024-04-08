@@ -20,6 +20,7 @@ require("./db/conn");
 //require("./utils/deletion.utils/removeUser.del");
 //require("./utils/deletion.utils/removeDailIQField.del");
 //require("./utils/deletion.utils/quizGivenByUserDeletion");
+//require("./utils/deletion.utils/removeBotUsers.del");
 // ---------------------------
 
 // -----Update Collection-----
@@ -27,6 +28,11 @@ require("./db/conn");
 //require("./utils/update.utils/quizCountUpdate.update");
 //require("./utils/update.utils/name.update");
 // ---------------------------
+
+// -----Bot utils-----
+//require("./utils/bot.utils/generateFakeUsers");
+require("./utils/bot.utils/generateFakeQuizAttempts");
+// -------------------
 app.use(express.json());
 require("./scheduler/userIQScoreScheduler");
 const PORT = process.env.PORT;

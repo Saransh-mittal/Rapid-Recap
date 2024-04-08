@@ -232,12 +232,16 @@ const LeaderBoard = () => {
                 <Tbody marginTop={"20px"} className="Entries">
                   {leaders.length > 0 &&
                     leaders.map((leader, index) => {
+                      const urlInGameName = leader.inGameName.replace(
+                        /\./g,
+                        "%2E"
+                      );
                       return (
                         <Tr // Clickable row to the profile of the user
                           height={"80px"}
                           key={leader._id}
                           onClick={() => {
-                            window.location.href = `/profile/${leader.inGameName}`;
+                            navigate(`/profile/${urlInGameName}`);
                           }}
                           _hover={{
                             backgroundImage:

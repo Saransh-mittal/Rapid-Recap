@@ -31,5 +31,5 @@ async function deleteUserAndRelatedRecords(userId) {
 }
 
 // Example usage:
-const userIdToDelete = "65f6aa8f6f1f4e5477f1ab27";
-deleteUserAndRelatedRecords(userIdToDelete);
+
+module.exports = deleteUserAndRelatedRecords;

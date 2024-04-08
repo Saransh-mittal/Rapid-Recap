@@ -238,6 +238,7 @@ const updatePercentilesOnQuizDeactivation = async ({ id }) => {
   const attempts = await QuizAttempt.find({
     article: id,
   });
+  //console.log(id, "Attempts", attempts.length);
 
   // Calculate the total number of attempts
   const totalAttempts = attempts.length;
@@ -246,20 +247,18 @@ const updatePercentilesOnQuizDeactivation = async ({ id }) => {
   attempts.sort((a, b) => b.RQM_score - a.RQM_score);
 
   // Update user percentile based on their position in the sorted array
+  //console.log("Total Attempts", totalAttempts);
   await Promise.all(
     attempts.map(async (attempt, index) => {
-      if (
-        !attempt ||
-        !attempt.article ||
-        !attempt.article.quiz ||
-        !attempt.articleDifficulty
-      ) {
+      if (!attempt || !attempt.article || !attempt.articleDifficulty) {
         return; // Skip this attempt
       }
       const percentile = ((totalAttempts - index) / totalAttempts) * 100;
-      attempt.userPercentile = percentile;
+
+      const attemptQuiz = await QuizAttempt.findById(attempt._id);
+      attemptQuiz.userPercentile = percentile;
       // Save updated attempt
-      await attempt.save();
+      await attemptQuiz.save();
     })
   );
 };

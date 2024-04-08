@@ -28,13 +28,15 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   //const [rerender, setRerender] = useState(false);
 
-  const isTutorialTakenCheck=async()=>{
-    try{
+  const isTutorialTakenCheck = async () => {
+    try {
       const Page = "profilePage";
-      const response=await axios.get(`/api/user/isTutorialTakenCheck/${Page}`);
+      const response = await axios.get(
+        `/api/user/isTutorialTakenCheck/${Page}`
+      );
       console.log(response.data);
-      if(response.data.status) tour.start();
-    }catch(err){
+      if (response.data.status) tour.start();
+    } catch (err) {
       toast({
         title: "Error in Checking tutorial taken",
         description: err,
@@ -44,14 +46,15 @@ export default function Profile() {
         position: "top",
       });
     }
-  }
-  const isTutorialTakenUpdate=async()=>{
-    try{
+  };
+  const isTutorialTakenUpdate = async () => {
+    try {
       const page = "profilePage";
-      const response=await axios.post(`/api/user/isTutorialTakenUpdate`,{page});
+      const response = await axios.post(`/api/user/isTutorialTakenUpdate`, {
+        page,
+      });
       console.log(response.data);
-
-    }catch(err){
+    } catch (err) {
       toast({
         title: "Error in updating tutorial taken",
         description: err,
@@ -61,7 +64,7 @@ export default function Profile() {
         position: "top",
       });
     }
-  }
+  };
 
   const fetchProfile = async () => {
     setIsLoading(true);
