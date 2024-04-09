@@ -43,8 +43,26 @@ export default function Sigin() {
         data,
         inGameName,
       });
-      //console.log(response);
-      if (response.status === 201) {
+      if (response.data.user.verified === false) {
+        const response = await axios.post(`/api/user/resendOTP`, {
+          email: data.email,
+        });
+        if (response.status === 201) {
+          await dispatch({ type: "verifyEmail", payloadverifyEmail: true });
+          await dispatch({ type: "showModal", payloadModal: true });
+          toast({
+            title: "Email not verified",
+            description: "Please verify your email before continuing",
+            status: "warning",
+            duration: 5000,
+            isClosable: true,
+            position: "top",
+          });
+        }
+      } else if (
+        response.status === 201 &&
+        response.data.user.verified === true
+      ) {
         dispatch({ type: "UNSHOW" });
         dispatch({
           type: "setUser",

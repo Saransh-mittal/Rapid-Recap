@@ -38,6 +38,10 @@ const Navbar = () => {
           position: "top",
         });
         dispatch({ type: "SHOW" });
+        dispatch({
+          type: "setUser",
+          payloadUser: null,
+        });
         navigate("/signin");
       } else {
         throw new Error("Logout Failed");

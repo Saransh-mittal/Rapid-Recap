@@ -125,10 +125,11 @@ const loginUser = async (req, res) => {
     if (!isMatch) return res.status(401).json({ error: "Invalid Credentials" });
     const token = await findUser.generateAuthToken();
     // console.log(token);
-    res.cookie("jwtoken", token, {
-      expires: new Date(Date.now() + 2592000000),
-      httpOnly: true,
-    });
+    if (findUser.verified)
+      res.cookie("jwtoken", token, {
+        expires: new Date(Date.now() + 2592000000),
+        httpOnly: true,
+      });
 
     return res
       .status(201)

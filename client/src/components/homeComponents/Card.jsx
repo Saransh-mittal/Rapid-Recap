@@ -1,5 +1,5 @@
 import { Slide } from "@chakra-ui/react";
-import { useRef, useContext } from "react";
+import { useRef, useContext, useEffect } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import imageData from "../../assets/AltNewsImage";
 
@@ -46,6 +46,14 @@ const Card = ({ newsNumber, data }) => {
     project_meta.current.style.transition = "transform 0.5s ease-in-out";
     project_meta.current.style.transform = `rotateY(0) rotateX(0)`;
   };
+
+  useEffect(() => {}, [
+    data,
+    newsNumber,
+    data.imgURL,
+    data.title,
+    data.mainText,
+  ]);
 
   return (
     <div className={`containers`}>
