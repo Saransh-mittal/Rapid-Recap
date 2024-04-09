@@ -4,7 +4,7 @@ const User = require("../model/userSchema");
 const { progressBar } = require("./progress");
 const { updatePercentilesOnQuizDeactivation } = require("./quiz");
 
-const dailyUserIQCalc = async (currentDate) => {
+const dailyUserIQCalc = async () => {
   console.log("\nFetching users...\n");
   const users = await User.aggregate([
     {
@@ -135,7 +135,6 @@ const dailyUserIQCalc = async (currentDate) => {
       user: updatedUser._id,
       IQ_score: Math.round(IQScore),
       dailyRank: `${rank}/${userScores.length}`,
-      date: currentDate,
     });
     await dailyIQ.save();
     updatedUser.dailyIQScores.push(dailyIQ._id);
