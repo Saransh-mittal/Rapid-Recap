@@ -18,14 +18,13 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 
-
-
 const EditProfileModal = ({
   isOpen,
   onClose,
   profileData,
   setProfileData,
   onSubmit,
+  leftProfileView,
 }) => {
   const { state } = React.useContext(AppContext);
   const [formData, setFormData] = useState(profileData);
@@ -67,7 +66,13 @@ const EditProfileModal = ({
       isOpen={isOpen}
       onClose={() => {
         onClose();
-        setProfileData(null);
+        setProfileData({
+          name: leftProfileView.name,
+          pic: leftProfileView.pic
+            ? leftProfileView.pic
+            : "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+          bio: leftProfileView.bio,
+        });
       }}
       size="xl"
     >
@@ -107,7 +112,7 @@ const EditProfileModal = ({
             </label>
           </FormControl>
 
-            <FormControl mb={4}>
+          <FormControl mb={4}>
             <FormLabel>Name</FormLabel>
             <Input
               type="text"
