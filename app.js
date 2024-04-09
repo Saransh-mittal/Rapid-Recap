@@ -6,7 +6,6 @@ const quizRoutes = require("./router/quizRoutes");
 const authRouter = express.Router();
 const cookieParser = require("cookie-parser");
 const path = require("path");
-
 dotenv.config({ path: "./config.env" });
 const app = express();
 
@@ -20,6 +19,8 @@ require("./db/conn");
 // ------Deleteion utils------
 //require("./utils/deletion.utils/removeUser.del");
 //require("./utils/deletion.utils/removeDailIQField.del");
+//require("./utils/deletion.utils/quizGivenByUserDeletion");
+//require("./utils/deletion.utils/removeBotUsers.del");
 // ---------------------------
 
 // -----Update Collection-----
@@ -28,9 +29,14 @@ require("./db/conn");
 //require("./utils/update.utils/name.update");
 // ---------------------------
 
+// -----Bot utils-----
+//require("./utils/bot.utils/generateFakeUsers");
+//require("./utils/bot.utils/generateFakeQuizAttempts");
+//require("./utils/bot.utils/generatePicForUsers");
+// -------------------
 app.use(express.json());
 require("./scheduler/userIQScoreScheduler");
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);
 authRouter.use("/articles", articleRoutes);

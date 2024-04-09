@@ -1,32 +1,36 @@
 {
-  "name": "mernprac",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest",
-    "build": "npm i",
-    "start": "node app.js",
-    "server": "node app.js",
-    "client": "npm start --prefix client",
-    "clientinstall": "npm install --prefix client",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cookie-parser": "^1.4.6",
-    "dotenv": "^16.2.0",
-    "express": "^4.18.2",
-    "googleapis": "^133.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.6.10",
-    "natural": "^6.10.4",
-    "node-cron": "^3.0.3",
-    "nodemailer": "^6.9.7",
-    "nodemon": "^3.0.1",
-    "openai": "^4.26.1",
-    "path": "^0.12.7"
-  }
+    "name": "mernprac",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "jest",
+        "build": "npm i",
+        "start": "node app.js",
+        "server": "node app.js",
+        "client": "npm start --prefix client",
+        "clientinstall": "npm install --prefix client",
+        "dev": "concurrently \"npm run server\" \"npm run client\""
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "path": "^0.12.7",
+        "@faker-js/faker": "^8.4.1",
+        "bcryptjs": "^2.4.3",
+        "cloudinary": "^2.0.3",
+        "cookie-parser": "^1.4.6",
+        "dotenv": "^16.2.0",
+        "express": "^4.18.2",
+        "googleapis": "^133.0.0",
+        "jsonwebtoken": "^9.0.0",
+        "moment": "^2.30.1",
+        "mongoose": "^7.6.10",
+        "natural": "^6.10.4",
+        "newsapi": "^2.4.1",
+        "node-cron": "^3.0.3",
+        "nodemailer": "^6.9.7",
+        "nodemon": "^3.0.1",
+        "openai": "^4.26.1"
+    }
 }

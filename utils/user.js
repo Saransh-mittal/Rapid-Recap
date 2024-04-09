@@ -1,3 +1,4 @@
+const DailyIQ = require("../model/dailyIQSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const User = require("../model/userSchema");
 const { formatDate } = require("./date");
@@ -63,11 +64,25 @@ const getUserIQScoreHistory = async (userId) => {
   if (!user) {
     throw new Error("User not found");
   }
-  await user.populate("dailyIQScores");
-  const iqScoresHistory = user.dailyIQScores.map((score) => ({
+  //await user.populate("dailyIQScores");
+  const latestIQScores = await DailyIQ.aggregate([
+    { $match: { user: user._id } }, // Filter by user
+    { $sort: { date: -1 } }, // Sort by date in descending order
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+        latestScore: { $first: "$IQ_score" },
+        latestDailyRank: { $first: "$dailyRank" },
+        date: { $first: "$date" },
+      },
+    },
+  ]);
+
+  // Map the result to the desired format
+  const iqScoresHistory = latestIQScores.map((score) => ({
     date: formatDate(score.date),
-    IQScore: score.IQ_score,
-    dailyRank: score.dailyRank,
+    IQScore: score.latestScore,
+    dailyRank: score.latestDailyRank,
   }));
 
   return iqScoresHistory.sort((a, b) => new Date(a.date) - new Date(b.date));

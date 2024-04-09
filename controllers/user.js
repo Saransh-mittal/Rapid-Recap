@@ -19,12 +19,13 @@ const {
   getDailyActivity,
   calculateUserRank,
 } = require("../utils/user");
+const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
 
 const registerUser = async (req, res) => {
   //console.log(req.body);
-  const { name, email, phone, password, cpassword, inGameName } = req.body;
+  const { name, email, pic, password, cpassword, inGameName } = req.body;
 
-  if (!name || !email || !phone || !password || !cpassword || !inGameName)
+  if (!name || !email || !pic || !password || !cpassword || !inGameName)
     return res.status(422).json({ error: "Please fill the required field" });
   // inGameName cannot have spaces
   if (inGameName.includes(" "))
@@ -46,16 +47,16 @@ const registerUser = async (req, res) => {
       return res
         .status(422)
         .json({ error: "password is not equal to confirm password" });
-    if (phone.toString().length != 10) {
-      return res
-        .status(422)
-        .json({ error: "Phone no. should be of 10 digits" });
-    }
+    // if (phone.toString().length != 10) {
+    //   return res
+    //     .status(422)
+    //     .json({ error: "Phone no. should be of 10 digits" });
+    // }
     const user = new User({
       inGameName,
       name,
       email,
-      phone,
+      pic,
       password,
       cpassword,
       googleEmail: email,
@@ -124,10 +125,11 @@ const loginUser = async (req, res) => {
     if (!isMatch) return res.status(401).json({ error: "Invalid Credentials" });
     const token = await findUser.generateAuthToken();
     // console.log(token);
-    res.cookie("jwtoken", token, {
-      expires: new Date(Date.now() + 2592000000),
-      httpOnly: true,
-    });
+    if (findUser.verified)
+      res.cookie("jwtoken", token, {
+        expires: new Date(Date.now() + 2592000000),
+        httpOnly: true,
+      });
 
     return res
       .status(201)
@@ -351,123 +353,7 @@ const handleGoogleLogin = async (req, res) => {
 const calculateUserIQScores = async (req, res) => {
   try {
     // Fetch all users
-    console.log("\nFetching users...\n");
-    const users = await User.aggregate([
-      {
-        $lookup: {
-          from: "quiz_attempts",
-          localField: "_id",
-          foreignField: "user",
-          as: "quizAttempts",
-        },
-      },
-      {
-        $addFields: {
-          distinctArticles: { $size: { $setUnion: "$quizAttempts.article" } },
-        },
-      },
-      {
-        $match: {
-          distinctArticles: { $gte: 10 },
-        },
-      },
-    ]);
-    console.log("\nFetched users.\n");
-    // Array to store user scores
-    const userScores = [];
-    let sumOfUserScores = 0;
-    // Fetch quiz attempts concurrently for each user
-    const fetchQuizAttemptsPromises = users.map(async (user) => {
-      const quizAttempts = await QuizAttempt.find({ user: user._id }).populate({
-        path: "article",
-        populate: { path: "quiz" },
-      });
-      return { user, quizAttempts };
-    });
-
-    const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises);
-    console.log("\nFetched quiz attempts.\n");
-    // Iterate through each user's quiz attempts
-    console.log("\nCalculating user scores...\n");
-    const updateProgress1 = progressBar(userQuizAttempts.length);
-    for (const { user, quizAttempts } of userQuizAttempts) {
-      let userScore = 0;
-
-      for (const attempt of quizAttempts) {
-        // Check if quiz attempt, quiz, and article exist
-        if (
-          !attempt ||
-          !attempt.article ||
-          !attempt.article.quiz ||
-          !attempt.articleDifficulty
-        ) {
-          //console.log("Inside IF", attempt);
-          console.error("Invalid quiz attempt data.");
-          continue; // Skip this attempt
-        }
-        //console.log("Outside IF", attempt);
-
-        // Check if the quiz attempt is valid based on its creation date and quiz activity
-        // if (
-        //   attempt.article.quiz.createdAt.getTime() + 24 * 60 * 60 * 1000 <
-        //   Date.now()
-        // ) {
-        //if (attempt.article.quiz.isActive) {
-        await updatePercentilesOnQuizDeactivation({
-          id: attempt.article._id,
-        });
-
-        //   attempt.article.quiz.isActive = false;
-        //   await attempt.article.quiz.save();
-        // }
-        // Calculate score for the quiz attempt (Wi * Pi)
-
-        const quizScore = attempt.articleDifficulty * attempt.userPercentile;
-        userScore += quizScore;
-        //}
-      }
-      sumOfUserScores += userScore;
-      // Add user score to the array
-      userScores.push({ user, userScore });
-      updateProgress1();
-    }
-
-    // Calculate mean and standard deviation
-    const meanOfUserScores = sumOfUserScores / userScores.length;
-    const sumOfSquares = userScores.reduce(
-      (acc, user) => acc + Math.pow(user.userScore - meanOfUserScores, 2),
-      0
-    );
-    const standardDeviation = Math.sqrt(sumOfSquares / userScores.length);
-
-    // Calculate and update IQ scores for each user
-    console.log("\nCalculating IQ scores...\n");
-    const updateProgress2 = progressBar(userScores.length);
-    userScores.sort((a, b) => b.userScore - a.userScore);
-    let rank = 1;
-    for (const user of userScores) {
-      if (!user || !user.user) {
-        console.error("Invalid user data.");
-        continue; // Skip this user
-      }
-
-      const normalizedScore =
-        (user.userScore - meanOfUserScores) / standardDeviation;
-      const IQScore = 100 + 15 * normalizedScore;
-      const updatedUser = await User.findById(user.user._id);
-      updatedUser.IQ_score = Math.round(IQScore);
-
-      const dailyIQ = new DailyIQ({
-        user: updatedUser._id,
-        IQ_score: Math.round(IQScore),
-        dailyRank: `${rank}/${userScores.length}`,
-      });
-      await dailyIQ.save();
-      updatedUser.dailyIQScores.push(dailyIQ._id);
-      await updatedUser.save();
-      rank++;
-      updateProgress2();
-    }
+    await dailyUserIQCalc();
 
     // Send success response
     res.status(200).json({ message: "IQ scores calculated successfully." });
@@ -480,9 +366,9 @@ const calculateUserIQScores = async (req, res) => {
 
 const leaderBoard = async (req, res) => {
   try {
-    const users = await User.find({})
+    const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
       .sort({ IQ_score: -1 })
-      .limit(5)
+      .limit(50)
       .populate("quizAttempts");
     //AVG. RQM SCORES
     const result = [];
@@ -504,6 +390,15 @@ const leaderBoard = async (req, res) => {
         pic,
         quizSubmissions,
       });
+    });
+    result.sort((a, b) => {
+      if (a.IQ_score !== b.IQ_score) {
+        return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
+      } else if (a.quizSubmissions !== b.quizSubmissions) {
+        return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
+      } else {
+        return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
+      }
     });
     res.status(200).json({ users: result });
   } catch (error) {
@@ -588,6 +483,105 @@ const editProfile = async (req, res) => {
   }
 };
 
+const expectedIQScore = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const quizAttempts = await QuizAttempt.find({ user: userId }).populate({
+      path: "article",
+      populate: { path: "quiz" },
+    });
+    let userScore = 0;
+    const cntOfQuizAttempts = quizAttempts.length;
+    for (const attempt of quizAttempts) {
+      if (
+        !attempt ||
+        !attempt.article ||
+        !attempt.article.quiz ||
+        !attempt.articleDifficulty
+      ) {
+        //console.error("Invalid quiz attempt data.");
+        continue;
+      }
+      let percentile = attempt.userPercentile;
+      if (!percentile) {
+        // calculate percentile
+        const quizAttempts = await QuizAttempt.find({
+          article: attempt.article._id,
+        });
+        const sortedQuizAttempts = quizAttempts.sort(
+          (a, b) => b.RQM_score - a.RQM_score
+        );
+        const userAttempt = sortedQuizAttempts.find(
+          (attempt) => attempt.user.toString() === userId
+        );
+        if (!userAttempt) {
+          throw new Error("User has not attempted the quiz for the article.");
+        }
+        const userPosition = sortedQuizAttempts.indexOf(userAttempt);
+        const totalAttempts = sortedQuizAttempts.length;
+        const userPercentile =
+          ((totalAttempts - userPosition) / totalAttempts) * 100;
+        userAttempt.userPercentile = userPercentile;
+        percentile = userPercentile;
+        await userAttempt.save();
+      }
+      const quizScore = attempt.articleDifficulty * percentile;
+      userScore += quizScore;
+    }
+    userScore = (userScore / cntOfQuizAttempts) * 10;
+    // IQscore > 0 users
+    const users = await User.find({
+      userScore: { $gt: 0 },
+    });
+    let sumOfUserScores = users.reduce((acc, user) => acc + user.userScore, 0);
+    sumOfUserScores += userScore;
+    const meanOfUserScores = sumOfUserScores / users.length;
+    let sumOfSquares = users.reduce(
+      (acc, user) => acc + Math.pow(user.userScore - meanOfUserScores, 2),
+      0
+    );
+    sumOfSquares += Math.pow(userScore - meanOfUserScores, 2);
+    const standardDeviation = Math.sqrt(sumOfSquares / users.length);
+    const normalizedScore = (userScore - meanOfUserScores) / standardDeviation;
+    const ExpectedIQScore = Math.round(100 + 15 * normalizedScore);
+    res.status(200).json({ ExpectedIQScore });
+  } catch (error) {
+    console.error("Error calculating user IQ expected score:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const tutorialTakenCheck = async (req, res) => {
+  const page = req.params.Page;
+  const userId = req.user._id;
+
+  try {
+    const user = await User.findById(userId);
+    //console.log(user.tutorial[page], page);
+    res.status(200).json({ status: user.tutorial[page] });
+  } catch (error) {
+    console.error("Error in saving is the user is firstTimer:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const tutorialTakenUpdate = async (req, res) => {
+  // const data=req.body;
+  const page = req.body.page;
+  const userId = req.user._id;
+  //console.log(req.body);
+  try {
+    const user = await User.findById(userId);
+    //console.log(user.tutorial[page], page);
+    user.tutorial[page] = false;
+    await user.save();
+    res.status(200).json({ status: "Success" });
+  } catch (error) {
+    console.error("Error in saving is the user is firstTimer:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -601,4 +595,7 @@ module.exports = {
   editProfile,
   leaderBoard,
   profile,
+  expectedIQScore,
+  tutorialTakenCheck,
+  tutorialTakenUpdate,
 };
