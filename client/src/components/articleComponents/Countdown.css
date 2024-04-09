@@ -1,0 +1,86 @@
+
+.container-timer {
+    position: relative;
+    transform: scale(50%);
+}
+
+.text-timer {
+    position: absolute;
+    color: #183D3D;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    font-size: 65px;
+}
+
+.container-timer svg {
+    width: 150px;
+    height: 150px;
+    transform: rotate(-90deg);
+}
+
+.container-timer svg circle {
+    fill: transparent;
+    stroke: #092635;
+    stroke-width: 4;
+    transform: translate(5px, 5px);
+    transition: all 2s;
+    z-index: 0;
+}
+
+.container-timer svg circle:nth-child(2) {
+    fill: transparent;
+    stroke: #FFEFE8;
+    stroke-width: 6;
+    stroke-dasharray: 440;
+    /* stroke-dashoffset: 0; */
+    transition: all 0.1s;
+}
+
+.dot-timer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    /* background-color: rgba(0, 128, 0, 0.281); */
+    transition: all 0.1s;
+    z-index: 9999;
+}
+
+.dot-timer::before {
+    content: "";
+    width: 20px;
+    height: 20px;
+    background-color: #092635;
+    z-index: 1000;
+    position: absolute;
+    border-radius: 10px;
+    top: -2px;
+    transform: translate(-10px);
+    box-shadow: 0 0 20px 4px #FFEFE8;
+}
+
+@keyframes pulsate {
+    0% {
+        font-size: 55px;
+    }
+
+    50% {
+        font-size: 65px;
+    }
+
+    100% {
+        font-size: 55px;
+    }
+}
+
+.text-timer.pulsate {
+    animation: pulsate 0.5s infinite;
+    font-weight: bolder;
+    color: #CD1818;
+}
+
+.container-timer.pulsate {
+    position: relative;
+    transform: scale(55%);
+}
