@@ -25,19 +25,10 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
       marginBottom={5}
       css={css}
     >
-      <Heading
-        as="h6"
-        size="xl"
-        textAlign="center"
-        mb={3}
-        color="#B1D0E0"
-      >
+      <Heading as="h6" size="xl" textAlign="center" mb={3} color="#B1D0E0">
         Quiz Performance
       </Heading>
-      <Flex
-        flexDirection="column"
-        alignItems="center"
-      >
+      <Flex flexDirection="column" alignItems="center">
         <Heading
           textAlign={"center"}
           as="h6"
@@ -46,7 +37,7 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
           mb={2}
           color="#D4ECDD"
         >
-          Current Percentile: {percentile}%
+          Current Percentile: {percentile.toFixed(2)}%
         </Heading>
         <Heading
           textAlign={"center"}
