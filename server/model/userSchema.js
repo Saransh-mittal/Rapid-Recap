@@ -13,9 +13,9 @@ const userSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
-    phone: {
-      type: Number,
-    },
+    // phone: {
+    //   type: Number,
+    // },
     password: {
       type: String,
     },
@@ -92,12 +92,11 @@ const userSchema = new mongoose.Schema(
       default: Date.now,
     },
     tutorial: {
-      homePage: {type: Boolean, default:true},
-      articlePage: {type: Boolean, default:true},
-      profilePage: {type: Boolean, default:true},
-      leaderBoardPage: {type: Boolean, default:true},
+      homePage: { type: Boolean, default: true },
+      articlePage: { type: Boolean, default: true },
+      profilePage: { type: Boolean, default: true },
+      leaderBoardPage: { type: Boolean, default: true },
     },
-
   },
   { collection: "Users" }
 );
