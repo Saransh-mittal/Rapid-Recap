@@ -18,15 +18,56 @@ const App = () => {
     <>
       <Navbar />
       <Routes>
-        <Route persistent path="/" element={<Home />} />
-        <Route exact path="/article/:id" element={<Article />} />
+        <Route
+          persistent
+          path="/:category"
+          element={<Home />}
+        />
+        <Route
+          persistent
+          path="/"
+          element={<Home />}
+        />
+        <Route
+          exact
+          path="/article/:id"
+          element={<Article />}
+        />
         {/* <Route exact path="/about" element={<About />} /> */}
-        <Route exact path="/profile/:inGameName" element={<Profile />} />
-        <Route exact path="/signin" element={<Signin />} />
-        <Route exact path="/register" element={<Register />} />
-        <Route exact path="/contact" element={<Contact />} />
-        <Route exact path="/leaderboard" element={<LeaderBoard />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          exact
+          path="/profile/:inGameName"
+          element={<Profile />}
+        />
+        <Route
+          exact
+          path="/signin"
+          element={<Signin />}
+        />
+        <Route
+          exact
+          path="/register"
+          element={<Register />}
+        />
+        <Route
+          exact
+          path="/contact"
+          element={<Contact />}
+        />
+        <Route
+          exact
+          path="/leaderboard"
+          element={<LeaderBoard />}
+        />
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
+        />
       </Routes>
       <Footer />
     </>
