@@ -65,8 +65,10 @@ const saveAttempt = async (req, res) => {
       timeTaken <= 10
         ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
         : timeTaken;
+
+    const apparentScore = (score * Math.log(score + 1)) / Math.log(1.3);
     const RQM_score = Math.ceil(
-      ((score * quizDifficulty) / apparentTimeTaken) * 1000
+      ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000
     );
     const articleDifficulty = article.quiz.overAllDifficulty;
     const newQuizAttempt = new QuizAttempt({
