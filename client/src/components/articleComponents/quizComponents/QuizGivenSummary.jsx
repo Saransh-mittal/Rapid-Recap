@@ -57,11 +57,7 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
     fetchQuizSummary();
   }, []);
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size={{ base: "full", md: "3xl" }}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "3xl" }}>
       <ModalOverlay
         bg="blackAlpha.300"
         backdropFilter="blur(40px) hue-rotate(90deg)"
@@ -139,10 +135,7 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
               justifyContent={"center"}
               flexDirection={"column"}
             >
-              <Text
-                textColor={"white"}
-                marginBottom={8}
-              >
+              <Text textColor={"white"} marginBottom={8}>
                 Explanation:{" "}
                 {quizGivenSummary[currentQuestionIndex].explanation}
               </Text>

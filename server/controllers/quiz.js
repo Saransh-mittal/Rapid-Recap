@@ -178,7 +178,8 @@ const getQuizSummary = async (req, res) => {
       user: userId,
       article: articleId,
     });
-    const quiz = await Quiz.findOne({ article: articleId });
+    const article = await Article.findById(articleId).populate("quiz");
+    const quiz = article.quiz;
     if (!quizAttempt) {
       throw new Error("User has not attempted the quiz for the article.");
     }
