@@ -158,7 +158,7 @@ export default function Profile() {
   useEffect(() => {
     fetchProfile();
     // tour.start();
-    isTutorialTakenCheck();
+    if (state.user && state.user.tutorial.profilePage) isTutorialTakenCheck();
   }, [inGameName]);
 
   return (

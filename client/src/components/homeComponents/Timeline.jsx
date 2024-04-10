@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import TimelineItem from "./TimelineItem";
 import { useShepherdTour } from "react-shepherd";
 import stepsTutorialHome from "./stepsTutorialHome";
 import axios from "axios";
 import { useToast } from "@chakra-ui/react";
+import { AppContext } from "../../contextAPI/appContext";
 
 const tourOptions = {
   defaultStepOptions: {
@@ -14,6 +15,7 @@ const tourOptions = {
   useModalOverlay: true,
 };
 const Timeline = ({ data }) => {
+  const { state } = useContext(AppContext);
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
   const toast = useToast();
   const isTutorialTakenCheck = async () => {
@@ -119,7 +121,7 @@ const Timeline = ({ data }) => {
   }, [tour]);
 
   useEffect(() => {
-    isTutorialTakenCheck();
+    if (state.user && state.user.tutorial.homePage) isTutorialTakenCheck();
   }, []);
   return (
     <div className="px-5 timeline">

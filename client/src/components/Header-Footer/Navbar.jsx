@@ -69,17 +69,16 @@ const Navbar = () => {
         <NavLink to="/" className="navbar-brand">
           📻 Rapid Recap
         </NavLink>
-        <button
-          className="navbar-toggler"
+        <Button
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
           aria-controls="navbarNav"
-          aria-expanded="false"
           aria-label="Toggle navigation"
+          display={{ base: "block", lg: "none" }}
         >
-          <span className="navbar-toggler-icon"></span>
-        </button>
+          <HamburgerIcon />
+        </Button>
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav">
             {navItems.map((item, index) => (

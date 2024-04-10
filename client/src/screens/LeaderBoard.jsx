@@ -28,7 +28,7 @@ const LeaderBoard = () => {
   const { state } = useContext(AppContext);
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [leaders, setLeaders] = useState(null);
+  const [leaders, setLeaders] = useState([]);
   const tour = useShepherdTour({
     tourOptions,
     steps: stepsLeaderBoard,
@@ -108,7 +108,8 @@ const LeaderBoard = () => {
   useEffect(() => {
     if (!state.show) {
       fetchLeaderBoard();
-      isTutorialTakenCheck();
+      if (state.user && state.user.tutorial.leaderBoardPage)
+        isTutorialTakenCheck();
     }
   }, []);
 
@@ -230,7 +231,7 @@ const LeaderBoard = () => {
                 </Thead>
 
                 <Tbody marginTop={"20px"} className="Entries">
-                  {leaders.length > 0 &&
+                  {leaders?.length > 0 &&
                     leaders.map((leader, index) => {
                       const urlInGameName = leader.inGameName.replace(
                         /\./g,
