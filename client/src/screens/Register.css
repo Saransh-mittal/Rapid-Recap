@@ -14,13 +14,15 @@ h6 {
 .r-container {
   position: relative;
   width: 45rem;
-  bottom: 75px;
+  bottom: 40px;
 }
 .form-container {
   border: 1px solid hsla(0, 0%, 65%, 0.158);
   box-shadow: 0 0 36px 1px rgba(0, 0, 0, 0.2);
   border-radius: 10px;
+  margin-left:2%;
   backdrop-filter: blur(20px);
+  width: 96%;
   z-index: 99;
   padding: 1.5rem;
   -webkit-border-radius: 10px;

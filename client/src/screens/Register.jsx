@@ -169,7 +169,7 @@ export default function Register({
   };
 
   return (
-    <div>
+    <div className="content">
       {state.modal && (
         <Modal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
@@ -177,9 +177,9 @@ export default function Register({
           <EmailVerify email={data.email} />
         </Modal>
       )}
-      <section className="container">
+      <section className="">
         <div className="r-container">
-          <div className="circle circle-one"></div>
+          {/* <div className="circle circle-one"></div> */}
           <div className="form-container">
             <h1 className="opacity">Welcome!</h1>
             <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>
@@ -199,8 +199,8 @@ export default function Register({
                       src={picDisplay}
                       alt="Profile Picture"
                       style={{
-                        width: "150px",
-                        height: "150px",
+                        width: "100px",
+                        height: "100px",
                         borderRadius: "50%",
                         marginBottom: "4px",
                       }}
@@ -239,7 +239,9 @@ export default function Register({
                     placeholder="Email ID"
                   />
                 </div>
-                <div className="row">
+                
+              </div>
+              <div className="row">
                   <div className="col">
                     <input
                       name="name"
@@ -261,17 +263,6 @@ export default function Register({
                     />
                   </div>
                 </div>
-                {/* <div className="col">
-                  <input
-                    name="phone"
-                    onChange={inputHandler}
-                    required
-                    value={data.phone}
-                    type="tel"
-                    placeholder="Mobile No."
-                  />
-                </div> */}
-              </div>
               <div className="row">
                 <div className="col">
                   <input
@@ -321,7 +312,7 @@ export default function Register({
                 Already a Member ?
                 <NavLink
                   type="button"
-                  className="w-50 btn btn-success p-1 rounded-2 mt-2"
+                  className="w-50 btn btn-success p-1 rounded-2 mt-2 mb-2"
                   to="/signin"
                 >
                   {" "}
@@ -331,7 +322,7 @@ export default function Register({
               {/* <div>{load && <Loading />}</div> */}
             </div>
           </div>
-          <div className="circle circle-two"></div>
+          {/* <div className="circle circle-two"></div> */}
         </div>
         <div className="theme-btn-container"></div>
       </section>

@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
-const { google } = require("googleapis");
+// const { google } = require("googleapis");
+const { OAuth2Client } = require("google-auth-library");
 
 //These id's and secrets should come from .env file.
 
@@ -18,7 +19,14 @@ const mailTransporter = async () => {
     const REDIRECT_URI = "https://developers.google.com/oauthplayground";
     const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
 
-    const oAuth2Client = new google.auth.OAuth2(
+    // const oAuth2Client = new google.auth.OAuth2(
+    //   CLIENT_ID,
+    //   CLEINT_SECRET,
+    //   REDIRECT_URI
+    // );
+    // oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+    // const accessToken = await oAuth2Client.getAccessToken();
+    const oAuth2Client = new OAuth2Client(
       CLIENT_ID,
       CLEINT_SECRET,
       REDIRECT_URI
