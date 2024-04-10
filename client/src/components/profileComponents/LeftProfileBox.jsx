@@ -21,7 +21,9 @@ const LeftProfileBox = ({ leftProfileView }) => {
   const { state, dispatch } = useContext(AppContext);
   const [profileData, setProfileData] = useState({
     name: leftProfileView.name,
-    pic: leftProfileView.pic,
+    pic: leftProfileView.pic
+      ? leftProfileView.pic
+      : "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     bio: leftProfileView.bio,
   });
 
@@ -86,13 +88,10 @@ const LeftProfileBox = ({ leftProfileView }) => {
     }
   };
   return (
-    <Flex
-      className="left-profile-box"
-      flexDirection={"column"}
-    >
+    <Flex className="left-profile-box" flexDirection={"column"}>
       <Flex w={"100%"}>
         <Image
-          src={profileData.pic}
+          src={profileData?.pic}
           alt="Profile"
           borderRadius="10%"
           width="80px"
@@ -100,35 +99,23 @@ const LeftProfileBox = ({ leftProfileView }) => {
           marginRight="20px"
         />
         <Box margin={"5px"}>
-          <Heading
-            as="h4"
-            size={"md"}
-          >
-            {profileData.name}
+          <Heading as="h4" size={"md"}>
+            {profileData?.name}
           </Heading>
-          <Heading
-            as="h6"
-            fontSize={"12px"}
-          >
+          <Heading as="h6" fontSize={"12px"}>
             {leftProfileView.inGameName}
           </Heading>
           {isLoading ? (
             <Loading />
           ) : (
-            <Heading
-              as="h6"
-              fontSize={"12px"}
-            >
+            <Heading as="h6" fontSize={"12px"}>
               Rank : {rank}
             </Heading>
           )}
         </Box>
       </Flex>
-      <Box
-        marginTop={"10px"}
-        w={{ lg: "300px", base: "100%" }}
-      >
-        <Text align={"justify"}>{profileData.bio}</Text>
+      <Box marginTop={"10px"} w={{ lg: "300px", base: "100%" }}>
+        <Text align={"justify"}>{profileData?.bio}</Text>
         {window.location.pathname.split("/").pop() === state.user.inGameName ? (
           <Button
             size="md"
@@ -158,6 +145,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
           profileData={profileData}
           onSubmit={handleSubmitModal}
           setProfileData={setProfileData}
+          leftProfileView={leftProfileView}
         />
       )}
     </Flex>

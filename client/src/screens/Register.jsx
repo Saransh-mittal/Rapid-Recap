@@ -6,35 +6,68 @@ import Modal from "./Modal";
 import EmailVerify from "../components/authComponents/EmailVerify";
 import { AppContext } from "../contextAPI/appContext";
 //import Loading from "../components/Loading";
-import { Button, useToast } from "@chakra-ui/react";
+import { Button, useToast, Input, Image, Spinner } from "@chakra-ui/react";
+
 import _ from "lodash";
 
-export default function Register() {
+export default function Register({
+  isOpen,
+  onClose,
+  profileData,
+  setProfileData,
+  onSubmit,
+}) {
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
+  // const { formData, setFormData } = useState(profileData);
+  // const [formData, setFormData] = useState(profileData);
+  // const [formData, setFormData] = useState(
+  //   profileData || {
+  //     pic: "", // Initialize the pic property
+  //   }
+  // );
+
   const [data, setData] = useState({
     name: "",
     inGameName: "",
     email: "",
-    phone: "",
+    // phone: "",
     password: "",
     cpassword: "",
+    pic: "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
   });
   const [load, setLoad] = useState(false); //for loading spinner
+  const [imageLoading, setImageLoading] = useState(false);
+  const [picDisplay, setPicDisplay] = useState(
+    "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
+  );
   const navigate = useNavigate();
 
   const inputHandler = (e) => {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
+    // setFormData((prevData) => ({
+    //   ...prevData,
+    //   [name]: value,
+    // }));
   };
 
+  // const handleSubmitAll = (e) => {
+  //   e.preventDefault();
+  //   onSubmit(formData);
+  //   onClose();
+  // };
+
   const handleSubmit = async (e) => {
-    console.log(data);
+    //console.log(data);
     setLoad(true);
     e.preventDefault();
     try {
+      const newData = data;
+      const pic = await submitImage(data);
+      newData.pic = pic;
       //console.log(data);
-      const response = await axios.post(`/api/user/register`, data);
+      const response = await axios.post(`/api/user/register`, newData);
       if (response.status === 201) {
         await dispatch({ type: "showModal", payloadModal: true });
         toast({
@@ -82,6 +115,59 @@ export default function Register() {
       handleSubmitThrottled(e);
     }
   };
+  const submitImage = async (dataForPic) => {
+    //setImageLoading(true);
+    try {
+      //console.log(dataForPic);
+      const img = dataForPic.pic;
+      //console.log(img);
+      const data = new FormData();
+      data.append("file", img);
+      data.append("upload_preset", "ProfilePics");
+      data.append("cloud_name", "dxstsrnbs");
+      const response = await axios.post(
+        "https://api.cloudinary.com/v1_1/dxstsrnbs/image/upload",
+        data
+      );
+      const pic = response.data.url;
+      //console.log(pic);
+      //setFormData({ ...formData, pic });
+      return pic;
+      //setData({ ...data, pic });
+    } catch (e) {
+      console.log(e);
+    }
+    // finally {
+    //   setImageLoading(false);
+    // }
+  };
+
+  const handleImageChange = async (e) => {
+    setImageLoading(true);
+    try {
+      const img = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // reader.result contains the data URL representing the file
+        setPicDisplay(reader.result);
+        setData({ ...data, pic: img });
+      };
+      reader.readAsDataURL(img);
+    } catch (error) {
+      toast({
+        title: "Image upload Failed",
+        description: error,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      console.error(error);
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
   return (
     <div>
       {state.modal && (
@@ -97,26 +183,49 @@ export default function Register() {
           <div className="form-container">
             <h1 className="opacity">Welcome!</h1>
             <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>
-              <div className="row">
-                <div className="col">
-                  <input
-                    name="name"
-                    onChange={inputHandler}
-                    required
-                    value={data.name}
-                    type="text"
-                    placeholder="Name"
-                  />
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {imageLoading ? ( // Display spinner if image is loading
+                    <Spinner size="lg" />
+                  ) : (
+                    <Image
+                      loading={"eager"}
+                      src={picDisplay}
+                      alt="Profile Picture"
+                      style={{
+                        width: "150px",
+                        height: "150px",
+                        borderRadius: "50%",
+                        marginBottom: "4px",
+                      }}
+                    />
+                  )}
                 </div>
-                <div className="col">
-                  <input
-                    name="inGameName"
-                    onChange={inputHandler}
-                    required
-                    value={data.inGameName}
-                    type="text"
-                    placeholder="In Game Name"
+                <div>
+                  <div style={{ display: "flex", justifyContent: "center" }}>
+                    <label style={{ color: "white", fontWeight: "bold" }}>
+                      Upload Profile Picture
+                    </label>
+                  </div>
+                  <Input
+                    id="profile-pic"
+                    type="file"
+                    name="pic"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ display: "none" }}
                   />
+                  <label htmlFor="profile-pic">
+                    <Button as="span" colorScheme="blue" style={{ size: "sm" }}>
+                      Choose File
+                    </Button>
+                  </label>
                 </div>
               </div>
               <div className="row">
@@ -130,7 +239,29 @@ export default function Register() {
                     placeholder="Email ID"
                   />
                 </div>
-                <div className="col">
+                <div className="row">
+                  <div className="col">
+                    <input
+                      name="name"
+                      onChange={inputHandler}
+                      required
+                      value={data.name}
+                      type="text"
+                      placeholder="Name"
+                    />
+                  </div>
+                  <div className="col">
+                    <input
+                      name="inGameName"
+                      onChange={inputHandler}
+                      required
+                      value={data.inGameName}
+                      type="text"
+                      placeholder="In Game Name"
+                    />
+                  </div>
+                </div>
+                {/* <div className="col">
                   <input
                     name="phone"
                     onChange={inputHandler}
@@ -139,7 +270,7 @@ export default function Register() {
                     type="tel"
                     placeholder="Mobile No."
                   />
-                </div>
+                </div> */}
               </div>
               <div className="row">
                 <div className="col">

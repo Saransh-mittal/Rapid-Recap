@@ -18,17 +18,19 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 
-
-
 const EditProfileModal = ({
   isOpen,
   onClose,
   profileData,
   setProfileData,
   onSubmit,
+  leftProfileView,
 }) => {
   const { state } = React.useContext(AppContext);
   const [formData, setFormData] = useState(profileData);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [picDisplay, setPicDisplay] = useState(profileData.pic);
+  const [load, setLoad] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -38,15 +40,34 @@ const EditProfileModal = ({
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
-    onClose();
+    setLoad(true);
+    try {
+      const newData = formData;
+      const pic = await submitImage(formData);
+      newData.pic = pic;
+      console.log(newData);
+      onSubmit(newData);
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: error.response.data.error,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      //console.log(error);
+    } finally {
+      setLoad(false);
+    }
   };
 
-  const submitImage = async (e) => {
+  const submitImage = async (dataForPic) => {
     try {
-      const img = e.target.files[0];
+      const img = dataForPic.pic;
       const data = new FormData();
       data.append("file", img);
       data.append("upload_preset", "ProfilePics");
@@ -56,9 +77,35 @@ const EditProfileModal = ({
         data
       );
       const pic = response.data.url;
-      setFormData({ ...formData, pic });
+      // setFormData({ ...formData, pic });
+      return pic;
     } catch (e) {
       console.log(e);
+    }
+  };
+  const handleImageChange = async (e) => {
+    setImageLoading(true);
+    try {
+      const img = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // reader.result contains the data URL representing the file
+        setPicDisplay(reader.result);
+        setFormData({ ...formData, pic: img });
+      };
+      reader.readAsDataURL(img);
+    } catch (error) {
+      toast({
+        title: "Image upload Failed",
+        description: error,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      console.error(error);
+    } finally {
+      setImageLoading(false);
     }
   };
 
@@ -67,7 +114,13 @@ const EditProfileModal = ({
       isOpen={isOpen}
       onClose={() => {
         onClose();
-        setProfileData(null);
+        setProfileData({
+          name: leftProfileView.name,
+          pic: leftProfileView.pic
+            ? leftProfileView.pic
+            : "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+          bio: leftProfileView.bio,
+        });
       }}
       size="xl"
     >
@@ -78,7 +131,7 @@ const EditProfileModal = ({
         <ModalBody width={"80%"}>
           <Box display="flex" justifyContent="center" mb={4}>
             <Image
-              src={formData.pic}
+              src={picDisplay}
               alt="Profile Picture"
               boxSize="150px"
               borderRadius="full"
@@ -97,7 +150,7 @@ const EditProfileModal = ({
               type="file"
               name="pic"
               accept="image/*"
-              onChange={submitImage}
+              onChange={handleImageChange}
               display="none"
             />
             <label htmlFor="profile-pic">
@@ -107,7 +160,7 @@ const EditProfileModal = ({
             </label>
           </FormControl>
 
-            <FormControl mb={4}>
+          <FormControl mb={4}>
             <FormLabel>Name</FormLabel>
             <Input
               type="text"
@@ -126,7 +179,12 @@ const EditProfileModal = ({
           </FormControl>
         </ModalBody>
         <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+          <Button
+            colorScheme="blue"
+            mr={3}
+            onClick={handleSubmit}
+            isLoading={load}
+          >
             Save Changes
           </Button>
           <Button onClick={onClose}>Cancel</Button>

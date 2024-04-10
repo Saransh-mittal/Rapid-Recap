@@ -3,10 +3,10 @@ import { NavLink, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
-import { useToast, Button } from "@chakra-ui/react";
+import { useToast, Button, Flex } from "@chakra-ui/react";
 import useDrag from "../../customHooks/useDrag";
 import ProfileDropDownMenu from "../profileComponents/ProfileDropDownMenu";
-import { ViewIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import Categories from "./Categories";
 
 const Navbar = () => {
@@ -19,11 +19,19 @@ const Navbar = () => {
     { to: "/profile", label: "Profile" },
   ];
   const [showCategory, setShowCategory] = useState(false);
+  const [isHamburgerOpen, setIsHamburgerOpen] = useState(false); // State variable to track hamburger menu state
   const navigate = useNavigate();
   const toast = useToast();
   const { state, dispatch, navLinkRefs } = useContext(AppContext);
   const { startDrag, drag, endDrag } = useDrag();
   useEffect(() => {}, [state.show]);
+  useEffect(() => {
+    if (isHamburgerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  }, [isHamburgerOpen]);
 
   const handleLogout = async () => {
     try {
@@ -59,73 +67,136 @@ const Navbar = () => {
   };
 
   return (
-    <nav
-      className="navbar navbar-expand-lg navbar-light bg-light px-5"
+    <Flex
+      className={`navbar navbar-expand-lg navbar-light bg-light px-5 ${
+        isHamburgerOpen ? "full-screen" : ""
+      }`} // Conditionally apply "full-screen" class when hamburger menu is open
       onTouchStart={startDrag}
       onTouchMove={(e) => drag(e.touches[0])}
       onTouchEnd={endDrag}
     >
-      <div className="container-fluid">
-        <NavLink to="/" className="navbar-brand">
-          📻 Rapid Recap
-        </NavLink>
+      {isHamburgerOpen ? (
         <Button
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
           aria-controls="navbarNav"
           aria-label="Toggle navigation"
-          display={{ base: "block", lg: "none" }}
+          display={{ base: "flex", lg: "none" }}
+          onClick={() => setIsHamburgerOpen(false)} // Toggle hamburger menu state
+          marginBottom={isHamburgerOpen ? "2rem" : "0"}
+          width={isHamburgerOpen ? "100px" : "auto"}
+          marginLeft={"auto"} // Align the button to the right
         >
-          <HamburgerIcon />
+          <CloseIcon />
         </Button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav">
-            {navItems.map((item, index) => (
-              <li className="nav-item" key={index}>
-                {item.label === "Profile" && !state.show ? (
-                  <ProfileDropDownMenu
-                    handleLogout={handleLogout}
-                    toProfile={item.to}
-                    refProfile={(ref) => (navLinkRefs.current[index] = ref)}
-                  />
-                ) : item.label === "category" && !state.show ? (
-                  <>
-                    <Button
-                      colorScheme="teal"
-                      onClick={() => setShowCategory(!showCategory)}
-                    >
-                      Category <HamburgerIcon marginLeft={"5px"} />{" "}
-                    </Button>
-                    {showCategory && (
-                      <Categories setShowCategory={setShowCategory} />
-                    )}
-                  </>
-                ) : (
-                  item.label !== "Profile" &&
-                  item.label !== "category" && (
-                    <NavLink
-                      to={item.to}
-                      className="nav-link"
-                      ref={(ref) => (navLinkRefs.current[index] = ref)}
-                    >
-                      {item.label}
-                    </NavLink>
-                  )
-                )}
-              </li>
-            ))}
-            {state.show && (
-              <li className="nav-item">
-                <NavLink to="/signin" className="nav-link">
-                  Sign In
-                </NavLink>
-              </li>
-            )}
-          </ul>
-        </div>
-      </div>
-    </nav>
+      ) : null}
+      <Flex
+        justifyContent={!isHamburgerOpen ? "space-between" : "flex-start"}
+        width={"100%"}
+        height={"100%"}
+        flexDirection={isHamburgerOpen ? "column" : "row"}
+        padding={isHamburgerOpen ? "1rem" : "0"}
+      >
+        <NavLink
+          to="/"
+          className={`navbar-brand${isHamburgerOpen ? " mb-5" : ""}`}
+        >
+          📻 Rapid Recap
+        </NavLink>
+        <Flex
+          flexDirection={{
+            base: isHamburgerOpen ? "column" : "row-reverse",
+            lg: "row-reverse",
+          }}
+          height={"100%"}
+          alignItems={"center"}
+        >
+          {!isHamburgerOpen ? (
+            <Button
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarNav"
+              aria-controls="navbarNav"
+              aria-label="Toggle navigation"
+              display={{ base: "flex", lg: "none" }}
+              onClick={() => setIsHamburgerOpen(true)} // Toggle hamburger menu state
+              marginBottom={isHamburgerOpen ? "2rem" : "0"}
+            >
+              <HamburgerIcon />
+            </Button>
+          ) : null}
+          {!state.show && !isHamburgerOpen ? (
+            <ProfileDropDownMenu
+              handleLogout={handleLogout}
+              toProfile={"/profile"}
+              refProfile={(ref) => (navLinkRefs.current[4] = ref)}
+            />
+          ) : null}
+          <Flex
+            display={{ base: isHamburgerOpen ? "flex" : "none", lg: "flex" }}
+            flexDirection={{ base: "column", lg: "row" }}
+            // className="collapse navbar-collapse"
+            id="navbarNav"
+            // justifyContent="space-between"
+            alignItems={"center"}
+            h={"100%"}
+          >
+            <ul
+              className={`navbar-nav h-100 w-100 ${
+                isHamburgerOpen ? "d-flex gap-5" : ""
+              }`}
+            >
+              {navItems.map((item, index) => (
+                <li
+                  className="nav-item"
+                  key={index}
+                  onClick={() => setIsHamburgerOpen(false)}
+                >
+                  {item.label === "Profile" &&
+                  !state.show ? null : item.label === "category" &&
+                    !state.show ? (
+                    <>
+                      <Button
+                        colorScheme="teal"
+                        onClick={() => setShowCategory(!showCategory)}
+                      >
+                        Category <HamburgerIcon marginLeft={"5px"} />{" "}
+                      </Button>
+                      {showCategory && (
+                        <Categories
+                          setShowCategory={setShowCategory}
+                          isHamburgerOpen={isHamburgerOpen}
+                          setIsHamburgerOpen={setIsHamburgerOpen}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    item.label !== "Profile" &&
+                    item.label !== "category" && (
+                      <NavLink
+                        to={item.to}
+                        className="nav-link"
+                        ref={(ref) => (navLinkRefs.current[index] = ref)}
+                      >
+                        {item.label}
+                      </NavLink>
+                    )
+                  )}
+                </li>
+              ))}
+              {state.show && (
+                <li className="nav-item">
+                  <NavLink to="/signin" className="nav-link">
+                    Sign In
+                  </NavLink>
+                </li>
+              )}
+            </ul>
+          </Flex>
+        </Flex>
+      </Flex>
+    </Flex>
   );
 };
 

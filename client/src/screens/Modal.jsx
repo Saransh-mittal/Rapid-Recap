@@ -8,7 +8,7 @@ const MODAL_STYLES = {
   backgroundColor: "rgb(34,34,34)",
   transform: "translate(-50%, -50%)",
   zIndex: 2000,
-  height: "90%",
+  minheight: "90%",
   width: "90%",
 };
 
@@ -30,7 +30,7 @@ export default function Modal({ children, onClose }) {
     marginTop: "-5px",
     zIndex: 2001,
     position: "absolute",
-    top: "22px",
+    top: "21px",
     right: "10px",
     color: isHovered ? "#f0f0f0" : "#253547",
     backgroundColor: isHovered ? "#37474f" : "white",

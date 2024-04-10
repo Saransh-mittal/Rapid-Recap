@@ -13,7 +13,11 @@ import {
 import { AppContext } from "../../contextAPI/appContext";
 import { useNavigate } from "react-router-dom";
 
-const Categories = ({ setShowCategory }) => {
+const Categories = ({
+  setShowCategory,
+  isHamburgerOpen,
+  setIsHamburgerOpen,
+}) => {
   const { state, dispatch } = useContext(AppContext);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
@@ -36,7 +40,7 @@ const Categories = ({ setShowCategory }) => {
         setShowCategory(false);
       }}
       isOpen={isOpen}
-      size={"xs"}
+      size={{ base: "full", lg: "xs" }}
       backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
       boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
     >
@@ -48,10 +52,7 @@ const Categories = ({ setShowCategory }) => {
       >
         <DrawerCloseButton />
         <DrawerHeader marginTop={"20px"}>Categories</DrawerHeader>
-        <DrawerBody
-          overflow={"hidden"}
-          marginTop={"50px"}
-        >
+        <DrawerBody overflow={"hidden"} marginTop={"50px"}>
           <UnorderedList
             height={"40%"}
             justifyContent={"space-between"}
@@ -77,6 +78,9 @@ const Categories = ({ setShowCategory }) => {
                   // });
 
                   navigate(`/${item.toLowerCase()}`);
+                  if (isHamburgerOpen) {
+                    setIsHamburgerOpen(false);
+                  }
                   onClose();
                 }}
                 onMouseDown={(e) => {
