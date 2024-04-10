@@ -181,9 +181,9 @@ export default function Sigin() {
       <div className="alert alert-warning" role="alert">
         You must log in to view this content.
       </div>
-      <section className="container">
+      <section className="">
         <div className="login-container">
-          <div className="circle circle-one"></div>
+          {/* <div className="circle circle-one"></div> */}
           <div className="form-container">
             <h1 className="opacity">LOG-IN</h1>
             <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>

@@ -239,30 +239,29 @@ export default function Register({
                     placeholder="Email ID"
                   />
                 </div>
-                
               </div>
               <div className="row">
-                  <div className="col">
-                    <input
-                      name="name"
-                      onChange={inputHandler}
-                      required
-                      value={data.name}
-                      type="text"
-                      placeholder="Name"
-                    />
-                  </div>
-                  <div className="col">
-                    <input
-                      name="inGameName"
-                      onChange={inputHandler}
-                      required
-                      value={data.inGameName}
-                      type="text"
-                      placeholder="In Game Name"
-                    />
-                  </div>
+                <div className="col">
+                  <input
+                    name="name"
+                    onChange={inputHandler}
+                    required
+                    value={data.name}
+                    type="text"
+                    placeholder="Name"
+                  />
                 </div>
+                <div className="col">
+                  <input
+                    name="inGameName"
+                    onChange={inputHandler}
+                    required
+                    value={data.inGameName}
+                    type="text"
+                    placeholder="In Game Name"
+                  />
+                </div>
+              </div>
               <div className="row">
                 <div className="col">
                   <input

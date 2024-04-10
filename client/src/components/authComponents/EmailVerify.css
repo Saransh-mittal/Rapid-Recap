@@ -1,129 +1,131 @@
 .title {
-    max-width: 500px;
-    margin: auto;
-    text-align: center;
-    font-family: "Poppins", sans-serif;
-    color: #f5f5f5;
-    /* Lighter text color */
+  max-width: 500px;
+  margin: auto;
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+  color: #f5f5f5;
+  /* Lighter text color */
 }
 
 .title h3 {
-    font-weight: bold;
-    color: #f5f5f5;
-    /* Lighter text color */
+  font-weight: bold;
+  color: #f5f5f5;
+  /* Lighter text color */
 }
 
 .title p {
-    font-size: 14px;
-    color: #f5f5f5;
-    /* Lighter text color */
+  font-size: 14px;
+  color: #f5f5f5;
+  /* Lighter text color */
 }
 
 .title p.msg {
-    color: initial;
-    text-align: initial;
-    font-weight: bold;
-    color: #f5f5f5;
-    /* Lighter text color */
+  color: initial;
+  text-align: center;
+
+  font-weight: bold;
+  color: #f5f5f5;
+  /* Lighter text color */
 }
 
 .otp-input-fields {
-    margin: auto;
-    background-color: #333;
-    /* Darker background color */
-    box-shadow: 0px 0px 10px 0px #02025044;
-    max-width: 500px;
-    width: auto;
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    padding: 50px;
-    color: #f5f5f5;
-    /* Lighter text color */
+  margin: auto;
+  background-color: #333;
+  /* Darker background color */
+  box-shadow: 0px 0px 10px 0px #02025044;
+  max-width: 500px;
+  /* width: auto; */
+  width: fit-content;
+  display: flex;
+  justify-content: space-between;
+  gap: 3px;
+  padding: 20px 2px;
+  color: #f5f5f5;
+  /* Lighter text color */
 }
 
 .otp-input-fields input {
-    height: 50px;
-    width: 50px;
-    background-color: transparent;
-    border-radius: 5px;
-    border: 2px solid #f5f5f5;
-    /* Lighter border color */
-    text-align: center;
-    outline: none;
-    font-size: 18px;
-    color: #f5f5f5;
-    /* Lighter text color */
+  height: 50px;
+  width: 50px;
+  background-color: transparent;
+  border-radius: 5px;
+  border: 2px solid #f5f5f5;
+  /* Lighter border color */
+  text-align: center;
+  outline: none;
+  font-size: 18px;
+  color: #f5f5f5;
+  /* Lighter text color */
 }
 
-.otp-input-fields input[type='number'] {
-    -moz-appearance: textfield;
+.otp-input-fields input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 /* For Chrome, Safari, Edge, Opera */
 .otp-input-fields input::-webkit-outer-spin-button,
 .otp-input-fields input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .otp-input-fields input:focus {
-    border-width: 3px;
-    border-color: #f5f5f5;
-    /* Lighter border color */
-    font-size: 22px;
-    color: #f5f5f5;
-    /* Lighter text color */
+  border-width: 3px;
+  border-color: #f5f5f5;
+  /* Lighter border color */
+  font-size: 22px;
+  color: #f5f5f5;
+  /* Lighter text color */
 }
 
 .result {
-    max-width: 500px;
-    margin: auto;
-    padding: 30px;
-    text-align: center;
-    background-color: #333;
-    /* Darker background color */
-    color: #f5f5f5;
-    /* Lighter text color */
+  max-width: 500px;
+  margin: auto;
+  padding: 30px;
+  text-align: center;
+  background-color: #333;
+  /* Darker background color */
+  color: #f5f5f5;
+  /* Lighter text color */
 }
 
 .result p {
-    font-size: 26px;
-    font-family: "Antonio", sans-serif;
-    opacity: 1;
-    transition: color 0.5s ease;
-    color: #f5f5f5;
-    /* Lighter text color */
+  font-size: 26px;
+  font-family: "Antonio", sans-serif;
+  opacity: 1;
+  transition: color 0.5s ease;
+  color: #f5f5f5;
+  /* Lighter text color */
 }
 
 .result p._ok {
-    color: #008000;
+  color: #008000;
 }
 
 .result p._notok {
-    color: #ff0000;
-    border-radius: 5px;
+  color: #ff0000;
+  border-radius: 5px;
 }
 
 .resend {
-    font-size: 14px;
-    color: #f5f5f5;
-    /* Lighter text color */
-    background-color: #333;
-    /* Darker background color */
+  font-size: 14px;
+  color: #f5f5f5;
+  /* Lighter text color */
+  background-color: #333;
+  /* Darker background color */
 }
 
 .otp-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background-color: #333;
-    /* Darker background color */
-    border-radius: 10px;
-    height: 100%;
-    position: absolute;
-    width: 100%;
-    top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: #333;
+  /* Darker background color */
+  border-radius: 10px;
+  height: 100%;
+  /* position: absolute; */
+  width: 100%;
+  top: 0;
 }
