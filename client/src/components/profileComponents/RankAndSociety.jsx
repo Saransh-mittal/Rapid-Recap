@@ -39,24 +39,12 @@ const RankAndSociety = ({ USER_IQ = 0 }) => {
         <Loading />
       ) : (
         <>
-          <Box
-            flexDirection={"column"}
-            width={"100%"}
-          >
-            <Text
-              textAlign={"left"}
-              color={"#9CAFAA"}
-              p={0}
-              m={0}
-            >
+          <Box flexDirection={"column"} width={"100%"}>
+            <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
               Society and Circle
             </Text>
           </Box>
-          <Flex
-            mt={5}
-            flexDirection={"column"}
-            w={"100%"}
-          >
+          <Flex mt={5} flexDirection={"column"} w={"100%"}>
             <Flex width={"100%"}>
               <Flex
                 justifyContent={"center"}
@@ -97,55 +85,65 @@ const RankAndSociety = ({ USER_IQ = 0 }) => {
                   src={Arrow}
                 />
               </Flex>
-              <Flex
-                w={"100%"}
-                position={"relative"}
-              >
-                <Flex
-                  w={"100%"}
-                  position={"absolute"}
-                  flexDirection={"column"}
-                  gap={0}
-                  zIndex={1}
-                  top={"2.7rem"}
-                  right={"0.5rem"}
+              <Flex w={"100%"} position={"relative"}>
+                <div
+                  style={{
+                    position: "relative",
+                    width: "140px",
+                    height: "140px",
+                  }}
                 >
-                  <Text
-                    color={"#9CAFAA"}
-                    fontSize={"0.8rem"}
-                    p={0}
-                    m={0}
-                  >
-                    {circleAndSociety.IQ_Lower}
-                  </Text>
-                  <Text
-                    color={"#9CAFAA"}
-                    fontSize={"0.8rem"}
-                    p={0}
-                    m={0}
-                  >
-                    to
-                  </Text>
-                  <Text
-                    color={"#9CAFAA"}
-                    fontSize={"0.8rem"}
-                    p={0}
-                    m={0}
-                  >
-                    {circleAndSociety.IQ_Upper} IQ
-                  </Text>
-                </Flex>
-                <Flex w={"100%"}>
-                  <Image
-                    background={"transparent"}
-                    p={0}
-                    m={0}
-                    w={"140px"}
-                    h={"140px"}
+                  <img
                     src={circle}
-                    zIndex={0} // Set a lower z-index value for the image
+                    alt="Circle"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      background: "transparent",
+                    }}
                   />
-                </Flex>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "#9CAFAA",
+                        fontSize: "0.8rem",
+                        margin: 0,
+                      }}
+                    >
+                      {circleAndSociety.IQ_Lower}
+                    </span>
+                    <span
+                      style={{
+                        color: "#9CAFAA",
+                        fontSize: "0.8rem",
+                        margin: 0,
+                      }}
+                    >
+                      to
+                    </span>
+                    <span
+                      style={{
+                        color: "#9CAFAA",
+                        fontSize: "0.8rem",
+                        margin: 0,
+                      }}
+                    >
+                      {circleAndSociety.IQ_Upper} IQ
+                    </span>
+                  </div>
+                </div>
               </Flex>
             </Flex>
             <Flex
@@ -153,8 +151,8 @@ const RankAndSociety = ({ USER_IQ = 0 }) => {
               w={"100%"}
               alignItems={"center"}
               justifyContent={"space-between"}
-              paddingLeft={5}
-              paddingRight={9}
+              paddingLeft={{ base: "9.5%", md: "9.5%", xl: "3.5%" }}
+              // paddingRight={9}
             >
               <Text
                 textAlign="center"
