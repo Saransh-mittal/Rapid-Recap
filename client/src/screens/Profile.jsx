@@ -162,7 +162,7 @@ export default function Profile() {
   }, [inGameName]);
 
   return (
-    <Flex marginTop={"4.5rem"}>
+    <Box marginTop={"4.5rem"} w={"100%"}>
       <Flex
         flexDirection={{ base: "column", md: "row" }}
         marginTop="20px"
@@ -285,6 +285,6 @@ export default function Profile() {
           </>
         )}
       </Flex>
-    </Flex>
+    </Box>
   );
 }
