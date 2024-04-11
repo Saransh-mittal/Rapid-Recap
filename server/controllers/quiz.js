@@ -4,7 +4,7 @@ const QuizAttempt = require("../model/quizAttemptSchema");
 const Quiz = require("../model/quizSchema");
 
 const saveAttempt = async (req, res) => {
-  const { articleId, userResponses, quizData, timeTaken } = req.body;
+  const { articleId, userResponses, quizData, timeTaken, quizId } = req.body;
   const userId = req.user._id;
   //console.log(userId);
   try {
@@ -18,7 +18,7 @@ const saveAttempt = async (req, res) => {
     if (attempt) {
       throw new Error("User has already attempted the quiz for the article.");
     }
-    const article = await Article.findById(articleId).populate("quiz");
+    const article = await Article.findById(articleId);
     if (!article) {
       throw new Error("Article not found");
     }
@@ -36,9 +36,12 @@ const saveAttempt = async (req, res) => {
       throw new Error("User never started the quiz");
     }
     await article.save();
+
+    const quiz = await Quiz.findById(quizId);
     const quizAttempt = await QuizAttempt.findOne({
       user: userId,
       article: articleId,
+      quiz: quizId,
     });
     if (quizAttempt) {
       throw new Error("User has already attempted the quiz for the article.");
@@ -70,10 +73,11 @@ const saveAttempt = async (req, res) => {
     const RQM_score = Math.ceil(
       ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000
     );
-    const articleDifficulty = article.quiz.overAllDifficulty;
+    const articleDifficulty = quiz.overAllDifficulty;
     const newQuizAttempt = new QuizAttempt({
       user: userId,
       article: articleId,
+      quiz: quizId,
       responses: userResponses.map((userAnswer, index) => {
         return {
           questionId: questions[index]._id, // Assuming each question has a unique ID
@@ -178,8 +182,7 @@ const getQuizSummary = async (req, res) => {
       user: userId,
       article: articleId,
     });
-    const article = await Article.findById(articleId).populate("quiz");
-    const quiz = article.quiz;
+    const quiz = await Quiz.findById(quizAttempt.quiz);
     if (!quizAttempt) {
       throw new Error("User has not attempted the quiz for the article.");
     }

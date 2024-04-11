@@ -53,29 +53,27 @@ const getArticle = async (req, res) => {
     };
     //console.log(newArticle);
     let quizExpired = false;
-    if (article.quiz) {
-      const quizId = article.quiz;
-      const fullQuiz = await Quiz.findById(quizId);
-      if (!fullQuiz) {
-        article.quiz = null;
-        await article.save();
-        throw new Error("Quiz not found, Please try again.");
-      }
-      //console.log(fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000);
-      // if (fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()) {
-      //   //console.log("quiz expired");
-      //   //console.log(fullQuiz);
-      //   if (fullQuiz.isActive) {
-      //     //console.log("deactivating quiz");
-      //     await updatePercentilesOnQuizDeactivation({ id: article._id });
-      //     fullQuiz.isActive = false;
-      //     await fullQuiz.save();
-      //   }
-      //   quizExpired = true;
-      // }
-    }
-    //console.log(article.mainText);
-    //console.log(article);
+    // if (article.quiz) {
+    //   const quizId = article.quiz;
+    //   const fullQuiz = await Quiz.findById(quizId);
+    //   if (!fullQuiz) {
+    //     article.quiz = null;
+    //     await article.save();
+    //     throw new Error("Quiz not found, Please try again.");
+    //   }
+    //   //console.log(fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000);
+    //   // if (fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()) {
+    //   //   //console.log("quiz expired");
+    //   //   //console.log(fullQuiz);
+    //   //   if (fullQuiz.isActive) {
+    //   //     //console.log("deactivating quiz");
+    //   //     await updatePercentilesOnQuizDeactivation({ id: article._id });
+    //   //     fullQuiz.isActive = false;
+    //   //     await fullQuiz.save();
+    //   //   }
+    //   //   quizExpired = true;
+    //   // }
+    // }
     res.status(201).send({ quizExpired, newArticle });
   } catch (error) {
     res.status(400).json({ error: error.message || "Something went wrong" });
@@ -85,6 +83,7 @@ const getArticle = async (req, res) => {
 
 const getQuiz = async (req, res) => {
   const { articleId } = req.params;
+  const userId = req.user._id;
   //console.log(articleId);
   try {
     if (!articleId) {
@@ -109,31 +108,31 @@ const getQuiz = async (req, res) => {
     ) {
       throw new Error("Quiz already started");
     }
+    let fullQuiz;
     if (article.quiz && article.quiz.length > 0) {
-      const quizId =
-        article.quiz[Math.floor(Math.random() * article.quiz.length)];
-      const fullQuiz = await Quiz.findById(quizId);
-      if (!fullQuiz) {
-        article.quiz = null;
-        await article.save();
-        throw new Error("Quiz not found, Please try again.");
+      let foundValidQuiz = false;
+      let attempts = 0;
+
+      while (!foundValidQuiz && attempts < article.quiz.length) {
+        const quizId =
+          article.quiz[Math.floor(Math.random() * article.quiz.length)];
+        fullQuiz = await Quiz.findById(quizId);
+
+        if (fullQuiz) {
+          foundValidQuiz = true;
+        } else {
+          attempts++;
+        }
       }
 
-      const timer =
-        Math.min(
-          5,
-          fullQuiz.para1.questions.length +
-            fullQuiz.para2.questions.length +
-            fullQuiz.para3.questions.length
-        ) * 10;
-      // if (fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()) {
-      //   if (fullQuiz.isActive) {
-      //     await updatePercentilesOnQuizDeactivation({ id: article._id });
-      //     fullQuiz.isActive = false;
-      //     await fullQuiz.save();
-      //   }
-      //   return res.status(200).json({ expired: true, message: "Quiz expired" });
-      // }
+      if (!foundValidQuiz) {
+        article.quiz = null;
+        await article.save();
+        throw new Error("No valid quizzes found");
+      }
+
+      // Now you have a valid fullQuiz
+      // Proceed with your code...
     } else {
       const response = await generateQuestionsForQuiz({
         title,
@@ -150,14 +149,6 @@ const getQuiz = async (req, res) => {
       ) {
         throw new Error("Quiz not generated");
       }
-      // Calculate timer according to 10 sec per question
-      const timer =
-        Math.min(
-          5,
-          response.para1.questions.length +
-            response.para2.questions.length +
-            response.para3.questions.length
-        ) * 10;
 
       const newQuiz = new Quiz({
         article: articleId,
@@ -167,20 +158,33 @@ const getQuiz = async (req, res) => {
         overAllDifficulty: response.overAllDifficulty,
       });
       await newQuiz.save();
+      fullQuiz = newQuiz;
+      if (!article.quiz) {
+        article.quiz = [];
+        await article.save();
+      }
       article.quiz.push(newQuiz._id);
       await article.save();
     }
+    const timer =
+      Math.min(
+        5,
+        fullQuiz.para1.questions.length +
+          fullQuiz.para2.questions.length +
+          fullQuiz.para3.questions.length
+      ) * 10;
     const quiz = await genQuiz({ fullQuiz, title });
     if (quiz.questions.length <= 2) {
       throw new Error("Article is too short for a quiz");
     }
-    article.userQuizStatus.push({ userId, status: true });
+    //article.userQuizStatus.push({ userId, status: true });
     await article.save();
     return res.status(200).json({
       expired: false,
       message: "Quiz Questions generated successfully",
       timer,
       quiz,
+      quizId: fullQuiz._id,
     });
   } catch (error) {
     res.status(400).json({ error: "Something went wrong! Please try again" });
@@ -200,7 +204,6 @@ const startQuiz = async (req, res) => {
     if (!article) {
       throw new Error("Article not found");
     }
-    const { title } = article;
     if (
       article.userQuizStatus.find(
         (status) =>
@@ -209,26 +212,9 @@ const startQuiz = async (req, res) => {
     ) {
       throw new Error("Quiz already started");
     }
-    if (article.quiz && article.quiz.length > 0) {
-      const quizId =
-        article.quiz[Math.floor(Math.random() * article.quiz.length)];
-      const fullQuiz = await Quiz.findById(quizId);
-      if (!fullQuiz) {
-        article.quiz = null;
-        await article.save();
-        throw new Error("Quiz not found, Please try again.");
-      }
-      const quiz = await genQuiz({ fullQuiz, title });
-      if (quiz.questions.length <= 2) {
-        throw new Error("Article is too short for a quiz");
-      }
-      article.userQuizStatus.push({ userId, status: true });
-      await article.save();
-      res.status(200).send(quiz);
-      return;
-    } else {
-      throw new Error("Quiz not found, Please try again.");
-    }
+    article.userQuizStatus.push({ userId, status: true });
+    await article.save();
+    res.status(200).json({ message: "Quiz started successfully" });
   } catch (error) {
     res.status(400).json({ error: error.message || "Something went wrong" });
     console.log(error);

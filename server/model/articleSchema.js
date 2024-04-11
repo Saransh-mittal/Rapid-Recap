@@ -30,12 +30,15 @@ const articleSchema = new mongoose.Schema(
         type: String,
       },
     ],
-    quiz: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "QUIZ",
-      },
-    ],
+    quiz: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "QUIZ",
+        },
+      ],
+      default: [],
+    },
     userQuizStatus: [
       {
         userId: {
