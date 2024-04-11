@@ -97,6 +97,10 @@ const userSchema = new mongoose.Schema(
       profilePage: { type: Boolean, default: true },
       leaderBoardPage: { type: Boolean, default: true },
     },
+    maxIQScore: {
+      type: Number,
+      default: 0,
+    },
   },
   { collection: "Users" }
 );

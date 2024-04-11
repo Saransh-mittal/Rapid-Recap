@@ -31,8 +31,13 @@ const articleSchema = new mongoose.Schema(
       },
     ],
     quiz: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "QUIZ",
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "QUIZ",
+        },
+      ],
+      default: [],
     },
     userQuizStatus: [
       {

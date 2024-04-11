@@ -35,7 +35,7 @@ require("./db/conn");
 //require("./utils/bot.utils/generatePicForUsers");
 // -------------------
 app.use(express.json());
-require("./scheduler/userIQScoreScheduler");
+//require("./scheduler/userIQScoreScheduler");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);
