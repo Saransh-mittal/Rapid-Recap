@@ -28,6 +28,7 @@ import imageData from "../assets/AltNewsImage";
 import { useShepherdTour } from "react-shepherd";
 import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle";
 import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
+import TotalUserAttempted from "../components/articleComponents/TotalUserAttempted";
 const tourOptions = {
   defaultStepOptions: {
     cancelIcon: {
@@ -64,6 +65,7 @@ const Article = () => {
   const [quizExpired, setQuizExpired] = useState(false);
   const [showExpectedIQ, setShowExpectedIQ] = useState(false);
   const [expectedIQ, setExpectedIQ] = useState(null);
+  const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(0);
   //const [showInstruction, setShowInstruction] = useState(false);
 
   const isTutorialTakenCheck = async () => {
@@ -107,8 +109,12 @@ const Article = () => {
   const fetchArticle = async () => {
     try {
       const response = await axios.get(`/api/articles/article/${id}`);
-      const news = await axios.get(`/api/articles?page=1&pageSize=9`);
-
+      const news = await axios.get(
+        `/api/articles?page=1&pageSize=9&category=${
+          state.category ? state.category : "general"
+        }`
+      );
+      setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
       setLatestNews(news.data);
       //console.log(news.data);
       setArticle(response.data.newArticle);
@@ -332,7 +338,7 @@ const Article = () => {
       {load ? (
         <Loading />
       ) : (
-        <Flex className="article-page">
+        <Flex className="article-page" marginTop={"4.5rem"}>
           <Box
             marginLeft={{ base: "20px", md: "80px" }}
             position={"absolute"}
@@ -516,6 +522,7 @@ const Article = () => {
                   }}
                 />
               )}
+              <TotalUserAttempted totalUsersGivenQuiz={totalUsersGivenQuiz} />
               <Box
                 boxShadow={"0 100px 200px rgba(1, 1, 1, 1.1)"}
                 borderRadius={"15px"}
@@ -626,6 +633,14 @@ const Article = () => {
                 }}
               />
             )}
+            <TotalUserAttempted
+              totalUsersGivenQuiz={totalUsersGivenQuiz}
+              css={{
+                "@media screen and (min-width: 821px)": {
+                  display: "none",
+                },
+              }}
+            />
           </Grid>
         </Flex>
       )}

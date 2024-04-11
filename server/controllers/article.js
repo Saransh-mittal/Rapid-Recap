@@ -1,5 +1,6 @@
 const Article = require("../model/articleSchema");
 const Quiz = require("../model/quizSchema");
+const QuizAttempt = require("../model/quizAttemptSchema");
 const {
   genQuiz,
   generateQuestionsForQuiz,
@@ -74,7 +75,10 @@ const getArticle = async (req, res) => {
     //   //   quizExpired = true;
     //   // }
     // }
-    res.status(201).send({ quizExpired, newArticle });
+    const totalUsersGivenQuiz = await QuizAttempt.find({
+      article: article._id,
+    }).countDocuments();
+    res.status(201).send({ quizExpired, newArticle, totalUsersGivenQuiz });
   } catch (error) {
     res.status(400).json({ error: error.message || "Something went wrong" });
     console.log(error.message);

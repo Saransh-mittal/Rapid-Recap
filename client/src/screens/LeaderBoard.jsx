@@ -180,7 +180,12 @@ const LeaderBoard = () => {
   };
 
   return (
-    <Flex minH={"85vh"} justifyContent={"center"} className="leaderboard">
+    <Flex
+      minH={"85vh"}
+      justifyContent={"center"}
+      className="leaderboard"
+      marginTop={"4.5rem"}
+    >
       <Flex
         margin={"20px"}
         justifyContent={"center"}
