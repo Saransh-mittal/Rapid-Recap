@@ -23,6 +23,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { state, dispatch, navLinkRefs } = useContext(AppContext);
+  const [visible, setVisible] = useState(true);
+  const [prevScrollPos, setPrevScrollPos] = useState(0);
   const { startDrag, drag, endDrag } = useDrag();
   useEffect(() => {}, [state.show]);
   useEffect(() => {
@@ -66,6 +68,17 @@ const Navbar = () => {
     }
   };
 
+  const handleScroll = () => {
+    const currentScrollPos = window.scrollY;
+    setVisible(prevScrollPos > currentScrollPos || currentScrollPos < 10);
+    setPrevScrollPos(currentScrollPos);
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [prevScrollPos, visible]);
+
   return (
     <Flex
       className={`navbar navbar-expand-lg navbar-light bg-light px-5 ${
@@ -74,6 +87,11 @@ const Navbar = () => {
       onTouchStart={startDrag}
       onTouchMove={(e) => drag(e.touches[0])}
       onTouchEnd={endDrag}
+      position={"fixed"}
+      w={"100%"}
+      zIndex={"1000"}
+      transform={visible ? "translateY(0)" : "translateY(-100%)"}
+      transition="transform 0.3s ease-in-out"
     >
       {isHamburgerOpen ? (
         <Button
