@@ -375,7 +375,7 @@ const leaderBoard = async (req, res) => {
 
     users.forEach((user) => {
       let sum = 0;
-      const { name, inGameName, IQ_score, pic, _id } = user;
+      const { name, inGameName, IQ_score, pic, _id, maxIQScore } = user;
       for (let i = 0; i < user.quizAttempts.length; i++) {
         sum += user.quizAttempts[i].RQM_score;
       }
@@ -389,6 +389,7 @@ const leaderBoard = async (req, res) => {
         IQ_score,
         pic,
         quizSubmissions,
+        maxIQScore,
       });
     });
     result.sort((a, b) => {

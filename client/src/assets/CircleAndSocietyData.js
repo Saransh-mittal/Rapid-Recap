@@ -10,7 +10,7 @@ const CircleAndSocietyData = [
     image: Titans_Brain,
     IQ_Lower: 150,
     IQ_Upper: null,
-    boxShadow: "0 0 10px 5px rgba(255,215,0,0.5)",
+    boxShadow: "0 0 10px 5px rgba(255, 215, 0, 0.8)",
     textColor: "goldenrod",
   },
   {

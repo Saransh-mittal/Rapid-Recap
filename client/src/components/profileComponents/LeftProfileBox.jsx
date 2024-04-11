@@ -12,7 +12,7 @@ import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
 import EditProfileModal from "./EditProfileModal";
 import Loading from "../miscellaneous/Loading";
-import NameLightning from "./LeftProfileView/NameLightning";
+import NameLightning from "../miscellaneous/NameLightning";
 import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 
 const LeftProfileBox = ({ leftProfileView }) => {
