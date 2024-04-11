@@ -19,7 +19,7 @@ const CircleAndSocietyData = [
     image: Mavericks_Brain,
     IQ_Lower: 140,
     IQ_Upper: 150,
-    boxShadow: "0 0 10px 5px rgba(255, 150, 0, 0.5)",
+    boxShadow: "0 0 10px 5px rgba(255, 100, 0, 0.7)",
     textColor: "darkorange",
   },
   {
