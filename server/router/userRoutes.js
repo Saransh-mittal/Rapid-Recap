@@ -35,5 +35,5 @@ router
 router.route("/isTutorialTakenUpdate").post(Authenticate, tutorialTakenUpdate);
 router.route("/editProfile").post(Authenticate, editProfile);
 router.route("/expectedIQScore").get(Authenticate, expectedIQScore);
-router.route("/calculateUserIQScores").get(calculateUserIQScores);
+router.route("/calcUsersIQScore").get(calculateUserIQScores);
 module.exports = router;

@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { AppContext } from "../contextAPI/appContext";
 import { useNavigate } from "react-router-dom";
 import useDrag from "../customHooks/useDrag";
+import { Flex } from "@chakra-ui/react";
 
 const Contact = () => {
   const { startDrag, drag, endDrag } = useDrag();
@@ -26,11 +27,12 @@ const Contact = () => {
     handleLoginAlert();
   }, [state.show]);
   return (
-    <div
+    <Flex
       style={{ minHeight: "77vh" }}
       onTouchStart={startDrag}
       onTouchMove={(e) => drag(e.touches[0])}
       onTouchEnd={endDrag}
+      marginTop={"4.5rem"}
     >
       <div className="container-fluid px-5 my-5">
         <div className="row justify-content-center">
@@ -147,7 +149,7 @@ const Contact = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Flex>
   );
 };
 

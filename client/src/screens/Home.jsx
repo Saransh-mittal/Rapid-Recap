@@ -8,7 +8,7 @@ import Modal from "./Modal";
 import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
 import { debounce } from "lodash";
-import { useToast } from "@chakra-ui/react";
+import { useToast, Flex } from "@chakra-ui/react";
 
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -123,10 +123,11 @@ const Home = () => {
   }, [state.items, state.page, state.category]);
 
   return (
-    <div
+    <Flex
       onTouchStart={startDrag}
       onTouchMove={(e) => drag(e.touches[0])}
       onTouchEnd={endDrag}
+      marginTop={"4rem"}
     >
       {state.modal && (
         <Modal
@@ -137,7 +138,7 @@ const Home = () => {
       )}
       {!state.show && <Timeline data={items} />}
       {load && <Loading />}
-    </div>
+    </Flex>
   );
 };
 

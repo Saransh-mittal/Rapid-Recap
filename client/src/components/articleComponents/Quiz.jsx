@@ -37,6 +37,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false);
   const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
     useState(false);
+  const [quizId, setQuizId] = useState(null);
 
   const totalQuestions = quizData ? quizData.questions.length : 0;
 
@@ -50,7 +51,11 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
   };
 
   const handleAnswer = (selectedOption) => {
-    setUserAnswers((prevAnswers) => [...prevAnswers, selectedOption]);
+    setUserAnswers((prevAnswers) => {
+      const updatedAnswers = [...prevAnswers];
+      updatedAnswers[currentQuestionIndex] = selectedOption;
+      return updatedAnswers;
+    });
   };
 
   const handleSubmitQuiz = async () => {
@@ -74,6 +79,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
         userResponses,
         quizData,
         timeTaken: timeTaken === 0 ? 1 : timeTaken,
+        quizId,
       });
       //console.log(response);
       setScore(response.data.RQM_score);
@@ -105,9 +111,10 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
     try {
       //console.log(article._id);
       const articleId = article._id;
-      const quiz = await axios.get(`/api/articles/startQuiz/${articleId}`);
-      if (!quiz.data) throw new Error("No Quiz data found!");
-      setQuizData(quiz.data);
+      await axios.get(`/api/articles/startQuiz/${articleId}`);
+      //if (!quiz.data) throw new Error("No Quiz data found!");
+      //setQuizData(quiz.data);
+      //console.log("Quiz started");
       localStorage.removeItem("isQuizGivenCalled");
       setShowInstruction(false);
     } catch (error) {
@@ -137,6 +144,13 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
       if (response.data.expired) {
         throw new Error("Quiz is already expired.");
       }
+      if (!response.data.quiz || !response.data.quizId)
+        throw new Error("No Quiz data found!");
+      setQuizData(response.data.quiz);
+      setUserAnswers(
+        Array.from({ length: response.data.quiz.questions.length }, () => "")
+      );
+      setQuizId(response.data.quizId);
       setTimer(() => response.data.timer);
       setLoad(false);
       toast({
@@ -301,22 +315,13 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
                   />
                 </>
               ) : (
-                <SubmittedQuizInterface
-                  isOpen={isOpen}
-                  score={score}
-                />
+                <SubmittedQuizInterface isOpen={isOpen} score={score} />
               )}
             </ModalBody>
           )}
-          <Flex
-            flexDirection={"column"}
-            color={"white"}
-          >
+          <Flex flexDirection={"column"} color={"white"}>
             {load && (
-              <Text
-                size={"lg"}
-                color={"black"}
-              >
+              <Text size={"lg"} color={"black"}>
                 Quiz is generating. Wait for the start button....
               </Text>
             )}

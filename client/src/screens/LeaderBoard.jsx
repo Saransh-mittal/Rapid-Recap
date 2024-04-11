@@ -22,6 +22,8 @@ import stepsLeaderBoard from "../components/leaderBoardComponents/stepsLeaderBoa
 import { tourOptions } from "../components/leaderBoardComponents/stepsLeaderBoard";
 import { AppContext } from "../contextAPI/appContext";
 import { useNavigate } from "react-router-dom";
+import NameLightning from "../components/miscellaneous/NameLightning";
+import CircleAndSocietyData from "../assets/CircleAndSocietyData";
 
 const LeaderBoard = () => {
   const navigate = useNavigate();
@@ -167,8 +169,23 @@ const LeaderBoard = () => {
     };
   }, [tour]);
 
+  const findSocietyAndCircle = (IQ) => {
+    for (let i = 0; i < CircleAndSocietyData.length; i++) {
+      const { IQ_Lower, IQ_Upper } = CircleAndSocietyData[i];
+      if (IQ >= IQ_Lower && (IQ_Upper === null || IQ < IQ_Upper)) {
+        return CircleAndSocietyData[i];
+      }
+    }
+    return null; // Return null if no match is found
+  };
+
   return (
-    <Flex minH={"85vh"} justifyContent={"center"} className="leaderboard">
+    <Flex
+      minH={"85vh"}
+      justifyContent={"center"}
+      className="leaderboard"
+      marginTop={"4.5rem"}
+    >
       <Flex
         margin={"20px"}
         justifyContent={"center"}
@@ -292,7 +309,33 @@ const LeaderBoard = () => {
                               </Flex>
                             </Flex>
                           </Td>
-                          <Td textAlign="center">{leader.name}</Td>
+                          <Td>
+                            <Flex
+                              justifyContent={"center"}
+                              alignItems={"center"}
+                              w={"100%"}
+                              position="relative"
+                            >
+                              <Heading
+                                as="h6"
+                                size={"xs"}
+                                color={
+                                  findSocietyAndCircle(leader.IQ_score)
+                                    ?.textColor
+                                }
+                                marginTop={"5px"}
+                              >
+                                {leader.name}
+                              </Heading>
+                              <NameLightning
+                                boxShadow={
+                                  findSocietyAndCircle(leader.maxIQScore)
+                                    ?.boxShadow
+                                }
+                                MAX_IQ={leader.maxIQScore}
+                              />
+                            </Flex>
+                          </Td>
                           <Td textAlign="center">{leader.inGameName}</Td>
                           <Td textAlign="center">{leader.IQ_score}</Td>
                           <Td textAlign="center">{leader.quizSubmissions}</Td>

@@ -12,6 +12,8 @@ import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
 import EditProfileModal from "./EditProfileModal";
 import Loading from "../miscellaneous/Loading";
+import NameLightning from "../miscellaneous/NameLightning";
+import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 
 const LeftProfileBox = ({ leftProfileView }) => {
   const toast = useToast();
@@ -19,6 +21,8 @@ const LeftProfileBox = ({ leftProfileView }) => {
   const [rank, setRank] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { state, dispatch } = useContext(AppContext);
+  const CURR_IQ = state.user.IQ_score;
+  const MAX_IQ = state.user.maxIQScore;
   const [profileData, setProfileData] = useState({
     name: leftProfileView.name,
     pic: leftProfileView.pic
@@ -87,6 +91,18 @@ const LeftProfileBox = ({ leftProfileView }) => {
       console.error(e);
     }
   };
+  const findSocietyAndCircle = (IQ) => {
+    for (let i = 0; i < CircleAndSocietyData.length; i++) {
+      const { IQ_Lower, IQ_Upper } = CircleAndSocietyData[i];
+      if (IQ >= IQ_Lower && (IQ_Upper === null || IQ < IQ_Upper)) {
+        return CircleAndSocietyData[i];
+      }
+    }
+    return null; // Return null if no match is found
+  };
+
+  const selectedDatafromMaxIQ = findSocietyAndCircle(MAX_IQ);
+  const selectedDatafromCurrIQ = findSocietyAndCircle(CURR_IQ);
   return (
     <Flex className="left-profile-box" flexDirection={"column"}>
       <Flex w={"100%"}>
@@ -98,10 +114,28 @@ const LeftProfileBox = ({ leftProfileView }) => {
           height="80px"
           marginRight="20px"
         />
-        <Box margin={"5px"}>
-          <Heading as="h4" size={"md"}>
-            {profileData?.name}
-          </Heading>
+        <Box margin={"5px"} position={"relative"}>
+          <Flex
+            justifyContent={"center"}
+            alignItems={"center"}
+            w={"100%"}
+            position="relative"
+            marginBottom={"15px"}
+          >
+            <Heading
+              as="h4"
+              size={"md"}
+              margin={"2px"}
+              marginInline={"5px"}
+              color={selectedDatafromCurrIQ?.textColor}
+            >
+              {profileData?.name}
+            </Heading>
+            <NameLightning
+              boxShadow={selectedDatafromMaxIQ?.boxShadow}
+              MAX_IQ={MAX_IQ}
+            />
+          </Flex>
           <Heading as="h6" fontSize={"12px"}>
             {leftProfileView.inGameName}
           </Heading>
