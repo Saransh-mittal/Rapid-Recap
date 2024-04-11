@@ -10,6 +10,8 @@ const CircleAndSocietyData = [
     image: Titans_Brain,
     IQ_Lower: 150,
     IQ_Upper: null,
+    boxShadow: "0 0 10px 5px rgba(255,215,0,0.5)",
+    textColor: "goldenrod",
   },
   {
     society: "Mavericks Society",
@@ -17,6 +19,8 @@ const CircleAndSocietyData = [
     image: Mavericks_Brain,
     IQ_Lower: 140,
     IQ_Upper: 150,
+    boxShadow: "0 0 10px 5px rgba(255, 150, 0, 0.5)",
+    textColor: "darkorange",
   },
   {
     society: "Mavericks Society",
@@ -24,6 +28,8 @@ const CircleAndSocietyData = [
     image: Mavericks_Brain,
     IQ_Lower: 130,
     IQ_Upper: 140,
+    boxShadow: "0 0 10px 5px rgba(255, 150, 0, 0.5)",
+    textColor: "darkorange",
   },
   {
     society: "Elites Society",
@@ -31,6 +37,8 @@ const CircleAndSocietyData = [
     image: Elites_Brain,
     IQ_Lower: 120,
     IQ_Upper: 130,
+    boxShadow: "0 0 10px 5px rgba(0, 255, 100, 0.5)",
+    textColor: "lightgreen",
   },
   {
     society: "Elites Society",
@@ -38,6 +46,8 @@ const CircleAndSocietyData = [
     image: Elites_Brain,
     IQ_Lower: 110,
     IQ_Upper: 120,
+    boxShadow: "0 0 10px 5px rgba(0, 255, 100, 0.5)",
+    textColor: "lightgreen",
   },
   {
     society: "Strivers Society",
@@ -45,6 +55,8 @@ const CircleAndSocietyData = [
     image: Strivers_Brain,
     IQ_Lower: 104,
     IQ_Upper: 110,
+    boxShadow: null,
+    textColor: "cornflowerblue",
   },
   {
     society: "Strivers Society",
@@ -52,6 +64,8 @@ const CircleAndSocietyData = [
     image: Strivers_Brain,
     IQ_Lower: 97,
     IQ_Upper: 104,
+    boxShadow: null,
+    textColor: "cornflowerblue",
   },
   {
     society: "Strivers Society",
@@ -59,6 +73,8 @@ const CircleAndSocietyData = [
     image: Strivers_Brain,
     IQ_Lower: 90,
     IQ_Upper: 97,
+    boxShadow: null,
+    textColor: "cornflowerblue",
   },
   {
     society: "Explorers Society",
@@ -66,6 +82,8 @@ const CircleAndSocietyData = [
     image: Explorers_Brain,
     IQ_Lower: 0,
     IQ_Upper: 90,
+    boxShadow: null,
+    textColor: "white",
   },
 ];
 

@@ -14,7 +14,6 @@ const quizAttemptSchema = new mongoose.Schema({
   quiz: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "QUIZ",
-    required: true,
   },
   responses: [
     {

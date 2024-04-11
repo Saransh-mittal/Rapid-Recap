@@ -24,6 +24,7 @@ require("./db/conn");
 // ---------------------------
 
 // -----Update Collection-----
+//require("./utils/update.utils/maxIQScore.update.js");
 //require("./utils/update.utils/quizActiveStatus.update");
 //require("./utils/update.utils/quizCountUpdate.update");
 //require("./utils/update.utils/name.update");
