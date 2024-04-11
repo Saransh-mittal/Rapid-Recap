@@ -1,7 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
+import TitansFrame from "/images/TitansFrame.png";
+import { Image } from "@chakra-ui/react";
 
-const NameLightning = ({ boxShadow }) => {
+const NameLightning = ({ boxShadow, MAX_IQ }) => {
   return (
     <motion.div
       style={{
@@ -12,7 +14,7 @@ const NameLightning = ({ boxShadow }) => {
         pointerEvents: "none",
         borderRadius: "10px",
       }}
-      animate={{ opacity: [0.6, 1.3, 0.6] }}
+      animate={{ opacity: [0.6, 1.5, 0.6] }}
       transition={{ duration: 1.5, repeat: Infinity }}
     >
       {/* Boundary with shadow */}
@@ -23,8 +25,21 @@ const NameLightning = ({ boxShadow }) => {
           borderRadius: "10px",
           boxShadow: boxShadow, // Add shadow
           boxSizing: "border-box", // Ensure boundary remains within dimensions
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
         }}
-      ></div>
+      >
+        {MAX_IQ > 150 && (
+          <Image
+            src={TitansFrame}
+            position={"absolute"}
+            background={"transparent"}
+            height={"200%"}
+            maxW={"115%"}
+          />
+        )}
+      </div>
     </motion.div>
   );
 };

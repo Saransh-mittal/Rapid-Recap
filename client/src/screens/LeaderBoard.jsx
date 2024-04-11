@@ -327,6 +327,7 @@ const LeaderBoard = () => {
                                   findSocietyAndCircle(leader.maxIQScore)
                                     ?.boxShadow
                                 }
+                                MAX_IQ={leader.maxIQScore}
                               />
                             </Flex>
                           </Td>

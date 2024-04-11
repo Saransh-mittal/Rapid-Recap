@@ -114,7 +114,7 @@ const LeftProfileBox = ({ leftProfileView }) => {
           height="80px"
           marginRight="20px"
         />
-        <Box margin={"5px"}>
+        <Box margin={"5px"} position={"relative"}>
           <Flex
             justifyContent={"center"}
             alignItems={"center"}
@@ -131,7 +131,10 @@ const LeftProfileBox = ({ leftProfileView }) => {
             >
               {profileData?.name}
             </Heading>
-            <NameLightning boxShadow={selectedDatafromMaxIQ?.boxShadow} />
+            <NameLightning
+              boxShadow={selectedDatafromMaxIQ?.boxShadow}
+              MAX_IQ={MAX_IQ}
+            />
           </Flex>
           <Heading as="h6" fontSize={"12px"}>
             {leftProfileView.inGameName}
