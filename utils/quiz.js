@@ -99,11 +99,12 @@ const generateQuestionsForQuiz = async ({ title, author, mainText }) => {
                                 2. Generate minimum 2 and maximum 5 questions from each paragraph(very important!).
                                 3. Each question should have 4 options.
                                 4. Each question should have a correct option.
-                                5. Each answer should have an explanation.
-                                6. Nothing should be outside of the article provided(important)
-                                7. Every question should be unique.
-                                8. Give each question a difficulty level between 0 to 1 (Important).
-                                9.Assess the overall difficulty level of the article by considering factors 
+                                5. Anwer should be one of the options key(a,b,c,d).
+                                6. Each answer should have an explanation.
+                                7. Nothing should be outside of the article provided(important)
+                                8. Every question should be unique.
+                                9. Give each question a difficulty level between 0 to 1 (Important).
+                                10.Assess the overall difficulty level of the article by considering factors 
                                   such as vocabulary complexity, sentence structure, conceptual difficulty, 
                                   depth of analysis, background knowledge required, clarity and coherence, 
                                   density of information, language style, length of the article, and reader 

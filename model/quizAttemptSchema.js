@@ -41,6 +41,9 @@ const quizAttemptSchema = new mongoose.Schema({
   userPercentile: {
     type: Number,
   },
+  timeTaken: {
+    type: Number,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

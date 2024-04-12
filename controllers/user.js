@@ -412,10 +412,10 @@ const profile = async (req, res) => {
   try {
     const inGameName = req.params.inGameName;
     //console.log(inGameName);
-    const u = await User.findOne({ inGameName });
-    const userId = u._id;
+    const user = await User.findOne({ inGameName });
+    const userId = user._id;
     // Fetch user information
-    const user = await User.findById(userId);
+    //const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -459,6 +459,8 @@ const profile = async (req, res) => {
         pic: user.pic,
         bio: user.bio,
       },
+      USER_IQ,
+      maxIQScore: user.maxIQScore,
     });
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -583,6 +585,44 @@ const tutorialTakenUpdate = async (req, res) => {
   }
 };
 
+const solvedQuizHistory = async (req, res) => {
+  const userId = req.user._id;
+  const { page = 1, pageSize = 50 } = req.query;
+  try {
+    const quizAttempts = await QuizAttempt.find({ user: userId })
+      .populate({
+        path: "article",
+      })
+      .sort({ createdAt: -1 }) // Sort by createdAt field in descending order (latest first)
+      .limit(pageSize);
+    const history = [];
+    quizAttempts.forEach((attempt) => {
+      const { article, RQM_score, userPercentile, articleDifficulty } = attempt;
+      if (!article || !RQM_score || !userPercentile || !articleDifficulty)
+        return;
+      const { title } = article;
+      let diff = "";
+      if (articleDifficulty < 0.5) diff = "Easy";
+      else if (articleDifficulty < 0.7) diff = "Medium";
+      else diff = "Hard";
+
+      history.push({
+        newsArticle: article,
+        _id: attempt._id,
+        article: article._id,
+        title,
+        RQM_score,
+        userPercentile,
+        articleDifficulty: diff,
+      });
+    });
+    res.status(200).json({ history });
+  } catch (error) {
+    console.error("Error in fetching solved quiz history:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -599,4 +639,5 @@ module.exports = {
   expectedIQScore,
   tutorialTakenCheck,
   tutorialTakenUpdate,
+  solvedQuizHistory,
 };

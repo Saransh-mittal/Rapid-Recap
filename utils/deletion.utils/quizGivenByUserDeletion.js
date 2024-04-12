@@ -14,7 +14,7 @@ const deleteQuizAttempt = async (userId, articleId) => {
     const foundStatus = article.userQuizStatus.find(
       (status) => status.userId.toString() === userId && status.status === true
     );
-    foundStatus.status = false;
+    if (foundStatus && foundStatus.status) foundStatus.status = false;
     await article.save();
     console.log("Deleting Quiz Attempt");
     const quizAttempt = await QuizAttempt.findOne({
@@ -37,4 +37,4 @@ const deleteQuizAttempt = async (userId, articleId) => {
   }
 };
 
-deleteQuizAttempt("65b1ebbc90ba2e3794e9696d", "6610182a3f9a693aac6ac397");
+deleteQuizAttempt("65b1ebbc90ba2e3794e9696d", "661847c714d1af6e8f8c0bdb");
