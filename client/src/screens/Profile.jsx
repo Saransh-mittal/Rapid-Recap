@@ -24,7 +24,7 @@ export default function Profile() {
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialProfile });
   const { inGameName } = useParams();
   const { state, dispatch } = useContext(AppContext);
-  const [profile, setProfile] = useState({});
+  const [profile, setProfile] = useState(state.userProfile);
   const [isLoading, setIsLoading] = useState(true);
   //const [rerender, setRerender] = useState(false);
 
@@ -71,6 +71,17 @@ export default function Profile() {
     try {
       const response = await axios.get(`/api/user/profile/${inGameName}`);
       setProfile(() => response.data);
+      if (inGameName === state.user.inGameName)
+        dispatch({ type: "profile", payloadProfile: response.data });
+      else {
+        dispatch({
+          type: "otherUserProfiles",
+          payloadOtherUserProfiles: [
+            ...state.otherUserProfiles,
+            { profile: response.data, inGameName: inGameName },
+          ],
+        });
+      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -156,8 +167,20 @@ export default function Profile() {
     };
   }, [tour]);
   useEffect(() => {
-    fetchProfile();
-    // tour.start();
+    //console.log("Profile Page");
+    const otherUserStored = state.otherUserProfiles?.find((user) => {
+      return user?.inGameName === inGameName;
+    });
+    //console.log(otherUserStored);
+    if (inGameName === state.user.inGameName && state.userProfile) {
+      setProfile(state.userProfile);
+      setIsLoading(false);
+    } else if (otherUserStored) {
+      setProfile(otherUserStored.profile);
+      setIsLoading(false);
+    } else {
+      fetchProfile();
+    }
     if (state.user && state.user.tutorial.profilePage) isTutorialTakenCheck();
   }, [inGameName]);
 
@@ -190,7 +213,11 @@ export default function Profile() {
                   "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
               }}
             >
-              <LeftProfileBox leftProfileView={profile.leftProfileView} />
+              <LeftProfileBox
+                leftProfileView={profile.leftProfileView}
+                CURR_IQ={profile?.USER_IQ}
+                MAX_IQ={profile?.maxIQScore}
+              />
             </Flex>
             <Flex
               w={{

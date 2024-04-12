@@ -15,14 +15,14 @@ import Loading from "../miscellaneous/Loading";
 import NameLightning from "../miscellaneous/NameLightning";
 import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 
-const LeftProfileBox = ({ leftProfileView }) => {
+const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [rank, setRank] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { state, dispatch } = useContext(AppContext);
-  const CURR_IQ = state.user.IQ_score;
-  const MAX_IQ = state.user.maxIQScore;
+  //const CURR_IQ = state.user.IQ_score;
+  //const MAX_IQ = state.user.maxIQScore;
   const [profileData, setProfileData] = useState({
     name: leftProfileView.name,
     pic: leftProfileView.pic
@@ -51,6 +51,13 @@ const LeftProfileBox = ({ leftProfileView }) => {
   };
   useEffect(() => {
     //console.log(state.user);
+    setProfileData({
+      name: leftProfileView.name,
+      pic: leftProfileView.pic
+        ? leftProfileView.pic
+        : "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+      bio: leftProfileView.bio,
+    });
     fetchRank();
   }, [leftProfileView]);
   const handleEditClick = () => {

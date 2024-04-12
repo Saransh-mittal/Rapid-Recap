@@ -26,6 +26,10 @@ export const Reducer = (state, action) => {
       return { ...state, homeInitialRender: false };
     case "category":
       return { ...state, category: action.payloadCategory };
+    case "profile":
+      return { ...state, userProfile: action.payloadProfile };
+    case "otherUserProfiles":
+      return { ...state, otherUserProfiles: action.payloadOtherUserProfiles };
     default:
       return state;
   }

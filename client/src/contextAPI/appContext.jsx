@@ -64,6 +64,8 @@ const initialState = {
   items: [],
   homeInitialRender: true,
   category: !category && category !== "" ? category : "general",
+  userProfile: null,
+  otherUserProfiles: [],
   // ...
 };
 // async function init() {
