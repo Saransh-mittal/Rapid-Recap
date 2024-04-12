@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
-import { Flex, Image, Text, useToast } from "@chakra-ui/react";
+import { Button, Flex, Image, Text, useToast } from "@chakra-ui/react";
 import Chart from "chart.js/auto";
 import moment from "moment";
 import "chartjs-adapter-date-fns";
 import axios from "axios";
 import Loading from "../miscellaneous/Loading";
+import ExpectedIQModal from "../articleComponents/ExpectedIQModal";
 
 const IQLineGraph = ({ lineGraph }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,6 +19,8 @@ const IQLineGraph = ({ lineGraph }) => {
   const [hoveredData, setHoveredData] = useState(null);
   const [isHovering, setIsHovering] = useState(false);
   const [chartOptions, setChartOptions] = useState(null);
+  const [expectedIQ, setExpectedIQ] = useState(0);
+  const [showExpectedIQ, setShowExpectedIQ] = useState(false);
   const chartRef = useRef(null);
   const handleHover = (event, array) => {
     const chart = chartRef.current;
@@ -248,6 +251,29 @@ const IQLineGraph = ({ lineGraph }) => {
     };
   }, [isHovering]);
 
+  const getExpectedIQ = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("/api/user/expectedIQScore");
+      if (response.data.ExpectedIQScore) {
+        setExpectedIQ(response.data.ExpectedIQScore);
+      }
+      setShowExpectedIQ(true);
+    } catch (error) {
+      toast({
+        title: "An error occurred.",
+        description: "Unable to fetch expected IQ. Please try again later.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Flex
       w={"100%"}
@@ -268,6 +294,12 @@ const IQLineGraph = ({ lineGraph }) => {
       }}
       className="iq-line-graph"
     >
+      {showExpectedIQ && (
+        <ExpectedIQModal
+          expectedIQ={expectedIQ}
+          setShowExpectedIQ={setShowExpectedIQ}
+        />
+      )}
       {isLoading ? (
         <Loading />
       ) : IQScoreHistory.length === 0 ? (
@@ -280,39 +312,50 @@ const IQLineGraph = ({ lineGraph }) => {
           <Text m={0}>
             Give 10 Quizzes to get the IQ score and enter the ranking
           </Text>
-          <Image
+          <Button
+            backgroundColor="transparent"
+            onClick={getExpectedIQ}
             h={"200px"}
             w={"200px"}
-            background={"transparent"}
-            src="/images/lock.png"
-          />
+            borderRadius={"50%"}
+            _hover={{
+              backgroundColor: { base: "#0f0d15", xl: "transparent" },
+              backgroundImage: {
+                xl: "none",
+                base: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+              },
+              boxShadow: {
+                xl: "none",
+                base: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+              },
+            }}
+            _active={{
+              bg: "#dddfe2",
+              transform: "scale(0.98)",
+              borderColor: "#bec3c9",
+            }}
+          >
+            <Image
+              h={"200px"}
+              w={"200px"}
+              background={"transparent"}
+              src="/images/lock.png"
+            />
+          </Button>
         </Flex>
       ) : (
         <>
           <Flex justifyContent={"space-between"}>
             <Flex flexDirection={"column"}>
-              <Text
-                textAlign={"left"}
-                color={"#9CAFAA"}
-                p={0}
-                m={0}
-              >
+              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
                 IQ Score
               </Text>
-              <Text
-                textAlign={"left"}
-                fontSize={"1.5rem"}
-              >
+              <Text textAlign={"left"} fontSize={"1.5rem"}>
                 {hoveredData?.IQScore}
               </Text>
             </Flex>
             <Flex flexDirection={"column"}>
-              <Text
-                textAlign={"left"}
-                color={"#9CAFAA"}
-                p={0}
-                m={0}
-              >
+              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
                 Date
               </Text>
               <Text textAlign={"left"}>
@@ -320,12 +363,7 @@ const IQLineGraph = ({ lineGraph }) => {
               </Text>
             </Flex>
             <Flex flexDirection={"column"}>
-              <Text
-                textAlign={"left"}
-                color={"#9CAFAA"}
-                p={0}
-                m={0}
-              >
+              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
                 Daily Rank
               </Text>
               <Text textAlign={"left"}>{hoveredData?.dailyRank}</Text>
@@ -342,11 +380,7 @@ const IQLineGraph = ({ lineGraph }) => {
             p={0}
             m={0}
           >
-            <Line
-              ref={chartRef}
-              data={chartData}
-              options={chartOptions}
-            />
+            <Line ref={chartRef} data={chartData} options={chartOptions} />
           </Flex>
         </>
       )}

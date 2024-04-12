@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Bar } from "react-chartjs-2";
-import { Flex, Image, Text, useToast } from "@chakra-ui/react";
+import { Button, Flex, Image, Text, useToast } from "@chakra-ui/react";
 import Chart from "chart.js/auto";
 import "chartjs-adapter-date-fns";
 import axios from "axios";
 import Loading from "../miscellaneous/Loading";
+import ExpectedIQModal from "../articleComponents/ExpectedIQModal";
 
 const IQBarGraph = ({ barGraph }) => {
   const [USER_IQ, setUSER_IQ] = useState(null); // [USER_IQ, setUSER_IQ
@@ -18,6 +19,8 @@ const IQBarGraph = ({ barGraph }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [currentData, setCurrentData] = useState(null);
+  const [expectedIQ, setExpectedIQ] = useState(0);
+  const [showExpectedIQ, setShowExpectedIQ] = useState(false);
 
   //console.log(filteredLabels, filteredIQData);
   const [chartData, setChartData] = useState(null);
@@ -200,6 +203,29 @@ const IQBarGraph = ({ barGraph }) => {
     }
   }, [hoveredIndex]);
 
+  const getExpectedIQ = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("/api/user/expectedIQScore");
+      if (response.data.ExpectedIQScore) {
+        setExpectedIQ(response.data.ExpectedIQScore);
+      }
+      setShowExpectedIQ(true);
+    } catch (error) {
+      toast({
+        title: "An error occurred.",
+        description: "Unable to fetch expected IQ. Please try again later.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Flex
       w={"100%"}
@@ -219,6 +245,12 @@ const IQBarGraph = ({ barGraph }) => {
       }}
       className="iq-bar-graph"
     >
+      {showExpectedIQ && (
+        <ExpectedIQModal
+          expectedIQ={expectedIQ}
+          setShowExpectedIQ={setShowExpectedIQ}
+        />
+      )}
       {isLoading ? (
         <Loading />
       ) : USER_IQ === 0 ? (
@@ -231,46 +263,51 @@ const IQBarGraph = ({ barGraph }) => {
           <Text m={0}>
             Give 10 Quizzes to get the IQ score and Unlock the bar graph
           </Text>
-          <Image
+          <Button
+            backgroundColor="transparent"
+            onClick={getExpectedIQ}
             h={"200px"}
             w={"200px"}
-            background={"transparent"}
-            src="/images/lock.png"
-          />
+            borderRadius={"50%"}
+            _hover={{
+              backgroundColor: { base: "#0f0d15", xl: "transparent" },
+              backgroundImage: {
+                xl: "none",
+                base: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+              },
+              boxShadow: {
+                xl: "none",
+                base: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+              },
+            }}
+            _active={{
+              bg: "#dddfe2",
+              transform: "scale(0.98)",
+              borderColor: "#bec3c9",
+            }}
+          >
+            <Image
+              h={"200px"}
+              w={"200px"}
+              background={"transparent"}
+              src="/images/lock.png"
+            />
+          </Button>
         </Flex>
       ) : (
         <>
           <Flex width={"100%"}>
-            <Flex
-              marginStart={"15px"}
-              flexDirection={"column"}
-            >
-              <Text
-                textAlign={"left"}
-                color={"#9CAFAA"}
-                p={0}
-                m={0}
-              >
+            <Flex marginStart={"15px"} flexDirection={"column"}>
+              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
                 Top
               </Text>
-              <Text
-                textAlign={"left"}
-                fontSize={"1.5rem"}
-              >
+              <Text textAlign={"left"} fontSize={"1.5rem"}>
                 {hoveredPercentile}%
               </Text>
             </Flex>
             {currentData && currentData.range && currentData.count ? (
-              <Flex
-                marginLeft={"40px"}
-                flexDirection={"column"}
-              >
-                <Text
-                  textAlign={"left"}
-                  color={"#9CAFAA"}
-                  p={0}
-                  m={0}
-                >
+              <Flex marginLeft={"40px"} flexDirection={"column"}>
+                <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
                   {currentData.range}
                 </Text>
 
@@ -278,17 +315,9 @@ const IQBarGraph = ({ barGraph }) => {
               </Flex>
             ) : null}
           </Flex>
-          <Flex
-            height={"150px"}
-            width={"100%"}
-            justifyContent={"center"}
-          >
+          <Flex height={"150px"} width={"100%"} justifyContent={"center"}>
             {chartData && (
-              <Bar
-                ref={chartRef}
-                data={chartData}
-                options={options}
-              />
+              <Bar ref={chartRef} data={chartData} options={options} />
             )}
           </Flex>
         </>
