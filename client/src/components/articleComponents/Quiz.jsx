@@ -38,6 +38,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
   const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
     useState(false);
   const [quizId, setQuizId] = useState(null);
+  const [submitLoad, setSubmitLoad] = useState(false);
 
   const totalQuestions = quizData ? quizData.questions.length : 0;
 
@@ -61,6 +62,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
   const handleSubmitQuiz = async () => {
     // For example, you can calculate the score here
     // You can add your own logic here
+    setSubmitLoad(true);
     console.log("Submitting Quiz");
     try {
       const articleId = article._id;
@@ -103,6 +105,8 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
         isClosable: true,
         position: "top",
       });
+    } finally {
+      setSubmitLoad(false);
     }
   };
 
@@ -376,6 +380,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
                       bg: "#265073", // Change background color to red on hover
                       color: "#DCF2F1", // Change text color to black on hover
                     }}
+                    isLoading={submitLoad}
                   >
                     Submit
                   </Button>
