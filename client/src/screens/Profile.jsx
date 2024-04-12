@@ -274,6 +274,13 @@ export default function Profile() {
                       "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
                   }}
                   className="solved-quizzes"
+                  _hover={{
+                    transform: "scale(1.01)",
+                  }}
+                  _active={{
+                    transform: "scale(0.9)",
+                    borderColor: "#bec3c9",
+                  }}
                 >
                   <SolvedQuizzes solvedQuizzes={profile.solvedQuizzes} />
                 </Flex>

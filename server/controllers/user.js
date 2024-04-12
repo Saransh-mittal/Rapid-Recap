@@ -585,6 +585,44 @@ const tutorialTakenUpdate = async (req, res) => {
   }
 };
 
+const solvedQuizHistory = async (req, res) => {
+  const userId = req.user._id;
+  const { page = 1, pageSize = 50 } = req.query;
+  try {
+    const quizAttempts = await QuizAttempt.find({ user: userId })
+      .populate({
+        path: "article",
+      })
+      .sort({ createdAt: -1 }) // Sort by createdAt field in descending order (latest first)
+      .limit(pageSize);
+    const history = [];
+    quizAttempts.forEach((attempt) => {
+      const { article, RQM_score, userPercentile, articleDifficulty } = attempt;
+      if (!article || !RQM_score || !userPercentile || !articleDifficulty)
+        return;
+      const { title } = article;
+      let diff = "";
+      if (articleDifficulty < 0.5) diff = "Easy";
+      else if (articleDifficulty < 0.7) diff = "Medium";
+      else diff = "Hard";
+
+      history.push({
+        newsArticle: article,
+        _id: attempt._id,
+        article: article._id,
+        title,
+        RQM_score,
+        userPercentile,
+        articleDifficulty: diff,
+      });
+    });
+    res.status(200).json({ history });
+  } catch (error) {
+    console.error("Error in fetching solved quiz history:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -601,4 +639,5 @@ module.exports = {
   expectedIQScore,
   tutorialTakenCheck,
   tutorialTakenUpdate,
+  solvedQuizHistory,
 };
