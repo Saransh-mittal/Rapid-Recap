@@ -52,7 +52,7 @@ function getCategory() {
   return route;
 }
 const category = getCategory();
-const initialState = {
+export const initialState = {
   // Define your initial state properties here
   ...(await showState()),
   ...(await currentArticle()),

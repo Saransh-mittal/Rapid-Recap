@@ -1,3 +1,4 @@
+import { initialState } from "../contextAPI/appContext";
 export const Reducer = (state, action) => {
   switch (action.type) {
     // Define your action types and their corresponding state updates
@@ -30,6 +31,8 @@ export const Reducer = (state, action) => {
       return { ...state, userProfile: action.payloadProfile };
     case "otherUserProfiles":
       return { ...state, otherUserProfiles: action.payloadOtherUserProfiles };
+    case "RESET_STATE":
+      return { ...initialState, show: true, user: null };
     default:
       return state;
   }

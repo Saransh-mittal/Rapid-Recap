@@ -47,11 +47,12 @@ const Navbar = () => {
           isClosable: true,
           position: "top",
         });
-        dispatch({ type: "SHOW" });
-        dispatch({
-          type: "setUser",
-          payloadUser: null,
-        });
+        // dispatch({ type: "SHOW" });
+        // dispatch({
+        //   type: "setUser",
+        //   payloadUser: null,
+        // });
+        dispatch({ type: "RESET_STATE" });
         navigate("/signin");
       } else {
         throw new Error("Logout Failed");
