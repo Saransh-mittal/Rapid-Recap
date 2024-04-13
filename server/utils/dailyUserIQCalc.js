@@ -130,6 +130,10 @@ const dailyUserIQCalc = async () => {
     const IQScore = 100 + 15 * normalizedScore;
     const updatedUser = await User.findById(user.user._id);
     updatedUser.IQ_score = Math.round(IQScore);
+    updatedUser.maxIQScore = Math.max(
+      updatedUser.maxIQScore,
+      Math.round(IQScore)
+    );
 
     const dailyIQ = new DailyIQ({
       user: updatedUser._id,
