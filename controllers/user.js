@@ -10,8 +10,6 @@ const {
 const VerificationToken = require("../model/verificationToken");
 const { isValidObjectId } = require("mongoose");
 const jwt = require("jsonwebtoken");
-const { updatePercentilesOnQuizDeactivation } = require("../utils/quiz");
-const { progressBar } = require("../utils/progress");
 const {
   getUserIQScoreHistory,
   currentTopPercentOfUser,
@@ -367,7 +365,8 @@ const calculateUserIQScores = async (req, res) => {
 const leaderBoard = async (req, res) => {
   try {
     const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
-      .sort({ IQ_score: -1 })
+      .select("name inGameName IQ_score pic maxIQScore rank _id")
+      .sort({ rank: 1 })
       .limit(50)
       .populate("quizAttempts");
     //AVG. RQM SCORES
@@ -623,6 +622,68 @@ const solvedQuizHistory = async (req, res) => {
   }
 };
 
+const userSearch = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    // Construct MongoDB query to search by inGameName, name, or email
+    const searchQuery = {
+      $or: [
+        { inGameName: query }, // Full match for inGameName
+        { name: query }, // Full match for name
+        { email: query }, // Full match for email
+        { inGameName: { $regex: query, $options: "i" } }, // Partial match for inGameName
+        { name: { $regex: query, $options: "i" } }, // Partial match for name
+        { email: { $regex: query, $options: "i" } }, // Partial match for email
+      ],
+      inGameName: { $ne: null, $exists: true },
+    };
+
+    // Execute the query and retrieve the matching users
+    const users = await User.find(searchQuery).populate("quizAttempts");
+    // Prioritize results with full query match
+    const prioritizedUsers = users.sort((a, b) => {
+      // Check if a has a full query match
+      const aFullMatch =
+        a.inGameName === query || a.name === query || a.email === query;
+      // Check if b has a full query match
+      const bFullMatch =
+        b.inGameName === query || b.name === query || b.email === query;
+
+      // Prioritize full match over partial match
+      if (aFullMatch && !bFullMatch) return -1;
+      if (!aFullMatch && bFullMatch) return 1;
+      return 0;
+    });
+    const result = [];
+
+    prioritizedUsers.forEach((user) => {
+      let sum = 0;
+      const { name, inGameName, IQ_score, pic, _id, maxIQScore, rank } = user;
+      for (let i = 0; i < user.quizAttempts.length; i++) {
+        sum += user.quizAttempts[i].RQM_score;
+      }
+      const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
+      const quizSubmissions = user.quizAttempts.length;
+      result.push({
+        _id,
+        RQM_avg,
+        name,
+        inGameName,
+        IQ_score,
+        pic,
+        quizSubmissions,
+        maxIQScore,
+        rank,
+      });
+    });
+    res.status(201).json(result); // Return the prioritized users as JSON response
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -640,4 +701,5 @@ module.exports = {
   tutorialTakenCheck,
   tutorialTakenUpdate,
   solvedQuizHistory,
+  userSearch,
 };
