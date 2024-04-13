@@ -365,7 +365,9 @@ const calculateUserIQScores = async (req, res) => {
 const leaderBoard = async (req, res) => {
   try {
     const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
-      .sort({ IQ_score: -1 })
+      .select("name inGameName IQ_score pic maxIQScore rank _id")
+      .sort({ rank: 1 })
+      .limit(50)
       .populate("quizAttempts");
     //AVG. RQM SCORES
     const result = [];
@@ -398,7 +400,7 @@ const leaderBoard = async (req, res) => {
         return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
       }
     });
-    res.status(200).json({ users: result.slice(0, 50) });
+    res.status(200).json({ users: result });
   } catch (error) {
     res.status(500).json({ error: "Error fetching the Leaderboard" });
     console.log(error.message);
@@ -639,52 +641,6 @@ const userSearch = async (req, res) => {
 
     // Execute the query and retrieve the matching users
     const users = await User.find(searchQuery).populate("quizAttempts");
-    const allUsers = await User.find({
-      inGameName: { $ne: null, $exists: true },
-    })
-      .populate("quizAttempts")
-      .sort({ IQ_score: -1 });
-    const result1 = [];
-
-    // Create a map to store the index of each user based on their _id
-    const userIndexMap = new Map();
-
-    allUsers.forEach((user, index) => {
-      let sum = 0;
-      const { name, inGameName, IQ_score, pic, _id, maxIQScore } = user;
-      for (let i = 0; i < user.quizAttempts.length; i++) {
-        sum += user.quizAttempts[i].RQM_score;
-      }
-      const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
-      const quizSubmissions = user.quizAttempts.length;
-      result1.push({
-        _id,
-        RQM_avg,
-        name,
-        inGameName,
-        IQ_score,
-        pic,
-        quizSubmissions,
-        maxIQScore,
-      });
-
-      // Store the index of the user in the map
-    });
-
-    result1.sort((a, b) => {
-      if (a.IQ_score !== b.IQ_score) {
-        return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
-      } else if (a.quizSubmissions !== b.quizSubmissions) {
-        return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
-      } else {
-        return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
-      }
-    });
-
-    result1.map((user, index) => {
-      userIndexMap.set(user.inGameName, index);
-    });
-
     // Prioritize results with full query match
     const prioritizedUsers = users.sort((a, b) => {
       // Check if a has a full query match
@@ -702,12 +658,24 @@ const userSearch = async (req, res) => {
     const result = [];
 
     prioritizedUsers.forEach((user) => {
-      //console.log(user.inGameName);
-      const index = userIndexMap.get(user.inGameName);
-      if (index !== undefined) {
-        const rank = index + 1; // Calculate rank (index + 1)
-        result.push({ ...result1[index], rank }); // Add rank to the user object
+      let sum = 0;
+      const { name, inGameName, IQ_score, pic, _id, maxIQScore, rank } = user;
+      for (let i = 0; i < user.quizAttempts.length; i++) {
+        sum += user.quizAttempts[i].RQM_score;
       }
+      const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
+      const quizSubmissions = user.quizAttempts.length;
+      result.push({
+        _id,
+        RQM_avg,
+        name,
+        inGameName,
+        IQ_score,
+        pic,
+        quizSubmissions,
+        maxIQScore,
+        rank,
+      });
     });
     res.status(201).json(result); // Return the prioritized users as JSON response
   } catch (error) {

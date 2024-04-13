@@ -3,6 +3,7 @@ const QuizAttempt = require("../model/quizAttemptSchema");
 const User = require("../model/userSchema");
 const { progressBar } = require("./progress");
 const { updatePercentilesOnQuizDeactivation } = require("./quiz");
+const rankUpdate = require("./update.utils/rank.update");
 
 const dailyUserIQCalc = async () => {
   console.log("\nFetching users...\n");
@@ -146,6 +147,7 @@ const dailyUserIQCalc = async () => {
     rank++;
     updateProgress2();
   }
+  await rankUpdate();
 };
 
 module.exports = dailyUserIQCalc;
