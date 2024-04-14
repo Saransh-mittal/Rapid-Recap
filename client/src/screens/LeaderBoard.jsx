@@ -3,6 +3,8 @@ import {
   Flex,
   Heading,
   Image,
+  Input,
+  Spinner,
   Table,
   TableCaption,
   TableContainer,
@@ -25,14 +27,31 @@ import { useNavigate } from "react-router-dom";
 import NameLightning from "../components/miscellaneous/NameLightning";
 import CircleAndSocietyData from "../assets/CircleAndSocietyData";
 import VerticalDotsSeparator from "../components/leaderBoardComponents/VerticalDotsSeparator";
+import { debounce } from "lodash";
+
+const debouncedSearch = debounce(async (query, callback) => {
+  try {
+    if (!query || query === "") return;
+    const response = await axios.get(`/api/user/search?query=${query}`);
+
+    callback(response.data); // Pass the response data to the callback function
+  } catch (error) {
+    console.error("Error searching users:", error);
+    // Handle error, show toast, etc.
+  }
+}, 800);
 
 const LeaderBoard = () => {
-  const profileIndex = 49;
+  // const profileIndex = 49;
   const navigate = useNavigate();
   const { state } = useContext(AppContext);
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [searchLoad, setSearchLoad] = useState(false);
   const [leaders, setLeaders] = useState([]);
+  const [searchResults, setSearchResults] = useState([]); // Add this line
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currUserChar, setCurrUserChar] = useState(null);
   const tour = useShepherdTour({
     tourOptions,
     steps: stepsLeaderBoard,
@@ -80,6 +99,7 @@ const LeaderBoard = () => {
     try {
       const response = await axios.get("/api/user/leaderboard");
       setLeaders(response.data.users);
+      setCurrUserChar(response.data.currUser);
     } catch (error) {
       toast({
         title: "Error",
@@ -181,6 +201,43 @@ const LeaderBoard = () => {
     return null; // Return null if no match is found
   };
 
+  const handleSearch = async (event) => {
+    setSearchLoad(true);
+    try {
+      const { value } = event.target;
+      //console.log(event.key);
+      setSearchQuery(value);
+
+      if (value === "") {
+        // Check if value is empty or only contains whitespace
+        setSearchLoad(false);
+        setSearchResults([]); // Clear search results when query is empty
+        debouncedSearch.cancel();
+        return;
+      }
+
+      debouncedSearch(value, (responseData) => {
+        // Handle response data
+        if (!value || value === "") return;
+        setSearchResults([...responseData]);
+
+        if (responseData.length === 0)
+          toast({
+            title: "No user found",
+            status: "info",
+            duration: 3000,
+            isClosable: true,
+            position: "top",
+          });
+        setSearchLoad(false);
+        // Update state or perform other actions based on response data
+      });
+    } catch (err) {
+      console.log(err);
+    }
+    // debouncedSearch(value);
+  };
+
   return (
     <Flex
       minH={"85vh"}
@@ -221,6 +278,20 @@ const LeaderBoard = () => {
                 />
               </Flex>
             </Heading>
+            {/* Search bar */}
+            <Flex
+              alignItems="center"
+              justifyContent="center"
+              marginBottom="20px"
+              marginTop={"20px"}
+            >
+              <Input
+                placeholder="Search for users..."
+                value={searchQuery}
+                onChange={handleSearch}
+                color={"white"}
+              />
+            </Flex>
             <TableContainer width={"100%"} className="mainBoard">
               <Table variant={"unstyled"}>
                 <TableCaption color={"white"} placement="top">
@@ -248,25 +319,135 @@ const LeaderBoard = () => {
                     </Th>
                   </Tr>
                 </Thead>
-
-                <Tbody marginTop={"20px"} className="Entries">
-                  {leaders?.length > 0 &&
-                    leaders.map((leader, index) => {
-                      const urlInGameName = leader.inGameName.replace(
-                        /\./g,
-                        "%2E"
-                      );
-                      return (
-                        <Tr // Clickable row to the profile of the user
+                {searchLoad ? (
+                  <Tbody marginTop={"20px"} className="Entries">
+                    <Tr>
+                      <Td colSpan={6} textAlign={"center"}>
+                        <Spinner
+                          thickness="4px"
+                          speed="0.65s"
+                          emptyColor="gray.200"
+                          color="blue.500"
+                          size="xl"
+                        />
+                      </Td>
+                    </Tr>
+                  </Tbody>
+                ) : (
+                  <Tbody marginTop={"20px"} className="Entries">
+                    {leaders?.length > 0 &&
+                      (searchResults.length > 0 ? searchResults : leaders).map(
+                        (user, index) => {
+                          //console.log(user);
+                          const urlInGameName = user?.inGameName?.replace(
+                            /\./g,
+                            "%2E"
+                          );
+                          return (
+                            <Tr // Clickable row to the profile of the user
+                              height={"80px"}
+                              key={user._id}
+                              className={
+                                state.user.inGameName === user.inGameName
+                                  ? "highlighted-card-2"
+                                  : ""
+                              }
+                              onClick={() => {
+                                navigate(`/profile/${urlInGameName}`);
+                              }}
+                              _hover={{
+                                backgroundImage:
+                                  "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                                boxShadow:
+                                  "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+                              }}
+                              cursor={"pointer"}
+                            >
+                              <Td textAlign={"center"}>
+                                <Flex
+                                  justifyContent={"center"}
+                                  alignItems={"center"}
+                                  bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+                                  p={2}
+                                  gap={"35px"}
+                                  borderRadius="md"
+                                >
+                                  {user.rank ? user.rank : index + 1}
+                                  <Flex
+                                    border={"5px solid gold"}
+                                    style={{ transform: "rotate(45deg)" }}
+                                    w="45px"
+                                    h="45px"
+                                    justifyContent={"center"}
+                                    alignItems={"center"}
+                                    bg={"blue.200"}
+                                    position={"relative"}
+                                    overflow={"hidden"}
+                                  >
+                                    <Box
+                                      position={"absolute"}
+                                      h="50px"
+                                      w="50px"
+                                      style={{
+                                        transform: "rotate(-45deg)",
+                                      }}
+                                    >
+                                      <Image
+                                        h={"100%"}
+                                        w={"100%"}
+                                        src={user.pic}
+                                        alt="Dan Abramov"
+                                        objectFit={"cover"}
+                                      />
+                                    </Box>
+                                  </Flex>
+                                </Flex>
+                              </Td>
+                              <Td>
+                                <Flex
+                                  justifyContent={"center"}
+                                  alignItems={"center"}
+                                  w={"100%"}
+                                  position="relative"
+                                >
+                                  <Heading
+                                    as="h6"
+                                    size={"xs"}
+                                    color={
+                                      findSocietyAndCircle(user.IQ_score)
+                                        ?.textColor
+                                    }
+                                    marginTop={"5px"}
+                                  >
+                                    {user.name}
+                                  </Heading>
+                                  <NameLightning
+                                    boxShadow={
+                                      findSocietyAndCircle(user.maxIQScore)
+                                        ?.boxShadow
+                                    }
+                                    MAX_IQ={user.maxIQScore}
+                                  />
+                                </Flex>
+                              </Td>
+                              <Td textAlign="center">{user.inGameName}</Td>
+                              <Td textAlign="center">{user.IQ_score}</Td>
+                              <Td textAlign="center">{user.quizSubmissions}</Td>
+                              <Td textAlign="center">{user.RQM_avg}</Td>
+                            </Tr>
+                          );
+                        }
+                      )}
+                    {/* <div className="highlighted-card-0"> */}
+                    {state.user.rank > 50 && (
+                      <>
+                        <VerticalDotsSeparator />
+                        <Tr
                           height={"80px"}
-                          key={leader._id}
-                          className={
-                            profileIndex <= 50 && profileIndex === index
-                              ? "highlighted-card-2"
-                              : ""
-                          }
+                          key={"51"}
+                          className="highlighted-card-3"
                           onClick={() => {
-                            navigate(`/profile/${urlInGameName}`);
+                            navigate("/profile/smash_dev");
                           }}
                           _hover={{
                             backgroundImage:
@@ -283,9 +464,10 @@ const LeaderBoard = () => {
                               bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
                               p={2}
                               gap={"35px"}
+                              z-index={"99999999"}
                               borderRadius="md"
                             >
-                              {index + 1}
+                              {state.user.rank}
                               <Flex
                                 border={"5px solid gold"}
                                 style={{ transform: "rotate(45deg)" }}
@@ -308,7 +490,7 @@ const LeaderBoard = () => {
                                   <Image
                                     h={"100%"}
                                     w={"100%"}
-                                    src={leader.pic}
+                                    src={state.user.pic}
                                     alt="Dan Abramov"
                                     objectFit={"cover"}
                                   />
@@ -326,123 +508,31 @@ const LeaderBoard = () => {
                               <Heading
                                 as="h6"
                                 size={"xs"}
-                                color={
-                                  findSocietyAndCircle(leader.IQ_score)
-                                    ?.textColor
-                                }
+                                color={findSocietyAndCircle(50)?.textColor}
                                 marginTop={"5px"}
                               >
-                                {leader.name}
+                                {state.user.name}
                               </Heading>
                               <NameLightning
-                                boxShadow={
-                                  findSocietyAndCircle(leader.maxIQScore)
-                                    ?.boxShadow
-                                }
-                                MAX_IQ={leader.maxIQScore}
+                                boxShadow={findSocietyAndCircle(50)?.boxShadow}
+                                MAX_IQ={"100"}
                               />
                             </Flex>
                           </Td>
-                          <Td textAlign="center">{leader.inGameName}</Td>
-                          <Td textAlign="center">{leader.IQ_score}</Td>
-                          <Td textAlign="center">{leader.quizSubmissions}</Td>
-                          <Td textAlign="center">{leader.RQM_avg}</Td>
+                          <Td textAlign="center">{state.user.inGameName}</Td>
+                          <Td textAlign="center">{state.user.IQ_score}</Td>
+                          <Td textAlign="center">
+                            {currUserChar?.quizSubmissions}
+                          </Td>
+                          <Td textAlign="center">{currUserChar?.RQM_avg}</Td>
                         </Tr>
-                      );
-                    })}
-                  {/* <div className="highlighted-card-0"> */}
-                  {profileIndex > 50 && (
-                    <>
-                      <VerticalDotsSeparator />
-                      <Tr
-                        height={"80px"}
-                        key={"51"}
-                        className="highlighted-card-2"
-                        onClick={() => {
-                          navigate("/profile/smash_dev");
-                        }}
-                        _hover={{
-                          backgroundImage:
-                            "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-                          boxShadow:
-                            "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
-                        }}
-                        cursor={"pointer"}
-                      >
-                        <Td textAlign={"center"}>
-                          <Flex
-                            justifyContent={"center"}
-                            alignItems={"center"}
-                            bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-                            p={2}
-                            gap={"35px"}
-                            z-index={"99999999"}
-                            borderRadius="md"
-                          >
-                            {55 + 1}
-                            <Flex
-                              border={"5px solid gold"}
-                              style={{ transform: "rotate(45deg)" }}
-                              w="45px"
-                              h="45px"
-                              justifyContent={"center"}
-                              alignItems={"center"}
-                              bg={"blue.200"}
-                              position={"relative"}
-                              overflow={"hidden"}
-                            >
-                              <Box
-                                position={"absolute"}
-                                h="50px"
-                                w="50px"
-                                style={{
-                                  transform: "rotate(-45deg)",
-                                }}
-                              >
-                                <Image
-                                  h={"100%"}
-                                  w={"100%"}
-                                  src={
-                                    "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
-                                  }
-                                  alt="Dan Abramov"
-                                  objectFit={"cover"}
-                                />
-                              </Box>
-                            </Flex>
-                          </Flex>
-                        </Td>
-                        <Td>
-                          <Flex
-                            justifyContent={"center"}
-                            alignItems={"center"}
-                            w={"100%"}
-                            position="relative"
-                          >
-                            <Heading
-                              as="h6"
-                              size={"xs"}
-                              color={findSocietyAndCircle(50)?.textColor}
-                              marginTop={"5px"}
-                            >
-                              {"Gaurav"}
-                            </Heading>
-                            <NameLightning
-                              boxShadow={findSocietyAndCircle(50)?.boxShadow}
-                              MAX_IQ={"100"}
-                            />
-                          </Flex>
-                        </Td>
-                        <Td textAlign="center">{"smash_dev"}</Td>
-                        <Td textAlign="center">{"50"}</Td>
-                        <Td textAlign="center">{"5"}</Td>
-                        <Td textAlign="center">{"100"}</Td>
-                      </Tr>
-                    </>
-                  )}
+                      </>
+                    )}
+                    <div style={{ padding: "10px 10px" }}></div>
 
-                  {/* </div> */}
-                </Tbody>
+                    {/* </div> */}
+                  </Tbody>
+                )}
               </Table>
             </TableContainer>
           </>

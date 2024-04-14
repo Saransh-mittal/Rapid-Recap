@@ -30,25 +30,6 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       : "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     bio: leftProfileView.bio,
   });
-
-  const fetchRank = async () => {
-    try {
-      //const response = await axios.get("/api/user/calculateUserRank");
-      setRank(leftProfileView.rank);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong in fetching Rank",
-        status: "error",
-        duration: 9000,
-        isClosable: true,
-        position: "top",
-      });
-      console.log(error.response.data.error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   useEffect(() => {
     //console.log(state.user);
     setProfileData({
@@ -58,7 +39,6 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         : "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
       bio: leftProfileView.bio,
     });
-    fetchRank();
   }, [leftProfileView]);
   const handleEditClick = () => {
     // Set profile data for modal
@@ -150,7 +130,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             <Loading />
           ) : (
             <Heading as="h6" fontSize={"12px"}>
-              Rank : {rank}
+              Rank : {state.user.rank}
             </Heading>
           )}
         </Box>

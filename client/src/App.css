@@ -614,11 +614,11 @@ section {
   /* Define your highlight styles here */
 
   /* Red border as highlight */
-  box-shadow: 10px 10px 10px 10px rgb(42, 157, 211);
+  box-shadow: 10px 1px 10px 10px rgb(42, 157, 211);
   border: #000 solid 6px;
   position: relative;
   /* z-index: 999 !important; */
-  animation: blink-animation-1 2s infinite alternate;
+  animation: blink-animation-2 2s infinite alternate;
 }
 
 .highlighted-card-2:hover {
@@ -631,7 +631,43 @@ section {
   animation: none; /* Remove animation on hover */
 }
 
-@keyframes blink-animation-1 {
+@keyframes blink-animation-2 {
+  0% {
+    filter: brightness(1);
+  }
+
+  30% {
+    filter: brightness(1); /* Stay at 0% brightness for longer */
+  }
+
+  100% {
+    filter: brightness(3.5);
+  }
+}
+
+.highlighted-card-3 {
+  /* Define your highlight styles here */
+
+  /* Red border as highlight */
+  box-shadow: 1px 1px 10px 6px rgb(42, 157, 211);
+  border: #000 solid 3px;
+  position: relative;
+  /* margin-bottom: 100px; */
+  /* z-index: 999 !important; */
+  animation: blink-animation-3 2s infinite alternate;
+}
+
+.highlighted-card-3:hover {
+  /* Override styles on hover */
+  box-shadow: none; /* Remove box-shadow on hover */
+  box-shadow: 10px 10px 10px 10px rgb(42, 157, 211);
+
+  border: rgb(42, 157, 211) solid 3px;
+  /* border: none;  */
+  animation: none; /* Remove animation on hover */
+}
+
+@keyframes blink-animation-3 {
   0% {
     filter: brightness(1);
   }

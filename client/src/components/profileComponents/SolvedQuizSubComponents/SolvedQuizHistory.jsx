@@ -36,6 +36,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
     console.log(solvedHistory);
     onOpen();
   }, []);
+
   return (
     <>
       <Modal
@@ -67,7 +68,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
           <ModalCloseButton color={"white"} />
           <ModalBody>
             <Box
-              maxH={{ md: "50vh" }}
+              maxH={{ base: "80vh", md: "50vh" }}
               overflowY="scroll"
               css={{
                 "&::-webkit-scrollbar": {
