@@ -596,10 +596,15 @@ const tutorialTakenUpdate = async (req, res) => {
 };
 
 const solvedQuizHistory = async (req, res) => {
-  const userId = req.user._id;
+  //const userId = req.user._id;
+  const { inGameName } = req.query;
   const { page = 1, pageSize = 50 } = req.query;
   try {
-    const quizAttempts = await QuizAttempt.find({ user: userId })
+    const user = await User.findOne({ inGameName });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const quizAttempts = await QuizAttempt.find({ user: user._id })
       .populate({
         path: "article",
       })
