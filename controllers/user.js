@@ -363,12 +363,14 @@ const calculateUserIQScores = async (req, res) => {
 };
 
 const leaderBoard = async (req, res) => {
+  const currUserId = req.user._id;
   try {
     const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
       .select("name inGameName IQ_score pic maxIQScore rank _id")
       .sort({ rank: 1 })
       .limit(50)
       .populate("quizAttempts");
+    const currUser = await User.findById(currUserId).populate("quizAttempts");
     //AVG. RQM SCORES
     const result = [];
 
@@ -400,7 +402,16 @@ const leaderBoard = async (req, res) => {
         return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
       }
     });
-    res.status(200).json({ users: result });
+    let sum = 0;
+    for (let i = 0; i < currUser.quizAttempts.length; i++) {
+      sum += currUser.quizAttempts[i].RQM_score;
+    }
+    const RQM_avg = (sum / currUser.quizAttempts.length).toFixed(0);
+    const quizSubmissions = currUser.quizAttempts.length;
+
+    res
+      .status(200)
+      .json({ users: result, currUser: { RQM_avg, quizSubmissions } });
   } catch (error) {
     res.status(500).json({ error: "Error fetching the Leaderboard" });
     console.log(error.message);
@@ -439,7 +450,16 @@ const profile = async (req, res) => {
 
     // Calculate user rank
     const rank = await calculateUserRank(userId);
-
+    const profilePrivacy = user.profilePrivacy
+      ? user.profilePrivacy
+      : {
+          fullProfile: false,
+          lineGraph: false,
+          barGraph: false,
+          solvedQuizzes: false,
+          dailyActivity: false,
+          society: false,
+        };
     res.status(200).json({
       lineGraph: iqScoresHistory,
       barGraph: {
@@ -460,6 +480,7 @@ const profile = async (req, res) => {
       },
       USER_IQ,
       maxIQScore: user.maxIQScore,
+      profilePrivacy,
     });
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -585,10 +606,15 @@ const tutorialTakenUpdate = async (req, res) => {
 };
 
 const solvedQuizHistory = async (req, res) => {
-  const userId = req.user._id;
+  //const userId = req.user._id;
+  const { inGameName } = req.query;
   const { page = 1, pageSize = 50 } = req.query;
   try {
-    const quizAttempts = await QuizAttempt.find({ user: userId })
+    const user = await User.findOne({ inGameName });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const quizAttempts = await QuizAttempt.find({ user: user._id })
       .populate({
         path: "article",
       })
@@ -596,8 +622,14 @@ const solvedQuizHistory = async (req, res) => {
       .limit(pageSize);
     const history = [];
     quizAttempts.forEach((attempt) => {
+      console.log(attempt);
       const { article, RQM_score, userPercentile, articleDifficulty } = attempt;
-      if (!article || !RQM_score || !userPercentile || !articleDifficulty)
+      if (
+        !article ||
+        isNaN(RQM_score) ||
+        isNaN(userPercentile) ||
+        isNaN(articleDifficulty)
+      )
         return;
       const { title } = article;
       let diff = "";
@@ -684,6 +716,36 @@ const userSearch = async (req, res) => {
   }
 };
 
+const profilePrivacy = async (req, res) => {
+  const userId = req.user._id;
+  const {
+    fullProfile,
+    lineGraph,
+    barGraph,
+    solvedQuizzes,
+    dailyActivity,
+    society,
+  } = req.body;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.profilePrivacy = {
+      fullProfile,
+      lineGraph,
+      barGraph,
+      solvedQuizzes,
+      dailyActivity,
+      society,
+    };
+    await user.save();
+    res.status(200).json({ message: "Profile privacy settings updated" });
+  } catch (error) {
+    console.error("Error in fetching solved quiz history:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 module.exports = {
   registerUser,
   loginUser,
@@ -702,4 +764,5 @@ module.exports = {
   tutorialTakenUpdate,
   solvedQuizHistory,
   userSearch,
+  profilePrivacy,
 };

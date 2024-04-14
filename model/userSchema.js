@@ -105,6 +105,14 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    profilePrivacy: {
+      fullProfile: { type: Boolean, default: false },
+      lineGraph: { type: Boolean, default: false },
+      barGraph: { type: Boolean, default: false },
+      solvedQuizzes: { type: Boolean, default: false },
+      dailyActivity: { type: Boolean, default: false },
+      society: { type: Boolean, default: false },
+    },
   },
   { collection: "Users" }
 );

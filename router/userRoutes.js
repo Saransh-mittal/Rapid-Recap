@@ -18,6 +18,7 @@ const {
   calculateUserIQScores,
   solvedQuizHistory,
   userSearch,
+  profilePrivacy,
 } = require("../controllers/user");
 const Authenticate = require("../middleware/authenticate");
 
@@ -29,7 +30,7 @@ router.route("/loginCheck").get(Authenticate, loginCheck);
 router.route("/resendOTP").post(resendOTP);
 router.route("/forgotPassword").post(forgotPassword);
 router.route("/handleGoogleLogin").post(handleGoogleLogin);
-router.route("/leaderboard").get(leaderBoard);
+router.route("/leaderboard").get(Authenticate, leaderBoard);
 router.route("/profile/:inGameName").get(profile);
 router
   .route("/isTutorialTakenCheck/:Page")
@@ -40,4 +41,5 @@ router.route("/expectedIQScore").get(Authenticate, expectedIQScore);
 router.route("/calcUsersIQScore").get(calculateUserIQScores);
 router.route("/solvedQuizzesHistory").get(Authenticate, solvedQuizHistory);
 router.route("/search").get(Authenticate, userSearch);
+router.route("/profilePrivacy").post(Authenticate, profilePrivacy);
 module.exports = router;
