@@ -1,4 +1,4 @@
-import { Box, Flex, Image, Text } from "@chakra-ui/react";
+import { Box, Flex, Image, Tag, Text, Tooltip } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
@@ -9,7 +9,11 @@ import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 import { AppContext } from "../../contextAPI/appContext";
 import Loading from "../miscellaneous/Loading";
 
-const RankAndSociety = ({ USER_IQ = 0 }) => {
+const RankAndSociety = ({
+  USER_IQ = 0,
+  privateSociety,
+  loginedUserProfile,
+}) => {
   const { state, dispatch } = useContext(AppContext);
   const [circleAndSociety, setCircleAndSociety] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,14 +39,55 @@ const RankAndSociety = ({ USER_IQ = 0 }) => {
       mr={1}
       ml={6}
     >
-      {isLoading ? (
+      {privateSociety ? (
+        <Flex
+          h={"100%"}
+          w={"100%"}
+          justifyContent={"center"}
+          alignItems={"center"}
+        >
+          <Text
+            backgroundColor="#0f0d15"
+            m={0}
+            top={0}
+            right={10}
+            color={"#9CAFAA"}
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            w={"60px"}
+            height={"30px"}
+          >
+            Hidden
+          </Text>
+        </Flex>
+      ) : isLoading ? (
         <Loading />
       ) : (
         <>
-          <Box flexDirection={"column"} width={"100%"}>
+          <Box flexDirection={"column"} width={"100%"} position={"relative"}>
             <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
               Society and Circle
             </Text>
+            {loginedUserProfile && (
+              <Tooltip label="Visibility to others">
+                <Tag
+                  backgroundColor="#0f0d15"
+                  m={0}
+                  position={"absolute"}
+                  top={0}
+                  right={2}
+                  color={"#9CAFAA"}
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  w={"60px"}
+                  height={"30px"}
+                >
+                  {state.user.profilePrivacy.society ? "HIDDEN" : "VISIBLE"}
+                </Tag>
+              </Tooltip>
+            )}
           </Box>
           <Flex mt={5} flexDirection={"column"} w={"100%"}>
             <Flex width={"100%"}>

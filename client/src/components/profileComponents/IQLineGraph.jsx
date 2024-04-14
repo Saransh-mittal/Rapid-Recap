@@ -1,14 +1,24 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
-import { Button, Flex, Image, Text, useToast } from "@chakra-ui/react";
+import {
+  Button,
+  Flex,
+  Image,
+  Tag,
+  Text,
+  Tooltip,
+  useToast,
+} from "@chakra-ui/react";
 import Chart from "chart.js/auto";
 import moment from "moment";
 import "chartjs-adapter-date-fns";
 import axios from "axios";
 import Loading from "../miscellaneous/Loading";
 import ExpectedIQModal from "../articleComponents/ExpectedIQModal";
+import { AppContext } from "../../contextAPI/appContext";
 
-const IQLineGraph = ({ lineGraph }) => {
+const IQLineGraph = ({ lineGraph, privateLineGraph, loginedUserProfile }) => {
+  const { state } = useContext(AppContext);
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
   const [IQScoreHistory, setIQScoreHistory] = useState([]);
@@ -300,7 +310,29 @@ const IQLineGraph = ({ lineGraph }) => {
           setShowExpectedIQ={setShowExpectedIQ}
         />
       )}
-      {isLoading ? (
+      {privateLineGraph ? (
+        <Flex
+          h={"100%"}
+          w={"100%"}
+          justifyContent={"center"}
+          alignItems={"center"}
+        >
+          <Text
+            backgroundColor="#0f0d15"
+            m={0}
+            top={0}
+            right={10}
+            color={"#9CAFAA"}
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            w={"60px"}
+            height={"30px"}
+          >
+            Hidden
+          </Text>
+        </Flex>
+      ) : isLoading ? (
         <Loading />
       ) : IQScoreHistory.length === 0 ? (
         <Flex
@@ -308,10 +340,30 @@ const IQLineGraph = ({ lineGraph }) => {
           justifyContent={"center"}
           alignItems={"center"}
           flexDirection={"column"}
+          position={"relative"}
         >
           <Text m={0}>
             Give 10 Quizzes to get the IQ score and enter the ranking
           </Text>
+          {loginedUserProfile && (
+            <Tooltip label="Visibility to others">
+              <Tag
+                backgroundColor="#0f0d15"
+                m={0}
+                position={"absolute"}
+                top={0}
+                right={0}
+                color={"#9CAFAA"}
+                display={"flex"}
+                justifyContent={"center"}
+                alignItems={"center"}
+                w={"60px"}
+                height={"30px"}
+              >
+                {state.user.profilePrivacy.lineGraph ? "HIDDEN" : "VISIBLE"}
+              </Tag>
+            </Tooltip>
+          )}
           <Button
             backgroundColor="transparent"
             onClick={getExpectedIQ}
@@ -345,28 +397,55 @@ const IQLineGraph = ({ lineGraph }) => {
         </Flex>
       ) : (
         <>
-          <Flex justifyContent={"space-between"}>
-            <Flex flexDirection={"column"}>
-              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
-                IQ Score
-              </Text>
-              <Text textAlign={"left"} fontSize={"1.5rem"}>
-                {hoveredData?.IQScore}
-              </Text>
-            </Flex>
-            <Flex flexDirection={"column"}>
-              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
-                Date
-              </Text>
-              <Text textAlign={"left"}>
-                {moment(hoveredData?.date, "YYYY:MM:DD").format("MMM DD, YYYY")}
-              </Text>
-            </Flex>
-            <Flex flexDirection={"column"}>
-              <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
-                Daily Rank
-              </Text>
-              <Text textAlign={"left"}>{hoveredData?.dailyRank}</Text>
+          <Flex justifyContent={"space-between"} position={"relative"}>
+            {loginedUserProfile && (
+              <Tooltip label="Visibility to others">
+                <Tag
+                  backgroundColor="#0f0d15"
+                  m={0}
+                  position={"absolute"}
+                  top={0}
+                  right={0}
+                  color={"#9CAFAA"}
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  w={"60px"}
+                  height={"30px"}
+                >
+                  {state.user.profilePrivacy.lineGraph ? "HIDDEN" : "VISIBLE"}
+                </Tag>
+              </Tooltip>
+            )}
+            <Flex
+              justifyContent={"space-between"}
+              w={"100%"}
+              marginTop={"2rem"}
+            >
+              <Flex flexDirection={"column"}>
+                <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+                  IQ Score
+                </Text>
+                <Text textAlign={"left"} fontSize={"1.5rem"}>
+                  {hoveredData?.IQScore}
+                </Text>
+              </Flex>
+              <Flex flexDirection={"column"}>
+                <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+                  Date
+                </Text>
+                <Text textAlign={"left"}>
+                  {moment(hoveredData?.date, "YYYY:MM:DD").format(
+                    "MMM DD, YYYY"
+                  )}
+                </Text>
+              </Flex>
+              <Flex flexDirection={"column"}>
+                <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
+                  Daily Rank
+                </Text>
+                <Text textAlign={"left"}>{hoveredData?.dailyRank}</Text>
+              </Flex>
             </Flex>
           </Flex>
 

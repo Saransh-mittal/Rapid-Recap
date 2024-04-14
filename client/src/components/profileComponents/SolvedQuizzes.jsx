@@ -1,11 +1,27 @@
-import { Box, Flex, Progress, Stack, Text, useToast } from "@chakra-ui/react";
-import React, { useEffect } from "react";
+import {
+  Box,
+  Flex,
+  Progress,
+  Stack,
+  Tag,
+  Text,
+  Tooltip,
+  useToast,
+} from "@chakra-ui/react";
+import React, { useContext, useEffect } from "react";
 import axios from "axios";
 import { useState } from "react";
 import Loading from "../miscellaneous/Loading";
 import SolvedQuizHistory from "./SolvedQuizSubComponents/SolvedQuizHistory";
+import { AppContext } from "../../contextAPI/appContext";
 
-const SolvedQuizzes = ({ solvedQuizzes, inGameName }) => {
+const SolvedQuizzes = ({
+  solvedQuizzes,
+  inGameName,
+  privateSolvedQuiz,
+  loginedUserProfile,
+}) => {
+  const { state } = useContext(AppContext);
   const toast = useToast();
   const [solvedQuizzesCount, setSolvedQuizzesCount] = useState(0);
   const [easySolved, setEasySolved] = useState(0);
@@ -80,14 +96,62 @@ const SolvedQuizzes = ({ solvedQuizzes, inGameName }) => {
           setShowHistory={setShowHistory}
         />
       )}
-      {isLoading ? (
+      {privateSolvedQuiz ? (
+        <Flex
+          h={"100%"}
+          w={"100%"}
+          justifyContent={"center"}
+          alignItems={"center"}
+        >
+          <Text
+            backgroundColor="#0f0d15"
+            m={0}
+            top={0}
+            right={10}
+            color={"#9CAFAA"}
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            w={"60px"}
+            height={"30px"}
+          >
+            Hidden
+          </Text>
+        </Flex>
+      ) : isLoading ? (
         <Loading />
       ) : (
         <>
-          <Box flexDirection={"column"} width={"100%"} marginStart={"15px"}>
+          <Box
+            flexDirection={"column"}
+            width={"100%"}
+            marginStart={"15px"}
+            position={"relative"}
+          >
             <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
               Solved Quizzes
             </Text>
+            {loginedUserProfile && (
+              <Tooltip label="Visibility to others">
+                <Tag
+                  backgroundColor="#0f0d15"
+                  m={0}
+                  position={"absolute"}
+                  top={0}
+                  right={0}
+                  color={"#9CAFAA"}
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  w={"60px"}
+                  height={"30px"}
+                >
+                  {state.user.profilePrivacy.solvedQuizzes
+                    ? "HIDDEN"
+                    : "VISIBLE"}
+                </Tag>
+              </Tooltip>
+            )}
           </Box>
           <Flex width={"100%"}>
             <Flex w={"80%"} justifyContent={"center"} alignItems={"center"}>

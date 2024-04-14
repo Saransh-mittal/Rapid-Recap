@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Box, Flex } from "@chakra-ui/react";
+import { Box, Flex, Tag, Text, Tooltip } from "@chakra-ui/react";
+import { ViewIcon } from "@chakra-ui/icons";
 import { AppContext } from "../contextAPI/appContext";
 import IQLineGraph from "../components/profileComponents/IQLineGraph";
 import IQBarGraph from "../components/profileComponents/IQBarGraph";
@@ -12,6 +13,8 @@ import axios from "axios";
 import Loading from "../components/miscellaneous/Loading";
 import { useShepherdTour } from "react-shepherd";
 import stepsTutorialProfile from "../components/profileComponents/stepsTutorialProfile";
+import ToggleProfileVisibilty from "../components/profileComponents/LeftProfileSubComponents/ToggleProfileVisibilty.jsx";
+
 const tourOptions = {
   defaultStepOptions: {
     cancelIcon: {
@@ -26,6 +29,17 @@ export default function Profile() {
   const { state, dispatch } = useContext(AppContext);
   const [profile, setProfile] = useState(state.userProfile);
   const [isLoading, setIsLoading] = useState(true);
+  const [showHideModal, setShowHideModal] = useState(false);
+
+  const loginedUserProfile = inGameName === state.user.inGameName;
+  const [privacyProfileData, setPrivacyProfileData] = useState({
+    fullProfile: false,
+    lineGraph: false,
+    barGraph: false,
+    solvedQuizzes: false,
+    society: false,
+    dailyActivity: false,
+  });
   //const [rerender, setRerender] = useState(false);
 
   const isTutorialTakenCheck = async () => {
@@ -74,6 +88,7 @@ export default function Profile() {
       if (inGameName === state.user.inGameName)
         dispatch({ type: "profile", payloadProfile: response.data });
       else {
+        setPrivacyProfileData(() => response.data.profilePrivacy);
         dispatch({
           type: "otherUserProfiles",
           payloadOtherUserProfiles: [
@@ -213,6 +228,18 @@ export default function Profile() {
                   "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
               }}
             >
+              {showHideModal && (
+                <ToggleProfileVisibilty setShowHideModal={setShowHideModal} />
+              )}
+              {inGameName === state.user.inGameName && (
+                <Tooltip label="Toggle Profile Visibility">
+                  <ViewIcon
+                    marginLeft={"auto"}
+                    onClick={() => setShowHideModal(true)}
+                    _hover={{ cursor: "pointer" }}
+                  />
+                </Tooltip>
+              )}
               <LeftProfileBox
                 leftProfileView={profile.leftProfileView}
                 CURR_IQ={profile?.USER_IQ}
@@ -251,8 +278,17 @@ export default function Profile() {
                 }}
                 gap={{ base: "20px", xl: "0" }}
               >
-                <IQLineGraph lineGraph={profile.lineGraph} />
-                <IQBarGraph barGraph={profile.barGraph} />
+                <IQLineGraph
+                  lineGraph={profile.lineGraph}
+                  privateLineGraph={privacyProfileData.lineGraph}
+                  loginedUserProfile={loginedUserProfile}
+                />
+
+                <IQBarGraph
+                  barGraph={profile.barGraph}
+                  privateBarGraph={privacyProfileData.lineGraph}
+                  loginedUserProfile={loginedUserProfile}
+                />
               </Flex>
 
               <Flex
@@ -283,6 +319,8 @@ export default function Profile() {
                   }}
                 >
                   <SolvedQuizzes
+                    privateSolvedQuiz={privacyProfileData.solvedQuizzes}
+                    loginedUserProfile={loginedUserProfile}
                     solvedQuizzes={profile.solvedQuizzes}
                     inGameName={inGameName}
                   />
@@ -299,7 +337,11 @@ export default function Profile() {
                   }}
                   className="rank-and-society"
                 >
-                  <RankAndSociety USER_IQ={profile?.barGraph?.USER_IQ} />
+                  <RankAndSociety
+                    privateSociety={privacyProfileData.society}
+                    loginedUserProfile={loginedUserProfile}
+                    USER_IQ={profile?.barGraph?.USER_IQ}
+                  />
                 </Flex>
               </Flex>
               <Box
@@ -316,7 +358,11 @@ export default function Profile() {
                 }}
                 className="daily-activity"
               >
-                <DailyActivity dailyAct={profile.dailyActivity} />
+                <DailyActivity
+                  dailyAct={profile.dailyActivity}
+                  privateDailyAct={privacyProfileData.dailyActivity}
+                  loginedUserProfile={loginedUserProfile}
+                />
               </Box>
             </Flex>
           </>

@@ -17,8 +17,6 @@ import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const toast = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [rank, setRank] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { state, dispatch } = useContext(AppContext);
   //const CURR_IQ = state.user.IQ_score;
@@ -30,6 +28,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       : "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     bio: leftProfileView.bio,
   });
+
   useEffect(() => {
     //console.log(state.user);
     setProfileData({
@@ -126,13 +125,10 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           <Heading as="h6" fontSize={"12px"}>
             {leftProfileView.inGameName}
           </Heading>
-          {isLoading ? (
-            <Loading />
-          ) : (
-            <Heading as="h6" fontSize={"12px"}>
-              Rank : {state.user.rank}
-            </Heading>
-          )}
+
+          <Heading as="h6" fontSize={"12px"}>
+            Rank : {leftProfileView.rank}
+          </Heading>
         </Box>
       </Flex>
       <Box marginTop={"10px"} w={{ lg: "300px", base: "100%" }}>

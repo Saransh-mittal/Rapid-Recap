@@ -1,7 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { Box, Flex, Grid, Text, Tooltip, useToast } from "@chakra-ui/react";
+import React, { useContext, useEffect, useState } from "react";
+import {
+  Box,
+  Flex,
+  Grid,
+  Tag,
+  Text,
+  Tooltip,
+  useToast,
+} from "@chakra-ui/react";
 import axios from "axios";
 import Loading from "../miscellaneous/Loading";
+import { AppContext } from "../../contextAPI/appContext";
 
 const DAYS_IN_WEEK = 7;
 const MONTHS_IN_YEAR = 12;
@@ -20,7 +29,8 @@ const MONTH_NAMES = [
   "Dec",
 ];
 
-const DailyActivity = ({ dailyAct }) => {
+const DailyActivity = ({ dailyAct, privateDailyAct, loginedUserProfile }) => {
+  const { state } = useContext(AppContext);
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -148,17 +158,8 @@ const DailyActivity = ({ dailyAct }) => {
   const calendarData = generateCalendarData(currentYear, currentMonth);
   function renderCalendarBody(month, allDays) {
     return (
-      <Flex
-        direction={{ base: "column" }}
-        key={month}
-        p={0}
-        m={0}
-      >
-        <Flex
-          h={"80px"}
-          p={0}
-          m={0}
-        >
+      <Flex direction={{ base: "column" }} key={month} p={0} m={0}>
+        <Flex h={"80px"} p={0} m={0}>
           <Flex
             p={0}
             m={0}
@@ -221,11 +222,30 @@ const DailyActivity = ({ dailyAct }) => {
   }, [dailyAct]);
 
   return (
-    <Box
-      m={0}
-      pt={3}
-    >
-      {isLoading ? (
+    <Box m={0} pt={3}>
+      {privateDailyAct ? (
+        <Flex
+          h={"100%"}
+          w={"100%"}
+          justifyContent={"center"}
+          alignItems={"center"}
+        >
+          <Text
+            backgroundColor="#0f0d15"
+            m={0}
+            top={0}
+            right={10}
+            color={"#9CAFAA"}
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            w={"60px"}
+            height={"30px"}
+          >
+            Hidden
+          </Text>
+        </Flex>
+      ) : isLoading ? (
         <Loading />
       ) : (
         <>
@@ -234,15 +254,32 @@ const DailyActivity = ({ dailyAct }) => {
             width={"100%"}
             marginStart={"15px"}
             marginBottom={"20px"}
+            position={"relative"}
           >
-            <Text
-              textAlign={"left"}
-              color={"#9CAFAA"}
-              p={0}
-              m={0}
-            >
+            <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
               Daily Activity
             </Text>
+            {loginedUserProfile && (
+              <Tooltip label="Visibility to others">
+                <Tag
+                  backgroundColor="#0f0d15"
+                  m={0}
+                  position={"absolute"}
+                  top={0}
+                  right={5}
+                  color={"#9CAFAA"}
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  w={"60px"}
+                  height={"30px"}
+                >
+                  {state.user.profilePrivacy.dailyActivity
+                    ? "HIDDEN"
+                    : "VISIBLE"}
+                </Tag>
+              </Tooltip>
+            )}
           </Box>
           <Flex
             overflow={"auto"}

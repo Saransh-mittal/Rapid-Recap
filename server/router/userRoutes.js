@@ -18,6 +18,7 @@ const {
   calculateUserIQScores,
   solvedQuizHistory,
   userSearch,
+  profilePrivacy,
 } = require("../controllers/user");
 const Authenticate = require("../middleware/authenticate");
 
@@ -40,4 +41,5 @@ router.route("/expectedIQScore").get(Authenticate, expectedIQScore);
 router.route("/calcUsersIQScore").get(calculateUserIQScores);
 router.route("/solvedQuizzesHistory").get(Authenticate, solvedQuizHistory);
 router.route("/search").get(Authenticate, userSearch);
+router.route("/profilePrivacy").post(Authenticate, profilePrivacy);
 module.exports = router;

@@ -7,7 +7,7 @@ import EmailVerify from "../components/authComponents/EmailVerify";
 import Modal from "./Modal";
 import ResetPassword from "../components/authComponents/ResetPassword";
 import { throttle } from "lodash";
-import { useToast, Button } from "@chakra-ui/react";
+import { useToast, Button, Box } from "@chakra-ui/react";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleLogin } from "@react-oauth/google";
 
@@ -163,7 +163,7 @@ export default function Sigin() {
     }
   };
   return (
-    <div>
+    <Box w={"100%"} h={"100%"} overflowX={"hidden"}>
       {state.modal && state.forgotPassword && !state.verifyEmail && (
         <Modal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
@@ -307,6 +307,6 @@ export default function Sigin() {
         </div>
         <div className="theme-btn-container"></div>
       </section>
-    </div>
+    </Box>
   );
 }

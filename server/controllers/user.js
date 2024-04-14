@@ -439,7 +439,16 @@ const profile = async (req, res) => {
 
     // Calculate user rank
     const rank = await calculateUserRank(userId);
-
+    const profilePrivacy = user.profilePrivacy
+      ? user.profilePrivacy
+      : {
+          fullProfile: false,
+          lineGraph: false,
+          barGraph: false,
+          solvedQuizzes: false,
+          dailyActivity: false,
+          society: false,
+        };
     res.status(200).json({
       lineGraph: iqScoresHistory,
       barGraph: {
@@ -460,6 +469,7 @@ const profile = async (req, res) => {
       },
       USER_IQ,
       maxIQScore: user.maxIQScore,
+      profilePrivacy,
     });
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -689,6 +699,36 @@ const userSearch = async (req, res) => {
   }
 };
 
+const profilePrivacy = async (req, res) => {
+  const userId = req.user._id;
+  const {
+    fullProfile,
+    lineGraph,
+    barGraph,
+    solvedQuizzes,
+    dailyActivity,
+    society,
+  } = req.body;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.profilePrivacy = {
+      fullProfile,
+      lineGraph,
+      barGraph,
+      solvedQuizzes,
+      dailyActivity,
+      society,
+    };
+    await user.save();
+    res.status(200).json({ message: "Profile privacy settings updated" });
+  } catch (error) {
+    console.error("Error in fetching solved quiz history:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 module.exports = {
   registerUser,
   loginUser,
@@ -707,4 +747,5 @@ module.exports = {
   tutorialTakenUpdate,
   solvedQuizHistory,
   userSearch,
+  profilePrivacy,
 };

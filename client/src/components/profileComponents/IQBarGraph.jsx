@@ -1,13 +1,23 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Bar } from "react-chartjs-2";
-import { Button, Flex, Image, Text, useToast } from "@chakra-ui/react";
+import {
+  Button,
+  Flex,
+  Image,
+  Tag,
+  Text,
+  Tooltip,
+  useToast,
+} from "@chakra-ui/react";
 import Chart from "chart.js/auto";
 import "chartjs-adapter-date-fns";
 import axios from "axios";
 import Loading from "../miscellaneous/Loading";
 import ExpectedIQModal from "../articleComponents/ExpectedIQModal";
+import { AppContext } from "../../contextAPI/appContext";
 
-const IQBarGraph = ({ barGraph }) => {
+const IQBarGraph = ({ barGraph, privateBarGraph, loginedUserProfile }) => {
+  const { state } = useContext(AppContext);
   const [USER_IQ, setUSER_IQ] = useState(null); // [USER_IQ, setUSER_IQ
   const [TOP_PERCENT, setTOP_PERCENT] = useState(null);
   const [filteredIQData, setFilteredIQData] = useState(null);
@@ -251,7 +261,29 @@ const IQBarGraph = ({ barGraph }) => {
           setShowExpectedIQ={setShowExpectedIQ}
         />
       )}
-      {isLoading ? (
+      {privateBarGraph ? (
+        <Flex
+          h={"100%"}
+          w={"100%"}
+          justifyContent={"center"}
+          alignItems={"center"}
+        >
+          <Text
+            backgroundColor="#0f0d15"
+            m={0}
+            top={0}
+            right={10}
+            color={"#9CAFAA"}
+            display={"flex"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            w={"60px"}
+            height={"30px"}
+          >
+            Hidden
+          </Text>
+        </Flex>
+      ) : isLoading ? (
         <Loading />
       ) : USER_IQ === 0 ? (
         <Flex
@@ -259,10 +291,30 @@ const IQBarGraph = ({ barGraph }) => {
           justifyContent={"center"}
           alignItems={"center"}
           flexDirection={"column"}
+          position={"relative"}
         >
           <Text m={0}>
             Give 10 Quizzes to get the IQ score and Unlock the bar graph
           </Text>
+          {loginedUserProfile && (
+            <Tooltip label="Visibility to others">
+              <Tag
+                backgroundColor="#0f0d15"
+                m={0}
+                position={"absolute"}
+                top={0}
+                right={0}
+                color={"#9CAFAA"}
+                display={"flex"}
+                justifyContent={"center"}
+                alignItems={"center"}
+                w={"60px"}
+                height={"30px"}
+              >
+                {state.user.profilePrivacy.barGraph ? "HIDDEN" : "VISIBLE"}
+              </Tag>
+            </Tooltip>
+          )}
           <Button
             backgroundColor="transparent"
             onClick={getExpectedIQ}
@@ -296,7 +348,7 @@ const IQBarGraph = ({ barGraph }) => {
         </Flex>
       ) : (
         <>
-          <Flex width={"100%"}>
+          <Flex width={"100%"} position={"relative"}>
             <Flex marginStart={"15px"} flexDirection={"column"}>
               <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
                 Top
@@ -314,6 +366,25 @@ const IQBarGraph = ({ barGraph }) => {
                 <Text textAlign={"left"}>{currentData.count} users</Text>
               </Flex>
             ) : null}
+            {loginedUserProfile && (
+              <Tooltip label="Visibility to others">
+                <Tag
+                  backgroundColor="#0f0d15"
+                  m={0}
+                  position={"absolute"}
+                  top={0}
+                  right={0}
+                  color={"#9CAFAA"}
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  w={"60px"}
+                  height={"30px"}
+                >
+                  {state.user.profilePrivacy.barGraph ? "HIDDEN" : "VISIBLE"}
+                </Tag>
+              </Tooltip>
+            )}
           </Flex>
           <Flex height={"150px"} width={"100%"} justifyContent={"center"}>
             {chartData && (
