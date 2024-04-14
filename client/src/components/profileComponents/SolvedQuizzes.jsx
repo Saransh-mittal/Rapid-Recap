@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import { useState } from "react";
 import Loading from "../miscellaneous/Loading";
+import SolvedQuizHistory from "./SolvedQuizSubComponents/SolvedQuizHistory";
 
 const SolvedQuizzes = ({ solvedQuizzes }) => {
   const toast = useToast();
@@ -11,6 +12,8 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
   const [mediumSolved, setMediumSolved] = useState(0);
   const [hardSolved, setHardSolved] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [history, setHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
   const fetchSolvedQuizzes = async () => {
     try {
       //const response = await axios.get("/api/user/solvedQuizzesCount");
@@ -22,7 +25,29 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
     } catch (error) {
       toast({
         title: "An error occurred.",
-        description: "Unable to Solved Quiz Data. Please try again later.",
+        description: "Unable to get Solved Quiz Data. Please try again later.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getHistory = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`/api/user/solvedQuizzesHistory`);
+      setHistory(response.data);
+      setShowHistory(true);
+    } catch (error) {
+      toast({
+        title: "An error occurred.",
+        description:
+          "Unable to get Solved Quiz History. Please try again later.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -45,31 +70,25 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
       gap={6}
       mt={4}
       mr={10}
+      onClick={getHistory}
     >
+      {showHistory && (
+        <SolvedQuizHistory
+          solvedHistory={history}
+          setShowHistory={setShowHistory}
+        />
+      )}
       {isLoading ? (
         <Loading />
       ) : (
         <>
-          <Box
-            flexDirection={"column"}
-            width={"100%"}
-            marginStart={"15px"}
-          >
-            <Text
-              textAlign={"left"}
-              color={"#9CAFAA"}
-              p={0}
-              m={0}
-            >
+          <Box flexDirection={"column"} width={"100%"} marginStart={"15px"}>
+            <Text textAlign={"left"} color={"#9CAFAA"} p={0} m={0}>
               Solved Quizzes
             </Text>
           </Box>
           <Flex width={"100%"}>
-            <Flex
-              w={"80%"}
-              justifyContent={"center"}
-              alignItems={"center"}
-            >
+            <Flex w={"80%"} justifyContent={"center"} alignItems={"center"}>
               <Flex
                 borderWidth={"5px"}
                 borderRadius={"50%"}
@@ -111,15 +130,9 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
               justifyContent={"center"}
               alignItems={"center"}
             >
-              <Stack
-                spacing={5}
-                w={"100%"}
-              >
+              <Stack spacing={5} w={"100%"}>
                 <Box>
-                  <Flex
-                    justifyContent={"space-between"}
-                    marginBottom={"5px"}
-                  >
+                  <Flex justifyContent={"space-between"} marginBottom={"5px"}>
                     <Text
                       marginBottom={0}
                       marginTop={"1px"}
@@ -160,10 +173,7 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
                   />
                 </Box>
                 <Box>
-                  <Flex
-                    justifyContent={"space-between"}
-                    marginBottom={"5px"}
-                  >
+                  <Flex justifyContent={"space-between"} marginBottom={"5px"}>
                     <Text
                       textAlign={"left"}
                       marginBottom={0}
@@ -204,10 +214,7 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
                   />
                 </Box>
                 <Box>
-                  <Flex
-                    justifyContent={"space-between"}
-                    marginBottom={"5px"}
-                  >
+                  <Flex justifyContent={"space-between"} marginBottom={"5px"}>
                     <Text
                       textAlign={"left"}
                       marginBottom={0}

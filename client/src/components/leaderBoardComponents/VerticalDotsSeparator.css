@@ -1,43 +1,11 @@
-.vertical-dots {
-  position: relative;
-  width: 2px;
-  height: 150px; /* Adjust the height of the separator */
-  margin: auto;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 5px,
-    gray 5px,
-    gray 10px
-  );
+.verticaldot {
+  width: 8px; /* Adjust size as needed */
+  height: 8px; /* Adjust size as needed */
+  border-radius: 50%; /* Makes it circular */
+  background-color: white; /* White background */
+  margin: 20px 20px;
+  /* padding: 40px 40px; */
+  /* margin-top: 40px; */
+  /* margin-bottom: 40px; */
+  margin-left: 63%;
 }
-
-.vertical-dots::before,
-.vertical-dots::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  height: 10px; /* Adjust height of each dot as needed */
-  background-color: gray; /* Adjust color as needed */
-}
-
-.vertical-dots::before {
-  top: 30px; /* Adjust the vertical position of the first dot */
-}
-
-.vertical-dots::after {
-  top: 60px; /* Adjust the vertical position of the second dot */
-}
-
-/* Additional dots */
-.vertical-dots::before:nth-of-type(2) {
-  top: 90px; /* Adjust the vertical position of the third dot */
-}
-
-.vertical-dots::after:nth-of-type(2) {
-  top: 120px; /* Adjust the vertical position of the fourth dot */
-}
-
-/* Add more styles for additional dots as needed */

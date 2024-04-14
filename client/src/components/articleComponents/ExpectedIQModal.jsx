@@ -33,11 +33,9 @@ const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ }) => {
           // background="linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
           backgroundColor={{ base: "#0f0d15", xl: "transparent" }}
           backgroundImage={{
-            xl: "none",
             base: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
           }}
           boxShadow={{
-            xl: "none",
             base: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
           }}
           backgroundSize="400% 400%"

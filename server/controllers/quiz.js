@@ -87,6 +87,7 @@ const saveAttempt = async (req, res) => {
       }),
       RQM_score,
       articleDifficulty,
+      timeTaken,
     });
     await newQuizAttempt.save();
     const user = await User.findById(userId);
