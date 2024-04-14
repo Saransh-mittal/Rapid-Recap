@@ -1,13 +1,21 @@
-import { useState, useContext, useEffect, useCallback } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import "./Register.css";
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
 import Modal from "./Modal";
 import EmailVerify from "../components/authComponents/EmailVerify";
 import { AppContext } from "../contextAPI/appContext";
-//import Loading from "../components/Loading";
-import { Button, useToast, Input, Image, Spinner } from "@chakra-ui/react";
-
+import {
+  Button,
+  useToast,
+  Input,
+  Image,
+  Spinner,
+  InputGroup,
+  InputRightElement,
+  IconButton,
+} from "@chakra-ui/react";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import _ from "lodash";
 
 export default function Register({
@@ -19,24 +27,17 @@ export default function Register({
 }) {
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
-  // const { formData, setFormData } = useState(profileData);
-  // const [formData, setFormData] = useState(profileData);
-  // const [formData, setFormData] = useState(
-  //   profileData || {
-  //     pic: "", // Initialize the pic property
-  //   }
-  // );
-
   const [data, setData] = useState({
     name: "",
     inGameName: "",
     email: "",
-    // phone: "",
     password: "",
     cpassword: "",
     pic: "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+    showPassword: false,
+    showCPassword: false,
   });
-  const [load, setLoad] = useState(false); //for loading spinner
+  const [load, setLoad] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [picDisplay, setPicDisplay] = useState(
     "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
@@ -46,27 +47,22 @@ export default function Register({
   const inputHandler = (e) => {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
-    // setFormData((prevData) => ({
-    //   ...prevData,
-    //   [name]: value,
-    // }));
   };
 
-  // const handleSubmitAll = (e) => {
-  //   e.preventDefault();
-  //   onSubmit(formData);
-  //   onClose();
-  // };
+  const togglePasswordVisibility = (field) => {
+    setData({
+      ...data,
+      [field]: !data[field],
+    });
+  };
 
   const handleSubmit = async (e) => {
-    //console.log(data);
     setLoad(true);
     e.preventDefault();
     try {
       const newData = data;
       const pic = await submitImage(data);
       newData.pic = pic;
-      //console.log(data);
       const response = await axios.post(`/api/user/register`, newData);
       if (response.status === 201) {
         await dispatch({ type: "showModal", payloadModal: true });
@@ -89,7 +85,6 @@ export default function Register({
         isClosable: true,
         position: "top",
       });
-      //console.log(error);
     } finally {
       setLoad(false);
     }
@@ -111,16 +106,13 @@ export default function Register({
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      // If Enter key is pressed, submit the form
       handleSubmitThrottled(e);
     }
   };
+
   const submitImage = async (dataForPic) => {
-    //setImageLoading(true);
     try {
-      //console.log(dataForPic);
       const img = dataForPic.pic;
-      //console.log(img);
       const data = new FormData();
       data.append("file", img);
       data.append("upload_preset", "ProfilePics");
@@ -130,16 +122,10 @@ export default function Register({
         data
       );
       const pic = response.data.url;
-      //console.log(pic);
-      //setFormData({ ...formData, pic });
       return pic;
-      //setData({ ...data, pic });
     } catch (e) {
       console.log(e);
     }
-    // finally {
-    //   setImageLoading(false);
-    // }
   };
 
   const handleImageChange = async (e) => {
@@ -148,7 +134,6 @@ export default function Register({
       const img = e.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        // reader.result contains the data URL representing the file
         setPicDisplay(reader.result);
         setData({ ...data, pic: img });
       };
@@ -179,7 +164,6 @@ export default function Register({
       )}
       <section className="">
         <div className="r-container">
-          {/* <div className="circle circle-one"></div> */}
           <div className="form-container">
             <h1 className="opacity">Welcome!</h1>
             <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>
@@ -191,7 +175,7 @@ export default function Register({
                     marginBottom: "4px",
                   }}
                 >
-                  {imageLoading ? ( // Display spinner if image is loading
+                  {imageLoading ? (
                     <Spinner size="lg" />
                   ) : (
                     <Image
@@ -264,27 +248,72 @@ export default function Register({
               </div>
               <div className="row">
                 <div className="col">
-                  <input
-                    name="password"
-                    onChange={inputHandler}
-                    required
-                    value={data.password}
-                    type="password"
-                    placeholder="Password"
-                    minLength={8}
-                  />
+                  <InputGroup>
+                    <Input
+                      name="password"
+                      onChange={inputHandler}
+                      required
+                      value={data.password}
+                      type={data.showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      minLength={8}
+                    />
+                    <InputRightElement width="4.5rem">
+                      <IconButton
+                        // h="1.75rem"
+                        // size="sm"
+                        style={{
+                          marginBottom: "-44%",
+                          marginLeft: "40%",
+                          backgroundColor: "transparent",
+                          color: "black",
+                        }}
+                        onClick={() => togglePasswordVisibility("showPassword")}
+                        icon={
+                          data.showPassword ? (
+                            <AiFillEyeInvisible />
+                          ) : (
+                            <AiFillEye />
+                          )
+                        }
+                      />
+                    </InputRightElement>
+                  </InputGroup>
                 </div>
-
                 <div className="col">
-                  <input
-                    name="cpassword"
-                    onChange={inputHandler}
-                    required
-                    value={data.cpassword}
-                    type="password"
-                    placeholder="Confirm Password"
-                    minLength={8}
-                  />
+                  <InputGroup>
+                    <Input
+                      name="cpassword"
+                      onChange={inputHandler}
+                      required
+                      value={data.cpassword}
+                      type={data.showCPassword ? "text" : "password"}
+                      placeholder="Confirm Password"
+                      minLength={8}
+                    />
+                    <InputRightElement width="4.5rem">
+                      <IconButton
+                        // h="1.75rem"
+                        // size="sm"
+                        style={{
+                          marginBottom: "-44%",
+                          marginLeft: "40%",
+                          backgroundColor: "transparent",
+                          color: "black",
+                        }}
+                        onClick={() =>
+                          togglePasswordVisibility("showCPassword")
+                        }
+                        icon={
+                          data.showCPassword ? (
+                            <AiFillEyeInvisible />
+                          ) : (
+                            <AiFillEye />
+                          )
+                        }
+                      />
+                    </InputRightElement>
+                  </InputGroup>
                 </div>
               </div>
               <Button
@@ -298,13 +327,6 @@ export default function Register({
               >
                 Submit
               </Button>
-              {/* <button
-                className="opacity mt-3 mb-0"
-                type="submit"
-                disabled={load}
-              >
-                SUBMIT
-              </button> */}
             </form>
             <div className="r-forget opacity">
               <h6>
@@ -318,10 +340,8 @@ export default function Register({
                   Login Here
                 </NavLink>
               </h6>
-              {/* <div>{load && <Loading />}</div> */}
             </div>
           </div>
-          {/* <div className="circle circle-two"></div> */}
         </div>
         <div className="theme-btn-container"></div>
       </section>

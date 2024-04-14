@@ -1,4 +1,10 @@
-import { useState, useContext, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import "./Signin.css";
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -7,7 +13,15 @@ import EmailVerify from "../components/authComponents/EmailVerify";
 import Modal from "./Modal";
 import ResetPassword from "../components/authComponents/ResetPassword";
 import { throttle } from "lodash";
-import { useToast, Button } from "@chakra-ui/react";
+import {
+  useToast,
+  Button,
+  Input,
+  InputGroup,
+  InputRightElement,
+  IconButton,
+} from "@chakra-ui/react";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleLogin } from "@react-oauth/google";
 
@@ -17,6 +31,7 @@ export default function Sigin() {
   const [data, setData] = useState({
     email: "",
     password: "",
+    showPassword: false, // Add showPassword state to manage password visibility
   });
   const [inGameName, setInGameName] = useState("");
   const [enterInGameName, setEnterInGameName] = useState(false);
@@ -94,7 +109,6 @@ export default function Sigin() {
   };
 
   const forgotPassword = async () => {
-    //console.log("forgotPassword");
     try {
       setLoad({ submitLoad: false, forgotLoad: true });
       const response = await axios.post(`/api/user/resendOTP`, {
@@ -117,7 +131,6 @@ export default function Sigin() {
           isClosable: true,
           position: "top",
         });
-        //alert("OTP sent to your email : " + starredEmail);
       }
       await dispatch({ type: "showModal", payloadModal: true });
     } catch (error) {
@@ -183,47 +196,73 @@ export default function Sigin() {
       </div>
       <section className="">
         <div className="login-container">
-          {/* <div className="circle circle-one"></div> */}
           <div className="form-container">
             <h1 className="opacity">LOG-IN</h1>
             <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>
-              <input
-                onFocus={() =>
-                  (inGameNameRef.current.style =
-                    "border-color: #4fd1c5; box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.3); outline: none;")
-                }
-                onBlur={() => (inGameNameRef.current.style = "")}
-                onChange={inputHandler}
-                name="email"
-                value={data.email}
-                type="email"
-                placeholder="Email ID"
-              />
-              <input
-                onFocus={() =>
-                  (inGameNameRef.current.style =
-                    "border-color: #4fd1c5; box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.3); outline: none;")
-                }
-                onBlur={() => (inGameNameRef.current.style = "")}
-                onChange={inputHandler}
-                name="password"
-                value={data.password}
-                type="password"
-                placeholder="Password"
-              />
-              <input
-                onFocus={() =>
-                  (inGameNameRef.current.style =
-                    "border-color: #4fd1c5; box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.3); outline: none;")
-                }
-                onBlur={() => (inGameNameRef.current.style = "")}
-                ref={inGameNameRef}
-                onChange={inGameNameHandler}
-                name="inGameName"
-                value={inGameName}
-                type="text"
-                placeholder="In Game Name"
-              />
+              <InputGroup>
+                <Input
+                  onFocus={() =>
+                    (inGameNameRef.current.style =
+                      "border-color: #4fd1c5; box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.3); outline: none;")
+                  }
+                  onBlur={() => (inGameNameRef.current.style = "")}
+                  onChange={inputHandler}
+                  name="email"
+                  value={data.email}
+                  type="email"
+                  placeholder="Email ID"
+                />
+              </InputGroup>
+              <InputGroup>
+                <Input
+                  onFocus={() =>
+                    (inGameNameRef.current.style =
+                      "border-color: #4fd1c5; box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.3); outline: none;")
+                  }
+                  onBlur={() => (inGameNameRef.current.style = "")}
+                  onChange={inputHandler}
+                  name="password"
+                  value={data.password}
+                  type={data.showPassword ? "text" : "password"}
+                  placeholder="Password"
+                />
+                <InputRightElement width="4.5rem">
+                  <IconButton
+                    // h="1.75rem"
+                    // size="sm"
+                    style={{
+                      marginBottom: "-85%",
+                      marginLeft: "40%",
+                      backgroundColor: "transparent",
+                      color: "black",
+                    }}
+                    onClick={() =>
+                      setData((prevData) => ({
+                        ...prevData,
+                        showPassword: !prevData.showPassword,
+                      }))
+                    }
+                    icon={
+                      data.showPassword ? <AiFillEyeInvisible /> : <AiFillEye />
+                    }
+                  />
+                </InputRightElement>
+              </InputGroup>
+              <InputGroup>
+                <Input
+                  onFocus={() =>
+                    (inGameNameRef.current.style =
+                      "border-color: #4fd1c5; box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.3); outline: none;")
+                  }
+                  onBlur={() => (inGameNameRef.current.style = "")}
+                  ref={inGameNameRef}
+                  onChange={inGameNameHandler}
+                  name="inGameName"
+                  value={inGameName}
+                  type="text"
+                  placeholder="In Game Name"
+                />
+              </InputGroup>
               <Button
                 isLoading={load.submitLoad}
                 loadingText="Submitting"
@@ -259,13 +298,11 @@ export default function Sigin() {
                 <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
                   <GoogleLogin
                     onSuccess={async (credentialResponse) => {
-                      //console.log(credentialResponse);
                       try {
                         const response = await axios.post(
                           "/api/user/handleGoogleLogin",
                           { credentialResponse, inGameName }
                         );
-                        //console.log(response);
                         if (response.status === 201) {
                           dispatch({ type: "UNSHOW" });
                           dispatch({
