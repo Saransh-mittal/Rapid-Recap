@@ -26,6 +26,7 @@ import { AppContext } from "../contextAPI/appContext";
 import { useNavigate } from "react-router-dom";
 import NameLightning from "../components/miscellaneous/NameLightning";
 import CircleAndSocietyData from "../assets/CircleAndSocietyData";
+import VerticalDotsSeparator from "../components/leaderBoardComponents/VerticalDotsSeparator";
 import { debounce } from "lodash";
 
 const debouncedSearch = debounce(async (query, callback) => {
@@ -41,6 +42,7 @@ const debouncedSearch = debounce(async (query, callback) => {
 }, 800);
 
 const LeaderBoard = () => {
+  // const profileIndex = 49;
   const navigate = useNavigate();
   const { state } = useContext(AppContext);
   const toast = useToast();
@@ -49,6 +51,7 @@ const LeaderBoard = () => {
   const [leaders, setLeaders] = useState([]);
   const [searchResults, setSearchResults] = useState([]); // Add this line
   const [searchQuery, setSearchQuery] = useState("");
+  const [currUserChar, setCurrUserChar] = useState(null);
   const tour = useShepherdTour({
     tourOptions,
     steps: stepsLeaderBoard,
@@ -96,6 +99,7 @@ const LeaderBoard = () => {
     try {
       const response = await axios.get("/api/user/leaderboard");
       setLeaders(response.data.users);
+      setCurrUserChar(response.data.currUser);
     } catch (error) {
       toast({
         title: "Error",
@@ -343,6 +347,11 @@ const LeaderBoard = () => {
                             <Tr // Clickable row to the profile of the user
                               height={"80px"}
                               key={user._id}
+                              className={
+                                state.user.inGameName === user.inGameName
+                                  ? "highlighted-card-2"
+                                  : ""
+                              }
                               onClick={() => {
                                 navigate(`/profile/${urlInGameName}`);
                               }}
@@ -429,6 +438,99 @@ const LeaderBoard = () => {
                           );
                         }
                       )}
+                    {/* <div className="highlighted-card-0"> */}
+                    {state.user.rank > 50 && (
+                      <>
+                        <VerticalDotsSeparator />
+                        <Tr
+                          height={"80px"}
+                          key={"51"}
+                          className="highlighted-card-3"
+                          onClick={() => {
+                            navigate("/profile/smash_dev");
+                          }}
+                          _hover={{
+                            backgroundImage:
+                              "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                            boxShadow:
+                              "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+                          }}
+                          cursor={"pointer"}
+                        >
+                          <Td textAlign={"center"}>
+                            <Flex
+                              justifyContent={"center"}
+                              alignItems={"center"}
+                              bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+                              p={2}
+                              gap={"35px"}
+                              z-index={"99999999"}
+                              borderRadius="md"
+                            >
+                              {state.user.rank}
+                              <Flex
+                                border={"5px solid gold"}
+                                style={{ transform: "rotate(45deg)" }}
+                                w="45px"
+                                h="45px"
+                                justifyContent={"center"}
+                                alignItems={"center"}
+                                bg={"blue.200"}
+                                position={"relative"}
+                                overflow={"hidden"}
+                              >
+                                <Box
+                                  position={"absolute"}
+                                  h="50px"
+                                  w="50px"
+                                  style={{
+                                    transform: "rotate(-45deg)",
+                                  }}
+                                >
+                                  <Image
+                                    h={"100%"}
+                                    w={"100%"}
+                                    src={state.user.pic}
+                                    alt="Dan Abramov"
+                                    objectFit={"cover"}
+                                  />
+                                </Box>
+                              </Flex>
+                            </Flex>
+                          </Td>
+                          <Td>
+                            <Flex
+                              justifyContent={"center"}
+                              alignItems={"center"}
+                              w={"100%"}
+                              position="relative"
+                            >
+                              <Heading
+                                as="h6"
+                                size={"xs"}
+                                color={findSocietyAndCircle(50)?.textColor}
+                                marginTop={"5px"}
+                              >
+                                {state.user.name}
+                              </Heading>
+                              <NameLightning
+                                boxShadow={findSocietyAndCircle(50)?.boxShadow}
+                                MAX_IQ={"100"}
+                              />
+                            </Flex>
+                          </Td>
+                          <Td textAlign="center">{state.user.inGameName}</Td>
+                          <Td textAlign="center">{state.user.IQ_score}</Td>
+                          <Td textAlign="center">
+                            {currUserChar?.quizSubmissions}
+                          </Td>
+                          <Td textAlign="center">{currUserChar?.RQM_avg}</Td>
+                        </Tr>
+                      </>
+                    )}
+                    <div style={{ padding: "10px 10px" }}></div>
+
+                    {/* </div> */}
                   </Tbody>
                 )}
               </Table>

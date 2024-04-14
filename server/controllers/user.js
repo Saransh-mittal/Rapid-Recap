@@ -363,12 +363,14 @@ const calculateUserIQScores = async (req, res) => {
 };
 
 const leaderBoard = async (req, res) => {
+  const currUserId = req.user._id;
   try {
     const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
       .select("name inGameName IQ_score pic maxIQScore rank _id")
       .sort({ rank: 1 })
       .limit(50)
       .populate("quizAttempts");
+    const currUser = await User.findById(currUserId).populate("quizAttempts");
     //AVG. RQM SCORES
     const result = [];
 
@@ -400,7 +402,16 @@ const leaderBoard = async (req, res) => {
         return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
       }
     });
-    res.status(200).json({ users: result });
+    let sum = 0;
+    for (let i = 0; i < currUser.quizAttempts.length; i++) {
+      sum += currUser.quizAttempts[i].RQM_score;
+    }
+    const RQM_avg = (sum / currUser.quizAttempts.length).toFixed(0);
+    const quizSubmissions = currUser.quizAttempts.length;
+
+    res
+      .status(200)
+      .json({ users: result, currUser: { RQM_avg, quizSubmissions } });
   } catch (error) {
     res.status(500).json({ error: "Error fetching the Leaderboard" });
     console.log(error.message);
@@ -611,8 +622,14 @@ const solvedQuizHistory = async (req, res) => {
       .limit(pageSize);
     const history = [];
     quizAttempts.forEach((attempt) => {
+      console.log(attempt);
       const { article, RQM_score, userPercentile, articleDifficulty } = attempt;
-      if (!article || !RQM_score || !userPercentile || !articleDifficulty)
+      if (
+        !article ||
+        isNaN(RQM_score) ||
+        isNaN(userPercentile) ||
+        isNaN(articleDifficulty)
+      )
         return;
       const { title } = article;
       let diff = "";

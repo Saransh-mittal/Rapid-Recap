@@ -33,6 +33,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
     Hard: "red.300",
   };
   useEffect(() => {
+    console.log(solvedHistory);
     onOpen();
   }, []);
 

@@ -30,7 +30,7 @@ router.route("/loginCheck").get(Authenticate, loginCheck);
 router.route("/resendOTP").post(resendOTP);
 router.route("/forgotPassword").post(forgotPassword);
 router.route("/handleGoogleLogin").post(handleGoogleLogin);
-router.route("/leaderboard").get(leaderBoard);
+router.route("/leaderboard").get(Authenticate, leaderBoard);
 router.route("/profile/:inGameName").get(profile);
 router
   .route("/isTutorialTakenCheck/:Page")
