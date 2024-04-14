@@ -282,7 +282,10 @@ export default function Profile() {
                     borderColor: "#bec3c9",
                   }}
                 >
-                  <SolvedQuizzes solvedQuizzes={profile.solvedQuizzes} />
+                  <SolvedQuizzes
+                    solvedQuizzes={profile.solvedQuizzes}
+                    inGameName={inGameName}
+                  />
                 </Flex>
                 <Flex
                   borderRadius="10px"

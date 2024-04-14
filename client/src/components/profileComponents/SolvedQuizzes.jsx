@@ -5,7 +5,7 @@ import { useState } from "react";
 import Loading from "../miscellaneous/Loading";
 import SolvedQuizHistory from "./SolvedQuizSubComponents/SolvedQuizHistory";
 
-const SolvedQuizzes = ({ solvedQuizzes }) => {
+const SolvedQuizzes = ({ solvedQuizzes, inGameName }) => {
   const toast = useToast();
   const [solvedQuizzesCount, setSolvedQuizzesCount] = useState(0);
   const [easySolved, setEasySolved] = useState(0);
@@ -40,7 +40,9 @@ const SolvedQuizzes = ({ solvedQuizzes }) => {
   const getHistory = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`/api/user/solvedQuizzesHistory`);
+      const response = await axios.get(
+        `/api/user/solvedQuizzesHistory?inGameName=${inGameName}`
+      );
       setHistory(response.data);
       setShowHistory(true);
     } catch (error) {
