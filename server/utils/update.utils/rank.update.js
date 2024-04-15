@@ -28,16 +28,19 @@ const rankUpdate = async () => {
   });
   console.log("\nCalculated user RQM_avg and quizSubs.\n");
   console.log("\nSorting users...\n");
-  const updateProgress2 = progressBar(result.length);
+
   result.sort((a, b) => {
     if (a.IQ_score !== b.IQ_score) {
       return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
     } else if (a.quizSubmissions !== b.quizSubmissions) {
       return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
     } else {
-      return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
+      return isNaN(a.RQM_avg)
+        ? b.RQM_avg
+        : isNaN(b.RQM_avg)
+        ? a.RQM_avg
+        : b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
     }
-    updateProgress2();
   });
 
   console.log("\nUpdating user ranks...\n");
