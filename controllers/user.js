@@ -104,7 +104,7 @@ const loginUser = async (req, res) => {
       if (
         !userByEmail ||
         !userByInGameName ||
-        userByEmail._id !== userByInGameName._id
+        userByEmail._id.toString() !== userByInGameName._id.toString()
       ) {
         return res.status(422).json({ error: "Invalid Credentials" });
       }
