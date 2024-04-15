@@ -9,7 +9,7 @@ const path = require("path");
 dotenv.config({ path: "./config.env" });
 const app = express();
 
-require("./db/conn");
+const connectDB = require("./db/conn");
 
 // -----Testings-----
 //require("./test/conn.test");
@@ -55,6 +55,13 @@ app.get("*", function (_, res) {
 });
 // --------------------
 
-app.listen(PORT, () => {
-  console.log(`Listening to port no. ${PORT}`);
-});
+// Connect to the database before starting the server
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Listening to port no. ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to connect to MongoDB:", err);
+  });
