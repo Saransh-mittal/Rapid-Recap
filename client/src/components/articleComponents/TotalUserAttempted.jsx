@@ -1,6 +1,8 @@
-import React from "react";
-import { Flex, Text } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { Button, Flex, Text } from "@chakra-ui/react";
+import QuizTitansModal from "./QuizTitansModal";
 const TotalUserAttempted = ({ css, totalUsersGivenQuiz }) => {
+  const [showQuizTitans, setShowQuizTitans] = useState(false);
   return (
     <Flex
       css={css}
@@ -11,6 +13,9 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz }) => {
       borderRadius="xl"
       backgroundColor="#2A2F4F"
       marginBottom="2rem"
+      flexDirection={"column"}
+      justifyContent={"center"}
+      alignItems={"center"}
     >
       <Text
         fontSize="18px"
@@ -32,6 +37,12 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz }) => {
           {totalUsersGivenQuiz}
         </span>
       </Text>
+      {showQuizTitans && (
+        <QuizTitansModal setShowQuizTitans={setShowQuizTitans} />
+      )}
+      <Button margin={"1rem"} w={"50%"} onClick={() => setShowQuizTitans(true)}>
+        Quiz Titans
+      </Button>
     </Flex>
   );
 };

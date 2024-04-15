@@ -19,8 +19,8 @@ function parseURL(url) {
   // Split the URL by slashes
   const segments = url.split("/");
   // The segment after the base URL will indicate the route
-  const route = segments[3];
-  const id = segments[4];
+  const route = segments[segments.length - 2];
+  const id = segments[segments.length - 1];
 
   // Check if the route matches any of the known routes
   return { route, id };

@@ -189,9 +189,19 @@ export default function Profile() {
     //console.log(otherUserStored);
     if (inGameName === state.user.inGameName && state.userProfile) {
       setProfile(state.userProfile);
+      setPrivacyProfileData(
+        state.userProfile.profilePrivacy
+          ? state.userProfile.profilePrivacy
+          : privacyProfileData
+      );
       setIsLoading(false);
     } else if (otherUserStored) {
       setProfile(otherUserStored.profile);
+      setPrivacyProfileData(
+        otherUserStored.profile.profilePrivacy
+          ? otherUserStored.profile.profilePrivacy
+          : privacyProfileData
+      );
       setIsLoading(false);
     } else {
       fetchProfile();

@@ -15,7 +15,6 @@ import {
   Text,
   useToast,
   useDisclosure,
-  Tooltip,
 } from "@chakra-ui/react";
 import Loading from "../components/miscellaneous/Loading";
 import Quiz from "../components/articleComponents/Quiz";
@@ -43,10 +42,13 @@ const Article = () => {
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const data = state.news;
-  const alt_image = imageData.find(
-    (img) =>
-      img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
-  )?.image;
+  const [alt_image, setAlt_image] = useState(
+    imageData.find(
+      (img) =>
+        img?.category?.toLocaleLowerCase() ===
+        data?.category?.toLocaleLowerCase()
+    )?.image
+  );
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -315,6 +317,16 @@ const Article = () => {
     }
   }, [article, textHeight]);
 
+  useEffect(() => {
+    setAlt_image(
+      imageData.find(
+        (img) =>
+          img?.category?.toLocaleLowerCase() ===
+          data.category?.toLocaleLowerCase()
+      )?.image
+    );
+  }, [data.category]);
+
   return (
     <>
       {showExpectedIQ && expectedIQ ? (
@@ -523,6 +535,7 @@ const Article = () => {
                 />
               )}
               <TotalUserAttempted totalUsersGivenQuiz={totalUsersGivenQuiz} />
+
               <Box
                 boxShadow={"0 100px 200px rgba(1, 1, 1, 1.1)"}
                 borderRadius={"15px"}
