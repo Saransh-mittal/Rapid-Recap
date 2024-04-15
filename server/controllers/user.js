@@ -100,11 +100,10 @@ const loginUser = async (req, res) => {
       // Both email and inGameName are provided, check if they belong to the same user
       const userByEmail = await User.findOne({ email });
       const userByInGameName = await User.findOne({ inGameName });
-
       if (
         !userByEmail ||
         !userByInGameName ||
-        userByEmail._id !== userByInGameName._id
+        userByEmail._id.toString() !== userByInGameName._id.toString()
       ) {
         return res.status(422).json({ error: "Invalid Credentials" });
       }
