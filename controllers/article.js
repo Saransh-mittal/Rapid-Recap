@@ -246,6 +246,31 @@ const getArticleQuizStatus = async (req, res) => {
   }
 };
 
+const getTopRankers = async (req, res) => {
+  const { articleId } = req.query;
+  try {
+    const quizAttempts = await QuizAttempt.find({ article: articleId })
+      .sort({ RQM_score: -1 })
+      .limit(3)
+      .populate({
+        path: "user",
+        select: "name inGameName", // Specify the fields you want to select
+      });
+    const rankers = [];
+    quizAttempts.forEach((attempt, index) => {
+      rankers.push({
+        rank: index + 1,
+        name: attempt.user.name,
+        inGameName: attempt.user.inGameName,
+      });
+    });
+    res.status(200).json({ rankers });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Something went wrong" });
+    console.log(error);
+  }
+};
+
 // const testNewsApi = async (req, res) => {
 //   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
 //   try {
@@ -266,5 +291,6 @@ module.exports = {
   getQuiz,
   getArticleQuizStatus,
   startQuiz,
+  getTopRankers,
   //testNewsApi,
 };

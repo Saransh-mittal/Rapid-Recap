@@ -118,6 +118,12 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", async function (next) {
+  if (this.isNew && this.isModified("rank")) {
+    // Calculate the default rank as the number of existing users
+    const existingUsersCount = await this.constructor.countDocuments();
+    this.rank = existingUsersCount + 1;
+  }
+
   if (this.isModified("password")) {
     const pass = this.password;
     this.password = await bcrypt.hash(pass, 12);

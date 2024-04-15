@@ -622,7 +622,6 @@ const solvedQuizHistory = async (req, res) => {
       .limit(pageSize);
     const history = [];
     quizAttempts.forEach((attempt) => {
-      console.log(attempt);
       const { article, RQM_score, userPercentile, articleDifficulty } = attempt;
       if (
         !article ||
