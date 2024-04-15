@@ -88,7 +88,7 @@ const SolvedQuizzes = ({
       gap={6}
       mt={4}
       mr={10}
-      onClick={getHistory}
+      onClick={!privateSolvedQuiz ? getHistory : null}
     >
       {showHistory && (
         <SolvedQuizHistory
