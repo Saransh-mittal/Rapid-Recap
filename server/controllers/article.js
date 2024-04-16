@@ -254,15 +254,24 @@ const getTopRankers = async (req, res) => {
       .limit(3)
       .populate({
         path: "user",
-        select: "name inGameName", // Specify the fields you want to select
+        select: "name inGameName IQ_score maxIQScore", // Specify the fields you want to select
       });
+
     const rankers = [];
+    let rank = 1;
     quizAttempts.forEach((attempt, index) => {
+      //console.log(attempt);
+      if (!attempt.user) {
+        return;
+      }
       rankers.push({
-        rank: index + 1,
+        rank: rank,
         name: attempt.user.name,
         inGameName: attempt.user.inGameName,
+        IQ_score: attempt.user.IQ_score,
+        maxIQScore: attempt.user.maxIQScore,
       });
+      rank++;
     });
     res.status(200).json({ rankers });
   } catch (error) {

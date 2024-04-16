@@ -17,12 +17,16 @@ import {
   TableContainer,
   Image,
   useToast,
+  Flex,
+  Heading,
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import Trophy from "/images/trophy.png";
 import axios from "axios";
 import Loading from "../miscellaneous/Loading";
 import { useNavigate } from "react-router-dom";
+import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
+import NameLightning from "../miscellaneous/NameLightning";
 
 const QuizTitansModal = ({ setShowQuizTitans }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -57,6 +61,15 @@ const QuizTitansModal = ({ setShowQuizTitans }) => {
     fetchRankers();
     onOpen();
   }, []);
+  const findSocietyAndCircle = (IQ) => {
+    for (let i = 0; i < CircleAndSocietyData.length; i++) {
+      const { IQ_Lower, IQ_Upper } = CircleAndSocietyData[i];
+      if (IQ >= IQ_Lower && (IQ_Upper === null || IQ < IQ_Upper)) {
+        return CircleAndSocietyData[i];
+      }
+    }
+    return null; // Return null if no match is found
+  };
   return (
     <>
       <Modal
@@ -130,7 +143,33 @@ const QuizTitansModal = ({ setShowQuizTitans }) => {
                             }}
                           >
                             <Td textAlign={"center"}>{ranker.rank}</Td>
-                            <Td textAlign={"center"}>{ranker.name}</Td>
+                            <Td>
+                              <Flex
+                                justifyContent={"center"}
+                                alignItems={"center"}
+                                w={"100%"}
+                                position="relative"
+                              >
+                                <Heading
+                                  as="h6"
+                                  size={"xs"}
+                                  color={
+                                    findSocietyAndCircle(ranker.IQ_score)
+                                      ?.textColor
+                                  }
+                                  marginTop={"5px"}
+                                >
+                                  {ranker.name}
+                                </Heading>
+                                <NameLightning
+                                  boxShadow={
+                                    findSocietyAndCircle(ranker.maxIQScore)
+                                      ?.boxShadow
+                                  }
+                                  MAX_IQ={ranker.maxIQScore}
+                                />
+                              </Flex>
+                            </Td>
                             <Td textAlign={"center"}>{ranker.inGameName}</Td>
                           </Tr>
                         );

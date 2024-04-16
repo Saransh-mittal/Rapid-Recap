@@ -21,6 +21,7 @@ require("./db/conn");
 //require("./utils/deletion.utils/removeDailIQField.del");
 //require("./utils/deletion.utils/quizGivenByUserDeletion");
 //require("./utils/deletion.utils/removeBotUsers.del");
+//require("./utils/deletion.utils/removeQuizAttemptForNullUser.del");
 // ---------------------------
 
 // -----Update Collection-----

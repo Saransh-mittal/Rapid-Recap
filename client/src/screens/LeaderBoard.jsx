@@ -447,7 +447,7 @@ const LeaderBoard = () => {
                           key={"51"}
                           className="highlighted-card-3"
                           onClick={() => {
-                            navigate("/profile/smash_dev");
+                            navigate(`/profile/${state.user.inGameName}`);
                           }}
                           _hover={{
                             backgroundImage:
