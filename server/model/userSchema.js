@@ -113,6 +113,12 @@ const userSchema = new mongoose.Schema(
       dailyActivity: { type: Boolean, default: false },
       society: { type: Boolean, default: false },
     },
+    applicationUpdates: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "APPLICATION_UPDATES",
+      },
+    ],
   },
   { collection: "Users" }
 );

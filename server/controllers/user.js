@@ -1,6 +1,6 @@
 const User = require("../model/userSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
-const DailyIQ = require("../model/dailyIQSchema");
+
 const bcrypt = require("bcryptjs");
 const {
   generateOtp,
@@ -744,6 +744,19 @@ const profilePrivacy = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+// Get all application updates
+const getUpdates = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId).populate("applicationUpdates");
+    res.status(200).json({ updates: user.applicationUpdates });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -763,4 +776,5 @@ module.exports = {
   solvedQuizHistory,
   userSearch,
   profilePrivacy,
+  getUpdates,
 };

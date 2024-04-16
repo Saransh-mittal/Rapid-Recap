@@ -49,7 +49,7 @@ async function updateBots() {
       for (let i = 0; i < selectedBotUsers.length; i++) {
         const user = selectedBotUsers[i];
         // randomly select number of articles to attempt quiz from 8 to articlesWithQuiz.length from the articlesWithQuiz array
-        const cnt = Math.floor(Math.random() * 6);
+        const cnt = Math.floor(Math.random() * 3);
         const newArticlesWithQuiz = shuffle(articlesWithQuiz).slice(0, cnt);
 
         for (const article of newArticlesWithQuiz) {

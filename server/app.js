@@ -30,13 +30,14 @@ require("./db/conn");
 //require("./utils/update.utils/quizCountUpdate.update");
 //require("./utils/update.utils/name.update");
 //require("./utils/update.utils/rank.update")();
+//require("./utils/update.utils/cleanUpBadQuizAttempts.update");
 // ---------------------------
 
 // -----Bot utils-----
 //require("./utils/bot.utils/generateFakeUsers");
 //require("./utils/bot.utils/generateFakeQuizAttempts");
 //require("./utils/bot.utils/generatePicForUsers");
-//require("./utils/bot.utils/updateBots");
+require("./utils/bot.utils/updateBots");
 // -------------------
 app.use(express.json());
 require("./scheduler/userIQScoreScheduler");
