@@ -818,6 +818,23 @@ const getUpdates = async (req, res) => {
   }
 };
 
+const readUpdates = async (req, res) => {
+  const { updateId } = req.query;
+  //console.log(userId);
+  try {
+    const update = await ApplicationUpdates.findById(updateId);
+    if (!update) {
+      return res.status(404).json({ error: "Update not found" });
+    }
+    update.read = true;
+    await update.save();
+    res.status(200).json({ message: "Update read" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -838,4 +855,5 @@ module.exports = {
   userSearch,
   profilePrivacy,
   getUpdates,
+  readUpdates,
 };

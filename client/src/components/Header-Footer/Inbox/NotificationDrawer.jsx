@@ -11,15 +11,18 @@ import {
   Heading,
   Text,
   Flex,
+  useToast,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 //import { dummyNotificationData as notificationData } from "./dummyNotificationData";
 import NotificationModal from "./NotificationModal";
 import { AppContext } from "../../../contextAPI/appContext";
 import Rapid_recap from "/images/Rapid Recap.png";
+import axios from "axios";
 
 const NotificationDrawer = ({ setIsDrawerOpen }) => {
-  const { state } = useContext(AppContext);
+  const { state, dispatch } = useContext(AppContext);
+  const toast = useToast();
 
   const [notificationData, setNotificationData] = useState(state.updates); // State for notification data
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -28,6 +31,30 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
   const handleNotificationClick = (notification) => {
     setSelectedNotification(notification);
     setIsModalOpen(true);
+  };
+  const setReadUpdate = async (updateId) => {
+    try {
+      await axios.put(`/api/user/readUpdates?updateId=${updateId}`);
+      const updatedNotifications = notificationData.map((update) =>
+        update._id === updateId ? { ...update, read: true } : update
+      );
+      setNotificationData(updatedNotifications);
+      // Dispatch action to update state globally (optional, if using context)
+      dispatch({
+        type: "APP_UPDATES",
+        payloadAppUpdates: updatedNotifications,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark as read",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      console.log(error);
+    }
   };
   useEffect(() => {
     onOpen();
@@ -62,62 +89,74 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
           >
             {/* Render notifications */}
             {notificationData.length > 0 &&
-              notificationData.map((update, index) => (
-                <Box
-                  key={index}
-                  style={{
-                    marginBottom: "1rem",
-                    cursor: "pointer",
-                    backgroundColor: "#0f0d15",
-                    backgroundImage:
-                      "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-                    boxShadow:
-                      "0px 4px 8px rgba(0, 0, 0, 0.9), 0px 8px 16px rgba(0, 0, 0, 0.9), 0px 12px 24px rgba(0, 0, 0, 0.9)", // Increased intensity of the shadow
-                  }}
-                  onClick={() => handleNotificationClick(update)}
-                  paddingBottom={"20px"}
-                  //borderBottom={"2px solid white"}
-                  padding={"10px"}
-                >
-                  <Flex
-                    flexDirection={"row"}
-                    justifyContent={"space-between"}
-                    gap={3}
+              notificationData.map((update, index) => {
+                // console.log(update);
+                return (
+                  <Box
+                    color={update.read ? "#9CAFAA" : null}
+                    key={index}
+                    style={{
+                      marginBottom: "1rem",
+                      cursor: "pointer",
+                      backgroundColor: "#0f0d15",
+                      backgroundImage:
+                        "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                      boxShadow:
+                        "0px 4px 8px rgba(0, 0, 0, 0.9), 0px 8px 16px rgba(0, 0, 0, 0.9), 0px 12px 24px rgba(0, 0, 0, 0.9)", // Increased intensity of the shadow
+                    }}
+                    onClick={() => {
+                      setReadUpdate(update._id);
+                      handleNotificationClick(update);
+                    }}
+                    paddingBottom={"20px"}
+                    //borderBottom={"2px solid white"}
+                    padding={"10px"}
                   >
                     <Flex
-                      w={"30%"}
-                      justifyContent={"center"}
-                      alignItems={"center"}
-                      height="50px"
-                      p={0}
-                      m={0}
+                      flexDirection={"row"}
+                      justifyContent={"space-between"}
+                      gap={3}
                     >
-                      <Image
-                        src={Rapid_recap}
-                        alt="Notification Image"
-                        width="40px "
-                        height="40px"
-                        borderRadius="50%"
-                        objectFit="cover"
-                        objectPosition="center center"
-                      />
-                    </Flex>
-                    <Flex justifyContent={"center"} alignItems={"center"}>
-                      <Heading
-                        as={"h5"}
-                        size={"sm"}
-                        style={{ marginBottom: "0.5rem", textAlign: "left" }}
+                      <Flex
+                        w={"30%"}
+                        justifyContent={"center"}
+                        alignItems={"center"}
+                        height="50px"
+                        p={0}
+                        m={0}
                       >
-                        {update.title}
-                      </Heading>
+                        <Image
+                          src={Rapid_recap}
+                          alt="Notification Image"
+                          width="40px "
+                          height="40px"
+                          borderRadius="50%"
+                          objectFit="cover"
+                          objectPosition="center center"
+                        />
+                      </Flex>
+                      <Flex justifyContent={"center"} alignItems={"center"}>
+                        <Heading
+                          as={"h5"}
+                          size={"sm"}
+                          style={{ marginBottom: "0.5rem", textAlign: "left" }}
+                        >
+                          {update.title}
+                        </Heading>
+                      </Flex>
                     </Flex>
-                  </Flex>
 
-                  <Text style={{ textAlign: "left" }}>{update.mainText}</Text>
+                    <Text style={{ textAlign: "left" }}>{update.mainText}</Text>
+                    <Flex>
+                      <small>{new Date(update.date).toLocaleString()}</small>
 
-                  <small>{new Date(update.date).toLocaleString()}</small>
-                </Box>
-              ))}
+                      <small style={{ marginLeft: "auto" }}>
+                        {update.read ? "Read" : "Unread"}
+                      </small>
+                    </Flex>
+                  </Box>
+                );
+              })}
           </DrawerBody>
         </DrawerContent>
       </Drawer>

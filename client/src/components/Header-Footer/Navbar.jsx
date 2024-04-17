@@ -63,7 +63,14 @@ const Navbar = () => {
     }
   }, [state.user]);
   useEffect(() => {
-    setNotifyCnt(state.updates.length);
+    //update notification count whose update is not read
+    let count = 0;
+    state.updates.forEach((update) => {
+      if (!update.read) {
+        count++;
+      }
+    });
+    setNotifyCnt(count);
   }, [state.updates]);
 
   const handleLogout = async () => {
