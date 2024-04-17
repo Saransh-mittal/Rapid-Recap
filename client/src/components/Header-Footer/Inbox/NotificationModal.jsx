@@ -6,15 +6,23 @@ import {
   ModalHeader,
   ModalOverlay,
   useDisclosure,
+  Image,
+  Flex,
+  Heading,
+  Text,
 } from "@chakra-ui/react";
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
+import { AppContext } from "../../../contextAPI/appContext";
+import Rapid_recap from "./../../../../public/images/Rapid Recap.png";
 
 const NotificationModal = ({ setIsModalOpen, selectedNotification }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { state } = useContext(AppContext);
 
   useEffect(() => {
     onOpen();
   }, []);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -42,11 +50,43 @@ const NotificationModal = ({ setIsModalOpen, selectedNotification }) => {
         <ModalBody>
           {selectedNotification && (
             <>
-              <p>{selectedNotification.mainText}</p>
-              <small>
-                {new Date(selectedNotification.date).toLocaleString()}
-              </small>{" "}
-              {/* Date */}
+              {/* Circular image */}
+              <Flex justifyContent="center">
+                <Image
+                  src={Rapid_recap}
+                  alt="Notification Image"
+                  width="80px"
+                  height="80px"
+                  borderRadius="50%"
+                  objectFit="cover"
+                  objectPosition="center center"
+                />
+              </Flex>
+              {/* Greetings section */}
+              <Flex justifyContent="center" mt={3} marginTop={"20px"}>
+                <Heading as="h3" size="md" color="teal">
+                  Hello, {state.user.name || "User"}!
+                </Heading>
+              </Flex>
+              {/* Main content */}
+              <Flex
+                flexDirection="column"
+                alignItems="center"
+                marginTop={"30px"}
+              >
+                <Text
+                  fontSize="lg"
+                  color="gray.400"
+                  fontStyle="italic"
+                  textAlign="center"
+                  marginBottom="20px"
+                >
+                  {selectedNotification.mainText}
+                </Text>
+                <Text fontSize="sm" color="gray.600">
+                  {new Date(selectedNotification.date).toLocaleString()}
+                </Text>
+              </Flex>
             </>
           )}
         </ModalBody>
