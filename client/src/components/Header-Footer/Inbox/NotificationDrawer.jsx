@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 //import { dummyNotificationData as notificationData } from "./dummyNotificationData";
-import NotificationModal from "../NotificationModal";
+import NotificationModal from "./NotificationModal";
 import { AppContext } from "../../../contextAPI/appContext";
 
 const NotificationDrawer = ({ setIsDrawerOpen }) => {
