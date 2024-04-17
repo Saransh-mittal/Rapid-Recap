@@ -25,6 +25,7 @@ import useDrag from "../../customHooks/useDrag";
 import ProfileDropDownMenu from "../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon, CloseIcon, EmailIcon } from "@chakra-ui/icons";
 import Categories from "./Categories";
+import NotificationDrawer from "./Inbox/NotificationDrawer";
 
 const Navbar = () => {
   const navItems = [
@@ -37,9 +38,8 @@ const Navbar = () => {
   const [showCategory, setShowCategory] = useState(false);
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // New state for drawer
-  const [notificationData, setNotificationData] = useState(null); // State for notification data
-  const [selectedNotification, setSelectedNotification] = useState(null); // State for selected notification
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
+  // const [notificationData, setNotificationData] = useState(null); // State for notification data
+  
   const navigate = useNavigate();
   const toast = useToast();
   const { state, dispatch, navLinkRefs } = useContext(AppContext);
@@ -48,44 +48,11 @@ const Navbar = () => {
   const { startDrag, drag, endDrag } = useDrag();
 
   // Dummy notification data
-  const dummyNotificationData = {
-    updates: [
-      {
-        title: "New Feature: Dark Mode",
-        mainText:
-          "Experience our app in a whole new light with Dark Mode! Enable it from the settings menu for reduced eye strain and improved battery life.",
-        img: "dark_mode_image_url",
-        date: "2024-04-16T08:00:00Z",
-        user_id: "user123",
-        read: false,
-        _id: "update123",
-      },
-      {
-        title: "Bug Fix: Login Issue Resolved",
-        mainText:
-          "We've fixed a pesky bug that was causing some users to experience difficulties logging in. You should now be able to access your account without any problems.",
-        img: "bug_fix_image_url",
-        date: "2024-04-15T14:30:00Z",
-        user_id: "user456",
-        read: false,
-        _id: "update456",
-      },
-      {
-        title: "Performance Enhancement: Faster Loading Times",
-        mainText:
-          "We've optimized our app to deliver faster loading times across the board. Enjoy a smoother experience with quicker access to your favorite features.",
-        img: "performance_image_url",
-        date: "2024-04-14T10:45:00Z",
-        user_id: "user789",
-        read: false,
-        _id: "update789",
-      },
-    ],
-  };
+  
 
-  useEffect(() => {
-    setNotificationData(dummyNotificationData);
-  }, []); // Fetch or set dummy data on component mount
+  // useEffect(() => {
+  //   setNotificationData(dummyNotificationData);
+  // }, []); // Fetch or set dummy data on component mount
 
   useEffect(() => {
     if (isHamburgerOpen) {
@@ -134,10 +101,7 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [prevScrollPos, visible]);
 
-  const handleNotificationClick = (notification) => {
-    setSelectedNotification(notification);
-    setIsModalOpen(true);
-  };
+  
 
   return (
     <Flex
@@ -311,58 +275,9 @@ const Navbar = () => {
           </Flex>
         </Flex>
       </Flex>
-      {/* Drawer for notifications */}
-      <Drawer
-        size={{ base: "full", lg: "xs" }}
-        isOpen={isDrawerOpen}
-        placement="right"
-        onClose={() => setIsDrawerOpen(false)} // Close drawer onClose
-      >
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader>Notifications</DrawerHeader>
-          <DrawerBody>
-            {/* Render notifications */}
-            {notificationData &&
-              notificationData.updates.map((update, index) => (
-                <div
-                  key={index}
-                  style={{ marginBottom: "1rem", cursor: "pointer" }}
-                  onClick={() => handleNotificationClick(update)}
-                >
-                  <h3>{update.title}</h3>
-                  <p>{update.mainText}</p>
-                  <small>{new Date(update.date).toLocaleString()}</small>{" "}
-                  {/* Date */}
-                  {/* Add more elements as needed */}
-                </div>
-              ))}
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
-
+      {isDrawerOpen && <NotificationDrawer setIsDrawerOpen={setIsDrawerOpen}/>}
       {/* Modal for detailed notification */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {selectedNotification && selectedNotification.title}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {selectedNotification && (
-              <>
-                <p>{selectedNotification.mainText}</p>
-                <small>
-                  {new Date(selectedNotification.date).toLocaleString()}
-                </small>{" "}
-                {/* Date */}
-              </>
-            )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      
     </Flex>
   );
 };
