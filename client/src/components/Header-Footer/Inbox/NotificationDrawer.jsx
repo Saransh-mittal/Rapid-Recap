@@ -14,8 +14,9 @@ import {
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 //import { dummyNotificationData as notificationData } from "./dummyNotificationData";
-import NotificationModal from "../NotificationModal";
+import NotificationModal from "./NotificationModal";
 import { AppContext } from "../../../contextAPI/appContext";
+import Rapid_recap from "/images/Rapid Recap.png";
 
 const NotificationDrawer = ({ setIsDrawerOpen }) => {
   const { state } = useContext(AppContext);
@@ -52,16 +53,31 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
         >
           <DrawerCloseButton />
           <DrawerHeader size="10px">Inbox</DrawerHeader>
-          <DrawerBody>
+          <DrawerBody
+            style={{
+              overflowY: "auto",
+              scrollbarWidth: "thin",
+              scrollbarColor: "black transparent",
+            }}
+          >
             {/* Render notifications */}
             {notificationData.length > 0 &&
               notificationData.map((update, index) => (
                 <Box
                   key={index}
-                  style={{ marginBottom: "1rem", cursor: "pointer" }}
+                  style={{
+                    marginBottom: "1rem",
+                    cursor: "pointer",
+                    backgroundColor: "#0f0d15",
+                    backgroundImage:
+                      "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                    boxShadow:
+                      "0px 4px 8px rgba(0, 0, 0, 0.9), 0px 8px 16px rgba(0, 0, 0, 0.9), 0px 12px 24px rgba(0, 0, 0, 0.9)", // Increased intensity of the shadow
+                  }}
                   onClick={() => handleNotificationClick(update)}
                   paddingBottom={"20px"}
-                  borderBottom={"2px solid white"}
+                  //borderBottom={"2px solid white"}
+                  padding={"10px"}
                 >
                   <Flex
                     flexDirection={"row"}
@@ -77,7 +93,7 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
                       m={0}
                     >
                       <Image
-                        src={update.img}
+                        src={Rapid_recap}
                         alt="Notification Image"
                         width="40px "
                         height="40px"

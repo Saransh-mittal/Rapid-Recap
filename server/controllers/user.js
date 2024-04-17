@@ -808,7 +808,9 @@ const getUpdates = async (req, res) => {
   const userId = req.user._id;
   //console.log(userId);
   try {
-    const updates = await ApplicationUpdates.find({ userId: userId });
+    const updates = await ApplicationUpdates.find({ userId: userId }).sort({
+      date: -1,
+    });
     res.status(200).json({ updates });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
