@@ -3,24 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
-import {
-  useToast,
-  Button,
-  Flex,
-  Drawer,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
-  DrawerCloseButton,
-  background,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-} from "@chakra-ui/react";
+import { useToast, Button, Flex, Badge } from "@chakra-ui/react";
 import useDrag from "../../customHooks/useDrag";
 import ProfileDropDownMenu from "../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon, CloseIcon, EmailIcon } from "@chakra-ui/icons";
@@ -39,16 +22,16 @@ const Navbar = () => {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // New state for drawer
   // const [notificationData, setNotificationData] = useState(null); // State for notification data
-  
+
   const navigate = useNavigate();
   const toast = useToast();
   const { state, dispatch, navLinkRefs } = useContext(AppContext);
   const [visible, setVisible] = useState(true);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const { startDrag, drag, endDrag } = useDrag();
+  const [notifyCont, setNotifyCnt] = useState(0);
 
   // Dummy notification data
-  
 
   // useEffect(() => {
   //   setNotificationData(dummyNotificationData);
@@ -61,6 +44,27 @@ const Navbar = () => {
       document.body.style.overflow = "auto";
     }
   }, [isHamburgerOpen]);
+
+  async function getAppUpdates() {
+    try {
+      const response = await axios.get(`/api/user/getUpdates`);
+      dispatch({
+        type: "APP_UPDATES",
+        payloadAppUpdates: response.data.updates,
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
+  useEffect(() => {
+    if (state.user) {
+      getAppUpdates();
+    }
+  }, [state.user]);
+  useEffect(() => {
+    setNotifyCnt(state.updates.length);
+  }, [state.updates]);
 
   const handleLogout = async () => {
     try {
@@ -100,8 +104,6 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [prevScrollPos, visible]);
-
-  
 
   return (
     <Flex
@@ -171,6 +173,25 @@ const Navbar = () => {
                 onClick={() => setIsDrawerOpen(true)} // Open drawer onClick
               >
                 <EmailIcon width={"6"} height={"6"} />
+                {notifyCont > 0 && (
+                  <Badge
+                    borderRadius="50%"
+                    h={"20px"}
+                    w={"20px"}
+                    display={"flex"}
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                    backgroundColor="red"
+                    color="white"
+                    fontSize="md"
+                    position="absolute"
+                    top="-1px"
+                    right="-1px"
+                    padding="2px"
+                  >
+                    {notifyCont}
+                  </Badge>
+                )}
               </Button>
               <Button
                 type="button"
@@ -269,15 +290,33 @@ const Navbar = () => {
                   onClick={() => setIsDrawerOpen(true)} // Open drawer onClick
                 >
                   <EmailIcon width={"6"} height={"6"} />
+                  {notifyCont > 0 && (
+                    <Badge
+                      borderRadius="50%"
+                      h={"20px"}
+                      w={"20px"}
+                      display={"flex"}
+                      justifyContent={"center"}
+                      alignItems={"center"}
+                      backgroundColor="red"
+                      color="white"
+                      fontSize="md"
+                      position="absolute"
+                      top="-1px"
+                      right="-1px"
+                      padding="2px"
+                    >
+                      {notifyCont}
+                    </Badge>
+                  )}
                 </Button>
               )}
             </ul>
           </Flex>
         </Flex>
       </Flex>
-      {isDrawerOpen && <NotificationDrawer setIsDrawerOpen={setIsDrawerOpen}/>}
+      {isDrawerOpen && <NotificationDrawer setIsDrawerOpen={setIsDrawerOpen} />}
       {/* Modal for detailed notification */}
-      
     </Flex>
   );
 };

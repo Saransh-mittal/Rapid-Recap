@@ -31,6 +31,8 @@ export const Reducer = (state, action) => {
       return { ...state, userProfile: action.payloadProfile };
     case "otherUserProfiles":
       return { ...state, otherUserProfiles: action.payloadOtherUserProfiles };
+    case "APP_UPDATES":
+      return { ...state, updates: action.payloadAppUpdates };
     case "RESET_STATE":
       return { ...initialState, show: true, user: null };
     default:

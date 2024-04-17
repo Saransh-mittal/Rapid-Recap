@@ -18,6 +18,7 @@ const {
   calculateUserRank,
 } = require("../utils/user");
 const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
+const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 
 const registerUser = async (req, res) => {
   //console.log(req.body);
@@ -805,9 +806,10 @@ const profilePrivacy = async (req, res) => {
 // Get all application updates
 const getUpdates = async (req, res) => {
   const userId = req.user._id;
+  //console.log(userId);
   try {
-    const user = await User.findById(userId).populate("applicationUpdates");
-    res.status(200).json({ updates: user.applicationUpdates });
+    const updates = await ApplicationUpdates.find({ userId: userId });
+    res.status(200).json({ updates });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
     console.log(error.message);

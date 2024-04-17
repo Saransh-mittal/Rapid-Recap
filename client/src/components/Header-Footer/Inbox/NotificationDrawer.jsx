@@ -12,11 +12,15 @@ import {
   Text,
   Flex,
 } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
-import { dummyNotificationData as notificationData } from "./dummyNotificationData";
+import React, { useContext, useEffect, useState } from "react";
+//import { dummyNotificationData as notificationData } from "./dummyNotificationData";
 import NotificationModal from "../NotificationModal";
+import { AppContext } from "../../../contextAPI/appContext";
 
 const NotificationDrawer = ({ setIsDrawerOpen }) => {
+  const { state } = useContext(AppContext);
+
+  const [notificationData, setNotificationData] = useState(state.updates); // State for notification data
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedNotification, setSelectedNotification] = useState(null); // State for selected notification
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
@@ -39,38 +43,19 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
         }} // Close drawer onClose
         backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
         boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
-       
       >
         <DrawerOverlay />
         <DrawerContent
           backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
           boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
           color="white"
-         
         >
           <DrawerCloseButton />
           <DrawerHeader size="10px">Inbox</DrawerHeader>
-          <DrawerBody
-          style={{
-            scrollbarWidth: "thin",
-            WebkitScrollbar: "none",
-            overflowY: "scroll",
-            "&::-webkit-scrollbar": {
-              width: "5px",
-              backgroundColor:"#0f0d15"
-            },
-            "&::-webkit-scrollbar-track": {
-              backgroundColor: "#0f0d15",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              background: "#0f0d15",
-              borderRadius: "8px",
-            },
-          }}
-          >
+          <DrawerBody>
             {/* Render notifications */}
-            {notificationData &&
-              notificationData.updates.map((update, index) => (
+            {notificationData.length > 0 &&
+              notificationData.map((update, index) => (
                 <Box
                   key={index}
                   style={{ marginBottom: "1rem", cursor: "pointer" }}
@@ -78,7 +63,11 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
                   paddingBottom={"20px"}
                   borderBottom={"2px solid white"}
                 >
-                  <Flex flexDirection={"row"} justifyContent={"space-between"} gap={3}>
+                  <Flex
+                    flexDirection={"row"}
+                    justifyContent={"space-between"}
+                    gap={3}
+                  >
                     <Flex
                       w={"30%"}
                       justifyContent={"center"}
@@ -86,7 +75,6 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
                       height="50px"
                       p={0}
                       m={0}
-                     
                     >
                       <Image
                         src={update.img}
@@ -94,16 +82,11 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
                         width="40px "
                         height="40px"
                         borderRadius="50%"
-                     
                         objectFit="cover"
                         objectPosition="center center"
                       />
                     </Flex>
-                    <Flex
-                     
-                      justifyContent={"center"}
-                      alignItems={"center"}
-                    >
+                    <Flex justifyContent={"center"} alignItems={"center"}>
                       <Heading
                         as={"h5"}
                         size={"sm"}

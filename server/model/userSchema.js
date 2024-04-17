@@ -116,7 +116,7 @@ const userSchema = new mongoose.Schema(
     applicationUpdates: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "APPLICATION_UPDATES",
+        ref: "APPLICATION_UPDATES", // This should match the model name
       },
     ],
   },
