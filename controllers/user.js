@@ -1,6 +1,6 @@
 const User = require("../model/userSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
-const DailyIQ = require("../model/dailyIQSchema");
+
 const bcrypt = require("bcryptjs");
 const {
   generateOtp,
@@ -18,6 +18,7 @@ const {
   calculateUserRank,
 } = require("../utils/user");
 const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
+const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 
 const registerUser = async (req, res) => {
   //console.log(req.body);
@@ -100,7 +101,6 @@ const loginUser = async (req, res) => {
       // Both email and inGameName are provided, check if they belong to the same user
       const userByEmail = await User.findOne({ email });
       const userByInGameName = await User.findOne({ inGameName });
-
       if (
         !userByEmail ||
         !userByInGameName ||
@@ -364,12 +364,69 @@ const calculateUserIQScores = async (req, res) => {
 
 const leaderBoard = async (req, res) => {
   const currUserId = req.user._id;
+  const { society } = req.query;
+  // console.log(currUserId);
+  // console.log(society);
   try {
-    const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
-      .select("name inGameName IQ_score pic maxIQScore rank _id")
-      .sort({ rank: 1 })
-      .limit(50)
-      .populate("quizAttempts");
+    let users;
+    if (society?.toLowerCase() === "titans") {
+      users = await User.find({
+        inGameName: { $exists: true, $ne: "" },
+        IQ_score: { $gte: 150 },
+      })
+        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .sort({ rank: 1 })
+        .limit(100)
+        .populate("quizAttempts");
+    } else if (society?.toLowerCase() === "mavericks") {
+      users = await User.find({
+        inGameName: { $exists: true, $ne: "" },
+        IQ_score: { $gte: 130, $lt: 150 },
+      })
+        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .sort({ rank: 1 })
+        .limit(100)
+        .populate("quizAttempts");
+    } else if (society?.toLowerCase() === "elites") {
+      users = await User.find({
+        inGameName: { $exists: true, $ne: "" },
+        IQ_score: { $gte: 110, $lt: 130 },
+      })
+        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .sort({ rank: 1 })
+        .limit(100)
+        .populate("quizAttempts");
+    } else if (society?.toLowerCase() === "strivers") {
+      users = await User.find({
+        inGameName: { $exists: true, $ne: "" },
+        IQ_score: { $gte: 90, $lt: 110 },
+      })
+        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .sort({ rank: 1 })
+        .limit(100)
+        .populate("quizAttempts");
+    } else if (society?.toLowerCase() === "explorers") {
+      users = await User.find({
+        inGameName: { $exists: true, $ne: "" },
+        IQ_score: { $gte: 0, $lt: 90 },
+      })
+        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .sort({ rank: 1 })
+        .limit(100)
+        .populate("quizAttempts");
+    } else {
+      users = await User.find({ inGameName: { $exists: true, $ne: "" } })
+        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .sort({ rank: 1 })
+        .limit(100)
+        .populate("quizAttempts");
+    }
+
+    // const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
+    //   .select("name inGameName IQ_score pic maxIQScore rank _id")
+    //   .sort({ rank: 1 })
+    //   .limit(100)
+    //   .populate("quizAttempts");
     const currUser = await User.findById(currUserId).populate("quizAttempts");
     //AVG. RQM SCORES
     const result = [];
@@ -745,6 +802,39 @@ const profilePrivacy = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+// Get all application updates
+const getUpdates = async (req, res) => {
+  const userId = req.user._id;
+  //console.log(userId);
+  try {
+    const updates = await ApplicationUpdates.find({ userId: userId }).sort({
+      date: -1,
+    });
+    res.status(200).json({ updates });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
+const readUpdates = async (req, res) => {
+  const { updateId } = req.query;
+  //console.log(userId);
+  try {
+    const update = await ApplicationUpdates.findById(updateId);
+    if (!update) {
+      return res.status(404).json({ error: "Update not found" });
+    }
+    update.read = true;
+    await update.save();
+    res.status(200).json({ message: "Update read" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -764,4 +854,6 @@ module.exports = {
   solvedQuizHistory,
   userSearch,
   profilePrivacy,
+  getUpdates,
+  readUpdates,
 };
