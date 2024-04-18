@@ -12,12 +12,20 @@ import {
   Text,
   Flex,
   useToast,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
-//import { dummyNotificationData as notificationData } from "./dummyNotificationData";
 import NotificationModal from "./NotificationModal";
 import { AppContext } from "../../../contextAPI/appContext";
 import Rapid_recap from "/images/Rapid Recap.png";
+import { DeleteIcon } from "@chakra-ui/icons";
 import axios from "axios";
 
 const NotificationDrawer = ({ setIsDrawerOpen }) => {
@@ -28,10 +36,14 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedNotification, setSelectedNotification] = useState(null); // State for selected notification
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // State for delete confirmation modal
+  const [notificationToDelete, setNotificationToDelete] = useState(null); // State to store notification to delete
+
   const handleNotificationClick = (notification) => {
     setSelectedNotification(notification);
     setIsModalOpen(true);
   };
+
   const setReadUpdate = async (updateId) => {
     try {
       await axios.put(`/api/user/readUpdates?updateId=${updateId}`);
@@ -56,9 +68,39 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
       console.log(error);
     }
   };
+
+  const handleDeleteClick = (notification) => {
+    setNotificationToDelete(notification);
+    setIsDeleteModalOpen(true);
+  };
+
+  const trashUpdate = async()=>{
+    try {
+      await axios.put(`/api/user/trashUpdates/${notificationToDelete._id}`);
+      const updatedNotificationData = notificationData.filter(
+        (update) => update._id !== notificationToDelete._id
+      );
+      setNotificationData(updatedNotificationData);
+      
+      // Close the delete confirmation modal
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete update",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     onOpen();
   }, []);
+
   return (
     <>
       <Drawer
@@ -90,7 +132,6 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
             {/* Render notifications */}
             {notificationData.length > 0 &&
               notificationData.map((update, index) => {
-                // console.log(update);
                 return (
                   <Box
                     color={update.read ? "#9CAFAA" : null}
@@ -109,7 +150,6 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
                       handleNotificationClick(update);
                     }}
                     paddingBottom={"20px"}
-                    //borderBottom={"2px solid white"}
                     padding={"10px"}
                   >
                     <Flex
@@ -149,9 +189,29 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
                     <Text style={{ textAlign: "left" }}>{update.mainText}</Text>
                     <Flex>
                       <small>{new Date(update.date).toLocaleString()}</small>
-
                       <small style={{ marginLeft: "auto" }}>
                         {update.read ? "Read" : "Unread"}
+                      </small>
+                    </Flex>
+                    <Flex
+                      width={"100%"}
+                      justifyContent={"center"}
+                      alignItems={"center"}
+                      marginTop={"10px"}
+                    >
+                      <small>
+                        <Button
+                          p={0}
+                          background={"transparent"}
+                          color={"white"}
+                          _hover={{ background: "transparent", color: "red" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(update);
+                          }}
+                        >
+                          <DeleteIcon />
+                        </Button>
                       </small>
                     </Flex>
                   </Box>
@@ -166,6 +226,36 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
           setIsModalOpen={setIsModalOpen}
         />
       )}
+      {/* Delete confirmation modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+      >
+        <ModalOverlay />
+        <ModalContent
+          backgroundImage={{
+            base: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+          }}
+          backgroundColor={{ base: "#0f0d15", xl: "transparent" }}
+          boxShadow={{
+            base: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+          }}
+          color={"white"}
+          p={"3"}
+        >
+          <ModalHeader><b>Confirm Delete</b></ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            Are you sure you want to delete this notification?
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="red" mr={3} onClick={trashUpdate}>
+              Confirm Delete
+            </Button>
+            <Button onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

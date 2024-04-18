@@ -835,6 +835,22 @@ const readUpdates = async (req, res) => {
   }
 };
 
+const trashUpdate = async (req,res) =>{
+  const {updateId} = req.params;
+  try {
+    const deletedUpdate = await ApplicationUpdates.findByIdAndDelete(updateId);
+    
+    if (!deletedUpdate) {
+      return res.status(404).json({ error: "Update not found" });
+    }
+
+    res.status(200).json({ message: "Update deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -856,4 +872,5 @@ module.exports = {
   profilePrivacy,
   getUpdates,
   readUpdates,
+  trashUpdate,
 };
