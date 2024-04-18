@@ -1,0 +1,20 @@
+[
+    {
+        "title": "New Mailbox Feature",
+        "mainText": "Now users can view the latest application updates here in the mailbox. Stay tuned for more updates!",
+        "img": null,
+        "read": false
+    },
+    {
+        "title": "Society Leaders Added",
+        "mainText": "Users can now view leaders of particular societies in the leaderboard. Check out who's leading in your favorite societies!",
+        "img": null,
+        "read": false
+    },
+    {
+        "title": "Quiz Titans Section Added",
+        "mainText": "Users can also view quiz titans, i.e., leaders on a particular article. Test your knowledge and compete with others!",
+        "img": null,
+        "read": false
+    }
+]

@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
+// const updates = require("./updates/updates1.json");
+// const User = require("../model/userSchema");
+// const ApplicationUpdates = require("../model/applicationUpdatesSchema");
+// const { progressBar } = require("../utils/progress");
 
 mongoose
   .connect(DB)
@@ -27,3 +31,33 @@ mongoose
 
 // // Call the function to save articles to the database
 // saveArticlesToDB();
+
+// async function saveUpdatesToDB() {
+//   try {
+//     const users = await User.find({
+//       email: { $not: /dummy\d+mail\.com/ },
+//     }).select("_id");
+//     for (const update of updates) {
+//       const progress = progressBar(users.length);
+//       for (const user of users) {
+//         // Create a new update object for the user
+//         const { title, mainText, img, read } = update;
+//         const newUpdate = new ApplicationUpdates({
+//           title,
+//           mainText,
+//           img,
+//           userId: user._id, // Associate the update with the current user
+//           read,
+//         });
+//         await newUpdate.save();
+//         progress();
+//       }
+//     }
+//     console.log("All Updates saved successfully!");
+//   } catch (error) {
+//     console.error("Error saving updates:", error);
+//   }
+// }
+
+// // Call the function to save articles to the database
+// saveUpdatesToDB();

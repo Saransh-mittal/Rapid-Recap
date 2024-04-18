@@ -1,80 +1,122 @@
 import {
-    Box,
-    Drawer,
-    DrawerOverlay,
-    DrawerContent,
-    DrawerHeader,
-    DrawerBody,
-    DrawerCloseButton,
-    useDisclosure,
-    Image,
-    Heading,
-    Text,
-    Flex,
-  } from "@chakra-ui/react";
-  import React, { useEffect, useState } from "react";
-  import { dummyNotificationData as notificationData } from "./dummyNotificationData";
-  import NotificationModal from "../NotificationModal";
-  
-  const NotificationDrawer = ({ setIsDrawerOpen }) => {
-    const { isOpen, onOpen, onClose } = useDisclosure();
-    const [selectedNotification, setSelectedNotification] = useState(null); // State for selected notification
-    const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
-  
-    const handleNotificationClick = (notification) => {
-      setSelectedNotification(notification);
-      setIsModalOpen(true);
-    };
-  
-    useEffect(() => {
-      onOpen();
-    }, []);
-  
-    return (
-      <>
-        <Drawer
-          size={{ base: "full", lg: "xs" }}
-          isOpen={isOpen}
-          placement="right"
-          onClose={() => {
-            setIsDrawerOpen(false);
-            onClose();
-          }}
+  Box,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerCloseButton,
+  useDisclosure,
+  Image,
+  Heading,
+  Text,
+  Flex,
+  useToast,
+} from "@chakra-ui/react";
+import React, { useContext, useEffect, useState } from "react";
+//import { dummyNotificationData as notificationData } from "./dummyNotificationData";
+import NotificationModal from "./NotificationModal";
+import { AppContext } from "../../../contextAPI/appContext";
+import Rapid_recap from "/images/Rapid Recap.png";
+import axios from "axios";
+
+const NotificationDrawer = ({ setIsDrawerOpen }) => {
+  const { state, dispatch } = useContext(AppContext);
+  const toast = useToast();
+
+  const [notificationData, setNotificationData] = useState(state.updates); // State for notification data
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedNotification, setSelectedNotification] = useState(null); // State for selected notification
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
+  const handleNotificationClick = (notification) => {
+    setSelectedNotification(notification);
+    setIsModalOpen(true);
+  };
+  const setReadUpdate = async (updateId) => {
+    try {
+      await axios.put(`/api/user/readUpdates?updateId=${updateId}`);
+      const updatedNotifications = notificationData.map((update) =>
+        update._id === updateId ? { ...update, read: true } : update
+      );
+      setNotificationData(updatedNotifications);
+      // Dispatch action to update state globally (optional, if using context)
+      dispatch({
+        type: "APP_UPDATES",
+        payloadAppUpdates: updatedNotifications,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark as read",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    onOpen();
+  }, []);
+  return (
+    <>
+      <Drawer
+        size={{ base: "full", lg: "xs" }}
+        isOpen={isOpen}
+        placement="right"
+        onClose={() => {
+          setIsDrawerOpen(false);
+          onClose();
+        }} // Close drawer onClose
+        backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+        boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
+      >
+        <DrawerOverlay />
+        <DrawerContent
           backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
           boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
+          color="white"
         >
-          <DrawerOverlay />
-          <DrawerContent
-            backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-            boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
-            color="white"
-            css={{
-              "& > div:nth-of-type(2)": {
-                "&::-webkit-scrollbar": {
-                  width: "10px",
-                  backgroundColor: "#0f0d15",
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: "#000",
-                  borderRadius: "10px",
-                },
-              },
+          <DrawerCloseButton />
+          <DrawerHeader size="10px">Inbox</DrawerHeader>
+          <DrawerBody
+            style={{
+              overflowY: "auto",
+              scrollbarWidth: "thin",
+              scrollbarColor: "black transparent",
             }}
           >
-            <DrawerCloseButton />
-            <DrawerHeader size="10px">Inbox</DrawerHeader>
-            <DrawerBody>
-              {/* Render notifications */}
-              {notificationData &&
-                notificationData.updates.map((update, index) => (
+            {/* Render notifications */}
+            {notificationData.length > 0 &&
+              notificationData.map((update, index) => {
+                // console.log(update);
+                return (
                   <Box
+                    color={update.read ? "#9CAFAA" : null}
                     key={index}
-                    style={{ marginBottom: "1rem", cursor: "pointer" }}
-                    onClick={() => handleNotificationClick(update)}
+                    style={{
+                      marginBottom: "1rem",
+                      cursor: "pointer",
+                      backgroundColor: "#0f0d15",
+                      backgroundImage:
+                        "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                      boxShadow:
+                        "0px 4px 8px rgba(0, 0, 0, 0.9), 0px 8px 16px rgba(0, 0, 0, 0.9), 0px 12px 24px rgba(0, 0, 0, 0.9)", // Increased intensity of the shadow
+                    }}
+                    onClick={() => {
+                      setReadUpdate(update._id);
+                      handleNotificationClick(update);
+                    }}
                     paddingBottom={"20px"}
-                    borderBottom={"2px solid white"}
+                    //borderBottom={"2px solid white"}
+                    padding={"10px"}
                   >
-                    <Flex flexDirection={"row"} justifyContent={"space-between"} gap={3}>
+                    <Flex
+                      flexDirection={"row"}
+                      justifyContent={"space-between"}
+                      gap={3}
+                    >
                       <Flex
                         w={"30%"}
                         justifyContent={"center"}
@@ -84,7 +126,7 @@ import {
                         m={0}
                       >
                         <Image
-                          src={update.img}
+                          src={Rapid_recap}
                           alt="Notification Image"
                           width="40px "
                           height="40px"
@@ -93,10 +135,7 @@ import {
                           objectPosition="center center"
                         />
                       </Flex>
-                      <Flex
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                      >
+                      <Flex justifyContent={"center"} alignItems={"center"}>
                         <Heading
                           as={"h5"}
                           size={"sm"}
@@ -106,24 +145,29 @@ import {
                         </Heading>
                       </Flex>
                     </Flex>
-  
+
                     <Text style={{ textAlign: "left" }}>{update.mainText}</Text>
-  
-                    <small>{new Date(update.date).toLocaleString()}</small>
+                    <Flex>
+                      <small>{new Date(update.date).toLocaleString()}</small>
+
+                      <small style={{ marginLeft: "auto" }}>
+                        {update.read ? "Read" : "Unread"}
+                      </small>
+                    </Flex>
                   </Box>
-                ))}
-            </DrawerBody>
-          </DrawerContent>
-        </Drawer>
-        {isModalOpen && (
-          <NotificationModal
-            selectedNotification={selectedNotification}
-            setIsModalOpen={setIsModalOpen}
-          />
-        )}
-      </>
-    );
-  };
-  
-  export default NotificationDrawer;
-  
+                );
+              })}
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+      {isModalOpen && (
+        <NotificationModal
+          selectedNotification={selectedNotification}
+          setIsModalOpen={setIsModalOpen}
+        />
+      )}
+    </>
+  );
+};
+
+export default NotificationDrawer;

@@ -15,6 +15,19 @@ async function showState() {
   }
 }
 
+async function getAppUpdates() {
+  try {
+    const response = await axios.get(`/api/user/getUpdates`);
+    if (response.status === 200) {
+      return { updates: response.data.updates };
+    }
+    return { updates: [] };
+  } catch (error) {
+    console.log(error.message);
+    return { updates: [] };
+  }
+}
+
 function parseURL(url) {
   // Split the URL by slashes
   const segments = url.split("/");
@@ -56,6 +69,7 @@ export const initialState = {
   // Define your initial state properties here
   ...(await showState()),
   ...(await currentArticle()),
+  ...(await getAppUpdates()),
   modal: false,
   forgotPassword: false,
   verifyEmail: false,

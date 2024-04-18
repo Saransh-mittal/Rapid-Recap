@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Flex,
   Heading,
   Image,
@@ -27,7 +28,7 @@ import { useNavigate } from "react-router-dom";
 import NameLightning from "../components/miscellaneous/NameLightning";
 import CircleAndSocietyData from "../assets/CircleAndSocietyData";
 import VerticalDotsSeparator from "../components/leaderBoardComponents/VerticalDotsSeparator";
-import { debounce } from "lodash";
+import { debounce, set } from "lodash";
 
 const debouncedSearch = debounce(async (query, callback) => {
   try {
@@ -52,6 +53,7 @@ const LeaderBoard = () => {
   const [searchResults, setSearchResults] = useState([]); // Add this line
   const [searchQuery, setSearchQuery] = useState("");
   const [currUserChar, setCurrUserChar] = useState(null);
+  const [activeSociety, setActiveSociety] = useState(null);
   const tour = useShepherdTour({
     tourOptions,
     steps: stepsLeaderBoard,
@@ -95,9 +97,13 @@ const LeaderBoard = () => {
     }
   };
 
-  const fetchLeaderBoard = async () => {
+  const fetchLeaderBoard = async (society = "") => {
+    //etIsLoading(true);
+    setSearchLoad(true);
     try {
-      const response = await axios.get("/api/user/leaderboard");
+      const response = await axios.get(
+        `/api/user/leaderboard?society=${society}`
+      );
       setLeaders(response.data.users);
       setCurrUserChar(response.data.currUser);
     } catch (error) {
@@ -111,6 +117,7 @@ const LeaderBoard = () => {
       });
       // console.log(error);
     } finally {
+      setSearchLoad(false);
       setIsLoading(false);
     }
   };
@@ -126,6 +133,19 @@ const LeaderBoard = () => {
       });
     }
   };
+
+  const handleSocietyButtonClick = (society) => {
+    // If the clicked society is already active, deselect it
+    if (activeSociety === society) {
+      setActiveSociety(null);
+      fetchLeaderBoard();
+    } else {
+      // Otherwise, fetch leaderboard for the clicked society
+      setActiveSociety(society);
+      fetchLeaderBoard(society);
+    }
+  };
+
   useEffect(() => {
     handleLoginAlert();
   }, [state.show]);
@@ -292,6 +312,76 @@ const LeaderBoard = () => {
                 color={"white"}
               />
             </Flex>
+            <Flex justifyContent={"center"} gap={5}>
+              <Button
+                isDisabled={searchLoad || isLoading}
+                isLoading={activeSociety === "titans" && searchLoad}
+                onClick={() => handleSocietyButtonClick("titans")}
+                w={"10%"}
+                backgroundColor={"goldenrod"}
+                boxShadow="0 0 10px 5px rgba(255, 215, 0, 0.8)"
+                h={"30px"}
+                borderBottom={
+                  activeSociety === "titans" ? "5px solid gold" : null
+                }
+              >
+                Titans
+              </Button>
+              <Button
+                isDisabled={searchLoad || isLoading}
+                isLoading={activeSociety === "mavericks" && searchLoad}
+                onClick={() => handleSocietyButtonClick("mavericks")}
+                w={"10%"}
+                backgroundColor={"darkorange"}
+                boxShadow="0 0 10px 5px rgba(255, 150, 0, 0.5)"
+                h={"30px"}
+                borderBottom={
+                  activeSociety === "mavericks" ? "5px solid 	#C13315" : null
+                }
+              >
+                Maverick
+              </Button>
+              <Button
+                isDisabled={searchLoad || isLoading}
+                isLoading={activeSociety === "elites" && searchLoad}
+                onClick={() => handleSocietyButtonClick("elites")}
+                w={"10%"}
+                backgroundColor={"lightgreen"}
+                boxShadow="0 0 10px 5px rgba(0, 255, 100, 0.5)"
+                h={"30px"}
+                borderBottom={
+                  activeSociety === "elites" ? "5px solid darkgreen" : null
+                }
+              >
+                Elites
+              </Button>
+              <Button
+                isDisabled={searchLoad || isLoading}
+                isLoading={activeSociety === "strivers" && searchLoad}
+                onClick={() => handleSocietyButtonClick("strivers")}
+                w={"10%"}
+                backgroundColor={"cornflowerblue"}
+                h={"30px"}
+                borderBottom={
+                  activeSociety === "strivers" ? "5px solid darkblue" : null
+                }
+              >
+                Strivers
+              </Button>
+              <Button
+                isDisabled={searchLoad || isLoading}
+                isLoading={activeSociety === "explorers" && searchLoad}
+                textColor={"black"}
+                w={"10%"}
+                h={"30px"}
+                onClick={() => handleSocietyButtonClick("explorers")}
+                borderBottom={
+                  activeSociety === "explorers" ? "5px solid #C6C5C5" : null
+                }
+              >
+                Explorers
+              </Button>
+            </Flex>
             <TableContainer width={"100%"} className="mainBoard">
               <Table variant={"unstyled"}>
                 <TableCaption color={"white"} placement="top">
@@ -441,7 +531,11 @@ const LeaderBoard = () => {
                     {/* <div className="highlighted-card-0"> */}
                     {state.user.rank > 50 && (
                       <>
-                        <VerticalDotsSeparator />
+                        <Tr>
+                          <Td>
+                            <VerticalDotsSeparator />
+                          </Td>
+                        </Tr>
                         <Tr
                           height={"80px"}
                           key={"51"}
@@ -528,9 +622,13 @@ const LeaderBoard = () => {
                         </Tr>
                       </>
                     )}
-                    <div style={{ padding: "10px 10px" }}></div>
 
                     {/* </div> */}
+                    <Tr>
+                      <Td>
+                        <div style={{ padding: "10px 10px" }}></div>
+                      </Td>
+                    </Tr>
                   </Tbody>
                 )}
               </Table>
