@@ -6,7 +6,10 @@ const {
   generateQuestionsForQuiz,
   updatePercentilesOnQuizDeactivation,
 } = require("../utils/quiz");
-const { breakArticleIntoParagraphs } = require("../utils/article");
+const {
+  breakArticleIntoParagraphs,
+  hindiConverter,
+} = require("../utils/article");
 const NewsAPI = require("newsapi");
 
 const allArticles = async (req, res) => {
@@ -50,6 +53,9 @@ const getArticle = async (req, res) => {
       mainText: paragraphs,
       author: article.author,
       imgURL: article.imgURL[0],
+      hindiTitle: article?.hindiTitle,
+      hindiMainText: article?.hindiMainText,
+      hindiAuthor: article?.hindiAuthor,
       _id: article._id,
     };
     //console.log(newArticle);
@@ -280,6 +286,33 @@ const getTopRankers = async (req, res) => {
   }
 };
 
+const hindiTranslation = async (req, res) => {
+  const { articleId } = req.params;
+  try {
+    const article = await Article.findById(articleId);
+    if (!article) {
+      throw new Error("Article not found");
+    }
+    const response = await hindiConverter(article);
+    if (!article.hindiMainText) {
+      article.hindiMainText = [];
+      await article.save();
+    }
+    article.hindiTitle = response.hindiTitle;
+
+    for (let key in response.hindiMainText) {
+      if (!response.hindiMainText[key]) continue;
+      article.hindiMainText.push(response.hindiMainText[key]);
+    }
+    article.hindiAuthor = response.hindiAuthor;
+    await article.save();
+    res.status(200).json({ status: "ok", article });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Something went wrong" });
+    console.log(error);
+  }
+};
+
 // const testNewsApi = async (req, res) => {
 //   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
 //   try {
@@ -301,5 +334,6 @@ module.exports = {
   getArticleQuizStatus,
   startQuiz,
   getTopRankers,
+  hindiTranslation,
   //testNewsApi,
 };

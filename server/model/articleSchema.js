@@ -14,15 +14,29 @@ const articleSchema = new mongoose.Schema(
       type: String,
       default: "Rapid Recap Team",
     },
-
+    hindiAuthor: {
+      type: String,
+      default: "",
+    },
     title: {
       type: String,
       required: true,
     },
-
+    hindiTitle: {
+      type: String,
+      default: "",
+    },
     mainText: {
       type: String,
       required: true,
+    },
+    hindiMainText: {
+      type: [
+        {
+          type: String,
+        },
+      ],
+      default: [],
     },
 
     imgURL: [

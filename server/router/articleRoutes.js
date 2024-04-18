@@ -7,6 +7,7 @@ const {
   startQuiz,
   getArticleQuizStatus,
   getTopRankers,
+  hindiTranslation,
   //testNewsApi,
 } = require("../controllers/article");
 const Authenticate = require("../middleware/authenticate");
@@ -17,6 +18,7 @@ router.route("/genQuiz/:articleId").put(Authenticate, getQuiz);
 router.route("/startQuiz/:articleId").get(Authenticate, startQuiz);
 router.route("/quizStatus/:articleId").get(Authenticate, getArticleQuizStatus);
 router.route("/topRankers").get(getTopRankers);
+router.route("/hindiTranslation/:articleId").get(hindiTranslation);
 //router.route("/testNewsApi").get(testNewsApi);
 
 module.exports = router;

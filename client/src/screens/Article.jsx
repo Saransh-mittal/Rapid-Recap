@@ -15,6 +15,8 @@ import {
   Text,
   useToast,
   useDisclosure,
+  Select,
+  Skeleton,
 } from "@chakra-ui/react";
 import Loading from "../components/miscellaneous/Loading";
 import Quiz from "../components/articleComponents/Quiz";
@@ -28,6 +30,7 @@ import { useShepherdTour } from "react-shepherd";
 import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle";
 import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
 import TotalUserAttempted from "../components/articleComponents/TotalUserAttempted";
+
 const tourOptions = {
   defaultStepOptions: {
     cancelIcon: {
@@ -68,6 +71,20 @@ const Article = () => {
   const [showExpectedIQ, setShowExpectedIQ] = useState(false);
   const [expectedIQ, setExpectedIQ] = useState(null);
   const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(0);
+  const [title, setTitle] = useState({
+    english: "",
+    hindi: "",
+  });
+  const [author, setAuthor] = useState({
+    english: "",
+    hindi: "",
+  });
+  const [mainText, setMainText] = useState({
+    english: [],
+    hindi: [],
+  });
+  const [translateLoading, setTranslateLoading] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("english");
   //const [showInstruction, setShowInstruction] = useState(false);
 
   const isTutorialTakenCheck = async () => {
@@ -120,6 +137,18 @@ const Article = () => {
       setLatestNews(news.data);
       //console.log(news.data);
       setArticle(response.data.newArticle);
+      setTitle({
+        english: response.data.newArticle.title,
+        hindi: response.data.newArticle.hindiTitle,
+      });
+      setAuthor({
+        english: response.data.newArticle.author,
+        hindi: response.data.newArticle.hindiAuthor,
+      });
+      setMainText({
+        english: response.data.newArticle.mainText,
+        hindi: response.data.newArticle.hindiMainText,
+      });
       setQuizExpired(response.data.quizExpired);
     } catch (error) {
       // Handle errors
@@ -327,6 +356,57 @@ const Article = () => {
     );
   }, [data.category]);
 
+  const handleLanguageChange = async (event) => {
+    setTranslateLoading(true);
+    try {
+      if (event.target.value === "hindi") {
+        //console.log(article);
+        if (article.hindiTitle) {
+          setTitle({ ...title, hindi: article.hindiTitle });
+          setAuthor({ ...author, hindi: article.hindiAuthor });
+          setMainText({ ...mainText, hindi: article.hindiMainText });
+        } else {
+          toast({
+            title: "Wait",
+            description: "Hindi translation Might Take 1 minute",
+            status: "info",
+            duration: 9000,
+            isClosable: true,
+            position: "top",
+          });
+          const response = await axios.get(
+            `/api/articles/hindiTranslation/${id}`
+          );
+
+          if (response.data.status === "ok") {
+            setArticle(response.data.article);
+            setTitle({ ...title, hindi: response.data.article.hindiTitle });
+            setAuthor({ ...author, hindi: response.data.article.hindiAuthor });
+            setMainText({
+              ...mainText,
+              hindi: response.data.article.hindiMainText,
+            });
+          }
+        }
+        setSelectedLanguage("hindi");
+      } else {
+        setSelectedLanguage("english");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "error setting language",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      console.log(error);
+    } finally {
+      setTranslateLoading(false);
+    }
+  };
+
   return (
     <>
       {showExpectedIQ && expectedIQ ? (
@@ -350,45 +430,69 @@ const Article = () => {
       {load ? (
         <Loading />
       ) : (
-        <Flex className="article-page" marginTop={"4.5rem"}>
-          <Box
-            marginLeft={{ base: "20px", md: "80px" }}
-            position={"absolute"}
-            top={"6rem"}
-            border={"solid"}
-            p={1}
-            borderRadius="5px"
-            boxShadow="md"
-            cursor="pointer"
-            _hover={{ bg: "#37474f", color: "#f0f0f0" }}
-            onClick={() => navigate(-1)}
-          >
-            <ArrowBackIcon />
-          </Box>
+        <Flex
+          className="article-page"
+          marginTop={"4.5rem"}
+          flexDirection={"column"}
+        >
+          <Flex w={"100%"} marginTop={"2rem"} marginBottom={"0"} gap={10}>
+            <Box
+              marginLeft={{ base: "20px", md: "80px" }}
+              top={"6rem"}
+              border={"solid"}
+              p={1}
+              borderRadius="5px"
+              boxShadow="md"
+              cursor="pointer"
+              _hover={{ bg: "#37474f", color: "#f0f0f0" }}
+              onClick={() => navigate(-1)}
+            >
+              <ArrowBackIcon />
+            </Box>
+            <Box>
+              <Select
+                variant="outline"
+                w={"150px"}
+                backgroundColor={"#2A2F4F"}
+                defaultValue="english"
+                onChange={handleLanguageChange}
+              >
+                <option style={{ backgroundColor: "#2A2F4F" }} value="english">
+                  English
+                </option>
+                <option style={{ backgroundColor: "#2A2F4F" }} value="hindi">
+                  Hindi
+                </option>
+              </Select>
+            </Box>
+          </Flex>
           <Grid
             templateColumns={
               window.innerWidth > 820 ? "minmax(0, 9fr) 5fr" : "1fr"
             }
             gap={10}
             minH={"85vh"}
-            p={{ base: "20px", md: "80px" }}
-            marginTop={{ base: "50px", md: "0px" }}
+            p={{ base: "20px", md: "50px" }}
+            marginTop={{ base: "30px", md: "0px" }}
           >
             {article && (
               <GridItem w="100%" className="article-container">
-                <Heading
-                  align="left"
-                  letterSpacing={1}
-                  as="h3"
-                  fontSize="25px"
-                  bg="#2A2F4F"
-                  p={2}
-                  color="#FDE2F3"
-                  borderRadius="xl"
-                  marginBottom="20px"
-                >
-                  {article.title}
-                </Heading>
+                <Skeleton isLoaded={!translateLoading}>
+                  <Heading
+                    align="left"
+                    letterSpacing={1}
+                    as="h3"
+                    fontSize="25px"
+                    bg="#2A2F4F"
+                    p={2}
+                    color="#FDE2F3"
+                    borderRadius="xl"
+                    marginBottom="20px"
+                  >
+                    {title[selectedLanguage]}
+                  </Heading>
+                </Skeleton>
+
                 <Heading
                   align="left"
                   letterSpacing={1}
@@ -404,25 +508,67 @@ const Article = () => {
                       rounded: "full",
                       bg: "#F7EFE5",
                     }}
+                    margin="5px"
                   >
                     Author:
                   </Highlight>
+
                   <span style={{ fontSize: "20px", marginLeft: "10px" }}>
-                    {article.author}
+                    <Skeleton isLoaded={!translateLoading} display={"inline"}>
+                      {author[selectedLanguage]}
+                    </Skeleton>
                   </span>
                 </Heading>
-                {article.mainText.length === 3 ? (
-                  <Box marginTop={5} ref={articleRef}>
-                    <Text align="justify" letterSpacing={0}>
-                      {article.mainText[0]}
-                    </Text>
-                    <Box
-                      marginTop="2"
-                      marginBottom="2"
-                      display={"flex"}
-                      alignItems={"justify"}
-                      height={"100%"}
-                    >
+                <Skeleton isLoaded={!translateLoading}>
+                  {mainText[selectedLanguage].length === 3 ? (
+                    <Box marginTop={5} ref={articleRef}>
+                      <Text align="justify" letterSpacing={0}>
+                        {mainText[selectedLanguage][0]}
+                      </Text>
+                      <Box
+                        marginTop="2"
+                        marginBottom="2"
+                        display={"flex"}
+                        alignItems={"justify"}
+                        height={"100%"}
+                      >
+                        <Image
+                          css={{
+                            "@media screen and (max-width: 1366px)": {
+                              display: "none",
+                            },
+                          }}
+                          src={
+                            typeof data.imgURL === "Array" &&
+                            data.imgURL.length > 0 &&
+                            data.imgURL[0]
+                              ? data.imgURL[0]
+                              : typeof data.imgURL !== "Array" && data.imgURL
+                              ? data.imgURL
+                              : alt_image
+                          }
+                          alt="Article Image"
+                          borderRadius="md"
+                          float={"left"}
+                          marginRight={"3"}
+                          height={`${textHeight}px`}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = alt_image;
+                            e.target.style.height = `${textHeight}px`;
+                          }}
+                        />
+
+                        <Text ref={textRef} align="justify" letterSpacing={0}>
+                          {mainText[selectedLanguage][1]}
+                        </Text>
+                      </Box>
+                      <Text align="justify" letterSpacing={0}>
+                        {mainText[selectedLanguage][2]}
+                      </Text>
+                    </Box>
+                  ) : (
+                    <Box marginTop={8} ref={articleRef}>
                       <Image
                         css={{
                           "@media screen and (max-width: 1366px)": {
@@ -440,8 +586,9 @@ const Article = () => {
                         }
                         alt="Article Image"
                         borderRadius="md"
+                        marginBottom="5"
+                        marginRight="5"
                         float={"left"}
-                        marginRight={"3"}
                         height={`${textHeight}px`}
                         onError={(e) => {
                           e.target.onerror = null;
@@ -450,52 +597,15 @@ const Article = () => {
                         }}
                       />
 
-                      <Text ref={textRef} align="justify" letterSpacing={0}>
-                        {article.mainText[1]}
+                      <Text ref={textRef} align="left" letterSpacing={1}>
+                        {mainText[selectedLanguage][0]}
+                      </Text>
+                      <Text align="left" letterSpacing={1}>
+                        {mainText[selectedLanguage][1]}
                       </Text>
                     </Box>
-                    <Text align="justify" letterSpacing={0}>
-                      {article.mainText[2]}
-                    </Text>
-                  </Box>
-                ) : (
-                  <Box marginTop={8} ref={articleRef}>
-                    <Image
-                      css={{
-                        "@media screen and (max-width: 1366px)": {
-                          display: "none",
-                        },
-                      }}
-                      src={
-                        typeof data.imgURL === "Array" &&
-                        data.imgURL.length > 0 &&
-                        data.imgURL[0]
-                          ? data.imgURL[0]
-                          : typeof data.imgURL !== "Array" && data.imgURL
-                          ? data.imgURL
-                          : alt_image
-                      }
-                      alt="Article Image"
-                      borderRadius="md"
-                      marginBottom="5"
-                      marginRight="5"
-                      float={"left"}
-                      height={`${textHeight}px`}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = alt_image;
-                        e.target.style.height = `${textHeight}px`;
-                      }}
-                    />
-
-                    <Text ref={textRef} align="left" letterSpacing={1}>
-                      {article.mainText[0]}
-                    </Text>
-                    <Text align="left" letterSpacing={1}>
-                      {article.mainText[1]}
-                    </Text>
-                  </Box>
-                )}
+                  )}
+                </Skeleton>
               </GridItem>
             )}
             <GridItem
