@@ -114,7 +114,7 @@ const Navbar = () => {
 
   return (
     <Flex
-      className={`navbar navbar-expand-lg navbar-light bg-light px-5 ${
+      className={`navbar navbar-expand-lg navbar-light bg-light px-3 ${
         isHamburgerOpen ? "full-screen" : ""
       }`}
       onTouchStart={startDrag}
