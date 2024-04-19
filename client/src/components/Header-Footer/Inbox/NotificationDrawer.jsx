@@ -251,7 +251,7 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
                       </Flex>
                     </Flex>
 
-                    <Text style={{ textAlign: "left" }}>{update.mainText}</Text>
+                    <Text style={{ textAlign: "left" }}>{update.mainText.substring(0,60)}.....</Text>
                     <Flex>
                       <small>{new Date(update.date).toLocaleString()}</small>
                       <small style={{ marginLeft: "auto" }}>
