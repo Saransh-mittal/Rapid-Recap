@@ -191,11 +191,8 @@ const generateQuestionsForQuiz = async ({
           content: `You are a quiz generator bot. You have to generate a quiz for the given article. You
                     have to follow the given instructions to generate the quiz. You importantly have to give 
                     the overall difficulty of the article and also difficulty of each question. You have to 
-                    return the response in the given JSON format. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para.`,
-        },
-        {
-          role: "system",
-          content: instructions,
+                    return the response in the given JSON format. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para.
+                    ${instructions}`,
         },
         {
           role: "user",
@@ -226,11 +223,7 @@ const generateQuestionsForQuiz = async ({
                       rating on a scale from 0 to 1, where 0 represents low difficulty and 1 represents 
                       high difficulty. Aggregate these assessments to derive an overall difficulty level 
                       that reflects the article's complexity and suitability for readers of varying 
-                      proficiency levels.`,
-          },
-          {
-            role: "system",
-            content: instructions,
+                      proficiency levels. ${instructions}`,
           },
           {
             role: "user",
@@ -281,8 +274,9 @@ const generateQuestionsForHindiQuiz = async ({
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
+  const combinedMainText = mainText.join(" ");
   //console.log(title, author, mainText);
-  const prompt = `Title: ${title}\n Author: ${author}\n\n MainText:${mainText}\n\n`;
+  const prompt = `Title: ${title}\n Author: ${author}\n\n MainText:${combinedMainText}\n\n`;
   const instructions = `Instructions:
                                 1. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para. Quiz should be generated in hindi langauge as article will be in hindi and it should be generated carefully.
                                 2. Generate minimum 2 and maximum 5 questions from each paragraph(very important!).
@@ -373,11 +367,8 @@ const generateQuestionsForHindiQuiz = async ({
         content: `You are a quiz generator bot. You have to generate a quiz for the given article. You
                     have to follow the given instructions to generate the quiz. You importantly have to give 
                     the overall difficulty of the article and also difficulty of each question. You have to 
-                    return the response in the given JSON format. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para.`,
-      },
-      {
-        role: "system",
-        content: instructions,
+                    return the response in the given JSON format. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para.
+                    ${instructions}`,
       },
       {
         role: "user",
@@ -408,11 +399,7 @@ const generateQuestionsForHindiQuiz = async ({
                       rating on a scale from 0 to 1, where 0 represents low difficulty and 1 represents 
                       high difficulty. Aggregate these assessments to derive an overall difficulty level 
                       that reflects the article's complexity and suitability for readers of varying 
-                      proficiency levels.`,
-        },
-        {
-          role: "system",
-          content: instructions,
+                      proficiency levels. ${instructions}`,
         },
         {
           role: "user",
