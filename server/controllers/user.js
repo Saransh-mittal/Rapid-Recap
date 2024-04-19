@@ -851,6 +851,22 @@ const trashUpdate = async (req,res) =>{
   }
 };
 
+// const ApplicationUpdates = require('./../model/applicationUpdatesSchema');
+
+const trashAllUpdate = async (req, res) => {
+  const userId = req.user._id; // Assuming user ID is available in req.user._id
+  
+  try {
+    // Delete all updates associated with the user ID
+    await ApplicationUpdates.deleteMany({ userId });
+
+    res.status(200).json({ message: "All updates deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -873,4 +889,5 @@ module.exports = {
   getUpdates,
   readUpdates,
   trashUpdate,
+  trashAllUpdate,
 };

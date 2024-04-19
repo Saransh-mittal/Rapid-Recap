@@ -38,6 +38,7 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // State for delete confirmation modal
   const [notificationToDelete, setNotificationToDelete] = useState(null); // State to store notification to delete
+  const [removeAllModalOpen, setRemoveAllModalOpen] = useState(false); // State for remove all notifications modal
 
   const handleNotificationClick = (notification) => {
     setSelectedNotification(notification);
@@ -74,16 +75,19 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
     setIsDeleteModalOpen(true);
   };
 
-  const trashUpdate = async()=>{
+  const handleRemoveAllClick = () => {
+    setRemoveAllModalOpen(true);
+  };
+
+  const trashUpdate = async () => {
     try {
       await axios.put(`/api/user/trashUpdates/${notificationToDelete._id}`);
       const updatedNotificationData = notificationData.filter(
         (update) => update._id !== notificationToDelete._id
       );
       setNotificationData(updatedNotificationData);
-      
+
       // Close the delete confirmation modal
-      setIsDeleteModalOpen(false);
     } catch (error) {
       toast({
         title: "Error",
@@ -94,6 +98,50 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
         position: "top",
       });
       console.log(error);
+    } finally {
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  const removeAllNotifications = async () => {
+    try {
+      // Make a request to the backend to remove all notifications
+      const response = await axios.put("/api/user/trashAllUpdates");
+
+      // Check if the request was successful
+      if (response.status === 200) {
+        // Update the notificationData state or perform any other action if needed
+        setNotificationData([]);
+        toast({
+          title: "Success",
+          description: "All notifications removed successfully",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to remove all notifications",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove all notifications",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      console.log(error);
+    } finally {
+      setRemoveAllModalOpen(false);
     }
   };
 
@@ -121,7 +169,24 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
           color="white"
         >
           <DrawerCloseButton />
-          <DrawerHeader size="10px">Inbox</DrawerHeader>
+          <DrawerHeader size="10px">
+            <span>Inbox</span>
+          </DrawerHeader>
+          <DrawerHeader size="10px">
+            {notificationData.length > 0 && (
+              <Button
+                color="white"
+                border={"2px solid white"}
+                // borderColor="white"
+                // backgroundColor="black"
+                background={"transparent"}
+                _hover={{ color: "red", borderColor: "red" }}
+                onClick={handleRemoveAllClick}
+              >
+                Remove all Notifications
+              </Button>
+            )}
+          </DrawerHeader>
           <DrawerBody
             style={{
               overflowY: "auto",
@@ -228,8 +293,12 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
       )}
       {/* Delete confirmation modal */}
       <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        isOpen={isDeleteModalOpen || removeAllModalOpen}
+        onClose={() =>
+          isDeleteModalOpen
+            ? setIsDeleteModalOpen(false)
+            : setRemoveAllModalOpen(false)
+        }
       >
         <ModalOverlay />
         <ModalContent
@@ -243,19 +312,71 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
           color={"white"}
           p={"3"}
         >
-          <ModalHeader><b>Confirm Delete</b></ModalHeader>
+          <ModalHeader>
+            {isDeleteModalOpen ? (
+              <b>Confirm Remove Notification</b>
+            ) : (
+              <b>Confirm Remove All Notifications</b>
+            )}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            Are you sure you want to delete this notification?
+            {isDeleteModalOpen
+              ? "Are you sure you want to delete this notification?"
+              : "Are you sure you want to remove all notifications from inbox?"}
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={trashUpdate}>
+            <Button
+              colorScheme="red"
+              mr={3}
+              onClick={isDeleteModalOpen ? trashUpdate : removeAllNotifications}
+            >
               Confirm Delete
             </Button>
-            <Button onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() =>
+                isDeleteModalOpen
+                  ? setIsDeleteModalOpen(false)
+                  : setRemoveAllModalOpen(false)
+              }
+            >
+              Cancel
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
+      {/* Remove all notifications confirmation modal */}
+      {/* <Modal
+        isOpen={removeAllModalOpen}
+        onClose={() => setRemoveAllModalOpen(false)}
+      >
+        <ModalOverlay />
+        <ModalContent
+          backgroundImage={{
+            base: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+          }}
+          backgroundColor={{ base: "#0f0d15", xl: "transparent" }}
+          boxShadow={{
+            base: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+          }}
+          color={"white"}
+          p={"3"}
+        >
+          <ModalHeader>
+            <b>Confirm Remove All Notifications</b>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            Are you sure you want to remove all notifications from inbox?
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="red" mr={3} onClick={removeAllNotifications}>
+              Confirm
+            </Button>
+            <Button onClick={() => setRemoveAllModalOpen(false)}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal> */}
     </>
   );
 };
