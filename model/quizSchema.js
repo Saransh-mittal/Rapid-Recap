@@ -134,6 +134,10 @@ const quizSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  language: {
+    type: String,
+    default: "en",
+  },
 });
 
 const Quiz = mongoose.model("QUIZ", quizSchema);

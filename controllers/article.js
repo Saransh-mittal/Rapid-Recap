@@ -5,6 +5,8 @@ const {
   genQuiz,
   generateQuestionsForQuiz,
   updatePercentilesOnQuizDeactivation,
+  generateQuestionsForHindiQuiz,
+  findQuizByLanguage,
 } = require("../utils/quiz");
 const {
   breakArticleIntoParagraphs,
@@ -120,61 +122,25 @@ const getQuiz = async (req, res) => {
     }
     let fullQuiz;
     if (article.quiz && article.quiz.length > 0) {
-      let foundValidQuiz = false;
-      let attempts = 0;
-
-      while (!foundValidQuiz && attempts < article.quiz.length) {
-        const quizId =
-          article.quiz[Math.floor(Math.random() * article.quiz.length)];
-        fullQuiz = await Quiz.findById(quizId);
-
-        if (fullQuiz) {
-          foundValidQuiz = true;
-        } else {
-          attempts++;
-        }
+      fullQuiz = await findQuizByLanguage({
+        language: "en",
+        articleId,
+      });
+      if (!fullQuiz) {
+        fullQuiz = await generateQuestionsForQuiz({
+          title,
+          author,
+          mainText,
+          articleId,
+        });
       }
-
-      if (!foundValidQuiz) {
-        article.quiz = null;
-        await article.save();
-        throw new Error("No valid quizzes found");
-      }
-
-      // Now you have a valid fullQuiz
-      // Proceed with your code...
     } else {
-      const response = await generateQuestionsForQuiz({
+      fullQuiz = await generateQuestionsForQuiz({
         title,
         author,
         mainText,
+        articleId,
       });
-      //console.log(response);
-      if (
-        !response ||
-        !response.para1 ||
-        !response.para2 ||
-        !response.para3 ||
-        !response.overAllDifficulty
-      ) {
-        throw new Error("Quiz not generated");
-      }
-
-      const newQuiz = new Quiz({
-        article: articleId,
-        para1: response.para1,
-        para2: response.para2,
-        para3: response.para3,
-        overAllDifficulty: response.overAllDifficulty,
-      });
-      await newQuiz.save();
-      fullQuiz = newQuiz;
-      if (!article.quiz) {
-        article.quiz = [];
-        await article.save();
-      }
-      article.quiz.push(newQuiz._id);
-      await article.save();
     }
     const timer =
       Math.min(
@@ -187,8 +153,6 @@ const getQuiz = async (req, res) => {
     if (quiz.questions.length <= 2) {
       throw new Error("Article is too short for a quiz");
     }
-    //article.userQuizStatus.push({ userId, status: true });
-    await article.save();
     return res.status(200).json({
       expired: false,
       message: "Quiz Questions generated successfully",
@@ -198,6 +162,85 @@ const getQuiz = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ error: "Something went wrong! Please try again" });
+    console.log(error);
+  }
+};
+
+const getHindiQuiz = async (req, res) => {
+  const { articleId } = req.params;
+  const userId = req.user._id;
+  //console.log(articleId);
+  try {
+    if (!articleId) {
+      throw new Error("No article provided");
+    }
+    const article = await Article.findById(articleId);
+    if (!article) {
+      throw new Error("Article not found");
+    }
+    //console.log(article);
+
+    const { hindiTitle, hindiAuthor, hindiMainText } = article;
+    //console.log(title, author, mainText);
+    if (!hindiTitle || !hindiMainText || !hindiAuthor) {
+      throw new Error("Please the select the hindi article first");
+    }
+    if (
+      article.userQuizStatus.find(
+        (status) =>
+          status.userId.toString() === userId && status.status === true
+      )
+    ) {
+      throw new Error("Quiz already started");
+    }
+    let fullQuiz;
+    if (article.quiz && article.quiz.length > 0) {
+      fullQuiz = await findQuizByLanguage({
+        language: "hi",
+        articleId,
+      });
+      if (!fullQuiz) {
+        fullQuiz = await generateQuestionsForHindiQuiz({
+          title: hindiTitle,
+          author: hindiAuthor,
+          mainText: hindiMainText,
+          articleId,
+        });
+      }
+
+      // Now you have a valid fullQuiz
+      // Proceed with your code...
+    } else {
+      fullQuiz = await generateQuestionsForHindiQuiz({
+        title: hindiTitle,
+        author: hindiAuthor,
+        mainText: hindiMainText,
+        articleId,
+      });
+    }
+    const timer =
+      Math.min(
+        5,
+        fullQuiz.para1.questions.length +
+          fullQuiz.para2.questions.length +
+          fullQuiz.para3.questions.length
+      ) * 10;
+    const quiz = await genQuiz({ fullQuiz, title: hindiTitle });
+    if (quiz.questions.length <= 2) {
+      throw new Error("Article is too short for a quiz");
+    }
+
+    return res.status(200).json({
+      expired: false,
+      message: "Quiz Questions generated successfully",
+      timer,
+      quiz,
+      quizId: fullQuiz._id,
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: error.message || "Something went wrong! Please try again",
+    });
     console.log(error.message);
   }
 };
@@ -335,5 +378,6 @@ module.exports = {
   startQuiz,
   getTopRankers,
   hindiTranslation,
+  getHindiQuiz,
   //testNewsApi,
 };
