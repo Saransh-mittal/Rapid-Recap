@@ -1,0 +1,14 @@
+[
+    {
+        "title": "Society Search Buttons",
+        "mainText": "We have added new search buttons to the society search page. Now you can search for societies based on their category.",
+        "img": null,
+        "read": false
+    },
+    {
+        "title": "Hindi Transation",
+        "mainText": "We have added Hindi translation of the articles. Now you can read the articles in Hindi as well. But Quizzes are not available in Hindi yet.",
+        "img": null,
+        "read": false
+    }
+]

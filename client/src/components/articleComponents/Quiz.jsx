@@ -21,8 +21,9 @@ import ConfirmationModal from "./customQuizModal/ConfirmationModal";
 import InstructionModal from "./customQuizModal/InstructionModal";
 import QuizInterface from "./quizComponents/quizInterface";
 import SubmittedQuizInterface from "./quizComponents/SubmittedQuizInterface";
+import HindiInstructionModal from "./customQuizModal/HindiInstructionModal";
 
-const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
+const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timer, setTimer] = useState(50);
   const [submitted, setSubmitted] = useState(false);
@@ -144,7 +145,10 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
     try {
       //console.log(article._id);
       const articleId = article._id;
-      const response = await axios.put(`/api/articles/genQuiz/${articleId}`);
+      const response =
+        language === "english"
+          ? await axios.put(`/api/articles/genQuiz/${articleId}`)
+          : await axios.put(`/api/articles/genHindiQuiz/${articleId}`);
       if (response.data.expired) {
         throw new Error("Quiz is already expired.");
       }
@@ -296,7 +300,11 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz }) => {
           />
 
           {showInstruction ? (
-            <InstructionModal />
+            language === "english" ? (
+              <InstructionModal />
+            ) : (
+              <HindiInstructionModal />
+            )
           ) : (
             <ModalBody
               p={"15px"}

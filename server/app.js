@@ -32,6 +32,8 @@ require("./db/conn");
 //require("./utils/update.utils/rank.update")();
 //require("./utils/update.utils/cleanUpBadQuizAttempts.update");
 //require("./utils/update.utils/updateUserAppUpdate");
+//require("./utils/update.utils/updateAppUpdates.update");
+//require("./utils/update.utils/quizLang.update");
 // ---------------------------
 
 // -----Bot utils-----
