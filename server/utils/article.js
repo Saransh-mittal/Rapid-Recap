@@ -52,11 +52,7 @@ const hindiConverter = async (article) => {
           role: "system",
           content: `You are a hindi translator bot. You have to translate an article. You
                     have to follow the given instructions to translate the article.You have to 
-                    return the response in the given JSON format.`,
-        },
-        {
-          role: "system",
-          content: instructions,
+                    return the response in the given JSON format. ${instructions}`,
         },
         {
           role: "user",
@@ -80,11 +76,7 @@ const hindiConverter = async (article) => {
             role: "system",
             content: `You are a hindi translator bot. You have to translate an article. You
                     have to follow the given instructions to translate the article.You have to 
-                    return the response in the given JSON format.`,
-          },
-          {
-            role: "system",
-            content: instructions,
+                    return the response in the given JSON format. ${instructions}`,
           },
           {
             role: "user",

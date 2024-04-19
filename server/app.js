@@ -34,6 +34,7 @@ require("./db/conn");
 //require("./utils/update.utils/updateUserAppUpdate");
 //require("./utils/update.utils/updateAppUpdates.update");
 //require("./utils/update.utils/quizLang.update");
+require("./utils/update.utils/generateHindiTrans.update");
 // ---------------------------
 
 // -----Bot utils-----
