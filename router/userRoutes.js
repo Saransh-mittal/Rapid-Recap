@@ -21,6 +21,8 @@ const {
   profilePrivacy,
   getUpdates,
   readUpdates,
+  trashUpdate,
+  trashAllUpdate
 } = require("../controllers/user");
 const Authenticate = require("../middleware/authenticate");
 
@@ -46,4 +48,6 @@ router.route("/search").get(Authenticate, userSearch);
 router.route("/profilePrivacy").post(Authenticate, profilePrivacy);
 router.route("/getUpdates").get(Authenticate, getUpdates);
 router.route("/readUpdates").put(Authenticate, readUpdates);
+router.route("/trashUpdates/:updateId").put(Authenticate, trashUpdate);
+router.route("/trashAllUpdates").put(Authenticate, trashAllUpdate);
 module.exports = router;
