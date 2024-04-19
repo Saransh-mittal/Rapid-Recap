@@ -30,6 +30,7 @@ import { useShepherdTour } from "react-shepherd";
 import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle";
 import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
 import TotalUserAttempted from "../components/articleComponents/TotalUserAttempted";
+import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangModal";
 
 const tourOptions = {
   defaultStepOptions: {
@@ -85,6 +86,8 @@ const Article = () => {
   });
   const [translateLoading, setTranslateLoading] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("english");
+  const [showQuizLangModal, setShowQuizLangModal] = useState(false);
+  const [selectLanForQuiz, setSelectLanForQuiz] = useState("english");
   //const [showInstruction, setShowInstruction] = useState(false);
 
   const isTutorialTakenCheck = async () => {
@@ -409,13 +412,19 @@ const Article = () => {
 
   return (
     <>
+      {showQuizLangModal && (
+        <SelectQuizLangModal
+          setSelectLanForQuiz={setSelectLanForQuiz}
+          setShowQuizLangModal={setShowQuizLangModal}
+        />
+      )}
       {showExpectedIQ && expectedIQ ? (
         <ExpectedIQModal
           expectedIQ={expectedIQ}
           setShowExpectedIQ={setShowExpectedIQ}
         />
       ) : null}
-      {showQuiz && !givenQuiz ? (
+      {showQuiz && !givenQuiz && !showQuizLangModal ? (
         <Quiz
           article={article}
           isOpen={isOpen}
@@ -425,6 +434,7 @@ const Article = () => {
             setGivenQuiz(true);
             state.user.IQ_score === 0 && getExpectedIQ();
           }}
+          language={selectLanForQuiz}
         />
       ) : null}
       {load ? (
@@ -639,6 +649,7 @@ const Article = () => {
               ) : (
                 <GenerateQuizButton
                   onClick={() => {
+                    setShowQuizLangModal(true);
                     setShowQuiz(!showQuiz);
                     onOpen();
                   }}
@@ -751,6 +762,7 @@ const Article = () => {
                   },
                 }}
                 onClick={() => {
+                  setShowQuizLangModal(true);
                   setShowQuiz(!showQuiz);
                   onOpen();
                 }}
