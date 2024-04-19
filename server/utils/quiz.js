@@ -93,7 +93,7 @@ const generateQuestionsForQuiz = async ({ title, author, mainText }) => {
     apiKey: process.env.OPENAI_API_KEY,
   });
   //console.log(title, author, mainText);
-  const prompt = `Title: ${title}\n Author: ${author}\n\n ${mainText}\n\n`;
+  const prompt = `Title: ${title}\n Author: ${author}\n\n MainText:${mainText}\n\n`;
   const instructions = `Instructions:
                                 1. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para.
                                 2. Generate minimum 2 and maximum 5 questions from each paragraph(very important!).
