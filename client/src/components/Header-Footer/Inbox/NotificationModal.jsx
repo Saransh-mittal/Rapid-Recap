@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import React, { useContext, useEffect } from "react";
 import { AppContext } from "../../../contextAPI/appContext";
-import Rapid_recap from "./../../../../public/images/Rapid Recap.png";
+import Rapid_recap from "/images/Rapid Recap.png?url";
 
 const NotificationModal = ({ setIsModalOpen, selectedNotification }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
