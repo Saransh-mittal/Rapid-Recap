@@ -6,25 +6,32 @@ const { updatePercentilesOnQuizDeactivation } = require("./quiz");
 const rankUpdate = require("./update.utils/rank.update");
 const CircleAndSocietyData = require("./../data/CircleAndSocietyData");
 
+
+const findSocietyCircleByIQ = (IQScore) => {
+  return CircleAndSocietyData.find((data) => {
+    return IQScore >= data.IQ_Lower && (data.IQ_Upper === null || IQScore < data.IQ_Upper);
+  });
+};
 const handleSocietyOrCircleUpgrade = async (
   userId,
   prevIQScore,
   currIQScore
 ) => {
-  const upgradeData = CircleAndSocietyData.find((entry) => {
-    // Check if the user's IQ score falls within the range specified in the upgrade data
-    return (
-      currIQScore >= entry.IQ_Lower &&
-      (entry.IQ_Upper === null || currIQScore < entry.IQ_Upper)
-    );
-  });
+  // Find the user's previous and current society and circle
+  const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore);
+  const currSocietyCircle = findSocietyCircleByIQ(currIQScore);
 
-  if (upgradeData) {
-    const { upgradeMsg } = upgradeData;
-    const updatedUser = await User.findById(userId);
-    updatedUser.societyUpgradeMessage = upgradeMsg;
-    await updatedUser.save();
-    console.log(`Sending upgrade message to user ${userId}: ${upgradeMsg}`);
+  if (
+    (prevSocietyCircle.society !== currSocietyCircle.society ||
+    prevSocietyCircle.circle !== currSocietyCircle.circle) && prevSocietyCircle.IQ_Upper<=currSocietyCircle.IQ_Lower
+  ) {
+    // Save the upgrade message for the user
+    const upgradeMsg = currSocietyCircle.upgradeMsg;
+    // You can save the upgrade message to the userId here
+    const user = await User.findById(userId);
+    user.societyUpgradeMessage = upgradeMsg;
+    await user.save();
+    // Save upgradeMsg to userId logic can be implemented here
   }
 };
 
@@ -134,7 +141,7 @@ const dailyUserIQCalc = async () => {
       (user.userScore - meanOfUserScores) / standardDeviation;
     const IQScore = 100 + 15 * normalizedScore;
 
-    const prevIQScore = updatedUser.IQ_score;
+    const prevIQScore = user.IQ_score;
     const currIQScore = Math.round(IQScore);
     const updatedUser = await User.findById(user.user._id);
     updatedUser.IQ_score = Math.round(IQScore);
