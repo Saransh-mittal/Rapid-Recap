@@ -4,7 +4,7 @@ const { progressBar } = require("../progress");
 
 const genQuizForArticles = async () => {
   const twoDaysAgo = new Date();
-  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 5);
 
   // Construct the aggregation pipeline
   const pipeline = [
@@ -21,7 +21,9 @@ const genQuizForArticles = async () => {
     const progress = progressBar(articles.length);
     console.log("\nGenerating quizzes for articles...\n");
     for (let article of articles) {
-      const articleId = article._id;
+      try {
+        const articleId = article._id;
+        const {title, author, mainText} = article;
       let fullQuiz;
       if (article.quiz && article.quiz.length > 0) {
         fullQuiz = await findQuizByLanguage({
@@ -44,6 +46,10 @@ const genQuizForArticles = async () => {
           articleId,
         });
       }
+      } catch (error) {
+        console.log("Error saving article",article._id.toString() , error);
+      }
+      
       progress();
     }
     console.log("\nQuizzes generated successfully!\n");
