@@ -11,8 +11,10 @@ const {
 const {
   breakArticleIntoParagraphs,
   hindiConverter,
+  getWorldNewsApi,
 } = require("../utils/article");
 const NewsAPI = require("newsapi");
+const { progressBar } = require("../utils/progress");
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = "general" } = req.query;
@@ -370,6 +372,34 @@ const hindiTranslation = async (req, res) => {
 //   }
 // };
 
+const getWorldNews = async (req, res) => {
+  try {
+    const response = await getWorldNewsApi();
+    console.log(response.length);
+    console.log("\nSaving World news in DB\n");
+    //const updateProgress = progressBar(response.length);
+    // for (let article of response) {
+    //   try {
+    //     const isArticle = await Article.findOne({
+    //       title: article.title,
+    //       author: article.author,
+    //     });
+    //     if (isArticle) continue;
+    //     const newArticle = new Article({ article });
+    //     await newArticle.save();
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+
+    //   updateProgress();
+    // }
+    res.status(200).json({ message: "World News fetched successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Something went wrong" });
+    console.log(error);
+  }
+};
+
 module.exports = {
   allArticles,
   getArticle,
@@ -379,5 +409,6 @@ module.exports = {
   getTopRankers,
   hindiTranslation,
   getHindiQuiz,
+  getWorldNews,
   //testNewsApi,
 };
