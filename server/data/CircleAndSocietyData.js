@@ -1,8 +1,15 @@
-import Mavericks_Brain from "/images/Mavericks_Brain.png";
-import Explorers_Brain from "/images/Explorers_Brain.png";
-import Strivers_Brain from "/images/Strivers_Brain.png";
-import Elites_Brain from "/images/Elites_Brain.png";
-import Titans_Brain from "/images/Titans_Brain.png";
+// import Mavericks_Brain from "/images/Mavericks_Brain.png";
+const Mavericks_Brain = require("/images/Mavericks_Brain.png");
+
+// import Explorers_Brain from "/images/Explorers_Brain.png";
+// import Strivers_Brain from "/images/Strivers_Brain.png";
+// import Elites_Brain from "/images/Elites_Brain.png";
+// import Titans_Brain from "/images/Titans_Brain.png";
+const Explorers_Brain = require("/images/Explorers_Brain.png");
+const Strivers_Brain = require("/images/Strivers_Brain.png");
+const Elites_Brain = require("/images/Elites_Brain.png");
+const Titans_Brain = require("/images/Titans_Brain.png");
+
 const CircleAndSocietyData = [
   {
     society: "Titans Society",
@@ -105,4 +112,4 @@ const CircleAndSocietyData = [
   },
 ];
 
-export default CircleAndSocietyData;
+module.exports = CircleAndSocietyData;
