@@ -9,6 +9,7 @@ import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
 import { debounce } from "lodash";
 import { useToast, Box } from "@chakra-ui/react";
+import NotificationSubscription from "../components/Notifications/NotificationSubscription";
 
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -130,6 +131,7 @@ const Home = () => {
       marginTop={"4rem"}
       w={"100%"}
     >
+      <NotificationSubscription />
       {state.modal && (
         <Modal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}

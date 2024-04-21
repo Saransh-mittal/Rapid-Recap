@@ -1,16 +1,24 @@
 const dotenv = require("dotenv");
+const bodyParser = require("body-parser");
 const express = require("express");
 const userRoutes = require("./router/userRoutes");
 const articleRoutes = require("./router/articleRoutes");
 const quizRoutes = require("./router/quizRoutes");
+const subscriptionRoutes = require("./router/subscriptionRoutes");
 const authRouter = express.Router();
+const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
 
 dotenv.config({ path: "./config.env" });
 const app = express();
-
+// Body parser middleware
+app.use(bodyParser.json());
 require("./db/conn");
-
+webpush.setVapidDetails(
+  "mailto:rapidrecap2k23@gmail.com",
+  process.env.PUBLIC_VAPID_KEY,
+  process.env.PRIVATE_VAPID_KEY
+);
 // -----Testings-----
 //require("./test/conn.test");
 //require("./test/index");
@@ -51,6 +59,7 @@ authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);
 authRouter.use("/articles", articleRoutes);
 authRouter.use("/quiz", quizRoutes);
+authRouter.use("/subs", subscriptionRoutes);
 app.use("/api", authRouter);
 
 app.listen(PORT, () => {
