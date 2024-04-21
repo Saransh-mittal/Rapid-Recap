@@ -22,6 +22,7 @@ require("./db/conn");
 //require("./utils/deletion.utils/quizGivenByUserDeletion");
 //require("./utils/deletion.utils/removeBotUsers.del");
 //require("./utils/deletion.utils/removeQuizAttemptForNullUser.del");
+//require("./utils/deletion.utils/removeArticle.del");
 // ---------------------------
 
 // -----Update Collection-----
