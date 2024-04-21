@@ -11,7 +11,8 @@ const {
 const {
   breakArticleIntoParagraphs,
   hindiConverter,
-  getWorldNewsApi,
+  fetchNews,
+  processNews,
 } = require("../utils/article");
 const NewsAPI = require("newsapi");
 const { progressBar } = require("../utils/progress");
@@ -374,26 +375,42 @@ const hindiTranslation = async (req, res) => {
 
 const getWorldNews = async (req, res) => {
   try {
-    const response = await getWorldNewsApi();
-    console.log(response.length);
-    console.log("\nSaving World news in DB\n");
-    //const updateProgress = progressBar(response.length);
-    // for (let article of response) {
-    //   try {
-    //     const isArticle = await Article.findOne({
-    //       title: article.title,
-    //       author: article.author,
-    //     });
-    //     if (isArticle) continue;
-    //     const newArticle = new Article({ article });
-    //     await newArticle.save();
-    //   } catch (error) {
-    //     console.log(error);
-    //   }
+    const queries = [
+      "source-countries=in",
+      "source-countries=in&text=IPL OR T20WorldCup",
+      "source-countries=in&text=elections",
+      "text=karnataka",
+      "text=HDFCBank OR Business",
+      "text=technology",
+      "text=space",
+      "source-countries=in&text=ModiTohGayo",
+      "text=JusticeForNeha",
+    ];
 
-    //   updateProgress();
-    // }
-    res.status(200).json({ message: "World News fetched successfully" });
+    let allProcessedOutput = [];
+
+    for (let query of queries) {
+      const news = await fetchNews(query);
+
+      if (news.length === 0) {
+        console.log("No news articles found for query:", query);
+        continue;
+      }
+
+      console.log("\nProcessing news articles for query:", query, "\n");
+
+      const processedOutput = await processNews(news);
+
+      console.log(
+        "\nNews articles processed successfully for query:",
+        query,
+        "\n"
+      );
+      allProcessedOutput = allProcessedOutput.concat(processedOutput);
+    }
+    res.status(200).json({
+      message: `No. of news fetched for DB : ${allProcessedOutput.length}`,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message || "Something went wrong" });
     console.log(error);

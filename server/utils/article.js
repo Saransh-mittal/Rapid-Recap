@@ -102,135 +102,8 @@ const hindiConverter = async (article) => {
   }
 };
 
-const getWorldNewsApi = async () => {
-  const apiKey = "e7409124fe384b688c07763501b270dd";
-  try {
-    const urlCricket =
-      "https://api.worldnewsapi.com/search-news?text=IPL&language=en&earliest-publish-date=2024-04-19";
-    const urlElections =
-      "https://api.worldnewsapi.com/search-news?source-countries=in&text=elections&language=en&earliest-publish-date=2024-04-19";
-    const url =
-      "https://api.worldnewsapi.com/search-news?source-countries=in&language=en&earliest-publish-date=2024-04-19";
-    const urlTech =
-      "https://api.worldnewsapi.com/search-news?text=technology&language=en&earliest-publish-date=2024-04-19";
-    const urlSpace =
-      "https://api.worldnewsapi.com/search-news?text=space&language=en&earliest-publish-date=2024-04-19";
-    const responseCricket = await fetch(urlCricket, {
-      method: "GET",
-      headers: {
-        "x-api-key": apiKey,
-      },
-    });
-    const responseElections = await fetch(urlElections, {
-      method: "GET",
-      headers: {
-        "x-api-key": apiKey,
-      },
-    });
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "x-api-key": apiKey,
-      },
-    });
-
-    const responseTech = await fetch(urlTech, {
-      method: "GET",
-      headers: {
-        "x-api-key": apiKey,
-      },
-    });
-    const responseSpace = await fetch(urlSpace, {
-      method: "GET",
-      headers: {
-        "x-api-key": apiKey,
-      },
-    });
-    let dataCricket = {};
-    let dataElections = {};
-    let data = {};
-    let dataTech = {};
-    let dataSpace = {};
-    if (responseCricket.ok) dataCricket = await responseCricket.json();
-    if (responseElections.ok) dataElections = await responseElections.json();
-    if (response.ok) data = await response.json();
-    if (responseTech.ok) dataTech = await responseTech.json();
-    if (responseSpace.ok) dataSpace = await responseSpace.json();
-    const result = [];
-    function formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toISOString();
-    }
-    for (let news of dataCricket.news) {
-      if (news.text.length < 800) continue;
-      const article = {
-        url: news.url,
-        dateTime: formatDate(news.publish_date),
-        author: news.author,
-        title: news.title,
-        mainText: news.text,
-        imgURL: [news.image],
-        category: "",
-      };
-      result.push(article);
-    }
-    for (let news of dataElections.news) {
-      if (news.text.length < 800) continue;
-      const article = {
-        url: news.url,
-        dateTime: formatDate(news.publish_date),
-        author: news.author,
-        title: news.title,
-        mainText: news.text,
-        imgURL: [news.image],
-        category: "",
-      };
-      result.push(article);
-    }
-    for (let news of data.news) {
-      if (news.text.length < 800) continue;
-      const article = {
-        url: news.url,
-        dateTime: formatDate(news.publish_date),
-        author: news.author,
-        title: news.title,
-        mainText: news.text,
-        imgURL: [news.image],
-        category: "",
-      };
-      result.push(article);
-    }
-    for (let news of dataTech.news) {
-      if (news.text.length < 800) continue;
-      const article = {
-        url: news.url,
-        dateTime: formatDate(news.publish_date),
-        author: news.author,
-        title: news.title,
-        mainText: news.text,
-        imgURL: [news.image],
-        category: "",
-      };
-      result.push(article);
-    }
-    for (let news of dataSpace.news) {
-      if (news.text.length < 800) continue;
-      const article = {
-        url: news.url,
-        dateTime: formatDate(news.publish_date),
-        author: news.author,
-        title: news.title,
-        mainText: news.text,
-        imgURL: [news.image],
-        category: "",
-      };
-      result.push(article);
-    }
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-    const instructions = `you are a text checker and analyser
+const processNews = async (news) => {
+  const instructions = `you are a text checker and analyser
 
 remove the unnecessary content or lines of the mainText which is not related to the title for example Also read(section),
 if question in the mainText that are not answered or not there in the mainText etc.
@@ -238,91 +111,117 @@ Don't summarize the content. and only return the same json_object back:
 also analyze the title and give categories between : [general,business,sports,health,science,entertainment,technology]
 
 fill these in the category key (only string).`;
-    console.log(result.length);
-    console.log("\nProcessing news articles\n");
-    const updateProgress = new progressBar(result.length);
 
-    const processedOutput = [];
-    for (let news of result) {
-      try {
-        const isArticle = await Article.findOne({
-          title: news.title,
-          author: news.author,
-        });
-        if (isArticle) {
-          updateProgress();
-          continue;
-        }
-        const prompt = `{
-   "url": ${news.url},
-        "dateTime": ${news.dateTime},
-      "author": ${news.author},
-     "title": ${news.title},
-        "mainText":   ${news.mainText},
-      "imgURL": ${news.imgURL},
-        "category": "",
-      }`;
+  const validCategories = [
+    "general",
+    "business",
+    "sports",
+    "health",
+    "science",
+    "entertainment",
+    "technology",
+  ];
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
-        let output = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo-0125",
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "system",
-              content: instructions,
-            },
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        });
-        let res = JSON.parse(output.choices[0].message.content);
-        const validCategories = [
-          "general",
-          "business",
-          "sports",
-          "health",
-          "science",
-          "entertainment",
-          "technology",
-        ];
+  const processedOutput = [];
+  const updateProgress = progressBar(news.length);
+  for (let newsItem of news) {
+    try {
+      const isArticle = await Article.findOne({
+        title: newsItem.title,
+        author: newsItem.author,
+      });
 
-        if (!validCategories.includes(res.category)) {
-          res.category = "general";
-        }
-        if (
-          !res.mainText ||
-          !res.title ||
-          !res.author ||
-          !res.url ||
-          !res.dateTime ||
-          !res.imgURL ||
-          !res.category
-        ) {
-          updateProgress();
-          continue;
-        }
-        //console.log(res);
-        processedOutput.push(res);
-
-        const newArticle = new Article(res);
-        await newArticle.save();
-      } catch (error) {
-        console.log(error);
+      if (isArticle) {
+        continue;
       }
 
+      const prompt = JSON.stringify({
+        url: newsItem.url,
+        dateTime: newsItem.publish_date,
+        author: newsItem.author,
+        title: newsItem.title,
+        mainText: newsItem.text,
+        imgURL: [newsItem.image],
+        category: "",
+      });
+
+      let output = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo-0125",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: instructions,
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      });
+
+      let res = JSON.parse(output.choices[0].message.content);
+
+      if (!validCategories.includes(res.category)) {
+        res.category = "general";
+      }
+
+      if (
+        !res.mainText ||
+        !res.title ||
+        !res.author ||
+        !res.url ||
+        !res.dateTime ||
+        !res.imgURL ||
+        !res.category
+      ) {
+        continue;
+      }
+
+      processedOutput.push(res);
+
+      const newArticle = new Article(res);
+      await newArticle.save();
+    } catch (error) {
+      console.log(error);
+    } finally {
       updateProgress();
     }
-    console.log("\nNews articles processed successfully\n");
-    return processedOutput;
+  }
+
+  return processedOutput;
+};
+
+const fetchNews = async (query) => {
+  const apiKey = "e7409124fe384b688c07763501b270dd";
+  const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-20`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "x-api-key": apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch news articles");
+    }
+
+    const data = await response.json();
+    return data.news.filter((news) => news.text.length >= 800);
   } catch (error) {
     console.log(error);
+    return [];
   }
 };
 
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
-  getWorldNewsApi,
+  processNews,
+  fetchNews,
 };
