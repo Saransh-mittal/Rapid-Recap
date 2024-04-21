@@ -110,7 +110,7 @@ if question in the mainText that are not answered or not there in the mainText e
 Don't summarize the content. and only return the same json_object back:
 also analyze the title and give categories between : [general,business,sports,health,science,entertainment,technology]
 
-fill these in the category key (only string).`;
+fill these in the category key (only string). Also if total characters are more than 2500 than summarize the whole mainText in 2500 characters.`;
 
   const validCategories = [
     "general",
@@ -165,10 +165,27 @@ fill these in the category key (only string).`;
 
       let res = JSON.parse(output.choices[0].message.content);
 
+      if (res.mainText.length > 2500) {
+        output = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo-0125",
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: "Summarize the mainText to 2500 characters",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+        });
+      }
+      res = JSON.parse(output.choices[0].message.content);
+
       if (!validCategories.includes(res.category)) {
         res.category = "general";
       }
-
       if (
         !res.mainText ||
         !res.title ||
