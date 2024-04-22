@@ -1,10 +1,13 @@
 const webpush = require("web-push");
 const Subscription = require("../model/subscriptionSchema");
 
-async function sendNotification(title, body) {
+async function sendNotification({ title, body, icon, url }) {
   const subscriptions = await Subscription.find();
   subscriptions.forEach((subscription) => {
-    webpush.sendNotification(subscription, JSON.stringify({ title, body }));
+    webpush.sendNotification(
+      subscription,
+      JSON.stringify({ title, body, icon, url })
+    );
   });
 }
 

@@ -1,14 +1,21 @@
+const RapidRecapLogo = "./images/Rapid Recap.png";
+
 self.addEventListener("push", (event) => {
   const data = event.data.json();
-  self.registration.showNotification(data.title, {
+  //console.log("Push received", data);
+  const notificationOptions = {
     body: data.body,
-  });
+    icon: data.icon || RapidRecapLogo,
+    data: { url: data.url }, // Pass additional data
+  };
+  self.registration.showNotification(data.title, notificationOptions);
 });
 
 self.addEventListener("notificationclick", function (event) {
-  //console.log("On notification click: ", event.notification.tag);
-  event.waitUntil(
-    clients.openWindow("http://localhost:5173/article/6624a3058036eaa5636e0e88") // assuming `data.url` contains the URL to redirect to
-  );
+  const notificationData = event.notification.data;
+
+  if (notificationData && notificationData.url) {
+    event.waitUntil(clients.openWindow(notificationData.url));
+  }
   event.notification.close();
 });

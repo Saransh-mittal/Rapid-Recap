@@ -24,7 +24,11 @@ const subscribe = async (req, res) => {
 
 const sendNotify = async (req, res) => {
   try {
-    sendNotification("test", "test");
+    const title = "📢 New Content Alert! 📰";
+    const body =
+      "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
+    const url = "http://localhost:5173/";
+    sendNotification({ title, body, url });
     res.status(200).json({ message: "Notifications sent successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to send notifications" });

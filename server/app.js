@@ -30,6 +30,7 @@ webpush.setVapidDetails(
 //require("./utils/deletion.utils/quizGivenByUserDeletion");
 //require("./utils/deletion.utils/removeBotUsers.del");
 //require("./utils/deletion.utils/removeQuizAttemptForNullUser.del");
+//require("./utils/deletion.utils/removeArticle.del");
 // ---------------------------
 
 // -----Update Collection-----
@@ -44,6 +45,7 @@ webpush.setVapidDetails(
 //require("./utils/update.utils/quizLang.update");
 //require("./utils/update.utils/generateHindiTrans.update");
 //require("./utils/update.utils/genHindiQuizForArticles");
+//require("./utils/update.utils/articleCategory.update");
 // ---------------------------
 
 // -----Bot utils-----
