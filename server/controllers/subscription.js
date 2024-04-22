@@ -4,10 +4,18 @@ const { sendNotification } = require("../services/notificationService");
 const subscribe = async (req, res) => {
   const userId = req.user._id;
   try {
-    const alreadySubscribed = await Subscription.find({ userId });
-    if (alreadySubscribed.length > 0) {
-      return res.status(400).json({ message: "Already subscribed" });
+    // Check if subscription already exists for the user and endpoint
+    const existingSubscription = await Subscription.findOne({
+      userId,
+      endpoint: req.body.endpoint,
+    });
+
+    if (existingSubscription) {
+      // If a subscription already exists for the same user and endpoint, return a conflict response
+      return res.status(409).json({ message: "Subscription already exists" });
     }
+
+    // If no existing subscription found, create a new one
     const subscription = new Subscription({
       userId,
       endpoint: req.body.endpoint,
