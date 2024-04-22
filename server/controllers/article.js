@@ -440,7 +440,7 @@ const extractNews = async (req, res) => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   try {
     const response = await newsapi.v2.topHeadlines({
-      category: "entertainment",
+      category: "health",
       language: "en",
     });
 
