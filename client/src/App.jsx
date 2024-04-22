@@ -1,5 +1,5 @@
 import "./App.css";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js";
 import Navbar from "./components/Header-Footer/Navbar.jsx";
@@ -12,8 +12,14 @@ import Footer from "./components/Header-Footer/Footer.jsx";
 import Article from "./screens/Article.jsx";
 import Profile from "./screens/Profile.jsx";
 import LeaderBoard from "./screens/LeaderBoard.jsx";
-
+import ReactGA from "react-ga";
+import { useEffect } from "react";
 const App = () => {
+  ReactGA.initialize("G-ES5VQ8NW7Z");
+  const location = useLocation();
+  useEffect(() => {
+    ReactGA.pageview(location.pathname + location.search);
+  }, [location]);
   return (
     <>
       <Navbar />
