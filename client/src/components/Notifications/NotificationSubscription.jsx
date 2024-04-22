@@ -9,6 +9,7 @@ import {
   Button,
 } from "@chakra-ui/react";
 import React, { useEffect, useRef, useState } from "react";
+import Cookies from "js-cookie";
 
 const NotificationSubscription = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -47,7 +48,7 @@ const NotificationSubscription = () => {
         body: JSON.stringify(subscription),
       });
       setSubscription(subscription);
-      localStorage.removeItem("notificationDismissedAt");
+      Cookies.set("notificationSubscribed", true, { expires: 365 }); // expires in 1 year (permanently)
       onClose();
     } catch (error) {
       console.log(error);
@@ -55,32 +56,19 @@ const NotificationSubscription = () => {
   };
 
   useEffect(() => {
-    const notificationShown = localStorage.getItem("notificationShown");
-    const notificationDismissedAt = localStorage.getItem(
-      "notificationDismissedAt"
-    );
-    const delayTimeInMilliseconds = 7 * 24 * 60 * 60 * 1000; // 7 days delay
-
-    if (
-      !notificationShown ||
-      (notificationDismissedAt &&
-        Date.now() - Number(notificationDismissedAt) >= delayTimeInMilliseconds)
-    ) {
+    const notificationShown = Cookies.get("notificationShown");
+    const notificationSubscribed = Cookies.get("notificationSubscribed");
+    if (!notificationShown && !notificationSubscribed) {
       onOpen();
-      localStorage.setItem("notificationShown", true);
+      Cookies.set("notificationShown", true, { expires: 7 }); // expires in 7 days
     }
   }, [onOpen]);
-
-  const dismiss = () => {
-    localStorage.setItem("notificationDismissedAt", Date.now());
-    onClose();
-  };
 
   return (
     <AlertDialog
       isOpen={isOpen}
       leastDestructiveRef={cancelRef}
-      onClose={dismiss}
+      onClose={onClose}
     >
       <AlertDialogOverlay>
         <AlertDialogContent>
@@ -96,7 +84,7 @@ const NotificationSubscription = () => {
           </AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={dismiss}>
+            <Button ref={cancelRef} onClick={onClose}>
               Cancel
             </Button>
             <Button colorScheme="red" onClick={subscribe} ml={3}>
