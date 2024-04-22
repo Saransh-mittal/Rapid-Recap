@@ -4,7 +4,7 @@ const removeArticle = async () => {
   try {
     const articles = await Article.find({
       title:
-        "IPL 2024: LSG v CSK overall head-to-head; When and where to watch",
+        "North Korea says it tested 'super-large' cruise missile warhead and new anti-aircraft missile",
     });
     // for (let i = 0; i < articles.length - 1; i++) {
     //   const article = await Article.findByIdAndDelete(articles[i]._id);

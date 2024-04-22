@@ -108,7 +108,7 @@ const processNews = async (news) => {
 remove the unnecessary content or lines of the mainText which is not related to the title for example Also read(section),
 if question in the mainText that are not answered or not there in the mainText etc.
 Don't summarize the content. and only return the same json_object back:
-also analyze the title and give categories between : [general,business,sports,health,science,entertainment,technology]
+also analyze the content and give categories between : [general,business,sports,health,science,entertainment,technology]
 
 fill these in the category key (only string). Also if total characters are more than 2500 than summarize the whole mainText in 2500 characters.`;
 
@@ -131,7 +131,6 @@ fill these in the category key (only string). Also if total characters are more 
     try {
       const isArticle = await Article.findOne({
         title: newsItem.title,
-        author: newsItem.author,
       });
 
       if (isArticle) {
@@ -172,7 +171,8 @@ fill these in the category key (only string). Also if total characters are more 
           messages: [
             {
               role: "system",
-              content: "Summarize the mainText to 2500 characters",
+              content:
+                "You are a summarizer. Summarize the mainText to 2500 characters and only return the same json_object back",
             },
             {
               role: "user",
@@ -214,7 +214,7 @@ fill these in the category key (only string). Also if total characters are more 
 
 const fetchNews = async (query) => {
   const apiKey = "e7409124fe384b688c07763501b270dd";
-  const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-20`;
+  const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-21`;
 
   try {
     const response = await fetch(url, {

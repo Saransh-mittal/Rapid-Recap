@@ -376,15 +376,15 @@ const hindiTranslation = async (req, res) => {
 const getWorldNews = async (req, res) => {
   try {
     const queries = [
-      "source-countries=in",
+      "source-countries=in,us,uk,jp",
       "source-countries=in&text=IPL OR T20WorldCup",
       "source-countries=in&text=elections",
-      "text=karnataka",
-      "text=HDFCBank OR Business",
+      "text=PM MMS",
+      "text=Indian OR Muslims OR Hindu",
       "text=technology",
       "text=space",
-      "source-countries=in&text=ModiTohGayo",
-      "text=JusticeForNeha",
+      "text=virat OR Neha",
+      "text=PBKSvsGT",
     ];
 
     let allProcessedOutput = [];
