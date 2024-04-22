@@ -236,9 +236,116 @@ const fetchNews = async (query) => {
   }
 };
 
+const extractNewsFromLink = async (query) => {
+  const apiKey = "acd1bf365a084183b509789e0aae202a";
+  const url = `https://api.worldnewsapi.com/extract-news?url=${query}`;
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "x-api-key": apiKey,
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch news articles");
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const processExtractedNews = async (news, category) => {
+  const instructions = `you are a text checker and analyser
+
+remove the unnecessary content or lines of the mainText which is not related to the title for example Also read(section),
+if question in the mainText that are not answered or not there in the mainText etc.
+Don't summarize the content. and only return the same json_object back:
+Also if total characters are more than 2500 than summarize the whole mainText in 2500 characters.`;
+
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
+  const processedOutput = [];
+  const updateProgress = progressBar(news.length);
+  for (let newsItem of news) {
+    try {
+      const isArticle = await Article.findOne({
+        title: newsItem.title,
+      });
+
+      if (isArticle) {
+        continue;
+      }
+
+      const prompt = JSON.stringify({
+        url: newsItem.url,
+        dateTime: newsItem.publish_date,
+        author: Array.isArray(newsItem.author)
+          ? newsItem.author[0]
+          : newsItem.author,
+        title: newsItem.title,
+        mainText: newsItem.text,
+        imgURL: [newsItem.image],
+        category: category,
+      });
+
+      let output = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo-0125",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: instructions,
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      });
+
+      let res = JSON.parse(output.choices[0].message.content);
+
+      if (res.mainText.length > 2500) {
+        output = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo-0125",
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a summarizer. Summarize the mainText to 2500 characters and only return the same json_object back",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+        });
+      }
+      res = JSON.parse(output.choices[0].message.content);
+
+      processedOutput.push(res);
+
+      const newArticle = new Article(res);
+      await newArticle.save();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      updateProgress();
+    }
+  }
+
+  return processedOutput;
+};
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
   processNews,
   fetchNews,
+  extractNewsFromLink,
+  processExtractedNews,
 };

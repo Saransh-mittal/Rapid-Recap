@@ -13,6 +13,8 @@ const {
   hindiConverter,
   fetchNews,
   processNews,
+  extractNewsFromLink,
+  processExtractedNews,
 } = require("../utils/article");
 const NewsAPI = require("newsapi");
 const { progressBar } = require("../utils/progress");
@@ -408,8 +410,52 @@ const getWorldNews = async (req, res) => {
       );
       allProcessedOutput = allProcessedOutput.concat(processedOutput);
     }
+    let genCnt = 0;
+    let entCnt = 0;
+    let techCnt = 0;
+    let sportsCnt = 0;
+    let scienceCnt = 0;
+    let healthCnt = 0;
+    let busiCnt = 0;
+
+    for (let article of allProcessedOutput) {
+      if (article.category.toLowerCase() === "general") genCnt++;
+      if (article.category.toLowerCase() === "entertainment") entCnt++;
+      if (article.category.toLowerCase() === "technology") techCnt++;
+      if (article.category.toLowerCase() === "sports") sportsCnt++;
+      if (article.category.toLowerCase() === "science") scienceCnt++;
+      if (article.category.toLowerCase() === "health") healthCnt++;
+      if (article.category.toLowerCase() === "business") busiCnt++;
+    }
     res.status(200).json({
-      message: `No. of news fetched for DB : ${allProcessedOutput.length}`,
+      message: `No. of news fetched for DB : ${allProcessedOutput.length}\n General : ${genCnt}\n Entertainment : ${entCnt}\n Technology : ${techCnt}\n Sports : ${sportsCnt}\n Science : ${scienceCnt}\n Health : ${healthCnt}\n Business : ${busiCnt}`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Something went wrong" });
+    console.log(error);
+  }
+};
+
+const extractNews = async (req, res) => {
+  const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
+  try {
+    const response = await newsapi.v2.topHeadlines({
+      category: "entertainment",
+      language: "en",
+    });
+
+    const articles = JSON.parse(JSON.stringify(response.articles));
+    let allProcessedOutput = [];
+    for (let article of articles) {
+      const extractedNews = await extractNewsFromLink(article.url);
+      allProcessedOutput.push(extractedNews);
+    }
+    const AiProcessedNews = await processExtractedNews(
+      allProcessedOutput,
+      "entertainment"
+    );
+    res.status(200).json({
+      message: `No. of news fetched for DB : ${AiProcessedNews.length}`,
     });
   } catch (error) {
     res.status(500).json({ error: error.message || "Something went wrong" });
@@ -427,5 +473,6 @@ module.exports = {
   hindiTranslation,
   getHindiQuiz,
   getWorldNews,
+  extractNews,
   //testNewsApi,
 };
