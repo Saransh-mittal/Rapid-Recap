@@ -428,7 +428,10 @@ const Article = () => {
         <Quiz
           article={article}
           isOpen={isOpen}
-          onClose={onClose}
+          onClose={() => {
+            onClose();
+            setShowQuiz(false);
+          }}
           ofShowQuiz={() => {
             setShowQuiz(false);
             setGivenQuiz(true);
