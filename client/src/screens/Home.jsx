@@ -8,7 +8,8 @@ import Modal from "./Modal";
 import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
 import { debounce } from "lodash";
-import { useToast, Box } from "@chakra-ui/react";
+import { useToast, Box, Flex, Container } from "@chakra-ui/react";
+import UpgradeModal from "../components/homeComponents/UpgradeModal"; // Import UpgradeModal
 import NotificationSubscription from "../components/Notifications/NotificationSubscription";
 
 const Home = () => {
@@ -20,6 +21,9 @@ const Home = () => {
   const { startDrag, drag, endDrag } = useDrag();
   const navigate = useNavigate();
   const { category } = useParams();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(true); // State to control the visibility of the upgrade modal
+
+  const USER_IQ = state.user.IQ_score;
   async function fetchData() {
     try {
       const response = await axios.get(
@@ -65,15 +69,20 @@ const Home = () => {
         isClosable: true,
         position: "top",
       });
+    } else if (state.user.societyUpgradeMessage !== "") {
+      // Display upgrade message if available
+      setShowUpgradeModal(true);
     }
   };
+
   useEffect(() => {
     handleLoginAlert();
-  }, [state.show]);
+  }, [state.show, state.user.societyUpgradeMessage]);
+
   const debouncedHandleScroll = debounce(handleScroll, 300);
+
   useEffect(() => {
     if (!state.show) {
-      //setInitialRender(false);
       if (!category || category === "") {
         navigate("/general");
       }
@@ -82,6 +91,7 @@ const Home = () => {
     }
     return () => window.removeEventListener("scroll", debouncedHandleScroll);
   }, []);
+
   useEffect(() => {
     if (!state.show) {
       if (items.length < page * 9) {
@@ -132,6 +142,14 @@ const Home = () => {
       w={"100%"}
     >
       <NotificationSubscription />
+      {/* Always render UpgradeModal for development */}
+      {USER_IQ > 90 && state.user.societyUpgradeMessage && (
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+        />
+      )}
+      {/* Render UpgradeModal */}
       {state.modal && (
         <Modal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
