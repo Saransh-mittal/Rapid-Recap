@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
-import { useToast, Button, Flex, Badge } from "@chakra-ui/react";
+import { useToast, Button, Flex, Badge, Heading, Box } from "@chakra-ui/react";
 import useDrag from "../../customHooks/useDrag";
 import ProfileDropDownMenu from "../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon, CloseIcon, EmailIcon } from "@chakra-ui/icons";
@@ -113,10 +113,11 @@ const Navbar = () => {
   }, [prevScrollPos, visible]);
 
   return (
-    <Flex
-      className={`navbar navbar-expand-lg navbar-light bg-light px-3 ${
+    <Box
+      className={`navbar navbar-expand-lg navbar-light bg-light ${
         isHamburgerOpen ? "full-screen" : ""
       }`}
+      padding={{ base: "0.5rem", lg: "1rem" }}
       onTouchStart={startDrag}
       onTouchMove={(e) => drag(e.touches[0])}
       onTouchEnd={endDrag}
@@ -149,14 +150,16 @@ const Navbar = () => {
         width={"100%"}
         height={"100%"}
         flexDirection={isHamburgerOpen ? "column" : "row"}
-        padding={isHamburgerOpen ? "1rem" : "0"}
+        padding={isHamburgerOpen ? "2rem" : "0"}
       >
         {/* Navbar brand */}
         <NavLink
           to="/"
-          className={`navbar-brand${isHamburgerOpen ? " mb-5" : ""}`}
+          className={`navbar-brand ${isHamburgerOpen ? " mb-5" : ""}`}
         >
-          📻 Rapid Recap
+          <Heading fontSize={{ base: "1rem", lg: "1.5rem" }}>
+            📻 Rapid Recap
+          </Heading>
         </NavLink>
         {/* Right side of navbar */}
         <Flex
@@ -164,6 +167,7 @@ const Navbar = () => {
             base: isHamburgerOpen ? "column" : "row-reverse",
             lg: "row-reverse",
           }}
+          // ml={-10}
           height={"100%"}
           alignItems={"center"}
         >
@@ -209,8 +213,11 @@ const Navbar = () => {
                 display={{ base: "flex", lg: "none" }}
                 onClick={() => setIsHamburgerOpen(true)}
                 marginBottom={isHamburgerOpen ? "2rem" : "0"}
+                // boxSize={2}
+                height={"35px"}
+                width={"10px"}
               >
-                <HamburgerIcon />
+                <HamburgerIcon height={"35px"} width={"20px"} />
               </Button>
             </>
           ) : null}
@@ -324,7 +331,7 @@ const Navbar = () => {
       </Flex>
       {isDrawerOpen && <NotificationDrawer setIsDrawerOpen={setIsDrawerOpen} />}
       {/* Modal for detailed notification */}
-    </Flex>
+    </Box>
   );
 };
 

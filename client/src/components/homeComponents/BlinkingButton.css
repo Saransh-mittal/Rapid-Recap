@@ -1,0 +1,21 @@
+@keyframes blinking {
+  0% {
+    filter: drop-shadow(0px 0px 8px rgba(152, 150, 241, 0.8));
+  }
+  50% {
+    filter: drop-shadow(0px 0px 8px rgba(152, 150, 241, 0));
+  }
+  100% {
+    filter: drop-shadow(0px 0px 8px rgba(152, 150, 241, 0.8));
+  }
+}
+
+@keyframes slowBlinking {
+  0%,
+  100% {
+    filter: drop-shadow(0px 0px 8px rgba(152, 150, 241, 0.8));
+  }
+  50% {
+    filter: drop-shadow(0px 0px 8px rgba(152, 150, 241, 0));
+  }
+}

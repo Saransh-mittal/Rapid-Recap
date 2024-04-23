@@ -896,6 +896,20 @@ const sendMailForNotifySubscribe = async (req, res) => {
     console.log(error);
   }
 };
+
+const upgradeMessageClose = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId);
+    user.societyUpgradeMessage = "";
+    await user.save();
+    res.status(200).json({ ok: "Success" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -919,5 +933,8 @@ module.exports = {
   readUpdates,
   trashUpdate,
   trashAllUpdate,
+
   sendMailForNotifySubscribe,
+
+  upgradeMessageClose,
 };
