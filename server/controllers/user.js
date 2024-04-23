@@ -835,11 +835,11 @@ const readUpdates = async (req, res) => {
   }
 };
 
-const trashUpdate = async (req,res) =>{
-  const {updateId} = req.params;
+const trashUpdate = async (req, res) => {
+  const { updateId } = req.params;
   try {
     const deletedUpdate = await ApplicationUpdates.findByIdAndDelete(updateId);
-    
+
     if (!deletedUpdate) {
       return res.status(404).json({ error: "Update not found" });
     }
@@ -855,12 +855,25 @@ const trashUpdate = async (req,res) =>{
 
 const trashAllUpdate = async (req, res) => {
   const userId = req.user._id; // Assuming user ID is available in req.user._id
-  
+
   try {
     // Delete all updates associated with the user ID
     await ApplicationUpdates.deleteMany({ userId });
 
     res.status(200).json({ message: "All updates deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
+const upgradeMessageClose = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId);
+    user.societyUpgradeMessage = "";
+    await user.save();
+    res.status(200).json({ ok: "Success" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
     console.log(error.message);
@@ -890,4 +903,5 @@ module.exports = {
   readUpdates,
   trashUpdate,
   trashAllUpdate,
+  upgradeMessageClose,
 };

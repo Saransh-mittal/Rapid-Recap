@@ -86,6 +86,10 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
         (update) => update._id !== notificationToDelete._id
       );
       setNotificationData(updatedNotificationData);
+      dispatch({
+        type: "APP_UPDATES",
+        payloadAppUpdates: updatedNotificationData,
+      });
 
       // Close the delete confirmation modal
     } catch (error) {
@@ -112,6 +116,10 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
       if (response.status === 200) {
         // Update the notificationData state or perform any other action if needed
         setNotificationData([]);
+        dispatch({
+          type: "APP_UPDATES",
+          payloadAppUpdates: [],
+        });
         toast({
           title: "Success",
           description: "All notifications removed successfully",
@@ -251,7 +259,9 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
                       </Flex>
                     </Flex>
 
-                    <Text style={{ textAlign: "left" }}>{update.mainText.substring(0,60)}.....</Text>
+                    <Text style={{ textAlign: "left" }}>
+                      {update.mainText.substring(0, 60)}.....
+                    </Text>
                     <Flex>
                       <small>{new Date(update.date).toLocaleString()}</small>
                       <small style={{ marginLeft: "auto" }}>

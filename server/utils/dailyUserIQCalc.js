@@ -4,12 +4,14 @@ const User = require("../model/userSchema");
 const { progressBar } = require("./progress");
 const { updatePercentilesOnQuizDeactivation } = require("./quiz");
 const rankUpdate = require("./update.utils/rank.update");
-const CircleAndSocietyData = require("./../data/CircleAndSocietyData");
-
+const CircleAndSocietyData = require("../data/CircleAndSocietyData");
 
 const findSocietyCircleByIQ = (IQScore) => {
   return CircleAndSocietyData.find((data) => {
-    return IQScore >= data.IQ_Lower && (data.IQ_Upper === null || IQScore < data.IQ_Upper);
+    return (
+      IQScore >= data.IQ_Lower &&
+      (data.IQ_Upper === null || IQScore < data.IQ_Upper)
+    );
   });
 };
 const handleSocietyOrCircleUpgrade = async (
@@ -23,7 +25,8 @@ const handleSocietyOrCircleUpgrade = async (
 
   if (
     (prevSocietyCircle.society !== currSocietyCircle.society ||
-    prevSocietyCircle.circle !== currSocietyCircle.circle) && prevSocietyCircle.IQ_Upper<=currSocietyCircle.IQ_Lower
+      prevSocietyCircle.circle !== currSocietyCircle.circle) &&
+    prevSocietyCircle.IQ_Upper <= currSocietyCircle.IQ_Lower
   ) {
     // Save the upgrade message for the user
     const upgradeMsg = currSocietyCircle.upgradeMsg;
