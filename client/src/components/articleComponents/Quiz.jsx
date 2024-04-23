@@ -154,6 +154,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
       }
       if (!response.data.quiz || !response.data.quizId)
         throw new Error("No Quiz data found!");
+
       setQuizData(response.data.quiz);
       setUserAnswers(
         Array.from({ length: response.data.quiz.questions.length }, () => "")
@@ -172,16 +173,17 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
     } catch (error) {
       toast({
         title: "Quiz Generation Failed!",
-        description:
-          error.response?.data?.error ||
-          error ||
-          "Please try again (Close this window and Try refreshing the page)",
+        description: error.message
+          ? error.message
+          : "Please try again Later (Server might be responding slow)",
         status: "error",
         duration: 5000,
         isClosable: true,
         position: "top",
       });
-      //console.log(error);
+      handleClose();
+      setLoad(false);
+      console.log(error);
     }
   };
 
@@ -239,6 +241,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
         isClosable: true,
         position: "top",
       });
+      handleClose();
       //console.log(error);
     }
     // Perform additional actions if needed
