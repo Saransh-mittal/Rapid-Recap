@@ -380,12 +380,12 @@ const getWorldNews = async (req, res) => {
       "source-countries=in,us,uk,jp",
       "source-countries=in&text=IPL OR T20WorldCup",
       "source-countries=in&text=elections",
-      "text=PM MMS",
+      "text=hardik",
       "text=Indian OR Muslims OR Hindu",
       "text=technology",
       "text=space",
-      "text=virat OR Neha",
-      "text=PBKSvsGT",
+      "text=Natasha OR Dalal OR Greatest OR time OR reactjs OR Reddit",
+      "text=Sand OR Scam OR 7000crore",
     ];
 
     let allProcessedOutput = [];
@@ -433,7 +433,7 @@ const getWorldNews = async (req, res) => {
     const title = "📢 New Content Alert! 📰";
     const body =
       "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-    const url = "http://localhost:5173/";
+    const url = "https://cyan-crane-tie.cyclic.app/";
     sendNotification({ title, body, url });
   } catch (error) {
     res.status(500).json({ error: error.message || "Something went wrong" });
@@ -444,7 +444,7 @@ const getWorldNews = async (req, res) => {
 const extractNews = async (req, res) => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   try {
-    const category = "science";
+    const category = "technology";
     const response = await newsapi.v2.topHeadlines({
       category,
       language: "en",
@@ -458,7 +458,7 @@ const extractNews = async (req, res) => {
     }
     const AiProcessedNews = await processExtractedNews(
       allProcessedOutput,
-      "entertainment"
+      category
     );
     res.status(200).json({
       message: `No. of news fetched for DB : ${AiProcessedNews.length}`,
@@ -466,7 +466,7 @@ const extractNews = async (req, res) => {
     const title = `📢 New ${category} Content Alert! 📰`;
     const body =
       "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-    const url = "http://localhost:5173/";
+    const url = "https://cyan-crane-tie.cyclic.app/";
     sendNotification({ title, body, url });
   } catch (error) {
     res.status(500).json({ error: error.message || "Something went wrong" });

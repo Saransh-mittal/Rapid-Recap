@@ -36,6 +36,7 @@ const connectDB = require("./db/conn");
 //require("./utils/update.utils/quizActiveStatus.update");
 //require("./utils/update.utils/quizCountUpdate.update");
 //require("./utils/update.utils/name.update");
+//require("./utils/update.utils/genQuizForArticles");
 // ---------------------------
 
 // -----Bot utils-----
