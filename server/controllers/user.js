@@ -6,6 +6,7 @@ const {
   generateOtp,
   mailTransporter,
   generateEmailTemplate,
+  genEmailTemplateForNotifySubscribe,
 } = require("../utils/mail");
 const VerificationToken = require("../model/verificationToken");
 const { isValidObjectId } = require("mongoose");
@@ -19,6 +20,7 @@ const {
 } = require("../utils/user");
 const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
+const { progressBar } = require("../utils/progress");
 
 const registerUser = async (req, res) => {
   //console.log(req.body);
@@ -835,11 +837,11 @@ const readUpdates = async (req, res) => {
   }
 };
 
-const trashUpdate = async (req,res) =>{
-  const {updateId} = req.params;
+const trashUpdate = async (req, res) => {
+  const { updateId } = req.params;
   try {
     const deletedUpdate = await ApplicationUpdates.findByIdAndDelete(updateId);
-    
+
     if (!deletedUpdate) {
       return res.status(404).json({ error: "Update not found" });
     }
@@ -855,7 +857,7 @@ const trashUpdate = async (req,res) =>{
 
 const trashAllUpdate = async (req, res) => {
   const userId = req.user._id; // Assuming user ID is available in req.user._id
-  
+
   try {
     // Delete all updates associated with the user ID
     await ApplicationUpdates.deleteMany({ userId });
@@ -867,6 +869,33 @@ const trashAllUpdate = async (req, res) => {
   }
 };
 
+const sendMailForNotifySubscribe = async (req, res) => {
+  try {
+    const users = await User.find({
+      email: { $not: /dummy\d+mail\.com/ },
+    });
+    //const users = await User.find({ inGameName: "saransh_1234" });
+    const transporter = await mailTransporter();
+    const updateProgress = progressBar(users.length);
+    for (const user of users) {
+      await transporter.sendMail({
+        from: "rapidrecap2k23@gmail.com",
+        to: user.email,
+        subject: "📢 Stay Updated with Rapid Recap Notifications! 📰",
+        html: genEmailTemplateForNotifySubscribe({
+          name: user.name.split(" ")[0],
+        }),
+      });
+      updateProgress();
+    }
+    res
+      .status(200)
+      .json({ message: `Email send successfully to ${users.length} users` });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error);
+  }
+};
 module.exports = {
   registerUser,
   loginUser,
@@ -890,4 +919,5 @@ module.exports = {
   readUpdates,
   trashUpdate,
   trashAllUpdate,
+  sendMailForNotifySubscribe,
 };
