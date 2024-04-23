@@ -15,6 +15,7 @@ const NotificationSubscription = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef();
   const [subscription, setSubscription] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)
@@ -30,6 +31,7 @@ const NotificationSubscription = () => {
     return outputArray;
   }
   const subscribe = async () => {
+    setIsLoading(true);
     try {
       const serviceWorker = await navigator.serviceWorker.register("/sw.js", {
         scope: "/",
@@ -52,6 +54,8 @@ const NotificationSubscription = () => {
       onClose();
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,10 +88,15 @@ const NotificationSubscription = () => {
           </AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={onClose}>
+            <Button ref={cancelRef} onClick={onClose} isDisabled={isLoading}>
               Cancel
             </Button>
-            <Button colorScheme="red" onClick={subscribe} ml={3}>
+            <Button
+              colorScheme="red"
+              onClick={subscribe}
+              ml={3}
+              isLoading={isLoading}
+            >
               Allow
             </Button>
           </AlertDialogFooter>

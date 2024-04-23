@@ -46,6 +46,7 @@ webpush.setVapidDetails(
 //require("./utils/update.utils/generateHindiTrans.update");
 //require("./utils/update.utils/genHindiQuizForArticles");
 //require("./utils/update.utils/articleCategory.update");
+//require("./utils/update.utils/subscription.update");
 // ---------------------------
 
 // -----Bot utils-----

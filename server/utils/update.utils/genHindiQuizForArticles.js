@@ -7,7 +7,7 @@ const { progressBar } = require("../progress");
 
 const genHindiQuizForArticles = async () => {
   const twoDaysAgo = new Date();
-  twoDaysAgo.setDate(twoDaysAgo.getDate() - 5);
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
   // Construct the aggregation pipeline
   const pipeline = [

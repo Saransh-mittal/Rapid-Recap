@@ -24,8 +24,8 @@ const App = () => {
     <>
       <Navbar />
       <Routes>
-        <Route persistent path="/:category" element={<Home />} />
-        <Route persistent path="/" element={<Home />} />
+        <Route path="/:category" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route exact path="/article/:id" element={<Article />} />
         {/* <Route exact path="/about" element={<About />} /> */}
         <Route path="/profile/:inGameName" element={<Profile />} />

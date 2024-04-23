@@ -3,7 +3,12 @@ const mongoose = require("mongoose");
 const subscriptionSchema = new mongoose.Schema({
   endpoint: String,
   keys: mongoose.Schema.Types.Mixed,
-  userId: { type: String, required: true },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "USER",
+  },
 });
 
-module.exports = mongoose.model("Subscription", subscriptionSchema);
+const Subscription = mongoose.model("Subscription", subscriptionSchema);
+
+module.exports = Subscription;
