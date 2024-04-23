@@ -16,6 +16,7 @@ const NotificationSubscription = () => {
   const cancelRef = useRef();
   const [subscription, setSubscription] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeniedMessage, setShowDeniedMessage] = useState(false);
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)
@@ -62,11 +63,48 @@ const NotificationSubscription = () => {
   useEffect(() => {
     const notificationShown = Cookies.get("notificationShown");
     const notificationSubscribed = Cookies.get("notificationSubscribed");
-    if (!notificationShown && !notificationSubscribed) {
+    const currentPermission = Notification.permission;
+    if (
+      !notificationShown &&
+      !notificationSubscribed &&
+      currentPermission !== "denied"
+    ) {
       onOpen();
       Cookies.set("notificationShown", true, { expires: 7 }); // expires in 7 days
+    } else if (notificationSubscribed === "true") {
+      // User has already subscribed, no need to prompt again
+      onClose();
+    } else if (currentPermission === "denied" && !notificationShown) {
+      onOpen();
+      setShowDeniedMessage(true);
+      Cookies.set("notificationShown", true, { expires: 7 });
     }
-  }, [onOpen]);
+
+    // Listen for changes to Notification permission
+    const handlePermissionChange = () => {
+      const newPermission = Notification.permission;
+      console.log(newPermission);
+      if (newPermission === "granted") {
+        // User has enabled notifications after previously denying
+        subscribe();
+
+        onClose();
+      } else if (newPermission !== "denied") {
+        // User has changed their mind, ask to subscribe again
+        onOpen();
+      }
+    };
+
+    Notification.requestPermission().then(handlePermissionChange);
+
+    // Add event listener for permissionchange event
+    document.addEventListener("permissionchange", handlePermissionChange);
+
+    return () => {
+      // Remove event listener when component unmounts
+      document.removeEventListener("permissionchange", handlePermissionChange);
+    };
+  }, [onOpen, onClose]);
 
   return (
     <AlertDialog
@@ -81,24 +119,47 @@ const NotificationSubscription = () => {
           </AlertDialogHeader>
 
           <AlertDialogBody>
-            Stay in the loop with our notifications! Get the latest news, app
-            updates, leaderboard rankings, and more delivered right to your
-            device. Click "Allow" in your browser to stay informed and stay
-            ahead.
+            {showDeniedMessage && (
+              <p>
+                It seems like you have previously turned off notifications.
+                Please go to your browser settings to enable notifications for
+                our site.
+              </p>
+            )}
+            {!showDeniedMessage && (
+              <p>
+                Stay in the loop with our notifications! Get the latest news,
+                app updates, leaderboard rankings, and more delivered right to
+                your device. Click "Allow" in your browser to stay informed and
+                stay ahead.
+              </p>
+            )}
           </AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={onClose} isDisabled={isLoading}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="red"
-              onClick={subscribe}
-              ml={3}
-              isLoading={isLoading}
-            >
-              Allow
-            </Button>
+            {showDeniedMessage ? (
+              <Button ref={cancelRef} onClick={onClose} isDisabled={isLoading}>
+                Close
+              </Button>
+            ) : (
+              <>
+                <Button
+                  ref={cancelRef}
+                  onClick={onClose}
+                  isDisabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  colorScheme="red"
+                  onClick={subscribe}
+                  ml={3}
+                  isLoading={isLoading}
+                >
+                  Allow
+                </Button>
+              </>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialogOverlay>
