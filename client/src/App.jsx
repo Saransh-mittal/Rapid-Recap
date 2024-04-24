@@ -12,13 +12,17 @@ import Footer from "./components/Header-Footer/Footer.jsx";
 import Article from "./screens/Article.jsx";
 import Profile from "./screens/Profile.jsx";
 import LeaderBoard from "./screens/LeaderBoard.jsx";
-import ReactGA from "react-ga";
+import ReactGA from "react-ga4";
 import { useEffect } from "react";
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
   const location = useLocation();
   useEffect(() => {
-    ReactGA.pageview(location.pathname + location.search);
+    ReactGA.send({
+      hitType: "pageview",
+      page: location.pathname + location.search,
+      title: "Home",
+    });
   }, [location]);
   return (
     <>
