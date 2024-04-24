@@ -31,6 +31,7 @@ import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle
 import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
 import TotalUserAttempted from "../components/articleComponents/TotalUserAttempted";
 import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangModal";
+import ReactGA from "react-ga4";
 
 const tourOptions = {
   defaultStepOptions: {
