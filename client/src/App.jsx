@@ -21,7 +21,7 @@ const App = () => {
     ReactGA.send({
       hitType: "pageview",
       page: location.pathname + location.search,
-      title: "Home",
+      title: document.title,
     });
   }, [location]);
   return (

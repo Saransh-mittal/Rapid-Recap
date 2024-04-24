@@ -24,6 +24,7 @@ const Contact = () => {
   };
 
   useEffect(() => {
+    document.title = "Contact page";
     handleLoginAlert();
   }, [state.show]);
   return (

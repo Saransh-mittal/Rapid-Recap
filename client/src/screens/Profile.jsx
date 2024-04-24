@@ -182,6 +182,7 @@ export default function Profile() {
     };
   }, [tour]);
   useEffect(() => {
+    document.title = "Profile page";
     //console.log("Profile Page");
     const otherUserStored = state.otherUserProfiles?.find((user) => {
       return user?.inGameName === inGameName;

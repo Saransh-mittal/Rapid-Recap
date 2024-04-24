@@ -329,6 +329,7 @@ const Article = () => {
   }, [tour]);
 
   useEffect(() => {
+    document.title = "Article page";
     fetchArticle();
     checkOnGoingQuiz();
     if (state.user && state.user.tutorial.articlePage) isTutorialTakenCheck();
@@ -409,7 +410,14 @@ const Article = () => {
       setTranslateLoading(false);
     }
   };
-
+  const trackGenerateQuizClick = () => {
+    ReactGA.send({
+      hitType: "event",
+      eventCategory: "Generate Quiz Click",
+      eventAction: "Click",
+      eventLabel: "Generate Quiz Button",
+    });
+  };
   return (
     <>
       {showQuizLangModal && (
@@ -652,6 +660,7 @@ const Article = () => {
               ) : (
                 <GenerateQuizButton
                   onClick={() => {
+                    trackGenerateQuizClick();
                     setShowQuizLangModal(true);
                     setShowQuiz(!showQuiz);
                     onOpen();
@@ -765,6 +774,7 @@ const Article = () => {
                   },
                 }}
                 onClick={() => {
+                  trackGenerateQuizClick();
                   setShowQuizLangModal(true);
                   setShowQuiz(!showQuiz);
                   onOpen();

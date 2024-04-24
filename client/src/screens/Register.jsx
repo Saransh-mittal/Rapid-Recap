@@ -91,6 +91,7 @@ export default function Register({
   };
 
   useEffect(() => {
+    document.title = "Register page";
     if (state.show === false) {
       navigate("/");
     }

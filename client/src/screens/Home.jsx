@@ -82,6 +82,7 @@ const Home = () => {
   const debouncedHandleScroll = debounce(handleScroll, 300);
 
   useEffect(() => {
+    document.title = "Home Page";
     if (!state.show) {
       if (!category || category === "") {
         navigate("/general");

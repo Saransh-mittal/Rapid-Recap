@@ -156,6 +156,7 @@ export default function Sigin() {
   }, [enterInGameName]);
 
   useEffect(() => {
+    document.title = "Signin page";
     if (state.show === false) {
       navigate("/");
     }

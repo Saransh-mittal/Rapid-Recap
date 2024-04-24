@@ -150,6 +150,7 @@ const LeaderBoard = () => {
     handleLoginAlert();
   }, [state.show]);
   useEffect(() => {
+    document.title = "LeaderBoard Page";
     if (!state.show) {
       fetchLeaderBoard();
       if (state.user && state.user.tutorial.leaderBoardPage)
@@ -313,7 +314,11 @@ const LeaderBoard = () => {
               />
             </Flex>
             <Flex justifyContent={"center"} gap={5}>
-              <Flex justifyContent={"center"} gap={5} flexDirection={{base:"column", md:"column",lg:"row" }}>
+              <Flex
+                justifyContent={"center"}
+                gap={5}
+                flexDirection={{ base: "column", md: "column", lg: "row" }}
+              >
                 <Button
                   isDisabled={searchLoad || isLoading}
                   isLoading={activeSociety === "titans" && searchLoad}
@@ -346,7 +351,11 @@ const LeaderBoard = () => {
                 </Button>
               </Flex>
 
-              <Flex justifyContent={"center"} gap={5} flexDirection={{base:"column", md:"column",lg:"row" }}>
+              <Flex
+                justifyContent={"center"}
+                gap={5}
+                flexDirection={{ base: "column", md: "column", lg: "row" }}
+              >
                 <Button
                   isDisabled={searchLoad || isLoading}
                   isLoading={activeSociety === "elites" && searchLoad}
