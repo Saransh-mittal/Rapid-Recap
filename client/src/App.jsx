@@ -1,5 +1,5 @@
 import "./App.css";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js";
 import Navbar from "./components/Header-Footer/Navbar.jsx";
@@ -12,14 +12,24 @@ import Footer from "./components/Header-Footer/Footer.jsx";
 import Article from "./screens/Article.jsx";
 import Profile from "./screens/Profile.jsx";
 import LeaderBoard from "./screens/LeaderBoard.jsx";
-
+import ReactGA from "react-ga4";
+import { useEffect } from "react";
 const App = () => {
+  ReactGA.initialize("G-ES5VQ8NW7Z");
+  const location = useLocation();
+  useEffect(() => {
+    ReactGA.send({
+      hitType: "pageview",
+      page: location.pathname + location.search,
+      title: document.title,
+    });
+  }, [location]);
   return (
     <>
       <Navbar />
       <Routes>
-        <Route persistent path="/:category" element={<Home />} />
-        <Route persistent path="/" element={<Home />} />
+        <Route path="/:category" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route exact path="/article/:id" element={<Article />} />
         {/* <Route exact path="/about" element={<About />} /> */}
         <Route path="/profile/:inGameName" element={<Profile />} />

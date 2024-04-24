@@ -31,6 +31,7 @@ import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle
 import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
 import TotalUserAttempted from "../components/articleComponents/TotalUserAttempted";
 import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangModal";
+import ReactGA from "react-ga4";
 
 const tourOptions = {
   defaultStepOptions: {
@@ -329,6 +330,7 @@ const Article = () => {
   }, [tour]);
 
   useEffect(() => {
+    document.title = "Article page";
     fetchArticle();
     checkOnGoingQuiz();
     if (state.user && state.user.tutorial.articlePage) isTutorialTakenCheck();
@@ -409,7 +411,14 @@ const Article = () => {
       setTranslateLoading(false);
     }
   };
-
+  const trackGenerateQuizClick = () => {
+    ReactGA.send({
+      hitType: "event",
+      eventCategory: "Generate Quiz Click",
+      eventAction: "Click",
+      eventLabel: "Generate Quiz Button",
+    });
+  };
   return (
     <>
       {showQuizLangModal && (
@@ -428,7 +437,10 @@ const Article = () => {
         <Quiz
           article={article}
           isOpen={isOpen}
-          onClose={onClose}
+          onClose={() => {
+            onClose();
+            setShowQuiz(false);
+          }}
           ofShowQuiz={() => {
             setShowQuiz(false);
             setGivenQuiz(true);
@@ -649,6 +661,7 @@ const Article = () => {
               ) : (
                 <GenerateQuizButton
                   onClick={() => {
+                    trackGenerateQuizClick();
                     setShowQuizLangModal(true);
                     setShowQuiz(!showQuiz);
                     onOpen();
@@ -762,6 +775,7 @@ const Article = () => {
                   },
                 }}
                 onClick={() => {
+                  trackGenerateQuizClick();
                   setShowQuizLangModal(true);
                   setShowQuiz(!showQuiz);
                   onOpen();

@@ -51,6 +51,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    prevIQScore: {
+      type: Number,
+      default: 0,
+    },
     userScore: {
       type: Number,
       default: 0,
@@ -112,6 +116,10 @@ const userSchema = new mongoose.Schema(
       solvedQuizzes: { type: Boolean, default: false },
       dailyActivity: { type: Boolean, default: false },
       society: { type: Boolean, default: false },
+    },
+    societyUpgradeMessage: {
+      type: String,
+      default: "",
     },
     applicationUpdates: [
       {

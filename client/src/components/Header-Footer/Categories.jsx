@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { AppContext } from "../../contextAPI/appContext";
 import { useNavigate } from "react-router-dom";
+import ReactGA from "react-ga4"; // Import Google Analytics library
 
 const Categories = ({
   setShowCategory,
@@ -33,6 +34,14 @@ const Categories = ({
     "Technology",
     "Entertainment",
   ];
+  const trackCategoryClick = (category) => {
+    ReactGA.send({
+      hitType: "event",
+      eventCategory: "Category Click",
+      eventAction: "Click",
+      eventLabel: category, // Track the category that was clicked
+    });
+  };
   return (
     <Drawer
       onClose={() => {
@@ -72,10 +81,7 @@ const Categories = ({
                 }}
                 cursor={"pointer"}
                 onClick={() => {
-                  // dispatch({
-                  //   type: "category",
-                  //   payloadCategory: item.toLocaleLowerCase(),
-                  // });
+                  trackCategoryClick(item);
 
                   navigate(`/${item.toLowerCase()}`);
                   if (isHamburgerOpen) {

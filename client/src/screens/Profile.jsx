@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Box, Flex, Tag, Text, Tooltip } from "@chakra-ui/react";
+import { Box, Container, Flex, Tag, Text, Tooltip } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
 import { AppContext } from "../contextAPI/appContext";
 import IQLineGraph from "../components/profileComponents/IQLineGraph";
@@ -182,6 +182,7 @@ export default function Profile() {
     };
   }, [tour]);
   useEffect(() => {
+    document.title = "Profile page";
     //console.log("Profile Page");
     const otherUserStored = state.otherUserProfiles?.find((user) => {
       return user?.inGameName === inGameName;
@@ -214,7 +215,7 @@ export default function Profile() {
       <Flex
         flexDirection={{ base: "column", md: "row" }}
         marginTop="20px"
-        marginInline={{ base: "0", xl: "6.5%" }}
+        marginInline={{ base: "2%", xl: "6.5%" }}
         alignItems={{ base: "center", md: "normal" }}
         justifyContent={{ base: "center", md: "center", lg: "normal" }}
         className="profile-info"

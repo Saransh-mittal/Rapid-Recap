@@ -3,7 +3,7 @@ import TimelineItem from "./TimelineItem";
 import { useShepherdTour } from "react-shepherd";
 import stepsTutorialHome from "./stepsTutorialHome";
 import axios from "axios";
-import { useToast } from "@chakra-ui/react";
+import { Box, useToast } from "@chakra-ui/react";
 import { AppContext } from "../../contextAPI/appContext";
 
 const tourOptions = {
