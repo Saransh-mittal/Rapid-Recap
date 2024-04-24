@@ -378,14 +378,13 @@ const getWorldNews = async (req, res) => {
   try {
     const queries = [
       "source-countries=in,us,uk,jp",
-      "source-countries=in&text=IPL OR T20WorldCup",
-      "source-countries=in&text=elections",
-      "text=hardik",
-      "text=Indian OR Muslims OR Hindu",
-      "text=technology",
-      "text=space",
-      "text=Natasha OR Dalal OR Greatest OR time OR reactjs OR Reddit",
-      "text=Sand OR Scam OR 7000crore",
+      //"source-countries=in&text=IPL OR T20WorldCup",
+      //"source-countries=in&text=elections",
+      //"text=ruturaj OR rizvi OR Modi OR Scam OR BJP OR ghaziabad",
+      "text=Helicopter OR crash OR E OR Y",
+      //"text=technology OR earthquakew OR MonkeyMan",
+      "text=space OR ISRO OR NASA OR SpaceX",
+      "text=king OR maryam OR single",
     ];
 
     let allProcessedOutput = [];
@@ -444,30 +443,41 @@ const getWorldNews = async (req, res) => {
 const extractNews = async (req, res) => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   try {
-    const category = "technology";
-    const response = await newsapi.v2.topHeadlines({
-      category,
-      language: "en",
-    });
+    const categories = ["science", "health", "business"];
+    let result = [];
+    for (let category of categories) {
+      console.log(`\nExtracting news of category ${category}\n`);
+      const response = await newsapi.v2.topHeadlines({
+        category,
+        language: "en",
+      });
 
-    const articles = JSON.parse(JSON.stringify(response.articles));
-    let allProcessedOutput = [];
-    for (let article of articles) {
-      const extractedNews = await extractNewsFromLink(article.url);
-      allProcessedOutput.push(extractedNews);
+      const articles = JSON.parse(JSON.stringify(response.articles));
+      console.log(articles.length);
+      let allProcessedOutput = [];
+      for (let article of articles) {
+        const extractedNews = await extractNewsFromLink(article.url);
+        allProcessedOutput.push(extractedNews);
+      }
+      const AiProcessedNews = await processExtractedNews(
+        allProcessedOutput,
+        category
+      );
+      // push content of AiProcessedNews in result
+      result = result.concat(AiProcessedNews);
     }
-    const AiProcessedNews = await processExtractedNews(
-      allProcessedOutput,
-      category
-    );
     res.status(200).json({
-      message: `No. of news fetched for DB : ${AiProcessedNews.length}`,
+      message: `No. of news fetched for DB : ${result.length}`,
     });
-    const title = `📢 New ${category} Content Alert! 📰`;
-    const body =
-      "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-    const url = "https://cyan-crane-tie.cyclic.app/";
-    sendNotification({ title, body, url });
+    if (result.length > 0) {
+      const title = `📢 New ${
+        categories[0] + `, ` + categories[1] + ` and ` + categories[2]
+      } Content Alert! 📰`;
+      const body =
+        "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
+      const url = "https://cyan-crane-tie.cyclic.app/";
+      sendNotification({ title, body, url });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message || "Something went wrong" });
     console.log(error);

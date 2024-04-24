@@ -23,6 +23,9 @@ const handleSocietyOrCircleUpgrade = async (
   const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore);
   const currSocietyCircle = findSocietyCircleByIQ(currIQScore);
 
+  if (!prevSocietyCircle || !currSocietyCircle)
+    //console.log(prevSocietyCircle, currSocietyCircle);
+    return;
   if (
     (prevSocietyCircle.society !== currSocietyCircle.society ||
       prevSocietyCircle.circle !== currSocietyCircle.circle) &&
@@ -144,15 +147,15 @@ const dailyUserIQCalc = async () => {
       (user.userScore - meanOfUserScores) / standardDeviation;
     const IQScore = 100 + 15 * normalizedScore;
 
-    const prevIQScore = user.IQ_score;
     const currIQScore = Math.round(IQScore);
     const updatedUser = await User.findById(user.user._id);
+    const prevIQScore = updatedUser.IQ_score;
     updatedUser.IQ_score = Math.round(IQScore);
     updatedUser.maxIQScore = Math.max(
       updatedUser.maxIQScore,
       Math.round(IQScore)
     );
-
+    updatedUser.prevIQScore = prevIQScore;
     const dailyIQ = new DailyIQ({
       user: updatedUser._id,
       IQ_score: Math.round(IQScore),
@@ -161,8 +164,9 @@ const dailyUserIQCalc = async () => {
     await dailyIQ.save();
     updatedUser.dailyIQScores.push(dailyIQ._id);
     await updatedUser.save();
+
     await handleSocietyOrCircleUpgrade(
-      updatedUser._id,
+      updatedUser._id.toString(),
       prevIQScore,
       currIQScore
     );

@@ -19,11 +19,9 @@ const genQuizForArticles = async () => {
   try {
     const articles = await Article.aggregate(pipeline);
     const progress = progressBar(articles.length);
-    console.log(`Total articles in last 2 days : ${articles.length}`);
     console.log("\nGenerating quizzes for articles...\n");
     for (let article of articles) {
       const articleId = article._id;
-      const { title, author, mainText } = article;
       let fullQuiz;
       if (article.quiz && article.quiz.length > 0) {
         fullQuiz = await findQuizByLanguage({
