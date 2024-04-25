@@ -1,4 +1,3 @@
-//import { Box, Flex, Image, Tag, Text, Tooltip } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 import { Flex, Image, Tooltip, Text, Tag } from "@chakra-ui/react";
 import { motion } from "framer-motion";
@@ -8,6 +7,7 @@ import Lightning from "./RankAndSocietySubCompnents/Lightning";
 import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 import { AppContext } from "../../contextAPI/appContext";
 import Loading from "../miscellaneous/Loading";
+import BrainModal from "./RankAndSocietySubCompnents/BrainModal";
 
 const RankAndSociety = ({
   USER_IQ = 0,
@@ -17,6 +17,7 @@ const RankAndSociety = ({
   const { state, dispatch } = useContext(AppContext);
   const [circleAndSociety, setCircleAndSociety] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false); 
 
   useEffect(() => {
     const userIQ = USER_IQ;
@@ -30,6 +31,14 @@ const RankAndSociety = ({
     setCircleAndSociety(userCircleAndSociety[0] || {});
     setIsLoading(false);
   }, [USER_IQ]);
+
+  const handleBrainClick = () => {
+    setIsModalOpen(true); // Open the modal upon clicking the brain image
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false); // Close the modal
+  };
 
   return (
     <Flex
@@ -99,6 +108,8 @@ const RankAndSociety = ({
                 w="100%"
                 position="relative"
                 flexDirection="column"
+                onClick={handleBrainClick} // Add onClick handler to the brain image
+                style={{ cursor: "pointer" }} // Change cursor to pointer to indicate it's clickable
               >
                 <motion.img
                   src={circleAndSociety.image}
@@ -254,6 +265,9 @@ const RankAndSociety = ({
           </Flex>
         </>
       )}
+
+      {/* Modal */}
+      <BrainModal isOpen={isModalOpen} onClose={handleCloseModal} />
     </Flex>
   );
 };
