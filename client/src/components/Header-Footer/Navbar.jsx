@@ -243,32 +243,38 @@ const Navbar = () => {
               gap={1}
               display={{ base: "flex", lg: "none" }}
               marginRight={"1rem"}
+              _hover={{
+                cursor: "pointer",
+              }}
             >
-              <Image
-                marginLeft={"10px"}
-                h={"35px"}
-                w={"20px"}
-                background={"transparent"}
-                src={RedFire}
-                alt="Red Flame Sticker"
-                marginBottom={"10px"}
-                marginRight={"2px"}
-              />
-              {/* <Box
-            as="svg"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 18 18"
-            width={{ base: "1.2rem", lg: "2em" }}
-            height={{ base: "1.2rem", lg: "2em" }}
-            fill="currentColor"
-            className="h-[20px] w-[20px] hover:text-text-primary dark:hover:text-text-primary text-text-secondary dark:text-text-secondary"
-          >
-            <path
-              fillRule="evenodd"
-              d="M7.19 1.564a.75.75 0 01.729.069c2.137 1.475 3.373 3.558 3.981 5.002l.641-.663a.75.75 0 011.17.115c1.633 2.536 1.659 5.537.391 7.725-1.322 2.282-3.915 2.688-5.119 2.688-1.177 0-3.679-.203-5.12-2.688-.623-1.076-.951-2.29-.842-3.528.109-1.245.656-2.463 1.697-3.54.646-.67 1.129-1.592 1.468-2.492.337-.895.51-1.709.564-2.105a.75.75 0 01.44-.583zm.784 2.023c-.1.368-.226.773-.385 1.193-.375.997-.947 2.13-1.792 3.005-.821.851-1.205 1.754-1.282 2.63-.078.884.153 1.792.647 2.645C6.176 14.81 7.925 15 8.983 15c1.03 0 2.909-.366 3.822-1.94.839-1.449.97-3.446.11-5.315l-.785.812a.75.75 0 01-1.268-.345c-.192-.794-1.04-2.948-2.888-4.625z"
-              clipRule="evenodd"
-            ></path>
-          </Box> */}
+              {state.streak > 0 ? (
+                <Image
+                  marginLeft={"10px"}
+                  h={"35px"}
+                  w={"20px"}
+                  background={"transparent"}
+                  src={RedFire}
+                  alt="Red Flame Sticker"
+                  marginBottom={"10px"}
+                  marginRight={"2px"}
+                />
+              ) : (
+                <Box
+                  as="svg"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 18 18"
+                  width={{ base: "1.2rem", lg: "2em" }}
+                  height={{ base: "1.2rem", lg: "2em" }}
+                  fill="currentColor"
+                  className="h-[20px] w-[20px] hover:text-text-primary dark:hover:text-text-primary text-text-secondary dark:text-text-secondary"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.19 1.564a.75.75 0 01.729.069c2.137 1.475 3.373 3.558 3.981 5.002l.641-.663a.75.75 0 011.17.115c1.633 2.536 1.659 5.537.391 7.725-1.322 2.282-3.915 2.688-5.119 2.688-1.177 0-3.679-.203-5.12-2.688-.623-1.076-.951-2.29-.842-3.528.109-1.245.656-2.463 1.697-3.54.646-.67 1.129-1.592 1.468-2.492.337-.895.51-1.709.564-2.105a.75.75 0 01.44-.583zm.784 2.023c-.1.368-.226.773-.385 1.193-.375.997-.947 2.13-1.792 3.005-.821.851-1.205 1.754-1.282 2.63-.078.884.153 1.792.647 2.645C6.176 14.81 7.925 15 8.983 15c1.03 0 2.909-.366 3.822-1.94.839-1.449.97-3.446.11-5.315l-.785.812a.75.75 0 01-1.268-.345c-.192-.794-1.04-2.948-2.888-4.625z"
+                    clipRule="evenodd"
+                  ></path>
+                </Box>
+              )}
               <Text textAlign={"center"} fontSize={"1.5rem"} m={0}>
                 {" "}
                 {state.streak}{" "}
@@ -390,32 +396,42 @@ const Navbar = () => {
             alignItems={"center"}
             gap={1}
             display={{ base: "none", lg: "flex" }}
+            borderRadius={"10px"}
+            _hover={{
+              cursor: "pointer",
+              backgroundColor: "#0f0d15",
+              backgroundImage:
+                "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+            }}
           >
-            <Image
-              marginLeft={"10px"}
-              h={"30px"}
-              w={"50px"}
-              background={"transparent"}
-              src={RedFire}
-              alt="Red Flame Sticker"
-              marginBottom={"10px"}
-              marginRight={"5px"}
-            />
-            {/* <Box
-            as="svg"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 18 18"
-            width={{ base: "1.2rem", lg: "2em" }}
-            height={{ base: "1.2rem", lg: "2em" }}
-            fill="currentColor"
-            className="h-[20px] w-[20px] hover:text-text-primary dark:hover:text-text-primary text-text-secondary dark:text-text-secondary"
-          >
-            <path
-              fillRule="evenodd"
-              d="M7.19 1.564a.75.75 0 01.729.069c2.137 1.475 3.373 3.558 3.981 5.002l.641-.663a.75.75 0 011.17.115c1.633 2.536 1.659 5.537.391 7.725-1.322 2.282-3.915 2.688-5.119 2.688-1.177 0-3.679-.203-5.12-2.688-.623-1.076-.951-2.29-.842-3.528.109-1.245.656-2.463 1.697-3.54.646-.67 1.129-1.592 1.468-2.492.337-.895.51-1.709.564-2.105a.75.75 0 01.44-.583zm.784 2.023c-.1.368-.226.773-.385 1.193-.375.997-.947 2.13-1.792 3.005-.821.851-1.205 1.754-1.282 2.63-.078.884.153 1.792.647 2.645C6.176 14.81 7.925 15 8.983 15c1.03 0 2.909-.366 3.822-1.94.839-1.449.97-3.446.11-5.315l-.785.812a.75.75 0 01-1.268-.345c-.192-.794-1.04-2.948-2.888-4.625z"
-              clipRule="evenodd"
-            ></path>
-          </Box> */}
+            {state.streak > 0 ? (
+              <Image
+                marginLeft={"10px"}
+                h={"30px"}
+                w={"50px"}
+                background={"transparent"}
+                src={RedFire}
+                alt="Red Flame Sticker"
+                marginBottom={"10px"}
+                marginRight={"5px"}
+              />
+            ) : (
+              <Box
+                as="svg"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 18 18"
+                width={{ base: "1.2rem", lg: "2em" }}
+                height={{ base: "1.2rem", lg: "2em" }}
+                fill="currentColor"
+                className="h-[20px] w-[20px] hover:text-text-primary dark:hover:text-text-primary text-text-secondary dark:text-text-secondary"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.19 1.564a.75.75 0 01.729.069c2.137 1.475 3.373 3.558 3.981 5.002l.641-.663a.75.75 0 011.17.115c1.633 2.536 1.659 5.537.391 7.725-1.322 2.282-3.915 2.688-5.119 2.688-1.177 0-3.679-.203-5.12-2.688-.623-1.076-.951-2.29-.842-3.528.109-1.245.656-2.463 1.697-3.54.646-.67 1.129-1.592 1.468-2.492.337-.895.51-1.709.564-2.105a.75.75 0 01.44-.583zm.784 2.023c-.1.368-.226.773-.385 1.193-.375.997-.947 2.13-1.792 3.005-.821.851-1.205 1.754-1.282 2.63-.078.884.153 1.792.647 2.645C6.176 14.81 7.925 15 8.983 15c1.03 0 2.909-.366 3.822-1.94.839-1.449.97-3.446.11-5.315l-.785.812a.75.75 0 01-1.268-.345c-.192-.794-1.04-2.948-2.888-4.625z"
+                  clipRule="evenodd"
+                ></path>
+              </Box>
+            )}
             <Text textAlign={"center"} fontSize={"1.5rem"} m={0}>
               {" "}
               {state.streak}{" "}

@@ -940,13 +940,14 @@ const quizDailyStreak = async (req, res) => {
       },
     ]);
 
-    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
     const latestAttemptDate = new Date(streakData[0]._id);
-    const isSameDay =
-      Math.round(today.getTime() - latestAttemptDate.getTime()) /
-      (1000 * 3600 * 24);
-    //console.log(isSameDay, today, latestAttemptDate, streakData[0].createdAt);
-    if (!isSameDay) {
+    const isDiffDay = Math.floor(
+      (yesterday.getTime() - latestAttemptDate.getTime()) / (1000 * 3600 * 24)
+    );
+    //console.log(isDiffDay, yesterday, latestAttemptDate, streakData[0]._id);
+    if (isDiffDay) {
       return res.json({ streak: 0 }); // No streak
     }
 
