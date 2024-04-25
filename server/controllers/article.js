@@ -378,13 +378,12 @@ const getWorldNews = async (req, res) => {
   try {
     const queries = [
       "source-countries=in,us,uk,jp",
-      //"source-countries=in&text=IPL OR T20WorldCup",
-      //"source-countries=in&text=elections",
-      //"text=ruturaj OR rizvi OR Modi OR Scam OR BJP OR ghaziabad",
-      "text=Helicopter OR crash OR E OR Y",
-      //"text=technology OR earthquakew OR MonkeyMan",
+      "source-countries=in&text=IPL OR T20WorldCup OR rishabh OR pant ",
+      "source-countries=in&text=elections",
+      "text=dhruv OR rathee OR Sharia OR law OR CM OR Adityanath",
+      "text=shipping OR pushpa OR radhe OR krishna",
+      "text=technology OR earthquakew OR MonkeyMan",
       "text=space OR ISRO OR NASA OR SpaceX",
-      "text=king OR maryam OR single",
     ];
 
     let allProcessedOutput = [];
@@ -443,7 +442,7 @@ const getWorldNews = async (req, res) => {
 const extractNews = async (req, res) => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   try {
-    const categories = ["science", "health", "business"];
+    const categories = ["entertainment", "technology"];
     let result = [];
     for (let category of categories) {
       console.log(`\nExtracting news of category ${category}\n`);

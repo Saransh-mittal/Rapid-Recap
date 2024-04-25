@@ -15,6 +15,18 @@ async function showState() {
   }
 }
 
+async function getDailyStreak() {
+  try {
+    const response = await axios.get(`/api/user/quizDailyStreak`);
+    if (response.status === 200) {
+      return { streak: response.data.streak };
+    }
+  } catch (error) {
+    console.log(error.message);
+    return { streak: 0 };
+  }
+}
+
 async function getAppUpdates() {
   try {
     const response = await axios.get(`/api/user/getUpdates`);
@@ -70,6 +82,7 @@ export const initialState = {
   ...(await showState()),
   ...(await currentArticle()),
   ...(await getAppUpdates()),
+  ...(await getDailyStreak()),
   modal: false,
   forgotPassword: false,
   verifyEmail: false,

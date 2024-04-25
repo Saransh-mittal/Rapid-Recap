@@ -910,6 +910,70 @@ const upgradeMessageClose = async (req, res) => {
   }
 };
 
+const quizDailyStreak = async (req, res) => {
+  const userId = req.user._id;
+
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    // If user not found, return error
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Use aggregation pipeline to group quiz attempts by day
+    const streakData = await QuizAttempt.aggregate([
+      {
+        $match: {
+          user: user._id,
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: -1 }, // Sort by date in descending order
+      },
+    ]);
+
+    const today = new Date();
+    const latestAttemptDate = new Date(streakData[0]._id);
+    const isSameDay =
+      Math.round(today.getTime() - latestAttemptDate.getTime()) /
+      (1000 * 3600 * 24);
+    //console.log(isSameDay, today, latestAttemptDate, streakData[0].createdAt);
+    if (!isSameDay) {
+      return res.json({ streak: 0 }); // No streak
+    }
+
+    // Iterate through quiz attempts to find streak
+    let streak = 1;
+    for (let i = 1; i < streakData.length; i++) {
+      // Check if consecutive days
+      const currentDay = new Date(streakData[i]._id);
+      const prevDay = new Date(streakData[i - 1]._id);
+      const diffInTime = currentDay.getTime() - prevDay.getTime();
+      const diffInDays = diffInTime / (1000 * 3600 * 24);
+      //console.log(currentDay, prevDay);
+      if (Math.abs(diffInDays) === 1) {
+        streak++;
+      } else {
+        // Streak broken, exit loop
+        break;
+      }
+    }
+
+    res.json({ streak });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -933,8 +997,7 @@ module.exports = {
   readUpdates,
   trashUpdate,
   trashAllUpdate,
-
   sendMailForNotifySubscribe,
-
   upgradeMessageClose,
+  quizDailyStreak,
 };

@@ -206,7 +206,7 @@ fill these in the category key (only string). Also if total characters are more 
 
 const fetchNews = async (query) => {
   const apiKey = "e7409124fe384b688c07763501b270dd";
-  const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-23`;
+  const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-24`;
 
   try {
     const response = await fetch(url, {
@@ -229,7 +229,7 @@ const fetchNews = async (query) => {
 };
 
 const extractNewsFromLink = async (query) => {
-  const apiKey = "acd1bf365a084183b509789e0aae202a";
+  const apiKey = "7e4a7d41a3ed463a952349bfb07b1452";
   const url = `https://api.worldnewsapi.com/extract-news?url=${query}`;
   try {
     const response = await fetch(url, {
