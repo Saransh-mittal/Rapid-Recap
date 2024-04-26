@@ -3,6 +3,6 @@
         "title": "Streak System Implemented",
         "mainText": "We've introduced a new streak system! Now, users can keep track of their daily quiz streaks right from the navigation bar. Each day you participate in at least one quiz, your streak continues; however, if you skip a day without participating, your streak resets to zero. Stay tuned for more updates on the perks coming your way!",
         "img": null,
-        "read": true
+        "read": false
     }
 ]
