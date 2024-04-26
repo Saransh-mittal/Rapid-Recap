@@ -4,7 +4,7 @@ const { progressBar } = require("../progress");
 
 const generateHindiTrans = async () => {
   const twoDaysAgo = new Date();
-  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 3);
 
   // Construct the aggregation pipeline
   const pipeline = [
@@ -20,7 +20,7 @@ const generateHindiTrans = async () => {
   try {
     const articles = await Article.aggregate(pipeline);
     const progress = progressBar(articles.length);
-    console.log("\nTotal articles in last 2 days: ", articles.length);
+    console.log("\nTotal articles in last 3 days: ", articles.length);
     console.log("\nGenerating Hindi translations for articles...\n");
     for (let art of articles) {
       if (art.hindiTitle === "" || !art.hindiTitle) {
