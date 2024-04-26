@@ -25,6 +25,8 @@ const {
   trashAllUpdate,
   upgradeMessageClose,
   sendMailForNotifySubscribe,
+  quizDailyStreakUpdator,
+  streakChecker,
 } = require("../controllers/user");
 const Authenticate = require("../middleware/authenticate");
 
@@ -54,4 +56,6 @@ router.route("/trashUpdates/:updateId").put(Authenticate, trashUpdate);
 router.route("/trashAllUpdates").put(Authenticate, trashAllUpdate);
 router.route("/upgradeMessageClose").put(Authenticate, upgradeMessageClose);
 router.route("/sendMailForNotifySubscribe").get(sendMailForNotifySubscribe);
+router.route("/quizDailyStreak").get(quizDailyStreakUpdator);
+router.route("/streakChecker").get(Authenticate, streakChecker);
 module.exports = router;

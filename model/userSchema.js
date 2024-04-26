@@ -60,7 +60,7 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
     pic: {
-      type: "String",
+      type: String,
       required: true,
       default:
         "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
@@ -127,6 +127,20 @@ const userSchema = new mongoose.Schema(
         ref: "APPLICATION_UPDATES", // This should match the model name
       },
     ],
+    streak: {
+      type: Number,
+      default: 0,
+    },
+    streakExpiry: {
+      type: Date,
+      default: function () {
+        // Set the default streak expiry to one day from now
+        const expiry = new Date();
+        expiry.setDate(expiry.getDate() + 1); // Set date to one day from now
+        expiry.setHours(0, 0, 0, 0); // Set time to start of the day
+        return expiry;
+      },
+    },
   },
   { collection: "Users" }
 );
