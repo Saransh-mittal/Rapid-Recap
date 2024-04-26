@@ -2,6 +2,7 @@ const natural = require("natural");
 const OpenAI = require("openai");
 const { progressBar } = require("./progress");
 const Article = require("../model/articleSchema");
+const Entities = require("html-entities").AllHtmlEntities;
 
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
@@ -95,6 +96,7 @@ const hindiConverter = async (article) => {
 };
 
 const processNews = async (news) => {
+  const entities = new Entities();
   const instructions = `you are a text checker and analyser
 
 remove the unnecessary content or lines of the mainText which is not related to the title for example Also read(section),
@@ -131,13 +133,16 @@ fill these in the category key (only string). Also if total characters are more 
       if (newsItem.text.length < 800) {
         throw new Error("Text is too short");
       }
-
+      const encodedText = newsItem.text;
+      const decodedText = entities.decode(encodedText);
+      const encodedTitle = newsItem.title;
+      const decodedTitle = entities.decode(encodedTitle);
       const prompt = JSON.stringify({
         url: newsItem.url,
         dateTime: newsItem.publish_date,
         author: newsItem.author,
-        title: newsItem.title,
-        mainText: newsItem.text,
+        title: decodedTitle,
+        mainText: decodedText,
         imgURL: [newsItem.image],
         category: "",
       });
@@ -252,6 +257,7 @@ const extractNewsFromLink = async (query) => {
 };
 
 const processExtractedNews = async (news, category) => {
+  const entities = new Entities();
   const instructions = `you are a text checker and analyser
 
 remove the unnecessary content or lines of the mainText which is not related to the title for example Also read(section),
@@ -277,15 +283,18 @@ Also if total characters are more than 2500 than summarize the whole mainText in
       if (newsItem.text.length < 800) {
         throw new Error("Text is too short");
       }
-
+      const encodedText = newsItem.text;
+      const decodedText = entities.decode(encodedText);
+      const encodedTitle = newsItem.title;
+      const decodedTitle = entities.decode(encodedTitle);
       const prompt = JSON.stringify({
         url: newsItem.url,
         dateTime: newsItem.publish_date,
         author: Array.isArray(newsItem.author)
           ? newsItem.author[0]
           : newsItem.author,
-        title: newsItem.title,
-        mainText: newsItem.text,
+        title: decodedTitle,
+        mainText: decodedText,
         imgURL: [newsItem.image],
         category: category,
       });

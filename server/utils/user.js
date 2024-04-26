@@ -274,11 +274,9 @@ const dailyStreakCalculator = async (userId) => {
         break;
       }
     }
-
-    //if (user.inGameName === "dynamic_queen") console.log(streak);
     user.streak = streak;
     latestAttemptDate.setDate(latestAttemptDate.getDate() + 1);
-    latestAttemptDate.setHours(0, 0, 0, 0);
+    latestAttemptDate.setUTCHours(0, 0, 0, 0);
     user.streakExpiry = latestAttemptDate;
     await user.save();
     return streak;
