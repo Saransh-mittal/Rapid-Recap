@@ -17,7 +17,7 @@ async function showState() {
 
 async function getDailyStreak() {
   try {
-    const response = await axios.get(`/api/user/quizDailyStreak`);
+    const response = await axios.get(`/api/user/streakChecker`);
     if (response.status === 200) {
       return { streak: response.data.streak };
     }

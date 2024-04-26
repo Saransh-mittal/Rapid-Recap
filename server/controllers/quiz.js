@@ -15,6 +15,15 @@ const saveAttempt = async (req, res) => {
       user: userId,
       article: articleId,
     });
+
+    const currentDate = new Date(); // Get current date
+    currentDate.setHours(0, 0, 0, 0); // Set time to start of the day
+
+    // Check if there's any attempt saved for the current user and article for today
+    const todayAttemptsCount = await QuizAttempt.countDocuments({
+      user: userId,
+      createdAt: { $gte: currentDate },
+    });
     if (attempt) {
       throw new Error("User has already attempted the quiz for the article.");
     }
@@ -92,6 +101,11 @@ const saveAttempt = async (req, res) => {
     await newQuizAttempt.save();
     const user = await User.findById(userId);
     user.quizAttempts.push(newQuizAttempt._id);
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 1); // Set date to one day from now
+    expiry.setHours(0, 0, 0, 0);
+    user.streakExpiry = expiry;
+    if (todayAttemptsCount === 0) user.streak++;
     if (articleDifficulty < 0.5) user.easyQuizCount++;
     else if (articleDifficulty < 0.7) user.mediumQuizCount++;
     else user.hardQuizCount++;

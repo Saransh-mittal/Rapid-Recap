@@ -85,7 +85,7 @@ export default function Sigin() {
           payloadUser: response.data.user,
         });
         try {
-          const res = await axios.get(`/api/user/quizDailyStreak`);
+          const res = await axios.get(`/api/user/streakChecker`);
           if (res.status === 200) {
             dispatch({
               type: "setDailyStreak",
@@ -325,7 +325,7 @@ export default function Sigin() {
                           });
                           try {
                             const res = await axios.get(
-                              `/api/user/quizDailyStreak`
+                              `/api/user/streakChecker`
                             );
                             if (res.status === 200) {
                               dispatch({

@@ -378,12 +378,9 @@ const getWorldNews = async (req, res) => {
   try {
     const queries = [
       "source-countries=in,us,uk,jp",
-      "source-countries=in&text=IPL OR T20WorldCup OR rishabh OR pant ",
-      "source-countries=in&text=elections",
-      "text=dhruv OR rathee OR Sharia OR law OR CM OR Adityanath",
-      "text=shipping OR pushpa OR radhe OR krishna",
-      "text=technology OR earthquakew OR MonkeyMan",
-      "text=space OR ISRO OR NASA OR SpaceX",
+      "source-countries=in&text=IPL OR T20WorldCup OR kohli",
+      "source-countries=in&text=elections OR dhruv OR rathee OR Modi OR whatsapp OR university",
+      "text=Hanuman OR beniwal OR mrunal OR thakur OR tamannah OR Bhatia",
     ];
 
     let allProcessedOutput = [];
@@ -442,8 +439,9 @@ const getWorldNews = async (req, res) => {
 const extractNews = async (req, res) => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   try {
-    const categories = ["entertainment", "technology"];
+    const categories = ["business"];
     let result = [];
+    let notificationCategories = categories.join(", ");
     for (let category of categories) {
       console.log(`\nExtracting news of category ${category}\n`);
       const response = await newsapi.v2.topHeadlines({
@@ -469,9 +467,7 @@ const extractNews = async (req, res) => {
       message: `No. of news fetched for DB : ${result.length}`,
     });
     if (result.length > 0) {
-      const title = `📢 New ${
-        categories[0] + `, ` + categories[1] + ` and ` + categories[2]
-      } Content Alert! 📰`;
+      const title = `📢 New ${notificationCategories} Content Alert! 📰`;
       const body =
         "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
       const url = "https://cyan-crane-tie.cyclic.app/";

@@ -126,7 +126,10 @@ fill these in the category key (only string). Also if total characters are more 
       });
 
       if (isArticle) {
-        continue;
+        throw new Error("Article already exists");
+      }
+      if (newsItem.text.length < 800) {
+        throw new Error("Text is too short");
       }
 
       const prompt = JSON.stringify({
@@ -206,7 +209,7 @@ fill these in the category key (only string). Also if total characters are more 
 
 const fetchNews = async (query) => {
   const apiKey = "e7409124fe384b688c07763501b270dd";
-  const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-24`;
+  const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-25`;
 
   try {
     const response = await fetch(url, {
@@ -229,7 +232,7 @@ const fetchNews = async (query) => {
 };
 
 const extractNewsFromLink = async (query) => {
-  const apiKey = "7e4a7d41a3ed463a952349bfb07b1452";
+  const apiKey = "acd1bf365a084183b509789e0aae202a";
   const url = `https://api.worldnewsapi.com/extract-news?url=${query}`;
   try {
     const response = await fetch(url, {
@@ -270,6 +273,9 @@ Also if total characters are more than 2500 than summarize the whole mainText in
 
       if (isArticle) {
         continue;
+      }
+      if (newsItem.text.length < 800) {
+        throw new Error("Text is too short");
       }
 
       const prompt = JSON.stringify({
