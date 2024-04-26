@@ -938,6 +938,8 @@ const streakChecker = async (req, res) => {
 
     if (today.getTime() > user.streakExpiry.getTime()) {
       // Reset streak
+      console.log(today.getTime(), user.streakExpiry.getTime());
+      console.log("Streak reset for user:", user.inGameName);
       user.streak = 0;
       user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000);
       await user.save();
