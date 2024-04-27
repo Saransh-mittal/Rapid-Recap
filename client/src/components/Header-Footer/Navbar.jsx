@@ -18,6 +18,8 @@ import ProfileDropDownMenu from "../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon, CloseIcon, EmailIcon } from "@chakra-ui/icons";
 import Categories from "./Categories";
 import NotificationDrawer from "./Inbox/NotificationDrawer";
+import DailyStreakModal from "../streakComponents/DailyStreakModal";
+import { motion } from "framer-motion";
 
 const Navbar = () => {
   const navItems = [
@@ -30,7 +32,7 @@ const Navbar = () => {
   const [showCategory, setShowCategory] = useState(false);
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // New state for drawer
-  // const [notificationData, setNotificationData] = useState(null); // State for notification data
+  const [showDailyStreakModal, setShowDailyStreakModal] = useState(false);
 
   const navigate = useNavigate();
   const toast = useToast();
@@ -156,6 +158,12 @@ const Navbar = () => {
       transform={visible ? "translateY(0)" : "translateY(-100%)"}
       transition="transform 0.3s ease-in-out"
     >
+      {showDailyStreakModal && (
+        <DailyStreakModal
+          setShowDailyStreakModal={setShowDailyStreakModal}
+          getBackgroundColor={getBackgroundColor}
+        />
+      )}
       {/* Close button when hamburger menu is open */}
       {isHamburgerOpen ? (
         <Button
@@ -263,6 +271,10 @@ const Navbar = () => {
               _hover={{
                 cursor: "pointer",
               }}
+              onClick={() => setShowDailyStreakModal(true)}
+              _active={{
+                transform: "scale(0.9)",
+              }}
             >
               <Box
                 as="svg"
@@ -280,9 +292,9 @@ const Navbar = () => {
                   <>
                     <g filter="url(#hot-filled_svg__filter0_i_289_12318)">
                       <path
-                        fill-rule="evenodd"
+                        fillRule="evenodd"
                         d="M9.588 2.085a1 1 0 01.97.092c2.85 1.966 4.498 4.744 5.31 6.67l.854-.885a1 1 0 011.56.154c2.177 3.38 2.211 7.383.521 10.3C17.039 21.459 13.583 22 11.977 22c-1.569 0-4.905-.27-6.825-3.584-.832-1.435-1.27-3.053-1.125-4.704.146-1.66.876-3.284 2.264-4.721.86-.891 1.505-2.122 1.957-3.322.449-1.193.68-2.278.752-2.806a1 1 0 01.588-.778z"
-                        clip-rule="evenodd"
+                        clipRule="evenodd"
                         fill={getBackgroundColor({
                           heatLevel: state.streak / 7,
                         })}
@@ -297,8 +309,8 @@ const Navbar = () => {
                         y2="22"
                         gradientUnits="userSpaceOnUse"
                       >
-                        <stop stop-color="#FFA116"></stop>
-                        <stop offset="1" stop-color="#F9772E"></stop>
+                        <stop stopColor="#FFA116"></stop>
+                        <stop offset="1" stopColor="#F9772E"></stop>
                       </linearGradient>
                       <filter
                         id="hot-filled_svg__filter0_i_289_12318"
@@ -306,11 +318,11 @@ const Navbar = () => {
                         height="21.2"
                         x="4"
                         y="2"
-                        color-interpolation-filters="sRGB"
+                        colorInterpolationFilters="sRGB"
                         filterUnits="userSpaceOnUse"
                       >
                         <feFlood
-                          flood-opacity="0"
+                          floodOpacity="0"
                           result="BackgroundImageFix"
                         ></feFlood>
                         <feBlend
@@ -486,25 +498,38 @@ const Navbar = () => {
                 "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
             }}
             marginRight={"1.3rem"}
+            onClick={() => setShowDailyStreakModal(true)}
+            _active={{
+              transform: "scale(0.9)",
+            }}
           >
             <Box
               as="svg"
               xmlns="http://www.w3.org/2000/svg"
               viewBox={state.streak === 0 ? "0 0 18 18" : "0 0 24 24"}
-              width={{ base: "1.2rem", lg: "1.5em" }}
-              height={{ base: "1.2rem", lg: "1.5em" }}
+              width={{ base: "1.2rem", lg: "1.6em" }}
+              height={{ base: "1.2rem", lg: "1.6em" }}
               fill="currentColor"
               display={"flex"}
               justifyContent={"center"}
               alignItems={"center"}
+              zIndex={"1000"}
+              borderRadius={"50%"}
+              padding={"2px"}
+              style={{
+                boxShadow:
+                  state.streak % 7 === 0
+                    ? "0 0 10px 0 rgba(0, 150, 255, 0.7), 0 4px 8px 0 rgba(0, 150, 255, 0.3), 0 8px 20px 0 rgba(0, 150, 255, 0.2)"
+                    : "none",
+              }}
             >
               {state.streak > 0 ? (
                 <>
                   <g filter="url(#hot-filled_svg__filter0_i_289_12318)">
                     <path
-                      fill-rule="evenodd"
+                      fillRule="evenodd"
                       d="M9.588 2.085a1 1 0 01.97.092c2.85 1.966 4.498 4.744 5.31 6.67l.854-.885a1 1 0 011.56.154c2.177 3.38 2.211 7.383.521 10.3C17.039 21.459 13.583 22 11.977 22c-1.569 0-4.905-.27-6.825-3.584-.832-1.435-1.27-3.053-1.125-4.704.146-1.66.876-3.284 2.264-4.721.86-.891 1.505-2.122 1.957-3.322.449-1.193.68-2.278.752-2.806a1 1 0 01.588-.778z"
-                      clip-rule="evenodd"
+                      clipRule="evenodd"
                       fill={getBackgroundColor({ heatLevel: state.streak / 7 })}
                     ></path>
                   </g>
@@ -517,8 +542,8 @@ const Navbar = () => {
                       y2="22"
                       gradientUnits="userSpaceOnUse"
                     >
-                      <stop stop-color="#FFA116"></stop>
-                      <stop offset="1" stop-color="#F9772E"></stop>
+                      <stop stopColor="#FFA116"></stop>
+                      <stop offset="1" stopColor="#F9772E"></stop>
                     </linearGradient>
                     <filter
                       id="hot-filled_svg__filter0_i_289_12318"
@@ -526,11 +551,11 @@ const Navbar = () => {
                       height="21.2"
                       x="4"
                       y="2"
-                      color-interpolation-filters="sRGB"
+                      colorInterpolationFilters="sRGB"
                       filterUnits="userSpaceOnUse"
                     >
                       <feFlood
-                        flood-opacity="0"
+                        floodOpacity="0"
                         result="BackgroundImageFix"
                       ></feFlood>
                       <feBlend
