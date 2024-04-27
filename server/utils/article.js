@@ -27,15 +27,15 @@ const hindiConverter = async (article) => {
       apiKey: process.env.OPENAI_API_KEY,
     });
     const prompt = `Title: ${title}\n Author: ${author}\n\n MainText: ${mainText}\n\n`;
-
-    const instructions = `Instructions:
-                                1. Translate the given text to Hindi.
-                                2. Translate the title to hindi carefully.
-                                3. Author is name of the author of the article, translate author name to hindi ,dont write its meaning.
-                                4. Be very careful when translating MainText to hindi and it's meaning should be same as in english.
-                                5. Break maintext in only 3 paragraphs.
-                                6. Make a JSON object containing hindiTitle, hindiAuthor, and hindiMainText.
-                                7.  Return the JSON object which contains the translated text and looks like :
+    const instructions1 =
+      "do you know about daily speaking hindi spoken by a common Indian";
+    const instructions2 =
+      "I will provide you the article ,convert it in the above manner and letters should be in hindi.";
+    const instructions3 = `Instructions:
+                                1. Author is name of the author of the article, translate author name to hindi ,dont write its meaning.
+                                2. Break maintext in only 3 paragraphs.
+                                3. Make a JSON object containing hindiTitle, hindiAuthor, and hindiMainText.
+                                4.  Return the JSON object which contains the translated text and looks like :
                                 {
                                   "hindiTitle": "translated title",
                                   "hindiAuthor": "translated author",
@@ -53,9 +53,15 @@ const hindiConverter = async (article) => {
       messages: [
         {
           role: "system",
-          content: `You are a hindi translator bot. You have to translate an article. You
-                    have to follow the given instructions to translate the article.You have to 
-                    return the response in the given JSON format. ${instructions}`,
+          content: `${instructions1}`,
+        },
+        {
+          role: "system",
+          content: `${instructions2}`,
+        },
+        {
+          role: "system",
+          content: `${instructions3}`,
         },
         {
           role: "user",
@@ -77,9 +83,15 @@ const hindiConverter = async (article) => {
         messages: [
           {
             role: "system",
-            content: `You are a hindi translator bot. You have to translate an article. You
-                    have to follow the given instructions to translate the article.You have to 
-                    return the response in the given JSON format. ${instructions}`,
+            content: `${instructions1}`,
+          },
+          {
+            role: "system",
+            content: `${instructions2}`,
+          },
+          {
+            role: "system",
+            content: `${instructions3}`,
           },
           {
             role: "user",
@@ -103,7 +115,6 @@ const hindiConverter = async (article) => {
 };
 
 const processNews = async (news) => {
-  const entities = new Entities();
   const instructions = `you are a text checker and analyser
 
 remove the unnecessary content or lines of the mainText which is not related to the title for example Also read(section),
@@ -141,9 +152,9 @@ fill these in the category key (only string). Also if total characters are more 
         throw new Error("Text is too short");
       }
       const encodedText = newsItem.text;
-      const decodedText = entities.decode(encodedText);
+      const decodedText = decode(encodedText);
       const encodedTitle = newsItem.title;
-      const decodedTitle = entities.decode(encodedTitle);
+      const decodedTitle = decode(encodedTitle);
       const prompt = JSON.stringify({
         url: newsItem.url,
         dateTime: newsItem.publish_date,
