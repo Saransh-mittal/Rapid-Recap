@@ -5,33 +5,34 @@ const {
 } = require("../quiz");
 const { progressBar } = require("../progress");
 
-const genHindiQuizForArticles = async () => {
-  const twoDaysAgo = new Date();
-  twoDaysAgo.setDate(twoDaysAgo.getDate() - 3);
+const genHindiQuizForArticles = async (articles) => {
+  // const twoDaysAgo = new Date();
+  // twoDaysAgo.setDate(twoDaysAgo.getDate() - 3);
 
-  // Construct the aggregation pipeline
-  const pipeline = [
-    {
-      $match: {
-        dateTime: {
-          $gte: twoDaysAgo.toISOString(), // Find articles with dateTime greater than or equal to two days ago
-        },
-      },
-    },
-  ];
+  // // Construct the aggregation pipeline
+  // const pipeline = [
+  //   {
+  //     $match: {
+  //       dateTime: {
+  //         $gte: twoDaysAgo.toISOString(), // Find articles with dateTime greater than or equal to two days ago
+  //       },
+  //     },
+  //   },
+  // ];
   try {
-    const articles = await Article.aggregate(pipeline);
+    //const articles = await Article.aggregate(pipeline);
     const progress = progressBar(articles.length);
     console.log("\nGenerating Hindi quizzes for articles...\n");
     for (let article of articles) {
       try {
         const articleId = article._id;
-        const { hindiTitle, hindiAuthor, hindiMainText } = article;
+        const art = await Article.findById(articleId);
+        const { hindiTitle, hindiAuthor, hindiMainText } = art;
         if (!hindiTitle || !hindiAuthor || !hindiMainText) {
           continue;
         }
         let fullQuiz;
-        if (article.quiz && article.quiz.length > 0) {
+        if (art.quiz && art.quiz.length > 0) {
           fullQuiz = await findQuizByLanguage({
             language: "hi",
             articleId,
@@ -67,4 +68,4 @@ const genHindiQuizForArticles = async () => {
   }
 };
 
-genHindiQuizForArticles();
+module.exports = genHindiQuizForArticles;

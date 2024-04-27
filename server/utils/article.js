@@ -2,7 +2,7 @@ const natural = require("natural");
 const OpenAI = require("openai");
 const { progressBar } = require("./progress");
 const Article = require("../model/articleSchema");
-const Entities = require("html-entities").AllHtmlEntities;
+const { decode } = require("html-entities");
 
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
@@ -88,6 +88,13 @@ const hindiConverter = async (article) => {
         ],
       });
       response = JSON.parse(result.choices[0].message.content);
+    }
+    if (
+      !response.hindiTitle ||
+      !response.hindiAuthor ||
+      !response.hindiMainText
+    ) {
+      throw new Error("Failed to translate article");
     }
     return response;
   } catch (error) {
@@ -236,8 +243,7 @@ const fetchNews = async (query) => {
   }
 };
 
-const extractNewsFromLink = async (query) => {
-  const apiKey = "acd1bf365a084183b509789e0aae202a";
+const extractNewsFromLink = async (query, apiKey) => {
   const url = `https://api.worldnewsapi.com/extract-news?url=${query}`;
   try {
     const response = await fetch(url, {
@@ -257,7 +263,6 @@ const extractNewsFromLink = async (query) => {
 };
 
 const processExtractedNews = async (news, category) => {
-  const entities = new Entities();
   const instructions = `you are a text checker and analyser
 
 remove the unnecessary content or lines of the mainText which is not related to the title for example Also read(section),
@@ -284,9 +289,9 @@ Also if total characters are more than 2500 than summarize the whole mainText in
         throw new Error("Text is too short");
       }
       const encodedText = newsItem.text;
-      const decodedText = entities.decode(encodedText);
+      const decodedText = decode(encodedText);
       const encodedTitle = newsItem.title;
-      const decodedTitle = entities.decode(encodedTitle);
+      const decodedTitle = decode(encodedTitle);
       const prompt = JSON.stringify({
         url: newsItem.url,
         dateTime: newsItem.publish_date,
@@ -335,10 +340,9 @@ Also if total characters are more than 2500 than summarize the whole mainText in
       }
       res = JSON.parse(output.choices[0].message.content);
 
-      processedOutput.push(res);
-
       const newArticle = new Article(res);
       await newArticle.save();
+      processedOutput.push(newArticle);
     } catch (error) {
       console.log(error);
     } finally {
