@@ -380,16 +380,16 @@ const hindiTranslation = async (req, res) => {
 const getWorldNews = async (req, res) => {
   try {
     const queries = [
-      "source-countries=in,us,uk,jp",
-      "source-countries=in&text=IPL OR T20WorldCup OR kohli",
-      "source-countries=in&text=elections OR dhruv OR rathee OR Modi OR whatsapp OR university",
-      "text=Hanuman OR beniwal OR mrunal OR thakur OR tamannah OR Bhatia",
+      "source-countries=in&text=IPL OR T20WorldCup",
+      "source-countries=in&text=elections OR dhruv OR rathee OR Modi",
+      "text=Ramayan",
     ];
 
     let allProcessedOutput = [];
 
     for (let query of queries) {
       const news = await fetchNews(query);
+      qq;
 
       if (news.length === 0) {
         console.log("No news articles found for query:", query);
@@ -442,13 +442,13 @@ const getWorldNews = async (req, res) => {
 const extractNews = async (req, res) => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   const apiKeys = [
+    "7170746b5aa044069fbd5f48e74817ac",
     "acd1bf365a084183b509789e0aae202a",
     "a46513e934b14f44a9fa2137185f5438",
     "7e4a7d41a3ed463a952349bfb07b1452",
     "e7409124fe384b688c07763501b270dd",
-    "7170746b5aa044069fbd5f48e74817ac",
   ];
-  const categories = ["technology", "science", "entertainment"];
+  const categories = ["general", "sports"];
   const requestsPerKey = 30;
   let currentKeyIndex = 0;
   let requestsMadeWithCurrentKey = 0;
@@ -462,6 +462,7 @@ const extractNews = async (req, res) => {
       const response = await newsapi.v2.topHeadlines({
         category,
         language: "en",
+        country: "in",
       });
 
       const articles = JSON.parse(JSON.stringify(response.articles));
