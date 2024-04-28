@@ -8,6 +8,7 @@ import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 import { AppContext } from "../../contextAPI/appContext";
 import Loading from "../miscellaneous/Loading";
 import BrainModal from "./RankAndSocietySubCompnents/BrainModal";
+import CircleModal from "./RankAndSocietySubCompnents/CircleModal"; // Import CircleModal
 
 const RankAndSociety = ({
   USER_IQ = 0,
@@ -17,7 +18,8 @@ const RankAndSociety = ({
   const { state, dispatch } = useContext(AppContext);
   const [circleAndSociety, setCircleAndSociety] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for BrainModal
+  const [isCircleModalOpen, setIsCircleModalOpen] = useState(false); // State for CircleModal
 
   useEffect(() => {
     const userIQ = USER_IQ;
@@ -33,11 +35,19 @@ const RankAndSociety = ({
   }, [USER_IQ]);
 
   const handleBrainClick = () => {
-    setIsModalOpen(true); // Open the modal upon clicking the brain image
+    setIsModalOpen(true); // Open the BrainModal upon clicking the brain image
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false); // Close the modal
+    setIsModalOpen(false); // Close the BrainModal
+  };
+
+  const handleCircleClick = () => {
+    setIsCircleModalOpen(true); // Open the CircleModal upon clicking the circle image
+  };
+
+  const handleCloseCircleModal = () => {
+    setIsCircleModalOpen(false); // Close the CircleModal
   };
 
   return (
@@ -111,22 +121,25 @@ const RankAndSociety = ({
                 onClick={handleBrainClick} // Add onClick handler to the brain image
                 style={{ cursor: "pointer" }} // Change cursor to pointer to indicate it's clickable
               >
-                <motion.img
-                  src={circleAndSociety.image}
-                  alt="Brain"
-                  style={{
-                    width: "80px",
-                    height: "80px",
-                    background: "transparent",
-                  }}
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    repeatType: "reverse",
-                  }}
-                />
-                <Lightning />
+                <Flex>
+                  <motion.img
+                    src={circleAndSociety.image}
+                    alt="Brain"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      background: "transparent",
+                    }}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                    }}
+                  />
+                  <Lightning />
+                </Flex>
+
                 <Text
                   textAlign="center"
                   fontSize="lg"
@@ -145,7 +158,13 @@ const RankAndSociety = ({
                 justifyContent="center"
                 marginTop="-5%"
               >
-                <Image w="70px" h="70px" background="transparent" src={Arrow} />
+                <Image
+                  w="70px"
+                  h="70px"
+                  background="transparent"
+                  mt={-10}
+                  src={Arrow}
+                />
               </Flex>
               <Flex w="100%" position="relative">
                 <div
@@ -153,8 +172,11 @@ const RankAndSociety = ({
                     position: "relative",
                     width: "140px",
                     height: "140px",
-                    marginTop: "-22%",
+                    marginTop: "-11%",
+                    cursor: "pointer",
                   }}
+                  onClick={handleCircleClick} // Add onClick handler to the circle
+                  // Change cursor to pointer to indicate it's clickable
                 >
                   <img
                     src={circle}
@@ -170,6 +192,7 @@ const RankAndSociety = ({
                       position: "absolute",
                       top: 0,
                       left: 0,
+                      mt: "3px",
                       width: "100%",
                       height: "100%",
                       display: "flex",
@@ -265,9 +288,17 @@ const RankAndSociety = ({
           </Flex>
         </>
       )}
-
-      {/* Modal */}
-      <BrainModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      {/* Modals */}
+      <BrainModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        currentUserSociety={"Strivers Society"}
+      />
+      <CircleModal
+        isOpen={isCircleModalOpen}
+        onClose={handleCloseCircleModal}
+      />{" "}
+      {/* Pass the state and handler */}
     </Flex>
   );
 };
