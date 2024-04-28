@@ -21,6 +21,7 @@ const RankAndSociety = ({
   const [isModalOpen, setIsModalOpen] = useState(false); // State for BrainModal
   const [isCircleModalOpen, setIsCircleModalOpen] = useState(false); // State for CircleModal
   const [showBrainModal, setShowBrainModal] = useState(false);
+  const [showCircleModal, setShowCircleModal] = useState(false);
 
   useEffect(() => {
     const userIQ = USER_IQ;
@@ -45,6 +46,7 @@ const RankAndSociety = ({
   };
 
   const handleCircleClick = () => {
+    setShowCircleModal(true);
     setIsCircleModalOpen(true); // Open the CircleModal upon clicking the circle image
   };
 
@@ -291,16 +293,30 @@ const RankAndSociety = ({
         </>
       )}
       {/* Modals */}
-      {showBrainModal && <BrainModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        currentUserSociety={"Mavericks"}
-        setShowBrainModal={setShowBrainModal}
-      />}
-      <CircleModal
+      {showBrainModal && (
+        <BrainModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          // currentUserSociety={"Mavericks"}
+          currentUserSociety={circleAndSociety.society.split(" ")[0]}
+          setShowBrainModal={setShowBrainModal}
+        />
+      )}
+      {showCircleModal && (
+        <CircleModal
+          isOpen={isCircleModalOpen}
+          onClose={handleCloseCircleModal}
+          // currentUserCircle={"Masters"}
+          currentUserCircle={
+            circleAndSociety.circle ? circleAndSociety.circle.split(" ")[0] : ""
+          }
+          setShowCircleModal={setShowCircleModal}
+        />
+      )}
+      {/* <CircleModal
         isOpen={isCircleModalOpen}
         onClose={handleCloseCircleModal}
-      />{" "}
+      />{" "} */}
       {/* Pass the state and handler */}
     </Flex>
   );

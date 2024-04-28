@@ -18,20 +18,25 @@ import Brains from "../../../assets/Brains"; // Import the Brains array
 import { motion } from "framer-motion";
 import NameLightning from "../../miscellaneous/NameLightning";
 
-const BrainModal = ({ isOpen, onClose, currentUserSociety,setShowBrainModal }) => {
+const BrainModal = ({
+  isOpen,
+  onClose,
+  currentUserSociety,
+  setShowBrainModal,
+}) => {
   const [currentPage, setCurrentPage] = useState(1); // Initialize current page to 1
-
 
   useEffect(() => {
     if (!isOpen || !currentUserSociety || Brains.length === 0) return;
     const societyIndex = Brains.findIndex(
-      (brain) => brain.society.toLowerCase() === currentUserSociety.toLowerCase()
+      (brain) =>
+        brain.society.toLowerCase() === currentUserSociety.toLowerCase()
     );
 
     // Start auto-navigation to current page when modal opens
     const intervalId = setInterval(() => {
       setCurrentPage((prevPage) => {
-        if (prevPage === societyIndex+1) {
+        if (prevPage === societyIndex + 1) {
           clearInterval(intervalId); // Stop the interval if it reaches the end
           return prevPage;
         } else {
@@ -61,10 +66,14 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety,setShowBrainModal }) =
   const currentBrain = Brains[currentPage - 1];
 
   return (
-    <Modal isOpen={isOpen} onClose={()=>{
-      setShowBrainModal(false);
-      onClose();
-    }} size="xl">
+    <Modal
+      isOpen={isOpen}
+      onClose={() => {
+        setShowBrainModal(false);
+        onClose();
+      }}
+      size="xl"
+    >
       <ModalOverlay />
       <ModalContent
         style={{
@@ -78,11 +87,11 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety,setShowBrainModal }) =
             textAlign: "center",
             fontSize: "36px",
             fontWeight: "bold",
-            color: "transparent", /* Transparent text color */
+            color: "transparent" /* Transparent text color */,
             fontFamily: "'Poppins', sans-serif",
             backgroundImage:
-              "linear-gradient(45deg, #ff7e5f, #feb47b)", /* Gradient background */
-            backgroundClip: "text", /* Clip text to background gradient */
+              "linear-gradient(45deg, #ff7e5f, #feb47b)" /* Gradient background */,
+            backgroundClip: "text" /* Clip text to background gradient */,
             textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
             backgroundColor: "#0f0d15",
             padding: "10px",
@@ -103,7 +112,9 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety,setShowBrainModal }) =
               icon={<ChevronLeftIcon />}
               aria-label="Previous Page"
               onClick={handlePreviousPage}
-              isDisabled={currentPage === 1} /* Disable previous button at page 1 */
+              isDisabled={
+                currentPage === 1
+              } /* Disable previous button at page 1 */
               _hover={{
                 bgGradient: "linear(to-r, #7928CA, #FF0080)",
                 color: "white",
@@ -124,6 +135,23 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety,setShowBrainModal }) =
               transition="all 0.2s"
             />
           </Flex>
+          {currentPage ===
+            Brains.findIndex(
+              (brain) =>
+                brain.society.toLowerCase() === currentUserSociety.toLowerCase()
+            ) +
+              1 && (
+            <Text
+              textAlign="center"
+              color="yellow"
+              fontWeight="bold"
+              fontSize="24px"
+              marginBottom="10px"
+            >
+              <span style={{ fontSize: "36px", marginRight: "5px" }}>📍</span>
+              You are here!
+            </Text>
+          )}
           <Box textAlign="center">
             <Flex
               justifyContent={"center"}
@@ -174,7 +202,10 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety,setShowBrainModal }) =
                 return lines.map(
                   (line, lineIndex) =>
                     line.trim() && (
-                      <div style={{ flexDirection: "row !important" }} key={lineIndex}>
+                      <div
+                        style={{ flexDirection: "row !important" }}
+                        key={lineIndex}
+                      >
                         <p style={{ padding: "0", margin: "0.2rem" }}></p>
 
                         <span
