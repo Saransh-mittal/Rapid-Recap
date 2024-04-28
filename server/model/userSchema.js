@@ -137,6 +137,10 @@ const userSchema = new mongoose.Schema(
         return expiry;
       },
     },
+    longestStreak: {
+      type: Number,
+      default: 0,
+    },
   },
   { collection: "Users" }
 );

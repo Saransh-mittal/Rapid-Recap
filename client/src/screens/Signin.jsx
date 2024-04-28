@@ -91,6 +91,10 @@ export default function Sigin() {
               type: "setDailyStreak",
               payloadDailyStreak: res.data.streak,
             });
+            dispatch({
+              type: "setLongestDailyStreak",
+              payloadLongestDailyStreak: res.data.longestStreak,
+            });
           }
         } catch (error) {
           console.error(error.message);
@@ -331,6 +335,11 @@ export default function Sigin() {
                               dispatch({
                                 type: "setDailyStreak",
                                 payloadDailyStreak: res.data.streak,
+                              });
+                              dispatch({
+                                type: "setLongestDailyStreak",
+                                payloadLongestDailyStreak:
+                                  res.data.longestStreak,
                               });
                             }
                           } catch (error) {

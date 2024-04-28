@@ -105,7 +105,11 @@ const saveAttempt = async (req, res) => {
     expiry.setDate(expiry.getDate() + 1); // Set date to one day from now
     expiry.setHours(0, 0, 0, 0);
     user.streakExpiry = expiry;
-    if (todayAttemptsCount === 0) user.streak++;
+    if (todayAttemptsCount === 0) {
+      if (user.streak + 1 > user.longestStreak)
+        user.longestStreak = user.streak + 1;
+      user.streak++;
+    }
     if (articleDifficulty < 0.5) user.easyQuizCount++;
     else if (articleDifficulty < 0.7) user.mediumQuizCount++;
     else user.hardQuizCount++;

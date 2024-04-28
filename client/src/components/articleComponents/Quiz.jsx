@@ -104,6 +104,10 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
         type: "setDailyStreak",
         payloadDailyStreak: res.data.streak,
       });
+      dispatch({
+        type: "setLongestDailyStreak",
+        payloadLongestDailyStreak: res.data.longestStreak,
+      });
     } catch (error) {
       //console.log(error.response.data.error);
       toast({

@@ -18,6 +18,7 @@ const {
   getDailyActivity,
   calculateUserRank,
   dailyStreakCalculator,
+  longestStreakCalculator,
 } = require("../utils/user");
 const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
@@ -926,6 +927,21 @@ const quizDailyStreakUpdator = async (req, res) => {
     console.log(error.message);
   }
 };
+const longestStreakCalculatorOfAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({ inGameName: { $exists: true, $ne: "" } });
+    console.log(users.length);
+    const updateProgress = progressBar(users.length);
+    for (let user of users) {
+      await longestStreakCalculator(user._id);
+      updateProgress();
+    }
+    res.status(200).json({ message: "Longest streak updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
 
 const streakChecker = async (req, res) => {
   const userId = req.user._id;
@@ -944,7 +960,9 @@ const streakChecker = async (req, res) => {
       return res.status(200).json({ streak: 0 });
     }
 
-    res.status(200).json({ streak: user.streak });
+    res
+      .status(200)
+      .json({ streak: user.streak, longestStreak: user.longestStreak });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
     console.log(error.message);
@@ -976,5 +994,6 @@ module.exports = {
   sendMailForNotifySubscribe,
   upgradeMessageClose,
   quizDailyStreakUpdator,
+  longestStreakCalculatorOfAllUsers,
   streakChecker,
 };

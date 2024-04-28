@@ -295,6 +295,65 @@ const dailyStreakCalculator = async (userId) => {
   }
 };
 
+const longestStreakCalculator = async (userId) => {
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    // If user not found, return error
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Use aggregation pipeline to group quiz attempts by day
+    const streakData = await QuizAttempt.aggregate([
+      {
+        $match: {
+          user: user._id,
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: -1 }, // Sort by date in descending order
+      },
+    ]);
+    if (streakData.length === 0) {
+      user.longestStreak = 0;
+      await user.save();
+      return 0; // No streak
+    }
+
+    // Iterate through streakData to find longest streak
+    let longestStreak = 0;
+
+    for (let i = 0; i < streakData.length; i++) {
+      let streak = 1;
+      for (let j = i + 1; j < streakData.length; j++) {
+        const currentDay = new Date(streakData[j]._id);
+        const prevDay = new Date(streakData[j - 1]._id);
+        const diffInTime = currentDay.getTime() - prevDay.getTime();
+        const diffInDays = diffInTime / (1000 * 3600 * 24);
+        if (Math.abs(diffInDays) === 1) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      longestStreak = Math.max(longestStreak, streak);
+    }
+    user.longestStreak = longestStreak;
+    await user.save();
+    return longestStreak;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -305,4 +364,5 @@ module.exports = {
   getDailyActivity,
   calculateUserRank,
   dailyStreakCalculator,
+  longestStreakCalculator,
 };
