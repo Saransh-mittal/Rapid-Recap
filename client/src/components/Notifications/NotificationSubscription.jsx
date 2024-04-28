@@ -97,7 +97,8 @@ const NotificationSubscription = () => {
       }
     };
 
-    Notification.requestPermission().then(handlePermissionChange);
+    Notification &&
+      Notification?.requestPermission()?.then(handlePermissionChange);
 
     // Add event listener for permissionchange event
     document.addEventListener("permissionchange", handlePermissionChange);
