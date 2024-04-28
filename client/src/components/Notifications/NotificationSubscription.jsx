@@ -85,7 +85,7 @@ const NotificationSubscription = () => {
     // Listen for changes to Notification permission
     const handlePermissionChange = () => {
       const newPermission = Notification ? Notification?.permission : "denied";
-      console.log(newPermission);
+
       if (newPermission === "granted") {
         // User has enabled notifications after previously denying
         subscribe();
