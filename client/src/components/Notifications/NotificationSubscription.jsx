@@ -63,9 +63,7 @@ const NotificationSubscription = () => {
   useEffect(() => {
     const notificationShown = Cookies.get("notificationShown");
     const notificationSubscribed = Cookies.get("notificationSubscribed");
-    const currentPermission = Notification
-      ? Notification?.permission
-      : "denied";
+    const currentPermission = Notification.permission;
     if (
       !notificationShown &&
       !notificationSubscribed &&
@@ -84,8 +82,8 @@ const NotificationSubscription = () => {
 
     // Listen for changes to Notification permission
     const handlePermissionChange = () => {
-      const newPermission = Notification ? Notification?.permission : "denied";
-
+      const newPermission = Notification.permission;
+      console.log(newPermission);
       if (newPermission === "granted") {
         // User has enabled notifications after previously denying
         subscribe();
@@ -97,8 +95,7 @@ const NotificationSubscription = () => {
       }
     };
 
-    Notification &&
-      Notification?.requestPermission()?.then(handlePermissionChange);
+    Notification.requestPermission().then(handlePermissionChange);
 
     // Add event listener for permissionchange event
     document.addEventListener("permissionchange", handlePermissionChange);
