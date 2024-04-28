@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -10,24 +10,39 @@ import {
   IconButton,
   Text,
   Box,
+  Image,
+  Heading,
 } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import Brains from "../../../assets/Brains"; // Import the Brains array
 import { motion } from "framer-motion";
-import Lightning from "./Lightning";
+import NameLightning from "../../miscellaneous/NameLightning";
 
-const BrainModal = ({ isOpen, onClose, currentUserSociety }) => {
+const BrainModal = ({ isOpen, onClose, currentUserSociety,setShowBrainModal }) => {
   const [currentPage, setCurrentPage] = useState(1); // Initialize current page to 1
 
+
   useEffect(() => {
-    if (!currentUserSociety || Brains.length === 0) return; // Check if currentUserSociety or Brains array is empty
+    if (!isOpen || !currentUserSociety || Brains.length === 0) return;
     const societyIndex = Brains.findIndex(
-      (brain) => brain.society === currentUserSociety
+      (brain) => brain.society.toLowerCase() === currentUserSociety.toLowerCase()
     );
-    if (societyIndex !== -1) {
-      setCurrentPage(societyIndex + 1); // Set currentPage to the index of currentUserSociety + 1
-    }
-  }, [currentUserSociety]);
+
+    // Start auto-navigation to current page when modal opens
+    const intervalId = setInterval(() => {
+      setCurrentPage((prevPage) => {
+        if (prevPage === societyIndex+1) {
+          clearInterval(intervalId); // Stop the interval if it reaches the end
+          return prevPage;
+        } else {
+          return prevPage + 1;
+        }
+      });
+    }, 200);
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isOpen, currentUserSociety]);
 
   const handlePreviousPage = () => {
     setCurrentPage((prevPage) =>
@@ -46,7 +61,10 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety }) => {
   const currentBrain = Brains[currentPage - 1];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={()=>{
+      setShowBrainModal(false);
+      onClose();
+    }} size="xl">
       <ModalOverlay />
       <ModalContent
         style={{
@@ -60,11 +78,11 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety }) => {
             textAlign: "center",
             fontSize: "36px",
             fontWeight: "bold",
-            color: "transparent" /* Transparent text color */,
+            color: "transparent", /* Transparent text color */
             fontFamily: "'Poppins', sans-serif",
             backgroundImage:
-              "linear-gradient(45deg, #ff7e5f, #feb47b)" /* Gradient background */,
-            backgroundClip: "text" /* Clip text to background gradient */,
+              "linear-gradient(45deg, #ff7e5f, #feb47b)", /* Gradient background */
+            backgroundClip: "text", /* Clip text to background gradient */
             textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
             backgroundColor: "#0f0d15",
             padding: "10px",
@@ -85,7 +103,7 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety }) => {
               icon={<ChevronLeftIcon />}
               aria-label="Previous Page"
               onClick={handlePreviousPage}
-              isDisabled={currentPage === 1} // Disable previous button at page 1
+              isDisabled={currentPage === 1} /* Disable previous button at page 1 */
               _hover={{
                 bgGradient: "linear(to-r, #7928CA, #FF0080)",
                 color: "white",
@@ -97,7 +115,7 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety }) => {
               icon={<ChevronRightIcon />}
               aria-label="Next Page"
               onClick={handleNextPage}
-              isDisabled={currentPage === 5} // Disable next button at page 5
+              isDisabled={currentPage === 5} /* Disable next button at page 5 */
               _hover={{
                 bgGradient: "linear(to-r, #7928CA, #FF0080)",
                 color: "white",
@@ -107,21 +125,27 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety }) => {
             />
           </Flex>
           <Box textAlign="center">
-            <Text
-              fontSize="2xl"
-              fontWeight="bold"
-              mb={2}
-              color={currentBrain.textColor}
-              style={{
-                boxShadow: currentBrain.boxShadow,
-                width: "40%",
-                display: "block",
-                margin: "0 auto",
-                borderRadius: "6px",
-              }}
+            <Flex
+              justifyContent={"center"}
+              alignItems={"center"}
+              w={"50%"}
+              position="relative"
+              mx={"auto"}
             >
-              {currentBrain.society} Society
-            </Text>
+              <Heading
+                as="h4"
+                size={"sm"}
+                color={currentBrain.textColor}
+                marginTop={"5px"}
+              >
+                {currentBrain.society} Society
+              </Heading>
+              <NameLightning
+                boxShadow={currentBrain.boxShadow}
+                MAX_IQ={currentBrain.IQ_Lower}
+              />
+            </Flex>
+
             <Text mb={2} color={currentBrain.textColor} mt={4}>
               IQ Range: {currentBrain.IQ_Lower} -{" "}
               {currentBrain.IQ_Upper || "Above"}
@@ -144,13 +168,13 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety }) => {
                 repeatType: "reverse",
               }}
             />
-            <p style={{ textAlign: "left", color: currentBrain.textColor }}>
+            <div style={{ textAlign: "left", color: currentBrain.textColor }}>
               {currentBrain.BrainInfo.split(".").map((point, index) => {
                 const lines = point.trim().split("\n");
                 return lines.map(
                   (line, lineIndex) =>
                     line.trim() && (
-                      <div style={{ flexDirection: "row !important" }}>
+                      <div style={{ flexDirection: "row !important" }} key={lineIndex}>
                         <p style={{ padding: "0", margin: "0.2rem" }}></p>
 
                         <span
@@ -171,7 +195,7 @@ const BrainModal = ({ isOpen, onClose, currentUserSociety }) => {
                 );
               })}
               <br />
-            </p>
+            </div>
           </Box>
         </ModalBody>
       </ModalContent>

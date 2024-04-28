@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Import React, useState, and useEffect hooks
 import {
   Modal,
   ModalOverlay,
@@ -9,42 +9,62 @@ import {
   Flex,
   IconButton,
   Text,
-} from "@chakra-ui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+} from "@chakra-ui/react"; // Import Chakra UI components
+import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons"; // Import Chakra UI icons
 import Circles from "../../../assets/Circles"; // Import the Circles array
 
-const CircleModal = ({ isOpen, onClose }) => {
-  const [currentPage, setCurrentPage] = useState(7); // Set initial page to 7 (Progressors)
 
-  const handlePreviousPage = () => {
-    setCurrentPage((prevPage) => (prevPage === 7 ? 1 : prevPage + 1)); // Reverse logic for previous page
+const CircleModal = ({ isOpen, onClose }) => { // Define CircleModal component
+  const [currentPage, setCurrentPage] = useState(7); // State for current page
+  const [glowAnimation, setGlowAnimation] = useState(false); // State to trigger glow animation
+
+  useEffect(() => { // useEffect hook to trigger glow animation when modal is opened
+    if (isOpen) { // If modal is open
+      setGlowAnimation(true); // Trigger glow animation
+    }
+  }, [isOpen]); // Dependency array with isOpen
+
+  useEffect(() => { // useEffect hook to trigger glow animation when previous or next buttons are clicked
+    if (glowAnimation) { // If glowAnimation is true
+      const timeout = setTimeout(() => { // Set timeout to reset glowAnimation after 1.5 seconds
+        setGlowAnimation(false); // Reset glow animation after 1.5s
+      }, 1500);
+      return () => clearTimeout(timeout); // Clear timeout on component unmount
+    }
+  }, [glowAnimation]); // Dependency array with glowAnimation
+
+  const handlePreviousPage = () => { // Function to handle previous page button click
+    setCurrentPage((prevPage) => (prevPage === 7 ? 1 : prevPage + 1)); // Update currentPage
+    setGlowAnimation(true); // Trigger glow animation
   };
 
-  const handleNextPage = () => {
-    setCurrentPage((prevPage) => (prevPage === 1 ? 7 : prevPage - 1)); // Reverse logic for next page
+  const handleNextPage = () => { // Function to handle next page button click
+    setCurrentPage((prevPage) => (prevPage === 1 ? 7 : prevPage - 1)); // Update currentPage
+    setGlowAnimation(true); // Trigger glow animation
   };
-  const currentCircle = Circles[currentPage - 1];
+  
+  const currentCircle = Circles[currentPage - 1]; // Get current circle based on currentPage
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent
+    <Modal isOpen={isOpen} onClose={onClose} size="xl"> {/* Render Modal component */}
+      <ModalOverlay /> {/* Render ModalOverlay */}
+      <ModalContent // Render ModalContent with custom styling
         style={{
           backgroundColor: "#0f0d15",
           color: "white",
           borderRadius: "10px",
         }}
       >
-        <ModalHeader
+        <ModalHeader // Render ModalHeader with custom styling
           style={{
             textAlign: "center",
             fontSize: "36px",
             fontWeight: "bold",
-            color: "transparent" /* Transparent text color */,
+            color: "transparent",
             fontFamily: "'Poppins', sans-serif",
             backgroundImage:
-              "linear-gradient(45deg, #ff7e5f, #feb47b)" /* Gradient background */,
-            backgroundClip: "text" /* Clip text to background gradient */,
+              "linear-gradient(45deg, #ff7e5f, #feb47b)",
+            backgroundClip: "text",
             textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
             backgroundColor: "#0f0d15",
             padding: "10px",
@@ -52,11 +72,11 @@ const CircleModal = ({ isOpen, onClose }) => {
             boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
           }}
         >
-          Circle Details
+          Circle Details {/* Render ModalHeader content */}
         </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Flex
+        <ModalCloseButton /> {/* Render ModalCloseButton */}
+        <ModalBody> {/* Render ModalBody */}
+          <Flex // Render Flex component for previous and next buttons
             justifyContent="space-between"
             alignItems="center"
             marginBottom="10px"
@@ -95,7 +115,9 @@ const CircleModal = ({ isOpen, onClose }) => {
             style={{
               position: "relative",
               textAlign: "center",
-              animation: "glow 1.5s infinite alternate",
+              animation: glowAnimation
+                ? "glow 1.5s 2 alternate"
+                : "none", // Apply glow animation conditionally
             }}
           >
             <img
@@ -202,4 +224,4 @@ const CircleModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default CircleModal;
+export default CircleModal; // Export CircleModal component

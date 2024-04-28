@@ -20,6 +20,7 @@ const RankAndSociety = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false); // State for BrainModal
   const [isCircleModalOpen, setIsCircleModalOpen] = useState(false); // State for CircleModal
+  const [showBrainModal, setShowBrainModal] = useState(false);
 
   useEffect(() => {
     const userIQ = USER_IQ;
@@ -35,6 +36,7 @@ const RankAndSociety = ({
   }, [USER_IQ]);
 
   const handleBrainClick = () => {
+    setShowBrainModal(true);
     setIsModalOpen(true); // Open the BrainModal upon clicking the brain image
   };
 
@@ -289,11 +291,12 @@ const RankAndSociety = ({
         </>
       )}
       {/* Modals */}
-      <BrainModal
+      {showBrainModal && <BrainModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        currentUserSociety={"Strivers Society"}
-      />
+        currentUserSociety={"Mavericks"}
+        setShowBrainModal={setShowBrainModal}
+      />}
       <CircleModal
         isOpen={isCircleModalOpen}
         onClose={handleCloseCircleModal}
