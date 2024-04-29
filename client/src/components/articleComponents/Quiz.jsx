@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Button,
   Modal,
@@ -23,8 +23,10 @@ import QuizInterface from "./quizComponents/quizInterface";
 import SubmittedQuizInterface from "./quizComponents/SubmittedQuizInterface";
 import HindiInstructionModal from "./customQuizModal/HindiInstructionModal";
 import ReactGA from "react-ga4";
+import { AppContext } from "../../contextAPI/appContext";
 
 const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
+  const { state, dispatch } = useContext(AppContext);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timer, setTimer] = useState(50);
   const [submitted, setSubmitted] = useState(false);
@@ -96,6 +98,11 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
         duration: 5000,
         isClosable: true,
         position: "top",
+      });
+      const res = await axios.get(`/api/user/streakChecker`);
+      dispatch({
+        type: "setDailyStreak",
+        payloadDailyStreak: res.data.streak,
       });
     } catch (error) {
       //console.log(error.response.data.error);

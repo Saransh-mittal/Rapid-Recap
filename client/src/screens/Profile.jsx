@@ -224,38 +224,40 @@ export default function Profile() {
           <Loading />
         ) : (
           <>
-            <Flex
-              margin="20px"
-              padding="15px"
-              borderRadius="10px"
-              flexDirection="column"
-              w={{ md: "300px", lg: "350px", base: "95%" }}
-              height="fit-content"
-              style={{
-                backgroundColor: "#0f0d15",
-                backgroundImage:
-                  "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-                boxShadow:
-                  "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
-              }}
-            >
-              {showHideModal && (
-                <ToggleProfileVisibilty setShowHideModal={setShowHideModal} />
-              )}
-              {inGameName === state.user.inGameName && (
-                <Tooltip label="Toggle Profile Visibility">
-                  <ViewIcon
-                    marginLeft={"auto"}
-                    onClick={() => setShowHideModal(true)}
-                    _hover={{ cursor: "pointer" }}
-                  />
-                </Tooltip>
-              )}
-              <LeftProfileBox
-                leftProfileView={profile.leftProfileView}
-                CURR_IQ={profile?.USER_IQ}
-                MAX_IQ={profile?.maxIQScore}
-              />
+            <Flex flexDirection={"column"}>
+              <Flex
+                margin="20px"
+                padding="15px"
+                borderRadius="10px"
+                flexDirection="column"
+                w={{ md: "300px", lg: "350px", base: "95%" }}
+                height="fit-content"
+                style={{
+                  backgroundColor: "#0f0d15",
+                  backgroundImage:
+                    "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                  boxShadow:
+                    "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
+                }}
+              >
+                {showHideModal && (
+                  <ToggleProfileVisibilty setShowHideModal={setShowHideModal} />
+                )}
+                {inGameName === state.user.inGameName && (
+                  <Tooltip label="Toggle Profile Visibility">
+                    <ViewIcon
+                      marginLeft={"auto"}
+                      onClick={() => setShowHideModal(true)}
+                      _hover={{ cursor: "pointer" }}
+                    />
+                  </Tooltip>
+                )}
+                <LeftProfileBox
+                  leftProfileView={profile.leftProfileView}
+                  CURR_IQ={profile?.USER_IQ}
+                  MAX_IQ={profile?.maxIQScore}
+                />
+              </Flex>
             </Flex>
             <Flex
               w={{

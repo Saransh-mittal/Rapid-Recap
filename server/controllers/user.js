@@ -17,6 +17,7 @@ const {
   getSolvedQuizzesCount,
   getDailyActivity,
   calculateUserRank,
+  dailyStreakCalculator,
 } = require("../utils/user");
 const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
@@ -910,6 +911,45 @@ const upgradeMessageClose = async (req, res) => {
   }
 };
 
+const quizDailyStreakUpdator = async (req, res) => {
+  try {
+    const users = await User.find({ inGameName: { $exists: true, $ne: "" } });
+    console.log(users.length);
+    const updateProgress = progressBar(users.length);
+    for (let user of users) {
+      await dailyStreakCalculator(user._id);
+      updateProgress();
+    }
+    res.status(200).json({ message: "Daily streak updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
+const streakChecker = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId);
+
+    // Check if the latest attempt is from yesterday
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set time to start of the day
+
+    if (today.getTime() > user.streakExpiry.getTime()) {
+      // Reset streak
+      user.streak = 0;
+      user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      await user.save();
+      return res.status(200).json({ streak: 0 });
+    }
+
+    res.status(200).json({ streak: user.streak });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
 module.exports = {
   registerUser,
   loginUser,
@@ -933,8 +973,8 @@ module.exports = {
   readUpdates,
   trashUpdate,
   trashAllUpdate,
-
   sendMailForNotifySubscribe,
-
   upgradeMessageClose,
+  quizDailyStreakUpdator,
+  streakChecker,
 };

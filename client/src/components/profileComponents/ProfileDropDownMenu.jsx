@@ -22,7 +22,7 @@ const ProfileDropDownMenu = ({ handleLogout, toProfile, refProfile }) => {
         _hover={{ bg: "transparent" }}
         _active={{ bg: "transparent" }}
         as={Button}
-        rightIcon={<ChevronDownIcon marginLeft={"0"} color={"white"} />}
+        p={0}
       >
         <Avatar src={state.user.pic} h={"35px"} w={"35px"} rounded={"50%"} />
       </MenuButton>

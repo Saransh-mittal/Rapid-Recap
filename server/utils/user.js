@@ -199,6 +199,94 @@ const calculateUserRank = async (userId) => {
   return userIndex + 1;
 };
 
+const dailyStreakCalculator = async (userId) => {
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    // If user not found, return error
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Use aggregation pipeline to group quiz attempts by day
+    const streakData = await QuizAttempt.aggregate([
+      {
+        $match: {
+          user: user._id,
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: -1 }, // Sort by date in descending order
+      },
+    ]);
+    if (streakData.length === 0) {
+      return 0; // No streak
+    }
+
+    // const yesterday = new Date(streakData[1]._id);
+    const latestAttemptDate = new Date(streakData[0]._id);
+    // const isDiffDay = Math.floor(
+    //   (yesterday.getTime() - latestAttemptDate.getTime()) / (1000 * 3600 * 24)
+    // );
+    // //console.log(isDiffDay, yesterday, latestAttemptDate, streakData[0]._id);
+    // if (isDiffDay) {
+    //   user.streak = 0;
+    //   latestAttemptDate.setDate(latestAttemptDate.getDate() + 1);
+    //   latestAttemptDate.setHours(0, 0, 0, 0);
+    //   user.streakExpiry = latestAttemptDate;
+    //   return 0; // No streak
+    // }
+
+    // Iterate through quiz attempts to find streak
+    let streak = 1;
+    for (let i = 1; i < streakData.length; i++) {
+      // Check if consecutive days
+      const currentDay = new Date(streakData[i]._id);
+      const prevDay = new Date(streakData[i - 1]._id);
+      const diffInTime = currentDay.getTime() - prevDay.getTime();
+      const diffInDays = diffInTime / (1000 * 3600 * 24);
+      //console.log(currentDay, prevDay);
+      if (Math.abs(diffInDays) === 1) {
+        streak++;
+      } else {
+        if (i == 1) {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          yesterday.setHours(0, 0, 0, 0);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          latestAttemptDate.setHours(0, 0, 0, 0);
+          if (
+            yesterday.getTime() !== latestAttemptDate.getTime() &&
+            today.getTime() !== latestAttemptDate.getTime()
+          ) {
+            streak = 0;
+          }
+        }
+        // Streak broken, exit loop
+        break;
+      }
+    }
+
+    //if (user.inGameName === "dynamic_queen") console.log(streak);
+    user.streak = streak;
+    latestAttemptDate.setDate(latestAttemptDate.getDate() + 1);
+    latestAttemptDate.setHours(0, 0, 0, 0);
+    user.streakExpiry = latestAttemptDate;
+    await user.save();
+    return streak;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -208,4 +296,5 @@ module.exports = {
   getSolvedQuizzesCount,
   getDailyActivity,
   calculateUserRank,
+  dailyStreakCalculator,
 };
