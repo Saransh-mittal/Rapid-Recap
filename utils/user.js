@@ -232,6 +232,9 @@ const dailyStreakCalculator = async (userId) => {
 
     // const yesterday = new Date(streakData[1]._id);
     const latestAttemptDate = new Date(streakData[0]._id);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set time to start of the day
+
     // const isDiffDay = Math.floor(
     //   (yesterday.getTime() - latestAttemptDate.getTime()) / (1000 * 3600 * 24)
     // );
@@ -259,10 +262,10 @@ const dailyStreakCalculator = async (userId) => {
         if (i == 1) {
           const yesterday = new Date();
           yesterday.setDate(yesterday.getDate() - 1);
-          yesterday.setHours(0, 0, 0, 0);
+          yesterday.setUTCHours(0, 0, 0, 0);
           const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          latestAttemptDate.setHours(0, 0, 0, 0);
+          today.setUTCHours(0, 0, 0, 0);
+          latestAttemptDate.setUTCHours(0, 0, 0, 0);
           if (
             yesterday.getTime() !== latestAttemptDate.getTime() &&
             today.getTime() !== latestAttemptDate.getTime()
@@ -274,11 +277,16 @@ const dailyStreakCalculator = async (userId) => {
         break;
       }
     }
-
-    //if (user.inGameName === "dynamic_queen") console.log(streak);
-    user.streak = streak;
     latestAttemptDate.setDate(latestAttemptDate.getDate() + 1);
-    latestAttemptDate.setHours(0, 0, 0, 0);
+    latestAttemptDate.setUTCHours(0, 0, 0, 0);
+    if (today.getTime() > user.streakExpiry.getTime()) {
+      // Reset streak
+      user.streak = 0;
+      user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      await user.save();
+      return 0;
+    }
+    user.streak = streak;
     user.streakExpiry = latestAttemptDate;
     await user.save();
     return streak;

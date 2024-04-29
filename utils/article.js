@@ -2,6 +2,7 @@ const natural = require("natural");
 const OpenAI = require("openai");
 const { progressBar } = require("./progress");
 const Article = require("../model/articleSchema");
+const { decode } = require("html-entities");
 
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
@@ -26,15 +27,15 @@ const hindiConverter = async (article) => {
       apiKey: process.env.OPENAI_API_KEY,
     });
     const prompt = `Title: ${title}\n Author: ${author}\n\n MainText: ${mainText}\n\n`;
-
-    const instructions = `Instructions:
-                                1. Translate the given text to Hindi.
-                                2. Translate the title to hindi carefully.
-                                3. Author is name of the author of the article, translate author name to hindi ,dont write its meaning.
-                                4. Be very careful when translating MainText to hindi and it's meaning should be same as in english.
-                                5. Break maintext in only 3 paragraphs.
-                                6. Make a JSON object containing hindiTitle, hindiAuthor, and hindiMainText.
-                                7.  Return the JSON object which contains the translated text and looks like :
+    const instructions1 =
+      "do you know about daily speaking hindi spoken by a common Indian";
+    const instructions2 =
+      "I will provide you the article ,convert it in the above manner and letters should be in hindi.";
+    const instructions3 = `Instructions:
+                                1. Author is name of the author of the article, translate author name to hindi ,dont write its meaning.
+                                2. Break maintext in only 3 paragraphs.
+                                3. Make a JSON object containing hindiTitle, hindiAuthor, and hindiMainText.
+                                4.  Return the JSON object which contains the translated text and looks like :
                                 {
                                   "hindiTitle": "translated title",
                                   "hindiAuthor": "translated author",
@@ -52,9 +53,15 @@ const hindiConverter = async (article) => {
       messages: [
         {
           role: "system",
-          content: `You are a hindi translator bot. You have to translate an article. You
-                    have to follow the given instructions to translate the article.You have to 
-                    return the response in the given JSON format. ${instructions}`,
+          content: `${instructions1}`,
+        },
+        {
+          role: "system",
+          content: `${instructions2}`,
+        },
+        {
+          role: "system",
+          content: `${instructions3}`,
         },
         {
           role: "user",
@@ -76,9 +83,15 @@ const hindiConverter = async (article) => {
         messages: [
           {
             role: "system",
-            content: `You are a hindi translator bot. You have to translate an article. You
-                    have to follow the given instructions to translate the article.You have to 
-                    return the response in the given JSON format. ${instructions}`,
+            content: `${instructions1}`,
+          },
+          {
+            role: "system",
+            content: `${instructions2}`,
+          },
+          {
+            role: "system",
+            content: `${instructions3}`,
           },
           {
             role: "user",
@@ -87,6 +100,13 @@ const hindiConverter = async (article) => {
         ],
       });
       response = JSON.parse(result.choices[0].message.content);
+    }
+    if (
+      !response.hindiTitle ||
+      !response.hindiAuthor ||
+      !response.hindiMainText
+    ) {
+      throw new Error("Failed to translate article");
     }
     return response;
   } catch (error) {
@@ -131,13 +151,16 @@ fill these in the category key (only string). Also if total characters are more 
       if (newsItem.text.length < 800) {
         throw new Error("Text is too short");
       }
-
+      const encodedText = newsItem.text;
+      const decodedText = decode(encodedText);
+      const encodedTitle = newsItem.title;
+      const decodedTitle = decode(encodedTitle);
       const prompt = JSON.stringify({
         url: newsItem.url,
         dateTime: newsItem.publish_date,
         author: newsItem.author,
-        title: newsItem.title,
-        mainText: newsItem.text,
+        title: decodedTitle,
+        mainText: decodedText,
         imgURL: [newsItem.image],
         category: "",
       });
@@ -209,7 +232,7 @@ fill these in the category key (only string). Also if total characters are more 
 
 const fetchNews = async (query) => {
   const apiKey = "e7409124fe384b688c07763501b270dd";
-  const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-25`;
+  const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-28`;
 
   try {
     const response = await fetch(url, {
@@ -231,8 +254,7 @@ const fetchNews = async (query) => {
   }
 };
 
-const extractNewsFromLink = async (query) => {
-  const apiKey = "acd1bf365a084183b509789e0aae202a";
+const extractNewsFromLink = async (query, apiKey) => {
   const url = `https://api.worldnewsapi.com/extract-news?url=${query}`;
   try {
     const response = await fetch(url, {
@@ -277,15 +299,18 @@ Also if total characters are more than 2500 than summarize the whole mainText in
       if (newsItem.text.length < 800) {
         throw new Error("Text is too short");
       }
-
+      const encodedText = newsItem.text;
+      const decodedText = decode(encodedText);
+      const encodedTitle = newsItem.title;
+      const decodedTitle = decode(encodedTitle);
       const prompt = JSON.stringify({
         url: newsItem.url,
         dateTime: newsItem.publish_date,
         author: Array.isArray(newsItem.author)
           ? newsItem.author[0]
           : newsItem.author,
-        title: newsItem.title,
-        mainText: newsItem.text,
+        title: decodedTitle,
+        mainText: decodedText,
         imgURL: [newsItem.image],
         category: category,
       });
@@ -326,10 +351,9 @@ Also if total characters are more than 2500 than summarize the whole mainText in
       }
       res = JSON.parse(output.choices[0].message.content);
 
-      processedOutput.push(res);
-
       const newArticle = new Article(res);
       await newArticle.save();
+      processedOutput.push(newArticle);
     } catch (error) {
       console.log(error);
     } finally {
