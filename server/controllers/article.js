@@ -381,15 +381,14 @@ const getWorldNews = async (req, res) => {
   try {
     const queries = [
       "source-countries=in&text=IPL OR T20WorldCup",
-      "source-countries=in&text=elections OR dhruv OR rathee OR Modi",
-      "text=Ramayan",
+      "source-countries=in&text=elections OR dhruv OR rathee OR Modi OR ashok OR gehlot",
+      "text=Ramayan OR pakistani OR gandi OR krishna OR astrology",
     ];
 
     let allProcessedOutput = [];
 
     for (let query of queries) {
       const news = await fetchNews(query);
-      qq;
 
       if (news.length === 0) {
         console.log("No news articles found for query:", query);
@@ -448,7 +447,15 @@ const extractNews = async (req, res) => {
     "7e4a7d41a3ed463a952349bfb07b1452",
     "e7409124fe384b688c07763501b270dd",
   ];
-  const categories = ["general", "sports"];
+  const categories = [
+    // "general",
+    // "sports",
+    "health",
+    // "science",
+    // "business",
+    // "technology",
+    // "entertainment",
+  ];
   const requestsPerKey = 30;
   let currentKeyIndex = 0;
   let requestsMadeWithCurrentKey = 0;
