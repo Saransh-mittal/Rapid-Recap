@@ -91,9 +91,33 @@ const genEmailTemplateForNotifySubscribe = ({ name }) => {
 </div>
 `;
 };
+
+const genEmailTemplateForAppUpdates = ({ title, mainText, name }) => {
+  return `<div style="font-family: Helvetica,Arial,sans-serif; min-width:1000px; overflow:auto; line-height:2">
+  <div style="margin:50px auto; width:70%; padding:20px 0">
+    <div style="border-bottom:1px solid #eee">
+      <a href="" style="font-size:1.4em; color:#00466a; text-decoration:none; font-weight:600">Rapid Recap</a>
+    </div>
+    <p style="font-size:1.1em">Hello ${name},</p>
+    <h4>${title}</h4>
+    <p>${mainText}</p>
+    <a href="https://cyan-crane-tie.cyclic.app/" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:10px 20px; border-radius:5px;">View</a>
+    
+    <p>Best regards,<br />Rapid Recap Team</p>
+    <hr style="border:none; border-top:1px solid #eee" />
+    <div style="float:right; padding:8px 0; color:#aaa; font-size:0.8em; line-height:1; font-weight:300">
+      <p>Rapid Recap Inc</p>
+      <p>Jaipur</p>
+      <p>India</p>
+    </div>
+    <p style="font-size:0.9em;"><strong>P.S.:</strong> Don't forget to stay updated with our latest news and articles by subscribing to browser notifications! If you have any questions or need assistance with subscribing to notifications, feel free to reach out to our support team at <a href="mailto:rapidrecap2k2023@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k2023@gmail.com</a>. We're here to help!</p>
+  </h6>
+</div>`;
+};
 module.exports = {
   generateOtp,
   mailTransporter,
   generateEmailTemplate,
   genEmailTemplateForNotifySubscribe,
+  genEmailTemplateForAppUpdates,
 };

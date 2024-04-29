@@ -17,6 +17,9 @@ const {
 } = require("../utils/article");
 const NewsAPI = require("newsapi");
 const { sendNotification } = require("../services/notificationService");
+const genQuizForArticles = require("../utils/update.utils/genQuizForArticles");
+const genHindiQuizForArticles = require("../utils/update.utils/genHindiQuizForArticles");
+const generateHindiTrans = require("../utils/update.utils/generateHindiTrans.update");
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = "general" } = req.query;
@@ -377,10 +380,9 @@ const hindiTranslation = async (req, res) => {
 const getWorldNews = async (req, res) => {
   try {
     const queries = [
-      "source-countries=in,us,uk,jp",
-      "source-countries=in&text=IPL OR T20WorldCup OR kohli",
-      "source-countries=in&text=elections OR dhruv OR rathee OR Modi OR whatsapp OR university",
-      "text=Hanuman OR beniwal OR mrunal OR thakur OR tamannah OR Bhatia",
+      "source-countries=in&text=IPL OR T20WorldCup",
+      "source-countries=in&text=elections OR dhruv OR rathee OR Modi OR ashok OR gehlot",
+      "text=Ramayan OR pakistani OR gandi OR krishna OR astrology",
     ];
 
     let allProcessedOutput = [];
@@ -438,34 +440,78 @@ const getWorldNews = async (req, res) => {
 
 const extractNews = async (req, res) => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
+  const apiKeys = [
+    "7170746b5aa044069fbd5f48e74817ac",
+    "acd1bf365a084183b509789e0aae202a",
+    "a46513e934b14f44a9fa2137185f5438",
+    "7e4a7d41a3ed463a952349bfb07b1452",
+    "e7409124fe384b688c07763501b270dd",
+  ];
+  const categories = [
+    // "general",
+    // "sports",
+    "health",
+    // "science",
+    // "business",
+    // "technology",
+    // "entertainment",
+  ];
+  const requestsPerKey = 30;
+  let currentKeyIndex = 0;
+  let requestsMadeWithCurrentKey = 0;
+
   try {
-    const categories = ["business"];
     let result = [];
     let notificationCategories = categories.join(", ");
+
     for (let category of categories) {
       console.log(`\nExtracting news of category ${category}\n`);
       const response = await newsapi.v2.topHeadlines({
         category,
         language: "en",
+        country: "in",
       });
 
       const articles = JSON.parse(JSON.stringify(response.articles));
       console.log(articles.length);
       let allProcessedOutput = [];
+
       for (let article of articles) {
-        const extractedNews = await extractNewsFromLink(article.url);
-        allProcessedOutput.push(extractedNews);
+        try {
+          if (requestsMadeWithCurrentKey >= requestsPerKey) {
+            // If requests limit reached, switch to the next API key
+            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+            requestsMadeWithCurrentKey = 0;
+          }
+
+          const apiKey = apiKeys[currentKeyIndex];
+          const extractedNews = await extractNewsFromLink(article.url, apiKey);
+          allProcessedOutput.push(extractedNews);
+
+          requestsMadeWithCurrentKey++;
+        } catch (error) {
+          console.log(
+            `Error extracting news from article ${article.title}: ${error}`
+          );
+        }
       }
+
       const AiProcessedNews = await processExtractedNews(
         allProcessedOutput,
         category
       );
+
+      await genQuizForArticles(AiProcessedNews);
+      await generateHindiTrans(AiProcessedNews);
+      await genHindiQuizForArticles(AiProcessedNews);
       // push content of AiProcessedNews in result
       result = result.concat(AiProcessedNews);
     }
+
     res.status(200).json({
       message: `No. of news fetched for DB : ${result.length}`,
     });
+
     if (result.length > 0) {
       const title = `📢 New ${notificationCategories} Content Alert! 📰`;
       const body =
