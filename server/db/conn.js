@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(23.04.2024).json");
+// const updates = require("./updates/updates(29.04.2024).json");
 // const User = require("../model/userSchema");
 // const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 // const { progressBar } = require("../utils/progress");
@@ -45,13 +45,13 @@ mongoose
 //     });
 //     for (const update of updates) {
 //       const progress = progressBar(users.length);
-//       // const updateTitle = `📢 ${update.title} 📰`;
-//       // const updateBody =
-//       //   update.mainText.length > 100
-//       //     ? `${update.mainText.slice(0, 100)}...`
-//       //     : update.mainText;
-//       // const url = "https://cyan-crane-tie.cyclic.app/";
-//       // await sendNotification({ title: updateTitle, body: updateBody, url });
+//       const updateTitle = `📢 ${update.title} 📰`;
+//       const updateBody =
+//         update.mainText.length > 100
+//           ? `${update.mainText.slice(0, 100)}...`
+//           : update.mainText;
+//       const url = "https://rapidrecap.co.in/";
+//       await sendNotification({ title: updateTitle, body: updateBody, url });
 //       for (const user of users) {
 //         // Create a new update object for the user
 //         const { title, mainText, img, read } = update;
