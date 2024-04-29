@@ -58,11 +58,14 @@ const RankAndSociety = ({
     <Flex
       margin="10px"
       w="100%"
+      h={"100%"}
       flexDirection="column"
       position="relative"
       mt={4}
       mr={1}
       ml={6}
+      justifyContent={"center"}
+      alignItems={"center"}
     >
       {privateSociety ? (
         <Flex
@@ -90,7 +93,7 @@ const RankAndSociety = ({
         <Loading />
       ) : (
         <>
-          <Flex flexDirection="column" width="100%">
+          <Flex flexDirection="column" width="100%" h={"100%"} m={0}>
             <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
               Society and Circle
             </Text>
@@ -114,91 +117,121 @@ const RankAndSociety = ({
               </Tooltip>
             )}
           </Flex>
-          <Flex mt={5} flexDirection="column" w="100%">
-            <Flex width="100%">
-              <Flex
-                justifyContent="center"
-                alignItems="center"
-                w="100%"
-                position="relative"
-                flexDirection="column"
-                onClick={handleBrainClick} // Add onClick handler to the brain image
-                style={{ cursor: "pointer" }} // Change cursor to pointer to indicate it's clickable
+          <Flex
+            mt={5}
+            flexDirection="column"
+            w="100%"
+            m={0}
+            justifyContent={"center"}
+            alignItems={"center"}
+          >
+            <Flex width="100%" justifyContent={"center"} alignItems={"center"}>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  width: "100%",
+                  height: "100%",
+                }}
               >
-                <Flex>
-                  <motion.img
-                    src={circleAndSociety.image}
-                    alt="Brain"
-                    style={{
-                      width: "80px",
-                      height: "80px",
-                      background: "transparent",
-                    }}
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                    }}
-                  />
-                  <Lightning />
-                </Flex>
-
-                <Text
-                  textAlign="center"
-                  fontSize="lg"
-                  fontWeight="bold"
-                  color="#436850"
-                  textShadow="2px 2px 4px rgba(0,0,0,0.4)"
-                  paddingLeft={{ base: "5.5%", md: "9.5%", xl: "0.5%" }}
+                <Flex
+                  justifyContent="center"
+                  alignItems="center"
+                  w="100%"
+                  position="relative"
+                  flexDirection="column"
+                  onClick={handleBrainClick} // Add onClick handler to the brain image
+                  style={{ cursor: "pointer" }} // Change cursor to pointer to indicate it's clickable
+                  h={"100%"}
                 >
-                  {circleAndSociety.society}
-                </Text>
-              </Flex>
+                  <Flex
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                    w={"100%"}
+                    height={"100%"}
+                  >
+                    <motion.img
+                      src={circleAndSociety.image}
+                      alt="Brain"
+                      style={{
+                        width: "6.5rem",
+                        height: "6.5rem",
+                        background: "transparent",
+                      }}
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                      }}
+                    />
+                    <Lightning />
+                  </Flex>
 
+                  <Text
+                    textAlign="center"
+                    fontSize="lg"
+                    fontWeight="bold"
+                    color="#436850"
+                    textShadow="2px 2px 4px rgba(0,0,0,0.4)"
+                    m={0}
+                    p={0}
+                  >
+                    {circleAndSociety.society}
+                  </Text>
+                </Flex>
+              </motion.button>
               <Flex
                 width="80%"
                 alignItems="center"
                 justifyContent="center"
-                marginTop="-5%"
+                h={"100%"}
               >
                 <Image
-                  w="70px"
-                  h="70px"
+                  w="4rem"
+                  h="4rem"
                   background="transparent"
                   mt={-10}
                   src={Arrow}
                 />
               </Flex>
-              <Flex w="100%" position="relative">
-                <div
-                  style={{
-                    position: "relative",
-                    width: "140px",
-                    height: "140px",
-                    marginTop: "-11%",
-                    cursor: "pointer",
-                  }}
-                  onClick={handleCircleClick} // Add onClick handler to the circle
-                  // Change cursor to pointer to indicate it's clickable
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  width: "100%",
+                  height: "100%",
+                }}
+              >
+                <Flex
+                  flexDirection={"column"}
+                  w="100%"
+                  h={"100%"}
+                  position="relative"
+                  onClick={handleCircleClick}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  cursor="pointer"
                 >
                   <img
                     src={circle}
                     alt="Circle"
                     style={{
-                      width: "100%",
-                      height: "100%",
+                      width: "8.5rem",
+                      height: "8.5rem",
                       background: "transparent",
                     }}
                   />
                   <div
                     style={{
                       position: "absolute",
-                      top: 0,
-                      left: 0,
-                      mt: "3px",
-                      width: "100%",
-                      height: "100%",
+                      top: "4.5rem",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
@@ -210,10 +243,7 @@ const RankAndSociety = ({
                       <div
                         style={{
                           position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
+
                           display: "flex",
                           flexDirection: "column",
                           justifyContent: "center",
@@ -243,6 +273,7 @@ const RankAndSociety = ({
                             color: "#9CAFAA",
                             fontSize: "0.8rem",
                             margin: 0,
+                            width: "60px",
                           }}
                         >
                           {circleAndSociety.IQ_Upper} IQ
@@ -252,9 +283,10 @@ const RankAndSociety = ({
                       <>
                         <span
                           style={{
+                            position: "absolute",
                             color: "#9CAFAA",
                             fontSize: "0.8rem",
-                            margin: 0,
+                            top: "-1rem",
                           }}
                         >
                           {circleAndSociety.IQ_Lower}+
@@ -277,11 +309,13 @@ const RankAndSociety = ({
                     fontWeight="bold"
                     color="#436850"
                     textShadow="2px 2px 4px rgba(0,0,0,0.4)"
+                    m={0}
+                    p={0}
                   >
                     {circleAndSociety.circle}
                   </Text>
-                </div>
-              </Flex>
+                </Flex>
+              </motion.button>
             </Flex>
             <Flex
               mt={5}

@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import Circles from "../../../assets/Circles";
+import { useSwipeable } from "react-swipeable";
 
 const CircleModal = ({
   isOpen,
@@ -78,7 +79,7 @@ const CircleModal = ({
         setShowCircleModal(false);
         onClose();
       }}
-      size="xl"
+      size={{ base: "full", lg: "3xl" }}
     >
       <ModalOverlay />
       <ModalContent
@@ -87,6 +88,10 @@ const CircleModal = ({
           color: "white",
           borderRadius: "10px",
         }}
+        {...useSwipeable({
+          onSwipedLeft: () => handleNextPage(),
+          onSwipedRight: () => handlePreviousPage(),
+        })}
       >
         <ModalHeader
           style={{
@@ -140,24 +145,24 @@ const CircleModal = ({
               transition="all 0.2s"
             />
           </Flex>
-          <Text
-            textAlign="center"
-            color="yellow"
-            fontWeight="bold"
-            fontSize="24px"
-            marginBottom="10px"
-          >
-            <span
-              style={{
-                fontSize: "36px",
-                marginRight: "5px",
-                textShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
-              }}
+          {currentPage ===
+            Circles.findIndex(
+              (circle) =>
+                circle.circle.toLowerCase() === currentUserCircle.toLowerCase()
+            ) +
+              1 && (
+            <Text
+              textAlign="center"
+              color="yellow"
+              fontWeight="bold"
+              marginTop={"-10%"}
+              fontSize="24px"
+              marginBottom={0}
             >
-              📍
-            </span>
-            You are here!
-          </Text>
+              <span style={{ fontSize: "36px", marginRight: "5px" }}>📍</span>
+              You are here!
+            </Text>
+          )}
           {currentCircle && (
             <div
               style={{

@@ -6,10 +6,10 @@ const Lightning = () => {
     <motion.div
       style={{
         position: "absolute",
-        width: "100px",
-        height: "100px",
-        marginTop: "-0.6rem",
-        marginLeft: "-0.6rem",
+        width: "7rem",
+        height: "7rem",
+        // marginTop: "-0.6rem",
+        // marginLeft: "-0.6rem",
         background:
           "radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%)",
         borderRadius: "50%",

@@ -17,6 +17,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import Brains from "../../../assets/Brains"; // Import the Brains array
 import { motion } from "framer-motion";
 import NameLightning from "../../miscellaneous/NameLightning";
+import { useSwipeable } from "react-swipeable";
 
 const BrainModal = ({
   isOpen,
@@ -72,7 +73,7 @@ const BrainModal = ({
         setShowBrainModal(false);
         onClose();
       }}
-      size="xl"
+      size={{ base: "full", lg: "3xl" }}
     >
       <ModalOverlay />
       <ModalContent
@@ -81,6 +82,10 @@ const BrainModal = ({
           color: "white",
           borderRadius: "10px",
         }}
+        {...useSwipeable({
+          onSwipedLeft: () => handleNextPage(),
+          onSwipedRight: () => handlePreviousPage(),
+        })}
       >
         <ModalHeader
           style={{
@@ -145,8 +150,8 @@ const BrainModal = ({
               textAlign="center"
               color="yellow"
               fontWeight="bold"
+              marginTop={"-10%"}
               fontSize="24px"
-              marginBottom="10px"
             >
               <span style={{ fontSize: "36px", marginRight: "5px" }}>📍</span>
               You are here!
@@ -156,7 +161,7 @@ const BrainModal = ({
             <Flex
               justifyContent={"center"}
               alignItems={"center"}
-              w={"50%"}
+              w={"30%"}
               position="relative"
               mx={"auto"}
             >
