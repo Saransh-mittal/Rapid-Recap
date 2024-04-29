@@ -959,7 +959,10 @@ const streakChecker = async (req, res) => {
       await user.save();
       return res.status(200).json({ streak: 0 });
     }
-
+    if (user.streak > user.longestStreak) {
+      user.longestStreak = user.streak;
+      await user.save();
+    }
     res
       .status(200)
       .json({ streak: user.streak, longestStreak: user.longestStreak });

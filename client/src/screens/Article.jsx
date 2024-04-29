@@ -17,6 +17,8 @@ import {
   useDisclosure,
   Select,
   Skeleton,
+  Tag,
+  Badge,
 } from "@chakra-ui/react";
 import Loading from "../components/miscellaneous/Loading";
 import Quiz from "../components/articleComponents/Quiz";
@@ -32,6 +34,7 @@ import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
 import TotalUserAttempted from "../components/articleComponents/TotalUserAttempted";
 import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangModal";
 import ReactGA from "react-ga4";
+import starBoost from "/GIFs/starBoost.gif";
 
 const tourOptions = {
   defaultStepOptions: {
@@ -457,36 +460,73 @@ const Article = () => {
           marginTop={"4.5rem"}
           flexDirection={"column"}
         >
-          <Flex w={"100%"} marginTop={"2rem"} marginBottom={"0"} gap={10}>
-            <Box
-              marginLeft={{ base: "20px", md: "80px" }}
-              top={"6rem"}
-              border={"solid"}
-              p={1}
-              borderRadius="5px"
-              boxShadow="md"
-              cursor="pointer"
-              _hover={{ bg: "#37474f", color: "#f0f0f0" }}
-              onClick={() => navigate(-1)}
+          <Flex
+            w={"100%"}
+            marginTop={"2rem"}
+            marginBottom={"0"}
+            gap={10}
+            flexDirection={{ base: "column", md: "row" }}
+            // justifyContent={"center"}
+            alignItems={"center"}
+          >
+            <Flex
+              h={"100%"}
+              // justifyContent={"center"}
+              // alignItems={"center"}
+              w={{ base: "100%", md: "auto" }}
+              gap={10}
             >
-              <ArrowBackIcon />
-            </Box>
-            <Box>
-              <Select
-                variant="outline"
-                w={"150px"}
-                backgroundColor={"#2A2F4F"}
-                defaultValue="english"
-                onChange={handleLanguageChange}
+              <Box
+                marginLeft={{ base: "40px", md: "80px" }}
+                top={"6rem"}
+                border={"solid"}
+                p={1}
+                borderRadius="5px"
+                boxShadow="md"
+                cursor="pointer"
+                _hover={{ bg: "#37474f", color: "#f0f0f0" }}
+                onClick={() => navigate(-1)}
+                height={"40px"}
+                w={"40px"}
               >
-                <option style={{ backgroundColor: "#2A2F4F" }} value="english">
-                  English
-                </option>
-                <option style={{ backgroundColor: "#2A2F4F" }} value="hindi">
-                  Hindi
-                </option>
-              </Select>
-            </Box>
+                <ArrowBackIcon />
+              </Box>
+              <Box>
+                <Select
+                  variant="outline"
+                  w={"150px"}
+                  backgroundColor={"#2A2F4F"}
+                  defaultValue="english"
+                  onChange={handleLanguageChange}
+                >
+                  <option
+                    style={{ backgroundColor: "#2A2F4F" }}
+                    value="english"
+                  >
+                    English
+                  </option>
+                  <option style={{ backgroundColor: "#2A2F4F" }} value="hindi">
+                    Hindi
+                  </option>
+                </Select>
+              </Box>
+            </Flex>
+            <Flex
+              justifyContent={"center"}
+              alignItems={"center"}
+              gap={2}
+              marginTop={"10px"}
+            >
+              <Image
+                src={starBoost}
+                background={"none"}
+                height={"60px"}
+                w={"60px"}
+              />
+              <Badge fontSize={"1.2rem"} color={"yellow"} background={"none"}>
+                Enjoy!! 1.5x multiplier
+              </Badge>
+            </Flex>
           </Flex>
           <Grid
             templateColumns={
