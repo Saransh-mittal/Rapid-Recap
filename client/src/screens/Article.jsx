@@ -511,22 +511,24 @@ const Article = () => {
                 </Select>
               </Box>
             </Flex>
-            <Flex
-              justifyContent={"center"}
-              alignItems={"center"}
-              gap={2}
-              marginTop={"10px"}
-            >
-              <Image
-                src={starBoost}
-                background={"none"}
-                height={"60px"}
-                w={"60px"}
-              />
-              <Badge fontSize={"1.2rem"} color={"yellow"} background={"none"}>
-                Enjoy!! 1.5x multiplier
-              </Badge>
-            </Flex>
+            {state.streak > 0 && state.streak % 7 === 0 && (
+              <Flex
+                justifyContent={"center"}
+                alignItems={"center"}
+                gap={2}
+                marginTop={"10px"}
+              >
+                <Image
+                  src={starBoost}
+                  background={"none"}
+                  height={"60px"}
+                  w={"60px"}
+                />
+                <Badge fontSize={"1.2rem"} color={"yellow"} background={"none"}>
+                  Enjoy!! 1.5x multiplier
+                </Badge>
+              </Flex>
+            )}
           </Flex>
           <Grid
             templateColumns={

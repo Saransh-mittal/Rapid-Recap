@@ -378,7 +378,7 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 150 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
@@ -387,7 +387,7 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 130, $lt: 150 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
@@ -396,7 +396,7 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 110, $lt: 130 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
@@ -405,7 +405,7 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 90, $lt: 110 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
@@ -414,20 +414,20 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 0, $lt: 90 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
     } else {
       users = await User.find({ inGameName: { $exists: true, $ne: "" } })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
     }
 
     // const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
-    //   .select("name inGameName IQ_score pic maxIQScore rank _id")
+    //   .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
     //   .sort({ rank: 1 })
     //   .limit(100)
     //   .populate("quizAttempts");
@@ -436,12 +436,9 @@ const leaderBoard = async (req, res) => {
     const result = [];
 
     users.forEach((user) => {
-      let sum = 0;
       const { name, inGameName, IQ_score, pic, _id, maxIQScore } = user;
-      for (let i = 0; i < user.quizAttempts.length; i++) {
-        sum += user.quizAttempts[i].RQM_score;
-      }
-      const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
+
+      const RQM_avg = user.avgRQM?.toFixed(0);
       const quizSubmissions = user.quizAttempts.length;
       result.push({
         _id,
@@ -463,11 +460,8 @@ const leaderBoard = async (req, res) => {
         return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
       }
     });
-    let sum = 0;
-    for (let i = 0; i < currUser.quizAttempts.length; i++) {
-      sum += currUser.quizAttempts[i].RQM_score;
-    }
-    const RQM_avg = (sum / currUser.quizAttempts.length).toFixed(0);
+
+    const RQM_avg = currUser.avgRQM.toFixed(0);
     const quizSubmissions = currUser.quizAttempts.length;
 
     res
@@ -950,7 +944,7 @@ const streakChecker = async (req, res) => {
 
     // Check if the latest attempt is from yesterday
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set time to start of the day
+    today.setUTCHours(0, 0, 0, 0); // Set time to start of the day
 
     if (today.getTime() > user.streakExpiry.getTime()) {
       // Reset streak

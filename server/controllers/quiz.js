@@ -17,7 +17,7 @@ const saveAttempt = async (req, res) => {
     });
 
     const currentDate = new Date(); // Get current date
-    currentDate.setHours(0, 0, 0, 0); // Set time to start of the day
+    currentDate.setUTCHours(0, 0, 0, 0); // Set time to start of the day
 
     // Check if there's any attempt saved for the current user and article for today
     const todayAttemptsCount = await QuizAttempt.countDocuments({
@@ -100,10 +100,19 @@ const saveAttempt = async (req, res) => {
     });
     await newQuizAttempt.save();
     const user = await User.findById(userId);
+    let sumOfRQM = user.avgRQM * user.quizAttempts.length;
+    sumOfRQM += RQM_score;
+    user.avgRQM = sumOfRQM / (user.quizAttempts.length + 1);
     user.quizAttempts.push(newQuizAttempt._id);
     const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 1); // Set date to one day from now
-    expiry.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (user.streakExpiry < today) {
+      user.streak = 0;
+      await user.save();
+    }
+    expiry.setUTCDate(expiry.getUTCDate() + 1); // Set date to one day from now
+    expiry.setUTCHours(0, 0, 0, 0);
     user.streakExpiry = expiry;
     if (todayAttemptsCount === 0) {
       if (user.streak + 1 > user.longestStreak)

@@ -309,7 +309,9 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                           as="svg"
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox={
-                            state.streak === 0 ? "0 0 18 18" : "0 0 24 24"
+                            state.longestStreak === 0
+                              ? "0 0 18 18"
+                              : "0 0 24 24"
                           }
                           width={{ base: "1.2rem", lg: "1.2em" }}
                           height={{ base: "1.2rem", lg: "1.2em" }}
@@ -321,7 +323,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                           borderRadius={"50%"}
                           marginBottom={"5px"}
                         >
-                          {state.streak > 0 ? (
+                          {state.longestStreak > 0 ? (
                             <>
                               <g filter="url(#hot-filled_svg__filter0_i_289_12318)">
                                 <path
@@ -399,33 +401,6 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     </Text>
                   </>
                 )}
-
-                {/* <Text
-                  color="white"
-                  fontSize="16px"
-                  textAlign="center"
-                  mb={4}
-                  lineHeight="1.5"
-                >
-                  Keep up the consistency to reach a 7-day streak and unlock a{" "}
-                  <Text
-                    as="span"
-                    fontWeight="semibold"
-                    color="green.300"
-                    textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
-                  >
-                    1.5x multiplier
-                  </Text>{" "}
-                  on your quizzes!
-                </Text>
-                <Text
-                  color="white"
-                  fontSize="16px"
-                  textAlign="center"
-                  lineHeight="1.5"
-                >
-                  Challenge yourself to explore new topics every day.
-                </Text> */}
                 {state.streak === 0 && state.longestStreak === 0 && (
                   <>
                     <Text

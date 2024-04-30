@@ -89,7 +89,7 @@ const Navbar = () => {
       const response = await axios.post("/api/user/logout");
       if (response.status === 201) {
         toast({
-          title: "Logout Successfull",
+          title: "Logout-Successfull",
           status: "success",
           duration: 5000,
           isClosable: true,

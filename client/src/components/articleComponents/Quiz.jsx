@@ -319,7 +319,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
             onMouseLeave={() => setIsCloseButtonHovered(false)}
           />
 
-          {showInstruction ? (
+          {!showInstruction ? (
             language === "english" ? (
               <InstructionModal />
             ) : (
@@ -334,8 +334,9 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
               alignItems={"center"}
               width={"100%"}
               userSelect={"none"}
+              position={"relative"}
             >
-              {!submitted ? (
+              {submitted ? (
                 <>
                   <QuizInterface
                     load={load}

@@ -1,8 +1,20 @@
 // InstructionModal.js
-import React from "react";
-import { ModalBody, Heading, Text, VStack, Box } from "@chakra-ui/react";
+import React, { useContext } from "react";
+import {
+  ModalBody,
+  Heading,
+  Text,
+  VStack,
+  Box,
+  Flex,
+  Image,
+  Badge,
+} from "@chakra-ui/react";
+import { AppContext } from "../../../contextAPI/appContext";
+import starBoost from "/GIFs/starBoost.gif";
 
 const InstructionModal = () => {
+  const { state } = useContext(AppContext);
   return (
     <>
       <ModalBody
@@ -17,6 +29,25 @@ const InstructionModal = () => {
         <Heading as="h1" size={"xl"} mb={2}>
           Instructions
         </Heading>
+
+        {state.streak > 0 && state.streak % 7 === 0 && (
+          <Flex
+            justifyContent={"center"}
+            alignItems={"center"}
+            gap={2}
+            marginTop={"10px"}
+          >
+            <Image
+              src={starBoost}
+              background={"none"}
+              height={"60px"}
+              w={"60px"}
+            />
+            <Badge fontSize={"1.2rem"} color={"yellow"} background={"none"}>
+              Enjoy!! 1.5x multiplier
+            </Badge>
+          </Flex>
+        )}
 
         <VStack spacing={1} alignItems="start" textAlign="left">
           <Box mt={5} mb={-1}>

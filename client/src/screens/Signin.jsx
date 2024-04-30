@@ -101,7 +101,7 @@ export default function Sigin() {
         }
 
         toast({
-          title: "Logined Successfully",
+          title: "Login-Successfull",
           status: "success",
           duration: 5000,
           isClosable: true,
@@ -346,7 +346,7 @@ export default function Sigin() {
                             console.error(error.message);
                           }
                           toast({
-                            title: "Logined Successfully",
+                            title: "Login-Successfull",
                             status: "success",
                             duration: 5000,
                             isClosable: true,

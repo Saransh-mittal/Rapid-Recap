@@ -141,6 +141,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    avgRQM: {
+      type: Number,
+      default: 0,
+    },
   },
   { collection: "Users" }
 );

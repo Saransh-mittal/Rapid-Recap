@@ -157,46 +157,46 @@ const getDailyActivity = async (userId) => {
 };
 
 const calculateUserRank = async (userId) => {
-  const users = await User.find({})
-    .sort({ IQ_score: -1 })
-    .populate("quizAttempts");
-  const result = [];
-  users.forEach((user) => {
-    let sum = 0;
-    const { name, inGameName, IQ_score, pic, _id } = user;
-    for (let i = 0; i < user.quizAttempts.length; i++) {
-      sum += user.quizAttempts[i].RQM_score;
-    }
-    const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
-    const quizSubmissions = user.quizAttempts.length;
-    result.push({
-      _id,
-      RQM_avg,
-      name,
-      inGameName,
-      IQ_score,
-      pic,
-      quizSubmissions,
-    });
-  });
-  result.sort((a, b) => {
-    if (a.IQ_score !== b.IQ_score) {
-      return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
-    } else if (a.quizSubmissions !== b.quizSubmissions) {
-      return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
-    } else {
-      return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
-    }
-  });
-  const userIndex = result.findIndex(
-    (user) => user._id.toString() === userId.toString()
-  );
+  // const users = await User.find({})
+  //   .sort({ IQ_score: -1 })
+  //   .populate("quizAttempts");
+  // const result = [];
+  // users.forEach((user) => {
+  //   let sum = 0;
+  //   const { name, inGameName, IQ_score, pic, _id } = user;
+  //   for (let i = 0; i < user.quizAttempts.length; i++) {
+  //     sum += user.quizAttempts[i].RQM_score;
+  //   }
+  //   const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
+  //   const quizSubmissions = user.quizAttempts.length;
+  //   result.push({
+  //     _id,
+  //     RQM_avg,
+  //     name,
+  //     inGameName,
+  //     IQ_score,
+  //     pic,
+  //     quizSubmissions,
+  //   });
+  // });
+  // result.sort((a, b) => {
+  //   if (a.IQ_score !== b.IQ_score) {
+  //     return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
+  //   } else if (a.quizSubmissions !== b.quizSubmissions) {
+  //     return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
+  //   } else {
+  //     return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
+  //   }
+  // });
+  // const userIndex = result.findIndex(
+  //   (user) => user._id.toString() === userId.toString()
+  // );
 
-  if (userIndex === -1) {
-    throw new Error("User not found");
-  }
-
-  return userIndex + 1;
+  // if (userIndex === -1) {
+  //   throw new Error("User not found");
+  // }
+  const user = await User.findById(userId);
+  return user.rank;
 };
 
 const dailyStreakCalculator = async (userId) => {
@@ -233,7 +233,7 @@ const dailyStreakCalculator = async (userId) => {
     // const yesterday = new Date(streakData[1]._id);
     const latestAttemptDate = new Date(streakData[0]._id);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set time to start of the day
+    today.setUTCHours(0, 0, 0, 0); // Set time to start of the day
 
     // const isDiffDay = Math.floor(
     //   (yesterday.getTime() - latestAttemptDate.getTime()) / (1000 * 3600 * 24)
@@ -241,7 +241,7 @@ const dailyStreakCalculator = async (userId) => {
     // //console.log(isDiffDay, yesterday, latestAttemptDate, streakData[0]._id);
     // if (isDiffDay) {
     //   user.streak = 0;
-    //   latestAttemptDate.setDate(latestAttemptDate.getDate() + 1);
+    //   latestAttemptDate.setUTCDate(latestAttemptDate.getUTCDate() + 1);
     //   latestAttemptDate.setHours(0, 0, 0, 0);
     //   user.streakExpiry = latestAttemptDate;
     //   return 0; // No streak
@@ -261,7 +261,7 @@ const dailyStreakCalculator = async (userId) => {
       } else {
         if (i == 1) {
           const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
+          yesterday.setUTCDate(yesterday.getUTCDate() - 1);
           yesterday.setUTCHours(0, 0, 0, 0);
           const today = new Date();
           today.setUTCHours(0, 0, 0, 0);
@@ -277,7 +277,7 @@ const dailyStreakCalculator = async (userId) => {
         break;
       }
     }
-    latestAttemptDate.setDate(latestAttemptDate.getDate() + 1);
+    latestAttemptDate.setUTCDate(latestAttemptDate.getUTCDate() + 1);
     latestAttemptDate.setUTCHours(0, 0, 0, 0);
     if (today.getTime() > user.streakExpiry.getTime()) {
       // Reset streak
