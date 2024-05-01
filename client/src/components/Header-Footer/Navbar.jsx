@@ -517,10 +517,9 @@ const Navbar = () => {
               borderRadius={"50%"}
               padding={"2px"}
               style={{
-                boxShadow:
-                  state.streak % 7 === 0 && state.streak > 0
-                    ? "0 0 10px 0 rgba(0, 150, 255, 0.7), 0 4px 8px 0 rgba(0, 150, 255, 0.3), 0 8px 20px 0 rgba(0, 150, 255, 0.2)"
-                    : "none",
+                boxShadow: state.isBoosted
+                  ? "0 0 10px 0 rgba(0, 150, 255, 0.7), 0 4px 8px 0 rgba(0, 150, 255, 0.3), 0 8px 20px 0 rgba(0, 150, 255, 0.2)"
+                  : "none",
               }}
             >
               {state.streak > 0 ? (

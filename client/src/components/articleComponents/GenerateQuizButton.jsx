@@ -4,7 +4,7 @@ import { AppContext } from "../../contextAPI/appContext";
 
 const GenerateQuizButton = ({ onClick, css }) => {
   const { state } = useContext(AppContext);
-  const isBoosted = state.streak > 0 && state.streak % 7 === 0;
+  const isBoosted = state.isBoosted;
   const buttonStyle = {
     height: "35px",
     width: "110px",

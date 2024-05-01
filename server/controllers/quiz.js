@@ -79,9 +79,11 @@ const saveAttempt = async (req, res) => {
         : timeTaken;
 
     const apparentScore = (score * Math.log(score + 1)) / Math.log(1.3);
-    const RQM_score = Math.ceil(
+    let RQM_score = Math.ceil(
       ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000
     );
+    const user = await User.findById(userId);
+    if (user.todayBoost) RQM_score = RQM_score * 1.5;
     const articleDifficulty = quiz.overAllDifficulty;
     const newQuizAttempt = new QuizAttempt({
       user: userId,
@@ -97,9 +99,11 @@ const saveAttempt = async (req, res) => {
       RQM_score,
       articleDifficulty,
       timeTaken,
+      boost: user.todayBoost ? 1.5 : 1,
+      isBoosted: user.todayBoost,
     });
     await newQuizAttempt.save();
-    const user = await User.findById(userId);
+
     let sumOfRQM = user.avgRQM * user.quizAttempts.length;
     sumOfRQM += RQM_score;
     user.avgRQM = sumOfRQM / (user.quizAttempts.length + 1);

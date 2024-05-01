@@ -511,7 +511,7 @@ const Article = () => {
                 </Select>
               </Box>
             </Flex>
-            {state.streak > 0 && state.streak % 7 === 0 && (
+            {state.isBoosted && (
               <Flex
                 justifyContent={"center"}
                 alignItems={"center"}

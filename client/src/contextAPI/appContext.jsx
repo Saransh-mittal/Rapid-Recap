@@ -22,6 +22,7 @@ async function getDailyStreak() {
       return {
         streak: response.data.streak,
         longestStreak: response.data.longestStreak,
+        isBoosted: response.data.isBoosted,
       };
     }
   } catch (error) {

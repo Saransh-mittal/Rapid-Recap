@@ -945,21 +945,31 @@ const streakChecker = async (req, res) => {
     // Check if the latest attempt is from yesterday
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0); // Set time to start of the day
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 
     if (today.getTime() > user.streakExpiry.getTime()) {
       // Reset streak
       user.streak = 0;
       user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      user.todayBoost = false;
       await user.save();
       return res.status(200).json({ streak: 0 });
     }
+    const isBoosted =
+      user.streak > 0 &&
+      user.streak % 7 === 0 &&
+      user.streakExpiry.getTime() === tomorrow.getTime();
+    user.todayBoost = isBoosted;
     if (user.streak > user.longestStreak) {
       user.longestStreak = user.streak;
-      await user.save();
     }
-    res
-      .status(200)
-      .json({ streak: user.streak, longestStreak: user.longestStreak });
+    await user.save();
+
+    res.status(200).json({
+      streak: user.streak,
+      longestStreak: user.longestStreak,
+      isBoosted,
+    });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
     console.log(error.message);
