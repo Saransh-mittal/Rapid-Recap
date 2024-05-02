@@ -2,28 +2,43 @@ const DailyIQ = require("../model/dailyIQSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const User = require("../model/userSchema");
 const { formatDate } = require("./date");
+const {
+  binarySearch,
+  binarySearchForLeftRange,
+  binarySearchForRightRange,
+} = require("./miscellaneous");
 
-const calculateTopPercent = (userIQ, IQScores) => {
-  const sortedIQScores = IQScores.sort((a, b) => b - a);
-  const index = sortedIQScores.findIndex((score) => score <= userIQ);
-
-  return (((index + 1) / IQScores.length) * 100).toFixed(2);
+const calculateTopPercent = (userIQ, sortedIQScores) => {
+  //sortedIQScores.sort((a, b) => b - a);
+  // const index = sortedIQScores.findIndex((score) => score === userIQ);
+  const index = binarySearch(sortedIQScores, userIQ);
+  if (index === -1) {
+    throw new Error("User IQ score not found in the list");
+  }
+  return (100 - ((index + 1) / sortedIQScores.length) * 100).toFixed(2);
 };
 
 const calculateLabelsAndData = (IQScores) => {
   const labels = Array.from({ length: 40 }, (_, i) => (i + 1) * 10);
-  const data = labels.map((threshold) => {
-    return IQScores.filter(
-      (score) => score >= threshold - 10 && score < threshold
-    ).length;
-  });
-
   const filteredLabels = [];
   const filteredIQData = [];
+
   for (let i = 0; i < labels.length; i++) {
-    if (data[i] !== 0) {
-      filteredLabels.push(`${labels[i] - 10}-${labels[i]}`);
-      filteredIQData.push(data[i]);
+    const lowerBound = labels[i] - 10;
+    const upperBound = labels[i];
+    const index_left = binarySearchForLeftRange(IQScores, lowerBound);
+    const index_right = binarySearchForRightRange(IQScores, upperBound);
+
+    // // Calculate the count of elements within the current threshold range
+    const count =
+      index_left == -1 || index_right == -1 || index_left > index_right
+        ? 0
+        : index_right - index_left + 1;
+
+    // // If count is not zero, add the label and count to filteredLabels and filteredIQData respectively
+    if (count !== 0) {
+      filteredLabels.push(`${lowerBound}-${upperBound}`);
+      filteredIQData.push(count);
     }
   }
 
@@ -31,7 +46,7 @@ const calculateLabelsAndData = (IQScores) => {
 };
 
 const calculatePercentilesOfEachBar = (
-  IQScores,
+  sortedScores,
   filteredLabels,
   filteredIQData
 ) => {
@@ -39,9 +54,12 @@ const calculatePercentilesOfEachBar = (
 
   // Define the function to calculate percentile
   const calculatePercentile = (iqScore) => {
-    const sortedScores = IQScores.sort((a, b) => a - b);
-    const index = sortedScores.findIndex((score) => score >= iqScore);
-    return index === 0 ? 100 : 100 - ((index + 1) / sortedScores.length) * 100;
+    //const sortedScores = IQScores.sort((a, b) => a - b);
+    //const index = sortedScores.findIndex((score) => score >= iqScore);
+    const index = binarySearchForLeftRange(sortedScores, iqScore);
+    return index === 0 || index === -1
+      ? 100
+      : 100 - ((index + 1) / sortedScores.length) * 100;
   };
 
   // Iterate through each data point
@@ -95,20 +113,22 @@ const currentTopPercentOfUser = async (userId) => {
   }
 
   const USER_IQ = user.IQ_score;
+  // const users = await User.find({ IQ_score: { $gt: 0 } });
+  // const IQScores = users.map((u) => u.IQ_score);
   const users = await User.find({});
   const IQScores = users.filter((u) => u.IQ_score > 0).map((u) => u.IQ_score);
-  const Top_Percentage = calculateTopPercent(USER_IQ, IQScores);
-  //console.log(Top_Percentage);
-  const { filteredLabels, filteredIQData } = calculateLabelsAndData(IQScores);
-  const percentileData = calculatePercentilesOfEachBar(
-    IQScores,
-    filteredLabels,
-    filteredIQData
-  );
+  const sortedIQScores = IQScores.sort((a, b) => a - b);
+  const Top_Percentage = calculateTopPercent(USER_IQ, sortedIQScores);
+  const { filteredLabels, filteredIQData } =
+    calculateLabelsAndData(sortedIQScores);
 
   return {
     Top_Percentage,
-    percentileData,
+    percentileData: calculatePercentilesOfEachBar(
+      sortedIQScores,
+      filteredLabels,
+      filteredIQData
+    ),
     filteredLabels,
     filteredIQData,
     USER_IQ,
@@ -121,23 +141,26 @@ const getSolvedQuizzesCount = async (userId) => {
     throw new Error("User not found");
   }
 
-  const users = await User.find({});
   const totalSolvedQuiz = user.quizAttempts.length;
   const easyQuizzesCount = user.easyQuizCount;
   const mediumQuizzesCount = user.mediumQuizCount;
   const hardQuizzesCount = user.hardQuizCount;
 
+  // Calculate the number of users with fewer easy, medium, and hard quizzes
+  const usersCount = await User.countDocuments();
   const easyBeatsPercentage =
-    (users.filter((u) => u.easyQuizCount < easyQuizzesCount).length /
-      users.length) *
+    ((await User.countDocuments({ easyQuizCount: { $lt: easyQuizzesCount } })) /
+      usersCount) *
     100;
   const medBeatsPercentage =
-    (users.filter((u) => u.mediumQuizCount < mediumQuizzesCount).length /
-      users.length) *
+    ((await User.countDocuments({
+      mediumQuizCount: { $lt: mediumQuizzesCount },
+    })) /
+      usersCount) *
     100;
   const hardBeatsPercentage =
-    (users.filter((u) => u.hardQuizCount < hardQuizzesCount).length /
-      users.length) *
+    ((await User.countDocuments({ hardQuizCount: { $lt: hardQuizzesCount } })) /
+      usersCount) *
     100;
 
   return {
@@ -149,11 +172,12 @@ const getSolvedQuizzesCount = async (userId) => {
 };
 
 const getDailyActivity = async (userId) => {
-  const quizAttempts = await QuizAttempt.find({ user: userId });
+  const quizAttempts = await QuizAttempt.aggregate([
+    { $match: { user: userId } }, // Filter quiz attempts by user ID
+    { $project: { date: "$createdAt" } }, // Rename createdAt to date
+  ]);
 
-  return quizAttempts.map((attempt) => ({
-    date: attempt.createdAt,
-  }));
+  return quizAttempts;
 };
 
 const calculateUserRank = async (userId) => {

@@ -480,46 +480,38 @@ const leaderBoard = async (req, res) => {
 
 const profile = async (req, res) => {
   try {
-    const inGameName = req.params.inGameName;
-    //console.log(inGameName);
-    const user = await User.findOne({ inGameName });
-    const userId = user._id;
-    // Fetch user information
-    //const user = await User.findById(userId);
+    const user = await User.findOne({
+      inGameName: req.params.inGameName,
+    }).populate("dailyIQScores");
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Get IQ score history
-    const iqScoresHistory = await getUserIQScoreHistory(userId);
-
-    // Calculate current top percentage
     const {
       Top_Percentage,
       percentileData,
       filteredLabels,
       filteredIQData,
       USER_IQ,
-    } = await currentTopPercentOfUser(userId);
+    } = await currentTopPercentOfUser(user._id);
+    const [solvedQuizzes, dailyActivity, rank, iqScoresHistory] =
+      await Promise.all([
+        getSolvedQuizzesCount(user._id),
+        getDailyActivity(user._id),
+        calculateUserRank(user._id),
+        getUserIQScoreHistory(user._id),
+      ]);
 
-    // Get solved quizzes count and percentages
-    const solvedQuizzes = await getSolvedQuizzesCount(userId);
+    const profilePrivacy = user.profilePrivacy || {
+      fullProfile: false,
+      lineGraph: false,
+      barGraph: false,
+      solvedQuizzes: false,
+      dailyActivity: false,
+      society: false,
+    };
 
-    // Get daily activity
-    const dailyActivity = await getDailyActivity(userId);
-
-    // Calculate user rank
-    const rank = await calculateUserRank(userId);
-    const profilePrivacy = user.profilePrivacy
-      ? user.profilePrivacy
-      : {
-          fullProfile: false,
-          lineGraph: false,
-          barGraph: false,
-          solvedQuizzes: false,
-          dailyActivity: false,
-          society: false,
-        };
     res.status(200).json({
       lineGraph: iqScoresHistory,
       barGraph: {
