@@ -448,13 +448,13 @@ const extractNews = async (req, res) => {
     "e7409124fe384b688c07763501b270dd",
   ];
   const categories = [
-    // "general",
-    // "sports",
+    "general",
+    "sports",
     "health",
-    // "science",
-    // "business",
-    // "technology",
-    // "entertainment",
+    "science",
+    "business",
+    "technology",
+    "entertainment",
   ];
   const requestsPerKey = 30;
   let currentKeyIndex = 0;
@@ -463,6 +463,7 @@ const extractNews = async (req, res) => {
   try {
     let result = [];
     let notificationCategories = categories.join(", ");
+    let articlesSavedPerCategory = {};
 
     for (let category of categories) {
       console.log(`\nExtracting news of category ${category}\n`);
@@ -506,17 +507,19 @@ const extractNews = async (req, res) => {
       await genHindiQuizForArticles(AiProcessedNews);
       // push content of AiProcessedNews in result
       result = result.concat(AiProcessedNews);
+      articlesSavedPerCategory[category] = AiProcessedNews.length;
     }
 
     res.status(200).json({
       message: `No. of news fetched for DB : ${result.length}`,
+      articlesSavedPerCategory: articlesSavedPerCategory,
     });
 
     if (result.length > 0) {
       const title = `📢 New ${notificationCategories} Content Alert! 📰`;
       const body =
         "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-      const url = "https://cyan-crane-tie.cyclic.app/";
+      const url = "https://www.rapidrecap.co.in/";
       sendNotification({ title, body, url });
     }
   } catch (error) {

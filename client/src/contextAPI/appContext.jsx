@@ -19,7 +19,11 @@ async function getDailyStreak() {
   try {
     const response = await axios.get(`/api/user/streakChecker`);
     if (response.status === 200) {
-      return { streak: response.data.streak };
+      return {
+        streak: response.data.streak,
+        longestStreak: response.data.longestStreak,
+        isBoosted: response.data.isBoosted,
+      };
     }
   } catch (error) {
     console.log(error.message);

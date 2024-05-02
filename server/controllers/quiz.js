@@ -17,7 +17,7 @@ const saveAttempt = async (req, res) => {
     });
 
     const currentDate = new Date(); // Get current date
-    currentDate.setHours(0, 0, 0, 0); // Set time to start of the day
+    currentDate.setUTCHours(0, 0, 0, 0); // Set time to start of the day
 
     // Check if there's any attempt saved for the current user and article for today
     const todayAttemptsCount = await QuizAttempt.countDocuments({
@@ -79,9 +79,11 @@ const saveAttempt = async (req, res) => {
         : timeTaken;
 
     const apparentScore = (score * Math.log(score + 1)) / Math.log(1.3);
-    const RQM_score = Math.ceil(
+    let RQM_score = Math.ceil(
       ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000
     );
+    const user = await User.findById(userId);
+    if (user.todayBoost) RQM_score = Math.ceil(RQM_score * 1.5);
     const articleDifficulty = quiz.overAllDifficulty;
     const newQuizAttempt = new QuizAttempt({
       user: userId,
@@ -97,15 +99,30 @@ const saveAttempt = async (req, res) => {
       RQM_score,
       articleDifficulty,
       timeTaken,
+      boost: user.todayBoost ? 1.5 : 1,
+      isBoosted: user.todayBoost,
     });
     await newQuizAttempt.save();
-    const user = await User.findById(userId);
+
+    let sumOfRQM = user.avgRQM * user.quizAttempts.length;
+    sumOfRQM += RQM_score;
+    user.avgRQM = sumOfRQM / (user.quizAttempts.length + 1);
     user.quizAttempts.push(newQuizAttempt._id);
     const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 1); // Set date to one day from now
-    expiry.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (user.streakExpiry < today) {
+      user.streak = 0;
+      await user.save();
+    }
+    expiry.setUTCDate(expiry.getUTCDate() + 1); // Set date to one day from now
+    expiry.setUTCHours(0, 0, 0, 0);
     user.streakExpiry = expiry;
-    if (todayAttemptsCount === 0) user.streak++;
+    if (todayAttemptsCount === 0) {
+      if (user.streak + 1 > user.longestStreak)
+        user.longestStreak = user.streak + 1;
+      user.streak++;
+    }
     if (articleDifficulty < 0.5) user.easyQuizCount++;
     else if (articleDifficulty < 0.7) user.mediumQuizCount++;
     else user.hardQuizCount++;
