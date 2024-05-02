@@ -2,28 +2,43 @@ const DailyIQ = require("../model/dailyIQSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const User = require("../model/userSchema");
 const { formatDate } = require("./date");
+const {
+  binarySearch,
+  binarySearchForLeftRange,
+  binarySearchForRightRange,
+} = require("./miscellaneous");
 
-const calculateTopPercent = (userIQ, IQScores) => {
-  const sortedIQScores = IQScores.sort((a, b) => b - a);
-  const index = sortedIQScores.findIndex((score) => score <= userIQ);
-
-  return (((index + 1) / IQScores.length) * 100).toFixed(2);
+const calculateTopPercent = (userIQ, sortedIQScores) => {
+  //sortedIQScores.sort((a, b) => b - a);
+  // const index = sortedIQScores.findIndex((score) => score === userIQ);
+  const index = binarySearch(sortedIQScores, userIQ);
+  if (index === -1) {
+    throw new Error("User IQ score not found in the list");
+  }
+  return (100 - ((index + 1) / sortedIQScores.length) * 100).toFixed(2);
 };
 
 const calculateLabelsAndData = (IQScores) => {
   const labels = Array.from({ length: 40 }, (_, i) => (i + 1) * 10);
-  const data = labels.map((threshold) => {
-    return IQScores.filter(
-      (score) => score >= threshold - 10 && score < threshold
-    ).length;
-  });
-
   const filteredLabels = [];
   const filteredIQData = [];
+
   for (let i = 0; i < labels.length; i++) {
-    if (data[i] !== 0) {
-      filteredLabels.push(`${labels[i] - 10}-${labels[i]}`);
-      filteredIQData.push(data[i]);
+    const lowerBound = labels[i] - 10;
+    const upperBound = labels[i];
+    const index_left = binarySearchForLeftRange(IQScores, lowerBound);
+    const index_right = binarySearchForRightRange(IQScores, upperBound);
+
+    // // Calculate the count of elements within the current threshold range
+    const count =
+      index_left == -1 || index_right == -1 || index_left > index_right
+        ? 0
+        : index_right - index_left + 1;
+
+    // // If count is not zero, add the label and count to filteredLabels and filteredIQData respectively
+    if (count !== 0) {
+      filteredLabels.push(`${lowerBound}-${upperBound}`);
+      filteredIQData.push(count);
     }
   }
 
@@ -31,7 +46,7 @@ const calculateLabelsAndData = (IQScores) => {
 };
 
 const calculatePercentilesOfEachBar = (
-  IQScores,
+  sortedScores,
   filteredLabels,
   filteredIQData
 ) => {
@@ -39,9 +54,12 @@ const calculatePercentilesOfEachBar = (
 
   // Define the function to calculate percentile
   const calculatePercentile = (iqScore) => {
-    const sortedScores = IQScores.sort((a, b) => a - b);
-    const index = sortedScores.findIndex((score) => score >= iqScore);
-    return index === 0 ? 100 : 100 - ((index + 1) / sortedScores.length) * 100;
+    //const sortedScores = IQScores.sort((a, b) => a - b);
+    //const index = sortedScores.findIndex((score) => score >= iqScore);
+    const index = binarySearchForLeftRange(sortedScores, iqScore);
+    return index === 0 || index === -1
+      ? 100
+      : 100 - ((index + 1) / sortedScores.length) * 100;
   };
 
   // Iterate through each data point
@@ -95,20 +113,21 @@ const currentTopPercentOfUser = async (userId) => {
   }
 
   const USER_IQ = user.IQ_score;
-  const users = await User.find({});
-  const IQScores = users.filter((u) => u.IQ_score > 0).map((u) => u.IQ_score);
-  const Top_Percentage = calculateTopPercent(USER_IQ, IQScores);
-  //console.log(Top_Percentage);
-  const { filteredLabels, filteredIQData } = calculateLabelsAndData(IQScores);
-  const percentileData = calculatePercentilesOfEachBar(
-    IQScores,
-    filteredLabels,
-    filteredIQData
-  );
+  const users = await User.find({ IQ_score: { $gt: 0 } });
+  const IQScores = users.map((u) => u.IQ_score);
+
+  const sortedIQScores = IQScores.sort((a, b) => a - b);
+  const Top_Percentage = calculateTopPercent(USER_IQ, sortedIQScores);
+  const { filteredLabels, filteredIQData } =
+    calculateLabelsAndData(sortedIQScores);
 
   return {
     Top_Percentage,
-    percentileData,
+    percentileData: calculatePercentilesOfEachBar(
+      sortedIQScores,
+      filteredLabels,
+      filteredIQData
+    ),
     filteredLabels,
     filteredIQData,
     USER_IQ,
@@ -121,23 +140,26 @@ const getSolvedQuizzesCount = async (userId) => {
     throw new Error("User not found");
   }
 
-  const users = await User.find({});
   const totalSolvedQuiz = user.quizAttempts.length;
   const easyQuizzesCount = user.easyQuizCount;
   const mediumQuizzesCount = user.mediumQuizCount;
   const hardQuizzesCount = user.hardQuizCount;
 
+  // Calculate the number of users with fewer easy, medium, and hard quizzes
+  const usersCount = await User.countDocuments();
   const easyBeatsPercentage =
-    (users.filter((u) => u.easyQuizCount < easyQuizzesCount).length /
-      users.length) *
+    ((await User.countDocuments({ easyQuizCount: { $lt: easyQuizzesCount } })) /
+      usersCount) *
     100;
   const medBeatsPercentage =
-    (users.filter((u) => u.mediumQuizCount < mediumQuizzesCount).length /
-      users.length) *
+    ((await User.countDocuments({
+      mediumQuizCount: { $lt: mediumQuizzesCount },
+    })) /
+      usersCount) *
     100;
   const hardBeatsPercentage =
-    (users.filter((u) => u.hardQuizCount < hardQuizzesCount).length /
-      users.length) *
+    ((await User.countDocuments({ hardQuizCount: { $lt: hardQuizzesCount } })) /
+      usersCount) *
     100;
 
   return {
@@ -149,54 +171,17 @@ const getSolvedQuizzesCount = async (userId) => {
 };
 
 const getDailyActivity = async (userId) => {
-  const quizAttempts = await QuizAttempt.find({ user: userId });
+  const quizAttempts = await QuizAttempt.aggregate([
+    { $match: { user: userId } }, // Filter quiz attempts by user ID
+    { $project: { date: "$createdAt" } }, // Rename createdAt to date
+  ]);
 
-  return quizAttempts.map((attempt) => ({
-    date: attempt.createdAt,
-  }));
+  return quizAttempts;
 };
 
 const calculateUserRank = async (userId) => {
-  const users = await User.find({})
-    .sort({ IQ_score: -1 })
-    .populate("quizAttempts");
-  const result = [];
-  users.forEach((user) => {
-    let sum = 0;
-    const { name, inGameName, IQ_score, pic, _id } = user;
-    for (let i = 0; i < user.quizAttempts.length; i++) {
-      sum += user.quizAttempts[i].RQM_score;
-    }
-    const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
-    const quizSubmissions = user.quizAttempts.length;
-    result.push({
-      _id,
-      RQM_avg,
-      name,
-      inGameName,
-      IQ_score,
-      pic,
-      quizSubmissions,
-    });
-  });
-  result.sort((a, b) => {
-    if (a.IQ_score !== b.IQ_score) {
-      return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
-    } else if (a.quizSubmissions !== b.quizSubmissions) {
-      return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
-    } else {
-      return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
-    }
-  });
-  const userIndex = result.findIndex(
-    (user) => user._id.toString() === userId.toString()
-  );
-
-  if (userIndex === -1) {
-    throw new Error("User not found");
-  }
-
-  return userIndex + 1;
+  const user = await User.findById(userId);
+  return user.rank;
 };
 
 const dailyStreakCalculator = async (userId) => {
@@ -233,7 +218,7 @@ const dailyStreakCalculator = async (userId) => {
     // const yesterday = new Date(streakData[1]._id);
     const latestAttemptDate = new Date(streakData[0]._id);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set time to start of the day
+    today.setUTCHours(0, 0, 0, 0); // Set time to start of the day
 
     // const isDiffDay = Math.floor(
     //   (yesterday.getTime() - latestAttemptDate.getTime()) / (1000 * 3600 * 24)
@@ -241,7 +226,7 @@ const dailyStreakCalculator = async (userId) => {
     // //console.log(isDiffDay, yesterday, latestAttemptDate, streakData[0]._id);
     // if (isDiffDay) {
     //   user.streak = 0;
-    //   latestAttemptDate.setDate(latestAttemptDate.getDate() + 1);
+    //   latestAttemptDate.setUTCDate(latestAttemptDate.getUTCDate() + 1);
     //   latestAttemptDate.setHours(0, 0, 0, 0);
     //   user.streakExpiry = latestAttemptDate;
     //   return 0; // No streak
@@ -261,7 +246,7 @@ const dailyStreakCalculator = async (userId) => {
       } else {
         if (i == 1) {
           const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
+          yesterday.setUTCDate(yesterday.getUTCDate() - 1);
           yesterday.setUTCHours(0, 0, 0, 0);
           const today = new Date();
           today.setUTCHours(0, 0, 0, 0);
@@ -277,7 +262,7 @@ const dailyStreakCalculator = async (userId) => {
         break;
       }
     }
-    latestAttemptDate.setDate(latestAttemptDate.getDate() + 1);
+    latestAttemptDate.setUTCDate(latestAttemptDate.getUTCDate() + 1);
     latestAttemptDate.setUTCHours(0, 0, 0, 0);
     if (today.getTime() > user.streakExpiry.getTime()) {
       // Reset streak
@@ -295,6 +280,65 @@ const dailyStreakCalculator = async (userId) => {
   }
 };
 
+const longestStreakCalculator = async (userId) => {
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    // If user not found, return error
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Use aggregation pipeline to group quiz attempts by day
+    const streakData = await QuizAttempt.aggregate([
+      {
+        $match: {
+          user: user._id,
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: -1 }, // Sort by date in descending order
+      },
+    ]);
+    if (streakData.length === 0) {
+      user.longestStreak = 0;
+      await user.save();
+      return 0; // No streak
+    }
+
+    // Iterate through streakData to find longest streak
+    let longestStreak = 0;
+
+    for (let i = 0; i < streakData.length; i++) {
+      let streak = 1;
+      for (let j = i + 1; j < streakData.length; j++) {
+        const currentDay = new Date(streakData[j]._id);
+        const prevDay = new Date(streakData[j - 1]._id);
+        const diffInTime = currentDay.getTime() - prevDay.getTime();
+        const diffInDays = diffInTime / (1000 * 3600 * 24);
+        if (Math.abs(diffInDays) === 1) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      longestStreak = Math.max(longestStreak, streak);
+    }
+    user.longestStreak = longestStreak;
+    await user.save();
+    return longestStreak;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -305,4 +349,5 @@ module.exports = {
   getDailyActivity,
   calculateUserRank,
   dailyStreakCalculator,
+  longestStreakCalculator,
 };

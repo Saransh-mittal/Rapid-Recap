@@ -44,6 +44,14 @@ const quizAttemptSchema = new mongoose.Schema({
   timeTaken: {
     type: Number,
   },
+  isBoosted: {
+    type: Boolean,
+    default: false,
+  },
+  boost: {
+    type: Number,
+    default: 1,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

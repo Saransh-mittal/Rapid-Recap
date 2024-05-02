@@ -18,6 +18,7 @@ const {
   getDailyActivity,
   calculateUserRank,
   dailyStreakCalculator,
+  longestStreakCalculator,
 } = require("../utils/user");
 const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
@@ -377,7 +378,7 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 150 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
@@ -386,7 +387,7 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 130, $lt: 150 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
@@ -395,7 +396,7 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 110, $lt: 130 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
@@ -404,7 +405,7 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 90, $lt: 110 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
@@ -413,20 +414,20 @@ const leaderBoard = async (req, res) => {
         inGameName: { $exists: true, $ne: "" },
         IQ_score: { $gte: 0, $lt: 90 },
       })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
     } else {
       users = await User.find({ inGameName: { $exists: true, $ne: "" } })
-        .select("name inGameName IQ_score pic maxIQScore rank _id")
+        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
         .sort({ rank: 1 })
         .limit(100)
         .populate("quizAttempts");
     }
 
     // const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
-    //   .select("name inGameName IQ_score pic maxIQScore rank _id")
+    //   .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
     //   .sort({ rank: 1 })
     //   .limit(100)
     //   .populate("quizAttempts");
@@ -435,12 +436,9 @@ const leaderBoard = async (req, res) => {
     const result = [];
 
     users.forEach((user) => {
-      let sum = 0;
       const { name, inGameName, IQ_score, pic, _id, maxIQScore } = user;
-      for (let i = 0; i < user.quizAttempts.length; i++) {
-        sum += user.quizAttempts[i].RQM_score;
-      }
-      const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
+
+      const RQM_avg = user.avgRQM?.toFixed(0);
       const quizSubmissions = user.quizAttempts.length;
       result.push({
         _id,
@@ -462,11 +460,8 @@ const leaderBoard = async (req, res) => {
         return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
       }
     });
-    let sum = 0;
-    for (let i = 0; i < currUser.quizAttempts.length; i++) {
-      sum += currUser.quizAttempts[i].RQM_score;
-    }
-    const RQM_avg = (sum / currUser.quizAttempts.length).toFixed(0);
+
+    const RQM_avg = currUser.avgRQM.toFixed(0);
     const quizSubmissions = currUser.quizAttempts.length;
 
     res
@@ -480,46 +475,38 @@ const leaderBoard = async (req, res) => {
 
 const profile = async (req, res) => {
   try {
-    const inGameName = req.params.inGameName;
-    //console.log(inGameName);
-    const user = await User.findOne({ inGameName });
-    const userId = user._id;
-    // Fetch user information
-    //const user = await User.findById(userId);
+    const user = await User.findOne({
+      inGameName: req.params.inGameName,
+    }).populate("dailyIQScores");
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Get IQ score history
-    const iqScoresHistory = await getUserIQScoreHistory(userId);
-
-    // Calculate current top percentage
     const {
       Top_Percentage,
       percentileData,
       filteredLabels,
       filteredIQData,
       USER_IQ,
-    } = await currentTopPercentOfUser(userId);
+    } = await currentTopPercentOfUser(user._id);
+    const [solvedQuizzes, dailyActivity, rank, iqScoresHistory] =
+      await Promise.all([
+        getSolvedQuizzesCount(user._id),
+        getDailyActivity(user._id),
+        calculateUserRank(user._id),
+        getUserIQScoreHistory(user._id),
+      ]);
 
-    // Get solved quizzes count and percentages
-    const solvedQuizzes = await getSolvedQuizzesCount(userId);
+    const profilePrivacy = user.profilePrivacy || {
+      fullProfile: false,
+      lineGraph: false,
+      barGraph: false,
+      solvedQuizzes: false,
+      dailyActivity: false,
+      society: false,
+    };
 
-    // Get daily activity
-    const dailyActivity = await getDailyActivity(userId);
-
-    // Calculate user rank
-    const rank = await calculateUserRank(userId);
-    const profilePrivacy = user.profilePrivacy
-      ? user.profilePrivacy
-      : {
-          fullProfile: false,
-          lineGraph: false,
-          barGraph: false,
-          solvedQuizzes: false,
-          dailyActivity: false,
-          society: false,
-        };
     res.status(200).json({
       lineGraph: iqScoresHistory,
       barGraph: {
@@ -926,6 +913,21 @@ const quizDailyStreakUpdator = async (req, res) => {
     console.log(error.message);
   }
 };
+const longestStreakCalculatorOfAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({ inGameName: { $exists: true, $ne: "" } });
+    console.log(users.length);
+    const updateProgress = progressBar(users.length);
+    for (let user of users) {
+      await longestStreakCalculator(user._id);
+      updateProgress();
+    }
+    res.status(200).json({ message: "Longest streak updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
 
 const streakChecker = async (req, res) => {
   const userId = req.user._id;
@@ -934,17 +936,32 @@ const streakChecker = async (req, res) => {
 
     // Check if the latest attempt is from yesterday
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set time to start of the day
+    today.setUTCHours(0, 0, 0, 0); // Set time to start of the day
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 
     if (today.getTime() > user.streakExpiry.getTime()) {
       // Reset streak
       user.streak = 0;
       user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      user.todayBoost = false;
       await user.save();
       return res.status(200).json({ streak: 0 });
     }
+    const isBoosted =
+      user.streak > 0 &&
+      user.streak % 7 === 0 &&
+      user.streakExpiry.getTime() === tomorrow.getTime();
+    user.todayBoost = isBoosted;
+    if (user.streak > user.longestStreak) {
+      user.longestStreak = user.streak;
+    }
+    await user.save();
 
-    res.status(200).json({ streak: user.streak });
+    res.status(200).json({
+      streak: user.streak,
+      longestStreak: user.longestStreak,
+      isBoosted,
+    });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
     console.log(error.message);
@@ -976,5 +993,6 @@ module.exports = {
   sendMailForNotifySubscribe,
   upgradeMessageClose,
   quizDailyStreakUpdator,
+  longestStreakCalculatorOfAllUsers,
   streakChecker,
 };
