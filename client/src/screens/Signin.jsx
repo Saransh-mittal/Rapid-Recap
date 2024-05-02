@@ -88,6 +88,10 @@ export default function Sigin() {
           const res = await axios.get(`/api/user/streakChecker`);
           if (res.status === 200) {
             dispatch({
+              type: "setIsBoosted",
+              payloadIsBoosted: res.data.isBoosted,
+            });
+            dispatch({
               type: "setDailyStreak",
               payloadDailyStreak: res.data.streak,
             });
@@ -332,6 +336,10 @@ export default function Sigin() {
                               `/api/user/streakChecker`
                             );
                             if (res.status === 200) {
+                              dispatch({
+                                type: "setIsBoosted",
+                                payloadIsBoosted: res.data.isBoosted,
+                              });
                               dispatch({
                                 type: "setDailyStreak",
                                 payloadDailyStreak: res.data.streak,

@@ -37,6 +37,8 @@ export const Reducer = (state, action) => {
       return { ...state, streak: action.payloadDailyStreak };
     case "setLongestDailyStreak":
       return { ...state, streak: action.payloadLongestDailyStreak };
+    case "setIsBoosted":
+      return { ...state, isBoosted: action.payloadIsBoosted };
     case "RESET_STATE":
       return { ...initialState, show: true, user: null };
     default:

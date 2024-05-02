@@ -101,6 +101,12 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
         position: "top",
       });
       const res = await axios.get(`/api/user/streakChecker`);
+
+      dispatch({
+        type: "setIsBoosted",
+        payloadIsBoosted: res.data.isBoosted,
+      });
+
       dispatch({
         type: "setDailyStreak",
         payloadDailyStreak: res.data.streak,
