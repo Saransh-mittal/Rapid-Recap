@@ -27,7 +27,11 @@ async function getDailyStreak() {
     }
   } catch (error) {
     console.log(error.message);
-    return { streak: 0 };
+    return {
+      streak: 0,
+      longestStreak: 0,
+      isBoosted: false,
+    };
   }
 }
 

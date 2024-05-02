@@ -36,7 +36,7 @@ export const Reducer = (state, action) => {
     case "setDailyStreak":
       return { ...state, streak: action.payloadDailyStreak };
     case "setLongestDailyStreak":
-      return { ...state, streak: action.payloadLongestDailyStreak };
+      return { ...state, longestStreak: action.payloadLongestDailyStreak };
     case "setIsBoosted":
       return { ...state, isBoosted: action.payloadIsBoosted };
     case "RESET_STATE":
