@@ -83,7 +83,7 @@ const saveAttempt = async (req, res) => {
       ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000
     );
     const user = await User.findById(userId);
-    if (user.todayBoost) RQM_score = RQM_score * 1.5;
+    if (user.todayBoost) RQM_score = Math.ceil(RQM_score * 1.5);
     const articleDifficulty = quiz.overAllDifficulty;
     const newQuizAttempt = new QuizAttempt({
       user: userId,
