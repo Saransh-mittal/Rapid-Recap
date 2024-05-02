@@ -137,6 +137,18 @@ const userSchema = new mongoose.Schema(
         return expiry;
       },
     },
+    longestStreak: {
+      type: Number,
+      default: 0,
+    },
+    avgRQM: {
+      type: Number,
+      default: 0,
+    },
+    todayBoost: {
+      type: Boolean,
+      default: false,
+    },
   },
   { collection: "Users" }
 );
