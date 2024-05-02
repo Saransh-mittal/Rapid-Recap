@@ -51,6 +51,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    prevIQScore: {
+      type: Number,
+      default: 0,
+    },
     userScore: {
       type: Number,
       default: 0,

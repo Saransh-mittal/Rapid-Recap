@@ -23,7 +23,7 @@ import "./BlinkingButton.css";
 // const AnimatedText = motion(Text);
 
 const UpgradeModal = ({ isOpen, onClose }) => {
-  const { state } = useContext(AppContext);
+  const { state, dispatch } = useContext(AppContext);
 
   const USER_IQ = state.user.IQ_score;
   // const USER_IQ = 111;
@@ -45,9 +45,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
 
   // Determine the society and circle for the current USER_IQ
   const upgradedSocietyOrCircle = findSocietyAndCircle(USER_IQ);
-  const prevSocietyOrCircle = findSocietyAndCircle(
-    upgradedSocietyOrCircle.IQ_Lower - 1
-  );
+  const prevSocietyOrCircle = findSocietyAndCircle(state.user.prevIQScore);
 
   const isCircleUpdgraded =
     upgradedSocietyOrCircle.society === prevSocietyOrCircle.society;
@@ -55,6 +53,10 @@ const UpgradeModal = ({ isOpen, onClose }) => {
   const handleUpgradeMessageClose = async () => {
     try {
       await axios.put("/api/user/upgradeMessageClose");
+      dispatch({
+        type: "setUser",
+        payloadUser: { ...state.user, societyUpgradeMessage: "" },
+      });
       onClose();
     } catch (error) {
       console.error("Error:", error);

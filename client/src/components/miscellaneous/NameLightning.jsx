@@ -30,7 +30,7 @@ const NameLightning = ({ boxShadow, MAX_IQ }) => {
           alignItems: "center",
         }}
       >
-        {MAX_IQ > 150 && (
+        {MAX_IQ >= 150 && (
           <Image
             src={TitansFrame}
             position={"absolute"}
