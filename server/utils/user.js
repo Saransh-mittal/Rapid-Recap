@@ -113,10 +113,9 @@ const currentTopPercentOfUser = async (userId) => {
   }
 
   const USER_IQ = user.IQ_score;
-  // const users = await User.find({ IQ_score: { $gt: 0 } });
-  // const IQScores = users.map((u) => u.IQ_score);
-  const users = await User.find({});
-  const IQScores = users.filter((u) => u.IQ_score > 0).map((u) => u.IQ_score);
+  const users = await User.find({ IQ_score: { $gt: 0 } });
+  const IQScores = users.map((u) => u.IQ_score);
+
   const sortedIQScores = IQScores.sort((a, b) => a - b);
   const Top_Percentage = calculateTopPercent(USER_IQ, sortedIQScores);
   const { filteredLabels, filteredIQData } =
@@ -181,44 +180,6 @@ const getDailyActivity = async (userId) => {
 };
 
 const calculateUserRank = async (userId) => {
-  // const users = await User.find({})
-  //   .sort({ IQ_score: -1 })
-  //   .populate("quizAttempts");
-  // const result = [];
-  // users.forEach((user) => {
-  //   let sum = 0;
-  //   const { name, inGameName, IQ_score, pic, _id } = user;
-  //   for (let i = 0; i < user.quizAttempts.length; i++) {
-  //     sum += user.quizAttempts[i].RQM_score;
-  //   }
-  //   const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
-  //   const quizSubmissions = user.quizAttempts.length;
-  //   result.push({
-  //     _id,
-  //     RQM_avg,
-  //     name,
-  //     inGameName,
-  //     IQ_score,
-  //     pic,
-  //     quizSubmissions,
-  //   });
-  // });
-  // result.sort((a, b) => {
-  //   if (a.IQ_score !== b.IQ_score) {
-  //     return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
-  //   } else if (a.quizSubmissions !== b.quizSubmissions) {
-  //     return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
-  //   } else {
-  //     return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
-  //   }
-  // });
-  // const userIndex = result.findIndex(
-  //   (user) => user._id.toString() === userId.toString()
-  // );
-
-  // if (userIndex === -1) {
-  //   throw new Error("User not found");
-  // }
   const user = await User.findById(userId);
   return user.rank;
 };
