@@ -207,8 +207,18 @@ export default function Profile() {
     } else {
       fetchProfile();
     }
-    if (state.user && state.user.tutorial.profilePage) isTutorialTakenCheck();
+    //if (state.user && state.user.tutorial.profilePage) isTutorialTakenCheck();
   }, [inGameName]);
+
+  useEffect(() => {
+    if (
+      !isLoading &&
+      !state.show &&
+      state.user &&
+      state.user.tutorial.profilePage
+    )
+      isTutorialTakenCheck();
+  }, [isLoading]);
 
   return (
     <Box marginTop={"4.5rem"} w={"100%"}>
@@ -253,7 +263,7 @@ export default function Profile() {
                   </Tooltip>
                 )}
                 <LeftProfileBox
-                  leftProfileView={profile.leftProfileView}
+                  leftProfileView={profile?.leftProfileView}
                   CURR_IQ={profile?.USER_IQ}
                   MAX_IQ={profile?.maxIQScore}
                 />

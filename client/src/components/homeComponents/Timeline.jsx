@@ -14,7 +14,7 @@ const tourOptions = {
   },
   useModalOverlay: true,
 };
-const Timeline = ({ data }) => {
+const Timeline = ({ data, load }) => {
   const { state } = useContext(AppContext);
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
   const toast = useToast();
@@ -121,8 +121,10 @@ const Timeline = ({ data }) => {
   }, [tour]);
 
   useEffect(() => {
-    if (state.user && state.user.tutorial.homePage) isTutorialTakenCheck();
-  }, []);
+    if (!load && !state.show && state.user && state.user.tutorial.homePage)
+      isTutorialTakenCheck();
+  }, [load]);
+
   return (
     <div className="px-5 timeline">
       <div className="timeline-container">

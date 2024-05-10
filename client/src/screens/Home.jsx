@@ -162,7 +162,7 @@ const Home = () => {
           <News />
         </Modal>
       )}
-      {!state.show && <Timeline data={items} />}
+      {!state.show && <Timeline data={items} load={load} />}
       {load && <Loading />}
     </Box>
   );

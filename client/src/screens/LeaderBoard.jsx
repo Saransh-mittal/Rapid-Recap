@@ -153,10 +153,20 @@ const LeaderBoard = () => {
     document.title = "LeaderBoard Page";
     if (!state.show) {
       fetchLeaderBoard();
-      if (state.user && state.user.tutorial.leaderBoardPage)
-        isTutorialTakenCheck();
+      // if (state.user && state.user.tutorial.leaderBoardPage)
+      //   isTutorialTakenCheck();
     }
   }, []);
+
+  useEffect(() => {
+    if (
+      !isLoading &&
+      !state.show &&
+      state.user &&
+      state.user.tutorial.leaderBoardPage
+    )
+      isTutorialTakenCheck();
+  }, [isLoading]);
 
   useEffect(() => {
     const body = document.querySelector("body");

@@ -336,7 +336,7 @@ const Article = () => {
     document.title = "Article page";
     fetchArticle();
     checkOnGoingQuiz();
-    if (state.user && state.user.tutorial.articlePage) isTutorialTakenCheck();
+
     // tour.start();
   }, []);
   // useEffect(() => {
@@ -353,6 +353,11 @@ const Article = () => {
       setArticleHeight(articleRef.current.getBoundingClientRect().height);
     }
   }, [article, textHeight]);
+
+  useEffect(() => {
+    if (!load && !state.show && state.user && state.user.tutorial.articlePage)
+      isTutorialTakenCheck();
+  }, [load]);
 
   useEffect(() => {
     setAlt_image(
