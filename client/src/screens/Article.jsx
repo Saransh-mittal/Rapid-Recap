@@ -35,7 +35,7 @@ import TotalUserAttempted from "../components/articleComponents/TotalUserAttempt
 import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangModal";
 import ReactGA from "react-ga4";
 import starBoost from "/GIFs/starBoost.gif";
-
+import TextBackgound from "/images/textBackground.png";
 const tourOptions = {
   defaultStepOptions: {
     cancelIcon: {
@@ -511,6 +511,47 @@ const Article = () => {
                 </Select>
               </Box>
             </Flex>
+
+            <Flex flexDirection={"column"} position={"relative"}>
+              <Text
+                m={0}
+                p={0}
+                textAlign={"left"}
+                paddingLeft={"30px"}
+                position={"absolute"}
+                color={"#9CAFAA"}
+                fontWeight={"bold"}
+              >
+                {" "}
+                Quin Boost{" "}
+              </Text>
+              <Flex
+                marginTop={"5px"}
+                position={"relative"}
+                justifyContent={"center"}
+                alignItems={"center"}
+              >
+                <Image
+                  src={TextBackgound}
+                  background={"none"}
+                  height={"100px"}
+                  width={"200px"}
+                />
+                <Text
+                  m={0}
+                  p={0}
+                  textAlign={"left"}
+                  position={"absolute"}
+                  color={"black"}
+                  fontSize={"20px"}
+                  fontWeight={"bold"}
+                >
+                  {" "}
+                  3 Quiz Left{" "}
+                </Text>
+              </Flex>
+            </Flex>
+
             {state.isBoosted && (
               <Flex
                 justifyContent={"center"}
@@ -537,7 +578,7 @@ const Article = () => {
             gap={10}
             minH={"85vh"}
             p={{ base: "20px", md: "50px" }}
-            marginTop={{ base: "30px", md: "0px" }}
+            marginTop={0}
           >
             {article && (
               <GridItem w="100%" className="article-container">
