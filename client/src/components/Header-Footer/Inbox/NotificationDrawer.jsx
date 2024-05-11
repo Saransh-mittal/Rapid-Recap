@@ -22,20 +22,22 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
-import NotificationModal from "./NotificationModal";
+// import NotificationModal from "./NotificationModal";
 import { AppContext } from "../../../contextAPI/appContext";
 import Rapid_recap from "/images/Rapid Recap.png";
 import { DeleteIcon } from "@chakra-ui/icons";
 import axios from "axios";
 
-const NotificationDrawer = ({ setIsDrawerOpen }) => {
+const NotificationDrawer = ({
+  setIsDrawerOpen,
+  setIsModalOpen,
+  setSelectedNotification,
+}) => {
   const { state, dispatch } = useContext(AppContext);
   const toast = useToast();
 
   const [notificationData, setNotificationData] = useState(state.updates); // State for notification data
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedNotification, setSelectedNotification] = useState(null); // State for selected notification
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // State for delete confirmation modal
   const [notificationToDelete, setNotificationToDelete] = useState(null); // State to store notification to delete
   const [removeAllModalOpen, setRemoveAllModalOpen] = useState(false); // State for remove all notifications modal
@@ -43,6 +45,7 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
   const handleNotificationClick = (notification) => {
     setSelectedNotification(notification);
     setIsModalOpen(true);
+    setIsDrawerOpen(false);
   };
 
   const setReadUpdate = async (updateId) => {
@@ -295,12 +298,6 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
           </DrawerBody>
         </DrawerContent>
       </Drawer>
-      {isModalOpen && (
-        <NotificationModal
-          selectedNotification={selectedNotification}
-          setIsModalOpen={setIsModalOpen}
-        />
-      )}
       {/* Delete confirmation modal */}
       <Modal
         isOpen={isDeleteModalOpen || removeAllModalOpen}
@@ -355,38 +352,6 @@ const NotificationDrawer = ({ setIsDrawerOpen }) => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      {/* Remove all notifications confirmation modal */}
-      {/* <Modal
-        isOpen={removeAllModalOpen}
-        onClose={() => setRemoveAllModalOpen(false)}
-      >
-        <ModalOverlay />
-        <ModalContent
-          backgroundImage={{
-            base: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-          }}
-          backgroundColor={{ base: "#0f0d15", xl: "transparent" }}
-          boxShadow={{
-            base: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
-          }}
-          color={"white"}
-          p={"3"}
-        >
-          <ModalHeader>
-            <b>Confirm Remove All Notifications</b>
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            Are you sure you want to remove all notifications from inbox?
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={removeAllNotifications}>
-              Confirm
-            </Button>
-            <Button onClick={() => setRemoveAllModalOpen(false)}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal> */}
     </>
   );
 };

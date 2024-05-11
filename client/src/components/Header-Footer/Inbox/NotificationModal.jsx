@@ -15,7 +15,11 @@ import React, { useContext, useEffect } from "react";
 import { AppContext } from "../../../contextAPI/appContext";
 import Rapid_recap from "/images/Rapid Recap.png?url";
 
-const NotificationModal = ({ setIsModalOpen, selectedNotification }) => {
+const NotificationModal = ({
+  setIsModalOpen,
+  selectedNotification,
+  setIsDrawerOpen,
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { state } = useContext(AppContext);
 
@@ -28,6 +32,7 @@ const NotificationModal = ({ setIsModalOpen, selectedNotification }) => {
       isOpen={isOpen}
       onClose={() => {
         setIsModalOpen(false);
+        setIsDrawerOpen(true);
         onClose();
       }}
       size={{ base: "full", md: "xl" }}

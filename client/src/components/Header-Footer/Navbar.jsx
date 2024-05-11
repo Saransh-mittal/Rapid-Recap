@@ -9,6 +9,7 @@ import ProfileDropDownMenu from "../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon, CloseIcon, EmailIcon } from "@chakra-ui/icons";
 import Categories from "./Categories";
 import NotificationDrawer from "./Inbox/NotificationDrawer";
+import NotificationModal from "./Inbox/NotificationModal";
 
 const Navbar = () => {
   const navItems = [
@@ -21,8 +22,7 @@ const Navbar = () => {
   const [showCategory, setShowCategory] = useState(false);
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // New state for drawer
-  // const [notificationData, setNotificationData] = useState(null); // State for notification data
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
   const { state, dispatch, navLinkRefs } = useContext(AppContext);
@@ -30,6 +30,7 @@ const Navbar = () => {
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const { startDrag, drag, endDrag } = useDrag();
   const [notifyCont, setNotifyCnt] = useState(0);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
   // Dummy notification data
 
@@ -329,7 +330,20 @@ const Navbar = () => {
           </Flex>
         </Flex>
       </Flex>
-      {isDrawerOpen && <NotificationDrawer setIsDrawerOpen={setIsDrawerOpen} />}
+      {isModalOpen && (
+        <NotificationModal
+          selectedNotification={selectedNotification}
+          setIsModalOpen={setIsModalOpen}
+          setIsDrawerOpen={setIsDrawerOpen}
+        />
+      )}
+      {isDrawerOpen && (
+        <NotificationDrawer
+          setIsDrawerOpen={setIsDrawerOpen}
+          setIsModalOpen={setIsModalOpen}
+          setSelectedNotification={setSelectedNotification}
+        />
+      )}
       {/* Modal for detailed notification */}
     </Box>
   );
