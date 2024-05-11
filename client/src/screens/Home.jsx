@@ -3,7 +3,7 @@ import Timeline from "../components/homeComponents/Timeline";
 import axios from "axios";
 import Loading from "../components/miscellaneous/Loading";
 import { AppContext } from "../contextAPI/appContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Modal from "./Modal";
 import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
@@ -47,9 +47,11 @@ const Home = () => {
 
   const handleScroll = async () => {
     try {
+      console.log("fetching data");
       if (
         window.innerHeight + document.documentElement.scrollTop + 10 >
-        document.documentElement.scrollHeight
+          document.documentElement.scrollHeight &&
+        category === state.category
       ) {
         setLoad(true);
         setPage((ele) => ele + 1);
@@ -84,9 +86,10 @@ const Home = () => {
   useEffect(() => {
     document.title = "Home Page";
     if (!state.show) {
-      if (!category || category === "") {
-        navigate("/general");
-      }
+      // if (!category || category === "") {
+      //   navigate("/general");
+      // }
+
       dispatch({ type: "homeInitialRender" });
       window.addEventListener("scroll", debouncedHandleScroll);
     }
@@ -105,12 +108,13 @@ const Home = () => {
     if (!state.show) {
       if (state.category !== category) {
         setLoad(true);
-        dispatch({ type: "category", payloadCategory: category });
-        dispatch({ type: "PAGE", payloadPage: 0 });
         dispatch({
-          type: "ITEMS",
-          payloadItems: [],
+          type: "category",
+          payloadCategory: category,
         });
+        dispatch({ type: "PAGE", payloadPage: 0 });
+        dispatch({ type: "ITEMS", payloadItems: [] });
+        console.log("navigate to category", category);
       }
     }
   }, [category]);
@@ -124,12 +128,14 @@ const Home = () => {
         state.items.length === 0 &&
         state.category === category
       ) {
+        //window.location.reload();
+        console.log("fetching data from useEffect");
         setPage(() => 1);
         setItems(() => []);
         if (page === 1)
           setTimeout(() => {
             fetchData();
-          }, 0);
+          }, 100);
       }
     }
   }, [state.items, state.page, state.category]);
