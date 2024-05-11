@@ -2,31 +2,30 @@ const Article = require("../../model/articleSchema");
 const { hindiConverter } = require("../article");
 const { progressBar } = require("../progress");
 
-const generateHindiTrans = async () => {
-  const twoDaysAgo = new Date();
-  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+const generateHindiTrans = async (articles) => {
+  // const twoDaysAgo = new Date();
+  // twoDaysAgo.setDate(twoDaysAgo.getDate() - 3);
 
-  // Construct the aggregation pipeline
-  const pipeline = [
-    {
-      $match: {
-        dateTime: {
-          $gte: twoDaysAgo.toISOString(), // Find articles with dateTime greater than or equal to two days ago
-        },
-      },
-    },
-  ];
+  // // Construct the aggregation pipeline
+  // const pipeline = [
+  //   {
+  //     $match: {
+  //       dateTime: {
+  //         $gte: twoDaysAgo.toISOString(), // Find articles with dateTime greater than or equal to two days ago
+  //       },
+  //     },
+  //   },
+  // ];
 
   try {
-    const articles = await Article.aggregate(pipeline);
+    //const articles = await Article.aggregate(pipeline);
     const progress = progressBar(articles.length);
-    console.log("\nTotal articles in last 2 days: ", articles.length);
+    //console.log("\nTotal articles in last 3 days: ", articles.length);
     console.log("\nGenerating Hindi translations for articles...\n");
     for (let art of articles) {
       if (art.hindiTitle === "" || !art.hindiTitle) {
         //console.log("hii");
         try {
-          if (art._id.toString() === "6620214df46b052bfa8e4337") continue;
           const response = await hindiConverter(art);
           const article = await Article.findById(art._id);
           if (!article.hindiMainText) {
@@ -54,4 +53,4 @@ const generateHindiTrans = async () => {
   }
 };
 
-generateHindiTrans();
+module.exports = generateHindiTrans;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Button,
   Modal,
@@ -23,8 +23,11 @@ import QuizInterface from "./quizComponents/quizInterface";
 import SubmittedQuizInterface from "./quizComponents/SubmittedQuizInterface";
 import HindiInstructionModal from "./customQuizModal/HindiInstructionModal";
 import ReactGA from "react-ga4";
+import { AppContext } from "../../contextAPI/appContext";
+import BoostedSubmittedQuizInterface from "./quizComponents/BoostedSubmittedQuizInterface";
 
 const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
+  const { state, dispatch } = useContext(AppContext);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timer, setTimer] = useState(50);
   const [submitted, setSubmitted] = useState(false);
@@ -96,6 +99,21 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
         duration: 5000,
         isClosable: true,
         position: "top",
+      });
+      const res = await axios.get(`/api/user/streakChecker`);
+
+      dispatch({
+        type: "setIsBoosted",
+        payloadIsBoosted: res.data.isBoosted,
+      });
+
+      dispatch({
+        type: "setDailyStreak",
+        payloadDailyStreak: res.data.streak,
+      });
+      dispatch({
+        type: "setLongestDailyStreak",
+        payloadLongestDailyStreak: res.data.longestStreak,
       });
     } catch (error) {
       //console.log(error.response.data.error);
@@ -252,6 +270,31 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
     }
     // Perform additional actions if needed
   };
+  useEffect(() => {
+    if (submitted && !load && state.isBoosted) {
+      stars();
+    }
+  }, [submitted, load]);
+  function stars() {
+    let count = 40;
+    let scene = document.querySelector(".scene");
+
+    let i = 0;
+    while (i < count) {
+      let star = document.createElement("i");
+      let x = Math.floor(Math.random() * window.innerWidth);
+
+      let duration = Math.random() * 1;
+      let h = Math.random() * 100;
+
+      star.style.left = x + "px";
+      star.style.width = 1 + "px";
+      star.style.height = h + "px";
+      star.style.animationDuration = duration + "s";
+      scene.appendChild(star);
+      i++;
+    }
+  }
 
   return (
     <>
@@ -267,12 +310,15 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
 
         <ModalContent
           background={
-            "linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
+            submitted && state.isBoosted
+              ? "black"
+              : "linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
           }
           backgroundSize="400% 400%"
-          className="animated-gradient"
-          minHeight={"75%"}
+          className="animated-gradient scene"
+          minHeight={"80vh"}
           borderRadius={{ md: "2px" }}
+          overflow="hidden"
         >
           <ModalHeader
             maxHeight={"100px"}
@@ -323,6 +369,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
               alignItems={"center"}
               width={"100%"}
               userSelect={"none"}
+              position={"relative"}
             >
               {!submitted ? (
                 <>
@@ -335,6 +382,8 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
                     userAnswers={userAnswers}
                   />
                 </>
+              ) : state.isBoosted ? (
+                <BoostedSubmittedQuizInterface isOpen={isOpen} score={score} />
               ) : (
                 <SubmittedQuizInterface isOpen={isOpen} score={score} />
               )}

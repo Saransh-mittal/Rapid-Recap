@@ -84,8 +84,28 @@ export default function Sigin() {
           type: "setUser",
           payloadUser: response.data.user,
         });
+        try {
+          const res = await axios.get(`/api/user/streakChecker`);
+          if (res.status === 200) {
+            dispatch({
+              type: "setIsBoosted",
+              payloadIsBoosted: res.data.isBoosted,
+            });
+            dispatch({
+              type: "setDailyStreak",
+              payloadDailyStreak: res.data.streak,
+            });
+            dispatch({
+              type: "setLongestDailyStreak",
+              payloadLongestDailyStreak: res.data.longestStreak,
+            });
+          }
+        } catch (error) {
+          console.error(error.message);
+        }
+
         toast({
-          title: "Logined Successfully",
+          title: "Login-Successfull",
           status: "success",
           duration: 5000,
           isClosable: true,
@@ -311,8 +331,30 @@ export default function Sigin() {
                             type: "setUser",
                             payloadUser: response.data.user,
                           });
+                          try {
+                            const res = await axios.get(
+                              `/api/user/streakChecker`
+                            );
+                            if (res.status === 200) {
+                              dispatch({
+                                type: "setIsBoosted",
+                                payloadIsBoosted: res.data.isBoosted,
+                              });
+                              dispatch({
+                                type: "setDailyStreak",
+                                payloadDailyStreak: res.data.streak,
+                              });
+                              dispatch({
+                                type: "setLongestDailyStreak",
+                                payloadLongestDailyStreak:
+                                  res.data.longestStreak,
+                              });
+                            }
+                          } catch (error) {
+                            console.error(error.message);
+                          }
                           toast({
-                            title: "Logined Successfully",
+                            title: "Login-Successfull",
                             status: "success",
                             duration: 5000,
                             isClosable: true,

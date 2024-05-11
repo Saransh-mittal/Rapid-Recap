@@ -17,6 +17,40 @@ import { useEffect } from "react";
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
   const location = useLocation();
+
+  useEffect(() => {
+    const refreshAtMidnightUTC = () => {
+      const now = new Date();
+      const midnightUTC = new Date(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        24, // Hours (24-hour format)
+        0, // Minutes
+        0, // Seconds
+        0 // Milliseconds
+      );
+
+      const timeUntilMidnight = midnightUTC - now;
+
+      // If it's already past midnight, schedule the refresh for the next day
+      const timeout =
+        timeUntilMidnight > 0
+          ? timeUntilMidnight
+          : 86400000 + timeUntilMidnight; // 86400000ms = 24 hours
+
+      setTimeout(() => {
+        window.location.reload(true);
+      }, timeout);
+    };
+
+    refreshAtMidnightUTC();
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
   useEffect(() => {
     ReactGA.send({
       hitType: "pageview",

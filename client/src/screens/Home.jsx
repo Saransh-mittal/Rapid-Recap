@@ -133,6 +133,10 @@ const Home = () => {
       }
     }
   }, [state.items, state.page, state.category]);
+  const isSupported = () =>
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window;
 
   return (
     <Box
@@ -142,7 +146,7 @@ const Home = () => {
       marginTop={"4rem"}
       w={"100%"}
     >
-      <NotificationSubscription />
+      {isSupported() ? <NotificationSubscription /> : null}
       {/* Always render UpgradeModal for development */}
       {USER_IQ > 90 && state.user.societyUpgradeMessage && (
         <UpgradeModal
@@ -158,7 +162,7 @@ const Home = () => {
           <News />
         </Modal>
       )}
-      {!state.show && <Timeline data={items} />}
+      {!state.show && <Timeline data={items} load={load} />}
       {load && <Loading />}
     </Box>
   );

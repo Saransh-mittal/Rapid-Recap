@@ -1,4 +1,4 @@
-import { Slide } from "@chakra-ui/react";
+import { Box, Slide } from "@chakra-ui/react";
 import { useRef, useContext, useEffect } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import imageData from "../../assets/AltNewsImage";
@@ -86,7 +86,10 @@ const Card = ({ newsNumber, data }) => {
         </div>
         <Slide direction="left" in={true} unmountOnExit>
           <div className="cards" ref={card}>
-            <div className="img-box">
+            <Box
+              className="img-box"
+              background="linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%)"
+            >
               <img
                 src={data?.imgURL[0] ? data?.imgURL[0] : alt_img}
                 alt=""
@@ -95,7 +98,7 @@ const Card = ({ newsNumber, data }) => {
                   e.target.src = alt_img;
                 }}
               />
-            </div>
+            </Box>
             <div className="contents text-white">
               <h2> Click here to know More </h2>
               <p>

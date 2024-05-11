@@ -47,6 +47,7 @@ webpush.setVapidDetails(
 //require("./utils/update.utils/genHindiQuizForArticles");
 //require("./utils/update.utils/articleCategory.update");
 //require("./utils/update.utils/subscription.update");
+//require("./utils/update.utils/avg_RQM.update");
 // ---------------------------
 
 // -----Bot utils-----

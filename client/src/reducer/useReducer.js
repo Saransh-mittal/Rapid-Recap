@@ -33,6 +33,12 @@ export const Reducer = (state, action) => {
       return { ...state, otherUserProfiles: action.payloadOtherUserProfiles };
     case "APP_UPDATES":
       return { ...state, updates: action.payloadAppUpdates };
+    case "setDailyStreak":
+      return { ...state, streak: action.payloadDailyStreak };
+    case "setLongestDailyStreak":
+      return { ...state, longestStreak: action.payloadLongestDailyStreak };
+    case "setIsBoosted":
+      return { ...state, isBoosted: action.payloadIsBoosted };
     case "RESET_STATE":
       return { ...initialState, show: true, user: null };
     default:
