@@ -9,6 +9,8 @@ import ProfileDropDownMenu from "../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon, CloseIcon, EmailIcon } from "@chakra-ui/icons";
 import Categories from "./Categories";
 import NotificationDrawer from "./Inbox/NotificationDrawer";
+import DailyStreakModal from "../streakComponents/DailyStreakModal";
+import { motion } from "framer-motion";
 import NotificationModal from "./Inbox/NotificationModal";
 
 const Navbar = () => {
