@@ -967,6 +967,33 @@ const streakChecker = async (req, res) => {
     console.log(error.message);
   }
 };
+
+const quinBoostChecker = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const quizAttempts = await QuizAttempt.find({
+      user: userId,
+      createdAt: { $gte: today }, // Find documents created today or later
+    });
+    const quizLeftToGetQuizBoost = 5 - (quizAttempts.length % 5);
+    const isQuinBoostAvailable =
+      quizAttempts.length % 5 === 0 && quizAttempts.length > 0;
+
+    res.status(200).json({
+      quizLeftToGetQuizBoost,
+      isQuinBoostAvailable,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
 module.exports = {
   registerUser,
   loginUser,
@@ -995,4 +1022,5 @@ module.exports = {
   quizDailyStreakUpdator,
   longestStreakCalculatorOfAllUsers,
   streakChecker,
+  quinBoostChecker,
 };

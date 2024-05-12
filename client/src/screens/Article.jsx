@@ -36,6 +36,9 @@ import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangM
 import ReactGA from "react-ga4";
 import starBoost from "/GIFs/starBoost.gif";
 import TextBackgound from "/images/textBackground.png";
+import { motion } from "framer-motion";
+import Bubbles from "../components/miscellaneous/bubbles";
+
 const tourOptions = {
   defaultStepOptions: {
     cancelIcon: {
@@ -92,7 +95,8 @@ const Article = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   const [showQuizLangModal, setShowQuizLangModal] = useState(false);
   const [selectLanForQuiz, setSelectLanForQuiz] = useState("english");
-  //const [showInstruction, setShowInstruction] = useState(false);
+  const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false);
+  const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5);
 
   const isTutorialTakenCheck = async () => {
     try {
@@ -129,6 +133,27 @@ const Article = () => {
         isClosable: true,
         position: "top",
       });
+    }
+  };
+
+  const quinBoostChecker = async () => {
+    try {
+      const response = await axios.get(`/api/user/quinBoostChecker`);
+      console.log(response.data);
+      if (response.data.status === 200) {
+        setQuizLeftToGetQuizBoost(response.data.quizLeftToGetQuizBoost);
+        setIsQuinBoostAvailable(response.data.isQuinBoostAvailable);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response.data.error || "Error checking for boost",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      console.log(error.message);
     }
   };
 
@@ -334,6 +359,7 @@ const Article = () => {
 
   useEffect(() => {
     document.title = "Article page";
+    quinBoostChecker();
     fetchArticle();
     checkOnGoingQuiz();
     if (state.user && state.user.tutorial.articlePage) isTutorialTakenCheck();
@@ -513,43 +539,76 @@ const Article = () => {
             </Flex>
 
             <Flex flexDirection={"column"} position={"relative"}>
-              <Text
-                m={0}
-                p={0}
-                textAlign={"left"}
-                paddingLeft={"30px"}
-                position={"absolute"}
-                color={"#9CAFAA"}
-                fontWeight={"bold"}
-              >
-                {" "}
-                Quin Boost{" "}
-              </Text>
-              <Flex
-                marginTop={"5px"}
-                position={"relative"}
-                justifyContent={"center"}
-                alignItems={"center"}
-              >
-                <Image
-                  src={TextBackgound}
-                  background={"none"}
-                  height={"100px"}
-                  width={"200px"}
-                />
-                <Text
-                  m={0}
-                  p={0}
-                  textAlign={"left"}
-                  position={"absolute"}
-                  color={"black"}
-                  fontSize={"20px"}
-                  fontWeight={"bold"}
-                >
-                  {" "}
-                  3 Quiz Left{" "}
-                </Text>
-              </Flex>
+              {isQuinBoostAvailable ? (
+                <Flex marginTop={"5px"} alignItems="center">
+                  <Bubbles />
+                  <motion.div
+                    style={{
+                      color: "#9CAFAA",
+                      fontWeight: "bold",
+                      marginRight: "10px",
+                      fontSize: "24px", // Increase font size
+                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)", // Add text shadow for stunning effect
+                    }}
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    QuinBoost
+                  </motion.div>
+                  <motion.div
+                    style={{
+                      color: "#F2D7D9",
+                      fontWeight: "bold",
+                      fontSize: "28px", // Increase font size
+                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)", // Add text shadow for stunning effect
+                    }}
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    1.5x
+                  </motion.div>
+                </Flex>
+              ) : (
+                <>
+                  <Text
+                    m={0}
+                    p={0}
+                    textAlign={"left"}
+                    paddingLeft={"30px"}
+                    position={"absolute"}
+                    color={"#9CAFAA"}
+                    fontWeight={"bold"}
+                  >
+                    {" "}
+                    Quin Boost{" "}
+                  </Text>
+                  <Flex
+                    marginTop={"5px"}
+                    position={"relative"}
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                  >
+                    <Image
+                      src={TextBackgound}
+                      background={"none"}
+                      height={"100px"}
+                      width={"200px"}
+                    />
+                    <Text
+                      m={0}
+                      p={0}
+                      textAlign={"left"}
+                      position={"absolute"}
+                      color={"black"}
+                      fontSize={"20px"}
+                      fontWeight={"bold"}
+                    >
+                      {" "}
+                      {quizLeftToGetQuizBoost} Quiz Left{" "}
+                    </Text>
+                  </Flex>
+                </>
+              )}
             </Flex>
 
             {state.isBoosted && (
