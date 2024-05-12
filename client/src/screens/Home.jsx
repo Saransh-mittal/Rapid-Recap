@@ -47,7 +47,6 @@ const Home = () => {
 
   const handleScroll = async () => {
     try {
-      console.log("fetching data");
       if (
         window.innerHeight + document.documentElement.scrollTop + 10 >
           document.documentElement.scrollHeight &&
@@ -114,7 +113,6 @@ const Home = () => {
         });
         dispatch({ type: "PAGE", payloadPage: 0 });
         dispatch({ type: "ITEMS", payloadItems: [] });
-        console.log("navigate to category", category);
       }
     }
   }, [category]);
@@ -128,8 +126,6 @@ const Home = () => {
         state.items.length === 0 &&
         state.category === category
       ) {
-        //window.location.reload();
-        console.log("fetching data from useEffect");
         setPage(() => 1);
         setItems(() => []);
         if (page === 1)
