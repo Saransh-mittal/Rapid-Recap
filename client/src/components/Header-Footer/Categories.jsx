@@ -82,7 +82,12 @@ const Categories = ({
                 cursor={"pointer"}
                 onClick={() => {
                   trackCategoryClick(item);
-
+                  dispatch({
+                    type: "category",
+                    payloadCategory: item.toLowerCase(),
+                  });
+                  dispatch({ type: "PAGE", payloadPage: 0 });
+                  dispatch({ type: "ITEMS", payloadItems: [] });
                   navigate(`/${item.toLowerCase()}`);
                   if (isHamburgerOpen) {
                     setIsHamburgerOpen(false);

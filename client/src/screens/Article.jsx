@@ -608,11 +608,9 @@ const Article = () => {
                             },
                           }}
                           src={
-                            typeof data.imgURL === "Array" &&
-                            data.imgURL.length > 0 &&
-                            data.imgURL[0]
+                            Array.isArray(data.imgURL) && data.imgURL.length > 0
                               ? data.imgURL[0]
-                              : typeof data.imgURL !== "Array" && data.imgURL
+                              : !Array.isArray(data.imgURL) && data.imgURL
                               ? data.imgURL
                               : alt_image
                           }
@@ -645,11 +643,9 @@ const Article = () => {
                           },
                         }}
                         src={
-                          typeof data.imgURL === "Array" &&
-                          data.imgURL.length > 0 &&
-                          data.imgURL[0]
+                          Array.isArray(data.imgURL) && data.imgURL.length > 0
                             ? data.imgURL[0]
-                            : typeof data.imgURL !== "Array" && data.imgURL
+                            : !Array.isArray(data.imgURL) && data.imgURL
                             ? data.imgURL
                             : alt_image
                         }
