@@ -19,7 +19,7 @@ import { HamburgerIcon, CloseIcon, EmailIcon } from "@chakra-ui/icons";
 import Categories from "./Categories";
 import NotificationDrawer from "./Inbox/NotificationDrawer";
 import DailyStreakModal from "../streakComponents/DailyStreakModal";
-import { motion } from "framer-motion";
+import { motion } from "framer-motion"; // Not being used in this snippet
 
 const Navbar = () => {
   const navItems = [
