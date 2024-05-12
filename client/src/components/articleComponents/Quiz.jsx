@@ -26,7 +26,14 @@ import ReactGA from "react-ga4";
 import { AppContext } from "../../contextAPI/appContext";
 import BoostedSubmittedQuizInterface from "./quizComponents/BoostedSubmittedQuizInterface";
 
-const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
+const Quiz = ({
+  article,
+  isOpen,
+  onClose,
+  ofShowQuiz,
+  language,
+  isQuinBoostAvailable,
+}) => {
   const { state, dispatch } = useContext(AppContext);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timer, setTimer] = useState(50);
@@ -356,7 +363,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
 
           {showInstruction ? (
             language === "english" ? (
-              <InstructionModal />
+              <InstructionModal isQuinBoostAvailable={isQuinBoostAvailable} />
             ) : (
               <HindiInstructionModal />
             )

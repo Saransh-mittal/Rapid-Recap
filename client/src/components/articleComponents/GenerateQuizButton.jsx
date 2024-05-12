@@ -3,7 +3,7 @@ import React, { useContext, useState } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import Bubbles from "../miscellaneous/bubbles";
 
-const GenerateQuizButton = ({ onClick, css }) => {
+const GenerateQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
   const { state } = useContext(AppContext);
   const isBoosted = state.isBoosted;
   const buttonStyle = {
@@ -54,7 +54,7 @@ const GenerateQuizButton = ({ onClick, css }) => {
       </Text>
       <Button onClick={onClick} style={buttonStyle} position={"relative"}>
         {/* Generate bubbles */}
-        {isBoosted && <Bubbles />}
+        {isBoosted || (isQuinBoostAvailable && <Bubbles />)}
         Generate Quiz
       </Button>
     </Box>

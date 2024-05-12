@@ -38,6 +38,7 @@ import starBoost from "/GIFs/starBoost.gif";
 import TextBackgound from "/images/textBackground.png";
 import { motion } from "framer-motion";
 import Bubbles from "../components/miscellaneous/bubbles";
+import QuinBoost from "../components/articleComponents/quizComponents/QuinBoost";
 
 const tourOptions = {
   defaultStepOptions: {
@@ -464,6 +465,7 @@ const Article = () => {
       ) : null}
       {showQuiz && !givenQuiz && !showQuizLangModal ? (
         <Quiz
+          isQuinBoostAvailable={isQuinBoostAvailable}
           article={article}
           isOpen={isOpen}
           onClose={() => {
@@ -540,34 +542,7 @@ const Article = () => {
 
             <Flex flexDirection={"column"} position={"relative"}>
               {isQuinBoostAvailable ? (
-                <Flex marginTop={"5px"} alignItems="center">
-                  <Bubbles />
-                  <motion.div
-                    style={{
-                      color: "#9CAFAA",
-                      fontWeight: "bold",
-                      marginRight: "10px",
-                      fontSize: "24px", // Increase font size
-                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)", // Add text shadow for stunning effect
-                    }}
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    QuinBoost
-                  </motion.div>
-                  <motion.div
-                    style={{
-                      color: "#F2D7D9",
-                      fontWeight: "bold",
-                      fontSize: "28px", // Increase font size
-                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)", // Add text shadow for stunning effect
-                    }}
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    1.5x
-                  </motion.div>
-                </Flex>
+                <QuinBoost />
               ) : (
                 <>
                   <Text
@@ -802,6 +777,7 @@ const Article = () => {
                 <QuizExpired />
               ) : (
                 <GenerateQuizButton
+                  isQuinBoostAvailable={isQuinBoostAvailable}
                   onClick={() => {
                     trackGenerateQuizClick();
                     setShowQuizLangModal(true);
@@ -911,6 +887,7 @@ const Article = () => {
               />
             ) : (
               <GenerateQuizButton
+                isQuinBoostAvailable={isQuinBoostAvailable}
                 css={{
                   "@media screen and (min-width: 821px)": {
                     display: "none",
