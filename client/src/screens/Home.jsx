@@ -5,14 +5,13 @@ import Loading from "../components/miscellaneous/Loading";
 import { AppContext } from "../contextAPI/appContext";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Modal from "./Modal";
-import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
 import { debounce } from "lodash";
 import { useToast, Box, Flex, Container } from "@chakra-ui/react";
 import UpgradeModal from "../components/homeComponents/UpgradeModal"; // Import UpgradeModal
 import NotificationSubscription from "../components/Notifications/NotificationSubscription";
 import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
-
+//
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
   const [items, setItems] = useState(state.items);
@@ -161,9 +160,7 @@ const Home = () => {
       {state.modal && (
         <ReadMoreNewsModal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
-        >
-          <News />
-        </ReadMoreNewsModal>
+        ></ReadMoreNewsModal>
       )}
       {!state.show && <Timeline data={items} load={load} />}
       {load && <Loading />}
