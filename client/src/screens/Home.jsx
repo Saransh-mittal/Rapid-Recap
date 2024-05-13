@@ -11,7 +11,7 @@ import { useToast, Box, Flex, Container } from "@chakra-ui/react";
 import UpgradeModal from "../components/homeComponents/UpgradeModal"; // Import UpgradeModal
 import NotificationSubscription from "../components/Notifications/NotificationSubscription";
 import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
-
+// Home component
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
   const [items, setItems] = useState(state.items);
