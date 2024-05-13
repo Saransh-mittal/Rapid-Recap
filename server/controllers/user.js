@@ -23,6 +23,7 @@ const {
 const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 const { progressBar } = require("../utils/progress");
+const QuinBoost = require("../model/quinBoostSchema");
 
 const registerUser = async (req, res) => {
   //console.log(req.body);
@@ -971,10 +972,28 @@ const streakChecker = async (req, res) => {
 const quinBoostChecker = async (req, res) => {
   const userId = req.user._id;
   try {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate({
+      path: "quinBoosts.quinBoost",
+      select: "createdAt",
+    });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    if (user.todayBoost) {
+      return res.status(200).json({
+        quizLeftToGetQuizBoost: null,
+        isQuinBoostAvailable: false,
+      });
+    }
+    const quinBoostsToReset = user.quinBoosts.filter((quinBoost) => {
+      return quinBoost.quinBoost.createdAt < today;
+    });
+
+    // Set boosted to false for filtered quinBoosts
+    for (const quinBoost of quinBoostsToReset) {
+      quinBoost.boosted = false;
+    }
+    await user.save();
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     const quizAttempts = await QuizAttempt.find({
@@ -985,6 +1004,26 @@ const quinBoostChecker = async (req, res) => {
     const isQuinBoostAvailable =
       quizAttempts.length % 5 === 0 && quizAttempts.length > 0;
 
+    if (isQuinBoostAvailable) {
+      const existingQuinBoost = await QuinBoost.findOne({
+        user: userId,
+        createdAt: { $gte: today },
+        quizCount: quizAttempts.length,
+      });
+      if (!existingQuinBoost) {
+        const quinBoost = new QuinBoost({
+          user: user._id,
+          quizCount: quizAttempts.length,
+          createdAt: new Date(),
+        });
+        await quinBoost.save();
+        user.quinBoosts.push({
+          quinBoost: quinBoost._id,
+          boosted: true,
+        });
+        await user.save();
+      }
+    }
     res.status(200).json({
       quizLeftToGetQuizBoost,
       isQuinBoostAvailable,

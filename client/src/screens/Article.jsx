@@ -39,6 +39,7 @@ import TextBackgound from "/images/textBackground.png";
 import { motion } from "framer-motion";
 import Bubbles from "../components/miscellaneous/bubbles";
 import QuinBoost from "../components/articleComponents/quizComponents/QuinBoost";
+import { quinBoostChecker } from "../utils/quiz";
 
 const tourOptions = {
   defaultStepOptions: {
@@ -134,27 +135,6 @@ const Article = () => {
         isClosable: true,
         position: "top",
       });
-    }
-  };
-
-  const quinBoostChecker = async () => {
-    try {
-      const response = await axios.get(`/api/user/quinBoostChecker`);
-      console.log(response.data);
-      if (response.data.status === 200) {
-        setQuizLeftToGetQuizBoost(response.data.quizLeftToGetQuizBoost);
-        setIsQuinBoostAvailable(response.data.isQuinBoostAvailable);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.response.data.error || "Error checking for boost",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-        position: "top",
-      });
-      console.log(error.message);
     }
   };
 
@@ -360,15 +340,14 @@ const Article = () => {
 
   useEffect(() => {
     document.title = "Article page";
-    quinBoostChecker();
+    quinBoostChecker({
+      setIsQuinBoostAvailable,
+      setQuizLeftToGetQuizBoost,
+    });
     fetchArticle();
     checkOnGoingQuiz();
     if (state.user && state.user.tutorial.articlePage) isTutorialTakenCheck();
-    // tour.start();
   }, []);
-  // useEffect(() => {
-  //   getExpectedIQ();
-  // }, [load]);
   useEffect(() => {
     isQuizGiven();
   }, [givenQuiz]);
@@ -465,6 +444,8 @@ const Article = () => {
       ) : null}
       {showQuiz && !givenQuiz && !showQuizLangModal ? (
         <Quiz
+          setIsQuinBoostAvailable={setIsQuinBoostAvailable}
+          setQuizLeftToGetQuizBoost={setQuizLeftToGetQuizBoost}
           isQuinBoostAvailable={isQuinBoostAvailable}
           article={article}
           isOpen={isOpen}
@@ -544,45 +525,47 @@ const Article = () => {
               {isQuinBoostAvailable ? (
                 <QuinBoost />
               ) : (
-                <>
-                  <Text
-                    m={0}
-                    p={0}
-                    textAlign={"left"}
-                    paddingLeft={"30px"}
-                    position={"absolute"}
-                    color={"#9CAFAA"}
-                    fontWeight={"bold"}
-                  >
-                    {" "}
-                    Quin Boost{" "}
-                  </Text>
-                  <Flex
-                    marginTop={"5px"}
-                    position={"relative"}
-                    justifyContent={"center"}
-                    alignItems={"center"}
-                  >
-                    <Image
-                      src={TextBackgound}
-                      background={"none"}
-                      height={"100px"}
-                      width={"200px"}
-                    />
+                !state.isBoosted && (
+                  <>
                     <Text
                       m={0}
                       p={0}
                       textAlign={"left"}
+                      paddingLeft={"30px"}
                       position={"absolute"}
-                      color={"black"}
-                      fontSize={"20px"}
+                      color={"#9CAFAA"}
                       fontWeight={"bold"}
                     >
                       {" "}
-                      {quizLeftToGetQuizBoost} Quiz Left{" "}
+                      Quin Boost{" "}
                     </Text>
-                  </Flex>
-                </>
+                    <Flex
+                      marginTop={"5px"}
+                      position={"relative"}
+                      justifyContent={"center"}
+                      alignItems={"center"}
+                    >
+                      <Image
+                        src={TextBackgound}
+                        background={"none"}
+                        height={"100px"}
+                        width={"200px"}
+                      />
+                      <Text
+                        m={0}
+                        p={0}
+                        textAlign={"left"}
+                        position={"absolute"}
+                        color={"black"}
+                        fontSize={"20px"}
+                        fontWeight={"bold"}
+                      >
+                        {" "}
+                        {quizLeftToGetQuizBoost} Quiz Left{" "}
+                      </Text>
+                    </Flex>
+                  </>
+                )
               )}
             </Flex>
 
