@@ -5,7 +5,6 @@ import Loading from "../components/miscellaneous/Loading";
 import { AppContext } from "../contextAPI/appContext";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Modal from "./Modal";
-import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
 import { debounce } from "lodash";
 import { useToast, Box, Flex, Container } from "@chakra-ui/react";
@@ -161,9 +160,7 @@ const Home = () => {
       {state.modal && (
         <ReadMoreNewsModal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
-        >
-          <News />
-        </ReadMoreNewsModal>
+        ></ReadMoreNewsModal>
       )}
       {!state.show && <Timeline data={items} load={load} />}
       {load && <Loading />}
