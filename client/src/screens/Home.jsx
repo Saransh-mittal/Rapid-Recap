@@ -49,8 +49,7 @@ const Home = () => {
     try {
       if (
         window.innerHeight + document.documentElement.scrollTop + 10 >
-          document.documentElement.scrollHeight &&
-        category === state.category
+        document.documentElement.scrollHeight
       ) {
         setLoad(true);
         setPage((ele) => ele + 1);
@@ -85,9 +84,9 @@ const Home = () => {
   useEffect(() => {
     document.title = "Home Page";
     if (!state.show) {
-      // if (!category || category === "") {
-      //   navigate("/general");
-      // }
+      if (!category || category === "") {
+        navigate("/general");
+      }
 
       dispatch({ type: "homeInitialRender" });
       window.addEventListener("scroll", debouncedHandleScroll);
