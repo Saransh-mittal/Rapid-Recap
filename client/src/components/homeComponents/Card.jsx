@@ -2,9 +2,11 @@ import { Box, Slide } from "@chakra-ui/react";
 import { useRef, useContext, useEffect } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import imageData from "../../assets/AltNewsImage";
+import { useNavigate } from "react-router-dom";
 
 const Card = ({ newsNumber, data }) => {
   //console.log("card :", data);
+  const navigate = useNavigate();
   const newArticle = {
     ...data,
     imgURL: data?.imgURL[0],
@@ -66,7 +68,9 @@ const Card = ({ newsNumber, data }) => {
           //   "_blank"
           // )
           //console.log(`hi`);
-          dispatch({ type: "showModal", payloadModal: true });
+          window.innerWidth < 768
+            ? navigate(`/article/${newArticle._id}`)
+            : dispatch({ type: "showModal", payloadModal: true });
           dispatch({ type: "setNews", payloadNews: newArticle });
         }}
         onMouseMove={mousemove}

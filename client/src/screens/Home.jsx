@@ -11,6 +11,7 @@ import { debounce } from "lodash";
 import { useToast, Box, Flex, Container } from "@chakra-ui/react";
 import UpgradeModal from "../components/homeComponents/UpgradeModal"; // Import UpgradeModal
 import NotificationSubscription from "../components/Notifications/NotificationSubscription";
+import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
 
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -158,11 +159,11 @@ const Home = () => {
       )}
       {/* Render UpgradeModal */}
       {state.modal && (
-        <Modal
+        <ReadMoreNewsModal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
         >
           <News />
-        </Modal>
+        </ReadMoreNewsModal>
       )}
       {!state.show && <Timeline data={items} load={load} />}
       {load && <Loading />}
