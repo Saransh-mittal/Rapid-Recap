@@ -985,6 +985,9 @@ const quinBoostChecker = async (req, res) => {
         isQuinBoostAvailable: false,
       });
     }
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
     const quinBoostsToReset = user.quinBoosts.filter((quinBoost) => {
       return quinBoost.quinBoost.createdAt < today;
     });
@@ -994,15 +997,13 @@ const quinBoostChecker = async (req, res) => {
       quinBoost.boosted = false;
     }
     await user.save();
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
     const quizAttempts = await QuizAttempt.find({
       user: userId,
       createdAt: { $gte: today }, // Find documents created today or later
     });
-    const quizLeftToGetQuizBoost = 5 - (quizAttempts.length % 5);
+    const quizLeftToGetQuizBoost = 5 - (quizAttempts.length % 6);
     const isQuinBoostAvailable =
-      quizAttempts.length % 5 === 0 && quizAttempts.length > 0;
+      quizLeftToGetQuizBoost === 0 && quizAttempts.length > 0;
 
     if (isQuinBoostAvailable) {
       const existingQuinBoost = await QuinBoost.findOne({

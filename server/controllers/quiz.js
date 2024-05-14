@@ -2,6 +2,7 @@ const User = require("../model/userSchema");
 const Article = require("../model/articleSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const Quiz = require("../model/quizSchema");
+const QuinBoost = require("../model/quinBoostSchema");
 
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken, quizId } = req.body;
@@ -94,6 +95,11 @@ const saveAttempt = async (req, res) => {
         RQM_score = Math.ceil(RQM_score * 1.5);
         boosted = true;
         quinBoost.boosted = false;
+        const qBoost = await QuinBoost.findById(quinBoost.quinBoost);
+        // console.log(qBoost);
+        // console.log(article._id);
+        qBoost.article = article._id;
+        await qBoost.save();
       }
     }
     const articleDifficulty = quiz.overAllDifficulty;
@@ -141,7 +147,7 @@ const saveAttempt = async (req, res) => {
     await user.save();
     res.status(201).json({ message: "Attempt saved successfully", RQM_score });
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     res.status(400).json({ error: error.message || "Error saving attempt" });
   }
 };

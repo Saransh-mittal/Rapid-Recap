@@ -111,10 +111,7 @@ const Quiz = ({
         position: "top",
       });
       const res = await axios.get(`/api/user/streakChecker`);
-      await quinBoostChecker({
-        setIsQuinBoostAvailable,
-        setQuizLeftToGetQuizBoost,
-      });
+
       dispatch({
         type: "setIsBoosted",
         payloadIsBoosted: res.data.isBoosted,
@@ -248,24 +245,36 @@ const Quiz = ({
   const showConfirmation = () => {
     setShowConfirmationModal(true);
   };
-  const handleClose = () => {
-    if (
-      !submitted &&
-      currentQuestionIndex < totalQuestions &&
-      !showInstruction
-    ) {
-      showConfirmation();
-    } else if (showInstruction) {
-      setShowInstruction(false);
-      onClose();
-    } else {
-      ofShowQuiz();
-      onClose();
+  const handleClose = async () => {
+    try {
+      await quinBoostChecker({
+        setIsQuinBoostAvailable,
+        setQuizLeftToGetQuizBoost,
+      });
+      if (
+        !submitted &&
+        currentQuestionIndex < totalQuestions &&
+        !showInstruction
+      ) {
+        showConfirmation();
+      } else if (showInstruction) {
+        setShowInstruction(false);
+        onClose();
+      } else {
+        ofShowQuiz();
+        onClose();
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
   const handleConfirmClose = async () => {
     // Close the confirmation modal
     try {
+      await quinBoostChecker({
+        setIsQuinBoostAvailable,
+        setQuizLeftToGetQuizBoost,
+      });
       await handleSubmitQuiz();
       setShowConfirmationModal(false);
     } catch (error) {
@@ -284,7 +293,7 @@ const Quiz = ({
     // Perform additional actions if needed
   };
   useEffect(() => {
-    if (submitted && !load && state.isBoosted) {
+    if (submitted && !load && (state.isBoosted || isQuinBoostAvailable)) {
       stars();
     }
   }, [submitted, load]);
@@ -323,7 +332,7 @@ const Quiz = ({
 
         <ModalContent
           background={
-            submitted && state.isBoosted
+            submitted && (state.isBoosted || isQuinBoostAvailable)
               ? "black"
               : "linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
           }
@@ -395,7 +404,7 @@ const Quiz = ({
                     userAnswers={userAnswers}
                   />
                 </>
-              ) : state.isBoosted ? (
+              ) : state.isBoosted || isQuinBoostAvailable ? (
                 <BoostedSubmittedQuizInterface isOpen={isOpen} score={score} />
               ) : (
                 <SubmittedQuizInterface isOpen={isOpen} score={score} />
