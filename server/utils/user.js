@@ -117,7 +117,8 @@ const currentTopPercentOfUser = async (userId) => {
   const IQScores = users.map((u) => u.IQ_score);
 
   const sortedIQScores = IQScores.sort((a, b) => a - b);
-  const Top_Percentage = calculateTopPercent(USER_IQ, sortedIQScores);
+  const Top_Percentage =
+    USER_IQ === 0 ? 100 : calculateTopPercent(USER_IQ, sortedIQScores);
   const { filteredLabels, filteredIQData } =
     calculateLabelsAndData(sortedIQScores);
 

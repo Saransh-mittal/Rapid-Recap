@@ -3,15 +3,15 @@ import Timeline from "../components/homeComponents/Timeline";
 import axios from "axios";
 import Loading from "../components/miscellaneous/Loading";
 import { AppContext } from "../contextAPI/appContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Modal from "./Modal";
-import News from "../components/articleComponents/News";
 import useDrag from "../customHooks/useDrag";
 import { debounce } from "lodash";
 import { useToast, Box, Flex, Container } from "@chakra-ui/react";
 import UpgradeModal from "../components/homeComponents/UpgradeModal"; // Import UpgradeModal
 import NotificationSubscription from "../components/Notifications/NotificationSubscription";
-
+import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
+//
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
   const [items, setItems] = useState(state.items);
@@ -87,6 +87,7 @@ const Home = () => {
       if (!category || category === "") {
         navigate("/general");
       }
+
       dispatch({ type: "homeInitialRender" });
       window.addEventListener("scroll", debouncedHandleScroll);
     }
@@ -105,12 +106,12 @@ const Home = () => {
     if (!state.show) {
       if (state.category !== category) {
         setLoad(true);
-        dispatch({ type: "category", payloadCategory: category });
-        dispatch({ type: "PAGE", payloadPage: 0 });
         dispatch({
-          type: "ITEMS",
-          payloadItems: [],
+          type: "category",
+          payloadCategory: category,
         });
+        dispatch({ type: "PAGE", payloadPage: 0 });
+        dispatch({ type: "ITEMS", payloadItems: [] });
       }
     }
   }, [category]);
@@ -129,7 +130,7 @@ const Home = () => {
         if (page === 1)
           setTimeout(() => {
             fetchData();
-          }, 0);
+          }, 100);
       }
     }
   }, [state.items, state.page, state.category]);
@@ -156,13 +157,11 @@ const Home = () => {
       )}
       {/* Render UpgradeModal */}
       {state.modal && (
-        <Modal
+        <ReadMoreNewsModal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
-        >
-          <News />
-        </Modal>
+        ></ReadMoreNewsModal>
       )}
-      {!state.show && <Timeline data={items} />}
+      {!state.show && <Timeline data={items} load={load} />}
       {load && <Loading />}
     </Box>
   );
