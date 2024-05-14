@@ -36,6 +36,8 @@ import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangM
 import ReactGA from "react-ga4";
 import starBoost from "/GIFs/starBoost.gif";
 import TextBackgound from "/images/textBackground.png";
+import QuinBoostModal from "../components/articleComponents/QuinBoostModal";
+
 const tourOptions = {
   defaultStepOptions: {
     cancelIcon: {
@@ -93,6 +95,14 @@ const Article = () => {
   const [showQuizLangModal, setShowQuizLangModal] = useState(false);
   const [selectLanForQuiz, setSelectLanForQuiz] = useState("english");
   //const [showInstruction, setShowInstruction] = useState(false);
+  const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false);
+  const openModal = () => {
+    setIsQuinBoostModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsQuinBoostModalOpen(false);
+  };
 
   const isTutorialTakenCheck = async () => {
     try {
@@ -530,6 +540,8 @@ const Article = () => {
                 position={"relative"}
                 justifyContent={"center"}
                 alignItems={"center"}
+                onClick={openModal}
+                style={{ cursor: "pointer" }}
               >
                 <Image
                   src={TextBackgound}
@@ -550,6 +562,10 @@ const Article = () => {
                   3 Quiz Left{" "}
                 </Text>
               </Flex>
+              <QuinBoostModal
+                isOpen={isQuinBoostModalOpen}
+                onClose={closeModal}
+              />
             </Flex>
 
             {state.isBoosted && (
