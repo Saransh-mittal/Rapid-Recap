@@ -17,7 +17,6 @@ import {
   useDisclosure,
   Select,
   Skeleton,
-  Tag,
   Badge,
 } from "@chakra-ui/react";
 import Loading from "../components/miscellaneous/Loading";
@@ -28,32 +27,18 @@ import QuizExpired from "../components/articleComponents/QuizExpired";
 import Alt_img from "../assets/alt_image.jpg";
 import GivenQuiz from "../components/articleComponents/GivenQuiz";
 import imageData from "../assets/AltNewsImage";
-import { useShepherdTour } from "react-shepherd";
-import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle";
 import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
 import TotalUserAttempted from "../components/articleComponents/TotalUserAttempted";
 import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangModal";
 import ReactGA from "react-ga4";
 import starBoost from "/GIFs/starBoost.gif";
 import TextBackgound from "/images/textBackground.png";
-import { motion } from "framer-motion";
-import Bubbles from "../components/miscellaneous/bubbles";
 import QuinBoost from "../components/articleComponents/quizComponents/QuinBoost";
 import { quinBoostChecker } from "../utils/quiz";
-
-const tourOptions = {
-  defaultStepOptions: {
-    cancelIcon: {
-      enabled: true,
-    },
-  },
-  useModalOverlay: true,
-};
-
+import { useArticlePageTour } from "../customHooks/useTours";
 const Article = () => {
-  const tour = useShepherdTour({ tourOptions, steps: stepsGuideArticle });
   const toast = useToast();
-  const { state, dispatch } = useContext(AppContext);
+  const { state } = useContext(AppContext);
   const data = state.news;
   const [alt_image, setAlt_image] = useState(
     imageData.find(
@@ -99,44 +84,7 @@ const Article = () => {
   const [selectLanForQuiz, setSelectLanForQuiz] = useState("english");
   const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false);
   const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5);
-
-  const isTutorialTakenCheck = async () => {
-    try {
-      const Page = "articlePage";
-      const response = await axios.get(
-        `/api/user/isTutorialTakenCheck/${Page}`
-      );
-      console.log(response.data);
-      if (response.data.status) tour.start();
-    } catch (err) {
-      toast({
-        title: "Error in Checking tutorial taken",
-        description: err,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    }
-  };
-  const isTutorialTakenUpdate = async () => {
-    try {
-      const page = "articlePage";
-      const response = await axios.post(`/api/user/isTutorialTakenUpdate`, {
-        page,
-      });
-      console.log(response.data);
-    } catch (err) {
-      toast({
-        title: "Error in updating tutorial taken",
-        description: err,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    }
-  };
+  const { tour, isTutorialTakenCheck } = useArticlePageTour();
 
   const fetchArticle = async () => {
     try {
@@ -285,60 +233,6 @@ const Article = () => {
   };
 
   useEffect(() => {
-    const body = document.querySelector("body");
-    const handleTourStart = () => {
-      body.style.overflow = "hidden"; // Reapply scroll behavior
-      const overlay = document.createElement("div");
-      overlay.classList.add("custom-overlay");
-      const overlayNav = document.createElement("div");
-      overlayNav.classList.add("custom-overlay-nav");
-      document.querySelector(".article-page")?.appendChild(overlay);
-      document.querySelector(".navbar").appendChild(overlayNav);
-    };
-
-    const handleTourComplete = () => {
-      body.style.overflow = "auto";
-      const generateQuizButton = document.querySelector(
-        ".generate-quiz-button"
-      );
-      if (generateQuizButton) {
-        generateQuizButton.classList.remove("highlighted-button-0");
-      }
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNav = document.querySelector(".custom-overlay-nav");
-      if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate();
-    };
-
-    const handleTourCancel = () => {
-      body.style.overflow = "auto";
-      const generateQuizButton = document.querySelector(
-        ".generate-quiz-button"
-      );
-      if (generateQuizButton) {
-        generateQuizButton.classList.remove("highlighted-button-0");
-      }
-
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNav = document.querySelector(".custom-overlay-nav");
-      if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate();
-    };
-
-    tour.on("start", handleTourStart);
-    tour.on("complete", handleTourComplete);
-    tour.on("cancel", handleTourCancel);
-
-    return () => {
-      tour.off("start", handleTourStart);
-      tour.off("complete", handleTourComplete);
-      tour.off("cancel", handleTourCancel);
-    };
-  }, [tour]);
-
-  useEffect(() => {
     document.title = "Article page";
     quinBoostChecker({
       setIsQuinBoostAvailable,
@@ -346,7 +240,8 @@ const Article = () => {
     });
     fetchArticle();
     checkOnGoingQuiz();
-    if (state.user && state.user.tutorial.articlePage) isTutorialTakenCheck();
+    if (state.user && state.user.tutorial.articlePage)
+      isTutorialTakenCheck({ page: "articlePage", tour });
   }, []);
   useEffect(() => {
     isQuizGiven();
