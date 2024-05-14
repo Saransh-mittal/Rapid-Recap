@@ -3,11 +3,12 @@ import TimelineItem from "./TimelineItem";
 import { AppContext } from "../../contextAPI/appContext";
 import { useHomeTour } from "../../customHooks/useTours";
 
-const Timeline = ({ data }) => {
+const Timeline = ({ data, load }) => {
   const { state } = useContext(AppContext);
   const { tour, isTutorialTakenCheck } = useHomeTour();
+
   useEffect(() => {
-    if (state.user && state.user.tutorial.homePage)
+    if (!load && !state.show && state.user && state.user.tutorial.homePage)
       isTutorialTakenCheck({ page: "homePage", tour });
   }, []);
   return (

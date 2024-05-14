@@ -11,7 +11,6 @@ import {
   Heading,
   Box,
   Text,
-  Image,
 } from "@chakra-ui/react";
 import useDrag from "../../customHooks/useDrag";
 import ProfileDropDownMenu from "../profileComponents/ProfileDropDownMenu";
@@ -20,6 +19,7 @@ import Categories from "./Categories";
 import NotificationDrawer from "./Inbox/NotificationDrawer";
 import DailyStreakModal from "../streakComponents/DailyStreakModal";
 import { motion } from "framer-motion";
+import NotificationModal from "./Inbox/NotificationModal";
 
 const Navbar = () => {
   const navItems = [
@@ -32,8 +32,7 @@ const Navbar = () => {
   const [showCategory, setShowCategory] = useState(false);
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // New state for drawer
-  const [showDailyStreakModal, setShowDailyStreakModal] = useState(false);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
   const { state, dispatch, navLinkRefs } = useContext(AppContext);
@@ -41,7 +40,8 @@ const Navbar = () => {
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const { startDrag, drag, endDrag } = useDrag();
   const [notifyCont, setNotifyCnt] = useState(0);
-
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [showDailyStreakModal, setShowDailyStreakModal] = useState(false);
   // Dummy notification data
 
   // useEffect(() => {
@@ -89,7 +89,7 @@ const Navbar = () => {
       const response = await axios.post("/api/user/logout");
       if (response.status === 201) {
         toast({
-          title: "Logout-Successfull",
+          title: "Logout Successfull",
           status: "success",
           duration: 5000,
           isClosable: true,
@@ -141,7 +141,6 @@ const Navbar = () => {
       return "rgba(0, 0, 255, 1)"; // White in RGBA
     }
   };
-
   return (
     <Box
       className={`navbar navbar-expand-lg navbar-light bg-light ${
@@ -617,8 +616,20 @@ const Navbar = () => {
           ) : null}
         </Flex>
       )}
-      {isDrawerOpen && <NotificationDrawer setIsDrawerOpen={setIsDrawerOpen} />}
-      {/* Modal for detailed notification */}
+      {isModalOpen && (
+        <NotificationModal
+          selectedNotification={selectedNotification}
+          setIsModalOpen={setIsModalOpen}
+          setIsDrawerOpen={setIsDrawerOpen}
+        />
+      )}
+      {isDrawerOpen && (
+        <NotificationDrawer
+          setIsDrawerOpen={setIsDrawerOpen}
+          setIsModalOpen={setIsModalOpen}
+          setSelectedNotification={setSelectedNotification}
+        />
+      )}
     </Box>
   );
 };

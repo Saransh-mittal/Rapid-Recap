@@ -240,8 +240,6 @@ const Article = () => {
     });
     fetchArticle();
     checkOnGoingQuiz();
-    if (state.user && state.user.tutorial.articlePage)
-      isTutorialTakenCheck({ page: "articlePage", tour });
   }, []);
   useEffect(() => {
     isQuizGiven();
@@ -254,6 +252,11 @@ const Article = () => {
       setArticleHeight(articleRef.current.getBoundingClientRect().height);
     }
   }, [article, textHeight]);
+
+  useEffect(() => {
+    if (!load && !state.show && state.user && state.user.tutorial.articlePage)
+      isTutorialTakenCheck({ page: "articlePage", tour });
+  }, [load]);
 
   useEffect(() => {
     setAlt_image(
@@ -556,11 +559,9 @@ const Article = () => {
                             },
                           }}
                           src={
-                            typeof data.imgURL === "Array" &&
-                            data.imgURL.length > 0 &&
-                            data.imgURL[0]
+                            Array.isArray(data.imgURL) && data.imgURL.length > 0
                               ? data.imgURL[0]
-                              : typeof data.imgURL !== "Array" && data.imgURL
+                              : !Array.isArray(data.imgURL) && data.imgURL
                               ? data.imgURL
                               : alt_image
                           }
@@ -593,11 +594,9 @@ const Article = () => {
                           },
                         }}
                         src={
-                          typeof data.imgURL === "Array" &&
-                          data.imgURL.length > 0 &&
-                          data.imgURL[0]
+                          Array.isArray(data.imgURL) && data.imgURL.length > 0
                             ? data.imgURL[0]
-                            : typeof data.imgURL !== "Array" && data.imgURL
+                            : !Array.isArray(data.imgURL) && data.imgURL
                             ? data.imgURL
                             : alt_image
                         }
@@ -657,6 +656,7 @@ const Article = () => {
                 <GenerateQuizButton
                   isQuinBoostAvailable={isQuinBoostAvailable}
                   onClick={() => {
+                    tour.complete();
                     trackGenerateQuizClick();
                     setShowQuizLangModal(true);
                     setShowQuiz(!showQuiz);
@@ -772,6 +772,7 @@ const Article = () => {
                   },
                 }}
                 onClick={() => {
+                  tour.complete();
                   trackGenerateQuizClick();
                   setShowQuizLangModal(true);
                   setShowQuiz(!showQuiz);
