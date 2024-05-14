@@ -36,6 +36,11 @@ import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangM
 import ReactGA from "react-ga4";
 import starBoost from "/GIFs/starBoost.gif";
 import TextBackgound from "/images/textBackground.png";
+import { motion } from "framer-motion";
+import Bubbles from "../components/miscellaneous/bubbles";
+import QuinBoost from "../components/articleComponents/quizComponents/QuinBoost";
+import { quinBoostChecker } from "../utils/quiz";
+
 import QuinBoostModal from "../components/articleComponents/QuinBoostModal";
 
 const tourOptions = {
@@ -94,7 +99,8 @@ const Article = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   const [showQuizLangModal, setShowQuizLangModal] = useState(false);
   const [selectLanForQuiz, setSelectLanForQuiz] = useState("english");
-  //const [showInstruction, setShowInstruction] = useState(false);
+  const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false);
+  const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5);
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false);
   const openModal = () => {
     setIsQuinBoostModalOpen(true);
@@ -344,14 +350,14 @@ const Article = () => {
 
   useEffect(() => {
     document.title = "Article page";
+    quinBoostChecker({
+      setIsQuinBoostAvailable,
+      setQuizLeftToGetQuizBoost,
+    });
     fetchArticle();
     checkOnGoingQuiz();
     if (state.user && state.user.tutorial.articlePage) isTutorialTakenCheck();
-    // tour.start();
   }, []);
-  // useEffect(() => {
-  //   getExpectedIQ();
-  // }, [load]);
   useEffect(() => {
     isQuizGiven();
   }, [givenQuiz]);
@@ -448,6 +454,9 @@ const Article = () => {
       ) : null}
       {showQuiz && !givenQuiz && !showQuizLangModal ? (
         <Quiz
+          setIsQuinBoostAvailable={setIsQuinBoostAvailable}
+          setQuizLeftToGetQuizBoost={setQuizLeftToGetQuizBoost}
+          isQuinBoostAvailable={isQuinBoostAvailable}
           article={article}
           isOpen={isOpen}
           onClose={() => {
@@ -523,45 +532,53 @@ const Article = () => {
             </Flex>
 
             <Flex flexDirection={"column"} position={"relative"}>
-              <Text
-                m={0}
-                p={0}
-                textAlign={"left"}
-                paddingLeft={"30px"}
-                position={"absolute"}
-                color={"#9CAFAA"}
-                fontWeight={"bold"}
-              >
-                {" "}
-                Quin Boost{" "}
-              </Text>
-              <Flex
-                marginTop={"5px"}
-                position={"relative"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                onClick={openModal}
-                style={{ cursor: "pointer" }}
-              >
-                <Image
-                  src={TextBackgound}
-                  background={"none"}
-                  height={"100px"}
-                  width={"200px"}
-                />
-                <Text
-                  m={0}
-                  p={0}
-                  textAlign={"left"}
-                  position={"absolute"}
-                  color={"black"}
-                  fontSize={"20px"}
-                  fontWeight={"bold"}
-                >
-                  {" "}
-                  3 Quiz Left{" "}
-                </Text>
-              </Flex>
+              {isQuinBoostAvailable ? (
+                <QuinBoost />
+              ) : (
+                !state.isBoosted && (
+                  <>
+                    <Text
+                      m={0}
+                      p={0}
+                      textAlign={"left"}
+                      paddingLeft={"30px"}
+                      position={"absolute"}
+                      color={"#9CAFAA"}
+                      fontWeight={"bold"}
+                    >
+                      {" "}
+                      Quin Boost{" "}
+                    </Text>
+                    <Flex
+                      marginTop={"5px"}
+                      position={"relative"}
+                      justifyContent={"center"}
+                      alignItems={"center"}
+                      onClick={openModal}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Image
+                        src={TextBackgound}
+                        background={"none"}
+                        height={"100px"}
+                        width={"200px"}
+                      />
+                      <Text
+                        m={0}
+                        p={0}
+                        textAlign={"left"}
+                        position={"absolute"}
+                        color={"black"}
+                        fontSize={"20px"}
+                        fontWeight={"bold"}
+                      >
+                        {" "}
+                        {quizLeftToGetQuizBoost} Quiz Left{" "}
+                      </Text>
+                    </Flex>
+                  </>
+                )
+              )}
               <QuinBoostModal
                 isOpen={isQuinBoostModalOpen}
                 onClose={closeModal}
@@ -759,6 +776,7 @@ const Article = () => {
                 <QuizExpired />
               ) : (
                 <GenerateQuizButton
+                  isQuinBoostAvailable={isQuinBoostAvailable}
                   onClick={() => {
                     trackGenerateQuizClick();
                     setShowQuizLangModal(true);
@@ -868,6 +886,7 @@ const Article = () => {
               />
             ) : (
               <GenerateQuizButton
+                isQuinBoostAvailable={isQuinBoostAvailable}
                 css={{
                   "@media screen and (min-width: 821px)": {
                     display: "none",

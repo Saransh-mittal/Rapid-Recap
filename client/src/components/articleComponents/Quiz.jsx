@@ -25,8 +25,18 @@ import HindiInstructionModal from "./customQuizModal/HindiInstructionModal";
 import ReactGA from "react-ga4";
 import { AppContext } from "../../contextAPI/appContext";
 import BoostedSubmittedQuizInterface from "./quizComponents/BoostedSubmittedQuizInterface";
+import { quinBoostChecker } from "../../utils/quiz";
 
-const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
+const Quiz = ({
+  article,
+  isOpen,
+  onClose,
+  ofShowQuiz,
+  language,
+  isQuinBoostAvailable,
+  setIsQuinBoostAvailable,
+  setQuizLeftToGetQuizBoost,
+}) => {
   const { state, dispatch } = useContext(AppContext);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timer, setTimer] = useState(50);
@@ -101,7 +111,10 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
         position: "top",
       });
       const res = await axios.get(`/api/user/streakChecker`);
-
+      await quinBoostChecker({
+        setIsQuinBoostAvailable,
+        setQuizLeftToGetQuizBoost,
+      });
       dispatch({
         type: "setIsBoosted",
         payloadIsBoosted: res.data.isBoosted,
@@ -356,7 +369,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
 
           {showInstruction ? (
             language === "english" ? (
-              <InstructionModal />
+              <InstructionModal isQuinBoostAvailable={isQuinBoostAvailable} />
             ) : (
               <HindiInstructionModal />
             )
