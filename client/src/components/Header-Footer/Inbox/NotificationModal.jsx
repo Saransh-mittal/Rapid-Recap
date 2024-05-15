@@ -15,7 +15,11 @@ import React, { useContext, useEffect } from "react";
 import { AppContext } from "../../../contextAPI/appContext";
 import Rapid_recap from "/images/Rapid Recap.png?url";
 
-const NotificationModal = ({ setIsModalOpen, selectedNotification }) => {
+const NotificationModal = ({
+  setIsModalOpen,
+  selectedNotification,
+  setIsDrawerOpen,
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { state } = useContext(AppContext);
 
@@ -28,6 +32,7 @@ const NotificationModal = ({ setIsModalOpen, selectedNotification }) => {
       isOpen={isOpen}
       onClose={() => {
         setIsModalOpen(false);
+        setIsDrawerOpen(true);
         onClose();
       }}
       size={{ base: "full", md: "xl" }}
@@ -44,8 +49,31 @@ const NotificationModal = ({ setIsModalOpen, selectedNotification }) => {
         color={"white"}
       >
         <ModalHeader>
-          {selectedNotification && selectedNotification.title}
+          {selectedNotification && (
+            <Heading
+              as="h2"
+              size="lg"
+              fontWeight="bold"
+              textShadow="2px 2px 4px rgba(0, 0, 0, 0.3)"
+              borderRadius="md"
+              px={2}
+              py={1}
+              mt={2}
+              css={{
+                background: "rgba(255, 255, 255, 0.3)",
+                backdropFilter: "blur(8px)",
+                border: "2px solid #4A5568", // Border color
+                padding: "10px 20px",
+                background: `linear-gradient(to right, #ff8a00, #e52e71)`,
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              {selectedNotification.title}
+            </Heading>
+          )}
         </ModalHeader>
+
         <ModalCloseButton />
         <ModalBody>
           {selectedNotification && (
@@ -74,15 +102,20 @@ const NotificationModal = ({ setIsModalOpen, selectedNotification }) => {
                 alignItems="center"
                 marginTop={"30px"}
               >
-                <Text
-                  fontSize="lg"
-                  color="gray.400"
-                  fontStyle="italic"
-                  textAlign="center"
-                  marginBottom="20px"
-                >
-                  {selectedNotification.mainText}
-                </Text>
+                {selectedNotification.mainText
+                  .split("\n\n")
+                  .map((paragraph, index) => (
+                    <Text
+                      key={index}
+                      fontSize="lg"
+                      color="gray.400"
+                      fontStyle="italic"
+                      textAlign="center"
+                      marginBottom="20px"
+                    >
+                      {paragraph}
+                    </Text>
+                  ))}
                 <Text fontSize="sm" color="gray.600">
                   {new Date(selectedNotification.date).toLocaleString()}
                 </Text>

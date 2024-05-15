@@ -14,7 +14,7 @@ import {
 import TextBackgound from "/images/textBackground.png";
 import QuinBoost from "./quizComponents/QuinBoost";
 
-const QuinBoostModal = ({ isOpen, onClose }) => {
+const QuinBoostModal = ({ isOpen, onClose, quizLeftToGetQuizBoost }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
       <ModalOverlay />
@@ -52,8 +52,8 @@ const QuinBoostModal = ({ isOpen, onClose }) => {
             <Text
               fontSize={{ base: "xl", md: "xl" }}
               // fontWeight="bold"
-              color="gray.600"
-              textAlign="center"
+              color="purple.600"
+              textAlign="left"
               mb="4"
             >
               <span
@@ -68,11 +68,15 @@ const QuinBoostModal = ({ isOpen, onClose }) => {
               Unlocks after five quizzes.
             </Text>
             <Text
-              fontSize={{ base: "lg", md: "xl" }}
-              color="gray.600"
-              textAlign="center"
+              fontSize={{ base: "md", md: "lg" }}
+              color="cyan.400"
+              textAlign="left"
+              style={{
+                fontStyle: "italic",
+                // fontWeight: "bold",
+              }}
             >
-              Your RQM Score on the sixth quiz gets a 1.5x supercharge!{" "}
+              {"➤"} Your RQM Score on the sixth quiz gets a 1.5x supercharge!{" "}
               <span role="img" aria-label="rocket">
                 🚀
               </span>
@@ -83,53 +87,72 @@ const QuinBoostModal = ({ isOpen, onClose }) => {
             instead of the usual 1000. This is a great opportunity to boost your
             RQM Score and climb the leaderboard! 🏆
           </Text> */}
-          <Text>
-            Track your Quin Boost progress on every quiz page with a countdown
-            image indicating quizzes left until boost!
-          </Text>
-          {/* <Flex> */}
           <Text
-            m={0}
-            p={0}
-            textAlign={"left"}
-            paddingLeft={"8rem"}
-            position={"relative"}
-            color={"#9CAFAA"}
-            fontWeight={"bold"}
+            fontSize={{ base: "md", md: "lg" }}
+            color="#C3FF93"
+            textAlign="left"
+            // fontWeight="bold"
+            style={{
+              fontStyle: "italic",
+              // fontWeight: "bold",
+            }}
           >
-            {" "}
-            Quin Boost{" "}
+            {"➤"} Track your Quin Boost progress on every quiz page with a
+            countdown image indicating quizzes left until boost!
           </Text>
-          <Flex
-            marginTop={"-15px"}
-            position={"relative"}
-            justifyContent={"center"}
-            alignItems={"center"}
-          >
-            <Image
-              src={TextBackgound}
-              background={"none"}
-              height={"100px"}
-              width={"200px"}
-            />
+
+          <Box>
             <Text
               m={0}
               p={0}
               textAlign={"left"}
-              position={"absolute"}
-              color={"black"}
-              fontSize={"20px"}
+              paddingLeft={"8rem"}
+              position={"relative"}
+              color={"#9CAFAA"}
               fontWeight={"bold"}
             >
               {" "}
-              {5} Quiz Left{" "}
+              Quin Boost{" "}
             </Text>
-          </Flex>
-          {/* </Flex> */}
+            <Flex
+              marginTop={"-15px"}
+              position={"relative"}
+              justifyContent={"center"}
+              alignItems={"center"}
+            >
+              <Image
+                src={TextBackgound}
+                background={"none"}
+                height={"100px"}
+                width={"200px"}
+              />
+              <Text
+                m={0}
+                p={0}
+                textAlign={"left"}
+                position={"absolute"}
+                color={"black"}
+                fontSize={"20px"}
+                fontWeight={"bold"}
+              >
+                {" "}
+                {quizLeftToGetQuizBoost} Quiz Left{" "}
+              </Text>
+            </Flex>
+          </Box>
 
-          <Text>
-            Once Quin Boost is activated, a special badge appears on your next
-            quiz, signaling its activation! 🏅
+          <Text
+            fontSize={{ base: "md", md: "lg" }}
+            color="#FC4100"
+            textAlign="left"
+            mt={"1rem"}
+            style={{
+              fontStyle: "italic",
+              // fontWeight: "bold",
+            }}
+          >
+            {"➤"} Once Quin Boost is activated, a special badge appears on your
+            next quiz, signaling its activation! 🏅
           </Text>
           <Flex justifyContent={"center"} alignItems="center">
             <Flex
@@ -144,9 +167,18 @@ const QuinBoostModal = ({ isOpen, onClose }) => {
             </Flex>
           </Flex>
 
-          <Text>
-            Quin Boost is exclusive to your sixth quiz. Enjoy the 1.5x RQM Score
-            boost, but remember, it's a one-time offer! Make it count! 🎉
+          <Text
+            fontSize={{ base: "sm", md: "md" }}
+            color="gray.600"
+            textAlign="centre"
+            mt={"2rem"}
+            style={{
+              fontStyle: "italic",
+              fontWeight: "bold",
+            }}
+          >
+            Note: Quin Boost is exclusive to your sixth quiz. Enjoy the 1.5x RQM
+            Score boost, but remember, it's a one-time offer! Make it count! 🎉
           </Text>
         </ModalBody>
       </ModalContent>

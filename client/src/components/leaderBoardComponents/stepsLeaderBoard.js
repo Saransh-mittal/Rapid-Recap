@@ -94,14 +94,4 @@ const stepsLeaderBoard = [
   },
 ];
 
-const tourOptions = {
-  defaultStepOptions: {
-    cancelIcon: {
-      enabled: true,
-    },
-  },
-  useModalOverlay: true,
-};
-
 export default stepsLeaderBoard;
-export { tourOptions };
