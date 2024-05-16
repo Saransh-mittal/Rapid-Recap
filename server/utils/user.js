@@ -340,6 +340,39 @@ const longestStreakCalculator = async (userId) => {
   }
 };
 
+const streakBrokenDaysCalculator = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // last quiz attempt dateTime in UTC
+    const lastAttempt = await QuizAttempt.findOne({ user: userId }).sort({
+      createdAt: -1,
+    });
+    if (!lastAttempt) {
+      return -1;
+    }
+    const lastAttemptDate = lastAttempt.createdAt;
+    lastAttemptDate.setUTCHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    // If last attempt was today, no streak broken
+    if (lastAttemptDate.getTime() === today.getTime()) {
+      return 0;
+    }
+    // If last attempt was day before yesterday then streak broken recently i.e total days = 2 = today - lastAttemptDate
+    const diffInTime = today.getTime() - lastAttemptDate.getTime();
+    const diffInDays = diffInTime / (1000 * 3600 * 24);
+    return diffInDays;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -351,4 +384,5 @@ module.exports = {
   calculateUserRank,
   dailyStreakCalculator,
   longestStreakCalculator,
+  streakBrokenDaysCalculator,
 };

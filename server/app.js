@@ -5,6 +5,7 @@ const userRoutes = require("./router/userRoutes");
 const articleRoutes = require("./router/articleRoutes");
 const quizRoutes = require("./router/quizRoutes");
 const subscriptionRoutes = require("./router/subscriptionRoutes");
+const mailRoutes = require("./router/mailRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -64,6 +65,7 @@ authRouter.use("/user", userRoutes);
 authRouter.use("/articles", articleRoutes);
 authRouter.use("/quiz", quizRoutes);
 authRouter.use("/subs", subscriptionRoutes);
+authRouter.use("/mail", mailRoutes);
 app.use("/api", authRouter);
 
 app.listen(PORT, () => {

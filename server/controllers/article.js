@@ -430,7 +430,7 @@ const getWorldNews = async (req, res) => {
     const title = "📢 New Content Alert! 📰";
     const body =
       "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-    const url = "https://cyan-crane-tie.cyclic.app/";
+    const url = "https://www.rapidrecap.co.in/";
     sendNotification({ title, body, url });
   } catch (error) {
     res.status(500).json({ error: error.message || "Something went wrong" });

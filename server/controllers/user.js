@@ -842,8 +842,6 @@ const trashUpdate = async (req, res) => {
   }
 };
 
-// const ApplicationUpdates = require('./../model/applicationUpdatesSchema');
-
 const trashAllUpdate = async (req, res) => {
   const userId = req.user._id; // Assuming user ID is available in req.user._id
 
@@ -861,7 +859,7 @@ const trashAllUpdate = async (req, res) => {
 const sendMailForNotifySubscribe = async (req, res) => {
   try {
     const users = await User.find({
-      email: { $not: /dummy\d+mail\.com/ },
+      email: { $not: /^dummy\d+@mail\.com$/ },
     });
     //const users = await User.find({ inGameName: "saransh_1234" });
     const transporter = await mailTransporter();

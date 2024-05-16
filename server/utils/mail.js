@@ -77,7 +77,7 @@ const genEmailTemplateForNotifySubscribe = ({ name }) => {
     <p style="font-size:1.1em">Hello ${name},</p>
     <p>We're excited to introduce you to our latest feature: browser notifications! With Rapid Recap's new notification system, you'll never miss out on the latest articles, breaking news, and exclusive content.</p>
     <p>To subscribe to browser notifications and stay informed, simply click the button below:</p>
-    <a href="https://cyan-crane-tie.cyclic.app/" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:10px 20px; border-radius:5px;">Subscribe Now</a>
+    <a href="https://www.rapidrecap.co.in/" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:10px 20px; border-radius:5px;">Subscribe Now</a>
     
     <p>Best regards,<br />Rapid Recap Team</p>
     <hr style="border:none; border-top:1px solid #eee" />
@@ -101,7 +101,7 @@ const genEmailTemplateForAppUpdates = ({ title, mainText, name }) => {
     <p style="font-size:1.1em">Hello ${name},</p>
     <h4>${title}</h4>
     <p>${mainText}</p>
-    <a href="https://cyan-crane-tie.cyclic.app/" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:10px 20px; border-radius:5px;">View</a>
+    <a href="https://www.rapidrecap.co.in/" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:10px 20px; border-radius:5px;">View</a>
     
     <p>Best regards,<br />Rapid Recap Team</p>
     <hr style="border:none; border-top:1px solid #eee" />
@@ -114,6 +114,8 @@ const genEmailTemplateForAppUpdates = ({ title, mainText, name }) => {
   </h6>
 </div>`;
 };
+
+const streakJustBroken = ({ name }) => {};
 module.exports = {
   generateOtp,
   mailTransporter,
