@@ -477,11 +477,6 @@ const Article = () => {
                   </>
                 )
               )}
-              <QuinBoostModal
-                isOpen={isQuinBoostModalOpen}
-                onClose={closeModal}
-                quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
-              />
             </Flex>
 
             {state.isBoosted && (
@@ -490,6 +485,8 @@ const Article = () => {
                 alignItems={"center"}
                 gap={2}
                 marginTop={"10px"}
+                onClick={openModal}
+                style={{ cursor: "pointer" }}
               >
                 <Image
                   src={starBoost}
@@ -502,6 +499,12 @@ const Article = () => {
                 </Badge>
               </Flex>
             )}
+            <QuinBoostModal
+              isOpen={isQuinBoostModalOpen}
+              onClose={closeModal}
+              quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
+              isStateBoosted={state.isBoosted}
+            />
           </Flex>
           <Grid
             templateColumns={
