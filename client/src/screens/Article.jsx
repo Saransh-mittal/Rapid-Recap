@@ -35,7 +35,9 @@ import starBoost from "/GIFs/starBoost.gif";
 import TextBackgound from "/images/textBackground.png";
 import QuinBoost from "../components/articleComponents/quizComponents/QuinBoost";
 import { quinBoostChecker } from "../utils/quiz";
+import QuinBoostModal from "../components/articleComponents/QuinBoostModal";
 import { useArticlePageTour } from "../customHooks/useTours";
+
 const Article = () => {
   const toast = useToast();
   const { state } = useContext(AppContext);
@@ -85,6 +87,14 @@ const Article = () => {
   const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false);
   const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5);
   const { tour, isTutorialTakenCheck } = useArticlePageTour();
+  const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false);
+  const openModal = () => {
+    setIsQuinBoostModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsQuinBoostModalOpen(false);
+  };
 
   const fetchArticle = async () => {
     try {
@@ -442,6 +452,8 @@ const Article = () => {
                       position={"relative"}
                       justifyContent={"center"}
                       alignItems={"center"}
+                      onClick={openModal}
+                      style={{ cursor: "pointer" }}
                     >
                       <Image
                         src={TextBackgound}
@@ -473,6 +485,8 @@ const Article = () => {
                 alignItems={"center"}
                 gap={2}
                 marginTop={"10px"}
+                onClick={openModal}
+                style={{ cursor: "pointer" }}
               >
                 <Image
                   src={starBoost}
@@ -485,6 +499,12 @@ const Article = () => {
                 </Badge>
               </Flex>
             )}
+            <QuinBoostModal
+              isOpen={isQuinBoostModalOpen}
+              onClose={closeModal}
+              quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
+              isStateBoosted={state.isBoosted}
+            />
           </Flex>
           <Grid
             templateColumns={
