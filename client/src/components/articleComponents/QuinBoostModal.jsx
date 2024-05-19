@@ -72,7 +72,7 @@ const QuinBoostModal = ({
 
           <ModalCloseButton />
           <ModalBody>
-            {isStateBoosted ? (
+            {!isStateBoosted ? (
               <Box mt={"1rem"}>
                 <Text
                   fontSize={{ base: "xl", md: "lg" }}

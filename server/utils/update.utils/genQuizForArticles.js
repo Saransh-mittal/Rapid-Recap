@@ -1,6 +1,9 @@
 const Article = require("../../model/articleSchema");
-const { findQuizByLanguage, generateQuestionsForQuiz } = require("../quiz");
-const { progressBar } = require("../progress");
+const {
+  findQuizByLanguage,
+  generateQuestionsForQuiz,
+} = require("../quiz.utils");
+const { progressBar } = require("../progress.utils");
 
 const genQuizForArticles = async (articles) => {
   // const twoDaysAgo = new Date();

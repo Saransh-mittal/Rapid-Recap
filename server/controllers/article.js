@@ -6,7 +6,7 @@ const {
   generateQuestionsForQuiz,
   generateQuestionsForHindiQuiz,
   findQuizByLanguage,
-} = require("../utils/quiz");
+} = require("../utils/quiz.utils");
 const {
   breakArticleIntoParagraphs,
   hindiConverter,
@@ -14,7 +14,7 @@ const {
   processNews,
   extractNewsFromLink,
   processExtractedNews,
-} = require("../utils/article");
+} = require("../utils/article.utils");
 const NewsAPI = require("newsapi");
 const { sendNotification } = require("../services/notificationService");
 const genQuizForArticles = require("../utils/update.utils/genQuizForArticles");

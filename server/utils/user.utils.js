@@ -1,12 +1,12 @@
 const DailyIQ = require("../model/dailyIQSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const User = require("../model/userSchema");
-const { formatDate } = require("./date");
+const { formatDate } = require("./date.utils");
 const {
   binarySearch,
   binarySearchForLeftRange,
   binarySearchForRightRange,
-} = require("./miscellaneous");
+} = require("./miscellaneous.utils");
 
 const calculateTopPercent = (userIQ, sortedIQScores) => {
   //sortedIQScores.sort((a, b) => b - a);
@@ -388,6 +388,35 @@ const noLoginDaysSpentCalculator = async (userId) => {
     console.log(error);
   }
 };
+// write a logic for calculating the number of the quizes given by the user for curent day
+const currDayStreakCalulator = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const quizAttempts = await QuizAttempt.find({
+      user: userId,
+      createdAt: { $gte: today },
+    });
+    return quizAttempts.length;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const preQuinBoost = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 module.exports = {
   calculateTopPercent,
@@ -402,4 +431,5 @@ module.exports = {
   longestStreakCalculator,
   streakBrokenDaysCalculator,
   noLoginDaysSpentCalculator,
+  currDayStreakCalulator,
 };

@@ -3,7 +3,7 @@ const generateFakeArticle = require("./generateFakeArticle.test"); // Import gen
 const generateFakeUsers = require("./generateFakeUsers.test"); // Import generateFakeUsers utility function
 const selectRandomUsers = require("./selectRandomUsers.test"); // Import selectRandomUsers utility function
 const generateQuizAttemptsForUsers = require("./generateQuizAttemptsForUsers.test"); // Import generateQuizAttemptsForUsers utility function
-const { progressBar } = require("../../utils/progress"); // Import progressBar utility function
+const { progressBar } = require("../../utils/progress.utils"); // Import progressBar utility function
 async function generateArticlesQuizzesAndQuizAttempts() {
   // Generate 100 fake users
   console.log("\nGenerating fake users...\n");

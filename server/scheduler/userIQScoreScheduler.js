@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
+const dailyUserIQCalc = require("../utils/dailyUserIQCalc.utils");
 
 cron.schedule("0 0 * * *", async () => {
   try {
