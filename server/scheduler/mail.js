@@ -43,4 +43,35 @@ const cancelScheduledEmails = (userId) => {
   }
 };
 
-module.exports = { scheduleEmail, cancelScheduledEmails };
+const scheduleDayEndEmail = (
+  userId,
+  userEmail,
+  beforehour,
+  mailHtml,
+  subject
+) => {
+  const now = moment.utc();
+  const endOfDay = moment.utc().endOf("day").subtract(beforehour, "hour");
+
+  if (now.isBefore(endOfDay)) {
+    const task = cron.schedule(endOfDay.toDate(), async () => {
+      const transporter = await mailTransporter();
+      await transporter.sendMail({
+        from: "rapidrecap2k23@gmail.com",
+        to: userEmail,
+        subject,
+        html: mailHtml,
+      });
+      delete tasks[userId].daily; // Remove the task after execution
+    });
+
+    // Ensure the user has a tasks object
+    if (!tasks[userId]) {
+      tasks[userId] = {};
+    }
+
+    tasks[userId].daily = task;
+  }
+};
+
+module.exports = { scheduleEmail, cancelScheduledEmails, scheduleDayEndEmail };

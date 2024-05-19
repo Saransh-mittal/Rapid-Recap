@@ -5,6 +5,7 @@ const {
   onQuinBoost,
   postQuinBoost,
   genEmailTemplateForStreakJustBroken,
+  streakBrokenSevenPeriodic,
 } = require("../utils/mail.utils");
 const {
   streakBrokenDaysCalculator,
@@ -39,7 +40,7 @@ const streakBroken = async (req, res) => {
           from: "rapidrecap2k23@gmail.com",
           to: user.email,
           subject: "🚀 Restart Your Rapid Recap Quiz Streak Today! 🌟",
-          html: genEmailTemplateForNotifySubscribe({
+          html: streakBrokenSevenPeriodic({
             name: user.name.split(" ")[0],
             streak_days: streakBrokenDays,
           }),
