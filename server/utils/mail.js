@@ -115,11 +115,33 @@ const genEmailTemplateForAppUpdates = ({ title, mainText, name }) => {
 </div>`;
 };
 
-const streakJustBroken = ({ name }) => {};
+const genEmailTemplateForStreakJustBroken = ({ name }) => {
+  return `<div style="font-family: Helvetica, Arial, sans-serif; min-width: 1000px; overflow: auto; line-height: 2">
+  <div style="margin: 50px auto; width: 70%; padding: 20px 0">
+    <div style="border-bottom: 1px solid #eee">
+      <a href="" style="font-size: 1.4em; color: #00466a; text-decoration: none; font-weight: 600">Rapid Recap</a>
+    </div>
+    <p style="font-size: 1.1em">Hello ${name},</p>
+    <p>We noticed that your Rapid Recap streak of daily quizzes was broken, but don't worry – setbacks happen! Let's get you back on track and continue your journey towards mastering knowledge.</p>
+    <p>
+      Daily quizzes are a great way to stay sharp and engaged. <a href="https://www.rapidrecap.co.in/" style="background-color: #00466a; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: 600;">Log in now</a> and resume your streak by taking today's quiz. Remember, consistency is key to progress!
+    </p>
+    <p>Best regards,<br />Rapid Recap Team</p>
+    <hr style="border: none; border-top: 1px solid #eee" />
+    <div style="float: right; padding: 8px 0; color: #aaa; font-size: 0.8em; line-height: 1; font-weight: 300">
+      <p>Rapid Recap Inc</p>
+      <p>India</p>
+    </div>
+    <p style="font-size: 0.9em;"><strong>P.S.:</strong> Don't forget to stay updated with our latest news and articles by subscribing to browser notifications! If you have any questions or need assistance, feel free to reach out to our support team at <a href="mailto:rapidrecap2k23@gmail.com" style="color: #00466a; text-decoration: none;">rapidrecap2k23@gmail.com</a>. We're here to help!</p>
+  </div>
+</div>
+`;
+};
 module.exports = {
   generateOtp,
   mailTransporter,
   generateEmailTemplate,
   genEmailTemplateForNotifySubscribe,
   genEmailTemplateForAppUpdates,
+  genEmailTemplateForStreakJustBroken,
 };

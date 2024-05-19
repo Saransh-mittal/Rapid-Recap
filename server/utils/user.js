@@ -373,6 +373,22 @@ const streakBrokenDaysCalculator = async (userId) => {
   }
 };
 
+const noLoginDaysSpentCalculator = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const lastLogin = user.lastLogin;
+    lastLogin.setUTCHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    return Math.floor(
+      (today.getTime() - lastLogin.getTime()) / (1000 * 3600 * 24)
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -385,4 +401,5 @@ module.exports = {
   dailyStreakCalculator,
   longestStreakCalculator,
   streakBrokenDaysCalculator,
+  noLoginDaysSpentCalculator,
 };
