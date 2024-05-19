@@ -2,7 +2,10 @@ import { useEffect } from "react";
 import { useShepherdTour } from "react-shepherd";
 import stepsTutorialHome from "../components/homeComponents/stepsTutorialHome";
 import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle";
-import { isTutorialTakenCheck, isTutorialTakenUpdate } from "../utils/tutorial";
+import {
+  isTutorialTakenCheck,
+  isTutorialTakenUpdate,
+} from "../utils/tutorial.utlis";
 import stepsLeaderBoard from "../components/leaderBoardComponents/stepsLeaderBoard";
 import stepsTutorialProfile from "../components/profileComponents/stepsTutorialProfile";
 

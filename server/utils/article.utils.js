@@ -1,6 +1,6 @@
 const natural = require("natural");
 const OpenAI = require("openai");
-const { progressBar } = require("./progress");
+const { progressBar } = require("./progress.utils");
 const Article = require("../model/articleSchema");
 const { decode } = require("html-entities");
 

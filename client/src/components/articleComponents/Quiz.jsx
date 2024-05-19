@@ -25,7 +25,7 @@ import HindiInstructionModal from "./customQuizModal/HindiInstructionModal";
 import ReactGA from "react-ga4";
 import { AppContext } from "../../contextAPI/appContext";
 import BoostedSubmittedQuizInterface from "./quizComponents/BoostedSubmittedQuizInterface";
-import { quinBoostChecker } from "../../utils/quiz";
+import { quinBoostChecker } from "../../utils/quiz.utils";
 
 const Quiz = ({
   article,

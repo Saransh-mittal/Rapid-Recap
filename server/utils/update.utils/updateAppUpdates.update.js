@@ -1,5 +1,5 @@
 const ApplicationUpdates = require("../../model/applicationUpdatesSchema");
-const { progressBar } = require("../progress");
+const { progressBar } = require("../progress.utils");
 
 const updateAppUpdates = async (title) => {
   try {

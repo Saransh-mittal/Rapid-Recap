@@ -34,7 +34,7 @@ import ReactGA from "react-ga4";
 import starBoost from "/GIFs/starBoost.gif";
 import TextBackgound from "/images/textBackground.png";
 import QuinBoost from "../components/articleComponents/quizComponents/QuinBoost";
-import { quinBoostChecker } from "../utils/quiz";
+import { quinBoostChecker } from "../utils/quiz.utils";
 import QuinBoostModal from "../components/articleComponents/QuinBoostModal";
 import { useArticlePageTour } from "../customHooks/useTours";
 

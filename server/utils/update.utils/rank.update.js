@@ -1,5 +1,5 @@
 const User = require("../../model/userSchema");
-const { progressBar } = require("../progress");
+const { progressBar } = require("../progress.utils");
 
 const rankUpdate = async () => {
   const users = await User.find({ inGameName: { $exists: true, $ne: "" } })

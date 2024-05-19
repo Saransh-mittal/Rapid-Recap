@@ -7,7 +7,7 @@ const {
   mailTransporter,
   generateEmailTemplate,
   genEmailTemplateForNotifySubscribe,
-} = require("../utils/mail");
+} = require("../utils/mail.utils");
 const VerificationToken = require("../model/verificationToken");
 const { isValidObjectId } = require("mongoose");
 const jwt = require("jsonwebtoken");
@@ -19,10 +19,11 @@ const {
   calculateUserRank,
   dailyStreakCalculator,
   longestStreakCalculator,
-} = require("../utils/user");
-const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
+  currDayStreakCalulator,
+} = require("../utils/user.utils");
+const dailyUserIQCalc = require("../utils/dailyUserIQCalc.utils");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
-const { progressBar } = require("../utils/progress");
+const { progressBar } = require("../utils/progress.utils");
 const QuinBoost = require("../model/quinBoostSchema");
 
 const registerUser = async (req, res) => {
@@ -1032,6 +1033,18 @@ const quinBoostChecker = async (req, res) => {
     console.log(error.message);
   }
 };
+
+const mailForQuinBoost = async (req, res) => {
+  try {
+    const user = await User.findOne({ inGameName: "saransh_1234" });
+    const quizzesToday = await currDayStreakCalulator(user._id);
+    console.log(quizzesToday);
+    res.status(200).json({ message: "Email sent successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error);
+  }
+};
 module.exports = {
   registerUser,
   loginUser,
@@ -1061,4 +1074,5 @@ module.exports = {
   longestStreakCalculatorOfAllUsers,
   streakChecker,
   quinBoostChecker,
+  mailForQuinBoost,
 };
