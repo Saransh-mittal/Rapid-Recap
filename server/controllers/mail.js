@@ -40,7 +40,6 @@ const streakBroken = async (req, res) => {
     }
     console.log("\nMails sent successfully\n");
     res.status(200).json({ message: "Mails sent successfully" });
-    q;
   } catch (error) {
     res.status(500).json({ message: error.message });
     console.error(error);
