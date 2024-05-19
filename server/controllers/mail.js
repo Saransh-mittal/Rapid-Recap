@@ -1,17 +1,12 @@
 const User = require("../model/userSchema");
-const {
-  mailTransporter,
-  preQuinBoost,
-  onQuinBoost,
-  postQuinBoost,
-  genEmailTemplateForStreakJustBroken,
-} = require("../utils/mail.utils");
+const { mailTransporter } = require("../utils/mail.utils");
 const {
   streakBrokenDaysCalculator,
   noLoginDaysSpentCalculator,
   currDayStreakCalulator,
 } = require("../utils/user.utils");
 const { progressBar } = require("../utils/progress.utils");
+const MailTemplates = require("../data/MailTemplates");
 
 const streakBroken = async (req, res) => {
   try {
@@ -27,19 +22,19 @@ const streakBroken = async (req, res) => {
 
       if (streakBrokenDays === 2) {
         await transporter.sendMail({
-          from: "rapidrecap2k23@gmail.com",
+          from: MailTemplates.StreakJustBroken.from,
           to: user.email,
-          subject: "Let's Get Back on Track! 🔄",
-          html: genEmailTemplateForStreakJustBroken({
+          subject: MailTemplates.StreakJustBroken.subject,
+          html: MailTemplates.StreakJustBroken.html({
             name: user.name.split(" ")[0],
           }),
         });
       } else if (streakBrokenDays % 7 === 0 && streakBrokenDays > 2) {
         await transporter.sendMail({
-          from: "rapidrecap2k23@gmail.com",
+          from: MailTemplates.StreakSevenPeriodic.from,
           to: user.email,
-          subject: "🚀 Restart Your Rapid Recap Quiz Streak Today! 🌟",
-          html: genEmailTemplateForNotifySubscribe({
+          subject: MailTemplates.StreakSevenPeriodic.subject,
+          html: MailTemplates.StreakSevenPeriodic.html({
             name: user.name.split(" ")[0],
             streak_days: streakBrokenDays,
           }),
@@ -72,29 +67,28 @@ const QuinBoost = async (req, res) => {
 
       if ((todayQuizNumber + 2) % 6 === 0) {
         await transporter.sendMail({
-          from: "rapidrecap2k23@gmail.com",
+          from: MailTemplates.preQuinBoost.from,
           to: user.email,
-          subject: "Almost There! One More Quiz to Unlock Your Power-Up! 🚀",
-          html: preQuinBoost({
+          subject: MailTemplates.preQuinBoost.subject,
+          html: MailTemplates.preQuinBoost.html({
             name: user.name.split(" ")[0],
           }),
         });
       } else if ((todayQuizNumber + 1) % 6 === 0) {
         await transporter.sendMail({
-          from: "rapidrecap2k23@gmail.com",
+          from: MailTemplates.onQuinBoost.from,
           to: user.email,
-          subject: "Congrats! Your Quin Boost is Now Active! 🌟",
-          html: onQuinBoost({
+          subject: MailTemplates.onQuinBoost.subject,
+          html: MailTemplates.onQuinBoost.html({
             name: user.name.split(" ")[0],
           }),
         });
       } else if (todayQuizNumber % 6 === 0) {
         await transporter.sendMail({
-          from: "rapidrecap2k23@gmail.com",
+          from: MailTemplates.postQuinBoost.from,
           to: user.email,
-          subject:
-            "Well Done! Quin Boost Utilized! 🎉 Keep Going for More Boosts!",
-          html: postQuinBoost({
+          subject: MailTemplates.postQuinBoost.subject,
+          html: MailTemplates.postQuinBoost.html({
             name: user.name.split(" ")[0],
           }),
         });

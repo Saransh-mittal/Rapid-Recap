@@ -5,7 +5,7 @@ const Quiz = require("../model/quizSchema");
 const QuinBoost = require("../model/quinBoostSchema");
 const { currDayStreakCalulator } = require("../utils/user.utils");
 const { scheduleEmail } = require("../scheduler/mail");
-const { preQuinBoost } = require("../utils/mail.utils");
+const MailTemplates = require("../data/MailTemplates");
 
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken, quizId } = req.body;
@@ -154,7 +154,7 @@ const saveAttempt = async (req, res) => {
         userId: user._id.toString(),
         userEmail: user.email,
         delayMinutes: 30,
-        mailHtml: preQuinBoost({
+        mailHtml: MailTemplates.preQuinBoost.html({
           name: user.name.split(" ")[0],
         }),
         subject: "Almost There! One More Quiz to Unlock Your Power-Up! 🚀",
@@ -163,7 +163,7 @@ const saveAttempt = async (req, res) => {
         userId: user._id.toString(),
         userEmail: user.email,
         delayMinutes: 120,
-        mailHtml: preQuinBoost({
+        mailHtml: MailTemplates.preQuinBoost.html({
           name: user.name.split(" ")[0],
         }),
         subject: "Almost There! One More Quiz to Unlock Your Power-Up! 🚀",
