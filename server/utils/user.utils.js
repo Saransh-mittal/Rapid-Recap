@@ -372,6 +372,22 @@ const streakBrokenDaysCalculator = async (userId) => {
     console.error(error);
   }
 };
+
+const noLoginDaysSpentCalculator = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const lastLogin = user.lastLogin;
+    lastLogin.setUTCHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    return Math.floor(
+      (today.getTime() - lastLogin.getTime()) / (1000 * 3600 * 24)
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
 // write a logic for calculating the number of the quizes given by the user for curent day
 const currDayStreakCalulator = async (userId) => {
   try {
@@ -414,5 +430,6 @@ module.exports = {
   dailyStreakCalculator,
   longestStreakCalculator,
   streakBrokenDaysCalculator,
+  noLoginDaysSpentCalculator,
   currDayStreakCalulator,
 };

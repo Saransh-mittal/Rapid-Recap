@@ -4,9 +4,13 @@ const {
   preQuinBoost,
   onQuinBoost,
   postQuinBoost,
+  genEmailTemplateForStreakJustBroken,
 } = require("../utils/mail.utils");
-const { streakBrokenDaysCalculator } = require("../utils/user.utils");
-const { currDayStreakCalulator } = require("../utils/user.utils");
+const {
+  streakBrokenDaysCalculator,
+  noLoginDaysSpentCalculator,
+  currDayStreakCalulator,
+} = require("../utils/user.utils");
 const { progressBar } = require("../utils/progress.utils");
 
 const streakBroken = async (req, res) => {
@@ -19,16 +23,14 @@ const streakBroken = async (req, res) => {
     const updateProgress = progressBar(users.length);
     for (let user of users) {
       const streakBrokenDays = await streakBrokenDaysCalculator(user._id);
+      const noLoginDaysSpent = await noLoginDaysSpentCalculator(user._id);
 
-      if (streakBrokenDays === 1) {
-        updateProgress();
-        continue;
-      } else if (streakBrokenDays === 2) {
+      if (streakBrokenDays === 2) {
         await transporter.sendMail({
           from: "rapidrecap2k23@gmail.com",
           to: user.email,
           subject: "Let's Get Back on Track! 🔄",
-          html: genEmailTemplateForNotifySubscribe({
+          html: genEmailTemplateForStreakJustBroken({
             name: user.name.split(" ")[0],
           }),
         });
@@ -42,10 +44,14 @@ const streakBroken = async (req, res) => {
             streak_days: streakBrokenDays,
           }),
         });
-      } else if (streakBrokenDays === -1) {
+      }
+
+      if (noLoginDaysSpent === 2) {
+      } else if (noLoginDaysSpent % 7 === 0 && noLoginDaysSpent > 2) {
       }
       updateProgress();
     }
+    console.log("\nMails sent successfully\n");
     res.status(200).json({ message: "Mails sent successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -95,6 +101,7 @@ const QuinBoost = async (req, res) => {
       }
       updateProgress();
     }
+    console.log("\nMails sent successfully\n");
     res.status(200).json({ message: "Mails sent successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
