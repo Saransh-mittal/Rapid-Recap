@@ -9,8 +9,8 @@ const DB = process.env.DATABASE;
 // const { sendNotification } = require("../services/notificationService");
 // const {
 //   mailTransporter,
-//   genEmailTemplateForAppUpdates,
 // } = require("../utils/mail");
+// const MailTemplates = require("../data/MailTemplates.js");
 
 mongoose
   .connect(DB)
@@ -66,16 +66,16 @@ mongoose
 //         await newUpdate.save();
 //         //console.log("Update saved:", title);
 //         const transporter = await mailTransporter();
-//         await transporter.sendMail({
-//           from: "rapidrecap2k23@gmail.com",
-//           to: user.email,
-//           subject: "Application Update",
-//           html: genEmailTemplateForAppUpdates({
-//             title,
-//             mainText,
-//             name: user.name,
-//           }),
-//         });
+// await transporter.sendMail({
+//   from: MailTemplates.AppUpdates.from,
+//   to: user.email,
+//   subject: MailTemplates.AppUpdates.subject,
+//   html: MailTemplates.AppUpdates.html({
+//     title,
+//     mainText,
+//     name: user.name,
+//   }),
+// });
 //         progress();
 //       }
 //     }

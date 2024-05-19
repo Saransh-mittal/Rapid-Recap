@@ -2,12 +2,7 @@ const User = require("../model/userSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 
 const bcrypt = require("bcryptjs");
-const {
-  generateOtp,
-  mailTransporter,
-  generateEmailTemplate,
-  genEmailTemplateForNotifySubscribe,
-} = require("../utils/mail.utils");
+const { generateOtp, mailTransporter } = require("../utils/mail.utils");
 const VerificationToken = require("../model/verificationToken");
 const { isValidObjectId } = require("mongoose");
 const jwt = require("jsonwebtoken");
@@ -25,6 +20,7 @@ const dailyUserIQCalc = require("../utils/dailyUserIQCalc.utils");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 const { progressBar } = require("../utils/progress.utils");
 const QuinBoost = require("../model/quinBoostSchema");
+const MailTemplates = require("../data/MailTemplates.js");
 
 const registerUser = async (req, res) => {
   //console.log(req.body);
@@ -79,11 +75,11 @@ const registerUser = async (req, res) => {
 
     const transporter = await mailTransporter();
     await transporter.sendMail({
-      from: "rapidrecap2k23@gmail.com",
+      from: MailTemplates.OTP.from,
       to: user.email,
-      subject: "OTP for verification",
-      text: `Your OTP for verification`,
-      html: generateEmailTemplate(OTP),
+      subject: MailTemplates.OTP.subject,
+      text: MailTemplates.OTP.text,
+      html: MailTemplates.OTP.html(OTP),
     });
     return res.status(201).json({ message: "Registered Successfully" });
   } catch (err) {
@@ -235,11 +231,11 @@ const resendOTP = async (req, res) => {
     await verificationToken.save();
     const transporter = await mailTransporter();
     await transporter.sendMail({
-      from: "rapidrecap2k23@gmail.com",
+      from: MailTemplates.OTP.from,
       to: user.email,
-      subject: "OTP for verification",
-      text: `Your OTP for verification`,
-      html: generateEmailTemplate(OTP),
+      subject: MailTemplates.OTP.subject,
+      text: MailTemplates.OTP.text,
+      html: MailTemplates.OTP.html(OTP),
     });
     return res.status(201).json({ message: "OTP send Successfully" });
   } catch (error) {
@@ -253,7 +249,9 @@ const forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ email: email });
     if (!user) throw new Error("No user found");
+
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
     if (isSamePassword)
       throw new Error("New password should be different from old password");
     if (newPassword.length < 8)
@@ -265,7 +263,7 @@ const forgotPassword = async (req, res) => {
     await user.save();
     res.status(201).json({ message: "Password changed successfully" });
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     res.status(422).json({ error: error.message });
   }
 };
@@ -867,12 +865,10 @@ const sendMailForNotifySubscribe = async (req, res) => {
     const updateProgress = progressBar(users.length);
     for (const user of users) {
       await transporter.sendMail({
-        from: "rapidrecap2k23@gmail.com",
+        from: MailTemplates.NotifySubscribe.from,
         to: user.email,
-        subject: "📢 Stay Updated with Rapid Recap Notifications! 📰",
-        html: genEmailTemplateForNotifySubscribe({
-          name: user.name.split(" ")[0],
-        }),
+        subject: MailTemplates.NotifySubscribe.subject,
+        html: MailTemplates.NotifySubscribe.html(user.name.split(" ")[0]),
       });
       updateProgress();
     }
