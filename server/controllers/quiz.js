@@ -174,29 +174,30 @@ const saveAttempt = async (req, res) => {
         subject: "Almost There! One More Quiz to Unlock Your Power-Up! 🚀",
       });
     } else if (quizzesToday % 7 === 5) {
+      console.log("\nQuin Boost Activated : mail ready to send\n");
       cancelScheduledEmails(user._id.toString());
-      scheduleEmail({
-        userId: user._id.toString(),
-        userEmail: user.email,
-        delayMinutes: 30,
-        mailHtml: MailTemplates.onQuinBoost.html({
-          name: user.name.split(" ")[0],
-        }),
-        subject: "Congrats! Your Quin Boost is Now Active! 🌟",
-      });
-      scheduleEmail({
-        userId: user._id.toString(),
-        userEmail: user.email,
-        delayMinutes: 120,
-        mailHtml: MailTemplates.onQuinBoost.html({
-          name: user.name.split(" ")[0],
-        }),
-        subject: "Congrats! Your Quin Boost is Now Active! 🌟",
-      });
+      // scheduleEmail({
+      //   userId: user._id.toString(),
+      //   userEmail: user.email,
+      //   delayMinutes: 2,
+      //   mailHtml: MailTemplates.onQuinBoost.html({
+      //     name: user.name.split(" ")[0],
+      //   }),
+      //   subject: "Congrats! Your Quin Boost is Now Active! 🌟",
+      // });
+      // scheduleEmail({
+      //   userId: user._id.toString(),
+      //   userEmail: user.email,
+      //   delayMinutes: 4,
+      //   mailHtml: MailTemplates.onQuinBoost.html({
+      //     name: user.name.split(" ")[0],
+      //   }),
+      //   subject: "Congrats! Your Quin Boost is Now Active! 🌟",
+      // });
       scheduleDayEndEmail({
         userId: user._id.toString(),
         userEmail: user.email,
-        beforehour: 1,
+        beforehour: 18,
         mailHtml: MailTemplates.onQuinBoost.html({
           name: user.name.split(" ")[0],
         }),

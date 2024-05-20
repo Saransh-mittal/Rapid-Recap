@@ -16,7 +16,14 @@ const scheduleEmail = ({
 
   // Check if the sendTime is within the same day
   if (moment(sendTime).isSame(now, "day")) {
-    const task = cron.schedule(new Date(sendTime), async () => {
+    const minute = sendTime.getMinutes();
+    const hour = sendTime.getHours();
+    const dayOfMonth = sendTime.getDate();
+    const month = sendTime.getMonth() + 1; // getMonth() returns 0-based month
+    const dayOfWeek = "*"; // Run the task regardless of the day of the week
+
+    const cronPattern = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
+    const task = cron.schedule(cronPattern, async () => {
       const transporter = await mailTransporter();
       await transporter.sendMail({
         from: "rapidrecap2k23@gmail.com",
@@ -51,10 +58,22 @@ const scheduleDayEndEmail = (
   subject
 ) => {
   const now = moment.utc();
-  const endOfDay = moment.utc().endOf("day").subtract(beforehour, "hour");
+  //const endOfDay = moment.utc().endOf("day").subtract(beforehour, "hours");
+  const endOfDay = moment.utc().endOf("day");
+  const sendTime = endOfDay.clone().subtract(beforehour, "h");
+  console.log(`End of Day: ${endOfDay.format()}`); // For debugging
+  console.log(`Send Time: ${sendTime.format()}`);
 
   if (now.isBefore(endOfDay)) {
-    const task = cron.schedule(endOfDay.toDate(), async () => {
+    const minute = endOfDay.minute();
+    const hour = endOfDay.hour();
+    const dayOfMonth = endOfDay.date();
+    const month = endOfDay.month() + 1; // month() returns 0-based month
+    const dayOfWeek = "*"; // Run the task regardless of the day of the week
+
+    const cronPattern = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
+    //console.log(cronPattern);
+    const task = cron.schedule(cronPattern, async () => {
       const transporter = await mailTransporter();
       await transporter.sendMail({
         from: "rapidrecap2k23@gmail.com",
