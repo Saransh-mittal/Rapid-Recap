@@ -50,25 +50,27 @@ const cancelScheduledEmails = (userId) => {
   }
 };
 
-const scheduleDayEndEmail = (
+const scheduleDayEndEmail = ({
   userId,
   userEmail,
-  beforehour,
+  beforeMin,
   mailHtml,
-  subject
-) => {
+  subject,
+}) => {
   const now = moment.utc();
   //const endOfDay = moment.utc().endOf("day").subtract(beforehour, "hours");
   const endOfDay = moment.utc().endOf("day");
-  const sendTime = endOfDay.clone().subtract(beforehour, "h");
-  console.log(`End of Day: ${endOfDay.format()}`); // For debugging
-  console.log(`Send Time: ${sendTime.format()}`);
+  const sendTime = endOfDay.subtract(beforeMin, "minutes");
 
-  if (now.isBefore(endOfDay)) {
-    const minute = endOfDay.minute();
-    const hour = endOfDay.hour();
-    const dayOfMonth = endOfDay.date();
-    const month = endOfDay.month() + 1; // month() returns 0-based month
+  if (now.isBefore(sendTime)) {
+    const utcTime = moment.utc(sendTime);
+
+    // Convert to local time
+    const localTime = utcTime.local();
+    const minute = localTime.minute();
+    const hour = localTime.hour();
+    const dayOfMonth = localTime.date();
+    const month = localTime.month() + 1; // month() returns 0-based month
     const dayOfWeek = "*"; // Run the task regardless of the day of the week
 
     const cronPattern = `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
