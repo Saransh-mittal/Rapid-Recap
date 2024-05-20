@@ -1,12 +1,15 @@
 // Controller to delete a quiz attempt of a user
 
 const Article = require("../../model/articleSchema");
+const QuinBoost = require("../../model/quinBoostSchema");
 const QuizAttempt = require("../../model/quizAttemptSchema");
 const User = require("../../model/userSchema");
 
-const deleteQuizAttempt = async (userId, articleId) => {
+const deleteQuizAttempt = async (inGameName, articleId) => {
   try {
     const article = await Article.findById(articleId);
+    const user = await User.findOne({ inGameName });
+    const userId = user._id.toString();
     if (!article) {
       throw new Error("Article not found");
     }
@@ -27,14 +30,14 @@ const deleteQuizAttempt = async (userId, articleId) => {
     await QuizAttempt.deleteOne({ _id: quizAttempt._id });
     console.log("Quiz Attempt Deleted Successfully");
     console.log("Removing quiz attempt from user's quizAttempts array");
-    const user = await User.findById(userId);
+
     user.quizAttempts.pull(quizAttempt._id);
     await user.save();
     console.log("Quiz Attempt removed from user's quizAttempts array");
     return;
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
   }
 };
 
-deleteQuizAttempt("65b1ebbc90ba2e3794e9696d", "661847c714d1af6e8f8c0bdb");
+deleteQuizAttempt("tailonjackron@gmail.com", "664aa1fc680a44e232808c30");

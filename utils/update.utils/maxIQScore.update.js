@@ -1,6 +1,6 @@
 const User = require("../../model/userSchema");
 const DailyIQ = require("../../model/dailyIQSchema");
-const { progressBar } = require("../progress");
+const { progressBar } = require("../progress.utils");
 const maxIQScoreUpdate = async () => {
   try {
     const users = await User.find();

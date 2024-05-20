@@ -1,5 +1,5 @@
 const Quiz = require("../../model/quizSchema");
-const { progressBar } = require("../progress");
+const { progressBar } = require("../progress.utils");
 
 async function updateQuizzes() {
   try {

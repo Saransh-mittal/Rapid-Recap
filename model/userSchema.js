@@ -153,6 +153,22 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    quinBoosts: [
+      {
+        quinBoost: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "QUIN_BOOST",
+        },
+        boosted: {
+          type: Boolean,
+          default: true,
+        },
+      },
+    ],
+    lastLogin: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { collection: "Users" }
 );

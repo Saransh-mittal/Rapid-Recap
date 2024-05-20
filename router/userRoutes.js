@@ -28,6 +28,8 @@ const {
   quizDailyStreakUpdator,
   streakChecker,
   longestStreakCalculatorOfAllUsers,
+  quinBoostChecker,
+  // mailForQuinBoost,
 } = require("../controllers/user");
 const Authenticate = require("../middleware/authenticate");
 
@@ -60,4 +62,6 @@ router.route("/sendMailForNotifySubscribe").get(sendMailForNotifySubscribe);
 router.route("/quizDailyStreak").get(quizDailyStreakUpdator);
 router.route("/streakChecker").get(Authenticate, streakChecker);
 router.route("/longestStreakCalculator").get(longestStreakCalculatorOfAllUsers);
+router.route("/quinBoostChecker").get(Authenticate, quinBoostChecker);
+// router.route("/mailForQuinBoost").get(mailForQuinBoost);
 module.exports = router;

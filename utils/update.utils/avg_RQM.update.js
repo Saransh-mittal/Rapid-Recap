@@ -1,5 +1,5 @@
 const User = require("../../model/userSchema");
-const { progressBar } = require("../progress");
+const { progressBar } = require("../progress.utils");
 
 const avg_RQM = async () => {
   try {

@@ -2,12 +2,7 @@ const User = require("../model/userSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 
 const bcrypt = require("bcryptjs");
-const {
-  generateOtp,
-  mailTransporter,
-  generateEmailTemplate,
-  genEmailTemplateForNotifySubscribe,
-} = require("../utils/mail");
+const { generateOtp, mailTransporter } = require("../utils/mail.utils");
 const VerificationToken = require("../model/verificationToken");
 const { isValidObjectId } = require("mongoose");
 const jwt = require("jsonwebtoken");
@@ -19,10 +14,13 @@ const {
   calculateUserRank,
   dailyStreakCalculator,
   longestStreakCalculator,
-} = require("../utils/user");
-const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
+  currDayStreakCalulator,
+} = require("../utils/user.utils");
+const dailyUserIQCalc = require("../utils/dailyUserIQCalc.utils");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
-const { progressBar } = require("../utils/progress");
+const { progressBar } = require("../utils/progress.utils");
+const QuinBoost = require("../model/quinBoostSchema");
+const MailTemplates = require("../data/MailTemplates.js");
 
 const registerUser = async (req, res) => {
   //console.log(req.body);
@@ -77,11 +75,11 @@ const registerUser = async (req, res) => {
 
     const transporter = await mailTransporter();
     await transporter.sendMail({
-      from: "rapidrecap2k23@gmail.com",
+      from: MailTemplates.OTP.from,
       to: user.email,
-      subject: "OTP for verification",
-      text: `Your OTP for verification`,
-      html: generateEmailTemplate(OTP),
+      subject: MailTemplates.OTP.subject,
+      text: MailTemplates.OTP.text,
+      html: MailTemplates.OTP.html(OTP),
     });
     return res.status(201).json({ message: "Registered Successfully" });
   } catch (err) {
@@ -233,11 +231,11 @@ const resendOTP = async (req, res) => {
     await verificationToken.save();
     const transporter = await mailTransporter();
     await transporter.sendMail({
-      from: "rapidrecap2k23@gmail.com",
+      from: MailTemplates.OTP.from,
       to: user.email,
-      subject: "OTP for verification",
-      text: `Your OTP for verification`,
-      html: generateEmailTemplate(OTP),
+      subject: MailTemplates.OTP.subject,
+      text: MailTemplates.OTP.text,
+      html: MailTemplates.OTP.html(OTP),
     });
     return res.status(201).json({ message: "OTP send Successfully" });
   } catch (error) {
@@ -251,7 +249,9 @@ const forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ email: email });
     if (!user) throw new Error("No user found");
+
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
     if (isSamePassword)
       throw new Error("New password should be different from old password");
     if (newPassword.length < 8)
@@ -263,7 +263,7 @@ const forgotPassword = async (req, res) => {
     await user.save();
     res.status(201).json({ message: "Password changed successfully" });
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     res.status(422).json({ error: error.message });
   }
 };
@@ -841,8 +841,6 @@ const trashUpdate = async (req, res) => {
   }
 };
 
-// const ApplicationUpdates = require('./../model/applicationUpdatesSchema');
-
 const trashAllUpdate = async (req, res) => {
   const userId = req.user._id; // Assuming user ID is available in req.user._id
 
@@ -860,19 +858,17 @@ const trashAllUpdate = async (req, res) => {
 const sendMailForNotifySubscribe = async (req, res) => {
   try {
     const users = await User.find({
-      email: { $not: /dummy\d+mail\.com/ },
+      email: { $not: /^dummy\d+@mail\.com$/ },
     });
     //const users = await User.find({ inGameName: "saransh_1234" });
     const transporter = await mailTransporter();
     const updateProgress = progressBar(users.length);
     for (const user of users) {
       await transporter.sendMail({
-        from: "rapidrecap2k23@gmail.com",
+        from: MailTemplates.NotifySubscribe.from,
         to: user.email,
-        subject: "📢 Stay Updated with Rapid Recap Notifications! 📰",
-        html: genEmailTemplateForNotifySubscribe({
-          name: user.name.split(" ")[0],
-        }),
+        subject: MailTemplates.NotifySubscribe.subject,
+        html: MailTemplates.NotifySubscribe.html(user.name.split(" ")[0]),
       });
       updateProgress();
     }
@@ -967,6 +963,84 @@ const streakChecker = async (req, res) => {
     console.log(error.message);
   }
 };
+
+const quinBoostChecker = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId).populate({
+      path: "quinBoosts.quinBoost",
+      select: "createdAt",
+    });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (user.todayBoost) {
+      return res.status(200).json({
+        quizLeftToGetQuizBoost: null,
+        isQuinBoostAvailable: false,
+      });
+    }
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const quinBoostsToReset = user.quinBoosts.filter((quinBoost) => {
+      return quinBoost.quinBoost.createdAt < today;
+    });
+
+    // Set boosted to false for filtered quinBoosts
+    for (const quinBoost of quinBoostsToReset) {
+      quinBoost.boosted = false;
+    }
+    await user.save();
+    const quizAttempts = await QuizAttempt.find({
+      user: userId,
+      createdAt: { $gte: today }, // Find documents created today or later
+    });
+    const quizLeftToGetQuizBoost = 5 - (quizAttempts.length % 6);
+    const isQuinBoostAvailable =
+      quizLeftToGetQuizBoost === 0 && quizAttempts.length > 0;
+
+    if (isQuinBoostAvailable) {
+      const existingQuinBoost = await QuinBoost.findOne({
+        user: userId,
+        createdAt: { $gte: today },
+        quizCount: quizAttempts.length,
+      });
+      if (!existingQuinBoost) {
+        const quinBoost = new QuinBoost({
+          user: user._id,
+          quizCount: quizAttempts.length,
+          createdAt: new Date(),
+        });
+        await quinBoost.save();
+        user.quinBoosts.push({
+          quinBoost: quinBoost._id,
+          boosted: true,
+        });
+        await user.save();
+      }
+    }
+    res.status(200).json({
+      quizLeftToGetQuizBoost,
+      isQuinBoostAvailable,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error.message);
+  }
+};
+
+// const mailForQuinBoost = async (req, res) => {
+//   try {
+//     const user = await User.findOne({ inGameName: "saransh_1234" });
+//     const quizzesToday = await currDayStreakCalulator(user._id);
+//     console.log(quizzesToday);
+//     res.status(200).json({ message: "Email sent successfully" });
+//   } catch (error) {
+//     res.status(500).json({ error: "Internal server error" });
+//     console.log(error);
+//   }
+// };
 module.exports = {
   registerUser,
   loginUser,
@@ -995,4 +1069,6 @@ module.exports = {
   quizDailyStreakUpdator,
   longestStreakCalculatorOfAllUsers,
   streakChecker,
+  quinBoostChecker,
+  // mailForQuinBoost,
 };

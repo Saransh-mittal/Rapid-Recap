@@ -1,6 +1,6 @@
 const Article = require("../../model/articleSchema");
-const { hindiConverter } = require("../article");
-const { progressBar } = require("../progress");
+const { hindiConverter } = require("../article.utils");
+const { progressBar } = require("../progress.utils");
 
 const generateHindiTrans = async (articles) => {
   // const twoDaysAgo = new Date();

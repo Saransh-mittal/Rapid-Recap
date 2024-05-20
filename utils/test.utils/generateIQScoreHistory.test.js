@@ -1,6 +1,6 @@
 const User = require("../../model/userSchema"); // Import User model
 const DailyIQ = require("../../model/dailyIQSchema"); // Import DailyIQ model
-const { progressBar } = require("../../utils/progress"); // Import progressBar utility function
+const { progressBar } = require("../../utils/progress.utils"); // Import progressBar utility function
 async function generateIQScoreHistory() {
   const users = await User.find({});
   const startDate = new Date(); // Start date from today

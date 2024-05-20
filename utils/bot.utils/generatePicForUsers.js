@@ -1,6 +1,6 @@
 const { fakerEN_IN } = require("@faker-js/faker");
 const User = require("../../model/userSchema");
-const { progressBar } = require("../../utils/progress");
+const { progressBar } = require("../../utils/progress.utils");
 async function generatePicForUsers() {
   const updateProgress = progressBar(100);
   for (let i = 0; i < 100; i++) {

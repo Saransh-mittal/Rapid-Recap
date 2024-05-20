@@ -1,5 +1,5 @@
 const User = require("../../model/userSchema");
-const { progressBar } = require("../../utils/progress");
+const { progressBar } = require("../../utils/progress.utils");
 const deleteUserAndRelatedRecords = require("./removeUser.del");
 
 // Function to delete a user and related records
