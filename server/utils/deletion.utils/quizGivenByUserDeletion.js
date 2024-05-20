@@ -40,4 +40,4 @@ const deleteQuizAttempt = async (inGameName, articleId) => {
   }
 };
 
-deleteQuizAttempt("saransh_1234", "664aa1fc680a44e232808c30");
+deleteQuizAttempt("tailonjackron@gmail.com", "664aa1fc680a44e232808c30");
