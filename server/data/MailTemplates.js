@@ -134,15 +134,15 @@ const MailTemplates = {
   preQuinBoost: {
     from: "rapidrecap2k23@gmail.com",
     subject: "Almost There! One More Quiz to Unlock Your Power-Up! 🚀",
-    html: ({ name }) =>
+    html: ({ name, noOfQuiz, QuinQuizNumber }) =>
       `<div style="font-family: Helvetica, Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
   <div style="margin: 20px auto; max-width: 600px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px;">
     <div style="border-bottom: 2px solid #00466a; margin-bottom: 20px;">
       <a href="" style="color: #00466a; font-weight: 600; font-size: 1.5em; text-decoration: none;">Rapid Recap</a>
     </div>
     <p style="font-size: 1.2em;">Hello ${name} 👋,</p>
-    <p>Congratulations on completing your 4th quiz! 🎉</p>
-    <p>You're just one step away from unlocking an exciting power-up. Complete your next quiz to activate the Quin Boost, which will enhance your performance on your 6th quiz.</p>
+    <p>Congratulations on completing your ${noOfQuiz}th quiz! 🎉</p>
+    <p>You're just one step away from unlocking an exciting power-up. Complete your next quiz to activate the Quin Boost, which will enhance your performance on your ${QuinQuizNumber}th quiz.</p>
     <p>We can't wait to see you achieve great results with this boost! 🚀</p>
     <a href="https://www.rapidrecap.co.in/" style="background-color: #00466a; color: #fff; text-decoration: none; padding: 15px 25px; border-radius: 5px; display: inline-block; font-size: 1.1em; margin-top: 20px;">Complete Your 5th Quiz</a>
     <p style="margin-top: 20px;">Best regards,<br /><strong>Rapid Recap Team</strong></p>
@@ -158,16 +158,18 @@ const MailTemplates = {
     from: "rapidrecap2k23@gmail.com",
 
     subject: "Congrats! Your Quin Boost is Now Active! 🌟",
-    html: ({
+    html1: ({
       name,
+      noOfQuiz,
+      QuinQuizNumber,
     }) => `<div style="font-family: Helvetica, Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
   <div style="margin: 20px auto; max-width: 600px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px;">
     <div style="border-bottom: 2px solid #00466a; margin-bottom: 20px;">
       <a href="" style="color: #00466a; font-weight: 600; font-size: 1.5em; text-decoration: none;">Rapid Recap</a>
     </div>
     <p style="font-size: 1.2em;">Hello ${name} 👋,</p>
-    <p>Great job on completing your 5th quiz! 🏅</p>
-    <p>You have now unlocked the Quin Boost! 🎉 This special power-up will amplify your RQM Score by 1.5 times on your next (6th) quiz. Look out for the special badge indicating your Quin Boost is active.</p>
+    <p>Great job on completing your ${noOfQuiz}th quiz! 🏅</p>
+    <p>You have now unlocked the Quin Boost! 🎉 This special power-up will amplify your RQM Score by 1.5 times on your next (${QuinQuizNumber}th) quiz. Look out for the special badge indicating your Quin Boost is active.</p>
     <p>Make sure to take full advantage of this boost and achieve an outstanding score! 🌟</p>
     <a href="https://www.rapidrecap.co.in/" style="background-color: #00466a; color: #fff; text-decoration: none; padding: 15px 25px; border-radius: 5px; display: inline-block; font-size: 1.1em; margin-top: 20px;">Take Your 6th Quiz Now</a>
     <p style="margin-top: 20px;">Best regards,<br /><strong>Rapid Recap Team</strong></p>
@@ -178,19 +180,40 @@ const MailTemplates = {
     <p style="font-size: 0.9em;"><strong>📧 P.S.:</strong> Need assistance or have any questions? Feel free to reach out to our support team at <a href="mailto:rapidrecap2k23@gmail.com" style="color: #00466a; text-decoration: none;">rapidrecap2k23@gmail.com</a>.</p>
   </div>
 </div>`,
+    html2: ({
+      name,
+      QuinQuizNumber,
+    }) => `<div style="font-family: Helvetica, Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+        <div style="margin: 20px auto; max-width: 600px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px;">
+          <div style="border-bottom: 2px solid #00466a; margin-bottom: 20px;">
+            <a href="https://www.rapidrecap.co.in/" style="color: #00466a; font-weight: 600; font-size: 1.5em; text-decoration: none;">Rapid Recap</a>
+          </div>
+          <p style="font-size: 1.2em;">Hello ${name} 👋,</p>
+          <p>Quick reminder: your Quin Boost will expire in just 1 hour! ⏳</p>
+          <p>Don't miss out on this opportunity to amplify your RQM Score by 1.5 times on your next quiz. Take your ${QuinQuizNumber}th quiz now and make the most of this special power-up! 🌟</p>
+          <a href="https://www.rapidrecap.co.in/" style="background-color: #00466a; color: #fff; text-decoration: none; padding: 15px 25px; border-radius: 5px; display: inline-block; font-size: 1.1em; margin-top: 20px;">Take Your 6th Quiz Now</a>
+          <p style="margin-top: 20px;">Best regards,<br /><strong>Rapid Recap Team</strong></p>
+          <hr style="border: none; border-top: 1px solid #eee; margin-top: 20px; margin-bottom: 10px;" />
+          <div style="color: #aaa; font-size: 0.9em;">
+            <p>Rapid Recap Inc<br />India</p>
+          </div>
+          <p style="font-size: 0.9em;"><strong>📧 P.S.:</strong> Need assistance or have any questions? Feel free to reach out to our support team at <a href="mailto:rapidrecap2k23@gmail.com" style="color: #00466a; text-decoration: none;">rapidrecap2k23@gmail.com</a>.</p>
+        </div>
+      </div>`,
   },
   postQuinBoost: {
     from: "rapidrecap2k23@gmail.com",
     subject: "Well Done! Quin Boost Utilized! 🎉 Keep Going for More Boosts!",
     html: ({
       name,
+      noOfQuiz,
     }) => `<div style="font-family: Helvetica, Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
   <div style="margin: 20px auto; max-width: 600px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px;">
     <div style="border-bottom: 2px solid #00466a; margin-bottom: 20px;">
       <a href="" style="color: #00466a; font-weight: 600; font-size: 1.5em; text-decoration: none;">Rapid Recap</a>
     </div>
     <p style="font-size: 1.2em;">Hello ${name} 👋,</p>
-    <p>Congratulations on completing your 6th quiz with the Quin Boost! 🎉</p>
+    <p>Congratulations on completing your ${noOfQuiz}th quiz with the Quin Boost! 🎉</p>
     <p>We hope you enjoyed the enhanced experience and made the most of the 1.5x RQM Score multiplier. Your boosted performance has been truly impressive! 🌟</p>
     <p>Even though the Quin Boost was temporary, there's good news! The Quin Boost will reactivate after you complete the next five quizzes. Keep up the great work and continue your learning journey with us. We have many more quizzes waiting for you. 📚</p>
     <a href="https://www.rapidrecap.co.in/" style="background-color: #00466a; color: #fff; text-decoration: none; padding: 15px 25px; border-radius: 5px; display: inline-block; font-size: 1.1em; margin-top: 20px;">Continue Learning</a>
