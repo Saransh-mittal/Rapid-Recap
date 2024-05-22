@@ -155,7 +155,7 @@ const dailyUserIQCalc = async () => {
       updatedUser.maxIQScore,
       Math.round(IQScore)
     );
-    updatedUser.prevIQScore = prevIQScore;
+
     const dailyIQ = new DailyIQ({
       user: updatedUser._id,
       IQ_score: Math.round(IQScore),
