@@ -3,7 +3,7 @@ const OpenAI = require("openai");
 const { progressBar } = require("./progress.utils");
 const Article = require("../model/articleSchema");
 const { decode } = require("html-entities");
-
+const NewsAPI = require("newsapi");
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
   // Use natural language processing to tokenize sentences
@@ -363,6 +363,79 @@ Also if total characters are more than 2500 than summarize the whole mainText in
 
   return processedOutput;
 };
+
+const extractNewsUtilityFunc = async () => {
+  const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
+  const apiKeys = [
+    "7170746b5aa044069fbd5f48e74817ac",
+    "acd1bf365a084183b509789e0aae202a",
+    "a46513e934b14f44a9fa2137185f5438",
+    "7e4a7d41a3ed463a952349bfb07b1452",
+    "e7409124fe384b688c07763501b270dd",
+  ];
+  const categories = [
+    "general",
+    "sports",
+    "health",
+    "science",
+    "business",
+    "technology",
+    "entertainment",
+  ];
+  const requestsPerKey = 30;
+  let currentKeyIndex = 0;
+  let requestsMadeWithCurrentKey = 0;
+
+  try {
+    let result = [];
+    let notificationCategories = categories.join(", ");
+    let articlesSavedPerCategory = {};
+
+    for (let category of categories) {
+      console.log(`\nExtracting news of category ${category}\n`);
+      const response = await newsapi.v2.topHeadlines({
+        category,
+        language: "en",
+        country: "in",
+      });
+
+      const articles = JSON.parse(JSON.stringify(response.articles));
+      console.log(articles.length);
+      let allProcessedOutput = [];
+
+      for (let article of articles) {
+        try {
+          if (requestsMadeWithCurrentKey >= requestsPerKey) {
+            // If requests limit reached, switch to the next API key
+            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+            requestsMadeWithCurrentKey = 0;
+          }
+
+          const apiKey = apiKeys[currentKeyIndex];
+          const extractedNews = await extractNewsFromLink(article.url, apiKey);
+          allProcessedOutput.push(extractedNews);
+
+          requestsMadeWithCurrentKey++;
+        } catch (error) {
+          console.log(
+            `Error extracting news from article ${article.title}: ${error}`
+          );
+        }
+      }
+
+      const AiProcessedNews = await processExtractedNews(
+        allProcessedOutput,
+        category
+      );
+
+      result = result.concat(AiProcessedNews);
+      articlesSavedPerCategory[category] = AiProcessedNews.length;
+    }
+    return { result, articlesSavedPerCategory, notificationCategories };
+  } catch (error) {
+    console.log(error);
+  }
+};
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
@@ -370,4 +443,5 @@ module.exports = {
   fetchNews,
   extractNewsFromLink,
   processExtractedNews,
+  extractNewsUtilityFunc,
 };
