@@ -133,7 +133,7 @@ const dailyUserIQCalc = async () => {
   const standardDeviation = Math.sqrt(sumOfSquares / userScores.length);
 
   console.log("\nCalculating IQ scores...\n");
-  //const updateProgress2 = progressBar(userScores.length);
+  // const updateProgress2 = progressBar(userScores.length);
   userScores.sort((a, b) => b.userScore - a.userScore);
   let rank = 1;
 

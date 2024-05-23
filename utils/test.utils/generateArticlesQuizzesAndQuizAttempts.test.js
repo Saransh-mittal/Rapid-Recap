@@ -3,7 +3,7 @@ const generateFakeArticle = require("./generateFakeArticle.test"); // Import gen
 const generateFakeUsers = require("./generateFakeUsers.test"); // Import generateFakeUsers utility function
 const selectRandomUsers = require("./selectRandomUsers.test"); // Import selectRandomUsers utility function
 const generateQuizAttemptsForUsers = require("./generateQuizAttemptsForUsers.test"); // Import generateQuizAttemptsForUsers utility function
-const { progressBar } = require("../../utils/progress.utils"); // Import progressBar utility function
+//const { progressBar } = require("../../utils/progress.utils"); // Import progressBar utility function
 async function generateArticlesQuizzesAndQuizAttempts() {
   // Generate 100 fake users
   console.log("\nGenerating fake users...\n");
@@ -14,18 +14,18 @@ async function generateArticlesQuizzesAndQuizAttempts() {
   // Assuming you have functions to generate articles and quizzes
   const fakeArticles = [];
   const fakeQuizzes = [];
-  const updateProgress = progressBar(100);
+  //const updateProgress = progressBar(100);
   for (let i = 0; i < 100; i++) {
     const { fakeArticle, fakeQuiz } = await generateFakeArticle();
     fakeArticles.push(fakeArticle);
     fakeQuizzes.push(fakeQuiz);
-    updateProgress();
+    //updateProgress();
   }
   console.log("\nFake articles and quizzes generated successfully\n");
 
   // Generate quiz attempts for selected users
   console.log("\nGenerating quiz attempts for selected users...\n");
-  const updateProgress2 = progressBar(100);
+  //const updateProgress2 = progressBar(100);
   for (let i = 0; i < 100; i++) {
     const count = Math.floor(Math.random() * 30);
     const selectedUsers = selectRandomUsers(users, count);
@@ -34,7 +34,7 @@ async function generateArticlesQuizzesAndQuizAttempts() {
       fakeArticles[i]._id,
       fakeQuizzes[i]._id
     );
-    updateProgress2();
+    //updateProgress2();
   }
 }
 
