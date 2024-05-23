@@ -3,7 +3,7 @@ const { extractNewsUtilityFunc } = require("../utils/article.utils");
 const moment = require("moment-timezone");
 
 const currentDate = moment().format("YYYY-MM-DD");
-const timeIST = moment.tz(`${currentDate} 11:55`, "Asia/Kolkata"); // Use the current date
+const timeIST = moment.tz(`${currentDate} 12:15`, "Asia/Kolkata"); // Use the current date
 const timeUTC = timeIST.clone().tz("UTC");
 
 // Step 2: Convert UTC to local time of the machine
