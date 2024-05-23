@@ -2,7 +2,7 @@ const nodemailer = require("nodemailer");
 // const { google } = require("googleapis");
 const { OAuth2Client } = require("google-auth-library");
 const User = require("../model/userSchema");
-const { progressBar } = require("./progress.utils");
+//const { progressBar } = require("./progress.utils");
 const {
   streakBrokenDaysCalculator,
   noLoginDaysSpentCalculator,
@@ -63,7 +63,7 @@ const mailForStreakBroken = async () => {
       name: { $not: /^undefined\sundefined$/ },
     });
     const transporter = await mailTransporter();
-    const updateProgress = progressBar(users.length);
+    //const updateProgress = progressBar(users.length);
     for (let user of users) {
       const streakBrokenDays = await streakBrokenDaysCalculator(user._id);
       const noLoginDaysSpent = await noLoginDaysSpentCalculator(user._id);
@@ -109,7 +109,7 @@ const mailForStreakBroken = async () => {
           }),
         });
       }
-      updateProgress();
+      //updateProgress();
     }
     console.log("\nMails sent successfully\n");
   } catch (error) {
@@ -117,20 +117,28 @@ const mailForStreakBroken = async () => {
   }
 };
 
-const mailForMaintainStreakReminder = async () => {
+const mailForMaintainStreakReminder = async ({ template }) => {
   try {
     const users = await User.find({
       email: { $not: /^dummy\d+@mail\.com$/ },
       name: { $not: /^undefined\sundefined$/ },
     });
     const transporter = await mailTransporter();
-    const updateProgress = progressBar(users.length);
+    //const updateProgress = progressBar(users.length);
     for (let user of users) {
       const streakBrokenDays = await streakBrokenDaysCalculator(user._id);
 
       if (streakBrokenDays === 1) {
+        await transporter.sendMail({
+          from: template.from,
+          to: user.email,
+          subject: template.subject,
+          html: template.html({
+            name: user.name.split(" ")[0],
+          }),
+        });
       }
-      updateProgress();
+      //updateProgress();
     }
     console.log("\nMails sent successfully\n");
   } catch (error) {
