@@ -1,7 +1,7 @@
 const DailyIQ = require("../model/dailyIQSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const User = require("../model/userSchema");
-const { progressBar } = require("./progress.utils");
+//const { progressBar } = require("./progress.utils");
 const { updatePercentilesOnQuizDeactivation } = require("./quiz.utils");
 const rankUpdate = require("./update.utils/rank.update");
 const CircleAndSocietyData = require("../data/CircleAndSocietyData");
@@ -95,7 +95,7 @@ const dailyUserIQCalc = async () => {
   console.log("\nFetched quiz attempts.\n");
 
   console.log("\nCalculating user scores...\n");
-  const updateProgress1 = progressBar(userQuizAttempts.length);
+  //const updateProgress1 = progressBar(userQuizAttempts.length);
 
   for (const { user, quizAttempts } of userQuizAttempts) {
     let userScore = 0;
@@ -122,7 +122,7 @@ const dailyUserIQCalc = async () => {
 
     sumOfUserScores += userScore;
     userScores.push({ user, userScore });
-    updateProgress1();
+    //updateProgress1();
   }
 
   const meanOfUserScores = sumOfUserScores / userScores.length;
@@ -133,7 +133,7 @@ const dailyUserIQCalc = async () => {
   const standardDeviation = Math.sqrt(sumOfSquares / userScores.length);
 
   console.log("\nCalculating IQ scores...\n");
-  const updateProgress2 = progressBar(userScores.length);
+  //const updateProgress2 = progressBar(userScores.length);
   userScores.sort((a, b) => b.userScore - a.userScore);
   let rank = 1;
 
@@ -171,7 +171,7 @@ const dailyUserIQCalc = async () => {
       currIQScore
     );
     rank++;
-    updateProgress2();
+    //updateProgress2();
   }
   await rankUpdate();
 };
