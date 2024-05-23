@@ -3,7 +3,7 @@ const moment = require("moment-timezone");
 const { mailForStreakBroken } = require("../utils/mail.utils");
 
 const currentDate = moment().format("YYYY-MM-DD");
-const timeIST = moment.tz(`${currentDate} 15:10`, "Asia/Kolkata"); // Use the current date
+const timeIST = moment.tz(`${currentDate} 03:00`, "Asia/Kolkata"); // Use the current date
 const timeUTC = timeIST.clone().tz("UTC");
 
 // Step 2: Convert UTC to local time of the machine
