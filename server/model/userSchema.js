@@ -100,6 +100,8 @@ const userSchema = new mongoose.Schema(
       articlePage: { type: Boolean, default: true },
       profilePage: { type: Boolean, default: true },
       leaderBoardPage: { type: Boolean, default: true },
+      dailyStreakPage: { type: Boolean, default: true },
+      quinBoostPage: { type: Boolean, default: true },
     },
     maxIQScore: {
       type: Number,

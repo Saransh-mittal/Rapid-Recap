@@ -12,7 +12,12 @@ import { AppContext } from "../../contextAPI/appContext";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
 
-const ProfileDropDownMenu = ({ handleLogout, toProfile, refProfile }) => {
+const ProfileDropDownMenu = ({
+  handleLogout,
+  toProfile,
+  refProfile,
+  className,
+}) => {
   const { state } = useContext(AppContext);
   return (
     <Menu>
@@ -23,6 +28,7 @@ const ProfileDropDownMenu = ({ handleLogout, toProfile, refProfile }) => {
         _active={{ bg: "transparent" }}
         as={Button}
         p={0}
+        className={className}
       >
         <Avatar src={state.user.pic} h={"35px"} w={"35px"} rounded={"50%"} />
       </MenuButton>

@@ -37,6 +37,7 @@ import QuinBoost from "../components/articleComponents/quizComponents/QuinBoost"
 import { quinBoostChecker } from "../utils/quiz.utils";
 import QuinBoostModal from "../components/articleComponents/QuinBoostModal";
 import { useArticlePageTour } from "../customHooks/useTours";
+import { useQuinBoostTour } from "../customHooks/useTours";
 
 const Article = () => {
   const toast = useToast();
@@ -87,6 +88,7 @@ const Article = () => {
   const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false);
   const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5);
   const { tour, isTutorialTakenCheck } = useArticlePageTour();
+  const { quinTour } = useQuinBoostTour();
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false);
   const openModal = () => {
     setIsQuinBoostModalOpen(true);
@@ -251,6 +253,7 @@ const Article = () => {
     fetchArticle();
     checkOnGoingQuiz();
   }, []);
+
   useEffect(() => {
     isQuizGiven();
   }, [givenQuiz]);
@@ -267,6 +270,17 @@ const Article = () => {
     if (!load && !state.show && state.user && state.user.tutorial.articlePage)
       isTutorialTakenCheck({ page: "articlePage", tour });
   }, [load]);
+
+  useEffect(() => {
+    if (
+      !load &&
+      !state.show &&
+      state.user &&
+      state.user.tutorial.quinBoostPage &&
+      !state.user.tutorial.articlePage
+    )
+      isTutorialTakenCheck({ page: "quinBoostPage", tour: quinTour });
+  }, [state.user, state.show, state.user.tutorial.articlePage, load]);
 
   useEffect(() => {
     setAlt_image(
