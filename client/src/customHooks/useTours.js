@@ -4,6 +4,8 @@ import stepsTutorialHome from "../components/homeComponents/stepsTutorialHome";
 import stepsGuideArticle from "../components/articleComponents/stepsGuideArticle";
 import {
   isTutorialTakenCheck,
+  manageOverlay,
+  toggleClass,
   //isTutorialTakenUpdate,
 } from "../utils/tutorial.utlis";
 import stepsLeaderBoard from "../components/leaderBoardComponents/stepsLeaderBoard";
@@ -310,7 +312,7 @@ export const useDailyStreakTour = () => {
   });
   const updateStatusOfTutorial = useTutorialTakenUpdate();
   useEffect(() => {
-    const timeline = document.querySelector(".timeline");
+    const timeline = document.querySelector(".timeline-container");
     // const nav = document.querySelector(".navbar");
     // const navList = document.querySelector(".css-156e09s");
     // const navInbox = document.querySelector(".chakra-button css-eywkib");
@@ -335,167 +337,108 @@ export const useDailyStreakTour = () => {
 
     const handleTourStart = () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
-      timeline.classList.add("shepherd-active");
-      isLargeWindow && navbarContent.classList.add("shepherd-active");
-      profile.classList.add("shepherd-active");
-      inboxButton.classList.add("shepherd-active");
-      streakButton.classList.add("highlighted-card-0-streak");
-      hamCategory && hamCategory.classList.add("shepherd-active");
-      rrIcon.classList.add("shepherd-active");
-      //nav.classList.add("shepherd-active");
-      // navInbox.classList.add("shepherd-active");
+      toggleClass({
+        element: timeline,
+        className: "shepherd-active",
+        addClass: true,
+      });
+      isLargeWindow &&
+        toggleClass({
+          element: navbarContent,
+          className: "shepherd-active",
+          addClass: true,
+        });
+      toggleClass({
+        element: profile,
+        className: "shepherd-active",
+        addClass: true,
+      });
+      toggleClass({
+        element: inboxButton,
+        className: "shepherd-active",
+        addClass: true,
+      });
+      toggleClass({
+        element: streakButton,
+        className: "highlighted-card-0-streak",
+        addClass: true,
+      });
+      toggleClass({
+        element: hamCategory,
+        className: "shepherd-active",
+        addClass: true,
+      });
+      toggleClass({
+        element: rrIcon,
+        className: "shepherd-active",
+        addClass: true,
+      });
       body.style.overflow = "hidden"; // Reapply scroll behavior
-      const overlay = document.createElement("div");
-      overlay.classList.add("custom-overlay");
-      timeline.appendChild(overlay);
 
-      const overlayNavbarContent = document.createElement("div");
-      overlayNavbarContent.classList.add("custom-overlay-nav");
-
-      isLargeWindow && navbarContent.appendChild(overlayNavbarContent);
-
-      const overlayInbox = document.createElement("div");
-      overlayInbox.classList.add("custom-overlay-nav");
-      inboxButton.appendChild(overlayInbox);
-
-      const overlayStreak = document.createElement("div");
-      overlayStreak.classList.add("custom-overlay-nav");
-      streakButton.appendChild(overlayStreak);
-
-      if (hamCategory) {
-        const overlayHamCategory = document.createElement("div");
-        overlayHamCategory.classList.add("custom-overlay-nav");
-        hamCategory.appendChild(overlayHamCategory);
-      }
-      const overlayRrIcon = document.createElement("div");
-      overlayRrIcon.classList.add("custom-overlay-nav");
-      rrIcon.appendChild(overlayRrIcon);
-
-      // document.querySelector(".navbar").appendChild(overlayNav);
+      manageOverlay({ element: timeline, overlay: true });
+      isLargeWindow && manageOverlay({ element: navbarContent, overlay: true });
+      manageOverlay({ element: profile, overlay: true });
+      manageOverlay({ element: inboxButton, overlay: true });
+      manageOverlay({ element: streakButton, overlay: true });
+      manageOverlay({ element: hamCategory, overlay: true });
+      manageOverlay({ element: rrIcon, overlay: true });
     };
 
     const handleTourComplete = () => {
       body.style.overflow = "auto";
-      if (timeline.classList.contains("shepherd-active")) {
-        timeline.classList.remove("shepherd-active");
-      }
       const isLargeWindow = window.innerWidth > 992;
       const streakButton = document.querySelector(
         isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
       );
-      streakButton.classList.remove("highlighted-card-streak");
-      // Assuming isLargeWindow is a boolean that you check
-      if (isLargeWindow) {
-        if (
-          navbarContent &&
-          navbarContent.classList.contains("shepherd-active")
-        ) {
-          navbarContent.classList.remove("shepherd-active");
-        }
-      }
-
-      if (profile && profile.classList.contains("shepherd-active")) {
-        profile.classList.remove("shepherd-active");
-      }
-
-      if (inboxButton && inboxButton.classList.contains("shepherd-active")) {
-        inboxButton.classList.remove("shepherd-active");
-      }
-
-      if (streakButton && streakButton.classList.contains("shepherd-active")) {
-        streakButton.classList.remove("shepherd-active");
-      }
-
-      if (hamCategory && hamCategory.classList.contains("shepherd-active")) {
-        hamCategory.classList.remove("shepherd-active");
-      }
-
-      if (rrIcon && rrIcon.classList.contains("shepherd-active")) {
-        rrIcon.classList.remove("shepherd-active");
-      }
-
-      //nav.classList.remove("shepherd-active");
-      const timelineItem = document.querySelector(".timeline-item");
-      if (timelineItem.classList.contains("highlighted-card-0")) {
-        timelineItem.classList.remove("highlighted-card-0");
-      }
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNavbarContent = document.querySelector(
-        ".custom-overlay-nav"
-      );
-      if (overlayNavbarContent) overlayNavbarContent.remove();
-      const overlayInbox = document.querySelector(".custom-overlay-nav");
-      if (overlayInbox) overlayInbox.remove();
-      const overlayStreak = document.querySelector(".custom-overlay-nav");
-      if (overlayStreak) overlayStreak.remove();
-      const overlayHamCategory = document.querySelector(".custom-overlay-nav");
-      if (overlayHamCategory) overlayHamCategory.remove();
-      const overlayRrIcon = document.querySelector(".custom-overlay-nav");
-      if (overlayRrIcon) overlayRrIcon.remove();
-      // const img = document.querySelector(".hand-click-img");
-      // if (img) {
-      //   img.remove();
-      // }
+      toggleClass({
+        element: timeline,
+        className: "shepherd-active",
+        addClass: false,
+      });
+      toggleClass({
+        element: navbarContent,
+        className: "shepherd-active",
+        addClass: false,
+      });
+      toggleClass({
+        element: profile,
+        className: "shepherd-active",
+        addClass: false,
+      });
+      toggleClass({
+        element: inboxButton,
+        className: "shepherd-active",
+        addClass: false,
+      });
+      toggleClass({
+        element: streakButton,
+        className: "highlighted-card-0-streak",
+        addClass: false,
+      });
+      toggleClass({
+        element: streakButton,
+        className: "highlighted-card-streak",
+        addClass: false,
+      });
+      toggleClass({
+        element: hamCategory,
+        className: "shepherd-active",
+        addClass: false,
+      });
+      toggleClass({
+        element: rrIcon,
+        className: "shepherd-active",
+        addClass: false,
+      });
+      manageOverlay({ element: timeline, overlay: false });
+      manageOverlay({ element: navbarContent, overlay: false });
+      manageOverlay({ element: profile, overlay: false });
+      manageOverlay({ element: inboxButton, overlay: false });
+      manageOverlay({ element: streakButton, overlay: false });
+      manageOverlay({ element: hamCategory, overlay: false });
+      manageOverlay({ element: rrIcon, overlay: false });
       updateStatusOfTutorial("dailyStreakPage");
     };
-
-    // const handleTourCancel = () => {
-    //   body.style.overflow = "auto";
-    //   if (timeline.classList.contains("shepherd-active")) {
-    //     timeline.classList.remove("shepherd-active");
-    //   }
-    //   // Assuming isLargeWindow is a boolean that you check
-    //   if (isLargeWindow) {
-    //     if (
-    //       navbarContent &&
-    //       navbarContent.classList.contains("shepherd-active")
-    //     ) {
-    //       navbarContent.classList.remove("shepherd-active");
-    //     }
-    //   }
-
-    //   if (profile && profile.classList.contains("shepherd-active")) {
-    //     profile.classList.remove("shepherd-active");
-    //   }
-
-    //   if (inboxButton && inboxButton.classList.contains("shepherd-active")) {
-    //     inboxButton.classList.remove("shepherd-active");
-    //   }
-
-    //   if (streakButton && streakButton.classList.contains("shepherd-active")) {
-    //     streakButton.classList.remove("shepherd-active");
-    //   }
-
-    //   if (hamCategory && hamCategory.classList.contains("shepherd-active")) {
-    //     hamCategory.classList.remove("shepherd-active");
-    //   }
-
-    //   if (rrIcon && rrIcon.classList.contains("shepherd-active")) {
-    //     rrIcon.classList.remove("shepherd-active");
-    //   }
-
-    //   //nav.classList.remove("shepherd-active");
-    //   const timelineItem = document.querySelector(".timeline-item");
-    //   if (timelineItem.classList.contains("highlighted-card-0")) {
-    //     timelineItem.classList.remove("highlighted-card-0");
-    //   }
-    //   const overlay = document.querySelector(".custom-overlay");
-    //   if (overlay) overlay.remove();
-    //   const overlayNavbarContent = document.querySelector(
-    //     ".custom-overlay-nav"
-    //   );
-    //   if (overlayNavbarContent) overlayNavbarContent.remove();
-    //   const overlayInbox = document.querySelector(".custom-overlay-nav");
-    //   if (overlayInbox) overlayInbox.remove();
-    //   const overlayStreak = document.querySelector(".custom-overlay-nav");
-    //   if (overlayStreak) overlayStreak.remove();
-    //   const overlayHamCategory = document.querySelector(".custom-overlay-nav");
-    //   if (overlayHamCategory) overlayHamCategory.remove();
-    //   const overlayRrIcon = document.querySelector(".custom-overlay-nav");
-    //   if (overlayRrIcon) overlayRrIcon.remove();
-    //   isTutorialTakenUpdate("homePage");
-    // };
 
     tour.on("start", handleTourStart);
     tour.on("complete", handleTourComplete);

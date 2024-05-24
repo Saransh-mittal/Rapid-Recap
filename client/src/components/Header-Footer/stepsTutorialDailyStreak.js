@@ -1,3 +1,5 @@
+import { manageOverlay, toggleClass } from "../../utils/tutorial.utlis";
+
 const stepsTutorialDailyStreak = [
   {
     id: "step-1-dailyStreak",
@@ -27,23 +29,24 @@ const stepsTutorialDailyStreak = [
         const streakButton = document.querySelector(
           isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
         );
-        if (streakButton.classList.contains("highlighted-card-0-streak"))
-          return;
-        streakButton.classList.add("highlighted-card-0-streak");
+        toggleClass({
+          element: streakButton,
+          className: "highlighted-card-0-streak",
+          addClass: true,
+        });
       },
       hide: () => {
         const isLargeWindow = window.innerWidth > 992;
         const streakButton = document.querySelector(
           isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
         );
-        streakButton.classList.remove("highlighted-card-0-streak");
-        // remove custom overlay child of streakButton
-        // console.log(streakButton.children);
-        // find div.custom-overlay-nav and remove it
-        const customOverlay = streakButton.querySelector(".custom-overlay-nav");
-        if (customOverlay) {
-          customOverlay.remove();
-        }
+        toggleClass({
+          element: streakButton,
+          className: "highlighted-card-0-streak",
+          addClass: false,
+        });
+
+        manageOverlay({ element: streakButton, overlay: false });
       },
     },
   },
@@ -81,13 +84,24 @@ const stepsTutorialDailyStreak = [
           isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
         );
         streakButton.classList.add("highlighted-card-streak");
+        toggleClass({
+          element: streakButton,
+          className: "highlighted-card-streak",
+          addClass: true,
+        });
+
+        manageOverlay({ element: streakButton, overlay: false });
       },
       hide: () => {
         const isLargeWindow = window.innerWidth > 992;
         const streakButton = document.querySelector(
           isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
         );
-        streakButton.classList.remove("highlighted-card-streak");
+        toggleClass({
+          element: streakButton,
+          className: "highlighted-card-streak",
+          addClass: false,
+        });
       },
     },
   },

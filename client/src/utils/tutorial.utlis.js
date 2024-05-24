@@ -1,6 +1,4 @@
 import axios from "axios";
-import { useContext } from "react";
-import { AppContext } from "../contextAPI/appContext";
 
 export const isTutorialTakenCheck = async ({ page, tour }) => {
   try {
@@ -11,19 +9,39 @@ export const isTutorialTakenCheck = async ({ page, tour }) => {
   }
 };
 
-// export const isTutorialTakenUpdate = async (page) => {
-//   const { state, dispatch } = useContext(AppContext);
-//   try {
-//     console.log(page);
-//     const res = await axios.post(`/api/user/isTutorialTakenUpdate`, {
-//       page,
-//     });
-//     if (res.status === 200) {
-//       const user = state.user;
-//       user.tutorial[page] = false;
-//       dispatch({ type: "setUser", payloadUser: user });
-//     }
-//   } catch (err) {
-//     console.error(err);
-//   }
-// };
+export function manageOverlay({
+  element,
+  overlayClassName = "custom-overlay-nav",
+  overlay = false,
+}) {
+  if (!element) {
+    console.error("Element is not provided or invalid");
+    return;
+  }
+  // Check for existing overlay
+  let existingOverlay = element.querySelector("." + overlayClassName);
+
+  while (existingOverlay) {
+    existingOverlay.remove();
+    existingOverlay = element.querySelector("." + overlayClassName);
+    // If overlay exists, remove it
+  }
+
+  // Add the overlay if the condition is true
+  if (overlay) {
+    const newOverlay = document.createElement("div");
+    newOverlay.classList.add(overlayClassName);
+    element.appendChild(newOverlay);
+  }
+}
+
+export function toggleClass({ element, className, addClass }) {
+  if (element) {
+    if (addClass && !element.classList.contains(className)) {
+      element.classList.add(className);
+    } else if (!addClass && element.classList.contains(className)) {
+      while (element.classList.contains(className))
+        element.classList.remove(className);
+    }
+  }
+}
