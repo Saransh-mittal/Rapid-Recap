@@ -434,21 +434,26 @@ const getWorldNews = async (req, res) => {
 
 const extractNews = async (req, res) => {
   try {
-    const { result, articlesSavedPerCategory, notificationCategories } =
-      await extractNewsUtilityFunc();
-
+    // const { result, articlesSavedPerCategory, notificationCategories } =
+    //   await extractNewsUtilityFunc();
+    const categories = [
+      "general",
+      "sports",
+      "health",
+      "science",
+      "business",
+      "technology",
+      "entertainment",
+    ];
+    let notificationCategories = categories.join(", ");
+    const title = `📢 New ${notificationCategories} Content Alert! 📰`;
+    const body =
+      "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
+    const url = "https://www.rapidrecap.co.in/";
+    await sendNotification({ title, body, url });
     res.status(200).json({
-      message: `No. of news fetched for DB : ${result.length}`,
-      articlesSavedPerCategory: articlesSavedPerCategory,
+      message: `notifications sent for ${notificationCategories} categories`,
     });
-
-    if (result.length > 0) {
-      const title = `📢 New ${notificationCategories} Content Alert! 📰`;
-      const body =
-        "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-      const url = "https://www.rapidrecap.co.in/";
-      await sendNotification({ title, body, url });
-    }
   } catch (error) {
     res.status(500).json({ error: error.message || "Something went wrong" });
     console.log(error);
