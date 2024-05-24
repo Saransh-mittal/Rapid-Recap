@@ -59,6 +59,8 @@ webpush.setVapidDetails(
 // -------------------
 app.use(express.json());
 require("./scheduler/userIQScoreScheduler");
+require("./scheduler/mailsForStreakBroken");
+require("./scheduler/mailsForStreakReminder");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);

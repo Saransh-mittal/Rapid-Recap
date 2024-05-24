@@ -2,14 +2,12 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(29.04.2024).json");
+// const updates = require("./updates/updates(20.05.2024).json");
 // const User = require("../model/userSchema");
 // const ApplicationUpdates = require("../model/applicationUpdatesSchema");
-// const { progressBar } = require("../utils/progress");
+// const { progressBar } = require("../utils/progress.utils.js");
 // const { sendNotification } = require("../services/notificationService");
-// const {
-//   mailTransporter,
-// } = require("../utils/mail");
+// const { mailTransporter } = require("../utils/mail.utils.js");
 // const MailTemplates = require("../data/MailTemplates.js");
 
 mongoose
@@ -51,7 +49,7 @@ mongoose
 //           ? `${update.mainText.slice(0, 100)}...`
 //           : update.mainText;
 //       const url = "https://rapidrecap.co.in/";
-//       await sendNotification({ title: updateTitle, body: updateBody, url });
+//       //await sendNotification({ title: updateTitle, body: updateBody, url });
 //       for (const user of users) {
 //         // Create a new update object for the user
 //         const { title, mainText, img, read } = update;
@@ -66,16 +64,16 @@ mongoose
 //         await newUpdate.save();
 //         //console.log("Update saved:", title);
 //         const transporter = await mailTransporter();
-// await transporter.sendMail({
-//   from: MailTemplates.AppUpdates.from,
-//   to: user.email,
-//   subject: MailTemplates.AppUpdates.subject,
-//   html: MailTemplates.AppUpdates.html({
-//     title,
-//     mainText,
-//     name: user.name,
-//   }),
-// });
+//         await transporter.sendMail({
+//           from: MailTemplates.AppUpdates.from,
+//           to: user.email,
+//           subject: MailTemplates.AppUpdates.subject,
+//           html: MailTemplates.AppUpdates.html({
+//             title,
+//             mainText,
+//             name: user.name,
+//           }),
+//         });
 //         progress();
 //       }
 //     }

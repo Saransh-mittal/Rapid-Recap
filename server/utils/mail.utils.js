@@ -1,6 +1,13 @@
 const nodemailer = require("nodemailer");
 // const { google } = require("googleapis");
 const { OAuth2Client } = require("google-auth-library");
+const User = require("../model/userSchema");
+//const { progressBar } = require("./progress.utils");
+const {
+  streakBrokenDaysCalculator,
+  noLoginDaysSpentCalculator,
+} = require("./user.utils");
+const MailTemplates = require("../data/MailTemplates");
 
 //These id's and secrets should come from .env file.
 
@@ -49,7 +56,99 @@ const mailTransporter = async () => {
   }
 };
 
+const mailForStreakBroken = async () => {
+  try {
+    const users = await User.find({
+      email: { $not: /^dummy\d+@mail\.com$/ },
+      name: { $not: /^undefined\sundefined$/ },
+    });
+    const transporter = await mailTransporter();
+    //const updateProgress = progressBar(users.length);
+    for (let user of users) {
+      const streakBrokenDays = await streakBrokenDaysCalculator(user._id);
+      const noLoginDaysSpent = await noLoginDaysSpentCalculator(user._id);
+
+      if (streakBrokenDays === 2) {
+        await transporter.sendMail({
+          from: MailTemplates.StreakJustBroken.from,
+          to: user.email,
+          subject: MailTemplates.StreakJustBroken.subject,
+          html: MailTemplates.StreakJustBroken.html({
+            name: user.name.split(" ")[0],
+          }),
+        });
+      } else if (streakBrokenDays % 7 === 0 && streakBrokenDays > 2) {
+        await transporter.sendMail({
+          from: MailTemplates.StreakSevenPeriodic.from,
+          to: user.email,
+          subject: MailTemplates.StreakSevenPeriodic.subject,
+          html: MailTemplates.StreakSevenPeriodic.html({
+            name: user.name.split(" ")[0],
+            streak_days: streakBrokenDays,
+          }),
+        });
+      }
+
+      if (noLoginDaysSpent === 2) {
+        await transporter.sendMail({
+          from: MailTemplates.noLoginFor2Days.from,
+          to: user.email,
+          subject: MailTemplates.noLoginFor2Days.subject,
+          html: MailTemplates.noLoginFor2Days.html({
+            name: user.name.split(" ")[0],
+          }),
+        });
+      } else if (noLoginDaysSpent % 7 === 0 && noLoginDaysSpent > 2) {
+        await transporter.sendMail({
+          from: MailTemplates.noLoginForSevenPeriodic.from,
+          to: user.email,
+          subject: MailTemplates.noLoginForSevenPeriodic.subject,
+          html: MailTemplates.noLoginForSevenPeriodic.html({
+            name: user.name.split(" ")[0],
+            inactive_days: noLoginDaysSpent,
+          }),
+        });
+      }
+      //updateProgress();
+    }
+    console.log("\nMails sent successfully\n");
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const mailForMaintainStreakReminder = async ({ template }) => {
+  try {
+    const users = await User.find({
+      email: { $not: /^dummy\d+@mail\.com$/ },
+      name: { $not: /^undefined\sundefined$/ },
+    });
+    const transporter = await mailTransporter();
+    //const updateProgress = progressBar(users.length);
+    for (let user of users) {
+      const streakBrokenDays = await streakBrokenDaysCalculator(user._id);
+
+      if (streakBrokenDays === 1) {
+        await transporter.sendMail({
+          from: template.from,
+          to: user.email,
+          subject: template.subject,
+          html: template.html({
+            name: user.name.split(" ")[0],
+          }),
+        });
+      }
+      //updateProgress();
+    }
+    console.log("\nMails sent successfully\n");
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 module.exports = {
   generateOtp,
   mailTransporter,
+  mailForStreakBroken,
+  mailForMaintainStreakReminder,
 };
