@@ -126,7 +126,7 @@ export const useArticlePageTour = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate("articlePage");
+      // isTutorialTakenUpdate("articlePage");
     };
 
     const handleTourCancel = () => {
@@ -142,7 +142,7 @@ export const useArticlePageTour = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate("articlePage");
+      // isTutorialTakenUpdate("articlePage");
     };
 
     tour.on("start", handleTourStart);
@@ -191,7 +191,7 @@ export const useLeaderBoardTour = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate("leaderBoardPage");
+      // isTutorialTakenUpdate("leaderBoardPage");
     };
 
     const handleTourCancel = () => {
@@ -205,7 +205,7 @@ export const useLeaderBoardTour = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate("leaderBoardPage");
+      // isTutorialTakenUpdate("leaderBoardPage");
     };
 
     tour.on("start", handleTourStart);
@@ -262,7 +262,7 @@ export const useProfileTour = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate("profilePage");
+      // isTutorialTakenUpdate("profilePage");
     };
 
     const handleTourCancel = () => {
@@ -289,7 +289,7 @@ export const useProfileTour = () => {
       if (overlay) overlay.remove();
       const overlayNav = document.querySelector(".custom-overlay-nav");
       if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate("profilePage");
+      // isTutorialTakenUpdate("profilePage");
     };
 
     tour.on("start", handleTourStart);
@@ -459,58 +459,121 @@ export const useQuinBoostTour = () => {
     tourOptions,
     steps: stepsTutorialQuinBoost,
   });
-
+  const updateStatusOfTutorial = useTutorialTakenUpdate();
   useEffect(() => {
     const body = document.querySelector("body");
+    const navbar = document.querySelector(".navbar");
+    //const articlePage = document.querySelector(".article-page");
+    //console.log(articlePage);
     const handleTourStart = () => {
+      const articleContent = document.querySelector(".article-content-all");
+      const langBack = document.querySelector(".lang-back-flex");
+      const quinBoost = document.querySelector(".quin-boost-tag");
+      // const overlay = document.createElement("div");
+      // overlay.classList.add("custom-overlay");;
+      toggleClass({
+        element: articleContent,
+        className: "shepherd-active",
+        addClass: true,
+      });
+
+      toggleClass({
+        element: navbar,
+        className: "shepherd-active",
+        addClass: true,
+      });
+      toggleClass({
+        element: langBack,
+        className: "shepherd-active",
+        addClass: true,
+      });
+      toggleClass({
+        element: quinBoost,
+        className: "shepherd-active",
+        addClass: true,
+      });
+
+      toggleClass({
+        element: quinBoost,
+        className: "highlighted-card-0-streak",
+        addClass: true,
+      });
       body.style.overflow = "hidden"; // Reapply scroll behavior
-      const overlay = document.createElement("div");
-      overlay.classList.add("custom-overlay");
-      const overlayNav = document.createElement("div");
-      overlayNav.classList.add("custom-overlay-nav");
-      document.querySelector(".article-page")?.appendChild(overlay);
-      document.querySelector(".navbar").appendChild(overlayNav);
+
+      manageOverlay({ element: articleContent, overlay: true });
+      manageOverlay({ element: navbar, overlay: true });
+      manageOverlay({ element: langBack, overlay: true });
+      manageOverlay({ element: quinBoost, overlay: true });
     };
 
     const handleTourComplete = () => {
+      const articleContent = document.querySelector(".article-content-all");
+      const langBack = document.querySelector(".lang-back-flex");
+      const quinBoost = document.querySelector(".quin-boost-tag");
+      toggleClass({
+        element: articleContent,
+        className: "shepherd-active",
+        addClass: false,
+      });
+
+      toggleClass({
+        element: navbar,
+        className: "shepherd-active",
+        addClass: false,
+      });
+      toggleClass({
+        element: langBack,
+        className: "shepherd-active",
+        addClass: false,
+      });
+      toggleClass({
+        element: quinBoost,
+        className: "shepherd-active",
+        addClass: false,
+      });
+
+      toggleClass({
+        element: quinBoost,
+        className: "highlighted-card-0-streak",
+        addClass: false,
+      });
+      toggleClass({
+        element: quinBoost,
+        className: "quin-boost-tracker-img",
+        addClass: false,
+      });
       body.style.overflow = "auto";
-      const generateQuizButton = document.querySelector(
-        ".generate-quiz-button"
-      );
-      if (generateQuizButton) {
-        generateQuizButton.classList.remove("highlighted-button-0");
-      }
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNav = document.querySelector(".custom-overlay-nav");
-      if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate("articlePage");
+      manageOverlay({ element: articleContent, overlay: false });
+      manageOverlay({ element: navbar, overlay: false });
+      manageOverlay({ element: langBack, overlay: false });
+      manageOverlay({ element: quinBoost, overlay: false });
+      updateStatusOfTutorial("quinBoostPage");
     };
 
-    const handleTourCancel = () => {
-      body.style.overflow = "auto";
-      const generateQuizButton = document.querySelector(
-        ".generate-quiz-button"
-      );
-      if (generateQuizButton) {
-        generateQuizButton.classList.remove("highlighted-button-0");
-      }
-
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNav = document.querySelector(".custom-overlay-nav");
-      if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate("articlePage");
-    };
+    // const handleTourCancel = () => {
+    //   const articleContent = document.querySelector(".article-content-all");
+    //   body.style.overflow = "auto";
+    //   const generateQuizButton = document.querySelector(
+    //     ".generate-quiz-button"
+    //   );
+    //   if (generateQuizButton) {
+    //     generateQuizButton.classList.remove("highlighted-button-0");
+    //   }
+    //   const overlay = document.querySelector(".custom-overlay");
+    //   if (overlay) overlay.remove();
+    //   const overlayNav = document.querySelector(".custom-overlay-nav");
+    //   if (overlayNav) overlayNav.remove();
+    //   // isTutorialTakenUpdate("articlePage");
+    // };
 
     quinTour.on("start", handleTourStart);
     quinTour.on("complete", handleTourComplete);
-    quinTour.on("cancel", handleTourCancel);
+    // quinTour.on("cancel", handleTourCancel);
 
     return () => {
       quinTour.off("start", handleTourStart);
       quinTour.off("complete", handleTourComplete);
-      quinTour.off("cancel", handleTourCancel);
+      // quinTour.off("cancel", handleTourCancel);
     };
   }, [quinTour]);
 

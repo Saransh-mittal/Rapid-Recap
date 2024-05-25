@@ -278,8 +278,9 @@ const Article = () => {
       state.user &&
       state.user.tutorial.quinBoostPage &&
       !state.user.tutorial.articlePage
-    )
+    ) {
       isTutorialTakenCheck({ page: "quinBoostPage", tour: quinTour });
+    }
   }, [state.user, state.show, state.user.tutorial.articlePage, load]);
 
   useEffect(() => {
@@ -406,6 +407,7 @@ const Article = () => {
               // alignItems={"center"}
               w={{ base: "100%", md: "auto" }}
               gap={10}
+              className="lang-back-flex"
             >
               <Box
                 marginLeft={{ base: "40px", md: "80px" }}
@@ -443,7 +445,11 @@ const Article = () => {
               </Box>
             </Flex>
 
-            <Flex flexDirection={"column"} position={"relative"}>
+            <Flex
+              flexDirection={"column"}
+              position={"relative"}
+              className="quin-boost-tag"
+            >
               {isQuinBoostAvailable ? (
                 <QuinBoost />
               ) : (
@@ -466,7 +472,10 @@ const Article = () => {
                       position={"relative"}
                       justifyContent={"center"}
                       alignItems={"center"}
-                      onClick={openModal}
+                      onClick={() => {
+                        quinTour.complete();
+                        openModal();
+                      }}
                       style={{ cursor: "pointer" }}
                     >
                       <Image
@@ -474,6 +483,7 @@ const Article = () => {
                         background={"none"}
                         height={"100px"}
                         width={"200px"}
+                        className="quin-boost-tracker"
                       />
                       <Text
                         m={0}
@@ -520,72 +530,109 @@ const Article = () => {
               isStateBoosted={state.isBoosted}
             />
           </Flex>
-          <Grid
-            templateColumns={
-              window.innerWidth > 820 ? "minmax(0, 9fr) 5fr" : "1fr"
-            }
-            gap={10}
-            minH={"85vh"}
-            p={{ base: "20px", md: "50px" }}
-            marginTop={0}
-          >
-            {article && (
-              <GridItem w="100%" className="article-container">
-                <Skeleton isLoaded={!translateLoading}>
+          <Flex className="article-content-all">
+            <Grid
+              templateColumns={
+                window.innerWidth > 820 ? "minmax(0, 9fr) 5fr" : "1fr"
+              }
+              gap={10}
+              minH={"85vh"}
+              p={{ base: "20px", md: "50px" }}
+              marginTop={0}
+            >
+              {article && (
+                <GridItem w="100%" className="article-container">
+                  <Skeleton isLoaded={!translateLoading}>
+                    <Heading
+                      align="left"
+                      letterSpacing={1}
+                      as="h3"
+                      fontSize="25px"
+                      bg="#2A2F4F"
+                      p={2}
+                      color="#FDE2F3"
+                      borderRadius="xl"
+                      marginBottom="20px"
+                    >
+                      {title[selectedLanguage]}
+                    </Heading>
+                  </Skeleton>
+
                   <Heading
                     align="left"
                     letterSpacing={1}
-                    as="h3"
-                    fontSize="25px"
-                    bg="#2A2F4F"
-                    p={2}
-                    color="#FDE2F3"
-                    borderRadius="xl"
-                    marginBottom="20px"
+                    as="h4"
+                    fontSize="15px"
+                    marginTop="10px"
                   >
-                    {title[selectedLanguage]}
+                    <Highlight
+                      query="Author:"
+                      styles={{
+                        px: "2",
+                        py: "1",
+                        rounded: "full",
+                        bg: "#F7EFE5",
+                      }}
+                      margin="5px"
+                    >
+                      Author:
+                    </Highlight>
+
+                    <span style={{ fontSize: "20px", marginLeft: "10px" }}>
+                      <Skeleton isLoaded={!translateLoading} display={"inline"}>
+                        {author[selectedLanguage]}
+                      </Skeleton>
+                    </span>
                   </Heading>
-                </Skeleton>
+                  <Skeleton isLoaded={!translateLoading}>
+                    {mainText[selectedLanguage].length === 3 ? (
+                      <Box marginTop={5} ref={articleRef}>
+                        <Text align="justify" letterSpacing={0}>
+                          {mainText[selectedLanguage][0]}
+                        </Text>
+                        <Box
+                          marginTop="2"
+                          marginBottom="2"
+                          display={"flex"}
+                          alignItems={"justify"}
+                          height={"100%"}
+                        >
+                          <Image
+                            css={{
+                              "@media screen and (max-width: 1366px)": {
+                                display: "none",
+                              },
+                            }}
+                            src={
+                              Array.isArray(data.imgURL) &&
+                              data.imgURL.length > 0
+                                ? data.imgURL[0]
+                                : !Array.isArray(data.imgURL) && data.imgURL
+                                ? data.imgURL
+                                : alt_image
+                            }
+                            alt="Article Image"
+                            borderRadius="md"
+                            float={"left"}
+                            marginRight={"3"}
+                            height={`${textHeight}px`}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = alt_image;
+                              e.target.style.height = `${textHeight}px`;
+                            }}
+                          />
 
-                <Heading
-                  align="left"
-                  letterSpacing={1}
-                  as="h4"
-                  fontSize="15px"
-                  marginTop="10px"
-                >
-                  <Highlight
-                    query="Author:"
-                    styles={{
-                      px: "2",
-                      py: "1",
-                      rounded: "full",
-                      bg: "#F7EFE5",
-                    }}
-                    margin="5px"
-                  >
-                    Author:
-                  </Highlight>
-
-                  <span style={{ fontSize: "20px", marginLeft: "10px" }}>
-                    <Skeleton isLoaded={!translateLoading} display={"inline"}>
-                      {author[selectedLanguage]}
-                    </Skeleton>
-                  </span>
-                </Heading>
-                <Skeleton isLoaded={!translateLoading}>
-                  {mainText[selectedLanguage].length === 3 ? (
-                    <Box marginTop={5} ref={articleRef}>
-                      <Text align="justify" letterSpacing={0}>
-                        {mainText[selectedLanguage][0]}
-                      </Text>
-                      <Box
-                        marginTop="2"
-                        marginBottom="2"
-                        display={"flex"}
-                        alignItems={"justify"}
-                        height={"100%"}
-                      >
+                          <Text ref={textRef} align="justify" letterSpacing={0}>
+                            {mainText[selectedLanguage][1]}
+                          </Text>
+                        </Box>
+                        <Text align="justify" letterSpacing={0}>
+                          {mainText[selectedLanguage][2]}
+                        </Text>
+                      </Box>
+                    ) : (
+                      <Box marginTop={8} ref={articleRef}>
                         <Image
                           css={{
                             "@media screen and (max-width: 1366px)": {
@@ -601,8 +648,9 @@ const Article = () => {
                           }
                           alt="Article Image"
                           borderRadius="md"
+                          marginBottom="5"
+                          marginRight="5"
                           float={"left"}
-                          marginRight={"3"}
                           height={`${textHeight}px`}
                           onError={(e) => {
                             e.target.onerror = null;
@@ -611,84 +659,164 @@ const Article = () => {
                           }}
                         />
 
-                        <Text ref={textRef} align="justify" letterSpacing={0}>
+                        <Text ref={textRef} align="left" letterSpacing={1}>
+                          {mainText[selectedLanguage][0]}
+                        </Text>
+                        <Text align="left" letterSpacing={1}>
                           {mainText[selectedLanguage][1]}
                         </Text>
                       </Box>
-                      <Text align="justify" letterSpacing={0}>
-                        {mainText[selectedLanguage][2]}
-                      </Text>
-                    </Box>
-                  ) : (
-                    <Box marginTop={8} ref={articleRef}>
-                      <Image
-                        css={{
-                          "@media screen and (max-width: 1366px)": {
-                            display: "none",
-                          },
-                        }}
-                        src={
-                          Array.isArray(data.imgURL) && data.imgURL.length > 0
-                            ? data.imgURL[0]
-                            : !Array.isArray(data.imgURL) && data.imgURL
-                            ? data.imgURL
-                            : alt_image
-                        }
-                        alt="Article Image"
-                        borderRadius="md"
-                        marginBottom="5"
-                        marginRight="5"
-                        float={"left"}
-                        height={`${textHeight}px`}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = alt_image;
-                          e.target.style.height = `${textHeight}px`;
-                        }}
-                      />
+                    )}
+                  </Skeleton>
+                </GridItem>
+              )}
+              <GridItem
+                w="100%"
+                css={{
+                  "@media screen and (max-width: 821px)": {
+                    display: "none",
+                  },
+                }}
+              >
+                {givenQuiz ? (
+                  <>
+                    <GivenQuiz
+                      articleId={id}
+                      percentile={percentile}
+                      RQM_score={RQM_score}
+                    />
+                  </>
+                ) : onGoingQuiz ? (
+                  <Heading
+                    size="md"
+                    margin={"5px"}
+                    mb={5}
+                    height={"100px"}
+                    color={"red"}
+                  >
+                    Quiz is Already going on in some other tab or device
+                  </Heading>
+                ) : quizExpired ? (
+                  <QuizExpired />
+                ) : (
+                  <GenerateQuizButton
+                    isQuinBoostAvailable={isQuinBoostAvailable}
+                    onClick={() => {
+                      tour.complete();
+                      trackGenerateQuizClick();
+                      setShowQuizLangModal(true);
+                      setShowQuiz(!showQuiz);
+                      onOpen();
+                    }}
+                  />
+                )}
+                <TotalUserAttempted totalUsersGivenQuiz={totalUsersGivenQuiz} />
 
-                      <Text ref={textRef} align="left" letterSpacing={1}>
-                        {mainText[selectedLanguage][0]}
-                      </Text>
-                      <Text align="left" letterSpacing={1}>
-                        {mainText[selectedLanguage][1]}
-                      </Text>
-                    </Box>
-                  )}
-                </Skeleton>
+                <Box
+                  boxShadow={"0 100px 200px rgba(1, 1, 1, 1.1)"}
+                  borderRadius={"15px"}
+                  p={1.5}
+                >
+                  <Heading
+                    as="h3"
+                    fontSize="25px"
+                    color="white"
+                    letterSpacing={1}
+                  >
+                    <TriangleDownIcon color="#F2D7D9" /> Latest Articles
+                  </Heading>
+
+                  <SimpleGrid
+                    columns={1}
+                    marginTop={5}
+                    display={"flex"}
+                    flexDirection={"column"}
+                    alignItems={"justify"}
+                  >
+                    {latestNews
+                      .filter(
+                        (_, idx) =>
+                          idx < Math.floor(articleHeight / 100) &&
+                          _._id !== article._id
+                      )
+                      .map((item) => {
+                        return (
+                          <Box
+                            minHeight="100px"
+                            key={item._id}
+                            onClick={() => {
+                              window.location.href = `/article/${item._id}`;
+                            }}
+                            style={{ cursor: "pointer" }}
+                            borderTop={"2px solid lightblue"}
+                            p={2}
+                            w={"100%"}
+                            display={"flex"}
+                            alignItems={"center"}
+                          >
+                            <Image
+                              width="100px"
+                              mr={3}
+                              mt={-3}
+                              height={"60px"}
+                              float="left"
+                              src={item.imgURL}
+                              alt="Article img"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = Alt_img;
+                                e.target.style.height = `100%`;
+                              }}
+                            />
+                            <Text mt={2}>{item.title}</Text>
+                          </Box>
+                        );
+                      })}
+                  </SimpleGrid>
+                </Box>
               </GridItem>
-            )}
-            <GridItem
-              w="100%"
-              css={{
-                "@media screen and (max-width: 821px)": {
-                  display: "none",
-                },
-              }}
-            >
               {givenQuiz ? (
                 <>
                   <GivenQuiz
                     articleId={id}
                     percentile={percentile}
                     RQM_score={RQM_score}
+                    css={{
+                      "@media screen and (min-width: 821px)": {
+                        display: "none",
+                      },
+                    }}
                   />
                 </>
               ) : onGoingQuiz ? (
                 <Heading
+                  css={{
+                    "@media screen and (min-width: 821px)": {
+                      display: "none",
+                    },
+                  }}
                   size="md"
-                  margin={"5px"}
-                  mb={5}
-                  height={"100px"}
+                  margin={"20px"}
                   color={"red"}
                 >
                   Quiz is Already going on in some other tab or device
                 </Heading>
               ) : quizExpired ? (
-                <QuizExpired />
+                <QuizExpired
+                  css={{
+                    "@media screen and (min-width: 821px)": {
+                      display: "none",
+                    },
+                  }}
+                />
               ) : (
                 <GenerateQuizButton
                   isQuinBoostAvailable={isQuinBoostAvailable}
+                  css={{
+                    "@media screen and (min-width: 821px)": {
+                      display: "none",
+                    },
+                  }}
                   onClick={() => {
                     tour.complete();
                     trackGenerateQuizClick();
@@ -698,131 +826,16 @@ const Article = () => {
                   }}
                 />
               )}
-              <TotalUserAttempted totalUsersGivenQuiz={totalUsersGivenQuiz} />
-
-              <Box
-                boxShadow={"0 100px 200px rgba(1, 1, 1, 1.1)"}
-                borderRadius={"15px"}
-                p={1.5}
-              >
-                <Heading
-                  as="h3"
-                  fontSize="25px"
-                  color="white"
-                  letterSpacing={1}
-                >
-                  <TriangleDownIcon color="#F2D7D9" /> Latest Articles
-                </Heading>
-
-                <SimpleGrid
-                  columns={1}
-                  marginTop={5}
-                  display={"flex"}
-                  flexDirection={"column"}
-                  alignItems={"justify"}
-                >
-                  {latestNews
-                    .filter(
-                      (_, idx) =>
-                        idx < Math.floor(articleHeight / 100) &&
-                        _._id !== article._id
-                    )
-                    .map((item) => {
-                      return (
-                        <Box
-                          minHeight="100px"
-                          key={item._id}
-                          onClick={() => {
-                            window.location.href = `/article/${item._id}`;
-                          }}
-                          style={{ cursor: "pointer" }}
-                          borderTop={"2px solid lightblue"}
-                          p={2}
-                          w={"100%"}
-                          display={"flex"}
-                          alignItems={"center"}
-                        >
-                          <Image
-                            width="100px"
-                            mr={3}
-                            mt={-3}
-                            height={"60px"}
-                            float="left"
-                            src={item.imgURL}
-                            alt="Article img"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = Alt_img;
-                              e.target.style.height = `100%`;
-                            }}
-                          />
-                          <Text mt={2}>{item.title}</Text>
-                        </Box>
-                      );
-                    })}
-                </SimpleGrid>
-              </Box>
-            </GridItem>
-            {givenQuiz ? (
-              <>
-                <GivenQuiz
-                  articleId={id}
-                  percentile={percentile}
-                  RQM_score={RQM_score}
-                  css={{
-                    "@media screen and (min-width: 821px)": {
-                      display: "none",
-                    },
-                  }}
-                />
-              </>
-            ) : onGoingQuiz ? (
-              <Heading
-                css={{
-                  "@media screen and (min-width: 821px)": {
-                    display: "none",
-                  },
-                }}
-                size="md"
-                margin={"20px"}
-                color={"red"}
-              >
-                Quiz is Already going on in some other tab or device
-              </Heading>
-            ) : quizExpired ? (
-              <QuizExpired
+              <TotalUserAttempted
+                totalUsersGivenQuiz={totalUsersGivenQuiz}
                 css={{
                   "@media screen and (min-width: 821px)": {
                     display: "none",
                   },
                 }}
               />
-            ) : (
-              <GenerateQuizButton
-                isQuinBoostAvailable={isQuinBoostAvailable}
-                css={{
-                  "@media screen and (min-width: 821px)": {
-                    display: "none",
-                  },
-                }}
-                onClick={() => {
-                  tour.complete();
-                  trackGenerateQuizClick();
-                  setShowQuizLangModal(true);
-                  setShowQuiz(!showQuiz);
-                  onOpen();
-                }}
-              />
-            )}
-            <TotalUserAttempted
-              totalUsersGivenQuiz={totalUsersGivenQuiz}
-              css={{
-                "@media screen and (min-width: 821px)": {
-                  display: "none",
-                },
-              }}
-            />
-          </Grid>
+            </Grid>
+          </Flex>
         </Flex>
       )}
     </>

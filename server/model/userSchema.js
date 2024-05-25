@@ -195,7 +195,7 @@ userSchema.methods.generateAuthToken = async function () {
     let token = jwt.sign({ _id: this._id }, process.env.SECRET_KEY);
     return token;
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
   }
 };
 userSchema.methods.incrementOtpCnt = function () {

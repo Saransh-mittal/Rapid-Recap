@@ -144,8 +144,8 @@ const logoutUser = async (req, res) => {
     res.clearCookie("jwtoken", { path: "/" });
     res.status(201).send("User Logout");
   } catch (error) {
-    console.log(error.message);
-    res.status(422).json({ error: error.message });
+    console.log(error);
+    res.status(422).json({ error: error });
   }
 };
 
@@ -195,7 +195,7 @@ const verifyUser = async (req, res) => {
     res.status(201).json({ message: "Email verified successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(422).json({ error: error.message });
+    return res.status(422).json({ error: error });
   }
 };
 
@@ -239,8 +239,8 @@ const resendOTP = async (req, res) => {
     });
     return res.status(201).json({ message: "OTP send Successfully" });
   } catch (error) {
-    console.log(error.message);
-    return res.status(422).json({ error: error.message });
+    console.log(error);
+    return res.status(422).json({ error: error });
   }
 };
 
@@ -264,7 +264,7 @@ const forgotPassword = async (req, res) => {
     res.status(201).json({ message: "Password changed successfully" });
   } catch (error) {
     console.log(error);
-    res.status(422).json({ error: error.message });
+    res.status(422).json({ error: error });
   }
 };
 
@@ -347,8 +347,8 @@ const handleGoogleLogin = async (req, res) => {
     });
     res.status(201).json({ message: "Google Login Successfull", user });
   } catch (error) {
-    console.log(error.message);
-    res.status(422).json({ error: error.message });
+    console.log(error);
+    res.status(422).json({ error: error });
   }
 };
 
@@ -469,7 +469,7 @@ const leaderBoard = async (req, res) => {
       .json({ users: result, currUser: { RQM_avg, quizSubmissions } });
   } catch (error) {
     res.status(500).json({ error: "Error fetching the Leaderboard" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -804,7 +804,7 @@ const getUpdates = async (req, res) => {
     res.status(200).json({ updates });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -821,7 +821,7 @@ const readUpdates = async (req, res) => {
     res.status(200).json({ message: "Update read" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -837,7 +837,7 @@ const trashUpdate = async (req, res) => {
     res.status(200).json({ message: "Update deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -851,7 +851,7 @@ const trashAllUpdate = async (req, res) => {
     res.status(200).json({ message: "All updates deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -890,7 +890,7 @@ const upgradeMessageClose = async (req, res) => {
     res.status(200).json({ ok: "Success" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -906,7 +906,7 @@ const quizDailyStreakUpdator = async (req, res) => {
     res.status(200).json({ message: "Daily streak updated successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 const longestStreakCalculatorOfAllUsers = async (req, res) => {
@@ -921,7 +921,7 @@ const longestStreakCalculatorOfAllUsers = async (req, res) => {
     res.status(200).json({ message: "Longest streak updated successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -960,7 +960,7 @@ const streakChecker = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -984,7 +984,9 @@ const quinBoostChecker = async (req, res) => {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     const quinBoostsToReset = user.quinBoosts.filter((quinBoost) => {
-      return quinBoost.quinBoost.createdAt < today;
+      return quinBoost.quinBoost
+        ? quinBoost.quinBoost.createdAt < today
+        : false;
     });
 
     // Set boosted to false for filtered quinBoosts
@@ -1026,7 +1028,7 @@ const quinBoostChecker = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
