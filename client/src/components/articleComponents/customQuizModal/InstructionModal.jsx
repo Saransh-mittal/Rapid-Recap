@@ -12,8 +12,9 @@ import {
 } from "@chakra-ui/react";
 import { AppContext } from "../../../contextAPI/appContext";
 import starBoost from "/GIFs/starBoost.gif";
+import QuinBoost from "../quizComponents/QuinBoost";
 
-const InstructionModal = () => {
+const InstructionModal = ({ isQuinBoostAvailable }) => {
   const { state } = useContext(AppContext);
   return (
     <>
@@ -29,7 +30,7 @@ const InstructionModal = () => {
         <Heading as="h1" size={"xl"} mb={2}>
           Instructions
         </Heading>
-
+        {isQuinBoostAvailable && <QuinBoost />}
         {state.isBoosted && (
           <Flex
             justifyContent={"center"}

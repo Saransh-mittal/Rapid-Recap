@@ -3,9 +3,9 @@ const Article = require("../../model/articleSchema");
 const QuizAttempt = require("../../model/quizAttemptSchema");
 const Quiz = require("../../model/quizSchema");
 const User = require("../../model/userSchema");
-const { progressBar } = require("../../utils/progress");
-const dailyUserIQCalc = require("../dailyUserIQCalc");
-const { genQuiz } = require("../quiz");
+const { progressBar } = require("../../utils/progress.utils");
+const dailyUserIQCalc = require("../dailyUserIQCalc.utils");
+const { genQuiz } = require("../quiz.utils");
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -158,4 +158,4 @@ async function updateBots() {
   }
 }
 
-updateBots();
+module.exports = updateBots;

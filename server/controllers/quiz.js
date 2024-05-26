@@ -2,6 +2,14 @@ const User = require("../model/userSchema");
 const Article = require("../model/articleSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const Quiz = require("../model/quizSchema");
+const QuinBoost = require("../model/quinBoostSchema");
+const { currDayStreakCalulator } = require("../utils/user.utils");
+const {
+  scheduleEmail,
+  cancelScheduledEmails,
+  scheduleDayEndEmail,
+} = require("../scheduler/mail");
+const MailTemplates = require("../data/MailTemplates");
 
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken, quizId } = req.body;
@@ -83,7 +91,24 @@ const saveAttempt = async (req, res) => {
       ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000
     );
     const user = await User.findById(userId);
-    if (user.todayBoost) RQM_score = Math.ceil(RQM_score * 1.5);
+    let boosted = false;
+    if (user.todayBoost) {
+      RQM_score = Math.ceil(RQM_score * 1.5);
+      boosted = true;
+    }
+    if (!user.todayBoost && user.quinBoosts.length > 0) {
+      const quinBoost = user.quinBoosts[user.quinBoosts.length - 1];
+      if (quinBoost.boosted) {
+        RQM_score = Math.ceil(RQM_score * 1.5);
+        boosted = true;
+        quinBoost.boosted = false;
+        const qBoost = await QuinBoost.findById(quinBoost.quinBoost);
+        // console.log(qBoost);
+        // console.log(article._id);
+        qBoost.article = article._id;
+        await qBoost.save();
+      }
+    }
     const articleDifficulty = quiz.overAllDifficulty;
     const newQuizAttempt = new QuizAttempt({
       user: userId,
@@ -99,8 +124,8 @@ const saveAttempt = async (req, res) => {
       RQM_score,
       articleDifficulty,
       timeTaken,
-      boost: user.todayBoost ? 1.5 : 1,
-      isBoosted: user.todayBoost,
+      boost: boosted ? 1.5 : 1,
+      isBoosted: boosted,
     });
     await newQuizAttempt.save();
 
@@ -127,10 +152,82 @@ const saveAttempt = async (req, res) => {
     else if (articleDifficulty < 0.7) user.mediumQuizCount++;
     else user.hardQuizCount++;
     await user.save();
+    const quizzesToday = await currDayStreakCalulator(user._id);
+    if (quizzesToday % 7 === 4) {
+      cancelScheduledEmails(user._id.toString());
+      scheduleEmail({
+        userId: user._id.toString(),
+        userEmail: user.email,
+        delayMinutes: 30,
+        mailHtml: MailTemplates.preQuinBoost.html({
+          name: user.name.split(" ")[0],
+          noOfQuizzes: quizzesToday,
+          QuinQuizNumber: quizzesToday + 2,
+        }),
+        subject: MailTemplates.preQuinBoost.subject,
+      });
+      scheduleEmail({
+        userId: user._id.toString(),
+        userEmail: user.email,
+        delayMinutes: 120,
+        mailHtml: MailTemplates.preQuinBoost.html({
+          name: user.name.split(" ")[0],
+          noOfQuizzes: quizzesToday,
+          QuinQuizNumber: quizzesToday + 2,
+        }),
+        subject: `Reminder: ${MailTemplates.preQuinBoost.subject}`,
+      });
+    } else if (quizzesToday % 7 === 5) {
+      cancelScheduledEmails(user._id.toString());
+      scheduleEmail({
+        userId: user._id.toString(),
+        userEmail: user.email,
+        delayMinutes: 30,
+        mailHtml: MailTemplates.onQuinBoost.html1({
+          name: user.name.split(" ")[0],
+          noOfQuizzes: quizzesToday,
+          QuinQuizNumber: quizzesToday + 1,
+        }),
+        subject: MailTemplates.onQuinBoost.subject,
+      });
+      scheduleEmail({
+        userId: user._id.toString(),
+        userEmail: user.email,
+        delayMinutes: 120,
+        mailHtml: MailTemplates.onQuinBoost.html1({
+          name: user.name.split(" ")[0],
+          noOfQuizzes: quizzesToday,
+          QuinQuizNumber: quizzesToday + 1,
+        }),
+        subject: `Reminder: ${MailTemplates.onQuinBoost.subject}`,
+      });
+      scheduleDayEndEmail({
+        userId: user._id.toString(),
+        userEmail: user.email,
+        beforeMin: 60,
+        mailHtml: MailTemplates.onQuinBoost.html2({
+          name: user.name.split(" ")[0],
+          QuinQuizNumber: quizzesToday + 1,
+        }),
+        subject: "Hurry Up 1 hour Left! Your Quin Boost is Active! 🌟",
+      });
+    } else if (quizzesToday % 7 === 6) {
+      cancelScheduledEmails(user._id.toString());
+      scheduleEmail({
+        userId: user._id.toString(),
+        userEmail: user.email,
+        delayMinutes: 30,
+        mailHtml: MailTemplates.postQuinBoost.html({
+          name: user.name.split(" ")[0],
+          noOfQuizzes: quizzesToday,
+        }),
+        subject: MailTemplates.postQuinBoost.subject,
+      });
+    }
     res.status(201).json({ message: "Attempt saved successfully", RQM_score });
   } catch (error) {
-    console.log(error.message);
-    res.status(400).json({ error: error.message || "Error saving attempt" });
+    console.log(error);
+    res.status(400).json({ error: error || "Error saving attempt" });
   }
 };
 
@@ -158,10 +255,9 @@ const getPercentile = async (req, res) => {
     console.log(userPercentile);
     res.status(200).json({ percentile: userPercentile });
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     res.status(400).json({
-      error:
-        error.message || "Error Calculating percentile. Please try again Later",
+      error: error || "Error Calculating percentile. Please try again Later",
     });
   }
 };
@@ -200,8 +296,8 @@ const givenQuiz = async (req, res) => {
       res.status(200).json({ given: false });
     }
   } catch (error) {
-    console.log(error.message);
-    res.status(422).json({ error: error.message });
+    console.log(error);
+    res.status(422).json({ error: error });
   }
 };
 
@@ -261,7 +357,7 @@ const getQuizSummary = async (req, res) => {
     }
     res.status(200).json({ result });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
+    res.status(400).json({ error: error || "Something went wrong" });
     console.error(error);
   }
 };

@@ -49,7 +49,11 @@ section {
   width: 100%;
   /* Adjust as needed */
   height: 100%;
-  background-image: linear-gradient(65deg, rgba(16, 9, 27, .8), transparent 50%);
+  background-image: linear-gradient(
+    65deg,
+    rgba(16, 9, 27, 0.8),
+    transparent 50%
+  );
   z-index: 10;
   /* Adjust opacity as needed */
 }
@@ -344,6 +348,7 @@ section {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Add a strong shadow */
   background-image: linear-gradient(-180deg, #4a525d, #1a2839);
 }
+
 .custom-class-name-2 {
   filter: brightness(100%) !important;
   border-radius: 15px;
@@ -353,6 +358,21 @@ section {
   /* max-height: 200px; */
   max-width: 800px;
   padding: 20px;
+  border: none;
+  outline: none;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  /* Add a strong shadow */
+  background-image: linear-gradient(-180deg, #4a525d, #1a2839);
+}
+.custom-class-name-3 {
+  filter: brightness(100%) !important;
+  border-radius: 15px;
+  z-index: 99999999 !important;
+  color: white;
+  min-height: 100px;
+  /* max-height: 200px; */
+  max-width: 500px;
+  padding: 10px 20px;
   border: none;
   outline: none;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
@@ -442,6 +462,24 @@ section {
   animation: moveHand 2s infinite; /* Adjust duration and timing as needed */
 }
 
+.hand-click-img1 {
+  width: 40px; /* Adjust size as needed */
+  height: 40px;
+  z-index: 9999999;
+  bottom: 18%;
+  /* right: -18%; */
+  right: 10%;
+  position: absolute;
+  background-color: transparent;
+  filter: brightness(1.8);
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+}
+
+.hand-click-img1 {
+  opacity: 1; /* Show the hand on hover */
+  animation: moveHand 2s infinite; /* Adjust duration and timing as needed */
+}
 @keyframes moveHand {
   0% {
     transform: translateX(-10px) translateY(-10px);
@@ -458,6 +496,16 @@ section {
   /* Define your highlight styles here */
 
   /* Red border as highlight */
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  position: relative;
+  z-index: 9999999 !important;
+  animation: blink-animation 1s infinite alternate;
+}
+.highlighted-card-0-streak {
+  /* Define your highlight styles here */
+
+  /* Red border as highlight */
+  border-radius: 1rem;
   box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
   position: relative;
   z-index: 9999999 !important;
@@ -494,7 +542,7 @@ section {
   height: 100%;
   background-color: transparent;
   /* semi-transparent black */
-  z-index: 9999;
+  z-index: 999999;
   /* ensure it's above other content */
 }
 
@@ -679,6 +727,43 @@ section {
   animation: none; /* Remove animation on hover */
 }
 
+@keyframes neonGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(0, 183, 255, 0), 0 0 0 rgba(0, 183, 255, 0),
+      0 0 0 rgba(0, 183, 255, 0), 0 0 0 rgba(0, 183, 255, 0),
+      0 0 0 rgba(0, 183, 255, 0), 0 0 0 rgba(0, 183, 255, 0),
+      0 0 0 rgba(0, 183, 255, 0), 0 0 0 rgba(0, 183, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(0, 183, 255, 1), 0 0 20px rgba(0, 183, 255, 1),
+      0 0 30px rgba(0, 183, 255, 1), 0 0 50px rgba(0, 183, 255, 1),
+      0 0 100px rgba(0, 183, 255, 1), 0 0 120px rgba(0, 183, 255, 1),
+      0 0 140px rgba(0, 183, 255, 1), 0 0 200px rgba(0, 183, 255, 1);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(0, 183, 255, 0.5), 0 0 10px rgba(0, 183, 255, 0.5),
+      0 0 20px rgba(0, 183, 255, 0.5), 0 0 40px rgba(0, 183, 255, 1),
+      0 0 80px rgba(0, 183, 255, 1), 0 0 90px rgba(0, 183, 255, 1),
+      0 0 100px rgba(0, 183, 255, 1), 0 0 150px rgba(0, 183, 255, 1);
+  }
+}
+
+.highlighted-card-streak {
+  background-color: #0a0a0a;
+  color: #fff;
+  padding: 6px 2px;
+  border-radius: 10px;
+  animation: neonGlow 2s infinite alternate;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.highlighted-card-streak:hover {
+  box-shadow: 0 0 15px rgba(0, 183, 255, 1), 0 0 30px rgba(0, 183, 255, 1),
+    0 0 45px rgba(0, 183, 255, 1), 0 0 60px rgba(0, 183, 255, 1),
+    0 0 75px rgba(0, 183, 255, 1), 0 0 90px rgba(0, 183, 255, 1),
+    0 0 105px rgba(0, 183, 255, 1), 0 0 120px rgba(0, 183, 255, 1);
+}
+
 @keyframes blink-animation-3 {
   0% {
     filter: brightness(1);
@@ -716,5 +801,33 @@ section {
   }
   100% {
     transform: translateX(-7px);
+  }
+}
+
+.quin-boost-tracker-img {
+  border-radius: 10px; /* Optional: Add rounded corners */
+  box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
+  transition: box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out,
+    filter 0.3s ease-in-out;
+  cursor: pointer;
+  animation: pulse 1.5s infinite;
+  filter: brightness(200%);
+}
+
+.quin-boost-tracker-img:hover {
+  box-shadow: 0 0 15px rgba(0, 0, 255, 1), 0 0 30px rgba(0, 0, 255, 0.8),
+    0 0 45px rgba(0, 0, 255, 0.6);
+  filter: brightness(200%);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
   }
 }

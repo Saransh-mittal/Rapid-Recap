@@ -1,8 +1,9 @@
 import { Box, Button, Text } from "@chakra-ui/react";
 import React, { useContext, useState } from "react";
 import { AppContext } from "../../contextAPI/appContext";
+import Bubbles from "../miscellaneous/bubbles";
 
-const GenerateQuizButton = ({ onClick, css }) => {
+const GenerateQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
   const { state } = useContext(AppContext);
   const isBoosted = state.isBoosted;
   const buttonStyle = {
@@ -28,57 +29,7 @@ const GenerateQuizButton = ({ onClick, css }) => {
         box-shadow: 0 0 10px 0 rgba(255, 255, 0, 0.5);
       }
     }
-
-    @keyframes bubbleTop {
-      0% {
-        transform: translateY(-35px) scale(1); /* Start from bottom */
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(-55px) scale(0.6); /* End at top */
-        opacity: 0;
-      }
-    }
-
-    @keyframes bubbleBottom {
-      0% {
-        transform: translateY(25px) scale(1); /* Start from button position */
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(45px) scale(0.6); /* Move further up and to the right */
-        opacity: 0;
-      }
-    }
-
-    @keyframes bubbleLeft {
-      0% {
-        transform: translateX(-95px) scale(1); /* Start from button position */
-        opacity: 1;
-      }
-      100% {
-        transform: translateX(-105px) scale(0.6); /* Move further up and to the right */
-        opacity: 0;
-      }
-    }
-
-    @keyframes bubbleRight {
-      0% {
-        transform: translateX(95px) scale(1); /* Start from button position */
-        opacity: 1;
-      }
-      100% {
-        transform: translateX(105px) scale(1); /* Move further up and to the right */
-        opacity: 0;
-      }
-    }
   `;
-  const bubbleStyle = {
-    position: "absolute",
-    width: "10px",
-    height: "10px",
-    borderRadius: "50%",
-  };
   return (
     <Box
       css={[css, keyframes]}
@@ -103,74 +54,7 @@ const GenerateQuizButton = ({ onClick, css }) => {
       </Text>
       <Button onClick={onClick} style={buttonStyle} position={"relative"}>
         {/* Generate bubbles */}
-        {isBoosted &&
-          Array.from({ length: 10 }).map((_, index) => (
-            <Box
-              position={"absolute"}
-              key={index}
-              style={{
-                ...bubbleStyle,
-                top: `${Math.random() * 100}%`, // Randomize bubble position
-                left: `${Math.random() * 100}%`, // Randomize bubble position
-                animationDelay: `${Math.random() * 3}s`, // Randomize animation delay
-                background: `hsla(${Math.random() * 360}, 100%, 50%, ${
-                  Math.random() * 0.5
-                })`, // Randomize color with alpha channel
-              }}
-              animation="bubbleTop 3s infinite"
-            />
-          ))}
-        {isBoosted &&
-          Array.from({ length: 10 }).map((_, index) => (
-            <Box
-              position={"absolute"}
-              key={index}
-              style={{
-                ...bubbleStyle,
-                top: `${Math.random() * 100}%`, // Randomize bubble position
-                left: `${Math.random() * 100}%`, // Randomize bubble position
-                animationDelay: `${Math.random() * 3}s`, // Randomize animation delay
-                background: `hsla(${Math.random() * 360}, 100%, 50%, ${
-                  Math.random() * 0.5
-                })`, // Randomize color with alpha channel
-              }}
-              animation="bubbleBottom 3s infinite" // Apply bubble animation
-            />
-          ))}
-        {isBoosted &&
-          Array.from({ length: 10 }).map((_, index) => (
-            <Box
-              position={"absolute"}
-              key={index}
-              style={{
-                ...bubbleStyle,
-                top: `${Math.random() * 100}%`, // Randomize bubble position
-                left: `${Math.random() * 100}%`, // Randomize bubble position
-                animationDelay: `${Math.random() * 3}s`, // Randomize animation delay
-                background: `hsla(${Math.random() * 360}, 100%, 50%, ${
-                  Math.random() * 0.5
-                })`, // Randomize color with alpha channel
-              }}
-              animation="bubbleLeft 3s infinite"
-            />
-          ))}
-        {isBoosted &&
-          Array.from({ length: 10 }).map((_, index) => (
-            <Box
-              position={"absolute"}
-              key={index}
-              style={{
-                ...bubbleStyle,
-                top: `${Math.random() * 100}%`, // Randomize bubble position
-                left: `${Math.random() * 100}%`, // Randomize bubble position
-                animationDelay: `${Math.random() * 3}s`, // Randomize animation delay
-                background: `hsla(${Math.random() * 360}, 100%, 50%, ${
-                  Math.random() * 0.5
-                })`, // Randomize color with alpha channel
-              }}
-              animation="bubbleRight 3s infinite"
-            />
-          ))}
+        {isBoosted || (isQuinBoostAvailable && <Bubbles />)}
         Generate Quiz
       </Button>
     </Box>

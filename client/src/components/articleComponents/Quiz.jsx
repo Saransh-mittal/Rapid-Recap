@@ -25,8 +25,18 @@ import HindiInstructionModal from "./customQuizModal/HindiInstructionModal";
 import ReactGA from "react-ga4";
 import { AppContext } from "../../contextAPI/appContext";
 import BoostedSubmittedQuizInterface from "./quizComponents/BoostedSubmittedQuizInterface";
+import { quinBoostChecker } from "../../utils/quiz.utils";
 
-const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
+const Quiz = ({
+  article,
+  isOpen,
+  onClose,
+  ofShowQuiz,
+  language,
+  isQuinBoostAvailable,
+  setIsQuinBoostAvailable,
+  setQuizLeftToGetQuizBoost,
+}) => {
   const { state, dispatch } = useContext(AppContext);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timer, setTimer] = useState(50);
@@ -235,24 +245,36 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
   const showConfirmation = () => {
     setShowConfirmationModal(true);
   };
-  const handleClose = () => {
-    if (
-      !submitted &&
-      currentQuestionIndex < totalQuestions &&
-      !showInstruction
-    ) {
-      showConfirmation();
-    } else if (showInstruction) {
-      setShowInstruction(false);
-      onClose();
-    } else {
-      ofShowQuiz();
-      onClose();
+  const handleClose = async () => {
+    try {
+      await quinBoostChecker({
+        setIsQuinBoostAvailable,
+        setQuizLeftToGetQuizBoost,
+      });
+      if (
+        !submitted &&
+        currentQuestionIndex < totalQuestions &&
+        !showInstruction
+      ) {
+        showConfirmation();
+      } else if (showInstruction) {
+        setShowInstruction(false);
+        onClose();
+      } else {
+        ofShowQuiz();
+        onClose();
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
   const handleConfirmClose = async () => {
     // Close the confirmation modal
     try {
+      await quinBoostChecker({
+        setIsQuinBoostAvailable,
+        setQuizLeftToGetQuizBoost,
+      });
       await handleSubmitQuiz();
       setShowConfirmationModal(false);
     } catch (error) {
@@ -271,7 +293,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
     // Perform additional actions if needed
   };
   useEffect(() => {
-    if (submitted && !load && state.isBoosted) {
+    if (submitted && !load && (state.isBoosted || isQuinBoostAvailable)) {
       stars();
     }
   }, [submitted, load]);
@@ -310,7 +332,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
 
         <ModalContent
           background={
-            submitted && state.isBoosted
+            submitted && (state.isBoosted || isQuinBoostAvailable)
               ? "black"
               : "linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
           }
@@ -356,7 +378,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
 
           {showInstruction ? (
             language === "english" ? (
-              <InstructionModal />
+              <InstructionModal isQuinBoostAvailable={isQuinBoostAvailable} />
             ) : (
               <HindiInstructionModal />
             )
@@ -382,7 +404,7 @@ const Quiz = ({ article, isOpen, onClose, ofShowQuiz, language }) => {
                     userAnswers={userAnswers}
                   />
                 </>
-              ) : state.isBoosted ? (
+              ) : state.isBoosted || isQuinBoostAvailable ? (
                 <BoostedSubmittedQuizInterface isOpen={isOpen} score={score} />
               ) : (
                 <SubmittedQuizInterface isOpen={isOpen} score={score} />

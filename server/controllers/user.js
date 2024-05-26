@@ -2,12 +2,7 @@ const User = require("../model/userSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 
 const bcrypt = require("bcryptjs");
-const {
-  generateOtp,
-  mailTransporter,
-  generateEmailTemplate,
-  genEmailTemplateForNotifySubscribe,
-} = require("../utils/mail");
+const { generateOtp, mailTransporter } = require("../utils/mail.utils");
 const VerificationToken = require("../model/verificationToken");
 const { isValidObjectId } = require("mongoose");
 const jwt = require("jsonwebtoken");
@@ -19,10 +14,13 @@ const {
   calculateUserRank,
   dailyStreakCalculator,
   longestStreakCalculator,
-} = require("../utils/user");
-const dailyUserIQCalc = require("../utils/dailyUserIQCalc");
+  currDayStreakCalulator,
+} = require("../utils/user.utils");
+const dailyUserIQCalc = require("../utils/dailyUserIQCalc.utils");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
-const { progressBar } = require("../utils/progress");
+const { progressBar } = require("../utils/progress.utils");
+const QuinBoost = require("../model/quinBoostSchema");
+const MailTemplates = require("../data/MailTemplates.js");
 
 const registerUser = async (req, res) => {
   //console.log(req.body);
@@ -77,11 +75,11 @@ const registerUser = async (req, res) => {
 
     const transporter = await mailTransporter();
     await transporter.sendMail({
-      from: "rapidrecap2k23@gmail.com",
+      from: MailTemplates.OTP.from,
       to: user.email,
-      subject: "OTP for verification",
-      text: `Your OTP for verification`,
-      html: generateEmailTemplate(OTP),
+      subject: MailTemplates.OTP.subject,
+      text: MailTemplates.OTP.text,
+      html: MailTemplates.OTP.html(OTP),
     });
     return res.status(201).json({ message: "Registered Successfully" });
   } catch (err) {
@@ -146,8 +144,8 @@ const logoutUser = async (req, res) => {
     res.clearCookie("jwtoken", { path: "/" });
     res.status(201).send("User Logout");
   } catch (error) {
-    console.log(error.message);
-    res.status(422).json({ error: error.message });
+    console.log(error);
+    res.status(422).json({ error: error });
   }
 };
 
@@ -197,7 +195,7 @@ const verifyUser = async (req, res) => {
     res.status(201).json({ message: "Email verified successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(422).json({ error: error.message });
+    return res.status(422).json({ error: error });
   }
 };
 
@@ -233,16 +231,16 @@ const resendOTP = async (req, res) => {
     await verificationToken.save();
     const transporter = await mailTransporter();
     await transporter.sendMail({
-      from: "rapidrecap2k23@gmail.com",
+      from: MailTemplates.OTP.from,
       to: user.email,
-      subject: "OTP for verification",
-      text: `Your OTP for verification`,
-      html: generateEmailTemplate(OTP),
+      subject: MailTemplates.OTP.subject,
+      text: MailTemplates.OTP.text,
+      html: MailTemplates.OTP.html(OTP),
     });
     return res.status(201).json({ message: "OTP send Successfully" });
   } catch (error) {
-    console.log(error.message);
-    return res.status(422).json({ error: error.message });
+    console.log(error);
+    return res.status(422).json({ error: error });
   }
 };
 
@@ -251,7 +249,9 @@ const forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ email: email });
     if (!user) throw new Error("No user found");
+
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
     if (isSamePassword)
       throw new Error("New password should be different from old password");
     if (newPassword.length < 8)
@@ -263,8 +263,8 @@ const forgotPassword = async (req, res) => {
     await user.save();
     res.status(201).json({ message: "Password changed successfully" });
   } catch (error) {
-    console.log(error.message);
-    res.status(422).json({ error: error.message });
+    console.log(error);
+    res.status(422).json({ error: error });
   }
 };
 
@@ -347,8 +347,8 @@ const handleGoogleLogin = async (req, res) => {
     });
     res.status(201).json({ message: "Google Login Successfull", user });
   } catch (error) {
-    console.log(error.message);
-    res.status(422).json({ error: error.message });
+    console.log(error);
+    res.status(422).json({ error: error });
   }
 };
 
@@ -469,7 +469,7 @@ const leaderBoard = async (req, res) => {
       .json({ users: result, currUser: { RQM_avg, quizSubmissions } });
   } catch (error) {
     res.status(500).json({ error: "Error fetching the Leaderboard" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -804,7 +804,7 @@ const getUpdates = async (req, res) => {
     res.status(200).json({ updates });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -821,7 +821,7 @@ const readUpdates = async (req, res) => {
     res.status(200).json({ message: "Update read" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -837,11 +837,9 @@ const trashUpdate = async (req, res) => {
     res.status(200).json({ message: "Update deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
-
-// const ApplicationUpdates = require('./../model/applicationUpdatesSchema');
 
 const trashAllUpdate = async (req, res) => {
   const userId = req.user._id; // Assuming user ID is available in req.user._id
@@ -853,26 +851,24 @@ const trashAllUpdate = async (req, res) => {
     res.status(200).json({ message: "All updates deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
 const sendMailForNotifySubscribe = async (req, res) => {
   try {
     const users = await User.find({
-      email: { $not: /dummy\d+mail\.com/ },
+      email: { $not: /^dummy\d+@mail\.com$/ },
     });
     //const users = await User.find({ inGameName: "saransh_1234" });
     const transporter = await mailTransporter();
     const updateProgress = progressBar(users.length);
     for (const user of users) {
       await transporter.sendMail({
-        from: "rapidrecap2k23@gmail.com",
+        from: MailTemplates.NotifySubscribe.from,
         to: user.email,
-        subject: "📢 Stay Updated with Rapid Recap Notifications! 📰",
-        html: genEmailTemplateForNotifySubscribe({
-          name: user.name.split(" ")[0],
-        }),
+        subject: MailTemplates.NotifySubscribe.subject,
+        html: MailTemplates.NotifySubscribe.html(user.name.split(" ")[0]),
       });
       updateProgress();
     }
@@ -894,7 +890,7 @@ const upgradeMessageClose = async (req, res) => {
     res.status(200).json({ ok: "Success" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -910,7 +906,7 @@ const quizDailyStreakUpdator = async (req, res) => {
     res.status(200).json({ message: "Daily streak updated successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 const longestStreakCalculatorOfAllUsers = async (req, res) => {
@@ -925,7 +921,7 @@ const longestStreakCalculatorOfAllUsers = async (req, res) => {
     res.status(200).json({ message: "Longest streak updated successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -964,9 +960,78 @@ const streakChecker = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-    console.log(error.message);
+    console.log(error);
   }
 };
+
+const quinBoostChecker = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId).populate({
+      path: "quinBoosts.quinBoost",
+      select: "createdAt",
+    });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (user.todayBoost) {
+      return res.status(200).json({
+        quizLeftToGetQuizBoost: null,
+        isQuinBoostAvailable: false,
+      });
+    }
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const quinBoostsToReset = user.quinBoosts.filter((quinBoost) => {
+      return quinBoost.quinBoost
+        ? quinBoost.quinBoost.createdAt < today
+        : false;
+    });
+
+    // Set boosted to false for filtered quinBoosts
+    for (const quinBoost of quinBoostsToReset) {
+      quinBoost.boosted = false;
+    }
+    await user.save();
+    const quizAttempts = await QuizAttempt.find({
+      user: userId,
+      createdAt: { $gte: today }, // Find documents created today or later
+    });
+    const quizLeftToGetQuizBoost = 5 - (quizAttempts.length % 6);
+    const isQuinBoostAvailable =
+      quizLeftToGetQuizBoost === 0 && quizAttempts.length > 0;
+
+    if (isQuinBoostAvailable) {
+      const existingQuinBoost = await QuinBoost.findOne({
+        user: userId,
+        createdAt: { $gte: today },
+        quizCount: quizAttempts.length,
+      });
+      if (!existingQuinBoost) {
+        const quinBoost = new QuinBoost({
+          user: user._id,
+          quizCount: quizAttempts.length,
+          createdAt: new Date(),
+        });
+        await quinBoost.save();
+        user.quinBoosts.push({
+          quinBoost: quinBoost._id,
+          boosted: true,
+        });
+        await user.save();
+      }
+    }
+    res.status(200).json({
+      quizLeftToGetQuizBoost,
+      isQuinBoostAvailable,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -995,4 +1060,5 @@ module.exports = {
   quizDailyStreakUpdator,
   longestStreakCalculatorOfAllUsers,
   streakChecker,
+  quinBoostChecker,
 };

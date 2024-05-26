@@ -18,7 +18,7 @@ import imageData from "../../assets/AltNewsImage";
 
 const ReadMoreNewsModal = ({ onClose }) => {
   const [isMobile, setIsMobile] = useState(false);
-  const { state } = useContext(AppContext);
+  const { state, dispatch } = useContext(AppContext);
   const data = state.news;
   const altImage = imageData.find(
     (img) =>

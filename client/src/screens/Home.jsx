@@ -11,7 +11,7 @@ import { useToast, Box, Flex, Container } from "@chakra-ui/react";
 import UpgradeModal from "../components/homeComponents/UpgradeModal"; // Import UpgradeModal
 import NotificationSubscription from "../components/Notifications/NotificationSubscription";
 import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
-// Home component
+//
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
   const [items, setItems] = useState(state.items);
@@ -49,8 +49,7 @@ const Home = () => {
     try {
       if (
         window.innerHeight + document.documentElement.scrollTop + 10 >
-          document.documentElement.scrollHeight &&
-        category === state.category
+        document.documentElement.scrollHeight
       ) {
         setLoad(true);
         setPage((ele) => ele + 1);
@@ -85,15 +84,20 @@ const Home = () => {
   useEffect(() => {
     document.title = "Home Page";
     if (!state.show) {
-      // if (!category || category === "") {
-      //   navigate("/general");
-      // }
+      if (!category || category === "") {
+        navigate("/general");
+      }
 
       dispatch({ type: "homeInitialRender" });
       window.addEventListener("scroll", debouncedHandleScroll);
     }
+    dispatch({ type: "setNews", payloadNews: {} });
     return () => window.removeEventListener("scroll", debouncedHandleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!state.modal) dispatch({ type: "setNews", payloadNews: {} });
+  }, [state.modal]);
 
   useEffect(() => {
     if (!state.show) {

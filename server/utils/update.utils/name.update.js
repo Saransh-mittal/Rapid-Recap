@@ -1,5 +1,5 @@
 const User = require("../../model/userSchema");
-const { progressBar } = require("../progress");
+const { progressBar } = require("../progress.utils");
 
 async function updateUserName() {
   try {

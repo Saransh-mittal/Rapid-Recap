@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Box, Container, Flex, Tag, Text, Tooltip } from "@chakra-ui/react";
+import { Box, Flex, Tooltip } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
 import { AppContext } from "../contextAPI/appContext";
 import IQLineGraph from "../components/profileComponents/IQLineGraph";
@@ -11,20 +11,11 @@ import DailyActivity from "../components/profileComponents/DailyActivity";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import Loading from "../components/miscellaneous/Loading";
-import { useShepherdTour } from "react-shepherd";
-import stepsTutorialProfile from "../components/profileComponents/stepsTutorialProfile";
 import ToggleProfileVisibilty from "../components/profileComponents/LeftProfileSubComponents/ToggleProfileVisibilty.jsx";
+import { useProfileTour } from "../customHooks/useTours.js";
 
-const tourOptions = {
-  defaultStepOptions: {
-    cancelIcon: {
-      enabled: true,
-    },
-  },
-  useModalOverlay: true,
-};
 export default function Profile() {
-  const tour = useShepherdTour({ tourOptions, steps: stepsTutorialProfile });
+  const { tour, isTutorialTakenCheck } = useProfileTour();
   const { inGameName } = useParams();
   const { state, dispatch } = useContext(AppContext);
   const [profile, setProfile] = useState(state.userProfile);
@@ -40,45 +31,6 @@ export default function Profile() {
     society: false,
     dailyActivity: false,
   });
-  //const [rerender, setRerender] = useState(false);
-
-  const isTutorialTakenCheck = async () => {
-    try {
-      const Page = "profilePage";
-      const response = await axios.get(
-        `/api/user/isTutorialTakenCheck/${Page}`
-      );
-      console.log(response.data);
-      if (response.data.status) tour.start();
-    } catch (err) {
-      toast({
-        title: "Error in Checking tutorial taken",
-        description: err,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    }
-  };
-  const isTutorialTakenUpdate = async () => {
-    try {
-      const page = "profilePage";
-      const response = await axios.post(`/api/user/isTutorialTakenUpdate`, {
-        page,
-      });
-      console.log(response.data);
-    } catch (err) {
-      toast({
-        title: "Error in updating tutorial taken",
-        description: err,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    }
-  };
 
   const fetchProfile = async () => {
     setIsLoading(true);
@@ -105,89 +57,11 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    const body = document.querySelector("body");
-    const handleTourStart = () => {
-      body.style.overflow = "hidden"; // Reapply scroll behavior
-      const overlay = document.createElement("div");
-      overlay.classList.add("custom-overlay");
-      const overlayNav = document.createElement("div");
-      overlayNav.classList.add("custom-overlay-nav");
-      document.querySelector(".profile-info")?.appendChild(overlay);
-      document.querySelector(".profile-info")?.classList.add("shepherd-active");
-      document.querySelector(".navbar").appendChild(overlayNav);
-      document.querySelector(".navbar").classList.add("shepherd-active");
-    };
-
-    const handleTourComplete = () => {
-      body.style.overflow = "auto";
-      const dailyAct = document.querySelector(".daily-activity");
-      if (dailyAct) {
-        dailyAct.classList.remove("highlighted-card-1");
-      }
-      const navbar = document.querySelector(".navbar");
-      navbar.classList.remove("shepherd-active");
-      const leftProfileBox = document.querySelector(".left-profile-box");
-      leftProfileBox.classList.remove("shepherd-active");
-      const iqBarGraph = document.querySelector(".iq-bar-graph");
-      const iqlineGraph = document.querySelector(".iq-line-graph");
-      const solvedQuizzes = document.querySelector(".solved-quizzes");
-      const rankAndSociety = document.querySelector(".rank-and-society");
-
-      iqBarGraph.classList.remove("shepherd-active");
-      iqlineGraph.classList.remove("shepherd-active");
-      solvedQuizzes.classList.remove("shepherd-active");
-      rankAndSociety.classList.remove("shepherd-active");
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNav = document.querySelector(".custom-overlay-nav");
-      if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate();
-    };
-
-    const handleTourCancel = () => {
-      body.style.overflow = "auto";
-      const dailyAct = document.querySelector(".daily-activity");
-      if (dailyAct) {
-        dailyAct.classList.remove("highlighted-card-1");
-      }
-      const navbar = document.querySelector(".navbar");
-      navbar.classList.remove("shepherd-active");
-      const leftProfileBox = document.querySelector(".left-profile-box");
-      leftProfileBox.classList.remove("shepherd-active");
-      const iqBarGraph = document.querySelector(".iq-bar-graph");
-      const iqlineGraph = document.querySelector(".iq-line-graph");
-      const solvedQuizzes = document.querySelector(".solved-quizzes");
-      const rankAndSociety = document.querySelector(".rank-and-society");
-
-      iqBarGraph.classList.remove("shepherd-active");
-      iqlineGraph.classList.remove("shepherd-active");
-      solvedQuizzes.classList.remove("shepherd-active");
-      rankAndSociety.classList.remove("shepherd-active");
-
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNav = document.querySelector(".custom-overlay-nav");
-      if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate();
-    };
-
-    tour.on("start", handleTourStart);
-    tour.on("complete", handleTourComplete);
-    tour.on("cancel", handleTourCancel);
-
-    return () => {
-      tour.off("start", handleTourStart);
-      tour.off("complete", handleTourComplete);
-      tour.off("cancel", handleTourCancel);
-    };
-  }, [tour]);
-  useEffect(() => {
     document.title = "Profile page";
-    //console.log("Profile Page");
     const otherUserStored = state.otherUserProfiles?.find((user) => {
       return user?.inGameName === inGameName;
     });
-    //console.log(otherUserStored);
+
     if (inGameName === state.user.inGameName && state.userProfile) {
       setProfile(state.userProfile);
       setPrivacyProfileData(
@@ -207,7 +81,6 @@ export default function Profile() {
     } else {
       fetchProfile();
     }
-    //if (state.user && state.user.tutorial.profilePage) isTutorialTakenCheck();
   }, [inGameName]);
 
   useEffect(() => {
@@ -215,9 +88,10 @@ export default function Profile() {
       !isLoading &&
       !state.show &&
       state.user &&
-      state.user.tutorial.profilePage
+      state.user.tutorial.profilePage &&
+      loginedUserProfile
     )
-      isTutorialTakenCheck();
+      isTutorialTakenCheck({ page: "profilePage", tour });
   }, [isLoading]);
 
   return (

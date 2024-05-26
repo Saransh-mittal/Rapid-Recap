@@ -5,6 +5,7 @@ const userRoutes = require("./router/userRoutes");
 const articleRoutes = require("./router/articleRoutes");
 const quizRoutes = require("./router/quizRoutes");
 const subscriptionRoutes = require("./router/subscriptionRoutes");
+const mailRoutes = require("./router/mailRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -57,13 +58,17 @@ webpush.setVapidDetails(
 //require("./utils/bot.utils/updateBots");
 // -------------------
 app.use(express.json());
-require("./scheduler/userIQScoreScheduler");
+// require("./scheduler/userIQScoreScheduler");
+// require("./scheduler/mailsForStreakBroken");
+// require("./scheduler/mailsForStreakReminder");
+// require("./scheduler/extractNews");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);
 authRouter.use("/articles", articleRoutes);
 authRouter.use("/quiz", quizRoutes);
 authRouter.use("/subs", subscriptionRoutes);
+authRouter.use("/mail", mailRoutes);
 app.use("/api", authRouter);
 
 app.listen(PORT, () => {

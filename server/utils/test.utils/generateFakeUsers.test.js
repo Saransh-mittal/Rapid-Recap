@@ -1,7 +1,7 @@
 // Function to generate 100 fake users
 const { faker } = require("@faker-js/faker");
 const User = require("../../model/userSchema"); // Import User model
-const { progressBar } = require("../../utils/progress"); // Import progressBar utility function
+const { progressBar } = require("../../utils/progress.utils"); // Import progressBar utility function
 async function generateFakeUsers() {
   const updateProgress = progressBar(100);
   const fakeUsers = [];

@@ -19,16 +19,14 @@ import {
 import medalIcon from "../assets/medal.png";
 import axios from "axios";
 import { useState, useEffect, useContext } from "react";
-import { useShepherdTour } from "react-shepherd";
 import Loading from "../components/miscellaneous/Loading";
-import stepsLeaderBoard from "../components/leaderBoardComponents/stepsLeaderBoard"; // Assuming stepsLeaderBoard.js is in the same directory
-import { tourOptions } from "../components/leaderBoardComponents/stepsLeaderBoard";
 import { AppContext } from "../contextAPI/appContext";
 import { useNavigate } from "react-router-dom";
 import NameLightning from "../components/miscellaneous/NameLightning";
 import CircleAndSocietyData from "../assets/CircleAndSocietyData";
 import VerticalDotsSeparator from "../components/leaderBoardComponents/VerticalDotsSeparator";
 import { debounce, set } from "lodash";
+import { useLeaderBoardTour } from "../customHooks/useTours";
 
 const debouncedSearch = debounce(async (query, callback) => {
   try {
@@ -54,48 +52,7 @@ const LeaderBoard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currUserChar, setCurrUserChar] = useState(null);
   const [activeSociety, setActiveSociety] = useState(null);
-  const tour = useShepherdTour({
-    tourOptions,
-    steps: stepsLeaderBoard,
-  });
-
-  const isTutorialTakenCheck = async () => {
-    try {
-      const Page = "leaderBoardPage";
-      const response = await axios.get(
-        `/api/user/isTutorialTakenCheck/${Page}`
-      );
-      console.log(response.data);
-      if (response.data.status) tour.start();
-    } catch (err) {
-      toast({
-        title: "Error in Checking tutorial taken",
-        description: err,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    }
-  };
-  const isTutorialTakenUpdate = async () => {
-    try {
-      const page = "leaderBoardPage";
-      const response = await axios.post(`/api/user/isTutorialTakenUpdate`, {
-        page,
-      });
-      console.log(response.data);
-    } catch (err) {
-      toast({
-        title: "Error in updating tutorial taken",
-        description: err,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    }
-  };
+  const { tour, isTutorialTakenCheck } = useLeaderBoardTour();
 
   const fetchLeaderBoard = async (society = "") => {
     //etIsLoading(true);
@@ -153,8 +110,6 @@ const LeaderBoard = () => {
     document.title = "LeaderBoard Page";
     if (!state.show) {
       fetchLeaderBoard();
-      // if (state.user && state.user.tutorial.leaderBoardPage)
-      //   isTutorialTakenCheck();
     }
   }, []);
 
@@ -165,63 +120,8 @@ const LeaderBoard = () => {
       state.user &&
       state.user.tutorial.leaderBoardPage
     )
-      isTutorialTakenCheck();
+      isTutorialTakenCheck({ page: "leaderBoardPage", tour });
   }, [isLoading]);
-
-  useEffect(() => {
-    const body = document.querySelector("body");
-    const handleTourStart = () => {
-      body.style.overflow = "hidden"; // Reapply scroll behavior
-      const overlay = document.createElement("div");
-      overlay.classList.add("custom-overlay");
-      const overlayNav = document.createElement("div");
-      overlayNav.classList.add("custom-overlay-nav");
-      document.querySelector(".leaderboard")?.appendChild(overlay);
-      document.querySelector(".leaderboard")?.classList.add("shepherd-active");
-      document.querySelector(".navbar").appendChild(overlayNav);
-      document.querySelector(".navbar").classList.add("shepherd-active");
-    };
-
-    const handleTourComplete = () => {
-      body.style.overflow = "auto";
-      const navbar = document.querySelector(".navbar");
-      navbar.classList.remove("shepherd-active");
-
-      document
-        .querySelector(".leaderboard")
-        ?.classList.remove("shepherd-active");
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNav = document.querySelector(".custom-overlay-nav");
-      if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate();
-    };
-
-    const handleTourCancel = () => {
-      body.style.overflow = "auto";
-      const navbar = document.querySelector(".navbar");
-      navbar.classList.remove("shepherd-active");
-      document
-        .querySelector(".leaderboard")
-        ?.classList.remove("shepherd-active");
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNav = document.querySelector(".custom-overlay-nav");
-      if (overlayNav) overlayNav.remove();
-      isTutorialTakenUpdate();
-    };
-
-    tour.on("start", handleTourStart);
-    tour.on("complete", handleTourComplete);
-    tour.on("cancel", handleTourCancel);
-
-    return () => {
-      tour.off("start", handleTourStart);
-      tour.off("complete", handleTourComplete);
-      tour.off("cancel", handleTourCancel);
-    };
-  }, [tour]);
-
   const findSocietyAndCircle = (IQ) => {
     for (let i = 0; i < CircleAndSocietyData.length; i++) {
       const { IQ_Lower, IQ_Upper } = CircleAndSocietyData[i];
@@ -261,12 +161,10 @@ const LeaderBoard = () => {
             position: "top",
           });
         setSearchLoad(false);
-        // Update state or perform other actions based on response data
       });
     } catch (err) {
       console.log(err);
     }
-    // debouncedSearch(value);
   };
 
   return (

@@ -1,25 +1,19 @@
 const Article = require("../model/articleSchema");
-const Quiz = require("../model/quizSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const {
   genQuiz,
   generateQuestionsForQuiz,
   generateQuestionsForHindiQuiz,
   findQuizByLanguage,
-} = require("../utils/quiz");
+} = require("../utils/quiz.utils");
 const {
   breakArticleIntoParagraphs,
   hindiConverter,
   fetchNews,
   processNews,
-  extractNewsFromLink,
-  processExtractedNews,
-} = require("../utils/article");
-const NewsAPI = require("newsapi");
+  extractNewsUtilityFunc,
+} = require("../utils/article.utils");
 const { sendNotification } = require("../services/notificationService");
-const genQuizForArticles = require("../utils/update.utils/genQuizForArticles");
-const genHindiQuizForArticles = require("../utils/update.utils/genHindiQuizForArticles");
-const generateHindiTrans = require("../utils/update.utils/generateHindiTrans.update");
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = "general" } = req.query;
@@ -40,8 +34,8 @@ const allArticles = async (req, res) => {
     }
     res.send(article);
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
-    console.log(error.message);
+    res.status(400).json({ error: error || "Something went wrong" });
+    console.log(error);
   }
 };
 
@@ -95,8 +89,8 @@ const getArticle = async (req, res) => {
     }).countDocuments();
     res.status(201).send({ quizExpired, newArticle, totalUsersGivenQuiz });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
-    console.log(error.message);
+    res.status(400).json({ error: error || "Something went wrong" });
+    console.log(error);
   }
 };
 
@@ -246,9 +240,9 @@ const getHindiQuiz = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({
-      error: error.message || "Something went wrong! Please try again",
+      error: error || "Something went wrong! Please try again",
     });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -276,7 +270,7 @@ const startQuiz = async (req, res) => {
     await article.save();
     res.status(200).json({ message: "Quiz started successfully" });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
+    res.status(400).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
@@ -297,7 +291,7 @@ const getArticleQuizStatus = async (req, res) => {
     }
     res.status(200).json({ status: userStatus.status });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
+    res.status(400).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
@@ -331,7 +325,7 @@ const getTopRankers = async (req, res) => {
     });
     res.status(200).json({ rankers });
   } catch (error) {
-    res.status(500).json({ error: error.message || "Something went wrong" });
+    res.status(500).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
@@ -358,7 +352,7 @@ const hindiTranslation = async (req, res) => {
     await article.save();
     res.status(200).json({ status: "ok", article });
   } catch (error) {
-    res.status(500).json({ error: error.message || "Something went wrong" });
+    res.status(500).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
@@ -430,85 +424,18 @@ const getWorldNews = async (req, res) => {
     const title = "📢 New Content Alert! 📰";
     const body =
       "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-    const url = "https://cyan-crane-tie.cyclic.app/";
+    const url = "https://www.rapidrecap.co.in/";
     sendNotification({ title, body, url });
   } catch (error) {
-    res.status(500).json({ error: error.message || "Something went wrong" });
+    res.status(500).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
 
 const extractNews = async (req, res) => {
-  const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
-  const apiKeys = [
-    "7170746b5aa044069fbd5f48e74817ac",
-    "acd1bf365a084183b509789e0aae202a",
-    "a46513e934b14f44a9fa2137185f5438",
-    "7e4a7d41a3ed463a952349bfb07b1452",
-    "e7409124fe384b688c07763501b270dd",
-  ];
-  const categories = [
-    "general",
-    "sports",
-    "health",
-    "science",
-    "business",
-    "technology",
-    "entertainment",
-  ];
-  const requestsPerKey = 30;
-  let currentKeyIndex = 0;
-  let requestsMadeWithCurrentKey = 0;
-
   try {
-    let result = [];
-    let notificationCategories = categories.join(", ");
-    let articlesSavedPerCategory = {};
-
-    for (let category of categories) {
-      console.log(`\nExtracting news of category ${category}\n`);
-      const response = await newsapi.v2.topHeadlines({
-        category,
-        language: "en",
-        country: "in",
-      });
-
-      const articles = JSON.parse(JSON.stringify(response.articles));
-      console.log(articles.length);
-      let allProcessedOutput = [];
-
-      for (let article of articles) {
-        try {
-          if (requestsMadeWithCurrentKey >= requestsPerKey) {
-            // If requests limit reached, switch to the next API key
-            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
-            requestsMadeWithCurrentKey = 0;
-          }
-
-          const apiKey = apiKeys[currentKeyIndex];
-          const extractedNews = await extractNewsFromLink(article.url, apiKey);
-          allProcessedOutput.push(extractedNews);
-
-          requestsMadeWithCurrentKey++;
-        } catch (error) {
-          console.log(
-            `Error extracting news from article ${article.title}: ${error}`
-          );
-        }
-      }
-
-      const AiProcessedNews = await processExtractedNews(
-        allProcessedOutput,
-        category
-      );
-
-      await genQuizForArticles(AiProcessedNews);
-      await generateHindiTrans(AiProcessedNews);
-      await genHindiQuizForArticles(AiProcessedNews);
-      // push content of AiProcessedNews in result
-      result = result.concat(AiProcessedNews);
-      articlesSavedPerCategory[category] = AiProcessedNews.length;
-    }
+    const { result, articlesSavedPerCategory, notificationCategories } =
+      await extractNewsUtilityFunc();
 
     res.status(200).json({
       message: `No. of news fetched for DB : ${result.length}`,
@@ -523,7 +450,7 @@ const extractNews = async (req, res) => {
       await sendNotification({ title, body, url });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message || "Something went wrong" });
+    res.status(500).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };

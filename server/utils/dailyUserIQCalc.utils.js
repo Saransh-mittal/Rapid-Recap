@@ -1,8 +1,8 @@
 const DailyIQ = require("../model/dailyIQSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const User = require("../model/userSchema");
-const { progressBar } = require("./progress");
-const { updatePercentilesOnQuizDeactivation } = require("./quiz");
+const { progressBar } = require("./progress.utils");
+const { updatePercentilesOnQuizDeactivation } = require("./quiz.utils");
 const rankUpdate = require("./update.utils/rank.update");
 const CircleAndSocietyData = require("../data/CircleAndSocietyData");
 
