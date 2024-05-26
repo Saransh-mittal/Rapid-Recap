@@ -163,7 +163,7 @@ const Navbar = () => {
   };
   return (
     <Box
-      className={`navbar navbar-expand-lg navbar-light bg-light ${
+      className={`navbar navbar-expand-lg  ${
         isHamburgerOpen ? "full-screen" : ""
       }`}
       paddingX={{ base: "0.5rem", lg: "5rem" }}
