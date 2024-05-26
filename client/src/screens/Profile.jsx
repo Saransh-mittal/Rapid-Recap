@@ -88,7 +88,8 @@ export default function Profile() {
       !isLoading &&
       !state.show &&
       state.user &&
-      state.user.tutorial.profilePage
+      state.user.tutorial.profilePage &&
+      loginedUserProfile
     )
       isTutorialTakenCheck({ page: "profilePage", tour });
   }, [isLoading]);
