@@ -4,7 +4,6 @@ const QuizAttempt = require("../../model/quizAttemptSchema");
 const Quiz = require("../../model/quizSchema");
 const User = require("../../model/userSchema");
 //const { progressBar } = require("../../utils/progress.utils");
-const dailyUserIQCalc = require("../dailyUserIQCalc.utils");
 const { genQuiz } = require("../quiz.utils");
 
 function shuffle(array) {
@@ -148,10 +147,9 @@ async function updateBots() {
           else u.hardQuizCount++;
           await u.save();
         }
-        // updateProgressQuizAttempts();
+        //updateProgressQuizAttempts();
       }
       console.log(`\nGenerated fake quiz attempts for ${currentDate}\n`);
-      await dailyUserIQCalc();
     }
   } catch (err) {
     console.log(err);

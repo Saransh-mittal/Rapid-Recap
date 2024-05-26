@@ -64,7 +64,7 @@ const MailTemplates = {
     </div>
     <p style="font-size:1.1em">Hello ${name},</p>
     <h4>${title}</h4>
-    <p>${mainText}</p>
+    <p>${mainText.replace(/\n\n/g, "<br><br>")}</p>
     <a href="https://www.rapidrecap.co.in/" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:10px 20px; border-radius:5px;">View</a>
     
     <p>Best regards,<br />Rapid Recap Team</p>

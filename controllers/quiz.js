@@ -227,7 +227,7 @@ const saveAttempt = async (req, res) => {
     res.status(201).json({ message: "Attempt saved successfully", RQM_score });
   } catch (error) {
     console.log(error);
-    res.status(400).json({ error: error.message || "Error saving attempt" });
+    res.status(400).json({ error: error || "Error saving attempt" });
   }
 };
 
@@ -255,10 +255,9 @@ const getPercentile = async (req, res) => {
     console.log(userPercentile);
     res.status(200).json({ percentile: userPercentile });
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     res.status(400).json({
-      error:
-        error.message || "Error Calculating percentile. Please try again Later",
+      error: error || "Error Calculating percentile. Please try again Later",
     });
   }
 };
@@ -297,8 +296,8 @@ const givenQuiz = async (req, res) => {
       res.status(200).json({ given: false });
     }
   } catch (error) {
-    console.log(error.message);
-    res.status(422).json({ error: error.message });
+    console.log(error);
+    res.status(422).json({ error: error });
   }
 };
 
@@ -358,7 +357,7 @@ const getQuizSummary = async (req, res) => {
     }
     res.status(200).json({ result });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
+    res.status(400).json({ error: error || "Something went wrong" });
     console.error(error);
   }
 };
