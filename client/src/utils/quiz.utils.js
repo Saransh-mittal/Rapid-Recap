@@ -12,7 +12,7 @@ const quinBoostChecker = async ({
       setIsQuinBoostAvailable(response.data.isQuinBoostAvailable);
     }
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
   }
 };
 

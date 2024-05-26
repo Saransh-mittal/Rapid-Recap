@@ -1,24 +1,24 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const verificationSchema = new mongoose.Schema(
-    {
-      owner:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
-      token: {
-        type: String,
-        required: true,
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: 300,
-      }
+  {
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    { collection: "VerificationToken" }
-  );
+    token: {
+      type: String,
+      required: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      expires: 300,
+    },
+  },
+  { collection: "VerificationToken" }
+);
 
 verificationSchema.pre("save", async function (next) {
   if (this.isModified("token")) {
@@ -34,10 +34,13 @@ verificationSchema.methods.compareToken = async function (token) {
     const result = await bcrypt.compare(token, this.token);
     return result;
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
   }
 };
-  
-const VerificationToken = mongoose.model("VERIFICATIONTOKEN", verificationSchema);
+
+const VerificationToken = mongoose.model(
+  "VERIFICATIONTOKEN",
+  verificationSchema
+);
 
 module.exports = VerificationToken;

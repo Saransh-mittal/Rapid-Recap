@@ -34,8 +34,8 @@ const allArticles = async (req, res) => {
     }
     res.send(article);
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
-    console.log(error.message);
+    res.status(400).json({ error: error || "Something went wrong" });
+    console.log(error);
   }
 };
 
@@ -89,8 +89,8 @@ const getArticle = async (req, res) => {
     }).countDocuments();
     res.status(201).send({ quizExpired, newArticle, totalUsersGivenQuiz });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
-    console.log(error.message);
+    res.status(400).json({ error: error || "Something went wrong" });
+    console.log(error);
   }
 };
 
@@ -240,9 +240,9 @@ const getHindiQuiz = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({
-      error: error.message || "Something went wrong! Please try again",
+      error: error || "Something went wrong! Please try again",
     });
-    console.log(error.message);
+    console.log(error);
   }
 };
 
@@ -270,7 +270,7 @@ const startQuiz = async (req, res) => {
     await article.save();
     res.status(200).json({ message: "Quiz started successfully" });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
+    res.status(400).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
@@ -291,7 +291,7 @@ const getArticleQuizStatus = async (req, res) => {
     }
     res.status(200).json({ status: userStatus.status });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Something went wrong" });
+    res.status(400).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
@@ -325,7 +325,7 @@ const getTopRankers = async (req, res) => {
     });
     res.status(200).json({ rankers });
   } catch (error) {
-    res.status(500).json({ error: error.message || "Something went wrong" });
+    res.status(500).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
@@ -352,7 +352,7 @@ const hindiTranslation = async (req, res) => {
     await article.save();
     res.status(200).json({ status: "ok", article });
   } catch (error) {
-    res.status(500).json({ error: error.message || "Something went wrong" });
+    res.status(500).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
@@ -427,7 +427,7 @@ const getWorldNews = async (req, res) => {
     const url = "https://www.rapidrecap.co.in/";
     sendNotification({ title, body, url });
   } catch (error) {
-    res.status(500).json({ error: error.message || "Something went wrong" });
+    res.status(500).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };
@@ -450,7 +450,7 @@ const extractNews = async (req, res) => {
       await sendNotification({ title, body, url });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message || "Something went wrong" });
+    res.status(500).json({ error: error || "Something went wrong" });
     console.log(error);
   }
 };

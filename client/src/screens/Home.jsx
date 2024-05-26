@@ -91,8 +91,13 @@ const Home = () => {
       dispatch({ type: "homeInitialRender" });
       window.addEventListener("scroll", debouncedHandleScroll);
     }
+    dispatch({ type: "setNews", payloadNews: {} });
     return () => window.removeEventListener("scroll", debouncedHandleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!state.modal) dispatch({ type: "setNews", payloadNews: {} });
+  }, [state.modal]);
 
   useEffect(() => {
     if (!state.show) {
