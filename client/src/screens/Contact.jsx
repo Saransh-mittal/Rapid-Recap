@@ -17,16 +17,10 @@ const Contact = () => {
     transition: "all 0.3s ease-in-out",
     color: isHovered ? "#6c757d" : "#f9f9f9",
   };
-  const handleLoginAlert = () => {
-    if (state.show === true) {
-      navigate("/signin");
-    }
-  };
 
   useEffect(() => {
     document.title = "Contact page";
-    handleLoginAlert();
-  }, [state.show]);
+  }, []);
   return (
     <Flex
       style={{ minHeight: "77vh" }}
