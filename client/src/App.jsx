@@ -12,6 +12,7 @@ import Footer from "./components/Header-Footer/Footer.jsx";
 import Article from "./screens/Article.jsx";
 import Profile from "./screens/Profile.jsx";
 import LeaderBoard from "./screens/LeaderBoard.jsx";
+import GetStarted from "./screens/GetStarted.jsx";
 import ReactGA from "react-ga4";
 import { useEffect } from "react";
 const App = () => {
@@ -62,6 +63,7 @@ const App = () => {
     <>
       <Navbar />
       <Routes>
+        <Route exact path="/getStarted" element={<GetStarted />} />
         <Route path="/:category" element={<Home />} />
         <Route path="/" element={<Home />} />
         <Route exact path="/article/:id" element={<Article />} />
