@@ -18,7 +18,8 @@ const cronPattern = `${localMinute} ${localHour} * * *`;
 cron.schedule(cronPattern, async () => {
   try {
     // Call your function here
-    const { result, articlesSavedPerCategory } = await extractNewsUtilityFunc();
+    const { result, articlesSavedPerCategory, notificationCategories } =
+      await extractNewsUtilityFunc();
     if (result.length > 0) {
       const title = `📢 New ${notificationCategories} Content Alert! 📰`;
       const body =
