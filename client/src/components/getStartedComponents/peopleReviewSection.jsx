@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Flex,
@@ -7,10 +7,13 @@ import {
   VStack,
   HStack,
   IconButton,
+  Heading,
 } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import Section from "../miscellaneous/Section";
 
 const PeopleReviews = () => {
+  const parallaxRef = useRef(null);
   const reviews = [
     { src: "path/to/avatar1", alt: "Avatar 1", text: "Review 1" },
     { src: "path/to/avatar2", alt: "Avatar 2", text: "Review 2" },
@@ -53,51 +56,64 @@ const PeopleReviews = () => {
   const visibleReviews = getVisibleReviews();
 
   return (
-    <Box mb={8}>
-      <Flex justify="space-between" align="center" mb={4}>
-        <IconButton
-          icon={<ChevronLeftIcon />}
-          onClick={handlePrev}
-          aria-label="Previous"
-        />
-        <IconButton
-          icon={<ChevronRightIcon />}
-          onClick={handleNext}
-          aria-label="Next"
-        />
-      </Flex>
-      <Box overflow="hidden" width="100%">
-        <HStack
-          spacing={4}
-          justify="center"
-          transition="transform 0.5s ease-in-out"
-          width="100%"
-        >
-          {visibleReviews.map((review, index) => (
-            <VStack
-              key={index}
-              p={4}
-              borderWidth={1}
-              borderRadius="md"
-              minWidth="20%"
-              textAlign="center"
-              transform={index === 2 ? "scale(1.2)" : "scale(1)"}
-              transition="transform 0.5s, opacity 0.5s"
-              opacity={index === 2 ? 1 : 0.7}
+    <Section crosses customPaddings={`2.85rem 0 0 0`} id="whyUse">
+      <Box
+        mb={"2rem"}
+        textAlign="center"
+        maxW="62rem"
+        mx="auto"
+        ref={parallaxRef}
+      >
+        <Box mb={8}>
+          <Heading as="h2" size="lg" mb={4} textAlign="center">
+            What People say about us?
+          </Heading>
+          <Flex justify="space-between" align="center" mb={4}>
+            <IconButton
+              icon={<ChevronLeftIcon />}
+              onClick={handlePrev}
+              aria-label="Previous"
+            />
+            <IconButton
+              icon={<ChevronRightIcon />}
+              onClick={handleNext}
+              aria-label="Next"
+            />
+          </Flex>
+          <Box overflow="hidden" width="100%">
+            <HStack
+              spacing={4}
+              justify="center"
+              transition="transform 0.5s ease-in-out"
+              width="100%"
             >
-              <Image
-                src={review.src}
-                alt={review.alt}
-                boxSize={index === 2 ? "120px" : "100px"}
-                borderRadius="full"
-                transition="box-size 0.5s"
-              />
-              <Text>{review.text}</Text>
-            </VStack>
-          ))}
-        </HStack>
+              {visibleReviews.map((review, index) => (
+                <VStack
+                  key={index}
+                  p={4}
+                  borderWidth={1}
+                  borderRadius="md"
+                  minWidth="20%"
+                  textAlign="center"
+                  transform={index === 2 ? "scale(1.2)" : "scale(1)"}
+                  transition="transform 0.5s, opacity 0.5s"
+                  opacity={index === 2 ? 1 : 0.7}
+                >
+                  <Image
+                    src={review.src}
+                    alt={review.alt}
+                    boxSize={index === 2 ? "120px" : "100px"}
+                    borderRadius="full"
+                    transition="box-size 0.5s"
+                  />
+                  <Text>{review.text}</Text>
+                </VStack>
+              ))}
+            </HStack>
+          </Box>
+        </Box>
       </Box>
-    </Box>
+    </Section>
   );
 };
 
