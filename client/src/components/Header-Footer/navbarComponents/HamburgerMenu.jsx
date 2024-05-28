@@ -1,21 +1,28 @@
 import { LockIcon } from "@chakra-ui/icons";
 import {
-  Container,
+  Avatar,
   Flex,
   ListItem,
+  Text,
   Tooltip,
   UnorderedList,
 } from "@chakra-ui/react";
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useContext } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { BackgroundCircles, Rings, SideLines } from "../../design/Header";
+import { AppContext } from "../../../contextAPI/appContext";
+import LogoutButton from "./LogoutButton";
+import GetStarted from "./GetStarted";
 
 const HamburgerMenu = ({
   navItems,
   notLogined,
   navLinkRefs,
   setIsHamburgerOpen,
+  handleLogout,
 }) => {
+  const { state } = useContext(AppContext);
+  const navigate = useNavigate();
   return (
     <Flex
       backgroundImage={
@@ -24,7 +31,42 @@ const HamburgerMenu = ({
       height={"100%"}
       width={"100%"}
       position={"relative"}
+      justifyContent={"center"}
+      alignItems={"center"}
+      flexDirection={"column"}
+      marginTop={"2rem"}
     >
+      {!notLogined && (
+        <Flex
+          position={"absolute"}
+          top={"6rem"}
+          zIndex={1}
+          flexDirection={"column"}
+          gap={4}
+          justifyContent={"center"}
+          alignItems={"center"}
+          onClick={() => {
+            setIsHamburgerOpen(false);
+            navigate(`/profile/${state.user.inGameName}`);
+          }}
+          cursor={"pointer"}
+        >
+          <Avatar src={state.user.pic} h={"6rem"} w={"6rem"} rounded={"50%"} />
+          <Text letterSpacing={"2px"} fontWeight={"bold"}>
+            {" "}
+            <span
+              style={{
+                background: "#5ac8fa",
+                color: "#0f0d15",
+                borderRadius: "10px",
+                padding: "5px",
+              }}
+            >
+              {state.user.name}{" "}
+            </span>
+          </Text>
+        </Flex>
+      )}
       <UnorderedList
         display={"flex"}
         p={0}
@@ -32,12 +74,13 @@ const HamburgerMenu = ({
         w={"100%"}
         justifyContent={"center"}
         alignItems={"center"}
-        height={"100%"}
         listStyleType={"none"}
         gap={"3rem"}
         letterSpacing={"2px"}
         flexDirection="column"
         zIndex={1}
+        position={"absolute"}
+        top={notLogined ? "30%" : ""}
       >
         {/* Navigation items */}
         {navItems.map((item, index) => (
@@ -81,6 +124,13 @@ const HamburgerMenu = ({
       <SideLines />
 
       <BackgroundCircles />
+      <Flex position={"absolute"} bottom={notLogined ? "35%" : "28%"}>
+        {notLogined ? (
+          <GetStarted />
+        ) : (
+          <LogoutButton handleLogout={handleLogout} />
+        )}
+      </Flex>
     </Flex>
   );
 };

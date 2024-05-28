@@ -4,6 +4,7 @@ import Inbox from "./Inbox";
 import StreakFire from "./StreakFire";
 import ProfileDropDownMenu from "../../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon } from "@chakra-ui/icons";
+import GetStarted from "./GetStarted";
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -27,32 +28,38 @@ const OutsideNavbarContent = ({
         display={isHamburgerOpen ? "none" : "flex"}
       >
         {/* Profile dropdown menu */}
-        <StreakFire
-          marginAroundBox={"auto"}
-          widthOfBox={"1.6em"}
-          heightOfBox={"1.6em"}
-          _hover={{
-            cursor: "pointer",
-            backgroundColor: "#0f0d15",
-            backgroundImage:
-              "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-          }}
-          className={"streak-tracker-lg"}
-          onClick={() => {
-            setShowDailyStreakModal(true);
-            tourComplete();
-          }}
-          streak={streak}
-          isBoosted={isBoosted}
-          getBackgroundColor={getBackgroundColor}
-        />
-        <Inbox
-          className={"inbox-button-lg"}
-          onClick={() => setIsDrawerOpen(true)}
-          notifyCont={notifyCont}
-        />
+        {notLogined && <GetStarted display={{ base: "none", lg: "flex" }} />}
+        {!notLogined && (
+          <>
+            {" "}
+            <StreakFire
+              marginAroundBox={"auto"}
+              widthOfBox={"1.6em"}
+              heightOfBox={"1.6em"}
+              _hover={{
+                cursor: "pointer",
+                backgroundColor: "#0f0d15",
+                backgroundImage:
+                  "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+              }}
+              className={"streak-tracker-lg"}
+              onClick={() => {
+                setShowDailyStreakModal(true);
+                tourComplete();
+              }}
+              streak={streak}
+              isBoosted={isBoosted}
+              getBackgroundColor={getBackgroundColor}
+            />
+            <Inbox
+              className={"inbox-button-lg"}
+              onClick={() => setIsDrawerOpen(true)}
+              notifyCont={notifyCont}
+            />
+          </>
+        )}
         {!notLogined && !isHamburgerOpen ? (
-          <Flex>
+          <Flex display={{ base: "none", lg: "flex" }}>
             <ProfileDropDownMenu
               className="profile-dropdown-lg"
               handleLogout={handleLogout}
@@ -61,7 +68,7 @@ const OutsideNavbarContent = ({
             />
           </Flex>
         ) : null}
-        {!isHamburgerOpen && !notLogined ? (
+        {!isHamburgerOpen ? (
           <>
             <Flex className="menu-button">
               <Button

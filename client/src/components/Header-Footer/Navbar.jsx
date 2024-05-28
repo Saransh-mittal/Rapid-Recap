@@ -93,6 +93,8 @@ const Navbar = () => {
     try {
       const response = await axios.post("/api/user/logout");
       if (response.status === 201) {
+        setIsDrawerOpen(false);
+        setIsHamburgerOpen(false);
         toast({
           title: "Logout Successfull",
           status: "success",
@@ -147,12 +149,15 @@ const Navbar = () => {
     }
   };
   return (
-    <Flex height={isHamburgerOpen ? "100vh" : "auto"}>
+    <Box
+      height={isHamburgerOpen ? "100vh" : "auto"}
+      overflow={isHamburgerOpen ? "hidden" : "visible"}
+    >
       <Box
         className={`navbar navbar-expand-lg`}
-        paddingX={{ base: "0.5rem", lg: "5rem" }}
+        paddingX={{ base: "2rem", lg: "5rem" }}
         height={"5rem"}
-        w={"100%"}
+        w={"100vw"}
         //padding={{ base: "0.5rem", lg: "1rem" }}
         onTouchStart={startDrag}
         onTouchMove={(e) => drag(e.touches[0])}
@@ -228,24 +233,21 @@ const Navbar = () => {
             setShowCategory={setShowCategory}
             showCategory={showCategory}
           />
-          {!state.show ? (
-            <OutsideNavbarContent
-              setIsDrawerOpen={setIsDrawerOpen}
-              notifyCont={notifyCont}
-              setShowDailyStreakModal={setShowDailyStreakModal}
-              tourComplete={tour.complete}
-              streak={state.streak}
-              isBoosted={state.isBoosted}
-              getBackgroundColor={getBackgroundColor}
-              notLogined={state.show}
-              isHamburgerOpen={isHamburgerOpen}
-              handleLogout={handleLogout}
-              navLinkRefs={navLinkRefs}
-              setIsHamburgerOpen={setIsHamburgerOpen}
-            />
-          ) : (
-            <GetStarted />
-          )}
+
+          <OutsideNavbarContent
+            setIsDrawerOpen={setIsDrawerOpen}
+            notifyCont={notifyCont}
+            setShowDailyStreakModal={setShowDailyStreakModal}
+            tourComplete={tour.complete}
+            streak={state.streak}
+            isBoosted={state.isBoosted}
+            getBackgroundColor={getBackgroundColor}
+            notLogined={state.show}
+            isHamburgerOpen={isHamburgerOpen}
+            handleLogout={handleLogout}
+            navLinkRefs={navLinkRefs}
+            setIsHamburgerOpen={setIsHamburgerOpen}
+          />
         </Flex>
         {isModalOpen && (
           <NotificationModal
@@ -268,9 +270,10 @@ const Navbar = () => {
           notLogined={state.show}
           navLinkRefs={navLinkRefs}
           setIsHamburgerOpen={setIsHamburgerOpen}
+          handleLogout={handleLogout}
         />
       )}
-    </Flex>
+    </Box>
   );
 };
 

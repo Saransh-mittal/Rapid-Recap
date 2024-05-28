@@ -1,9 +1,8 @@
 import { Flex, ListItem, UnorderedList } from "@chakra-ui/react";
 import React from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { LockIcon } from "@chakra-ui/icons";
 import { Tooltip } from "@chakra-ui/react";
-import { BackgroundCircles, Rings, SideLines } from "../../design/Header";
 
 const NavbarContent = ({
   isHamburgerOpen,
@@ -12,8 +11,6 @@ const NavbarContent = ({
   navItems,
   notLogined,
 }) => {
-  const location = useLocation();
-
   return (
     <>
       <Flex
@@ -31,7 +28,7 @@ const NavbarContent = ({
       >
         {/* Dropdown menu for small screens */}
         <Flex
-          display={{ base: "none", lg: "flex" }}
+          display={{ base: "none", lg: "flex !important" }}
           flexDirection={{ base: "column", lg: "row" }}
           id="navbarNav"
           alignItems={"center"}

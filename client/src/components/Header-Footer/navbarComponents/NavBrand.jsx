@@ -11,16 +11,24 @@ const NavBrand = ({ isHamburgerOpen }) => {
         <Image
           src={Mic}
           alt="Rapid Recap"
-          width="30px"
-          height={"40px"}
+          width={{
+            base: isHamburgerOpen ? "1.5rem" : "3rem",
+            md: isHamburgerOpen ? "2rem" : "5rem",
+            lg: "2.5rem",
+          }}
+          height={"2.5rem"}
           background={"transparent"}
           marginRight={"-5px"}
         />
         <Image
           src={Logo}
           alt="Rapid Recap"
-          width="120px"
-          height={"40px"}
+          width={{
+            base: isHamburgerOpen ? "5rem" : "10rem",
+            md: "6rem",
+            lg: "9rem",
+          }}
+          height={"2.5rem"}
           background={"transparent"}
         />
       </Flex>
