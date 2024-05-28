@@ -33,7 +33,8 @@
     "react-router-dom": "^6.14.1",
     "react-shepherd": "^4.3.0",
     "react-swipeable": "^7.0.1",
-    "styled-components": "^6.1.11"
+    "styled-components": "^6.1.11",
+    "swiper": "^11.1.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.14",
