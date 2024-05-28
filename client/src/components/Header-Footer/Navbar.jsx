@@ -1,37 +1,27 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
-import {
-  useToast,
-  Button,
-  Flex,
-  Badge,
-  Heading,
-  Box,
-  Text,
-} from "@chakra-ui/react";
+import { useToast, Button, Flex, Box } from "@chakra-ui/react";
 import useDrag from "../../customHooks/useDrag";
-import ProfileDropDownMenu from "../profileComponents/ProfileDropDownMenu";
-import { HamburgerIcon, CloseIcon, EmailIcon } from "@chakra-ui/icons";
-import Categories from "./Categories";
+
+import { CloseIcon } from "@chakra-ui/icons";
 import NotificationDrawer from "./Inbox/NotificationDrawer";
 import DailyStreakModal from "../streakComponents/DailyStreakModal";
 import NotificationModal from "./Inbox/NotificationModal";
 import { useDailyStreakTour } from "../../customHooks/useTours";
-import StreakFire from "./navbarComponents/StreakFire";
-import Inbox from "./navbarComponents/Inbox";
 import NavbarContent from "./navbarComponents/NavbarContent";
 import OutsideNavbarContent from "./navbarComponents/OutsideNavbarContent";
+import NavBrand from "./navbarComponents/NavBrand";
+import GetStarted from "./navbarComponents/GetStarted";
+import HamburgerMenu from "./navbarComponents/HamburgerMenu";
 
 const Navbar = () => {
   const navItems = [
     { to: "/", label: "Home" },
     { to: "/contact", label: "Contact Us" },
     { to: "/leaderboard", label: "Leaderboard" },
-    { to: "", label: "category" },
-    { to: "/profile", label: "Profile" },
   ];
   const [showCategory, setShowCategory] = useState(false);
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
@@ -47,11 +37,6 @@ const Navbar = () => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [showDailyStreakModal, setShowDailyStreakModal] = useState(false);
   const { tour, isTutorialTakenCheck } = useDailyStreakTour();
-  // Dummy notification data
-
-  // useEffect(() => {
-  //   setNotificationData(dummyNotificationData);
-  // }, []); // Fetch or set dummy data on component mount
 
   useEffect(() => {
     const isEmptyObject = (obj) => {
@@ -108,6 +93,8 @@ const Navbar = () => {
     try {
       const response = await axios.post("/api/user/logout");
       if (response.status === 201) {
+        setIsDrawerOpen(false);
+        setIsHamburgerOpen(false);
         toast({
           title: "Logout Successfull",
           status: "success",
@@ -163,88 +150,127 @@ const Navbar = () => {
   };
   return (
     <Box
-      className={`navbar navbar-expand-lg  ${
-        isHamburgerOpen ? "full-screen" : ""
-      }`}
-      paddingX={{ base: "0.5rem", lg: "5rem" }}
-      //padding={{ base: "0.5rem", lg: "1rem" }}
-      onTouchStart={startDrag}
-      onTouchMove={(e) => drag(e.touches[0])}
-      onTouchEnd={endDrag}
-      position={"fixed"}
-      w={"100%"}
-      zIndex={"1000"}
-      transform={visible ? "translateY(0)" : "translateY(-100%)"}
-      transition="transform 0.3s ease-in-out"
+      height={isHamburgerOpen ? "100vh" : "auto"}
+      overflow={isHamburgerOpen ? "hidden" : "visible"}
     >
-      {showDailyStreakModal && (
-        <DailyStreakModal
-          setShowDailyStreakModal={setShowDailyStreakModal}
-          getBackgroundColor={getBackgroundColor}
-        />
-      )}
-      {/* Close button when hamburger menu is open */}
-      {isHamburgerOpen ? (
-        <Button
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-label="Toggle navigation"
-          display={{ base: "flex", lg: "none" }}
-          onClick={() => setIsHamburgerOpen(false)}
-          marginBottom={isHamburgerOpen ? "2rem" : "0"}
-          width={isHamburgerOpen ? "100px" : "auto"}
-          marginLeft={"auto"}
+      <Box
+        className={`navbar navbar-expand-lg`}
+        paddingX={{ base: "2rem", lg: "5rem" }}
+        height={"5rem"}
+        w={"100vw"}
+        //padding={{ base: "0.5rem", lg: "1rem" }}
+        onTouchStart={startDrag}
+        onTouchMove={(e) => drag(e.touches[0])}
+        onTouchEnd={endDrag}
+        position={"fixed"}
+        zIndex={"1000"}
+        transform={visible ? "translateY(0)" : "translateY(-100%)"}
+        transition="transform 0.3s ease-in-out"
+        backgroundImage={
+          "linear-gradient(-180deg, rgba(26, 21, 39, 0.9), rgba(14, 12, 22, 0.9) 88%, rgba(14, 12, 22, 0.9) 99%)"
+        }
+        borderBottom={"1px solid rgba(255, 255, 255, 0.1)"}
+        boxShadow={visible ? "0 2px 4px rgba(0, 0, 0, 0.1)" : "none"}
+        style={{
+          transition:
+            "transform 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          borderImage:
+            "linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1",
+        }}
+        borderBottomWidth={"1px"}
+        borderBottomStyle={"solid"}
+        justifyContent={"center"}
+      >
+        {isHamburgerOpen && <NavBrand isHamburgerOpen={isHamburgerOpen} />}
+
+        {showDailyStreakModal && (
+          <DailyStreakModal
+            setShowDailyStreakModal={setShowDailyStreakModal}
+            getBackgroundColor={getBackgroundColor}
+          />
+        )}
+        {/* Close button when hamburger menu is open */}
+        {isHamburgerOpen ? (
+          <Button
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-label="Toggle navigation"
+            display={{ base: "flex", lg: "none" }}
+            onClick={() => setIsHamburgerOpen(false)}
+            height={"35px"}
+            width={"10px"}
+            marginLeft={"auto"}
+          >
+            <CloseIcon />
+          </Button>
+        ) : null}
+        {/* Navbar content */}
+        <Flex
+          w={"100%"}
+          height={"100%"}
+          flexDirection={"row"}
+          display={isHamburgerOpen ? "none" : "flex"}
         >
-          <CloseIcon />
-        </Button>
-      ) : null}
-      {/* Navbar content */}
-      <NavbarContent
-        isHamburgerOpen={isHamburgerOpen}
-        notLogined={state.show}
-        setIsDrawerOpen={setIsDrawerOpen}
-        notifyCont={notifyCont}
-        setIsHamburgerOpen={setIsHamburgerOpen}
-        setShowDailyStreakModal={setShowDailyStreakModal}
-        tourComplete={tour.complete}
-        streak={state.streak}
-        isBoosted={state.isBoosted}
-        getBackgroundColor={getBackgroundColor}
-        handleLogout={handleLogout}
-        navLinkRefs={navLinkRefs}
-        navItems={navItems}
-        setShowCategory={setShowCategory}
-        showCategory={showCategory}
-      />
-      {!state.show && (
-        <OutsideNavbarContent
-          setIsDrawerOpen={setIsDrawerOpen}
-          notifyCont={notifyCont}
-          setShowDailyStreakModal={setShowDailyStreakModal}
-          tourComplete={tour.complete}
-          streak={state.streak}
-          isBoosted={state.isBoosted}
-          getBackgroundColor={getBackgroundColor}
+          <NavBrand isHamburgerOpen={isHamburgerOpen} />
+          <NavbarContent
+            isHamburgerOpen={isHamburgerOpen}
+            notLogined={state.show}
+            setIsDrawerOpen={setIsDrawerOpen}
+            notifyCont={notifyCont}
+            setIsHamburgerOpen={setIsHamburgerOpen}
+            setShowDailyStreakModal={setShowDailyStreakModal}
+            tourComplete={tour.complete}
+            streak={state.streak}
+            isBoosted={state.isBoosted}
+            getBackgroundColor={getBackgroundColor}
+            handleLogout={handleLogout}
+            navLinkRefs={navLinkRefs}
+            navItems={navItems}
+            setShowCategory={setShowCategory}
+            showCategory={showCategory}
+          />
+
+          <OutsideNavbarContent
+            setIsDrawerOpen={setIsDrawerOpen}
+            notifyCont={notifyCont}
+            setShowDailyStreakModal={setShowDailyStreakModal}
+            tourComplete={tour.complete}
+            streak={state.streak}
+            isBoosted={state.isBoosted}
+            getBackgroundColor={getBackgroundColor}
+            notLogined={state.show}
+            isHamburgerOpen={isHamburgerOpen}
+            handleLogout={handleLogout}
+            navLinkRefs={navLinkRefs}
+            setIsHamburgerOpen={setIsHamburgerOpen}
+          />
+        </Flex>
+        {isModalOpen && (
+          <NotificationModal
+            selectedNotification={selectedNotification}
+            setIsModalOpen={setIsModalOpen}
+            setIsDrawerOpen={setIsDrawerOpen}
+          />
+        )}
+        {isDrawerOpen && (
+          <NotificationDrawer
+            setIsDrawerOpen={setIsDrawerOpen}
+            setIsModalOpen={setIsModalOpen}
+            setSelectedNotification={setSelectedNotification}
+          />
+        )}
+      </Box>
+      {isHamburgerOpen && (
+        <HamburgerMenu
+          navItems={navItems}
           notLogined={state.show}
-          isHamburgerOpen={isHamburgerOpen}
-          handleLogout={handleLogout}
           navLinkRefs={navLinkRefs}
-        />
-      )}
-      {isModalOpen && (
-        <NotificationModal
-          selectedNotification={selectedNotification}
-          setIsModalOpen={setIsModalOpen}
-          setIsDrawerOpen={setIsDrawerOpen}
-        />
-      )}
-      {isDrawerOpen && (
-        <NotificationDrawer
-          setIsDrawerOpen={setIsDrawerOpen}
-          setIsModalOpen={setIsModalOpen}
-          setSelectedNotification={setSelectedNotification}
+          setIsHamburgerOpen={setIsHamburgerOpen}
+          handleLogout={handleLogout}
         />
       )}
     </Box>

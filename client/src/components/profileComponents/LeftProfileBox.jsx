@@ -90,7 +90,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const selectedDatafromMaxIQ = findSocietyAndCircle(MAX_IQ);
   const selectedDatafromCurrIQ = findSocietyAndCircle(CURR_IQ);
   return (
-    <Flex className="left-profile-box" flexDirection={"column"}>
+    <Flex className="left-profile-box" flexDirection={"column"} w={"100%"}>
       <Flex w={"100%"}>
         <Image
           src={profileData?.pic}
