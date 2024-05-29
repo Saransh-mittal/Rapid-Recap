@@ -48,7 +48,7 @@ const Home = () => {
   const handleScroll = async () => {
     try {
       if (
-        window.innerHeight + document.documentElement.scrollTop + 10 >
+        window.innerHeight + document.documentElement.scrollTop + 1000 >
         document.documentElement.scrollHeight
       ) {
         setLoad(true);

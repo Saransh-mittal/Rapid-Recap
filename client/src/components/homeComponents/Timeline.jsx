@@ -2,6 +2,7 @@ import { useContext, useEffect } from "react";
 import TimelineItem from "./TimelineItem";
 import { AppContext } from "../../contextAPI/appContext";
 import { useHomeTour } from "../../customHooks/useTours";
+import { Box, Flex } from "@chakra-ui/react";
 
 const Timeline = ({ data, load }) => {
   const { state } = useContext(AppContext);
@@ -12,33 +13,31 @@ const Timeline = ({ data, load }) => {
       isTutorialTakenCheck({ page: "homePage", tour });
   }, [load]);
   return (
-    <div className="px-5 timeline">
+    <div
+      className="px-3 timeline"
+      style={{ display: "flex", flexDirection: "row", gap: "5%" }}
+    >
+      <Flex
+        w={"15%"}
+        h={"100vh"}
+        display={{ base: "none", lg: "flex" }}
+        position={"fixed"}
+        backgroundColor={{ base: "transparent", lg: "#0f0d15" }}
+        backgroundImage={{
+          base: "none",
+          lg: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+        }}
+        boxShadow={{
+          base: "none",
+          lg: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+        }}
+      ></Flex>
       <div className="timeline-container">
-        <div className="intro">
-          <div className="info">
-            <h1>🌍 Stay Informed:</h1>
-            <p className="mb-5">
-              Explore the latest global developments, breaking news, and top
-              stories from around the world. Our team of dedicated journalists
-              and AI algorithms work tirelessly to bring you the most relevant
-              and comprehensive news coverage.
-            </p>
-          </div>
-          <div className="short">
-            <h1>📰 Short and Sweet:</h1>
-            <p>
-              We understand that your time is valuable. That's why we provide
-              concise and engaging summaries of the day's most important events.
-              Get all the essential information you need in a format
-              that's easy to digest.
-            </p>
-          </div>
-        </div>
         <div className="row item-container">
           {data.map((item, id) => {
             //console.log(item.dateTime);
             return (
-              <div className="col-md-6 col-lg-4 item" key={id}>
+              <div className="col-md-6 col-xxl-4 item" key={id}>
                 <TimelineItem
                   newsNumber={id}
                   data={item}

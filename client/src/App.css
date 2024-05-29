@@ -37,7 +37,7 @@ section {
 .cardWrapper {
   perspective: 1000px;
   width: 100%;
-  width: 410px;
+  width: 260px;
   height: 230px;
   z-index: 10;
 }
@@ -166,6 +166,13 @@ section {
   transition: 0.5s;
   transform: translateY(800px);
 }
+
+@media only screen and (max-width: 992px){
+  .timeline-container{
+    width: 100% !important;
+  }
+}
+
 @media only screen and (max-width: 1440px) {
   .contents p {
     display: none;
@@ -227,7 +234,9 @@ section {
   display: flex;
   flex-direction: column;
   position: relative;
-  margin: 40px 0;
+  margin-top: 40px;
+  margin-left: auto;
+  width: 80%;
 }
 
 .timeline-item {
@@ -246,8 +255,8 @@ section {
   margin-top: 4rem !important;
 }
 .item:nth-child(5n) .cardWrapper {
-  height: 400px;
-  width: 250px;
+  height: 350px;
+  width: 230px;
 }
 .item:nth-child(3n) .cardWrapper {
   height: 400px;
