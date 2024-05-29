@@ -1,215 +1,180 @@
 import React, { useRef } from "react";
-import {
-  Box,
-  Heading,
-  Text,
-  VStack,
-  Icon,
-  useColorModeValue,
-  Flex,
-  Image,
-} from "@chakra-ui/react";
-import { FaCheckCircle } from "react-icons/fa";
+import { Box, Heading, Flex, Text, Image } from "@chakra-ui/react";
 import Section from "../miscellaneous/Section";
-import ArrowIcon from "../../assets/svg/Arrow";
+import benefitIcon1 from "../../assets/benefits/icon-1.svg";
+import benefitIcon2 from "../../assets/benefits/icon-2.svg";
+import benefitIcon3 from "../../assets/benefits/icon-3.svg";
+import benefitIcon4 from "../../assets/benefits/icon-4.svg";
+import benefitImage2 from "../../assets/benefits/image-2.png";
 import ClipPath from "../../assets/svg/ClipPath";
+import Arrow from "../../assets/svg/Arrow";
 
 const WhyToUseSection = () => {
   const parallaxRef = useRef(null);
-  // const textColor = useColorModeValue("gray.700", "gray.200");
 
-  const cardData = [
+  const benefits = [
     {
       id: "0",
-      title: "Ask anything",
-      text: "Lets users quickly find answers to their questions without having to search through multiple sources.",
+      title: "Stay Informed",
+      text: "Get the latest news articles from diverse sources all in one place, ensuring you stay updated on current events. Whether it's politics, technology, sports, or entertainment, Rapid Recap has you covered.",
       backgroundUrl: "./src/assets/benefits/card-1.svg",
-      // iconUrl: benefitIcon1,
-      // imageUrl: benefitImage2,
+      iconUrl: benefitIcon1,
+      imageUrl: benefitImage2,
     },
     {
       id: "1",
-      title: "Improve everyday",
-      text: "The app uses natural language processing to understand user queries and provide accurate and relevant responses.",
+      title: "Test Your Knowledge",
+      text: "Take quizzes based on the articles you read to test your comprehension and retention of information. Our quizzes are designed to be engaging and informative, helping you reinforce what you've learned.",
       backgroundUrl: "./src/assets/benefits/card-2.svg",
-      // iconUrl: benefitIcon2,
-      // imageUrl: benefitImage2,
+      iconUrl: benefitIcon2,
+      imageUrl: benefitImage2,
       light: true,
     },
     {
       id: "2",
-      title: "Connect everywhere",
-      text: "Connect with the AI chatbot from anywhere, on any device, making it more accessible and convenient.",
+      title: "Track Your Progress",
+      text: "Monitor your Information Quotient (IQ) score over time with detailed graphs and statistics. See how your knowledge and understanding evolve as you continue to engage with the app.",
       backgroundUrl: "./src/assets/benefits/card-3.svg",
-      // iconUrl: benefitIcon3,
-      // imageUrl: benefitImage2,
+      iconUrl: benefitIcon3,
+      imageUrl: benefitImage2,
     },
     {
       id: "3",
-      title: "Fast responding",
-      text: "Lets users quickly find answers to their questions without having to search through multiple sources.",
+      title: "Compete and Rank",
+      text: "See how you stack up against other users with our leaderboard and percentile ranking system. Compete for the top spot and earn recognition for your knowledge and expertise.",
       backgroundUrl: "./src/assets/benefits/card-4.svg",
-      // iconUrl: benefitIcon4,
-      // imageUrl: benefitImage2,
+      iconUrl: benefitIcon4,
+      imageUrl: benefitImage2,
       light: true,
     },
     {
       id: "4",
-      title: "Ask anything",
-      text: "Lets users quickly find answers to their questions without having to search through multiple sources.",
+      title: "Join Societies",
+      text: "Belong to exclusive societies based on your IQ score and connect with like-minded individuals. Whether you're an Explorer, Striver, Elite, Maverick, or Visionary, there's a community waiting for you.",
       backgroundUrl: "./src/assets/benefits/card-5.svg",
-      // iconUrl: benefitIcon1,
-      // imageUrl: benefitImage2,
+      iconUrl: benefitIcon1,
+      imageUrl: benefitImage2,
     },
     {
       id: "5",
-      title: "Improve everyday",
-      text: "The app uses natural language processing to understand user queries and provide accurate and relevant responses.",
+      title: "Improve Daily",
+      text: "Consistently challenge yourself with new quizzes and track your improvement over time. With daily practice, you can expand your knowledge and enhance your cognitive abilities.",
       backgroundUrl: "./src/assets/benefits/card-6.svg",
-      // iconUrl: benefitIcon2,
-      // imageUrl: benefitImage2,
+      iconUrl: benefitIcon2,
+      imageUrl: benefitImage2,
     },
   ];
 
   return (
-    <Section crosses customPaddings={`2.85rem 0 0 0`} id="whyUse">
-      <Box
-        mb={"2rem"}
+    <Section crosses customPaddings={`2.85rem 0 0 0`} id="whyToUse">
+      <Flex
+        position="relative"
         textAlign="center"
-        maxW="62rem"
         mx="auto"
+        mb={"2rem"}
         ref={parallaxRef}
       >
-        <Heading as="h2" size="lg" mb={4} textAlign="center">
-          Why Use It?
-        </Heading>
-        <Flex flexWrap="wrap" gap="10" marginBottom="10">
-          {cardData.map((item) => (
-            <Box
-              display="block"
-              position="relative"
-              p="0.5"
-              bgImage={`url(${item.backgroundUrl})`}
-              bgSize="100% 100%"
-              maxW={["100%", "100%", "24rem"]}
-              key={item.id}
-            >
-              <Flex
-                position="relative"
-                zIndex={2}
-                flexDirection="column"
-                minH="22rem"
-                p="2.4rem"
-                pointerEvents="none"
-                // flexDirection="column"
-                alignItems="flex-start"
-                justifyContent="flex-start"
-              >
-                <Text as="h5" fontSize="lg" marginBottom="5">
-                  {item.title}
-                </Text>
-                <Text fontSize="md" marginBottom="6">
-                  {item.text}
-                </Text>
-                <Flex alignItems="center" marginTop="auto">
-                  <Image
-                    src={item.iconUrl}
-                    alt={item.title}
-                    width={48}
-                    height={48}
-                    mr="auto"
-                  />
-                  <Text
-                    as="p"
-                    fontSize="xs"
-                    fontWeight="bold"
-                    textTransform="uppercase"
-                    color="gray.600"
-                    letterSpacing="wider"
-                    marginLeft="auto"
-                  >
-                    Explore more
-                  </Text>
-                  <ArrowIcon />
-                </Flex>
-              </Flex>
+        <Box position="relative" zIndex="2">
+          <Heading mb={10}>Get Gaming with Rapid Recap</Heading>
 
-              {item.light && (
-                <Box
-                  position="absolute"
-                  top="0"
-                  left="25%"
-                  width="100%"
-                  sx={{
-                    aspectRatio: "1",
-                    bgGradient:
-                      "radial-gradient(circle, #28206C, #28206C 70%, transparent 70%)",
-                    pointerEvents: "none",
-                  }}
-                />
-              )}
-
-              <Box
-                position="absolute"
-                top="0.125rem"
-                right="0.125rem"
-                bottom="0.125rem"
-                left="0.125rem"
-                bg="#1a1a1a"
-                style={{ clipPath: "url(#benefits)" }}
-              >
-                <Box
-                  position="absolute"
-                  top="0"
-                  right="0"
-                  bottom="0"
-                  left="0"
-                  opacity="0"
-                  transition="opacity 0.2s"
-                  _hover={{ opacity: "0.1" }}
-                >
-                  {item.imageUrl && (
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      width={380}
-                      height={362}
-                      objectFit="cover"
-                    />
-                  )}
-                </Box>
-              </Box>
-
-              <ClipPath />
-            </Box>
-          ))}
-        </Flex>
-        {/* {cardData.map((card, index) => (
           <Flex
-            key={index}
-            direction={{
-              base: "column",
-              md: index % 2 === 0 ? "row" : "row-reverse",
-            }}
-            alignItems="center"
+            flexWrap="wrap"
             justifyContent="space-between"
-            mb={8}
-            p={5}
-            borderRadius="md"
-            shadow="md"
+            gap={4}
+            mb={10}
+            ml={"10rem"} // Adjusted left margin
+            mr={"10rem"} // Adjusted right margin
           >
-            <VStack spacing={4} align="start" flex={{ base: "none", md: "1" }}>
-              <Heading as="h3" size="md" mb={2}>
-                {card.title}
-              </Heading>
-              <Text>{card.description}</Text>
-            </VStack>
-            <Box flex={{ base: "none", md: "1" }}>
-              <img src={card.image} alt={card.title} />
-            </Box>
+            {benefits.map((item) => (
+              <Box
+                key={item.id}
+                position="relative"
+                p={0.5}
+                bgImage={`url(${item.backgroundUrl})`}
+                bgSize="cover"
+                width={{ base: "100%", sm: "48%" }} // Adjusted width for 2 cards per row
+                height={{ base: "auto", md: "18rem" }}
+              >
+                <Box
+                  position="relative"
+                  zIndex="2"
+                  display="flex"
+                  flexDirection="column"
+                  height="100%"
+                  p="1.6rem"
+                  pointerEvents="none"
+                >
+                  <Heading as="h5" size="sm" mb={3}>
+                    {item.title}
+                  </Heading>
+                  <Text fontSize="sm" mb={4} color="gray.500">
+                    {item.text}
+                  </Text>
+                  <Flex alignItems="center" mt="auto">
+                    <Image
+                      src={item.iconUrl}
+                      width={8}
+                      height={8}
+                      alt={item.title}
+                    />
+                    <Text
+                      ml="auto"
+                      fontSize="xs"
+                      fontWeight="bold"
+                      color="gray.600"
+                      textTransform="uppercase"
+                      letterSpacing="wider"
+                    >
+                      Explore more
+                    </Text>
+                    <Arrow />
+                  </Flex>
+                </Box>
+
+                {item.light && (
+                  <Box
+                    position="absolute"
+                    top="0"
+                    left="25%"
+                    width="100%"
+                    height="0"
+                    paddingBottom="100%"
+                    bgGradient="radial-gradient(circle, #28206C, rgba(40, 32, 108, 0) 70%)"
+                    pointerEvents="none"
+                  />
+                )}
+
+                <Box
+                  position="absolute"
+                  inset="0.5"
+                  bg="gray.800"
+                  style={{ clipPath: "url(#benefits)" }}
+                >
+                  <Box
+                    position="absolute"
+                    inset="0"
+                    opacity="0"
+                    transition="opacity 0.2s"
+                    _hover={{ opacity: 0.1 }}
+                  >
+                    {item.imageUrl && (
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.title}
+                        objectFit="cover"
+                        width="100%"
+                        height="100%"
+                      />
+                    )}
+                  </Box>
+                </Box>
+
+                <ClipPath />
+              </Box>
+            ))}
           </Flex>
-        ))} */}
-      </Box>
+        </Box>
+      </Flex>
     </Section>
   );
 };
