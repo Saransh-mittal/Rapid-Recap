@@ -4,6 +4,7 @@ const { progressBar } = require("./progress.utils");
 const Article = require("../model/articleSchema");
 const { decode } = require("html-entities");
 const NewsAPI = require("newsapi");
+const axios = require("axios");
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
   // Use natural language processing to tokenize sentences
@@ -276,7 +277,7 @@ const extractNewsFromLink = async (query, apiKey) => {
 const processExtractedNews = async (news, category) => {
   const instructions = `you are a text checker and analyser
 
-remove the unnecessary content or lines of the mainText which is not related to the title for example Also read(section),
+remove the unnecessary content or lines of the mainText which is not related to the article/title for example :- Also read(section), Loading... ,
 if question in the mainText that are not answered or not there in the mainText etc.
 Don't summarize the content. and only return the same json_object back:
 Also if total characters are more than 2500 than summarize the whole mainText in 2500 characters.`;
@@ -367,74 +368,178 @@ Also if total characters are more than 2500 than summarize the whole mainText in
 const extractNewsUtilityFunc = async () => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   const apiKeys = [
+    "7e4a7d41a3ed463a952349bfb07b1452",
+    "e7409124fe384b688c07763501b270dd",
     "7170746b5aa044069fbd5f48e74817ac",
     "acd1bf365a084183b509789e0aae202a",
     "a46513e934b14f44a9fa2137185f5438",
-    "7e4a7d41a3ed463a952349bfb07b1452",
-    "e7409124fe384b688c07763501b270dd",
   ];
-  const categories = [
-    "general",
-    "sports",
-    "health",
-    "science",
+  const newsAPICategories = ["general"];
+  const newsDataIoCategories = [
     "business",
-    "technology",
+    "crime",
+    "domestic",
+    "education",
     "entertainment",
+    "environment",
+    "food",
+    "health",
+    "lifestyle",
+    "other",
+    "politics",
+    "science",
+    "sports",
+    "technology",
+    "top",
+    "tourism",
+    "world",
   ];
-  const requestsPerKey = 30;
-  let currentKeyIndex = 0;
-  let requestsMadeWithCurrentKey = 0;
+  const requestsPerKey = 5;
+  let keyTracker = { currentKeyIndex: 0, requestsMadeWithCurrentKey: 0 };
+
+  let result = [];
+  let notificationCategories = [
+    ...newsAPICategories,
+    ...newsDataIoCategories,
+  ].join(", ");
+  let articlesSavedPerCategory = {};
 
   try {
-    let result = [];
-    let notificationCategories = categories.join(", ");
-    let articlesSavedPerCategory = {};
-
-    for (let category of categories) {
-      console.log(`\nExtracting news of category ${category}\n`);
-      const response = await newsapi.v2.topHeadlines({
-        category,
-        language: "en",
-        country: "in",
-      });
-
-      const articles = JSON.parse(JSON.stringify(response.articles));
-      console.log(articles.length);
-      let allProcessedOutput = [];
-
-      for (let article of articles) {
-        try {
-          if (requestsMadeWithCurrentKey >= requestsPerKey) {
-            // If requests limit reached, switch to the next API key
-            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
-            requestsMadeWithCurrentKey = 0;
-          }
-
-          const apiKey = apiKeys[currentKeyIndex];
-          const extractedNews = await extractNewsFromLink(article.url, apiKey);
-          allProcessedOutput.push(extractedNews);
-
-          requestsMadeWithCurrentKey++;
-        } catch (error) {
-          console.log(
-            `Error extracting news from article ${article.title}: ${error}`
-          );
-        }
-      }
-
-      const AiProcessedNews = await processExtractedNews(
-        allProcessedOutput,
-        category
-      );
-
-      result = result.concat(AiProcessedNews);
-      articlesSavedPerCategory[category] = AiProcessedNews.length;
-    }
+    await processCategories(
+      newsapi,
+      newsAPICategories,
+      apiKeys,
+      requestsPerKey,
+      keyTracker,
+      result,
+      articlesSavedPerCategory
+    );
+    await processDataIoCategories(
+      newsDataIoCategories,
+      apiKeys,
+      requestsPerKey,
+      keyTracker,
+      result,
+      articlesSavedPerCategory
+    );
     return { result, articlesSavedPerCategory, notificationCategories };
   } catch (error) {
     console.log(error);
   }
+};
+
+const processCategories = async (
+  newsapi,
+  categories,
+  apiKeys,
+  requestsPerKey,
+  keyTracker,
+  result,
+  articlesSavedPerCategory
+) => {
+  for (let category of categories) {
+    console.log(`\nExtracting news of category ${category}\n`);
+    const response = await newsapi.v2.topHeadlines({
+      category,
+      language: "en",
+      country: "in",
+    });
+
+    const articles = JSON.parse(JSON.stringify(response.articles));
+    console.log(articles.length);
+
+    let allProcessedOutput = await processArticles(
+      articles,
+      apiKeys,
+      requestsPerKey,
+      keyTracker
+    );
+    const AiProcessedNews = await processExtractedNews(
+      allProcessedOutput,
+      category
+    );
+
+    result.push(...AiProcessedNews);
+    articlesSavedPerCategory[category] = AiProcessedNews.length;
+  }
+};
+
+const processDataIoCategories = async (
+  categories,
+  apiKeys,
+  requestsPerKey,
+  keyTracker,
+  result,
+  articlesSavedPerCategory
+) => {
+  for (let category of categories) {
+    console.log(`\nExtracting news of category ${category}\n`);
+    const queries = {
+      category,
+      language: "en",
+      prioritydomain: "top",
+      timezone: "Asia/Kolkata",
+      size: "10",
+    };
+    const queryString = Object.entries(queries)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join("&");
+    const response = await axios.get(
+      `https://newsdata.io/api/1/latest?apikey=pub_37495bb8e5dde4895a967868c687ebd423775&${queryString}`
+    );
+    const articles = JSON.parse(JSON.stringify(response.data.results));
+
+    console.log(articles.length);
+
+    let allProcessedOutput = await processArticles(
+      articles,
+      apiKeys,
+      requestsPerKey,
+      keyTracker
+    );
+    const AiProcessedNews = await processExtractedNews(
+      allProcessedOutput,
+      category
+    );
+
+    result.push(...AiProcessedNews);
+    articlesSavedPerCategory[category] = AiProcessedNews.length;
+  }
+};
+
+const processArticles = async (
+  articles,
+  apiKeys,
+  requestsPerKey,
+  keyTracker
+) => {
+  let allProcessedOutput = [];
+
+  for (let article of articles) {
+    try {
+      if (keyTracker.requestsMadeWithCurrentKey >= requestsPerKey) {
+        // Rotate to the next API key
+        keyTracker.currentKeyIndex =
+          (keyTracker.currentKeyIndex + 1) % apiKeys.length;
+        keyTracker.requestsMadeWithCurrentKey = 0;
+      }
+
+      const apiKey = apiKeys[keyTracker.currentKeyIndex];
+      const extractedNews = await extractNewsFromLink(
+        article.url || article.link,
+        apiKey
+      );
+      allProcessedOutput.push(extractedNews);
+
+      keyTracker.requestsMadeWithCurrentKey++;
+    } catch (error) {
+      console.log(
+        `Error extracting news from article ${article.title}: ${error}`
+      );
+    }
+  }
+
+  return allProcessedOutput;
 };
 module.exports = {
   hindiConverter,
