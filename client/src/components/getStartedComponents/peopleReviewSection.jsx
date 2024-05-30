@@ -63,7 +63,7 @@ const PeopleReviews = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       handleNext();
-    }, 3000); // Change slide every 3 seconds
+    }, 5000); // Change slide every 3 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -125,7 +125,13 @@ const PeopleReviews = () => {
             <Text>What members are saying.</Text>
           </Box>
 
-          <Box position="relative" userSelect="none" px={4}>
+          <Box
+            position="relative"
+            userSelect="none"
+            px={4}
+            // bgGradient="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+            // bgColor="#0f0d15"
+          >
             <Image
               src={Quote}
               alt="Opening quote"
@@ -148,12 +154,14 @@ const PeopleReviews = () => {
               className={fadeProp.fade}
               bg="white"
               p={8}
-              borderRadius="lg"
+              borderRadius="2.5rem"
               alignItems="center"
               spacing={4}
               boxShadow="md"
               transition="box-shadow 0.3s ease, transform 0.3s ease"
               _hover={{ boxShadow: "lg", transform: "scale(1.02)" }}
+              bgGradient="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+              bgColor="#0f0d15"
             >
               <Image
                 borderRadius="full"
@@ -180,6 +188,7 @@ const PeopleReviews = () => {
               backgroundColor="white"
               borderRadius="50%"
               boxShadow="md"
+              // background={"transparent"}
             >
               &lt;
             </Button>

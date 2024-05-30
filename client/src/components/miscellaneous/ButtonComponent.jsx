@@ -3,12 +3,20 @@ import ButtonSvg from "../../assets/svg/ButtonSvg";
 
 const Button = ({ className, href, onClick, children, px, white }) => {
   const buttonProps = {
-    className: `relative inline-flex items-center justify-center h-11 transition-colors hover:text-color-1 ${
-      px || "px-7"
-    } ${white ? "text-n-8" : "text-n-1"} ${className || ""}`,
+    colorScheme: "teal",
+    size: "md",
     onClick: onClick,
     href: href,
     as: href ? "a" : "button",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "color",
+    _hover: { color: "color-1" },
+    paddingLeft: px || "7",
+    paddingRight: px || "7",
+    color: white ? "text-n-8" : "text-n-1",
+    className: className || "",
   };
 
   return (

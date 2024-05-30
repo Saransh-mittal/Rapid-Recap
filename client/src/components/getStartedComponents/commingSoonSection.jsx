@@ -1,25 +1,21 @@
-import { Box, Flex, Image } from "@chakra-ui/react";
+import { Box, Flex, Image, useColorModeValue, Badge } from "@chakra-ui/react";
 import Button from "../miscellaneous/ButtonComponent";
 import Heading from "../miscellaneous/HeadingComponent";
-// import Section from "./Section";
 import TagLine from "../miscellaneous/TaglineComponent";
-// import { roadmap } from "../constants";
-// import { check2, grid, loading1 } from "../assets";
 import check2 from "../../assets/check-02.svg";
-import grid from "../../assets/grid.png";
 import loading1 from "../../assets/loading-01.svg";
-import gradientImage from "../../assets/gradient.png";
-import Section from "../miscellaneous/Section";
 import roadmap1 from "../../assets/roadmap/image-1.png";
 import roadmap2 from "../../assets/roadmap/image-2.png";
 import roadmap3 from "../../assets/roadmap/image-3.png";
 import roadmap4 from "../../assets/roadmap/image-4.png";
+import gradientImage from "../../assets/gradient.png";
 import { useRef } from "react";
+import Section from "../miscellaneous/Section";
 
 const roadmap = [
   {
     id: "0",
-    title: "Voice recognition",
+    title: "Voice Recognition",
     text: "Enable the chatbot to understand and respond to voice commands, making it easier for users to interact with the app hands-free.",
     date: "May 2023",
     status: "done",
@@ -36,7 +32,7 @@ const roadmap = [
   },
   {
     id: "2",
-    title: "Chatbot customization",
+    title: "Chatbot Customization",
     text: "Allow users to customize the chatbot's appearance and behavior, making it more engaging and fun to interact with.",
     date: "May 2023",
     status: "done",
@@ -63,80 +59,105 @@ const CommigSoonSection = () => {
         mx="auto"
         ref={parallaxRef}
       >
-        <Section className="overflow-hidden" id="roadmap">
-          <Box className="container md:pb-10">
+        <Box className="overflow-hidden" id="roadmap">
+          <Box maxW="container" pb={{ md: 10 }}>
             <Heading tag="Ready to get started" title="What we’re working on" />
 
             <Flex
-              className="relative grid gap-6 md:grid-cols-2 md:gap-4 md:pb-[7rem]"
-              direction={{ base: "column", md: "row" }}
+              position="relative"
+              gap={{ base: 6, md: 4 }}
+              pb={{ md: "7rem" }}
+              direction="row"
+              flexWrap="wrap"
+              justifyContent="center"
             >
-              {roadmap.map((item) => {
-                const status = item.status === "done" ? "Done" : "In progress";
+              {roadmap.map((item, index) => {
+                const status = item.status === "done" ? "Done" : "In Progress";
+                const translateY = index % 2 !== 0 ? "6rem" : "0"; // Shift every second card down
 
                 return (
                   <Box
-                    className={`md:flex even:md:translate-y-[7rem] p-0.25 rounded-[2.5rem] ${
-                      item.colorful ? "bg-conic-gradient" : "bg-n-6"
-                    }`}
                     key={item.id}
+                    mx={4}
+                    mb={8}
+                    maxW={{ base: "100%", md: "45%" }}
+                    background={"transparent"}
+                    border={"1px solid transparent"}
+                    style={{
+                      borderRadius: "2.5rem",
+                      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.3)",
+                      transform: `translateY(${translateY})`, // Apply translateY transformation
+                    }}
+                    bgGradient="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+                    bgColor="#0f0d15"
                   >
-                    <Box className="relative p-8 bg-n-8 rounded-[2.4375rem] overflow-hidden xl:p-15">
-                      <Box className="absolute top-0 left-0 max-w-full">
-                        <Image src={grid} width={550} height={550} alt="Grid" />
-                      </Box>
-                      <Box className="relative z-1">
-                        <Flex
-                          className="items-center justify-between max-w-[27rem] mb-8 md:mb-20"
-                          direction={{ base: "column", md: "row" }}
+                    <Box
+                      p={{ base: 6, md: 8 }}
+                      bg={useColorModeValue("gray.50", "gray.700")}
+                      overflow="hidden"
+                      boxShadow="lg"
+                      background={"transparent"}
+                      borderRadius={"2.5rem"}
+                    >
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.title}
+                        width="100%"
+                        height="auto"
+                        objectFit="cover"
+                        mb={4}
+                        background={"transparent"}
+                      />
+                      <TagLine fontSize="sm" mb={2}>
+                        {item.date}
+                      </TagLine>
+                      <Flex align="center" mb={4}>
+                        <Image
+                          src={item.status === "done" ? check2 : loading1}
+                          width={5}
+                          height={5}
+                          alt={status}
+                          mr={2.5}
+                        />
+                        <Badge
+                          variant="subtle"
+                          colorScheme={
+                            item.status === "done" ? "green" : "orange"
+                          }
                         >
-                          <TagLine>{item.date}</TagLine>
-
-                          <Flex
-                            className="items-center px-4 py-1 bg-n-1 rounded text-n-8"
-                            direction="row"
-                          >
-                            <Image
-                              src={item.status === "done" ? check2 : loading1}
-                              width={16}
-                              height={16}
-                              alt={status}
-                              mr={2.5}
-                            />
-                            <TagLine>{status}</TagLine>
-                          </Flex>
-                        </Flex>
-
-                        <Box className="mb-10 -my-10 -mx-15">
-                          <Image
-                            src={item.imageUrl}
-                            width={628}
-                            height={426}
-                            alt={item.title}
-                            className="w-full"
-                          />
-                        </Box>
-                        <Box as="h4" className="h4 mb-4">
-                          {item.title}
-                        </Box>
-                        <Box as="p" className="body-2 text-n-4">
-                          {item.text}
-                        </Box>
+                          {status}
+                        </Badge>
+                      </Flex>
+                      <Heading as="h4" fontSize="lg" mb={2}>
+                        {item.title}
+                      </Heading>
+                      <Box fontSize="md" color="gray.600">
+                        {item.text}
                       </Box>
                     </Box>
                   </Box>
                 );
               })}
-
-              {/* <Gradient /> */}
-              <img src={gradientImage} alt="Gradient" />
-            </Flex>
-
-            <Flex justifyContent="center" mt={12} md={{ mt: 15, xl: 20 }}>
-              <Button href="/roadmap">Our roadmap</Button>
+              <Box
+                position="absolute"
+                top="0"
+                left="0"
+                right="0"
+                bottom="0"
+                zIndex="-1"
+                pointerEvents="none"
+              >
+                <Image
+                  src={gradientImage}
+                  alt="Gradient"
+                  objectFit="cover"
+                  w="full"
+                  h="full"
+                />
+              </Box>
             </Flex>
           </Box>
-        </Section>
+        </Box>
       </Box>
     </Section>
   );

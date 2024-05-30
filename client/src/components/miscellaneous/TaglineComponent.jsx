@@ -3,9 +3,9 @@ import brackets from "../../assets/svg/Brackets";
 
 const TagLine = ({ className, children }) => {
   return (
-    <Box className={`tagline flex items-center ${className || ""}`}>
+    <Box display="flex" alignItems="center" className={className}>
       {brackets("left")}
-      <Box mx={3} className="text-n-3">
+      <Box mx={3} fontSize="sm">
         {children}
       </Box>
       {brackets("right")}
