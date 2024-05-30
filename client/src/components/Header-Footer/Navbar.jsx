@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
@@ -14,15 +14,15 @@ import { useDailyStreakTour } from "../../customHooks/useTours";
 import NavbarContent from "./navbarComponents/NavbarContent";
 import OutsideNavbarContent from "./navbarComponents/OutsideNavbarContent";
 import NavBrand from "./navbarComponents/NavBrand";
-import GetStarted from "./navbarComponents/GetStarted";
 import HamburgerMenu from "./navbarComponents/HamburgerMenu";
 
 const Navbar = () => {
   const navItems = [
-    { to: "/", label: "Home" },
+    { to: "/home", label: "Home" },
     { to: "/contact", label: "Contact Us" },
     { to: "/leaderboard", label: "Leaderboard" },
   ];
+  const location = useLocation();
   const [showCategory, setShowCategory] = useState(false);
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // New state for drawer
@@ -164,7 +164,11 @@ const Navbar = () => {
         onTouchEnd={endDrag}
         position={"fixed"}
         zIndex={"1000"}
-        transform={visible ? "translateY(0)" : "translateY(-100%)"}
+        transform={
+          visible || location.pathname.split("/")[1] === "home"
+            ? "translateY(0)"
+            : "translateY(-100%)"
+        }
         transition="transform 0.3s ease-in-out"
         backgroundImage={
           "linear-gradient(-180deg, rgba(26, 21, 39, 0.9), rgba(14, 12, 22, 0.9) 88%, rgba(14, 12, 22, 0.9) 99%)"

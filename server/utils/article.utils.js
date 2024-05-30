@@ -332,6 +332,19 @@ Also if total characters are more than 2500 than summarize the whole mainText in
       });
 
       let res = JSON.parse(output.choices[0].message.content);
+      res = {
+        url: res.url || newsItem.url,
+        dateTime: res.dateTime || newsItem.publish_date,
+        author:
+          res.author ||
+          (Array.isArray(newsItem.author)
+            ? newsItem.author[0]
+            : newsItem.author),
+        title: res.title || decodedTitle,
+        mainText: res.mainText || decodedText,
+        imgURL: res.imgURL || [newsItem.image],
+        category: res.category || category,
+      };
 
       if (res.mainText.length > 2500) {
         output = await openai.chat.completions.create({
@@ -349,8 +362,30 @@ Also if total characters are more than 2500 than summarize the whole mainText in
             },
           ],
         });
+
+        res = JSON.parse(output.choices[0].message.content);
+        res = {
+          url: res.url || newsItem.url,
+          dateTime: res.dateTime || newsItem.publish_date,
+          author:
+            res.author ||
+            (Array.isArray(newsItem.author)
+              ? newsItem.author[0]
+              : newsItem.author),
+          title: res.title || decodedTitle,
+          mainText: res.mainText || decodedText,
+          imgURL: res.imgURL || [newsItem.image],
+          category: res.category || category,
+        };
       }
-      res = JSON.parse(output.choices[0].message.content);
+
+      const isArticleCheckAgain = await Article.findOne({
+        title: res.title,
+      });
+
+      if (isArticleCheckAgain) {
+        continue;
+      }
 
       const newArticle = new Article(res);
       await newArticle.save();
@@ -368,28 +403,33 @@ Also if total characters are more than 2500 than summarize the whole mainText in
 const extractNewsUtilityFunc = async () => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   const apiKeys = [
-    "7e4a7d41a3ed463a952349bfb07b1452",
-    "e7409124fe384b688c07763501b270dd",
-    "7170746b5aa044069fbd5f48e74817ac",
-    "acd1bf365a084183b509789e0aae202a",
-    "a46513e934b14f44a9fa2137185f5438",
+    // "7e4a7d41a3ed463a952349bfb07b1452",
+    // "e7409124fe384b688c07763501b270dd",
+    // "7170746b5aa044069fbd5f48e74817ac",
+    // "acd1bf365a084183b509789e0aae202a",
+    // "a46513e934b14f44a9fa2137185f5438",
+    "fa26103bbdd849c3a4a6ff9f713a2a91",
+    "e20b7e002db74c22b29beb122b72e8c8",
+    "9921240e42464f3589886811e71a3977",
+    "88905479ff7c4564ae48aef8b23d56d0",
+    "819c3bf3fab848a89741017dd5e67091",
   ];
   const newsAPICategories = ["general"];
   const newsDataIoCategories = [
-    "business",
+    //"business",
     "crime",
     "domestic",
     "education",
-    "entertainment",
+    //"entertainment",
     "environment",
     "food",
-    "health",
+    //"health",
     "lifestyle",
     "other",
     "politics",
-    "science",
-    "sports",
-    "technology",
+    //"science",
+    //"sports",
+    //"technology",
     "top",
     "tourism",
     "world",
@@ -405,15 +445,15 @@ const extractNewsUtilityFunc = async () => {
   let articlesSavedPerCategory = {};
 
   try {
-    await processCategories(
-      newsapi,
-      newsAPICategories,
-      apiKeys,
-      requestsPerKey,
-      keyTracker,
-      result,
-      articlesSavedPerCategory
-    );
+    // await processCategories(
+    //   newsapi,
+    //   newsAPICategories,
+    //   apiKeys,
+    //   requestsPerKey,
+    //   keyTracker,
+    //   result,
+    //   articlesSavedPerCategory
+    // );
     await processDataIoCategories(
       newsDataIoCategories,
       apiKeys,
@@ -479,7 +519,7 @@ const processDataIoCategories = async (
       language: "en",
       prioritydomain: "top",
       timezone: "Asia/Kolkata",
-      size: "10",
+      size: "2",
     };
     const queryString = Object.entries(queries)
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
