@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -7,15 +7,16 @@ import {
   VStack,
   HStack,
   Icon,
+  Button,
 } from "@chakra-ui/react";
 import { StarIcon } from "@chakra-ui/icons";
-import { Splide, SplideSlide } from "@splidejs/react-splide";
-import "@splidejs/splide/dist/css/splide.min.css";
 import Section from "../miscellaneous/Section";
 import Quote from "../../assets/Testimonials/blockquote.svg";
 
 const PeopleReviews = () => {
-  const splideRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [fadeProp, setFadeProp] = useState({ fade: "fade-in" });
+
   const reviews = [
     {
       id: 1,
@@ -59,6 +60,32 @@ const PeopleReviews = () => {
     },
   ];
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleNext();
+    }, 3000); // Change slide every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleNext = () => {
+    setFadeProp({ fade: "fade-out" });
+    setTimeout(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % reviews.length);
+      setFadeProp({ fade: "fade-in" });
+    }, 500);
+  };
+
+  const handlePrev = () => {
+    setFadeProp({ fade: "fade-out" });
+    setTimeout(() => {
+      setCurrentIndex(
+        (prevIndex) => (prevIndex - 1 + reviews.length) % reviews.length
+      );
+      setFadeProp({ fade: "fade-in" });
+    }, 500);
+  };
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 0; i < 5; i++) {
@@ -73,16 +100,6 @@ const PeopleReviews = () => {
     return stars;
   };
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     if (splideRef.current) {
-  //       splideRef.current.go("+1");
-  //     }
-  //   }, 3000); // Change slide every 3 seconds
-
-  //   return () => clearInterval(interval); // Cleanup interval on component unmount
-  // }, []);
-
   return (
     <Section crosses customPaddings="2.85rem 0 0 0" id="whyUse">
       <Box mb="2rem" textAlign="center" maxW="62rem" mx="auto">
@@ -94,11 +111,6 @@ const PeopleReviews = () => {
           justifyContent="center"
           height="100vh"
           p={4}
-          // style={{
-          //   backgroundColor: "#0f0d15",
-          //   backgroundImage:
-          //     "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-          // }}
         >
           <Box textAlign="center" mb={8}>
             <Heading
@@ -113,16 +125,7 @@ const PeopleReviews = () => {
             <Text>What members are saying.</Text>
           </Box>
 
-          <Box
-            position="relative"
-            userSelect="none"
-            px={4}
-            // style={{
-            //   backgroundColor: "#0f0d15",
-            //   backgroundImage:
-            //     "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-            // }}
-          >
+          <Box position="relative" userSelect="none" px={4}>
             <Image
               src={Quote}
               alt="Opening quote"
@@ -141,55 +144,73 @@ const PeopleReviews = () => {
               zIndex="-1"
             />
 
-            <Splide
-              ref={splideRef}
-              options={{
-                type: "loop",
-                perPage: 1,
-                autoplay: false, // Disable Splide's built-in autoplay
-                interval: 3000,
-                speed: 1000,
-                easing: "ease-in-out",
-                rewind: true,
-                rewindByDrag: true,
-                pauseOnHover: true,
-                pauseOnFocus: true,
-                arrows: true,
-                pagination: true,
-              }}
+            <VStack
+              className={fadeProp.fade}
+              bg="white"
+              p={8}
+              borderRadius="lg"
+              alignItems="center"
+              spacing={4}
+              boxShadow="md"
+              transition="box-shadow 0.3s ease, transform 0.3s ease"
+              _hover={{ boxShadow: "lg", transform: "scale(1.02)" }}
             >
-              {reviews.map((review) => (
-                <SplideSlide key={review.id} style={{ padding: "0" }}>
-                  <VStack
-                    bg="white"
-                    p={8}
-                    borderRadius="lg"
-                    alignItems="center"
-                    spacing={4}
-                    boxShadow="md"
-                    transition="box-shadow 0.3s ease, transform 0.3s ease"
-                    _hover={{ boxShadow: "lg", transform: "scale(1.02)" }}
-                  >
-                    <Image
-                      borderRadius="full"
-                      boxSize="140px"
-                      src={review.image}
-                      alt={`Image of ${review.name}`}
-                      objectFit="cover"
-                      mb={4}
-                    />
-                    <Text fontSize="lg" color="gray.700">
-                      {review.text}
-                    </Text>
-                    <HStack>{renderStars(review.rating)}</HStack>
-                    <Text fontWeight="bold">{review.name}</Text>
-                  </VStack>
-                </SplideSlide>
-              ))}
-            </Splide>
+              <Image
+                borderRadius="full"
+                boxSize="140px"
+                src={reviews[currentIndex].image}
+                alt={`Image of ${reviews[currentIndex].name}`}
+                objectFit="cover"
+                mb={4}
+              />
+              <Text fontSize="lg" color="gray.700">
+                {reviews[currentIndex].text}
+              </Text>
+              <HStack>{renderStars(reviews[currentIndex].rating)}</HStack>
+              <Text fontWeight="bold">{reviews[currentIndex].name}</Text>
+            </VStack>
+
+            <Button
+              onClick={handlePrev}
+              position="absolute"
+              top="50%"
+              left="0"
+              transform="translateY(-50%)"
+              zIndex="1"
+              backgroundColor="white"
+              borderRadius="50%"
+              boxShadow="md"
+            >
+              &lt;
+            </Button>
+            <Button
+              onClick={handleNext}
+              position="absolute"
+              top="50%"
+              right="0"
+              transform="translateY(-50%)"
+              zIndex="1"
+              backgroundColor="white"
+              borderRadius="50%"
+              boxShadow="md"
+            >
+              &gt;
+            </Button>
           </Box>
         </Box>
       </Box>
+
+      <style jsx>{`
+        .fade-in {
+          opacity: 1;
+          transition: opacity 0.5s ease-in;
+        }
+
+        .fade-out {
+          opacity: 0;
+          transition: opacity 0.5s ease-out;
+        }
+      `}</style>
     </Section>
   );
 };
