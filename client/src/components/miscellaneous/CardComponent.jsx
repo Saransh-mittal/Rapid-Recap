@@ -1,107 +1,111 @@
-// import React from "react";
-// import { Box, Text } from "@chakra-ui/react";
-
-// const CardComponent = ({ id, title, text, backgroundUrl, imageUrl, light }) => {
-//   return (
-//     <Box
-//       position="relative"
-//       overflow="hidden"
-//       borderRadius="0.5rem"
-//       maxW="24rem"
-//       bg="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-//       backgroundSize="cover"
-//       transition="all 0.3s ease-in-out"
-//       _hover={{
-//         transform: "scale(1.05)",
-//         boxShadow: "0 0 20px rgba(0, 0, 0, 0.2)",
-//         zIndex: 1,
-//         border: "2px solid transparent",
-//       }}
-//     >
-//       <Box
-//         pos="relative"
-//         zIndex={2}
-//         display="flex"
-//         flexDirection="column"
-//         minHeight="22rem"
-//         p="2.4rem"
-//         pointerEvents="none"
-//         alignItems="flex-start"
-//         justifyContent="flex-start"
-//         borderRadius="0.5rem"
-//         bg="rgba(15, 13, 21, 0.5)" // Transparent background
-//       >
-//         <Text fontSize="1.125rem" mb="1.25rem" color="white">
-//           {title}
-//         </Text>
-//         <Text fontSize="1rem" mb="1.5rem" color="white">
-//           {text}
-//         </Text>
-//         <Box display="flex" alignItems="center" mt="auto">
-//           <Text
-//             fontSize="0.75rem"
-//             fontWeight="bold"
-//             textTransform="uppercase"
-//             color="gray"
-//             letterSpacing="0.05em"
-//             mr="auto"
-//           >
-//             Explore more
-//           </Text>
-//           {/* <ArrowIcon /> */}
-//         </Box>
-//       </Box>
-//       <Box
-//         position="absolute"
-//         top="-2px"
-//         right="-2px"
-//         bottom="-2px"
-//         left="-2px"
-//         zIndex={1}
-//         _before={{
-//           content: '""',
-//           position: "absolute",
-//           top: 0,
-//           right: 0,
-//           bottom: 0,
-//           left: 0,
-//           background:
-//             "linear-gradient(to top right, #ff6347, #ff00ff, #6495ed)",
-//           borderRadius: "0.5rem",
-//         }}
-//         clipPath="polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)"
-//       />
-//     </Box>
-//   );
-// };
-
-// export default CardComponent;
-
-// src/components/miscellaneous/CardComponent.jsx
-
 import React from "react";
-import { Box, Heading, Text } from "@chakra-ui/react";
+import { Box, Heading, Text, Flex, Image, Button } from "@chakra-ui/react";
+import ClipPath from "../../assets/svg/ClipPath";
+import Arrow from "../../assets/svg/Arrow";
 
-const CardComponent = ({ title, text }) => {
+const BenefitCard = ({
+  id,
+  title,
+  text,
+  backgroundUrl,
+  iconUrl,
+  imageUrl,
+  light,
+}) => {
   return (
     <Box
-      maxW="sm"
-      borderRadius="lg"
-      overflow="hidden"
-      p="6"
-      m="2"
-      textAlign="left"
-      bg="transparent"
+      key={id}
       position="relative"
-      border="5px solid orange"
-      boxShadow="inset 0 0 10px rgba(0, 0, 0, 0.1), inset 0 0 15px rgba(0, 0, 0, 0.2), 0 0 20px rgba(26, 21, 39, 0.5)"
+      p={0.5}
+      bgImage={`url(${backgroundUrl})`}
+      bgSize="cover"
+      width={"23rem"}
+      height={"22rem"}
     >
-      <Heading as="h3" size="md" mb="2">
-        {title}
-      </Heading>
-      <Text color="gray.600">{text}</Text>
+      <Box
+        position="relative"
+        zIndex="2"
+        display="flex"
+        flexDirection="column"
+        height="100%"
+        p="1.6rem"
+        pointerEvents="none"
+      >
+        <Heading as="h5" size="sm" mb={3}>
+          {title}
+        </Heading>
+        <Text fontSize="sm" mb={4} color="gray.500">
+          {text}
+        </Text>
+        <Flex
+          // mt="auto" // This pushes the Flex container to the bottom
+          mt="5.5rem"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Image
+            src={iconUrl}
+            width={8}
+            height={8}
+            alt={title}
+            background={"transparent"}
+          />
+          <Text
+            fontSize="xs"
+            fontWeight="bold"
+            color="gray.600"
+            textTransform="uppercase"
+            letterSpacing="wider"
+            ml={"13rem"}
+          >
+            Explore more
+          </Text>
+          <Flex mt="3.5rem">
+            <Arrow />
+          </Flex>
+        </Flex>
+      </Box>
+
+      {light && (
+        <Box
+          position="absolute"
+          top="0"
+          left="25%"
+          width="100%"
+          height="0"
+          paddingBottom="100%"
+          bgGradient="radial-gradient(circle, #28206C, rgba(40, 32, 108, 0) 70%)"
+          pointerEvents="none"
+        />
+      )}
+
+      <Box
+        position="absolute"
+        inset="0.5"
+        style={{ clipPath: "url(#benefits)" }}
+      >
+        <Box
+          position="absolute"
+          inset="0"
+          opacity="0"
+          transition="opacity 0.2s"
+          _hover={{ opacity: 0.1 }}
+        >
+          {imageUrl && (
+            <Image
+              src={imageUrl}
+              alt={title}
+              objectFit="cover"
+              width="100%"
+              height="100%"
+            />
+          )}
+        </Box>
+      </Box>
+
+      <ClipPath />
     </Box>
   );
 };
 
-export default CardComponent;
+export default BenefitCard;

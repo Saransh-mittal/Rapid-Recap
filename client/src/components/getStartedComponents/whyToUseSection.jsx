@@ -1,13 +1,12 @@
 import React, { useRef } from "react";
-import { Box, Heading, Flex, Text, Image } from "@chakra-ui/react";
+import { Box, Heading, Flex } from "@chakra-ui/react";
 import Section from "../miscellaneous/Section";
+import BenefitCard from "../miscellaneous/CardComponent";
 import benefitIcon1 from "../../assets/benefits/icon-1.svg";
 import benefitIcon2 from "../../assets/benefits/icon-2.svg";
 import benefitIcon3 from "../../assets/benefits/icon-3.svg";
 import benefitIcon4 from "../../assets/benefits/icon-4.svg";
 import benefitImage2 from "../../assets/benefits/image-2.png";
-import ClipPath from "../../assets/svg/ClipPath";
-import Arrow from "../../assets/svg/Arrow";
 
 const WhyToUseSection = () => {
   const parallaxRef = useRef(null);
@@ -82,95 +81,20 @@ const WhyToUseSection = () => {
             justifyContent="space-between"
             gap={4}
             mb={10}
-            ml={"10rem"} // Adjusted left margin
-            mr={"10rem"} // Adjusted right margin
+            ml={"4rem"} // Adjusted left margin
+            mr={"4rem"} // Adjusted right margin
           >
             {benefits.map((item) => (
-              <Box
+              <BenefitCard
                 key={item.id}
-                position="relative"
-                p={0.5}
-                bgImage={`url(${item.backgroundUrl})`}
-                bgSize="cover"
-                width={{ base: "100%", sm: "48%" }} // Adjusted width for 2 cards per row
-                height={{ base: "auto", md: "18rem" }}
-              >
-                <Box
-                  position="relative"
-                  zIndex="2"
-                  display="flex"
-                  flexDirection="column"
-                  height="100%"
-                  p="1.6rem"
-                  pointerEvents="none"
-                >
-                  <Heading as="h5" size="sm" mb={3}>
-                    {item.title}
-                  </Heading>
-                  <Text fontSize="sm" mb={4} color="gray.500">
-                    {item.text}
-                  </Text>
-                  <Flex alignItems="center" mt="auto">
-                    <Image
-                      src={item.iconUrl}
-                      width={8}
-                      height={8}
-                      alt={item.title}
-                    />
-                    <Text
-                      ml="auto"
-                      fontSize="xs"
-                      fontWeight="bold"
-                      color="gray.600"
-                      textTransform="uppercase"
-                      letterSpacing="wider"
-                    >
-                      Explore more
-                    </Text>
-                    <Arrow />
-                  </Flex>
-                </Box>
-
-                {item.light && (
-                  <Box
-                    position="absolute"
-                    top="0"
-                    left="25%"
-                    width="100%"
-                    height="0"
-                    paddingBottom="100%"
-                    bgGradient="radial-gradient(circle, #28206C, rgba(40, 32, 108, 0) 70%)"
-                    pointerEvents="none"
-                  />
-                )}
-
-                <Box
-                  position="absolute"
-                  inset="0.5"
-                  bg="gray.800"
-                  style={{ clipPath: "url(#benefits)" }}
-                >
-                  <Box
-                    position="absolute"
-                    inset="0"
-                    opacity="0"
-                    transition="opacity 0.2s"
-                    _hover={{ opacity: 0.1 }}
-                  >
-                    {item.imageUrl && (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.title}
-                        objectFit="cover"
-                        width="100%"
-                        height="100%"
-                      />
-                    )}
-                  </Box>
-                </Box>
-
-                <ClipPath />
-              </Box>
+                id={item.id}
+                title={item.title}
+                text={item.text}
+                backgroundUrl={item.backgroundUrl}
+                iconUrl={item.iconUrl}
+                imageUrl={item.imageUrl}
+                light={item.light}
+              />
             ))}
           </Flex>
         </Box>
