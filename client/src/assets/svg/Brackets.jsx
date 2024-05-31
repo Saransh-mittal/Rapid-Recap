@@ -1,16 +1,19 @@
+// File: components/Brackets.js
+
 import { Box } from "@chakra-ui/react";
+import PropTypes from "prop-types";
 
 const Brackets = ({ position }) => (
-  <Box as="svg" width="5" height="14" viewBox="0 0 5 14" fill="none">
+  <Box as="svg" width="3" height="14" viewBox="0 0 5 14" fill="none">
     {position === "left" ? (
       <path
-        d="M5 0.822266H1V12.8223H5"
+        d="M0 0.822266H4V12.8223H0"
         stroke="url(#brackets-left)"
         strokeWidth="2"
       />
     ) : (
       <path
-        d="M0 0.822266H4V12.8223H0"
+        d="M5 0.822266H1V12.8223H5"
         stroke="url(#brackets-right)"
         strokeWidth="2"
       />
@@ -33,5 +36,9 @@ const Brackets = ({ position }) => (
     </defs>
   </Box>
 );
+
+Brackets.propTypes = {
+  position: PropTypes.oneOf(["left", "right"]).isRequired,
+};
 
 export default Brackets;

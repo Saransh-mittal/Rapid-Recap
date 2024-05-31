@@ -1,5 +1,5 @@
 import { Box, Flex, Image, useColorModeValue, Badge } from "@chakra-ui/react";
-import Button from "../miscellaneous/ButtonComponent";
+// import Button from "../miscellaneous/ButtonComponent";
 import Heading from "../miscellaneous/HeadingComponent";
 import TagLine from "../miscellaneous/TaglineComponent";
 import check2 from "../../assets/check-02.svg";
@@ -11,6 +11,7 @@ import roadmap4 from "../../assets/roadmap/image-4.png";
 import gradientImage from "../../assets/gradient.png";
 import { useRef } from "react";
 import Section from "../miscellaneous/Section";
+import { RepeatClockIcon, CheckIcon } from "@chakra-ui/icons";
 
 const roadmap = [
   {
@@ -112,13 +113,24 @@ const CommigSoonSection = () => {
                         {item.date}
                       </TagLine>
                       <Flex align="center" mb={4}>
-                        <Image
+                        {/* <Image
                           src={item.status === "done" ? check2 : loading1}
                           width={5}
                           height={5}
                           alt={status}
                           mr={2.5}
-                        />
+                          background={"transparent"}
+                          color={"white"}
+                        /> */}
+                        {item.status === "done" ? (
+                          <Box mr={2}>
+                            <CheckIcon />
+                          </Box>
+                        ) : (
+                          <Box mr={2}>
+                            <RepeatClockIcon />
+                          </Box>
+                        )}
                         <Badge
                           variant="subtle"
                           colorScheme={

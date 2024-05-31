@@ -1,16 +1,27 @@
 import { Box } from "@chakra-ui/react";
-import brackets from "../../assets/svg/Brackets";
+import Brackets from "../../assets/svg/Brackets";
+import PropTypes from "prop-types";
 
 const TagLine = ({ className, children }) => {
   return (
-    <Box display="flex" alignItems="center" className={className}>
-      {brackets("left")}
-      <Box mx={3} fontSize="sm">
+    <Box
+      display="flex"
+      alignItems="center"
+      // justifyContent="center"
+      className={className}
+    >
+      <Brackets position="right" />
+      <Box mx={2} fontSize="sm">
         {children}
       </Box>
-      {brackets("right")}
+      <Brackets position="left" />
     </Box>
   );
+};
+
+TagLine.propTypes = {
+  className: PropTypes.string,
+  children: PropTypes.node.isRequired,
 };
 
 export default TagLine;
