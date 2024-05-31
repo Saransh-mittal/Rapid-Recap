@@ -15,7 +15,7 @@ import { useSwipeable } from "react-swipeable"; // Import the swipeable hook
 import { categories } from "../../assets/Categories";
 import { useNavigate } from "react-router-dom";
 
-const Timeline = ({ data, load }) => {
+const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate();
   const { state, dispatch } = useContext(AppContext);
   const { tour, isTutorialTakenCheck } = useHomeTour();
@@ -39,6 +39,7 @@ const Timeline = ({ data, load }) => {
   const categoryRefs = useRef([]);
 
   const handleActiveCategory = (category) => {
+    setHasMoreItems(true);
     setActiveCategory(category.toLowerCase());
     dispatch({
       type: "category",
@@ -155,7 +156,11 @@ const Timeline = ({ data, load }) => {
           categoryRefs={categoryRefs}
         />
       </Flex>
-      <div className="timeline-container" {...swipeHandlers}>
+      <div
+        className="timeline-container"
+        {...swipeHandlers}
+        //style={!notLoggedIn && { paddingBottom: "6rem" }}
+      >
         <div className="row item-container">
           {data.map((item, id) => (
             <div className="col-md-6 col-xxl-4 item" key={id}>
@@ -185,6 +190,21 @@ const Timeline = ({ data, load }) => {
             textAlign={"center"}
           >
             <GetStarted innerText={"Login To Continue further"} />
+          </Flex>
+        )}
+        {!hasMoreItems && (
+          <Flex
+            marginTop={"2rem"}
+            height={"6rem"}
+            w={"100%"}
+            color={"white"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            borderRadius={"8px"}
+            padding={"1rem"}
+            textAlign={"center"}
+          >
+            No more news to show
           </Flex>
         )}
       </div>

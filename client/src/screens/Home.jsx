@@ -21,23 +21,34 @@ const Home = () => {
   const navigate = useNavigate();
   const { category } = useParams();
   const [showUpgradeModal, setShowUpgradeModal] = useState(true);
+  const [hasMoreItems, setHasMoreItems] = useState(true); // Flag to check if there are more items
 
   const USER_IQ = state.user?.IQ_score ?? null;
 
   async function fetchData() {
+    if (!hasMoreItems) {
+      setLoad(false);
+      return; // Exit if no more items to load
+    }
+
     try {
       const response = await axios.get(
         `/api/articles?page=${page}&pageSize=9&category=${
           category ? category : "general"
         }`
       );
-      dispatch({ type: "PAGE", payloadPage: page - 1 });
-      dispatch({
-        type: "ITEMS",
-        payloadItems: [...state.items, ...response.data],
-      });
 
-      setItems((prev) => [...state.items, ...response.data]);
+      const newItems = response.data;
+      if (newItems.length === 0) {
+        setHasMoreItems(false); // Set flag if no more items
+      } else {
+        dispatch({ type: "PAGE", payloadPage: page - 1 });
+        dispatch({
+          type: "ITEMS",
+          payloadItems: [...state.items, ...newItems],
+        });
+        setItems((prev) => [...state.items, ...newItems]);
+      }
     } catch (error) {
       console.log(error.message);
     } finally {
@@ -50,7 +61,8 @@ const Home = () => {
       if (
         !notLoggedIn &&
         window.innerHeight + document.documentElement.scrollTop + 1000 >
-          document.documentElement.scrollHeight
+          document.documentElement.scrollHeight &&
+        hasMoreItems // Check if there are more items to load
       ) {
         setLoad(true);
         setPage((ele) => ele + 1);
@@ -124,7 +136,12 @@ const Home = () => {
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
         ></ReadMoreNewsModal>
       )}
-      <Timeline data={items} load={load} />
+      <Timeline
+        setHasMoreItems={setHasMoreItems}
+        hasMoreItems={hasMoreItems}
+        data={items}
+        load={load}
+      />
     </Box>
   );
 };
