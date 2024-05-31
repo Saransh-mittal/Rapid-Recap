@@ -4,12 +4,25 @@ import {
   Heading,
   Text,
   Image,
-  Flex,
-  useBreakpointValue,
   Button,
+  UnorderedList,
+  ListItem,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import Section from "../miscellaneous/Section";
 import curve from "../../assets/curve.png";
+import robot from "../../assets/hero/robot.jpeg";
+import homeSmile from "../../assets/home-smile.svg";
+import file02 from "../../assets/file-02.svg";
+import searchMd from "../../assets/search-md.svg";
+import plusSquare from "../../assets/plus-square.svg";
+import { ScrollParallax } from "react-just-parallax";
+import Generating from "../miscellaneous/Generating";
+import heroBackground from "../../assets/hero/hero-background.jpg";
+import { Gradient, BackgroundCircles } from "./design/hero";
+import Notification from "../miscellaneous/Notification";
+
+const heroIcons = [homeSmile, file02, searchMd, plusSquare];
 
 const heroSection = () => {
   const parallaxRef = useRef(null);
@@ -69,6 +82,113 @@ const heroSection = () => {
           <Button as="a" href="/pricing" colorScheme="blue">
             Get started
           </Button>
+          <Box
+            position="relative"
+            maxW={{ base: "23rem", md: "5xl" }}
+            mx="auto"
+            mb={{ xl: "24" }}
+          >
+            <Box
+              position="relative"
+              // zIndex="1"
+              p="0.5"
+              rounded="2xl"
+              bgGradient="conic-gradient"
+            >
+              <Box bg="gray.800" rounded="xl">
+                <Box h="1.4rem" bg="gray.700" roundedTop="0.9rem" />
+
+                <Box
+                  position="relative"
+                  overflow="hidden"
+                  roundedBottom="0.9rem"
+                >
+                  <Image
+                    src={robot}
+                    className="w-full"
+                    mt={{ base: "-1.5rem" }}
+                    transform={{
+                      base: "scale(1.7) translateY(8%)",
+                      md: "scale(1) translateY(-10%)",
+                      lg: "translateY(-23%)",
+                    }}
+                    width={1024}
+                    height={490}
+                    alt="AI"
+                  />
+
+                  {/* <Box
+                    position={{ base: "static", md: "absolute" }}
+                    left={{ md: 4 }}
+                    right={{ md: 4 }}
+                    bottom={{ md: 5 }}
+                    width={{ md: "31rem" }}
+                    mx="auto"
+                    transform={{ md: "translateX(-50%)" }}
+                    mb={{ md: 8 }}
+                  >
+                    <Generating />
+                  </Box> */}
+
+                  <ScrollParallax isAbsolutelyPositioned>
+                    <UnorderedList
+                      display={{ base: "none", xl: "flex" }}
+                      position="absolute"
+                      left="-5.5rem"
+                      bottom="-7.5rem"
+                      p={1}
+                      bg="rgba(0,0,0,0.4)"
+                      backdropFilter="blur(10px)"
+                      border="1px solid rgba(0,0,0,0.1)"
+                      rounded="2xl"
+                      styleType="none"
+                    >
+                      {heroIcons.map((icon, index) => (
+                        <ListItem p={5} key={index}>
+                          <Image
+                            src={icon}
+                            width={24}
+                            height={25}
+                            alt={`hero-icon-${index}`}
+                          />
+                        </ListItem>
+                      ))}
+                    </UnorderedList>
+                  </ScrollParallax>
+                  <ScrollParallax isAbsolutelyPositioned>
+                    <Box
+                      display={{ base: "none", xl: "flex" }}
+                      position="absolute"
+                      right={{ base: "0", xl: "-5.5rem" }}
+                      bottom="11rem"
+                      width="18rem"
+                    >
+                      <Notification title="Code generation" />
+                    </Box>
+                  </ScrollParallax>
+                </Box>
+              </Box>
+
+              <Gradient />
+            </Box>
+            <Box
+              position="absolute"
+              top={{ base: "-54%", md: "-46%", lg: "-104%" }}
+              left="50%"
+              width={{ base: "234%", md: "138%" }}
+              transform="translateX(-50%)"
+            >
+              {/* <Image
+                src={heroBackground}
+                className="w-full"
+                width={1440}
+                height={1800}
+                alt="hero"
+              /> */}
+            </Box>
+
+            <BackgroundCircles />
+          </Box>
         </Box>
       </Box>
     </Section>
