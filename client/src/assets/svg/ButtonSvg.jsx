@@ -8,7 +8,7 @@ const ButtonSvg = (white) => (
       position="absolute"
       top="0"
       left="0"
-      width="21px"
+      width="23px"
       height="44px"
       viewBox="0 0 21 44"
     >
@@ -58,7 +58,7 @@ const ButtonSvg = (white) => (
       position="absolute"
       top="0"
       right="0"
-      width="21px"
+      width="23px"
       height="44px"
       viewBox="0 0 21 44"
     >

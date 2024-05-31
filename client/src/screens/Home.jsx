@@ -22,7 +22,7 @@ const Home = () => {
   const { category } = useParams();
   const [showUpgradeModal, setShowUpgradeModal] = useState(true);
 
-  const USER_IQ = state.user.IQ_score;
+  const USER_IQ = state.user?.IQ_score ?? null;
 
   async function fetchData() {
     try {
@@ -87,22 +87,22 @@ const Home = () => {
   }, [page]);
 
   useEffect(() => {
-    if (!notLoggedIn) {
-      const currPage = state.page;
-      if (
-        currPage === 0 &&
-        !state.homeInitialRender &&
-        state.items.length === 0 &&
-        state.category === category
-      ) {
-        setPage(() => 1);
-        setItems(() => []);
-        if (page === 1)
-          setTimeout(() => {
-            fetchData();
-          }, 100);
-      }
+    //if (!notLoggedIn) {
+    const currPage = state.page;
+    if (
+      currPage === 0 &&
+      !state.homeInitialRender &&
+      state.items.length === 0 &&
+      state.category === category
+    ) {
+      setPage(() => 1);
+      setItems(() => []);
+      if (page === 1)
+        setTimeout(() => {
+          fetchData();
+        }, 100);
     }
+    //}
   }, [state.items, state.page, state.category]);
 
   const isSupported = () =>
@@ -111,13 +111,7 @@ const Home = () => {
     "PushManager" in window;
 
   return (
-    <Box
-      onTouchStart={startDrag}
-      onTouchMove={(e) => drag(e.touches[0])}
-      onTouchEnd={endDrag}
-      marginTop={"4rem"}
-      w={"100%"}
-    >
+    <Box marginTop={"4rem"} w={"100%"}>
       {!state.show && isSupported() ? <NotificationSubscription /> : null}
       {!state.show && USER_IQ > 90 && state.user.societyUpgradeMessage && (
         <UpgradeModal

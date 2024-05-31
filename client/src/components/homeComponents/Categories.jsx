@@ -1,18 +1,17 @@
-import { Box, Flex, Heading, Text } from "@chakra-ui/react";
-import React, { useContext, useState } from "react";
-import { categories } from "../../assets/Categories";
+import { Box, Flex } from "@chakra-ui/react";
+
 import CategoryButton from "./CategoryButton";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
-import { AppContext } from "../../contextAPI/appContext";
 import ReactGA from "react-ga4"; // Import Google Analytics library
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
-const Categories = () => {
-  const navigate = useNavigate();
-  const { state, dispatch } = useContext(AppContext);
-
-  const [activeCategory, setActiveCategory] = useState(state.category);
-
+const Categories = ({
+  activeCategory,
+  handleActiveCategory,
+  categories,
+  setActiveCategoryIndex,
+  categoryRefs,
+}) => {
   const trackCategoryClick = (category) => {
     ReactGA.send({
       hitType: "event",
@@ -21,30 +20,37 @@ const Categories = () => {
       eventLabel: category, // Track the category that was clicked
     });
   };
-  const handleActiveCategory = (category) => {
-    setActiveCategory(category.toLowerCase());
-    dispatch({
-      type: "category",
-      payloadCategory: category.toLowerCase(),
-    });
-    dispatch({ type: "PAGE", payloadPage: 0 });
-    dispatch({ type: "ITEMS", payloadItems: [] });
-  };
+
+  useEffect(() => {
+    const activeCategoryRef = categoryRefs.current.find(
+      (ref) =>
+        ref &&
+        ref.textContent.trim().toLowerCase() === activeCategory.toLowerCase()
+    );
+    if (activeCategoryRef) {
+      activeCategoryRef.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [activeCategory, categoryRefs]);
+
   return (
-    <Box paddingInline={"10%"} paddingTop={"15%"}>
+    <Box
+      paddingInline={{ base: 0, lg: "10%" }}
+      paddingTop={{ base: "5%", lg: "15%" }}
+    >
       <Flex
-        flexDirection={"column"}
+        flexDirection={{ base: "row", lg: "column" }}
         w={"100%"}
         alignItems={"center"}
-        paddingBottom={"8rem"}
+        paddingBottom={{ base: "1.5rem", lg: "8rem" }}
       >
         <ButtonGradient />
         {/* <Heading as={"h4"} fontSize={"1.75rem"} marginBottom={"2rem"}>
           Categories
         </Heading> */}
-        <Flex flexDirection={"column"} gap={4}>
+        <Flex flexDirection={{ base: "row", lg: "column" }} gap={4}>
           {categories.map((category, idx) => (
             <CategoryButton
+              ref={(el) => (categoryRefs.current[idx] = el)}
               key={idx}
               white={
                 category.toLocaleLowerCase() ===
@@ -53,9 +59,9 @@ const Categories = () => {
                   : false
               }
               onClick={() => {
+                setActiveCategoryIndex(idx);
                 trackCategoryClick(category);
                 handleActiveCategory(category);
-                navigate(`/home/${category.toLowerCase()}`);
               }}
             >
               {" "}

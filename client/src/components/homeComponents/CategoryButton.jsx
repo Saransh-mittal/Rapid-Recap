@@ -2,7 +2,9 @@ import React from "react";
 import { useBreakpointValue } from "@chakra-ui/react";
 import ButtonSvg from "../../assets/svg/ButtonSvg";
 
-const CategoryButton = ({ className, onClick, children, px, white }) => {
+const CategoryButton = React.forwardRef((props, ref) => {
+  const { className, onClick, children, px, white } = props;
+
   // Define responsive width using Chakra UI's useBreakpointValue hook
   const buttonWidth = useBreakpointValue({
     lg: "110px", // width for large screens (>= 62em or 992px)
@@ -32,11 +34,11 @@ const CategoryButton = ({ className, onClick, children, px, white }) => {
   };
 
   return (
-    <button onClick={onClick} style={buttonStyles}>
+    <button ref={ref} onClick={onClick} style={buttonStyles}>
       <span style={spanStyles}>{children}</span>
       {ButtonSvg(white)}
     </button>
   );
-};
+});
 
 export default CategoryButton;

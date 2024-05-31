@@ -28,7 +28,12 @@ const OutsideNavbarContent = ({
         display={isHamburgerOpen ? "none" : "flex"}
       >
         {/* Profile dropdown menu */}
-        {notLogined && <GetStarted display={{ base: "none", lg: "flex" }} />}
+        {notLogined && (
+          <GetStarted
+            display={{ base: "none", lg: "flex" }}
+            innerText={"Get Started"}
+          />
+        )}
         {!notLogined && (
           <>
             {" "}

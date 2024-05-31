@@ -7,7 +7,7 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
     <Flex
       style={
         notLoggedIn
-          ? { filter: "blur(5px)", userSelect: "none" }
+          ? { filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }
           : { userSelect: "text", border: "2px", padding: "0.5rem" }
       }
       css={css}

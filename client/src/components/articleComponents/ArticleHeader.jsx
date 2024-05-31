@@ -63,7 +63,9 @@ const ArticleHeader = ({
             backgroundColor={"#2A2F4F"}
             defaultValue="english"
             onChange={handleLanguageChange}
-            style={notLoggedIn ? { filter: "blur(5px)" } : {}}
+            style={
+              notLoggedIn ? { filter: "blur(5px)", pointerEvents: "none" } : {}
+            }
           >
             <option style={{ backgroundColor: "#2A2F4F" }} value="english">
               English

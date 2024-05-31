@@ -58,6 +58,7 @@ const App = () => {
       title: document.title,
     });
   }, [location]);
+  const shouldShowFooter = !location.pathname.includes("home");
   return (
     <>
       <Navbar />
@@ -74,7 +75,7 @@ const App = () => {
         <Route exact path="/leaderboard" element={<LeaderBoard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Footer />
+      {shouldShowFooter && <Footer />}
     </>
   );
 };

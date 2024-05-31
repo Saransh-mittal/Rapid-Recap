@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
-import { useToast, Button, Flex, Box } from "@chakra-ui/react";
+import { useToast, Button, Flex, Box, useMediaQuery } from "@chakra-ui/react";
 import useDrag from "../../customHooks/useDrag";
 
 import { CloseIcon } from "@chakra-ui/icons";
@@ -17,6 +17,7 @@ import NavBrand from "./navbarComponents/NavBrand";
 import HamburgerMenu from "./navbarComponents/HamburgerMenu";
 
 const Navbar = () => {
+  const isSmallerThan1024 = useMediaQuery("(max-width: 1024px)")[0];
   const navItems = [
     { to: "/home", label: "Home" },
     { to: "/contact", label: "Contact Us" },
@@ -103,7 +104,7 @@ const Navbar = () => {
           position: "top",
         });
         dispatch({ type: "RESET_STATE" });
-        navigate("/signin");
+        navigate("/");
       } else {
         throw new Error("Logout Failed");
       }
@@ -121,7 +122,13 @@ const Navbar = () => {
 
   const handleScroll = () => {
     const currentScrollPos = window.scrollY;
-    setVisible(prevScrollPos > currentScrollPos || currentScrollPos < 10);
+    const isHomePage = location.pathname.split("/")[1] === "home";
+    const shouldSetVisible =
+      prevScrollPos > currentScrollPos || currentScrollPos < 10;
+
+    if ((isHomePage && isSmallerThan1024) || !isHomePage) {
+      setVisible(shouldSetVisible);
+    }
     setPrevScrollPos(currentScrollPos);
   };
 
@@ -164,11 +171,7 @@ const Navbar = () => {
         onTouchEnd={endDrag}
         position={"fixed"}
         zIndex={"1000"}
-        transform={
-          visible || location.pathname.split("/")[1] === "home"
-            ? "translateY(0)"
-            : "translateY(-100%)"
-        }
+        transform={visible ? "translateY(0)" : "translateY(-100%)"}
         transition="transform 0.3s ease-in-out"
         backgroundImage={
           "linear-gradient(-180deg, rgba(26, 21, 39, 0.9), rgba(14, 12, 22, 0.9) 88%, rgba(14, 12, 22, 0.9) 99%)"

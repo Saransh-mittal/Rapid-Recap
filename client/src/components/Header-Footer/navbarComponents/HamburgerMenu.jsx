@@ -126,7 +126,7 @@ const HamburgerMenu = ({
       <BackgroundCircles />
       <Flex position={"absolute"} bottom={notLogined ? "35%" : "28%"}>
         {notLogined ? (
-          <GetStarted />
+          <GetStarted innerText={"Get Started"} />
         ) : (
           <LogoutButton handleLogout={handleLogout} />
         )}
