@@ -72,17 +72,17 @@ const WhyToUseSection = () => {
         mx="auto"
         mb={"2rem"}
         ref={parallaxRef}
+        flexDirection="column"
       >
         <Box position="relative" zIndex="2">
           <Heading mb={10}>Get Gaming with Rapid Recap</Heading>
 
           <Flex
             flexWrap="wrap"
-            justifyContent="space-between"
-            gap={4}
-            mb={10}
-            ml={"4rem"} // Adjusted left margin
-            mr={"4rem"} // Adjusted right margin
+            justifyContent="center"
+            gap={6} // Adjust gap for equal spacing
+            mx={"auto"}
+            px={4} // Add some padding for responsiveness
           >
             {benefits.map((item) => (
               <BenefitCard

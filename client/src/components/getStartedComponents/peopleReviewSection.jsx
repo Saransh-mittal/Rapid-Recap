@@ -63,7 +63,7 @@ const PeopleReviews = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       handleNext();
-    }, 5000); // Change slide every 3 seconds
+    }, 5000); // Change slide every 5 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -101,16 +101,15 @@ const PeopleReviews = () => {
   };
 
   return (
-    <Section crosses customPaddings="2.85rem 0 0 0" id="whyUse">
-      <Box mb="2rem" textAlign="center" maxW="62rem" mx="auto">
+    <Section crosses customPaddings="0 0 0 0" id="whyUse">
+      <Box textAlign="center" maxW="62rem" mx="auto">
         <Box
           maxW="800px"
           mx="auto"
           display="flex"
           flexDirection="column"
           justifyContent="center"
-          height="100vh"
-          p={4}
+          height="80vh"
         >
           <Box textAlign="center" mb={8}>
             <Heading
@@ -125,13 +124,7 @@ const PeopleReviews = () => {
             <Text>What members are saying.</Text>
           </Box>
 
-          <Box
-            position="relative"
-            userSelect="none"
-            px={4}
-            // bgGradient="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-            // bgColor="#0f0d15"
-          >
+          <Box position="relative" userSelect="none" px={4}>
             <Image
               src={Quote}
               alt="Opening quote"
@@ -152,7 +145,6 @@ const PeopleReviews = () => {
 
             <VStack
               className={fadeProp.fade}
-              bg="white"
               p={8}
               borderRadius="2.5rem"
               alignItems="center"
@@ -162,6 +154,10 @@ const PeopleReviews = () => {
               _hover={{ boxShadow: "lg", transform: "scale(1.02)" }}
               bgGradient="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
               bgColor="#0f0d15"
+              border="2px solid transparent"
+              backgroundClip="padding-box, border-box"
+              backgroundOrigin="padding-box, border-box"
+              backgroundImage="linear-gradient(#0f0d15, #0f0d15), linear-gradient(to right, #00f, #f0f)"
             >
               <Image
                 borderRadius="full"
@@ -171,11 +167,13 @@ const PeopleReviews = () => {
                 objectFit="cover"
                 mb={4}
               />
-              <Text fontSize="lg" color="gray.700">
+              <Text fontSize="lg" color="gray.300">
                 {reviews[currentIndex].text}
               </Text>
               <HStack>{renderStars(reviews[currentIndex].rating)}</HStack>
-              <Text fontWeight="bold">{reviews[currentIndex].name}</Text>
+              <Text fontWeight="bold" color="white">
+                {reviews[currentIndex].name}
+              </Text>
             </VStack>
 
             <Button
@@ -185,10 +183,12 @@ const PeopleReviews = () => {
               left="0"
               transform="translateY(-50%)"
               zIndex="1"
-              backgroundColor="white"
+              bgGradient="linear(to-r, #7928CA, #FF0080)"
+              color="white"
               borderRadius="50%"
-              boxShadow="md"
-              // background={"transparent"}
+              boxShadow="lg"
+              _hover={{ transform: "scale(1.1)", boxShadow: "xl" }}
+              transition="all 0.3s ease"
             >
               &lt;
             </Button>
@@ -199,9 +199,12 @@ const PeopleReviews = () => {
               right="0"
               transform="translateY(-50%)"
               zIndex="1"
-              backgroundColor="white"
+              bgGradient="linear(to-r, #7928CA, #FF0080)"
+              color="white"
               borderRadius="50%"
-              boxShadow="md"
+              boxShadow="lg"
+              _hover={{ transform: "scale(1.1)", boxShadow: "xl" }}
+              transition="all 0.3s ease"
             >
               &gt;
             </Button>
