@@ -91,7 +91,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
 
   const handleGoogleResponse = async (response) => {
     if (response.status === 201) {
-      hamburgerOnClose();
+      hamburgerOnClose && hamburgerOnClose();
       dispatch({ type: "UNSHOW" });
       dispatch({
         type: "setUser",
