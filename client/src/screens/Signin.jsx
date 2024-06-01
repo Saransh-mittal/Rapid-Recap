@@ -1,4 +1,10 @@
-import React, { useState, useContext, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import "./Signin.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +35,7 @@ import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import Register from "./Register";
 
-export default function Signin({ isOpen, onOpen, onClose }) {
+export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [data, setData] = useState({
@@ -37,6 +43,7 @@ export default function Signin({ isOpen, onOpen, onClose }) {
     password: "",
     showPassword: false,
   });
+  const emailOrInGameNameRef = useRef();
   //const [inGameName, setInGameName] = useState("");
   const [enterInGameName, setEnterInGameName] = useState(false);
   const [inGameName, setInGameName] = useState("");
@@ -84,6 +91,7 @@ export default function Signin({ isOpen, onOpen, onClose }) {
 
   const handleGoogleResponse = async (response) => {
     if (response.status === 201) {
+      hamburgerOnClose();
       dispatch({ type: "UNSHOW" });
       dispatch({
         type: "setUser",
@@ -126,11 +134,13 @@ export default function Signin({ isOpen, onOpen, onClose }) {
       const response = await axios.post(`/api/user/login`, {
         data,
       });
+
       if (response.data.user.verified === false) {
-        const response = await axios.post(`/api/user/resendOTP`, {
+        const responseOfResendOTP = await axios.post(`/api/user/resendOTP`, {
           email: response.data.user.email,
         });
-        if (response.status === 201) {
+
+        if (responseOfResendOTP.status === 201) {
           await dispatch({ type: "verifyEmail", payloadverifyEmail: true });
           await dispatch({ type: "showModal", payloadModal: true });
           toast({
@@ -151,6 +161,7 @@ export default function Signin({ isOpen, onOpen, onClose }) {
           type: "setUser",
           payloadUser: response.data.user,
         });
+        hamburgerOnClose();
         try {
           const res = await axios.get(`/api/user/streakChecker`);
           if (res.status === 200) {
@@ -190,6 +201,7 @@ export default function Signin({ isOpen, onOpen, onClose }) {
         isClosable: true,
         position: "top",
       });
+      console.error(error);
       console.log(error.response.data.error);
     } finally {
       setLoad({ submitLoad: false, forgotLoad: false });
@@ -222,8 +234,9 @@ export default function Signin({ isOpen, onOpen, onClose }) {
       }
       await dispatch({ type: "showModal", payloadModal: true });
     } catch (error) {
+      emailOrInGameNameRef.current.focus();
       toast({
-        description: error.response.data.error,
+        description: "Enter a valid Email or try again later",
         status: "error",
         duration: 9000,
         isClosable: true,
@@ -256,20 +269,6 @@ export default function Signin({ isOpen, onOpen, onClose }) {
 
   return (
     <>
-      {state.modal && state.forgotPassword && !state.verifyEmail && (
-        <Modal
-          onClose={() => dispatch({ type: "showModal", payloadModal: false })}
-        >
-          <ResetPassword email={data.emailOrInGameName} />
-        </Modal>
-      )}
-      {state.modal && state.verifyEmail && (
-        <Modal
-          onClose={() => dispatch({ type: "showModal", payloadModal: false })}
-        >
-          <EmailVerify email={data.emailOrInGameName} />
-        </Modal>
-      )}
       <ChakraModal
         isOpen={isOpen}
         onClose={onClose}
@@ -289,11 +288,30 @@ export default function Signin({ isOpen, onOpen, onClose }) {
           <ModalHeader color="white">Sign In</ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody w={"65%"} p={"20px"}>
+            {state.modal && state.forgotPassword && !state.verifyEmail && (
+              <Modal
+                onClose={() =>
+                  dispatch({ type: "showModal", payloadModal: false })
+                }
+              >
+                <ResetPassword email={data.emailOrInGameName} />
+              </Modal>
+            )}
+            {state.modal && state.verifyEmail && (
+              <Modal
+                onClose={() =>
+                  dispatch({ type: "showModal", payloadModal: false })
+                }
+              >
+                <EmailVerify email={data.emailOrInGameName} />
+              </Modal>
+            )}
             {!enterInGameName ? (
               <>
                 <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>
                   <InputGroup>
                     <Input
+                      ref={emailOrInGameNameRef}
                       onChange={inputHandler}
                       name="emailOrInGameName"
                       value={data.emailOrInGameName}
@@ -385,6 +403,15 @@ export default function Signin({ isOpen, onOpen, onClose }) {
                             { credentialResponse }
                           );
                           if (response.data.EnterInGameName) {
+                            toast({
+                              title: "Enter In-Game-Name",
+                              description:
+                                "Please enter your In-Game-Name to continue",
+                              status: "info",
+                              duration: 5000,
+                              isClosable: true,
+                              position: "top",
+                            });
                             setEnterInGameName(true);
                           } else {
                             handleGoogleResponse(response);

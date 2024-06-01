@@ -165,7 +165,10 @@ const HamburgerModal = ({
             <BackgroundCircles />
             <Flex position={"absolute"} bottom={notLogined ? "35%" : "28%"}>
               {notLogined ? (
-                <GetStarted innerText={"Get Started"} />
+                <GetStarted
+                  innerText={"Get Started"}
+                  hamburgerOnClose={onClose}
+                />
               ) : (
                 <LogoutButton handleLogout={handleLogout} />
               )}

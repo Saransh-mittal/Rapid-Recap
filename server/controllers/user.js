@@ -24,7 +24,6 @@ const MailTemplates = require("../data/MailTemplates.js");
 const { isValidEmail } = require("../utils/miscellaneous.utils.js");
 
 const registerUser = async (req, res) => {
-  //console.log(req.body);
   const { name, email, pic, password, cpassword, inGameName } = req.body;
 
   if (!name || !email || !pic || !password || !cpassword || !inGameName)
@@ -91,7 +90,6 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   // Implement login logic here
-  //console.log(req.body);
   const { emailOrInGameName, password } = req.body.data;
   if (!(emailOrInGameName && password)) {
     return res.status(422).json({ error: "Please fill the required fields" });
