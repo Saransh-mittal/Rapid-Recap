@@ -8,6 +8,7 @@ import {
   UnorderedList,
   ListItem,
   useBreakpointValue,
+  Flex,
 } from "@chakra-ui/react";
 import Section from "../miscellaneous/Section";
 import curve from "../../assets/curve.png";
@@ -34,6 +35,7 @@ const heroSection = () => {
     <Section crosses customPaddings={`2.85rem 0 0 0`} id="hero">
       <Box
         // className="container"
+
         position="relative"
         textAlign="center"
         maxW="container.xl"
@@ -45,8 +47,9 @@ const heroSection = () => {
           maxW="62rem"
           maxH={{ base: "auto", lg: "30rem" }}
           mx="auto"
-          mb={{ base: "3.875rem", md: "5rem", lg: "6.25rem" }}
-          zIndex="1"
+          mb={{ base: "3.875rem", md: "5rem" }}
+          zIndex={99}
+          position={"relative"}
         >
           <Heading as="h1" size="2xl" mb="6">
             Explore the Potential of your brain with{" "}
@@ -83,18 +86,21 @@ const heroSection = () => {
           </Button>
         </Box>
 
-        <Box
+        <Flex
           position="relative"
           maxW={{ base: "23rem", md: "5xl" }}
           mx="auto"
-          mb={{ xl: 24 }}
+          justifyContent={"center"}
+          alignItems={"center"}
+          // mb={{ xl: 24 }}
         >
           <Box
             position="relative"
             zIndex={1}
             p={0.5}
             borderRadius="2xl"
-            bgGradient="linear(to-br, blue.600, pink.500)"
+            bgGradient="linear(to-br, blue.800, orange.500)"
+            w={{ base: "100%", md: "80%" }}
           >
             <Box position="relative" bg="gray.600" borderRadius="1rem">
               <Box height="1.4rem" bg="gray.600" borderTopRadius="0.9rem" />
@@ -104,33 +110,28 @@ const heroSection = () => {
                 overflow="hidden"
                 sx={{
                   aspectRatio: "33 / 40",
-                  "@media (min-width: 48em)": {
-                    aspectRatio: "688 / 490",
-                  },
-                  "@media (min-width: 62em)": {
-                    aspectRatio: "1024 / 490",
+
+                  "@media (min-width: 769px)": { aspectRatio: "688 / 390" },
+                  "@media (min-width: 1240px)": {
+                    aspectRatio: "800 / 390",
                   },
                 }}
               >
                 <Box
                   width="100%"
+                  height={"100%"}
                   transform={{
                     base: "scale(1.7) translateY(8%)",
                     md: "scale(1) translateY(-10%)",
-                    lg: "translateY(-23%)",
                   }}
                 >
-                  <Image src={robot} width={1024} height={790} alt="AI" />
+                  <Image
+                    src={robot}
+                    width={{ base: 688, lg: 1024 }}
+                    height={790}
+                    alt="AI"
+                  />
                 </Box>
-
-                <Generating
-                  position="absolute"
-                  left={{ base: 4, md: "50%" }}
-                  right={{ base: 4, md: "auto" }}
-                  bottom={{ base: 5, md: 8 }}
-                  width={{ md: "21rem" }}
-                  transform={{ md: "translateX(-50%)" }}
-                />
 
                 <ScrollParallax isAbsolutelyPositioned>
                   <UnorderedList
@@ -176,31 +177,29 @@ const heroSection = () => {
           </Box>
           <Box
             position="absolute"
-            top="-54%"
             left="50%"
-            width="234%"
             transform="translateX(-50%)"
             sx={{
-              "@media (min-width: 48em)": {
-                top: "-46%",
+              "@media (max-width: 992px)": {
+                display: "none",
+              },
+              "@media (max-width: 1240px)": {
+                top: "-120% !important",
                 width: "138%",
               },
               "@media (min-width: 62em)": {
-                top: "-104%",
+                top: "-151%",
+                width: "234%",
+                left: "85%",
+                height: "auto",
               },
             }}
           >
-            {/* <Image
-              src={heroBackground}
-              className="w-full"
-              width={1440}
-              height={1800}
-              alt="hero"
-            /> */}
+            <Image src={heroBackground} width={1640} height={1200} alt="hero" />
           </Box>
 
           <BackgroundCircles />
-        </Box>
+        </Flex>
       </Box>
     </Section>
   );

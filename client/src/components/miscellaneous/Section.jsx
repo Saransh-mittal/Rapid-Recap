@@ -17,15 +17,17 @@ const Section = ({
       position="relative"
       py={
         customPaddings
-          ? undefined
+          ? 0
           : {
               base: 10,
               lg: crosses ? 38 : 16,
               xl: crosses ? 46 : 20,
             }
       }
-      p={customPaddings ? customPaddings : undefined}
+      p={customPaddings ? customPaddings : 0}
+      height={"100%"}
       //   borderColor={"gray.600"}
+      margin={0}
     >
       {children}
 
@@ -60,7 +62,7 @@ const Section = ({
             left={{ lg: "7", xl: "10" }}
             right={{ lg: "7", xl: "10" }}
             // width={"1px"}
-            mt={"-1rem"}
+            mt={{ base: "0", lg: "-1rem" }}
             height="1px"
             bg="gray.600"
             transform={crossesOffset ? crossesOffset : undefined}

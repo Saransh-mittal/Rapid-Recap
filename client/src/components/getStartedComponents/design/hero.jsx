@@ -11,7 +11,7 @@ export const Gradient = () => {
         zIndex={1}
         h={6}
         mx={2.5}
-        bg="n.11"
+        bg="white"
         shadow="xl"
         roundedBottom="1.25rem"
         lg={{ h: 6, mx: 8 }}
@@ -74,10 +74,10 @@ const Rings = () => {
         position="absolute"
         top="50%"
         left="50%"
-        w="65.875rem"
+        w="44rem"
         aspectRatio="1"
         border="1px"
-        borderColor="rgba(0, 0, 0, 0.1)"
+        borderColor="rgba(255, 255, 255, 0.1)"
         rounded="full"
         transform="translate(-50%, -50%)"
       />
@@ -85,10 +85,10 @@ const Rings = () => {
         position="absolute"
         top="50%"
         left="50%"
-        w="51.375rem"
+        w="33rem"
         aspectRatio="1"
         border="1px"
-        borderColor="rgba(0, 0, 0, 0.1)"
+        borderColor="rgba(255, 255, 255, 0.1)"
         rounded="full"
         transform="translate(-50%, -50%)"
       />
@@ -96,10 +96,10 @@ const Rings = () => {
         position="absolute"
         top="50%"
         left="50%"
-        w="36.125rem"
+        w="22rem"
         aspectRatio="1"
         border="1px"
-        borderColor="rgba(0, 0, 0, 0.1)"
+        borderColor="rgba(255, 255, 255, 0.1)"
         rounded="full"
         transform="translate(-50%, -50%)"
       />
@@ -107,10 +107,10 @@ const Rings = () => {
         position="absolute"
         top="50%"
         left="50%"
-        w="23.125rem"
+        w="11rem"
         aspectRatio="1"
         border="1px"
-        borderColor="rgba(0, 0, 0, 0.1)"
+        borderColor="rgba(255, 255, 255, 0.1)"
         rounded="full"
         transform="translate(-50%, -50%)"
       />
@@ -130,12 +130,12 @@ export const BackgroundCircles = ({ parallaxRef }) => {
       position="absolute"
       top={{ base: "-42.375rem", md: "-38.5rem", xl: "-32rem" }}
       left="50%"
-      w="78rem"
+      w="55rem"
       aspectRatio="1"
       border="1px"
-      borderColor="rgba(0, 0, 0, 0.5)"
+      borderColor="rgba(255, 255, 255, 0.1)"
       rounded="full"
-      transform="translateX(-50%)"
+      transform="translateX(-50%) translateY(13%)"
     >
       <Rings />
 

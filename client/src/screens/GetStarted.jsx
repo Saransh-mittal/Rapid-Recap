@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Box } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import PeopleReviews from "../components/getStartedComponents/peopleReviewSection"; // Importing the PeopleReviews component
 import WhyToUseSection from "../components/getStartedComponents/whyToUseSection";
 import HeroSection from "../components/getStartedComponents/heroSection";
@@ -8,13 +8,13 @@ import CommingSoonSection from "../components/getStartedComponents/commingSoonSe
 
 const GetStarted = () => {
   return (
-    <Box mt={{ base: "4rem", lg: "6.85rem" }}>
+    <Flex mt={{ base: "4rem", lg: "6.85rem" }} flexDirection={"column"}>
       <HeroSection />
       <WhyToUseSection />
       <PeopleReviews />
       <CommingSoonSection />
       <FooterSection />
-    </Box>
+    </Flex>
   );
 };
 
