@@ -63,9 +63,9 @@ const App = () => {
     <>
       <Navbar />
       <Routes>
-        <Route exact path="/getStarted" element={<GetStarted />} />
-        <Route path="/:category" element={<Home />} />
-        <Route path="/" element={<Home />} />
+        <Route exact path="/" element={<GetStarted />} />
+        <Route path="/home/:category" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route exact path="/article/:id" element={<Article />} />
         {/* <Route exact path="/about" element={<About />} /> */}
         <Route path="/profile/:inGameName" element={<Profile />} />

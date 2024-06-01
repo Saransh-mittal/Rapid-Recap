@@ -18,10 +18,8 @@ import file02 from "../../assets/file-02.svg";
 import searchMd from "../../assets/search-md.svg";
 import plusSquare from "../../assets/plus-square.svg";
 import { ScrollParallax } from "react-just-parallax";
-import Generating from "../miscellaneous/Generating";
 import heroBackground from "../../assets/hero/hero-background.jpg";
-import { Gradient, BackgroundCircles } from "./design/hero";
-import Notification from "../miscellaneous/Notification";
+import { Gradient, BackgroundCircles } from "./design/Hero";
 
 const heroIcons = [homeSmile, file02, searchMd, plusSquare];
 
@@ -50,6 +48,7 @@ const heroSection = () => {
           mb={{ base: "3.875rem", md: "5rem" }}
           zIndex={99}
           position={"relative"}
+          letterSpacing={"2px"}
         >
           <Heading as="h1" size="2xl" mb="6">
             Explore the Potential of your brain with{" "}
@@ -74,7 +73,8 @@ const heroSection = () => {
             maxW="3xl"
             mx="auto"
             mb={{ base: "6", lg: "8" }}
-            color="gray.600"
+            color={"#9CAFAA"}
+            fontWeight={"bold"}
             mt={{ base: "0", lg: "2rem" }}
           >
             Unlock the potential of your intellect with Rapid Recap. Elevate
@@ -99,7 +99,7 @@ const heroSection = () => {
             zIndex={1}
             p={0.5}
             borderRadius="2xl"
-            bgGradient="linear(to-br, blue.800, orange.500)"
+            bgGradient="linear(to-br, #FFBF00, #D10363)"
             w={{ base: "100%", md: "80%" }}
           >
             <Box position="relative" bg="gray.600" borderRadius="1rem">
@@ -135,6 +135,7 @@ const heroSection = () => {
 
                 <ScrollParallax isAbsolutelyPositioned>
                   <UnorderedList
+                    listStyleType={"none"}
                     display={{ base: "none", xl: "flex" }}
                     position="absolute"
                     left="-5.5rem"
@@ -159,17 +160,6 @@ const heroSection = () => {
                     ))}
                   </UnorderedList>
                 </ScrollParallax>
-
-                {/* <ScrollParallax isAbsolutelyPositioned>
-                  <Notification
-                    display={{ base: "none", xl: "flex" }}
-                    position="absolute"
-                    right="-2.5rem"
-                    bottom="11rem"
-                    width="18rem"
-                    title="Code generation"
-                  />
-                </ScrollParallax> */}
               </Box>
             </Box>
 

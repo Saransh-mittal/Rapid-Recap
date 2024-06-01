@@ -8,12 +8,16 @@ import CommingSoonSection from "../components/getStartedComponents/commingSoonSe
 
 const GetStarted = () => {
   return (
-    <Flex mt={{ base: "4rem", lg: "6.85rem" }} flexDirection={"column"}>
+    <Flex
+      mt={{ base: "4rem", lg: "5rem" }}
+      flexDirection={"column"}
+      overflow={"hidden"}
+    >
       <HeroSection />
       <WhyToUseSection />
       <PeopleReviews />
       <CommingSoonSection />
-      <FooterSection />
+      {/* <FooterSection /> */}
     </Flex>
   );
 };
