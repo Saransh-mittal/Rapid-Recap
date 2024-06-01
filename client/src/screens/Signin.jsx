@@ -1,13 +1,7 @@
-import React, {
-  useState,
-  useContext,
-  useEffect,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import "./Signin.css";
 import axios from "axios";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AppContext } from "../contextAPI/appContext";
 import EmailVerify from "../components/authComponents/EmailVerify";
 import Modal from "./Modal";
@@ -39,12 +33,13 @@ export default function Signin({ isOpen, onOpen, onClose }) {
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [data, setData] = useState({
-    email: "",
+    emailOrInGameName: "",
     password: "",
     showPassword: false,
   });
-  const [inGameName, setInGameName] = useState("");
+  //const [inGameName, setInGameName] = useState("");
   const [enterInGameName, setEnterInGameName] = useState(false);
+  const [inGameName, setInGameName] = useState("");
   const [load, setLoad] = useState({
     submitLoad: false,
     forgotLoad: false,
@@ -55,7 +50,6 @@ export default function Signin({ isOpen, onOpen, onClose }) {
     onOpen: onRegisterOpen,
     onClose: onRegisterClose,
   } = useDisclosure();
-  const inGameNameRef = useRef(null);
 
   const inGameNameHandler = (e) => {
     setInGameName(e.target.value);
@@ -65,17 +59,76 @@ export default function Signin({ isOpen, onOpen, onClose }) {
     setData({ ...data, [name]: value });
   };
 
+  const handleInGameNameSubmit = async () => {
+    try {
+      setLoad({ submitLoad: true, forgotLoad: false });
+      const response = await axios.post("/api/user/handleGoogleLogin", {
+        credentialResponse: data.credentialResponse,
+        inGameName,
+      });
+      handleGoogleResponse(response);
+    } catch (error) {
+      console.error(error.response.data.error);
+      toast({
+        title: "Login Failed",
+        description: error.response.data.error,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    } finally {
+      setLoad({ submitLoad: false, forgotLoad: false });
+    }
+  };
+
+  const handleGoogleResponse = async (response) => {
+    if (response.status === 201) {
+      dispatch({ type: "UNSHOW" });
+      dispatch({
+        type: "setUser",
+        payloadUser: response.data.user,
+      });
+      try {
+        const res = await axios.get(`/api/user/streakChecker`);
+        if (res.status === 200) {
+          dispatch({
+            type: "setIsBoosted",
+            payloadIsBoosted: res.data.isBoosted,
+          });
+          dispatch({
+            type: "setDailyStreak",
+            payloadDailyStreak: res.data.streak,
+          });
+          dispatch({
+            type: "setLongestDailyStreak",
+            payloadLongestDailyStreak: res.data.longestStreak,
+          });
+        }
+      } catch (error) {
+        console.error(error.message);
+      }
+      toast({
+        title: "Login Successful",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      navigate("/home");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoad({ submitLoad: true, forgotLoad: false });
       const response = await axios.post(`/api/user/login`, {
         data,
-        inGameName,
       });
       if (response.data.user.verified === false) {
         const response = await axios.post(`/api/user/resendOTP`, {
-          email: data.email,
+          email: response.data.user.email,
         });
         if (response.status === 201) {
           await dispatch({ type: "verifyEmail", payloadverifyEmail: true });
@@ -147,15 +200,15 @@ export default function Signin({ isOpen, onOpen, onClose }) {
     try {
       setLoad({ submitLoad: false, forgotLoad: true });
       const response = await axios.post(`/api/user/resendOTP`, {
-        email: data.email,
+        email: data.emailOrInGameName,
       });
       if (response.status === 201) {
         let i = data.email.indexOf("@");
 
         const starredEmail =
-          data.email.slice(0, 2) +
-          data.email.slice(2, i).replace(/./g, "*") +
-          data.email.slice(i);
+          data.emailOrInGameName.slice(0, 2) +
+          data.emailOrInGameName.slice(2, i).replace(/./g, "*") +
+          data.emailOrInGameName.slice(i);
         await dispatch({ type: "forgotPassword", payloadForgotPassword: true });
         await dispatch({ type: "verifyEmail", payloadverifyEmail: true });
         toast({
@@ -183,19 +236,12 @@ export default function Signin({ isOpen, onOpen, onClose }) {
   };
 
   useEffect(() => {
-    if (enterInGameName) {
-      inGameNameRef.current.focus();
-      setEnterInGameName(false);
-    }
-  }, [enterInGameName]);
-
-  useEffect(() => {
     document.title = "Signin page";
   }, []);
 
   const handleForgotPasswordThrottled = useCallback(
     throttle(forgotPassword, 1000),
-    [data.email]
+    [data.emailOrInGameName]
   );
 
   useEffect(() => {
@@ -214,14 +260,14 @@ export default function Signin({ isOpen, onOpen, onClose }) {
         <Modal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
         >
-          <ResetPassword email={data.email} />
+          <ResetPassword email={data.emailOrInGameName} />
         </Modal>
       )}
       {state.modal && state.verifyEmail && (
         <Modal
           onClose={() => dispatch({ type: "showModal", payloadModal: false })}
         >
-          <EmailVerify email={data.email} />
+          <EmailVerify email={data.emailOrInGameName} />
         </Modal>
       )}
       <ChakraModal
@@ -243,153 +289,153 @@ export default function Signin({ isOpen, onOpen, onClose }) {
           <ModalHeader color="white">Sign In</ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody w={"65%"} p={"20px"}>
-            <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>
-              <InputGroup>
-                <Input
-                  onChange={inputHandler}
-                  name="email"
-                  value={data.email}
-                  type="email"
-                  placeholder="Email ID"
-                  color="white"
-                />
-              </InputGroup>
-              <InputGroup mt={4}>
-                <Input
-                  onChange={inputHandler}
-                  name="password"
-                  value={data.password}
-                  type={data.showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  color="white"
-                />
-                <InputRightElement width="4.5rem">
-                  <IconButton
-                    style={{
-                      backgroundColor: "transparent",
-                      color: "white",
+            {!enterInGameName ? (
+              <>
+                <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>
+                  <InputGroup>
+                    <Input
+                      onChange={inputHandler}
+                      name="emailOrInGameName"
+                      value={data.emailOrInGameName}
+                      type="text"
+                      placeholder="Email / In-Game-Name"
+                      color="white"
+                    />
+                  </InputGroup>
+                  <InputGroup mt={4}>
+                    <Input
+                      onChange={inputHandler}
+                      name="password"
+                      value={data.password}
+                      type={data.showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      color="white"
+                    />
+                    <InputRightElement width="4.5rem">
+                      <IconButton
+                        style={{
+                          backgroundColor: "transparent",
+                          color: "white",
+                        }}
+                        onClick={() =>
+                          setData((prevData) => ({
+                            ...prevData,
+                            showPassword: !prevData.showPassword,
+                          }))
+                        }
+                        icon={
+                          data.showPassword ? (
+                            <AiFillEyeInvisible />
+                          ) : (
+                            <AiFillEye />
+                          )
+                        }
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+                  <Button
+                    isLoading={load.submitLoad}
+                    loadingText="Submitting"
+                    colorScheme="teal"
+                    variant="outline"
+                    type="submit"
+                    size="lg"
+                    w={"100%"}
+                    mt={4}
+                  >
+                    Submit
+                  </Button>
+                </form>
+                <Flex
+                  justifyContent="space-between"
+                  mt={4}
+                  flexDirection={{ base: "column", md: "row" }}
+                  gap={4}
+                >
+                  <Button
+                    variant="solid"
+                    colorScheme="green"
+                    onClick={() => {
+                      onClose();
+                      onRegisterOpen();
                     }}
-                    onClick={() =>
-                      setData((prevData) => ({
-                        ...prevData,
-                        showPassword: !prevData.showPassword,
-                      }))
-                    }
-                    icon={
-                      data.showPassword ? <AiFillEyeInvisible /> : <AiFillEye />
-                    }
-                  />
-                </InputRightElement>
-              </InputGroup>
-              <InputGroup mt={4}>
-                <Input
-                  ref={inGameNameRef}
-                  onChange={inGameNameHandler}
-                  name="inGameName"
-                  value={inGameName}
-                  type="text"
-                  placeholder="In Game Name"
-                  color="white"
-                />
-              </InputGroup>
-              <Button
-                isLoading={load.submitLoad}
-                loadingText="Submitting"
-                colorScheme="teal"
-                variant="outline"
-                type="submit"
-                size="lg"
-                w={"100%"}
-                mt={4}
-              >
-                Submit
-              </Button>
-            </form>
-            <Flex justifyContent="space-between" mt={4}>
-              <Button
-                variant="solid"
-                colorScheme="green"
-                onClick={() => {
-                  onClose();
-                  onRegisterOpen();
-                }}
-              >
-                Create an account
-              </Button>
-              <Button
-                isLoading={load.forgotLoad}
-                variant="solid"
-                colorScheme="red"
-                onClick={handleForgotPasswordThrottled}
-              >
-                Forgot Password?
-              </Button>
-            </Flex>
-            <Button mt={4} p={0}>
-              <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
-                <GoogleLogin
-                  onSuccess={async (credentialResponse) => {
-                    try {
-                      const response = await axios.post(
-                        "/api/user/handleGoogleLogin",
-                        { credentialResponse, inGameName }
-                      );
-                      if (response.status === 201) {
-                        dispatch({ type: "UNSHOW" });
-                        dispatch({
-                          type: "setUser",
-                          payloadUser: response.data.user,
-                        });
+                  >
+                    Create an account
+                  </Button>
+                  <Button
+                    isLoading={load.forgotLoad}
+                    variant="solid"
+                    colorScheme="red"
+                    onClick={handleForgotPasswordThrottled}
+                  >
+                    Forgot Password?
+                  </Button>
+                </Flex>
+                <Button mt={4} p={0}>
+                  <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
+                    <GoogleLogin
+                      onSuccess={async (credentialResponse) => {
+                        setData((prevData) => ({
+                          ...prevData,
+                          credentialResponse,
+                        }));
                         try {
-                          const res = await axios.get(
-                            `/api/user/streakChecker`
+                          const response = await axios.post(
+                            "/api/user/handleGoogleLogin",
+                            { credentialResponse }
                           );
-                          if (res.status === 200) {
-                            dispatch({
-                              type: "setIsBoosted",
-                              payloadIsBoosted: res.data.isBoosted,
-                            });
-                            dispatch({
-                              type: "setDailyStreak",
-                              payloadDailyStreak: res.data.streak,
-                            });
-                            dispatch({
-                              type: "setLongestDailyStreak",
-                              payloadLongestDailyStreak: res.data.longestStreak,
-                            });
+                          if (response.data.EnterInGameName) {
+                            setEnterInGameName(true);
+                          } else {
+                            handleGoogleResponse(response);
                           }
                         } catch (error) {
-                          console.error(error.message);
+                          console.error(error.response.data.error);
+                          if (error.response.data.EnterInGameName)
+                            setEnterInGameName(true);
+                          toast({
+                            title: "Login Failed",
+                            description: error.response.data.error,
+                            status: "error",
+                            duration: 5000,
+                            isClosable: true,
+                            position: "top",
+                          });
                         }
-                        toast({
-                          title: "Login-Successful",
-                          status: "success",
-                          duration: 5000,
-                          isClosable: true,
-                          position: "top",
-                        });
-                        navigate("/home");
-                      }
-                    } catch (error) {
-                      console.error(error.response.data.error);
-                      if (error.response.data.EnterInGameName)
-                        setEnterInGameName(true);
-                      toast({
-                        title: "Login Failed",
-                        description: error.response.data.error,
-                        status: "error",
-                        duration: 5000,
-                        isClosable: true,
-                        position: "top",
-                      });
-                    }
-                  }}
-                  onError={() => {
-                    console.log("Login Failed");
-                  }}
-                />
-              </GoogleOAuthProvider>
-            </Button>
+                      }}
+                      onError={() => {
+                        console.log("Login Failed");
+                      }}
+                    />
+                  </GoogleOAuthProvider>
+                </Button>
+              </>
+            ) : (
+              <>
+                <InputGroup mt={4}>
+                  <Input
+                    onChange={(e) => setInGameName(e.target.value)}
+                    name="inGameName"
+                    value={inGameName}
+                    type="text"
+                    placeholder="Enter In-Game-Name"
+                    color="white"
+                  />
+                </InputGroup>
+                <Button
+                  isLoading={load.submitLoad}
+                  loadingText="Submitting"
+                  colorScheme="teal"
+                  variant="outline"
+                  onClick={handleInGameNameSubmit}
+                  size="lg"
+                  w={"100%"}
+                  mt={4}
+                >
+                  Submit
+                </Button>
+              </>
+            )}
           </ModalBody>
         </ModalContent>
       </ChakraModal>

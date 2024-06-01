@@ -50,8 +50,14 @@ function binarySearchForRightRange(arr, upperbound) {
   return right; // Target not found
 }
 
+function isValidEmail(email) {
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailPattern.test(email);
+}
+
 module.exports = {
   binarySearch,
   binarySearchForLeftRange,
   binarySearchForRightRange,
+  isValidEmail,
 };

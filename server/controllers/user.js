@@ -21,6 +21,7 @@ const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 const { progressBar } = require("../utils/progress.utils");
 const QuinBoost = require("../model/quinBoostSchema");
 const MailTemplates = require("../data/MailTemplates.js");
+const { isValidEmail } = require("../utils/miscellaneous.utils.js");
 
 const registerUser = async (req, res) => {
   //console.log(req.body);
@@ -91,28 +92,16 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   // Implement login logic here
   //console.log(req.body);
-  const { email, password } = req.body.data;
-  const inGameName = req.body.inGameName;
-  if (!((email || inGameName) && password)) {
+  const { emailOrInGameName, password } = req.body.data;
+  if (!(emailOrInGameName && password)) {
     return res.status(422).json({ error: "Please fill the required fields" });
   }
 
   try {
     let findUser;
-    if (email && inGameName) {
-      // Both email and inGameName are provided, check if they belong to the same user
-      const userByEmail = await User.findOne({ email });
-      const userByInGameName = await User.findOne({ inGameName });
-      if (
-        !userByEmail ||
-        !userByInGameName ||
-        userByEmail._id.toString() !== userByInGameName._id.toString()
-      ) {
-        return res.status(422).json({ error: "Invalid Credentials" });
-      }
-
-      findUser = userByEmail;
-    } else if (email) {
+    const email = isValidEmail(emailOrInGameName) ? emailOrInGameName : null;
+    const inGameName = email ? null : emailOrInGameName;
+    if (email) {
       findUser = await User.findOne({ email });
     } else {
       findUser = await User.findOne({ inGameName });
@@ -125,7 +114,7 @@ const loginUser = async (req, res) => {
     if (!isMatch) return res.status(401).json({ error: "Invalid Credentials" });
     const token = await findUser.generateAuthToken();
     // console.log(token);
-    if (findUser.verified)
+    if (findUser.verified && findUser.inGameName)
       res.cookie("jwtoken", token, {
         expires: new Date(Date.now() + 2592000000),
         httpOnly: true,
@@ -160,6 +149,9 @@ const verifyUser = async (req, res) => {
   const forgotPassword = req.query.forgotPassword;
 
   try {
+    if (!email) throw new Error("No email provided");
+    const validEmail = isValidEmail(email);
+    if (!validEmail) throw new Error("Invalid Email");
     const user = await User.findOne({ email: email });
     if (!user) throw new Error("No user found");
     const userid = user._id;
@@ -204,6 +196,8 @@ const resendOTP = async (req, res) => {
     const { email } = req.body;
     if (!email)
       throw new Error("No email provided : Write the Email in the email field");
+    const validEmail = isValidEmail(email);
+    if (!validEmail) throw new Error("Invalid Email");
     const user = await User.findOne({ email: email });
     const user_id = user._id;
     if (!user_id) throw new Error("No user found");
@@ -247,6 +241,8 @@ const resendOTP = async (req, res) => {
 const forgotPassword = async (req, res) => {
   const { email, newPassword } = req.body;
   try {
+    const validEmail = isValidEmail(email);
+    if (!validEmail) throw new Error("Invalid Email");
     const user = await User.findOne({ email: email });
     if (!user) throw new Error("No user found");
 
@@ -285,7 +281,7 @@ const handleGoogleLogin = async (req, res) => {
     if (user) {
       if (!user.inGameName) {
         if (!inGameName)
-          return res.status(422).json({
+          return res.status(200).json({
             EnterInGameName: true,
             error:
               "Please provide your chosen In-Game Name for your initial login.",
@@ -310,7 +306,7 @@ const handleGoogleLogin = async (req, res) => {
       await user.save();
     } else {
       if (!inGameName)
-        return res.status(422).json({
+        return res.status(200).json({
           EnterInGameName: true,
           error:
             "Please provide your chosen In-Game Name for your initial login.",
