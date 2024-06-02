@@ -202,6 +202,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
             alignItems={"center"}
             borderRadius={"8px"}
             padding={"1rem"}
+            paddingTop={"4rem"}
             textAlign={"center"}
           >
             No more news to show
