@@ -87,14 +87,14 @@ const heroSection = () => {
             unique Information Quotient (IQ), ranking you on our leaderboard.
             Track your progress, compare with peers, and strive for excellence.
           </Text>
-          <Button
+          {/* <Button
             as="a"
             href="/pricing"
             colorScheme="blue"
             display={{ lg: "none" }}
           >
             Get started
-          </Button>
+          </Button> */}
         </Box>
 
         <Flex

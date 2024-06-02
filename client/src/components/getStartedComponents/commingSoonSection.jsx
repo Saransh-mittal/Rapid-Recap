@@ -64,7 +64,7 @@ const CommigSoonSection = () => {
   const parallaxRef = useRef(null);
 
   return (
-    <Section crosses customPaddings={`2.85rem 0 0 0`} id="whyUse">
+    <Section crosses customPaddings={`2.85rem 0 0 0`} id="CommingSoon">
       <Box
         mb={"2rem"}
         textAlign="center"
