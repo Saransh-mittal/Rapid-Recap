@@ -57,7 +57,7 @@ const Sidebar = ({
       ) : quizExpired ? (
         <QuizExpired />
       ) : (
-        <Flex position={"relative"}>
+        <Box position={"relative"}>
           <Box
             style={
               notLoggedIn
@@ -92,7 +92,7 @@ const Sidebar = ({
               />
             </Tooltip>
           )}
-        </Flex>
+        </Box>
       )}
       <Box>
         <TotalUserAttempted

@@ -23,7 +23,7 @@ const ReadMoreNewsModal = ({ onClose }) => {
   const altImage = imageData.find(
     (img) =>
       img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
-  ).image;
+  )?.image;
   const navigate = useNavigate();
 
   useEffect(() => {
