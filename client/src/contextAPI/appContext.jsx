@@ -49,42 +49,44 @@ async function getAppUpdates() {
 }
 
 function parseURL(url) {
-  // Split the URL by slashes
-  const segments = url.split("/");
-  // The segment after the base URL will indicate the route
-  const route = segments[segments.length - 2];
-  const id = segments[segments.length - 1];
+  const urlObj = new URL(url);
+  return urlObj.pathname.split("/").filter(Boolean);
+}
 
-  // Check if the route matches any of the known routes
-  return { route, id };
+function getArticleId() {
+  const segments = parseURL(window.location.href);
+  const articleIndex = segments.indexOf("article");
+  if (articleIndex !== -1 && articleIndex < segments.length - 1) {
+    return segments[articleIndex + 1];
+  }
+  return null;
+}
+
+function getCategory() {
+  const segments = parseURL(window.location.href);
+  const homeIndex = segments.indexOf("home");
+  if (homeIndex !== -1 && homeIndex < segments.length - 1) {
+    return segments[homeIndex + 1];
+  }
+  return null;
 }
 
 async function currentArticle() {
   try {
-    const url = window.location.href;
-
-    const { route, id } = parseURL(url);
-    if (route === "article") {
-      const response = await axios.get(`/api/articles/article/${id}`);
-
+    const articleId = getArticleId();
+    if (articleId) {
+      const response = await axios.get(`/api/articles/article/${articleId}`);
       return { news: response.data.newArticle };
-    } //const response = await axios.get(`/api/news/currentArticle`);
-    //return response.data;
+    }
     return { news: {} };
   } catch (error) {
-    console.log(error.message);
+    console.log("Error fetching current article:", error.message);
     return { news: {} };
   }
 }
 
-//function to get initial category from home url
-function getCategory() {
-  const url = window.location.href;
-  const { route } = parseURL(url);
-
-  return route;
-}
 const category = getCategory();
+
 export const initialState = {
   // Define your initial state properties here
   ...(await showState()),
@@ -98,7 +100,7 @@ export const initialState = {
   page: 0,
   items: [],
   homeInitialRender: true,
-  category: !category && category !== "" ? category : "general",
+  category: category ? category : "general",
   userProfile: null,
   otherUserProfiles: [],
   // ...

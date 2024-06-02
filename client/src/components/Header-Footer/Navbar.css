@@ -1,9 +1,5 @@
 .navbar {
-    background-color: #0f0d15;
-    background-image: linear-gradient(-180deg,
-            #1a1527,
-            #0e0c16 88%,
-            #0e0c16 99%);
+    /* background-color: #0f0d15; */
     padding: 1rem 2rem;
 }
 
@@ -22,8 +18,8 @@
 
 .nav-link {
     color: #fff;
-    margin-right: 1rem;
-    font-size: 1.2rem;
+   
+    font-size: 1rem;
 }
 
 .nav-link:hover {
@@ -34,6 +30,12 @@
 .nav-link.active {
     color: #fff !important;
     border-bottom: 3px solid #fff;
+}
+.locked{
+    color: #9CAFAA !important;
+        opacity: 0.5;
+        /* Optional: to visually indicate that the link is disabled */
+        cursor: not-allowed;
 }
 .nav-link:focus{
     color: #fff !important;

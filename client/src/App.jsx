@@ -12,6 +12,7 @@ import Footer from "./components/Header-Footer/Footer.jsx";
 import Article from "./screens/Article.jsx";
 import Profile from "./screens/Profile.jsx";
 import LeaderBoard from "./screens/LeaderBoard.jsx";
+import GetStarted from "./screens/GetStarted.jsx";
 import ReactGA from "react-ga4";
 import { useEffect } from "react";
 const App = () => {
@@ -58,12 +59,14 @@ const App = () => {
       title: document.title,
     });
   }, [location]);
+  const shouldShowFooter = !location.pathname.includes("home");
   return (
     <>
       <Navbar />
       <Routes>
-        <Route path="/:category" element={<Home />} />
-        <Route path="/" element={<Home />} />
+        <Route exact path="/" element={<GetStarted />} />
+        <Route path="/home/:category" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route exact path="/article/:id" element={<Article />} />
         {/* <Route exact path="/about" element={<About />} /> */}
         <Route path="/profile/:inGameName" element={<Profile />} />
@@ -74,7 +77,7 @@ const App = () => {
         <Route exact path="/leaderboard" element={<LeaderBoard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Footer />
+      {shouldShowFooter && <Footer />}
     </>
   );
 };

@@ -1,7 +1,6 @@
 import React, { useState, useContext, useEffect, useCallback } from "react";
 import "./Register.css";
 import axios from "axios";
-import { NavLink, useNavigate } from "react-router-dom";
 import Modal from "./Modal";
 import EmailVerify from "../components/authComponents/EmailVerify";
 import { AppContext } from "../contextAPI/appContext";
@@ -14,17 +13,21 @@ import {
   InputGroup,
   InputRightElement,
   IconButton,
+  Modal as ChakraModal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  Flex,
 } from "@chakra-ui/react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import _ from "lodash";
+import { NavLink } from "react-router-dom";
 
-export default function Register({
-  isOpen,
-  onClose,
-  profileData,
-  setProfileData,
-  onSubmit,
-}) {
+export default function Register({ isOpen, onClose, signinOnOpen }) {
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [data, setData] = useState({
@@ -42,7 +45,6 @@ export default function Register({
   const [picDisplay, setPicDisplay] = useState(
     "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
   );
-  const navigate = useNavigate();
 
   const inputHandler = (e) => {
     const { name, value } = e.target;
@@ -92,9 +94,6 @@ export default function Register({
 
   useEffect(() => {
     document.title = "Register page";
-    if (state.show === false) {
-      navigate("/");
-    }
   }, []);
 
   const handleSubmitThrottled = useCallback(_.throttle(handleSubmit, 1000), [
@@ -155,197 +154,193 @@ export default function Register({
   };
 
   return (
-    <div className="content">
-      {state.modal && (
-        <Modal
-          onClose={() => dispatch({ type: "showModal", payloadModal: false })}
-        >
-          <EmailVerify email={data.email} />
-        </Modal>
-      )}
-      <section className="">
-        <div className="r-container">
-          <div className="form-container">
-            <h1 className="opacity">Welcome!</h1>
-            <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>
-              <div>
-                <div
+    <ChakraModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={{ base: "full", md: "xl" }}
+    >
+      <ModalOverlay
+        bg="blackAlpha.300"
+        backdropFilter="blur(10px) hue-rotate(90deg)"
+      />
+      <ModalContent
+        sx={{
+          backgroundColor: "#0f0d15",
+          backgroundImage:
+            "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+          padding: "20px",
+        }}
+      >
+        <ModalHeader color="white">Register</ModalHeader>
+        <ModalCloseButton color="white" />
+        <ModalBody>
+          {state.modal && (
+            <Modal
+              onClose={() =>
+                dispatch({ type: "showModal", payloadModal: false })
+              }
+            >
+              <EmailVerify email={data.email} />
+            </Modal>
+          )}
+          <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                marginBottom: "25px",
+              }}
+            >
+              {imageLoading ? (
+                <Spinner size="lg" />
+              ) : (
+                <Image
+                  loading={"eager"}
+                  src={picDisplay}
+                  alt="Profile Picture"
                   style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    marginBottom: "4px",
+                    width: "100px",
+                    height: "100px",
+                    borderRadius: "50%",
+                    marginBottom: "10px",
+                  }}
+                />
+              )}
+              <div>
+                <label
+                  style={{
+                    color: "white",
+                    fontWeight: "bold",
+                    marginBottom: "10px",
                   }}
                 >
-                  {imageLoading ? (
-                    <Spinner size="lg" />
-                  ) : (
-                    <Image
-                      loading={"eager"}
-                      src={picDisplay}
-                      alt="Profile Picture"
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        borderRadius: "50%",
-                        marginBottom: "4px",
-                      }}
-                    />
-                  )}
-                </div>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "center" }}>
-                    <label style={{ color: "white", fontWeight: "bold" }}>
-                      Upload Profile Picture
-                    </label>
-                  </div>
-                  <Input
-                    id="profile-pic"
-                    type="file"
-                    name="pic"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    style={{ display: "none" }}
-                  />
-                  <label htmlFor="profile-pic">
-                    <Button as="span" colorScheme="blue" style={{ size: "sm" }}>
-                      Choose File
-                    </Button>
-                  </label>
-                </div>
+                  Upload Profile Picture
+                </label>
               </div>
-              <div className="row">
-                <div className="col">
-                  <input
-                    name="email"
-                    onChange={inputHandler}
-                    required
-                    value={data.email}
-                    type="email"
-                    placeholder="Email ID"
-                  />
-                </div>
-              </div>
-              <div className="row">
-                <div className="col">
-                  <input
-                    name="name"
-                    onChange={inputHandler}
-                    required
-                    value={data.name}
-                    type="text"
-                    placeholder="Name"
-                  />
-                </div>
-                <div className="col">
-                  <input
-                    name="inGameName"
-                    onChange={inputHandler}
-                    required
-                    value={data.inGameName}
-                    type="text"
-                    placeholder="In Game Name"
-                  />
-                </div>
-              </div>
-              <div className="row">
-                <div className="col">
-                  <InputGroup>
-                    <Input
-                      name="password"
-                      onChange={inputHandler}
-                      required
-                      value={data.password}
-                      type={data.showPassword ? "text" : "password"}
-                      placeholder="Password"
-                      minLength={8}
-                    />
-                    <InputRightElement width="4.5rem">
-                      <IconButton
-                        // h="1.75rem"
-                        // size="sm"
-                        style={{
-                          marginBottom: "-44%",
-                          marginLeft: "40%",
-                          backgroundColor: "transparent",
-                          color: "black",
-                        }}
-                        onClick={() => togglePasswordVisibility("showPassword")}
-                        icon={
-                          data.showPassword ? (
-                            <AiFillEyeInvisible />
-                          ) : (
-                            <AiFillEye />
-                          )
-                        }
-                      />
-                    </InputRightElement>
-                  </InputGroup>
-                </div>
-                <div className="col">
-                  <InputGroup>
-                    <Input
-                      name="cpassword"
-                      onChange={inputHandler}
-                      required
-                      value={data.cpassword}
-                      type={data.showCPassword ? "text" : "password"}
-                      placeholder="Confirm Password"
-                      minLength={8}
-                    />
-                    <InputRightElement width="4.5rem">
-                      <IconButton
-                        // h="1.75rem"
-                        // size="sm"
-                        style={{
-                          marginBottom: "-44%",
-                          marginLeft: "40%",
-                          backgroundColor: "transparent",
-                          color: "black",
-                        }}
-                        onClick={() =>
-                          togglePasswordVisibility("showCPassword")
-                        }
-                        icon={
-                          data.showCPassword ? (
-                            <AiFillEyeInvisible />
-                          ) : (
-                            <AiFillEye />
-                          )
-                        }
-                      />
-                    </InputRightElement>
-                  </InputGroup>
-                </div>
-              </div>
-              <Button
-                isLoading={load}
-                loadingText="Submitting"
-                colorScheme="teal"
-                variant="outline"
-                type="submit"
-                size="lg"
-                w={"100%"}
-              >
-                Submit
-              </Button>
-            </form>
-            <div className="r-forget opacity">
-              <h6>
-                Already a Member ?
-                <NavLink
-                  type="button"
-                  className="w-50 btn btn-success p-1 rounded-2 mt-2 mb-2"
-                  to="/signin"
-                >
-                  {" "}
-                  Login Here
-                </NavLink>
-              </h6>
+              <Input
+                id="profile-pic"
+                type="file"
+                name="pic"
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{ display: "none" }}
+              />
+              <label htmlFor="profile-pic">
+                <Button as="span" colorScheme="blue" style={{ size: "sm" }}>
+                  Choose File
+                </Button>
+              </label>
             </div>
-          </div>
-        </div>
-        <div className="theme-btn-container"></div>
-      </section>
-    </div>
+            <Flex direction="column" gap="4" mb="4">
+              <Input
+                name="email"
+                onChange={inputHandler}
+                required
+                value={data.email}
+                type="email"
+                placeholder="Email ID"
+                color="white"
+              />
+              <Input
+                name="name"
+                onChange={inputHandler}
+                required
+                value={data.name}
+                type="text"
+                placeholder="Name"
+                color="white"
+              />
+              <Input
+                name="inGameName"
+                onChange={inputHandler}
+                required
+                value={data.inGameName}
+                type="text"
+                placeholder="In Game Name"
+                color="white"
+              />
+              <InputGroup>
+                <Input
+                  name="password"
+                  onChange={inputHandler}
+                  required
+                  value={data.password}
+                  type={data.showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  minLength={8}
+                  color="white"
+                />
+                <InputRightElement width="4.5rem">
+                  <IconButton
+                    style={{ backgroundColor: "transparent", color: "white" }}
+                    onClick={() => togglePasswordVisibility("showPassword")}
+                    icon={
+                      data.showPassword ? <AiFillEyeInvisible /> : <AiFillEye />
+                    }
+                  />
+                </InputRightElement>
+              </InputGroup>
+              <InputGroup>
+                <Input
+                  name="cpassword"
+                  onChange={inputHandler}
+                  required
+                  value={data.cpassword}
+                  type={data.showCPassword ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  minLength={8}
+                  color="white"
+                />
+                <InputRightElement width="4.5rem">
+                  <IconButton
+                    style={{ backgroundColor: "transparent", color: "white" }}
+                    onClick={() => togglePasswordVisibility("showCPassword")}
+                    icon={
+                      data.showCPassword ? (
+                        <AiFillEyeInvisible />
+                      ) : (
+                        <AiFillEye />
+                      )
+                    }
+                  />
+                </InputRightElement>
+              </InputGroup>
+            </Flex>
+            <Button
+              isLoading={load}
+              loadingText="Submitting"
+              colorScheme="teal"
+              variant="outline"
+              type="submit"
+              size="lg"
+              w="100%"
+              mb="4"
+            >
+              Submit
+            </Button>
+          </form>
+        </ModalBody>
+        <ModalFooter>
+          <Flex direction="column" align="center" w="100%">
+            <h6 style={{ color: "white", marginBottom: "10px" }}>
+              Already a Member?
+            </h6>
+            <Button
+              variant="solid"
+              colorScheme="green"
+              type="button"
+              onClick={() => {
+                onClose();
+                signinOnOpen();
+              }}
+            >
+              Login Here
+            </Button>
+          </Flex>
+        </ModalFooter>
+      </ModalContent>
+    </ChakraModal>
   );
 }

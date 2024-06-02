@@ -108,7 +108,7 @@ export default function Profile() {
           <Loading />
         ) : (
           <>
-            <Flex flexDirection={"column"}>
+            <Flex flexDirection={"column"} width={"100%"}>
               <Flex
                 margin="20px"
                 padding="15px"

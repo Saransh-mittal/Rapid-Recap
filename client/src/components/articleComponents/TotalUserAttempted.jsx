@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { Button, Flex, Text } from "@chakra-ui/react";
 import QuizTitansModal from "./QuizTitansModal";
-const TotalUserAttempted = ({ css, totalUsersGivenQuiz }) => {
+const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
   const [showQuizTitans, setShowQuizTitans] = useState(false);
   return (
     <Flex
+      style={
+        notLoggedIn
+          ? { filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }
+          : { userSelect: "text", border: "2px", padding: "0.5rem" }
+      }
       css={css}
-      style={{
-        border: "2px",
-        padding: "0.5rem",
-      }}
       borderRadius="xl"
       backgroundColor="#2A2F4F"
       marginBottom="2rem"
@@ -40,7 +41,17 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz }) => {
       {showQuizTitans && (
         <QuizTitansModal setShowQuizTitans={setShowQuizTitans} />
       )}
-      <Button margin={"1rem"} w={"50%"} onClick={() => setShowQuizTitans(true)}>
+      <Button
+        margin={"1rem"}
+        w={"50%"}
+        onClick={(e) => {
+          if (notLoggedIn) {
+            e.preventDefault();
+            return;
+          }
+          setShowQuizTitans(true);
+        }}
+      >
         Quiz Titans
       </Button>
     </Flex>

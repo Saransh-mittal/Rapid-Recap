@@ -1,0 +1,77 @@
+import { Box, Flex } from "@chakra-ui/react";
+
+import CategoryButton from "./CategoryButton";
+import ButtonGradient from "../../assets/svg/ButtonGradient";
+import ReactGA from "react-ga4"; // Import Google Analytics library
+import { useEffect } from "react";
+
+const Categories = ({
+  activeCategory,
+  handleActiveCategory,
+  categories,
+  setActiveCategoryIndex,
+  categoryRefs,
+}) => {
+  const trackCategoryClick = (category) => {
+    ReactGA.send({
+      hitType: "event",
+      eventCategory: "Category Click",
+      eventAction: "Click",
+      eventLabel: category, // Track the category that was clicked
+    });
+  };
+
+  useEffect(() => {
+    const activeCategoryRef = categoryRefs.current.find(
+      (ref) =>
+        ref &&
+        ref.textContent.trim().toLowerCase() === activeCategory.toLowerCase()
+    );
+    if (activeCategoryRef) {
+      activeCategoryRef.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [activeCategory, categoryRefs]);
+
+  return (
+    <Box
+      paddingInline={{ base: 0, lg: "10%" }}
+      paddingTop={{ base: "5%", lg: "15%" }}
+    >
+      <Flex
+        flexDirection={{ base: "row", lg: "column" }}
+        w={"100%"}
+        alignItems={"center"}
+        paddingBottom={{ base: "1.5rem", lg: "8rem" }}
+      >
+        <ButtonGradient />
+        {/* <Heading as={"h4"} fontSize={"1.75rem"} marginBottom={"2rem"}>
+          Categories
+        </Heading> */}
+        <Flex flexDirection={{ base: "row", lg: "column" }} gap={4}>
+          {categories.map((category, idx) => (
+            <CategoryButton
+              ref={(el) => (categoryRefs.current[idx] = el)}
+              key={idx}
+              white={
+                category.toLocaleLowerCase() ===
+                activeCategory.toLocaleLowerCase()
+                  ? true
+                  : false
+              }
+              onClick={() => {
+                setActiveCategoryIndex(idx);
+                trackCategoryClick(category);
+                handleActiveCategory(category);
+              }}
+            >
+              {" "}
+              {category}{" "}
+            </CategoryButton>
+          ))}
+        </Flex>
+      </Flex>
+    </Box>
+  );
+};
+
+export default Categories;
