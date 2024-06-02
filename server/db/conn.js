@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(20.05.2024).json");
+// const updates = require("./updates/updates(02.06.2024).json");
 // const User = require("../model/userSchema");
 // const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 // const { progressBar } = require("../utils/progress.utils.js");
@@ -49,7 +49,7 @@ mongoose
 //           ? `${update.mainText.slice(0, 100)}...`
 //           : update.mainText;
 //       const url = "https://rapidrecap.co.in/";
-//       //await sendNotification({ title: updateTitle, body: updateBody, url });
+//       // await sendNotification({ title: updateTitle, body: updateBody, url });
 //       for (const user of users) {
 //         // Create a new update object for the user
 //         const { title, mainText, img, read } = update;

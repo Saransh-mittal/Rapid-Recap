@@ -1,13 +1,7 @@
 [
     {
-        "title": "Sleek and Intuitive UI Design",
-        "mainText": "Experience our revamped user interface! The new design is visually appealing and more intuitive, making navigation seamless and interaction smoother.",
-        "img": null,
-        "read": false
-    },
-    {
-        "title": "Expanded Categories",
-        "mainText": "Explore a wider range of topics with our newly added categories! Stay informed and engaged with fresh content tailored to your interests.",
+        "title": "Sleek and Intuitive UI Design & Expanded Categories",
+        "mainText": "Experience our revamped user interface! The new design is visually appealing and more intuitive, making navigation seamless and interaction smoother. Plus, explore a wider range of topics with our newly added categories! Stay informed and engaged with fresh content tailored to your interests.",
         "img": null,
         "read": false
     }
