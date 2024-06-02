@@ -18,7 +18,7 @@ const {
 } = require("../utils/user.utils");
 const dailyUserIQCalc = require("../utils/dailyUserIQCalc.utils");
 const ApplicationUpdates = require("../model/applicationUpdatesSchema");
-const { progressBar } = require("../utils/progress.utils");
+// const { progressBar } = require("../utils/progress.utils");
 const QuinBoost = require("../model/quinBoostSchema");
 const MailTemplates = require("../data/MailTemplates.js");
 const { isValidEmail } = require("../utils/miscellaneous.utils.js");
@@ -856,7 +856,7 @@ const sendMailForNotifySubscribe = async (req, res) => {
     });
     //const users = await User.find({ inGameName: "saransh_1234" });
     const transporter = await mailTransporter();
-    const updateProgress = progressBar(users.length);
+    // const updateProgress = progressBar(users.length);
     for (const user of users) {
       await transporter.sendMail({
         from: MailTemplates.NotifySubscribe.from,
@@ -864,7 +864,7 @@ const sendMailForNotifySubscribe = async (req, res) => {
         subject: MailTemplates.NotifySubscribe.subject,
         html: MailTemplates.NotifySubscribe.html(user.name.split(" ")[0]),
       });
-      updateProgress();
+      // updateProgress();
     }
     res
       .status(200)
@@ -892,10 +892,10 @@ const quizDailyStreakUpdator = async (req, res) => {
   try {
     const users = await User.find({ inGameName: { $exists: true, $ne: "" } });
     console.log(users.length);
-    const updateProgress = progressBar(users.length);
+    // const updateProgress = progressBar(users.length);
     for (let user of users) {
       await dailyStreakCalculator(user._id);
-      updateProgress();
+      // updateProgress();
     }
     res.status(200).json({ message: "Daily streak updated successfully" });
   } catch (error) {
@@ -907,10 +907,10 @@ const longestStreakCalculatorOfAllUsers = async (req, res) => {
   try {
     const users = await User.find({ inGameName: { $exists: true, $ne: "" } });
     console.log(users.length);
-    const updateProgress = progressBar(users.length);
+    // const updateProgress = progressBar(users.length);
     for (let user of users) {
       await longestStreakCalculator(user._id);
-      updateProgress();
+      // updateProgress();
     }
     res.status(200).json({ message: "Longest streak updated successfully" });
   } catch (error) {

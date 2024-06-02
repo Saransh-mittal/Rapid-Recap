@@ -3,7 +3,7 @@ const Article = require("../../model/articleSchema");
 const QuizAttempt = require("../../model/quizAttemptSchema");
 const Quiz = require("../../model/quizSchema");
 const User = require("../../model/userSchema");
-const { progressBar } = require("../../utils/progress.utils");
+// const { progressBar } = require("../../utils/progress.utils");
 const dailyUserIQCalc = require("../dailyUserIQCalc.utils");
 const { genQuiz } = require("../quiz.utils");
 
@@ -33,18 +33,18 @@ async function generateFakeQuizAttempts() {
 
     console.log("Fetching users...");
     const users = [];
-    const updateProgressusers = progressBar(100);
+    // const updateProgressusers = progressBar(100);
     for (let i = 0; i < 100; i++) {
       const user = await User.findOne({ email: `dummy${i}@mail.com` });
       users.push(user);
-      updateProgressusers();
+      // updateProgressusers();
     }
     console.log("Users fetched successfully");
 
     console.log("Generating fake quiz attempts...");
     for (let day = 10; day >= 0; day--) {
       const currentDate = moment().subtract(day, "days").toDate();
-      const updateProgressQuizAttempts = progressBar(100);
+      // const updateProgressQuizAttempts = progressBar(100);
       for (let i = 0; i < 100; i++) {
         const user = users[i];
         // randomly select number of articles to attempt quiz from 8 to articlesWithQuiz.length from the articlesWithQuiz array
@@ -142,7 +142,7 @@ async function generateFakeQuizAttempts() {
           else u.hardQuizCount++;
           await u.save();
         }
-        updateProgressQuizAttempts();
+        // updateProgressQuizAttempts();
       }
       dailyUserIQCalc(currentDate);
     }

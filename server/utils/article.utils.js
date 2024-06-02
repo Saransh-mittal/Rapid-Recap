@@ -1,6 +1,6 @@
 const natural = require("natural");
 const OpenAI = require("openai");
-const { progressBar } = require("./progress.utils");
+// const { progressBar } = require("./progress.utils");
 const Article = require("../model/articleSchema");
 const { decode } = require("html-entities");
 const NewsAPI = require("newsapi");
@@ -139,7 +139,7 @@ fill these in the category key (only string). Also if total characters are more 
   });
 
   const processedOutput = [];
-  const updateProgress = progressBar(news.length);
+  // const updateProgress = progressBar(news.length);
   for (let newsItem of news) {
     try {
       const isArticle = await Article.findOne({
@@ -224,7 +224,7 @@ fill these in the category key (only string). Also if total characters are more 
     } catch (error) {
       console.log(error);
     } finally {
-      updateProgress();
+      // updateProgress();
     }
   }
 
@@ -287,7 +287,7 @@ Also if total characters are more than 2500 than summarize the whole mainText in
   });
 
   const processedOutput = [];
-  const updateProgress = progressBar(news.length);
+  // const updateProgress = progressBar(news.length);
   for (let newsItem of news) {
     try {
       const isArticle = await Article.findOne({
@@ -393,7 +393,7 @@ Also if total characters are more than 2500 than summarize the whole mainText in
     } catch (error) {
       console.log(error);
     } finally {
-      updateProgress();
+      // updateProgress();
     }
   }
 
@@ -403,11 +403,11 @@ Also if total characters are more than 2500 than summarize the whole mainText in
 const extractNewsUtilityFunc = async () => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   const apiKeys = [
-    // "7e4a7d41a3ed463a952349bfb07b1452",
-    // "e7409124fe384b688c07763501b270dd",
-    // "7170746b5aa044069fbd5f48e74817ac",
-    // "acd1bf365a084183b509789e0aae202a",
-    // "a46513e934b14f44a9fa2137185f5438",
+    "7e4a7d41a3ed463a952349bfb07b1452",
+    "e7409124fe384b688c07763501b270dd",
+    "7170746b5aa044069fbd5f48e74817ac",
+    "acd1bf365a084183b509789e0aae202a",
+    "a46513e934b14f44a9fa2137185f5438",
     "fa26103bbdd849c3a4a6ff9f713a2a91",
     "e20b7e002db74c22b29beb122b72e8c8",
     "9921240e42464f3589886811e71a3977",
@@ -416,20 +416,20 @@ const extractNewsUtilityFunc = async () => {
   ];
   const newsAPICategories = ["general"];
   const newsDataIoCategories = [
-    //"business",
+    "business",
     "crime",
     "domestic",
     "education",
-    //"entertainment",
+    "entertainment",
     "environment",
     "food",
-    //"health",
+    "health",
     "lifestyle",
     "other",
     "politics",
-    //"science",
-    //"sports",
-    //"technology",
+    "science",
+    "sports",
+    "technology",
     "top",
     "tourism",
     "world",
@@ -445,15 +445,15 @@ const extractNewsUtilityFunc = async () => {
   let articlesSavedPerCategory = {};
 
   try {
-    // await processCategories(
-    //   newsapi,
-    //   newsAPICategories,
-    //   apiKeys,
-    //   requestsPerKey,
-    //   keyTracker,
-    //   result,
-    //   articlesSavedPerCategory
-    // );
+    await processCategories(
+      newsapi,
+      newsAPICategories,
+      apiKeys,
+      requestsPerKey,
+      keyTracker,
+      result,
+      articlesSavedPerCategory
+    );
     await processDataIoCategories(
       newsDataIoCategories,
       apiKeys,

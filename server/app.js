@@ -58,10 +58,10 @@ webpush.setVapidDetails(
 //require("./utils/bot.utils/updateBots");
 // -------------------
 app.use(express.json());
-require("./scheduler/userIQScoreScheduler");
-require("./scheduler/mailsForStreakBroken");
-require("./scheduler/mailsForStreakReminder");
-require("./scheduler/extractNews");
+// require("./scheduler/userIQScoreScheduler");
+// require("./scheduler/mailsForStreakBroken");
+// require("./scheduler/mailsForStreakReminder");
+// require("./scheduler/extractNews");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);

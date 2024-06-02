@@ -1,12 +1,12 @@
 const User = require("../../model/userSchema");
-const { progressBar } = require("../progress.utils");
+// const { progressBar } = require("../progress.utils");
 
 const avg_RQM = async () => {
   try {
     const users = await User.find({
       inGameName: { $exists: true, $ne: "" },
     }).populate("quizAttempts");
-    const progress = progressBar(users.length);
+    // const progress = progressBar(users.length);
     for (let user of users) {
       if (user.quizAttempts.length === 0) continue;
       let sum = 0;
@@ -18,7 +18,7 @@ const avg_RQM = async () => {
       const u = await User.findById(_id);
       u.avgRQM = RQM_avg;
       await u.save();
-      progress();
+      // progress();
     }
     console.log("Average RQM updated successfully!");
   } catch (error) {
