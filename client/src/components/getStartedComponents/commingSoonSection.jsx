@@ -15,6 +15,7 @@ import roadmap1 from "../../assets/roadmap/image-1.png";
 import roadmap2 from "../../assets/roadmap/image-2.png";
 import roadmap3 from "../../assets/roadmap/image-3.png";
 import roadmap4 from "../../assets/roadmap/image-4.png";
+import roadmap5 from "../../assets/roadmap/xp-min.jpeg";
 import grid from "../../assets/grid.png";
 import gradientImage from "../../assets/gradient.png";
 import { useRef } from "react";
@@ -25,33 +26,33 @@ import { BottomLine, Gradient } from "./design/Roadmap";
 const roadmap = [
   {
     id: "0",
-    title: "Voice Recognition",
-    text: "Enable the chatbot to understand and respond to voice commands, making it easier for users to interact with the app hands-free.",
+    title: "Sleek and Intuitive UI Design",
+    text: "Experience our revamped user interface! The new design is visually appealing and more intuitive, making navigation seamless and interaction smoother.",
     date: "May 2023",
     status: "done",
-    imageUrl: roadmap1,
+    imageUrl: roadmap2,
     colorful: true,
   },
   {
     id: "1",
-    title: "Gamification",
-    text: "Add game-like elements, such as badges or leaderboards, to incentivize users to engage with the chatbot more frequently.",
+    title: "Experience Level (xP)",
+    text: "Measure the journey, not just the end, see how far you've come, my friend. A hidden gauge, a subtle sign, to show your mastery, in a line. What could it be that marks your path and charts your growth on this unique graph?",
     date: "May 2023",
     status: "progress",
-    imageUrl: roadmap2,
+    imageUrl: roadmap5,
   },
   {
     id: "2",
-    title: "Chatbot Customization",
-    text: "Allow users to customize the chatbot's appearance and behavior, making it more engaging and fun to interact with.",
+    title: "Expanded Categories & Streak System",
+    text: "Explore new categories and keep your learning streak alive! Our new streak system rewards consistent participation, helping you boost your Information Quotient (IQ) score.",
     date: "May 2023",
     status: "done",
     imageUrl: roadmap3,
   },
   {
     id: "3",
-    title: "Integration with APIs",
-    text: "Allow the chatbot to access external data sources, such as weather APIs or news APIs, to provide more relevant recommendations.",
+    title: "Wise Web",
+    text: "In a realm where knowledge flows, connections grow. Soon, you'll weave a web so wise, where friends gather under digital skies. What is it that lets you chat, share, and thrive in this new social hive?",
     date: "May 2023",
     status: "progress",
     imageUrl: roadmap4,
@@ -73,7 +74,11 @@ const CommigSoonSection = () => {
       >
         <Box className="overflow-hidden" id="roadmap">
           <Box maxW="container" pb={{ md: 10 }}>
-            <Heading tag="Ready to get started" title="What we’re working on" />
+            <Heading
+              tag="Discover What's New and What's Coming Soon"
+              title="Feature Highlights
+"
+            />
             <Flex
               position="relative"
               gap={{ base: 6, md: 4 }}
@@ -157,15 +162,21 @@ const CommigSoonSection = () => {
                               </Badge>
                             </Flex>
                           </Flex>
-                          <Image
-                            src={item.imageUrl}
-                            alt={item.title}
-                            width="100%"
-                            height="auto"
-                            objectFit="cover"
-                            mb={4}
-                            background={"transparent"}
-                          />
+                          <Flex
+                            w={"100%"}
+                            justifyContent={"center"}
+                            alignItems={"center"}
+                          >
+                            <Image
+                              src={item.imageUrl}
+                              alt={item.title}
+                              width={item.id === "1" ? "80%" : "100%"}
+                              height="auto"
+                              objectFit="cover"
+                              mb={4}
+                              background={"transparent"}
+                            />
+                          </Flex>
                           <Flex>
                             <Heading title={item.title} />
                           </Flex>
