@@ -12,7 +12,8 @@ import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal
 
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
-  const notLoggedIn = state.show;
+  let notLoggedIn = state.show;
+
   const [items, setItems] = useState(state.items);
   const [page, setPage] = useState(state.page + 1);
   const toast = useToast();
@@ -86,7 +87,7 @@ const Home = () => {
     dispatch({ type: "setNews", payloadNews: {} });
 
     return () => window.removeEventListener("scroll", debouncedHandleScroll);
-  }, []);
+  }, [state.show]);
 
   useEffect(() => {
     if (!state.modal) dispatch({ type: "setNews", payloadNews: {} });
