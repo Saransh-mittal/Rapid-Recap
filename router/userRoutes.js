@@ -42,7 +42,7 @@ router.route("/resendOTP").post(resendOTP);
 router.route("/forgotPassword").post(forgotPassword);
 router.route("/handleGoogleLogin").post(handleGoogleLogin);
 router.route("/leaderboard").get(Authenticate, leaderBoard);
-router.route("/profile/:inGameName").get(profile);
+router.route("/profile/:inGameName").get(Authenticate, profile);
 router
   .route("/isTutorialTakenCheck/:Page")
   .get(Authenticate, tutorialTakenCheck);

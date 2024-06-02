@@ -442,13 +442,13 @@ const extractNews = async (req, res) => {
       articlesSavedPerCategory: articlesSavedPerCategory,
     });
 
-    if (result.length > 0) {
-      const title = `📢 New ${notificationCategories} Content Alert! 📰`;
-      const body =
-        "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-      const url = "https://www.rapidrecap.co.in/";
-      await sendNotification({ title, body, url });
-    }
+    // if (result.length > 0) {
+    //   const title = `📢 New ${notificationCategories} Content Alert! 📰`;
+    //   const body =
+    //     "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
+    //   const url = "https://www.rapidrecap.co.in/";
+    //   await sendNotification({ title, body, url });
+    // }
   } catch (error) {
     res.status(500).json({ error: error || "Something went wrong" });
     console.log(error);

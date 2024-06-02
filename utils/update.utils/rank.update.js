@@ -1,5 +1,5 @@
 const User = require("../../model/userSchema");
-//const { progressBar } = require("../progress.utils");
+// const { progressBar } = require("../progress.utils");
 
 const rankUpdate = async () => {
   const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
@@ -8,7 +8,7 @@ const rankUpdate = async () => {
   //AVG. RQM SCORES
   const result = [];
   console.log("\nCalculating user RQM_avg and quizSubs...\n");
-  //const updateProgress1 = progressBar(users.length);
+  // const updateProgress1 = progressBar(users.length);
 
   users.forEach((user) => {
     let sum = 0;
@@ -24,7 +24,7 @@ const rankUpdate = async () => {
       IQ_score,
       quizSubmissions,
     });
-    //updateProgress1();
+    // updateProgress1();
   });
   console.log("\nCalculated user RQM_avg and quizSubs.\n");
   console.log("\nSorting users...\n");
@@ -44,7 +44,7 @@ const rankUpdate = async () => {
   });
 
   console.log("\nUpdating user ranks...\n");
-  //const updateProgress3 = progressBar(result.length);
+  // const updateProgress3 = progressBar(result.length);
   let rank = 1;
   for (let i = 0; i < result.length; i++) {
     const user = result[i];
@@ -52,7 +52,7 @@ const rankUpdate = async () => {
     u.rank = rank;
     await u.save();
     rank++;
-    //updateProgress3();
+    // updateProgress3();
   }
   console.log("\nUpdated user ranks.\n");
 };

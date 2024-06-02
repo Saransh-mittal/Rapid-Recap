@@ -1,10 +1,10 @@
 const User = require("../../model/userSchema");
 const DailyIQ = require("../../model/dailyIQSchema");
-const { progressBar } = require("../progress.utils");
+// const { progressBar } = require("../progress.utils");
 const maxIQScoreUpdate = async () => {
   try {
     const users = await User.find();
-    const updateProgressBar = progressBar(users.length);
+    // const updateProgressBar = progressBar(users.length);
     for (const user of users) {
       const userId = user._id;
       const dailyIQScores = await DailyIQ.find({ user: userId });
@@ -21,7 +21,7 @@ const maxIQScoreUpdate = async () => {
         { maxIQScore: maxIQScore },
         { new: true }
       );
-      updateProgressBar();
+      // updateProgressBar();
     }
   } catch (error) {
     console.log(error.message);
