@@ -19,7 +19,11 @@ import searchMd from "../../assets/search-md.svg";
 import plusSquare from "../../assets/plus-square.svg";
 import { ScrollParallax } from "react-just-parallax";
 import heroBackground from "../../assets/hero/hero-background.jpg";
-import { Gradient, BackgroundCircles } from "./design/Hero";
+import {
+  Gradient,
+  BackgroundCircles,
+  MediumScreenbgGradient,
+} from "./design/Hero";
 
 const heroIcons = [homeSmile, file02, searchMd, plusSquare];
 
@@ -51,7 +55,7 @@ const heroSection = () => {
           letterSpacing={"2px"}
         >
           <Heading as="h1" size="2xl" mb="6">
-            Explore the Potential of your brain with{" "}
+            Turn News Into Knowledge with{" "}
             <Box as="span" display="inline-block" position="relative">
               Rapid Recap{" "}
               <Image
@@ -77,11 +81,18 @@ const heroSection = () => {
             fontWeight={"bold"}
             mt={{ base: "0", lg: "2rem" }}
           >
-            Unlock the potential of your intellect with Rapid Recap. Elevate
-            your knowledge game with Rapid Recap, the ultimate news and quiz
-            platform powered by AI.
+            Welcome to Rapid Recap, where staying informed meets friendly
+            competition. Read the latest news and articles, then test your
+            knowledge with interactive quizzes. Your scores contribute to your
+            unique Information Quotient (IQ), ranking you on our leaderboard.
+            Track your progress, compare with peers, and strive for excellence.
           </Text>
-          <Button as="a" href="/pricing" colorScheme="blue">
+          <Button
+            as="a"
+            href="/pricing"
+            colorScheme="blue"
+            display={{ lg: "none" }}
+          >
             Get started
           </Button>
         </Box>
@@ -169,10 +180,11 @@ const heroSection = () => {
             position="absolute"
             left="50%"
             transform="translateX(-50%)"
+            display={{ base: "block", md: "none", lg: "block" }}
             sx={{
-              "@media (max-width: 992px)": {
-                display: "none",
-              },
+              // "@media (max-width: 992px)": {
+              //   display: "none",
+              // },
               "@media (max-width: 1240px)": {
                 top: "-120% !important",
                 width: "138%",
@@ -191,6 +203,16 @@ const heroSection = () => {
           <BackgroundCircles />
         </Flex>
       </Box>
+      <MediumScreenbgGradient
+        top="18.25rem"
+        left="-25.375rem"
+        width="56.625rem"
+      />
+      <MediumScreenbgGradient
+        top="36.25rem"
+        left="40.375rem"
+        width="56.625rem"
+      />
     </Section>
   );
 };

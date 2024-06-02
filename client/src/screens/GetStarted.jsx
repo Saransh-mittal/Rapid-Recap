@@ -12,10 +12,11 @@ const GetStarted = () => {
       mt={{ base: "4rem", lg: "5rem" }}
       flexDirection={"column"}
       overflow={"hidden"}
+      letterSpacing={"2px"}
     >
       <HeroSection />
       <WhyToUseSection />
-      <PeopleReviews />
+      {/* <PeopleReviews /> */}
       <CommingSoonSection />
       {/* <FooterSection /> */}
     </Flex>

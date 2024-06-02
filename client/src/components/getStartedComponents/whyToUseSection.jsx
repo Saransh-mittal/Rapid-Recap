@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
-import { Box, Heading, Flex } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import Section from "../miscellaneous/Section";
+import Heading from "../miscellaneous/HeadingComponent";
 import BenefitCard from "../miscellaneous/CardComponent";
 import benefitIcon1 from "../../assets/benefits/icon-1.svg";
 import benefitIcon2 from "../../assets/benefits/icon-2.svg";
@@ -14,16 +15,16 @@ const WhyToUseSection = () => {
   const benefits = [
     {
       id: "0",
-      title: "Stay Informed",
-      text: "Get the latest news articles from diverse sources all in one place, ensuring you stay updated on current events. Whether it's politics, technology, sports, or entertainment, Rapid Recap has you covered.",
+      title: "Stay Informed and Engaged",
+      text: "Rapid Recap keeps you up-to-date with the latest news and articles from diverse fields. Our engaging quizzes turn learning into an interactive experience, making it fun to stay informed.",
       backgroundUrl: "./src/assets/benefits/card-1.svg",
       iconUrl: benefitIcon1,
       imageUrl: benefitImage2,
     },
     {
       id: "1",
-      title: "Test Your Knowledge",
-      text: "Take quizzes based on the articles you read to test your comprehension and retention of information. Our quizzes are designed to be engaging and informative, helping you reinforce what you've learned.",
+      title: "Challenge Your Knowledge",
+      text: "Test your comprehension and retention with quizzes designed to challenge you. Each quiz is an opportunity to deepen your understanding and enhance your knowledge.",
       backgroundUrl: "./src/assets/benefits/card-2.svg",
       iconUrl: benefitIcon2,
       imageUrl: benefitImage2,
@@ -31,16 +32,16 @@ const WhyToUseSection = () => {
     },
     {
       id: "2",
-      title: "Track Your Progress",
-      text: "Monitor your Information Quotient (IQ) score over time with detailed graphs and statistics. See how your knowledge and understanding evolve as you continue to engage with the app.",
+      title: "Track and Visualize Your Progress",
+      text: " Monitor your growth with personalized IQ scores and detailed progress charts. Visualize your achievements and see how you improve over time.",
       backgroundUrl: "./src/assets/benefits/card-3.svg",
       iconUrl: benefitIcon3,
       imageUrl: benefitImage2,
     },
     {
       id: "3",
-      title: "Compete and Rank",
-      text: "See how you stack up against other users with our leaderboard and percentile ranking system. Compete for the top spot and earn recognition for your knowledge and expertise.",
+      title: "Compete and Connect",
+      text: "Join the competitive leaderboards to see where you stand among peers. Connect with friends and other users, sharing your scores and achievements on social media.",
       backgroundUrl: "./src/assets/benefits/card-4.svg",
       iconUrl: benefitIcon4,
       imageUrl: benefitImage2,
@@ -48,16 +49,16 @@ const WhyToUseSection = () => {
     },
     {
       id: "4",
-      title: "Join Societies",
-      text: "Belong to exclusive societies based on your IQ score and connect with like-minded individuals. Whether you're an Explorer, Striver, Elite, Maverick, or Visionary, there's a community waiting for you.",
+      title: "Achieve and Belong",
+      text: "Unlock access to exclusive societies based on your IQ scores. Whether you're an Explorer or a Pioneer, find your place in a community of like-minded individuals.",
       backgroundUrl: "./src/assets/benefits/card-5.svg",
       iconUrl: benefitIcon1,
       imageUrl: benefitImage2,
     },
     {
       id: "5",
-      title: "Improve Daily",
-      text: "Consistently challenge yourself with new quizzes and track your improvement over time. With daily practice, you can expand your knowledge and enhance your cognitive abilities.",
+      title: "Earn Rewards and Recognition",
+      text: "Earn badges and rewards as you achieve milestones and excel in quizzes. Celebrate your accomplishments and showcase your expertise to the community.",
       backgroundUrl: "./src/assets/benefits/card-6.svg",
       iconUrl: benefitIcon2,
       imageUrl: benefitImage2,
@@ -75,8 +76,10 @@ const WhyToUseSection = () => {
         flexDirection="column"
       >
         <Box position="relative" zIndex="2">
-          <Heading mb={10}>Get Gaming with Rapid Recap</Heading>
-
+          <Heading
+            tag={"Engage, Learn, and Excel"}
+            title={"Discover the Power of Rapid Recap"}
+          />
           <Flex
             flexWrap="wrap"
             justifyContent="center"

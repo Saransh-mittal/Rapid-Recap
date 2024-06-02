@@ -6,7 +6,7 @@ const Heading = ({ className, title, text, tag }) => {
     <Flex
       maxWidth="50rem"
       marginX="auto"
-      marginBottom={{ base: "12", lg: "20" }}
+      marginBottom={"8"}
       justifyContent={"center"}
       alignItems={"center"}
       flexDirection={"column"}

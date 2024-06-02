@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { MouseParallax } from "react-just-parallax";
-import { Box, Flex } from "@chakra-ui/react";
+import { Box, Flex, Image } from "@chakra-ui/react";
 import PlusSvg from "../../../assets/svg/PlusSvg";
+import gradient from "../../../assets/gradient.png";
 
 export const Gradient = () => {
   return (
@@ -27,6 +28,40 @@ export const Gradient = () => {
         lg={{ h: 6, mx: 20 }}
       />
     </>
+  );
+};
+
+export const MediumScreenbgGradient = ({ top, left, width }) => {
+  return (
+    <Box
+      position="absolute"
+      //   top="18.25rem"
+      //   left="-30.375rem"
+      top={top}
+      left={left}
+      //   width="56.625rem"
+      width={width}
+      opacity="0.6"
+      mixBlendMode="color-dodge"
+      pointerEvents="none"
+    >
+      <Box
+        position="absolute"
+        top="50%"
+        left="50%"
+        width="58.85rem"
+        height="58.85rem"
+        transform="translate(-75%, -50%)"
+      >
+        <Image
+          src={gradient}
+          width="942px"
+          height="942px"
+          alt="Gradient"
+          bg={"transparent"}
+        />
+      </Box>
+    </Box>
   );
 };
 
@@ -105,7 +140,7 @@ const Rings = () => {
       />
       <Box
         position="absolute"
-        top="50%"
+        top={"50%"}
         left="50%"
         w="11rem"
         aspectRatio="1"
@@ -128,7 +163,9 @@ export const BackgroundCircles = ({ parallaxRef }) => {
   return (
     <Box
       position="absolute"
-      top={{ base: "-42.375rem", md: "-38.5rem", xl: "-32rem" }}
+      // top={{ base: "70%", md: "60%", xl: "50%" }}
+      display={{ base: "none", md: "block" }}
+      top={{ base: "-50%", md: "-50%", lg: "-100%", xl: "-110%" }}
       left="50%"
       w="55rem"
       aspectRatio="1"

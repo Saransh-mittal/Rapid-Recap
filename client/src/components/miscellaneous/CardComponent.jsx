@@ -39,7 +39,8 @@ const BenefitCard = ({
         </Text>
         <Flex
           // mt="auto" // This pushes the Flex container to the bottom
-          mt="5.5rem"
+          position={"absolute"}
+          bottom={"-15%"}
           alignItems="center"
           justifyContent="space-between"
         >
@@ -60,7 +61,7 @@ const BenefitCard = ({
           >
             Explore more
           </Text>
-          <Flex mt="3.5rem">
+          <Flex mt="4.5rem">
             <Arrow />
           </Flex>
         </Flex>

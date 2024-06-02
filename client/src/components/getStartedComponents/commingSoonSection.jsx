@@ -166,7 +166,7 @@ const CommigSoonSection = () => {
                             mb={4}
                             background={"transparent"}
                           />
-                          <Flex mb={"-4rem"}>
+                          <Flex>
                             <Heading title={item.title} />
                           </Flex>
                           <Box fontSize="md" color="gray.600">
