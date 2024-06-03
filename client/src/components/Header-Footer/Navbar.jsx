@@ -29,7 +29,7 @@ import NavBrand from "./navbarComponents/NavBrand";
 import HamburgerModal from "./navbarComponents/HamburgerModal";
 
 const Navbar = () => {
-  const isSmallerThan1024 = useMediaQuery("(max-width: 1024px)")[0];
+  const isSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
   const navItems = [
     { to: "/home", label: "Home" },
     { to: "/contact", label: "Contact Us" },
@@ -130,7 +130,7 @@ const Navbar = () => {
     const shouldSetVisible =
       prevScrollPos > currentScrollPos || currentScrollPos < 10;
 
-    if ((isHomePage && isSmallerThan1024) || !isHomePage) {
+    if ((isHomePage && isSmallerThan992) || !isHomePage) {
       setVisible(shouldSetVisible);
     }
     setPrevScrollPos(currentScrollPos);
