@@ -362,108 +362,118 @@ const calculateUserIQScores = async (req, res) => {
 
 const leaderBoard = async (req, res) => {
   const currUserId = req.user._id;
-  const { society } = req.query;
-  // console.log(currUserId);
-  // console.log(society);
+  const { society, page = 1, limit = 10 } = req.query;
+
+  const societyConditions = {
+    titans: { IQ_score: { $gte: 150 } },
+    mavericks: { IQ_score: { $gte: 130, $lt: 150 } },
+    elites: { IQ_score: { $gte: 110, $lt: 130 } },
+    strivers: { IQ_score: { $gte: 90, $lt: 110 } },
+    explorers: { IQ_score: { $gte: 0, $lt: 90 } },
+  };
+
+  const condition = societyConditions[society?.toLowerCase()] || {};
+  condition.inGameName = { $exists: true, $ne: "" };
+
+  const pageNumber = parseInt(page, 10);
+  const limitNumber = parseInt(limit, 10);
+  const skipNumber = (pageNumber - 1) * limitNumber;
+
   try {
-    let users;
-    if (society?.toLowerCase() === "titans") {
-      users = await User.find({
-        inGameName: { $exists: true, $ne: "" },
-        IQ_score: { $gte: 150 },
-      })
-        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
-        .sort({ rank: 1 })
-        .limit(100)
-        .populate("quizAttempts");
-    } else if (society?.toLowerCase() === "mavericks") {
-      users = await User.find({
-        inGameName: { $exists: true, $ne: "" },
-        IQ_score: { $gte: 130, $lt: 150 },
-      })
-        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
-        .sort({ rank: 1 })
-        .limit(100)
-        .populate("quizAttempts");
-    } else if (society?.toLowerCase() === "elites") {
-      users = await User.find({
-        inGameName: { $exists: true, $ne: "" },
-        IQ_score: { $gte: 110, $lt: 130 },
-      })
-        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
-        .sort({ rank: 1 })
-        .limit(100)
-        .populate("quizAttempts");
-    } else if (society?.toLowerCase() === "strivers") {
-      users = await User.find({
-        inGameName: { $exists: true, $ne: "" },
-        IQ_score: { $gte: 90, $lt: 110 },
-      })
-        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
-        .sort({ rank: 1 })
-        .limit(100)
-        .populate("quizAttempts");
-    } else if (society?.toLowerCase() === "explorers") {
-      users = await User.find({
-        inGameName: { $exists: true, $ne: "" },
-        IQ_score: { $gte: 0, $lt: 90 },
-      })
-        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
-        .sort({ rank: 1 })
-        .limit(100)
-        .populate("quizAttempts");
-    } else {
-      users = await User.find({ inGameName: { $exists: true, $ne: "" } })
-        .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
-        .sort({ rank: 1 })
-        .limit(100)
-        .populate("quizAttempts");
+    const totalDocuments = await User.countDocuments(condition);
+    const maxUsers = Math.min(totalDocuments, 500); // Limit the total users to 500
+    const totalPages = Math.ceil(maxUsers / limitNumber);
+
+    if (skipNumber >= maxUsers) {
+      return res.status(200).json({
+        users: [],
+        currUser: {},
+        totalPages,
+        currentPage: pageNumber,
+      });
     }
 
-    // const users = await User.find({ inGameName: { $exists: true, $ne: "" } })
-    //   .select("name inGameName IQ_score pic maxIQScore rank _id avgRQM")
-    //   .sort({ rank: 1 })
-    //   .limit(100)
-    //   .populate("quizAttempts");
-    const currUser = await User.findById(currUserId).populate("quizAttempts");
-    //AVG. RQM SCORES
-    const result = [];
+    const usersPromise = User.aggregate([
+      { $match: condition },
+      {
+        $addFields: {
+          quizAttemptsLength: { $size: "$quizAttempts" },
+        },
+      },
+      {
+        $sort: {
+          IQ_score: -1,
+          quizAttemptsLength: -1,
+          avgRQM: -1,
+        },
+      },
+      {
+        $skip: skipNumber,
+      },
+      {
+        $limit: limitNumber,
+      },
+      {
+        $project: {
+          name: 1,
+          inGameName: 1,
+          IQ_score: 1,
+          pic: 1,
+          maxIQScore: 1,
+          rank: 1,
+          _id: 1,
+          avgRQM: 1,
+          quizAttempts: 1,
+        },
+      },
+    ]);
 
-    users.forEach((user) => {
-      const { name, inGameName, IQ_score, pic, _id, maxIQScore } = user;
+    const currUserPromise = User.findById(currUserId)
+      .select("avgRQM quizAttempts")
+      .populate("quizAttempts", "_id");
 
-      const RQM_avg = user.avgRQM?.toFixed(0);
-      const quizSubmissions = user.quizAttempts.length;
-      result.push({
-        _id,
-        RQM_avg,
+    const [users, currUser] = await Promise.all([
+      usersPromise,
+      currUserPromise,
+    ]);
+
+    const result = users.map((user) => {
+      const {
         name,
         inGameName,
         IQ_score,
         pic,
-        quizSubmissions,
+        _id,
         maxIQScore,
-      });
-    });
-    result.sort((a, b) => {
-      if (a.IQ_score !== b.IQ_score) {
-        return b.IQ_score - a.IQ_score; // Sort by IQ_score in descending order
-      } else if (a.quizSubmissions !== b.quizSubmissions) {
-        return b.quizSubmissions - a.quizSubmissions; // Sort by quizSubmissions in descending order
-      } else {
-        return b.RQM_avg - a.RQM_avg; // Sort by RQM_avg in descending order
-      }
+        avgRQM,
+        quizAttempts,
+      } = user;
+      return {
+        _id,
+        RQM_avg: avgRQM?.toFixed(0),
+        name,
+        inGameName,
+        IQ_score,
+        pic,
+        quizSubmissions: quizAttempts.length,
+        maxIQScore,
+      };
     });
 
-    const RQM_avg = currUser.avgRQM.toFixed(0);
-    const quizSubmissions = currUser.quizAttempts.length;
+    const currUserData = {
+      RQM_avg: currUser.avgRQM.toFixed(0),
+      quizSubmissions: currUser.quizAttempts.length,
+    };
 
-    res
-      .status(200)
-      .json({ users: result, currUser: { RQM_avg, quizSubmissions } });
+    res.status(200).json({
+      users: result,
+      currUser: currUserData,
+      totalPages,
+      currentPage: pageNumber,
+    });
   } catch (error) {
     res.status(500).json({ error: "Error fetching the Leaderboard" });
-    console.log(error);
+    console.error(error);
   }
 };
 
