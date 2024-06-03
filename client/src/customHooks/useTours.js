@@ -123,6 +123,7 @@ export const useArticlePageTour = () => {
 
     const handleTourStart = () => {
       body.style.overflow = "hidden"; // Reapply scroll behavior
+
       manageOverlay({
         element: document.querySelector(".article-page"),
         overlay: true,
@@ -153,6 +154,8 @@ export const useArticlePageTour = () => {
         element: document.querySelector(".navbar"),
         overlay: false,
       });
+      //Scroll to the top of the page
+      window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const handleTourComplete = () => {
@@ -576,7 +579,7 @@ export const useQuinBoostTour = () => {
     const navbar = document.querySelector(".navbar");
 
     const handleTourStart = () => {
-      const articleContent = document.querySelector(".article-content-all");
+      const articleContent = document.querySelector(".article-all-content");
       const langBack = document.querySelector(".lang-back-flex");
       const quinBoost = document.querySelector(".quin-boost-tag");
 
@@ -615,7 +618,7 @@ export const useQuinBoostTour = () => {
     };
 
     const handleTourEnd = () => {
-      const articleContent = document.querySelector(".article-content-all");
+      const articleContent = document.querySelector(".article-all-content");
       const langBack = document.querySelector(".lang-back-flex");
       const quinBoost = document.querySelector(".quin-boost-tag");
 
