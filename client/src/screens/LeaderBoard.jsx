@@ -6,8 +6,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { useState, useEffect, useContext, useCallback, useRef } from "react";
-import Loading from "../components/miscellaneous/Loading";
+import { useState, useEffect, useContext } from "react";
 import { AppContext } from "../contextAPI/appContext";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "../components/leaderBoardComponents/SearchBar";
