@@ -370,10 +370,10 @@ const Article = () => {
                   },
                   "publisher": {
                     "@type": "Organization",
-                    "name": "Your Organization Name",
+                    "name": "Rapid Recap",
                     "logo": {
                       "@type": "ImageObject",
-                      "url": "https://yourdomain.com/logo.png"
+                      "url": "https://www.rapidrecap.co.in/logo.png"
                     }
                   },
                   "description": "${mainText[selectedLanguage]?.[0]}"
