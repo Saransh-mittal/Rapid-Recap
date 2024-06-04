@@ -1,12 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Flex, Image, Tooltip, Text, Tag } from "@chakra-ui/react";
+import { Flex, Image, Tooltip, Text, Tag, Spinner } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import circle from "/images/circle.png";
 import Arrow from "/images/arrow.png";
 import Lightning from "./RankAndSocietySubCompnents/Lightning";
 import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 import { AppContext } from "../../contextAPI/appContext";
-import Loading from "../miscellaneous/Loading";
 import BrainModal from "./RankAndSocietySubCompnents/BrainModal";
 import CircleModal from "./RankAndSocietySubCompnents/CircleModal"; // Import CircleModal
 
@@ -90,7 +89,7 @@ const RankAndSociety = ({
           </Text>
         </Flex>
       ) : isLoading ? (
-        <Loading />
+        <Spinner />
       ) : (
         <>
           <Flex flexDirection="column" width="100%" h={"100%"} m={0}>
