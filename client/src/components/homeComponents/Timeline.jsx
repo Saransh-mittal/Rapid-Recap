@@ -18,7 +18,8 @@ import { useNavigate } from "react-router-dom";
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate();
   const { state, dispatch } = useContext(AppContext);
-  const { tour, isTutorialTakenCheck } = useHomeTour();
+  const [swipeDisable, setSwipeDisable] = useState(false);
+  const { tour, isTutorialTakenCheck } = useHomeTour({ setSwipeDisable });
   const flexDirectionOfTimeline = useBreakpointValue({
     base: "column",
     lg: "row",
@@ -52,16 +53,20 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => {
-      setActiveCategoryIndex((activeCategoryIndex + 1) % categories.length);
-      handleActiveCategory(
-        categories[(activeCategoryIndex + 1) % categories.length]
-      );
+      !swipeDisable &&
+        setActiveCategoryIndex((activeCategoryIndex + 1) % categories.length);
+      !swipeDisable &&
+        handleActiveCategory(
+          categories[(activeCategoryIndex + 1) % categories.length]
+        );
     },
     onSwipedRight: () => {
-      setActiveCategoryIndex((activeCategoryIndex - 1) % categories.length);
-      handleActiveCategory(
-        categories[(activeCategoryIndex - 1) % categories.length]
-      );
+      !swipeDisable &&
+        setActiveCategoryIndex((activeCategoryIndex - 1) % categories.length);
+      !swipeDisable &&
+        handleActiveCategory(
+          categories[(activeCategoryIndex - 1) % categories.length]
+        );
     },
   });
 
@@ -118,7 +123,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
         transition="transform 0.3s ease-in-out"
         padding={"1rem"}
         w={{ base: "100%", lg: "15%" }}
-        h={{ base: "14%", lg: "100vh" }}
+        h={{ base: "auto", lg: "100vh" }}
         position={"fixed"}
         backgroundColor={"#0f0d15"}
         backgroundImage={
@@ -158,7 +163,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
       </Flex>
       <div
         className="timeline-container"
-        {...swipeHandlers}
+        {...(!swipeDisable && swipeHandlers)}
         //style={!notLoggedIn && { paddingBottom: "6rem" }}
       >
         <div className="row item-container">

@@ -36,6 +36,7 @@ const Categories = ({
     <Box
       paddingInline={{ base: 0, lg: "10%" }}
       paddingTop={{ base: "5%", lg: "15%" }}
+      className="categories-container"
     >
       <Flex
         flexDirection={{ base: "row", lg: "column" }}
