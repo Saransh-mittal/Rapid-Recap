@@ -22,6 +22,7 @@ import imageData from "../assets/AltNewsImage";
 import { quinBoostChecker } from "../utils/quiz.utils";
 import { useParams } from "react-router-dom";
 import ReactGA from "react-ga4";
+import { Helmet } from "react-helmet";
 
 const Article = () => {
   const toast = useToast();
@@ -326,6 +327,60 @@ const Article = () => {
           marginTop={"4.5rem"}
           flexDirection={"column"}
         >
+          <Helmet>
+            <title>{title[selectedLanguage]}</title>
+            <meta
+              name="description"
+              content={mainText[selectedLanguage]?.[0]}
+            />
+            <meta property="og:title" content={title[selectedLanguage]} />
+            <meta
+              property="og:description"
+              content={mainText[selectedLanguage]?.[0]}
+            />
+            <meta property="og:image" content={alt_image} />
+            <meta property="og:type" content="article" />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content={title[selectedLanguage]} />
+            <meta
+              name="twitter:description"
+              content={mainText[selectedLanguage]?.[0]}
+            />
+            <meta name="twitter:image" content={alt_image} />
+            <link
+              rel="canonical"
+              href={`https://yourdomain.com/articles/${id}`}
+            />
+            <script type="application/ld+json">
+              {`
+                {
+                  "@context": "https://schema.org",
+                  "@type": "NewsArticle",
+                  "mainEntityOfPage": {
+                    "@type": "WebPage",
+                    "@id": "https://yourdomain.com/articles/${id}"
+                  },
+                  "headline": "${title[selectedLanguage]}",
+                  "image": ["${alt_image}"],
+                  "datePublished": "${new Date().toISOString()}",
+                  "dateModified": "${new Date().toISOString()}",
+                  "author": {
+                    "@type": "Person",
+                    "name": "${author[selectedLanguage]}"
+                  },
+                  "publisher": {
+                    "@type": "Organization",
+                    "name": "Your Organization Name",
+                    "logo": {
+                      "@type": "ImageObject",
+                      "url": "https://yourdomain.com/logo.png"
+                    }
+                  },
+                  "description": "${mainText[selectedLanguage]?.[0]}"
+                }
+              `}
+            </script>
+          </Helmet>
           <ArticleHeader
             handleLanguageChange={handleLanguageChange}
             isQuinBoostAvailable={isQuinBoostAvailable}
