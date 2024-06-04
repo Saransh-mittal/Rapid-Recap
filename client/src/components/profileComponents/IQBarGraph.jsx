@@ -4,6 +4,7 @@ import {
   Button,
   Flex,
   Image,
+  Spinner,
   Tag,
   Text,
   Tooltip,
@@ -12,7 +13,6 @@ import {
 import Chart from "chart.js/auto";
 import "chartjs-adapter-date-fns";
 import axios from "axios";
-import Loading from "../miscellaneous/Loading";
 import ExpectedIQModal from "../articleComponents/ExpectedIQModal";
 import { AppContext } from "../../contextAPI/appContext";
 
@@ -284,7 +284,7 @@ const IQBarGraph = ({ barGraph, privateBarGraph, loginedUserProfile }) => {
           </Text>
         </Flex>
       ) : isLoading ? (
-        <Loading />
+        <Spinner />
       ) : USER_IQ === 0 ? (
         <Flex
           w={"100%"}

@@ -17,7 +17,7 @@ const stepsTutorialHome = [
         type: "next",
       },
     ],
-    classes: "custom-class-name-1 custom-class-name-2",
+    classes: "custom-class-name-2",
     highlightClass: "highlight",
     scrollTo: false,
     cancelIcon: {

@@ -1,12 +1,14 @@
-import React, { useRef } from "react";
-import { Box, Flex } from "@chakra-ui/react";
+import React, { useRef, useState } from "react";
+import { Box, Flex, Skeleton, Spinner } from "@chakra-ui/react";
 import PeopleReviews from "../components/getStartedComponents/peopleReviewSection"; // Importing the PeopleReviews component
 import WhyToUseSection from "../components/getStartedComponents/whyToUseSection";
 import HeroSection from "../components/getStartedComponents/heroSection";
 import FooterSection from "../components/getStartedComponents/footerSection";
 import CommingSoonSection from "../components/getStartedComponents/commingSoonSection";
+import Loading from "../components/miscellaneous/Loading";
 
 const GetStarted = () => {
+  const [bgLoaded, setBgLoaded] = useState(false);
   return (
     <Flex
       mt={{ base: "4rem", lg: "5rem" }}
@@ -14,11 +16,13 @@ const GetStarted = () => {
       overflow={"hidden"}
       letterSpacing={"2px"}
     >
-      <HeroSection />
-      <WhyToUseSection />
-      {/* <PeopleReviews /> */}
-      <CommingSoonSection />
-      {/* <FooterSection /> */}
+      <Skeleton isLoaded={bgLoaded}>
+        <HeroSection bgLoaded={bgLoaded} setBgLoaded={setBgLoaded} />
+        <WhyToUseSection />
+        {/* <PeopleReviews /> */}
+        <CommingSoonSection />
+        {/* <FooterSection /> */}
+      </Skeleton>
     </Flex>
   );
 };

@@ -167,8 +167,8 @@ section {
   transform: translateY(800px);
 }
 
-@media only screen and (max-width: 992px){
-  .timeline-container{
+@media only screen and (max-width: 992px) {
+  .timeline-container {
     width: 100% !important;
   }
 }
@@ -236,7 +236,6 @@ section {
   position: relative;
   margin-left: auto;
   width: 80%;
-  
 }
 
 .timeline-item {
@@ -264,7 +263,7 @@ section {
 }
 
 @media only screen and (max-width: 1023px) {
-  .timeline-container{
+  .timeline-container {
     margin-top: 10%;
   }
   .timeline-item-content {
@@ -433,10 +432,13 @@ section {
 }
 
 .card-guide {
-  left: 37% !important;
+  /* top: 22rem !important; */
+  left: 50% !important;
   border-radius: 15px;
   opacity: 1 !important;
   background-image: linear-gradient(-180deg, #4a525d, #1a2839);
+  /* Shift to the right */
+  /* left: 10rem; */
   z-index: 999999;
   color: white;
   max-width: 25rem;
@@ -461,12 +463,19 @@ section {
   height: 60px;
   z-index: 9999999;
   bottom: -5%;
-  right: -18%;
+  right: 0%; /* Default position for small screens */
   position: absolute;
   background-color: transparent;
   filter: brightness(1.8);
   box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
   border-radius: 50%;
+}
+
+/* Apply styles for medium and larger screens */
+@media (min-width: 768px) {
+  .hand-click-img {
+    right: -18%; /* Position for medium and larger screens */
+  }
 }
 
 .hand-click-img {

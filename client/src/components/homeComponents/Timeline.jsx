@@ -18,13 +18,14 @@ import { useNavigate } from "react-router-dom";
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate();
   const { state, dispatch } = useContext(AppContext);
-  const { tour, isTutorialTakenCheck } = useHomeTour();
+  const [swipeDisable, setSwipeDisable] = useState(false);
+  const { tour, isTutorialTakenCheck } = useHomeTour({ setSwipeDisable });
   const flexDirectionOfTimeline = useBreakpointValue({
     base: "column",
     lg: "row",
   });
   const notLoggedIn = state.show;
-  const isSmallerThan1024 = useMediaQuery("(max-width: 1024px)")[0];
+  const isSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
 
   const [isFixed, setIsFixed] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -52,23 +53,27 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => {
-      setActiveCategoryIndex((activeCategoryIndex + 1) % categories.length);
-      handleActiveCategory(
-        categories[(activeCategoryIndex + 1) % categories.length]
-      );
+      !swipeDisable &&
+        setActiveCategoryIndex((activeCategoryIndex + 1) % categories.length);
+      !swipeDisable &&
+        handleActiveCategory(
+          categories[(activeCategoryIndex + 1) % categories.length]
+        );
     },
     onSwipedRight: () => {
-      setActiveCategoryIndex((activeCategoryIndex - 1) % categories.length);
-      handleActiveCategory(
-        categories[(activeCategoryIndex - 1) % categories.length]
-      );
+      !swipeDisable &&
+        setActiveCategoryIndex((activeCategoryIndex - 1) % categories.length);
+      !swipeDisable &&
+        handleActiveCategory(
+          categories[(activeCategoryIndex - 1) % categories.length]
+        );
     },
   });
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
-      if (isSmallerThan1024) {
+      if (isSmallerThan992) {
         const notFix =
           prevScrollPos > currentScrollPos || currentScrollPos < 10;
         setIsFixed(!notFix);
@@ -80,7 +85,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [prevScrollPos, isFixed, isSmallerThan1024]);
+  }, [prevScrollPos, isFixed, isSmallerThan992]);
 
   useEffect(() => {
     if (!load && !state.show && state.user && state.user.tutorial.homePage) {
@@ -118,7 +123,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
         transition="transform 0.3s ease-in-out"
         padding={"1rem"}
         w={{ base: "100%", lg: "15%" }}
-        h={{ base: "14%", lg: "100vh" }}
+        h={{ base: "auto", lg: "100vh" }}
         position={"fixed"}
         backgroundColor={"#0f0d15"}
         backgroundImage={
@@ -158,7 +163,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
       </Flex>
       <div
         className="timeline-container"
-        {...swipeHandlers}
+        {...(!swipeDisable && swipeHandlers)}
         //style={!notLoggedIn && { paddingBottom: "6rem" }}
       >
         <div className="row item-container">

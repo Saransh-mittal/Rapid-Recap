@@ -395,6 +395,7 @@ const Article = () => {
             minH={"85vh"}
             p={{ base: "20px", md: "50px" }}
             marginTop={0}
+            className="article-all-content"
           >
             <MainArticleContent
               article={article}
