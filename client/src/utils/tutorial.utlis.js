@@ -3,7 +3,7 @@ import axios from "axios";
 export const isTutorialTakenCheck = async ({ page, tour }) => {
   try {
     const response = await axios.get(`/api/user/isTutorialTakenCheck/${page}`);
-    if (response.data.status) tour.start();
+    //if (response.data.status) tour.start();
   } catch (err) {
     console.error(err);
   }
