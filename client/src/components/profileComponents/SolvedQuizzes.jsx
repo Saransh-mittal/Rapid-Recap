@@ -2,6 +2,7 @@ import {
   Box,
   Flex,
   Progress,
+  Spinner,
   Stack,
   Tag,
   Text,
@@ -11,7 +12,6 @@ import {
 import React, { useContext, useEffect } from "react";
 import axios from "axios";
 import { useState } from "react";
-import Loading from "../miscellaneous/Loading";
 import SolvedQuizHistory from "./SolvedQuizSubComponents/SolvedQuizHistory";
 import { AppContext } from "../../contextAPI/appContext";
 
@@ -119,7 +119,7 @@ const SolvedQuizzes = ({
           </Text>
         </Flex>
       ) : isLoading ? (
-        <Loading />
+        <Spinner />
       ) : (
         <>
           <Box

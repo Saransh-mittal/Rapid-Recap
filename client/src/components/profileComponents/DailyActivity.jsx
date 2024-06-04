@@ -3,13 +3,12 @@ import {
   Box,
   Flex,
   Grid,
+  Spinner,
   Tag,
   Text,
   Tooltip,
   useToast,
 } from "@chakra-ui/react";
-import axios from "axios";
-import Loading from "../miscellaneous/Loading";
 import { AppContext } from "../../contextAPI/appContext";
 
 const DAYS_IN_WEEK = 7;
@@ -246,7 +245,7 @@ const DailyActivity = ({ dailyAct, privateDailyAct, loginedUserProfile }) => {
           </Text>
         </Flex>
       ) : isLoading ? (
-        <Loading />
+        <Spinner />
       ) : (
         <>
           <Box

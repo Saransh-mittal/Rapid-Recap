@@ -25,7 +25,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
     lg: "row",
   });
   const notLoggedIn = state.show;
-  const isSmallerThan1024 = useMediaQuery("(max-width: 1024px)")[0];
+  const isSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
 
   const [isFixed, setIsFixed] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -73,7 +73,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
-      if (isSmallerThan1024) {
+      if (isSmallerThan992) {
         const notFix =
           prevScrollPos > currentScrollPos || currentScrollPos < 10;
         setIsFixed(!notFix);
@@ -85,7 +85,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [prevScrollPos, isFixed, isSmallerThan1024]);
+  }, [prevScrollPos, isFixed, isSmallerThan992]);
 
   useEffect(() => {
     if (!load && !state.show && state.user && state.user.tutorial.homePage) {
