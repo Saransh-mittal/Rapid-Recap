@@ -28,7 +28,7 @@ import {
 
 const heroIcons = [homeSmile, file02, searchMd, plusSquare];
 
-const HeroSection = ({ bgLoaded, setBgLoaded }) => {
+const HeroSection = () => {
   const parallaxRef = useRef(null);
 
   const crossesOffset = useBreakpointValue({
@@ -52,11 +52,17 @@ const HeroSection = ({ bgLoaded, setBgLoaded }) => {
           transform="translateX(-50%)"
           display={{ base: "block", md: "none", lg: "block" }}
           sx={{
-            "@media (max-width: 1240px)": {
-              top: "-120% !important",
+            "@media (max-width: 768px)": {
+              top: "-20% !important",
               width: "138%",
+              left: "55% !important",
             },
-            "@media (min-width: 62em)": {
+            "@media (max-width: 1240px)": {
+              top: "-39%",
+              width: "138%",
+              left: "50% ",
+            },
+            "@media (min-width: 1241px)": {
               top: "-45%",
               width: "234%",
               left: "100%",
@@ -64,16 +70,10 @@ const HeroSection = ({ bgLoaded, setBgLoaded }) => {
             },
           }}
         >
-          <Image
-            src={heroBackground}
-            width={1640}
-            height={1200}
-            alt="hero"
-            onLoad={() => setBgLoaded(true)}
-          />
+          <Image src={heroBackground} width={1640} height={1200} alt="hero" />
         </Box>
 
-        <Box display={bgLoaded ? "block" : "none"}>
+        <Box display={"block"}>
           <Box
             maxW="62rem"
             maxH={{ base: "auto", lg: "30rem" }}
