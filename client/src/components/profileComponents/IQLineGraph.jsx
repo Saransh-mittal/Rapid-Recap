@@ -4,6 +4,7 @@ import {
   Button,
   Flex,
   Image,
+  Spinner,
   Tag,
   Text,
   Tooltip,
@@ -13,7 +14,6 @@ import Chart from "chart.js/auto";
 import moment from "moment";
 import "chartjs-adapter-date-fns";
 import axios from "axios";
-import Loading from "../miscellaneous/Loading";
 import ExpectedIQModal from "../articleComponents/ExpectedIQModal";
 import { AppContext } from "../../contextAPI/appContext";
 
@@ -333,7 +333,7 @@ const IQLineGraph = ({ lineGraph, privateLineGraph, loginedUserProfile }) => {
           </Text>
         </Flex>
       ) : isLoading ? (
-        <Loading />
+        <Spinner />
       ) : IQScoreHistory.length === 0 ? (
         <Flex
           w={"100%"}

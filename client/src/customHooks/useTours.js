@@ -22,7 +22,8 @@ const tourOptions = {
   },
   useModalOverlay: true,
 };
-export const useHomeTour = () => {
+
+export const useHomeTour = ({ setSwipeDisable }) => {
   const tour = useShepherdTour({ tourOptions, steps: stepsTutorialHome });
   const updateStatusOfTutorial = useTutorialTakenUpdate();
 
@@ -32,6 +33,7 @@ export const useHomeTour = () => {
     const body = document.querySelector("body");
 
     const handleTourStart = () => {
+      setSwipeDisable(true);
       toggleClass({
         element: timeline,
         className: "shepherd-active",
@@ -49,6 +51,7 @@ export const useHomeTour = () => {
     };
 
     const handleTourEnd = () => {
+      setSwipeDisable(false);
       body.style.overflow = "auto";
       toggleClass({
         element: timeline,
@@ -75,6 +78,7 @@ export const useHomeTour = () => {
     };
 
     const handleTourComplete = () => {
+      setSwipeDisable(false);
       handleTourEnd();
       updateStatusOfTutorial("homePage");
       // Additional logic if needed on complete
@@ -123,6 +127,7 @@ export const useArticlePageTour = () => {
 
     const handleTourStart = () => {
       body.style.overflow = "hidden"; // Reapply scroll behavior
+
       manageOverlay({
         element: document.querySelector(".article-page"),
         overlay: true,
@@ -153,6 +158,8 @@ export const useArticlePageTour = () => {
         element: document.querySelector(".navbar"),
         overlay: false,
       });
+      //Scroll to the top of the page
+      window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const handleTourComplete = () => {
@@ -397,6 +404,7 @@ export const useProfileTour = () => {
 
   return { tour, isTutorialTakenCheck };
 };
+
 export const useDailyStreakTour = () => {
   const tour = useShepherdTour({
     tourOptions,
@@ -412,19 +420,21 @@ export const useDailyStreakTour = () => {
     const profile = isLargeWindow
       ? document.querySelector(".profile-dropdown-lg")
       : document.querySelector(".profile-dropdown-base");
-    const inboxButton = document.querySelector(
-      isLargeWindow ? ".inbox-button-lg" : ".inbox-button-base"
-    );
-    const streakButton = document.querySelector(
-      isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
-    );
+    const inboxButton = document.querySelector(".inbox-button-lg");
+    const streakButton = document.querySelector(".streak-tracker-lg");
     const hamCategory = isLargeWindow
       ? null
       : document.querySelector(".menu-button");
     const rrIcon = document.querySelector(".navbar-brand");
+    const categories = document.querySelector(".categories-container");
 
     const handleTourStart = () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
+      toggleClass({
+        element: categories,
+        className: "shepherd-active",
+        addClass: true,
+      });
       toggleClass({
         element: timeline,
         className: "shepherd-active",
@@ -470,10 +480,16 @@ export const useDailyStreakTour = () => {
       manageOverlay({ element: streakButton, overlay: true });
       manageOverlay({ element: hamCategory, overlay: true });
       manageOverlay({ element: rrIcon, overlay: true });
+      manageOverlay({ element: categories, overlay: true });
     };
 
     const handleTourEnd = () => {
       body.style.overflow = "auto";
+      toggleClass({
+        element: categories,
+        className: "shepherd-active",
+        addClass: false,
+      });
       toggleClass({
         element: timeline,
         className: "shepherd-active",
@@ -523,6 +539,7 @@ export const useDailyStreakTour = () => {
       manageOverlay({ element: streakButton, overlay: false });
       manageOverlay({ element: hamCategory, overlay: false });
       manageOverlay({ element: rrIcon, overlay: false });
+      manageOverlay({ element: categories, overlay: false });
     };
 
     const handleTourComplete = () => {
@@ -576,7 +593,7 @@ export const useQuinBoostTour = () => {
     const navbar = document.querySelector(".navbar");
 
     const handleTourStart = () => {
-      const articleContent = document.querySelector(".article-content-all");
+      const articleContent = document.querySelector(".article-all-content");
       const langBack = document.querySelector(".lang-back-flex");
       const quinBoost = document.querySelector(".quin-boost-tag");
 
@@ -615,7 +632,7 @@ export const useQuinBoostTour = () => {
     };
 
     const handleTourEnd = () => {
-      const articleContent = document.querySelector(".article-content-all");
+      const articleContent = document.querySelector(".article-all-content");
       const langBack = document.querySelector(".lang-back-flex");
       const quinBoost = document.querySelector(".quin-boost-tag");
 

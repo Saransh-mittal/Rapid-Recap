@@ -4,10 +4,7 @@ const stepsTutorialDailyStreak = [
   {
     id: "step-1-dailyStreak",
     attachTo: {
-      element:
-        window.innerWidth <= 992
-          ? ".streak-tracker-base"
-          : ".streak-tracker-lg",
+      element: ".streak-tracker-lg",
       on: "bottom",
     },
     title: "Daily Streaks Quest!",
@@ -26,9 +23,7 @@ const stepsTutorialDailyStreak = [
     when: {
       show: () => {
         const isLargeWindow = window.innerWidth > 992;
-        const streakButton = document.querySelector(
-          isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
-        );
+        const streakButton = document.querySelector(".streak-tracker-lg");
         toggleClass({
           element: streakButton,
           className: "highlighted-card-0-streak",
@@ -37,9 +32,7 @@ const stepsTutorialDailyStreak = [
       },
       hide: () => {
         const isLargeWindow = window.innerWidth > 992;
-        const streakButton = document.querySelector(
-          isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
-        );
+        const streakButton = document.querySelector(".streak-tracker-lg");
         toggleClass({
           element: streakButton,
           className: "highlighted-card-0-streak",
@@ -53,10 +46,7 @@ const stepsTutorialDailyStreak = [
   {
     id: "step-2-dailyStreak",
     attachTo: {
-      element:
-        window.innerWidth <= 992
-          ? ".streak-tracker-base"
-          : ".streak-tracker-lg",
+      element: ".streak-tracker-lg",
       on: "bottom",
     },
     title: "Track Your Streak",
@@ -79,10 +69,7 @@ const stepsTutorialDailyStreak = [
     },
     when: {
       show: () => {
-        const isLargeWindow = window.innerWidth > 992;
-        const streakButton = document.querySelector(
-          isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
-        );
+        const streakButton = document.querySelector(".streak-tracker-lg");
         streakButton.classList.add("highlighted-card-streak");
         toggleClass({
           element: streakButton,
@@ -93,10 +80,7 @@ const stepsTutorialDailyStreak = [
         manageOverlay({ element: streakButton, overlay: false });
       },
       hide: () => {
-        const isLargeWindow = window.innerWidth > 992;
-        const streakButton = document.querySelector(
-          isLargeWindow ? ".streak-tracker-lg" : ".streak-tracker-base"
-        );
+        const streakButton = document.querySelector(".streak-tracker-lg");
         toggleClass({
           element: streakButton,
           className: "highlighted-card-streak",
