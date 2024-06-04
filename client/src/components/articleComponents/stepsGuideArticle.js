@@ -1,3 +1,5 @@
+import { toggleClass } from "../../utils/tutorial.utlis";
+
 const stepsTutorialHome = [
   {
     id: "step1",
@@ -17,7 +19,7 @@ const stepsTutorialHome = [
         type: "next",
       },
     ],
-    classes: "step-1",
+    classes: "step-2",
     highlightClass: "highlight",
     scrollTo: false,
     cancelIcon: {
@@ -38,6 +40,10 @@ const stepsTutorialHome = [
           });
           generateQuizButton.classList.add("highlighted-article");
         }
+        toggleClass({
+          element: ".article-container",
+          className: "highlighted-article",
+        });
       },
       hide: () => {
         const generateQuizButton = document.querySelector(".article-container");
