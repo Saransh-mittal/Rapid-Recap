@@ -215,7 +215,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         email: data.emailOrInGameName,
       });
       if (response.status === 201) {
-        let i = data.email.indexOf("@");
+        let i = data.emailOrInGameName.indexOf("@");
 
         const starredEmail =
           data.emailOrInGameName.slice(0, 2) +
@@ -242,6 +242,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         isClosable: true,
         position: "top",
       });
+      console.log(error);
       console.error(error.response.data.error);
     } finally {
       setLoad({ submitLoad: false, forgotLoad: false });
