@@ -12,6 +12,8 @@ import LeaderBoard from "./screens/LeaderBoard.jsx";
 import GetStarted from "./screens/GetStarted.jsx";
 import ReactGA from "react-ga4";
 import { useEffect } from "react";
+import { Helmet } from "react-helmet";
+
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
   const location = useLocation();
@@ -49,6 +51,7 @@ const App = () => {
       clearTimeout(timeout);
     };
   }, []);
+
   useEffect(() => {
     ReactGA.send({
       hitType: "pageview",
@@ -56,9 +59,30 @@ const App = () => {
       title: document.title,
     });
   }, [location]);
+
   const shouldShowFooter = !location.pathname.includes("home");
+
   return (
     <>
+      <Helmet>
+        <title>Rapid Recap - Stay Informed, Stay Ahead</title>
+        <meta
+          name="description"
+          content="Rapid Recap is your go-to source for the latest news and articles. Test your knowledge with quizzes and track your Information Quotient (IQ) score."
+        />
+        <meta
+          name="keywords"
+          content="Rapid Recap, news, articles, quizzes, IQ score, leaderboard"
+        />
+        <meta
+          property="og:title"
+          content="Rapid Recap - Stay Informed, Stay Ahead"
+        />
+        <meta
+          property="og:description"
+          content="Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap."
+        />
+      </Helmet>
       <Navbar />
       <Routes>
         <Route exact path="/" element={<GetStarted />} />

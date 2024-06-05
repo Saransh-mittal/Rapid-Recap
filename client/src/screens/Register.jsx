@@ -26,6 +26,7 @@ import {
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import _ from "lodash";
 import { NavLink } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 export default function Register({ isOpen, onClose, signinOnOpen }) {
   const toast = useToast();
@@ -93,7 +94,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
   };
 
   useEffect(() => {
-    document.title = "Register page";
+    document.title = "Register - Rapid Recap";
   }, []);
 
   const handleSubmitThrottled = useCallback(_.throttle(handleSubmit, 1000), [
@@ -159,6 +160,22 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
       onClose={onClose}
       size={{ base: "full", md: "xl" }}
     >
+      <Helmet>
+        <title>Register - Rapid Recap</title>
+        <meta
+          name="description"
+          content="Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
+        />
+        <meta
+          name="keywords"
+          content="Register, Rapid Recap, news, articles, quizzes, IQ score, leaderboard"
+        />
+        <meta property="og:title" content="Register - Rapid Recap" />
+        <meta
+          property="og:description"
+          content="Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
+        />
+      </Helmet>
       <ModalOverlay
         bg="blackAlpha.300"
         backdropFilter="blur(10px) hue-rotate(90deg)"

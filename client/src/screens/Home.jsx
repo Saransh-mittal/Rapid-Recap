@@ -9,6 +9,7 @@ import { useToast, Box } from "@chakra-ui/react";
 import UpgradeModal from "../components/homeComponents/UpgradeModal";
 import NotificationSubscription from "../components/Notifications/NotificationSubscription";
 import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
+import { Helmet } from "react-helmet-async";
 
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -125,6 +126,22 @@ const Home = () => {
 
   return (
     <Box marginTop={"4rem"} w={"100%"}>
+      <Helmet>
+        <title>Home - Rapid Recap</title>
+        <meta
+          name="description"
+          content="Explore the latest news and articles on Rapid Recap. Stay informed and test your knowledge with our engaging quizzes."
+        />
+        <meta
+          name="keywords"
+          content="Rapid Recap, news, articles, quizzes, Information Quotient, IQ score"
+        />
+        <meta property="og:title" content="Home - Rapid Recap" />
+        <meta
+          property="og:description"
+          content="Explore the latest news and articles on Rapid Recap. Stay informed and test your knowledge with our engaging quizzes."
+        />
+      </Helmet>
       {!state.show && isSupported() ? <NotificationSubscription /> : null}
       {!state.show && USER_IQ > 90 && state.user.societyUpgradeMessage && (
         <UpgradeModal
