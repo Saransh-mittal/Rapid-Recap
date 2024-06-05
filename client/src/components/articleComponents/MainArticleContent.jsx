@@ -78,13 +78,17 @@ const MainArticleContent = ({
                 alignItems={"justify"}
                 height={"100%"}
               >
-                <Flex w={"100%"} height={"100%"} marginRight={"3"}>
+                <Flex
+                  w={"100%"}
+                  height={"100%"}
+                  marginRight={"3"}
+                  css={{
+                    "@media screen and (max-width: 1366px)": {
+                      display: "none",
+                    },
+                  }}
+                >
                   <Image
-                    css={{
-                      "@media screen and (max-width: 1366px)": {
-                        display: "none",
-                      },
-                    }}
                     src={
                       Array.isArray(data.imgURL) && data.imgURL.length > 0
                         ? data.imgURL[0]
