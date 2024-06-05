@@ -36,7 +36,7 @@ const NameLightning = ({ boxShadow, MAX_IQ }) => {
             position={"absolute"}
             background={"transparent"}
             height={"200%"}
-            maxW={"115%"}
+            minW={"115%"}
           />
         )}
       </div>

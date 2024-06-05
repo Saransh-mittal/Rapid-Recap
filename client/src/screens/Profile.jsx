@@ -19,6 +19,8 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import ToggleProfileVisibilty from "../components/profileComponents/LeftProfileSubComponents/ToggleProfileVisibilty.jsx";
 import { useProfileTour } from "../customHooks/useTours.js";
+import { Helmet } from "react-helmet";
+import { findSocietyAndCircle } from "../utils/helper.utils.js";
 
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour();
@@ -27,6 +29,7 @@ export default function Profile() {
   const [profile, setProfile] = useState(state.userProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [showHideModal, setShowHideModal] = useState(false);
+  const userSocietyAndCircle = findSocietyAndCircle(state.user.IQ_score);
 
   const loginedUserProfile = inGameName === state.user.inGameName;
   const [privacyProfileData, setPrivacyProfileData] = useState({
@@ -102,6 +105,33 @@ export default function Profile() {
 
   return (
     <Box marginTop={"4.5rem"} w={"100%"}>
+      <Helmet>
+        <title>
+          {profile?.username ? `${profile.username}'s Profile` : "Profile"}
+        </title>
+        <meta
+          name="description"
+          content={`View ${profile?.username}'s profile, check their IQ score, solved quizzes, daily activities, and society.`}
+        />
+        <meta
+          name="keywords"
+          content="profile, IQ score, quizzes, daily activities, user ranking, society, circles, explorers, strivers, elites, mavericks, pioneers"
+        />
+        <meta property="og:title" content={`${profile?.username}'s Profile`} />
+        <meta
+          property="og:description"
+          content={`Explore ${
+            profile?.username
+          }'s profile with IQ score, solved quizzes, daily activities, and belongs to ${
+            userSocietyAndCircle.society
+          } ${
+            userSocietyAndCircle.circle
+              ? `and ` + userSocietyAndCircle.circle
+              : ``
+          }.`}
+        />
+        <meta property="og:type" content="profile" />
+      </Helmet>
       <Flex
         flexDirection={{ base: "column", md: "row" }}
         marginTop="20px"
@@ -233,7 +263,7 @@ export default function Profile() {
                     backgroundImage:
                       "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
                     boxShadow:
-                      "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
+                      "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
                   }}
                   className="solved-quizzes"
                   _hover={
@@ -267,7 +297,7 @@ export default function Profile() {
                     backgroundImage:
                       "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
                     boxShadow:
-                      "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
+                      "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
                   }}
                   className="rank-and-society"
                 >
@@ -290,7 +320,7 @@ export default function Profile() {
               backgroundImage:
                 "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
               boxShadow:
-                "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
+                "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
             }}
             className="daily-activity"
           >
