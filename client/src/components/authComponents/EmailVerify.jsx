@@ -5,7 +5,7 @@ import { Otptimer } from "otp-timer-ts";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../../contextAPI/appContext";
 import Loading from "../miscellaneous/Loading";
-import { Box } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/react";
 import { throttle } from "lodash";
 const EmailVerify = ({ email }) => {
@@ -199,26 +199,34 @@ const EmailVerify = ({ email }) => {
             />
           ))}
         </div>
-        <button
-          onClick={submitOTPThrottled}
-          className="btn btn-primary my-3"
-          disabled={load}
+        <Flex
+          w={"100%"}
+          justifyContent={"center"}
+          flexDirection={"column"}
+          textAlign={"center"}
         >
-          Verify
-        </button>
-        <p className="resend mb-2">Didn't receive code?</p>
-        <Box>
-          <Otptimer
-            buttonText="Resend OTP"
-            buttonContainerClass="btn btn-danger"
-            minutes={0}
-            seconds={60}
-            onResend={resendOTP}
-            textStyle={{ color: "white" }}
-            timerStyle={{ color: "white" }}
-          />
-        </Box>
+          <button
+            onClick={submitOTPThrottled}
+            className="btn btn-primary my-3"
+            disabled={load}
+          >
+            Verify
+          </button>
+          <p className="resend mb-2">Didn't receive code?</p>
+          <Box>
+            <Otptimer
+              buttonText="Resend OTP"
+              buttonContainerClass="btn btn-danger"
+              minutes={0}
+              seconds={60}
+              onResend={resendOTP}
+              textStyle={{ color: "white" }}
+              timerStyle={{ color: "white" }}
+            />
+          </Box>
+        </Flex>
       </form>
+
       <div className="mt-3">{load && <Loading />}</div>
     </div>
   );

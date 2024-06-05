@@ -134,24 +134,26 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       <Box marginTop={"10px"} w={{ lg: "300px", base: "100%" }}>
         <Text align={"justify"}>{profileData?.bio}</Text>
         {window.location.pathname.split("/").pop() === state.user.inGameName ? (
-          <Button
-            size="md"
-            height="35px"
-            width="90%"
-            border="5px"
-            borderColor="green.200"
-            backgroundColor="#F2D8D8" // Initial background color
-            color="#374259" // Initial text color
-            css={{
-              "&:hover": {
-                backgroundColor: "#316B83", // Change background color to green on hover
-                color: "#11324D", // Change text color to white on hover
-              },
-            }}
-            onClick={handleEditClick}
-          >
-            Edit Profile
-          </Button>
+          <Flex w={"100%"} justifyContent={"center"}>
+            <Button
+              size="md"
+              height="35px"
+              width="90%"
+              border="5px"
+              borderColor="green.200"
+              backgroundColor="#F2D8D8" // Initial background color
+              color="#374259" // Initial text color
+              css={{
+                "&:hover": {
+                  backgroundColor: "#316B83", // Change background color to green on hover
+                  color: "#11324D", // Change text color to white on hover
+                },
+              }}
+              onClick={handleEditClick}
+            >
+              Edit Profile
+            </Button>
+          </Flex>
         ) : null}
       </Box>
 

@@ -78,30 +78,31 @@ const MainArticleContent = ({
                 alignItems={"justify"}
                 height={"100%"}
               >
-                <Image
-                  css={{
-                    "@media screen and (max-width: 1366px)": {
-                      display: "none",
-                    },
-                  }}
-                  src={
-                    Array.isArray(data.imgURL) && data.imgURL.length > 0
-                      ? data.imgURL[0]
-                      : !Array.isArray(data.imgURL) && data.imgURL
-                      ? data.imgURL
-                      : alt_image
-                  }
-                  alt="Article Image"
-                  borderRadius="md"
-                  float={"left"}
-                  marginRight={"3"}
-                  height={`${textHeight}px`}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = alt_image;
-                    e.target.style.height = `${textHeight}px`;
-                  }}
-                />
+                <Flex w={"100%"} height={"100%"} marginRight={"3"}>
+                  <Image
+                    css={{
+                      "@media screen and (max-width: 1366px)": {
+                        display: "none",
+                      },
+                    }}
+                    src={
+                      Array.isArray(data.imgURL) && data.imgURL.length > 0
+                        ? data.imgURL[0]
+                        : !Array.isArray(data.imgURL) && data.imgURL
+                        ? data.imgURL
+                        : alt_image
+                    }
+                    alt="Article Image"
+                    borderRadius="md"
+                    float={"left"}
+                    height={`${textHeight}px`}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = alt_image;
+                      e.target.style.height = `${textHeight}px`;
+                    }}
+                  />
+                </Flex>
                 <Flex position={"relative"}>
                   <Text
                     ref={textRef}

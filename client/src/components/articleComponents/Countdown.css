@@ -55,6 +55,7 @@
     z-index: 1000;
     position: absolute;
     border-radius: 10px;
+    left: 50%;
     top: -2px;
     transform: translate(-10px);
     box-shadow: 0 0 20px 4px #FFEFE8;

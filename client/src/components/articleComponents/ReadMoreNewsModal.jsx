@@ -11,6 +11,7 @@ import {
   Image,
   Text,
   Button,
+  Flex,
 } from "@chakra-ui/react";
 // import News from "./News";
 import { Link, useNavigate } from "react-router-dom";
@@ -90,18 +91,20 @@ const ReadMoreNewsModal = ({ onClose }) => {
                   : data.mainText}
               </Text>
               <Link to={`/article/${data._id}`}>
-                <Button
-                  mb={2}
-                  _hover={{ backgroundColor: "#37474f", color: "#f0f0f0" }}
-                  maxW="100%"
-                  transition="background-color 0.3s, color 0.3s"
-                  boxShadow="0 0 10px 5px rgba(255, 255, 255, 0.7)"
-                  onClick={() =>
-                    dispatch({ type: "showModal", payloadModal: false })
-                  }
-                >
-                  Read More
-                </Button>
+                <Flex w={"100%"} justifyContent={"center"}>
+                  <Button
+                    mb={2}
+                    _hover={{ backgroundColor: "#37474f", color: "#f0f0f0" }}
+                    maxW="100%"
+                    transition="background-color 0.3s, color 0.3s"
+                    boxShadow="0 0 10px 5px rgba(255, 255, 255, 0.7)"
+                    onClick={() =>
+                      dispatch({ type: "showModal", payloadModal: false })
+                    }
+                  >
+                    Read More
+                  </Button>
+                </Flex>
               </Link>
             </Box>
           </Box>

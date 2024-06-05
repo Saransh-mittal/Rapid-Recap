@@ -1,4 +1,4 @@
-import { Box, Button, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
 import React, { useContext, useState } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import Bubbles from "../miscellaneous/bubbles";
@@ -31,7 +31,10 @@ const GenerateQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
     }
   `;
   return (
-    <Box
+    <Flex
+      flexDirection={"column"}
+      alignItems="center"
+      textAlign={"center"}
       css={[css, keyframes]}
       style={{
         border: "2px",
@@ -57,7 +60,7 @@ const GenerateQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
         {isBoosted || (isQuinBoostAvailable && <Bubbles />)}
         Generate Quiz
       </Button>
-    </Box>
+    </Flex>
   );
 };
 

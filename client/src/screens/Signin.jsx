@@ -215,7 +215,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         email: data.emailOrInGameName,
       });
       if (response.status === 201) {
-        let i = data.email.indexOf("@");
+        let i = data.emailOrInGameName.indexOf("@");
 
         const starredEmail =
           data.emailOrInGameName.slice(0, 2) +
@@ -242,6 +242,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         isClosable: true,
         position: "top",
       });
+      console.log(error);
       console.error(error.response.data.error);
     } finally {
       setLoad({ submitLoad: false, forgotLoad: false });
@@ -389,53 +390,55 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                     Forgot Password?
                   </Button>
                 </Flex>
-                <Button mt={4} p={0}>
-                  <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
-                    <GoogleLogin
-                      onSuccess={async (credentialResponse) => {
-                        setData((prevData) => ({
-                          ...prevData,
-                          credentialResponse,
-                        }));
-                        try {
-                          const response = await axios.post(
-                            "/api/user/handleGoogleLogin",
-                            { credentialResponse }
-                          );
-                          if (response.data.EnterInGameName) {
+                <Flex w={"100%"} justifyContent={"center"}>
+                  <Button mt={4} p={0}>
+                    <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
+                      <GoogleLogin
+                        onSuccess={async (credentialResponse) => {
+                          setData((prevData) => ({
+                            ...prevData,
+                            credentialResponse,
+                          }));
+                          try {
+                            const response = await axios.post(
+                              "/api/user/handleGoogleLogin",
+                              { credentialResponse }
+                            );
+                            if (response.data.EnterInGameName) {
+                              toast({
+                                title: "Enter In-Game-Name",
+                                description:
+                                  "Please enter your In-Game-Name to continue",
+                                status: "info",
+                                duration: 5000,
+                                isClosable: true,
+                                position: "top",
+                              });
+                              setEnterInGameName(true);
+                            } else {
+                              handleGoogleResponse(response);
+                            }
+                          } catch (error) {
+                            console.error(error.response.data.error);
+                            if (error.response.data.EnterInGameName)
+                              setEnterInGameName(true);
                             toast({
-                              title: "Enter In-Game-Name",
-                              description:
-                                "Please enter your In-Game-Name to continue",
-                              status: "info",
+                              title: "Login Failed",
+                              description: error.response.data.error,
+                              status: "error",
                               duration: 5000,
                               isClosable: true,
                               position: "top",
                             });
-                            setEnterInGameName(true);
-                          } else {
-                            handleGoogleResponse(response);
                           }
-                        } catch (error) {
-                          console.error(error.response.data.error);
-                          if (error.response.data.EnterInGameName)
-                            setEnterInGameName(true);
-                          toast({
-                            title: "Login Failed",
-                            description: error.response.data.error,
-                            status: "error",
-                            duration: 5000,
-                            isClosable: true,
-                            position: "top",
-                          });
-                        }
-                      }}
-                      onError={() => {
-                        console.log("Login Failed");
-                      }}
-                    />
-                  </GoogleOAuthProvider>
-                </Button>
+                        }}
+                        onError={() => {
+                          console.log("Login Failed");
+                        }}
+                      />
+                    </GoogleOAuthProvider>
+                  </Button>
+                </Flex>
               </>
             ) : (
               <>
