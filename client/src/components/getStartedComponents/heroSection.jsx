@@ -83,7 +83,7 @@ const HeroSection = ({ bgLoaded, setBgLoaded }) => {
             position={"relative"}
             letterSpacing={"2px"}
           >
-            <Heading as="h1" size="2xl" mb="6">
+            <Heading as="h2" size="2xl" mb="6">
               Turn News Into Knowledge with{" "}
               <Box as="span" display="inline-block" position="relative">
                 Rapid Recap{" "}
