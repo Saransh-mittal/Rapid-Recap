@@ -4,6 +4,7 @@ import { AppContext } from "../contextAPI/appContext";
 import { useNavigate } from "react-router-dom";
 import useDrag from "../customHooks/useDrag";
 import { Flex } from "@chakra-ui/react";
+import { Helmet } from "react-helmet";
 
 const Contact = () => {
   const { startDrag, drag, endDrag } = useDrag();
@@ -19,16 +20,34 @@ const Contact = () => {
   };
 
   useEffect(() => {
-    document.title = "Contact page";
+    document.title = "Contact Us - Rapid Recap";
   }, []);
+
   return (
     <Flex
+      as="main"
       style={{ minHeight: "77vh" }}
       onTouchStart={startDrag}
       onTouchMove={(e) => drag(e.touches[0])}
       onTouchEnd={endDrag}
       marginTop={"4.5rem"}
     >
+      <Helmet>
+        <title>Contact Us - Rapid Recap</title>
+        <meta
+          name="description"
+          content="Contact the Rapid Recap team for any inquiries or support. We're here to help you with your questions and feedback."
+        />
+        <meta
+          name="keywords"
+          content="Contact, Rapid Recap, Support, Inquiries"
+        />
+        <meta property="og:title" content="Contact Us - Rapid Recap" />
+        <meta
+          property="og:description"
+          content="Contact the Rapid Recap team for any inquiries or support. We're here to help you with your questions and feedback."
+        />
+      </Helmet>
       <div className="container-fluid px-5 my-5">
         <div className="row justify-content-center">
           <div className="col-xl-10">
@@ -52,13 +71,12 @@ const Contact = () => {
                       allowFullScreen=""
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
+                      title="Location map of Jaipur"
                     ></iframe>
                   </div>
                   <div className="col-12 col-md-6 p-4">
                     <div className="text-center">
-                      <div className="h3 fw-light text-white">
-                        How can we help?
-                      </div>
+                      <h3 className="fw-light text-white">How can we help?</h3>
                       <p className="mb-4 text-white">
                         Contact our team for any query
                       </p>
@@ -109,7 +127,6 @@ const Contact = () => {
                         <textarea
                           className="form-control"
                           id="message"
-                          type="text"
                           name="Message"
                           placeholder="Message"
                           autoComplete="off"
