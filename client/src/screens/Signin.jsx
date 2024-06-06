@@ -30,12 +30,14 @@ import {
   ModalCloseButton,
   useDisclosure,
   Flex,
+  //useMediaQuery,
 } from "@chakra-ui/react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import Register from "./Register";
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
+  //const isScreenSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [data, setData] = useState({
@@ -161,9 +163,12 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           type: "setUser",
           payloadUser: response.data.user,
         });
-        hamburgerOnClose();
+        //console.log(response);
+        hamburgerOnClose && hamburgerOnClose();
+
         try {
           const res = await axios.get(`/api/user/streakChecker`);
+          //console.log(res);
           if (res.status === 200) {
             dispatch({
               type: "setIsBoosted",
