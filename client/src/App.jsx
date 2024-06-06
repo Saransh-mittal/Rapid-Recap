@@ -11,12 +11,24 @@ import Profile from "./screens/Profile.jsx";
 import LeaderBoard from "./screens/LeaderBoard.jsx";
 import GetStarted from "./screens/GetStarted.jsx";
 import ReactGA from "react-ga4";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { Helmet } from "react-helmet";
+import { AppContext } from "./contextAPI/appContext.jsx";
 
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
   const location = useLocation();
+  const { state } = useContext(AppContext);
+
+  const isLoggedIn = () => {
+    // Example logic
+    return !state.show;
+  };
+
+  const getUserInGameName = () => {
+    // Example logic
+    return !state.show && state.user.inGameName ? state.user.inGameName : null;
+  };
 
   useEffect(() => {
     const refreshAtMidnightUTC = () => {
@@ -53,6 +65,14 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    const loggedIn = isLoggedIn();
+    const userInGameName = getUserInGameName();
+
+    // Set custom dimensions
+    ReactGA.set({
+      "User Logged In": loggedIn ? "Logged In" : "Logged Out",
+      "User InGameName": userInGameName ? userInGameName : "anonymous",
+    });
     ReactGA.send({
       hitType: "pageview",
       page: location.pathname + location.search,
