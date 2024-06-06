@@ -73,7 +73,7 @@ const NotificationSubscription = () => {
     // Listen for changes to Notification permission
     const handlePermissionChange = () => {
       const newPermission = Notification.permission;
-      console.log(newPermission);
+      // console.log(newPermission);
       if (newPermission === "granted") {
         subscribe();
       }
