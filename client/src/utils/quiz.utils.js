@@ -16,4 +16,27 @@ const quinBoostChecker = async ({
   }
 };
 
-export { quinBoostChecker };
+const dailyStreakCheckerAndUpdater = async ({ dispatch }) => {
+  try {
+    const res = await axios.get(`/api/user/streakChecker`);
+    //console.log(res);
+    if (res.status === 200) {
+      dispatch({
+        type: "setIsBoosted",
+        payloadIsBoosted: res.data.isBoosted,
+      });
+      dispatch({
+        type: "setDailyStreak",
+        payloadDailyStreak: res.data.streak,
+      });
+      dispatch({
+        type: "setLongestDailyStreak",
+        payloadLongestDailyStreak: res.data.longestStreak,
+      });
+    }
+  } catch (error) {
+    console.error(error.message);
+  }
+};
+
+export { quinBoostChecker, dailyStreakCheckerAndUpdater };

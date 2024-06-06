@@ -30,12 +30,15 @@ import {
   ModalCloseButton,
   useDisclosure,
   Flex,
+  //useMediaQuery,
 } from "@chakra-ui/react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import Register from "./Register";
+import { dailyStreakCheckerAndUpdater } from "../utils/quiz.utils";
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
+  //const isScreenSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [data, setData] = useState({
@@ -97,25 +100,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         type: "setUser",
         payloadUser: response.data.user,
       });
-      try {
-        const res = await axios.get(`/api/user/streakChecker`);
-        if (res.status === 200) {
-          dispatch({
-            type: "setIsBoosted",
-            payloadIsBoosted: res.data.isBoosted,
-          });
-          dispatch({
-            type: "setDailyStreak",
-            payloadDailyStreak: res.data.streak,
-          });
-          dispatch({
-            type: "setLongestDailyStreak",
-            payloadLongestDailyStreak: res.data.longestStreak,
-          });
-        }
-      } catch (error) {
-        console.error(error.message);
-      }
+      await dailyStreakCheckerAndUpdater({ dispatch });
       toast({
         title: "Login Successful",
         status: "success",
@@ -161,26 +146,9 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           type: "setUser",
           payloadUser: response.data.user,
         });
-        hamburgerOnClose();
-        try {
-          const res = await axios.get(`/api/user/streakChecker`);
-          if (res.status === 200) {
-            dispatch({
-              type: "setIsBoosted",
-              payloadIsBoosted: res.data.isBoosted,
-            });
-            dispatch({
-              type: "setDailyStreak",
-              payloadDailyStreak: res.data.streak,
-            });
-            dispatch({
-              type: "setLongestDailyStreak",
-              payloadLongestDailyStreak: res.data.longestStreak,
-            });
-          }
-        } catch (error) {
-          console.error(error.message);
-        }
+        //console.log(response);
+        hamburgerOnClose && hamburgerOnClose();
+        await dailyStreakCheckerAndUpdater({ dispatch });
 
         toast({
           title: "Login-Successful",

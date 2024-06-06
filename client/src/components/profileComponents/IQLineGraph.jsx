@@ -345,25 +345,7 @@ const IQLineGraph = ({ lineGraph, privateLineGraph, loginedUserProfile }) => {
           <Text m={0}>
             Give 10 Quizzes to get the IQ score and enter the ranking
           </Text>
-          {loginedUserProfile && (
-            <Tooltip label="Visibility to others">
-              <Tag
-                backgroundColor="#0f0d15"
-                m={0}
-                position={"absolute"}
-                top={0}
-                right={0}
-                color={"#9CAFAA"}
-                display={"flex"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                w={"60px"}
-                height={"30px"}
-              >
-                {state.user.profilePrivacy.lineGraph ? "HIDDEN" : "VISIBLE"}
-              </Tag>
-            </Tooltip>
-          )}
+
           <Button
             backgroundColor="transparent"
             onClick={getExpectedIQ}

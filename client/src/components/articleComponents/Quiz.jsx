@@ -25,7 +25,10 @@ import HindiInstructionModal from "./customQuizModal/HindiInstructionModal";
 import ReactGA from "react-ga4";
 import { AppContext } from "../../contextAPI/appContext";
 import BoostedSubmittedQuizInterface from "./quizComponents/BoostedSubmittedQuizInterface";
-import { quinBoostChecker } from "../../utils/quiz.utils";
+import {
+  dailyStreakCheckerAndUpdater,
+  quinBoostChecker,
+} from "../../utils/quiz.utils";
 
 const Quiz = ({
   article,
@@ -109,21 +112,6 @@ const Quiz = ({
         duration: 5000,
         isClosable: true,
         position: "top",
-      });
-      const res = await axios.get(`/api/user/streakChecker`);
-
-      dispatch({
-        type: "setIsBoosted",
-        payloadIsBoosted: res.data.isBoosted,
-      });
-
-      dispatch({
-        type: "setDailyStreak",
-        payloadDailyStreak: res.data.streak,
-      });
-      dispatch({
-        type: "setLongestDailyStreak",
-        payloadLongestDailyStreak: res.data.longestStreak,
       });
     } catch (error) {
       //console.log(error.response.data.error);
@@ -251,6 +239,7 @@ const Quiz = ({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       });
+      await dailyStreakCheckerAndUpdater({ dispatch });
       if (
         !submitted &&
         currentQuestionIndex < totalQuestions &&

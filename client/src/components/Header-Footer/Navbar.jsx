@@ -50,6 +50,9 @@ const Navbar = () => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [showDailyStreakModal, setShowDailyStreakModal] = useState(false);
   const { tour, isTutorialTakenCheck } = useDailyStreakTour();
+  const [isHomePage, setIsHomePage] = useState(
+    location.pathname.split("/")[1] === "home"
+  );
 
   useEffect(() => {
     const isEmptyObject = (obj) => {
@@ -124,9 +127,25 @@ const Navbar = () => {
     }
   };
 
+  useEffect(() => {
+    const checkIfHomePage = () => {
+      setIsHomePage(location.pathname.split("/")[1] === "home");
+    };
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("popstate", checkIfHomePage);
+    window.addEventListener("pushState", checkIfHomePage); // Custom event if using history.pushState
+
+    checkIfHomePage();
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("popstate", checkIfHomePage);
+      window.removeEventListener("pushState", checkIfHomePage);
+    };
+  }, [prevScrollPos, visible, location]);
+
   const handleScroll = () => {
     const currentScrollPos = window.scrollY;
-    const isHomePage = location.pathname.split("/")[1] === "home";
+    // const isHomePage = location.pathname.split("/")[1] === "home";
     const shouldSetVisible =
       prevScrollPos > currentScrollPos || currentScrollPos < 10;
 
@@ -135,11 +154,6 @@ const Navbar = () => {
     }
     setPrevScrollPos(currentScrollPos);
   };
-
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [prevScrollPos, visible]);
 
   const getBackgroundColor = ({ heatLevel }) => {
     if (heatLevel <= 0.2) {

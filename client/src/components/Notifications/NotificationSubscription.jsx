@@ -1,26 +1,14 @@
-import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  useDisclosure,
-  Button,
-} from "@chakra-ui/react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
 const NotificationSubscription = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const cancelRef = useRef();
   const [subscription, setSubscription] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showDeniedMessage, setShowDeniedMessage] = useState(false);
+
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)
-      .replace(/\-/g, "+")
+      .replace(/-/g, "+")
       .replace(/_/g, "/");
 
     const rawData = window.atob(base64);
@@ -31,6 +19,7 @@ const NotificationSubscription = () => {
     }
     return outputArray;
   }
+
   const subscribe = async () => {
     setIsLoading(true);
     try {
@@ -52,7 +41,6 @@ const NotificationSubscription = () => {
       });
       setSubscription(subscription);
       Cookies.set("notificationSubscribed", true, { expires: 365 }); // expires in 1 year (permanently)
-      onClose();
     } catch (error) {
       console.log(error);
     } finally {
@@ -64,34 +52,30 @@ const NotificationSubscription = () => {
     const notificationShown = Cookies.get("notificationShown");
     const notificationSubscribed = Cookies.get("notificationSubscribed");
     const currentPermission = Notification.permission;
+
     if (
       !notificationShown &&
       !notificationSubscribed &&
       currentPermission !== "denied"
     ) {
-      onOpen();
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          subscribe();
+        }
+      });
       Cookies.set("notificationShown", true, { expires: 7 }); // expires in 7 days
     } else if (notificationSubscribed === "true") {
       // User has already subscribed, no need to prompt again
-      onClose();
     } else if (currentPermission === "denied" && !notificationShown) {
-      onOpen();
-      setShowDeniedMessage(true);
       Cookies.set("notificationShown", true, { expires: 7 });
     }
 
     // Listen for changes to Notification permission
     const handlePermissionChange = () => {
       const newPermission = Notification.permission;
-      console.log(newPermission);
+      // console.log(newPermission);
       if (newPermission === "granted") {
-        // User has enabled notifications after previously denying
         subscribe();
-
-        onClose();
-      } else if (newPermission !== "denied") {
-        // User has changed their mind, ask to subscribe again
-        onOpen();
       }
     };
 
@@ -104,67 +88,9 @@ const NotificationSubscription = () => {
       // Remove event listener when component unmounts
       document.removeEventListener("permissionchange", handlePermissionChange);
     };
-  }, [onOpen, onClose]);
+  }, []);
 
-  return (
-    <AlertDialog
-      isOpen={isOpen}
-      leastDestructiveRef={cancelRef}
-      onClose={onClose}
-    >
-      <AlertDialogOverlay>
-        <AlertDialogContent>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Allow Notification
-          </AlertDialogHeader>
-
-          <AlertDialogBody>
-            {showDeniedMessage && (
-              <p>
-                It seems like you have previously turned off notifications.
-                Please go to your browser settings to enable notifications for
-                our site.
-              </p>
-            )}
-            {!showDeniedMessage && (
-              <p>
-                Stay in the loop with our notifications! Get the latest news,
-                app updates, leaderboard rankings, and more delivered right to
-                your device. Click "Allow" in your browser to stay informed and
-                stay ahead.
-              </p>
-            )}
-          </AlertDialogBody>
-
-          <AlertDialogFooter>
-            {showDeniedMessage ? (
-              <Button ref={cancelRef} onClick={onClose} isDisabled={isLoading}>
-                Close
-              </Button>
-            ) : (
-              <>
-                <Button
-                  ref={cancelRef}
-                  onClick={onClose}
-                  isDisabled={isLoading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  colorScheme="red"
-                  onClick={subscribe}
-                  ml={3}
-                  isLoading={isLoading}
-                >
-                  Allow
-                </Button>
-              </>
-            )}
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
-    </AlertDialog>
-  );
+  return null; // No need to return any UI component
 };
 
 export default NotificationSubscription;
