@@ -94,6 +94,8 @@ const QuizTitansModal = ({ setShowQuizTitans }) => {
           backgroundSize="400% 400%"
           borderRadius="10px"
           //boxShadow="0 0 10px rgba(0, 0, 0, 0.5)" // Added boxShadow to make it standout
+          overflow={"hidden"}
+          // px={3}
         >
           <ModalHeader
             as="h3"
@@ -142,8 +144,10 @@ const QuizTitansModal = ({ setShowQuizTitans }) => {
                               navigate(`/profile/${ranker.inGameName}`);
                             }}
                           >
-                            <Td textAlign={"center"}>{ranker.rank}</Td>
-                            <Td>
+                            <Td textAlign={"center"} px={0}>
+                              {ranker.rank}
+                            </Td>
+                            <Td px={0}>
                               <Flex
                                 justifyContent={"center"}
                                 alignItems={"center"}
@@ -170,7 +174,9 @@ const QuizTitansModal = ({ setShowQuizTitans }) => {
                                 />
                               </Flex>
                             </Td>
-                            <Td textAlign={"center"}>{ranker.inGameName}</Td>
+                            <Td textAlign={"center"} px={0}>
+                              {ranker.inGameName}
+                            </Td>
                           </Tr>
                         );
                       })}
