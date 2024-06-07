@@ -1,9 +1,17 @@
 const mongoose = require("mongoose");
 const Activity = require("../model/activitySchema");
 const User = require("../model/userSchema");
+const { getXpForActivity } = require("../data/activityTypes");
 
-const logActivity = async ({ userId, type, xpAwarded }) => {
+const logActivity = async ({ userId, type, userIQ, previousIQ }) => {
   try {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+    const xpAwarded = getXpForActivity({
+      activityType: type,
+      userIQ: userIQ || user.IQ_score,
+      previousIQ: previousIQ || user.prevIQScore,
+    });
     // Create a new activity
     const activity = new Activity({
       userId,
@@ -14,8 +22,6 @@ const logActivity = async ({ userId, type, xpAwarded }) => {
     await activity.save();
 
     // Fetch the user and update xp and level
-    const user = await User.findById(userId).exec();
-    if (!user) throw new Error("User not found");
 
     // Use a session for atomicity
     const session = await mongoose.startSession();

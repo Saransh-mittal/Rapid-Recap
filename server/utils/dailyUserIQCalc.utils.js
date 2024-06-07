@@ -5,6 +5,8 @@ const User = require("../model/userSchema");
 const { updatePercentilesOnQuizDeactivation } = require("./quiz.utils");
 const rankUpdate = require("./update.utils/rank.update");
 const CircleAndSocietyData = require("../data/CircleAndSocietyData");
+const { logActivity } = require("./activity.utils");
+const { activityTypes } = require("../data/activityTypes");
 
 const findSocietyCircleByIQ = (IQScore) => {
   return CircleAndSocietyData.find((data) => {
@@ -37,6 +39,12 @@ const handleSocietyOrCircleUpgrade = async (
     const user = await User.findById(userId);
     user.societyUpgradeMessage = upgradeMsg;
     await user.save();
+    await logActivity({
+      userId,
+      type: activityTypes.SOCIETY_OR_CIRCLE_UPGRADE.type,
+      userIQ: currIQScore,
+      previousIQ: prevIQScore,
+    });
     // Save upgradeMsg to userId logic can be implemented here
   }
 };

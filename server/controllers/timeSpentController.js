@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const TimeSpent = require("../model/timeSpentSchema");
 const { logActivity } = require("../utils/activity.utils");
-const activityTypes = { TIME_SPENT: "TIME_SPENT" }; // Define activity types if not already defined
+const { activityTypes } = { TIME_SPENT: "TIME_SPENT" }; // Define activity types if not already defined
 
 const timeSpent = async (req, res) => {
   try {
@@ -25,9 +25,8 @@ const timeSpent = async (req, res) => {
     // Award XP if time spent is >= 10 minutes (10 * 60 * 1000 milliseconds)
     if (timeSpent >= 10 * 60 * 1000) {
       await logActivity({
-        userId,
-        type: activityTypes.TIME_SPENT,
-        xpAwarded: 10,
+        userId: userId,
+        type: activityTypes.TIME_SPENT.type,
       });
     }
 
