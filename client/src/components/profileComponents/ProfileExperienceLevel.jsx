@@ -1,100 +1,225 @@
-import React from "react";
+import React, { useState } from "react";
 import {
+  ChakraProvider,
   Box,
-  Heading,
-  Text,
   Flex,
-  Icon,
-  useColorModeValue,
+  Input,
+  Text,
+  Heading,
+  Container,
+  extendTheme,
+  keyframes,
 } from "@chakra-ui/react";
-import { FaStar } from "react-icons/fa";
-import { motion } from "framer-motion";
-import { keyframes } from "@emotion/react";
 
-const waveAnimation = keyframes`
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0); }
+const theme = extendTheme({
+  styles: {
+    global: {
+      body: {
+        fontFamily: "Open Sans, sans-serif",
+      },
+    },
+  },
+});
+
+const ProgressBubble = ({ xp, level }) => {
+  const calculateProgress = (xp, level) => {
+    return (xp / (level * 10)) * 100;
+  };
+
+  const [percent, setPercent] = useState(calculateProgress(xp, level));
+  const colorInc = 100 / 3;
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    if (val !== "" && !isNaN(val) && val <= 100 && val >= 0) {
+      setPercent(Number(val));
+    } else {
+      setPercent(calculateProgress(xp, level));
+    }
+  };
+
+  const getClass = () => {
+    if (percent < colorInc * 1) return "red";
+    else if (percent < colorInc * 2) return "orange";
+    else return "green";
+  };
+
+  const gradientAnimation = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 `;
 
-const MotionBox = motion(Box);
-
-const ProfileExperienceLevel = ({ xp, level }) => {
-  const progress = (xp / (level * 10)) * 100;
-
   return (
-    <Box
-      p={6}
-      maxW="450px"
-      borderWidth={1}
-      borderRadius="md"
-      overflow="hidden"
-      bgColor="#0f0d15"
-      bgImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-      color="white"
-      boxShadow="0 4px 8px rgba(0, 0, 0, 0.4)"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-    >
-      <Flex alignItems="center" mb={4}>
-        <Icon as={FaStar} w={10} h={10} color="gold" />
-        <Box ml={4}>
-          <Heading as="h3" size="lg" fontWeight="bold" letterSpacing="wide">
-            Level {level}
-          </Heading>
-        </Box>
-      </Flex>
-      <Text fontSize="xl" mb={3} fontWeight="medium">
-        XP Progress
-      </Text>
-      <Box
-        position="relative"
-        width="100px"
-        height="300px"
-        borderRadius="15px"
-        overflow="hidden"
-        bg="rgba(255, 255, 255, 0.2)"
-        border="2px solid white"
-      >
-        <MotionBox
-          position="absolute"
-          bottom="0"
-          width="100%"
-          height={`${progress}%`}
-          bg="teal.400"
-          borderRadius="inherit"
-          initial={{ height: 0 }}
-          animate={{ height: `${progress}%` }}
-          transition={{ duration: 2, ease: "easeInOut" }}
-          style={{ animation: `${waveAnimation} 4s ease-in-out infinite` }}
+    <ChakraProvider theme={theme}>
+      <Container>
+        <Heading
+          size="lg"
+          color="white"
+          fontWeight="bold"
+          textAlign="center"
+          mt={12}
+          mb={6}
+          fontFamily="Arial, sans-serif"
+          letterSpacing="2px"
+          pb={5}
+          textShadow="0px 0px 3px rgba(0, 0, 0, 0.2)"
+          bgGradient="linear(to-r, teal.400, blue.500, purple.500)"
+          bgClip="text"
+          animation={`${gradientAnimation} 5s ease infinite`}
+          backgroundSize="200% 200%"
         >
-          <Text
-            position="absolute"
-            right="0"
-            left="0"
-            bottom="50%"
-            transform="translateY(50%)"
-            textAlign="center"
-            fontWeight="bold"
-            fontSize="lg"
+          Experience
+        </Heading>
+        <Box display="flex" flexDirection="column" alignItems="center" mt={4}>
+          <Flex
+            justify="space-between"
+            align="center"
+            width="300px"
+            flexDirection="column"
           >
-            {xp} XP
-          </Text>
-        </MotionBox>
-      </Box>
-      <Flex
-        justifyContent="space-between"
-        fontSize="lg"
-        fontWeight="medium"
-        width="100%"
-        mt={4}
-      >
-        <Text>Next Level: {level * 10} XP</Text>
-        <Text>Current Level: {level}</Text>
-      </Flex>
-    </Box>
+            <Box textAlign="center">
+              <Text
+                fontSize="16px"
+                // fontWeight="bold"
+                color="blue.600"
+                textShadow="0 0 10px blue.500"
+                mb={2}
+              >
+                Next Level: {level + 1}
+              </Text>
+            </Box>
+            <Box className={getClass()} position="relative" mb={4}>
+              <Box
+                className="progress"
+                position="relative"
+                borderRadius="50%"
+                w="120px"
+                h="120px"
+                border="5px solid"
+                borderColor={
+                  getClass() === "green"
+                    ? "green.400"
+                    : getClass() === "orange"
+                    ? "orange.400"
+                    : "red.400"
+                }
+                boxShadow={`0 0 20px ${
+                  getClass() === "green"
+                    ? "green.400"
+                    : getClass() === "orange"
+                    ? "orange.400"
+                    : "red.400"
+                }`}
+                transition="all 1s ease"
+              >
+                <Box
+                  className="inner"
+                  position="absolute"
+                  overflow="hidden"
+                  zIndex="2"
+                  borderRadius="50%"
+                  w="110px"
+                  h="110px"
+                  border="5px solid white"
+                  transition="all 1s ease"
+                >
+                  <Box
+                    className="percent"
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    w="100%"
+                    h="100%"
+                    fontWeight="bold"
+                    textAlign="center"
+                    lineHeight="110px"
+                    fontSize="40px"
+                    color="blue.600"
+                    textShadow="0 0 10px blue.500"
+                    transition="all 1s ease"
+                  >
+                    <span>{percent}</span>%
+                  </Box>
+                  <Box
+                    className="water"
+                    position="absolute"
+                    zIndex="1"
+                    w="200%"
+                    h="200%"
+                    left="-50%"
+                    top={`${100 - percent}%`}
+                    borderRadius="40%"
+                    bg="blue.400"
+                    opacity="0.5"
+                    animation="spin 10s linear infinite"
+                    transition="all 1s ease"
+                    boxShadow="0 0 20px blue.300"
+                  ></Box>
+                </Box>
+              </Box>
+            </Box>
+            <Box textAlign="center">
+              <Text
+                fontSize="16px"
+                // fontWeight="bold"
+                color="blue.600"
+                textShadow="0 0 10px blue.500"
+                // mt={2}
+              >
+                Current Level: {level}
+              </Text>
+            </Box>
+          </Flex>
+          <Flex textAlign={"center"}>
+            {/* <Text>
+              Enter Percentage:{" "}
+              <Input
+                type="text"
+                placeholder="67"
+                value={percent}
+                onChange={handleInputChange}
+                w="45px"
+                textAlign="center"
+                fontSize="20px"
+                border="0"
+                borderBottom="1px solid blue.300"
+                color="blue.600"
+                textShadow="3px 3px 10px blue.600"
+                bg="transparent"
+                _focus={{
+                  outline: "0",
+                  borderBottom: "1px dashed red.300",
+                }}
+                px={0}
+              />
+            </Text> */}
+            <Box>
+              {/* write current xp and required xp to go to next level */}
+              <Text
+                fontSize="16px"
+                fontWeight="bold"
+                // color="blue.600"
+                textShadow="0 0 10px blue.500"
+                mt={2}
+              >
+                Current XP: {xp}
+              </Text>
+              <Text
+                fontSize="16px"
+                fontWeight="bold"
+                // color="blue.600"
+                textShadow="0 0 10px blue.500"
+                mt={2}
+              >
+                Required XP for level up: {level * 10 - xp}
+              </Text>
+            </Box>
+          </Flex>
+        </Box>
+      </Container>
+    </ChakraProvider>
   );
 };
 
-export default ProfileExperienceLevel;
+export default ProgressBubble;

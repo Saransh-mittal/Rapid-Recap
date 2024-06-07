@@ -222,7 +222,7 @@ export default function Profile() {
               //   MAX_IQ={profile?.maxIQScore}
               // />
               // <Text>This is Experience level box</Text>
-              <ProfileExperienceLevel xp={40} level={15} />
+              <ProfileExperienceLevel xp={18} level={2} />
             )}
           </Flex>
         </Flex>
