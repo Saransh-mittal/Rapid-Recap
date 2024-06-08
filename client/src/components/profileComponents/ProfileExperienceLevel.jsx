@@ -5,21 +5,22 @@ import {
   Flex,
   Input,
   Text,
-  Heading,
+  //Heading,
   Container,
   extendTheme,
   keyframes,
 } from "@chakra-ui/react";
+import Heading from "../miscellaneous/HeadingComponent";
 
-const theme = extendTheme({
-  styles: {
-    global: {
-      body: {
-        fontFamily: "Open Sans, sans-serif",
-      },
-    },
-  },
-});
+// const theme = extendTheme({
+//   styles: {
+//     global: {
+//       body: {
+//         fontFamily: "Open Sans, sans-serif",
+//       },
+//     },
+//   },
+// });
 
 const ProgressBubble = ({ xp, level }) => {
   const calculateProgress = (xp, level) => {
@@ -28,6 +29,7 @@ const ProgressBubble = ({ xp, level }) => {
 
   const [percent, setPercent] = useState(calculateProgress(xp, level));
   const colorInc = 100 / 3;
+  const requiredXP = level * 10 - xp;
 
   const handleInputChange = (e) => {
     const val = e.target.value;
@@ -51,37 +53,29 @@ const ProgressBubble = ({ xp, level }) => {
 `;
 
   return (
-    <ChakraProvider theme={theme}>
-      <Container>
-        <Heading
-          size="lg"
-          color="white"
-          fontWeight="bold"
-          textAlign="center"
-          mt={12}
-          mb={6}
-          fontFamily="Arial, sans-serif"
-          letterSpacing="2px"
-          pb={5}
-          textShadow="0px 0px 3px rgba(0, 0, 0, 0.2)"
-          bgGradient="linear(to-r, teal.400, blue.500, purple.500)"
-          bgClip="text"
-          animation={`${gradientAnimation} 5s ease infinite`}
-          backgroundSize="200% 200%"
-        >
+    <Container padding={0}>
+      <Flex flexDirection="column" width="100%" h={"100%"} m={0}>
+        <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
           Experience
-        </Heading>
-        <Box display="flex" flexDirection="column" alignItems="center" mt={4}>
+        </Text>
+        <Box
+          display="flex"
+          flexDirection="row"
+          justifyContent={"space-between"}
+          alignItems="center"
+          mt={4}
+        >
           <Flex
             justify="space-between"
-            align="center"
-            width="300px"
+            align="left"
+            width="120px"
             flexDirection="column"
           >
-            <Box textAlign="center">
+            <Box>
               <Text
+                textAlign="center"
                 fontSize="16px"
-                // fontWeight="bold"
+                fontWeight="bold"
                 color="blue.600"
                 textShadow="0 0 10px blue.500"
                 mb={2}
@@ -159,10 +153,11 @@ const ProgressBubble = ({ xp, level }) => {
                 </Box>
               </Box>
             </Box>
-            <Box textAlign="center">
+            <Box textAlign="left">
               <Text
+                textAlign="center"
                 fontSize="16px"
-                // fontWeight="bold"
+                fontWeight="bold"
                 color="blue.600"
                 textShadow="0 0 10px blue.500"
                 // mt={2}
@@ -196,29 +191,59 @@ const ProgressBubble = ({ xp, level }) => {
             </Text> */}
             <Box>
               {/* write current xp and required xp to go to next level */}
-              <Text
-                fontSize="16px"
-                fontWeight="bold"
-                // color="blue.600"
-                textShadow="0 0 10px blue.500"
-                mt={2}
+              {/* <Text
+                  fontSize="16px"
+                  fontWeight="bold"
+                  // color="blue.600"
+                  textShadow="0 0 10px blue.500"
+                  mt={2}
+                >
+                  Current XP: {xp}
+                </Text>
+                <Text
+                  fontSize="16px"
+                  fontWeight="bold"
+                  // color="blue.600"
+                  textShadow="0 0 10px blue.500"
+                  mt={2}
+                >
+                  Required Level Up xP: {level * 10 - xp}
+                </Text> */}
+              <Heading
+                tag={`Required Level Up xP :`}
+                marginBottom="0"
+                textTransform="uppercase"
               >
-                Current XP: {xp}
-              </Text>
-              <Text
-                fontSize="16px"
-                fontWeight="bold"
-                // color="blue.600"
-                textShadow="0 0 10px blue.500"
-                mt={2}
+                <span
+                  style={{
+                    color: "blue",
+                    fontSize: "1.15rem",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {requiredXP}
+                </span>
+              </Heading>
+              <Heading
+                tag={`Current XP :`}
+                marginBottom="0"
+                textTransform="uppercase"
               >
-                Required XP for level up: {level * 10 - xp}
-              </Text>
+                <span
+                  style={{
+                    color: "blue",
+                    fontSize: "1.15rem",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {xp}
+                </span>
+              </Heading>
             </Box>
           </Flex>
         </Box>
-      </Container>
-    </ChakraProvider>
+      </Flex>
+    </Container>
   );
 };
 

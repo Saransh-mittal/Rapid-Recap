@@ -142,13 +142,13 @@ export default function Profile() {
         justifyContent={{ base: "center", md: "center", lg: "normal" }}
         className="profile-info"
       >
-        <Flex flexDirection={"column"} width={"100%"}>
+        <Flex flexDirection={"column"} width={"100%"} margin={"12px"}>
           <Flex
-            margin="20px"
+            marginTop={"10px"}
             padding="15px"
             borderRadius="10px"
             flexDirection="column"
-            w={{ md: "300px", lg: "350px", base: "95%" }}
+            w={{ md: "85%", lg: "95%", base: "100%" }}
             height="fit-content"
             style={{
               backgroundColor: "#0f0d15",
@@ -184,11 +184,11 @@ export default function Profile() {
             )}
           </Flex>
           <Flex
-            margin="20px"
+            marginTop={"12px"}
             padding="15px"
             borderRadius="10px"
             flexDirection="column"
-            w={{ md: "300px", lg: "350px", base: "95%" }}
+            w={{ md: "85%", lg: "95%", base: "100%" }}
             height="fit-content"
             style={{
               backgroundColor: "#0f0d15",
