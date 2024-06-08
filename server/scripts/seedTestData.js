@@ -31,20 +31,16 @@ const generateMockActivity = (userId) => ({
   timestamp: faker.date.recent(),
 });
 
-const seedTestData = async () => {
+const seedTestData = async (session) => {
   console.log("\nSeeding test data...\n");
-  //   await mongoose.connect("mongodb://localhost:27017/test", {
-  //     useNewUrlParser: true,
-  //     useUnifiedTopology: true,
-  //   });
-  await User.deleteMany({});
-  await Activity.deleteMany({});
+  await User.deleteMany({}).session(session);
+  await Activity.deleteMany({}).session(session);
   console.log("\n Deleted all data\n");
   console.log("\n Creating new data\n");
   const users = [];
   for (let i = 0; i < 10; i++) {
     const user = new User(generateMockUser());
-    await user.save();
+    await user.save({ session });
     users.push(user);
   }
   console.log("\n Created new data\n");
@@ -53,10 +49,10 @@ const seedTestData = async () => {
   for (const user of users) {
     for (let i = 0; i < 5; i++) {
       const activity = new Activity(generateMockActivity(user._id));
-      await activity.save();
+      await activity.save({ session });
       user.activities.push(activity._id);
     }
-    await user.save();
+    await user.save({ session });
   }
 
   console.log("\nActivities created successfully!\n");

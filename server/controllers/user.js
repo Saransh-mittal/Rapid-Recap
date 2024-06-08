@@ -22,37 +22,49 @@ const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 const QuinBoost = require("../model/quinBoostSchema");
 const MailTemplates = require("../data/MailTemplates.js");
 const { isValidEmail } = require("../utils/miscellaneous.utils.js");
+const {
+  startSession,
+  commitSession,
+  abortSession,
+} = require("../db/session.js");
 
 const registerUser = async (req, res) => {
+  // console.log(req.body);
   const { name, email, pic, password, cpassword, inGameName } = req.body;
 
-  if (!name || !email || !pic || !password || !cpassword || !inGameName)
+  if (!name || !email || !pic || !password || !cpassword || !inGameName) {
     return res.status(422).json({ error: "Please fill the required field" });
-  // inGameName cannot have spaces
-  if (inGameName.includes(" "))
+  }
+
+  if (inGameName.includes(" ")) {
     return res.status(422).json({ error: "In Game Name cannot have spaces" });
+  }
 
+  const session = await startSession();
   try {
-    const response = await User.findOne({ email: email });
-    const response2 = await User.findOne({ inGameName });
-    if (response2)
-      return res
-        .status(422)
-        .json({ error: "This In Game Name is already Taken" });
-    if (response)
-      return res.status(422).json({ error: "Email already exists" });
-    if (password.length < 8)
-      throw new Error("Password should be of atleast 8 characters");
+    const response = await User.findOne({ email }).session(session);
+    const response2 = await User.findOne({ inGameName }).session(session);
 
-    if (password != cpassword)
+    if (response2) {
       return res
         .status(422)
-        .json({ error: "password is not equal to confirm password" });
-    // if (phone.toString().length != 10) {
-    //   return res
-    //     .status(422)
-    //     .json({ error: "Phone no. should be of 10 digits" });
-    // }
+        .json({ error: "This In Game Name is already taken" });
+    }
+
+    if (response) {
+      return res.status(422).json({ error: "Email already exists" });
+    }
+
+    if (password.length < 8) {
+      throw new Error("Password should be at least 8 characters");
+    }
+
+    if (password !== cpassword) {
+      return res
+        .status(422)
+        .json({ error: "Password and confirm password do not match" });
+    }
+
     const user = new User({
       inGameName,
       name,
@@ -68,10 +80,11 @@ const registerUser = async (req, res) => {
       owner: user._id,
       token: OTP,
     });
-    await verificationToken.save();
+
+    await verificationToken.save({ session });
     user.resetOtpCnt();
     user.setOtpCntResetTime();
-    await user.save();
+    await user.save({ session });
 
     const transporter = await mailTransporter();
     await transporter.sendMail({
@@ -81,8 +94,11 @@ const registerUser = async (req, res) => {
       text: MailTemplates.OTP.text,
       html: MailTemplates.OTP.html(OTP),
     });
+
+    await commitSession();
     return res.status(201).json({ message: "Registered Successfully" });
   } catch (err) {
+    await abortSession();
     res.status(500).send("Internal Server Error");
     console.log(err);
   }

@@ -3,40 +3,51 @@ const Activity = require("../model/activitySchema");
 const User = require("../model/userSchema");
 const { getXpForActivity } = require("../data/activityTypes");
 
-const logActivity = async ({ userId, type, userIQ, previousIQ }) => {
+const logActivity = async ({
+  userInGameName,
+  type,
+  userIQ,
+  previousIQ,
+  session,
+}) => {
   try {
-    const user = await User.findById(userId);
+    // console.log(userInGameName);
+    const user = await User.findOne({ inGameName: userInGameName }).session(
+      session
+    );
+    //console.log(user);
     if (!user) throw new Error("User not found");
+
     const xpAwarded = getXpForActivity({
       activityType: type,
       userIQ: userIQ || user.IQ_score,
       previousIQ: previousIQ || user.prevIQScore,
     });
-    // Create a new activity
+
     const activity = new Activity({
-      userId,
+      userId: user._id,
       type,
       xpAwarded,
       timestamp: new Date(),
     });
-    await activity.save();
 
-    // Fetch the user and update xp and level
-
-    // Use a session for atomicity
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    await activity.save({ session });
 
     user.xp += xpAwarded;
-    while (user.xp >= user.level * 10) {
-      user.xp -= user.level * 10;
-      user.level += 1;
+    let level = user.level;
+    const xpBaseAtCurrLevel = (level * (level + 1) * 10) / 2;
+    let totalXp = user.xp;
+    let leftXp = totalXp - xpBaseAtCurrLevel;
+
+    while (leftXp >= (level + 1) * 10) {
+      level++;
+      leftXp -= level * 10;
     }
+
+    user.level = level;
     user.activities.push(activity._id);
 
     await user.save({ session });
-    await session.commitTransaction();
-    session.endSession();
   } catch (error) {
     console.error("Error logging activity:", error);
     throw error;
