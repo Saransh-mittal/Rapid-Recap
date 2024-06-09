@@ -5,22 +5,11 @@ import {
   Flex,
   Input,
   Text,
-  //Heading,
   Container,
   extendTheme,
   keyframes,
 } from "@chakra-ui/react";
 import Heading from "../miscellaneous/HeadingComponent";
-
-// const theme = extendTheme({
-//   styles: {
-//     global: {
-//       body: {
-//         fontFamily: "Open Sans, sans-serif",
-//       },
-//     },
-//   },
-// });
 
 const ProgressBubble = ({ xp, level }) => {
   const calculateProgress = (xp, level) => {

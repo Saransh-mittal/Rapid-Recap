@@ -6,7 +6,7 @@ import {
   Skeleton,
   SkeletonCircle,
   SkeletonText,
-  Text,
+  Container,
 } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
 import { AppContext } from "../contextAPI/appContext";
@@ -142,7 +142,16 @@ export default function Profile() {
         justifyContent={{ base: "center", md: "center", lg: "normal" }}
         className="profile-info"
       >
-        <Flex flexDirection={"column"} width={"100%"} margin={"12px"}>
+        <Flex
+          flexDirection={"column"}
+          w={{
+            xl: "400px",
+            md: "460px",
+            sm: "100%",
+            base: "100%",
+          }}
+          margin={"12px"}
+        >
           <Flex
             marginTop={"10px"}
             padding="15px"
@@ -198,30 +207,55 @@ export default function Profile() {
                 "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
             }}
           >
-            {/* {showHideModal && (
-              <ToggleProfileVisibilty setShowHideModal={setShowHideModal} />
-            )} */}
-            {/* {inGameName === state.user.inGameName && (
-              <Tooltip label="Toggle Profile Visibility">
-                <ViewIcon
-                  marginLeft={"auto"}
-                  onClick={() => setShowHideModal(true)}
-                  _hover={{ cursor: "pointer" }}
-                />
-              </Tooltip>
-            )} */}
             {isLoading ? (
               <>
-                <SkeletonCircle size="10" />
-                <SkeletonText mt="4" noOfLines={4} spacing="4" />
+                <Container padding={0}>
+                  <Flex flexDirection="column" width="100%" h={"100%"} m={0}>
+                    <SkeletonText
+                      noOfLines={1}
+                      spacing="4"
+                      skeletonHeight="20px"
+                    />
+                    <Box
+                      display="flex"
+                      flexDirection="row"
+                      justifyContent={"space-between"}
+                      alignItems="center"
+                      mt={4}
+                    >
+                      <Flex
+                        justify="space-between"
+                        align="left"
+                        width="120px"
+                        flexDirection="column"
+                      >
+                        <Box>
+                          <Skeleton height="20px" width="100px" mb={2} />
+                        </Box>
+                        <Box position="relative" mb={4}>
+                          <Skeleton
+                            height="120px"
+                            width="120px"
+                            borderRadius="50%"
+                            startColor="gray.200"
+                            endColor="gray.400"
+                          />
+                        </Box>
+                        <Box textAlign="left">
+                          <Skeleton height="20px" width="100px" />
+                        </Box>
+                      </Flex>
+                      <Flex textAlign={"center"}>
+                        <Box>
+                          <Skeleton height="20px" width="150px" mb={2} />
+                          <Skeleton height="20px" width="150px" />
+                        </Box>
+                      </Flex>
+                    </Box>
+                  </Flex>
+                </Container>
               </>
             ) : (
-              // <LeftProfileBox
-              //   leftProfileView={profile?.leftProfileView}
-              //   CURR_IQ={profile?.USER_IQ}
-              //   MAX_IQ={profile?.maxIQScore}
-              // />
-              // <Text>This is Experience level box</Text>
               <ProfileExperienceLevel xp={18} level={2} />
             )}
           </Flex>

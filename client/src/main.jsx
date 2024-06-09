@@ -3,14 +3,31 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { AppProvider } from "./contextAPI/appContext";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import { HelmetProvider, Helmet } from "react-helmet-async";
+import "@fontsource/roboto";
+import "@fontsource/open-sans";
+import "@fontsource/lato";
+
+const theme = extendTheme({
+  fonts: {
+    heading: `'Roboto', sans-serif`,
+    body: `'Open Sans', sans-serif`,
+  },
+  styles: {
+    global: {
+      ".lato-text": {
+        fontFamily: `'Lato', sans-serif`,
+      },
+    },
+  },
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   //<React.StrictMode>
   <BrowserRouter>
     <AppProvider>
-      <ChakraProvider>
+      <ChakraProvider theme={theme}>
         <HelmetProvider>
           <Helmet>
             <title>Rapid Recap - Stay Informed, Stay Ahead</title>
