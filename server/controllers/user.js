@@ -98,7 +98,7 @@ const registerUser = async (req, res) => {
     await commitSession();
     return res.status(201).json({ message: "Registered Successfully" });
   } catch (err) {
-    await abortSession();
+    await abortSession(session);
     res.status(500).send("Internal Server Error");
     console.log(err);
   }

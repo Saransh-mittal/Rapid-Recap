@@ -38,8 +38,8 @@ const commitSession = async () => {
   }
 };
 
-const abortSession = async () => {
-  if (session) {
+const abortSession = async (session) => {
+  if (session && session.inTransaction()) {
     await session.abortTransaction();
     session.endSession();
   }
