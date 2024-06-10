@@ -5,11 +5,13 @@ import StreakFire from "./StreakFire";
 import ProfileDropDownMenu from "../../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon } from "@chakra-ui/icons";
 import GetStarted from "./GetStarted";
+import XPLevel from "./XPLevel";
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
   notifyCont,
   setShowDailyStreakModal,
+  setShowXPLevelModal,
   tourComplete,
   streak,
   isBoosted,
@@ -36,7 +38,16 @@ const OutsideNavbarContent = ({
         )}
         {!notLogined && (
           <>
-            {" "}
+            <XPLevel
+              level={3}
+              _hover={{
+                cursor: "pointer",
+              }}
+              className={"xp-level"}
+              onClick={() => {
+                setShowXPLevelModal(true);
+              }}
+            />{" "}
             <StreakFire
               marginAroundBox={"auto"}
               widthOfBox={"1.6em"}
