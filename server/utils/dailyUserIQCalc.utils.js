@@ -1,12 +1,14 @@
+// utils/dailyUserIQCalc.js
+
 const DailyIQ = require("../model/dailyIQSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const User = require("../model/userSchema");
-// const { progressBar } = require("./progress.utils");
 const { updatePercentilesOnQuizDeactivation } = require("./quiz.utils");
 const rankUpdate = require("./update.utils/rank.update");
 const CircleAndSocietyData = require("../data/CircleAndSocietyData");
 const { logActivity } = require("./activity.utils");
 const { activityTypes } = require("../data/activityTypes");
+// const { progressBar } = require("./progress.utils");
 
 const findSocietyCircleByIQ = (IQScore) => {
   return CircleAndSocietyData.find((data) => {
@@ -16,42 +18,45 @@ const findSocietyCircleByIQ = (IQScore) => {
     );
   });
 };
+
 const handleSocietyOrCircleUpgrade = async (
   userId,
   prevIQScore,
-  currIQScore
+  currIQScore,
+  previousIQForXp,
+  awardableXpOrNot
 ) => {
-  // Find the user's previous and current society and circle
-  const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore);
-  const currSocietyCircle = findSocietyCircleByIQ(currIQScore);
+  try {
+    const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore);
+    const currSocietyCircle = findSocietyCircleByIQ(currIQScore);
 
-  if (!prevSocietyCircle || !currSocietyCircle)
-    //console.log(prevSocietyCircle, currSocietyCircle);
-    return;
-  if (
-    (prevSocietyCircle.society !== currSocietyCircle.society ||
-      prevSocietyCircle.circle !== currSocietyCircle.circle) &&
-    prevSocietyCircle.IQ_Upper <= currSocietyCircle.IQ_Lower
-  ) {
-    // Save the upgrade message for the user
-    const upgradeMsg = currSocietyCircle.upgradeMsg;
-    // You can save the upgrade message to the userId here
-    const user = await User.findById(userId);
-    user.societyUpgradeMessage = upgradeMsg;
-    await user.save();
-    await logActivity({
-      userId,
-      type: activityTypes.SOCIETY_OR_CIRCLE_UPGRADE.type,
-      userIQ: currIQScore,
-      previousIQ: prevIQScore,
-    });
-    // Save upgradeMsg to userId logic can be implemented here
+    if (!prevSocietyCircle || !currSocietyCircle) return;
+
+    if (
+      (prevSocietyCircle.society !== currSocietyCircle.society ||
+        prevSocietyCircle.circle !== currSocietyCircle.circle) &&
+      prevSocietyCircle.IQ_Upper <= currSocietyCircle.IQ_Lower
+    ) {
+      const upgradeMsg = currSocietyCircle.upgradeMsg;
+      const user = await User.findById(userId);
+      user.societyUpgradeMessage = upgradeMsg;
+      await user.save();
+      if (awardableXpOrNot) {
+        await logActivity({
+          userId,
+          type: activityTypes.SOCIETY_OR_CIRCLE_UPGRADE.type,
+          userIQ: currIQScore,
+          previousIQ: previousIQForXp,
+        });
+      }
+    }
+  } catch (error) {
+    console.error(`Error in handleSocietyOrCircleUpgrade: ${error.message}`);
   }
 };
 
-const dailyUserIQCalc = async () => {
-  console.log("\nFetching users...\n");
-  const users = await User.aggregate([
+const fetchUsersWithQuizAttempts = async () => {
+  return User.aggregate([
     {
       $lookup: {
         from: "quiz_attempts",
@@ -71,14 +76,16 @@ const dailyUserIQCalc = async () => {
       },
     },
   ]);
-  console.log("\nFetched users.\n");
+};
 
-  const uniqueArticleIds = await QuizAttempt.aggregate([
+const fetchUniqueArticleIds = async () => {
+  return QuizAttempt.aggregate([
     { $group: { _id: "$article" } },
     { $project: { _id: 0, articleId: "$_id" } },
   ]);
+};
 
-  console.log("\nUpdating percentiles on quiz...\n");
+const updatePercentilesForArticles = async (uniqueArticleIds) => {
   await Promise.all(
     uniqueArticleIds.map(async (doc) => {
       await updatePercentilesOnQuizDeactivation({
@@ -86,8 +93,9 @@ const dailyUserIQCalc = async () => {
       });
     })
   );
-  console.log("\nUpdated percentiles on quiz.\n");
+};
 
+const calculateUserScores = async (users) => {
   const userScores = [];
   let sumOfUserScores = 0;
 
@@ -100,11 +108,7 @@ const dailyUserIQCalc = async () => {
   });
 
   const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises);
-  console.log("\nFetched quiz attempts.\n");
-
-  console.log("\nCalculating user scores...\n");
-  // const updateProgress1 = progressBar(userQuizAttempts.length);
-
+  // const progressBarIncrement = progressBar(userQuizAttempts.length);
   for (const { user, quizAttempts } of userQuizAttempts) {
     let userScore = 0;
 
@@ -123,16 +127,20 @@ const dailyUserIQCalc = async () => {
       userScore += quizScore;
     }
 
-    if (typeof userScore !== "number" || !userScore) userScore = 0;
+    userScore = typeof userScore === "number" && userScore ? userScore : 0;
     const u = await User.findById(user._id);
     u.userScore = userScore;
     await u.save();
 
     sumOfUserScores += userScore;
     userScores.push({ user, userScore });
-    // updateProgress1();
+    // progressBarIncrement();
   }
 
+  return { userScores, sumOfUserScores };
+};
+
+const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
   const meanOfUserScores = sumOfUserScores / userScores.length;
   const sumOfSquares = userScores.reduce(
     (acc, user) => acc + Math.pow(user.userScore - meanOfUserScores, 2),
@@ -140,48 +148,77 @@ const dailyUserIQCalc = async () => {
   );
   const standardDeviation = Math.sqrt(sumOfSquares / userScores.length);
 
-  console.log("\nCalculating IQ scores...\n");
-  // const updateProgress2 = progressBar(userScores.length);
   userScores.sort((a, b) => b.userScore - a.userScore);
   let rank = 1;
-
-  for (const user of userScores) {
-    if (!user || !user.user) {
+  //const progressBarIncrement = progressBar(userScores.length);
+  for (const { user, userScore } of userScores) {
+    if (!user) {
       console.error("Invalid user data.");
       continue;
     }
 
-    const normalizedScore =
-      (user.userScore - meanOfUserScores) / standardDeviation;
+    const normalizedScore = (userScore - meanOfUserScores) / standardDeviation;
     const IQScore = 100 + 15 * normalizedScore;
 
     const currIQScore = Math.round(IQScore);
-    const updatedUser = await User.findById(user.user._id);
+    const updatedUser = await User.findById(user._id);
+    const awardableXpOrNot = currIQScore > user.maxIQScore;
+    const previousIQForXp = user.maxIQScore;
     const prevIQScore = updatedUser.IQ_score;
-    updatedUser.IQ_score = Math.round(IQScore);
-    updatedUser.maxIQScore = Math.max(
-      updatedUser.maxIQScore,
-      Math.round(IQScore)
-    );
+
+    updatedUser.IQ_score = currIQScore;
+    updatedUser.maxIQScore = Math.max(updatedUser.maxIQScore, currIQScore);
     updatedUser.prevIQScore = prevIQScore;
+
     const dailyIQ = new DailyIQ({
       user: updatedUser._id,
-      IQ_score: Math.round(IQScore),
+      IQ_score: currIQScore,
       dailyRank: `${rank}/${userScores.length}`,
     });
     await dailyIQ.save();
+
     updatedUser.dailyIQScores.push(dailyIQ._id);
     await updatedUser.save();
 
     await handleSocietyOrCircleUpgrade(
       updatedUser._id.toString(),
       prevIQScore,
-      currIQScore
+      currIQScore,
+      previousIQForXp,
+      awardableXpOrNot
     );
     rank++;
-    // updateProgress2();
+    //progressBarIncrement();
   }
-  await rankUpdate();
+};
+
+const dailyUserIQCalc = async () => {
+  try {
+    console.log("\nFetching users...\n");
+    const users = await fetchUsersWithQuizAttempts();
+    console.log("\nFetched users.\n");
+
+    console.log("\nFetching unique article IDs...\n");
+    const uniqueArticleIds = await fetchUniqueArticleIds();
+    console.log("\nFetched unique article IDs.\n");
+
+    console.log("\nUpdating percentiles on quiz...\n");
+    await updatePercentilesForArticles(uniqueArticleIds);
+    console.log("\nUpdated percentiles on quiz.\n");
+
+    console.log("\nCalculating user scores...\n");
+    const { userScores, sumOfUserScores } = await calculateUserScores(users);
+    console.log("\nCalculated user scores.\n");
+
+    console.log("\nCalculating and assigning IQ scores...\n");
+    await calculateAndAssignIQScores(userScores, sumOfUserScores);
+    console.log("\nCalculated and assigned IQ scores.\n");
+
+    await rankUpdate();
+    console.log("\nRank updated.\n");
+  } catch (error) {
+    console.error(`Error in dailyUserIQCalc: ${error.message}`);
+  }
 };
 
 module.exports = dailyUserIQCalc;
