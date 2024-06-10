@@ -1,86 +1,53 @@
-import React, { useEffect, useRef } from "react";
-import axios from "axios";
+import React, { useEffect, useState, useRef } from "react";
+import { useToast } from "@chakra-ui/react";
 
 const TrackTime = ({ userId, articleId }) => {
-  const startTimeRef = useRef(null);
+  const [startTime, setStartTime] = useState(Date.now());
   const totalTimeRef = useRef(0);
-  let tt = 0;
+  const toast = useToast();
 
   useEffect(() => {
-    console.log("TrackTime component mounted");
-    const startTracking = () => {
-      startTimeRef.current = Date.now();
-    };
-
-    const stopTracking = (event) => {
+    const handleUnload = () => {
       const endTime = Date.now();
-      const timeSpent = endTime - startTimeRef.current;
+      const timeSpent = endTime - startTime;
       totalTimeRef.current += timeSpent;
-      console.log("Time spent on this page:", totalTimeRef.current);
-      tt = totalTimeRef.current;
 
-      if (event && event.type === "beforeunload") {
-        console.log("Sending time spent data beforeunload event");
-        // Use synchronous XHR for beforeunload event
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/api/timeSpent", false);
-        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xhr.send(
-          JSON.stringify({
-            userId,
-            articleId,
-            timeSpent: totalTimeRef.current,
-          })
-        );
-        totalTimeRef.current = 0;
-      } else {
-        // axios
-        //   .post("/api/timeSpent", {
-        //     userId,
-        //     articleId,
-        //     timeSpent: totalTimeRef.current,
-        //   })
-        //   .then(() => {
-        //     totalTimeRef.current = 0;
-        //   })
-        //   .catch((error) => {
-        //     console.error("Error sending time spent data:", error);
-        //   });
-      }
+      console.log("handleUnload called");
+      console.log(
+        `User ${userId} spent ${totalTimeRef.current} ms on article ${articleId}`
+      );
+
+      // Create the payload
+      const payload = JSON.stringify({
+        userId,
+        articleId,
+        timeSpent: totalTimeRef.current,
+      });
+
+      // Use navigator.sendBeacon to send the data to the backend
+      navigator.sendBeacon("/api/track-time", payload);
     };
 
     const handleVisibilityChange = () => {
+      console.log("handleVisibilityChange called", document.visibilityState);
       if (document.visibilityState === "hidden") {
-        stopTracking();
-      } else {
-        startTracking();
+        handleUnload();
+      } else if (document.visibilityState === "visible") {
+        setStartTime(Date.now());
+        console.log("Page became visible, startTime set to", Date.now());
       }
     };
 
-    const handlePopState = () => {
-      stopTracking();
-      startTracking();
-    };
-
-    const handleBeforeUnload = (event) => {
-      stopTracking(event);
-    };
-
-    startTracking();
-
+    window.addEventListener("beforeunload", handleUnload);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("popstate", handlePopState);
 
+    // Cleanup function
     return () => {
+      window.removeEventListener("beforeunload", handleUnload);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("popstate", handlePopState);
-      stopTracking();
-      //   console.log(tt);
-      //   console.log("TrackTime component unmounted");
+      handleUnload();
     };
-  }, [userId, articleId]);
+  }, [startTime, userId, articleId]);
 
   return null;
 };

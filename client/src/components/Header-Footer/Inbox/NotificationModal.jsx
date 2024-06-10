@@ -102,20 +102,18 @@ const NotificationModal = ({
                 alignItems="center"
                 marginTop={"30px"}
               >
-                {selectedNotification.mainText
-                  .split("\n\n")
-                  .map((paragraph, index) => (
-                    <Text
-                      key={index}
-                      fontSize="lg"
-                      color="gray.400"
-                      fontStyle="italic"
-                      textAlign="center"
-                      marginBottom="20px"
-                    >
-                      {paragraph}
-                    </Text>
-                  ))}
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: selectedNotification.mainText,
+                  }}
+                  style={{
+                    fontSize: "lg",
+                    color: "gray.400",
+                    fontStyle: "italic",
+                    textAlign: "center",
+                    marginBottom: "20px",
+                  }}
+                />
                 <Text fontSize="sm" color="gray.600">
                   {new Date(selectedNotification.date).toLocaleString()}
                 </Text>
