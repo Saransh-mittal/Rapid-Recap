@@ -90,12 +90,30 @@ const NotificationModal = ({
                   objectPosition="center center"
                 />
               </Flex>
+
               {/* Greetings section */}
               <Flex justifyContent="center" mt={3} marginTop={"20px"}>
                 <Heading as="h3" size="md" color="teal">
                   Hello, {state.user.name || "User"}!
                 </Heading>
               </Flex>
+
+              {/* Image for update */}
+              {selectedNotification.image && (
+                <Flex justifyContent="center">
+                  <Image
+                    src={selectedNotification.image}
+                    mt={3}
+                    alt="Notification Image"
+                    width="12rem"
+                    height="12rem"
+                    // borderRadius="50%"
+                    objectFit="cover"
+                    objectPosition="center center"
+                  />
+                </Flex>
+              )}
+
               {/* Main content */}
               <Flex
                 flexDirection="column"
