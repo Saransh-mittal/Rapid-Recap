@@ -21,6 +21,7 @@ const OutsideNavbarContent = ({
   handleLogout,
   navLinkRefs,
   setIsHamburgerOpen,
+  level,
 }) => {
   return (
     <>
@@ -39,7 +40,7 @@ const OutsideNavbarContent = ({
         {!notLogined && (
           <>
             <XPLevel
-              level={3}
+              level={level}
               _hover={{
                 cursor: "pointer",
               }}

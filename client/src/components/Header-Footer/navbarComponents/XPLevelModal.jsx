@@ -1,21 +1,18 @@
-import React, { useContext, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   Modal,
   ModalBody,
   ModalCloseButton,
   ModalContent,
-  ModalFooter,
   ModalOverlay,
   Text,
   useDisclosure,
   Box,
 } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AppContext } from "../../../contextAPI/appContext";
 
-const XPLevelModal = ({ setShowXPLevelModal }) => {
+const XPLevelModal = ({ setShowXPLevelModal, level, requiredXP, xp }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { state } = useContext(AppContext);
 
   useEffect(() => {
     onOpen();
@@ -118,7 +115,7 @@ const XPLevelModal = ({ setShowXPLevelModal }) => {
                       textTransform={"uppercase"}
                       mb={"3rem"}
                     >
-                      Experinece Level: 4
+                      Experinece Level: {level}
                     </Text>
                     <Text
                       color="white"
@@ -133,7 +130,7 @@ const XPLevelModal = ({ setShowXPLevelModal }) => {
                       <Box as="sub" fontSize="xs">
                         current
                       </Box>
-                      : 30
+                      : {xp}
                     </Text>
                     <Text
                       color="white"
@@ -147,20 +144,9 @@ const XPLevelModal = ({ setShowXPLevelModal }) => {
                       <Box as="sub" fontSize="xs">
                         Required to level up
                       </Box>
-                      : 10
+                      : {requiredXP}
                     </Text>
                   </ModalBody>
-                  <ModalFooter justifyContent="center">
-                    {/* <Button
-                      colorScheme="green"
-                      onClick={() => {
-                        onClose();
-                        setShowDailyStreakModal(false);
-                      }}
-                    >
-                      Close
-                    </Button> */}
-                  </ModalFooter>
                 </Box>
               </Box>
             </ModalContent>

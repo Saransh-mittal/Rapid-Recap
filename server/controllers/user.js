@@ -440,6 +440,8 @@ const leaderBoard = async (req, res) => {
           _id: 1,
           avgRQM: 1,
           quizAttempts: 1,
+          level: 1,
+          xp: 1,
         },
       },
     ]);
@@ -463,6 +465,8 @@ const leaderBoard = async (req, res) => {
         maxIQScore,
         avgRQM,
         quizAttempts,
+        level,
+        xp,
       } = user;
       return {
         _id,
@@ -473,6 +477,8 @@ const leaderBoard = async (req, res) => {
         pic,
         quizSubmissions: quizAttempts.length,
         maxIQScore,
+        level,
+        xp,
       };
     });
 
@@ -544,6 +550,10 @@ const profile = async (req, res) => {
         inGameName: user.inGameName,
         pic: user.pic,
         bio: user.bio,
+      },
+      experience: {
+        level: user.level,
+        xp: user.xp,
       },
       USER_IQ,
       maxIQScore: user.maxIQScore,

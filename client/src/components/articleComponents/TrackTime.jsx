@@ -1,31 +1,27 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useToast } from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
 
 const TrackTime = ({ userId, articleId }) => {
   const [startTime, setStartTime] = useState(Date.now());
-  const totalTimeRef = useRef(0);
-  const toast = useToast();
 
   useEffect(() => {
     const handleUnload = () => {
       const endTime = Date.now();
       const timeSpent = endTime - startTime;
-      totalTimeRef.current += timeSpent;
 
-      console.log("handleUnload called");
-      console.log(
-        `User ${userId} spent ${totalTimeRef.current} ms on article ${articleId}`
-      );
+      // console.log("handleUnload called");
+      // console.log(
+      //   `User ${userId} spent ${totalTimeRef.current} ms on article ${articleId}`
+      // );
 
       // Create the payload
       const payload = JSON.stringify({
         userId,
         articleId,
-        timeSpent: totalTimeRef.current,
+        timeSpent,
       });
-
+      console.log("Payload:", payload);
       // Use navigator.sendBeacon to send the data to the backend
-      navigator.sendBeacon("/api/track-time", payload);
+      navigator.sendBeacon("/api/timeSpent", payload);
     };
 
     const handleVisibilityChange = () => {
@@ -38,12 +34,12 @@ const TrackTime = ({ userId, articleId }) => {
       }
     };
 
-    window.addEventListener("beforeunload", handleUnload);
+    //window.addEventListener("beforeunload", handleUnload);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Cleanup function
     return () => {
-      window.removeEventListener("beforeunload", handleUnload);
+      //window.removeEventListener("beforeunload", handleUnload);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       handleUnload();
     };

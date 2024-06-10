@@ -155,7 +155,7 @@ const saveAttempt = async (req, res) => {
     else user.hardQuizCount++;
     await user.save();
     await logActivity({
-      userId: user._id.toString(),
+      userInGameName: user.inGameName,
       type: activityTypes.RANDOM_QUIZ.type,
     });
     const quizzesToday = await currDayStreakCalulator(user._id);
