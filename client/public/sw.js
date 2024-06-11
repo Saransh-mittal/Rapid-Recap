@@ -6,6 +6,7 @@ self.addEventListener("push", (event) => {
   const notificationOptions = {
     body: data.body,
     icon: data.icon || RapidRecapLogo,
+    image: data.image || null,
     data: { url: data.url }, // Pass additional data
   };
   self.registration.showNotification(data.title, notificationOptions);

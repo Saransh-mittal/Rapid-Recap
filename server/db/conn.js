@@ -88,7 +88,7 @@ mongoose
 //       update.mainText.length > 100
 //         ? `${update.mainText.slice(0, 100)}...`
 //         : update.mainText;
-//     const url = "https://rapidrecap.co.in/";
+//     const url = "https://www.rapidrecap.co.in/";
 //     await sendNotification({
 //       title: updateTitle,
 //       body: updateBody,

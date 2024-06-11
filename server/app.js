@@ -7,6 +7,7 @@ const quizRoutes = require("./router/quizRoutes");
 const subscriptionRoutes = require("./router/subscriptionRoutes");
 const mailRoutes = require("./router/mailRoutes");
 const timeSpentRoutes = require("./router/timeSpentRoutes");
+const notificationRoutes = require("./router/notificationRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -72,6 +73,7 @@ authRouter.use("/quiz", quizRoutes);
 authRouter.use("/subs", subscriptionRoutes);
 authRouter.use("/mail", mailRoutes);
 authRouter.use("/timeSpent", timeSpentRoutes);
+authRouter.use("/notify", notificationRoutes);
 app.use("/api", authRouter);
 
 app.listen(PORT, () => {

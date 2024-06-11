@@ -483,6 +483,7 @@ const processCategories = async (
       category,
       language: "en",
       country: "in",
+      pageSize: 6,
     });
 
     const articles = JSON.parse(JSON.stringify(response.articles));
@@ -519,7 +520,7 @@ const processDataIoCategories = async (
       language: "en",
       prioritydomain: "top",
       timezone: "Asia/Kolkata",
-      size: "10",
+      size: "5",
     };
     const queryString = Object.entries(queries)
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
