@@ -48,29 +48,44 @@ const NotificationModal = ({
         }}
         color={"white"}
       >
-        <ModalHeader>
+        <ModalHeader display={"flex"} px={0} w={"100%"} pb={0}>
+          <Flex justifyContent="center" w={"20%"} position={"relative"}>
+            <Image
+              ml={"3rem"}
+              src={Rapid_recap}
+              alt="Notification Image"
+              width="80px"
+              height="80px"
+              borderRadius="50%"
+              objectFit="cover"
+              objectPosition="center center"
+            />
+          </Flex>
           {selectedNotification && (
-            <Heading
-              as="h2"
-              size="lg"
-              fontWeight="bold"
-              textShadow="2px 2px 4px rgba(0, 0, 0, 0.3)"
-              borderRadius="md"
-              px={2}
-              py={1}
-              mt={2}
-              css={{
-                background: "rgba(255, 255, 255, 0.3)",
-                backdropFilter: "blur(8px)",
-                border: "2px solid #4A5568", // Border color
-                padding: "10px 20px",
-                background: `linear-gradient(to right, #ff8a00, #e52e71)`,
-                WebkitBackgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              {selectedNotification.title}
-            </Heading>
+            <Flex w={"70%"}>
+              <Heading
+                ml={"3rem"}
+                as="h2"
+                size="md"
+                fontWeight="bold"
+                textShadow="2px 2px 4px rgba(0, 0, 0, 0.3)"
+                borderRadius="md"
+                px={2}
+                py={1}
+                mt={2}
+                css={{
+                  background: "rgba(255, 255, 255, 0.3)",
+                  backdropFilter: "blur(8px)",
+                  border: "2px solid #4A5568", // Border color
+                  padding: "10px 20px",
+                  background: `linear-gradient(to right, #ff8a00, #e52e71)`,
+                  WebkitBackgroundClip: "text",
+                  color: "transparent",
+                }}
+              >
+                {selectedNotification.title}
+              </Heading>
+            </Flex>
           )}
         </ModalHeader>
 
@@ -79,35 +94,25 @@ const NotificationModal = ({
           {selectedNotification && (
             <>
               {/* Circular image */}
-              <Flex justifyContent="center">
-                <Image
-                  src={Rapid_recap}
-                  alt="Notification Image"
-                  width="80px"
-                  height="80px"
-                  borderRadius="50%"
-                  objectFit="cover"
-                  objectPosition="center center"
-                />
-              </Flex>
 
               {/* Greetings section */}
-              <Flex justifyContent="center" mt={3} marginTop={"20px"}>
+              <Flex mt={8} ml={4} mb={2}>
                 <Heading as="h3" size="md" color="teal">
                   Hello, {state.user.name || "User"}!
                 </Heading>
               </Flex>
 
               {/* Image for update */}
-              {selectedNotification.image && (
+              {selectedNotification.img && (
                 <Flex justifyContent="center">
                   <Image
-                    src={selectedNotification.image}
+                    src={selectedNotification.img}
                     mt={3}
                     alt="Notification Image"
                     width="12rem"
                     height="12rem"
                     // borderRadius="50%"
+                    borderRadius={"2px"}
                     objectFit="cover"
                     objectPosition="center center"
                   />

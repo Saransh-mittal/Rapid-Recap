@@ -16,6 +16,7 @@ import roadmap2 from "../../assets/roadmap/image-2.png";
 import roadmap3 from "../../assets/roadmap/image-3.png";
 import roadmap4 from "../../assets/roadmap/image-4.png";
 import roadmap5 from "../../assets/roadmap/xp-min.jpeg";
+import seasonUpdate from "../../assets/roadmap/seasonUpdate.png";
 import grid from "../../assets/grid.png";
 import gradientImage from "../../assets/gradient.png";
 import { useRef } from "react";
@@ -35,19 +36,27 @@ const roadmap = [
   },
   {
     id: "1",
-    title: "Experience Level (xP)",
-    text: "Measure the journey, not just the end, see how far you've come, my friend. A hidden gauge, a subtle sign, to show your mastery, in a line. What could it be that marks your path and charts your growth on this unique graph?",
+    title: "IQ Quest: Seasonal Showdown",
+    text: `
+
+Two moons will pass, old scores will fade,
+A fresh start in the quest we’ve made.
+Ranks will shift, a chance to rise,
+Will you claim the ultimate prize?
+
+
+`,
     date: "May 2023",
     status: "progress",
-    imageUrl: roadmap5,
+    imageUrl: seasonUpdate,
   },
   {
     id: "2",
-    title: "Expanded Categories & Streak System",
-    text: "Explore new categories and keep your learning streak alive! Our new streak system rewards consistent participation, helping you boost your Information Quotient (IQ) score.",
+    title: "Experience Level (xP)",
+    text: "Measure the journey, not just the end, see how far you've come, my friend. A hidden gauge, a subtle sign, to show your mastery, in a line. What could it be that marks your path and charts your growth on this unique graph?",
     date: "May 2023",
     status: "done",
-    imageUrl: roadmap3,
+    imageUrl: roadmap5,
   },
   {
     id: "3",
@@ -167,7 +176,7 @@ const CommigSoonSection = () => {
                             <Image
                               src={item.imageUrl}
                               alt={item.title}
-                              width={item.id === "1" ? "80%" : "100%"}
+                              width={"80%"}
                               height="auto"
                               objectFit="cover"
                               mb={4}

@@ -96,16 +96,23 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   }, [load, state.show, state.user, isTutorialTakenCheck, tour]);
 
   useEffect(() => {
-    //console.log(location.pathname.split("/")[2]);
-
-    const category = location.pathname.split("/")[2];
-    if (category !== state.category) {
+    // Check if pathname exists and is valid
+    const pathCategory = location.pathname.split("/")[2] || "";
+    if (
+      pathCategory &&
+      pathCategory.toLocaleLowerCase() !== state.category.toLocaleLowerCase()
+    ) {
       const idx = categories.findIndex(
-        (cat) => cat.toLocaleLowerCase() === category.toLocaleLowerCase()
+        (cat) => cat.toLocaleLowerCase() === pathCategory.toLocaleLowerCase()
       );
-      setActiveCategoryIndex(idx);
-      trackCategoryClick(category);
-      handleActiveCategory({ category, shouldNavigateOrNot: false });
+      if (idx !== -1) {
+        setActiveCategoryIndex(idx);
+        trackCategoryClick(pathCategory);
+        handleActiveCategory({
+          category: pathCategory,
+          shouldNavigateOrNot: false,
+        });
+      }
     }
   }, [location]);
 
