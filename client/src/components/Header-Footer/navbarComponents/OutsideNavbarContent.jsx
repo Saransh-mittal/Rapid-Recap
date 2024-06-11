@@ -22,7 +22,12 @@ const OutsideNavbarContent = ({
   navLinkRefs,
   setIsHamburgerOpen,
   level,
+  user, // pass the user state
 }) => {
+  const isEmptyObject = (obj) => {
+    return obj && Object.keys(obj).length === 0;
+  };
+
   return (
     <>
       <Flex
@@ -39,16 +44,18 @@ const OutsideNavbarContent = ({
         )}
         {!notLogined && (
           <>
-            <XPLevel
-              level={level}
-              _hover={{
-                cursor: "pointer",
-              }}
-              className={"xp-level"}
-              onClick={() => {
-                setShowXPLevelModal(true);
-              }}
-            />{" "}
+            {!isEmptyObject(user) && (
+              <XPLevel
+                level={level}
+                _hover={{
+                  cursor: "pointer",
+                }}
+                className={"xp-level"}
+                onClick={() => {
+                  setShowXPLevelModal(true);
+                }}
+              />
+            )}
             <StreakFire
               marginAroundBox={"auto"}
               widthOfBox={"1.6em"}
@@ -97,7 +104,6 @@ const OutsideNavbarContent = ({
                 display={{ base: "flex", lg: "none" }}
                 onClick={() => setIsHamburgerOpen(true)}
                 marginBottom={isHamburgerOpen ? "2rem" : "0"}
-                // boxSize={2}
                 height={"35px"}
                 width={"10px"}
               >

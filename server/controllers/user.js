@@ -36,6 +36,23 @@ const registerUser = async (req, res) => {
     return res.status(422).json({ error: "Please fill the required field" });
   }
 
+  if (!isValidEmail(email)) {
+    return res.status(422).json({ error: "Invalid Email" });
+  }
+
+  if (isValidEmail(inGameName)) {
+    return res
+      .status(422)
+      .json({ error: "Email cannot be used as an In-Game Name" });
+  }
+
+  // InGameName cannot be greater than 16 characters
+  if (inGameName.length > 16) {
+    return res
+      .status(422)
+      .json({ error: "In Game Name cannot be greater than 16 characters" });
+  }
+
   if (inGameName.includes(" ")) {
     return res.status(422).json({ error: "In Game Name cannot have spaces" });
   }

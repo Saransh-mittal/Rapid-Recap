@@ -19,18 +19,18 @@ const TrackTime = ({ userId, articleId }) => {
         articleId,
         timeSpent,
       });
-      console.log("Payload:", payload);
+      //console.log("Payload:", payload);
       // Use navigator.sendBeacon to send the data to the backend
       navigator.sendBeacon("/api/timeSpent", payload);
     };
 
     const handleVisibilityChange = () => {
-      console.log("handleVisibilityChange called", document.visibilityState);
+      //console.log("handleVisibilityChange called", document.visibilityState);
       if (document.visibilityState === "hidden") {
         handleUnload();
       } else if (document.visibilityState === "visible") {
         setStartTime(Date.now());
-        console.log("Page became visible, startTime set to", Date.now());
+        //console.log("Page became visible, startTime set to", Date.now());
       }
     };
 

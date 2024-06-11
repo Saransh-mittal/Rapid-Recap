@@ -40,7 +40,7 @@ export const Reducer = (state, action) => {
     case "setIsBoosted":
       return { ...state, isBoosted: action.payloadIsBoosted };
     case "RESET_STATE":
-      return { ...initialState, show: true, user: null };
+      return { ...initialState, show: true, user: {} };
     default:
       return state;
   }

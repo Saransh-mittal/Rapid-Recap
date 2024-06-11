@@ -58,9 +58,19 @@ const Navbar = () => {
   const calculateRequiredXp = (xp, xpBaseAtNextLevel) => {
     return xpBaseAtNextLevel - xp;
   };
-  const level = state.user.level;
-  const xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2;
-  const requiredXP = calculateRequiredXp(state.user.xp, xpBaseAtNextLevel);
+
+  // Helper function to check if an object is empty
+  const isEmptyObject = (obj) => {
+    return obj && Object.keys(obj).length === 0;
+  };
+
+  let level, xpBaseAtNextLevel, requiredXP;
+
+  if (!isEmptyObject(state.user)) {
+    level = state.user.level;
+    xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2;
+    requiredXP = calculateRequiredXp(state.user.xp, xpBaseAtNextLevel);
+  }
 
   useEffect(() => {
     const isEmptyObject = (obj) => {

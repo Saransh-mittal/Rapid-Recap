@@ -2,7 +2,6 @@ import { Box, Flex } from "@chakra-ui/react";
 
 import CategoryButton from "./CategoryButton";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
-import ReactGA from "react-ga4"; // Import Google Analytics library
 import { useEffect } from "react";
 
 const Categories = ({
@@ -11,16 +10,8 @@ const Categories = ({
   categories,
   setActiveCategoryIndex,
   categoryRefs,
+  trackCategoryClick,
 }) => {
-  const trackCategoryClick = (category) => {
-    ReactGA.send({
-      hitType: "event",
-      eventCategory: "Category Click",
-      eventAction: "Click",
-      eventLabel: category, // Track the category that was clicked
-    });
-  };
-
   useEffect(() => {
     const activeCategoryRef = categoryRefs.current.find(
       (ref) =>
@@ -62,7 +53,7 @@ const Categories = ({
               onClick={() => {
                 setActiveCategoryIndex(idx);
                 trackCategoryClick(category);
-                handleActiveCategory(category);
+                handleActiveCategory({ category });
               }}
             >
               {" "}
