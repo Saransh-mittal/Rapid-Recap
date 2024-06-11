@@ -57,6 +57,7 @@ const MailTemplates = {
       title,
       mainText,
       name,
+      img,
     }) => `<div style="font-family: Helvetica,Arial,sans-serif; min-width:1000px; overflow:auto; line-height:2">
   <div style="margin:50px auto; width:70%; padding:20px 0">
     <div style="border-bottom:1px solid #eee">
@@ -64,6 +65,11 @@ const MailTemplates = {
     </div>
     <p style="font-size:1.1em">Hello ${name},</p>
     <h4>${title}</h4>
+    ${
+      img
+        ? `<div style="text-align: center; margin: 20px 0;"><img src="${img}" alt="Image" style="max-width:100%; height:auto;"></div>`
+        : ""
+    }
     <p>${mainText.replace(/\n\n/g, "<br><br>")}</p>
     <a href="https://www.rapidrecap.co.in/" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:10px 20px; border-radius:5px;">View</a>
     
@@ -75,9 +81,9 @@ const MailTemplates = {
       <p>India</p>
     </div>
     <p style="font-size:0.9em;"><strong>P.S.:</strong> Don't forget to stay updated with our latest news and articles by subscribing to browser notifications! If you have any questions or need assistance with subscribing to notifications, feel free to reach out to our support team at <a href="mailto:rapidrecap2k2023@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k2023@gmail.com</a>. We're here to help!</p>
-  </h6>
-</div>`,
+  </div>`,
   },
+
   StreakJustBroken: {
     from: "rapidrecap2k23@gmail.com",
     subject: "Let's Get Back on Track! 🔄",

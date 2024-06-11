@@ -55,6 +55,12 @@ const Navbar = () => {
   const [isHomePage, setIsHomePage] = useState(
     location.pathname.split("/")[1] === "home"
   );
+  const calculateRequiredXp = (xp, xpBaseAtNextLevel) => {
+    return xpBaseAtNextLevel - xp;
+  };
+  const level = state.user.level;
+  const xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2;
+  const requiredXP = calculateRequiredXp(state.user.xp, xpBaseAtNextLevel);
 
   useEffect(() => {
     const isEmptyObject = (obj) => {
@@ -213,6 +219,9 @@ const Navbar = () => {
           )}
           {showXPLevelModal && (
             <XPLevelModal
+              level={level}
+              xp={state.user.xp}
+              requiredXP={requiredXP}
               setShowXPLevelModal={setShowXPLevelModal}
               // getBackgroundColor={getBackgroundColor}
             />
@@ -273,6 +282,7 @@ const Navbar = () => {
               handleLogout={handleLogout}
               navLinkRefs={navLinkRefs}
               setIsHamburgerOpen={setIsHamburgerOpen}
+              level={state.user.level}
             />
           </Flex>
           {isModalOpen && (

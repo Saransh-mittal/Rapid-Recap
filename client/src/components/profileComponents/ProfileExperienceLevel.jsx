@@ -1,45 +1,30 @@
-import React, { useState } from "react";
-import {
-  ChakraProvider,
-  Box,
-  Flex,
-  Input,
-  Text,
-  Container,
-  extendTheme,
-  keyframes,
-} from "@chakra-ui/react";
+import { Box, Flex, Text, Container } from "@chakra-ui/react";
 import Heading from "../miscellaneous/HeadingComponent";
 
 const ProgressBubble = ({ xp, level }) => {
-  const calculateProgress = (xp, level) => {
-    return (xp / (level * 10)) * 100;
+  const calculateProgress = (transitionXp, requiredXP) => {
+    return Math.round(100 - (requiredXP / transitionXp) * 100);
   };
 
-  const [percent, setPercent] = useState(calculateProgress(xp, level));
+  const calculateRequiredXp = (xp, xpBaseAtNextLevel) => {
+    return xpBaseAtNextLevel - xp;
+  };
+
   const colorInc = 100 / 3;
-  const requiredXP = level * 10 - xp;
 
-  const handleInputChange = (e) => {
-    const val = e.target.value;
-    if (val !== "" && !isNaN(val) && val <= 100 && val >= 0) {
-      setPercent(Number(val));
-    } else {
-      setPercent(calculateProgress(xp, level));
-    }
-  };
+  const xpBaseAtCurrLevel = (level * (level + 1) * 10) / 2;
+  const xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2;
+  const requiredXP = calculateRequiredXp(xp, xpBaseAtNextLevel);
+  const percent = calculateProgress(
+    xpBaseAtNextLevel - xpBaseAtCurrLevel,
+    requiredXP
+  );
 
   const getClass = () => {
     if (percent < colorInc * 1) return "red";
     else if (percent < colorInc * 2) return "orange";
     else return "green";
   };
-
-  const gradientAnimation = keyframes`
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-`;
 
   return (
     <Container padding={0}>
@@ -149,55 +134,13 @@ const ProgressBubble = ({ xp, level }) => {
                 fontWeight="bold"
                 color="blue.600"
                 textShadow="0 0 10px blue.500"
-                // mt={2}
               >
                 Current Level: {level}
               </Text>
             </Box>
           </Flex>
           <Flex textAlign={"center"}>
-            {/* <Text>
-              Enter Percentage:{" "}
-              <Input
-                type="text"
-                placeholder="67"
-                value={percent}
-                onChange={handleInputChange}
-                w="45px"
-                textAlign="center"
-                fontSize="20px"
-                border="0"
-                borderBottom="1px solid blue.300"
-                color="blue.600"
-                textShadow="3px 3px 10px blue.600"
-                bg="transparent"
-                _focus={{
-                  outline: "0",
-                  borderBottom: "1px dashed red.300",
-                }}
-                px={0}
-              />
-            </Text> */}
             <Box>
-              {/* write current xp and required xp to go to next level */}
-              {/* <Text
-                  fontSize="16px"
-                  fontWeight="bold"
-                  // color="blue.600"
-                  textShadow="0 0 10px blue.500"
-                  mt={2}
-                >
-                  Current XP: {xp}
-                </Text>
-                <Text
-                  fontSize="16px"
-                  fontWeight="bold"
-                  // color="blue.600"
-                  textShadow="0 0 10px blue.500"
-                  mt={2}
-                >
-                  Required Level Up xP: {level * 10 - xp}
-                </Text> */}
               <Heading
                 tag={`Required Level Up xP :`}
                 marginBottom="0"

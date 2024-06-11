@@ -167,6 +167,27 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    xp: {
+      type: Number,
+      default: 0,
+    },
+    level: {
+      type: Number,
+      default: 0,
+    },
+    activities: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Activity",
+      },
+    ],
+    timeSpent: [
+      {
+        articleId: mongoose.Schema.Types.ObjectId,
+        timeSpent: Number,
+        date: { type: Date, default: Date.now },
+      },
+    ],
     lastLogin: {
       type: Date,
       default: Date.now,

@@ -256,7 +256,10 @@ export default function Profile() {
                 </Container>
               </>
             ) : (
-              <ProfileExperienceLevel xp={18} level={2} />
+              <ProfileExperienceLevel
+                xp={profile.experience.xp}
+                level={profile.experience.level}
+              />
             )}
           </Flex>
         </Flex>

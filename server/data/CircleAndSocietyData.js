@@ -7,6 +7,7 @@ const CircleAndSocietyData = [
     IQ_Upper: null,
     boxShadow: "0 0 10px 5px rgba(255, 215, 0, 0.8)",
     textColor: "goldenrod",
+    xp: 900,
     upgradeMsg:
       "Congratulations! You have reached the pinnacle of intellectual achievement. Welcome to the Titans Society, where brilliance knows no bounds. You are a Titan!",
   },
@@ -18,6 +19,7 @@ const CircleAndSocietyData = [
     IQ_Upper: 150,
     boxShadow: "0 0 10px 5px rgba(255, 100, 0, 0.7)",
     textColor: "darkorange",
+    xp: 320,
     upgradeMsg:
       "Congratulations! You've surpassed all boundaries of conventional thought and soared into the realm of true visionaries. Welcome to the Visionaries Circle, where Mavericks shape the future!",
   },
@@ -29,6 +31,7 @@ const CircleAndSocietyData = [
     IQ_Upper: 140,
     boxShadow: "0 0 10px 5px rgba(255, 150, 0, 0.5)",
     textColor: "darkorange",
+    xp: 240,
     upgradeMsg:
       "Congratulations! You've now ascended to the second highest echelon of society, joining the esteemed Pioneer Circle. Embrace your Maverick status with pride!",
   },
@@ -40,6 +43,7 @@ const CircleAndSocietyData = [
     IQ_Upper: 130,
     boxShadow: "0 0 10px 5px rgba(0, 255, 100, 0.5)",
     textColor: "lightgreen",
+    xp: 180,
     upgradeMsg:
       "Congratulations! You've demonstrated exceptional intellect and earned your place among the scholarly elite. Welcome to the Scholars Circle!",
   },
@@ -51,6 +55,7 @@ const CircleAndSocietyData = [
     IQ_Upper: 120,
     boxShadow: "0 0 10px 5px rgba(0, 255, 100, 0.5)",
     textColor: "lightgreen",
+    xp: 120,
     upgradeMsg:
       "Congratulations! You've achieved mastery in your intellectual pursuits, earning your rightful place among the esteemed Masters Circle.",
   },
@@ -62,6 +67,7 @@ const CircleAndSocietyData = [
     IQ_Upper: 110,
     boxShadow: null,
     textColor: "cornflowerblue",
+    xp: 60,
     upgradeMsg:
       "Congratulations! Your enthusiasm and dedication have propelled you to the Enthusiasts Circle. Keep striving for greatness!",
   },
@@ -73,6 +79,7 @@ const CircleAndSocietyData = [
     IQ_Upper: 104,
     boxShadow: null,
     textColor: "cornflowerblue",
+    xp: 40,
     upgradeMsg:
       "Congratulations! Your hard work and determination have paid off. Welcome to the Achievers Circle!",
   },
@@ -84,6 +91,7 @@ const CircleAndSocietyData = [
     IQ_Upper: 97,
     boxShadow: null,
     textColor: "cornflowerblue",
+    xp: 20,
     upgradeMsg:
       "Congratulations! Your commitment to progress has led you to the Progressors Circle. Keep pushing boundaries!",
   },
@@ -95,6 +103,7 @@ const CircleAndSocietyData = [
     IQ_Upper: 90,
     boxShadow: null,
     textColor: "white",
+    xp: 0,
     upgradeMsg:
       "Congratulations! You are embarking on an incredible journey of discovery and exploration. Embrace the unknown and welcome to the Explorers Society!",
   },
