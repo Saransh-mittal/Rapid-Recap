@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Jersey+10+Charted&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Honk&family=Jersey+10+Charted&display=swap');
+.animated-gradient {
+    animation: gradient 15s ease infinite;
+}
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes starAnimate {
+    0% {
+        transform: translateY(-300%);
+    }
+    100% {
+        transform: translateY(300%);
+    }
+}
+
+.scene i{
+    position: absolute;
+    z-index: -1;
+    background: rgba(255,255,255,0.5);
+    animation: starAnimate linear infinite;
+}
+
+/* .jersey-10-charted-regular {
+    font-family: "Jersey 10 Charted", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+} */
