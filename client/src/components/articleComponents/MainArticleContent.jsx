@@ -192,17 +192,22 @@ const MainArticleContent = ({
                 >
                   {mainText[selectedLanguage][1]}
                 </Text>
-                <Tooltip label="Please log in to view content" placement="top">
-                  <LockIcon
-                    position="absolute"
-                    top="50%"
-                    left="50%"
-                    transform="translate(-50%, -50%)"
-                    color="white"
-                    boxSize={8}
-                    zIndex={2}
-                  />
-                </Tooltip>
+                {notLoggedIn && (
+                  <Tooltip
+                    label="Please log in to view content"
+                    placement="top"
+                  >
+                    <LockIcon
+                      position="absolute"
+                      top="50%"
+                      left="50%"
+                      transform="translate(-50%, -50%)"
+                      color="white"
+                      boxSize={8}
+                      zIndex={2}
+                    />
+                  </Tooltip>
+                )}
               </Flex>
             </Box>
           )}

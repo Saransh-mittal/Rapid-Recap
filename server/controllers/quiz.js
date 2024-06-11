@@ -10,6 +10,8 @@ const {
   scheduleDayEndEmail,
 } = require("../scheduler/mail");
 const MailTemplates = require("../data/MailTemplates");
+const { logActivity } = require("../utils/activity.utils");
+const { activityTypes } = require("../data/activityTypes");
 
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken, quizId } = req.body;
@@ -152,6 +154,10 @@ const saveAttempt = async (req, res) => {
     else if (articleDifficulty < 0.7) user.mediumQuizCount++;
     else user.hardQuizCount++;
     await user.save();
+    await logActivity({
+      userInGameName: user.inGameName,
+      type: activityTypes.RANDOM_QUIZ.type,
+    });
     const quizzesToday = await currDayStreakCalulator(user._id);
     if (quizzesToday % 7 === 4) {
       cancelScheduledEmails(user._id.toString());

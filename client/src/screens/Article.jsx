@@ -23,6 +23,7 @@ import { quinBoostChecker } from "../utils/quiz.utils";
 import { useParams } from "react-router-dom";
 import ReactGA from "react-ga4";
 import { Helmet } from "react-helmet";
+import TrackTime from "../components/articleComponents/TrackTime"; // Import TrackTime component
 
 const Article = () => {
   const toast = useToast();
@@ -440,6 +441,8 @@ const Article = () => {
         quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
         isStateBoosted={state.isBoosted}
       />
+      {/* Integrate the TrackTime component */}
+      <TrackTime userId={state.user._id} articleId={id} />
     </>
   );
 };

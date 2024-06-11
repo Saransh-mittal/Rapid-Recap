@@ -1,6 +1,7 @@
 import { Box, Flex, Heading, Image, Td, Tr } from "@chakra-ui/react";
 import { findSocietyAndCircle } from "../../utils/helper.utils";
 import NameLightning from "../miscellaneous/NameLightning";
+import XPLevel from "../Header-Footer/navbarComponents/XPLevel";
 
 const LeaderBoardRow = ({
   user,
@@ -35,7 +36,7 @@ const LeaderBoardRow = ({
           alignItems={"center"}
           bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
           p={2}
-          gap={"35px"}
+          gap={"25px"}
           borderRadius="md"
         >
           {user.rank ? user.rank : index + 1}
@@ -67,6 +68,9 @@ const LeaderBoardRow = ({
               </Box>
             </Flex>
           )}
+          <Flex marginLeft={"-0.5rem"}>
+            <XPLevel level={user.level} className={"xp-level"} />
+          </Flex>
         </Flex>
       </Td>
       {!isBaseScreen && (

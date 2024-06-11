@@ -13,10 +13,12 @@ import Categories from "./Categories";
 import GetStarted from "../Header-Footer/navbarComponents/GetStarted";
 import { useSwipeable } from "react-swipeable"; // Import the swipeable hook
 import { categories } from "../../assets/Categories";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import ReactGA from "react-ga4"; // Import Google Analytics library
 
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { state, dispatch } = useContext(AppContext);
   const [swipeDisable, setSwipeDisable] = useState(false);
   const { tour, isTutorialTakenCheck } = useHomeTour({ setSwipeDisable });
@@ -39,7 +41,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   );
   const categoryRefs = useRef([]);
 
-  const handleActiveCategory = (category) => {
+  const handleActiveCategory = ({ category, shouldNavigateOrNot = true }) => {
     setHasMoreItems(true);
     setActiveCategory(category.toLowerCase());
     dispatch({
@@ -48,7 +50,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
     });
     dispatch({ type: "PAGE", payloadPage: 0 });
     dispatch({ type: "ITEMS", payloadItems: [] });
-    navigate(`/home/${category.toLowerCase()}`);
+    shouldNavigateOrNot && navigate(`/home/${category.toLowerCase()}`);
   };
 
   const swipeHandlers = useSwipeable({
@@ -93,6 +95,27 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
     }
   }, [load, state.show, state.user, isTutorialTakenCheck, tour]);
 
+  useEffect(() => {
+    // Check if pathname exists and is valid
+    const pathCategory = location.pathname.split("/")[2] || "";
+    if (
+      pathCategory &&
+      pathCategory.toLocaleLowerCase() !== state.category.toLocaleLowerCase()
+    ) {
+      const idx = categories.findIndex(
+        (cat) => cat.toLocaleLowerCase() === pathCategory.toLocaleLowerCase()
+      );
+      if (idx !== -1) {
+        setActiveCategoryIndex(idx);
+        trackCategoryClick(pathCategory);
+        handleActiveCategory({
+          category: pathCategory,
+          shouldNavigateOrNot: false,
+        });
+      }
+    }
+  }, [location]);
+
   const renderSkeletons = () => {
     return Array.from({ length: 9 }).map((_, index) => (
       <Box key={index} className="timeline-item">
@@ -103,6 +126,15 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
         </Box>
       </Box>
     ));
+  };
+
+  const trackCategoryClick = (category) => {
+    ReactGA.send({
+      hitType: "event",
+      eventCategory: "Category Click",
+      eventAction: "Click",
+      eventLabel: category, // Track the category that was clicked
+    });
   };
 
   return (
@@ -153,6 +185,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
         }}
       >
         <Categories
+          trackCategoryClick={trackCategoryClick}
           setActiveCategoryIndex={setActiveCategoryIndex}
           activeCategoryIndex={activeCategoryIndex}
           activeCategory={activeCategory}

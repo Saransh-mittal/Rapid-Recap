@@ -6,6 +6,7 @@ import {
   Skeleton,
   SkeletonCircle,
   SkeletonText,
+  Container,
 } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
 import { AppContext } from "../contextAPI/appContext";
@@ -21,6 +22,7 @@ import ToggleProfileVisibilty from "../components/profileComponents/LeftProfileS
 import { useProfileTour } from "../customHooks/useTours.js";
 import { Helmet } from "react-helmet";
 import { findSocietyAndCircle } from "../utils/helper.utils.js";
+import ProfileExperienceLevel from "../components/profileComponents/ProfileExperienceLevel";
 
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour();
@@ -140,13 +142,22 @@ export default function Profile() {
         justifyContent={{ base: "center", md: "center", lg: "normal" }}
         className="profile-info"
       >
-        <Flex flexDirection={"column"} width={"100%"}>
+        <Flex
+          flexDirection={"column"}
+          w={{
+            xl: "400px",
+            md: "460px",
+            sm: "100%",
+            base: "100%",
+          }}
+          margin={"12px"}
+        >
           <Flex
-            margin="20px"
+            marginTop={"10px"}
             padding="15px"
             borderRadius="10px"
             flexDirection="column"
-            w={{ md: "300px", lg: "350px", base: "95%" }}
+            w={{ md: "85%", lg: "95%", base: "100%" }}
             height="fit-content"
             style={{
               backgroundColor: "#0f0d15",
@@ -178,6 +189,76 @@ export default function Profile() {
                 leftProfileView={profile?.leftProfileView}
                 CURR_IQ={profile?.USER_IQ}
                 MAX_IQ={profile?.maxIQScore}
+              />
+            )}
+          </Flex>
+          <Flex
+            marginTop={"12px"}
+            padding="15px"
+            borderRadius="10px"
+            flexDirection="column"
+            w={{ md: "85%", lg: "95%", base: "100%" }}
+            height="fit-content"
+            style={{
+              backgroundColor: "#0f0d15",
+              backgroundImage:
+                "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+              boxShadow:
+                "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
+            }}
+          >
+            {isLoading ? (
+              <>
+                <Container padding={0}>
+                  <Flex flexDirection="column" width="100%" h={"100%"} m={0}>
+                    <SkeletonText
+                      noOfLines={1}
+                      spacing="4"
+                      skeletonHeight="20px"
+                    />
+                    <Box
+                      display="flex"
+                      flexDirection="row"
+                      justifyContent={"space-between"}
+                      alignItems="center"
+                      mt={4}
+                    >
+                      <Flex
+                        justify="space-between"
+                        align="left"
+                        width="120px"
+                        flexDirection="column"
+                      >
+                        <Box>
+                          <Skeleton height="20px" width="100px" mb={2} />
+                        </Box>
+                        <Box position="relative" mb={4}>
+                          <Skeleton
+                            height="120px"
+                            width="120px"
+                            borderRadius="50%"
+                            startColor="gray.200"
+                            endColor="gray.400"
+                          />
+                        </Box>
+                        <Box textAlign="left">
+                          <Skeleton height="20px" width="100px" />
+                        </Box>
+                      </Flex>
+                      <Flex textAlign={"center"}>
+                        <Box>
+                          <Skeleton height="20px" width="150px" mb={2} />
+                          <Skeleton height="20px" width="150px" />
+                        </Box>
+                      </Flex>
+                    </Box>
+                  </Flex>
+                </Container>
+              </>
+            ) : (
+              <ProfileExperienceLevel
+                xp={profile.experience.xp}
+                level={profile.experience.level}
               />
             )}
           </Flex>
