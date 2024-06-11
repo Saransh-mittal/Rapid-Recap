@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-const updates = require("./updates/updates(10.06.2024).json");
-const User = require("../model/userSchema");
-const ApplicationUpdates = require("../model/applicationUpdatesSchema");
-const { progressBar } = require("../utils/progress.utils.js");
-const { sendNotification } = require("../services/notificationService");
-const { mailTransporter } = require("../utils/mail.utils.js");
-const MailTemplates = require("../data/MailTemplates.js");
+// const updates = require("./updates/updates(10.06.2024).json");
+// const User = require("../model/userSchema");
+// const ApplicationUpdates = require("../model/applicationUpdatesSchema");
+// const { progressBar } = require("../utils/progress.utils.js");
+// const { sendNotification } = require("../services/notificationService");
+// const { mailTransporter } = require("../utils/mail.utils.js");
+// const MailTemplates = require("../data/MailTemplates.js");
 
 mongoose
   .connect(DB)
