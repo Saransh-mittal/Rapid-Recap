@@ -71,7 +71,7 @@ app.get("*", function (_, res) {
     }
   );
 });
-// --------------------
+// ---------------------
 
 // Connect to the database before starting the server
 connectDB()
