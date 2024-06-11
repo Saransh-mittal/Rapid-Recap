@@ -37,20 +37,13 @@ mongoose
 
 // async function saveUpdatesToDB() {
 //   try {
-//     // const users = await User.find({
-//     //   email: { $not: /dummy\d+mail\.com/ },
-//     //   inGameName: { $exists: true },
-//     // });
-//     const users = await User.find({ inGameName: "smash_dev" });
+//     const users = await User.find({
+//       email: { $not: /dummy\d+mail\.com/ },
+//       inGameName: { $exists: true },
+//     });
+//     // const users = await User.find({ inGameName: "smash_dev" });
 //     for (const update of updates) {
 //       const progress = progressBar(users.length);
-//       const updateTitle = `📢 ${update.title} 📰`;
-//       const updateBody =
-//         update.mainText.length > 100
-//           ? `${update.mainText.slice(0, 100)}...`
-//           : update.mainText;
-//       const url = "https://rapidrecap.co.in/";
-//       // await sendNotification({ title: updateTitle, body: updateBody, url });
 //       for (const user of users) {
 //         // Create a new update object for the user
 //         const { title, mainText, img, read } = update;
