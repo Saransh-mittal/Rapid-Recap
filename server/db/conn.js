@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(02.06.2024).json");
-// const User = require("../model/userSchema");
-// const ApplicationUpdates = require("../model/applicationUpdatesSchema");
-// const { progressBar } = require("../utils/progress.utils.js");
-// const { sendNotification } = require("../services/notificationService");
-// const { mailTransporter } = require("../utils/mail.utils.js");
-// const MailTemplates = require("../data/MailTemplates.js");
+const updates = require("./updates/updates(10.06.2024).json");
+const User = require("../model/userSchema");
+const ApplicationUpdates = require("../model/applicationUpdatesSchema");
+const { progressBar } = require("../utils/progress.utils.js");
+const { sendNotification } = require("../services/notificationService");
+const { mailTransporter } = require("../utils/mail.utils.js");
+const MailTemplates = require("../data/MailTemplates.js");
 
 mongoose
   .connect(DB)
@@ -37,10 +37,11 @@ mongoose
 
 // async function saveUpdatesToDB() {
 //   try {
-//     const users = await User.find({
-//       email: { $not: /dummy\d+mail\.com/ },
-//       inGameName: { $exists: true },
-//     });
+//     // const users = await User.find({
+//     //   email: { $not: /dummy\d+mail\.com/ },
+//     //   inGameName: { $exists: true },
+//     // });
+//     const users = await User.find({ inGameName: "smash_dev" });
 //     for (const update of updates) {
 //       const progress = progressBar(users.length);
 //       const updateTitle = `📢 ${update.title} 📰`;
@@ -72,6 +73,7 @@ mongoose
 //             title,
 //             mainText,
 //             name: user.name,
+//             img,
 //           }),
 //         });
 //         progress();
@@ -85,3 +87,22 @@ mongoose
 
 // // Call the function to save articles to the database
 // saveUpdatesToDB();
+
+// async function sendNotif() {
+//   for (const update of updates) {
+//     const updateTitle = `📢 ${update.title} 📰`;
+//     const updateBody =
+//       update.mainText.length > 100
+//         ? `${update.mainText.slice(0, 100)}...`
+//         : update.mainText;
+//     const url = "https://rapidrecap.co.in/";
+//     await sendNotification({
+//       title: updateTitle,
+//       body: updateBody,
+//       url,
+//       icon: update.img ? update.img : null,
+//     });
+//   }
+// }
+
+// sendNotif();

@@ -27,6 +27,7 @@ import NavbarContent from "./navbarComponents/NavbarContent";
 import OutsideNavbarContent from "./navbarComponents/OutsideNavbarContent";
 import NavBrand from "./navbarComponents/NavBrand";
 import HamburgerModal from "./navbarComponents/HamburgerModal";
+import XPLevelModal from "./navbarComponents/XPLevelModal";
 
 const Navbar = () => {
   const isSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
@@ -49,10 +50,27 @@ const Navbar = () => {
   const [notifyCont, setNotifyCnt] = useState(0);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [showDailyStreakModal, setShowDailyStreakModal] = useState(false);
+  const [showXPLevelModal, setShowXPLevelModal] = useState(false);
   const { tour, isTutorialTakenCheck } = useDailyStreakTour();
   const [isHomePage, setIsHomePage] = useState(
     location.pathname.split("/")[1] === "home"
   );
+  const calculateRequiredXp = (xp, xpBaseAtNextLevel) => {
+    return xpBaseAtNextLevel - xp;
+  };
+
+  // Helper function to check if an object is empty
+  const isEmptyObject = (obj) => {
+    return obj && Object.keys(obj).length === 0;
+  };
+
+  let level, xpBaseAtNextLevel, requiredXP;
+
+  if (!isEmptyObject(state.user)) {
+    level = state.user.level;
+    xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2;
+    requiredXP = calculateRequiredXp(state.user.xp, xpBaseAtNextLevel);
+  }
 
   useEffect(() => {
     const isEmptyObject = (obj) => {
@@ -209,6 +227,15 @@ const Navbar = () => {
               getBackgroundColor={getBackgroundColor}
             />
           )}
+          {showXPLevelModal && (
+            <XPLevelModal
+              level={level}
+              xp={state.user.xp}
+              requiredXP={requiredXP}
+              setShowXPLevelModal={setShowXPLevelModal}
+              // getBackgroundColor={getBackgroundColor}
+            />
+          )}
 
           {isHamburgerOpen ? (
             <Button
@@ -255,6 +282,7 @@ const Navbar = () => {
               setIsDrawerOpen={setIsDrawerOpen}
               notifyCont={notifyCont}
               setShowDailyStreakModal={setShowDailyStreakModal}
+              setShowXPLevelModal={setShowXPLevelModal}
               tourComplete={tour.complete}
               streak={state.streak}
               isBoosted={state.isBoosted}
@@ -264,6 +292,7 @@ const Navbar = () => {
               handleLogout={handleLogout}
               navLinkRefs={navLinkRefs}
               setIsHamburgerOpen={setIsHamburgerOpen}
+              level={state.user.level}
             />
           </Flex>
           {isModalOpen && (

@@ -4,20 +4,20 @@ const Subscription = require("../model/subscriptionSchema");
 async function sendNotification({ title, body, icon, url }) {
   try {
     const subscriptions = await Subscription.find();
-    // subscriptions.forEach((subscription) => {
-    //   webpush.sendNotification(
-    //     subscription,
-    //     JSON.stringify({ title, body, icon, url })
-    //   );
-    // });
     for (let subscription of subscriptions) {
       try {
-        webpush.sendNotification(
+        await webpush.sendNotification(
           subscription,
           JSON.stringify({ title, body, icon, url })
         );
       } catch (error) {
-        console.log(error);
+        if (error.statusCode === 410) {
+          // Subscription has expired or is no longer valid, remove it from the database
+          await Subscription.deleteOne({ _id: subscription._id });
+          console.log(`Deleted subscription ${subscription._id}`);
+        } else {
+          console.log(error);
+        }
       }
     }
   } catch (error) {

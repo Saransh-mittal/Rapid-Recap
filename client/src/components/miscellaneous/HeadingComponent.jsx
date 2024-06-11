@@ -1,21 +1,32 @@
 import { Box, Flex } from "@chakra-ui/react";
 import TagLine from "./TaglineComponent";
 
-const Heading = ({ className, title, text, tag }) => {
+const Heading = ({
+  className,
+  title,
+  text,
+  tag,
+  marginBottom = "8",
+  textTransform = "",
+  children,
+}) => {
   return (
     <Flex
       maxWidth="50rem"
       marginX="auto"
-      marginBottom={"8"}
+      marginBottom={marginBottom}
       justifyContent={"center"}
       alignItems={"center"}
       flexDirection={"column"}
       textAlign="center"
       className={className}
+      textTransform={textTransform}
     >
       {tag && (
-        <Box textAlign="center" marginBottom="4">
-          <TagLine>{tag}</TagLine>
+        <Box textAlign="center" marginBottom={"4"}>
+          <TagLine>
+            {tag} {children}
+          </TagLine>
         </Box>
       )}
       {title && (

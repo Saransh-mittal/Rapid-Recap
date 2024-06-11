@@ -5,11 +5,13 @@ import StreakFire from "./StreakFire";
 import ProfileDropDownMenu from "../../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon } from "@chakra-ui/icons";
 import GetStarted from "./GetStarted";
+import XPLevel from "./XPLevel";
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
   notifyCont,
   setShowDailyStreakModal,
+  setShowXPLevelModal,
   tourComplete,
   streak,
   isBoosted,
@@ -19,7 +21,13 @@ const OutsideNavbarContent = ({
   handleLogout,
   navLinkRefs,
   setIsHamburgerOpen,
+  level,
+  user, // pass the user state
 }) => {
+  const isEmptyObject = (obj) => {
+    return obj && Object.keys(obj).length === 0;
+  };
+
   return (
     <>
       <Flex
@@ -36,7 +44,18 @@ const OutsideNavbarContent = ({
         )}
         {!notLogined && (
           <>
-            {" "}
+            {!isEmptyObject(user) && (
+              <XPLevel
+                level={level}
+                _hover={{
+                  cursor: "pointer",
+                }}
+                className={"xp-level"}
+                onClick={() => {
+                  setShowXPLevelModal(true);
+                }}
+              />
+            )}
             <StreakFire
               marginAroundBox={"auto"}
               widthOfBox={"1.6em"}
@@ -85,7 +104,6 @@ const OutsideNavbarContent = ({
                 display={{ base: "flex", lg: "none" }}
                 onClick={() => setIsHamburgerOpen(true)}
                 marginBottom={isHamburgerOpen ? "2rem" : "0"}
-                // boxSize={2}
                 height={"35px"}
                 width={"10px"}
               >
