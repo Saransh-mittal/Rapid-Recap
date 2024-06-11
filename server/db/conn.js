@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(10.06.2024).json");
+// const updates = require("./updates/updates(11.06.2024).json");
 // const User = require("../model/userSchema");
 // const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 // const { progressBar } = require("../utils/progress.utils.js");
@@ -48,14 +48,14 @@ mongoose
 //         // Create a new update object for the user
 //         const { title, mainText, img, read } = update;
 //         //console.log("User:", user.name);
-//         const newUpdate = new ApplicationUpdates({
-//           title,
-//           mainText,
-//           img,
-//           userId: user._id, // Associate the update with the current user
-//           read,
-//         });
-//         await newUpdate.save();
+//         // const newUpdate = new ApplicationUpdates({
+//         //   title,
+//         //   mainText,
+//         //   img,
+//         //   userId: user._id, // Associate the update with the current user
+//         //   read,
+//         // });
+//         // await newUpdate.save();
 //         //console.log("Update saved:", title);
 //         const transporter = await mailTransporter();
 //         await transporter.sendMail({
