@@ -5,6 +5,7 @@ const userRoutes = require("./router/userRoutes");
 const articleRoutes = require("./router/articleRoutes");
 const quizRoutes = require("./router/quizRoutes");
 const subscriptionRoutes = require("./router/subscriptionRoutes");
+const timeSpentRoutes = require("./router/timeSpentRoutes");
 const mailRoutes = require("./router/mailRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
@@ -57,6 +58,7 @@ authRouter.use("/articles", articleRoutes);
 authRouter.use("/quiz", quizRoutes);
 authRouter.use("/subs", subscriptionRoutes);
 authRouter.use("/mail", mailRoutes);
+authRouter.use("/timeSpent", timeSpentRoutes);
 app.use("/api", authRouter);
 
 // -----Production-----
