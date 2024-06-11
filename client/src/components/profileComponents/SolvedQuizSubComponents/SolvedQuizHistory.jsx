@@ -60,6 +60,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
           }}
           backgroundSize="400% 400%"
           borderRadius="10px"
+          overflow={"hidden"}
           //boxShadow="0 0 10px rgba(0, 0, 0, 0.5)" // Added boxShadow to make it standout
         >
           <ModalHeader as="h3" size="lg" color="white" textAlign="center">
@@ -85,23 +86,30 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                         bg={"orange.300"}
                         color={"white"}
                         display={{ base: "none", md: "block" }}
+                        px={0}
                       >
                         Serial No.
                       </Th>
-                      <Th textAlign={"center"} bg={"green.300"} color={"white"}>
+                      <Th
+                        textAlign={"center"}
+                        bg={"green.300"}
+                        color={"white"}
+                        px={0}
+                      >
                         Percentile
                       </Th>
-                      <Th textAlign={"center"} bg={"red.300"}>
+                      <Th textAlign={"center"} bg={"red.300"} px={0}>
                         Article
                       </Th>
                       <Th
                         textAlign={"center"}
                         bg={"blue.300"}
                         display={{ base: "none", md: "block" }}
+                        px={0}
                       >
                         RQM Score
                       </Th>
-                      <Th textAlign={"center"} bg={"orange.300"}>
+                      <Th textAlign={"center"} bg={"orange.300"} px={0}>
                         Article Diff
                       </Th>
                     </Tr>
