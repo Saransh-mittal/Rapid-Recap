@@ -1,14 +1,14 @@
 const webpush = require("web-push");
 const Subscription = require("../model/subscriptionSchema");
 
-async function sendNotification({ title, body, icon, url }) {
+async function sendNotification({ title, body, icon, url, image }) {
   try {
     const subscriptions = await Subscription.find();
     for (let subscription of subscriptions) {
       try {
         await webpush.sendNotification(
           subscription,
-          JSON.stringify({ title, body, icon, url })
+          JSON.stringify({ title, body, icon, url, image })
         );
       } catch (error) {
         if (error.statusCode === 410) {
