@@ -1,5 +1,12 @@
+// /src/App.jsx
 import "./App.css";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js";
 import Navbar from "./components/Header-Footer/Navbar.jsx";
@@ -10,6 +17,7 @@ import Article from "./screens/Article.jsx";
 import Profile from "./screens/Profile.jsx";
 import LeaderBoard from "./screens/LeaderBoard.jsx";
 import GetStarted from "./screens/GetStarted.jsx";
+import FeedbackModal from "./components/getStartedComponents/modals/FeedbackModal.jsx";
 import ReactGA from "react-ga4";
 import { useEffect } from "react";
 import { Helmet } from "react-helmet";
@@ -85,7 +93,8 @@ const App = () => {
       </Helmet>
       <Navbar />
       <Routes>
-        <Route exact path="/" element={<GetStarted />} />
+        <Route exact path="/" element={<GetStartedLayout />} />
+        <Route exact path="/feedback" element={<GetStartedLayout />} />
         <Route path="/home/:category" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route exact path="/article/:id" element={<Article />} />
@@ -96,6 +105,19 @@ const App = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {shouldShowFooter && <Footer />}
+    </>
+  );
+};
+
+const GetStartedLayout = () => {
+  const location = useLocation();
+  const isFeedbackRoute = location.pathname === "/feedback";
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <GetStarted />
+      <FeedbackModal isOpen={isFeedbackRoute} onClose={() => navigate("/")} />
     </>
   );
 };

@@ -53,7 +53,7 @@ Will you claim the ultimate prize?
   {
     id: "2",
     title: "Experience Level (xP)",
-    text: "Measure the journey, not just the end, see how far you've come, my friend. A hidden gauge, a subtle sign, to show your mastery, in a line. What could it be that marks your path and charts your growth on this unique graph?",
+    text: `Introducing "Experience Level" – track your progress, celebrate achievements, and see your growth in real-time with our dynamic visual diagram.`,
     date: "May 2023",
     status: "done",
     imageUrl: roadmap5,
