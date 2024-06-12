@@ -65,6 +65,7 @@ app.use(express.json());
 // require("./scheduler/mailsForStreakBroken");
 // require("./scheduler/mailsForStreakReminder");
 // require("./scheduler/extractNews");
+// require("./scheduler/notifForTopNews");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);

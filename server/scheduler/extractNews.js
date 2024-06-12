@@ -21,7 +21,7 @@ const cronPatterns = timesLocal.map(
 cronPatterns.forEach((cronPattern) => {
   cron.schedule(cronPattern, async () => {
     try {
-      const { result, articlesSavedPerCategory } =
+      const { result, articlesSavedPerCategory, notificationCategories } =
         await extractNewsUtilityFunc();
       if (result.length > 0) {
         const title = `📢 New ${notificationCategories} Content Alert! 📰`;

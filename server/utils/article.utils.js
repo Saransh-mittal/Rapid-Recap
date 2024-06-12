@@ -582,6 +582,30 @@ const processArticles = async (
 
   return allProcessedOutput;
 };
+
+const getTopArticle = async () => {
+  try {
+    const articles = await Article.find({ category: "top" }).sort({
+      dateTime: -1,
+    });
+    const article = articles[0];
+    return article;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getSecondTopArticle = async () => {
+  try {
+    const articles = await Article.find({ category: "top" }).sort({
+      dateTime: -1,
+    });
+    const article = articles[1];
+    return article;
+  } catch (error) {
+    console.log(error);
+  }
+};
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
@@ -590,4 +614,6 @@ module.exports = {
   extractNewsFromLink,
   processExtractedNews,
   extractNewsUtilityFunc,
+  getTopArticle,
+  getSecondTopArticle,
 };

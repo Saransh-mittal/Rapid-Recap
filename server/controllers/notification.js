@@ -5,8 +5,8 @@ const notificationNews = async (req, res) => {
     await sendNotification({
       title: "asdfvbnm dfgh sdf",
       body: "asdfghjkl",
-      //   image:
-      //     "https://res.cloudinary.com/dxstsrnbs/image/upload/v1718001191/updates/vqcxacjn0pwpavmyoflu.jpg",
+      image:
+        "https://res.cloudinary.com/dxstsrnbs/image/upload/v1718001191/updates/vqcxacjn0pwpavmyoflu.jpg",
       url: "https://www.rapidrecap.co.in/",
     });
     res.status(200).json({ message: "Notif sent successfully" });
