@@ -58,17 +58,17 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
       !swipeDisable &&
         setActiveCategoryIndex((activeCategoryIndex + 1) % categories.length);
       !swipeDisable &&
-        handleActiveCategory(
-          categories[(activeCategoryIndex + 1) % categories.length]
-        );
+        handleActiveCategory({
+          category: categories[(activeCategoryIndex + 1) % categories.length],
+        });
     },
     onSwipedRight: () => {
       !swipeDisable &&
         setActiveCategoryIndex((activeCategoryIndex - 1) % categories.length);
       !swipeDisable &&
-        handleActiveCategory(
-          categories[(activeCategoryIndex - 1) % categories.length]
-        );
+        handleActiveCategory({
+          category: categories[(activeCategoryIndex - 1) % categories.length],
+        });
     },
   });
 
