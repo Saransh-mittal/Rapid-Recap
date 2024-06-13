@@ -52,7 +52,6 @@ webpush.setVapidDetails(
 //require("./utils/update.utils/subscription.update");
 //require("./utils/update.utils/avg_RQM.update");
 //require("./utils/update.utils/userExperienceLevel.update");
-require("./utils/update.utils/season.update");
 // ---------------------------
 
 // -----Bot utils-----

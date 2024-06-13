@@ -12,6 +12,7 @@ const {
 const MailTemplates = require("../data/MailTemplates");
 const { logActivity } = require("../utils/activity.utils");
 const { activityTypes } = require("../data/activityTypes");
+const configService = require("../configService");
 
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken, quizId } = req.body;
@@ -128,6 +129,7 @@ const saveAttempt = async (req, res) => {
       timeTaken,
       boost: boosted ? 1.5 : 1,
       isBoosted: boosted,
+      season: configService.getCurrentSeason(),
     });
     await newQuizAttempt.save();
 
