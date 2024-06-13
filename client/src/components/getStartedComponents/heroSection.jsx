@@ -78,12 +78,12 @@ const HeroSection = () => {
               left: "55% !important",
             },
             "@media (max-width: 1240px)": {
-              top: "-39%",
+              top: "-24%",
               width: "138%",
               left: "50% ",
             },
             "@media (min-width: 1241px)": {
-              top: "-45%",
+              top: "-33%",
               width: "234%",
               left: "100%",
               height: "auto",

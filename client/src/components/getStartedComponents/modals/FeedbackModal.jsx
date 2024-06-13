@@ -1,10 +1,9 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
   Button,
@@ -12,23 +11,82 @@ import {
   FormLabel,
   Input,
   Textarea,
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
   Box,
   Flex,
-  Text,
+  Heading,
+  Radio,
+  RadioGroup,
+  Stack,
+  useToast,
 } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import Section from "../../miscellaneous/Section";
+import SliderWithMarks from "./SliderWithMarks";
+import {
+  initialFormState,
+  handleSliderChange,
+  getLabelForValue,
+} from "./utils/formState";
+import { AppContext } from "../../../contextAPI/appContext";
 
 const FeedbackModal = ({ isOpen, onClose }) => {
-  const navigate = useNavigate();
+  const toast = useToast();
+  const { state } = useContext(AppContext);
+  const loggedIn = !state.show;
+  const [formState, setFormState] = useState(initialFormState);
+  const [quizIssueAnswer, setQuizIssueAnswer] = useState("no");
+  const [email, setEmail] = useState("");
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (loggedIn) setEmail(state.user.email);
+  }, [state.show]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic
-    onClose();
+    const formData = {
+      email: e.target.email.value,
+      answers: Object.keys(formState).reduce(
+        (acc, key) => {
+          acc[key] = getLabelForValue(key, formState[key]);
+          return acc;
+        },
+        {
+          scoringSystemLikes: e.target.scoringSystemLikes.value,
+          mostUsedFeature: e.target.mostUsedFeature.value,
+          missingFeatures: e.target.missingFeatures.value,
+          quizIssues: {
+            issue: e.target?.quizIssues?.value || "",
+            inGameName: e.target?.inGameName?.value || "",
+          },
+          improvements: e.target.improvements.value,
+          additionalComments: e.target.additionalComments.value,
+        }
+      ),
+    };
+
+    try {
+      const response = await axios.post("/api/feedback/submit", formData);
+      if (response.status !== 201) {
+        throw new Error("Failed to submit feedback");
+      }
+      toast({
+        title: "Feedback submitted successfully",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      onClose();
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      toast({
+        title: "Failed to submit feedback",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
   };
 
   const sliderMarks = [
@@ -38,48 +96,8 @@ const FeedbackModal = ({ isOpen, onClose }) => {
     { value: 4, label: "Excellent" },
   ];
 
-  const renderSliderWithMarks = (defaultValue, min, max, step, marks) => (
-    <Box mb={4}>
-      <Slider
-        defaultValue={defaultValue}
-        min={min}
-        max={max}
-        step={step}
-        width="80%"
-        ml={"10%"}
-      >
-        <SliderTrack>
-          <SliderFilledTrack />
-        </SliderTrack>
-        <SliderThumb
-          boxSize={4}
-          _before={{
-            content: '""',
-            boxSize: "10px",
-            borderRadius: "full",
-            bg: "teal.500",
-            filter: "blur(4px)",
-          }}
-        />
-      </Slider>
-      <Flex justifyContent="space-between" mt={2}>
-        {marks.map((mark) => (
-          <Text
-            key={mark.value}
-            fontSize="sm"
-            width="20%"
-            textAlign="center"
-            color="white"
-          >
-            {mark.label}
-          </Text>
-        ))}
-      </Flex>
-    </Box>
-  );
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "4xl" }}>
       <ModalOverlay />
       <ModalContent
         sx={{
@@ -89,185 +107,407 @@ const FeedbackModal = ({ isOpen, onClose }) => {
           backgroundImage:
             "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
         }}
+        overflow={"hidden"}
       >
-        <ModalHeader fontSize="2xl" fontWeight="bold" color="teal.400">
-          Feedback
+        <ModalHeader
+          display={"flex"}
+          justifyContent={"center"}
+          alignItems={"center"}
+          w={"100%"}
+          mb={3}
+        >
+          <Heading
+            fontSize="3xl"
+            fontWeight="bold"
+            letterSpacing="3px"
+            textTransform="uppercase"
+            borderBottom="2px solid"
+            pb={"0.2rem"}
+            px={0}
+            style={{
+              background: "linear-gradient(90deg, teal, cyan, purple, pink)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+            textAlign={"center"}
+          >
+            Feedback
+          </Heading>
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
-          <form onSubmit={handleSubmit}>
-            <Box mb={4}>
-              <FormControl id="email" isRequired mt={4}>
-                <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                  Email
-                </FormLabel>
-                <Input type="email" />
-              </FormControl>
-            </Box>
+        <Section crosses customPaddings={`0 4rem 0 4rem`} id="feedback">
+          <ModalBody letterSpacing={"0.105rem"} px={0}>
+            <form onSubmit={handleSubmit}>
+              <Box mb={4} p={"2rem"}>
+                <FormControl id="email" isRequired mt={4}>
+                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+                    Email
+                  </FormLabel>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      !loggedIn && setEmail(e.target.value);
+                    }}
+                    color={loggedIn && "grey"}
+                  />
+                </FormControl>
+              </Box>
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              How would you rate your overall experience with Rapid Recap?
-            </FormLabel>
-            {renderSliderWithMarks(3, 1, 4, 1, sliderMarks)}
+              <FormLabel
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+                mt={"2rem"}
+              >
+                1. How would you rate your overall experience with Rapid Recap?
+              </FormLabel>
+              <SliderWithMarks
+                name="experience"
+                defaultValue={3}
+                min={1}
+                max={4}
+                step={1}
+                marks={sliderMarks}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              How often do you use Rapid Recap?
-            </FormLabel>
-            {renderSliderWithMarks(2, 1, 4, 1, [
-              { value: 1, label: "Rarely" },
-              { value: 2, label: "Monthly" },
-              { value: 3, label: "Weekly" },
-              { value: 4, label: "Daily" },
-            ])}
+              <FormLabel
+                mt={"3rem"}
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+              >
+                2. How often do you use Rapid Recap?
+              </FormLabel>
+              <SliderWithMarks
+                name="usageFrequency"
+                defaultValue={2}
+                min={1}
+                max={4}
+                step={1}
+                marks={[
+                  { value: 1, label: "Rarely" },
+                  { value: 2, label: "Monthly" },
+                  { value: 3, label: "Weekly" },
+                  { value: 4, label: "Daily" },
+                ]}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              How satisfied are you with the difficulty level of the quizzes?
-            </FormLabel>
-            {renderSliderWithMarks(3, 1, 5, 1, [
-              { value: 1, label: "Very Dissatisfied" },
-              { value: 2, label: "Dissatisfied" },
-              { value: 3, label: "Neutral" },
-              { value: 4, label: "Satisfied" },
-              { value: 5, label: "Very Satisfied" },
-            ])}
+              <FormLabel
+                mt={"3rem"}
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+              >
+                3. How satisfied are you with the difficulty level of the
+                quizzes?
+              </FormLabel>
+              <SliderWithMarks
+                name="difficultySatisfaction"
+                defaultValue={3}
+                min={1}
+                max={5}
+                step={1}
+                marks={[
+                  { value: 1, label: "Very Dissatisfied" },
+                  { value: 2, label: "Dissatisfied" },
+                  { value: 3, label: "Neutral" },
+                  { value: 4, label: "Satisfied" },
+                  { value: 5, label: "Very Satisfied" },
+                ]}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              Do you feel the IQ score accurately reflects your knowledge and
-              understanding of the articles/news?
-            </FormLabel>
-            {renderSliderWithMarks(3, 1, 5, 1, [
-              { value: 1, label: "Strongly Disagree" },
-              { value: 2, label: "Disagree" },
-              { value: 3, label: "Neutral" },
-              { value: 4, label: "Agree" },
-              { value: 5, label: "Strongly Agree" },
-            ])}
+              <FormLabel
+                mt={"3rem"}
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+              >
+                4. Do you feel the IQ score accurately reflects your knowledge
+                and understanding of the articles/news?
+              </FormLabel>
+              <SliderWithMarks
+                name="iqAccuracy"
+                defaultValue={3}
+                min={1}
+                max={5}
+                step={1}
+                marks={[
+                  { value: 1, label: "Strongly Disagree" },
+                  { value: 2, label: "Disagree" },
+                  { value: 3, label: "Neutral" },
+                  { value: 4, label: "Agree" },
+                  { value: 5, label: "Strongly Agree" },
+                ]}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <Box mb={4}>
-              <FormControl id="scoringSystemLikes">
-                <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                  What features do you like the most about the scoring system
-                  and leaderboard?
-                </FormLabel>
-                <Textarea />
-              </FormControl>
-            </Box>
+              <Box mb={4}>
+                <FormControl id="scoringSystemLikes">
+                  <FormLabel
+                    fontSize="lg"
+                    fontWeight="medium"
+                    color="cyan.300"
+                    ml={"1rem"}
+                    mt={"3rem"}
+                  >
+                    5. What features do you like the most about the scoring
+                    system and leaderboard?
+                  </FormLabel>
+                  <Textarea />
+                </FormControl>
+              </Box>
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              How would you rate the user interface and design of the app?
-            </FormLabel>
-            {renderSliderWithMarks(3, 1, 4, 1, sliderMarks)}
+              <FormLabel
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+                mt={"3rem"}
+              >
+                6. How would you rate the user interface and design of the app?
+              </FormLabel>
+              <SliderWithMarks
+                name="uiDesignRating"
+                defaultValue={3}
+                min={1}
+                max={4}
+                step={1}
+                marks={sliderMarks}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              Is the IQ graph on your profile helpful in tracking your progress?
-            </FormLabel>
-            {renderSliderWithMarks(3, 1, 5, 1, [
-              { value: 1, label: "Very Unhelpful" },
-              { value: 2, label: "Unhelpful" },
-              { value: 3, label: "Neutral" },
-              { value: 4, label: "Helpful" },
-              { value: 5, label: "Very Helpful" },
-            ])}
+              <FormLabel
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+                mt={"3rem"}
+              >
+                7. Is the IQ graph on your profile helpful in tracking your
+                progress?
+              </FormLabel>
+              <SliderWithMarks
+                name="iqGraphHelpfulness"
+                defaultValue={3}
+                min={1}
+                max={5}
+                step={1}
+                marks={[
+                  { value: 1, label: "Very Unhelpful" },
+                  { value: 2, label: "Unhelpful" },
+                  { value: 3, label: "Neutral" },
+                  { value: 4, label: "Helpful" },
+                  { value: 5, label: "Very Helpful" },
+                ]}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              Do you find the IQ bar graph showing the top percentage of the
-              population useful?
-            </FormLabel>
-            {renderSliderWithMarks(3, 1, 5, 1, [
-              { value: 1, label: "Very Not Useful" },
-              { value: 2, label: "Not Useful" },
-              { value: 3, label: "Neutral" },
-              { value: 4, label: "Useful" },
-              { value: 5, label: "Very Useful" },
-            ])}
+              <FormLabel
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+                mt={"3rem"}
+              >
+                8. Do you find the IQ bar graph showing the top percentage of
+                the population useful?
+              </FormLabel>
+              <SliderWithMarks
+                name="iqBarGraphUsefulness"
+                defaultValue={3}
+                min={1}
+                max={5}
+                step={1}
+                marks={[
+                  { value: 1, label: "Very Not Useful" },
+                  { value: 2, label: "Not Useful" },
+                  { value: 3, label: "Neutral" },
+                  { value: 4, label: "Useful" },
+                  { value: 5, label: "Very Useful" },
+                ]}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <Box mb={4}>
-              <FormControl id="mostUsedFeature" isRequired>
-                <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                  Which feature do you use the most?
-                </FormLabel>
-                <Input type="text" />
-              </FormControl>
-            </Box>
+              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+                <FormControl id="mostUsedFeature">
+                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+                    9. Which feature do you use the most?
+                  </FormLabel>
+                  <Input type="text" />
+                </FormControl>
+              </Box>
 
-            <Box mb={4}>
-              <FormControl id="missingFeatures">
-                <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                  Are there any features you find missing or would like to see
-                  added?
-                </FormLabel>
-                <Textarea />
-              </FormControl>
-            </Box>
+              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+                <FormControl id="missingFeatures">
+                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+                    10. Are there any features you find missing or would like to
+                    see added?
+                  </FormLabel>
+                  <Textarea />
+                </FormControl>
+              </Box>
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              Do you find the concept of societies (Explorers, Strivers, Elites,
-              Mavericks) motivating?
-            </FormLabel>
-            {renderSliderWithMarks(3, 1, 5, 1, [
-              { value: 1, label: "Very Not Motivating" },
-              { value: 2, label: "Not Motivating" },
-              { value: 3, label: "Neutral" },
-              { value: 4, label: "Motivating" },
-              { value: 5, label: "Very Motivating" },
-            ])}
+              <FormLabel
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+                mt={"3rem"}
+              >
+                11. Do you find the concept of societies (Explorers, Strivers,
+                Elites, Mavericks) motivating?
+              </FormLabel>
+              <SliderWithMarks
+                name="societyMotivation"
+                defaultValue={3}
+                min={1}
+                max={5}
+                step={1}
+                marks={[
+                  { value: 1, label: "Very Not Motivating" },
+                  { value: 2, label: "Not Motivating" },
+                  { value: 3, label: "Neutral" },
+                  { value: 4, label: "Motivating" },
+                  { value: 5, label: "Very Motivating" },
+                ]}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              How often do you encounter technical issues (e.g., app crashes,
-              slow loading times)?
-            </FormLabel>
-            {renderSliderWithMarks(3, 1, 5, 1, [
-              { value: 1, label: "Never" },
-              { value: 2, label: "Rarely" },
-              { value: 3, label: "Sometimes" },
-              { value: 4, label: "Often" },
-              { value: 5, label: "Always" },
-            ])}
+              <FormLabel
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+                mt={"3rem"}
+              >
+                12. How often do you encounter technical issues (e.g., app
+                crashes, slow loading times)?
+              </FormLabel>
+              <SliderWithMarks
+                name="technicalIssuesFrequency"
+                defaultValue={3}
+                min={1}
+                max={5}
+                step={1}
+                marks={[
+                  { value: 1, label: "Never" },
+                  { value: 2, label: "Rarely" },
+                  { value: 3, label: "Sometimes" },
+                  { value: 4, label: "Often" },
+                  { value: 5, label: "Always" },
+                ]}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <Box mb={4}>
-              <FormControl id="quizIssues">
-                <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                  Have you ever faced issues with quiz scoring or leaderboard
-                  updates? If yes, please describe.
-                </FormLabel>
-                <Textarea />
-              </FormControl>
-            </Box>
+              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+                <FormControl as="fieldset">
+                  <FormLabel
+                    as="legend"
+                    fontSize="lg"
+                    fontWeight="medium"
+                    color="cyan.300"
+                  >
+                    13. Have you ever faced issues with quiz scoring or
+                    leaderboard updates? If yes, please describe.
+                  </FormLabel>
+                  <RadioGroup
+                    defaultValue="no"
+                    onChange={setQuizIssueAnswer}
+                    value={quizIssueAnswer}
+                  >
+                    <Stack direction="row">
+                      <Radio value="yes">Yes</Radio>
+                      <Radio value="no">No</Radio>
+                    </Stack>
+                  </RadioGroup>
+                </FormControl>
+                {quizIssueAnswer === "yes" && (
+                  <>
+                    <FormControl id="inGameName" mt={4} isRequired>
+                      <FormLabel
+                        fontSize="lg"
+                        fontWeight="medium"
+                        color="cyan.300"
+                      >
+                        In-Game Name
+                      </FormLabel>
+                      <Input type="text" />
+                    </FormControl>
+                    <FormControl id="quizIssues" mt={4} isRequired>
+                      <Textarea placeholder="Describe the issues..." />
+                    </FormControl>
+                  </>
+                )}
+              </Box>
 
-            <Box mb={4}>
-              <FormControl id="improvements">
-                <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                  What improvements would you suggest for Rapid Recap?
-                </FormLabel>
-                <Textarea />
-              </FormControl>
-            </Box>
+              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+                <FormControl id="improvements">
+                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+                    14. What improvements would you suggest for Rapid Recap?
+                  </FormLabel>
+                  <Textarea />
+                </FormControl>
+              </Box>
 
-            <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-              Would you recommend Rapid Recap to a friend or colleague?
-            </FormLabel>
-            {renderSliderWithMarks(3, 1, 5, 1, [
-              { value: 1, label: "Definitely Not" },
-              { value: 2, label: "Probably Not" },
-              { value: 3, label: "Not Sure" },
-              { value: 4, label: "Probably" },
-              { value: 5, label: "Definitely" },
-            ])}
+              <FormLabel
+                fontSize="lg"
+                fontWeight="medium"
+                color="cyan.300"
+                ml={"1rem"}
+                mt={"3rem"}
+              >
+                15. Would you recommend Rapid Recap to a friend or colleague?
+              </FormLabel>
+              <SliderWithMarks
+                name="recommendationLikelihood"
+                defaultValue={3}
+                min={1}
+                max={5}
+                step={1}
+                marks={[
+                  { value: 1, label: "Definitely Not" },
+                  { value: 2, label: "Probably Not" },
+                  { value: 3, label: "Not Sure" },
+                  { value: 4, label: "Probably" },
+                  { value: 5, label: "Definitely" },
+                ]}
+                formState={formState}
+                handleSliderChange={handleSliderChange(setFormState)}
+              />
 
-            <Box mb={4}>
-              <FormControl id="additionalComments">
-                <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                  Any additional comments or feedback?
-                </FormLabel>
-                <Textarea />
-              </FormControl>
-            </Box>
-
-            <Button mt={4} colorScheme="teal" type="submit" ml={"40%"}>
-              Submit
-            </Button>
-          </form>
-        </ModalBody>
+              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+                <FormControl id="additionalComments">
+                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+                    16. Any additional comments or feedback?
+                  </FormLabel>
+                  <Textarea />
+                </FormControl>
+              </Box>
+              <Flex justifyContent={"center"} alignItems={"center"}>
+                <Button my={"2rem"} colorScheme="teal" type="submit">
+                  Submit
+                </Button>
+              </Flex>
+            </form>
+          </ModalBody>
+        </Section>
       </ModalContent>
     </Modal>
   );
