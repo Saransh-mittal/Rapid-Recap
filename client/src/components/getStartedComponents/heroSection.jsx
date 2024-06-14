@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import {
   Box,
   Heading,
@@ -10,6 +10,7 @@ import {
   Flex,
   Spinner,
   Skeleton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import Section from "../miscellaneous/Section";
 import curve from "../../assets/curve.png";
@@ -20,21 +21,40 @@ import searchMd from "../../assets/search-md.svg";
 import plusSquare from "../../assets/plus-square.svg";
 import { ScrollParallax } from "react-just-parallax";
 import heroBackground from "../../assets/hero/hero-background.jpg";
+import { AppContext } from "../../contextAPI/appContext";
 import {
   Gradient,
   BackgroundCircles,
   MediumScreenbgGradient,
 } from "./design/Hero";
-
+import GetStarted from "../Header-Footer/navbarComponents/GetStarted";
+import { useEffect } from "react";
+import CategoryButton from "../homeComponents/CategoryButton";
+import ButtonGradient from "../../assets/svg/ButtonGradient";
+import FeedbackModal from "./modals/FeedbackModal";
+import { useNavigate } from "react-router-dom";
 const heroIcons = [homeSmile, file02, searchMd, plusSquare];
 
 const HeroSection = () => {
   const parallaxRef = useRef(null);
-
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const navigate = useNavigate();
   const crossesOffset = useBreakpointValue({
     base: "translateY(0)",
     lg: "translateY(5.25rem)",
   });
+
+  const { state } = useContext(AppContext);
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 992);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 992);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <Section crosses customPaddings={`2.85rem 0 0 0`} id="hero">
@@ -58,12 +78,12 @@ const HeroSection = () => {
               left: "55% !important",
             },
             "@media (max-width: 1240px)": {
-              top: "-39%",
+              top: "-24%",
               width: "138%",
               left: "50% ",
             },
             "@media (min-width: 1241px)": {
-              top: "-45%",
+              top: "-33%",
               width: "234%",
               left: "100%",
               height: "auto",
@@ -117,8 +137,28 @@ const HeroSection = () => {
               Track your progress, compare with peers, and strive for
               excellence.
             </Text>
+            <Flex flexDirection={"row"} justifyContent={"center"} gap={"2rem"}>
+              {state.show && isSmallScreen && (
+                <Flex justifyContent="center" alignItems="center" zIndex={10}>
+                  <GetStarted
+                    innerText="Get Started" /* hamburgerOnClose={onClose} */
+                  />
+                </Flex>
+              )}
+              <Flex justifyContent="center" alignItems="center" zIndex={10}>
+                <ButtonGradient />
+                <CategoryButton
+                  onClick={() => {
+                    navigate("/feedback");
+                  }}
+                >
+                  FeedBack
+                </CategoryButton>
+              </Flex>
+            </Flex>
           </Box>
 
+          <FeedbackModal isOpen={isOpen} onClose={onClose} />
           <Flex
             position="relative"
             maxW={{ base: "23rem", md: "5xl" }}
