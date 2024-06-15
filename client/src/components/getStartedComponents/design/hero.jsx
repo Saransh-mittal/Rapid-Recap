@@ -65,23 +65,24 @@ export const MediumScreenbgGradient = ({ top, left, width }) => {
   );
 };
 
-export const BottomLine = () => {
+export const BottomLine = ({ lineTop, plusTop, persistOnEveryVP }) => {
   return (
     <>
       <Box
-        display={{ xl: "block", base: "none" }}
+        display={persistOnEveryVP ? "block" : { xl: "block", base: "none" }}
         position="absolute"
-        top="55.25rem"
+        top={lineTop ? lineTop : "55.25rem"}
         left={10}
         right={10}
-        h="0.25rem"
-        bg="n.6"
+        h="1px"
+        bg="gray.600"
         pointerEvents="none"
+        zIndex={1}
       />
       <Box
-        display={{ xl: "block", base: "none" }}
+        display={persistOnEveryVP ? "block" : { xl: "block", base: "none" }}
         position="absolute"
-        top="54.9375rem"
+        top={plusTop ? plusTop : "54.9375rem"}
         left="2.1875rem"
         zIndex={2}
         pointerEvents="none"
@@ -89,9 +90,9 @@ export const BottomLine = () => {
         <PlusSvg />
       </Box>
       <Box
-        display={{ xl: "block", base: "none" }}
+        display={persistOnEveryVP ? "block" : { xl: "block", base: "none" }}
         position="absolute"
-        top="54.9375rem"
+        top={plusTop ? plusTop : "54.9375rem"}
         right="2.1875rem"
         zIndex={2}
         pointerEvents="none"

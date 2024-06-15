@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-const updates = require("./updates/updates(10.06.2024).json");
-const User = require("../model/userSchema");
-const ApplicationUpdates = require("../model/applicationUpdatesSchema");
-const { progressBar } = require("../utils/progress.utils.js");
-const { sendNotification } = require("../services/notificationService");
-const { mailTransporter } = require("../utils/mail.utils.js");
-const MailTemplates = require("../data/MailTemplates.js");
+// const updates = require("./updates/updates(11.06.2024).json");
+// const User = require("../model/userSchema");
+// const ApplicationUpdates = require("../model/applicationUpdatesSchema");
+// const { progressBar } = require("../utils/progress.utils.js");
+// const { sendNotification } = require("../services/notificationService");
+// const { mailTransporter } = require("../utils/mail.utils.js");
+// const MailTemplates = require("../data/MailTemplates.js");
 
 mongoose
   .connect(DB)
@@ -37,32 +37,25 @@ mongoose
 
 // async function saveUpdatesToDB() {
 //   try {
-//     // const users = await User.find({
-//     //   email: { $not: /dummy\d+mail\.com/ },
-//     //   inGameName: { $exists: true },
-//     // });
-//     const users = await User.find({ inGameName: "smash_dev" });
+//     const users = await User.find({
+//       email: { $not: /dummy\d+mail\.com/ },
+//       inGameName: { $exists: true },
+//     });
+//     // const users = await User.find({ inGameName: "smash_dev" });
 //     for (const update of updates) {
 //       const progress = progressBar(users.length);
-//       const updateTitle = `📢 ${update.title} 📰`;
-//       const updateBody =
-//         update.mainText.length > 100
-//           ? `${update.mainText.slice(0, 100)}...`
-//           : update.mainText;
-//       const url = "https://rapidrecap.co.in/";
-//       // await sendNotification({ title: updateTitle, body: updateBody, url });
 //       for (const user of users) {
 //         // Create a new update object for the user
 //         const { title, mainText, img, read } = update;
 //         //console.log("User:", user.name);
-//         const newUpdate = new ApplicationUpdates({
-//           title,
-//           mainText,
-//           img,
-//           userId: user._id, // Associate the update with the current user
-//           read,
-//         });
-//         await newUpdate.save();
+//         // const newUpdate = new ApplicationUpdates({
+//         //   title,
+//         //   mainText,
+//         //   img,
+//         //   userId: user._id, // Associate the update with the current user
+//         //   read,
+//         // });
+//         // await newUpdate.save();
 //         //console.log("Update saved:", title);
 //         const transporter = await mailTransporter();
 //         await transporter.sendMail({
@@ -95,7 +88,7 @@ mongoose
 //       update.mainText.length > 100
 //         ? `${update.mainText.slice(0, 100)}...`
 //         : update.mainText;
-//     const url = "https://rapidrecap.co.in/";
+//     const url = "https://www.rapidrecap.co.in/";
 //     await sendNotification({
 //       title: updateTitle,
 //       body: updateBody,

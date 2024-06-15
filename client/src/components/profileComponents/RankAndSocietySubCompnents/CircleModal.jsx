@@ -13,6 +13,7 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import Circles from "../../../assets/Circles";
 import { useSwipeable } from "react-swipeable";
+import circleImg from "/images/circle.png";
 
 const CircleModal = ({
   isOpen,
@@ -172,9 +173,11 @@ const CircleModal = ({
               }}
             >
               <img
-                src="../../../../images/circle.png"
-                alt={currentCircle.circle}
+                src={circleImg}
+                alt={"circle img"}
                 style={{
+                  width: "340px",
+                  height: "340px",
                   background: "transparent",
                   display: "block",
                   margin: "0 auto",

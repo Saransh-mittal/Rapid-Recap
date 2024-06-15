@@ -18,6 +18,11 @@ const dailyIQSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  season: {
+    type: Number,
+    required: true,
+    default: 1,
+  },
 });
 
 const DailyIQ = mongoose.model("DailyIQ", dailyIQSchema); // Daily IQ model

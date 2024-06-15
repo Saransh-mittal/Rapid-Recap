@@ -188,6 +188,12 @@ const userSchema = new mongoose.Schema(
         date: { type: Date, default: Date.now },
       },
     ],
+    previousSeasonData: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "SEASON_DATA",
+      },
+    ],
     lastLogin: {
       type: Date,
       default: Date.now,

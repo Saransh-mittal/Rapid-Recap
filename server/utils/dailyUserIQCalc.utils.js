@@ -8,6 +8,7 @@ const rankUpdate = require("./update.utils/rank.update");
 const CircleAndSocietyData = require("../data/CircleAndSocietyData");
 const { logActivity } = require("./activity.utils");
 const { activityTypes } = require("../data/activityTypes");
+const configService = require("../configService");
 // const { progressBar } = require("./progress.utils");
 
 const findSocietyCircleByIQ = (IQScore) => {
@@ -169,11 +170,12 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
     updatedUser.IQ_score = currIQScore;
     updatedUser.maxIQScore = Math.max(updatedUser.maxIQScore, currIQScore);
     updatedUser.prevIQScore = prevIQScore;
-
+    const currentSeason = configService.getCurrentSeason();
     const dailyIQ = new DailyIQ({
       user: updatedUser._id,
       IQ_score: currIQScore,
       dailyRank: `${rank}/${userScores.length}`,
+      season: currentSeason,
     });
     await dailyIQ.save();
 

@@ -483,6 +483,7 @@ const processCategories = async (
       category,
       language: "en",
       country: "in",
+      pageSize: 6,
     });
 
     const articles = JSON.parse(JSON.stringify(response.articles));
@@ -519,7 +520,7 @@ const processDataIoCategories = async (
       language: "en",
       prioritydomain: "top",
       timezone: "Asia/Kolkata",
-      size: "10",
+      size: "5",
     };
     const queryString = Object.entries(queries)
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
@@ -581,6 +582,30 @@ const processArticles = async (
 
   return allProcessedOutput;
 };
+
+const getTopArticle = async () => {
+  try {
+    const articles = await Article.find({ category: "top" }).sort({
+      dateTime: -1,
+    });
+    const article = articles[0];
+    return article;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getSecondTopArticle = async () => {
+  try {
+    const articles = await Article.find({ category: "top" }).sort({
+      dateTime: -1,
+    });
+    const article = articles[1];
+    return article;
+  } catch (error) {
+    console.log(error);
+  }
+};
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
@@ -589,4 +614,6 @@ module.exports = {
   extractNewsFromLink,
   processExtractedNews,
   extractNewsUtilityFunc,
+  getTopArticle,
+  getSecondTopArticle,
 };
