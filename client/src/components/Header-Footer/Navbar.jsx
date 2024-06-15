@@ -35,6 +35,7 @@ const Navbar = () => {
     { to: "/home", label: "Home" },
     { to: "/contact", label: "Contact Us" },
     { to: "/leaderboard", label: "Leaderboard" },
+    { to: "/season", label: "Season" },
   ];
   const location = useLocation();
   const [showCategory, setShowCategory] = useState(false);
