@@ -34,7 +34,7 @@ const GetStarted = () => {
   const fakeApiCallToCheckLogin = () => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(true); // Set to true to simulate a logged-in user
+        resolve(false); // Set to true to simulate a logged-in user
       }, 1000); // Simulate a delay
     });
   };

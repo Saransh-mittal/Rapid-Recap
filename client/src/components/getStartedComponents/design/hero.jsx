@@ -154,7 +154,7 @@ const Rings = () => {
   );
 };
 
-export const BackgroundCircles = ({ parallaxRef }) => {
+export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -166,8 +166,8 @@ export const BackgroundCircles = ({ parallaxRef }) => {
       position="absolute"
       // top={{ base: "70%", md: "60%", xl: "50%" }}
       display={{ base: "none", md: "block" }}
-      top={{ base: "-50%", md: "-50%", lg: "-100%", xl: "-110%" }}
-      left="50%"
+      top={bTop ? bTop : { base: "-50%", md: "-50%", lg: "-100%", xl: "-110%" }}
+      left={bLeft ? bLeft : "50%"}
       w="55rem"
       aspectRatio="1"
       border="1px"
