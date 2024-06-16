@@ -108,7 +108,6 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         isClosable: true,
         position: "top",
       });
-      navigate("/home");
     }
   };
 
@@ -157,7 +156,6 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           isClosable: true,
           position: "top",
         });
-        navigate("/home");
       } else {
         throw new Error("Login Failed");
       }
