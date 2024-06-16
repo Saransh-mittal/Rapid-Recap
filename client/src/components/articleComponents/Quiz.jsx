@@ -362,7 +362,7 @@ const Quiz = ({
                       Next
                     </Button>
                   )}
-                {currentQuestionIndex === totalQuestions - 1 && (
+                {currentQuestionIndex === totalQuestions - 1 && !submitted && (
                   <Button
                     colorScheme="blue"
                     mr={3}
