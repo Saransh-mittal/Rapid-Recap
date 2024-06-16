@@ -46,7 +46,7 @@ const Season = () => {
                   {/* <Text fontSize="2rem" fontWeight="bold" mb={4}>
                     Season 2: "The Cycle of Knowledge"
                   </Text> */}
-                  <Box>
+                  <Box lineHeight={"2rem"}>
                     <Typewriter
                       onInit={(typewriter) => {
                         typewriter
@@ -67,7 +67,7 @@ const Season = () => {
                       options={{
                         autoStart: true,
                         loop: false,
-                        delay: 75,
+                        delay: 30,
                       }}
                     />
                   </Box>

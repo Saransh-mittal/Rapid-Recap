@@ -59,6 +59,12 @@ webpush.setVapidDetails(
 //require("./utils/bot.utils/generateFakeQuizAttempts");
 //require("./utils/bot.utils/generatePicForUsers");
 //require("./utils/bot.utils/updateBots");
+
+// ------Scripts------
+// require("./scripts/usersUsingApp");
+// require("./scripts/usersGivingQuizStats");
+// require("./scripts/usersLastLoggedInStats");
+// -------------------
 // -------------------
 app.use(express.json());
 // require("./scheduler/userIQScoreScheduler");
