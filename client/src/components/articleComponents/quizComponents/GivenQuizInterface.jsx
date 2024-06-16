@@ -80,7 +80,6 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
                         userSelect={"none"}
                       >{`${optionKey.toLocaleUpperCase()} :`}</Box>
                       <Button
-                        _hover={"none"}
                         isDisabled={
                           quizGivenSummary[
                             currentQuestionIndex
@@ -121,6 +120,25 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
                         color={
                           "#FAF0E6" // Default text color
                         }
+                        sx={{
+                          _hover: {
+                            bg:
+                              quizGivenSummary[
+                                currentQuestionIndex
+                              ].answer.toLocaleUpperCase() ===
+                              optionKey.toLocaleUpperCase()
+                                ? "green.300"
+                                : quizGivenSummary[
+                                    currentQuestionIndex
+                                  ].userAnswer.toLocaleUpperCase() ===
+                                  optionKey.toLocaleUpperCase()
+                                ? "red.300"
+                                : "#183D3D", // Same as the default background color
+                            color: "#FAF0E6", // Same as the default text color
+                            borderColor: "lightgray", // Same as the default border color
+                            cursor: "default",
+                          },
+                        }}
                       >
                         {`${optionText}`}
                       </Button>

@@ -1,44 +1,10 @@
-import React, { useState, useEffect } from "react";
+// /components/Countdown.jsx
+import React from "react";
 import "./Countdown.css";
-import { Box, Heading, Text } from "@chakra-ui/react";
+import { Box, Heading } from "@chakra-ui/react";
 
-const Countdown = ({
-  initialTimer,
-  onTimerExhausted,
-  submitted,
-  start,
-  setTimeTaken,
-}) => {
-  const [timer, setTimer] = useState(initialTimer);
-
-  useEffect(() => {
-    let timerId;
-
-    const decrementTimer = () => {
-      setTimer((prevTimer) => {
-        const newTimer = prevTimer - 1;
-        if (newTimer === 0) {
-          onTimerExhausted();
-        } else {
-          timerId = setTimeout(decrementTimer, 1000);
-        }
-        return newTimer;
-      });
-    };
-
-    if (start && !submitted && timer > 0) {
-      timerId = setTimeout(decrementTimer, 1000);
-    }
-
-    return () => clearTimeout(timerId);
-  }, [timer, start, submitted, onTimerExhausted, initialTimer]);
-
-  useEffect(() => {
-    if (start && !submitted) {
-      setTimeTaken((prevTimeTaken) => prevTimeTaken + 1); // Update time taken
-    }
-  }, [timer, start, submitted, setTimeTaken]);
-
+const Countdown = ({ timer, submitted, stopTimer }) => {
+  const initialTimer = 50; // Initial timer value
   const dynamicStyles = {
     dotRotation: `rotate(${(360 * timer) / initialTimer}deg)`,
     loadingPercent: `${100 - (timer / initialTimer) * 100}%`,

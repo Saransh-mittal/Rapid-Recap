@@ -358,10 +358,11 @@ const getQuizSummary = async (req, res) => {
         answer,
         explanation,
         userAnswer,
+
         isCorrect: question.isCorrect,
       });
     }
-    res.status(200).json({ result });
+    res.status(200).json({ result, timeTaken: quizAttempt.timeTaken });
   } catch (error) {
     res.status(400).json({ error: error || "Something went wrong" });
     console.error(error);

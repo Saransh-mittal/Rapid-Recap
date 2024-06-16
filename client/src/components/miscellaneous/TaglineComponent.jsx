@@ -2,7 +2,12 @@ import { Box } from "@chakra-ui/react";
 import Brackets from "../../assets/svg/Brackets";
 import PropTypes from "prop-types";
 
-const TagLine = ({ className, children }) => {
+const TagLine = ({
+  className,
+  children,
+  tagFontSize = "sm",
+  tagFontWeight = "",
+}) => {
   return (
     <Box
       display="flex"
@@ -11,7 +16,7 @@ const TagLine = ({ className, children }) => {
       className={className}
     >
       <Brackets position="right" />
-      <Box mx={2} fontSize="sm">
+      <Box mx={2} fontSize={tagFontSize} fontWeight={tagFontWeight}>
         {children}
       </Box>
       <Brackets position="left" />

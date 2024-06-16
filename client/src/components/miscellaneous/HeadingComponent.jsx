@@ -9,6 +9,10 @@ const Heading = ({
   marginBottom = "8",
   textTransform = "",
   children,
+  tagMarginBottom = "4",
+  tagColor = "white",
+  tagFontSize,
+  tagFontWeight,
 }) => {
   return (
     <Flex
@@ -23,8 +27,8 @@ const Heading = ({
       textTransform={textTransform}
     >
       {tag && (
-        <Box textAlign="center" marginBottom={"4"}>
-          <TagLine>
+        <Box textAlign="center" marginBottom={tagMarginBottom} color={tagColor}>
+          <TagLine tagFontSize={tagFontSize} tagFontWeight={tagFontWeight}>
             {tag} {children}
           </TagLine>
         </Box>

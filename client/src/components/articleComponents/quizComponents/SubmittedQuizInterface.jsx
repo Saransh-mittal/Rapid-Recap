@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, SlideFade, Heading } from "@chakra-ui/react";
 
-const SubmittedQuizInterface = ({ score, isOpen }) => {
+const SubmittedQuizInterface = ({ score, isOpen, submitLoad }) => {
   return (
     <SlideFade
       direction="bottom"
@@ -22,9 +22,15 @@ const SubmittedQuizInterface = ({ score, isOpen }) => {
       >
         Quiz completed. Thank you for participating!
       </Heading>
-      <Text color="#503C3C" fontSize="30px" textAlign="center" marginTop="10">
-        RQM_score: {`${score}`}
-      </Text>
+      {submitLoad ? (
+        <Text color="#503C3C" fontSize="30px" textAlign="center" marginTop="10">
+          Calculating...
+        </Text>
+      ) : (
+        <Text color="#503C3C" fontSize="30px" textAlign="center" marginTop="10">
+          RQM_score: {`${score}`}
+        </Text>
+      )}
     </SlideFade>
   );
 };

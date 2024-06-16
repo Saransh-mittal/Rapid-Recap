@@ -1,7 +1,7 @@
 import {
   Button,
   Flex,
-  Heading,
+  Heading as ChakraHeading,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -16,17 +16,19 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import GivenQuizInterface from "./GivenQuizInterface";
 import Loading from "../../miscellaneous/Loading";
-
+import Heading from "../../miscellaneous/HeadingComponent";
 const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false);
   const [quizGivenSummary, setQuizGivenSummary] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [timeTaken, setTimeTaken] = useState(0);
 
   const fetchQuizSummary = async () => {
     try {
       const response = await axios.get(`/api/quiz/summary/${articleId}`);
+      setTimeTaken(response.data.timeTaken);
       setQuizGivenSummary(() => [...response.data.result]);
     } catch (error) {
       toast({
@@ -48,14 +50,17 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
     }
   };
+
   const handlePrevQuestion = () => {
     if (currentQuestionIndex >= 1) {
       setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
     }
   };
+
   useEffect(() => {
     fetchQuizSummary();
   }, []);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "3xl" }}>
       <ModalOverlay
@@ -84,7 +89,8 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
               alignItems={"center"}
             >
               <Flex flexDirection={"column"}>
-                <Heading
+                {/* <ChakraHeading
+                  textAlign={"center"}
                   marginTop={"10px"}
                   marginBottom={0}
                   color={
@@ -100,7 +106,31 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
                     : quizGivenSummary[currentQuestionIndex].isCorrect
                     ? "Correct"
                     : "Wrong"}
-                </Heading>
+                </ChakraHeading> */}
+                {/* <ChakraHeading textAlign={"center"}>
+                  Total Time Taken: {timeTaken} seconds
+                </ChakraHeading> */}
+                <Heading
+                  title={`Total Time Taken: ${timeTaken} seconds`}
+                  tag={
+                    !quizGivenSummary[currentQuestionIndex].userAnswer
+                      ? "Not Answered"
+                      : quizGivenSummary[currentQuestionIndex].isCorrect
+                      ? "Correct"
+                      : "Wrong"
+                  }
+                  tagMarginBottom={0}
+                  marginBottom="0"
+                  tagColor={
+                    !quizGivenSummary[currentQuestionIndex].userAnswer
+                      ? "blue"
+                      : quizGivenSummary[currentQuestionIndex].isCorrect
+                      ? "green"
+                      : "red"
+                  }
+                  tagFontSize="xl"
+                  tagFontWeight="bold"
+                />
               </Flex>
             </ModalHeader>
             <ModalCloseButton
@@ -108,7 +138,7 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
                 right: "10px",
                 color: isCloseButtonHovered ? "white" : "#FAF0E6",
                 backgroundColor: isCloseButtonHovered ? "#040D12" : "#183D3D",
-                transition: "background-color 0.3s, color 0.3s",
+                transition: "backgroundColor 0.3s, color 0.3s",
               }}
               onMouseEnter={() => setIsCloseButtonHovered(true)}
               onMouseLeave={() => setIsCloseButtonHovered(false)}
@@ -135,7 +165,7 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
               justifyContent={"center"}
               flexDirection={"column"}
             >
-              <Text textColor={"white"} marginBottom={8}>
+              <Text textColor={"white"} marginBottom={4} marginTop={2}>
                 Explanation:{" "}
                 {quizGivenSummary[currentQuestionIndex].explanation}
               </Text>
@@ -151,9 +181,9 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
                     colorScheme="blue"
                     onClick={handleNextQuestion}
                     bg="#FCECDD" // Default background color
-                    color="#046582  " // Default text color
+                    color="#046582" // Default text color
                     _hover={{
-                      bg: "#046582", // Change background color to red on hover
+                      bg: "#046582",
                       color: "#FCECDD", // Change text color to black on hover
                     }}
                   >
@@ -166,9 +196,9 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
                     colorScheme="blue"
                     onClick={handlePrevQuestion}
                     bg="#FCECDD" // Default background color
-                    color="#046582  " // Default text color
+                    color="#046582" // Default text color
                     _hover={{
-                      bg: "#046582", // Change background color to red on hover
+                      bg: "#046582",
                       color: "#FCECDD", // Change text color to black on hover
                     }}
                   >

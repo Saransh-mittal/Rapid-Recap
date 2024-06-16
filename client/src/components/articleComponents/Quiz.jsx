@@ -1,4 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
+// /components/Quiz.jsx
+import React, {
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import {
   Button,
   Modal,
@@ -16,7 +23,6 @@ import {
 } from "@chakra-ui/react";
 import "./Quiz.css";
 import Countdown from "./Countdown";
-import axios from "axios";
 import ConfirmationModal from "./customQuizModal/ConfirmationModal";
 import InstructionModal from "./customQuizModal/InstructionModal";
 import QuizInterface from "./quizComponents/quizInterface";
@@ -29,6 +35,10 @@ import {
   dailyStreakCheckerAndUpdater,
   quinBoostChecker,
 } from "../../utils/quiz.utils";
+import useFetchQuiz from "../../customHooks/useFetchQuiz";
+import useTimer from "../../customHooks/useTimer";
+import useSubmitQuiz from "../../customHooks/useSubmitQuiz";
+import axios from "axios";
 
 const Quiz = ({
   article,
@@ -40,107 +50,64 @@ const Quiz = ({
   setIsQuinBoostAvailable,
   setQuizLeftToGetQuizBoost,
 }) => {
+  const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timer, setTimer] = useState(50);
   const [submitted, setSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState([]);
   const [score, setScore] = useState(0);
-  const [quizData, setQuizData] = useState(null);
-  const [load, setLoad] = useState(true);
-  const toast = useToast();
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showInstruction, setShowInstruction] = useState(true);
-  const [timeTaken, setTimeTaken] = useState(0);
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false);
   const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
     useState(false);
-  const [quizId, setQuizId] = useState(null);
-  const [submitLoad, setSubmitLoad] = useState(false);
+  const stopTimerRef = useRef(false);
+
+  const articleId = article._id;
+  const { quizData, load, quizId, setLoad } = useFetchQuiz(articleId, language);
+  const { timer, timeTaken } = useTimer(isOpen, submitted, showInstruction);
+  const { handleSubmitQuiz, submitLoad } = useSubmitQuiz(
+    articleId,
+    quizData,
+    userAnswers,
+    timeTaken,
+    quizId,
+    showConfirmationModal,
+    currentQuestionIndex,
+    setSubmitted,
+    setScore
+  );
 
   const totalQuestions = quizData ? quizData.questions.length : 0;
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = useCallback(() => {
     if (currentQuestionIndex < totalQuestions - 1) {
       if (userAnswers.length === currentQuestionIndex) {
         setUserAnswers((prevAnswers) => [...prevAnswers, ""]);
       }
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
     }
-  };
+  }, [currentQuestionIndex, totalQuestions, userAnswers]);
 
-  const handleAnswer = (selectedOption) => {
-    setUserAnswers((prevAnswers) => {
-      const updatedAnswers = [...prevAnswers];
-      updatedAnswers[currentQuestionIndex] = selectedOption;
-      return updatedAnswers;
-    });
-  };
-
-  const handleSubmitQuiz = async () => {
-    // For example, you can calculate the score here
-    // You can add your own logic here
-    setSubmitLoad(true);
-    console.log("Submitting Quiz");
-    try {
-      const articleId = article._id;
-      const userResponses = showConfirmationModal
-        ? Array.from({ length: quizData.length }, () => "")
-        : [...userAnswers];
-      if (
-        !showConfirmationModal &&
-        userResponses.length === currentQuestionIndex
-      ) {
-        userResponses.push("");
-      }
-      //console.log(userResponses, quizData, timeTaken);
-      const response = await axios.post(`/api/quiz/attempt`, {
-        articleId,
-        userResponses,
-        quizData,
-        timeTaken: timeTaken === 0 ? 1 : timeTaken,
-        quizId,
+  const handleAnswer = useCallback(
+    (selectedOption) => {
+      setUserAnswers((prevAnswers) => {
+        const updatedAnswers = [...prevAnswers];
+        updatedAnswers[currentQuestionIndex] = selectedOption;
+        return updatedAnswers;
       });
-      //console.log(response);
-      setScore(response.data.RQM_score);
-      setCurrentQuestionIndex(quizData.questions.length);
-      setSubmitted(true);
-      toast({
-        title: "Quiz Submitted Successfully!",
-        description: "You can now view your score.",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    } catch (error) {
-      //console.log(error.response.data.error);
-      toast({
-        title: "Error",
-        description: error.response.data.error || "Quiz submission failed!",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    } finally {
-      setSubmitLoad(false);
-    }
-  };
+    },
+    [currentQuestionIndex]
+  );
 
   const startQuiz = async () => {
     setLoad(true);
     try {
-      //console.log(article._id);
-      const articleId = article._id;
       await axios.get(`/api/articles/startQuiz/${articleId}`);
-
-      //if (!quiz.data) throw new Error("No Quiz data found!");
-      //setQuizData(quiz.data);
-      //console.log("Quiz started");
       localStorage.removeItem("isQuizGivenCalled");
       setShowInstruction(false);
     } catch (error) {
+      console.log(error);
       toast({
         title: "Quiz failed!",
         description:
@@ -149,9 +116,7 @@ const Quiz = ({
         status: "error",
         duration: 5000,
         isClosable: true,
-        position: "top",
       });
-      //console.log(error);
     } finally {
       setLoad(false);
       ReactGA.event({
@@ -161,85 +126,17 @@ const Quiz = ({
     }
   };
 
-  const fetchQuiz = async () => {
-    //fetch quiz data from api
-    setLoad(true);
-    try {
-      //console.log(article._id);
-      const articleId = article._id;
-      const response =
-        language === "english"
-          ? await axios.put(`/api/articles/genQuiz/${articleId}`)
-          : await axios.put(`/api/articles/genHindiQuiz/${articleId}`);
-      if (response.data.expired) {
-        throw new Error("Quiz is already expired.");
-      }
-      if (!response.data.quiz || !response.data.quizId)
-        throw new Error("No Quiz data found!");
-
-      setQuizData(response.data.quiz);
-      setUserAnswers(
-        Array.from({ length: response.data.quiz.questions.length }, () => "")
-      );
-      setQuizId(response.data.quizId);
-      setTimer(() => response.data.timer);
-      setLoad(false);
-      toast({
-        title: "Quiz Generated Successfully!",
-        description: "You can now attempt the quiz.",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-    } catch (error) {
-      toast({
-        title: "Quiz Generation Failed!",
-        description: error.message
-          ? error.message
-          : "Please try again Later (Server might be responding slow)",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-      handleClose();
-      setLoad(false);
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    //console.log(article._id);
-    fetchQuiz();
-
-    const handleBeforeUnload = (event) => {
-      // Cancel the event
-      event.preventDefault();
-      // Chrome requires returnValue to be set
-      event.returnValue = "";
-      // Show the confirmation modal
-      setShowConfirmationModal(true);
-    };
-
-    if (!showInstruction)
-      window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
-
   const showConfirmation = () => {
     setShowConfirmationModal(true);
   };
+
   const handleClose = async () => {
     try {
-      await quinBoostChecker({
+      quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       });
-      await dailyStreakCheckerAndUpdater({ dispatch });
+      dailyStreakCheckerAndUpdater({ dispatch });
       if (
         !submitted &&
         currentQuestionIndex < totalQuestions &&
@@ -257,8 +154,8 @@ const Quiz = ({
       console.log(error);
     }
   };
+
   const handleConfirmClose = async () => {
-    // Close the confirmation modal
     try {
       await quinBoostChecker({
         setIsQuinBoostAvailable,
@@ -277,35 +174,91 @@ const Quiz = ({
         position: "top",
       });
       handleClose();
-      //console.log(error);
     }
-    // Perform additional actions if needed
   };
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+      setShowConfirmationModal(true);
+    };
+    if (!showInstruction)
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   useEffect(() => {
     if (submitted && !load && (state.isBoosted || isQuinBoostAvailable)) {
       stars();
     }
   }, [submitted, load]);
-  function stars() {
+
+  const stars = () => {
     let count = 40;
     let scene = document.querySelector(".scene");
-
     let i = 0;
     while (i < count) {
       let star = document.createElement("i");
       let x = Math.floor(Math.random() * window.innerWidth);
-
       let duration = Math.random() * 1;
       let h = Math.random() * 100;
-
-      star.style.left = x + "px";
-      star.style.width = 1 + "px";
-      star.style.height = h + "px";
-      star.style.animationDuration = duration + "s";
+      star.style.left = `${x}px`;
+      star.style.width = "1px";
+      star.style.height = `${h}px`;
+      star.style.animationDuration = `${duration}s`;
       scene.appendChild(star);
       i++;
     }
-  }
+  };
+
+  const renderModalContent = () => {
+    if (showInstruction) {
+      return language === "english" ? (
+        <InstructionModal isQuinBoostAvailable={isQuinBoostAvailable} />
+      ) : (
+        <HindiInstructionModal />
+      );
+    }
+
+    return (
+      <ModalBody
+        p={"15px"}
+        display={"flex"}
+        flexDirection={"column"}
+        justifyContent={"center"}
+        alignItems={"center"}
+        width={"100%"}
+        userSelect={"none"}
+        position={"relative"}
+      >
+        {!submitted ? (
+          <QuizInterface
+            load={load}
+            currentQuestionIndex={currentQuestionIndex}
+            totalQuestions={totalQuestions}
+            quizData={quizData}
+            handleAnswer={handleAnswer}
+            userAnswers={userAnswers}
+          />
+        ) : state.isBoosted || isQuinBoostAvailable ? (
+          <BoostedSubmittedQuizInterface
+            isOpen={isOpen}
+            score={score}
+            submitLoad={submitLoad}
+          />
+        ) : (
+          <SubmittedQuizInterface
+            isOpen={isOpen}
+            score={score}
+            submitLoad={submitLoad}
+          />
+        )}
+      </ModalBody>
+    );
+  };
 
   return (
     <>
@@ -318,7 +271,6 @@ const Quiz = ({
           bg="blackAlpha.300"
           backdropFilter="blur(40px) hue-rotate(90deg)"
         />
-
         <ModalContent
           background={
             submitted && (state.isBoosted || isQuinBoostAvailable)
@@ -341,16 +293,15 @@ const Quiz = ({
             <SkeletonCircle
               color="red"
               isLoaded={!load}
-              marginTop={load ? "10px" : "0"} // remove this when skeleton isLoaded
-              size={load ? "20" : "auto"} // make it auto when skeleton isLoaded
-              marginBottom={load ? "10px" : "0"} // remove this when skeleton isLoaded
+              marginTop={load ? "10px" : "0"}
+              size={load ? "20" : "auto"}
+              marginBottom={load ? "10px" : "0"}
             >
               <Countdown
-                initialTimer={timer}
-                onTimerExhausted={() => handleSubmitQuiz()}
+                timer={timer}
                 submitted={submitted}
-                setTimeTaken={setTimeTaken}
                 start={!showInstruction}
+                stopTimer={stopTimerRef.current}
               />
             </SkeletonCircle>
           </ModalHeader>
@@ -364,42 +315,7 @@ const Quiz = ({
             onMouseEnter={() => setIsCloseButtonHovered(true)}
             onMouseLeave={() => setIsCloseButtonHovered(false)}
           />
-
-          {showInstruction ? (
-            language === "english" ? (
-              <InstructionModal isQuinBoostAvailable={isQuinBoostAvailable} />
-            ) : (
-              <HindiInstructionModal />
-            )
-          ) : (
-            <ModalBody
-              p={"15px"}
-              display={"flex"}
-              flexDirection={"column"}
-              justifyContent={"center"}
-              alignItems={"center"}
-              width={"100%"}
-              userSelect={"none"}
-              position={"relative"}
-            >
-              {!submitted ? (
-                <>
-                  <QuizInterface
-                    load={load}
-                    currentQuestionIndex={currentQuestionIndex}
-                    totalQuestions={totalQuestions}
-                    quizData={quizData}
-                    handleAnswer={handleAnswer}
-                    userAnswers={userAnswers}
-                  />
-                </>
-              ) : state.isBoosted || isQuinBoostAvailable ? (
-                <BoostedSubmittedQuizInterface isOpen={isOpen} score={score} />
-              ) : (
-                <SubmittedQuizInterface isOpen={isOpen} score={score} />
-              )}
-            </ModalBody>
-          )}
+          {renderModalContent()}
           <Flex flexDirection={"column"} color={"white"}>
             {load && (
               <Text size={"lg"} color={"black"}>
@@ -409,7 +325,7 @@ const Quiz = ({
             <Skeleton
               isLoaded={!load}
               borderRadius={"10px"}
-              marginBottom={load ? "10px" : ""} // remove this when skeleton isLoaded
+              marginBottom={load ? "10px" : ""}
             >
               <ModalFooter>
                 {showInstruction && (
@@ -436,11 +352,11 @@ const Quiz = ({
                       colorScheme="blue"
                       mr={3}
                       onClick={handleNextQuestion}
-                      bg="#FCECDD" // Default background color
-                      color="#046582  " // Default text color
+                      bg="#FCECDD"
+                      color="#046582"
                       _hover={{
-                        bg: "#046582", // Change background color to red on hover
-                        color: "#FCECDD", // Change text color to black on hover
+                        bg: "#046582",
+                        color: "#FCECDD",
                       }}
                     >
                       Next
@@ -451,11 +367,11 @@ const Quiz = ({
                     colorScheme="blue"
                     mr={3}
                     onClick={handleSubmitQuiz}
-                    bg="#DCF2F1" // Default background color
-                    color="#265073" // Default text color
+                    bg="#DCF2F1"
+                    color="#265073"
                     _hover={{
-                      bg: "#265073", // Change background color to red on hover
-                      color: "#DCF2F1", // Change text color to black on hover
+                      bg: "#265073",
+                      color: "#DCF2F1",
                     }}
                     isLoading={submitLoad}
                   >
@@ -467,13 +383,13 @@ const Quiz = ({
           </Flex>
         </ModalContent>
       </Modal>
-      {!showInstruction && (
+      {!showInstruction && showConfirmationModal && (
         <ConfirmationModal
           bg={"black"}
           isOpen={showConfirmationModal}
           onClose={() => setShowConfirmationModal(false)}
           onConfirm={handleConfirmClose}
-          message="Clicking on Confirm will result in submission of the quiz with 0 score. Are you sure you want to submit the quiz ?"
+          message="Clicking on Confirm will result in submission of the quiz with 0 score. Are you sure you want to submit the quiz?"
         />
       )}
     </>

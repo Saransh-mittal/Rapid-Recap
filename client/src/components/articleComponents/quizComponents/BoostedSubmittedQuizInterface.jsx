@@ -2,7 +2,7 @@ import React from "react";
 import { Text, SlideFade, Heading, Image, Flex } from "@chakra-ui/react";
 import rocket from "/images/rocket.png";
 
-const BoostedSubmittedQuizInterface = ({ score, isOpen }) => {
+const BoostedSubmittedQuizInterface = ({ score, isOpen, submitLoad }) => {
   const rocketStyle = {
     position: "relative",
     bottom: "-500%",
@@ -125,7 +125,11 @@ const BoostedSubmittedQuizInterface = ({ score, isOpen }) => {
                   }}
                   animation="borderRotate var(--d) linear infinite forwards"
                 >
-                  <Heading>{score}</Heading>
+                  {submitLoad ? (
+                    <Heading>Calculating...</Heading>
+                  ) : (
+                    <Heading>{score}</Heading>
+                  )}
                   <Text
                     fontSize={"1rem"}
                     color={"yellow"}
