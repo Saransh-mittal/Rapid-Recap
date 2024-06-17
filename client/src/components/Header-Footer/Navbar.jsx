@@ -259,6 +259,7 @@ const Navbar = () => {
             height={"100%"}
             flexDirection={"row"}
             display={isHamburgerOpen ? "none" : "flex"}
+            position={"relative"}
           >
             <NavBrand isHamburgerOpen={isHamburgerOpen} />
             <NavbarContent

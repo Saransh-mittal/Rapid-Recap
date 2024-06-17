@@ -167,7 +167,7 @@ const saveAttempt = async (req, res) => {
         delayMinutes: 30,
         mailHtml: MailTemplates.preQuinBoost.html({
           name: user.name.split(" ")[0],
-          noOfQuizzes: quizzesToday,
+          noOfQuiz: quizzesToday,
           QuinQuizNumber: quizzesToday + 2,
         }),
         subject: MailTemplates.preQuinBoost.subject,
@@ -178,7 +178,7 @@ const saveAttempt = async (req, res) => {
         delayMinutes: 120,
         mailHtml: MailTemplates.preQuinBoost.html({
           name: user.name.split(" ")[0],
-          noOfQuizzes: quizzesToday,
+          noOfQuiz: quizzesToday,
           QuinQuizNumber: quizzesToday + 2,
         }),
         subject: `Reminder: ${MailTemplates.preQuinBoost.subject}`,
@@ -191,7 +191,7 @@ const saveAttempt = async (req, res) => {
         delayMinutes: 30,
         mailHtml: MailTemplates.onQuinBoost.html1({
           name: user.name.split(" ")[0],
-          noOfQuizzes: quizzesToday,
+          noOfQuiz: quizzesToday,
           QuinQuizNumber: quizzesToday + 1,
         }),
         subject: MailTemplates.onQuinBoost.subject,
@@ -202,7 +202,7 @@ const saveAttempt = async (req, res) => {
         delayMinutes: 120,
         mailHtml: MailTemplates.onQuinBoost.html1({
           name: user.name.split(" ")[0],
-          noOfQuizzes: quizzesToday,
+          noOfQuiz: quizzesToday,
           QuinQuizNumber: quizzesToday + 1,
         }),
         subject: `Reminder: ${MailTemplates.onQuinBoost.subject}`,
@@ -225,7 +225,7 @@ const saveAttempt = async (req, res) => {
         delayMinutes: 30,
         mailHtml: MailTemplates.postQuinBoost.html({
           name: user.name.split(" ")[0],
-          noOfQuizzes: quizzesToday,
+          noOfQuiz: quizzesToday,
         }),
         subject: MailTemplates.postQuinBoost.subject,
       });

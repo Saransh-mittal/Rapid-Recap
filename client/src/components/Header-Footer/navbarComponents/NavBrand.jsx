@@ -7,14 +7,13 @@ import Mic from "/images/mic.png";
 const NavBrand = ({ isHamburgerOpen }) => {
   return (
     <NavLink to="/" className={`navbar-brand`}>
-      <Flex>
+      <Flex position={!isHamburgerOpen ? "absolute" : "relative"}>
         <Image
           src={Mic}
           alt="Rapid Recap"
           width={{
-            base: isHamburgerOpen ? "1.5rem" : "3rem",
-            md: isHamburgerOpen ? "2rem" : "5rem",
-            lg: "2.5rem",
+            base: isHamburgerOpen ? "1.5rem" : "1.2rem",
+            md: "2rem",
           }}
           height={"2.5rem"}
           background={"transparent"}
@@ -24,9 +23,8 @@ const NavBrand = ({ isHamburgerOpen }) => {
           src={Logo}
           alt="Rapid Recap"
           width={{
-            base: isHamburgerOpen ? "5rem" : "10rem",
+            base: isHamburgerOpen ? "5rem" : "4.8rem",
             md: "6rem",
-            lg: "9rem",
           }}
           height={"2.5rem"}
           background={"transparent"}
