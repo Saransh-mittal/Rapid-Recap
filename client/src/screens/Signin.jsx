@@ -120,7 +120,6 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
       const response = await axios.post(`/api/user/login`, {
         data,
       });
-      console.log(response.data);
       if (response.data.user.verified === false) {
         const responseOfResendOTP = await axios.post(`/api/user/resendOTP`, {
           email: response.data.user.email,

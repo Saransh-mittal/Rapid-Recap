@@ -144,7 +144,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       paddingLeft={{ base: "5.5%", md: "9.5%", xl: "0.5%" }}
                     >
                       {/* {prevSocietyOrCircle.society} */}
-                      {prevSocietyOrCircle.society.split(" ")[0]}
+                      {prevSocietyOrCircle?.society?.split(" ")[0]}
                       <p>Society</p>
                     </Text>
                   </Flex>
@@ -266,7 +266,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                         letterSpacing="wide"
                         fontFamily="heading"
                       >
-                        {upgradedSocietyOrCircle.circle.split(" ")[0]}
+                        {upgradedSocietyOrCircle?.circle?.split(" ")[0]}
                       </Text>
                       <Text
                         align="center"
@@ -279,7 +279,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                         letterSpacing="wide"
                         fontFamily="heading"
                       >
-                        {upgradedSocietyOrCircle.circle.split(" ")[1]}
+                        {upgradedSocietyOrCircle?.circle?.split(" ")[1]}
                       </Text>
                     </Flex>
                   </Flex>
