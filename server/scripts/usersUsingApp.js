@@ -1,3 +1,4 @@
+// /scripts/usersUsingApp.js
 const mongoose = require("mongoose");
 const TimeSpent = require("../model/timeSpentSchema");
 const User = require("../model/userSchema");
@@ -50,9 +51,9 @@ async function usersUsingApp(startDate = null, endDate = null) {
 
 // Example usage:
 // View users' time spent for a specific date range
-const startDate = new Date("2024-06-10T00:00:00Z"); // ISO 8601 format
-const endDate = new Date("2024-06-14T23:59:59Z"); // ISO 8601 format
-// usersUsingApp(startDate, endDate).catch((err) => console.error(err));
+const startDate = new Date("2024-06-16T00:00:00Z"); // ISO 8601 format
+const endDate = new Date("2024-06-16T23:59:59Z"); // ISO 8601 format
+usersUsingApp(startDate, endDate).catch((err) => console.error(err));
 
 // View users' time spent for all time
 // usersUsingApp().catch((err) => console.error(err));

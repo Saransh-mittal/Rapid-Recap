@@ -1,3 +1,4 @@
+// /scripts/usersLastLoggedInStats.js
 const User = require("../model/userSchema");
 
 async function getUsersWithLastLoginAfter(date) {
