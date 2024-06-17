@@ -6,12 +6,12 @@ const {
   givenQuiz,
   getQuizSummary,
 } = require("../controllers/quiz");
-const Authentication = require("../middleware/authenticate");
+const { Authenticate } = require("../middleware/authenticate");
 
-router.route("/attempt").post(Authentication, saveAttempt);
+router.route("/attempt").post(Authenticate, saveAttempt);
 
-router.route("/given/:articleId/:userId").get(Authentication, givenQuiz);
-router.route("/summary/:articleId").get(Authentication, getQuizSummary);
-router.route("/:articleId/:userId").get(Authentication, getPercentile);
+router.route("/given/:articleId/:userId").get(Authenticate, givenQuiz);
+router.route("/summary/:articleId").get(Authenticate, getQuizSummary);
+router.route("/:articleId/:userId").get(Authenticate, getPercentile);
 
 module.exports = router;

@@ -9,6 +9,7 @@ const timeSpentRoutes = require("./router/timeSpentRoutes");
 const mailRoutes = require("./router/mailRoutes");
 const feedbackRoutes = require("./router/feedbackRoutes");
 const notificationRoutes = require("./router/notificationRoutes");
+const adminRoutes = require("./router/adminRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -64,6 +65,7 @@ authRouter.use("/mail", mailRoutes);
 authRouter.use("/timeSpent", timeSpentRoutes);
 authRouter.use("/feedback", feedbackRoutes);
 authRouter.use("/notify", notificationRoutes);
+authRouter.use("/admin", adminRoutes);
 app.use("/api", authRouter);
 
 // -----Production-----

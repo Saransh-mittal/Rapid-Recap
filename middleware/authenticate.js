@@ -25,4 +25,11 @@ const Authenticate = async (req, res, next) => {
   }
 };
 
-module.exports = Authenticate;
+const adminMiddleware = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Access denied. Admins only." });
+  }
+  next();
+};
+
+module.exports = { Authenticate, adminMiddleware };
