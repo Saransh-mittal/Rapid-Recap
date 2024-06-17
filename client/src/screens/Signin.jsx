@@ -94,6 +94,8 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
 
   const handleGoogleResponse = async (response) => {
     if (response.status === 201) {
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("role", response.data.user.role);
       hamburgerOnClose && hamburgerOnClose();
       dispatch({ type: "UNSHOW" });
       dispatch({
@@ -118,7 +120,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
       const response = await axios.post(`/api/user/login`, {
         data,
       });
-
+      console.log(response.data);
       if (response.data.user.verified === false) {
         const responseOfResendOTP = await axios.post(`/api/user/resendOTP`, {
           email: response.data.user.email,
@@ -140,6 +142,8 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         response.status === 201 &&
         response.data.user.verified === true
       ) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("role", response.data.user.role);
         dispatch({ type: "UNSHOW" });
         dispatch({
           type: "setUser",
@@ -370,6 +374,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                               "/api/user/handleGoogleLogin",
                               { credentialResponse }
                             );
+                            // Store role in localStorage
                             if (response.data.EnterInGameName) {
                               toast({
                                 title: "Enter In-Game-Name",

@@ -31,7 +31,7 @@ const {
   quinBoostChecker,
   // mailForQuinBoost,
 } = require("../controllers/user");
-const Authenticate = require("../middleware/authenticate");
+const { Authenticate } = require("../middleware/authenticate");
 
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);

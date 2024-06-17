@@ -121,6 +121,7 @@ const Navbar = () => {
       if (response.status === 201) {
         setIsDrawerOpen(false);
         setIsHamburgerOpen(false);
+        localStorage.removeItem("token");
         toast({
           title: "Logout Successful",
           status: "success",

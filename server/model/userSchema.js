@@ -188,6 +188,7 @@ const userSchema = new mongoose.Schema(
         date: { type: Date, default: Date.now },
       },
     ],
+    role: { type: String, enum: ["user", "admin"], default: "user" },
     lastLogin: {
       type: Date,
       default: Date.now,
@@ -213,7 +214,10 @@ userSchema.pre("save", async function (next) {
 
 userSchema.methods.generateAuthToken = async function () {
   try {
-    let token = jwt.sign({ _id: this._id }, process.env.SECRET_KEY);
+    let token = jwt.sign(
+      { _id: this._id, role: this.role },
+      process.env.SECRET_KEY
+    );
     return token;
   } catch (error) {
     console.log(error);

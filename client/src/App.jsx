@@ -22,6 +22,9 @@ import ReactGA from "react-ga4";
 import { useContext, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { AppContext } from "./contextAPI/appContext.jsx";
+import { useDisclosure, useToast } from "@chakra-ui/react";
+import Dashboard from "./screens/Dashboard.jsx";
+import Signin from "./screens/Signin.jsx";
 
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
@@ -122,11 +125,61 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route exact path="/contact" element={<Contact />} />
         <Route exact path="/leaderboard" element={<LeaderBoard />} />
+        <Route
+          path="/dashboard"
+          element={
+            <AdminRoute>
+              <Dashboard />
+            </AdminRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {shouldShowFooter && <Footer />}
     </>
   );
+};
+
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const handleClose = () => {
+    onClose();
+    navigate("/");
+  };
+
+  useEffect(() => {
+    if (!token) {
+      toast({
+        title: "Unauthorized",
+        description: "You need to be logged in to access this page.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    } else if (role !== "admin") {
+      toast({
+        title: "Unauthorized",
+        description: "You are not authorized to access this page.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      navigate("/");
+    }
+  }, [token, role, navigate, toast]);
+
+  if (!token) {
+    return <Signin isOpen={true} onOpen={onOpen} onClose={handleClose} />;
+  }
+
+  return children;
 };
 
 const GetStartedLayout = () => {

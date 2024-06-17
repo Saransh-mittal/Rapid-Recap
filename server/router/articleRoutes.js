@@ -13,7 +13,7 @@ const {
   extractNews,
   //testNewsApi,
 } = require("../controllers/article");
-const Authenticate = require("../middleware/authenticate");
+const { Authenticate } = require("../middleware/authenticate");
 
 router.route("/").get(allArticles);
 router.route("/article/:id").get(getArticle);

@@ -153,7 +153,7 @@ const loginUser = async (req, res) => {
 
     return res
       .status(201)
-      .json({ message: "SignIn Successfull", user: findUser });
+      .json({ message: "SignIn Successfull", user: findUser, token });
   } catch (err) {
     console.log(err);
   }
@@ -372,7 +372,7 @@ const handleGoogleLogin = async (req, res) => {
       expires: new Date(Date.now() + 2592000000),
       httpOnly: true,
     });
-    res.status(201).json({ message: "Google Login Successfull", user });
+    res.status(201).json({ message: "Google Login Successfull", user, token });
   } catch (error) {
     console.log(error);
     res.status(422).json({ error: error });
