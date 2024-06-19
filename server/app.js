@@ -61,12 +61,15 @@ webpush.setVapidDetails(
 //require("./utils/bot.utils/generatePicForUsers");
 //require("./utils/bot.utils/updateBots");
 // -------------------
+
+// require("./scripts/testNewSeasonModal");
 app.use(express.json());
 // require("./scheduler/userIQScoreScheduler");
 // require("./scheduler/mailsForStreakBroken");
 // require("./scheduler/mailsForStreakReminder");
 // require("./scheduler/extractNews");
 // require("./scheduler/notifForTopNews");
+// require("./scheduler/newSeasonSevenDays");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);

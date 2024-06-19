@@ -4,40 +4,34 @@ import WhyToUseSection from "../components/getStartedComponents/whyToUseSection"
 import HeroSection from "../components/getStartedComponents/heroSection";
 // import FooterSection from "../components/getStartedComponents/footerSection";
 import CommingSoonSection from "../components/getStartedComponents/commingSoonSection";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useDisclosure } from "@chakra-ui/react";
 import SeasonalUpdateModal from "../components/getStartedComponents/SeasonalUpdateModal";
+import { AppContext } from "../contextAPI/appContext";
+import axios from "axios";
 // import Loading from "../components/miscellaneous/Loading";
 
 const GetStarted = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Mocking the logged-in state
+  const { state } = useContext(AppContext);
 
-  useEffect(() => {
-    // Replace this with your actual login condition check
-    const checkLogin = async () => {
-      // Simulate an API call to check login status
-      const loggedIn = await fakeApiCallToCheckLogin(); // Replace with your actual API call
-      setIsLoggedIn(loggedIn);
-    };
-
-    checkLogin();
-  }, []);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      onOpen();
+  const showNewSeasonModal = async () => {
+    try {
+      const response = await axios.get(
+        "/api/user/newSeasonModal" // Adjust the URL as needed
+      );
+      if (response.status === 200 && response.data.show) {
+        onOpen();
+      }
+    } catch (error) {
+      console.log(error);
     }
-  }, [isLoggedIn, onOpen]);
-
-  // Mock API call
-  const fakeApiCallToCheckLogin = () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true); // Set to true to simulate a logged-in user
-      }, 1000); // Simulate a delay
-    });
   };
+  useEffect(() => {
+    if (!state.show) {
+      showNewSeasonModal();
+    }
+  }, [state.show, onOpen]);
 
   return (
     <Flex
@@ -46,7 +40,9 @@ const GetStarted = () => {
       overflow={"hidden"}
       letterSpacing={"2px"}
     >
-      <SeasonalUpdateModal isOpen={isOpen} onClose={onClose} />
+      {state.user.newSeasonModal && (
+        <SeasonalUpdateModal isOpen={isOpen} onClose={onClose} />
+      )}
       <HeroSection />
       <WhyToUseSection />
       {/* <PeopleReviews /> */}

@@ -19,20 +19,57 @@ import {
   Tbody,
   Tr,
   Td,
+  keyframes,
 } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { FaMedal, FaGamepad } from "react-icons/fa"; // Import the new icons
+import { FaMedal, FaGamepad, FaTrophy } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "react-confetti";
 import seasonGIF from "/GIFs/season.gif";
 import decayImage from "/images/decay.png";
-import arrowImage from "/images/arrow.png"; // Import the arrow image
+import arrowImage from "/images/arrow.png";
+import decrease from "/images/decrease.png";
+import { AiOutlineArrowDown } from "react-icons/ai";
+import { useNavigate } from "react-router-dom";
+import { useSwipeable } from "react-swipeable";
+import axios from "axios"; // Import axios for API calls
+
+const gradientAnimation = keyframes`
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+`;
+
+const arrowMotion = {
+  animate: {
+    x: [0, 10, 0],
+  },
+  transition: {
+    repeat: Infinity,
+    duration: 2,
+    ease: "easeInOut",
+  },
+};
 
 const SeasonalUpdateModal = ({ isOpen, onClose }) => {
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
 
   const nextPage = () => setPage((prev) => (prev < 3 ? prev + 1 : prev));
   const prevPage = () => setPage((prev) => (prev > 1 ? prev - 1 : prev));
+
+  const handlers = useSwipeable({
+    onSwipedLeft: () => nextPage(),
+    onSwipedRight: () => prevPage(),
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true,
+  });
 
   const Animation = ({ src, height = "20rem" }) => (
     <motion.div
@@ -55,33 +92,46 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
               fontWeight="bold"
               color="purple.700"
               fontStyle="italic"
+              textDecoration={"underline"}
             >
               SEASON 2: THE CYCLE OF KNOWLEDGE!
             </Text>
             <Box mt={4}>
-              <Text fontSize="md" mt={2} color="blue.800">
+              <Text
+                fontSize="md"
+                mt={2}
+                color="#2C7865"
+                fontStyle="italic"
+                fontWeight={"bold"}
+              >
                 The adventure continues as we dive into the new season, "THE
                 CYCLE OF KNOWLEDGE."
               </Text>
-              <Flex flexDirection={"row"} gap={2}>
-                <Flex mt={4}>
+              <Flex flexDirection={"row"}>
+                <Flex mt={4} ml={4}>
                   <FaMedal color="black" />
                 </Flex>
-                <Text fontSize="md" mt={2} color="blue.800" textAlign={"left"}>
-                  Prepare yourself for an exhilarating journey where your
-                  intellect and skills will be put to the test like never
-                  before!
+                <Text
+                  fontSize="md"
+                  mt={2}
+                  color="blue.800"
+                  textAlign={"center"}
+                  fontWeight={"bold"}
+                >
+                  Get ready for a thrilling season of challenges and
+                  opportunities that will push your skills and intellect to new
+                  heights!
                 </Text>
               </Flex>
-              {/* <Text fontSize="md" mt={2} color="blue.800" textAlign={"left"}>
-                In this season, you'll experience new challenges and
-                opportunities that will keep you engaged and striving for
-                greatness.
-              </Text> */}
             </Box>
             <Box mt={4}>
               <Animation src={seasonGIF} />
-              <Text fontSize="md" fontWeight="bold" color="yellow.800">
+              <Text
+                fontSize="md"
+                fontWeight="bold"
+                color="yellow.800"
+                fontStyle="italic"
+              >
                 Compete, learn, and grow as you navigate through the dynamic
                 landscape of knowledge and strategy.
               </Text>
@@ -91,24 +141,31 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
       case 2:
         return (
           <>
-            <Text
-              fontSize="lg"
-              fontWeight="bold"
-              color="purple.700"
-              fontStyle="italic"
-              //make a underline
-            >
-              IQ Score Decay
-            </Text>
+            <Flex flexDirection={"row"} justifyContent={"center"}>
+              <Text
+                fontSize="lg"
+                fontWeight="bold"
+                color="purple.700"
+                fontStyle="italic"
+                textDecoration={"underline"}
+              >
+                IQ SCORE DECAY
+              </Text>
+              <Flex mb={2}>
+                <Image src={decrease} alt="Decrease" h="2rem" w="2rem" ml={2} />
+              </Flex>
+            </Flex>
+
             <Box mt={4} textAlign="left">
               <List spacing={3}>
                 <ListItem>
                   <Text fontSize="md" color="blue.800">
                     <ListIcon as={FaGamepad} color="teal.500" />
                     <Text as="span" fontWeight="bold">
-                      IQ scores may decrease over time
+                      IQ scores will decrease
                     </Text>{" "}
-                    based on your activity levels.
+                    at the end of every season. So, make sure to make the most
+                    out of the season and keep your score high!
                   </Text>
                 </ListItem>
                 <ListItem>
@@ -122,7 +179,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                 </ListItem>
                 <ListItem>
                   <Text fontSize="md" color="blue.800">
-                    <ListIcon as={FaGamepad} color="teal.500" />
+                    <ListIcon as={FaTrophy} color="teal.500" />
                     <Text as="span" fontWeight="bold">
                       Societies such as Titans, Mavericks, Elites, Strivers, and
                       Explorers
@@ -135,7 +192,12 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
             </Box>
             <Box mt={4}>
               <Animation src={decayImage} />
-              <Text fontSize="md" fontWeight="bold" color="yellow.800">
+              <Text
+                fontSize="md"
+                fontWeight="bold"
+                color="yellow.800"
+                fontStyle="italic"
+              >
                 Stay engaged to maintain your IQ score and climb the ranks!
                 Remember, the decay will vary with each season, adding a new
                 layer of challenge and excitement.
@@ -163,12 +225,16 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                   <Tr>
                     <Td fontWeight="bold">Titans society</Td>
                     <Td>
-                      <Image
-                        src={arrowImage}
-                        alt="Arrow"
-                        h="3.5rem"
-                        w="10rem"
-                      />
+                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                        <motion.div {...arrowMotion}>
+                          <Image
+                            src={arrowImage}
+                            alt="Arrow"
+                            h="3.5rem"
+                            w="10rem"
+                          />
+                        </motion.div>
+                      </Flex>
                     </Td>
                     <Td>Mavericks society (Visionaries circle)</Td>
                   </Tr>
@@ -177,12 +243,16 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                       Mavericks society (Visionaries circle and Pioneers circle)
                     </Td>
                     <Td>
-                      <Image
-                        src={arrowImage}
-                        alt="Arrow"
-                        h="3.5rem"
-                        w="10rem"
-                      />
+                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                        <motion.div {...arrowMotion}>
+                          <Image
+                            src={arrowImage}
+                            alt="Arrow"
+                            h="3.5rem"
+                            w="10rem"
+                          />
+                        </motion.div>
+                      </Flex>
                     </Td>
                     <Td>Elites society (Scholars circle)</Td>
                   </Tr>
@@ -191,12 +261,16 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                       Elites society (Scholars circle and Master circle)
                     </Td>
                     <Td>
-                      <Image
-                        src={arrowImage}
-                        alt="Arrow"
-                        h="3.5rem"
-                        w="10rem"
-                      />
+                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                        <motion.div {...arrowMotion}>
+                          <Image
+                            src={arrowImage}
+                            alt="Arrow"
+                            h="3.5rem"
+                            w="10rem"
+                          />
+                        </motion.div>
+                      </Flex>
                     </Td>
                     <Td>
                       Elites society (Master circle) or Strivers (Enthusiasts
@@ -209,24 +283,32 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                       Progressors circle)
                     </Td>
                     <Td>
-                      <Image
-                        src={arrowImage}
-                        alt="Arrow"
-                        h="3.5rem"
-                        w="10rem"
-                      />
+                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                        <motion.div {...arrowMotion}>
+                          <Image
+                            src={arrowImage}
+                            alt="Arrow"
+                            h="3.5rem"
+                            w="10rem"
+                          />
+                        </motion.div>
+                      </Flex>
                     </Td>
                     <Td>Strivers (Progressors circle)</Td>
                   </Tr>
                   <Tr>
                     <Td fontWeight="bold">Explorers</Td>
                     <Td>
-                      <Image
-                        src={arrowImage}
-                        alt="Arrow"
-                        h="3.5rem"
-                        w="10rem"
-                      />
+                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                        <motion.div {...arrowMotion}>
+                          <Image
+                            src={arrowImage}
+                            alt="Arrow"
+                            h="3.5rem"
+                            w="10rem"
+                          />
+                        </motion.div>
+                      </Flex>
                     </Td>
                     <Td>
                       Very small decay (only for the people having high score)
@@ -242,6 +324,23 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleLetsGoClick = async () => {
+    try {
+      const response = await axios.get(
+        "/api/user/newSeasonModal" // Adjust the URL as needed
+      );
+
+      if (response.status === 200 && !response.data.show) {
+        navigate("/home");
+        onClose();
+      } else {
+        console.error("Failed to update new season modal status");
+      }
+    } catch (error) {
+      console.error("Error updating new season modal status", error);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -249,13 +348,19 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          {...handlers}
         >
           <Confetti
             width={window.innerWidth}
             height={window.innerHeight}
             numberOfPieces={200}
           />
-          <Modal isOpen={isOpen} onClose={onClose} size="xl">
+          <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            size={{ base: "full", md: "2xl" }}
+            closeOnOverlayClick={false}
+          >
             <ModalOverlay />
             <ModalContent
               initial={{ y: "-100vh" }}
@@ -267,12 +372,19 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
             >
               <ModalHeader
                 textAlign="center"
-                fontSize="2xl"
+                fontSize="3xl"
                 fontWeight="bold"
-                color="linear(to-r, purple.400, pink.400)"
+                bgGradient="linear(to-r, #191919, #BED754)"
+                bgClip="text"
+                animation={`${gradientAnimation} 5s ease infinite`}
+                backgroundSize="200% 200%"
+                fontFamily="'Courier New', Courier, monospace"
+                textShadow="2px 2px 4px rgba(0, 0, 0, 0.5)"
+                lineHeight="1.5"
               >
-                Welcome to the new Season!
+                WELCOME TO THE NEW SEASON!!!
               </ModalHeader>
+
               <ModalBody textAlign="center" color="white">
                 <IconButton
                   aria-label="Previous"
@@ -294,7 +406,11 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
               </ModalBody>
               <ModalFooter justifyContent="space-between">
                 {page === 3 && (
-                  <Button colorScheme="teal" onClick={onClose} size="lg">
+                  <Button
+                    colorScheme="teal"
+                    onClick={handleLetsGoClick} // Call the function on button click
+                    size="lg"
+                  >
                     Let's Go!
                   </Button>
                 )}

@@ -155,6 +155,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    newSeasonModal: {
+      type: Boolean,
+      default: true,
+    },
+    newSeasonModalUpdateAt: {
+      type: Date,
+      default: Date.now,
+    },
     quinBoosts: [
       {
         quinBoost: {
