@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const configService = require("../configService");
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -188,6 +189,14 @@ const userSchema = new mongoose.Schema(
         date: { type: Date, default: Date.now },
       },
     ],
+    rankedInCurrentSeason: {
+      type: Boolean,
+      default: false,
+    },
+    currentSeason: {
+      type: Number,
+      default: configService.getCurrentSeason(),
+    },
     previousSeasonData: [
       {
         type: mongoose.Schema.Types.ObjectId,

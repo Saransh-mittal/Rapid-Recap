@@ -1,5 +1,4 @@
 // utils/seasonUpdate.js
-
 const configService = require("../../configService");
 const CircleAndSocietyData = require("../../data/CircleAndSocietyData");
 const DailyIQ = require("../../model/dailyIQSchema");
@@ -98,11 +97,11 @@ const updateSeason = async (societyUsers, societyMeans, minIQ) => {
   const DEFAULT_STDDEV = 600;
 
   const decayPercentages = {
-    "Titans Society": 76,
-    "Mavericks Society": 57,
-    "Elites Society": 46.8,
+    "Titans Society": 70,
+    "Mavericks Society": 62,
+    "Elites Society": 50,
     "Strivers Society": 25,
-    "Explorers Society": 5,
+    "Explorers Society": 2,
   };
 
   console.log("societyMeans:", societyMeans);
@@ -154,57 +153,81 @@ const updateSeason = async (societyUsers, societyMeans, minIQ) => {
     );
     console.log("Final Uj Values:", finalUjValues);
 
+    // calculate Uj values for the users whose IQ score is less than than adjusted IQ of Explorers Society
+    // const users = await User.find({
+    //   IQ_score: { $lt: adjustedIQScores["Explorers Society"], $gte: 1 },
+    // });
+    // console.log(users.length);
+    // for (const user of users) {
+    //   const userSociety = societyDeterminer(user.IQ_score);
+    //   const userIQ = user.IQ_score;
+    //   const userUj = calculateUj(userIQ, newMean, newStdDev);
+
+    //   console.log(`User: ${user.inGameName}`);
+    //   console.log(`curr IQ: ${user.IQ_score}`);
+    //   console.log(`Society: ${userSociety}`);
+    //   console.log(`curr Uj: ${user.userScore}`);
+    //   console.log(`Final Uj: ${userUj}`);
+
+    //   // user.prevIQScore = userAdjustedIQ;
+    //   // user.IQ_score = userFinalAdjustedIQ;
+
+    //   // await user.save();
+    // }
+
     // Update each user with new scores and store previous season data
-    const users = await User.find({ IQ_score: { $gte: 1 } });
-    const progressIncrement = progressBar(users.length);
-    for (const user of users) {
-      const userSociety = societyDeterminer(user.IQ_score);
-      // Calculate the counts for the previous season
-      const quizAttempts = await QuizAttempt.find({
-        user: user._id,
-        season: currentSeason,
-      });
-      const dailyIQScores = await DailyIQ.find({
-        user: user._id,
-        season: currentSeason,
-      });
-      const easyQuizCount = quizAttempts.filter(
-        (qa) => qa.articleDifficulty < 0.5
-      ).length;
-      const mediumQuizCount = quizAttempts.filter(
-        (qa) => qa.articleDifficulty >= 0.5 && qa.articleDifficulty < 0.7
-      ).length;
-      const hardQuizCount = quizAttempts.filter(
-        (qa) => qa.articleDifficulty >= 0.7
-      ).length;
+    // const users = await User.find({ IQ_score: { $gte: 1 } });
+    // const progressIncrement = progressBar(users.length);
+    // for (const user of users) {
+    //   const userSociety = societyDeterminer(user.IQ_score);
+    //   // Calculate the counts for the previous season
+    //   const quizAttempts = await QuizAttempt.find({
+    //     user: user._id,
+    //     season: ParseInt(currentSeason,10),
+    //   });
+    //   const dailyIQScores = await DailyIQ.find({
+    //     user: user._id,
+    //     season: ParseInt(currentSeason,10),
+    //   });
+    //   const easyQuizCount = quizAttempts.filter(
+    //     (qa) => qa.articleDifficulty < 0.5
+    //   ).length;
+    //   const mediumQuizCount = quizAttempts.filter(
+    //     (qa) => qa.articleDifficulty >= 0.5 && qa.articleDifficulty < 0.7
+    //   ).length;
+    //   const hardQuizCount = quizAttempts.filter(
+    //     (qa) => qa.articleDifficulty >= 0.7
+    //   ).length;
 
-      const previousSeasonData = new SeasonData({
-        userId: user._id,
-        season: currentSeason,
-        quizAttempts: quizAttempts.map((qa) => qa._id),
-        IQ_score: user.IQ_score,
-        prevIQScore: user.prevIQScore,
-        userScore: user.userScore,
-        dailyIQScores: dailyIQScores.map((dq) => dq._id),
-        easyQuizCount,
-        mediumQuizCount,
-        hardQuizCount,
-        avgRQM: user.avgRQM,
-      });
+    //   const previousSeasonData = new SeasonData({
+    //     userId: user._id,
+    //     season: ParseInt(currentSeason,10),
+    //     quizAttempts: quizAttempts.map((qa) => qa._id),
+    //     IQ_score: user.IQ_score,
+    //     prevIQScore: user.prevIQScore,
+    //     userScore: user.userScore,
+    //     dailyIQScores: dailyIQScores.map((dq) => dq._id),
+    //     easyQuizCount,
+    //     mediumQuizCount,
+    //     hardQuizCount,
+    //     avgRQM: user.avgRQM,
+    //   });
 
-      await previousSeasonData.save();
+    //   await previousSeasonData.save();
 
-      user.previousSeasonData.push(previousSeasonData._id);
+    //   user.previousSeasonData.push(previousSeasonData._id);
 
-      // Update user with new season scores
-      user.prevIQScore = adjustedIQScores[userSociety];
-      user.IQ_score = adjustedIQScores[userSociety];
-      user.userScore = finalUjValues[userSociety];
-      user.avgRQM = 0;
+    //   // Update user with new season scores
+    //   user.prevIQScore = adjustedIQScores[userSociety];
+    //   user.IQ_score = adjustedIQScores[userSociety];
+    //   user.userScore = finalUjValues[userSociety];
+    //   user.avgRQM = 0;
+    //   user.rankedInCurrentSeason = false;
+    //   user.currentSeason = ParseInt(currentSeason,10) + 1;
 
-      await user.save();
-      progressIncrement();
-    }
+    //   await user.save();
+    //   progressIncrement();
+    // }
 
     // Increment the current season
     configService.setCurrentSeason(currentSeason + 1);

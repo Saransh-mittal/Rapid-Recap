@@ -459,6 +459,7 @@ const leaderBoard = async (req, res) => {
           quizAttempts: 1,
           level: 1,
           xp: 1,
+          rankedInCurrentSeason: 1,
         },
       },
     ]);
@@ -484,6 +485,7 @@ const leaderBoard = async (req, res) => {
         quizAttempts,
         level,
         xp,
+        rankedInCurrentSeason,
       } = user;
       return {
         _id,
@@ -496,6 +498,7 @@ const leaderBoard = async (req, res) => {
         maxIQScore,
         level,
         xp,
+        rankedInCurrentSeason,
       };
     });
 
@@ -532,13 +535,13 @@ const profile = async (req, res) => {
       filteredLabels,
       filteredIQData,
       USER_IQ,
-    } = await currentTopPercentOfUser(user._id);
+    } = await currentTopPercentOfUser({ userId: user._id });
     const [solvedQuizzes, dailyActivity, rank, iqScoresHistory] =
       await Promise.all([
-        getSolvedQuizzesCount(user._id),
-        getDailyActivity(user._id),
-        calculateUserRank(user._id),
-        getUserIQScoreHistory(user._id),
+        getSolvedQuizzesCount({ userId: user._id }),
+        getDailyActivity({ userId: user._id }),
+        calculateUserRank({ userId: user._id }),
+        getUserIQScoreHistory({ userId: user._id }),
       ]);
 
     const profilePrivacy = user.profilePrivacy || {
@@ -1079,6 +1082,49 @@ const quinBoostChecker = async (req, res) => {
   }
 };
 
+const seasonHistory = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      inGameName: req.params.inGameName,
+    }).select("_id");
+
+    const season = req.query.season;
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const {
+      Top_Percentage,
+      percentileData,
+      filteredLabels,
+      filteredIQData,
+      USER_IQ,
+    } = await currentTopPercentOfUser({ userId: user._id, season });
+
+    const [solvedQuizzes, iqScoresHistory] = await Promise.all([
+      getSolvedQuizzesCount({ userId: user._id, season }),
+      getUserIQScoreHistory({ userId: user._id, season }),
+    ]);
+
+    res.status(200).json({
+      lineGraph: iqScoresHistory,
+      barGraph: {
+        Top_Percentage,
+        percentileData,
+        filteredLabels,
+        filteredIQData,
+        USER_IQ,
+      },
+      solvedQuizzes,
+      USER_IQ,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(err);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1108,4 +1154,5 @@ module.exports = {
   longestStreakCalculatorOfAllUsers,
   streakChecker,
   quinBoostChecker,
+  seasonHistory,
 };

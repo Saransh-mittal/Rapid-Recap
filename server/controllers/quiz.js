@@ -155,6 +155,8 @@ const saveAttempt = async (req, res) => {
     if (articleDifficulty < 0.5) user.easyQuizCount++;
     else if (articleDifficulty < 0.7) user.mediumQuizCount++;
     else user.hardQuizCount++;
+
+    user.rankedInCurrentSeason = true;
     await user.save();
     await logActivity({
       userInGameName: user.inGameName,

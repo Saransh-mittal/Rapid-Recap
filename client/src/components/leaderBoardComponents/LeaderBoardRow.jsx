@@ -84,22 +84,52 @@ const LeaderBoardRow = ({
             <Heading
               as="h6"
               size={"xs"}
-              color={findSocietyAndCircle(user.IQ_score)?.textColor}
+              color={
+                user.rankedInCurrentSeason
+                  ? findSocietyAndCircle(user.IQ_score)?.textColor
+                  : "gray.400"
+              }
               marginTop={"5px"}
             >
               {user.name}
             </Heading>
-            <NameLightning
-              boxShadow={findSocietyAndCircle(user.maxIQScore)?.boxShadow}
-              MAX_IQ={user.maxIQScore}
-            />
+            {user.rankedInCurrentSeason ? (
+              <NameLightning
+                boxShadow={findSocietyAndCircle(user.maxIQScore)?.boxShadow}
+                MAX_IQ={user.maxIQScore}
+              />
+            ) : null}
           </Flex>
         </Td>
       )}
-      <Td textAlign="center">{user.inGameName}</Td>
-      <Td textAlign="center">{user.IQ_score}</Td>
-      {!isLgScreen && <Td textAlign="center">{user.quizSubmissions}</Td>}
-      {!isMdScreen && <Td textAlign="center">{user.RQM_avg}</Td>}
+      <Td
+        textAlign="center"
+        color={user.rankedInCurrentSeason ? "white" : "gray.400"}
+      >
+        {user.inGameName}
+      </Td>
+      <Td
+        textAlign="center"
+        color={user.rankedInCurrentSeason ? "white" : "gray.400"}
+      >
+        {user.IQ_score}
+      </Td>
+      {!isLgScreen && (
+        <Td
+          textAlign="center"
+          color={user.rankedInCurrentSeason ? "white" : "gray.400"}
+        >
+          {user.quizSubmissions}
+        </Td>
+      )}
+      {!isMdScreen && (
+        <Td
+          textAlign="center"
+          color={user.rankedInCurrentSeason ? "white" : "gray.400"}
+        >
+          {user.RQM_avg}
+        </Td>
+      )}
     </Tr>
   );
 };

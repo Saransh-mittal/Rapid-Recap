@@ -7,15 +7,9 @@ const seasonDataSchema = new mongoose.Schema({
     required: true,
   },
   season: {
-    type: String,
+    type: Number,
     required: true,
   },
-  quizAttempts: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "QUIZ_ATTEMPT",
-    },
-  ],
   IQ_score: {
     type: Number,
     default: 0,
@@ -28,12 +22,6 @@ const seasonDataSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  dailyIQScores: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "DailyIQ",
-    },
-  ],
   easyQuizCount: {
     type: Number,
     default: 0,

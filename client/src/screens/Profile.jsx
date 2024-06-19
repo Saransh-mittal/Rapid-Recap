@@ -7,8 +7,12 @@ import {
   SkeletonCircle,
   SkeletonText,
   Container,
+  Button,
+  keyframes,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
+import { GiHistogram } from "react-icons/gi"; // Import the icon
 import { AppContext } from "../contextAPI/appContext";
 import IQLineGraph from "../components/profileComponents/IQLineGraph";
 import IQBarGraph from "../components/profileComponents/IQBarGraph";
@@ -23,6 +27,7 @@ import { useProfileTour } from "../customHooks/useTours.js";
 import { Helmet } from "react-helmet";
 import { findSocietyAndCircle } from "../utils/helper.utils.js";
 import ProfileExperienceLevel from "../components/profileComponents/ProfileExperienceLevel";
+import SeasonSelectorModal from "../components/profileComponents/SeasonSelectorModal.jsx";
 
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour();
@@ -42,6 +47,12 @@ export default function Profile() {
     society: false,
     dailyActivity: false,
   });
+
+  const {
+    isOpen: isOpenSeasonSelector,
+    onOpen: onOpenSeasonSelector,
+    onClose: onCloseSeasonSelector,
+  } = useDisclosure();
 
   const fetchProfile = async () => {
     setIsLoading(true);
@@ -104,6 +115,13 @@ export default function Profile() {
     )
       isTutorialTakenCheck({ page: "profilePage", tour });
   }, [isLoading]);
+
+  // Define keyframes for hover animation
+  const hoverAnimation = keyframes`
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  `;
 
   return (
     <Box marginTop={"4.5rem"} w={"100%"}>
@@ -261,6 +279,46 @@ export default function Profile() {
                 level={profile.experience.level}
               />
             )}
+          </Flex>
+          <Flex
+            marginTop={"12px"}
+            padding="15px"
+            borderRadius="10px"
+            flexDirection="column"
+            w={{ md: "85%", lg: "95%", base: "100%" }}
+            height="fit-content"
+            justifyContent={"center"}
+            alignItems={"center"}
+          >
+            <Button
+              w={"100%"}
+              bgGradient="linear(to-r, teal.500, blue.500)"
+              color="white"
+              fontWeight="bold"
+              fontFamily="Arial, sans-serif"
+              _hover={{
+                bgGradient: "linear(to-r, red.500, yellow.500)",
+                animation: `${hoverAnimation} 0.5s ease-in-out`,
+              }}
+              _active={{
+                bgGradient: "linear(to-r, purple.500, pink.500)",
+                transform: "scale(0.95)",
+              }}
+              leftIcon={<GiHistogram />} // Add icon here
+              onClick={onOpenSeasonSelector}
+            >
+              Season Analytics
+            </Button>
+            <SeasonSelectorModal
+              currSeason={state.user.currentSeason}
+              isOpen={isOpenSeasonSelector}
+              onClose={onCloseSeasonSelector}
+              isLoading={isLoading}
+              profile={profile}
+              privacyProfileData={privacyProfileData}
+              loginedUserProfile={loginedUserProfile}
+              inGameName={inGameName}
+            />
           </Flex>
         </Flex>
         <Flex
