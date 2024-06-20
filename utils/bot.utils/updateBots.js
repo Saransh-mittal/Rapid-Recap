@@ -6,6 +6,7 @@ const User = require("../../model/userSchema");
 // const { progressBar } = require("../../utils/progress.utils");
 const dailyUserIQCalc = require("../dailyUserIQCalc.utils");
 const { genQuiz } = require("../quiz.utils");
+const configService = require("../../configService");
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -136,6 +137,7 @@ async function updateBots() {
             RQM_score,
             articleDifficulty: fullQuiz.overAllDifficulty,
             timeTaken,
+            season: parseInt(configService.getCurrentSeason(), 10),
           });
 
           await newQuizAttempt.save();
