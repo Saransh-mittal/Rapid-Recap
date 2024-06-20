@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    baseUserScore: {
+      type: Number,
+      default: 0,
+    },
     pic: {
       type: String,
       required: true,
@@ -195,7 +199,7 @@ const userSchema = new mongoose.Schema(
     },
     currentSeason: {
       type: Number,
-      default: configService.getCurrentSeason(),
+      default: parseInt(configService.getCurrentSeason(), 10),
     },
     previousSeasonData: [
       {

@@ -129,7 +129,7 @@ const saveAttempt = async (req, res) => {
       timeTaken,
       boost: boosted ? 1.5 : 1,
       isBoosted: boosted,
-      season: configService.getCurrentSeason(),
+      season: parseInt(configService.getCurrentSeason(), 10),
     });
     await newQuizAttempt.save();
 

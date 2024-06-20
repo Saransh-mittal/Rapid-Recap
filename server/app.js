@@ -66,6 +66,7 @@ webpush.setVapidDetails(
 // require("./scripts/usersGivingQuizStats");
 // require("./scripts/usersLastLoggedInStats");
 // require("./scripts/updateUserCurrentSeason");
+// require("./scripts/quizAttemptAndDailyIQUpdateSeason");
 // -------------------
 // -------------------
 app.use(express.json());

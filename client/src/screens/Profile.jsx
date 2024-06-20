@@ -290,25 +290,29 @@ export default function Profile() {
             justifyContent={"center"}
             alignItems={"center"}
           >
-            <Button
-              w={"100%"}
-              bgGradient="linear(to-r, teal.500, blue.500)"
-              color="white"
-              fontWeight="bold"
-              fontFamily="Arial, sans-serif"
-              _hover={{
-                bgGradient: "linear(to-r, red.500, yellow.500)",
-                animation: `${hoverAnimation} 0.5s ease-in-out`,
-              }}
-              _active={{
-                bgGradient: "linear(to-r, purple.500, pink.500)",
-                transform: "scale(0.95)",
-              }}
-              leftIcon={<GiHistogram />} // Add icon here
-              onClick={onOpenSeasonSelector}
-            >
-              Season Analytics
-            </Button>
+            <Tooltip label="Coming soon!" aria-label="Coming soon" hasArrow>
+              <Button
+                w={"100%"}
+                bgGradient="linear(to-r, teal.500, blue.500)"
+                color="white"
+                fontWeight="bold"
+                fontFamily="Arial, sans-serif"
+                _hover={"none"}
+                // _hover={{
+                //   bgGradient: "linear(to-r, red.500, yellow.500)",
+                //   animation: `${hoverAnimation} 0.5s ease-in-out`,
+                // }}
+                _active={{
+                  bgGradient: "linear(to-r, purple.500, pink.500)",
+                  transform: "scale(0.95)",
+                }}
+                leftIcon={<GiHistogram />} // Add icon here
+                onClick={onOpenSeasonSelector}
+                isDisabled={true}
+              >
+                Season Analytics
+              </Button>
+            </Tooltip>
             <SeasonSelectorModal
               currSeason={state.user.currentSeason}
               isOpen={isOpenSeasonSelector}
