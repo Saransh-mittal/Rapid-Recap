@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const configService = require("../configService");
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -56,6 +57,10 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
     userScore: {
+      type: Number,
+      default: 0,
+    },
+    baseUserScore: {
       type: Number,
       default: 0,
     },
@@ -155,6 +160,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    newSeasonModal: {
+      type: Boolean,
+      default: true,
+    },
+    newSeasonModalUpdateAt: {
+      type: Date,
+      default: Date.now,
+    },
     quinBoosts: [
       {
         quinBoost: {
@@ -189,6 +202,20 @@ const userSchema = new mongoose.Schema(
       },
     ],
     role: { type: String, enum: ["user", "admin"], default: "user" },
+    rankedInCurrentSeason: {
+      type: Boolean,
+      default: false,
+    },
+    currentSeason: {
+      type: Number,
+      default: parseInt(configService.getCurrentSeason(), 10),
+    },
+    previousSeasonData: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "SEASON_DATA",
+      },
+    ],
     lastLogin: {
       type: Date,
       default: Date.now,

@@ -12,6 +12,7 @@ const {
 const MailTemplates = require("../data/MailTemplates");
 const { logActivity } = require("../utils/activity.utils");
 const { activityTypes } = require("../data/activityTypes");
+const configService = require("../configService");
 
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken, quizId } = req.body;
@@ -128,6 +129,7 @@ const saveAttempt = async (req, res) => {
       timeTaken,
       boost: boosted ? 1.5 : 1,
       isBoosted: boosted,
+      season: parseInt(configService.getCurrentSeason(), 10),
     });
     await newQuizAttempt.save();
 
@@ -153,6 +155,8 @@ const saveAttempt = async (req, res) => {
     if (articleDifficulty < 0.5) user.easyQuizCount++;
     else if (articleDifficulty < 0.7) user.mediumQuizCount++;
     else user.hardQuizCount++;
+
+    user.rankedInCurrentSeason = true;
     await user.save();
     await logActivity({
       userInGameName: user.inGameName,

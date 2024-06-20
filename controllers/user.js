@@ -429,8 +429,27 @@ const leaderBoard = async (req, res) => {
     const usersPromise = User.aggregate([
       { $match: condition },
       {
+        $lookup: {
+          from: "quiz_attempts",
+          localField: "quizAttempts",
+          foreignField: "_id",
+          as: "quizAttempts",
+        },
+      },
+      {
         $addFields: {
-          quizAttemptsLength: { $size: "$quizAttempts" },
+          quizAttemptsSeason2: {
+            $filter: {
+              input: "$quizAttempts",
+              as: "attempt",
+              cond: { $eq: ["$$attempt.season", 2] },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          quizAttemptsLength: { $size: "$quizAttemptsSeason2" },
         },
       },
       {
@@ -456,16 +475,21 @@ const leaderBoard = async (req, res) => {
           rank: 1,
           _id: 1,
           avgRQM: 1,
-          quizAttempts: 1,
+          quizAttemptsLength: 1,
           level: 1,
           xp: 1,
+          rankedInCurrentSeason: 1,
         },
       },
     ]);
 
     const currUserPromise = User.findById(currUserId)
       .select("avgRQM quizAttempts")
-      .populate("quizAttempts", "_id");
+      .populate({
+        path: "quizAttempts",
+        match: { season: 2 },
+        select: "_id",
+      });
 
     const [users, currUser] = await Promise.all([
       usersPromise,
@@ -481,9 +505,10 @@ const leaderBoard = async (req, res) => {
         _id,
         maxIQScore,
         avgRQM,
-        quizAttempts,
+        quizAttemptsLength,
         level,
         xp,
+        rankedInCurrentSeason,
       } = user;
       return {
         _id,
@@ -492,10 +517,11 @@ const leaderBoard = async (req, res) => {
         inGameName,
         IQ_score,
         pic,
-        quizSubmissions: quizAttempts.length,
+        quizSubmissions: quizAttemptsLength,
         maxIQScore,
         level,
         xp,
+        rankedInCurrentSeason,
       };
     });
 
@@ -532,13 +558,13 @@ const profile = async (req, res) => {
       filteredLabels,
       filteredIQData,
       USER_IQ,
-    } = await currentTopPercentOfUser(user._id);
+    } = await currentTopPercentOfUser({ userId: user._id });
     const [solvedQuizzes, dailyActivity, rank, iqScoresHistory] =
       await Promise.all([
-        getSolvedQuizzesCount(user._id),
-        getDailyActivity(user._id),
-        calculateUserRank(user._id),
-        getUserIQScoreHistory(user._id),
+        getSolvedQuizzesCount({ userId: user._id }),
+        getDailyActivity({ userId: user._id }),
+        calculateUserRank({ userId: user._id }),
+        getUserIQScoreHistory({ userId: user._id }),
       ]);
 
     const profilePrivacy = user.profilePrivacy || {
@@ -1079,6 +1105,75 @@ const quinBoostChecker = async (req, res) => {
   }
 };
 
+const updateNewSeasonModal = async (req, res) => {
+  try {
+    const userId = req.user._id; // Assuming user ID is stored in req.user after authentication
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (
+      user.newSeasonModalUpdateAt.getTime() + 7 * 24 * 60 * 60 * 1000 <
+        new Date().getTime() ||
+      req.query.newSeasonModal === "false"
+    ) {
+      user.newSeasonModal = false;
+      await user.save();
+    }
+
+    res.status(200).json({
+      message: "New season modal updated successfully",
+      show: user.newSeasonModal,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const seasonHistory = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      inGameName: req.params.inGameName,
+    }).select("_id");
+
+    const season = req.query.season;
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const {
+      Top_Percentage,
+      percentileData,
+      filteredLabels,
+      filteredIQData,
+      USER_IQ,
+    } = await currentTopPercentOfUser({ userId: user._id, season });
+
+    const [solvedQuizzes, iqScoresHistory] = await Promise.all([
+      getSolvedQuizzesCount({ userId: user._id, season }),
+      getUserIQScoreHistory({ userId: user._id, season }),
+    ]);
+
+    res.status(200).json({
+      lineGraph: iqScoresHistory,
+      barGraph: {
+        Top_Percentage,
+        percentileData,
+        filteredLabels,
+        filteredIQData,
+        USER_IQ,
+      },
+      solvedQuizzes,
+      USER_IQ,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(err);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1108,4 +1203,6 @@ module.exports = {
   longestStreakCalculatorOfAllUsers,
   streakChecker,
   quinBoostChecker,
+  updateNewSeasonModal,
+  seasonHistory,
 };

@@ -52,6 +52,11 @@ const quizAttemptSchema = new mongoose.Schema({
     type: Number,
     default: 1,
   },
+  season: {
+    type: Number,
+    required: true,
+    deafult: 1,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

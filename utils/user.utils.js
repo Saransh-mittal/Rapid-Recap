@@ -7,6 +7,8 @@ const {
   binarySearchForLeftRange,
   binarySearchForRightRange,
 } = require("./miscellaneous.utils");
+const configService = require("../configService");
+const SeasonData = require("../model/seasonDataSchema");
 
 const calculateTopPercent = (userIQ, sortedIQScores) => {
   //sortedIQScores.sort((a, b) => b - a);
@@ -77,24 +79,37 @@ const calculatePercentilesOfEachBar = (
   return percentiles;
 };
 
-const getUserIQScoreHistory = async (userId) => {
+const getUserIQScoreHistory = async ({ userId, season = null }) => {
   const user = await User.findById(userId);
   if (!user) {
     throw new Error("User not found");
   }
   //await user.populate("dailyIQScores");
-  const latestIQScores = await DailyIQ.aggregate([
-    { $match: { user: user._id } }, // Filter by user
-    { $sort: { date: -1 } }, // Sort by date in descending order
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-        latestScore: { $first: "$IQ_score" },
-        latestDailyRank: { $first: "$dailyRank" },
-        date: { $first: "$date" },
-      },
-    },
-  ]);
+  const latestIQScores = !season
+    ? await DailyIQ.aggregate([
+        { $match: { user: user._id } }, // Filter by user
+        { $sort: { date: -1 } }, // Sort by date in descending order
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+            latestScore: { $first: "$IQ_score" },
+            latestDailyRank: { $first: "$dailyRank" },
+            date: { $first: "$date" },
+          },
+        },
+      ])
+    : await DailyIQ.aggregate([
+        { $match: { user: user._id, season: parseInt(season, 10) } }, // Filter by user
+        { $sort: { date: -1 } }, // Sort by date in descending order
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+            latestScore: { $first: "$IQ_score" },
+            latestDailyRank: { $first: "$dailyRank" },
+            date: { $first: "$date" },
+          },
+        },
+      ]);
 
   // Map the result to the desired format
   const iqScoresHistory = latestIQScores.map((score) => ({
@@ -106,14 +121,30 @@ const getUserIQScoreHistory = async (userId) => {
   return iqScoresHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
 };
 
-const currentTopPercentOfUser = async (userId) => {
-  const user = await User.findById(userId);
+const currentTopPercentOfUser = async ({ userId, season = null }) => {
+  //console.log(userId, season);
+  //console.log(configService.getCurrentSeason());
+  const user =
+    !season || season == configService.getCurrentSeason()
+      ? await User.findById(userId).select("IQ_score")
+      : await SeasonData.findOne({
+          userId: userId,
+          season: parseInt(season, 10),
+        }).select("IQ_score");
   if (!user) {
     throw new Error("User not found");
   }
-
   const USER_IQ = user.IQ_score;
-  const users = await User.find({ IQ_score: { $gt: 0 } });
+  let users;
+
+  if (!season || season == configService.getCurrentSeason()) {
+    users = await User.find({ IQ_score: { $gt: 0 } }).select("IQ_score");
+  } else {
+    users = await SeasonData.find({ season: parseInt(season, 10) }).select(
+      "IQ_score"
+    );
+  }
+
   const IQScores = users.map((u) => u.IQ_score);
 
   const sortedIQScores = IQScores.sort((a, b) => a - b);
@@ -135,33 +166,175 @@ const currentTopPercentOfUser = async (userId) => {
   };
 };
 
-const getSolvedQuizzesCount = async (userId) => {
+const getSolvedQuizzesCount = async ({ userId, season = null }) => {
   const user = await User.findById(userId);
   if (!user) {
     throw new Error("User not found");
   }
 
-  const totalSolvedQuiz = user.quizAttempts.length;
-  const easyQuizzesCount = user.easyQuizCount;
-  const mediumQuizzesCount = user.mediumQuizCount;
-  const hardQuizzesCount = user.hardQuizCount;
-
+  let totalSolvedQuiz;
+  let easyQuizzesCount;
+  let mediumQuizzesCount;
+  let hardQuizzesCount;
+  if (!season) {
+    totalSolvedQuiz = user.quizAttempts.length;
+    easyQuizzesCount = user.easyQuizCount;
+    mediumQuizzesCount = user.mediumQuizCount;
+    hardQuizzesCount = user.hardQuizCount;
+  } else if (season == configService.getCurrentSeason()) {
+    const quizAttempts = await QuizAttempt.find({
+      user: userId,
+      season: parseInt(season, 10),
+    });
+    totalSolvedQuiz = quizAttempts.length;
+    easyQuizzesCount = quizAttempts.filter(
+      (quiz) => quiz.articleDifficulty < 0.5
+    ).length;
+    mediumQuizzesCount = quizAttempts.filter(
+      (quiz) => quiz.articleDifficulty >= 0.5 && quiz.articleDifficulty < 0.7
+    ).length;
+    hardQuizzesCount = quizAttempts.filter(
+      (quiz) => quiz.articleDifficulty >= 0.7
+    ).length;
+  } else {
+    const seasonData = await SeasonData.findOne({
+      userId: userId,
+      season: parseInt(season, 10),
+    });
+    totalSolvedQuiz =
+      seasonData.easyQuizCount +
+      seasonData.mediumQuizCount +
+      seasonData.hardQuizCount;
+    easyQuizzesCount = seasonData.easyQuizCount;
+    mediumQuizzesCount = seasonData.mediumQuizCount;
+    hardQuizzesCount = seasonData.hardQuizCount;
+  }
   // Calculate the number of users with fewer easy, medium, and hard quizzes
-  const usersCount = await User.countDocuments();
-  const easyBeatsPercentage =
-    ((await User.countDocuments({ easyQuizCount: { $lt: easyQuizzesCount } })) /
-      usersCount) *
-    100;
-  const medBeatsPercentage =
-    ((await User.countDocuments({
-      mediumQuizCount: { $lt: mediumQuizzesCount },
-    })) /
-      usersCount) *
-    100;
-  const hardBeatsPercentage =
-    ((await User.countDocuments({ hardQuizCount: { $lt: hardQuizzesCount } })) /
-      usersCount) *
-    100;
+  let usersCount;
+  if (!season) {
+    usersCount = await User.countDocuments();
+  } else if (season == configService.getCurrentSeason()) {
+    const uniqueUserCounts = await QuizAttempt.aggregate([
+      { $match: { season: parseInt(season, 10) } },
+      { $group: { _id: "$user" } },
+      { $count: "uniqueUserCount" },
+    ]);
+    usersCount =
+      uniqueUserCounts.length > 0 ? uniqueUserCounts[0].uniqueUserCount : 0;
+  } else {
+    usersCount = await SeasonData.countDocuments({
+      season: parseInt(season, 10),
+    });
+  }
+
+  let easyBeatsPercentage, medBeatsPercentage, hardBeatsPercentage;
+  if (!season) {
+    easyBeatsPercentage =
+      ((await User.countDocuments({
+        easyQuizCount: { $lt: easyQuizzesCount },
+      })) /
+        usersCount) *
+      100;
+    medBeatsPercentage =
+      ((await User.countDocuments({
+        mediumQuizCount: { $lt: mediumQuizzesCount },
+      })) /
+        usersCount) *
+      100;
+    hardBeatsPercentage =
+      ((await User.countDocuments({
+        hardQuizCount: { $lt: hardQuizzesCount },
+      })) /
+        usersCount) *
+      100;
+  } else if (season == configService.getCurrentSeason()) {
+    const easyQuizCountUsers = await QuizAttempt.aggregate([
+      { $match: { season: parseInt(season, 10) } },
+      {
+        $group: {
+          _id: "$user",
+          easyQuizCount: {
+            $sum: { $cond: [{ $lt: ["$articleDifficulty", 0.5] }, 1, 0] },
+          },
+        },
+      },
+      { $match: { easyQuizCount: { $lt: easyQuizzesCount } } },
+      { $count: "count" },
+    ]);
+    easyBeatsPercentage =
+      easyQuizCountUsers.length > 0
+        ? (easyQuizCountUsers[0].count / usersCount) * 100
+        : 0;
+
+    const mediumQuizCountUsers = await QuizAttempt.aggregate([
+      { $match: { season: parseInt(season, 10) } },
+      {
+        $group: {
+          _id: "$user",
+          mediumQuizCount: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $gte: ["$articleDifficulty", 0.5] },
+                    { $lt: ["$articleDifficulty", 0.7] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+      { $match: { mediumQuizCount: { $lt: mediumQuizzesCount } } },
+      { $count: "count" },
+    ]);
+    medBeatsPercentage =
+      mediumQuizCountUsers.length > 0
+        ? (mediumQuizCountUsers[0].count / usersCount) * 100
+        : 0;
+
+    const hardQuizCountUsers = await QuizAttempt.aggregate([
+      { $match: { season: parseInt(season, 10) } },
+      {
+        $group: {
+          _id: "$user",
+          hardQuizCount: {
+            $sum: { $cond: [{ $gte: ["$articleDifficulty", 0.7] }, 1, 0] },
+          },
+        },
+      },
+      { $match: { hardQuizCount: { $lt: hardQuizzesCount } } },
+      { $count: "count" },
+    ]);
+    hardBeatsPercentage =
+      hardQuizCountUsers.length > 0
+        ? (hardQuizCountUsers[0].count / usersCount) * 100
+        : 0;
+  } else {
+    easyBeatsPercentage =
+      ((await SeasonData.countDocuments({
+        season: parseInt(season, 10),
+        easyQuizCount: { $lt: easyQuizzesCount },
+      })) /
+        usersCount) *
+      100;
+    medBeatsPercentage =
+      ((await SeasonData.countDocuments({
+        season: parseInt(season, 10),
+        mediumQuizCount: { $lt: mediumQuizzesCount },
+      })) /
+        usersCount) *
+      100;
+    hardBeatsPercentage =
+      ((await SeasonData.countDocuments({
+        season: parseInt(season, 10),
+        hardQuizCount: { $lt: hardQuizzesCount },
+      })) /
+        usersCount) *
+      100;
+  }
 
   return {
     solvedQuizzesCount: totalSolvedQuiz,
@@ -171,7 +344,7 @@ const getSolvedQuizzesCount = async (userId) => {
   };
 };
 
-const getDailyActivity = async (userId) => {
+const getDailyActivity = async ({ userId }) => {
   const quizAttempts = await QuizAttempt.aggregate([
     { $match: { user: userId } }, // Filter quiz attempts by user ID
     { $project: { date: "$createdAt" } }, // Rename createdAt to date
@@ -180,7 +353,7 @@ const getDailyActivity = async (userId) => {
   return quizAttempts;
 };
 
-const calculateUserRank = async (userId) => {
+const calculateUserRank = async ({ userId }) => {
   const user = await User.findById(userId);
   return user.rank;
 };
