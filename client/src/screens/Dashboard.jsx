@@ -3,8 +3,15 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Box,
+  Flex,
   Heading,
   Input,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
   VStack,
   HStack,
   Button,
@@ -12,6 +19,7 @@ import {
   Alert,
   AlertIcon,
   Skeleton,
+  useMediaQuery,
 } from "@chakra-ui/react";
 import DataTable from "../components/miscellaneous/DataTable";
 
@@ -25,6 +33,7 @@ const Dashboard = () => {
   const [selectedTables, setSelectedTables] = useState(["quizAttempts"]);
   const [dateError, setDateError] = useState("");
   const [loading, setLoading] = useState(true);
+  const isScreenSmallerThen650px = useMediaQuery("(max-width: 650px)")[0];
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
@@ -176,73 +185,153 @@ const Dashboard = () => {
   const { data: mergedData, totals } = mergeData();
 
   return (
-    <Box margin={"5rem"}>
+    <Box margin={{ base: "5rem 0 0 0", lg: "5rem" }}>
       <Heading textAlign={"center"} margin={"1rem"}>
         Dashboard
       </Heading>
-      {(selectedTables.includes("quizAttempts") ||
-        selectedTables.includes("timeSpent")) && (
-        <HStack spacing={4} align="flex-start">
-          <label>
-            Start Date:
-            <Input
-              type="date"
-              value={startDate}
-              max={new Date().toISOString().split("T")[0]}
-              onChange={handleDateChange(setStartDate)}
-            />
-          </label>
+      <Flex
+        justifyContent={"space-between"}
+        mt={"-2rem"}
+        flexDirection={{ base: "column" }}
+        w={"100%"}
+      >
+        <Flex
+          flexDirection={"column"}
+          alignItems={"center"}
+          mt={"4rem"}
+          mx={{ base: "0.75rem", md: "0" }}
+        >
+          {(selectedTables.includes("quizAttempts") ||
+            selectedTables.includes("timeSpent")) && (
+            <HStack spacing={4} align="flex-start">
+              <label>
+                Start Date:
+                <Input
+                  type="date"
+                  value={startDate}
+                  max={new Date().toISOString().split("T")[0]}
+                  onChange={handleDateChange(setStartDate)}
+                />
+              </label>
 
-          <label>
-            End Date:
-            <Input
-              type="date"
-              value={endDate}
-              max={new Date().toISOString().split("T")[0]}
-              onChange={handleDateChange(setEndDate)}
-            />
-          </label>
-        </HStack>
-      )}
-
-      {selectedTables.includes("lastLogin") && (
-        <HStack spacing={4} align="flex-start" marginTop={4}>
-          <label>
-            Last Login After Date:
-            <Input
-              type="date"
-              value={lastLoginAfterDate}
-              max={new Date().toISOString().split("T")[0]}
-              onChange={handleDateChange(setLastLoginAfterDate)}
-            />
-          </label>
-        </HStack>
-      )}
-
-      {dateError && (
-        <Alert status="error" marginTop={4}>
-          <AlertIcon />
-          {dateError}
-        </Alert>
-      )}
-
-      <HStack spacing={4} align="flex-start" marginTop={4}>
-        {renderButton("Show Quiz Attempts", "quizAttempts")}
-        {renderButton("Show Last Login Times", "lastLogin")}
-        {renderButton("Show Time Spent", "timeSpent")}
-      </HStack>
-
+              <label>
+                End Date:
+                <Input
+                  type="date"
+                  value={endDate}
+                  max={new Date().toISOString().split("T")[0]}
+                  onChange={handleDateChange(setEndDate)}
+                />
+              </label>
+            </HStack>
+          )}
+          {selectedTables.includes("lastLogin") && (
+            <HStack spacing={4} align="flex-start" marginTop={4}>
+              <label>
+                Last Login After Date:
+                <Input
+                  type="date"
+                  value={lastLoginAfterDate}
+                  max={new Date().toISOString().split("T")[0]}
+                  onChange={handleDateChange(setLastLoginAfterDate)}
+                />
+              </label>
+            </HStack>
+          )}
+          {dateError && (
+            <Alert status="error" marginTop={4}>
+              <AlertIcon />
+              {dateError}
+            </Alert>
+          )}
+          {isScreenSmallerThen650px ? (
+            <VStack spacing={4} align="center" marginTop={4}>
+              {renderButton("Show Quiz Attempts", "quizAttempts")}
+              {renderButton("Show Last Login Times", "lastLogin")}
+              {renderButton("Show Time Spent", "timeSpent")}
+            </VStack>
+          ) : (
+            <HStack spacing={4} align="flex-start" marginTop={4}>
+              {renderButton("Show Quiz Attempts", "quizAttempts")}
+              {renderButton("Show Last Login Times", "lastLogin")}
+              {renderButton("Show Time Spent", "timeSpent")}
+            </HStack>
+          )}
+        </Flex>
+        <Flex w="100%" mt="3rem">
+          {selectedTables.length > 0 && (
+            <VStack w="100%" justifyContent="space-between" p={4}>
+              <Table
+                variant="striped"
+                size="md"
+                w={{ base: "100%", md: "70%" }}
+              >
+                <Thead>
+                  <Tr bg="#363062">
+                    <Th
+                      colSpan={2}
+                      textAlign="center"
+                      color="white"
+                      fontSize="1rem"
+                    >
+                      User Statistics
+                    </Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  <Tr>
+                    <Td bg="#818FB4" color="black" fontWeight={"bold"}>
+                      <Text fontSize={"1.15rem"}>Total Users:</Text>
+                    </Td>
+                    <Td bg="#818FB4" color="black" fontWeight={"bold"}>
+                      <Text fontSize={"1.15rem"}>{totals.totalUsers}</Text>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td bg="#363062" color="black" fontWeight={"bold"}>
+                      <Text fontSize={"1.15rem"}>
+                        Total Quiz Attempts Users:
+                      </Text>
+                    </Td>
+                    <Td bg="#363062" color="black" fontWeight={"bold"}>
+                      <Text fontSize={"1.15rem"}>
+                        {totals.totalQuizAttemptsUsers}
+                      </Text>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td bg="#818FB4" color="black" fontWeight={"bold"}>
+                      <Text fontSize={"1.15rem"}>Total Last Login Users:</Text>
+                    </Td>
+                    <Td bg="#818FB4" color="black" fontWeight={"bold"}>
+                      <Text fontSize={"1.15rem"}>
+                        {totals.totalLastLoginUsers}
+                      </Text>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td bg="#363062" color="black" fontWeight={"bold"}>
+                      <Text fontSize={"1.15rem"}>Total Time Spent Users:</Text>
+                    </Td>
+                    <Td bg="#363062" color="black" fontWeight={"bold"}>
+                      <Text fontSize={"1.15rem"}>
+                        {totals.totalTimeSpentUsers}
+                      </Text>
+                    </Td>
+                  </Tr>
+                </Tbody>
+              </Table>
+            </VStack>
+          )}
+        </Flex>
+      </Flex>
       {selectedTables.length > 0 && (
         <Box mt={8}>
-          <HStack w={"100%"} justifyContent={"space-between"}>
-            <Text>Total Users: {totals.totalUsers}</Text>
-            <Text>
-              Total Quiz Attempts Users: {totals.totalQuizAttemptsUsers}
-            </Text>
-            <Text>Total Last Login Users: {totals.totalLastLoginUsers}</Text>
-            <Text>Total Time Spent Users: {totals.totalTimeSpentUsers}</Text>
-          </HStack>
-          <Heading size="md">Merged Data</Heading>
+          <Flex justifyContent={"center"}>
+            <Heading size="lg" mb={"1rem"}>
+              Merged Data
+            </Heading>
+          </Flex>
           {loading ? (
             <Skeleton height="200px" />
           ) : (
