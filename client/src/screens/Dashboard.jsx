@@ -258,7 +258,7 @@ const Dashboard = () => {
             </HStack>
           )}
         </Flex>
-        <Flex w="100%">
+        <Flex w="100%" mt="3rem">
           {selectedTables.length > 0 && (
             <VStack w="100%" justifyContent="space-between" p={4}>
               <Table
