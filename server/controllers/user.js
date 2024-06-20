@@ -1082,6 +1082,32 @@ const quinBoostChecker = async (req, res) => {
   }
 };
 
+const updateNewSeasonModal = async (req, res) => {
+  try {
+    const userId = req.user._id; // Assuming user ID is stored in req.user after authentication
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (
+      user.newSeasonModalUpdateAt.getTime() + 7 * 24 * 60 * 60 * 1000 <
+        new Date().getTime() ||
+      req.query.newSeasonModal === "false"
+    ) {
+      user.newSeasonModal = false;
+      await user.save();
+    }
+
+    res.status(200).json({
+      message: "New season modal updated successfully",
+      show: user.newSeasonModal,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 const seasonHistory = async (req, res) => {
   try {
     const user = await User.findOne({
@@ -1154,5 +1180,6 @@ module.exports = {
   longestStreakCalculatorOfAllUsers,
   streakChecker,
   quinBoostChecker,
+  updateNewSeasonModal,
   seasonHistory,
 };

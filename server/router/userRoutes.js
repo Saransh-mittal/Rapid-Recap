@@ -30,6 +30,7 @@ const {
   longestStreakCalculatorOfAllUsers,
   quinBoostChecker,
   seasonHistory,
+  updateNewSeasonModal,
   // mailForQuinBoost,
 } = require("../controllers/user");
 const Authenticate = require("../middleware/authenticate");
@@ -64,6 +65,7 @@ router.route("/quizDailyStreak").get(quizDailyStreakUpdator);
 router.route("/streakChecker").get(Authenticate, streakChecker);
 router.route("/longestStreakCalculator").get(longestStreakCalculatorOfAllUsers);
 router.route("/quinBoostChecker").get(Authenticate, quinBoostChecker);
+router.route("/newSeasonModal").get(Authenticate, updateNewSeasonModal);
 router.route("/seasonHistory/:inGameName").get(Authenticate, seasonHistory);
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
 module.exports = router;

@@ -8,6 +8,7 @@ const subscriptionRoutes = require("./router/subscriptionRoutes");
 const mailRoutes = require("./router/mailRoutes");
 const timeSpentRoutes = require("./router/timeSpentRoutes");
 const notificationRoutes = require("./router/notificationRoutes");
+const feedbackRoutes = require("./router/feedbackRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -69,12 +70,15 @@ webpush.setVapidDetails(
 // require("./scripts/quizAttemptAndDailyIQUpdateSeason");
 // -------------------
 // -------------------
+
+// require("./scripts/testNewSeasonModal");
 app.use(express.json());
 // require("./scheduler/userIQScoreScheduler");
 // require("./scheduler/mailsForStreakBroken");
 // require("./scheduler/mailsForStreakReminder");
 // require("./scheduler/extractNews");
 // require("./scheduler/notifForTopNews");
+// require("./scheduler/newSeasonSevenDays");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);
@@ -84,6 +88,7 @@ authRouter.use("/subs", subscriptionRoutes);
 authRouter.use("/mail", mailRoutes);
 authRouter.use("/timeSpent", timeSpentRoutes);
 authRouter.use("/notify", notificationRoutes);
+authRouter.use("/feedback", feedbackRoutes);
 app.use("/api", authRouter);
 
 app.listen(PORT, () => {
