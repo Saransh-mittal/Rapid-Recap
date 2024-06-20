@@ -5,7 +5,7 @@ const updateUsersCurrentSeason = async () => {
   try {
     await User.updateMany(
       {},
-      { currentSeason: configService.getCurrentSeason() }
+      { currentSeason: parseInt(configService.getCurrentSeason(), 10) }
     );
     console.log("Users current season updated successfully");
   } catch (error) {

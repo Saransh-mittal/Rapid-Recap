@@ -429,8 +429,27 @@ const leaderBoard = async (req, res) => {
     const usersPromise = User.aggregate([
       { $match: condition },
       {
+        $lookup: {
+          from: "quiz_attempts",
+          localField: "quizAttempts",
+          foreignField: "_id",
+          as: "quizAttempts",
+        },
+      },
+      {
         $addFields: {
-          quizAttemptsLength: { $size: "$quizAttempts" },
+          quizAttemptsSeason2: {
+            $filter: {
+              input: "$quizAttempts",
+              as: "attempt",
+              cond: { $eq: ["$$attempt.season", 2] },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          quizAttemptsLength: { $size: "$quizAttemptsSeason2" },
         },
       },
       {
@@ -456,7 +475,7 @@ const leaderBoard = async (req, res) => {
           rank: 1,
           _id: 1,
           avgRQM: 1,
-          quizAttempts: 1,
+          quizAttemptsLength: 1,
           level: 1,
           xp: 1,
           rankedInCurrentSeason: 1,
@@ -466,7 +485,11 @@ const leaderBoard = async (req, res) => {
 
     const currUserPromise = User.findById(currUserId)
       .select("avgRQM quizAttempts")
-      .populate("quizAttempts", "_id");
+      .populate({
+        path: "quizAttempts",
+        match: { season: 2 },
+        select: "_id",
+      });
 
     const [users, currUser] = await Promise.all([
       usersPromise,
@@ -482,7 +505,7 @@ const leaderBoard = async (req, res) => {
         _id,
         maxIQScore,
         avgRQM,
-        quizAttempts,
+        quizAttemptsLength,
         level,
         xp,
         rankedInCurrentSeason,
@@ -494,7 +517,7 @@ const leaderBoard = async (req, res) => {
         inGameName,
         IQ_score,
         pic,
-        quizSubmissions: quizAttempts.length,
+        quizSubmissions: quizAttemptsLength,
         maxIQScore,
         level,
         xp,

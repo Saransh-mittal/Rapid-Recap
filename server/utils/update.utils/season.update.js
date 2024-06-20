@@ -183,7 +183,7 @@ const updateSeason = async (societyUsers, societyMeans, minIQ) => {
       // Calculate the counts for the previous season
       const quizAttempts = await QuizAttempt.find({
         user: user._id,
-        season: ParseInt(currentSeason, 10),
+        season: parseInt(currentSeason, 10),
       });
 
       const easyQuizCount = quizAttempts.filter(
@@ -198,7 +198,7 @@ const updateSeason = async (societyUsers, societyMeans, minIQ) => {
 
       const previousSeasonData = new SeasonData({
         userId: user._id,
-        season: ParseInt(currentSeason, 10),
+        season: parseInt(currentSeason, 10),
         IQ_score: user.IQ_score,
         prevIQScore: user.prevIQScore,
         userScore: user.userScore,
@@ -219,7 +219,7 @@ const updateSeason = async (societyUsers, societyMeans, minIQ) => {
       user.baseUserScore = finalUjValues[userSociety];
       user.avgRQM = 0;
       user.rankedInCurrentSeason = false;
-      user.currentSeason = ParseInt(currentSeason, 10) + 1;
+      user.currentSeason = parseInt(currentSeason, 10) + 1;
 
       await user.save();
       progressIncrement();

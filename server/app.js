@@ -70,7 +70,6 @@ webpush.setVapidDetails(
 // require("./scripts/updateUserCurrentSeason");
 // require("./scripts/quizAttemptAndDailyIQUpdateSeason");
 // -------------------
-// -------------------
 
 // require("./scripts/testNewSeasonModal");
 app.use(express.json());

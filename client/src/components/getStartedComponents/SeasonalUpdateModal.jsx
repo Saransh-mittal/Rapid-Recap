@@ -236,7 +236,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                         </motion.div>
                       </Flex>
                     </Td>
-                    <Td>Mavericks society (Visionaries circle)</Td>
+                    <Td>Mavericks society (Pioneers Circle)</Td>
                   </Tr>
                   <Tr>
                     <Td fontWeight="bold">
@@ -272,10 +272,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                         </motion.div>
                       </Flex>
                     </Td>
-                    <Td>
-                      Elites society (Master circle) or Strivers (Enthusiasts
-                      circle)
-                    </Td>
+                    <Td>Strivers (Enthusiasts circle)</Td>
                   </Tr>
                   <Tr>
                     <Td fontWeight="bold">
