@@ -8,7 +8,8 @@ const rankUpdate = require("./update.utils/rank.update");
 const CircleAndSocietyData = require("../data/CircleAndSocietyData");
 const { logActivity } = require("./activity.utils");
 const { activityTypes } = require("../data/activityTypes");
-// const { progressBar } = require("./progress.utils");
+const configService = require("../configService");
+const { progressBar } = require("./progress.utils");
 
 const findSocietyCircleByIQ = (IQScore) => {
   return CircleAndSocietyData.find((data) => {
@@ -98,9 +99,13 @@ const updatePercentilesForArticles = async (uniqueArticleIds) => {
 const calculateUserScores = async (users) => {
   const userScores = [];
   let sumOfUserScores = 0;
+  const currSeason = configService.getCurrentSeason();
 
   const fetchQuizAttemptsPromises = users.map(async (user) => {
-    const quizAttempts = await QuizAttempt.find({ user: user._id }).populate({
+    const quizAttempts = await QuizAttempt.find({
+      user: user._id,
+      season: parseInt(currSeason, 10),
+    }).populate({
       path: "article",
       populate: { path: "quiz" },
     });
@@ -108,9 +113,9 @@ const calculateUserScores = async (users) => {
   });
 
   const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises);
-  // const progressBarIncrement = progressBar(userQuizAttempts.length);
+  const progressBarIncrement = progressBar(userQuizAttempts.length);
   for (const { user, quizAttempts } of userQuizAttempts) {
-    let userScore = 0;
+    let userScore = user.baseUserScore || 0;
 
     for (const attempt of quizAttempts) {
       if (
@@ -134,7 +139,7 @@ const calculateUserScores = async (users) => {
 
     sumOfUserScores += userScore;
     userScores.push({ user, userScore });
-    // progressBarIncrement();
+    progressBarIncrement();
   }
 
   return { userScores, sumOfUserScores };
@@ -150,7 +155,7 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
 
   userScores.sort((a, b) => b.userScore - a.userScore);
   let rank = 1;
-  //const progressBarIncrement = progressBar(userScores.length);
+  const progressBarIncrement = progressBar(userScores.length);
   for (const { user, userScore } of userScores) {
     if (!user) {
       console.error("Invalid user data.");
@@ -169,11 +174,12 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
     updatedUser.IQ_score = currIQScore;
     updatedUser.maxIQScore = Math.max(updatedUser.maxIQScore, currIQScore);
     updatedUser.prevIQScore = prevIQScore;
-
+    const currentSeason = configService.getCurrentSeason();
     const dailyIQ = new DailyIQ({
       user: updatedUser._id,
       IQ_score: currIQScore,
       dailyRank: `${rank}/${userScores.length}`,
+      season: parseInt(currentSeason, 10),
     });
     await dailyIQ.save();
 
@@ -188,7 +194,7 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
       awardableXpOrNot
     );
     rank++;
-    //progressBarIncrement();
+    progressBarIncrement();
   }
 };
 
@@ -217,7 +223,7 @@ const dailyUserIQCalc = async () => {
     await rankUpdate();
     console.log("\nRank updated.\n");
   } catch (error) {
-    console.error(`Error in dailyUserIQCalc: ${error.message}`);
+    console.error(`Error in dailyUserIQCalc: ${error}`);
   }
 };
 

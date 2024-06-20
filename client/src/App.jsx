@@ -22,6 +22,7 @@ import ReactGA from "react-ga4";
 import { useContext, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { AppContext } from "./contextAPI/appContext.jsx";
+// import Season from "./screens/Season.jsx";
 import { useDisclosure, useToast } from "@chakra-ui/react";
 import Dashboard from "./screens/Dashboard.jsx";
 import Signin from "./screens/Signin.jsx";
@@ -125,6 +126,7 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route exact path="/contact" element={<Contact />} />
         <Route exact path="/leaderboard" element={<LeaderBoard />} />
+        {/* <Route exact path="/season" element={<Season />} /> */}
         <Route
           path="/dashboard"
           element={

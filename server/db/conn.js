@@ -38,7 +38,7 @@ mongoose
 // async function saveUpdatesToDB() {
 //   try {
 //     const users = await User.find({
-//       email: { $not: /dummy\d+mail\.com/ },
+//       email: { $not: /^dummy\d+@mail\.com$/ },
 //       inGameName: { $exists: true },
 //     });
 //     // const users = await User.find({ inGameName: "smash_dev" });

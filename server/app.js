@@ -62,13 +62,24 @@ webpush.setVapidDetails(
 //require("./utils/bot.utils/generateFakeQuizAttempts");
 //require("./utils/bot.utils/generatePicForUsers");
 //require("./utils/bot.utils/updateBots");
+
+// ------Scripts------
+// require("./scripts/usersUsingApp");
+// require("./scripts/usersGivingQuizStats");
+// require("./scripts/usersLastLoggedInStats");
+// require("./scripts/updateUserCurrentSeason");
+// require("./scripts/quizAttemptAndDailyIQUpdateSeason");
 // -------------------
+// -------------------
+
+// require("./scripts/testNewSeasonModal");
 app.use(express.json());
 // require("./scheduler/userIQScoreScheduler");
 // require("./scheduler/mailsForStreakBroken");
 // require("./scheduler/mailsForStreakReminder");
 // require("./scheduler/extractNews");
 // require("./scheduler/notifForTopNews");
+// require("./scheduler/newSeasonSevenDays");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);

@@ -31,7 +31,7 @@ const OutsideNavbarContent = ({
   return (
     <>
       <Flex
-        gap={3}
+        gap={{ base: 1, lg: 3 }}
         alignItems={"center"}
         display={isHamburgerOpen ? "none" : "flex"}
       >

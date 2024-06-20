@@ -1,7 +1,11 @@
 // utils/seasonUpdate.js
-
+const configService = require("../../configService");
 const CircleAndSocietyData = require("../../data/CircleAndSocietyData");
+const DailyIQ = require("../../model/dailyIQSchema");
+const QuizAttempt = require("../../model/quizAttemptSchema");
+const SeasonData = require("../../model/seasonDataSchema");
 const User = require("../../model/userSchema");
+const { progressBar } = require("../../utils/progress.utils");
 
 /**
  * Calculate Uj value based on IQ, mean, and standard deviation.
@@ -86,21 +90,22 @@ const societyDeterminer = (IQ) => {
 
 /**
  * Update the season data based on user IQ scores and societies.
- * @param {Object[]} users - The array of user data.
+ * @param {Object[]} societyUsers - The array of society user data.
  */
-const updateSeason = async (users, societyMeans, minIQ) => {
+const updateSeason = async (societyUsers, societyMeans, minIQ) => {
   const DEFAULT_MEAN = 1000;
   const DEFAULT_STDDEV = 600;
 
   const decayPercentages = {
-    "Titans Society": 76,
-    "Mavericks Society": 57,
-    "Elites Society": 46.8,
+    "Titans Society": 70,
+    "Mavericks Society": 62,
+    "Elites Society": 50,
     "Strivers Society": 25,
-    "Explorers Society": 5,
+    "Explorers Society": 2,
   };
 
   console.log("societyMeans:", societyMeans);
+  const currentSeason = configService.getCurrentSeason();
 
   try {
     const ujValues = calculateInitialUjValues(
@@ -113,10 +118,15 @@ const updateSeason = async (users, societyMeans, minIQ) => {
     const decayedUjValues = applyDecayToUjValues(ujValues, decayPercentages);
     console.log("Decayed Uj Values:", decayedUjValues);
 
-    const usersWithDecayedUj = getUsersWithDecayedUj(users, decayedUjValues);
+    const societyUsersWithDecayedUj = getSocietyUsersWithDecayedUj(
+      societyUsers,
+      decayedUjValues
+    );
     const { mean: newMean, stdDev: newStdDev } = calculateMeanAndStdDev(
-      usersWithDecayedUj
-        .map((user) => Array(user.userCnt).fill(user.decayedUj))
+      societyUsersWithDecayedUj
+        .map((societyUser) =>
+          Array(societyUser.userCnt).fill(societyUser.decayedUj)
+        )
         .flat()
     );
 
@@ -142,6 +152,81 @@ const updateSeason = async (users, societyMeans, minIQ) => {
       newStdDev
     );
     console.log("Final Uj Values:", finalUjValues);
+
+    // calculate Uj values for the users whose IQ score is less than than adjusted IQ of Explorers Society
+    // const users = await User.find({
+    //   IQ_score: { $lt: adjustedIQScores["Explorers Society"], $gte: 1 },
+    // });
+    // console.log(users.length);
+    // for (const user of users) {
+    //   const userSociety = societyDeterminer(user.IQ_score);
+    //   const userIQ = user.IQ_score;
+    //   const userUj = calculateUj(userIQ, newMean, newStdDev);
+
+    //   console.log(`User: ${user.inGameName}`);
+    //   console.log(`curr IQ: ${user.IQ_score}`);
+    //   console.log(`Society: ${userSociety}`);
+    //   console.log(`curr Uj: ${user.userScore}`);
+    //   console.log(`Final Uj: ${userUj}`);
+
+    //   // user.prevIQScore = userAdjustedIQ;
+    //   // user.IQ_score = userFinalAdjustedIQ;
+
+    //   // await user.save();
+    // }
+
+    // Update each user with new scores and store previous season data
+    const users = await User.find({ IQ_score: { $gte: 1 } });
+    const progressIncrement = progressBar(users.length);
+    for (const user of users) {
+      const userSociety = societyDeterminer(user.IQ_score);
+      // Calculate the counts for the previous season
+      const quizAttempts = await QuizAttempt.find({
+        user: user._id,
+        season: ParseInt(currentSeason, 10),
+      });
+
+      const easyQuizCount = quizAttempts.filter(
+        (qa) => qa.articleDifficulty < 0.5
+      ).length;
+      const mediumQuizCount = quizAttempts.filter(
+        (qa) => qa.articleDifficulty >= 0.5 && qa.articleDifficulty < 0.7
+      ).length;
+      const hardQuizCount = quizAttempts.filter(
+        (qa) => qa.articleDifficulty >= 0.7
+      ).length;
+
+      const previousSeasonData = new SeasonData({
+        userId: user._id,
+        season: ParseInt(currentSeason, 10),
+        IQ_score: user.IQ_score,
+        prevIQScore: user.prevIQScore,
+        userScore: user.userScore,
+        easyQuizCount,
+        mediumQuizCount,
+        hardQuizCount,
+        avgRQM: user.avgRQM,
+      });
+
+      await previousSeasonData.save();
+
+      user.previousSeasonData.push(previousSeasonData._id);
+
+      // Update user with new season scores
+      user.prevIQScore = adjustedIQScores[userSociety];
+      user.IQ_score = adjustedIQScores[userSociety];
+      user.userScore = finalUjValues[userSociety];
+      user.baseUserScore = finalUjValues[userSociety];
+      user.avgRQM = 0;
+      user.rankedInCurrentSeason = false;
+      user.currentSeason = ParseInt(currentSeason, 10) + 1;
+
+      await user.save();
+      progressIncrement();
+    }
+
+    // Increment the current season
+    configService.setCurrentSeason(currentSeason + 1);
   } catch (error) {
     console.error("An error occurred during the season update process:", error);
   }
@@ -165,17 +250,19 @@ const applyDecayToUjValues = (ujValues, decayPercentages) => {
   return decayedUjValues;
 };
 
-const getUsersWithDecayedUj = (users, decayedUjValues) => {
-  let usersWithDecayedUj = [];
+const getSocietyUsersWithDecayedUj = (societyUsers, decayedUjValues) => {
+  let societyUsersWithDecayedUj = [];
   for (let [society, decayedUj] of Object.entries(decayedUjValues)) {
-    const usersInSociety = users.find((user) => user.society === society);
-    usersWithDecayedUj.push({
+    const usersInSociety = societyUsers.find(
+      (societyUser) => societyUser.society === society
+    );
+    societyUsersWithDecayedUj.push({
       society,
       decayedUj,
       userCnt: usersInSociety.userCnt,
     });
   }
-  return usersWithDecayedUj;
+  return societyUsersWithDecayedUj;
 };
 
 const calculateNewZjValues = (decayedUjValues, newMean, newStdDev) => {
@@ -226,10 +313,10 @@ const societyMeansCalculator = async () => {
     const { societyIQs, minIQ } = groupUsersBySociety(usersInDB);
 
     const societyMeans = calculateSocietyMeans(societyIQs);
-    const users = initializeUsers();
+    const societyUsers = initializeSocietyUsers();
 
-    updateUsersWithSocietyMeans(users, societyMeans, societyIQs);
-    updateSeason(users, societyMeans, minIQ);
+    updateSocietyUsersWithSocietyMeans(societyUsers, societyMeans, societyIQs);
+    updateSeason(societyUsers, societyMeans, minIQ);
   } catch (error) {
     console.error("Error calculating society means:", error);
   }
@@ -260,7 +347,7 @@ const calculateSocietyMeans = (societyIQs) => {
   return societyMeans;
 };
 
-const initializeUsers = () => {
+const initializeSocietyUsers = () => {
   return [
     { id: 1, society: "Titans Society", userCnt: 0 },
     { id: 2, society: "Mavericks Society", userCnt: 0 },
@@ -270,10 +357,15 @@ const initializeUsers = () => {
   ];
 };
 
-const updateUsersWithSocietyMeans = (users, societyMeans, societyIQs) => {
+const updateSocietyUsersWithSocietyMeans = (
+  societyUsers,
+  societyMeans,
+  societyIQs
+) => {
   for (const [society, meanIQ] of Object.entries(societyMeans)) {
-    users.find((user) => user.society === society).userCnt =
-      societyIQs[society].length;
+    societyUsers.find(
+      (societyUser) => societyUser.society === society
+    ).userCnt = societyIQs[society].length;
   }
 };
 

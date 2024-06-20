@@ -1,8 +1,7 @@
 import { Box, Flex } from "@chakra-ui/react";
-
-import CategoryButton from "./CategoryButton";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
 import { useEffect } from "react";
+import Button from "../miscellaneous/ButtonComponent";
 
 const Categories = ({
   activeCategory,
@@ -41,7 +40,7 @@ const Categories = ({
         </Heading> */}
         <Flex flexDirection={{ base: "row", lg: "column" }} gap={4}>
           {categories.map((category, idx) => (
-            <CategoryButton
+            <Button
               ref={(el) => (categoryRefs.current[idx] = el)}
               key={idx}
               white={
@@ -58,7 +57,7 @@ const Categories = ({
             >
               {" "}
               {category}{" "}
-            </CategoryButton>
+            </Button>
           ))}
         </Flex>
       </Flex>

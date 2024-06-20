@@ -10,6 +10,8 @@ const Section = ({
   children,
   paddingTopSection,
   marginTopSection,
+  width,
+  height,
 }) => {
   return (
     <Box
@@ -25,9 +27,11 @@ const Section = ({
             }
       }
       p={customPaddings ? customPaddings : 0}
-      height={"100%"}
+      height={height ? height : "100%"}
       //   borderColor={"gray.600"}
+      width={width ? width : "auto"}
       margin={0}
+      marginTop={marginTopSection ? marginTopSection : 0}
     >
       {children}
 

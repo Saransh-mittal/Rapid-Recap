@@ -29,7 +29,7 @@ import {
 } from "./design/Hero";
 import GetStarted from "../Header-Footer/navbarComponents/GetStarted";
 import { useEffect } from "react";
-import CategoryButton from "../homeComponents/CategoryButton";
+import Button from "../miscellaneous/ButtonComponent";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
 import FeedbackModal from "./modals/FeedbackModal";
 import { useNavigate } from "react-router-dom";
@@ -147,13 +147,13 @@ const HeroSection = () => {
               )}
               <Flex justifyContent="center" alignItems="center" zIndex={10}>
                 <ButtonGradient />
-                <CategoryButton
+                <Button
                   onClick={() => {
                     navigate("/feedback");
                   }}
                 >
                   FeedBack
-                </CategoryButton>
+                </Button>
               </Flex>
             </Flex>
           </Box>
