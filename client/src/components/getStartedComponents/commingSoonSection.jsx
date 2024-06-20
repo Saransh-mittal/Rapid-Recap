@@ -27,28 +27,22 @@ import { BottomLine, Gradient } from "./design/Roadmap";
 const roadmap = [
   {
     id: "0",
-    title: "Sleek and Intuitive UI Design",
-    text: "Experience our revamped user interface! The new design is visually appealing and more intuitive, making navigation seamless and interaction smoother.",
+    title: "IQ Quest: Seasonal Showdown",
+    text: `
+"Seasons" introduces dynamic user engagement by periodically adjusting rankings. This ensures lower-ranked users chances to challenge higher-ranked ones.
+    `,
     date: "June 2024",
     status: "done",
-    imageUrl: roadmap2,
-    colorful: true,
+    imageUrl: seasonUpdate,
   },
   {
     id: "1",
-    title: "IQ Quest: Seasonal Showdown",
-    text: `
-
-Two moons will pass, old scores will fade,
-A fresh start in the quest we’ve made.
-Ranks will shift, a chance to rise,
-Will you claim the ultimate prize?
-
-
-`,
+    title: "Personalized Feed and Notifications",
+    text: "Enjoy a tailored news and quiz experience with Rapid Recap's personalization feature, plus timely notifications to keep you updated and engaged with relevant content.",
     date: "June 2024",
     status: "progress",
-    imageUrl: seasonUpdate,
+    imageUrl: roadmap2,
+    colorful: true,
   },
   {
     id: "2",

@@ -22,7 +22,7 @@ import ReactGA from "react-ga4";
 import { useContext, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { AppContext } from "./contextAPI/appContext.jsx";
-import Season from "./screens/Season.jsx";
+// import Season from "./screens/Season.jsx";
 
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
@@ -123,7 +123,7 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route exact path="/contact" element={<Contact />} />
         <Route exact path="/leaderboard" element={<LeaderBoard />} />
-        <Route exact path="/season" element={<Season />} />
+        {/* <Route exact path="/season" element={<Season />} /> */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {shouldShowFooter && <Footer />}

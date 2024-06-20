@@ -327,7 +327,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
   const handleLetsGoClick = async () => {
     try {
       const response = await axios.get(
-        "/api/user/newSeasonModal" // Adjust the URL as needed
+        `/api/user/newSeasonModal?newSeasonModal=false` // Adjust the URL as needed
       );
 
       if (response.status === 200 && !response.data.show) {
