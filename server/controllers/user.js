@@ -427,6 +427,7 @@ const leaderBoard = async (req, res) => {
     }
 
     const usersPromise = User.aggregate([
+      { $match: condition },
       {
         $lookup: {
           from: "quiz_attempts",
