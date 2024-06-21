@@ -47,8 +47,9 @@ const ResetPassword = ({ email }) => {
         dispatch({ type: "showModal", payloadModal: false });
       }
     } catch (error) {
+      console.log(error);
       toast({
-        //title: ,
+        title: "Error",
         description: error.response.data.error,
         status: "error",
         duration: 5000,

@@ -205,7 +205,9 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     } catch (error) {
       emailOrInGameNameRef.current.focus();
       toast({
-        description: "Enter a valid Email or try again later",
+        description:
+          error.response?.data?.error ||
+          "Enter a valid Email or try again later",
         status: "error",
         duration: 9000,
         isClosable: true,

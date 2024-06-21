@@ -74,13 +74,10 @@ const EmailVerify = ({ email }) => {
         if (forgetPassword) {
           //console.log(forgetPassword);
           await dispatch({ type: "verifyEmail", payloadverifyEmail: false });
-
-          navigate("/signin");
         } else {
           // console.log(forgetPassword);
           // console.log(state.modal);
           await dispatch({ type: "showModal", payloadModal: false });
-          navigate("/signin");
         }
       } else {
         throw new Error("Email Verification Failed");

@@ -265,7 +265,7 @@ const resendOTP = async (req, res) => {
     return res.status(201).json({ message: "OTP send Successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(422).json({ error: error });
+    return res.status(422).json({ error: error.message });
   }
 };
 
@@ -291,7 +291,7 @@ const forgotPassword = async (req, res) => {
     res.status(201).json({ message: "Password changed successfully" });
   } catch (error) {
     console.log(error);
-    res.status(422).json({ error: error });
+    res.status(422).json({ error: error.message });
   }
 };
 
