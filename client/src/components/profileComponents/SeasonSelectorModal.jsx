@@ -24,6 +24,7 @@ const SeasonSelectorModal = ({
   privacyProfileData,
   loginedUserProfile,
   inGameName,
+  privateSeasonAnalytics,
 }) => {
   const {
     onOpen: onOpenSeasonModal,
@@ -96,7 +97,13 @@ const SeasonSelectorModal = ({
 
           <DrawerBody>
             <ButtonGradient />
-            <Flex w={"100%"} justifyContent={"center"} alignItems={"center"}>
+            <Flex
+              w={"100%"}
+              justifyContent={"center"}
+              alignItems={"center"}
+              flexDirection={!isLargerThan992px ? "row" : "column"}
+              gap={4}
+            >
               {Array.from({ length: currSeason }, (_, i) => (
                 <Button
                   key={i}

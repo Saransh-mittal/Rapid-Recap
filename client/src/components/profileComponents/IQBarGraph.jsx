@@ -16,7 +16,12 @@ import axios from "axios";
 import ExpectedIQModal from "../articleComponents/ExpectedIQModal";
 import { AppContext } from "../../contextAPI/appContext";
 
-const IQBarGraph = ({ barGraph, privateBarGraph, loginedUserProfile }) => {
+const IQBarGraph = ({
+  barGraph,
+  privateBarGraph,
+  loginedUserProfile,
+  viewingHistory = false,
+}) => {
   const { state } = useContext(AppContext);
   const [USER_IQ, setUSER_IQ] = useState(null); // [USER_IQ, setUSER_IQ
   const [TOP_PERCENT, setTOP_PERCENT] = useState(null);
@@ -295,7 +300,9 @@ const IQBarGraph = ({ barGraph, privateBarGraph, loginedUserProfile }) => {
           px={5}
         >
           <Text m={0}>
-            Give 10 Quizzes to get the IQ score and Unlock the bar graph
+            {viewingHistory
+              ? `No Data Available`
+              : `Give 10 Quizzes to get the IQ score and Unlock the bar graph`}
           </Text>
 
           <Button

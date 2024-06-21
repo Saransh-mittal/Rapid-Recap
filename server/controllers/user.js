@@ -612,6 +612,7 @@ const profile = async (req, res) => {
       USER_IQ,
       maxIQScore: user.maxIQScore,
       profilePrivacy,
+      currentSeason: user.currentSeason,
     });
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -855,6 +856,7 @@ const profilePrivacy = async (req, res) => {
     solvedQuizzes,
     dailyActivity,
     society,
+    seasonAnalytics,
   } = req.body;
   try {
     const user = await User.findById(userId);
@@ -868,6 +870,7 @@ const profilePrivacy = async (req, res) => {
       solvedQuizzes,
       dailyActivity,
       society,
+      seasonAnalytics,
     };
     await user.save();
     res.status(200).json({ message: "Profile privacy settings updated" });

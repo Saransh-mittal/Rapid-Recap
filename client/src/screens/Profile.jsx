@@ -10,6 +10,8 @@ import {
   Button,
   keyframes,
   useDisclosure,
+  Text,
+  Tag,
 } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
 import { GiHistogram } from "react-icons/gi"; // Import the icon
@@ -46,6 +48,7 @@ export default function Profile() {
     solvedQuizzes: false,
     society: false,
     dailyActivity: false,
+    seasonAnalytics: false,
   });
 
   const {
@@ -58,6 +61,7 @@ export default function Profile() {
     setIsLoading(true);
     try {
       const response = await axios.get(`/api/user/profile/${inGameName}`);
+      // console.log(response.data);
       setProfile(() => response.data);
       if (inGameName === state.user.inGameName)
         dispatch({ type: "profile", payloadProfile: response.data });
@@ -280,50 +284,86 @@ export default function Profile() {
               />
             )}
           </Flex>
-          <Flex
-            marginTop={"12px"}
-            padding="15px"
-            borderRadius="10px"
-            flexDirection="column"
-            w={{ md: "85%", lg: "95%", base: "100%" }}
-            height="fit-content"
-            justifyContent={"center"}
-            alignItems={"center"}
-          >
-            <Tooltip label="Coming soon!" aria-label="Coming soon" hasArrow>
-              <Button
-                w={"100%"}
-                bgGradient="linear(to-r, teal.500, blue.500)"
-                color="white"
-                fontWeight="bold"
-                fontFamily="Arial, sans-serif"
-                _hover={"none"}
-                // _hover={{
-                //   bgGradient: "linear(to-r, red.500, yellow.500)",
-                //   animation: `${hoverAnimation} 0.5s ease-in-out`,
-                // }}
-                _active={{
-                  bgGradient: "linear(to-r, purple.500, pink.500)",
-                  transform: "scale(0.95)",
-                }}
-                leftIcon={<GiHistogram />} // Add icon here
-                onClick={onOpenSeasonSelector}
-                isDisabled={true}
+          {isLoading ? (
+            <>
+              <Skeleton
+                w={{ md: "85%", lg: "95%", base: "100%" }}
+                borderRadius="10px"
+                marginTop={"12px"}
+                height="50px"
+              />
+            </>
+          ) : (
+            (!privacyProfileData.seasonAnalytics ||
+              inGameName == state.user.inGameName) && (
+              <Flex
+                marginTop={"12px"}
+                padding="15px"
+                borderRadius="10px"
+                flexDirection="column"
+                w={{ md: "85%", lg: "95%", base: "100%" }}
+                height="fit-content"
+                justifyContent={"center"}
+                alignItems={"center"}
+                position={"relative"}
               >
-                Season Analytics
-              </Button>
-            </Tooltip>
-            <SeasonSelectorModal
-              currSeason={state.user.currentSeason}
-              isOpen={isOpenSeasonSelector}
-              onClose={onCloseSeasonSelector}
-              isLoading={isLoading}
-              profile={profile}
-              privacyProfileData={privacyProfileData}
-              loginedUserProfile={loginedUserProfile}
-              inGameName={inGameName}
-            />
-          </Flex>
+                {inGameName == state.user.inGameName && (
+                  <Tooltip label="Visibility to others">
+                    <Tag
+                      backgroundColor="#0f0d15"
+                      m={0}
+                      position={"absolute"}
+                      top={"1.2rem"}
+                      right={"1.2rem"}
+                      color={"#9CAFAA"}
+                      display={"flex"}
+                      justifyContent={"center"}
+                      alignItems={"center"}
+                      w={"60px"}
+                      height={"30px"}
+                      zIndex={1}
+                    >
+                      {state.user.profilePrivacy.seasonAnalytics
+                        ? "HIDDEN"
+                        : "VISIBLE"}
+                    </Tag>
+                  </Tooltip>
+                )}
+
+                <Button
+                  w={"100%"}
+                  bgGradient="linear(to-r, teal.500, blue.500)"
+                  color="white"
+                  fontWeight="bold"
+                  fontFamily="Arial, sans-serif"
+                  _hover={{
+                    bgGradient: "linear(to-r, red.500, yellow.500)",
+                    animation: `${hoverAnimation} 0.5s ease-in-out`,
+                  }}
+                  _active={{
+                    bgGradient: "linear(to-r, purple.500, pink.500)",
+                    transform: "scale(0.95)",
+                  }}
+                  leftIcon={<GiHistogram />} // Add icon here
+                  onClick={onOpenSeasonSelector}
+                >
+                  Season Analytics
+                </Button>
+
+                <SeasonSelectorModal
+                  privateSeasonAnalytics={privacyProfileData.seasonAnalytics}
+                  currSeason={profile?.currentSeason}
+                  isOpen={isOpenSeasonSelector}
+                  onClose={onCloseSeasonSelector}
+                  isLoading={isLoading}
+                  profile={profile}
+                  privacyProfileData={privacyProfileData}
+                  loginedUserProfile={loginedUserProfile}
+                  inGameName={inGameName}
+                />
+              </Flex>
+            )
+          )}
         </Flex>
         <Flex
           w={{

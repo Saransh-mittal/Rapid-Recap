@@ -184,11 +184,13 @@ const SeasonModal = ({
                   lineGraph={profile.lineGraph}
                   privateLineGraph={privacyProfileData.lineGraph}
                   loginedUserProfile={loginedUserProfile}
+                  viewingHistory={true}
                 />
                 <IQBarGraph
                   barGraph={profile.barGraph}
                   privateBarGraph={privacyProfileData.lineGraph}
                   loginedUserProfile={loginedUserProfile}
+                  viewingHistory={true}
                 />
               </>
             )}

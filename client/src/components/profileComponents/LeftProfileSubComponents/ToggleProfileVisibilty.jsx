@@ -42,6 +42,9 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
     society: state.user.profilePrivacy
       ? state.user?.profilePrivacy.society
       : false,
+    seasonAnalytics: state.user.profilePrivacy
+      ? state.user?.profilePrivacy.seasonAnalytics
+      : false,
   });
   useEffect(() => {
     onOpen();

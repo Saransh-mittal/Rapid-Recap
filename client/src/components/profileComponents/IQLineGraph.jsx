@@ -17,7 +17,12 @@ import axios from "axios";
 import ExpectedIQModal from "../articleComponents/ExpectedIQModal";
 import { AppContext } from "../../contextAPI/appContext";
 
-const IQLineGraph = ({ lineGraph, privateLineGraph, loginedUserProfile }) => {
+const IQLineGraph = ({
+  lineGraph,
+  privateLineGraph,
+  loginedUserProfile,
+  viewingHistory = false,
+}) => {
   const { state } = useContext(AppContext);
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
@@ -343,7 +348,9 @@ const IQLineGraph = ({ lineGraph, privateLineGraph, loginedUserProfile }) => {
           position={"relative"}
         >
           <Text m={0}>
-            Give 10 Quizzes to get the IQ score and enter the ranking
+            {viewingHistory
+              ? `No Data Available`
+              : `Give 10 Quizzes to get the IQ score and enter the ranking`}
           </Text>
 
           <Button

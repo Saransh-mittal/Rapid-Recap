@@ -123,6 +123,7 @@ const userSchema = new mongoose.Schema(
       solvedQuizzes: { type: Boolean, default: false },
       dailyActivity: { type: Boolean, default: false },
       society: { type: Boolean, default: false },
+      seasonAnalytics: { type: Boolean, default: false },
     },
     societyUpgradeMessage: {
       type: String,
