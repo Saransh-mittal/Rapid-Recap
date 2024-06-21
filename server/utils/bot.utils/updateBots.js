@@ -148,6 +148,7 @@ async function updateBots() {
           if (fullQuiz.overAllDifficulty < 0.5) u.easyQuizCount++;
           else if (fullQuiz.overAllDifficulty < 0.7) u.mediumQuizCount++;
           else u.hardQuizCount++;
+          u.rankedInCurrentSeason = true;
           await u.save();
         }
         // updateProgressQuizAttempts();

@@ -427,7 +427,6 @@ const leaderBoard = async (req, res) => {
     }
 
     const usersPromise = User.aggregate([
-      { $match: condition },
       {
         $lookup: {
           from: "quiz_attempts",
@@ -450,6 +449,17 @@ const leaderBoard = async (req, res) => {
       {
         $addFields: {
           quizAttemptsLength: { $size: "$quizAttemptsSeason2" },
+        },
+      },
+      {
+        $addFields: {
+          rankedInCurrentSeason: {
+            $cond: {
+              if: { $gte: ["$quizAttemptsLength", 1] },
+              then: true,
+              else: false,
+            },
+          },
         },
       },
       {

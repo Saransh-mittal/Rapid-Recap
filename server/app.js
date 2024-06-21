@@ -71,7 +71,6 @@ webpush.setVapidDetails(
 // require("./scripts/quizAttemptAndDailyIQUpdateSeason");
 // -------------------
 
-// require("./scripts/testNewSeasonModal");
 app.use(express.json());
 // require("./scheduler/userIQScoreScheduler");
 // require("./scheduler/mailsForStreakBroken");
