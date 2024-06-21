@@ -143,11 +143,19 @@ async function updateBots() {
           await newQuizAttempt.save();
           newQuizAttempt.createdAt = currentDate;
           await newQuizAttempt.save();
-          const u = await User.findById(userId);
+          const u = await User.findById(userId).populate({
+            path: "quizAttempts",
+            select: "_id",
+            match: { season: parseInt(configService.getCurrentSeason(), 10) },
+          });
           u.quizAttempts.push(newQuizAttempt._id);
           if (fullQuiz.overAllDifficulty < 0.5) u.easyQuizCount++;
           else if (fullQuiz.overAllDifficulty < 0.7) u.mediumQuizCount++;
           else u.hardQuizCount++;
+          u.rankedInCurrentSeason = true;
+          let sumOfRQM = u.avgRQM * u.quizAttempts.length;
+          sumOfRQM += RQM_score;
+          u.avgRQM = sumOfRQM / (u.quizAttempts.length + 1);
           await u.save();
         }
         // updateProgressQuizAttempts();

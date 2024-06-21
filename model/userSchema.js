@@ -216,6 +216,12 @@ const userSchema = new mongoose.Schema(
         ref: "SEASON_DATA",
       },
     ],
+    maxIQScorePerSeason: [
+      {
+        season: Number,
+        maxIQScore: Number,
+      },
+    ],
     lastLogin: {
       type: Date,
       default: Date.now,

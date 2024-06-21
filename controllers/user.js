@@ -453,6 +453,17 @@ const leaderBoard = async (req, res) => {
         },
       },
       {
+        $addFields: {
+          rankedInCurrentSeason: {
+            $cond: {
+              if: { $gte: ["$quizAttemptsLength", 1] },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+      {
         $sort: {
           IQ_score: -1,
           quizAttemptsLength: -1,

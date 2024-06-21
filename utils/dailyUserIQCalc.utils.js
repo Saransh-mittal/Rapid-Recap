@@ -9,7 +9,7 @@ const CircleAndSocietyData = require("../data/CircleAndSocietyData");
 const { logActivity } = require("./activity.utils");
 const { activityTypes } = require("../data/activityTypes");
 const configService = require("../configService");
-const { progressBar } = require("./progress.utils");
+// const { progressBar } = require("./progress.utils");
 
 const findSocietyCircleByIQ = (IQScore) => {
   return CircleAndSocietyData.find((data) => {
@@ -113,7 +113,7 @@ const calculateUserScores = async (users) => {
   });
 
   const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises);
-  const progressBarIncrement = progressBar(userQuizAttempts.length);
+  // const progressBarIncrement = progressBar(userQuizAttempts.length);
   for (const { user, quizAttempts } of userQuizAttempts) {
     let userScore = user.baseUserScore || 0;
 
@@ -139,7 +139,7 @@ const calculateUserScores = async (users) => {
 
     sumOfUserScores += userScore;
     userScores.push({ user, userScore });
-    progressBarIncrement();
+    // progressBarIncrement();
   }
 
   return { userScores, sumOfUserScores };
@@ -155,7 +155,7 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
 
   userScores.sort((a, b) => b.userScore - a.userScore);
   let rank = 1;
-  const progressBarIncrement = progressBar(userScores.length);
+  // const progressBarIncrement = progressBar(userScores.length);
   for (const { user, userScore } of userScores) {
     if (!user) {
       console.error("Invalid user data.");
@@ -194,7 +194,7 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
       awardableXpOrNot
     );
     rank++;
-    progressBarIncrement();
+    // progressBarIncrement();
   }
 };
 

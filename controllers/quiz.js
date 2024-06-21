@@ -93,7 +93,11 @@ const saveAttempt = async (req, res) => {
     let RQM_score = Math.ceil(
       ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000
     );
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate({
+      path: "quizAttempts",
+      select: "_id",
+      match: { season: parseInt(configService.getCurrentSeason(), 10) },
+    });
     let boosted = false;
     if (user.todayBoost) {
       RQM_score = Math.ceil(RQM_score * 1.5);
