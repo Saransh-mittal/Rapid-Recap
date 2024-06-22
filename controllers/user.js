@@ -62,14 +62,13 @@ const registerUser = async (req, res) => {
     const response = await User.findOne({ email }).session(session);
     const response2 = await User.findOne({ inGameName }).session(session);
 
+    if (response) {
+      return res.status(422).json({ error: "Email already exists" });
+    }
     if (response2) {
       return res
         .status(422)
         .json({ error: "This In Game Name is already taken" });
-    }
-
-    if (response) {
-      return res.status(422).json({ error: "Email already exists" });
     }
 
     if (password.length < 8) {
@@ -133,9 +132,15 @@ const loginUser = async (req, res) => {
     const email = isValidEmail(emailOrInGameName) ? emailOrInGameName : null;
     const inGameName = email ? null : emailOrInGameName;
     if (email) {
-      findUser = await User.findOne({ email });
+      findUser = await User.findOne({ email }).populate({
+        path: "previousSeasonData",
+        select: "season",
+      });
     } else {
-      findUser = await User.findOne({ inGameName });
+      findUser = await User.findOne({ inGameName }).populate({
+        path: "previousSeasonData",
+        select: "season",
+      });
     }
     //console.log(findUser);
     if (!findUser)
@@ -307,6 +312,9 @@ const handleGoogleLogin = async (req, res) => {
         { googleEmail: userInfo.email },
         { googleId: userInfo.sub },
       ],
+    }).populate({
+      path: "previousSeasonData",
+      select: "season",
     });
     //console.log(userInfo);
     if (user) {
@@ -557,12 +565,17 @@ const profile = async (req, res) => {
   try {
     const user = await User.findOne({
       inGameName: req.params.inGameName,
-    }).populate("dailyIQScores");
+    })
+      .populate("dailyIQScores")
+      .populate({
+        path: "previousSeasonData",
+        select: "season",
+      });
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
+    const seasons = user.previousSeasonData.map((season) => season.season);
     const {
       Top_Percentage,
       percentileData,
@@ -613,6 +626,7 @@ const profile = async (req, res) => {
       maxIQScore: user.maxIQScore,
       profilePrivacy,
       currentSeason: user.currentSeason,
+      seasons,
     });
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -822,7 +836,17 @@ const userSearch = async (req, res) => {
 
     prioritizedUsers.forEach((user) => {
       let sum = 0;
-      const { name, inGameName, IQ_score, pic, _id, maxIQScore, rank } = user;
+      const {
+        name,
+        inGameName,
+        IQ_score,
+        pic,
+        _id,
+        maxIQScore,
+        rank,
+        xp,
+        level,
+      } = user;
       for (let i = 0; i < user.quizAttempts.length; i++) {
         sum += user.quizAttempts[i].RQM_score;
       }
@@ -838,6 +862,8 @@ const userSearch = async (req, res) => {
         quizSubmissions,
         maxIQScore,
         rank,
+        xp,
+        level,
       });
     });
     res.status(201).json(result); // Return the prioritized users as JSON response
