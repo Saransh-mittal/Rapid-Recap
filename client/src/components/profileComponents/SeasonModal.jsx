@@ -10,6 +10,7 @@ import {
   Flex,
   Skeleton,
   useMediaQuery,
+  Text,
 } from "@chakra-ui/react";
 import IQLineGraph from "./IQLineGraph";
 import IQBarGraph from "./IQBarGraph";
@@ -18,6 +19,7 @@ import RankAndSociety from "./RankAndSociety";
 import Heading from "../miscellaneous/HeadingComponent";
 
 const SeasonModal = ({
+  notInTheSeason,
   isOpen,
   onClose,
   season,
@@ -149,123 +151,122 @@ const SeasonModal = ({
         </ModalHeader>
         {isLargerThan992px && <ModalCloseButton />}
         <ModalBody mb={"2rem"} overflowX={"hidden"} overflowY="auto" w={"100%"}>
-          <Flex
-            w={"100%"}
-            h={""}
-            marginTop={"10px"}
-            marginInline={"1%"}
-            padding={{ xl: isLoading ? 0 : "20px", base: "0" }}
-            borderRadius="10px"
-            flexDirection={{ base: "column", xl: "row" }}
-            backgroundColor={{ base: "transparent", xl: "#0f0d15" }}
-            backgroundImage={{
-              base: "none",
-              xl: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-            }}
-            boxShadow={{
-              base: "none",
-              xl: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
-            }}
-            gap={{ base: "20px", xl: "0" }}
-          >
-            {isLoading ? (
-              <>
-                <Skeleton
-                  height="200px"
-                  width="100%"
-                  borderRadius="10px"
-                  marginRight={5}
-                />
-                <Skeleton height="200px" width="100%" borderRadius="10px" />
-              </>
-            ) : (
-              <>
-                <IQLineGraph
-                  lineGraph={profile.lineGraph}
-                  privateLineGraph={privacyProfileData.lineGraph}
-                  loginedUserProfile={loginedUserProfile}
-                  viewingHistory={true}
-                />
-                <IQBarGraph
-                  barGraph={profile.barGraph}
-                  privateBarGraph={privacyProfileData.lineGraph}
-                  loginedUserProfile={loginedUserProfile}
-                  viewingHistory={true}
-                />
-              </>
-            )}
-          </Flex>
+          {notInTheSeason ? (
+            <Heading
+              title={
+                loginedUserProfile
+                  ? "You were not logged-in in this season"
+                  : "This user was not logged-in in this season"
+              }
+            />
+          ) : (
+            <>
+              <Flex
+                w={"100%"}
+                h={""}
+                marginTop={"10px"}
+                marginInline={"1%"}
+                padding={{ xl: isLoading ? 0 : "20px", base: "0" }}
+                borderRadius="10px"
+                flexDirection={{ base: "column", xl: "row" }}
+                backgroundColor={{ base: "transparent", xl: "#0f0d15" }}
+                backgroundImage={{
+                  base: "none",
+                  xl: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                }}
+                boxShadow={{
+                  base: "none",
+                  xl: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+                }}
+                gap={{ base: "20px", xl: "0" }}
+              >
+                {isLoading ? (
+                  <>
+                    <Skeleton
+                      height="200px"
+                      width="100%"
+                      borderRadius="10px"
+                      marginRight={5}
+                    />
+                    <Skeleton height="200px" width="100%" borderRadius="10px" />
+                  </>
+                ) : (
+                  <>
+                    <IQLineGraph
+                      lineGraph={profile.lineGraph}
+                      privateLineGraph={privacyProfileData.lineGraph}
+                      loginedUserProfile={loginedUserProfile}
+                      viewingHistory={true}
+                    />
+                    <IQBarGraph
+                      barGraph={profile.barGraph}
+                      privateBarGraph={privacyProfileData.lineGraph}
+                      loginedUserProfile={loginedUserProfile}
+                      viewingHistory={true}
+                    />
+                  </>
+                )}
+              </Flex>
 
-          <Flex
-            w={"100%"}
-            margin="10px"
-            marginBottom="5px"
-            flexDirection={{ xl: "row", base: "column" }}
-            justifyContent="space-between"
-            gap={5}
-          >
-            {isLoading ? (
-              <>
-                <Skeleton height="150px" width="100%" borderRadius="10px" />
-                <Skeleton height="150px" width="100%" borderRadius="10px" />
-              </>
-            ) : (
-              <>
-                <Flex
-                  borderRadius="10px"
-                  width={"100%"}
-                  style={{
-                    backgroundColor: "#0f0d15",
-                    backgroundImage:
-                      "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-                    boxShadow:
-                      "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
-                  }}
-                  className="solved-quizzes"
-                  _hover={
-                    !privacyProfileData.solvedQuizzes
-                      ? {
-                          transform: "scale(1.01)",
-                        }
-                      : null
-                  }
-                  _active={
-                    !privacyProfileData.solvedQuizzes
-                      ? {
-                          transform: "scale(0.9)",
-                          borderColor: "#bec3c9",
-                        }
-                      : null
-                  }
-                >
-                  <SolvedQuizzes
-                    privateSolvedQuiz={privacyProfileData.solvedQuizzes}
-                    loginedUserProfile={loginedUserProfile}
-                    solvedQuizzes={profile.solvedQuizzes}
-                    inGameName={inGameName}
-                  />
-                </Flex>
-                <Flex
-                  borderRadius="10px"
-                  width={"100%"}
-                  style={{
-                    backgroundColor: "#0f0d15",
-                    backgroundImage:
-                      "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-                    boxShadow:
-                      "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
-                  }}
-                  className="rank-and-society"
-                >
-                  <RankAndSociety
-                    privateSociety={privacyProfileData.society}
-                    loginedUserProfile={loginedUserProfile}
-                    USER_IQ={profile?.barGraph?.USER_IQ}
-                  />
-                </Flex>
-              </>
-            )}
-          </Flex>
+              <Flex
+                w={"100%"}
+                margin="10px"
+                marginBottom="5px"
+                flexDirection={{ xl: "row", base: "column" }}
+                justifyContent="space-between"
+                gap={5}
+              >
+                {isLoading ? (
+                  <>
+                    <Skeleton height="150px" width="100%" borderRadius="10px" />
+                    <Skeleton height="150px" width="100%" borderRadius="10px" />
+                  </>
+                ) : (
+                  <>
+                    <Flex
+                      borderRadius="10px"
+                      width={"100%"}
+                      style={{
+                        backgroundColor: "#0f0d15",
+                        backgroundImage:
+                          "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                        boxShadow:
+                          "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+                      }}
+                      className="solved-quizzes"
+                    >
+                      <SolvedQuizzes
+                        isDisabled={true}
+                        privateSolvedQuiz={privacyProfileData.solvedQuizzes}
+                        loginedUserProfile={loginedUserProfile}
+                        solvedQuizzes={profile.solvedQuizzes}
+                        inGameName={inGameName}
+                      />
+                    </Flex>
+                    <Flex
+                      borderRadius="10px"
+                      width={"100%"}
+                      style={{
+                        backgroundColor: "#0f0d15",
+                        backgroundImage:
+                          "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                        boxShadow:
+                          "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+                      }}
+                      className="rank-and-society"
+                    >
+                      <RankAndSociety
+                        isDisabled={true}
+                        privateSociety={privacyProfileData.society}
+                        loginedUserProfile={loginedUserProfile}
+                        USER_IQ={profile?.barGraph?.USER_IQ}
+                      />
+                    </Flex>
+                  </>
+                )}
+              </Flex>
+            </>
+          )}
         </ModalBody>
       </ModalContent>
     </Modal>

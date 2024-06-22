@@ -8,7 +8,7 @@ import Loading from "../miscellaneous/Loading";
 import { Box, Flex } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/react";
 import { throttle } from "lodash";
-const EmailVerify = ({ email }) => {
+const EmailVerify = ({ email, setEmailVerified }) => {
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const forgetPassword = state.forgotPassword;
@@ -63,6 +63,7 @@ const EmailVerify = ({ email }) => {
         data
       );
       if (response.status === 201) {
+        setEmailVerified(true);
         toast({
           title: "Email Verified",
           status: "success",

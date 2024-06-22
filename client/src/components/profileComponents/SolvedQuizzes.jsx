@@ -20,6 +20,7 @@ const SolvedQuizzes = ({
   inGameName,
   privateSolvedQuiz,
   loginedUserProfile,
+  isDisabled = false,
 }) => {
   const { state } = useContext(AppContext);
   const toast = useToast();
@@ -30,6 +31,7 @@ const SolvedQuizzes = ({
   const [isLoading, setIsLoading] = useState(true);
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+
   const fetchSolvedQuizzes = async () => {
     try {
       //const response = await axios.get("/api/user/solvedQuizzesCount");
@@ -88,7 +90,7 @@ const SolvedQuizzes = ({
       gap={6}
       mt={4}
       mr={10}
-      onClick={!privateSolvedQuiz ? getHistory : null}
+      onClick={!privateSolvedQuiz && !isDisabled ? getHistory : null}
     >
       {showHistory && (
         <SolvedQuizHistory

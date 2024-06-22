@@ -20,15 +20,15 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  useDisclosure,
   Flex,
 } from "@chakra-ui/react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import _ from "lodash";
-import { NavLink } from "react-router-dom";
+
 import { Helmet } from "react-helmet-async";
 
 export default function Register({ isOpen, onClose, signinOnOpen }) {
+  const [emailVerified, setEmailVerified] = useState(false);
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [data, setData] = useState({
@@ -100,6 +100,13 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
   const handleSubmitThrottled = useCallback(_.throttle(handleSubmit, 1000), [
     data,
   ]);
+
+  useEffect(() => {
+    if (emailVerified) {
+      onClose();
+      signinOnOpen();
+    }
+  }, [emailVerified]);
 
   useEffect(() => {
     return () => handleSubmitThrottled.cancel();
@@ -197,7 +204,10 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
                 dispatch({ type: "showModal", payloadModal: false })
               }
             >
-              <EmailVerify email={data.email} />
+              <EmailVerify
+                email={data.email}
+                setEmailVerified={setEmailVerified}
+              />
             </Modal>
           )}
           <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>

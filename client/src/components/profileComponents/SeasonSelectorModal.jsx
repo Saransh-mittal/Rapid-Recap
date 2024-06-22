@@ -21,10 +21,9 @@ const SeasonSelectorModal = ({
   isOpen,
   onClose,
   currSeason,
-  privacyProfileData,
   loginedUserProfile,
   inGameName,
-  privateSeasonAnalytics,
+  seasons,
 }) => {
   const {
     onOpen: onOpenSeasonModal,
@@ -67,7 +66,8 @@ const SeasonSelectorModal = ({
       onCloseSeasonModal();
       setSelectedSeason(null);
     } else {
-      fetchSeasonHistory(season);
+      (seasons.includes(season) || season == currSeason) &&
+        fetchSeasonHistory(season);
       setSelectedSeason(season);
       onOpenSeasonModal();
     }
@@ -118,6 +118,9 @@ const SeasonSelectorModal = ({
         </DrawerContent>
       </Drawer>
       <SeasonModal
+        notInTheSeason={
+          !seasons.includes(selectedSeason) && selectedSeason !== currSeason
+        }
         isOpen={isOpenSeasonModal}
         onClose={() => {
           onCloseSeasonModal();
@@ -126,7 +129,7 @@ const SeasonSelectorModal = ({
         season={selectedSeason}
         isLoading={isLoading}
         profile={profile}
-        privacyProfileData={privacyProfileData}
+        privacyProfileData={false}
         loginedUserProfile={loginedUserProfile}
         inGameName={inGameName}
       />

@@ -360,6 +360,7 @@ export default function Profile() {
                   privacyProfileData={privacyProfileData}
                   loginedUserProfile={loginedUserProfile}
                   inGameName={inGameName}
+                  seasons={profile?.seasons}
                 />
               </Flex>
             )

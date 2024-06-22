@@ -13,6 +13,7 @@ const RankAndSociety = ({
   USER_IQ = 0,
   privateSociety,
   loginedUserProfile,
+  isDisabled = false,
 }) => {
   const { state, dispatch } = useContext(AppContext);
   const [circleAndSociety, setCircleAndSociety] = useState({});
@@ -126,14 +127,15 @@ const RankAndSociety = ({
           >
             <Flex width="100%" justifyContent={"center"} alignItems={"center"}>
               <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={!isDisabled && { scale: 1.1 }}
+                whileTap={!isDisabled && { scale: 0.9 }}
                 style={{
                   background: "transparent",
                   border: "none",
                   outline: "none",
                   width: "100%",
                   height: "100%",
+                  cursor: isDisabled ? "default" : "pointer",
                 }}
               >
                 <Flex
@@ -142,8 +144,8 @@ const RankAndSociety = ({
                   w="100%"
                   position="relative"
                   flexDirection="column"
-                  onClick={handleBrainClick} // Add onClick handler to the brain image
-                  style={{ cursor: "pointer" }} // Change cursor to pointer to indicate it's clickable
+                  onClick={!isDisabled ? handleBrainClick : null} // Add onClick handler to the brain image
+                  style={{ cursor: isDisabled ? "default" : "pointer" }} // Change cursor to pointer to indicate it's clickable
                   h={"100%"}
                 >
                   <Flex
@@ -198,14 +200,15 @@ const RankAndSociety = ({
                 />
               </Flex>
               <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={!isDisabled && { scale: 1.1 }}
+                whileTap={!isDisabled && { scale: 0.9 }}
                 style={{
                   background: "transparent",
                   border: "none",
                   outline: "none",
                   width: "100%",
                   height: "100%",
+                  cursor: isDisabled ? "default" : "pointer",
                 }}
               >
                 <Flex
@@ -213,10 +216,10 @@ const RankAndSociety = ({
                   w="100%"
                   h={"100%"}
                   position="relative"
-                  onClick={handleCircleClick}
+                  onClick={!isDisabled ? handleCircleClick : null}
                   justifyContent={"center"}
                   alignItems={"center"}
-                  cursor="pointer"
+                  cursor={isDisabled ? "default" : "pointer"}
                 >
                   <img
                     src={circle}
