@@ -520,6 +520,7 @@ const processDataIoCategories = async (
       language: "en",
       prioritydomain: "top",
       timezone: "Asia/Kolkata",
+      country: "in,us",
       size: "5",
     };
     const queryString = Object.entries(queries)
