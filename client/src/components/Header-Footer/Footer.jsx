@@ -68,7 +68,7 @@ const Footer = () => {
             </a>
           </li>
         </ul>
-        <p className="text-center ">© 2023 Company, Inc, All rights reserved</p>
+        <p className="text-center ">2024, All rights reserved</p>
       </footer>
     </>
   );
