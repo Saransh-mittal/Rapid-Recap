@@ -1,2 +1,6 @@
 node_modules
 config.env
+scripts/Articles.csv
+scripts/QuizAttempts.csv
+scripts/Users.csv
+scripts/TimeSpent.csv
