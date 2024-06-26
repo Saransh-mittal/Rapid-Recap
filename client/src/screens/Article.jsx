@@ -15,7 +15,7 @@ import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
 import QuinBoostModal from "../components/articleComponents/QuinBoostModal";
 import { useArticlePageTour } from "../customHooks/useTours";
 import { useQuinBoostTour } from "../customHooks/useTours";
-import ArticleHeader from "../components/articleComponents/ArticleHeader";
+// import ArticleHeader from "../components/articleComponents/ArticleHeader";
 import MainArticleContent from "../components/articleComponents/MainArticleContent";
 import Sidebar from "../components/articleComponents/Sidebar";
 import imageData from "../assets/AltNewsImage";
@@ -55,6 +55,7 @@ const Article = () => {
   const [expectedIQ, setExpectedIQ] = useState(null);
   const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(0);
   const [title, setTitle] = useState({ english: "", hindi: "" });
+  const [dateTime, setDateTime] = useState("");
   const [author, setAuthor] = useState({ english: "", hindi: "" });
   const [mainText, setMainText] = useState({ english: [], hindi: [] });
   const [translateLoading, setTranslateLoading] = useState(false);
@@ -79,9 +80,11 @@ const Article = () => {
           state.category ? state.category : "general"
         }`
       );
+      console.log(response.data);
       setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
       setLatestNews(news.data);
       setArticle(response.data.newArticle);
+      setDateTime(response.data.newArticle.date);
       setTitle({
         english: response.data.newArticle.title,
         hindi: response.data.newArticle.hindiTitle,
@@ -382,14 +385,7 @@ const Article = () => {
               `}
             </script>
           </Helmet>
-          <ArticleHeader
-            handleLanguageChange={handleLanguageChange}
-            isQuinBoostAvailable={isQuinBoostAvailable}
-            openModal={openModal}
-            quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
-            state={state}
-            quinTour={quinTour}
-          />
+
           <Grid
             templateColumns={isLargerThan820 ? "minmax(0, 9fr) 5fr" : "1fr"}
             gap={10}
@@ -411,7 +407,10 @@ const Article = () => {
               articleRef={articleRef}
               textHeight={textHeight}
               state={state}
+              handleLanguageChange={handleLanguageChange}
+              dateTime={dateTime}
             />
+
             <Sidebar
               state={state}
               givenQuiz={givenQuiz}
@@ -431,6 +430,9 @@ const Article = () => {
               articleHeight={articleHeight}
               article={article}
               id={id}
+              quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
+              openModal={openModal}
+              quinTour={quinTour}
             />
           </Grid>
         </Flex>

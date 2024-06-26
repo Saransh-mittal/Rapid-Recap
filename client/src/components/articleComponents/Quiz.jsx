@@ -50,6 +50,9 @@ const Quiz = ({
   setIsQuinBoostAvailable,
   setQuizLeftToGetQuizBoost,
 }) => {
+  const articleId = article._id;
+  const { quizData, load, quizId, setLoad } = useFetchQuiz(articleId, language);
+  const totalQuestions = quizData ? quizData.questions.length : 0;
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -63,38 +66,43 @@ const Quiz = ({
     useState(false);
   const stopTimerRef = useRef(false);
 
-  const articleId = article._id;
-  const { quizData, load, quizId, setLoad } = useFetchQuiz(articleId, language);
-  const { timer, timeTaken } = useTimer(isOpen, submitted, showInstruction);
+  useEffect(() => {
+    const initialAnswers = Array(totalQuestions).fill("");
+    setUserAnswers(initialAnswers);
+  }, [totalQuestions]);
+
   const { handleSubmitQuiz, submitLoad } = useSubmitQuiz(
     articleId,
     quizData,
-    userAnswers,
-    timeTaken,
     quizId,
     showConfirmationModal,
     currentQuestionIndex,
-    setSubmitted,
     setScore
   );
 
-  const totalQuestions = quizData ? quizData.questions.length : 0;
+  const { timer, timeTaken } = useTimer(
+    isOpen,
+    submitted,
+    showInstruction,
+    userAnswers,
+    ({ timeTaken, userAnswers, setSubmitted }) =>
+      handleSubmitQuiz({ timeTaken, userAnswers, setSubmitted }),
+    setSubmitted
+  );
 
   const handleNextQuestion = useCallback(() => {
     if (currentQuestionIndex < totalQuestions - 1) {
-      if (userAnswers.length === currentQuestionIndex) {
-        setUserAnswers((prevAnswers) => [...prevAnswers, ""]);
-      }
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
     }
-  }, [currentQuestionIndex, totalQuestions, userAnswers]);
+  }, [currentQuestionIndex, totalQuestions]);
 
   const handleAnswer = useCallback(
     (selectedOption) => {
       setUserAnswers((prevAnswers) => {
-        const updatedAnswers = [...prevAnswers];
-        updatedAnswers[currentQuestionIndex] = selectedOption;
-        return updatedAnswers;
+        const newAnswers = [...prevAnswers];
+        newAnswers[currentQuestionIndex] = selectedOption;
+
+        return newAnswers;
       });
     },
     [currentQuestionIndex]
@@ -161,7 +169,12 @@ const Quiz = ({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       });
-      await handleSubmitQuiz();
+
+      await handleSubmitQuiz({
+        timeTaken,
+        userAnswers,
+        setSubmitted,
+      });
       setShowConfirmationModal(false);
     } catch (error) {
       toast({
@@ -347,7 +360,8 @@ const Quiz = ({
                   </Button>
                 )}
                 {!showInstruction &&
-                  currentQuestionIndex < totalQuestions - 1 && (
+                  currentQuestionIndex < totalQuestions - 1 &&
+                  !submitted && (
                     <Button
                       colorScheme="blue"
                       mr={3}
@@ -366,7 +380,9 @@ const Quiz = ({
                   <Button
                     colorScheme="blue"
                     mr={3}
-                    onClick={handleSubmitQuiz}
+                    onClick={() =>
+                      handleSubmitQuiz({ timeTaken, userAnswers, setSubmitted })
+                    }
                     bg="#DCF2F1"
                     color="#265073"
                     _hover={{

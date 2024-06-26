@@ -6,31 +6,33 @@ import { useToast } from "@chakra-ui/react";
 const useSubmitQuiz = (
   articleId,
   quizData,
-  userAnswers,
-  timeTaken,
   quizId,
   showConfirmationModal,
   currentQuestionIndex,
-  setSubmitted,
+
   setScore
 ) => {
+  // console.log(userAnswers);
   const [submitLoad, setSubmitLoad] = useState(false);
 
   const toast = useToast();
 
-  const handleSubmitQuiz = async () => {
+  const handleSubmitQuiz = async ({ timeTaken, userAnswers, setSubmitted }) => {
     setSubmitLoad(true);
     setSubmitted(true);
     try {
-      const userResponses = showConfirmationModal
-        ? Array.from({ length: quizData.length }, () => "")
-        : [...userAnswers];
-      if (
-        !showConfirmationModal &&
-        userResponses.length === currentQuestionIndex
-      ) {
-        userResponses.push("");
-      }
+      // const userResponses = showConfirmationModal
+      //   ? Array.from({ length: quizData.length }, () => "")
+      //   : [...userAnswers];
+      // if (
+      //   !showConfirmationModal &&
+      //   userResponses.length === currentQuestionIndex
+      // ) {
+      //   userResponses.push("");
+      // }
+
+      const userResponses = [...userAnswers];
+
       const response = await axios.post(`/api/quiz/attempt`, {
         articleId,
         userResponses,

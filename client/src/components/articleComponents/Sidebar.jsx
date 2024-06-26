@@ -16,7 +16,9 @@ import GivenQuiz from "./GivenQuiz";
 import QuizExpired from "./QuizExpired";
 import GenerateQuizButton from "./GenerateQuizButton";
 import TotalUserAttempted from "./TotalUserAttempted";
-
+import QuinBoost from "./quizComponents/QuinBoost";
+import starBoost from "/GIFs/starBoost.gif";
+import TextBackgound from "/images/textBackground.png";
 const Sidebar = ({
   givenQuiz,
   percentile,
@@ -36,6 +38,9 @@ const Sidebar = ({
   article,
   id,
   state,
+  quizLeftToGetQuizBoost,
+  openModal,
+  quinTour,
 }) => {
   const notLoggedIn = state.show;
   return (
@@ -100,8 +105,116 @@ const Sidebar = ({
           notLoggedIn={notLoggedIn}
         />
       </Box>
+      <Flex
+        w={"100%"}
+        marginTop={"2rem"}
+        marginBottom={"2"}
+        gap={10}
+        flexDirection={{ base: "column", md: "row" }}
+        justifyContent={"center"}
+        alignItems={"center"}
+      >
+        <Flex
+          flexDirection={"column"}
+          position={"relative"}
+          className="quin-boost-tag"
+        >
+          {isQuinBoostAvailable ? (
+            <Flex mb={5}>
+              <QuinBoost />
+            </Flex>
+          ) : (
+            !state.isBoosted && (
+              <>
+                <Text
+                  m={0}
+                  p={0}
+                  textAlign={"left"}
+                  paddingLeft={"30px"}
+                  position={"absolute"}
+                  color={"#9CAFAA"}
+                  fontWeight={"bold"}
+                >
+                  Quin Boost
+                </Text>
+                <Flex
+                  marginTop={"5px"}
+                  position={"relative"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  onClick={(e) => {
+                    if (notLoggedIn) {
+                      e.preventDefault();
+                      return;
+                    }
+                    quinTour.complete();
+                    openModal();
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <Image
+                    src={TextBackgound}
+                    background={"none"}
+                    height={"100px"}
+                    width={"200px"}
+                    className="quin-boost-tracker"
+                    style={notLoggedIn ? { filter: "blur(5px)" } : {}}
+                  />
+                  <Text
+                    m={0}
+                    p={0}
+                    textAlign={"left"}
+                    position={"absolute"}
+                    color={"black"}
+                    fontSize={"20px"}
+                    fontWeight={"bold"}
+                  >
+                    {quizLeftToGetQuizBoost} Quiz Left
+                  </Text>
+                  {notLoggedIn && (
+                    <Tooltip
+                      label="Please log in to use the feature"
+                      placement="top"
+                    >
+                      <LockIcon
+                        position="absolute"
+                        top="50%"
+                        left="50%"
+                        transform="translate(-50%, -50%)"
+                        color="white"
+                        boxSize={8}
+                        zIndex={2}
+                      />
+                    </Tooltip>
+                  )}
+                </Flex>
+              </>
+            )
+          )}
+        </Flex>
+        {state.isBoosted && (
+          <Flex
+            justifyContent={"center"}
+            alignItems={"center"}
+            gap={2}
+            marginTop={"10px"}
+            onClick={openModal}
+            style={{ cursor: "pointer" }}
+          >
+            <Image
+              src={starBoost}
+              background={"none"}
+              height={"60px"}
+              w={"60px"}
+            />
+            <Badge fontSize={"1.2rem"} color={"yellow"} background={"none"}>
+              Enjoy!! 1.5x multiplier
+            </Badge>
+          </Flex>
+        )}
+      </Flex>
       <Heading as="h3" fontSize="25px" color="white" letterSpacing={1}>
-        <TriangleDownIcon color="#F2D7D9" /> Latest Articles
+        <TriangleDownIcon color="#F2D7D9" /> Related Articles
       </Heading>
       <SimpleGrid
         columns={1}

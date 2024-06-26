@@ -3,6 +3,7 @@ import { useRef, useContext, useEffect } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import imageData from "../../assets/AltNewsImage";
 import { useNavigate } from "react-router-dom";
+import { size } from "lodash";
 
 const Card = ({ newsNumber, data }) => {
   //console.log("card :", data);
@@ -84,6 +85,17 @@ const Card = ({ newsNumber, data }) => {
           <div className="project-nav">
             <span className="block-reveal__text numb">
               {newsNumber}
+              <span
+                style={{
+                  fontSize: "0.85rem",
+                  textTransform: "uppercase",
+                  color: "#9CAFAA",
+                  fontWeight: "bold",
+                }}
+              >
+                {" "}
+                {data?.category}
+              </span>
               <br /> <span className="arr">→</span>
             </span>
           </div>

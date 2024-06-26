@@ -1,9 +1,22 @@
 // /hooks/useTimer.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-const useTimer = (isOpen, submitted, showInstruction) => {
+const useTimer = (
+  isOpen,
+  submitted,
+  showInstruction,
+  userAnswers,
+  onTimerEnd,
+  setSubmitted
+) => {
   const [timer, setTimer] = useState(50);
   const [timeTaken, setTimeTaken] = useState(0);
+  const userAnswersRef = useRef(userAnswers);
+
+  // Update the ref whenever userAnswers changes
+  useEffect(() => {
+    userAnswersRef.current = userAnswers;
+  }, [userAnswers]);
 
   useEffect(() => {
     let timerId = null;
@@ -14,6 +27,11 @@ const useTimer = (isOpen, submitted, showInstruction) => {
           if (prevTimer > 0) {
             return prevTimer - 1;
           } else {
+            onTimerEnd({
+              timeTaken,
+              userAnswers: userAnswersRef.current,
+              setSubmitted,
+            });
             clearInterval(timerId);
             return prevTimer;
           }

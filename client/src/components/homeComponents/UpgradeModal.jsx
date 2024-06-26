@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -26,6 +26,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
   const { state, dispatch } = useContext(AppContext);
 
   const USER_IQ = state.user.IQ_score;
+  console.log(USER_IQ);
   // const USER_IQ = 111;
   const findSocietyAndCircle = (USER_IQ) => {
     let SocietyOrCircle = null;
@@ -45,7 +46,9 @@ const UpgradeModal = ({ isOpen, onClose }) => {
 
   // Determine the society and circle for the current USER_IQ
   const upgradedSocietyOrCircle = findSocietyAndCircle(USER_IQ);
+  console.log(upgradedSocietyOrCircle);
   const prevSocietyOrCircle = findSocietyAndCircle(state.user.prevIQScore);
+  console.log(prevSocietyOrCircle);
 
   const isCircleUpdgraded =
     upgradedSocietyOrCircle.society === prevSocietyOrCircle.society;
@@ -62,6 +65,17 @@ const UpgradeModal = ({ isOpen, onClose }) => {
       console.error("Error:", error);
     }
   };
+
+  useEffect(() => {
+    if (USER_IQ <= state.prevIQScore) {
+      handleUpgradeMessageClose();
+    } else if (
+      prevSocietyOrCircle.society === upgradedSocietyOrCircle.society &&
+      prevSocietyOrCircle.circle === upgradedSocietyOrCircle.circle
+    ) {
+      handleUpgradeMessageClose();
+    }
+  }, []);
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "xl" }}>
       <ModalOverlay />
@@ -145,7 +159,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                     >
                       {/* {prevSocietyOrCircle.society} */}
                       {prevSocietyOrCircle?.society?.split(" ")[0]}
-                      <p>Society</p>
+                      <span> Society</span>
                     </Text>
                   </Flex>
                   <Flex

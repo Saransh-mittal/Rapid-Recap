@@ -8,6 +8,7 @@ import {
   Heading,
   Highlight,
   Image,
+  Select,
   Skeleton,
   Text,
   Tooltip,
@@ -27,102 +28,88 @@ const MainArticleContent = ({
   articleRef,
   textHeight,
   state,
+  handleLanguageChange,
+  dateTime,
 }) => {
   const notLoggedIn = state.show;
   return (
-    <Skeleton isLoaded={!translateLoading}>
+    <>
       {article && (
         <GridItem w="100%" className="article-container">
-          <Heading
-            align="left"
-            letterSpacing={1}
-            as="h3"
-            fontSize="25px"
-            bg="#2A2F4F"
-            p={2}
-            color="#FDE2F3"
-            borderRadius="xl"
-            marginBottom="20px"
-          >
-            {title[selectedLanguage]}
-          </Heading>
-
-          <Heading
-            align="left"
-            letterSpacing={1}
-            as="h4"
-            fontSize="15px"
-            marginTop="10px"
-          >
-            <Highlight
-              query="Author:"
-              styles={{ px: "2", py: "1", rounded: "full", bg: "#F7EFE5" }}
-              margin="5px"
+          <Skeleton isLoaded={!translateLoading}>
+            <Heading
+              align="left"
+              letterSpacing={1}
+              as="h3"
+              fontSize="25px"
+              bg="#2A2F4F"
+              p={2}
+              color="#FDE2F3"
+              borderRadius="xl"
+              marginBottom="20px"
             >
-              Author:
-            </Highlight>
-            <span style={{ fontSize: "20px", marginLeft: "10px" }}>
-              {author[selectedLanguage]}
-            </span>
-          </Heading>
-
-          {mainText[selectedLanguage].length === 3 ? (
-            <Box marginTop={5} ref={articleRef}>
-              <Text align="justify" letterSpacing={0}>
-                {mainText[selectedLanguage][0]}
-              </Text>
-              <Box
-                marginTop="2"
-                marginBottom="2"
-                display={"flex"}
-                alignItems={"justify"}
-                height={"100%"}
+              {title[selectedLanguage]}
+            </Heading>
+            <Flex
+              justifyContent={"space-between"}
+              mb={3}
+              flexDirection={{ base: "column", md: "row" }}
+            >
+              <Heading
+                align="left"
+                letterSpacing={1}
+                as="h4"
+                fontSize="15px"
+                marginTop="10px"
               >
-                <Flex
-                  w={"100%"}
-                  height={"100%"}
-                  marginRight={"3"}
-                  css={{
-                    "@media screen and (max-width: 1366px)": {
-                      display: "none",
-                    },
-                  }}
+                <Highlight
+                  query="Author:"
+                  styles={{ px: "2", py: "1", rounded: "full", bg: "#F7EFE5" }}
+                  margin="5px"
                 >
-                  <Image
-                    src={
-                      Array.isArray(data.imgURL) && data.imgURL.length > 0
-                        ? data.imgURL[0]
-                        : !Array.isArray(data.imgURL) && data.imgURL
-                        ? data.imgURL
-                        : alt_image
-                    }
-                    alt="Article Image"
-                    borderRadius="md"
-                    float={"left"}
-                    height={`${textHeight}px`}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = alt_image;
-                      e.target.style.height = `${textHeight}px`;
-                    }}
-                  />
-                </Flex>
-                <Flex position={"relative"}>
-                  <Text
-                    ref={textRef}
-                    align="justify"
-                    letterSpacing={0}
+                  Author:
+                </Highlight>
+                <span style={{ fontSize: "20px", marginLeft: "10px" }}>
+                  {author[selectedLanguage]}
+                </span>
+              </Heading>
+              <Flex
+                h={"100%"}
+                w={{ base: "100%", md: "auto" }}
+                gap={10}
+                className="lang-back-flex"
+                mt={{ base: "10px", md: "0" }}
+                justifyContent={{ base: "center", md: "null" }}
+              >
+                <Box position={"relative"}>
+                  <Select
+                    variant="outline"
+                    w={"150px"}
+                    backgroundColor={"#2A2F4F"}
+                    defaultValue="english"
+                    onChange={handleLanguageChange}
                     style={
                       notLoggedIn
-                        ? { filter: "blur(5px)", userSelect: "none" }
-                        : { userSelect: "text" }
+                        ? { filter: "blur(5px)", pointerEvents: "none" }
+                        : {}
                     }
                   >
-                    {mainText[selectedLanguage][1]}
-                  </Text>
+                    <option
+                      style={{ backgroundColor: "#2A2F4F" }}
+                      value="english"
+                    >
+                      English
+                    </option>
+                    <option
+                      style={{ backgroundColor: "#2A2F4F" }}
+                      value="hindi"
+                    >
+                      Hindi
+                    </option>
+                  </Select>
                   {notLoggedIn && (
                     <Tooltip
-                      label="Please log in to view content"
+                      label="Please log in to change language"
                       placement="top"
                     >
                       <LockIcon
@@ -136,84 +123,163 @@ const MainArticleContent = ({
                       />
                     </Tooltip>
                   )}
-                </Flex>
-              </Box>
-              <Text
-                align="justify"
-                letterSpacing={0}
-                style={
-                  notLoggedIn
-                    ? { filter: "blur(5px)", userSelect: "none" }
-                    : { userSelect: "text" }
-                }
-              >
-                {mainText[selectedLanguage][2]}
-              </Text>
-            </Box>
-          ) : (
-            <Box marginTop={8} ref={articleRef}>
-              <Image
-                css={{
-                  "@media screen and (max-width: 1366px)": {
-                    display: "none",
-                  },
-                }}
-                src={
-                  Array.isArray(data.imgURL) && data.imgURL.length > 0
-                    ? data.imgURL[0]
-                    : !Array.isArray(data.imgURL) && data.imgURL
-                    ? data.imgURL
-                    : alt_image
-                }
-                alt="Article Image"
-                borderRadius="md"
-                marginBottom="5"
-                marginRight="5"
-                float={"left"}
-                height={`${textHeight}px`}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = alt_image;
-                  e.target.style.height = `${textHeight}px`;
-                }}
-              />
-              <Text ref={textRef} align="left" letterSpacing={1}>
-                {mainText[selectedLanguage][0]}
-              </Text>
-              <Flex position={"relative"}>
-                <Text
-                  align="left"
-                  letterSpacing={1}
-                  style={
-                    notLoggedIn
-                      ? { filter: "blur(5px)", userSelect: "none" }
-                      : { userSelect: "text" }
-                  }
-                >
-                  {mainText[selectedLanguage][1]}
-                </Text>
-                {notLoggedIn && (
-                  <Tooltip
-                    label="Please log in to view content"
-                    placement="top"
-                  >
-                    <LockIcon
-                      position="absolute"
-                      top="50%"
-                      left="50%"
-                      transform="translate(-50%, -50%)"
-                      color="white"
-                      boxSize={8}
-                      zIndex={2}
-                    />
-                  </Tooltip>
-                )}
+                </Box>
               </Flex>
+            </Flex>
+          </Skeleton>
+
+          {/* Article Image */}
+          <Skeleton isLoaded={!translateLoading}>
+            <Box
+              ref={articleRef}
+              p={4}
+              bg="#1a1527"
+              borderRadius="md"
+              color="#E5E7EB"
+            >
+              <Flex marginTop={5} justifyContent={"center"}>
+                <Image
+                  src={
+                    Array.isArray(data.imgURL) && data.imgURL.length > 0
+                      ? data.imgURL[0]
+                      : !Array.isArray(data.imgURL) && data.imgURL
+                      ? data.imgURL
+                      : alt_image
+                  }
+                  alt="Article Image"
+                  borderRadius="md"
+                  marginBottom="5"
+                  width={{ base: "100%", sm: "100%", md: "80%", lg: "80%" }}
+                  height="auto"
+                  objectFit="contain"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = alt_image;
+                  }}
+                />
+              </Flex>
+              <Flex>
+                <Text
+                  style={{
+                    fontSize: "1.15rem",
+                    textTransform: "uppercase",
+                    color: "#9CAFAA",
+                    fontWeight: "bold",
+                    letterSpacing: "1px",
+                  }}
+                >
+                  {dateTime}
+                  {","}
+                </Text>
+              </Flex>
+              {mainText[selectedLanguage].length === 3 ? (
+                <>
+                  <Text
+                    align="justify"
+                    mb={4}
+                    fontSize="18px"
+                    letterSpacing={1}
+                  >
+                    {mainText[selectedLanguage][0]}
+                  </Text>
+                  <Box
+                    marginTop="2"
+                    marginBottom="2"
+                    display={"flex"}
+                    alignItems={"justify"}
+                    height={"100%"}
+                  >
+                    <Flex position={"relative"} width="100%">
+                      <Text
+                        ref={textRef}
+                        align="justify"
+                        letterSpacing={1}
+                        fontSize="18px"
+                        style={
+                          notLoggedIn
+                            ? { filter: "blur(5px)", userSelect: "none" }
+                            : { userSelect: "text" }
+                        }
+                      >
+                        {mainText[selectedLanguage][1]}
+                      </Text>
+                      {notLoggedIn && (
+                        <Tooltip
+                          label="Please log in to view content"
+                          placement="top"
+                        >
+                          <LockIcon
+                            position="absolute"
+                            top="50%"
+                            left="50%"
+                            transform="translate(-50%, -50%)"
+                            color="white"
+                            boxSize={8}
+                            zIndex={2}
+                          />
+                        </Tooltip>
+                      )}
+                    </Flex>
+                  </Box>
+                  <Text
+                    align="justify"
+                    fontSize="18px"
+                    style={
+                      notLoggedIn
+                        ? { filter: "blur(5px)", userSelect: "none" }
+                        : { userSelect: "text" }
+                    }
+                  >
+                    {mainText[selectedLanguage][2]}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text
+                    align="justify"
+                    letterSpacing={1}
+                    mb={4}
+                    fontSize="18px"
+                  >
+                    {mainText[selectedLanguage][0]}
+                  </Text>
+                  <Flex position={"relative"} width="100%">
+                    <Text
+                      align="justify"
+                      letterSpacing={1}
+                      fontSize="18px"
+                      style={
+                        notLoggedIn
+                          ? { filter: "blur(5px)", userSelect: "none" }
+                          : { userSelect: "text" }
+                      }
+                    >
+                      {mainText[selectedLanguage][1]}
+                    </Text>
+                    {notLoggedIn && (
+                      <Tooltip
+                        label="Please log in to view content"
+                        placement="top"
+                      >
+                        <LockIcon
+                          position="absolute"
+                          top="50%"
+                          left="50%"
+                          transform="translate(-50%, -50%)"
+                          color="white"
+                          boxSize={8}
+                          zIndex={2}
+                        />
+                      </Tooltip>
+                    )}
+                  </Flex>
+                </>
+              )}
             </Box>
-          )}
+          </Skeleton>
         </GridItem>
       )}
-    </Skeleton>
+    </>
   );
 };
 
