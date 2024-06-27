@@ -87,7 +87,7 @@ authRouter.use("/quiz", quizRoutes);
 authRouter.use("/subs", subscriptionRoutes);
 authRouter.use("/mail", mailRoutes);
 authRouter.use("/timeSpent", timeSpentRoutes);
-authRouter.use("/feedback", feedbackRoutes);
+authRouter.use("/contact/feedback", feedbackRoutes);
 authRouter.use("/notify", notificationRoutes);
 authRouter.use("/admin", adminRoutes);
 app.use("/api", authRouter);

@@ -1,64 +1,21 @@
-// import React, { useEffect, useState } from "react";
-
-// const TrackTime = ({ userId, articleId }) => {
-//   const [startTime, setStartTime] = useState(Date.now());
-
-//   useEffect(() => {
-//     const handleUnload = () => {
-//       const endTime = Date.now();
-//       const timeSpent = endTime - startTime;
-
-//       // console.log("handleUnload called");
-//       // console.log(
-//       //   `User ${userId} spent ${totalTimeRef.current} ms on article ${articleId}`
-//       // );
-
-//       // Create the payload
-//       const payload = JSON.stringify({
-//         userId,
-//         articleId,
-//         timeSpent,
-//       });
-//       //console.log("Payload:", payload);
-//       // Use navigator.sendBeacon to send the data to the backend
-//       navigator.sendBeacon("/api/timeSpent", payload);
-//     };
-
-//     const handleVisibilityChange = () => {
-//       //console.log("handleVisibilityChange called", document.visibilityState);
-//       if (document.visibilityState === "hidden") {
-//         handleUnload();
-//       } else if (document.visibilityState === "visible") {
-//         setStartTime(Date.now());
-//         //console.log("Page became visible, startTime set to", Date.now());
-//       }
-//     };
-
-//     //window.addEventListener("beforeunload", handleUnload);
-//     document.addEventListener("visibilitychange", handleVisibilityChange);
-
-//     // Cleanup function
-//     return () => {
-//       //window.removeEventListener("beforeunload", handleUnload);
-//       document.removeEventListener("visibilitychange", handleVisibilityChange);
-//       handleUnload();
-//     };
-//   }, [startTime, userId, articleId]);
-
-//   return null;
-// };
-
-// export default TrackTime;
-
 import React, { useEffect, useState, useRef } from "react";
 
 const TrackTime = ({ userId, articleId }) => {
   const [startTime, setStartTime] = useState(Date.now());
-  const activityTimeout = useRef(null);
+  const [isTracking, setIsTracking] = useState(true);
+  const timeoutRef = useRef(null);
+
+  const getInactiveTime = () => {
+    if (window.innerWidth >= 1024) return 3 * 60 * 1000; // 3 mins for large screens
+    if (window.innerWidth >= 768) return 2 * 60 * 1000; // 2 mins for medium screens
+    return 60 * 1000; // 1 min for base screens
+  };
 
   const handleUnload = () => {
     const endTime = Date.now();
     const timeSpent = endTime - startTime;
+
+    // console.log(`User ${userId} spent ${timeSpent} ms on article ${articleId}`);
 
     const payload = JSON.stringify({
       userId,
@@ -66,62 +23,77 @@ const TrackTime = ({ userId, articleId }) => {
       timeSpent,
     });
 
+    console.log("Payload:", payload);
     navigator.sendBeacon("/api/timeSpent", payload);
   };
 
-  const determineTimeoutPeriod = () => {
-    if (window.innerWidth >= 1024) {
-      return 4 * 60 * 1000; // 4 minutes for large screens
-    } else if (window.innerWidth >= 768) {
-      return 2 * 60 * 1000; // 2 minutes for medium screens
-    } else {
-      return 1 * 60 * 1000; // 1 minute for base screens
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "hidden") {
+      handleUnload();
+      setIsTracking(false);
+    } else if (document.visibilityState === "visible") {
+      setStartTime(Date.now());
+      setIsTracking(true);
+      resetTimer();
     }
   };
 
-  const resetTimeout = () => {
-    clearTimeout(activityTimeout.current);
-    const timeoutPeriod = determineTimeoutPeriod();
-    activityTimeout.current = setTimeout(() => {
-      handleUnload();
-      setStartTime(Date.now()); // Reset the start time
-    }, timeoutPeriod);
+  const resetTimer = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    if (isTracking) {
+      timeoutRef.current = setTimeout(() => {
+        handleUnload();
+        setIsTracking(false);
+      }, getInactiveTime());
+    }
+  };
+
+  const handleUserActivity = () => {
+    if (!isTracking) {
+      setStartTime(Date.now());
+      setIsTracking(true);
+    }
+    resetTimer();
   };
 
   useEffect(() => {
-    const handleUserActivity = () => {
-      resetTimeout();
-    };
+    const events = [
+      "mousemove",
+      "mousedown",
+      "keypress",
+      "touchmove",
+      "scroll",
+    ];
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        handleUnload();
-      } else if (document.visibilityState === "visible") {
-        setStartTime(Date.now());
-        resetTimeout();
-      }
-    };
+    events.forEach((event) => {
+      window.addEventListener(event, handleUserActivity);
+    });
 
-    window.addEventListener("scroll", handleUserActivity);
-    window.addEventListener("click", handleUserActivity);
-    window.addEventListener("mousemove", handleUserActivity);
-    window.addEventListener("touchmove", handleUserActivity);
-    window.addEventListener("keypress", handleUserActivity);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    resetTimeout(); // Initialize the inactivity timeout
+    resetTimer();
 
     return () => {
-      clearTimeout(activityTimeout.current);
-      window.removeEventListener("scroll", handleUserActivity);
-      window.removeEventListener("click", handleUserActivity);
-      window.removeEventListener("mousemove", handleUserActivity);
-      window.removeEventListener("touchmove", handleUserActivity);
-      window.removeEventListener("keypress", handleUserActivity);
+      events.forEach((event) => {
+        window.removeEventListener(event, handleUserActivity);
+      });
+
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       handleUnload();
     };
-  }, [startTime, userId, articleId]);
+  }, [userId, articleId]);
+
+  useEffect(() => {
+    if (isTracking) {
+      resetTimer();
+    }
+  }, [isTracking]);
 
   return null;
 };

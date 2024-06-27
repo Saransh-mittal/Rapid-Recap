@@ -121,22 +121,24 @@ const HeroSection = () => {
                 />
               </Box>
             </Heading>
-            <Text
-              fontSize="lg"
-              maxW="3xl"
-              mx="auto"
-              mb={{ base: "6", lg: "8" }}
-              color={"#9CAFAA"}
-              fontWeight={"bold"}
-              mt={{ base: "0", lg: "2rem" }}
-            >
-              Welcome to Rapid Recap, where staying informed meets friendly
-              competition. Read the latest news and articles, then test your
-              knowledge with interactive quizzes. Your scores contribute to your
-              unique Information Quotient (IQ), ranking you on our leaderboard.
-              Track your progress, compare with peers, and strive for
-              excellence.
-            </Text>
+            <Flex justifyContent={"center"}>
+              <Text
+                fontSize="lg"
+                maxW="3xl"
+                px={"1rem"}
+                mb={{ base: "6", lg: "8" }}
+                color={"#9CAFAA"}
+                fontWeight={"bold"}
+                mt={{ base: "0", lg: "2rem" }}
+              >
+                Welcome to Rapid Recap, where staying informed meets friendly
+                competition. Read the latest news and articles, then test your
+                knowledge with interactive quizzes. Your scores contribute to
+                your unique Information Quotient (IQ), ranking you on our
+                leaderboard. Track your progress, compare with peers, and strive
+                for excellence.
+              </Text>
+            </Flex>
             <Flex flexDirection={"row"} justifyContent={"center"} gap={"2rem"}>
               {state.show && isSmallScreen && (
                 <Flex justifyContent="center" alignItems="center" zIndex={10}>
@@ -145,7 +147,7 @@ const HeroSection = () => {
                   />
                 </Flex>
               )}
-              <Flex justifyContent="center" alignItems="center" zIndex={10}>
+              {/* <Flex justifyContent="center" alignItems="center" zIndex={10}>
                 <ButtonGradient />
                 <Button
                   onClick={() => {
@@ -154,7 +156,7 @@ const HeroSection = () => {
                 >
                   FeedBack
                 </Button>
-              </Flex>
+              </Flex> */}
             </Flex>
           </Box>
 

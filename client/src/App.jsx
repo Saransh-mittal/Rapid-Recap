@@ -117,14 +117,14 @@ const App = () => {
       </Helmet>
       <Navbar />
       <Routes>
-        <Route exact path="/" element={<GetStartedLayout />} />
-        <Route exact path="/feedback" element={<GetStartedLayout />} />
+        <Route exact path="/" element={<GetStarted />} />
+        <Route exact path="/contact/feedback" element={<ContactLayout />} />
         <Route path="/home/:category" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route exact path="/article/:id" element={<Article />} />
         <Route path="/profile/:inGameName" element={<Profile />} />
         <Route path="/profile" element={<Profile />} />
-        <Route exact path="/contact" element={<Contact />} />
+        <Route exact path="/contact" element={<ContactLayout />} />
         <Route exact path="/leaderboard" element={<LeaderBoard />} />
         {/* <Route exact path="/season" element={<Season />} /> */}
         <Route
@@ -184,15 +184,18 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-const GetStartedLayout = () => {
+const ContactLayout = () => {
   const location = useLocation();
-  const isFeedbackRoute = location.pathname === "/feedback";
+  const isFeedbackRoute = location.pathname === "/contact/feedback";
   const navigate = useNavigate();
 
   return (
     <>
-      <GetStarted />
-      <FeedbackModal isOpen={isFeedbackRoute} onClose={() => navigate("/")} />
+      <Contact />
+      <FeedbackModal
+        isOpen={isFeedbackRoute}
+        onClose={() => navigate("/contact")}
+      />
     </>
   );
 };

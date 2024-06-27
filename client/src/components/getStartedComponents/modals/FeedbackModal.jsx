@@ -65,7 +65,10 @@ const FeedbackModal = ({ isOpen, onClose }) => {
     };
 
     try {
-      const response = await axios.post("/api/feedback/submit", formData);
+      const response = await axios.post(
+        "/api/contact/feedback/submit",
+        formData
+      );
       if (response.status !== 201) {
         throw new Error("Failed to submit feedback");
       }

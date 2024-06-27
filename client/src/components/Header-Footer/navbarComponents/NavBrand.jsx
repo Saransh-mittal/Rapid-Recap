@@ -15,7 +15,7 @@ const NavBrand = ({ isHamburgerOpen }) => {
           alt="Rapid Recap"
           width={{
             base: isHamburgerOpen ? "3.5rem" : "3.3rem",
-            md: "3.5rem",
+            md: "3.3rem",
           }}
           height={"2.5rem"}
           background={"transparent"}
