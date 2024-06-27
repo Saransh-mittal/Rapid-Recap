@@ -1,0 +1,42 @@
+const mongoose = require("mongoose");
+
+const recommendationSchema = new mongoose.Schema({
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "USER",
+    required: true,
+  },
+  recommendations: [
+    {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ARTICLE",
+        required: true,
+      },
+      title: {
+        type: String,
+        required: true,
+      },
+      category: {
+        type: String,
+        required: true,
+      },
+      served: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  ],
+  lastUpdated: {
+    type: Date,
+    default: Date.now,
+  },
+  isUpdating: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const Recommendation = mongoose.model("Recommendation", recommendationSchema);
+
+module.exports = Recommendation;
