@@ -184,12 +184,12 @@ const LeaderBoard = () => {
             setSearchLoad={setSearchLoad}
           />
         </Flex>
-        <SocietyButtons
+        {/* <SocietyButtons
           activeSociety={activeSociety}
           handleSocietyButtonClick={handleSocietyButtonClick}
           searchLoad={searchLoad}
           isLoading={isLoading}
-        />
+        /> */}
         <LeaderBoardTable
           hasMore={hasMore}
           PAGE_LIMIT={PAGE_LIMIT}
