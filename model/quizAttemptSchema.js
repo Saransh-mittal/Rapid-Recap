@@ -62,6 +62,8 @@ const quizAttemptSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+quizAttemptSchema.index({ user: 1 });
+quizAttemptSchema.index({ createdAt: 1 });
 
 const QuizAttempt = mongoose.model("QUIZ_ATTEMPT", quizAttemptSchema);
 

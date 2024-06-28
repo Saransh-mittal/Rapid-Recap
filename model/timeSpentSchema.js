@@ -6,7 +6,9 @@ const timeSpentSchema = new mongoose.Schema({
   timeSpent: Number,
   date: { type: Date, default: Date.now },
 });
-
+// Add indexes on userId and date
+timeSpentSchema.index({ userId: 1 });
+timeSpentSchema.index({ date: 1 });
 const TimeSpent = mongoose.model("TimeSpent", timeSpentSchema);
 
 module.exports = TimeSpent;

@@ -14,6 +14,7 @@ const {
   extractNewsUtilityFunc,
 } = require("../utils/article.utils");
 const { sendNotification } = require("../services/notificationService");
+const { formatDate } = require("../utils/miscellaneous.utils");
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = "general" } = req.query;
@@ -59,6 +60,7 @@ const getArticle = async (req, res) => {
       hindiTitle: article?.hindiTitle,
       hindiMainText: article?.hindiMainText,
       hindiAuthor: article?.hindiAuthor,
+      date: formatDate(article.dateTime),
       _id: article._id,
     };
     //console.log(newArticle);
