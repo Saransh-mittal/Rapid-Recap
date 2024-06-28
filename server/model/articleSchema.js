@@ -21,6 +21,7 @@ const articleSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      unique: true,
     },
     hindiTitle: {
       type: String,
@@ -74,6 +75,8 @@ const articleSchema = new mongoose.Schema(
   { collection: "Articles" }
 );
 
+articleSchema.index({ title: 1 }, { unique: true });
+articleSchema.index({ dateTime: 1 });
 articleSchema.pre("save", function (next) {
   if (this.author === null) {
     this.author = "Rapid Recap Team";

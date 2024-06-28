@@ -19,8 +19,8 @@ const BenefitCard = ({
       p={0.5}
       bgImage={`url(${backgroundUrl})`}
       bgSize="cover"
-      width={"23rem"}
-      height={"22rem"}
+      width={{ base: "21rem", md: "23rem" }}
+      height={{ base: "20rem", md: "22rem" }}
     >
       <Box
         position="relative"
@@ -31,18 +31,25 @@ const BenefitCard = ({
         p="1.6rem"
         pointerEvents="none"
       >
-        <Heading as="h5" size="sm" mb={3}>
+        <Heading as="h5" size="sm" mb={"1.5rem"}>
           {title}
         </Heading>
-        <Text fontSize="sm" mb={4} color="gray.500">
-          {text}
-        </Text>
+        <Flex alignItems={"center"}>
+          <Text fontSize="sm" mb={4} color="gray.500">
+            {text.split("\n").map((line, index) => (
+              <React.Fragment key={index}>
+                {line}
+                <br />
+              </React.Fragment>
+            ))}
+          </Text>
+        </Flex>
         <Flex
-          // mt="auto" // This pushes the Flex container to the bottom
+          mt="auto" // This pushes the Flex container to the bottom
           position={"absolute"}
-          bottom={"-15%"}
+          bottom={"5%"}
           alignItems="center"
-          justifyContent="space-between"
+          justifyContent="flex-end"
         >
           <Image
             src={iconUrl}
@@ -51,7 +58,7 @@ const BenefitCard = ({
             alt={title}
             background={"transparent"}
           />
-          <Text
+          {/* <Text
             fontSize="xs"
             fontWeight="bold"
             color="gray.600"
@@ -63,7 +70,7 @@ const BenefitCard = ({
           </Text>
           <Flex mt="4.5rem">
             <Arrow />
-          </Flex>
+          </Flex> */}
         </Flex>
       </Box>
 

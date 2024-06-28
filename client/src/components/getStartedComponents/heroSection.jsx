@@ -83,7 +83,7 @@ const HeroSection = () => {
               left: "50% ",
             },
             "@media (min-width: 1241px)": {
-              top: "-33%",
+              top: "-41%",
               width: "234%",
               left: "100%",
               height: "auto",
@@ -125,8 +125,8 @@ const HeroSection = () => {
               <Text
                 fontSize="lg"
                 maxW="3xl"
-                px={"1rem"}
-                mb={{ base: "6", lg: "8" }}
+                px={{ base: "1rem", md: "0rem" }}
+                mb={{ base: "6", lg: "0" }}
                 color={"#9CAFAA"}
                 fontWeight={"bold"}
                 mt={{ base: "0", lg: "2rem" }}

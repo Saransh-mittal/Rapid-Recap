@@ -531,6 +531,11 @@ export const useDailyStreakTour = () => {
         className: "shepherd-active",
         addClass: false,
       });
+      toggleClass({
+        element: streakButton,
+        className: "highlighted-card-streak",
+        addClass: false,
+      });
       manageOverlay({ element: timeline, overlay: false });
       isLargeWindow &&
         manageOverlay({ element: navbarContent, overlay: false });
