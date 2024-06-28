@@ -187,4 +187,9 @@ async function getRecommendations(userId, page = 1, pageSize = 18) {
   }
 }
 
-module.exports = { getRecommendations, updateRecommendations, exportDataToCSV };
+module.exports = {
+  getRecommendations,
+  updateRecommendations,
+  exportDataToCSV,
+  generateRecommendations,
+};
