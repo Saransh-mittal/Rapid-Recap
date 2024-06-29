@@ -207,8 +207,9 @@ const Article = () => {
   }, [article, textHeight]);
 
   useEffect(() => {
-    if (!load && !state.show && state.user && state.user.tutorial.articlePage)
-      isTutorialTakenCheck({ page: "articlePage", tour });
+    if (!load && !state.show && state.user && state.user.tutorial.articlePage) {
+      // isTutorialTakenCheck({ page: "articlePage", tour });
+    }
   }, [load]);
 
   useEffect(() => {
@@ -219,7 +220,7 @@ const Article = () => {
       state.user.tutorial.quinBoostPage &&
       !state.user.tutorial.articlePage
     ) {
-      isTutorialTakenCheck({ page: "quinBoostPage", tour: quinTour });
+      // isTutorialTakenCheck({ page: "quinBoostPage", tour: quinTour });
     }
   }, [state?.user, state.show, state?.user?.tutorial?.articlePage, load]);
 
