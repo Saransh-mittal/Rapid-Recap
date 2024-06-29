@@ -1,7 +1,7 @@
 const { spawn } = require("child_process");
 const path = require("path");
 
-const testScript_prepare_article_data = async () => {
+const script_prepare_article_data = async () => {
   try {
     const pythonScriptPath = path.join(
       __dirname,
@@ -32,4 +32,4 @@ const testScript_prepare_article_data = async () => {
   }
 };
 
-testScript_prepare_article_data();
+module.exports = script_prepare_article_data;

@@ -35,6 +35,10 @@ const recommendationSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  notified: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Recommendation = mongoose.model("Recommendation", recommendationSchema);

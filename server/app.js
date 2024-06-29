@@ -74,7 +74,7 @@ webpush.setVapidDetails(
 // require("./scripts/updateUserCurrentSeason");
 // require("./scripts/quizAttemptAndDailyIQUpdateSeason");
 // require("./scripts/collectionToCSV");
-// require("./scripts/testScript_prepare_article_data");
+// require("./scripts/script_prepare_article_data")();
 // -------------------
 
 // const { exportDataToCSV } = require("./services/recommendationService");
@@ -84,7 +84,7 @@ app.use(express.json());
 // require("./scheduler/mailsForStreakBroken");
 // require("./scheduler/mailsForStreakReminder");
 // require("./scheduler/extractNews");
-// require("./scheduler/notifForTopNews");
+// require("./scheduler/notifForRecommendedNews");
 // require("./scheduler/newSeasonSevenDays");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());

@@ -14,6 +14,7 @@ const {
   extractNewsUtilityFunc,
 } = require("../utils/article.utils");
 const { sendNotification } = require("../services/notificationService");
+const Quiz = require("../model/quizSchema");
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = "general" } = req.query;
@@ -257,6 +258,10 @@ const startQuiz = async (req, res) => {
     const article = await Article.findById(articleId);
     if (!article) {
       throw new Error("Article not found");
+    }
+    const quiz = await Quiz.find({ article: articleId });
+    if (!quiz) {
+      throw new Error("Quiz not found, Please Retry!!");
     }
     if (
       article.userQuizStatus.find(

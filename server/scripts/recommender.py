@@ -187,7 +187,7 @@ def calculate_preference_score(user_id, quiz_attempts_df, time_spent_df):
 
     return user_preference_df
 
-def recommend_articles(user_id, articles_df, sig, quiz_attempts_df, time_spent_df, num_recommendations=100):
+def recommend_articles(user_id, articles_df, sig, quiz_attempts_df, time_spent_df, num_recommendations=270):
     start_time = time.time()
 
     user_articles = get_user_articles(user_id, quiz_attempts_df, time_spent_df)

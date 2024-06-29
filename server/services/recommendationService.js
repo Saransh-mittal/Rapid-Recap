@@ -146,7 +146,7 @@ async function getRecommendations(userId, page = 1, pageSize = 18) {
     let userRecommendations = await Recommendation.findOne({ user_id: userId });
 
     const now = new Date();
-    const updateThreshold = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+    const updateThreshold = new Date(now.getTime() - 8 * 60 * 60 * 1000); // 8 hours ago
 
     if (
       !userRecommendations ||
@@ -187,9 +187,54 @@ async function getRecommendations(userId, page = 1, pageSize = 18) {
   }
 }
 
+async function getRecommendationsForNotification(userId, topN = 20) {
+  try {
+    let userRecommendations = await Recommendation.findOne({ user_id: userId });
+
+    if (!userRecommendations) {
+      await updateRecommendations(userId);
+      userRecommendations = await Recommendation.findOne({ user_id: userId });
+    }
+
+    if (
+      !userRecommendations ||
+      userRecommendations.recommendations.length === 0
+    ) {
+      return null;
+    }
+
+    // Filter not notified recommendations and take the top N
+    const topNotNotifiedRecommendations = userRecommendations.recommendations
+      .filter((rec) => !rec.notified)
+      .slice(0, topN);
+
+    if (topNotNotifiedRecommendations.length === 0) {
+      return null;
+    }
+
+    // Select a random recommendation from the top N
+    const randomIndex = Math.floor(
+      Math.random() * topNotNotifiedRecommendations.length
+    );
+    const selectedRecommendation = topNotNotifiedRecommendations[randomIndex];
+
+    // Mark the recommendation as notified
+    await Recommendation.updateOne(
+      { user_id: userId, "recommendations._id": selectedRecommendation._id },
+      { $set: { "recommendations.$.notified": true } }
+    );
+
+    return selectedRecommendation;
+  } catch (error) {
+    console.error("Error in getRecommendationsForNotification:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   getRecommendations,
   updateRecommendations,
   exportDataToCSV,
   generateRecommendations,
+  getRecommendationsForNotification,
 };
