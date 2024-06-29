@@ -25,6 +25,10 @@ const recommendationSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
       },
+      notified: {
+        type: Boolean,
+        default: false,
+      },
     },
   ],
   lastUpdated: {
@@ -35,12 +39,33 @@ const recommendationSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  notified: {
-    type: Boolean,
-    default: false,
+});
+
+const notifiedArticlesSchema = new mongoose.Schema({
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "USER",
+    required: true,
   },
+  notified_articles: [
+    {
+      article_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ARTICLE",
+        required: true,
+      },
+      notified_at: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
 });
 
 const Recommendation = mongoose.model("Recommendation", recommendationSchema);
+const NotifiedArticles = mongoose.model(
+  "NotifiedArticles",
+  notifiedArticlesSchema
+);
 
-module.exports = Recommendation;
+module.exports = { Recommendation, NotifiedArticles };

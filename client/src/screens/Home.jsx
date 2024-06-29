@@ -34,11 +34,14 @@ const Home = () => {
     }
 
     try {
-      const response = await axios.get(
-        `/api/articles?page=${page}&pageSize=9&category=${
-          category ? category : "general"
-        }`
-      );
+      const response =
+        category === "all"
+          ? await axios.get(`/api/recommendation?page=${page}&pageSize=9`)
+          : await axios.get(
+              `/api/articles?page=${page}&pageSize=9&category=${
+                category ? category : "general"
+              }`
+            );
 
       const newItems = response.data;
       if (newItems.length === 0) {

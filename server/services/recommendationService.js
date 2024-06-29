@@ -5,7 +5,10 @@ const User = require("../model/userSchema");
 const Article = require("../model/articleSchema");
 const QuizAttempt = require("../model/quizAttemptSchema");
 const TimeSpent = require("../model/timeSpentSchema");
-const Recommendation = require("../model/recommendationSchema");
+const {
+  Recommendation,
+  NotifiedArticles,
+} = require("../model/recommendationSchema");
 const { Parser } = require("json2csv");
 const path = require("path");
 
@@ -203,9 +206,22 @@ async function getRecommendationsForNotification(userId, topN = 20) {
       return null;
     }
 
+    // Get the list of already notified article IDs for this user
+    let notifiedArticles = await NotifiedArticles.findOne({ user_id: userId });
+    if (!notifiedArticles) {
+      notifiedArticles = new NotifiedArticles({
+        user_id: userId,
+        notified_articles: [],
+      });
+      await notifiedArticles.save();
+    }
+    const notifiedArticleIds = new Set(
+      notifiedArticles.notified_articles.map((na) => na.article_id.toString())
+    );
+
     // Filter not notified recommendations and take the top N
     const topNotNotifiedRecommendations = userRecommendations.recommendations
-      .filter((rec) => !rec.notified)
+      .filter((rec) => !notifiedArticleIds.has(rec._id.toString()))
       .slice(0, topN);
 
     if (topNotNotifiedRecommendations.length === 0) {
@@ -218,7 +234,15 @@ async function getRecommendationsForNotification(userId, topN = 20) {
     );
     const selectedRecommendation = topNotNotifiedRecommendations[randomIndex];
 
-    // Mark the recommendation as notified
+    // Add the selected article to the notified articles list
+    await NotifiedArticles.updateOne(
+      { user_id: userId },
+      {
+        $push: {
+          notified_articles: { article_id: selectedRecommendation._id },
+        },
+      }
+    );
     await Recommendation.updateOne(
       { user_id: userId, "recommendations._id": selectedRecommendation._id },
       { $set: { "recommendations.$.notified": true } }

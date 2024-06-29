@@ -5,6 +5,6 @@ const { userRecommendations } = require("../controllers/recommendation");
 const { Authenticate } = require("../middleware/authenticate");
 
 // router.route("/").get(Authenticate, userRecommendations);
-router.route("/").get(userRecommendations);
+router.route("/").get(Authenticate, userRecommendations);
 
 module.exports = router;

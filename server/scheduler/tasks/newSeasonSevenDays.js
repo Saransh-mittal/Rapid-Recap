@@ -1,8 +1,6 @@
-const cron = require("node-cron");
-const User = require("../model/userSchema");
+const User = require("../../model/userSchema");
 
-// Cron job to run every day at midnight
-cron.schedule("0 0 * * *", async () => {
+async function resetNewSeasonModal() {
   try {
     await User.updateMany(
       {
@@ -17,6 +15,6 @@ cron.schedule("0 0 * * *", async () => {
   } catch (error) {
     console.error("Error updating newSeasonModal:", error);
   }
-});
+}
 
-console.log("Running newSeasonSevenDays cron job...");
+module.exports = resetNewSeasonModal;

@@ -301,7 +301,7 @@ def update_recommendations_in_db(user_id, recommendations, mongo_uri):
         {
             "$set": {
                 "recommendations": [
-                    {**rec, "served": False} for rec in recommendations
+                    {**rec, "served": False, "notified": False} for rec in recommendations
                 ],
                 "lastUpdated": datetime.now(),
                 "isUpdating": False,

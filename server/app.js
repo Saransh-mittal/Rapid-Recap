@@ -80,12 +80,8 @@ webpush.setVapidDetails(
 // const { exportDataToCSV } = require("./services/recommendationService");
 // exportDataToCSV();
 app.use(express.json());
-// require("./scheduler/userIQScoreScheduler");
-// require("./scheduler/mailsForStreakBroken");
-// require("./scheduler/mailsForStreakReminder");
-// require("./scheduler/extractNews");
-// require("./scheduler/notifForRecommendedNews");
-// require("./scheduler/newSeasonSevenDays");
+
+// require("./scheduler/setupCronJobs");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);
