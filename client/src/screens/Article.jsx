@@ -304,13 +304,13 @@ const Article = () => {
           setShowExpectedIQ={setShowExpectedIQ}
         />
       ) : null}
-      {showQuiz && !givenQuiz && !showQuizLangModal ? (
+      {(showQuiz && !givenQuiz && !showQuizLangModal) || true ? (
         <Quiz
           setIsQuinBoostAvailable={setIsQuinBoostAvailable}
           setQuizLeftToGetQuizBoost={setQuizLeftToGetQuizBoost}
           isQuinBoostAvailable={isQuinBoostAvailable}
           article={article}
-          isOpen={isOpen}
+          isOpen={isOpen || true}
           onClose={() => {
             onClose();
             setShowQuiz(false);

@@ -23,7 +23,7 @@ const TrackTime = ({ userId, articleId }) => {
       timeSpent,
     });
 
-    console.log("Payload:", payload);
+    // console.log("Payload:", payload);
     navigator.sendBeacon("/api/timeSpent", payload);
   };
 

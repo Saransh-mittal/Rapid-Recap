@@ -56,11 +56,11 @@ const Quiz = ({
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(true);
   const [userAnswers, setUserAnswers] = useState([]);
   const [score, setScore] = useState(0);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  const [showInstruction, setShowInstruction] = useState(true);
+  const [showInstruction, setShowInstruction] = useState(false);
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false);
   const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
     useState(false);
@@ -310,12 +310,14 @@ const Quiz = ({
               size={load ? "20" : "auto"}
               marginBottom={load ? "10px" : "0"}
             >
-              <Countdown
-                timer={timer}
-                submitted={submitted}
-                start={!showInstruction}
-                stopTimer={stopTimerRef.current}
-              />
+              {!submitted && (
+                <Countdown
+                  timer={timer}
+                  submitted={submitted}
+                  start={!showInstruction}
+                  stopTimer={stopTimerRef.current}
+                />
+              )}
             </SkeletonCircle>
           </ModalHeader>
           <ModalCloseButton
