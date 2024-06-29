@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useToast } from "@chakra-ui/react";
 
-const useFetchQuiz = (articleId, language) => {
+const useFetchQuiz = (articleId, language, onClose) => {
   const [quizData, setQuizData] = useState(null);
   const [load, setLoad] = useState(true);
   const [quizId, setQuizId] = useState(null);
@@ -43,6 +43,7 @@ const useFetchQuiz = (articleId, language) => {
           isClosable: true,
           position: "top",
         });
+        onClose();
       } finally {
         setLoad(false);
       }

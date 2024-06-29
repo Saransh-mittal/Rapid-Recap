@@ -51,7 +51,11 @@ const Quiz = ({
   setQuizLeftToGetQuizBoost,
 }) => {
   const articleId = article._id;
-  const { quizData, load, quizId, setLoad } = useFetchQuiz(articleId, language);
+  const { quizData, load, quizId, setLoad } = useFetchQuiz(
+    articleId,
+    language,
+    onClose
+  );
   const totalQuestions = quizData ? quizData.questions.length : 0;
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
