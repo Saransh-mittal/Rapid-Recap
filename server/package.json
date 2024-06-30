@@ -10,7 +10,9 @@
     "server": "node app.js",
     "client": "npm start --prefix client",
     "clientinstall": "npm install --prefix client",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "setup-pyenv": "py -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
+    "start-dev": "venv\\Scripts\\activate && nodemon app.js",
+    "dev": "concurrently \"npm run setup-pyenv\" \"npm run start-dev\""
   },
   "author": "",
   "license": "ISC",
@@ -18,6 +20,7 @@
     "axios": "^1.7.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
+    "child_process": "^1.0.2",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.2.0",
     "express": "^4.18.2",
@@ -39,6 +42,7 @@
     "@faker-js/faker": "^8.4.1",
     "assert": "^2.1.0",
     "chai": "^5.1.1",
+    "concurrently": "^8.0.0",
     "json2csv": "^6.0.0-alpha.2",
     "mocha": "^10.4.0",
     "mongodb": "^6.7.0",

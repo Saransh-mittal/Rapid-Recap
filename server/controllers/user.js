@@ -27,6 +27,9 @@ const {
   commitSession,
   abortSession,
 } = require("../db/session.js");
+const {
+  generateRecommendations,
+} = require("../services/recommendationService.js");
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -112,6 +115,7 @@ const registerUser = async (req, res) => {
     });
 
     await commitSession();
+    generateRecommendations(user._id.toString());
     return res.status(201).json({ message: "Registered Successfully" });
   } catch (err) {
     await abortSession(session);
