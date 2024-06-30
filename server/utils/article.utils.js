@@ -5,6 +5,7 @@ const Article = require("../model/articleSchema");
 const { decode } = require("html-entities");
 const NewsAPI = require("newsapi");
 const axios = require("axios");
+const script_prepare_article_data = require("../scripts/script_prepare_article_data");
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
   // Use natural language processing to tokenize sentences
@@ -462,6 +463,7 @@ const extractNewsUtilityFunc = async () => {
       result,
       articlesSavedPerCategory
     );
+    script_prepare_article_data();
     return { result, articlesSavedPerCategory, notificationCategories };
   } catch (error) {
     console.log(error);

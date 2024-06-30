@@ -100,7 +100,7 @@ export const initialState = {
   page: 0,
   items: [],
   homeInitialRender: true,
-  category: category ? category : "general",
+  category: category ? category : "all",
   userProfile: null,
   otherUserProfiles: [],
   // ...

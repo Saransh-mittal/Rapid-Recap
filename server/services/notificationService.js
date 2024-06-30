@@ -1,9 +1,9 @@
 const webpush = require("web-push");
 const Subscription = require("../model/subscriptionSchema");
 
-async function sendNotification({ title, body, icon, url, image }) {
+async function sendNotification({ title, body, icon, url, image, userId }) {
   try {
-    const subscriptions = await Subscription.find();
+    const subscriptions = await Subscription.find({ userId });
     for (let subscription of subscriptions) {
       try {
         await webpush.sendNotification(

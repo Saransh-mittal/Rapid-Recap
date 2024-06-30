@@ -13,19 +13,26 @@ const MailTemplates = require("../data/MailTemplates");
 const { logActivity } = require("../utils/activity.utils");
 const { activityTypes } = require("../data/activityTypes");
 const configService = require("../configService");
+const {
+  startSession,
+  commitSession,
+  abortSession,
+} = require("../db/session.js");
 
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken, quizId } = req.body;
   const userId = req.user._id;
+  const session = await startSession();
   //console.log(userId);
   try {
     if (!userId || !articleId || !userResponses || !quizData) {
       throw new Error("Please provide all the details");
     }
+
     const attempt = await QuizAttempt.findOne({
       user: userId,
       article: articleId,
-    });
+    }).session(session);
 
     const currentDate = new Date(); // Get current date
     currentDate.setUTCHours(0, 0, 0, 0); // Set time to start of the day
@@ -34,11 +41,11 @@ const saveAttempt = async (req, res) => {
     const todayAttemptsCount = await QuizAttempt.countDocuments({
       user: userId,
       createdAt: { $gte: currentDate },
-    });
+    }).session(session);
     if (attempt) {
       throw new Error("User has already attempted the quiz for the article.");
     }
-    const article = await Article.findById(articleId);
+    const article = await Article.findById(articleId).session(session);
     if (!article) {
       throw new Error("Article not found");
     }
@@ -55,14 +62,14 @@ const saveAttempt = async (req, res) => {
     } else {
       throw new Error("User never started the quiz");
     }
-    await article.save();
+    await article.save({ session });
 
     const quiz = await Quiz.findById(quizId);
     const quizAttempt = await QuizAttempt.findOne({
       user: userId,
       article: articleId,
       quiz: quizId,
-    });
+    }).session(session);
     if (quizAttempt) {
       throw new Error("User has already attempted the quiz for the article.");
     }
@@ -93,11 +100,13 @@ const saveAttempt = async (req, res) => {
     let RQM_score = Math.ceil(
       ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000
     );
-    const user = await User.findById(userId).populate({
-      path: "quizAttempts",
-      select: "_id",
-      match: { season: parseInt(configService.getCurrentSeason(), 10) },
-    });
+    const user = await User.findById(userId)
+      .populate({
+        path: "quizAttempts",
+        select: "_id",
+        match: { season: parseInt(configService.getCurrentSeason(), 10) },
+      })
+      .session(session);
     let boosted = false;
     if (user.todayBoost) {
       RQM_score = Math.ceil(RQM_score * 1.5);
@@ -113,7 +122,7 @@ const saveAttempt = async (req, res) => {
         // console.log(qBoost);
         // console.log(article._id);
         qBoost.article = article._id;
-        await qBoost.save();
+        await qBoost.save({ session });
       }
     }
     const articleDifficulty = quiz.overAllDifficulty;
@@ -135,7 +144,7 @@ const saveAttempt = async (req, res) => {
       isBoosted: boosted,
       season: parseInt(configService.getCurrentSeason(), 10),
     });
-    await newQuizAttempt.save();
+    await newQuizAttempt.save({ session });
 
     let sumOfRQM = user.avgRQM * user.quizAttempts.length;
     sumOfRQM += RQM_score;
@@ -146,7 +155,7 @@ const saveAttempt = async (req, res) => {
     today.setUTCHours(0, 0, 0, 0);
     if (user.streakExpiry < today) {
       user.streak = 0;
-      await user.save();
+      await user.save({ session });
     }
     expiry.setUTCDate(expiry.getUTCDate() + 1); // Set date to one day from now
     expiry.setUTCHours(0, 0, 0, 0);
@@ -161,7 +170,8 @@ const saveAttempt = async (req, res) => {
     else user.hardQuizCount++;
 
     user.rankedInCurrentSeason = true;
-    await user.save();
+    await user.save({ session });
+    await commitSession();
     await logActivity({
       userInGameName: user.inGameName,
       type: activityTypes.RANDOM_QUIZ.type,
@@ -240,6 +250,7 @@ const saveAttempt = async (req, res) => {
     }
     res.status(201).json({ message: "Attempt saved successfully", RQM_score });
   } catch (error) {
+    await abortSession(session);
     console.log(error);
     res.status(400).json({ error: error || "Error saving attempt" });
   }
