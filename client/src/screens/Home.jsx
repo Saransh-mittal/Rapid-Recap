@@ -35,12 +35,10 @@ const Home = () => {
 
     try {
       const response =
-        category === "all"
+        category === "all" || !category || category === ""
           ? await axios.get(`/api/recommendation?page=${page}&pageSize=9`)
           : await axios.get(
-              `/api/articles?page=${page}&pageSize=9&category=${
-                category ? category : "general"
-              }`
+              `/api/articles?page=${page}&pageSize=9&category=${category}`
             );
 
       const newItems = response.data;
@@ -82,7 +80,7 @@ const Home = () => {
   useEffect(() => {
     document.title = "Home Page";
     if (!category || category === "") {
-      navigate("/home/general");
+      navigate("/home/all");
     }
 
     dispatch({ type: "homeInitialRender" });

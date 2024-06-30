@@ -6,11 +6,12 @@ const User = require("../../model/userSchema");
 const Article = require("../../model/articleSchema");
 
 async function sendRecommendedNewsNotification() {
+  console.log("Processing users for recommendations");
   try {
     const users = await User.find(
       {
         email: { $not: /^dummy\d+@mail\.com$/ },
-        inGameName: { $exists: true },
+        inGameName: { exists: true },
       },
       "_id"
     );
@@ -23,13 +24,12 @@ async function sendRecommendedNewsNotification() {
         const article = await Article.findById(recommendation._id);
         if (article) {
           const title = article.title;
-          const body = `Check out this recommended article in the ${article.category} category.`;
           const url = `https://www.rapidrecap.co.in/article/${article._id}`;
           const image =
             article.imgURL && article.imgURL.length > 0
               ? article.imgURL[0]
               : null;
-          await sendNotification({ userId: user._id, title, body, url, image });
+          await sendNotification({ userId: user._id, title, url, image });
           console.log(
             `Notification sent for recommended article to user ${user._id}`
           );

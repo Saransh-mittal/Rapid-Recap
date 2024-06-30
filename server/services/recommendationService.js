@@ -102,6 +102,9 @@ async function runPythonScript(pythonScriptPath, userId) {
       if (code === 0) {
         resolve();
       } else {
+        console.error(
+          `Python script failed for user ${userId} with code ${code}`
+        );
         reject(new Error(`Python script exited with code ${code}`));
       }
     });

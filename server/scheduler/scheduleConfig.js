@@ -21,19 +21,69 @@ const createSchedule = (name, time, task) => ({
 let schedules = [
   createSchedule("newSeasonReset", "00:00", resetNewSeasonModal),
   createSchedule("userIQScore", "00:01", calculateUserIQScores),
+  createSchedule(
+    "recommendedNewsNotification11",
+    "20:25",
+    sendRecommendedNewsNotification
+  ),
+  createSchedule(
+    "recommendedNewsNotification12",
+    "22:25",
+    sendRecommendedNewsNotification
+  ),
+  createSchedule(
+    "recommendedNewsNotification1",
+    "00:25",
+    sendRecommendedNewsNotification
+  ),
+  createSchedule(
+    "recommendedNewsNotification2",
+    "02:00",
+    sendRecommendedNewsNotification
+  ),
   createSchedule("extractNews1", "02:25", extractNews),
   createSchedule("updateRecommendations", "01:00", updateDailyRecommendations),
   createSchedule("streakBrokenMails", "03:30", sendStreakBrokenMails),
   createSchedule(
-    "recommendedNewsNotification1",
-    "08:30",
+    "recommendedNewsNotification3",
+    "04:25",
+    sendRecommendedNewsNotification
+  ),
+  createSchedule(
+    "recommendedNewsNotification4",
+    "06:25",
+    sendRecommendedNewsNotification
+  ),
+  createSchedule(
+    "recommendedNewsNotification5",
+    "08:25",
+    sendRecommendedNewsNotification
+  ),
+  createSchedule(
+    "recommendedNewsNotification6",
+    "10:00",
     sendRecommendedNewsNotification
   ),
   createSchedule("extractNews2", "10:25", extractNews),
   createSchedule("streakReminder1", "12:30", () => sendStreakReminder(0)),
   createSchedule(
-    "recommendedNewsNotification2",
-    "15:42",
+    "recommendedNewsNotification7",
+    "12:25",
+    sendRecommendedNewsNotification
+  ),
+  createSchedule(
+    "recommendedNewsNotification8",
+    "14:25",
+    sendRecommendedNewsNotification
+  ),
+  createSchedule(
+    "recommendedNewsNotification9",
+    "16:25",
+    sendRecommendedNewsNotification
+  ),
+  createSchedule(
+    "recommendedNewsNotification10",
+    "18:00",
     sendRecommendedNewsNotification
   ),
   createSchedule("extractNews3", "18:25", extractNews),
