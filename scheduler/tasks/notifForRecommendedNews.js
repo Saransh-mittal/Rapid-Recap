@@ -8,13 +8,10 @@ const Article = require("../../model/articleSchema");
 async function sendRecommendedNewsNotification() {
   console.log("Processing users for recommendations");
   try {
-    const users = await User.find(
-      {
-        email: { $not: /^dummy\d+@mail\.com$/ },
-        inGameName: { exists: true },
-      },
-      "_id"
-    );
+    const users = await User.find({
+      email: { $not: /^dummy\d+@mail\.com$/ },
+      inGameName: { $exists: true },
+    }).select("_id");
     for (const user of users) {
       const recommendation = await getRecommendationsForNotification(
         user._id,
