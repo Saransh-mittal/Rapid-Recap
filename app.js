@@ -10,6 +10,7 @@ const mailRoutes = require("./router/mailRoutes");
 const feedbackRoutes = require("./router/feedbackRoutes");
 const notificationRoutes = require("./router/notificationRoutes");
 const adminRoutes = require("./router/adminRoutes");
+const recommendationRoutes = require("./router/recommendationRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -50,11 +51,7 @@ const connectDB = require("./db/conn");
 //require("./utils/bot.utils/generatePicForUsers");
 // -------------------
 app.use(express.json());
-require("./scheduler/userIQScoreScheduler");
-require("./scheduler/mailsForStreakBroken");
-require("./scheduler/mailsForStreakReminder");
-require("./scheduler/extractNews");
-require("./scheduler/notifForTopNews");
+require("./scheduler/setupCronJobs");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);
@@ -66,6 +63,7 @@ authRouter.use("/timeSpent", timeSpentRoutes);
 authRouter.use("/feedback", feedbackRoutes);
 authRouter.use("/notify", notificationRoutes);
 authRouter.use("/admin", adminRoutes);
+authRouter.use("/recommendation", recommendationRoutes);
 app.use("/api", authRouter);
 
 // -----Production-----
