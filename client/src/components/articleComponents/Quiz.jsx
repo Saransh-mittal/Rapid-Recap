@@ -239,6 +239,7 @@ const Quiz = ({
     return (
       <ModalBody
         p={"15px"}
+        px={"5px"}
         display={"flex"}
         flexDirection={"column"}
         justifyContent={"center"}
@@ -288,7 +289,7 @@ const Quiz = ({
           background={
             submitted && (state.isBoosted || isQuinBoostAvailable)
               ? "black"
-              : "linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
+              : "linear-gradient(-45deg, #092635, #9EC8B9, #2a7575, #9EC8B9)"
           }
           backgroundSize="400% 400%"
           className="animated-gradient scene"

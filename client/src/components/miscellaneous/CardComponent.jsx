@@ -19,8 +19,8 @@ const BenefitCard = ({
       p={0.5}
       bgImage={`url(${backgroundUrl})`}
       bgSize="cover"
-      width={{ base: "21rem", md: "23rem" }}
-      height={{ base: "20rem", md: "22rem" }}
+      width={{ base: "20.5rem", md: "23rem" }}
+      height={{ base: "19.5rem", md: "22rem" }}
     >
       <Box
         position="relative"

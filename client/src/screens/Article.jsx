@@ -304,7 +304,7 @@ const Article = () => {
           setShowExpectedIQ={setShowExpectedIQ}
         />
       ) : null}
-      {(showQuiz && !givenQuiz && !showQuizLangModal) || true ? (
+      {((showQuiz && !givenQuiz && !showQuizLangModal) || true) && !load ? (
         <Quiz
           setIsQuinBoostAvailable={setIsQuinBoostAvailable}
           setQuizLeftToGetQuizBoost={setQuizLeftToGetQuizBoost}

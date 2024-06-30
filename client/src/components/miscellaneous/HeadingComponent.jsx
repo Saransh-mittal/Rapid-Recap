@@ -13,6 +13,7 @@ const Heading = ({
   tagColor = "white",
   tagFontSize,
   tagFontWeight,
+  headingWeight = "",
 }) => {
   return (
     <Flex
@@ -34,7 +35,7 @@ const Heading = ({
         </Box>
       )}
       {title && (
-        <Box as="h2" className="h2">
+        <Box as="h2" className="h2" fontWeight={headingWeight}>
           {title}
         </Box>
       )}
