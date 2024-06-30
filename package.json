@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "build": "npm i && npm run setup-pyenv",
+    "build": "npm ci",
     "server": "node app.js",
     "client": "npm start --prefix client",
     "clientinstall": "npm install --prefix client",
     "setup-pyenv": "py -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
-    "start-prod": "venv\\Scripts\\activate && node app.js",
+    "start-prod": "/opt/venv/bin/activate && node app.js",
     "start": "npm run start-prod"
   },
   "author": "",
