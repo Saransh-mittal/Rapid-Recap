@@ -3,7 +3,7 @@ import { manageOverlay, toggleClass } from "../../utils/tutorial.utlis";
 const stepsTutorialQuinBoost = [
   {
     id: "quin_boost_tracker",
-    attachTo: { element: ".quin-boost-tracker", on: "bottom" },
+    attachTo: { element: ".quin-boost-tracker", on: "top" },
     title: "Power Up Your RQM!!",
     text: "Complete 5 quizzes in one day to power up your Quin Boost. Keep track of your progress with our dynamic tracker and get ready to boost!",
     buttons: [

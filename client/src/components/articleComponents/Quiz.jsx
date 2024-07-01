@@ -69,20 +69,19 @@ const Quiz = ({
   const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
     useState(false);
   const stopTimerRef = useRef(false);
+  const [result, setResult] = useState({});
 
   useEffect(() => {
     const initialAnswers = Array(totalQuestions).fill("");
     setUserAnswers(initialAnswers);
   }, [totalQuestions]);
 
-  const { handleSubmitQuiz, submitLoad } = useSubmitQuiz(
+  const { handleSubmitQuiz, submitLoad } = useSubmitQuiz({
     articleId,
     quizData,
     quizId,
-    showConfirmationModal,
-    currentQuestionIndex,
-    setScore
-  );
+    setResult,
+  });
 
   const { timer, timeTaken } = useTimer(
     isOpen,
@@ -143,6 +142,7 @@ const Quiz = ({
   };
 
   const handleClose = async () => {
+    console.log("close");
     try {
       quinBoostChecker({
         setIsQuinBoostAvailable,
@@ -243,6 +243,8 @@ const Quiz = ({
     return (
       <ModalBody
         p={"15px"}
+        px={"5px"}
+        mt={"25px"}
         display={"flex"}
         flexDirection={"column"}
         justifyContent={"center"}
@@ -269,8 +271,8 @@ const Quiz = ({
         ) : (
           <SubmittedQuizInterface
             isOpen={isOpen}
-            score={score}
             submitLoad={submitLoad}
+            result={result}
           />
         )}
       </ModalBody>
@@ -292,7 +294,7 @@ const Quiz = ({
           background={
             submitted && (state.isBoosted || isQuinBoostAvailable)
               ? "black"
-              : "linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
+              : "linear-gradient(-45deg, #092635, #9EC8B9, #2a7575, #9EC8B9)"
           }
           backgroundSize="400% 400%"
           className="animated-gradient scene"
@@ -314,12 +316,14 @@ const Quiz = ({
               size={load ? "20" : "auto"}
               marginBottom={load ? "10px" : "0"}
             >
-              <Countdown
-                timer={timer}
-                submitted={submitted}
-                start={!showInstruction}
-                stopTimer={stopTimerRef.current}
-              />
+              {!submitted && (
+                <Countdown
+                  timer={timer}
+                  submitted={submitted}
+                  start={!showInstruction}
+                  stopTimer={stopTimerRef.current}
+                />
+              )}
             </SkeletonCircle>
           </ModalHeader>
           <ModalCloseButton

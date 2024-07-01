@@ -35,21 +35,24 @@ const MainArticleContent = ({
   return (
     <>
       {article && (
-        <GridItem w="100%" className="article-container">
+        <GridItem
+          w="100%"
+          className="article-container"
+          width={"100%"}
+          overflow={"hidden"}
+        >
           <Skeleton isLoaded={!translateLoading}>
-            <Heading
-              align="left"
-              letterSpacing={1}
-              as="h3"
-              fontSize="25px"
+            <Flex
               bg="#2A2F4F"
               p={2}
               color="#FDE2F3"
               borderRadius="xl"
               marginBottom="20px"
             >
-              {title[selectedLanguage]}
-            </Heading>
+              <Heading align="left" letterSpacing={1} as="h3" fontSize="25px">
+                {title[selectedLanguage]}
+              </Heading>
+            </Flex>
             <Flex
               justifyContent={"space-between"}
               mb={3}
@@ -221,17 +224,27 @@ const MainArticleContent = ({
                       )}
                     </Flex>
                   </Box>
-                  <Text
-                    align="justify"
-                    fontSize="18px"
-                    style={
-                      notLoggedIn
-                        ? { filter: "blur(5px)", userSelect: "none" }
-                        : { userSelect: "text" }
-                    }
+                  <Flex
+                    marginTop="2"
+                    marginBottom="2"
+                    display={"flex"}
+                    alignItems={"justify"}
+                    height={"100%"}
                   >
-                    {mainText[selectedLanguage][2]}
-                  </Text>
+                    <Text
+                      ref={textRef}
+                      align="justify"
+                      letterSpacing={1}
+                      fontSize="18px"
+                      style={
+                        notLoggedIn
+                          ? { filter: "blur(5px)", userSelect: "none" }
+                          : { userSelect: "text" }
+                      }
+                    >
+                      {mainText[selectedLanguage][2]}
+                    </Text>
+                  </Flex>
                 </>
               ) : (
                 <>

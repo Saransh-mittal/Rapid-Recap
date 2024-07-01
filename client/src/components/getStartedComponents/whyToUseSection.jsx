@@ -22,7 +22,7 @@ const WhyToUseSection = () => {
     {
       id: "0",
       title: "MULTI CATEGORIES NEWS",
-      text: `Stay ahead with Rapid Recap! Explore the latest news and trends across Top, General, Business, Technology, Entertainment, Sports, Science, Health, and more.\n\nStay informed, stay updated, and never miss out on the latest happenings around the globe. Dive into a world of information!`,
+      text: `Stay ahead with Rapid Recap! Explore the latest news and trends across Top, General, Business, Technology, Entertainment, Sports, Science, Health, and more.\n Stay informed, stay updated, and never miss out on the latest happenings around the globe. Dive into a world of information!`,
       backgroundUrl: card1,
       iconUrl: benefitIcon1,
       imageUrl: benefitImage2,
@@ -30,7 +30,7 @@ const WhyToUseSection = () => {
     {
       id: "1",
       title: "IQ SCORE",
-      text: `Boost your Information Quotient (IQ) Score! Your IQ score reflects your knowledge bank, increasing with each quiz you conquer.\n\nEngage more, score higher, and watch your IQ soar. Challenge yourself and climb the leaderboard!`,
+      text: `Boost your Information Quotient (IQ) Score! Your IQ score reflects your knowledge bank, increasing with each quiz you conquer.\n Engage more, score higher, and watch your IQ soar. Challenge yourself and climb the leaderboard!`,
       backgroundUrl: card2,
       iconUrl: benefitIcon2,
       imageUrl: benefitImage2,
@@ -39,7 +39,7 @@ const WhyToUseSection = () => {
     {
       id: "2",
       title: "RQM SCORE",
-      text: `Master the Rapid Quiz Mastery (RQM) Score! Your RQM score is calculated based on accuracy and speed in answering quizzes.\n\nSharpen your skills, answer swiftly, and rise to the top. Become the ultimate quiz master!`,
+      text: `Master the Rapid Quiz Mastery (RQM) Score! Your RQM score is calculated based on accuracy and speed in answering quizzes.\nSharpen your skills, answer swiftly, and rise to the top. Become the ultimate quiz master!`,
       backgroundUrl: card3,
       iconUrl: benefitIcon3,
       imageUrl: benefitImage2,
@@ -47,7 +47,7 @@ const WhyToUseSection = () => {
     {
       id: "3",
       title: "Societies and Circles",
-      text: `Join elite Societies and Circles! These groups celebrate different cognitive abilities and foster intellectual growth.\n\nAdvance through levels like Visionaries and Pioneers in the Mavericks Society, or Scholars and Masters in the Elites Society. Elevate your intellect!`,
+      text: `Join elite Societies and Circles! These groups celebrate different cognitive abilities and foster intellectual growth.\nAdvance through levels like Visionaries and Pioneers in the Mavericks Society, or Scholars and Masters in the Elites Society. Elevate your intellect!`,
       backgroundUrl: card4,
       iconUrl: benefitIcon4,
       imageUrl: benefitImage2,
@@ -57,7 +57,7 @@ const WhyToUseSection = () => {
     {
       id: "4",
       title: "Experience Level",
-      text: `Earn XP (Experience Points) for your activities! Gain points through quizzes and site engagement.\n\nUpgrade your Society or Circle with calculated XP based on IQ thresholds. Achieve accurate rewards and celebrate your progress!`,
+      text: `Earn XP (Experience Points) for your activities! Gain points through quizzes and site engagement.\nUpgrade your Society or Circle with calculated XP based on IQ thresholds. Achieve accurate rewards and celebrate your progress!`,
       backgroundUrl: card5,
       iconUrl: benefitIcon1,
       imageUrl: benefitImage2,
@@ -65,7 +65,7 @@ const WhyToUseSection = () => {
     {
       id: "5",
       title: "Streak Systems and Boosts",
-      text: `Unlock rewards with our Streak Systems!\n\nDaily Streaks grant a 1.5x RQM score after 6 days of continuous activity.\n\nQuin Boost Streaks offer a 1.5x RQM score on the 6th quiz of the same day. Keep the streaks alive!`,
+      text: `Unlock rewards with our Streak Systems!\nDaily Streaks grant a 1.5x RQM score after 6 days of continuous activity.\nQuin Boost Streaks offer a 1.5x RQM score on the 6th quiz of the same day. Keep the streaks alive!`,
       backgroundUrl: card6,
       iconUrl: benefitIcon2,
       imageUrl: benefitImage2,

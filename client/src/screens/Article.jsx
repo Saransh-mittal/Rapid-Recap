@@ -305,13 +305,14 @@ const Article = () => {
           setShowExpectedIQ={setShowExpectedIQ}
         />
       ) : null}
+      {/* {((showQuiz && !givenQuiz && !showQuizLangModal) || true) && !load ? ( */}
       {showQuiz && !givenQuiz && !showQuizLangModal ? (
         <Quiz
           setIsQuinBoostAvailable={setIsQuinBoostAvailable}
           setQuizLeftToGetQuizBoost={setQuizLeftToGetQuizBoost}
           isQuinBoostAvailable={isQuinBoostAvailable}
           article={article}
-          isOpen={isOpen}
+          isOpen={isOpen || true}
           onClose={() => {
             onClose();
             setShowQuiz(false);
@@ -331,6 +332,8 @@ const Article = () => {
           className="article-page"
           marginTop={"4.5rem"}
           flexDirection={"column"}
+          w={"100vw"}
+          overflow={"hidden"}
         >
           <Helmet>
             <title>{title[selectedLanguage]}</title>
