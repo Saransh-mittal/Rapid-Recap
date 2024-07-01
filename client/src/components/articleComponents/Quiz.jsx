@@ -56,29 +56,28 @@ const Quiz = ({
   const toast = useToast();
   const { state, dispatch } = useContext(AppContext);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [submitted, setSubmitted] = useState(true);
+  const [submitted, setSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState([]);
   const [score, setScore] = useState(0);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  const [showInstruction, setShowInstruction] = useState(false);
+  const [showInstruction, setShowInstruction] = useState(true);
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false);
   const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
     useState(false);
   const stopTimerRef = useRef(false);
+  const [result, setResult] = useState({});
 
   useEffect(() => {
     const initialAnswers = Array(totalQuestions).fill("");
     setUserAnswers(initialAnswers);
   }, [totalQuestions]);
 
-  const { handleSubmitQuiz, submitLoad } = useSubmitQuiz(
+  const { handleSubmitQuiz, submitLoad } = useSubmitQuiz({
     articleId,
     quizData,
     quizId,
-    showConfirmationModal,
-    currentQuestionIndex,
-    setScore
-  );
+    setResult,
+  });
 
   const { timer, timeTaken } = useTimer(
     isOpen,
@@ -139,6 +138,7 @@ const Quiz = ({
   };
 
   const handleClose = async () => {
+    console.log("close");
     try {
       quinBoostChecker({
         setIsQuinBoostAvailable,
@@ -266,8 +266,8 @@ const Quiz = ({
         ) : (
           <SubmittedQuizInterface
             isOpen={isOpen}
-            score={score}
             submitLoad={submitLoad}
+            result={result}
           />
         )}
       </ModalBody>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Text,
   SlideFade,
@@ -35,29 +35,15 @@ ChartJS.register(
   Legend
 );
 
-const heartbeat = keyframes`
-  0%, 100% {
-    transform: scale(1.1);
-  }
-  // 25% {
-  //   transform: scale(1.1);
-  // }
-  50% {
-    transform: scale(1.2);
-  }
-  // 75% {
-  //   transform: scale(1.1);
-  // }
-`;
-
 const getReviewText = (field, value) => {
   const reviews = {
     score: {
-      1: "Needs improvement",
-      2: "Below average",
-      3: "Good job",
-      4: "Great work",
-      5: "Excellent",
+      0: "Needs improvement",
+      20: "Below average",
+      40: "Average",
+      60: "Good job",
+      80: "Great work",
+      100: "Excellent",
     },
     timeTaken: {
       slow: "Too slow",
@@ -69,16 +55,22 @@ const getReviewText = (field, value) => {
       Medium: "Well done!",
       Hard: "Impressive!",
     },
-    rqmScore: {
+    rqmscore: {
       low: "Try harder",
       medium: "Good effort",
       high: "Outstanding",
     },
   };
+  const reviewKeys = Object.keys(reviews[field])
+    .map(Number)
+    .sort((a, b) => a - b);
 
-  if (field === "score") {
-    return reviews.score[value] || "Good effort";
+  for (let i = 0; i < reviewKeys.length; i++) {
+    if (value <= reviewKeys[i]) {
+      return reviews[field][reviewKeys[i]];
+    }
   }
+
   if (field === "timeTaken") {
     if (value >= 33 && value < 50) return reviews.timeTaken.slow;
     if (value <= 16 && value > 33) return reviews.timeTaken.average;
@@ -87,30 +79,43 @@ const getReviewText = (field, value) => {
   if (field === "difficulty") {
     return reviews.difficulty[value] || "Keep going!";
   }
-  if (field === "rqmScore") {
-    if (value < 45) return reviews.rqmScore.low;
-    if (value >= 45 && value < 75) return reviews.rqmScore.medium;
-    return reviews.rqmScore.high;
+  if (field === "result?.RQM_score") {
+    if (value < 45) return reviews.result?.RQM_score.low;
+    if (value >= 45 && value < 75) return reviews.result?.RQM_score.medium;
+    return reviews.result?.RQM_score.high;
   }
 };
 
 const SubmittedQuizInterface = ({
-  score = 5,
   isOpen = true,
   submitLoad = false,
-  timeTaken = 0,
-  difficulty = "Easy",
-  rqmScore = 111,
+  result,
 }) => {
-  const quizData = [11, 32, 55, 88, 105, rqmScore]; // Including the current quiz's RQM score
-  const labels = [
-    "Quiz 1",
-    "Quiz 2",
-    "Quiz 3",
-    "Quiz 4",
-    "Quiz 5",
-    "Current Quiz",
-  ]; // Adding a label for the current quiz
+  const [scoreArr, setScoreArr] = useState([]);
+  const [quizData, setQuizData] = useState([]);
+  const [labels, setLabels] = useState([]);
+  // console.log(result);
+  useEffect(() => {
+    if (result?.score && result?.score.includes("/")) {
+      setScoreArr(() => {
+        const arr = result?.score.split("/");
+        arr[0] = parseInt(arr[0]);
+        arr[1] = parseInt(arr[1]);
+        return arr;
+      });
+    }
+    if (result.pastRQMs && result.pastRQMs.length > 0) {
+      setQuizData(result.pastRQMs);
+      setLabels(() => {
+        const labels = Array.from(
+          { length: result.pastRQMs.length - 1 },
+          (_, i) => `Quiz ${i + 1}`
+        );
+        labels.push("Current Quiz");
+        return labels;
+      });
+    }
+  }, [submitLoad, result?.score, result?.pastRQMs]);
 
   const chartData = {
     labels: labels,
@@ -176,268 +181,271 @@ const SubmittedQuizInterface = ({
             Calculating...
           </Text>
         ) : (
-          //make a condition that if the screen is smaller than 768px
-
-          <StatGroup
-            border={{ base: "1px solid black", md: "none" }}
-            borderRadius={"xl"}
-          >
-            <Flex w={"100%"}>
-              <Flex
-                justifyContent={"space-between"}
-                w={"100%"}
-                flexDirection={{ base: "column", md: "row" }}
-              >
-                <Stat borderBottom={{ base: "1px solid black", md: "none" }}>
-                  <StatLabel color="#3E3232" mt={5}>
-                    Score
-                  </StatLabel>
-                  <StatNumber color="#3E3232">{score} / 5</StatNumber>
-                  <StatHelpText color="#3E3232">
-                    {getReviewText("score", score)}
-                  </StatHelpText>
-                </Stat>
-                <Stat>
-                  <StatLabel color="#3E3232" mt={5}>
-                    Time Taken
-                  </StatLabel>
-                  <StatNumber color="#3E3232">{timeTaken} seconds</StatNumber>
-                  <StatHelpText color="#3E3232">
-                    {getReviewText("timeTaken", timeTaken)}
-                  </StatHelpText>
-                </Stat>
-              </Flex>
-
-              <Flex
-                border={{ base: "1px solid black", md: "none" }}
-                display={{ base: "black", md: "none" }}
-                width={"0%"}
-              />
-              <Flex
-                justifyContent={"space-between"}
-                w={"100%"}
-                flexDirection={{ base: "column", md: "row" }}
-              >
-                <Stat borderBottom={{ base: "1px solid black", md: "none" }}>
-                  <StatLabel color="#3E3232" mt={5}>
-                    Article Difficulty
-                  </StatLabel>
-                  <StatNumber color="#3E3232">{difficulty}</StatNumber>
-                  <StatHelpText color="#3E3232">
-                    {getReviewText("difficulty", difficulty)}
-                  </StatHelpText>
-                </Stat>
-
-                <Stat>
-                  <StatLabel color="#3E3232" mt={5}>
-                    RQM Score
-                  </StatLabel>
-                  <StatNumber color="#3E3232">{rqmScore}</StatNumber>
-                  <StatHelpText color="#3E3232">
-                    {getReviewText("rqmScore", rqmScore)}
-                  </StatHelpText>
-                </Stat>
-              </Flex>
-            </Flex>
-          </StatGroup>
-        )}
-
-        {!submitLoad && (
-          <Box>
-            <Flex flexDirection={"column"}>
-              <HStack
-                spacing={0}
-                justifyContent={"center"}
-                mb={4}
-                w={"100%"}
-                mt={4}
-              >
-                <Flex flexDirection={"column"} alignItems={"center"} w={"100%"}>
-                  <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                    Rookie
-                  </Text>
-                  <Box
-                    h={"20px"}
-                    w={"100%"}
-                    bg="gray.300"
-                    animation={
-                      rqmScore >= 0 && rqmScore < 15
-                        ? `${heartbeat} 1.5s infinite`
-                        : "none"
-                    }
-                    boxShadow={
-                      rqmScore >= 0 && rqmScore < 15
-                        ? "0 0 10px 2px #00f"
-                        : "none"
-                    }
-                  ></Box>
-                </Flex>
-                <Flex flexDirection={"column"} alignItems={"center"} w={"100%"}>
-                  <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                    Amateur
-                  </Text>
-                  <Box
-                    h={"20px"}
-                    w={"100%"}
-                    bg="blue.400"
-                    animation={
-                      rqmScore >= 15 && rqmScore < 45
-                        ? `${heartbeat} 1.5s infinite`
-                        : "none"
-                    }
-                    boxShadow={
-                      rqmScore >= 15 && rqmScore < 45
-                        ? "0 0 10px 2px #00f"
-                        : "none"
-                    }
-                  ></Box>
-                </Flex>
-                <Flex flexDirection={"column"} alignItems={"center"} w={"100%"}>
-                  <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                    Advanced
-                  </Text>
-                  <Box
-                    h={"20px"}
-                    w={"100%"}
-                    bg="green.500"
-                    animation={
-                      rqmScore >= 45 && rqmScore < 75
-                        ? `${heartbeat} 1.5s infinite`
-                        : "none"
-                    }
-                    boxShadow={
-                      rqmScore >= 45 && rqmScore < 75
-                        ? "0 0 10px 2px #00f"
-                        : "none"
-                    }
-                  ></Box>
-                </Flex>
-                <Flex flexDirection={"column"} alignItems={"center"} w={"100%"}>
-                  <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                    Expert
-                  </Text>
-                  <Box
-                    h={"20px"}
-                    w={"100%"}
-                    bg="yellow.500"
-                    animation={
-                      rqmScore >= 75 && rqmScore < 105
-                        ? `${heartbeat} 1.5s infinite`
-                        : "none"
-                    }
-                    boxShadow={
-                      rqmScore >= 75 && rqmScore < 105
-                        ? "0 0 10px 2px #00f"
-                        : "none"
-                    }
-                  ></Box>
-                </Flex>
-                <Flex flexDirection={"column"} alignItems={"center"} w={"100%"}>
-                  <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                    Maestro
-                  </Text>
-                  <Box
-                    h={"20px"}
-                    w={"100%"}
-                    bg="red.500"
-                    // animation={
-                    //   rqmScore >= 105 ? `${heartbeat} 2.5s infinite` : "none"
-                    // }
-                    boxShadow={
-                      rqmScore >= 105 ? "0 0 20px 10px #00ffe2" : "none"
-                    }
-                  />
-                </Flex>
-              </HStack>
-              <HStack gap={0}>
-                <Flex
-                  w={"100%"}
-                  textAlign={"center"}
-                  h="20px"
-                  position={"relative"}
-                >
-                  <Text position={"absolute"} left={"-3px"}>
-                    0
-                  </Text>
-                </Flex>
-                <Flex
-                  w={"100%"}
-                  textAlign={"center"}
-                  h="20px"
-                  position={"relative"}
-                >
-                  <Text position={"absolute"} left={"-3px"}>
-                    15
-                  </Text>
-                </Flex>
-                <Flex
-                  w={"100%"}
-                  textAlign={"center"}
-                  h="20px"
-                  position={"relative"}
-                >
-                  <Text position={"absolute"} left={"-3px"}>
-                    45
-                  </Text>
-                </Flex>
-                <Flex
-                  w={"100%"}
-                  textAlign={"center"}
-                  h="20px"
-                  position={"relative"}
-                >
-                  <Text position={"absolute"} left={"-3px"}>
-                    75
-                  </Text>
-                </Flex>
-                <Flex
-                  w={"100%"}
-                  textAlign={"center"}
-                  h="20px"
-                  position={"relative"}
-                >
-                  <Text position={"absolute"} left={"-3px"}>
-                    105
-                  </Text>
-                  <Text
-                    position={"absolute"}
-                    right={"-3px"}
-                    letterSpacing={"3px"}
-                  >
-                    ...
-                  </Text>
-                </Flex>
-              </HStack>
-            </Flex>
-            <Flex
-              flexDirection={"column"}
-              // justifyContent={"center"}
-              alignItems={"center"}
-              height={"300px"}
+          <>
+            <StatGroup
+              border={{ base: "1px solid black", md: "none" }}
+              borderRadius={"xl"}
             >
-              <Flex justifyContent={"center"} mt={4}>
-                <Text
-                  color="#3E3232"
-                  fontSize="20px"
-                  textAlign="center"
-                  my={4}
-                  fontWeight={"bold"}
-                  textTransform={"uppercase"}
+              <Flex w={"100%"}>
+                <Flex
+                  justifyContent={"space-between"}
+                  w={"100%"}
+                  flexDirection={{ base: "column", md: "row" }}
                 >
-                  RQM Score Progress
-                </Text>
-              </Flex>
+                  <Stat borderBottom={{ base: "1px solid black", md: "none" }}>
+                    <StatLabel color="#3E3232" mt={5}>
+                      Score
+                    </StatLabel>
+                    <StatNumber color="#3E3232">{result?.score}</StatNumber>
+                    <StatHelpText color="#3E3232">
+                      {getReviewText(
+                        "score",
+                        (scoreArr[0] / scoreArr[1]) * 100
+                      )}
+                    </StatHelpText>
+                  </Stat>
+                  <Stat>
+                    <StatLabel color="#3E3232" mt={5}>
+                      Time Taken
+                    </StatLabel>
+                    <StatNumber color="#3E3232">
+                      {result?.timeTaken} Sec
+                    </StatNumber>
+                    <StatHelpText color="#3E3232">
+                      {getReviewText("timeTaken", result?.timeTaken)}
+                    </StatHelpText>
+                  </Stat>
+                </Flex>
 
-              <Flex
-                width="100%"
-                height={"100%"}
-                justifyContent={"center"}
-                alignItems={"center"}
-              >
-                <Line data={chartData} options={chartOptions} />
+                <Flex
+                  border={{ base: "1px solid black", md: "none" }}
+                  display={{ base: "black", md: "none" }}
+                  width={"0%"}
+                />
+                <Flex
+                  justifyContent={"space-between"}
+                  w={"100%"}
+                  flexDirection={{ base: "column", md: "row" }}
+                >
+                  <Stat borderBottom={{ base: "1px solid black", md: "none" }}>
+                    <StatLabel color="#3E3232" mt={5}>
+                      Article Difficulty
+                    </StatLabel>
+                    <StatNumber color="#3E3232">
+                      {result?.articleDifficulty}
+                    </StatNumber>
+                    <StatHelpText color="#3E3232">
+                      {getReviewText("difficulty", result?.articleDifficulty)}
+                    </StatHelpText>
+                  </Stat>
+
+                  <Stat>
+                    <StatLabel color="#3E3232" mt={5}>
+                      RQM Score
+                    </StatLabel>
+                    <StatNumber color="#3E3232">{result?.RQM_score}</StatNumber>
+                    <StatHelpText color="#3E3232">
+                      {getReviewText("rqmscore", result?.RQM_score)}
+                    </StatHelpText>
+                  </Stat>
+                </Flex>
               </Flex>
-            </Flex>
-          </Box>
+            </StatGroup>
+            <Box>
+              <Flex flexDirection={"column"}>
+                <HStack
+                  spacing={0}
+                  justifyContent={"center"}
+                  mb={4}
+                  w={"100%"}
+                  mt={4}
+                >
+                  <Flex
+                    flexDirection={"column"}
+                    alignItems={"center"}
+                    w={"100%"}
+                  >
+                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
+                      Rookie
+                    </Text>
+                    <Box
+                      h={"20px"}
+                      w={"100%"}
+                      bg="gray.300"
+                      boxShadow={
+                        result?.RQM_score >= 0 && result?.RQM_score < 15
+                          ? "0 0 10px 2px #00f"
+                          : "none"
+                      }
+                    ></Box>
+                  </Flex>
+                  <Flex
+                    flexDirection={"column"}
+                    alignItems={"center"}
+                    w={"100%"}
+                  >
+                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
+                      Amateur
+                    </Text>
+                    <Box
+                      h={"20px"}
+                      w={"100%"}
+                      bg="blue.400"
+                      boxShadow={
+                        result?.RQM_score >= 15 && result?.RQM_score < 45
+                          ? "0 0 10px 2px #00f"
+                          : "none"
+                      }
+                    ></Box>
+                  </Flex>
+                  <Flex
+                    flexDirection={"column"}
+                    alignItems={"center"}
+                    w={"100%"}
+                  >
+                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
+                      Advanced
+                    </Text>
+                    <Box
+                      h={"20px"}
+                      w={"100%"}
+                      bg="green.500"
+                      boxShadow={
+                        result?.RQM_score >= 45 && result?.RQM_score < 75
+                          ? "0 0 10px 2px #00f"
+                          : "none"
+                      }
+                    ></Box>
+                  </Flex>
+                  <Flex
+                    flexDirection={"column"}
+                    alignItems={"center"}
+                    w={"100%"}
+                  >
+                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
+                      Expert
+                    </Text>
+                    <Box
+                      h={"20px"}
+                      w={"100%"}
+                      bg="yellow.500"
+                      boxShadow={
+                        result?.RQM_score >= 75 && result?.RQM_score < 105
+                          ? "0 0 10px 2px #00f"
+                          : "none"
+                      }
+                    ></Box>
+                  </Flex>
+                  <Flex
+                    flexDirection={"column"}
+                    alignItems={"center"}
+                    w={"100%"}
+                  >
+                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
+                      Maestro
+                    </Text>
+                    <Box
+                      h={"20px"}
+                      w={"100%"}
+                      bg="red.500"
+                      boxShadow={
+                        result?.RQM_score >= 105
+                          ? "0 0 20px 10px #00ffe2"
+                          : "none"
+                      }
+                    />
+                  </Flex>
+                </HStack>
+                <HStack gap={0}>
+                  <Flex
+                    w={"100%"}
+                    textAlign={"center"}
+                    h="20px"
+                    position={"relative"}
+                  >
+                    <Text position={"absolute"} left={"-3px"}>
+                      0
+                    </Text>
+                  </Flex>
+                  <Flex
+                    w={"100%"}
+                    textAlign={"center"}
+                    h="20px"
+                    position={"relative"}
+                  >
+                    <Text position={"absolute"} left={"-3px"}>
+                      15
+                    </Text>
+                  </Flex>
+                  <Flex
+                    w={"100%"}
+                    textAlign={"center"}
+                    h="20px"
+                    position={"relative"}
+                  >
+                    <Text position={"absolute"} left={"-3px"}>
+                      45
+                    </Text>
+                  </Flex>
+                  <Flex
+                    w={"100%"}
+                    textAlign={"center"}
+                    h="20px"
+                    position={"relative"}
+                  >
+                    <Text position={"absolute"} left={"-3px"}>
+                      75
+                    </Text>
+                  </Flex>
+                  <Flex
+                    w={"100%"}
+                    textAlign={"center"}
+                    h="20px"
+                    position={"relative"}
+                  >
+                    <Text position={"absolute"} left={"-3px"}>
+                      105
+                    </Text>
+                    <Text
+                      position={"absolute"}
+                      right={"-3px"}
+                      letterSpacing={"3px"}
+                    >
+                      ...
+                    </Text>
+                  </Flex>
+                </HStack>
+              </Flex>
+              <Flex
+                flexDirection={"column"}
+                // justifyContent={"center"}
+                alignItems={"center"}
+                height={"300px"}
+              >
+                <Flex justifyContent={"center"} mt={4}>
+                  <Text
+                    color="#3E3232"
+                    fontSize="20px"
+                    textAlign="center"
+                    my={4}
+                    fontWeight={"bold"}
+                    textTransform={"uppercase"}
+                  >
+                    Today's RQM Score Update
+                  </Text>
+                </Flex>
+
+                <Flex
+                  width="100%"
+                  height={"100%"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                >
+                  <Line data={chartData} options={chartOptions} />
+                </Flex>
+              </Flex>
+            </Box>
+          </>
         )}
       </Box>
     </SlideFade>

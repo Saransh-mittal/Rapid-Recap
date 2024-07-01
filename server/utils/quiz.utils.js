@@ -487,10 +487,30 @@ const findQuizByLanguage = async ({ language, articleId }) => {
   }
 };
 
+const fetchTodaysPastRQMs = async ({ userId }) => {
+  try {
+    // fetch todays all quizAttempts RQMs in ascending sorted time order
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const pastRQMs = await QuizAttempt.find({
+      user: userId,
+      createdAt: { $gte: today },
+    })
+      .sort({ createdAt: 1 })
+      .select("RQM_score");
+    const result = pastRQMs.map((attempt) => attempt.RQM_score);
+    return result;
+  } catch (error) {
+    console.log("Error fetching today's past RQMs:", error);
+  }
+};
+
 module.exports = {
   genQuiz,
   generateQuestionsForQuiz,
   generateQuestionsForHindiQuiz,
   updatePercentilesOnQuizDeactivation,
   findQuizByLanguage,
+  fetchTodaysPastRQMs,
 };

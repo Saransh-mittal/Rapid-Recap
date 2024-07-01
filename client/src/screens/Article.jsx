@@ -80,7 +80,7 @@ const Article = () => {
           state.category ? state.category : "general"
         }`
       );
-      console.log(response.data);
+      // console.log(response.data);
       setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
       setLatestNews(news.data);
       setArticle(response.data.newArticle);
@@ -304,7 +304,8 @@ const Article = () => {
           setShowExpectedIQ={setShowExpectedIQ}
         />
       ) : null}
-      {((showQuiz && !givenQuiz && !showQuizLangModal) || true) && !load ? (
+      {/* {((showQuiz && !givenQuiz && !showQuizLangModal) || true) && !load ? ( */}
+      {showQuiz && !givenQuiz && !showQuizLangModal ? (
         <Quiz
           setIsQuinBoostAvailable={setIsQuinBoostAvailable}
           setQuizLeftToGetQuizBoost={setQuizLeftToGetQuizBoost}
@@ -330,6 +331,8 @@ const Article = () => {
           className="article-page"
           marginTop={"4.5rem"}
           flexDirection={"column"}
+          w={"100vw"}
+          overflow={"hidden"}
         >
           <Helmet>
             <title>{title[selectedLanguage]}</title>

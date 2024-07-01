@@ -3,15 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useToast } from "@chakra-ui/react";
 
-const useSubmitQuiz = (
-  articleId,
-  quizData,
-  quizId,
-  showConfirmationModal,
-  currentQuestionIndex,
-
-  setScore
-) => {
+const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
   // console.log(userAnswers);
   const [submitLoad, setSubmitLoad] = useState(false);
 
@@ -32,7 +24,7 @@ const useSubmitQuiz = (
       // }
 
       const userResponses = [...userAnswers];
-
+      // console.log(articleId);
       const response = await axios.post(`/api/quiz/attempt`, {
         articleId,
         userResponses,
@@ -48,8 +40,10 @@ const useSubmitQuiz = (
         isClosable: true,
         position: "top",
       });
-      setScore(response.data.RQM_score);
-      return response.data.RQM_score;
+      // console.log(response.data);
+      setResult(response.data);
+
+      return response.data;
     } catch (error) {
       console.log(error);
       toast({
