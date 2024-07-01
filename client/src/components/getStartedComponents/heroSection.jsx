@@ -1,7 +1,7 @@
 import React, { useContext, useRef, useState } from "react";
 import {
   Box,
-  Heading,
+  Heading as ChakraHeading,
   Text,
   Image,
   UnorderedList,
@@ -33,6 +33,7 @@ import Button from "../miscellaneous/ButtonComponent";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
 import FeedbackModal from "./modals/FeedbackModal";
 import { useNavigate } from "react-router-dom";
+import Heading from "../miscellaneous/HeadingComponent";
 const heroIcons = [homeSmile, file02, searchMd, plusSquare];
 
 const HeroSection = () => {
@@ -56,6 +57,25 @@ const HeroSection = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const handleDownload = () => {
+    // URL of the APK file served from the public directory
+    const url = "/RapidRecap.apk";
+
+    // Create a temporary link element
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "Rapid Recap - Your News Source.apk";
+
+    // Append link to the body
+    document.body.appendChild(link);
+
+    // Trigger click on the link to start download
+    link.click();
+
+    // Clean up and remove the link
+    document.body.removeChild(link);
+  };
+
   return (
     <Section crosses customPaddings={`2.85rem 0 0 0`} id="hero">
       <Box
@@ -77,13 +97,13 @@ const HeroSection = () => {
               width: "138%",
               left: "55% !important",
             },
-            "@media (max-width: 1240px)": {
-              top: "-24%",
+            "@media (max-width: 1024px)": {
+              top: "-13%",
               width: "138%",
               left: "50% ",
             },
-            "@media (min-width: 1241px)": {
-              top: "-41%",
+            "@media (min-width: 1280px)": {
+              top: "-21%",
               width: "234%",
               left: "100%",
               height: "auto",
@@ -103,7 +123,7 @@ const HeroSection = () => {
             position={"relative"}
             letterSpacing={"2px"}
           >
-            <Heading as="h2" size="2xl" mb="6">
+            <ChakraHeading as="h2" size="2xl" mb="6">
               Turn News Into Knowledge with{" "}
               <Box as="span" display="inline-block" position="relative">
                 Rapid Recap{" "}
@@ -120,7 +140,7 @@ const HeroSection = () => {
                   alt="Curve"
                 />
               </Box>
-            </Heading>
+            </ChakraHeading>
             <Flex justifyContent={"center"}>
               <Text
                 fontSize="lg"
@@ -139,7 +159,13 @@ const HeroSection = () => {
                 for excellence.
               </Text>
             </Flex>
-            <Flex flexDirection={"row"} justifyContent={"center"} gap={"2rem"}>
+            <Flex
+              // flexDirection={"row"}
+              justifyContent={"center"}
+              gap={{ base: "3rem", md: "8rem" }}
+              mt={6}
+              flexDirection={{ base: "column-reverse", md: "row" }}
+            >
               {state.show && isSmallScreen && (
                 <Flex justifyContent="center" alignItems="center" zIndex={10}>
                   <GetStarted
@@ -147,16 +173,19 @@ const HeroSection = () => {
                   />
                 </Flex>
               )}
-              {/* <Flex justifyContent="center" alignItems="center" zIndex={10}>
+              <Flex
+                justifyContent="center"
+                alignItems="center"
+                zIndex={10}
+                flexDirection={"column"}
+              >
+                <Heading
+                  tag="For better and smoother experience"
+                  marginBottom="0"
+                />
                 <ButtonGradient />
-                <Button
-                  onClick={() => {
-                    navigate("/feedback");
-                  }}
-                >
-                  FeedBack
-                </Button>
-              </Flex> */}
+                <Button onClick={handleDownload}> Download</Button>
+              </Flex>
             </Flex>
           </Box>
 
