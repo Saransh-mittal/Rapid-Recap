@@ -3,7 +3,7 @@ import { useRef, useContext, useEffect } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import imageData from "../../assets/AltNewsImage";
 import { useNavigate } from "react-router-dom";
-import { size } from "lodash";
+import rrImage from "/images/rr.png";
 
 const Card = ({ newsNumber, data }) => {
   //console.log("card :", data);
@@ -107,11 +107,11 @@ const Card = ({ newsNumber, data }) => {
               background="linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%)"
             >
               <img
-                src={data?.imgURL[0] ? data?.imgURL[0] : alt_img}
+                src={data?.imgURL[0] ? data?.imgURL[0] : rrImage}
                 alt=""
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = alt_img;
+                  e.target.src = rrImage;
                 }}
               />
             </Box>

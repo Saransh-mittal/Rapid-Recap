@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 import os
 import pickle
 import pymongo
@@ -61,6 +62,29 @@ def save_tfidf(tfv, tfv_matrix):
     with open(os.path.join(model_path, 'tfv_matrix.pkl'), 'wb') as f:
         pickle.dump(tfv_matrix, f)
 
+def update_similar_articles(mongo_uri, articles_df, tfv_matrix):
+    client = pymongo.MongoClient(mongo_uri)
+    db = client.get_database("RapidRecap0")
+    articles_collection = db.get_collection("Articles")
+
+    cosine_similarities = cosine_similarity(tfv_matrix)
+    bulk_operations = []
+    
+    for idx, article in articles_df.iterrows():
+        similar_indices = cosine_similarities[idx].argsort()[:-11:-1]
+        similar_articles = articles_df.iloc[similar_indices]['_id'].tolist()
+        similar_articles = [str(article_id) for article_id in similar_articles if article_id != article['_id']]
+        
+        bulk_operations.append(
+            pymongo.UpdateOne(
+                {"_id": article['_id']},
+                {"$set": {"relatedArticles": similar_articles}}
+            )
+        )
+    
+    if bulk_operations:
+        articles_collection.bulk_write(bulk_operations)
+
 if __name__ == "__main__":
     base_path = os.path.dirname(os.path.abspath(__file__))
     dotenv_path = os.path.join(base_path, '..', 'config.env')
@@ -82,3 +106,7 @@ if __name__ == "__main__":
     save_tfidf(tfv, tfv_matrix)
 
     print("TF-IDF matrix calculation completed and saved.")
+
+    print("Updating similar articles in the database...")
+    update_similar_articles(mongo_uri, articles_df, tfv_matrix)
+    print("Similar articles update completed.")

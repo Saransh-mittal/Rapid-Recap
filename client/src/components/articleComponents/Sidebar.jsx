@@ -11,7 +11,7 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { LockIcon, TriangleDownIcon } from "@chakra-ui/icons";
-import Alt_img from "../../assets/alt_image.jpg";
+import Alt_img from "/images/rr.png";
 import GivenQuiz from "./GivenQuiz";
 import QuizExpired from "./QuizExpired";
 import GenerateQuizButton from "./GenerateQuizButton";
@@ -250,15 +250,14 @@ const Sidebar = ({
                 p={2}
                 w={"100%"}
                 display={"flex"}
-                alignItems={"center"}
               >
                 <Image
                   width="100px"
                   mr={3}
-                  mt={-3}
-                  height={"60px"}
+                  mt={2}
+                  height={"100%"}
                   float="left"
-                  src={item.imgURL}
+                  src={item.imgURL ? item.imgURL : Alt_img}
                   alt="Article img"
                   onError={(e) => {
                     e.target.onerror = null;
@@ -266,7 +265,22 @@ const Sidebar = ({
                     e.target.style.height = `100%`;
                   }}
                 />
-                <Text mt={2}>{item.title}</Text>
+                <Flex flexDirection={"column"}>
+                  <Flex>
+                    <Text
+                      m={0}
+                      p={0}
+                      textTransform="uppercase"
+                      color="#9CAFAA"
+                      fontWeight="bold"
+                      letterSpacing="1px"
+                    >
+                      {item.date}
+                      {","}
+                    </Text>
+                  </Flex>
+                  <Text mt={2}>{item.title}</Text>
+                </Flex>
               </Box>
             );
           })}
