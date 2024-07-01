@@ -9,6 +9,7 @@ import {
   Image,
   Flex,
   Tooltip,
+  Badge,
 } from "@chakra-ui/react";
 import { LockIcon, TriangleDownIcon } from "@chakra-ui/icons";
 import Alt_img from "/images/rr.png";
