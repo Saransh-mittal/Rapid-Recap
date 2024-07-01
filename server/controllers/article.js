@@ -15,6 +15,7 @@ const {
 } = require("../utils/article.utils");
 const { sendNotification } = require("../services/notificationService");
 const { formatDate } = require("../utils/miscellaneous.utils");
+const Quiz = require("../model/quizSchema");
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = "general" } = req.query;
@@ -259,6 +260,10 @@ const startQuiz = async (req, res) => {
     const article = await Article.findById(articleId);
     if (!article) {
       throw new Error("Article not found");
+    }
+    const quiz = await Quiz.find({ article: articleId });
+    if (!quiz || quiz.length === 0) {
+      throw new Error("Quiz not found, Please try again!!");
     }
     if (
       article.userQuizStatus.find(

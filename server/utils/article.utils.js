@@ -5,6 +5,7 @@ const Article = require("../model/articleSchema");
 const { decode } = require("html-entities");
 const NewsAPI = require("newsapi");
 const axios = require("axios");
+const script_prepare_article_data = require("../scripts/script_prepare_article_data");
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
   // Use natural language processing to tokenize sentences
@@ -378,7 +379,9 @@ Also if total characters are more than 2500 than summarize the whole mainText in
           category: res.category || category,
         };
       }
-
+      if (res.mainText.length < 800) {
+        throw new Error("Text is too short");
+      }
       const isArticleCheckAgain = await Article.findOne({
         title: res.title,
       });
@@ -462,6 +465,7 @@ const extractNewsUtilityFunc = async () => {
       result,
       articlesSavedPerCategory
     );
+    script_prepare_article_data();
     return { result, articlesSavedPerCategory, notificationCategories };
   } catch (error) {
     console.log(error);

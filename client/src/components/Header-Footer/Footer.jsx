@@ -12,7 +12,7 @@ const Footer = () => {
         <ul className="nav justify-content-center border-bottom pb-3 mb-3">
           <li className="nav-item">
             <a
-              href="https://www.instagram.com/rapid.recap.2k23/"
+              href="https://www.instagram.com/rrapidrecap/"
               target="_blank"
               className="nav-link px-2 "
               style={{ color: "#f9f9f9" }}

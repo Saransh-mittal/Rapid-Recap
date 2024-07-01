@@ -207,8 +207,9 @@ const Article = () => {
   }, [article, textHeight]);
 
   useEffect(() => {
-    if (!load && !state.show && state.user && state.user.tutorial.articlePage)
-      isTutorialTakenCheck({ page: "articlePage", tour });
+    if (!load && !state.show && state.user && state.user.tutorial.articlePage) {
+      // isTutorialTakenCheck({ page: "articlePage", tour });
+    }
   }, [load]);
 
   useEffect(() => {

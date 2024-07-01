@@ -169,7 +169,7 @@ const SubmittedQuizInterface = ({
 
   return (
     <SlideFade direction="bottom" in={isOpen} offsetY="20px">
-      <Box textAlign="center" py={8} px={0} borderRadius="md" mt={8}>
+      <Box textAlign="center" py={8} px={0} borderRadius="md">
         <Flex flexWrap={"wrap"} px={"2rem"}>
           <Heading
             title={"Quiz Completed Successfully!!"}

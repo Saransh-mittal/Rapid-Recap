@@ -10,6 +10,7 @@ const timeSpentRoutes = require("./router/timeSpentRoutes");
 const feedbackRoutes = require("./router/feedbackRoutes");
 const notificationRoutes = require("./router/notificationRoutes");
 const adminRoutes = require("./router/adminRoutes");
+const recommendationRoutes = require("./router/recommendationRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -36,6 +37,7 @@ webpush.setVapidDetails(
 //require("./utils/deletion.utils/removeBotUsers.del");
 //require("./utils/deletion.utils/removeQuizAttemptForNullUser.del");
 //require("./utils/deletion.utils/removeArticle.del");
+// require("./utils/deletion.utils/useLessArticle.del");
 // ---------------------------
 
 // -----Update Collection-----
@@ -55,6 +57,9 @@ webpush.setVapidDetails(
 //require("./utils/update.utils/avg_RQM.update");
 //require("./utils/update.utils/userExperienceLevel.update");
 // require("./utils/update.utils/season.update");
+// require("./utils/update.utils/article.update");
+// require("./utils/update.utils/quizAttemptIndex.update");
+// require("./utils/update.utils/timeSpentIndexes");
 // ---------------------------
 
 // -----Bot utils-----
@@ -70,15 +75,14 @@ webpush.setVapidDetails(
 // require("./scripts/updateUserCurrentSeason");
 // require("./scripts/quizAttemptAndDailyIQUpdateSeason");
 // require("./scripts/collectionToCSV");
+// require("./scripts/script_prepare_article_data")();
 // -------------------
 
+// const { exportDataToCSV } = require("./services/recommendationService");
+// exportDataToCSV();
 app.use(express.json());
-// require("./scheduler/userIQScoreScheduler");
-// require("./scheduler/mailsForStreakBroken");
-// require("./scheduler/mailsForStreakReminder");
-// require("./scheduler/extractNews");
-// require("./scheduler/notifForTopNews");
-// require("./scheduler/newSeasonSevenDays");
+
+// require("./scheduler/setupCronJobs");
 const PORT = process.env.PORT;
 authRouter.use(cookieParser());
 authRouter.use("/user", userRoutes);
@@ -90,6 +94,7 @@ authRouter.use("/timeSpent", timeSpentRoutes);
 authRouter.use("/contact/feedback", feedbackRoutes);
 authRouter.use("/notify", notificationRoutes);
 authRouter.use("/admin", adminRoutes);
+authRouter.use("/recommendation", recommendationRoutes);
 app.use("/api", authRouter);
 
 app.listen(PORT, () => {
