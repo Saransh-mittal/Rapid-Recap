@@ -601,6 +601,15 @@ export const useQuinBoostTour = () => {
       const articleContent = document.querySelector(".article-all-content");
       const langBack = document.querySelector(".lang-back-flex");
       const quinBoost = document.querySelector(".quin-boost-tag");
+      const quinBoostTracker = document.querySelector(".quin-boost-tracker");
+
+      // Scroll to the .quin-boost-tracker element
+      if (quinBoostTracker) {
+        quinBoostTracker.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
 
       toggleClass({
         element: articleContent,
@@ -627,9 +636,7 @@ export const useQuinBoostTour = () => {
         className: "highlighted-card-0-streak",
         addClass: true,
       });
-
-      body.style.overflow = "hidden"; // Reapply scroll behavior
-
+      body.style.overflow = "hidden";
       manageOverlay({ element: articleContent, overlay: true });
       manageOverlay({ element: navbar, overlay: true });
       manageOverlay({ element: langBack, overlay: true });
