@@ -80,9 +80,9 @@ const Article = () => {
           state.category ? state.category : "general"
         }`
       );
-      console.log(response.data);
+      // console.log(response.data);
       setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
-      setLatestNews(news.data);
+      setLatestNews(response.data.newArticle.relatedArticles);
       setArticle(response.data.newArticle);
       setDateTime(response.data.newArticle.date);
       setTitle({

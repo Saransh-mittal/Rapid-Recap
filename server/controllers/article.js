@@ -52,6 +52,23 @@ const getArticle = async (req, res) => {
     const paragraphs = await breakArticleIntoParagraphs(article.mainText);
     //console.log(paragraphs);
     //article.mainText = paragraphs;
+    const relatedArticles = [];
+    for (let relatedArticleID of article.relatedArticles) {
+      const relatedArticleFetch = await Article.findById(
+        relatedArticleID
+      ).select("_id title imgURL dateTime");
+      if (relatedArticleFetch) {
+        const relatedArticle = {
+          _id: relatedArticleFetch._id,
+          title: relatedArticleFetch.title,
+          imgURL: relatedArticleFetch.imgURL[0],
+          date: formatDate(relatedArticleFetch.dateTime),
+          dateTime: new Date(relatedArticleFetch.dateTime),
+        };
+        relatedArticles.push(relatedArticle);
+      }
+    }
+    relatedArticles.sort((a, b) => b.dateTime - a.dateTime);
     const newArticle = {
       category: article.category,
       title: article.title,
@@ -61,6 +78,7 @@ const getArticle = async (req, res) => {
       hindiTitle: article?.hindiTitle,
       hindiMainText: article?.hindiMainText,
       hindiAuthor: article?.hindiAuthor,
+      relatedArticles,
       date: formatDate(article.dateTime),
       _id: article._id,
     };

@@ -15,11 +15,10 @@ from scipy import sparse
 import logging
 import traceback
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging to log only errors
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def load_data_from_db(mongo_uri, user_id):
-    start_time = time.time()
-
     client = pymongo.MongoClient(mongo_uri)
     db = client.get_database("RapidRecap0")
 
@@ -110,14 +109,9 @@ def load_data_from_db(mongo_uri, user_id):
     quiz_attempts_df = pd.DataFrame(quiz_attempts)
     time_spent_df = pd.DataFrame(time_spent)
 
-    end_time = time.time()
-    logging.info(f"load_data_from_db execution time: {(end_time - start_time) * 1000:.2f} milliseconds")
-
     return articles_df, quiz_attempts_df, time_spent_df
 
 def load_tfidf():
-    start_time = time.time()
-
     base_path = os.path.dirname(os.path.abspath(__file__))
     model_path = os.path.join(base_path, '..', 'model', 'tfidf_models')
 
@@ -125,9 +119,6 @@ def load_tfidf():
         tfv = pickle.load(f)
     with open(os.path.join(model_path, 'tfv_matrix.pkl'), 'rb') as f:
         tfv_matrix = pickle.load(f)
-
-    end_time = time.time()
-    logging.info(f"load_tfidf execution time: {end_time - start_time} seconds")
 
     return tfv, tfv_matrix
 
@@ -213,7 +204,6 @@ def recommend_articles(user_id, articles_df, sig, quiz_attempts_df, time_spent_d
     user_articles = get_user_articles(user_id, quiz_attempts_df, time_spent_df)
 
     if user_articles.size == 0:
-        logging.info("No articles found for the user. Returning random recommendations.")
         return recommend_random_articles(articles_df, num_recommendations)
 
     user_preference_df = calculate_preference_score(user_id, quiz_attempts_df, time_spent_df)
@@ -235,7 +225,6 @@ def recommend_articles(user_id, articles_df, sig, quiz_attempts_df, time_spent_d
     valid_recent_indices = recent_indices[recent_indices < sig.shape[1]]
 
     if valid_user_indices.size == 0 or valid_recent_indices.size == 0:
-        logging.info("No valid articles found for recommendations. Returning random recommendations.")
         return recommend_random_articles(articles_df, num_recommendations)
 
     sig_subset = sig[valid_user_indices][:, valid_recent_indices]
@@ -252,7 +241,6 @@ def recommend_articles(user_id, articles_df, sig, quiz_attempts_df, time_spent_d
     weighted_scores = (sig_subset * preference_matrix).sum(axis=0)
 
     if weighted_scores.shape[0] != time_decay.shape[0]:
-        logging.info("Mismatch in shapes between weighted_scores and time_decay. Returning random recommendations.")
         return recommend_random_articles(articles_df, num_recommendations)
 
     weighted_scores *= time_decay
@@ -290,8 +278,6 @@ def update_recommendations_in_db(user_id, recommendations, mongo_uri):
 
 if __name__ == "__main__":
     try:
-        start_time = time.time()
-
         base_path = os.path.dirname(os.path.abspath(__file__))
         dotenv_path = os.path.join(base_path, '..', 'config.env')
 
@@ -307,9 +293,6 @@ if __name__ == "__main__":
         recommendations = get_recommendations(user_id, articles_df, sig, quiz_attempts_df, time_spent_df)
 
         update_recommendations_in_db(user_id, recommendations, mongo_uri)
-
-        end_time = time.time()
-        logging.info(f"Total script execution time: {end_time - start_time} seconds")
 
     except Exception as e:
         logging.error(f"An error occurred for user {user_id}: {str(e)}")

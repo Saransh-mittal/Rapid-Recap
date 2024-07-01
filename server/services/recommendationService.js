@@ -165,7 +165,7 @@ async function getRecommendations(userId, page = 1, pageSize = 18) {
       !userRecommendations ||
       userRecommendations.recommendations.length < pageSize
     ) {
-      await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait for 10 seconds
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 10 seconds
       userRecommendations = await Recommendation.findOne({ user_id: userId });
     }
 
