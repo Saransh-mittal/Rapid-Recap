@@ -75,11 +75,6 @@ const Article = () => {
   const fetchArticle = async () => {
     try {
       const response = await axios.get(`/api/articles/article/${id}`);
-      const news = await axios.get(
-        `/api/articles?page=1&pageSize=9&category=${
-          state.category ? state.category : "general"
-        }`
-      );
       // console.log(response.data);
       setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
       setLatestNews(response.data.newArticle.relatedArticles);
