@@ -71,6 +71,12 @@ const articleSchema = new mongoose.Schema(
       required: true,
       default: "General",
     },
+    relatedArticles: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ARTICLE",
+      },
+    ],
   },
   { collection: "Articles" }
 );

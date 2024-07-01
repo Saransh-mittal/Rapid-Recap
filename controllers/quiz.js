@@ -13,6 +13,7 @@ const MailTemplates = require("../data/MailTemplates");
 const { logActivity } = require("../utils/activity.utils");
 const { activityTypes } = require("../data/activityTypes");
 const configService = require("../configService");
+const { fetchTodaysPastRQMs } = require("../utils/quiz.utils");
 const {
   startSession,
   commitSession,
@@ -248,7 +249,24 @@ const saveAttempt = async (req, res) => {
         subject: MailTemplates.postQuinBoost.subject,
       });
     }
-    res.status(201).json({ message: "Attempt saved successfully", RQM_score });
+    const pastRQMs = await fetchTodaysPastRQMs({ userId });
+    const articleDifficultyLevel =
+      articleDifficulty < 0.5
+        ? "easy"
+        : articleDifficulty >= 0.5 && articleDifficulty < 0.7
+        ? "medium"
+        : "hard";
+    const scoreString = `${score * quizData.questions.length}/${
+      quizData.questions.length
+    }`;
+    res.status(201).json({
+      message: "Attempt saved successfully",
+      RQM_score,
+      articleDifficulty: articleDifficultyLevel,
+      timeTaken,
+      score: scoreString,
+      pastRQMs,
+    });
   } catch (error) {
     await abortSession(session);
     console.log(error);

@@ -11,7 +11,9 @@
     "clientinstall": "npm install --prefix client",
     "setup-pyenv": "py -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
     "start-prod": "/opt/venv/bin/activate && node app.js",
-    "start": "npm run start-prod"
+    "start": "npm run start-prod",
+    "start-dev": "venv\\Scripts\\activate && nodemon app.js",
+    "dev": "concurrently \"npm run setup-pyenv\" \"npm run start-dev\""
   },
   "author": "",
   "license": "ISC",

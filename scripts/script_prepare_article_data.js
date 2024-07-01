@@ -2,6 +2,7 @@ const { spawn } = require("child_process");
 const path = require("path");
 
 const script_prepare_article_data = async () => {
+  console.log("Running Python script to prepare article data");
   try {
     const pythonScriptPath = path.join(
       __dirname,

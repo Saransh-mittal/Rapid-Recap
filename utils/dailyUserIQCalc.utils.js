@@ -9,7 +9,6 @@ const CircleAndSocietyData = require("../data/CircleAndSocietyData");
 const { logActivity } = require("./activity.utils");
 const { activityTypes } = require("../data/activityTypes");
 const configService = require("../configService");
-// const { progressBar } = require("./progress.utils");
 
 const findSocietyCircleByIQ = (IQScore) => {
   return CircleAndSocietyData.find((data) => {
@@ -44,7 +43,7 @@ const handleSocietyOrCircleUpgrade = async (
       await user.save();
       if (awardableXpOrNot) {
         await logActivity({
-          userId,
+          userInGameName: user.inGameName,
           type: activityTypes.SOCIETY_OR_CIRCLE_UPGRADE.type,
           userIQ: currIQScore,
           previousIQ: previousIQForXp,
@@ -52,48 +51,69 @@ const handleSocietyOrCircleUpgrade = async (
       }
     }
   } catch (error) {
-    console.error(`Error in handleSocietyOrCircleUpgrade: ${error.message}`);
+    console.error(
+      `Error in handleSocietyOrCircleUpgrade for user ${userId}: ${error.message}`
+    );
+    console.error(`Stack trace: ${error.stack}`);
   }
 };
 
 const fetchUsersWithQuizAttempts = async () => {
-  return User.aggregate([
-    {
-      $lookup: {
-        from: "quiz_attempts",
-        localField: "_id",
-        foreignField: "user",
-        as: "quizAttempts",
+  try {
+    return await User.aggregate([
+      {
+        $lookup: {
+          from: "quiz_attempts",
+          localField: "_id",
+          foreignField: "user",
+          as: "quizAttempts",
+        },
       },
-    },
-    {
-      $addFields: {
-        distinctArticles: { $size: { $setUnion: "$quizAttempts.article" } },
+      {
+        $addFields: {
+          distinctArticles: { $size: { $setUnion: "$quizAttempts.article" } },
+        },
       },
-    },
-    {
-      $match: {
-        distinctArticles: { $gte: 10 },
+      {
+        $match: {
+          distinctArticles: { $gte: 10 },
+        },
       },
-    },
-  ]);
+    ]);
+  } catch (error) {
+    console.error(`Error in fetchUsersWithQuizAttempts: ${error.message}`);
+    console.error(`Stack trace: ${error.stack}`);
+    throw error;
+  }
 };
 
 const fetchUniqueArticleIds = async () => {
-  return QuizAttempt.aggregate([
-    { $group: { _id: "$article" } },
-    { $project: { _id: 0, articleId: "$_id" } },
-  ]);
+  try {
+    return await QuizAttempt.aggregate([
+      { $group: { _id: "$article" } },
+      { $project: { _id: 0, articleId: "$_id" } },
+    ]);
+  } catch (error) {
+    console.error(`Error in fetchUniqueArticleIds: ${error.message}`);
+    console.error(`Stack trace: ${error.stack}`);
+    throw error;
+  }
 };
 
 const updatePercentilesForArticles = async (uniqueArticleIds) => {
-  await Promise.all(
-    uniqueArticleIds.map(async (doc) => {
-      await updatePercentilesOnQuizDeactivation({
-        id: doc.articleId.toString(),
-      });
-    })
-  );
+  try {
+    await Promise.all(
+      uniqueArticleIds.map(async (doc) => {
+        await updatePercentilesOnQuizDeactivation({
+          id: doc.articleId.toString(),
+        });
+      })
+    );
+  } catch (error) {
+    console.error(`Error in updatePercentilesForArticles: ${error.message}`);
+    console.error(`Stack trace: ${error.stack}`);
+    throw error;
+  }
 };
 
 const calculateUserScores = async (users) => {
@@ -102,18 +122,25 @@ const calculateUserScores = async (users) => {
   const currSeason = configService.getCurrentSeason();
 
   const fetchQuizAttemptsPromises = users.map(async (user) => {
-    const quizAttempts = await QuizAttempt.find({
-      user: user._id,
-      season: parseInt(currSeason, 10),
-    }).populate({
-      path: "article",
-      populate: { path: "quiz" },
-    });
-    return { user, quizAttempts };
+    try {
+      const quizAttempts = await QuizAttempt.find({
+        user: user._id,
+        season: parseInt(currSeason, 10),
+      }).populate({
+        path: "article",
+        populate: { path: "quiz" },
+      });
+      return { user, quizAttempts };
+    } catch (error) {
+      console.error(
+        `Error fetching quiz attempts for user ${user._id}: ${error.message}`
+      );
+      console.error(`Stack trace: ${error.stack}`);
+      throw error;
+    }
   });
 
   const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises);
-  // const progressBarIncrement = progressBar(userQuizAttempts.length);
   for (const { user, quizAttempts } of userQuizAttempts) {
     let userScore = user.baseUserScore || 0;
 
@@ -124,7 +151,7 @@ const calculateUserScores = async (users) => {
         !attempt.article.quiz ||
         !attempt.articleDifficulty
       ) {
-        console.error("Invalid quiz attempt data.");
+        console.error(`Invalid quiz attempt data for user ${user._id}.`);
         continue;
       }
 
@@ -133,13 +160,20 @@ const calculateUserScores = async (users) => {
     }
 
     userScore = typeof userScore === "number" && userScore ? userScore : 0;
-    const u = await User.findById(user._id);
-    u.userScore = userScore;
-    await u.save();
+    try {
+      const u = await User.findById(user._id);
+      u.userScore = userScore;
+      await u.save();
+    } catch (error) {
+      console.error(
+        `Error saving user score for user ${user._id}: ${error.message}`
+      );
+      console.error(`Stack trace: ${error.stack}`);
+      throw error;
+    }
 
     sumOfUserScores += userScore;
     userScores.push({ user, userScore });
-    // progressBarIncrement();
   }
 
   return { userScores, sumOfUserScores };
@@ -155,10 +189,9 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
 
   userScores.sort((a, b) => b.userScore - a.userScore);
   let rank = 1;
-  // const progressBarIncrement = progressBar(userScores.length);
   for (const { user, userScore } of userScores) {
     if (!user) {
-      console.error("Invalid user data.");
+      console.error(`Invalid user data for rank ${rank}.`);
       continue;
     }
 
@@ -166,35 +199,42 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
     const IQScore = 100 + 15 * normalizedScore;
 
     const currIQScore = Math.round(IQScore);
-    const updatedUser = await User.findById(user._id);
-    const awardableXpOrNot = currIQScore > user.maxIQScore;
-    const previousIQForXp = user.maxIQScore;
-    const prevIQScore = updatedUser.IQ_score;
+    try {
+      const updatedUser = await User.findById(user._id);
+      const awardableXpOrNot = currIQScore > user.maxIQScore;
+      const previousIQForXp = user.maxIQScore;
+      const prevIQScore = updatedUser.IQ_score;
 
-    updatedUser.IQ_score = currIQScore;
-    updatedUser.maxIQScore = Math.max(updatedUser.maxIQScore, currIQScore);
-    updatedUser.prevIQScore = prevIQScore;
-    const currentSeason = configService.getCurrentSeason();
-    const dailyIQ = new DailyIQ({
-      user: updatedUser._id,
-      IQ_score: currIQScore,
-      dailyRank: `${rank}/${userScores.length}`,
-      season: parseInt(currentSeason, 10),
-    });
-    await dailyIQ.save();
+      updatedUser.IQ_score = currIQScore;
+      updatedUser.maxIQScore = Math.max(updatedUser.maxIQScore, currIQScore);
+      updatedUser.prevIQScore = prevIQScore;
+      const currentSeason = configService.getCurrentSeason();
+      const dailyIQ = new DailyIQ({
+        user: updatedUser._id,
+        IQ_score: currIQScore,
+        dailyRank: `${rank}/${userScores.length}`,
+        season: parseInt(currentSeason, 10),
+      });
+      await dailyIQ.save();
 
-    updatedUser.dailyIQScores.push(dailyIQ._id);
-    await updatedUser.save();
+      updatedUser.dailyIQScores.push(dailyIQ._id);
+      await updatedUser.save();
 
-    await handleSocietyOrCircleUpgrade(
-      updatedUser._id.toString(),
-      prevIQScore,
-      currIQScore,
-      previousIQForXp,
-      awardableXpOrNot
-    );
+      await handleSocietyOrCircleUpgrade(
+        updatedUser._id.toString(),
+        prevIQScore,
+        currIQScore,
+        previousIQForXp,
+        awardableXpOrNot
+      );
+    } catch (error) {
+      console.error(
+        `Error calculating or saving IQ scores for user ${user._id}: ${error.message}`
+      );
+      console.error(`Stack trace: ${error.stack}`);
+      throw error;
+    }
     rank++;
-    // progressBarIncrement();
   }
 };
 
@@ -223,7 +263,8 @@ const dailyUserIQCalc = async () => {
     await rankUpdate();
     console.log("\nRank updated.\n");
   } catch (error) {
-    console.error(`Error in dailyUserIQCalc: ${error}`);
+    console.error(`Error in dailyUserIQCalc: ${error.message}`);
+    console.error(`Stack trace: ${error.stack}`);
   }
 };
 
