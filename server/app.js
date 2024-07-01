@@ -37,6 +37,7 @@ webpush.setVapidDetails(
 //require("./utils/deletion.utils/removeBotUsers.del");
 //require("./utils/deletion.utils/removeQuizAttemptForNullUser.del");
 //require("./utils/deletion.utils/removeArticle.del");
+// require("./utils/deletion.utils/useLessArticle.del");
 // ---------------------------
 
 // -----Update Collection-----

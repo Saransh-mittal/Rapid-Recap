@@ -379,7 +379,9 @@ Also if total characters are more than 2500 than summarize the whole mainText in
           category: res.category || category,
         };
       }
-
+      if (res.mainText.length < 800) {
+        throw new Error("Text is too short");
+      }
       const isArticleCheckAgain = await Article.findOne({
         title: res.title,
       });
