@@ -6,6 +6,7 @@ const { decode } = require("html-entities");
 const NewsAPI = require("newsapi");
 const axios = require("axios");
 const script_prepare_article_data = require("../scripts/script_prepare_article_data");
+const { averageReadTime } = require("./miscellaneous.utils");
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
   // Use natural language processing to tokenize sentences
@@ -370,6 +371,9 @@ const processExtractedNews = async (news, category) => {
 
       const articleCheck = await Article.findOne({ title: res.title });
       if (articleCheck) continue;
+
+      const averageReadTime = averageReadTime(res.mainText);
+      res.avgReadTime = averageReadTime;
 
       const newArticle = new Article(res);
       await newArticle.save();

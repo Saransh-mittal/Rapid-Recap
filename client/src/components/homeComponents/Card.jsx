@@ -1,4 +1,4 @@
-import { Box, Slide } from "@chakra-ui/react";
+import { Box, Flex, Slide } from "@chakra-ui/react";
 import { useRef, useContext, useEffect } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import imageData from "../../assets/AltNewsImage";
@@ -83,21 +83,37 @@ const Card = ({ newsNumber, data }) => {
           </div>
           <div className="divider"></div>
           <div className="project-nav">
-            <span className="block-reveal__text numb">
-              {newsNumber}
-              <span
-                style={{
-                  fontSize: "0.85rem",
-                  textTransform: "uppercase",
-                  color: "#9CAFAA",
-                  fontWeight: "bold",
-                }}
-              >
-                {" "}
-                {data?.category}
+            <Flex gap={3}>
+              <span className="block-reveal__text numb">
+                {newsNumber}
+                <br /> <span className="arr">→</span>
               </span>
-              <br /> <span className="arr">→</span>
-            </span>
+              <Flex flexDirection={"column"} gap={1}>
+                <span
+                  style={{
+                    fontSize: "0.85rem",
+                    textTransform: "uppercase",
+                    color: "#9CAFAA",
+                    fontWeight: "bold",
+                    textAlign: "left",
+                  }}
+                >
+                  {" "}
+                  {data?.category}
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.85rem",
+                    textTransform: "uppercase",
+                    color: "#9CAFAA",
+                    fontWeight: "bold",
+                    textAlign: "left",
+                  }}
+                >
+                  {data.avgReadTime} min read
+                </span>
+              </Flex>
+            </Flex>
           </div>
         </div>
         <Slide direction="left" in={true} unmountOnExit>
