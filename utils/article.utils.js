@@ -272,7 +272,8 @@ const extractNewsFromLink = async (query, apiKey) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.log(error);
+    console.log(`Error extracting news from URL ${query}: ${error.message}`);
+    return null; // Return null to handle the error gracefully
   }
 };
 
@@ -299,6 +300,10 @@ const processExtractedNews = async (news, category) => {
 
   for (let newsItem of news) {
     try {
+      if (!newsItem || !newsItem.title || !newsItem.text) {
+        throw new Error("Invalid news item structure");
+      }
+
       const existingArticle = await Article.findOne({ title: newsItem.title });
       if (existingArticle) continue;
 
@@ -372,8 +377,8 @@ const processExtractedNews = async (news, category) => {
       const articleCheck = await Article.findOne({ title: res.title });
       if (articleCheck) continue;
 
-      const averageReadTime = averageReadTime(res.mainText);
-      res.avgReadTime = averageReadTime;
+      const avgReadTime = averageReadTime(res.mainText);
+      res.avgReadTime = avgReadTime;
 
       const newArticle = new Article(res);
       await newArticle.save();
@@ -391,15 +396,15 @@ const processExtractedNews = async (news, category) => {
 const extractNewsUtilityFunc = async () => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
   const apiKeys = [
-    "7e4a7d41a3ed463a952349bfb07b1452",
+    "9921240e42464f3589886811e71a3977",
+    "88905479ff7c4564ae48aef8b23d56d0",
     "e7409124fe384b688c07763501b270dd",
     "7170746b5aa044069fbd5f48e74817ac",
     "acd1bf365a084183b509789e0aae202a",
     "a46513e934b14f44a9fa2137185f5438",
     "fa26103bbdd849c3a4a6ff9f713a2a91",
     "e20b7e002db74c22b29beb122b72e8c8",
-    "9921240e42464f3589886811e71a3977",
-    "88905479ff7c4564ae48aef8b23d56d0",
+    "7e4a7d41a3ed463a952349bfb07b1452",
     "819c3bf3fab848a89741017dd5e67091",
   ];
   const newsAPICategories = ["general"];
@@ -433,15 +438,15 @@ const extractNewsUtilityFunc = async () => {
   let articlesSavedPerCategory = {};
 
   try {
-    await processCategories(
-      newsapi,
-      newsAPICategories,
-      apiKeys,
-      requestsPerKey,
-      keyTracker,
-      result,
-      articlesSavedPerCategory
-    );
+    // await processCategories(
+    //   newsapi,
+    //   newsAPICategories,
+    //   apiKeys,
+    //   requestsPerKey,
+    //   keyTracker,
+    //   result,
+    //   articlesSavedPerCategory
+    // );
     await processDataIoCategories(
       newsDataIoCategories,
       apiKeys,
@@ -453,7 +458,7 @@ const extractNewsUtilityFunc = async () => {
     script_prepare_article_data();
     return { result, articlesSavedPerCategory, notificationCategories };
   } catch (error) {
-    console.log(error);
+    console.log(`Error in extractNewsUtilityFunc: ${error.message}`);
   }
 };
 
@@ -560,12 +565,16 @@ const processArticles = async (
         article.url || article.link,
         apiKey
       );
-      allProcessedOutput.push(extractedNews);
+      if (extractedNews) {
+        allProcessedOutput.push(extractedNews);
+      }
 
       keyTracker.requestsMadeWithCurrentKey++;
     } catch (error) {
       console.log(
-        `Error extracting news from article ${article.title}: ${error}`
+        `Error extracting news from article ${article.title || "unknown"}: ${
+          error.message
+        }`
       );
     }
   }
