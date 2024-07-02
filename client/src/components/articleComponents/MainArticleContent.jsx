@@ -16,6 +16,7 @@ import {
 import { LockIcon } from "@chakra-ui/icons";
 
 const MainArticleContent = ({
+  avgTimeRead,
   article,
   translateLoading,
   selectedLanguage,
@@ -161,7 +162,11 @@ const MainArticleContent = ({
                   }}
                 />
               </Flex>
-              <Flex>
+              <Flex
+                flexDirection={"row"}
+                w={"100%"}
+                justifyContent={"space-between"}
+              >
                 <Text
                   style={{
                     fontSize: "1.15rem",
@@ -173,6 +178,17 @@ const MainArticleContent = ({
                 >
                   {dateTime}
                   {","}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: "1rem",
+                    textTransform: "uppercase",
+                    color: "#9CAFAA",
+
+                    letterSpacing: "1px",
+                  }}
+                >
+                  {avgTimeRead} MIN READ
                 </Text>
               </Flex>
               {mainText[selectedLanguage].length === 3 ? (

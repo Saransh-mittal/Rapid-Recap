@@ -56,6 +56,7 @@ const Article = () => {
   const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(0);
   const [title, setTitle] = useState({ english: "", hindi: "" });
   const [dateTime, setDateTime] = useState("");
+  const [avgTimeRead, setAvgTimeRead] = useState(0);
   const [author, setAuthor] = useState({ english: "", hindi: "" });
   const [mainText, setMainText] = useState({ english: [], hindi: [] });
   const [translateLoading, setTranslateLoading] = useState(false);
@@ -80,6 +81,7 @@ const Article = () => {
       setLatestNews(response.data.newArticle.relatedArticles);
       setArticle(response.data.newArticle);
       setDateTime(response.data.newArticle.date);
+      setAvgTimeRead(response.data.newArticle.avgReadTime);
       setTitle({
         english: response.data.newArticle.title,
         hindi: response.data.newArticle.hindiTitle,
@@ -408,6 +410,7 @@ const Article = () => {
               state={state}
               handleLanguageChange={handleLanguageChange}
               dateTime={dateTime}
+              avgTimeRead={avgTimeRead}
             />
 
             <Sidebar
