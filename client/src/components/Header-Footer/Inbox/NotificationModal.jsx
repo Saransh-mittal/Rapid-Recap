@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import React, { useContext, useEffect } from "react";
 import { AppContext } from "../../../contextAPI/appContext";
-import Rapid_recap from "/images/Rapid Recap.png?url";
+import rr from "/images/rr.png";
 
 const NotificationModal = ({
   setIsModalOpen,
@@ -52,7 +52,7 @@ const NotificationModal = ({
           <Flex justifyContent="center" w={"20%"} position={"relative"}>
             <Image
               ml={"3rem"}
-              src={Rapid_recap}
+              src={rr}
               alt="Notification Image"
               width="80px"
               height="80px"
