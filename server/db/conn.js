@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(20.06.2024).json");
+// const updates = require("./updates/updates(30.06.2024).json");
 // const User = require("../model/userSchema");
 // const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 // const { progressBar } = require("../utils/progress.utils.js");
@@ -41,7 +41,7 @@ mongoose
 //       email: { $not: /^dummy\d+@mail\.com$/ },
 //       inGameName: { $exists: true },
 //     });
-//     // const users = await User.find({ inGameName: "smash_dev" });
+//     // const users = await User.find({ inGameName: "saransh_1234" });
 //     for (const update of updates) {
 //       const progress = progressBar(users.length);
 //       for (const user of users) {
@@ -82,20 +82,23 @@ mongoose
 // saveUpdatesToDB();
 
 // async function sendNotif() {
-//   for (const update of updates) {
-//     const updateTitle = `📢 ${update.title} 📰`;
-//     const updateBody =
-//       update.mainText.length > 100
-//         ? `${update.mainText.slice(0, 100)}...`
-//         : update.mainText;
-//     const url = "https://www.rapidrecap.co.in/";
+//   const users = await User.find({
+//     email: { $not: /^dummy\d+@mail\.com$/ },
+//     inGameName: { $exists: true },
+//   }).select("_id");
+//   // const users = await User.find({ inGameName: "saransh_1234" }).select("_id");
+
+//   const updateTitle = `📢 Discover Your Personalized News Experience with Rapid Recap! 📰`;
+//   const url = "https://www.rapidrecap.co.in/home/all";
+//   for (let user of users) {
 //     await sendNotification({
+//       userId: user._id.toString(),
 //       title: updateTitle,
-//       body: updateBody,
 //       url,
-//       icon: update.img ? update.img : null,
+//       icon: "https://res.cloudinary.com/dxstsrnbs/image/upload/v1719901928/image-2_j5jvxa.png",
 //     });
 //   }
+//   console.log("Notification sent");
 // }
 
 // sendNotif();
