@@ -95,166 +95,142 @@ const generateQuestionsForQuiz = async ({
   mainText,
   articleId,
 }) => {
+  // Input validation
+  if (!title || !author || !mainText || !articleId) {
+    throw new Error("Missing required parameters");
+  }
+
   try {
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-    //console.log(title, author, mainText);
-    const prompt = `Title: ${title}\n Author: ${author}\n\n MainText:${mainText}\n\n`;
-    const instructions = `Instructions:
-                                1. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para.
-                                2. Generate minimum 2 and maximum 5 questions from each paragraph(very important!).
-                                3. Each question should have 4 options.
-                                4. Each question should have a correct option.
-                                5. Anwer should be one of the options key(a,b,c,d).
-                                6. Each answer should have an explanation.
-                                7. Nothing should be outside of the article provided(important)
-                                8. Every question should be unique.
-                                9. Give each question a difficulty level between 0 to 1 (Important).
-                                10.Assess the overall difficulty level of the article by considering factors 
-                                  such as vocabulary complexity, sentence structure, conceptual difficulty, 
-                                  depth of analysis, background knowledge required, clarity and coherence, 
-                                  density of information, language style, length of the article, and reader 
-                                  engagement. Evaluate each criterion to determine the article's difficulty 
-                                  rating on a scale from 0 to 1, where 0 represents low difficulty and 1 represents 
-                                  high difficulty. Aggregate these assessments to derive an overall difficulty level 
-                                  that reflects the article's complexity and suitability for readers of varying 
-                                  proficiency levels.
-                                10. Return response in following JSON object format:
-                                  {
-                                    title: "Title of the article",
-                                    para1 :
-                                    {
-                                      questions:
-                                      [
-                                        {
-                                          question: "",
-                                          options:
-                                          {
-                                            a: "",
-                                            b: "",
-                                            c: "",
-                                            d: ""
-                                          },
-                                          answer: "",
-                                          explanation:"",
-                                          difficulty: ""
-                                        },
-                                      ],
-                                    }
-                                    para2 :
-                                    {
-                                      questions:
-                                      [
-                                        {
-                                          question: "",
-                                          options:
-                                          {
-                                            a: "",
-                                            b: "",
-                                            c: "",
-                                            d: ""
-                                          },
-                                          answer: "",
-                                          explanation:"",
-                                          difficulty: ""
-                                        },
-                                      ],
-                                    }
-                                    para3 :
-                                    {
-                                      questions:
-                                      [
-                                        {
-                                          question: "",
-                                          options:
-                                          {
-                                            a: "",
-                                            b: "",
-                                            c: "",
-                                            d: ""
-                                          },
-                                          answer: "",
-                                          explanation:"",
-                                          difficulty: ""
-                                        },
-                                      ],
-                                    }
-                                    overAllDifficulty: ""
-                                  }`;
-    let result = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo-0125",
-      response_format: { type: "json_object" },
-      messages: [
+    const openai = new OpenAI(process.env.OPENAI_API_KEY);
+
+    const prompt = `Title: ${title}\nAuthor: ${author}\n\nMainText: ${mainText}\n\nInstructions:
+1. Divide the article into 3 paragraphs.
+2. Generate 2 to 5 unique questions for each paragraph.
+3. Provide 4 answer options for each question, with one correct answer labeled (a, b, c, or d).
+4. Include a brief explanation for each correct answer.
+5. Ensure all questions are derived from the provided text.
+6. Assign a difficulty level between 0 and 1 for each question.
+7. Evaluate the article's overall difficulty considering vocabulary complexity, sentence structure, conceptual difficulty, depth of analysis, required background knowledge, clarity, coherence, information density, language style, length, and reader engagement. Provide an overall difficulty rating between 0 and 1.
+8. Return the response in the following JSON format:
+{
+  title: "Title of the article",
+  paragraphs: [
+    {
+      paragraph: 1,
+      questions: [
         {
-          role: "system",
-          content: `You are a quiz generator bot. You have to generate a quiz for the given article. You
-                    have to follow the given instructions to generate the quiz. You importantly have to give 
-                    the overall difficulty of the article and also difficulty of each question. You have to 
-                    return the response in the given JSON format. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para.
-                    ${instructions}`,
-        },
-        {
-          role: "user",
-          content: prompt,
+          question: "",
+          options: {
+            a: "",
+            b: "",
+            c: "",
+            d: ""
+          },
+          answer: "",
+          explanation: "",
+          difficulty: ""
         },
       ],
-    });
-    let response = JSON.parse(result.choices[0].message.content);
-    let cnt = 3;
-    while (
-      (!response.para1.questions[0].difficulty ||
-        !response.para2.questions[0].difficulty ||
-        !response.para3.questions[0].difficulty ||
-        !response.overAllDifficulty) &&
-      cnt-- > 0
-    ) {
-      result = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo-0125",
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: `Provide the difficulty of each question and overall difficulty of the article.Assess the overall difficulty level of the article by considering factors 
-                      such as vocabulary complexity, sentence structure, conceptual difficulty, 
-                      depth of analysis, background knowledge required, clarity and coherence, 
-                      density of information, language style, length of the article, and reader 
-                      engagement. Evaluate each criterion to determine the article's difficulty 
-                      rating on a scale from 0 to 1, where 0 represents low difficulty and 1 represents 
-                      high difficulty. Aggregate these assessments to derive an overall difficulty level 
-                      that reflects the article's complexity and suitability for readers of varying 
-                      proficiency levels. ${instructions}`,
+    },
+    {
+      paragraph: 2,
+      questions: [
+        {
+          question: "",
+          options: {
+            a: "",
+            b: "",
+            c: "",
+            d: ""
           },
-          {
-            role: "user",
-            content: JSON.stringify(response),
+          answer: "",
+          explanation: "",
+          difficulty: ""
+        },
+      ],
+    },
+    {
+      paragraph: 3,
+      questions: [
+        {
+          question: "",
+          options: {
+            a: "",
+            b: "",
+            c: "",
+            d: ""
           },
-        ],
-      });
-      response = JSON.parse(result.choices[0].message.content);
+          answer: "",
+          explanation: "",
+          difficulty: ""
+        },
+      ],
     }
-    if (
-      !response ||
-      !response.para1 ||
-      !response.para2 ||
-      !response.para3 ||
-      !response.overAllDifficulty
-    ) {
-      throw new Error("Quiz not generated");
+  ],
+  overAllDifficulty: ""
+}`;
+
+    let attempts = 3;
+    let result;
+    let response;
+
+    while (attempts-- > 0) {
+      try {
+        result = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are an educational quiz generator bot. Generate quiz questions based on the given article following the provided instructions and return the response in the specified JSON format.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+        });
+
+        response = JSON.parse(result.choices[0].message.content);
+
+        if (
+          response &&
+          response.paragraphs &&
+          response.paragraphs.length === 3 &&
+          response.paragraphs[0].questions.length > 0 &&
+          response.paragraphs[1].questions.length > 0 &&
+          response.paragraphs[2].questions.length > 0 &&
+          response.overAllDifficulty
+        ) {
+          break;
+        }
+      } catch (err) {
+        console.error("Error during OpenAI API call:", err);
+      }
+
+      console.log(`Retrying... ${3 - attempts} attempts left.`);
+    }
+
+    if (!response) {
+      throw new Error("Failed to generate quiz after multiple attempts");
     }
 
     const newQuiz = new Quiz({
       article: articleId,
-      para1: response.para1,
-      para2: response.para2,
-      para3: response.para3,
+      para1: { questions: response.paragraphs[0].questions },
+      para2: { questions: response.paragraphs[1].questions },
+      para3: { questions: response.paragraphs[2].questions },
       overAllDifficulty: response.overAllDifficulty,
     });
     await newQuiz.save();
+
     const article = await Article.findById(articleId);
+    if (!article) {
+      throw new Error("Article not found");
+    }
+
     if (!article.quiz) {
       article.quiz = [];
-      await article.save();
     }
     article.quiz.push(newQuiz._id);
     await article.save();
@@ -262,6 +238,7 @@ const generateQuestionsForQuiz = async ({
     return newQuiz;
   } catch (error) {
     console.error("Error generating questions for quiz:", error);
+    throw error; // Re-throw the error after logging it
   }
 };
 

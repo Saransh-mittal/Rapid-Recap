@@ -152,7 +152,7 @@ async function getRecommendations(userId, page = 1, pageSize = 18) {
     let userRecommendations = await Recommendation.findOne({ user_id: userId });
 
     const now = new Date();
-    const updateThreshold = new Date(now.getTime() - 8 * 60 * 60 * 1000); // 8 hours ago
+    const updateThreshold = new Date(now.getTime() - 4 * 60 * 60 * 1000); // 4 hours ago
 
     if (
       !userRecommendations ||

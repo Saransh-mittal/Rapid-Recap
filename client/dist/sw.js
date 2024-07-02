@@ -1,4 +1,4 @@
-const RapidRecapLogo = "./images/Rapid Recap.png";
+const RapidRecapLogo = "./images/rr.png";
 
 self.addEventListener("push", (event) => {
   const data = event.data.json();
