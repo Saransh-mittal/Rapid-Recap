@@ -85,10 +85,25 @@ function formatDate(datetime) {
   return formattedDate;
 }
 
+function averageReadTime(text) {
+  // Remove the article if it has no text
+  if (!text || text.length === 0 || text === "") {
+    return null;
+  }
+
+  // Calculate reading time in minutes
+  const wordsPerMinute = 100;
+  const plainText = text.replace(/<[^>]+>/g, ""); // Remove HTML tags
+  const wordCount = plainText.split(/\s+/).length;
+  const readingTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
+  return readingTimeMinutes;
+}
+
 module.exports = {
   binarySearch,
   binarySearchForLeftRange,
   binarySearchForRightRange,
   isValidEmail,
   formatDate,
+  averageReadTime,
 };

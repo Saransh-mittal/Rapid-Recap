@@ -9,6 +9,7 @@ import {
   Image,
   Flex,
   Tooltip,
+  Badge,
 } from "@chakra-ui/react";
 import { LockIcon, TriangleDownIcon } from "@chakra-ui/icons";
 import Alt_img from "/images/rr.png";
@@ -265,8 +266,8 @@ const Sidebar = ({
                     e.target.style.height = `100%`;
                   }}
                 />
-                <Flex flexDirection={"column"}>
-                  <Flex>
+                <Flex flexDirection={"column"} w={"100%"}>
+                  <Flex w={"100%"} justifyContent={"space-between"}>
                     <Text
                       m={0}
                       p={0}
@@ -277,6 +278,16 @@ const Sidebar = ({
                     >
                       {item.date}
                       {","}
+                    </Text>
+                    <Text
+                      fontSize={"0.8rem"}
+                      m={0}
+                      p={0}
+                      textTransform="uppercase"
+                      color="#9CAFAA"
+                      letterSpacing="1px"
+                    >
+                      {item.avgReadTime} MIN READ
                     </Text>
                   </Flex>
                   <Text mt={2}>{item.title}</Text>

@@ -56,7 +56,7 @@ const getArticle = async (req, res) => {
     for (let relatedArticleID of article.relatedArticles) {
       const relatedArticleFetch = await Article.findById(
         relatedArticleID
-      ).select("_id title imgURL dateTime");
+      ).select("_id title imgURL dateTime avgReadTime");
       if (relatedArticleFetch) {
         const relatedArticle = {
           _id: relatedArticleFetch._id,
@@ -64,6 +64,7 @@ const getArticle = async (req, res) => {
           imgURL: relatedArticleFetch.imgURL[0],
           date: formatDate(relatedArticleFetch.dateTime),
           dateTime: new Date(relatedArticleFetch.dateTime),
+          avgReadTime: relatedArticleFetch.avgReadTime,
         };
         relatedArticles.push(relatedArticle);
       }
@@ -79,6 +80,7 @@ const getArticle = async (req, res) => {
       hindiMainText: article?.hindiMainText,
       hindiAuthor: article?.hindiAuthor,
       relatedArticles,
+      avgReadTime: article?.avgReadTime,
       date: formatDate(article.dateTime),
       _id: article._id,
     };

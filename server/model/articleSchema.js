@@ -77,6 +77,9 @@ const articleSchema = new mongoose.Schema(
         ref: "ARTICLE",
       },
     ],
+    avgReadTime: {
+      type: Number,
+    },
   },
   { collection: "Articles" }
 );

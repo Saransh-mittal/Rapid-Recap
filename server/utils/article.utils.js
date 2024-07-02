@@ -6,6 +6,7 @@ const { decode } = require("html-entities");
 const NewsAPI = require("newsapi");
 const axios = require("axios");
 const script_prepare_article_data = require("../scripts/script_prepare_article_data");
+const { averageReadTime } = require("./miscellaneous.utils");
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
   // Use natural language processing to tokenize sentences
@@ -276,36 +277,36 @@ const extractNewsFromLink = async (query, apiKey) => {
 };
 
 const processExtractedNews = async (news, category) => {
-  const instructions = `you are a text checker and analyser
+  const initialInstructions = `
+    You are a text checker and analyzer. 
+    1. Remove any irrelevant content or lines from the mainText that are not related to the article or title. This includes sections like "Also read," "Loading...," "Share to Facebook," "Share to Twitter," "Share to LinkedIn," and unanswered questions.
+    2. Do not summarize the content if the mainText is 2500 characters or less.
+    3. If the mainText exceeds 2500 characters, summarize it to 2500 characters, keeping the most important information.
+    4. Ensure that the returned JSON object includes all original fields.
+  `;
 
-remove the unnecessary content or lines of the mainText which is not related to the article/title for example :- Also read(section), Loading... ,
-if question in the mainText that are not answered or not there in the mainText etc.
-Don't summarize the content. and only return the same json_object back:
-Also if total characters are more than 2500 than summarize the whole mainText in 2500 characters.`;
+  const summarizationInstructions = `
+    You are a summarizer. 
+    Summarize the mainText to 2500 characters while retaining the most important information.
+    Ensure that the returned JSON object includes all original fields.
+  `;
 
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
   const processedOutput = [];
-  // const updateProgress = progressBar(news.length);
+
   for (let newsItem of news) {
     try {
-      const isArticle = await Article.findOne({
-        title: newsItem.title,
-      });
+      const existingArticle = await Article.findOne({ title: newsItem.title });
+      if (existingArticle) continue;
 
-      if (isArticle) {
-        continue;
-      }
-      if (newsItem.text.length < 800) {
-        throw new Error("Text is too short");
-      }
-      const encodedText = newsItem.text;
-      const decodedText = decode(encodedText);
-      const encodedTitle = newsItem.title;
-      const decodedTitle = decode(encodedTitle);
-      const prompt = JSON.stringify({
+      if (newsItem.text.length < 800) throw new Error("Text is too short");
+
+      const decodedText = decode(newsItem.text);
+      const decodedTitle = decode(newsItem.title);
+      const promptPayload = {
         url: newsItem.url,
         dateTime: newsItem.publish_date,
         author: Array.isArray(newsItem.author)
@@ -315,20 +316,14 @@ Also if total characters are more than 2500 than summarize the whole mainText in
         mainText: decodedText,
         imgURL: [newsItem.image],
         category: category,
-      });
+      };
+      const prompt = JSON.stringify(promptPayload);
 
       let output = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo-0125",
-        response_format: { type: "json_object" },
+        model: "gpt-3.5-turbo",
         messages: [
-          {
-            role: "system",
-            content: instructions,
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
+          { role: "system", content: initialInstructions },
+          { role: "user", content: prompt },
         ],
       });
 
@@ -349,18 +344,10 @@ Also if total characters are more than 2500 than summarize the whole mainText in
 
       if (res.mainText.length > 2500) {
         output = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo-0125",
-          response_format: { type: "json_object" },
+          model: "gpt-3.5-turbo",
           messages: [
-            {
-              role: "system",
-              content:
-                "You are a summarizer. Summarize the mainText to 2500 characters and only return the same json_object back",
-            },
-            {
-              role: "user",
-              content: prompt,
-            },
+            { role: "system", content: summarizationInstructions },
+            { role: "user", content: JSON.stringify(res) },
           ],
         });
 
@@ -379,24 +366,22 @@ Also if total characters are more than 2500 than summarize the whole mainText in
           category: res.category || category,
         };
       }
-      if (res.mainText.length < 800) {
-        throw new Error("Text is too short");
-      }
-      const isArticleCheckAgain = await Article.findOne({
-        title: res.title,
-      });
 
-      if (isArticleCheckAgain) {
-        continue;
-      }
+      if (res.mainText.length < 800) throw new Error("Text is too short");
+
+      const articleCheck = await Article.findOne({ title: res.title });
+      if (articleCheck) continue;
+
+      const averageReadTime = averageReadTime(res.mainText);
+      res.avgReadTime = averageReadTime;
 
       const newArticle = new Article(res);
       await newArticle.save();
       processedOutput.push(newArticle);
     } catch (error) {
-      console.log(error);
-    } finally {
-      // updateProgress();
+      console.error(
+        `Error processing news item titled "${newsItem.title}": ${error.message}`
+      );
     }
   }
 
