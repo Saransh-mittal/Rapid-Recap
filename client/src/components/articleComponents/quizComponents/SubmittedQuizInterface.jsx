@@ -24,6 +24,7 @@ import {
   Legend,
 } from "chart.js";
 import Heading from "../../miscellaneous/HeadingComponent";
+import { result } from "lodash";
 
 ChartJS.register(
   CategoryScale,
@@ -72,17 +73,17 @@ const getReviewText = (field, value) => {
   }
 
   if (field === "timeTaken") {
-    if (value >= 33 && value < 50) return reviews.timeTaken.slow;
+    if (value >= 33 && value <= 50) return reviews.timeTaken.slow;
     if (value <= 16 && value > 33) return reviews.timeTaken.average;
     if (value >= 0 && value < 16) return reviews.timeTaken.fast;
   }
   if (field === "difficulty") {
     return reviews.difficulty[value] || "Keep going!";
   }
-  if (field === "result?.RQM_score") {
-    if (value < 45) return reviews.result?.RQM_score.low;
-    if (value >= 45 && value < 75) return reviews.result?.RQM_score.medium;
-    return reviews.result?.RQM_score.high;
+  if (field === "rqmscore") {
+    if (value < 45) return reviews.rqmscore.low;
+    if (value >= 45 && value < 75) return reviews.rqmscore.medium;
+    return reviews.rqmscore.high;
   }
 };
 
@@ -272,6 +273,9 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="gray.300"
+                      zIndex={
+                        result?.RQM_score >= 0 && result?.RQM_score < 15 ? 1 : 0
+                      }
                       boxShadow={
                         result?.RQM_score >= 0 && result?.RQM_score < 15
                           ? "0 0 10px 2px #00f"
@@ -291,6 +295,11 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="blue.400"
+                      zIndex={
+                        result?.RQM_score >= 15 && result?.RQM_score < 45
+                          ? 1
+                          : 0
+                      }
                       boxShadow={
                         result?.RQM_score >= 15 && result?.RQM_score < 45
                           ? "0 0 10px 2px #00f"
@@ -310,6 +319,11 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="green.500"
+                      zIndex={
+                        result?.RQM_score >= 45 && result?.RQM_score < 75
+                          ? 1
+                          : 0
+                      }
                       boxShadow={
                         result?.RQM_score >= 45 && result?.RQM_score < 75
                           ? "0 0 10px 2px #00f"
@@ -329,6 +343,11 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="yellow.500"
+                      zIndex={
+                        result?.RQM_score >= 75 && result?.RQM_score < 105
+                          ? 1
+                          : 0
+                      }
                       boxShadow={
                         result?.RQM_score >= 75 && result?.RQM_score < 105
                           ? "0 0 10px 2px #00f"
@@ -348,6 +367,7 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="red.500"
+                      zIndex={result?.RQM_score >= 105 ? 1 : 0}
                       boxShadow={
                         result?.RQM_score >= 105
                           ? "0 0 20px 10px #00ffe2"

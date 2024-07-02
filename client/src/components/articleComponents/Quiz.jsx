@@ -354,6 +354,7 @@ const Quiz = ({
                     colorScheme="blue"
                     mr={3}
                     onClick={startQuiz}
+                    // onClick={() => setShowInstruction(false)}
                     style={{
                       transition: "background-color 0.3s, color 0.3s",
                       backgroundColor: isStartQuizButtonHovered
