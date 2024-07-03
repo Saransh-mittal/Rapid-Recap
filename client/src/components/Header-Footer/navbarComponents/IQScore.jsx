@@ -12,7 +12,7 @@ const IQScore = ({ score }) => {
       bg="rgba(255, 255, 255, 0.1)"
       borderRadius="full"
       p="0.5rem"
-      cursor="pointer"
+      // cursor="pointer"
       transition="all 0.3s"
       _hover={{ bg: "rgba(255, 255, 255, 0.2)" }}
       title="Your Information Quotient (IQ) Score"

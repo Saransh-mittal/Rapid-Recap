@@ -1,6 +1,6 @@
 import {
   Flex,
-  Heading,
+  Heading as ChakraHeading,
   Image,
   useMediaQuery,
   useToast,
@@ -15,6 +15,7 @@ import LeaderBoardTable from "../components/leaderBoardComponents/LeaderBoardTab
 import { useLeaderBoardTour } from "../customHooks/useTours";
 import medalIcon from "../assets/medal.png";
 import { debounce } from "lodash";
+import Heading from "../components/miscellaneous/HeadingComponent";
 
 const LeaderBoard = () => {
   const PAGE_LIMIT = 20;
@@ -151,28 +152,42 @@ const LeaderBoard = () => {
       <Flex
         margin={"20px"}
         justifyContent={"center"}
+        // alignItems={"center"}
         w={"100%"}
         flexDirection={"column"}
       >
-        <Heading>
-          <Flex alignItems={"center"} gap={"10px"} justifyContent={"center"}>
-            <Image
-              src={medalIcon}
-              alt="Rating"
-              width={"35px"}
-              height={"35px"}
-              bg={"none"}
-            />
-            LEADERBOARD
-            <Image
-              src={medalIcon}
-              alt="Rating"
-              width={"35px"}
-              height={"35px"}
-              bg={"none"}
-            />
-          </Flex>
-        </Heading>
+        <Flex alignItems={"center"} justifyContent={"center"}>
+          <ChakraHeading>
+            <Flex
+              alignItems={"center"}
+              w={"100%"}
+              justifyContent={"center"}
+              // alignItems={"center"}
+            >
+              <Image
+                src={medalIcon}
+                alt="Rating"
+                width={"35px"}
+                height={"35px"}
+                bg={"none"}
+                mt={"2.5rem"}
+              />
+              <Heading
+                title={"LEADERBOARD"}
+                tag={"SEASON 2"}
+                tagFontSize={"1.05rem"}
+              />
+              <Image
+                src={medalIcon}
+                alt="Rating"
+                width={"35px"}
+                height={"35px"}
+                bg={"none"}
+                mt={"2.5rem"}
+              />
+            </Flex>
+          </ChakraHeading>
+        </Flex>
         <Flex
           alignItems="center"
           justifyContent="center"
