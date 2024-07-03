@@ -4,14 +4,14 @@ import React from "react";
 
 const Inbox = ({
   className,
-  display,
   marginLeftButton,
   onClick,
   notifyCont,
+  display,
 }) => {
   return (
     <>
-      <Flex className={className}>
+      <Flex className={className} display={display}>
         <Button
           display={display}
           background={"transparent"}

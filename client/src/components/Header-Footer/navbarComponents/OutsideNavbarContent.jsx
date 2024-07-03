@@ -1,11 +1,13 @@
-import { Button, Flex } from "@chakra-ui/react";
-import React from "react";
+import { Box, Button, Flex } from "@chakra-ui/react";
+import React, { useContext } from "react";
 import Inbox from "./Inbox";
 import StreakFire from "./StreakFire";
 import ProfileDropDownMenu from "../../profileComponents/ProfileDropDownMenu";
 import { HamburgerIcon } from "@chakra-ui/icons";
 import GetStarted from "./GetStarted";
 import XPLevel from "./XPLevel";
+import IQScore from "./IQScore";
+import { AppContext } from "../../../contextAPI/appContext";
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -27,6 +29,7 @@ const OutsideNavbarContent = ({
   const isEmptyObject = (obj) => {
     return obj && Object.keys(obj).length === 0;
   };
+  const { state } = useContext(AppContext);
 
   return (
     <>
@@ -45,16 +48,24 @@ const OutsideNavbarContent = ({
         {!notLogined && (
           <>
             {!isEmptyObject(user) && (
-              <XPLevel
-                level={level}
-                _hover={{
-                  cursor: "pointer",
-                }}
-                className={"xp-level"}
-                onClick={() => {
-                  setShowXPLevelModal(true);
-                }}
-              />
+              <Box>
+                {" "}
+                <IQScore score={state.user.IQ_score} />
+              </Box>
+            )}
+            {!isEmptyObject(user) && (
+              <Box>
+                <XPLevel
+                  level={level}
+                  _hover={{
+                    cursor: "pointer",
+                  }}
+                  className={"xp-level"}
+                  onClick={() => {
+                    setShowXPLevelModal(true);
+                  }}
+                />
+              </Box>
             )}
             <StreakFire
               marginAroundBox={"auto"}
@@ -79,6 +90,7 @@ const OutsideNavbarContent = ({
               className={"inbox-button-lg"}
               onClick={() => setIsDrawerOpen(true)}
               notifyCont={notifyCont}
+              display={{ base: "none", md: "flex" }}
             />
           </>
         )}

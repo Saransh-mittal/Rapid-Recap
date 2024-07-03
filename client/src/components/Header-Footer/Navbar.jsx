@@ -194,7 +194,7 @@ const Navbar = () => {
       <Box overflow={isHamburgerOpen ? "hidden" : "visible"}>
         <Box
           className={`navbar navbar-expand-lg`}
-          paddingX={{ base: "2rem", lg: "5rem" }}
+          paddingX={{ base: "1.2rem", lg: "5rem" }}
           height={"5rem"}
           w={"100vw"}
           onTouchStart={startDrag}
@@ -264,21 +264,12 @@ const Navbar = () => {
           >
             <NavBrand isHamburgerOpen={isHamburgerOpen} />
             <NavbarContent
+              notifyCont={notifyCont}
               isHamburgerOpen={isHamburgerOpen}
               notLogined={state.show}
-              setIsDrawerOpen={setIsDrawerOpen}
-              notifyCont={notifyCont}
               setIsHamburgerOpen={setIsHamburgerOpen}
-              setShowDailyStreakModal={setShowDailyStreakModal}
-              tourComplete={tour.complete}
-              streak={state.streak}
-              isBoosted={state.isBoosted}
-              getBackgroundColor={getBackgroundColor}
-              handleLogout={handleLogout}
               navLinkRefs={navLinkRefs}
               navItems={navItems}
-              setShowCategory={setShowCategory}
-              showCategory={showCategory}
             />
 
             <OutsideNavbarContent
@@ -321,7 +312,9 @@ const Navbar = () => {
         navItems={navItems}
         notLogined={state.show}
         navLinkRefs={navLinkRefs}
+        notifyCont={notifyCont}
         handleLogout={handleLogout}
+        setIsDrawerOpen={setIsDrawerOpen}
       />
     </>
   );
