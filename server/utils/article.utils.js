@@ -438,15 +438,15 @@ const extractNewsUtilityFunc = async () => {
   let articlesSavedPerCategory = {};
 
   try {
-    // await processCategories(
-    //   newsapi,
-    //   newsAPICategories,
-    //   apiKeys,
-    //   requestsPerKey,
-    //   keyTracker,
-    //   result,
-    //   articlesSavedPerCategory
-    // );
+    await processCategories(
+      newsapi,
+      newsAPICategories,
+      apiKeys,
+      requestsPerKey,
+      keyTracker,
+      result,
+      articlesSavedPerCategory
+    );
     await processDataIoCategories(
       newsDataIoCategories,
       apiKeys,
