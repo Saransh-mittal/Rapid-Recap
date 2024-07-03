@@ -24,7 +24,7 @@ const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
       // }
 
       const userResponses = [...userAnswers];
-      // console.log(articleId);
+
       const response = await axios.post(`/api/quiz/attempt`, {
         articleId,
         userResponses,

@@ -20,6 +20,7 @@ import { AppContext } from "../../../contextAPI/appContext";
 import LogoutButton from "./LogoutButton";
 import GetStarted from "./GetStarted";
 import NavBrand from "./NavBrand";
+import Inbox from "./Inbox";
 
 const HamburgerModal = ({
   isOpen,
@@ -28,6 +29,8 @@ const HamburgerModal = ({
   notLogined,
   navLinkRefs,
   handleLogout,
+  notifyCont,
+  setIsDrawerOpen,
 }) => {
   const { state } = useContext(AppContext);
   const navigate = useNavigate();
@@ -76,7 +79,7 @@ const HamburgerModal = ({
             {!notLogined && (
               <Flex
                 position={"absolute"}
-                top={"6rem"}
+                top={"3rem"}
                 zIndex={1}
                 flexDirection={"column"}
                 gap={4}
@@ -108,6 +111,7 @@ const HamburgerModal = ({
                 </Text>
               </Flex>
             )}
+
             <UnorderedList
               display={"flex"}
               p={0}
@@ -116,13 +120,27 @@ const HamburgerModal = ({
               justifyContent={"center"}
               alignItems={"center"}
               listStyleType={"none"}
-              gap={"3rem"}
+              gap={"2rem"}
               letterSpacing={"2px"}
               flexDirection="column"
               zIndex={1}
               position={"absolute"}
-              top={notLogined ? "30%" : ""}
+              top={notLogined ? "30%" : "32%"}
             >
+              <ListItem
+                className={`nav-item `}
+                display={"flex"}
+                justifyContent={"center"}
+                alignItems={"center"}
+                gap={"0.25rem"}
+              >
+                <Inbox
+                  className={"inbox-button-lg"}
+                  onClick={() => setIsDrawerOpen(true)}
+                  notifyCont={notifyCont}
+                  display={notLogined ? "none" : "flex"}
+                />
+              </ListItem>
               {navItems.map((item, index) => (
                 <ListItem
                   className={`nav-item `}
@@ -163,7 +181,7 @@ const HamburgerModal = ({
             <Rings />
             <SideLines />
             <BackgroundCircles />
-            <Flex position={"absolute"} bottom={notLogined ? "35%" : "28%"}>
+            <Flex position={"absolute"} bottom={notLogined ? "35%" : "26%"}>
               {notLogined ? (
                 <GetStarted
                   innerText={"Get Started"}

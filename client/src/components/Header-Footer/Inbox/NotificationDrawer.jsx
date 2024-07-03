@@ -22,11 +22,11 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
-// import NotificationModal from "./NotificationModal";
 import { AppContext } from "../../../contextAPI/appContext";
-import Rapid_recap from "/images/Rapid Recap.png";
+import Rapid_recap from "/images/rr.png";
 import { DeleteIcon } from "@chakra-ui/icons";
 import axios from "axios";
+import parse from "html-react-parser";
 
 const NotificationDrawer = ({
   setIsDrawerOpen,
@@ -55,7 +55,6 @@ const NotificationDrawer = ({
         update._id === updateId ? { ...update, read: true } : update
       );
       setNotificationData(updatedNotifications);
-      // Dispatch action to update state globally (optional, if using context)
       dispatch({
         type: "APP_UPDATES",
         payloadAppUpdates: updatedNotifications,
@@ -93,8 +92,6 @@ const NotificationDrawer = ({
         type: "APP_UPDATES",
         payloadAppUpdates: updatedNotificationData,
       });
-
-      // Close the delete confirmation modal
     } catch (error) {
       toast({
         title: "Error",
@@ -112,12 +109,9 @@ const NotificationDrawer = ({
 
   const removeAllNotifications = async () => {
     try {
-      // Make a request to the backend to remove all notifications
       const response = await axios.put("/api/user/trashAllUpdates");
 
-      // Check if the request was successful
       if (response.status === 200) {
-        // Update the notificationData state or perform any other action if needed
         setNotificationData([]);
         dispatch({
           type: "APP_UPDATES",
@@ -169,7 +163,7 @@ const NotificationDrawer = ({
         onClose={() => {
           setIsDrawerOpen(false);
           onClose();
-        }} // Close drawer onClose
+        }}
         backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
         boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
       >
@@ -188,8 +182,6 @@ const NotificationDrawer = ({
               <Button
                 color="white"
                 border={"2px solid white"}
-                // borderColor="white"
-                // backgroundColor="black"
                 background={"transparent"}
                 _hover={{ color: "red", borderColor: "red" }}
                 onClick={handleRemoveAllClick}
@@ -205,7 +197,6 @@ const NotificationDrawer = ({
               scrollbarColor: "black transparent",
             }}
           >
-            {/* Render notifications */}
             {notificationData.length > 0 &&
               notificationData.map((update, index) => {
                 return (
@@ -219,7 +210,7 @@ const NotificationDrawer = ({
                       backgroundImage:
                         "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
                       boxShadow:
-                        "0px 4px 8px rgba(0, 0, 0, 0.9), 0px 8px 16px rgba(0, 0, 0, 0.9), 0px 12px 24px rgba(0, 0, 0, 0.9)", // Increased intensity of the shadow
+                        "0px 4px 8px rgba(0, 0, 0, 0.9), 0px 8px 16px rgba(0, 0, 0, 0.9), 0px 12px 24px rgba(0, 0, 0, 0.9)",
                     }}
                     onClick={() => {
                       setReadUpdate(update._id);
@@ -263,7 +254,7 @@ const NotificationDrawer = ({
                     </Flex>
 
                     <Text style={{ textAlign: "left" }}>
-                      {update.mainText.substring(0, 60)}.....
+                      {parse(update.mainText.substring(0, 60))}.....
                     </Text>
                     <Flex>
                       <small>{new Date(update.date).toLocaleString()}</small>
@@ -298,7 +289,6 @@ const NotificationDrawer = ({
           </DrawerBody>
         </DrawerContent>
       </Drawer>
-      {/* Delete confirmation modal */}
       <Modal
         isOpen={isDeleteModalOpen || removeAllModalOpen}
         onClose={() =>

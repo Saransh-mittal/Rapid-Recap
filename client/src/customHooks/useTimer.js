@@ -28,7 +28,7 @@ const useTimer = (
             return prevTimer - 1;
           } else {
             onTimerEnd({
-              timeTaken,
+              timeTaken: 50,
               userAnswers: userAnswersRef.current,
               setSubmitted,
             });

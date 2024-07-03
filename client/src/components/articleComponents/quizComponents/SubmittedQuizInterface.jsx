@@ -27,6 +27,7 @@ import {
 import ButtonGradient from "../../../assets/svg/ButtonGradient";
 import Button from "../../miscellaneous/ButtonComponent";
 import Heading from "../../miscellaneous/HeadingComponent";
+import { result } from "lodash";
 
 ChartJS.register(
   CategoryScale,
@@ -75,17 +76,17 @@ const getReviewText = (field, value) => {
   }
 
   if (field === "timeTaken") {
-    if (value >= 33 && value < 50) return reviews.timeTaken.slow;
+    if (value >= 33 && value <= 50) return reviews.timeTaken.slow;
     if (value <= 16 && value > 33) return reviews.timeTaken.average;
     if (value >= 0 && value < 16) return reviews.timeTaken.fast;
   }
   if (field === "difficulty") {
     return reviews.difficulty[value] || "Keep going!";
   }
-  if (field === "result?.RQM_score") {
-    if (value < 45) return reviews.result?.RQM_score.low;
-    if (value >= 45 && value < 75) return reviews.result?.RQM_score.medium;
-    return reviews.result?.RQM_score.high;
+  if (field === "rqmscore") {
+    if (value < 45) return reviews.rqmscore.low;
+    if (value >= 45 && value < 75) return reviews.rqmscore.medium;
+    return reviews.rqmscore.high;
   }
 };
 
@@ -306,8 +307,8 @@ const SubmittedQuizInterface = ({
                       bg="blue.400"
                       zIndex={
                         result?.RQM_score >= 15 && result?.RQM_score < 45
-                          ? 0
-                          : 1
+                          ? 1
+                          : 0
                       }
                       boxShadow={
                         result?.RQM_score >= 15 && result?.RQM_score < 45

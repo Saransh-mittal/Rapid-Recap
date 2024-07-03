@@ -821,25 +821,38 @@ const userSearch = async (req, res) => {
     };
 
     // Execute the query and retrieve the matching users
-    const users = await User.find(searchQuery).populate("quizAttempts");
+    const users = await User.find(searchQuery).populate({
+      path: "quizAttempts",
+      match: { season: 2 },
+    });
+
     // Prioritize results with full query match
     const prioritizedUsers = users.sort((a, b) => {
-      // Check if a has a full query match
       const aFullMatch =
         a.inGameName === query || a.name === query || a.email === query;
-      // Check if b has a full query match
       const bFullMatch =
         b.inGameName === query || b.name === query || b.email === query;
 
-      // Prioritize full match over partial match
       if (aFullMatch && !bFullMatch) return -1;
       if (!aFullMatch && bFullMatch) return 1;
       return 0;
     });
+
     const result = [];
 
     prioritizedUsers.forEach((user) => {
       let sum = 0;
+      // _id,
+      //   RQM_avg: avgRQM?.toFixed(0),
+      //   name,
+      //   inGameName,
+      //   IQ_score,
+      //   pic,
+      //   quizSubmissions: quizAttemptsLength,
+      //   maxIQScore,
+      //   level,
+      //   xp,
+      //   rankedInCurrentSeason,
       const {
         name,
         inGameName,
@@ -850,11 +863,15 @@ const userSearch = async (req, res) => {
         rank,
         xp,
         level,
+        rankedInCurrentSeason,
       } = user;
       for (let i = 0; i < user.quizAttempts.length; i++) {
         sum += user.quizAttempts[i].RQM_score;
       }
-      const RQM_avg = (sum / user.quizAttempts.length).toFixed(0);
+      const RQM_avg =
+        user.quizAttempts.length > 0
+          ? (sum / user.quizAttempts.length).toFixed(0)
+          : 0;
       const quizSubmissions = user.quizAttempts.length;
       result.push({
         _id,
@@ -868,8 +885,10 @@ const userSearch = async (req, res) => {
         rank,
         xp,
         level,
+        rankedInCurrentSeason,
       });
     });
+
     res.status(201).json(result); // Return the prioritized users as JSON response
   } catch (error) {
     console.error("Error searching users:", error);
