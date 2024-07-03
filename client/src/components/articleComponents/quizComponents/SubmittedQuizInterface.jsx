@@ -272,6 +272,9 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="gray.300"
+                      zIndex={
+                        result?.RQM_score >= 0 && result?.RQM_score < 15 ? 1 : 0
+                      }
                       boxShadow={
                         result?.RQM_score >= 0 && result?.RQM_score < 15
                           ? "0 0 10px 2px #00f"
@@ -291,6 +294,11 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="blue.400"
+                      zIndex={
+                        result?.RQM_score >= 15 && result?.RQM_score < 45
+                          ? 0
+                          : 1
+                      }
                       boxShadow={
                         result?.RQM_score >= 15 && result?.RQM_score < 45
                           ? "0 0 10px 2px #00f"
@@ -310,6 +318,11 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="green.500"
+                      zIndex={
+                        result?.RQM_score >= 45 && result?.RQM_score < 75
+                          ? 1
+                          : 0
+                      }
                       boxShadow={
                         result?.RQM_score >= 45 && result?.RQM_score < 75
                           ? "0 0 10px 2px #00f"
@@ -329,6 +342,11 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="yellow.500"
+                      zIndex={
+                        result?.RQM_score >= 75 && result?.RQM_score < 105
+                          ? 1
+                          : 0
+                      }
                       boxShadow={
                         result?.RQM_score >= 75 && result?.RQM_score < 105
                           ? "0 0 10px 2px #00f"
@@ -348,6 +366,7 @@ const SubmittedQuizInterface = ({
                       h={"20px"}
                       w={"100%"}
                       bg="red.500"
+                      zIndex={result?.RQM_score >= 105 ? 1 : 0}
                       boxShadow={
                         result?.RQM_score >= 105
                           ? "0 0 20px 10px #00ffe2"

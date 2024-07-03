@@ -1,4 +1,3 @@
-// /components/Quiz.jsx
 import React, {
   useContext,
   useState,
@@ -62,12 +61,12 @@ const Quiz = ({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState([]);
-  const [score, setScore] = useState(0);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showInstruction, setShowInstruction] = useState(true);
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false);
   const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
     useState(false);
+  const [showSubmittedInterface, setShowSubmittedInterface] = useState(false); // New state
   const stopTimerRef = useRef(false);
   const [result, setResult] = useState({});
 
@@ -212,6 +211,16 @@ const Quiz = ({
       stars();
     }
   }, [submitted, load]);
+  useEffect(() => {
+    // remove stars on !showSubmittedInterface
+    if (showSubmittedInterface) {
+      const scene = document.querySelector(".scene");
+      const stars = scene.querySelectorAll("i");
+      stars.forEach((star) => {
+        star.remove();
+      });
+    }
+  }, [showSubmittedInterface]);
 
   const stars = () => {
     let count = 40;
@@ -265,8 +274,9 @@ const Quiz = ({
         ) : state.isBoosted || isQuinBoostAvailable ? (
           <BoostedSubmittedQuizInterface
             isOpen={isOpen}
-            score={score}
+            score={result?.RQM_score}
             submitLoad={submitLoad}
+            onViewReport={() => setShowSubmittedInterface(true)} // New prop
           />
         ) : (
           <SubmittedQuizInterface
@@ -292,7 +302,9 @@ const Quiz = ({
         />
         <ModalContent
           background={
-            submitted && (state.isBoosted || isQuinBoostAvailable)
+            submitted &&
+            (state.isBoosted || isQuinBoostAvailable) &&
+            !showSubmittedInterface
               ? "black"
               : "linear-gradient(-45deg, #092635, #9EC8B9, #2a7575, #9EC8B9)"
           }
@@ -327,6 +339,7 @@ const Quiz = ({
             </SkeletonCircle>
           </ModalHeader>
           <ModalCloseButton
+            zIndex={1}
             style={{
               right: "10px",
               color: isCloseButtonHovered ? "white" : "#FAF0E6",
@@ -336,7 +349,15 @@ const Quiz = ({
             onMouseEnter={() => setIsCloseButtonHovered(true)}
             onMouseLeave={() => setIsCloseButtonHovered(false)}
           />
-          {renderModalContent()}
+          {showSubmittedInterface ? (
+            <SubmittedQuizInterface
+              isOpen={isOpen}
+              submitLoad={submitLoad}
+              result={result}
+            />
+          ) : (
+            renderModalContent()
+          )}
           <Flex flexDirection={"column"} color={"white"}>
             {load && (
               <Text size={"lg"} color={"black"}>
