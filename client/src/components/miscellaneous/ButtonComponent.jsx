@@ -3,7 +3,7 @@ import ButtonSvg from "../../assets/svg/ButtonSvg";
 import React from "react";
 
 const Button = React.forwardRef((props, ref) => {
-  const { className, onClick, children, px, white } = props;
+  const { className, onClick, children, px, white, textColor = "" } = props;
 
   // Define responsive width using Chakra UI's useBreakpointValue hook
   const buttonWidth = useBreakpointValue({
@@ -29,7 +29,7 @@ const Button = React.forwardRef((props, ref) => {
     position: "relative",
     zIndex: "1",
     fontSize: white ? "1rem" : "0.75rem",
-    color: white ? "black" : "#9CAFAA",
+    color: white ? "black" : textColor !== "" ? textColor : "#9CAFAA",
     textTransform: "uppercase",
   };
 

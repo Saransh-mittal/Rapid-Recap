@@ -9,6 +9,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import QuizGivenSummary from "./quizComponents/QuizGivenSummary";
+import QuizReport from "./quizComponents/QuizReport";
 
 const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -75,10 +76,10 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
           }}
           marginTop={"10px"}
         >
-          View Quiz Summary
+          View Report
         </Button>
         {showQuizSummary && (
-          <QuizGivenSummary
+          <QuizReport
             isOpen={isOpen}
             onClose={() => {
               onClose();

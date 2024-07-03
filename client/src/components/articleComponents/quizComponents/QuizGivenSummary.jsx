@@ -17,13 +17,22 @@ import axios from "axios";
 import GivenQuizInterface from "./GivenQuizInterface";
 import Loading from "../../miscellaneous/Loading";
 import Heading from "../../miscellaneous/HeadingComponent";
-const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
+const QuizGivenSummary = ({
+  isOpen,
+  onClose,
+  articleId,
+  fetchQuizSummaryFromAnotherComp,
+  timeTakenInitial = 0,
+  quizGivenSummaryInitial = [],
+}) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false);
-  const [quizGivenSummary, setQuizGivenSummary] = useState([]);
+  const [quizGivenSummary, setQuizGivenSummary] = useState(
+    quizGivenSummaryInitial
+  );
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeTaken, setTimeTaken] = useState(0);
+  const [timeTaken, setTimeTaken] = useState(timeTakenInitial);
 
   const fetchQuizSummary = async () => {
     try {
@@ -58,7 +67,8 @@ const QuizGivenSummary = ({ isOpen, onClose, articleId }) => {
   };
 
   useEffect(() => {
-    fetchQuizSummary();
+    if (!fetchQuizSummaryFromAnotherComp) fetchQuizSummary();
+    else setIsLoading(false);
   }, []);
 
   return (

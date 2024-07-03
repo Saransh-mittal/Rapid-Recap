@@ -3,7 +3,7 @@ import React from "react";
 import "./Countdown.css";
 import { Box, Heading } from "@chakra-ui/react";
 
-const Countdown = ({ timer, submitted, stopTimer }) => {
+const Countdown = ({ timer, submitted }) => {
   const initialTimer = 50; // Initial timer value
   const dynamicStyles = {
     dotRotation: `rotate(${(360 * timer) / initialTimer}deg)`,
