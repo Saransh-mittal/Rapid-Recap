@@ -17,6 +17,7 @@ const XPLevel = ({ level, onClick, _hover, className }) => {
         className={className}
         onClick={onClick}
         _hover={_hover}
+        // w={"100%"}
       >
         <Image
           src={levelImage}
