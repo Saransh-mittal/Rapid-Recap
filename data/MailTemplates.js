@@ -1,3 +1,20 @@
+const recommendedArticles = `<div style="margin-top:40px;">
+        <h4 style="color:#333; text-align:center;">Articles Recommended for you:</h4>
+        <div style="display:flex; justify-content:space-between; margin-top:20px;">
+          <div style="width:30%; background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
+            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
+            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 1</p>
+          </div>
+          <div style="width:30%; background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
+            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
+            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 2</p>
+          </div>
+          <div style="width:30%; background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
+            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
+            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 3</p>
+          </div>
+        </div>
+      </div>`;
 const MailTemplates = {
   OTP: {
     from: "rapidrecap2k23@gmail.com",
@@ -5,49 +22,68 @@ const MailTemplates = {
     text: `Your OTP for verification`,
     html: (
       code
-    ) => `<div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
-    <div style="margin:50px auto;width:70%;padding:20px 0">
-      <div style="border-bottom:1px solid #eee">
-        <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Rapid Recap</a>
-      </div>
-      <p style="font-size:1.1em">Hi,</p>
-      <p>Thank you for choosing Rapid Recap. Use the following OTP to complete your Sign Up procedures. OTP is valid for 5 minutes</p>
-      <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">${code}</h2>
-      <p style="font-size:0.9em;">Regards,<br />Rapid Recap</p>
-      <hr style="border:none;border-top:1px solid #eee" />
-      <div style="float:right;padding:8px 0;color:#aaa;font-size:0.8em;line-height:1;font-weight:300">
-        <p>Rapid Recap Inc</p>
-        <p>Jaipur</p>
-        <p>India</p>
-      </div>
-    </div>
-  </div>`,
+    ) => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+  <div style="text-align: center; border-bottom: 1px solid #e0e0e0; padding-bottom: 20px; margin-bottom: 20px;">
+    <a href="#" style="font-size: 1.8em; color: #00466a; text-decoration: none; font-weight: bold;">Rapid Recap</a>
+  </div>
+  <p style="font-size: 1.2em; color: #333;">Hi,</p>
+  <p style="font-size: 1em; color: #333;">Thank you for choosing Rapid Recap. Use the following OTP to complete your sign-up procedures. The OTP is valid for 5 minutes.</p>
+  <div style="text-align: center; margin: 20px 0;">
+    <span style="display: inline-block; background: #00466a; padding: 15px 20px; color: #fff; font-size: 1.5em; border-radius: 5px;">${code}</span>
+  </div>
+  <p style="font-size: 1em; color: #333;">Regards,<br>Rapid Recap</p>
+  <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
+  <div style="text-align: center; color: #aaa; font-size: 0.8em; line-height: 1.4;">
+    <p>Rapid Recap Inc</p>
+    <p>Jaipur, India</p>
+  </div>
+</div>
+`,
   },
   NotifySubscribe: {
     from: "rapidrecap2k23@gmail.com",
     subject: "📢 Stay Updated with Rapid Recap Notifications! 📰",
     html: ({
       name,
-    }) => `<div style="font-family: Helvetica,Arial,sans-serif; min-width:1000px; overflow:auto; line-height:2">
-  <div style="margin:50px auto; width:70%; padding:20px 0">
-    <div style="border-bottom:1px solid #eee">
-      <a href="" style="font-size:1.4em; color:#00466a; text-decoration:none; font-weight:600">Rapid Recap</a>
+    }) => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px;">
+  <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
+    <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
+      <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
+        Rapid Recap
+      </a>
     </div>
-    <p style="font-size:1.1em">Hello ${name},</p>
-    <p>We're excited to introduce you to our latest feature: browser notifications! With Rapid Recap's new notification system, you'll never miss out on the latest articles, breaking news, and exclusive content.</p>
-    <p>To subscribe to browser notifications and stay informed, simply click the button below:</p>
-    <a href="https://www.rapidrecap.co.in/" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:10px 20px; border-radius:5px;">Subscribe Now</a>
-    
-    <p>Best regards,<br />Rapid Recap Team</p>
-    <hr style="border:none; border-top:1px solid #eee" />
-    <div style="float:right; padding:8px 0; color:#aaa; font-size:0.8em; line-height:1; font-weight:300">
-      <p>Rapid Recap Inc</p>
-      <p>Jaipur</p>
-      <p>India</p>
+    <div style="padding:20px 0;">
+      <p style="font-size:1.2em; color:#333;">Hello ${name},</p>
+      <p style="font-size:1em; color:#666; margin-top:20px;">We're excited to introduce you to our latest feature: browser notifications! With Rapid Recap's new notification system, you'll never miss out on the latest articles, breaking news, and exclusive content.</p>
+      <p style="font-size:1em; color:#666; margin-top:20px;">To subscribe to browser notifications and stay informed, simply click the button below:</p>
+      <div style="text-align:center; margin:30px 0;">
+        <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Subscribe Now</a>
+      </div>
+      
+      
+
+      <p style="font-size:1em; color:#666; margin-top:40px;">Best regards,<br/>The Rapid Recap Team</p>
     </div>
-    <p style="font-size:0.9em;"><strong>P.S.:</strong> Don't forget to stay updated with our latest news and articles by subscribing to browser notifications! If you have any questions or need assistance with subscribing to notifications, feel free to reach out to our support team at <a href="mailto:rapidrecap2k2023@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k2023@gmail.com</a>. We're here to help!</p>
+    <hr style="border:none; border-top:1px solid #e0e0e0; margin:20px 0;" />
+    <div style="font-size:0.9em; color:#999; line-height:1.4; text-align:center;">
+      <p style="margin:0;">Rapid Recap Inc</p>
+      <p style="margin:0;">Jaipur, India</p>
+    </div>
+    <p style="font-size:0.9em; color:#666; margin-top:20px; text-align:center;"><strong>P.S.:</strong> Don't forget to stay updated with our latest news and articles by subscribing to browser notifications! If you have any questions or need assistance with subscribing to notifications, feel free to reach out to our support team at <a href="mailto:rapidrecap2k2023@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k2023@gmail.com</a>. We're here to help!</p>
   </div>
 </div>
+
+<style>
+  div[style*="box-shadow"] {
+    transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+  div[style*="box-shadow"]:hover {
+    box-shadow: 0 0 15px rgba(0, 70, 106, 0.3);
+    transform: translateY(-5px);
+  }
+</style>
+
 `,
   },
   AppUpdates: {
@@ -58,30 +94,52 @@ const MailTemplates = {
       mainText,
       name,
       img,
-    }) => `<div style="font-family: Helvetica,Arial,sans-serif; min-width:1000px; overflow:auto; line-height:2">
-  <div style="margin:50px auto; width:70%; padding:20px 0">
-    <div style="border-bottom:1px solid #eee">
-      <a href="" style="font-size:1.4em; color:#00466a; text-decoration:none; font-weight:600">Rapid Recap</a>
+    }) => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px;">
+  <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
+    <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
+      <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
+        Rapid Recap
+      </a>
     </div>
-    <p style="font-size:1.1em">Hello ${name},</p>
-    <h4>${title}</h4>
-    ${
-      img
-        ? `<div style="text-align: center; margin: 20px 0;"><img src="${img}" alt="Image" style="max-width:100%; height:auto;"></div>`
-        : ""
-    }
-    <p>${mainText.replace(/\n\n/g, "<br><br>")}</p>
-    <a href="https://www.rapidrecap.co.in/" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:10px 20px; border-radius:5px;">View</a>
-    
-    <p>Best regards,<br />Rapid Recap Team</p>
-    <hr style="border:none; border-top:1px solid #eee" />
-    <div style="float:right; padding:8px 0; color:#aaa; font-size:0.8em; line-height:1; font-weight:300">
-      <p>Rapid Recap Inc</p>
-      <p>Jaipur</p>
-      <p>India</p>
+    <div style="padding:20px 0;">
+      <p style="font-size:1.2em; color:#333;">Hello ${name},</p>
+      <h4 style="color:#00466a;">${title}</h4>
+      ${
+        img
+          ? `<div style="text-align: center; margin: 20px 0;"><img src="${img}" alt="Image" style="max-width:100%; height:auto; border-radius:10px;"></div>`
+          : ""
+      }
+      <p style="font-size:1em; color:#666; margin-top:20px;">${mainText.replace(
+        /\n\n/g,
+        "<br><br>"
+      )}</p>
+      <div style="text-align:center; margin:30px 0;">
+        <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">View</a>
+      </div>
+      
+
+      <p style="font-size:1em; color:#666; margin-top:40px;">Best regards,<br/>The Rapid Recap Team</p>
     </div>
-    <p style="font-size:0.9em;"><strong>P.S.:</strong> Don't forget to stay updated with our latest news and articles by subscribing to browser notifications! If you have any questions or need assistance with subscribing to notifications, feel free to reach out to our support team at <a href="mailto:rapidrecap2k2023@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k2023@gmail.com</a>. We're here to help!</p>
-  </div>`,
+    <hr style="border:none; border-top:1px solid #e0e0e0; margin:20px 0;" />
+    <div style="font-size:0.9em; color:#999; line-height:1.4; text-align:center;">
+      <p style="margin:0;">Rapid Recap Inc</p>
+      <p style="margin:0;">Jaipur, India</p>
+    </div>
+    <p style="font-size:0.9em; color:#666; margin-top:20px; text-align:center;"><strong>P.S.:</strong> Don't forget to stay updated with our latest news and articles by subscribing to browser notifications! If you have any questions or need assistance with subscribing to notifications, feel free to reach out to our support team at <a href="mailto:rapidrecap2k2023@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k2023@gmail.com</a>. We're here to help!</p>
+  </div>
+</div>
+
+<style>
+  div[style*="box-shadow"] {
+    transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+  div[style*="box-shadow"]:hover {
+    box-shadow: 0 0 15px rgba(0, 70, 106, 0.3);
+    transform: translateY(-5px);
+  }
+</style>
+`,
   },
 
   StreakJustBroken: {
@@ -89,53 +147,96 @@ const MailTemplates = {
     subject: "Let's Get Back on Track! 🔄",
     html: ({
       name,
-    }) => `<div style="font-family: Helvetica, Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
-  <div style="margin: 20px auto; max-width: 600px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px;">
-    <div style="border-bottom: 2px solid #00466a; margin-bottom: 20px;">
-      <a href="" style="color: #00466a; font-weight: 600; font-size: 1.5em; text-decoration: none;">Rapid Recap</a>
+    }) => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px;">
+  <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
+    <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
+      <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
+        Rapid Recap
+      </a>
     </div>
-    <p style="font-size: 1.2em;">Hello ${name} 👋,</p>
-    <p>We noticed that your Rapid Recap streak of daily quizzes was broken, but don't worry – setbacks happen! Let's get you back on track and continue your journey towards mastering knowledge.</p>
-    <p>Daily quizzes are a great way to stay sharp and engaged. <a href="https://www.rapidrecap.co.in/" style="background-color: #00466a; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: 600; display: inline-block; margin-top: 5px; margin-bottom: 5px;">Log in now</a> and resume your streak by taking today's quiz. Remember, consistency is key to progress!</p>
-    <p style="margin-top: 20px;">Best regards,<br /><strong>Rapid Recap Team</strong></p>
-    <hr style="border: none; border-top: 1px solid #eee; margin-top: 20px; margin-bottom: 10px;" />
-    <div style="color: #aaa; font-size: 0.9em;">
-      <p>Rapid Recap Inc<br />India</p>
+    <div style="padding:20px 0;">
+      <p style="font-size:1.2em; color:#333;">Hello ${name} 👋,</p>
+      <p style="font-size:1em; color:#666; margin-top:20px;">We noticed that your Rapid Recap streak of daily quizzes was broken, but don't worry – setbacks happen! Let's get you back on track and continue your journey towards mastering knowledge.</p>
+      <div style="text-align:center; margin:30px 0;">
+        <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
+      </div>
+      <p style="font-size:1em; color:#666; margin-top:20px;">Daily quizzes are a great way to stay sharp and engaged. Log in now and resume your streak by taking today's quiz. Remember, consistency is key to progress!</p>
+      
+     
+
+      <p style="font-size:1em; color:#666; margin-top:40px;">Best regards,<br/>The Rapid Recap Team</p>
     </div>
-    <p style="font-size: 0.9em;"><strong>📧 P.S.:</strong> Need assistance or have any questions? Feel free to reach out to our support team at <a href="mailto:rapidrecap2k23@gmail.com" style="color: #00466a; text-decoration: none;">rapidrecap2k23@gmail.com</a>.</p>
+    <hr style="border:none; border-top:1px solid #e0e0e0; margin:20px 0;" />
+    <div style="font-size:0.9em; color:#999; line-height:1.4; text-align:center;">
+      <p style="margin:0;">Rapid Recap Inc</p>
+      <p style="margin:0;">India</p>
+    </div>
+    <p style="font-size:0.9em; color:#666; margin-top:20px; text-align:center;"><strong>📧 P.S.:</strong> Need assistance or have any questions? Feel free to reach out to our support team at <a href="mailto:rapidrecap2k23@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k23@gmail.com</a>.</p>
   </div>
 </div>
 
+<style>
+  div[style*="box-shadow"] {
+    transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+  div[style*="box-shadow"]:hover {
+    box-shadow: 0 0 15px rgba(0, 70, 106, 0.3);
+    transform: translateY(-5px);
+  }
+</style>
 `,
   },
+
   StreakSevenPeriodic: {
     from: "rapidrecap2k23@gmail.com",
-
     subject: "🚀 Restart Your Rapid Recap Quiz Streak Today! 🌟",
     html: ({
       name,
       streak_days,
-    }) => `<div style="font-family: Helvetica, Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
-  <div style="margin: 20px auto; max-width: 600px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px;">
-    <div style="border-bottom: 2px solid #00466a; margin-bottom: 20px;">
-      <a href="" style="color: #00466a; font-weight: 600; font-size: 1.5em; text-decoration: none;">Rapid Recap</a>
+    }) => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px;">
+  <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
+    <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
+      <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+        <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
+        Rapid Recap
+      </a>
     </div>
-    <p style="font-size: 1.2em;">Hello ${name} 👋,</p>
-    <p>We hope this message finds you well.</p>
-    <p>We regret to inform you that your Daily Quiz Streak on Rapid Recap has been interrupted for ${streak_days} days. We understand that life can get busy, and it's easy to lose track of routines.</p>
-    <p>However, we miss having you engage with our daily quizzes and would love to see you back on track!</p>
-    <p>Take this opportunity to restart your learning journey. Click below to resume:</p>
-    <a href="https://www.rapidrecap.co.in/" style="background-color: #00466a; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 5px; display: inline-block; margin-top: 10px;">Get Back on Track</a>
-    <p style="margin-top: 20px;">Best regards,<br /><strong>Rapid Recap Team</strong></p>
-    <hr style="border: none; border-top: 1px solid #eee; margin-top: 20px; margin-bottom: 10px;" />
-    <div style="color: #aaa; font-size: 0.9em;">
-      <p>Rapid Recap Inc<br />India</p>
+    <div style="padding:20px 0;">
+      <p style="font-size:1.2em; color:#333;">Hello ${name} 👋,</p>
+      <p style="font-size:1em; color:#666; margin-top:20px;">We hope this message finds you well.</p>
+      <p style="font-size:1em; color:#666; margin-top:20px;">We regret to inform you that your Daily Quiz Streak on Rapid Recap has been interrupted for ${streak_days} days. We understand that life can get busy, and it's easy to lose track of routines.</p>
+      <p style="font-size:1em; color:#666; margin-top:20px;">However, we miss having you engage with our daily quizzes and would love to see you back on track!</p>
+      <p style="font-size:1em; color:#666; margin-top:20px;">Take this opportunity to restart your learning journey. Click below to resume:</p>
+      <div style="text-align:center; margin:30px 0;">
+        <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
+      </div>
+      
+     
+
+      <p style="font-size:1em; color:#666; margin-top:40px;">Best regards,<br/>The Rapid Recap Team</p>
     </div>
-    <p style="font-size: 0.9em;"><strong>📧 P.S.:</strong> Need assistance or have any questions? Feel free to reach out to our support team at <a href="mailto:rapidrecap2k23@gmail.com" style="color: #00466a; text-decoration: none;">rapidrecap2k23@gmail.com</a>.</p>
+    <hr style="border:none; border-top:1px solid #e0e0e0; margin:20px 0;" />
+    <div style="font-size:0.9em; color:#999; line-height:1.4; text-align:center;">
+      <p style="margin:0;">Rapid Recap Inc</p>
+      <p style="margin:0;">India</p>
+    </div>
+    <p style="font-size:0.9em; color:#666; margin-top:20px; text-align:center;"><strong>📧 P.S.:</strong> Need assistance or have any questions? Feel free to reach out to our support team at <a href="mailto:rapidrecap2k23@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k23@gmail.com</a>.</p>
   </div>
 </div>
+
+<style>
+  div[style*="box-shadow"] {
+    transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+  div[style*="box-shadow"]:hover {
+    box-shadow: 0 0 15px rgba(0, 70, 106, 0.3);
+    transform: translateY(-5px);
+  }
+</style>
 `,
   },
+
   preQuinBoost: {
     from: "rapidrecap2k23@gmail.com",
     subject: "Almost There! One More Quiz to Unlock Your Power-Up! 🚀",

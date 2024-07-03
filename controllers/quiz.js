@@ -359,6 +359,7 @@ const getQuizSummary = async (req, res) => {
     }
     const { responses } = quizAttempt;
     const result = [];
+    let score = 0;
     for (let i = 0; i < responses.length; i++) {
       const question = responses[i];
 
@@ -389,17 +390,31 @@ const getQuizSummary = async (req, res) => {
       // console.log(userAnswer);
       // console.log(question.isCorrect);
       // console.log(fullQuestion);
+      if (question.isCorrect) score++;
       result.push({
         question: fullQuestion.question,
         options,
         answer,
         explanation,
         userAnswer,
-
         isCorrect: question.isCorrect,
       });
     }
-    res.status(200).json({ result, timeTaken: quizAttempt.timeTaken });
+    const articleDifficulty = quizAttempt.articleDifficulty;
+    const articleDifficultyLevel =
+      articleDifficulty < 0.5
+        ? "easy"
+        : articleDifficulty >= 0.5 && articleDifficulty < 0.7
+        ? "medium"
+        : "hard";
+    const scoreString = `${score}/${result.length}`;
+    res.status(200).json({
+      result,
+      timeTaken: quizAttempt.timeTaken,
+      RQM_score: quizAttempt.RQM_score,
+      articleDifficulty: articleDifficultyLevel,
+      score: scoreString,
+    });
   } catch (error) {
     res.status(400).json({ error: error || "Something went wrong" });
     console.error(error);
