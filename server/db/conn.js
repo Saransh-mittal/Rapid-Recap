@@ -2,13 +2,15 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(30.06.2024).json");
+// const updates = require("./updates/updates(01.07.2024).json");
 // const User = require("../model/userSchema");
 // const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 // const { progressBar } = require("../utils/progress.utils.js");
 // const { sendNotification } = require("../services/notificationService");
 // const { mailTransporter } = require("../utils/mail.utils.js");
 // const MailTemplates = require("../data/MailTemplates.js");
+// const { Recommendation } = require("../model/recommendationSchema.js");
+// const Article = require("../model/articleSchema.js");
 
 mongoose
   .connect(DB)
@@ -37,25 +39,45 @@ mongoose
 
 // async function saveUpdatesToDB() {
 //   try {
-//     const users = await User.find({
-//       email: { $not: /^dummy\d+@mail\.com$/ },
-//       inGameName: { $exists: true },
-//     });
-//     // const users = await User.find({ inGameName: "saransh_1234" });
+//     // const users = await User.find({
+//     //   email: { $not: /^dummy\d+@mail\.com$/ },
+//     //   inGameName: { $exists: true },
+//     // });
+//     const users = await User.find({ inGameName: "saransh_1234" });
 //     for (const update of updates) {
 //       const progress = progressBar(users.length);
 //       for (const user of users) {
 //         // Create a new update object for the user
 //         const { title, mainText, img, read } = update;
+//         const userRecommendedArticles = await Recommendation.findOne({
+//           user_id: user._id,
+//         }).select("recommendations");
+
+//         let cnt = 3;
+//         const articlesForMail = [];
+//         for (const article of userRecommendedArticles.recommendations) {
+//           if (cnt === 0) break;
+//           const articleData = await Article.findById(article._id).select(
+//             "title imgURL"
+//           );
+//           if (
+//             !articleData ||
+//             !articleData.imgURL ||
+//             articleData.imgURL[0] === ""
+//           )
+//             continue;
+//           articlesForMail.push(articleData);
+//           cnt--;
+//         }
 //         //console.log("User:", user.name);
-//         const newUpdate = new ApplicationUpdates({
-//           title,
-//           mainText,
-//           img,
-//           userId: user._id, // Associate the update with the current user
-//           read,
-//         });
-//         await newUpdate.save();
+//         // const newUpdate = new ApplicationUpdates({
+//         //   title,
+//         //   mainText,
+//         //   img,
+//         //   userId: user._id, // Associate the update with the current user
+//         //   read,
+//         // });
+//         // await newUpdate.save();
 //         //console.log("Update saved:", title);
 //         const transporter = await mailTransporter();
 //         await transporter.sendMail({
@@ -67,6 +89,7 @@ mongoose
 //             mainText,
 //             name: user.name,
 //             img,
+//             articlesForMail,
 //           }),
 //         });
 //         progress();

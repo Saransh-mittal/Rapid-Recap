@@ -88,16 +88,32 @@ const MailTemplates = {
   AppUpdates: {
     from: "rapidrecap2k23@gmail.com",
     subject: "Application Update",
-    html: ({
-      title,
-      mainText,
-      name,
-      img,
-    }) => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px;">
+    html: ({ title, mainText, name, img, articlesForMail }) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapid Recap Update</title>
+  <style type="text/css">
+    @media screen and (max-width: 600px) {
+      .article-container {
+        display: block !important;
+      }
+      .article-card {
+        display: block !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin-bottom: 20px !important;
+      }
+    }
+  </style>
+</head>
+<body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px; margin:0;">
   <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
     <div style="text-align:center; border-bottom:1px solid #e0e0e0; padding-bottom:20px;">
-      <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:flex; align-items:center; justify-content:center;">
-        <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; margin-right:10px;">
+      <a href="https://www.rapidrecap.co.in" style="font-size:2em; color:#00466a; text-decoration:none; font-weight:bold; display:inline-block;">
+        <img src="https://res.cloudinary.com/dxstsrnbs/image/upload/v1720002794/rr_qts9kn.png" alt="Rapid Recap Logo" style="width:40px; height:30px; vertical-align:middle; margin-right:10px;">
         Rapid Recap
       </a>
     </div>
@@ -119,20 +135,34 @@ const MailTemplates = {
       
       <div style="margin-top:40px;">
         <h4 style="color:#333; text-align:center;">Articles Recommended for you:</h4>
-        <div style="display:flex; justify-content:space-between; margin-top:20px;">
-          <div style="width:auto;height:30% background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 1</p>
-          </div>
-          <div style="width:auto;height:30% background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 2</p>
-          </div>
-          <div style="width:auto;height:30% background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 3</p>
-          </div>
-        </div>
+        
+        <table class="article-container" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top:20px;">
+          <tr>
+            ${
+              articlesForMail.length > 0
+                ? articlesForMail
+                    .map(
+                      (article) => `
+              <td class="article-card" align="center" style="display:inline-block; width:33.33%; max-width:200px; vertical-align:top;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f9f9f9; padding:10px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+                  <tr style="height:150px;">
+                    <td align="center">
+                      <img src="${article.imgURL[0]}" alt="Article Image" style="width:100%; max-width:150px; height:auto; border-radius:8px;">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="padding-top:10px;">
+                      <p style="font-size:1em; color:#333; margin:0;">${article.title}</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>`
+                    )
+                    .join("")
+                : ""
+            }
+          </tr>
+        </table>
       </div>
 
       <p style="font-size:1em; color:#666; margin-top:40px;">Best regards,<br/>The Rapid Recap Team</p>
@@ -144,17 +174,8 @@ const MailTemplates = {
     </div>
     <p style="font-size:0.9em; color:#666; margin-top:20px; text-align:center;"><strong>P.S.:</strong> Don't forget to stay updated with our latest news and articles by subscribing to browser notifications! If you have any questions or need assistance with subscribing to notifications, feel free to reach out to our support team at <a href="mailto:rapidrecap2k2023@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k2023@gmail.com</a>. We're here to help!</p>
   </div>
-</div>
-
-<style>
-  div[style*="box-shadow"] {
-    transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-  }
-  div[style*="box-shadow"]:hover {
-    box-shadow: 0 0 15px rgba(0, 70, 106, 0.3);
-    transform: translateY(-5px);
-  }
-</style>
+</body>
+</html>
 `,
   },
 
