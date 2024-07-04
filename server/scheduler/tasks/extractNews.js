@@ -1,16 +1,16 @@
 const { extractNewsUtilityFunc } = require("../../utils/article.utils");
-const { sendNotification } = require("../../services/notificationService");
 
-async function extractNews() {
+async function extractNews(country) {
   try {
-    const { result, articlesSavedPerCategory, notificationCategories } =
-      await extractNewsUtilityFunc();
+    const { result, articlesSavedPerCategory } = await extractNewsUtilityFunc(
+      country
+    );
 
     console.log(`No. of news fetched for DB : ${result.length}`);
     console.log(articlesSavedPerCategory);
-    console.log("News extracted successfully at scheduled times!");
+    console.log(`News extracted successfully for country: ${country}`);
   } catch (error) {
-    console.error("Error extracting news:", error);
+    console.error(`Error extracting news for country ${country}:`, error);
   }
 }
 

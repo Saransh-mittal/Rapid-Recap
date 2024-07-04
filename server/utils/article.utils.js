@@ -6,7 +6,7 @@ const { decode } = require("html-entities");
 const NewsAPI = require("newsapi");
 const axios = require("axios");
 const script_prepare_article_data = require("../scripts/script_prepare_article_data");
-const { averageReadTime } = require("./miscellaneous.utils");
+const { averageReadTime, shuffleArray } = require("./miscellaneous.utils");
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
   // Use natural language processing to tokenize sentences
@@ -234,7 +234,7 @@ fill these in the category key (only string). Also if total characters are more 
 };
 
 const fetchNews = async (query) => {
-  const apiKey = "e7409124fe384b688c07763501b270dd";
+  const apiKey = "e7409124fe384b688c07763501b270dd"; // rapidrecap2k23@gmail.com
   const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-28`;
 
   try {
@@ -396,9 +396,9 @@ const processExtractedNews = async (news, category) => {
   return processedOutput;
 };
 
-const extractNewsUtilityFunc = async () => {
+const extractNewsUtilityFunc = async (country = "") => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
-  const apiKeys = [
+  let apiKeys = [
     "9921240e42464f3589886811e71a3977",
     "88905479ff7c4564ae48aef8b23d56d0",
     "e7409124fe384b688c07763501b270dd",
@@ -410,13 +410,13 @@ const extractNewsUtilityFunc = async () => {
     "7e4a7d41a3ed463a952349bfb07b1452",
     "819c3bf3fab848a89741017dd5e67091",
   ];
-  const newsAPICategories = ["general"];
+  apiKeys = shuffleArray(apiKeys);
+  const newsAPICategories = ["general", "sports", "entertainment"];
   const newsDataIoCategories = [
     "business",
     "crime",
     "domestic",
     "education",
-    "entertainment",
     "environment",
     "food",
     "health",
@@ -424,7 +424,6 @@ const extractNewsUtilityFunc = async () => {
     "other",
     "politics",
     "science",
-    "sports",
     "technology",
     "top",
     "tourism",
@@ -448,7 +447,8 @@ const extractNewsUtilityFunc = async () => {
       requestsPerKey,
       keyTracker,
       result,
-      articlesSavedPerCategory
+      articlesSavedPerCategory,
+      country
     );
     await processDataIoCategories(
       newsDataIoCategories,
@@ -456,7 +456,8 @@ const extractNewsUtilityFunc = async () => {
       requestsPerKey,
       keyTracker,
       result,
-      articlesSavedPerCategory
+      articlesSavedPerCategory,
+      country
     );
     script_prepare_article_data();
     return { result, articlesSavedPerCategory, notificationCategories };
@@ -472,18 +473,48 @@ const processCategories = async (
   requestsPerKey,
   keyTracker,
   result,
-  articlesSavedPerCategory
+  articlesSavedPerCategory,
+  country
 ) => {
   for (let category of categories) {
     console.log(`\nExtracting news of category ${category}\n`);
-    const response = await newsapi.v2.topHeadlines({
+    let options = {
       category,
       language: "en",
-      country: "in",
-      pageSize: 6,
-    });
+      pageSize: 10,
+    };
+    if (country) {
+      options.country = country;
+    }
 
-    const articles = JSON.parse(JSON.stringify(response.articles));
+    let articles = [];
+    if (category === "sports") {
+      const sportsQueries = ["football", "cricket", "badminton", "NBA"];
+      options.pageSize = 5;
+
+      for (let query of sportsQueries) {
+        options.q = query;
+        const response = await newsapi.v2.topHeadlines(options);
+        articles = articles.concat(response.articles);
+      }
+    } else if (category === "entertainment") {
+      const entertainmentQueries = ["movies", "music", "bollywood"];
+      options.pageSize = 5;
+
+      for (let query of entertainmentQueries) {
+        options.q = query;
+        const response = await newsapi.v2.topHeadlines(options);
+        articles = articles.concat(response.articles);
+      }
+      // remove q parameter to get general entertainment news
+      delete options.q;
+      const response = await newsapi.v2.topHeadlines(options);
+      articles = articles.concat(response.articles);
+    } else {
+      const response = await newsapi.v2.topHeadlines(options);
+      articles = response.articles;
+    }
+
     console.log(articles.length);
 
     let allProcessedOutput = await processArticles(
@@ -508,18 +539,21 @@ const processDataIoCategories = async (
   requestsPerKey,
   keyTracker,
   result,
-  articlesSavedPerCategory
+  articlesSavedPerCategory,
+  country
 ) => {
   for (let category of categories) {
     console.log(`\nExtracting news of category ${category}\n`);
-    const queries = {
+    let queries = {
       category,
       language: "en",
       prioritydomain: "top",
       timezone: "Asia/Kolkata",
-      country: "in,us",
-      size: "5",
+      size: "10",
     };
+    if (country) {
+      queries.country = country;
+    }
     const queryString = Object.entries(queries)
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
       .join("&");
