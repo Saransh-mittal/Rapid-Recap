@@ -1,7 +1,4 @@
-// scheduleConfig.js
 const moment = require("moment-timezone");
-
-// Import all task functions
 const extractNews = require("./tasks/extractNews");
 const sendRecommendedNewsNotification = require("./tasks/notifForRecommendedNews");
 const updateDailyRecommendations = require("./tasks/updateRecommendations");
@@ -41,7 +38,10 @@ let schedules = [
     "02:00",
     sendRecommendedNewsNotification
   ),
-  createSchedule("extractNews1", "02:25", extractNews),
+  createSchedule("extractNews1", "02:25", () => extractNews("in")),
+  createSchedule("extractNews2", "09:00", () => extractNews(null)),
+  createSchedule("extractNews3", "15:00", () => extractNews("in")),
+  createSchedule("extractNews4", "23:00", () => extractNews(null)),
   createSchedule("updateRecommendations", "01:00", updateDailyRecommendations),
   createSchedule("streakBrokenMails", "03:30", sendStreakBrokenMails),
   createSchedule(
@@ -64,7 +64,6 @@ let schedules = [
     "10:00",
     sendRecommendedNewsNotification
   ),
-  createSchedule("extractNews2", "10:25", extractNews),
   createSchedule("streakReminder1", "12:30", () => sendStreakReminder(0)),
   createSchedule(
     "recommendedNewsNotification7",
@@ -86,7 +85,6 @@ let schedules = [
     "18:00",
     sendRecommendedNewsNotification
   ),
-  createSchedule("extractNews3", "18:25", extractNews),
   createSchedule("streakReminder2", "19:00", () => sendStreakReminder(1)),
   createSchedule("streakReminder3", "22:00", () => sendStreakReminder(2)),
 ];

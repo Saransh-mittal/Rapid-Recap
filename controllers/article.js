@@ -16,6 +16,7 @@ const {
 const { sendNotification } = require("../services/notificationService");
 const { formatDate } = require("../utils/miscellaneous.utils");
 const Quiz = require("../model/quizSchema");
+const NewsAPI = require("newsapi");
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = "general" } = req.query;
@@ -384,19 +385,34 @@ const hindiTranslation = async (req, res) => {
   }
 };
 
-// const testNewsApi = async (req, res) => {
-//   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
-//   try {
-//     const response = await newsapi.v2.topHeadlines({
-//       category: "entertainment",
-//       language: "en",
-//     });
-//     //console.log(response.articles[1]);
-//     res.status(200).json(response);
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
+const testNewsApi = async (req, res) => {
+  const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
+  console.log("Testing news api");
+  try {
+    let options = {
+      category: "entertainment",
+      language: "en",
+      pageSize: 10,
+    };
+    let articles = [];
+    const entertainmentQueries = ["movies", "music", "bollywood"];
+    options.pageSize = 5;
+
+    for (let query of entertainmentQueries) {
+      options.q = query;
+      const response = await newsapi.v2.topHeadlines(options);
+      articles = articles.concat(response.articles);
+    }
+    // remove q parameter to get general entertainment news
+    delete options.q;
+    const response = await newsapi.v2.topHeadlines(options);
+    articles = articles.concat(response.articles);
+    //console.log(response.articles[1]);
+    res.status(200).json(articles);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 const getWorldNews = async (req, res) => {
   try {
@@ -493,5 +509,5 @@ module.exports = {
   getHindiQuiz,
   getWorldNews,
   extractNews,
-  //testNewsApi,
+  testNewsApi,
 };
