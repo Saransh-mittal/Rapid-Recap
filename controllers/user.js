@@ -419,6 +419,7 @@ const leaderBoard = async (req, res) => {
 
   const condition = societyConditions[society?.toLowerCase()] || {};
   condition.inGameName = { $exists: true, $ne: "" };
+  condition.IQ_score = { $ne: 0 }; // Exclude users with IQ_score of 0
 
   const pageNumber = parseInt(page, 10);
   const limitNumber = parseInt(limit, 10);
