@@ -298,6 +298,7 @@ const Navbar = () => {
           )}
           {isDrawerOpen && (
             <NotificationDrawer
+              setIsHamburgerOpen={setIsHamburgerOpen}
               setIsDrawerOpen={setIsDrawerOpen}
               setIsModalOpen={setIsModalOpen}
               setSelectedNotification={setSelectedNotification}

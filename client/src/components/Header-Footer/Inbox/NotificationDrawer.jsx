@@ -20,6 +20,7 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  useMediaQuery,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../../contextAPI/appContext";
@@ -32,10 +33,11 @@ const NotificationDrawer = ({
   setIsDrawerOpen,
   setIsModalOpen,
   setSelectedNotification,
+  setIsHamburgerOpen,
 }) => {
   const { state, dispatch } = useContext(AppContext);
   const toast = useToast();
-
+  const isScreenSmallerThan48em = useMediaQuery("(max-width: 48em)")[0];
   const [notificationData, setNotificationData] = useState(state.updates); // State for notification data
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // State for delete confirmation modal
@@ -161,6 +163,7 @@ const NotificationDrawer = ({
         isOpen={isOpen}
         placement="right"
         onClose={() => {
+          isScreenSmallerThan48em && setIsHamburgerOpen(true);
           setIsDrawerOpen(false);
           onClose();
         }}
@@ -172,6 +175,7 @@ const NotificationDrawer = ({
           backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
           boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
           color="white"
+          className="inbox-drawer"
         >
           <DrawerCloseButton />
           <DrawerHeader size="10px">

@@ -136,7 +136,10 @@ const HamburgerModal = ({
               >
                 <Inbox
                   className={"inbox-button-lg"}
-                  onClick={() => setIsDrawerOpen(true)}
+                  onClick={() => {
+                    setIsDrawerOpen(true);
+                    onClose();
+                  }}
                   notifyCont={notifyCont}
                   display={notLogined ? "none" : "flex"}
                 />
