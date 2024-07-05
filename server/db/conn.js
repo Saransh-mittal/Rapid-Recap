@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(01.07.2024).json");
+// const updates = require("./updates/updates(02.07.2024).json");
 // const User = require("../model/userSchema");
 // const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 // const { progressBar } = require("../utils/progress.utils.js");
@@ -39,11 +39,11 @@ mongoose
 
 // async function saveUpdatesToDB() {
 //   try {
-//     // const users = await User.find({
-//     //   email: { $not: /^dummy\d+@mail\.com$/ },
-//     //   inGameName: { $exists: true },
-//     // });
-//     const users = await User.find({ inGameName: "saransh_1234" });
+//     const users = await User.find({
+//       email: { $not: /^dummy\d+@mail\.com$/ },
+//       inGameName: { $exists: true },
+//     });
+//     // const users = await User.find({ inGameName: "saransh_1234" });
 //     for (const update of updates) {
 //       const progress = progressBar(users.length);
 //       for (const user of users) {
@@ -53,7 +53,7 @@ mongoose
 //           user_id: user._id,
 //         }).select("recommendations");
 
-//         let cnt = 3;
+//         let cnt = 4;
 //         const articlesForMail = [];
 //         for (const article of userRecommendedArticles.recommendations) {
 //           if (cnt === 0) break;
@@ -63,10 +63,14 @@ mongoose
 //           if (
 //             !articleData ||
 //             !articleData.imgURL ||
-//             articleData.imgURL[0] === ""
+//             articleData.imgURL[0] === "" ||
+//             articleData.title.length > 100
 //           )
 //             continue;
-//           articlesForMail.push(articleData);
+//           articlesForMail.push({
+//             articleData,
+//             link: `https://www.rapidrecap.co.in/article/${articleData._id.toString()}`,
+//           });
 //           cnt--;
 //         }
 //         //console.log("User:", user.name);

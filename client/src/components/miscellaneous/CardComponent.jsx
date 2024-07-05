@@ -34,13 +34,14 @@ const BenefitCard = ({
         <Heading as="h5" size="sm" mb={"1.5rem"}>
           {title}
         </Heading>
-        <Flex alignItems={"center"}>
-          <Text fontSize="sm" mb={4} color="gray.500">
+        <Flex>
+          <Text fontSize="sm" mb={4} color="gray.500" textAlign={"left"}>
             {text.split("\n").map((line, index) => (
-              <React.Fragment key={index}>
-                {line}
+              <Flex key={index}>
+                <Flex marginRight={"5px"}>➤</Flex>
+                <Flex>{line}</Flex>
                 <br />
-              </React.Fragment>
+              </Flex>
             ))}
           </Text>
         </Flex>

@@ -36,17 +36,17 @@ const SeasonModal = ({
     const styleScrollbar = () => {
       const style = document.createElement("style");
       style.innerHTML = `
-        .chakra-modal__body.css-132ma0y::-webkit-scrollbar {
+        .seasonModalBody::-webkit-scrollbar {
           width: 8px;
         }
-        .chakra-modal__body.css-132ma0y::-webkit-scrollbar-thumb {
+        .seasonModalBody::-webkit-scrollbar-thumb {
           background-color: #333;
           border-radius: 4px;
         }
-        .chakra-modal__body.css-132ma0y::-webkit-scrollbar-thumb:hover {
+        .seasonModalBody::-webkit-scrollbar-thumb:hover {
           background-color: #555;
         }
-        .chakra-modal__body.css-132ma0y::-webkit-scrollbar-track {
+        .seasonModalBody::-webkit-scrollbar-track {
           background-color: #0f0d15;
         }
       `;
@@ -60,9 +60,7 @@ const SeasonModal = ({
     };
 
     const handleWheel = (event) => {
-      const modalBody = document.querySelector(
-        ".chakra-modal__body.css-132ma0y"
-      );
+      const modalBody = document.querySelector(".seasonModalBody");
       if (modalBody) {
         modalBody.scrollTop += event.deltaY;
       }
@@ -76,9 +74,7 @@ const SeasonModal = ({
 
     const handleTouchMove = (event) => {
       if (event.touches.length === 1) {
-        const modalBody = document.querySelector(
-          ".chakra-modal__body.css-132ma0y"
-        );
+        const modalBody = document.querySelector(".seasonModalBody");
         if (modalBody && initialTouchY !== null) {
           const currentTouchY = event.touches[0].clientY;
           modalBody.scrollTop += initialTouchY - currentTouchY;
@@ -150,7 +146,15 @@ const SeasonModal = ({
           />
         </ModalHeader>
         {isLargerThan992px && <ModalCloseButton />}
-        <ModalBody mb={"2rem"} overflowX={"hidden"} overflowY="auto" w={"100%"}>
+        <ModalBody
+          mb={"2rem"}
+          overflowX={"hidden"}
+          overflowY="auto"
+          w={"100%"}
+          pl={"7px"}
+          pr={"0"}
+          className="seasonModalBody"
+        >
           {notInTheSeason ? (
             <Heading
               title={
@@ -165,7 +169,7 @@ const SeasonModal = ({
                 w={"100%"}
                 h={""}
                 marginTop={"10px"}
-                marginInline={"1%"}
+                className="line-and-bar-graph"
                 padding={{ xl: isLoading ? 0 : "20px", base: "0" }}
                 borderRadius="10px"
                 flexDirection={{ base: "column", xl: "row" }}
@@ -210,7 +214,7 @@ const SeasonModal = ({
 
               <Flex
                 w={"100%"}
-                margin="10px"
+                // margin="10px"
                 marginBottom="5px"
                 flexDirection={{ xl: "row", base: "column" }}
                 justifyContent="space-between"

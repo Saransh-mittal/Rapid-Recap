@@ -89,7 +89,6 @@ const MailTemplates = {
     from: "rapidrecap2k23@gmail.com",
     subject: "Application Update",
     html: ({ title, mainText, name, img, articlesForMail }) => `
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -97,15 +96,52 @@ const MailTemplates = {
   <title>Rapid Recap Update</title>
   <style type="text/css">
     @media screen and (max-width: 600px) {
-      .article-container {
-        display: block !important;
-      }
-      .article-card {
-        display: block !important;
+      .article-table {
         width: 100% !important;
-        max-width: none !important;
+      }
+        .td-article-card{
+        width: 100% !important;
+        display: block !important;
+        }
+      .article-card {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+        width: 100% !important;
+        display: block !important;
         margin-bottom: 20px !important;
       }
+    }
+    .article-table {
+      width: 100%;
+      table-layout: fixed;
+    }
+      .td-article-card{
+      background-color: transparent !important;
+      }
+    .article-card {
+    height: 265px;
+    width: 220px;
+      margin: 20px;
+      box-sizing: border-box;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      vertical-align: top;
+    }
+    .article-image {
+      width: 100%;
+      max-width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin: 15px auto;
+    }
+    .article-title {
+      font-size: 1em;
+      color: #333;
+      margin-top: 10px;
+      text-align: center;
     }
   </style>
 </head>
@@ -133,30 +169,34 @@ const MailTemplates = {
         <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">View</a>
       </div>
       
-      <div style="margin-top:40px;">
-        <h4 style="color:#333; text-align:center;">Articles Recommended for you:</h4>
+      <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
+        <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
         
-        <table class="article-container" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top:20px;">
+        <table class="article-table" cellpadding="0" cellspacing="0">
           <tr>
             ${
               articlesForMail.length > 0
                 ? articlesForMail
                     .map(
-                      (article) => `
-              <td class="article-card" align="center" style="display:inline-block; width:33.33%; max-width:200px; vertical-align:top;">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f9f9f9; padding:10px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);">
-                  <tr style="height:150px;">
-                    <td align="center">
-                      <img src="${article.imgURL[0]}" alt="Article Image" style="width:100%; max-width:150px; height:auto; border-radius:8px;">
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" style="padding-top:10px;">
-                      <p style="font-size:1em; color:#333; margin:0;">${article.title}</p>
-                    </td>
-                  </tr>
-                </table>
-              </td>`
+                      (article, index) => `
+                        <td class="td-article-card">
+                        <a href=${article.link}>
+                        <div class="article-card">
+                          <img src="${
+                            article.articleData.imgURL[0]
+                          }" alt="Article Image" class="article-image">
+                          <p class="article-title">${
+                            article.articleData.title
+                          }</p>
+                          </div>
+                          </a>
+                        </td>
+                        ${
+                          index % 2 === 1 && index < articlesForMail.length - 1
+                            ? "</tr><tr>"
+                            : ""
+                        }
+                    `
                     )
                     .join("")
                 : ""

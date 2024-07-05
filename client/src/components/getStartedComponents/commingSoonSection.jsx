@@ -15,7 +15,7 @@ import roadmap1 from "../../assets/roadmap/image-1.png";
 import roadmap2 from "../../assets/roadmap/image-2.png";
 import roadmap3 from "../../assets/roadmap/image-3.png";
 import roadmap4 from "../../assets/roadmap/image-4.png";
-import roadmap5 from "../../assets/roadmap/xp-min.jpeg";
+import roadmap5 from "../../assets/roadmap/bookmark.png";
 import seasonUpdate from "../../assets/roadmap/seasonUpdate.png";
 import grid from "../../assets/grid.png";
 import gradientImage from "../../assets/gradient.png";
@@ -37,20 +37,20 @@ const roadmap = [
   },
   {
     id: "1",
-    title: "Personalized Feed and Notifications",
-    text: "Enjoy a tailored news and quiz experience with Rapid Recap's personalization feature, plus timely notifications to keep you updated and engaged with relevant content.",
-    date: "June 2024",
+    title: "Bookmark feature",
+    text: "Capture the knowledge, keep it near. Save the words that you hold dear. With just a tap, I'm always here. Save me now, read me later. What am I?",
+    date: "July 2024",
     status: "progress",
-    imageUrl: roadmap2,
-    colorful: true,
+    imageUrl: roadmap5,
   },
   {
     id: "2",
-    title: "Experience Level (xP)",
-    text: "Track your progress with our new Experience Level feature. Earn xP by completing random quizzes (5 xP), spending 10 minutes daily on the site (10 xP), and upgrading your Society or Circle. Celebrate your growth and achievements!",
+    title: "Personalized Feed and Notifications",
+    text: "Enjoy a tailored news and quiz experience with Rapid Recap's personalization feature, plus timely notifications to keep you updated and engaged with relevant content.",
     date: "June 2024",
     status: "done",
-    imageUrl: roadmap5,
+    imageUrl: roadmap2,
+    colorful: true,
   },
   {
     id: "3",
