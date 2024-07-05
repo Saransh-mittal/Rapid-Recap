@@ -19,18 +19,18 @@ const Home = () => {
   const [page, setPage] = useState(state.page + 1);
   const toast = useToast();
   const [load, setLoad] = useState(true);
-  const { startDrag, drag, endDrag } = useDrag();
   const navigate = useNavigate();
   const { category } = useParams();
   const [showUpgradeModal, setShowUpgradeModal] = useState(true);
-  const [hasMoreItems, setHasMoreItems] = useState(true); // Flag to check if there are more items
+  const [hasMoreItems, setHasMoreItems] = useState(true);
+  const [prevCategory, setPrevCategory] = useState(state.category);
 
   const USER_IQ = state.user?.IQ_score ?? null;
 
   async function fetchData() {
     if (!hasMoreItems) {
       setLoad(false);
-      return; // Exit if no more items to load
+      return;
     }
 
     try {
@@ -43,17 +43,25 @@ const Home = () => {
 
       const newItems = response.data;
       if (newItems.length === 0) {
-        setHasMoreItems(false); // Set flag if no more items
+        setHasMoreItems(false);
       } else {
         dispatch({ type: "PAGE", payloadPage: page - 1 });
         dispatch({
           type: "ITEMS",
-          payloadItems: [...state.items, ...newItems],
+          payloadItems: [...items, ...newItems],
         });
-        setItems((prev) => [...state.items, ...newItems]);
+        setItems((prev) => [...prev, ...newItems]);
       }
     } catch (error) {
       console.log(error.message);
+      toast({
+        title: "Error",
+        description: "Failed to fetch news",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
     } finally {
       setLoad(false);
     }
@@ -65,10 +73,10 @@ const Home = () => {
         !notLoggedIn &&
         window.innerHeight + document.documentElement.scrollTop + 1000 >
           document.documentElement.scrollHeight &&
-        hasMoreItems // Check if there are more items to load
+        hasMoreItems
       ) {
         setLoad(true);
-        setPage((ele) => ele + 1);
+        setPage((prevPage) => prevPage + 1);
       }
     } catch (error) {
       console.log(error);
@@ -78,7 +86,6 @@ const Home = () => {
   const debouncedHandleScroll = debounce(handleScroll, 300);
 
   useEffect(() => {
-    document.title = "Home Page";
     if (!category || category === "") {
       navigate("/home/all");
     }
@@ -89,36 +96,29 @@ const Home = () => {
     dispatch({ type: "setNews", payloadNews: {} });
 
     return () => window.removeEventListener("scroll", debouncedHandleScroll);
-  }, [state.show]);
+  }, [state.show, category]);
 
   useEffect(() => {
     if (!state.modal) dispatch({ type: "setNews", payloadNews: {} });
   }, [state.modal]);
 
   useEffect(() => {
-    if (items.length < page * 9) {
+    if (category !== prevCategory) {
+      // Category has changed
+      setPage(1);
+      setItems([]);
+      setHasMoreItems(true);
+      dispatch({ type: "category", payloadCategory: category });
+      dispatch({ type: "PAGE", payloadPage: 0 });
+      dispatch({ type: "ITEMS", payloadItems: [] });
+      setPrevCategory(category);
+    } else if (items.length < page * 9) {
+      // Same category, need to fetch more items
       fetchData();
-    } else setLoad(false);
-  }, [page]);
-
-  useEffect(() => {
-    //if (!notLoggedIn) {
-    const currPage = state.page;
-    if (
-      currPage === 0 &&
-      !state.homeInitialRender &&
-      state.items.length === 0 &&
-      state.category === category
-    ) {
-      setPage(() => 1);
-      setItems(() => []);
-      if (page === 1)
-        setTimeout(() => {
-          fetchData();
-        }, 100);
+    } else {
+      setLoad(false);
     }
-    //}
-  }, [state.items, state.page, state.category]);
+  }, [category, page, prevCategory]);
 
   const isSupported = () =>
     "Notification" in window &&
