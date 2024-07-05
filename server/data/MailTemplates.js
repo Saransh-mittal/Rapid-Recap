@@ -1,3 +1,20 @@
+const recommendedArticles = `<div style="margin-top:40px;">
+        <h4 style="color:#333; text-align:center;">Articles Recommended for you:</h4>
+        <div style="display:flex; justify-content:space-between; margin-top:20px;">
+          <div style="width:30%; background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
+            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
+            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 1</p>
+          </div>
+          <div style="width:30%; background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
+            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
+            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 2</p>
+          </div>
+          <div style="width:30%; background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
+            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
+            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 3</p>
+          </div>
+        </div>
+      </div>`;
 const MailTemplates = {
   OTP: {
     from: "rapidrecap2k23@gmail.com",
@@ -240,23 +257,7 @@ const MailTemplates = {
       </div>
       <p style="font-size:1em; color:#666; margin-top:20px;">Daily quizzes are a great way to stay sharp and engaged. Log in now and resume your streak by taking today's quiz. Remember, consistency is key to progress!</p>
       
-      <div style="margin-top:40px;">
-        <h4 style="color:#333; text-align:center;">Articles Recommended for you:</h4>
-        <div style="display:flex; justify-content:space-between; margin-top:20px;">
-          <div style="width:auto;height:30% background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 1</p>
-          </div>
-          <div style="width:auto;height:30% background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 2</p>
-          </div>
-          <div style="width:auto;height:30% background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 3</p>
-          </div>
-        </div>
-      </div>
+     
 
       <p style="font-size:1em; color:#666; margin-top:40px;">Best regards,<br/>The Rapid Recap Team</p>
     </div>
@@ -305,23 +306,7 @@ const MailTemplates = {
         <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
       </div>
       
-      <div style="margin-top:40px;">
-        <h4 style="color:#333; text-align:center;">Articles Recommended for you:</h4>
-        <div style="display:flex; justify-content:space-between; margin-top:20px;">
-          <div style="width:auto;height:30% background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 1</p>
-          </div>
-          <div style="width:auto;height:30% background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 2</p>
-          </div>
-          <div style="width:auto;height:30% background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 3</p>
-          </div>
-        </div>
-      </div>
+     
 
       <p style="font-size:1em; color:#666; margin-top:40px;">Best regards,<br/>The Rapid Recap Team</p>
     </div>

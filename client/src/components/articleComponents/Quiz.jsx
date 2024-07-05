@@ -1,4 +1,5 @@
-// /components/Quiz.jsx
+// src/components/Quiz.js
+
 import React, {
   useContext,
   useState,
@@ -8,15 +9,9 @@ import React, {
 } from "react";
 import {
   Button,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
   ModalOverlay,
-  ModalCloseButton,
   Text,
   Flex,
-  ModalHeader,
   Skeleton,
   SkeletonCircle,
   useToast,
@@ -31,6 +26,7 @@ import HindiInstructionModal from "./customQuizModal/HindiInstructionModal";
 import ReactGA from "react-ga4";
 import { AppContext } from "../../contextAPI/appContext";
 import BoostedSubmittedQuizInterface from "./quizComponents/BoostedSubmittedQuizInterface";
+import QuizGivenSummary from "./quizComponents/QuizGivenSummary";
 import {
   dailyStreakCheckerAndUpdater,
   quinBoostChecker,
@@ -39,6 +35,7 @@ import useFetchQuiz from "../../customHooks/useFetchQuiz";
 import useTimer from "../../customHooks/useTimer";
 import useSubmitQuiz from "../../customHooks/useSubmitQuiz";
 import axios from "axios";
+import ModalComponent from "./ModalComponent";
 
 const Quiz = ({
   article,
@@ -62,13 +59,13 @@ const Quiz = ({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState([]);
-  const [score, setScore] = useState(0);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showInstruction, setShowInstruction] = useState(true);
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false);
   const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
     useState(false);
-  const stopTimerRef = useRef(false);
+  const [showSubmittedInterface, setShowSubmittedInterface] = useState(false); // New state
+  const [showQuizSummary, setShowQuizSummary] = useState(false); // New state
   const [result, setResult] = useState({});
 
   useEffect(() => {
@@ -212,6 +209,16 @@ const Quiz = ({
       stars();
     }
   }, [submitted, load]);
+  useEffect(() => {
+    // remove stars on !showSubmittedInterface
+    if (showSubmittedInterface) {
+      const scene = document.querySelector(".scene");
+      const stars = scene.querySelectorAll("i");
+      stars.forEach((star) => {
+        star.remove();
+      });
+    }
+  }, [showSubmittedInterface]);
 
   const stars = () => {
     let count = 40;
@@ -231,7 +238,7 @@ const Quiz = ({
     }
   };
 
-  const renderModalContent = () => {
+  const renderModalBody = () => {
     if (showInstruction) {
       return language === "english" ? (
         <InstructionModal isQuinBoostAvailable={isQuinBoostAvailable} />
@@ -240,8 +247,29 @@ const Quiz = ({
       );
     }
 
+    if (showQuizSummary) {
+      return (
+        <QuizGivenSummary
+          isOpen={isOpen}
+          onClose={() => setShowQuizSummary(false)}
+          articleId={articleId}
+        />
+      );
+    }
+
+    if (showSubmittedInterface) {
+      return (
+        <SubmittedQuizInterface
+          isOpen={isOpen}
+          submitLoad={submitLoad}
+          result={result}
+          onViewReport={() => setShowQuizSummary(true)}
+        />
+      );
+    }
+
     return (
-      <ModalBody
+      <Flex
         p={"15px"}
         px={"5px"}
         mt={"25px"}
@@ -265,149 +293,50 @@ const Quiz = ({
         ) : state.isBoosted || isQuinBoostAvailable ? (
           <BoostedSubmittedQuizInterface
             isOpen={isOpen}
-            score={score}
+            score={result?.RQM_score}
             submitLoad={submitLoad}
+            onViewReport={() => setShowSubmittedInterface(true)}
           />
         ) : (
           <SubmittedQuizInterface
             isOpen={isOpen}
             submitLoad={submitLoad}
             result={result}
+            onViewReport={() => setShowQuizSummary(true)} // New prop
           />
         )}
-      </ModalBody>
+      </Flex>
     );
   };
 
   return (
     <>
-      <Modal
+      <ModalComponent
+        showSubmittedInterface={showSubmittedInterface}
+        isQuinBoostAvailable={isQuinBoostAvailable}
+        state={state}
+        setSubmitted={setSubmitted}
+        timer={timer}
         isOpen={isOpen}
         onClose={handleClose}
-        size={{ base: "full", md: "3xl" }}
-      >
-        <ModalOverlay
-          bg="blackAlpha.300"
-          backdropFilter="blur(40px) hue-rotate(90deg)"
-        />
-        <ModalContent
-          background={
-            submitted && (state.isBoosted || isQuinBoostAvailable)
-              ? "black"
-              : "linear-gradient(-45deg, #092635, #9EC8B9, #2a7575, #9EC8B9)"
-          }
-          backgroundSize="400% 400%"
-          className="animated-gradient scene"
-          minHeight={"80vh"}
-          borderRadius={{ md: "2px" }}
-          overflow="hidden"
-        >
-          <ModalHeader
-            maxHeight={"100px"}
-            p={0}
-            color={"white"}
-            display={"flex"}
-            alignItems={"center"}
-          >
-            <SkeletonCircle
-              color="red"
-              isLoaded={!load}
-              marginTop={load ? "10px" : "0"}
-              size={load ? "20" : "auto"}
-              marginBottom={load ? "10px" : "0"}
-            >
-              {!submitted && (
-                <Countdown
-                  timer={timer}
-                  submitted={submitted}
-                  start={!showInstruction}
-                  stopTimer={stopTimerRef.current}
-                />
-              )}
-            </SkeletonCircle>
-          </ModalHeader>
-          <ModalCloseButton
-            style={{
-              right: "10px",
-              color: isCloseButtonHovered ? "white" : "#FAF0E6",
-              backgroundColor: isCloseButtonHovered ? "#040D12" : "#183D3D",
-              transition: "background-color 0.3s, color 0.3s",
-            }}
-            onMouseEnter={() => setIsCloseButtonHovered(true)}
-            onMouseLeave={() => setIsCloseButtonHovered(false)}
-          />
-          {renderModalContent()}
-          <Flex flexDirection={"column"} color={"white"}>
-            {load && (
-              <Text size={"lg"} color={"black"}>
-                Quiz is generating. Wait for the start button....
-              </Text>
-            )}
-            <Skeleton
-              isLoaded={!load}
-              borderRadius={"10px"}
-              marginBottom={load ? "10px" : ""}
-            >
-              <ModalFooter>
-                {showInstruction && (
-                  <Button
-                    colorScheme="blue"
-                    mr={3}
-                    onClick={startQuiz}
-                    // onClick={() => setShowInstruction(false)}
-                    style={{
-                      transition: "background-color 0.3s, color 0.3s",
-                      backgroundColor: isStartQuizButtonHovered
-                        ? "#DDE6ED"
-                        : "#183D3D",
-                      color: isStartQuizButtonHovered ? "#27374D" : "#FAF0E6",
-                    }}
-                    onMouseEnter={() => setIsStartQuizButtonHovered(true)}
-                    onMouseLeave={() => setIsStartQuizButtonHovered(false)}
-                  >
-                    Start Quiz
-                  </Button>
-                )}
-                {!showInstruction &&
-                  currentQuestionIndex < totalQuestions - 1 &&
-                  !submitted && (
-                    <Button
-                      colorScheme="blue"
-                      mr={3}
-                      onClick={handleNextQuestion}
-                      bg="#FCECDD"
-                      color="#046582"
-                      _hover={{
-                        bg: "#046582",
-                        color: "#FCECDD",
-                      }}
-                    >
-                      Next
-                    </Button>
-                  )}
-                {currentQuestionIndex === totalQuestions - 1 && !submitted && (
-                  <Button
-                    colorScheme="blue"
-                    mr={3}
-                    onClick={() =>
-                      handleSubmitQuiz({ timeTaken, userAnswers, setSubmitted })
-                    }
-                    bg="#DCF2F1"
-                    color="#265073"
-                    _hover={{
-                      bg: "#265073",
-                      color: "#DCF2F1",
-                    }}
-                    isLoading={submitLoad}
-                  >
-                    Submit
-                  </Button>
-                )}
-              </ModalFooter>
-            </Skeleton>
-          </Flex>
-        </ModalContent>
-      </Modal>
+        isCloseButtonHovered={isCloseButtonHovered}
+        setIsCloseButtonHovered={setIsCloseButtonHovered}
+        isStartQuizButtonHovered={isStartQuizButtonHovered}
+        setIsStartQuizButtonHovered={setIsStartQuizButtonHovered}
+        renderModalBody={renderModalBody}
+        load={load}
+        showInstruction={showInstruction}
+        startQuiz={startQuiz}
+        handleNextQuestion={handleNextQuestion}
+        currentQuestionIndex={currentQuestionIndex}
+        totalQuestions={totalQuestions}
+        submitted={submitted}
+        submitLoad={submitLoad}
+        timeTaken={timeTaken}
+        userAnswers={userAnswers}
+        handleSubmitQuiz={handleSubmitQuiz}
+        setShowInstruction={setShowInstruction}
+      />
       {!showInstruction && showConfirmationModal && (
         <ConfirmationModal
           bg={"black"}

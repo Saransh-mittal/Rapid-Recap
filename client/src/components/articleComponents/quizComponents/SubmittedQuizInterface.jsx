@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+// src/components/quizComponents/SubmittedQuizInterface.js
+
+import React from "react";
 import {
   Text,
   SlideFade,
@@ -10,7 +12,6 @@ import {
   StatHelpText,
   StatGroup,
   HStack,
-  keyframes,
 } from "@chakra-ui/react";
 import { Line } from "react-chartjs-2";
 import {
@@ -23,6 +24,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import ButtonGradient from "../../../assets/svg/ButtonGradient";
+import Button from "../../miscellaneous/ButtonComponent";
 import Heading from "../../miscellaneous/HeadingComponent";
 import { result } from "lodash";
 
@@ -88,15 +91,16 @@ const getReviewText = (field, value) => {
 };
 
 const SubmittedQuizInterface = ({
-  isOpen = true,
+  isOpen,
   submitLoad = false,
   result,
+  onViewReport,
 }) => {
-  const [scoreArr, setScoreArr] = useState([]);
-  const [quizData, setQuizData] = useState([]);
-  const [labels, setLabels] = useState([]);
-  // console.log(result);
-  useEffect(() => {
+  const [scoreArr, setScoreArr] = React.useState([]);
+  const [quizData, setQuizData] = React.useState([]);
+  const [labels, setLabels] = React.useState([]);
+
+  React.useEffect(() => {
     if (result?.score && result?.score.includes("/")) {
       setScoreArr(() => {
         const arr = result?.score.split("/");
@@ -170,7 +174,13 @@ const SubmittedQuizInterface = ({
 
   return (
     <SlideFade direction="bottom" in={isOpen} offsetY="20px">
-      <Box textAlign="center" py={8} px={0} borderRadius="md">
+      <Box
+        textAlign="center"
+        py={8}
+        px={0}
+        borderRadius="md"
+        position={"relative"}
+      >
         <Flex flexWrap={"wrap"} px={"2rem"}>
           <Heading
             title={"Quiz Completed Successfully!!"}
@@ -436,33 +446,46 @@ const SubmittedQuizInterface = ({
                   </Flex>
                 </HStack>
               </Flex>
-              <Flex
-                flexDirection={"column"}
-                // justifyContent={"center"}
-                alignItems={"center"}
-                height={"300px"}
-              >
-                <Flex justifyContent={"center"} mt={4}>
-                  <Text
-                    color="#3E3232"
-                    fontSize="20px"
-                    textAlign="center"
-                    my={4}
-                    fontWeight={"bold"}
-                    textTransform={"uppercase"}
-                  >
-                    Today's RQM Score Update
-                  </Text>
-                </Flex>
-
+              {result.pastRQMs && (
                 <Flex
-                  width="100%"
-                  height={"100%"}
-                  justifyContent={"center"}
+                  flexDirection={"column"}
                   alignItems={"center"}
+                  height={"300px"}
                 >
-                  <Line data={chartData} options={chartOptions} />
+                  <Flex justifyContent={"center"} mt={4}>
+                    <Text
+                      color="#3E3232"
+                      fontSize="20px"
+                      textAlign="center"
+                      my={4}
+                      fontWeight={"bold"}
+                      textTransform={"uppercase"}
+                    >
+                      Today's RQM Score Update
+                    </Text>
+                  </Flex>
+
+                  <Flex
+                    width="100%"
+                    height={"100%"}
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                  >
+                    <Line data={chartData} options={chartOptions} />
+                  </Flex>
                 </Flex>
+              )}
+
+              <Flex mt={12} w={"100%"} justifyContent={"center"}>
+                <ButtonGradient />
+                <Button
+                  white={true}
+                  colorScheme="blue"
+                  mt={4}
+                  onClick={onViewReport} // New button to view Quiz Summary
+                >
+                  Quiz Summary
+                </Button>
               </Flex>
             </Box>
           </>

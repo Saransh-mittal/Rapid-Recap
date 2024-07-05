@@ -6,7 +6,7 @@ const { decode } = require("html-entities");
 const NewsAPI = require("newsapi");
 const axios = require("axios");
 const script_prepare_article_data = require("../scripts/script_prepare_article_data");
-const { averageReadTime } = require("./miscellaneous.utils");
+const { averageReadTime, shuffleArray } = require("./miscellaneous.utils");
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
   // Use natural language processing to tokenize sentences
@@ -234,7 +234,7 @@ fill these in the category key (only string). Also if total characters are more 
 };
 
 const fetchNews = async (query) => {
-  const apiKey = "e7409124fe384b688c07763501b270dd";
+  const apiKey = "e7409124fe384b688c07763501b270dd"; // rapidrecap2k23@gmail.com
   const url = `https://api.worldnewsapi.com/search-news?${query}&language=en&earliest-publish-date=2024-04-28`;
 
   try {
@@ -272,7 +272,8 @@ const extractNewsFromLink = async (query, apiKey) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.log(error);
+    console.log(`Error extracting news from URL ${query}: ${error.message}`);
+    return null; // Return null to handle the error gracefully
   }
 };
 
@@ -281,13 +282,13 @@ const processExtractedNews = async (news, category) => {
     You are a text checker and analyzer. 
     1. Remove any irrelevant content or lines from the mainText that are not related to the article or title. This includes sections like "Also read," "Loading...," "Share to Facebook," "Share to Twitter," "Share to LinkedIn," and unanswered questions.
     2. Do not summarize the content if the mainText is 2500 characters or less.
-    3. If the mainText exceeds 2500 characters, summarize it to 2500 characters, keeping the most important information.
+    3. If the mainText exceeds 2500 characters, summarize it to more than 800 characters but less than 2500 characters, keeping the most important information.
     4. Ensure that the returned JSON object includes all original fields.
   `;
 
   const summarizationInstructions = `
     You are a summarizer. 
-    Summarize the mainText to 2500 characters while retaining the most important information.
+    Summarize the mainText to more than 800 characters but less than 2500 characters, retaining the most important information.
     Ensure that the returned JSON object includes all original fields.
   `;
 
@@ -299,6 +300,10 @@ const processExtractedNews = async (news, category) => {
 
   for (let newsItem of news) {
     try {
+      if (!newsItem || !newsItem.title || !newsItem.text) {
+        throw new Error("Invalid news item structure");
+      }
+
       const existingArticle = await Article.findOne({ title: newsItem.title });
       if (existingArticle) continue;
 
@@ -367,13 +372,16 @@ const processExtractedNews = async (news, category) => {
         };
       }
 
-      if (res.mainText.length < 800) throw new Error("Text is too short");
+      if (res.mainText.length < 800)
+        throw new Error(
+          `Text is too short : ${res.mainText.length} characters`
+        );
 
       const articleCheck = await Article.findOne({ title: res.title });
       if (articleCheck) continue;
 
-      const averageReadTime = averageReadTime(res.mainText);
-      res.avgReadTime = averageReadTime;
+      const avgReadTime = averageReadTime(res.mainText);
+      res.avgReadTime = avgReadTime;
 
       const newArticle = new Article(res);
       await newArticle.save();
@@ -388,27 +396,27 @@ const processExtractedNews = async (news, category) => {
   return processedOutput;
 };
 
-const extractNewsUtilityFunc = async () => {
+const extractNewsUtilityFunc = async (country = "") => {
   const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
-  const apiKeys = [
-    "7e4a7d41a3ed463a952349bfb07b1452",
+  let apiKeys = [
+    "9921240e42464f3589886811e71a3977",
+    "88905479ff7c4564ae48aef8b23d56d0",
     "e7409124fe384b688c07763501b270dd",
     "7170746b5aa044069fbd5f48e74817ac",
     "acd1bf365a084183b509789e0aae202a",
     "a46513e934b14f44a9fa2137185f5438",
     "fa26103bbdd849c3a4a6ff9f713a2a91",
     "e20b7e002db74c22b29beb122b72e8c8",
-    "9921240e42464f3589886811e71a3977",
-    "88905479ff7c4564ae48aef8b23d56d0",
+    "7e4a7d41a3ed463a952349bfb07b1452",
     "819c3bf3fab848a89741017dd5e67091",
   ];
-  const newsAPICategories = ["general"];
+  apiKeys = shuffleArray(apiKeys);
+  const newsAPICategories = ["general", "sports", "entertainment"];
   const newsDataIoCategories = [
     "business",
     "crime",
     "domestic",
     "education",
-    "entertainment",
     "environment",
     "food",
     "health",
@@ -416,7 +424,6 @@ const extractNewsUtilityFunc = async () => {
     "other",
     "politics",
     "science",
-    "sports",
     "technology",
     "top",
     "tourism",
@@ -440,7 +447,8 @@ const extractNewsUtilityFunc = async () => {
       requestsPerKey,
       keyTracker,
       result,
-      articlesSavedPerCategory
+      articlesSavedPerCategory,
+      country
     );
     await processDataIoCategories(
       newsDataIoCategories,
@@ -448,12 +456,13 @@ const extractNewsUtilityFunc = async () => {
       requestsPerKey,
       keyTracker,
       result,
-      articlesSavedPerCategory
+      articlesSavedPerCategory,
+      country
     );
     script_prepare_article_data();
     return { result, articlesSavedPerCategory, notificationCategories };
   } catch (error) {
-    console.log(error);
+    console.log(`Error in extractNewsUtilityFunc: ${error.message}`);
   }
 };
 
@@ -464,18 +473,48 @@ const processCategories = async (
   requestsPerKey,
   keyTracker,
   result,
-  articlesSavedPerCategory
+  articlesSavedPerCategory,
+  country
 ) => {
   for (let category of categories) {
     console.log(`\nExtracting news of category ${category}\n`);
-    const response = await newsapi.v2.topHeadlines({
+    let options = {
       category,
       language: "en",
-      country: "in",
-      pageSize: 6,
-    });
+      pageSize: 10,
+    };
+    if (country) {
+      options.country = country;
+    }
 
-    const articles = JSON.parse(JSON.stringify(response.articles));
+    let articles = [];
+    if (category === "sports") {
+      const sportsQueries = ["football", "cricket", "badminton", "NBA"];
+      options.pageSize = 5;
+
+      for (let query of sportsQueries) {
+        options.q = query;
+        const response = await newsapi.v2.topHeadlines(options);
+        articles = articles.concat(response.articles);
+      }
+    } else if (category === "entertainment") {
+      const entertainmentQueries = ["movies", "music", "bollywood"];
+      options.pageSize = 5;
+
+      for (let query of entertainmentQueries) {
+        options.q = query;
+        const response = await newsapi.v2.topHeadlines(options);
+        articles = articles.concat(response.articles);
+      }
+      // remove q parameter to get general entertainment news
+      delete options.q;
+      const response = await newsapi.v2.topHeadlines(options);
+      articles = articles.concat(response.articles);
+    } else {
+      const response = await newsapi.v2.topHeadlines(options);
+      articles = response.articles;
+    }
+
     console.log(articles.length);
 
     let allProcessedOutput = await processArticles(
@@ -500,18 +539,21 @@ const processDataIoCategories = async (
   requestsPerKey,
   keyTracker,
   result,
-  articlesSavedPerCategory
+  articlesSavedPerCategory,
+  country
 ) => {
   for (let category of categories) {
     console.log(`\nExtracting news of category ${category}\n`);
-    const queries = {
+    let queries = {
       category,
       language: "en",
       prioritydomain: "top",
       timezone: "Asia/Kolkata",
-      country: "in,us",
-      size: "5",
+      size: "10",
     };
+    if (country) {
+      queries.country = country;
+    }
     const queryString = Object.entries(queries)
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
       .join("&");
@@ -560,12 +602,16 @@ const processArticles = async (
         article.url || article.link,
         apiKey
       );
-      allProcessedOutput.push(extractedNews);
+      if (extractedNews) {
+        allProcessedOutput.push(extractedNews);
+      }
 
       keyTracker.requestsMadeWithCurrentKey++;
     } catch (error) {
       console.log(
-        `Error extracting news from article ${article.title}: ${error}`
+        `Error extracting news from article ${article.title || "unknown"}: ${
+          error.message
+        }`
       );
     }
   }

@@ -95,13 +95,15 @@ const generateQuestionsForQuiz = async ({
   mainText,
   articleId,
 }) => {
-  // Input validation
   if (!title || !author || !mainText || !articleId) {
     throw new Error("Missing required parameters");
   }
 
   try {
     const openai = new OpenAI(process.env.OPENAI_API_KEY);
+    let attempts = 3;
+    let result;
+    let response;
 
     const prompt = `Title: ${title}\nAuthor: ${author}\n\nMainText: ${mainText}\n\nInstructions:
 1. Divide the article into 3 paragraphs.
@@ -109,70 +111,66 @@ const generateQuestionsForQuiz = async ({
 3. Provide 4 answer options for each question, with one correct answer labeled (a, b, c, or d).
 4. Include a brief explanation for each correct answer.
 5. Ensure all questions are derived from the provided text.
-6. Assign a difficulty level between 0 and 1 for each question.
+6. Assign a difficulty level between 0 and 1 for each question. **This field is mandatory**.
 7. Evaluate the article's overall difficulty considering vocabulary complexity, sentence structure, conceptual difficulty, depth of analysis, required background knowledge, clarity, coherence, information density, language style, length, and reader engagement. Provide an overall difficulty rating between 0 and 1.
 8. Return the response in the following JSON format:
 {
-  title: "Title of the article",
-  paragraphs: [
+  "title": "Title of the article",
+  "paragraphs": [
     {
-      paragraph: 1,
-      questions: [
+      "paragraph": 1,
+      "questions": [
         {
-          question: "",
-          options: {
-            a: "",
-            b: "",
-            c: "",
-            d: ""
+          "question": "",
+          "options": {
+            "a": "",
+            "b": "",
+            "c": "",
+            "d": ""
           },
-          answer: "",
-          explanation: "",
-          difficulty: ""
+          "answer": "",
+          "explanation": "",
+          "difficulty": ""
         },
       ],
     },
     {
-      paragraph: 2,
-      questions: [
+      "paragraph": 2,
+      "questions": [
         {
-          question: "",
-          options: {
-            a: "",
-            b: "",
-            c: "",
-            d: ""
+          "question": "",
+          "options": {
+            "a": "",
+            "b": "",
+            "c": "",
+            "d": ""
           },
-          answer: "",
-          explanation: "",
-          difficulty: ""
+          "answer": "",
+          "explanation": "",
+          "difficulty": ""
         },
       ],
     },
     {
-      paragraph: 3,
-      questions: [
+      "paragraph": 3,
+      "questions": [
         {
-          question: "",
-          options: {
-            a: "",
-            b: "",
-            c: "",
-            d: ""
+          "question": "",
+          "options": {
+            "a": "",
+            "b": "",
+            "c": "",
+            "d": ""
           },
-          answer: "",
-          explanation: "",
-          difficulty: ""
+          "answer": "",
+          "explanation": "",
+          "difficulty": ""
         },
       ],
     }
   ],
-  overAllDifficulty: ""
+  "overAllDifficulty": ""
 }`;
-
-    let attempts = 3;
-    let result;
-    let response;
 
     while (attempts-- > 0) {
       try {
@@ -191,24 +189,35 @@ const generateQuestionsForQuiz = async ({
           ],
         });
 
-        response = JSON.parse(result.choices[0].message.content);
+        let responseText = result.choices[0].message.content;
+
+        // Remove any backticks or invalid characters
+        responseText = responseText.replace(/```json|```/g, "").trim();
+
+        response = JSON.parse(responseText);
 
         if (
           response &&
           response.paragraphs &&
           response.paragraphs.length === 3 &&
-          response.paragraphs[0].questions.length > 0 &&
-          response.paragraphs[1].questions.length > 0 &&
-          response.paragraphs[2].questions.length > 0 &&
-          response.overAllDifficulty
+          response.paragraphs[0].questions.every(
+            (q) => q.difficulty !== undefined
+          ) &&
+          response.paragraphs[1].questions.every(
+            (q) => q.difficulty !== undefined
+          ) &&
+          response.paragraphs[2].questions.every(
+            (q) => q.difficulty !== undefined
+          ) &&
+          response.overAllDifficulty !== undefined
         ) {
           break;
         }
       } catch (err) {
-        console.error("Error during OpenAI API call:", err);
+        console.error("Error during OpenAI API call:", err.message);
       }
 
-      console.log(`Retrying... ${3 - attempts} attempts left.`);
+      console.log(`Retrying... ${attempts} attempts left.`);
     }
 
     if (!response) {
@@ -238,7 +247,7 @@ const generateQuestionsForQuiz = async ({
     return newQuiz;
   } catch (error) {
     console.error("Error generating questions for quiz:", error);
-    throw error; // Re-throw the error after logging it
+    throw error;
   }
 };
 

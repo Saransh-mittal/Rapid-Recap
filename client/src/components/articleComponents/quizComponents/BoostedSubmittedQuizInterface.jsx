@@ -1,8 +1,16 @@
 import React from "react";
 import { Text, SlideFade, Heading, Image, Flex } from "@chakra-ui/react";
 import rocket from "/images/rocket.png";
+import Button from "../../miscellaneous/ButtonComponent";
+import ButtonGradient from "../../../assets/svg/ButtonGradient";
 
-const BoostedSubmittedQuizInterface = ({ score, isOpen, submitLoad }) => {
+const BoostedSubmittedQuizInterface = ({
+  score,
+  isOpen,
+  submitLoad,
+  onViewReport,
+}) => {
+  // Added onViewReport prop
   const rocketStyle = {
     position: "relative",
     bottom: "-500%",
@@ -143,7 +151,6 @@ const BoostedSubmittedQuizInterface = ({ score, isOpen, submitLoad }) => {
                       ? "1.5x Boosted"
                       : `"Don't give up! Keep going!"`}
                   </Text>
-                  {/* <Heading>{score}</Heading> */}
                 </Flex>
               </Flex>
             </Flex>
@@ -219,6 +226,12 @@ const BoostedSubmittedQuizInterface = ({ score, isOpen, submitLoad }) => {
             the most of your boosts for even better scores before they expire!"
           </Text>
         )}
+        <Flex mt={4}>
+          <ButtonGradient />
+          <Button colorScheme="blue" onClick={onViewReport}>
+            View Report
+          </Button>
+        </Flex>
       </Flex>
     </SlideFade>
   );
