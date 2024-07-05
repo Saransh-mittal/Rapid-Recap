@@ -34,9 +34,10 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   const [activeCategory, setActiveCategory] = useState(state.category);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(
-    categories.findIndex(
+    categories?.findIndex(
       (category) =>
-        category.toLocaleLowerCase() === state.category.toLocaleLowerCase()
+        category?.toLocaleLowerCase() ===
+        (state.category || "all").toLocaleLowerCase()
     )
   );
   const categoryRefs = useRef([]);
@@ -91,16 +92,15 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   useEffect(() => {
     if (!load && !state.show && state.user && state.user.tutorial.homePage) {
-      isTutorialTakenCheck({ page: "homePage", tour });
+      // isTutorialTakenCheck({ page: "homePage", tour });
     }
   }, [load, state.show, state.user, isTutorialTakenCheck, tour]);
 
   useEffect(() => {
-    // Check if pathname exists and is valid
-    const pathCategory = location.pathname.split("/")[2] || "";
+    const pathCategory = location.pathname.split("/")[2] || "all";
     if (
       pathCategory &&
-      pathCategory.toLocaleLowerCase() !== state.category.toLocaleLowerCase()
+      pathCategory.toLocaleLowerCase() !== activeCategory.toLocaleLowerCase()
     ) {
       const idx = categories.findIndex(
         (cat) => cat.toLocaleLowerCase() === pathCategory.toLocaleLowerCase()
@@ -114,7 +114,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
         });
       }
     }
-  }, [location]);
+  }, [location, activeCategory]);
 
   const renderSkeletons = () => {
     return Array.from({ length: 9 }).map((_, index) => (
