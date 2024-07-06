@@ -7,6 +7,7 @@ const NewsAPI = require("newsapi");
 const axios = require("axios");
 const script_prepare_article_data = require("../scripts/script_prepare_article_data");
 const { averageReadTime, shuffleArray } = require("./miscellaneous.utils");
+const { Recommendation } = require("../model/recommendationSchema");
 const breakArticleIntoParagraphs = async (mainText) => {
   const tokenizer = new natural.SentenceTokenizer();
   // Use natural language processing to tokenize sentences
@@ -642,6 +643,39 @@ const getSecondTopArticle = async () => {
     console.log(error);
   }
 };
+
+const getTopThreeRecommendedArticles = async (userId) => {
+  try {
+    const userRecommendedArticles = await Recommendation.findOne({
+      user_id: userId,
+    }).select("recommendations");
+
+    let cnt = 4;
+    const articlesForMail = [];
+    for (const article of userRecommendedArticles.recommendations) {
+      if (cnt === 0) break;
+      const articleData = await Article.findById(article._id).select(
+        "title imgURL"
+      );
+      if (
+        !articleData ||
+        !articleData.imgURL ||
+        articleData.imgURL[0] === "" ||
+        articleData.title.length > 100
+      )
+        continue;
+      articlesForMail.push({
+        articleData,
+        link: `https://www.rapidrecap.co.in/article/${articleData._id.toString()}`,
+      });
+      cnt--;
+    }
+    return articlesForMail;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to fetch recommended articles");
+  }
+};
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
@@ -652,4 +686,5 @@ module.exports = {
   extractNewsUtilityFunc,
   getTopArticle,
   getSecondTopArticle,
+  getTopThreeRecommendedArticles,
 };

@@ -8,6 +8,7 @@ const {
   noLoginDaysSpentCalculator,
 } = require("./user.utils");
 const MailTemplates = require("../data/MailTemplates");
+const { getTopThreeRecommendedArticles } = require("./article.utils");
 
 //These id's and secrets should come from .env file.
 
@@ -67,7 +68,9 @@ const mailForStreakBroken = async () => {
     for (let user of users) {
       const streakBrokenDays = await streakBrokenDaysCalculator(user._id);
       const noLoginDaysSpent = await noLoginDaysSpentCalculator(user._id);
-
+      const articlesForMail = await getTopThreeRecommendedArticles(
+        user._id.toString()
+      );
       if (streakBrokenDays === 2) {
         await transporter.sendMail({
           from: MailTemplates.StreakJustBroken.from,
@@ -75,6 +78,7 @@ const mailForStreakBroken = async () => {
           subject: MailTemplates.StreakJustBroken.subject,
           html: MailTemplates.StreakJustBroken.html({
             name: user.name.split(" ")[0],
+            articlesForMail,
           }),
         });
       } else if (streakBrokenDays % 7 === 0 && streakBrokenDays > 2) {
@@ -85,6 +89,7 @@ const mailForStreakBroken = async () => {
           html: MailTemplates.StreakSevenPeriodic.html({
             name: user.name.split(" ")[0],
             streak_days: streakBrokenDays,
+            articlesForMail,
           }),
         });
       }
@@ -96,6 +101,7 @@ const mailForStreakBroken = async () => {
           subject: MailTemplates.noLoginFor2Days.subject,
           html: MailTemplates.noLoginFor2Days.html({
             name: user.name.split(" ")[0],
+            articlesForMail,
           }),
         });
       } else if (noLoginDaysSpent % 7 === 0 && noLoginDaysSpent > 2) {
@@ -106,6 +112,7 @@ const mailForStreakBroken = async () => {
           html: MailTemplates.noLoginForSevenPeriodic.html({
             name: user.name.split(" ")[0],
             inactive_days: noLoginDaysSpent,
+            articlesForMail,
           }),
         });
       }
@@ -127,6 +134,9 @@ const mailForMaintainStreakReminder = async ({ template }) => {
     //const updateProgress = progressBar(users.length);
     for (let user of users) {
       const streakBrokenDays = await streakBrokenDaysCalculator(user._id);
+      const articlesForMail = await getTopThreeRecommendedArticles(
+        user._id.toString()
+      );
 
       if (streakBrokenDays === 1) {
         await transporter.sendMail({
@@ -135,6 +145,7 @@ const mailForMaintainStreakReminder = async ({ template }) => {
           subject: template.subject,
           html: template.html({
             name: user.name.split(" ")[0],
+            articlesForMail,
           }),
         });
       }

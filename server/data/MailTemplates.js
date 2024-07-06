@@ -789,7 +789,7 @@ const MailTemplates = {
   </style>
   `,
 
-    html2: ({ name, QuinQuizNumber }) => `<html lang="en">
+    html2: ({ name, QuinQuizNumber, articlesForMail }) => `<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
