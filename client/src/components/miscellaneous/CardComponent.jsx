@@ -61,13 +61,13 @@ const BenefitCard = ({
           alignItems="center"
           justifyContent="flex-end"
         >
-          <Image
+          {/* <Image
             src={iconUrl}
             width={8}
             height={8}
             alt={title}
             background={"transparent"}
-          />
+          /> */}
           {/* <Text
             fontSize="xs"
             fontWeight="bold"
