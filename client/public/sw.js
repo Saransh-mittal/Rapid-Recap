@@ -4,12 +4,13 @@ self.addEventListener("push", (event) => {
   const data = event.data.json();
   //console.log("Push received", data);
   const notificationOptions = {
-    body: data.body,
+    body: data.body || null,
     icon: data.icon || RapidRecapLogo,
     image: data.image || null,
     data: { url: data.url }, // Pass additional data
   };
-  self.registration.showNotification(data.title, notificationOptions);
+  const title = data.title.replace(/(\.{3}|\…)/g, "...\n");
+  self.registration.showNotification(title, notificationOptions);
 });
 
 self.addEventListener("notificationclick", function (event) {

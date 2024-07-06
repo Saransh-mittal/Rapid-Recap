@@ -7,6 +7,7 @@ export default defineConfig({
     target: "esnext",
   },
   server: {
+    host: true, // This allows external connections
     proxy: {
       "/api": {
         target: "http://localhost:3000", // Replace with your backend server URL

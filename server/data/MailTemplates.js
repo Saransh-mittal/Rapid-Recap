@@ -1459,16 +1459,22 @@ const MailTemplates = {
   </body>
   </html>
 
-  <style>
-    div[style*="box-shadow"] {
-      transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-    }
-    div[style*="box-shadow"]:hover {
-      box-shadow: 0 0 15px rgba(0, 70, 106, 0.3);
-      transform: translateY(-5px);
-    }
-  </style>
-  `,
+<style>
+  div[style*="box-shadow"] {
+    transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+  div[style*="box-shadow"]:hover {
+    box-shadow: 0 0 15px rgba(0, 70, 106, 0.3);
+    transform: translateY(-5px);
+  }
+</style>
+`,
+    notif: ({ name }) => {
+      return {
+        title: `Keep Your Streak Alive! 🌟`,
+        body: `Hey ${name}, don't miss today's quiz! Keep your Rapid Recap streak going strong. 📚✨ Tap to log in now and stay on track!`,
+      };
+    },
   },
 
   streakMaintainReminder2: {
@@ -1605,6 +1611,12 @@ const MailTemplates = {
     }
   </style>
   `,
+    notif: ({ name }) => {
+      return {
+        title: `Last Chance to Keep Your Streak! ⏰`,
+        body: `Hey ${name}, the day is almost over! Don't miss out on today's quiz and keep your Rapid Recap streak alive. 🌟📚 Tap to log in now!`,
+      };
+    },
   },
 
   streakMaintainReminder3: {
@@ -1742,6 +1754,12 @@ const MailTemplates = {
     }
   </style>
   `,
+    notif: ({ name }) => {
+      return {
+        title: `Final Call to Keep Your Streak Alive! 🚨`,
+        body: `Hey ${name}, don't let your hard-earned streak end! Complete today's quiz now. 🌟📚 Tap to log in!`,
+      };
+    },
   },
 };
 
