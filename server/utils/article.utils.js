@@ -415,13 +415,13 @@ const extractNewsUtilityFunc = async (country = "") => {
   const newsDataIoCategories = [
     "business",
     "crime",
-    "domestic",
+    // "domestic",
     "education",
     "environment",
     "food",
     "health",
     "lifestyle",
-    "other",
+    // "other",
     "politics",
     "science",
     "technology",
@@ -549,10 +549,13 @@ const processDataIoCategories = async (
       language: "en",
       prioritydomain: "top",
       timezone: "Asia/Kolkata",
-      size: "10",
+      size: "5",
     };
     if (country) {
       queries.country = country;
+    }
+    if (category === "tourism") {
+      queries.size = "3";
     }
     const queryString = Object.entries(queries)
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)

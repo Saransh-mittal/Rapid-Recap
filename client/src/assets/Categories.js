@@ -11,11 +11,11 @@ export const categories = [
   "science",
   "environment",
   "crime",
-  "domestic",
+  // "domestic",
   "education",
   "entertainment",
   "food",
   "lifestyle",
   "tourism",
-  "other",
+  // "other",
 ];

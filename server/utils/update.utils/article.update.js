@@ -54,36 +54,55 @@ const { progressBar } = require("../progress.utils");
 
 // checkIndexes();
 
-const updateAverageReadTime = async () => {
-  console.log("Updating average read time for articles...");
+// const updateAverageReadTime = async () => {
+//   console.log("Updating average read time for articles...");
 
-  // Fetch all articles from the database without an average read time or with a null value or zero value
-  const articles = await Article.find({ avgReadTime: { $in: [null, 0] } });
-  const updateProgress = progressBar(articles.length);
-  for (const article of articles) {
-    const text = article.mainText;
+//   // Fetch all articles from the database without an average read time or with a null value or zero value
+//   const articles = await Article.find({ avgReadTime: { $in: [null, 0] } });
+//   const updateProgress = progressBar(articles.length);
+//   for (const article of articles) {
+//     const text = article.mainText;
 
-    // Remove the article if it has no text
-    if (!text || text.length === 0 || text === "") {
-      await Article.deleteOne({ _id: article._id });
+//     // Remove the article if it has no text
+//     if (!text || text.length === 0 || text === "") {
+//       await Article.deleteOne({ _id: article._id });
+//       updateProgress();
+//       continue;
+//     }
+
+//     // Calculate reading time in minutes
+//     const wordsPerMinute = 100;
+//     const plainText = text.replace(/<[^>]+>/g, ""); // Remove HTML tags
+//     const wordCount = plainText.split(/\s+/).length;
+//     const readingTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
+
+//     // Update the article's average read time
+//     article.avgReadTime = readingTimeMinutes;
+//     await article.save();
+//     updateProgress();
+//   }
+
+//   console.log("Average read time updated successfully!");
+// };
+
+// // Execute the function to update average read times
+// updateAverageReadTime();
+
+const changeDomesticAndOthersToGeneralCategory = async () => {
+  try {
+    const articles = await Article.find({
+      category: { $in: ["domestic", "other"] },
+    });
+
+    const updateProgress = progressBar(articles.length);
+    for (const article of articles) {
+      article.category = "general";
+      await article.save();
       updateProgress();
-      continue;
     }
-
-    // Calculate reading time in minutes
-    const wordsPerMinute = 100;
-    const plainText = text.replace(/<[^>]+>/g, ""); // Remove HTML tags
-    const wordCount = plainText.split(/\s+/).length;
-    const readingTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
-
-    // Update the article's average read time
-    article.avgReadTime = readingTimeMinutes;
-    await article.save();
-    updateProgress();
+  } catch (error) {
+    console.error("Error:", error);
   }
-
-  console.log("Average read time updated successfully!");
 };
 
-// Execute the function to update average read times
-updateAverageReadTime();
+changeDomesticAndOthersToGeneralCategory();
