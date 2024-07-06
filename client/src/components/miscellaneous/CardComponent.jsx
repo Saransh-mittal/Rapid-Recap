@@ -35,15 +35,24 @@ const BenefitCard = ({
           {title}
         </Heading>
         <Flex>
-          <Text fontSize="sm" mb={4} color="gray.500" textAlign={"left"}>
+          <Flex flexDirection={"column"}>
             {text.split("\n").map((line, index) => (
               <Flex key={index}>
                 <Flex marginRight={"5px"}>➤</Flex>
-                <Flex>{line}</Flex>
+                <Flex>
+                  <Text
+                    fontSize="sm"
+                    mb={4}
+                    color="gray.500"
+                    textAlign={"left"}
+                  >
+                    {line}
+                  </Text>{" "}
+                </Flex>
                 <br />
               </Flex>
             ))}
-          </Text>
+          </Flex>
         </Flex>
         <Flex
           mt="auto" // This pushes the Flex container to the bottom
