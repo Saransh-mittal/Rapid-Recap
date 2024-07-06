@@ -401,13 +401,13 @@ const extractNewsUtilityFunc = async (country = "") => {
   let apiKeys = [
     "9921240e42464f3589886811e71a3977",
     "88905479ff7c4564ae48aef8b23d56d0",
-    "e7409124fe384b688c07763501b270dd",
-    "7170746b5aa044069fbd5f48e74817ac",
+    "197c615648c946d8ab50590b4c9ab408", // squartal693@gmail.com
+    "dcd8cdcdb15c420d9e1d83d322962653", // muckhpoke@gmail.com
     "acd1bf365a084183b509789e0aae202a",
-    "a46513e934b14f44a9fa2137185f5438",
+    "11bc2812de624777ae7efed3feac7d54", // charizard.kento@gmail.com
     "fa26103bbdd849c3a4a6ff9f713a2a91",
     "e20b7e002db74c22b29beb122b72e8c8",
-    "7e4a7d41a3ed463a952349bfb07b1452",
+    "f5b9f1b4fa0342fe976664de66c71ca0", // inferno.sinho777@gmail.com
     "819c3bf3fab848a89741017dd5e67091",
   ];
   apiKeys = shuffleArray(apiKeys);
