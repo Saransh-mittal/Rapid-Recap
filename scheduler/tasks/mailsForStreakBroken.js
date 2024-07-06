@@ -2,6 +2,7 @@ const { mailForStreakBroken } = require("../../utils/mail.utils");
 
 async function sendStreakBrokenMails() {
   try {
+    console.log("Sending mails for streak Broken and no logins!!");
     await mailForStreakBroken();
     console.log("Mails for streak Broken and no logins sent successfully!!");
   } catch (error) {

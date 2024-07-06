@@ -19,6 +19,7 @@ const {
   commitSession,
   abortSession,
 } = require("../db/session.js");
+const { getTopThreeRecommendedArticles } = require("../utils/article.utils.js");
 
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken, quizId } = req.body;
@@ -178,6 +179,9 @@ const saveAttempt = async (req, res) => {
       type: activityTypes.RANDOM_QUIZ.type,
     });
     const quizzesToday = await currDayStreakCalulator(user._id);
+    const articlesForMail = await getTopThreeRecommendedArticles(
+      user._id.toString()
+    );
     if (quizzesToday % 7 === 4) {
       cancelScheduledEmails(user._id.toString());
       scheduleEmail({
@@ -188,6 +192,7 @@ const saveAttempt = async (req, res) => {
           name: user.name.split(" ")[0],
           noOfQuiz: quizzesToday,
           QuinQuizNumber: quizzesToday + 2,
+          articlesForMail,
         }),
         subject: MailTemplates.preQuinBoost.subject,
       });
@@ -212,6 +217,7 @@ const saveAttempt = async (req, res) => {
           name: user.name.split(" ")[0],
           noOfQuiz: quizzesToday,
           QuinQuizNumber: quizzesToday + 1,
+          articlesForMail,
         }),
         subject: MailTemplates.onQuinBoost.subject,
       });
@@ -223,6 +229,7 @@ const saveAttempt = async (req, res) => {
           name: user.name.split(" ")[0],
           noOfQuiz: quizzesToday,
           QuinQuizNumber: quizzesToday + 1,
+          articlesForMail,
         }),
         subject: `Reminder: ${MailTemplates.onQuinBoost.subject}`,
       });
@@ -233,6 +240,7 @@ const saveAttempt = async (req, res) => {
         mailHtml: MailTemplates.onQuinBoost.html2({
           name: user.name.split(" ")[0],
           QuinQuizNumber: quizzesToday + 1,
+          articlesForMail,
         }),
         subject: "Hurry Up 1 hour Left! Your Quin Boost is Active! 🌟",
       });
@@ -245,6 +253,7 @@ const saveAttempt = async (req, res) => {
         mailHtml: MailTemplates.postQuinBoost.html({
           name: user.name.split(" ")[0],
           noOfQuiz: quizzesToday,
+          articlesForMail,
         }),
         subject: MailTemplates.postQuinBoost.subject,
       });

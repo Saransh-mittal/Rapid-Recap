@@ -8,6 +8,8 @@ const {
   noLoginDaysSpentCalculator,
 } = require("./user.utils");
 const MailTemplates = require("../data/MailTemplates");
+const { getTopThreeRecommendedArticles } = require("./article.utils");
+const { sendNotification } = require("../services/notificationService");
 
 //These id's and secrets should come from .env file.
 
@@ -67,17 +69,34 @@ const mailForStreakBroken = async () => {
     for (let user of users) {
       const streakBrokenDays = await streakBrokenDaysCalculator(user._id);
       const noLoginDaysSpent = await noLoginDaysSpentCalculator(user._id);
-
+      const articlesForMail = await getTopThreeRecommendedArticles(
+        user._id.toString()
+      );
       if (streakBrokenDays === 2) {
+        await sendNotification({
+          userId: user._id,
+          title: "Let's Get Back on Track! 🔄",
+          body: `Hey ${user.name} 👋, your Rapid Recap streak was broken. Don't worry! Log in now to resume your daily quizzes and continue your journey to mastering knowledge. Consistency is key! 🚀📚`,
+          image:
+            "https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png",
+        });
         await transporter.sendMail({
           from: MailTemplates.StreakJustBroken.from,
           to: user.email,
           subject: MailTemplates.StreakJustBroken.subject,
           html: MailTemplates.StreakJustBroken.html({
             name: user.name.split(" ")[0],
+            articlesForMail,
           }),
         });
       } else if (streakBrokenDays % 7 === 0 && streakBrokenDays > 2) {
+        await sendNotification({
+          userId: user._id,
+          image:
+            "https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png",
+          title: "Restart Your Rapid Recap Quiz Streak Today!",
+          body: `Hey ${user.name}! You've missed your quiz streak for ${streakBrokenDays} days. Life gets busy, but we're here to help you get back on track. Tap to resume your learning journey with Rapid Recap! 🚀`,
+        });
         await transporter.sendMail({
           from: MailTemplates.StreakSevenPeriodic.from,
           to: user.email,
@@ -85,20 +104,36 @@ const mailForStreakBroken = async () => {
           html: MailTemplates.StreakSevenPeriodic.html({
             name: user.name.split(" ")[0],
             streak_days: streakBrokenDays,
+            articlesForMail,
           }),
         });
       }
 
       if (noLoginDaysSpent === 2) {
+        await sendNotification({
+          userId: user._id,
+          image:
+            "https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png",
+          title: "We Miss You! Resume Your Quiz Journey 🚀",
+          body: `Hey ${user.name}, it's been 2 days since we saw you on Rapid Recap. Jump back in and restart your learning journey! 🌟📚 Tap to continue.`,
+        });
         await transporter.sendMail({
           from: MailTemplates.noLoginFor2Days.from,
           to: user.email,
           subject: MailTemplates.noLoginFor2Days.subject,
           html: MailTemplates.noLoginFor2Days.html({
             name: user.name.split(" ")[0],
+            articlesForMail,
           }),
         });
       } else if (noLoginDaysSpent % 7 === 0 && noLoginDaysSpent > 2) {
+        await sendNotification({
+          userId: user._id,
+          image:
+            "https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png",
+          title: "It's Been a While! Restart Your Learning Journey 🚀",
+          body: `Hey ${user.name}, it's been ${noLoginDaysSpent} days since we saw you on Rapid Recap. Dive back in and explore our latest quizzes and content! 🌟📚 Tap to continue.`,
+        });
         await transporter.sendMail({
           from: MailTemplates.noLoginForSevenPeriodic.from,
           to: user.email,
@@ -106,6 +141,7 @@ const mailForStreakBroken = async () => {
           html: MailTemplates.noLoginForSevenPeriodic.html({
             name: user.name.split(" ")[0],
             inactive_days: noLoginDaysSpent,
+            articlesForMail,
           }),
         });
       }
@@ -127,14 +163,21 @@ const mailForMaintainStreakReminder = async ({ template }) => {
     //const updateProgress = progressBar(users.length);
     for (let user of users) {
       const streakBrokenDays = await streakBrokenDaysCalculator(user._id);
-
+      const articlesForMail = await getTopThreeRecommendedArticles(
+        user._id.toString()
+      );
       if (streakBrokenDays === 1) {
+        await sendNotification({
+          userId: user._id,
+          ...template.notif({ name: user.name.split(" ")[0] }),
+        });
         await transporter.sendMail({
           from: template.from,
           to: user.email,
           subject: template.subject,
           html: template.html({
             name: user.name.split(" ")[0],
+            articlesForMail,
           }),
         });
       }
