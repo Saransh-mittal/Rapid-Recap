@@ -10,6 +10,10 @@ const feedbackSchema = new mongoose.Schema({
     type: Object,
     required: true,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Feedback = mongoose.model("Feedback", feedbackSchema);
