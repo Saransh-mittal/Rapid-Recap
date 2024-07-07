@@ -8,6 +8,10 @@ import GetStarted from "./GetStarted";
 import XPLevel from "./XPLevel";
 import IQScore from "./IQScore";
 import { AppContext } from "../../../contextAPI/appContext";
+// import { FaFacebookMessenger } from "react-icons/fa";
+import Messenger from "../../../screens/Messenger";
+import { FaFacebookMessenger } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -30,6 +34,7 @@ const OutsideNavbarContent = ({
     return obj && Object.keys(obj).length === 0;
   };
   const { state } = useContext(AppContext);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -47,6 +52,16 @@ const OutsideNavbarContent = ({
         )}
         {!notLogined && (
           <>
+            {!isEmptyObject(user) && (
+              <Box
+                _hover={{
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate("/chats")}
+              >
+                <FaFacebookMessenger />
+              </Box>
+            )}
             {!isEmptyObject(user) && (
               <Box>
                 {" "}
