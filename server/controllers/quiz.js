@@ -204,6 +204,7 @@ const saveAttempt = async (req, res) => {
           name: user.name.split(" ")[0],
           noOfQuiz: quizzesToday,
           QuinQuizNumber: quizzesToday + 2,
+          articlesForMail,
         }),
         subject: `Reminder: ${MailTemplates.preQuinBoost.subject}`,
       });
