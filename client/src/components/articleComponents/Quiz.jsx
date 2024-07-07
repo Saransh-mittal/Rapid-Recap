@@ -46,6 +46,7 @@ const Quiz = ({
   isQuinBoostAvailable,
   setIsQuinBoostAvailable,
   setQuizLeftToGetQuizBoost,
+  fetchQuizTitans,
 }) => {
   const articleId = article._id;
   const { quizData, load, quizId, setLoad } = useFetchQuiz(
@@ -141,6 +142,7 @@ const Quiz = ({
   const handleClose = async () => {
     console.log("close");
     try {
+      fetchQuizTitans();
       quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,

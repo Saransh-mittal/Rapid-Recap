@@ -51,8 +51,6 @@ const getArticle = async (req, res) => {
       throw new Error("Article not found");
     }
     const paragraphs = await breakArticleIntoParagraphs(article.mainText);
-    //console.log(paragraphs);
-    //article.mainText = paragraphs;
     const relatedArticles = [];
     for (let relatedArticleID of article.relatedArticles) {
       const relatedArticleFetch = await Article.findById(
@@ -85,7 +83,6 @@ const getArticle = async (req, res) => {
       date: formatDate(article.dateTime),
       _id: article._id,
     };
-    //console.log(newArticle);
     let quizExpired = false;
     // if (article.quiz) {
     //   const quizId = article.quiz;
@@ -95,23 +92,29 @@ const getArticle = async (req, res) => {
     //     await article.save();
     //     throw new Error("Quiz not found, Please try again.");
     //   }
-    //   //console.log(fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000);
-    //   // if (fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()) {
-    //   //   //console.log("quiz expired");
-    //   //   //console.log(fullQuiz);
-    //   //   if (fullQuiz.isActive) {
-    //   //     //console.log("deactivating quiz");
-    //   //     await updatePercentilesOnQuizDeactivation({ id: article._id });
-    //   //     fullQuiz.isActive = false;
-    //   //     await fullQuiz.save();
-    //   //   }
-    //   //   quizExpired = true;
-    //   // }
+    //   if (fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()) {
+    //     if (fullQuiz.isActive) {
+    //       await updatePercentilesOnQuizDeactivation({ id: article._id });
+    //       fullQuiz.isActive = false;
+    //       await fullQuiz.save();
+    //     }
+    //     quizExpired = true;
+    //   }
     // }
+    res.status(201).send({ quizExpired, newArticle });
+  } catch (error) {
+    res.status(400).json({ error: error || "Something went wrong" });
+    console.log(error);
+  }
+};
+
+const getQuizTitan = async (req, res) => {
+  const { id } = req.params;
+  try {
     const totalUsersGivenQuiz = await QuizAttempt.find({
-      article: article._id,
+      article: id,
     }).countDocuments();
-    res.status(201).send({ quizExpired, newArticle, totalUsersGivenQuiz });
+    res.status(200).send({ totalUsersGivenQuiz });
   } catch (error) {
     res.status(400).json({ error: error || "Something went wrong" });
     console.log(error);
@@ -510,4 +513,5 @@ module.exports = {
   getWorldNews,
   extractNews,
   testNewsApi,
+  getQuizTitan,
 };

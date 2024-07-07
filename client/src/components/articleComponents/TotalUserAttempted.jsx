@@ -1,8 +1,19 @@
-import React, { useState } from "react";
+// File path: src/components/TotalUserAttempted.js
+
+import React, { useState, useEffect } from "react";
 import { Button, Flex, Text } from "@chakra-ui/react";
 import QuizTitansModal from "./QuizTitansModal";
+import { set } from "lodash";
+
 const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
   const [showQuizTitans, setShowQuizTitans] = useState(false);
+  const [updatedTotalUsersGivenQuiz, setUpdatedTotalUsersGivenQuiz] =
+    useState(totalUsersGivenQuiz);
+
+  useEffect(() => {
+    setUpdatedTotalUsersGivenQuiz(totalUsersGivenQuiz);
+  }, [totalUsersGivenQuiz]);
+
   return (
     <Flex
       style={
@@ -22,7 +33,7 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
         fontSize="18px"
         fontWeight="bold"
         letterSpacing={0.25}
-        color="#FDE2F3" // Change the color here
+        color="#FDE2F3"
         textAlign={"center"}
         w={"100%"}
         m={0}
@@ -35,7 +46,7 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
             padding: "8px",
           }}
         >
-          {totalUsersGivenQuiz}
+          {updatedTotalUsersGivenQuiz}
         </span>
       </Text>
       {showQuizTitans && (
