@@ -1,8 +1,30 @@
-import React, { useState } from "react";
+// File path: src/components/TotalUserAttempted.js
+
+import React, { useState, useEffect } from "react";
 import { Button, Flex, Text } from "@chakra-ui/react";
 import QuizTitansModal from "./QuizTitansModal";
+
 const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
   const [showQuizTitans, setShowQuizTitans] = useState(false);
+  const [updatedTotalUsersGivenQuiz, setUpdatedTotalUsersGivenQuiz] =
+    useState(totalUsersGivenQuiz);
+
+  // Function to fetch the updated total users given quiz
+  const fetchUpdatedTotalUsersGivenQuiz = () => {
+    // Simulate an API call with a timeout
+    setTimeout(() => {
+      const newTotal = updatedTotalUsersGivenQuiz + 1; // Simulating new total increment
+      setUpdatedTotalUsersGivenQuiz(newTotal);
+    }, 1000);
+  };
+
+  useEffect(() => {
+    // Fetch the updated total users given quiz when the component mounts or when showQuizTitans changes
+    if (showQuizTitans) {
+      fetchUpdatedTotalUsersGivenQuiz();
+    }
+  }, [showQuizTitans]);
+
   return (
     <Flex
       style={
@@ -22,7 +44,7 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
         fontSize="18px"
         fontWeight="bold"
         letterSpacing={0.25}
-        color="#FDE2F3" // Change the color here
+        color="#FDE2F3"
         textAlign={"center"}
         w={"100%"}
         m={0}
@@ -35,7 +57,7 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
             padding: "8px",
           }}
         >
-          {totalUsersGivenQuiz}
+          {updatedTotalUsersGivenQuiz}
         </span>
       </Text>
       {showQuizTitans && (
