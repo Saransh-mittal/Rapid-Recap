@@ -73,11 +73,29 @@ const Article = () => {
   const openModal = () => setIsQuinBoostModalOpen(true);
   const closeModal = () => setIsQuinBoostModalOpen(false);
 
+  const fetchQuizTitans = async () => {
+    try {
+      const response = await axios.get(`/api/articles/quizTitan/${id}`);
+      setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response.data.error || "Error fetching article",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+    } finally {
+      setLoad(false);
+    }
+  };
+
   const fetchArticle = async () => {
     try {
       const response = await axios.get(`/api/articles/article/${id}`);
       // console.log(response.data);
-      setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
+      // setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
       setLatestNews(response.data.newArticle.relatedArticles);
       setArticle(response.data.newArticle);
       setDateTime(response.data.newArticle.date);
@@ -187,6 +205,7 @@ const Article = () => {
     document.title = "Article page";
     quinBoostChecker({ setIsQuinBoostAvailable, setQuizLeftToGetQuizBoost });
     fetchArticle();
+    fetchQuizTitans();
     checkOnGoingQuiz();
   }, []);
 
@@ -305,6 +324,7 @@ const Article = () => {
       {/* {((showQuiz && !givenQuiz && !showQuizLangModal) || true) && !load ? ( */}
       {showQuiz && !givenQuiz && !showQuizLangModal ? (
         <Quiz
+          fetchQuizTitans={fetchQuizTitans}
           setIsQuinBoostAvailable={setIsQuinBoostAvailable}
           setQuizLeftToGetQuizBoost={setQuizLeftToGetQuizBoost}
           isQuinBoostAvailable={isQuinBoostAvailable}

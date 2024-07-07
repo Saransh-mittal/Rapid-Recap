@@ -3,27 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { Button, Flex, Text } from "@chakra-ui/react";
 import QuizTitansModal from "./QuizTitansModal";
+import { set } from "lodash";
 
 const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
   const [showQuizTitans, setShowQuizTitans] = useState(false);
   const [updatedTotalUsersGivenQuiz, setUpdatedTotalUsersGivenQuiz] =
     useState(totalUsersGivenQuiz);
 
-  // Function to fetch the updated total users given quiz
-  const fetchUpdatedTotalUsersGivenQuiz = () => {
-    // Simulate an API call with a timeout
-    setTimeout(() => {
-      const newTotal = updatedTotalUsersGivenQuiz + 1; // Simulating new total increment
-      setUpdatedTotalUsersGivenQuiz(newTotal);
-    }, 1000);
-  };
-
   useEffect(() => {
-    // Fetch the updated total users given quiz when the component mounts or when showQuizTitans changes
-    if (showQuizTitans) {
-      fetchUpdatedTotalUsersGivenQuiz();
-    }
-  }, [showQuizTitans]);
+    setUpdatedTotalUsersGivenQuiz(totalUsersGivenQuiz);
+  }, [totalUsersGivenQuiz]);
 
   return (
     <Flex
