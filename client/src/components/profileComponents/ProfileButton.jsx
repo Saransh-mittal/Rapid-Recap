@@ -1,6 +1,5 @@
 import { Button, Tag, Tooltip } from "@chakra-ui/react";
 import React from "react";
-import { GiHistogram } from "react-icons/gi";
 
 const ProfileButton = ({
   buttonText,
@@ -9,6 +8,7 @@ const ProfileButton = ({
   Private,
   hoverAnimation,
   onClick,
+  icon,
 }) => {
   return (
     <>
@@ -47,7 +47,7 @@ const ProfileButton = ({
           bgGradient: "linear(to-r, purple.500, pink.500)",
           transform: "scale(0.95)",
         }}
-        leftIcon={<GiHistogram />} // Add icon here
+        leftIcon={icon} // Add icon here
         onClick={onClick}
       >
         {buttonText}

@@ -7,14 +7,12 @@ import {
   SkeletonCircle,
   SkeletonText,
   Container,
-  Button,
   keyframes,
   useDisclosure,
-  Text,
-  Tag,
 } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
 import { GiHistogram } from "react-icons/gi"; // Import the icon
+import { FaBookmark } from "react-icons/fa";
 import { AppContext } from "../contextAPI/appContext";
 import IQLineGraph from "../components/profileComponents/IQLineGraph";
 import IQBarGraph from "../components/profileComponents/IQBarGraph";
@@ -31,6 +29,7 @@ import { findSocietyAndCircle } from "../utils/helper.utils.js";
 import ProfileExperienceLevel from "../components/profileComponents/ProfileExperienceLevel";
 import SeasonSelectorModal from "../components/profileComponents/SeasonSelectorModal.jsx";
 import ProfileButton from "../components/profileComponents/ProfileButton.jsx";
+import Bookmarks from "../components/profileComponents/Bookmarks.jsx";
 
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour();
@@ -57,7 +56,11 @@ export default function Profile() {
     onOpen: onOpenSeasonSelector,
     onClose: onCloseSeasonSelector,
   } = useDisclosure();
-
+  const {
+    isOpen: isOpenBookmarks,
+    onOpen: onOpenBookmarks,
+    onClose: onCloseBookmarks,
+  } = useDisclosure();
   const fetchProfile = async () => {
     setIsLoading(true);
     try {
@@ -315,6 +318,7 @@ export default function Profile() {
                   Private={state.user.profilePrivacy.seasonAnalytics}
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenSeasonSelector}
+                  icon={<GiHistogram />} // Add icon here
                 />
 
                 <SeasonSelectorModal
@@ -326,6 +330,49 @@ export default function Profile() {
                   profile={profile}
                   privacyProfileData={privacyProfileData}
                   loginedUserProfile={loginedUserProfile}
+                  inGameName={inGameName}
+                  seasons={profile?.seasons}
+                />
+              </Flex>
+            )
+          )}
+          {isLoading ? (
+            <>
+              <Skeleton
+                w={{ md: "85%", lg: "95%", base: "100%" }}
+                borderRadius="10px"
+                marginTop={"12px"}
+                height="50px"
+              />
+            </>
+          ) : (
+            inGameName == state.user.inGameName && (
+              <Flex
+                marginTop={"12px"}
+                padding="15px"
+                borderRadius="10px"
+                flexDirection="column"
+                w={{ md: "85%", lg: "95%", base: "100%" }}
+                height="fit-content"
+                justifyContent={"center"}
+                alignItems={"center"}
+                position={"relative"}
+              >
+                <ProfileButton
+                  buttonText="Bookmarks"
+                  inGameName={inGameName}
+                  stateUserInGameName={state.user.inGameName}
+                  Private={true}
+                  hoverAnimation={hoverAnimation}
+                  onClick={onOpenBookmarks}
+                  icon={<FaBookmark />} // Add icon here
+                />
+
+                <Bookmarks
+                  isOpen={isOpenBookmarks}
+                  onClose={onCloseBookmarks}
+                  isLoading={isLoading}
+                  profile={profile}
                   inGameName={inGameName}
                   seasons={profile?.seasons}
                 />

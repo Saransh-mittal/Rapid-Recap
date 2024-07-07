@@ -223,6 +223,12 @@ const userSchema = new mongoose.Schema(
         maxIQScore: Number,
       },
     ],
+    bookmarks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ARTICLE",
+      },
+    ],
     lastLogin: {
       type: Date,
       default: Date.now,

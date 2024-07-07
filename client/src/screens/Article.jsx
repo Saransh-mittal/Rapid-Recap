@@ -69,6 +69,7 @@ const Article = () => {
   const { quinTour } = useQuinBoostTour();
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false);
   const [isLargerThan820] = useMediaQuery("(min-width: 820px)");
+  const [bookmark, setBookmark] = useState(false);
 
   const openModal = () => setIsQuinBoostModalOpen(true);
   const closeModal = () => setIsQuinBoostModalOpen(false);
@@ -80,7 +81,7 @@ const Article = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: error.response.data.error || "Error fetching article",
+        description: error.response.data.error || "Error Quiz Titans",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -88,6 +89,24 @@ const Article = () => {
       });
     } finally {
       setLoad(false);
+    }
+  };
+
+  const bookmarkStatus = async ({ view, update }) => {
+    try {
+      const response = await axios.get(
+        `/api/user/bookmark?articleId=${id}&view=${view}&update=${update}`
+      );
+      setBookmark(response.data.bookmarkStatus);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response.data.error || "Error Bookmark Status",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
     }
   };
 
@@ -207,6 +226,7 @@ const Article = () => {
     fetchArticle();
     fetchQuizTitans();
     checkOnGoingQuiz();
+    bookmarkStatus({ view: true, update: false });
   }, []);
 
   useEffect(() => {
@@ -431,6 +451,8 @@ const Article = () => {
               handleLanguageChange={handleLanguageChange}
               dateTime={dateTime}
               avgTimeRead={avgTimeRead}
+              bookmark={bookmark}
+              bookmarkStatus={bookmarkStatus}
             />
 
             <Sidebar

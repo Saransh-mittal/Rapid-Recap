@@ -14,6 +14,8 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { LockIcon } from "@chakra-ui/icons";
+import { CiBookmark } from "react-icons/ci";
+import { FaBookmark } from "react-icons/fa";
 
 const MainArticleContent = ({
   avgTimeRead,
@@ -27,10 +29,11 @@ const MainArticleContent = ({
   alt_image,
   textRef,
   articleRef,
-  textHeight,
+  bookmarkStatus,
   state,
   handleLanguageChange,
   dateTime,
+  bookmark,
 }) => {
   const notLoggedIn = state.show;
   return (
@@ -58,25 +61,46 @@ const MainArticleContent = ({
               justifyContent={"space-between"}
               mb={3}
               flexDirection={{ base: "column", md: "row" }}
+              position={"relative"}
             >
-              <Heading
-                align="left"
-                letterSpacing={1}
-                as="h4"
-                fontSize="15px"
-                marginTop="10px"
-              >
-                <Highlight
-                  query="Author:"
-                  styles={{ px: "2", py: "1", rounded: "full", bg: "#F7EFE5" }}
-                  margin="5px"
+              <Flex>
+                <Heading
+                  align="left"
+                  letterSpacing={1}
+                  as="h4"
+                  fontSize="15px"
+                  marginTop="10px"
                 >
-                  Author:
-                </Highlight>
-                <span style={{ fontSize: "20px", marginLeft: "10px" }}>
-                  {author[selectedLanguage]}
-                </span>
-              </Heading>
+                  <Highlight
+                    query="Author:"
+                    styles={{
+                      px: "2",
+                      py: "1",
+                      rounded: "full",
+                      bg: "#F7EFE5",
+                    }}
+                    margin="5px"
+                  >
+                    Author:
+                  </Highlight>
+                  <span style={{ fontSize: "20px", marginLeft: "10px" }}>
+                    {author[selectedLanguage]}
+                  </span>
+                </Heading>
+                <Flex
+                  display={{ base: "none", md: "flex" }}
+                  mt={"10px"}
+                  ml={"10px"}
+                  cursor={"pointer"}
+                  onClick={() => bookmarkStatus({ view: false, update: true })}
+                >
+                  {bookmark ? (
+                    <FaBookmark size={30} color="red" />
+                  ) : (
+                    <CiBookmark size={30} />
+                  )}
+                </Flex>
+              </Flex>
               <Flex
                 h={"100%"}
                 w={{ base: "100%", md: "auto" }}
@@ -85,6 +109,19 @@ const MainArticleContent = ({
                 mt={{ base: "10px", md: "0" }}
                 justifyContent={{ base: "center", md: "null" }}
               >
+                <Flex
+                  display={{ base: "flex", md: "none" }}
+                  mt={"10px"}
+                  ml={"10px"}
+                  cursor={"pointer"}
+                  onClick={() => bookmarkStatus({ view: false, update: true })}
+                >
+                  {bookmark ? (
+                    <FaBookmark size={30} color="red" />
+                  ) : (
+                    <CiBookmark size={30} />
+                  )}
+                </Flex>
                 <Box position={"relative"}>
                   <Select
                     variant="outline"

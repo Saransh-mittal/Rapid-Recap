@@ -21,7 +21,7 @@ const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 // const { progressBar } = require("../utils/progress.utils");
 const QuinBoost = require("../model/quinBoostSchema");
 const MailTemplates = require("../data/MailTemplates.js");
-const { isValidEmail } = require("../utils/miscellaneous.utils.js");
+const { isValidEmail, formatDate } = require("../utils/miscellaneous.utils.js");
 const {
   startSession,
   commitSession,
@@ -30,6 +30,7 @@ const {
 const {
   generateRecommendations,
 } = require("../services/recommendationService.js");
+const Article = require("../model/articleSchema.js");
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -1238,6 +1239,67 @@ const seasonHistory = async (req, res) => {
   }
 };
 
+const bookmark = async (req, res) => {
+  const { articleId, view, update } = req.query;
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId);
+    const article = await Article.findById(articleId).select("_id");
+    if (!article) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+    const isBookmarked = user.bookmarks.includes(article._id);
+    if (view === "true" && update === "false") {
+      return res.status(200).json({ bookmarkStatus: isBookmarked });
+    }
+    if (isBookmarked) {
+      user.bookmarks = user.bookmarks.filter(
+        (bookmark) => bookmark.toString() !== article._id.toString()
+      );
+    } else {
+      user.bookmarks.push(article._id);
+    }
+    await user.save();
+    res.status(200).json({
+      message: "Bookmark updated successfully",
+      bookmarkStatus: !isBookmarked,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error);
+  }
+};
+
+const getBookmarks = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId).select("bookmarks").populate({
+      path: "bookmarks",
+      select: "_id title category dateTime imgURL",
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const bookmarks = user.bookmarks.map((bookmark) => {
+      return {
+        _id: bookmark._id,
+        title: bookmark.title,
+        category: bookmark.category,
+        date: formatDate(bookmark.dateTime),
+        image: bookmark.imgURL[0],
+        dateTimestamp: new Date(bookmark.dateTime).getTime(),
+      };
+    });
+    bookmarks.sort((a, b) => b.dateTimestamp - a.dateTimestamp);
+    res.status(200).json({ bookmarks });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1269,4 +1331,6 @@ module.exports = {
   quinBoostChecker,
   updateNewSeasonModal,
   seasonHistory,
+  bookmark,
+  getBookmarks,
 };
