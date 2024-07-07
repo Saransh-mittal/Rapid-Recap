@@ -30,6 +30,7 @@ import { Helmet } from "react-helmet";
 import { findSocietyAndCircle } from "../utils/helper.utils.js";
 import ProfileExperienceLevel from "../components/profileComponents/ProfileExperienceLevel";
 import SeasonSelectorModal from "../components/profileComponents/SeasonSelectorModal.jsx";
+import ProfileButton from "../components/profileComponents/ProfileButton.jsx";
 
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour();
@@ -307,48 +308,14 @@ export default function Profile() {
                 alignItems={"center"}
                 position={"relative"}
               >
-                {inGameName == state.user.inGameName && (
-                  <Tooltip label="Visibility to others">
-                    <Tag
-                      backgroundColor="#0f0d15"
-                      m={0}
-                      position={"absolute"}
-                      top={"1.2rem"}
-                      right={"1.2rem"}
-                      color={"#9CAFAA"}
-                      display={"flex"}
-                      justifyContent={"center"}
-                      alignItems={"center"}
-                      w={"60px"}
-                      height={"30px"}
-                      zIndex={1}
-                    >
-                      {state.user.profilePrivacy.seasonAnalytics
-                        ? "HIDDEN"
-                        : "VISIBLE"}
-                    </Tag>
-                  </Tooltip>
-                )}
-
-                <Button
-                  w={"100%"}
-                  bgGradient="linear(to-r, teal.500, blue.500)"
-                  color="white"
-                  fontWeight="bold"
-                  fontFamily="Arial, sans-serif"
-                  _hover={{
-                    bgGradient: "linear(to-r, red.500, yellow.500)",
-                    animation: `${hoverAnimation} 0.5s ease-in-out`,
-                  }}
-                  _active={{
-                    bgGradient: "linear(to-r, purple.500, pink.500)",
-                    transform: "scale(0.95)",
-                  }}
-                  leftIcon={<GiHistogram />} // Add icon here
+                <ProfileButton
+                  buttonText="Season Analytics"
+                  inGameName={inGameName}
+                  stateUserInGameName={state.user.inGameName}
+                  Private={state.user.profilePrivacy.seasonAnalytics}
+                  hoverAnimation={hoverAnimation}
                   onClick={onOpenSeasonSelector}
-                >
-                  Season Analytics
-                </Button>
+                />
 
                 <SeasonSelectorModal
                   privateSeasonAnalytics={privacyProfileData.seasonAnalytics}
