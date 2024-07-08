@@ -20,6 +20,7 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import rrImage from "/images/rr.png";
 
 const BookmarkCard = ({ bookmark, onClick, isLoading }) => (
   <Box
@@ -47,8 +48,18 @@ const BookmarkCard = ({ bookmark, onClick, isLoading }) => (
         <Skeleton height="100%" width="100%" />
       ) : (
         <Image
-          src={bookmark.image}
+          src={
+            bookmark.image &&
+            bookmark.image !== undefined &&
+            bookmark.image !== ""
+              ? bookmark.image
+              : rrImage
+          }
           alt={bookmark.title}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = rrImage;
+          }}
           position="absolute"
           top="0"
           left="0"
@@ -122,8 +133,18 @@ const BookmarkListItem = ({ bookmark, onClick, isLoading }) => (
       />
     ) : (
       <Image
-        src={bookmark.image}
+        src={
+          bookmark.image &&
+          bookmark.image !== undefined &&
+          bookmark.image !== ""
+            ? bookmark.image
+            : rrImage
+        }
         alt={bookmark.title}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = rrImage;
+        }}
         width={{ base: "60px", md: "80px", lg: "90px", xl: "100px" }}
         height={{ base: "60px", md: "80px", lg: "90px", xl: "100px" }}
         objectFit="cover"

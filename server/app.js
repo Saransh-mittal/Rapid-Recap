@@ -76,6 +76,7 @@ webpush.setVapidDetails(
 // require("./scripts/quizAttemptAndDailyIQUpdateSeason");
 // require("./scripts/collectionToCSV");
 // require("./scripts/script_prepare_article_data")();
+// require("./scripts/usersEnabledNotifs");
 // -------------------
 
 // const { exportDataToCSV } = require("./services/recommendationService");
