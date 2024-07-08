@@ -17,12 +17,15 @@ import {
   Text,
   VStack,
   Skeleton,
+  IconButton,
+  useToast,
 } from "@chakra-ui/react";
+import { CloseIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import rrImage from "/images/rr.png";
 
-const BookmarkCard = ({ bookmark, onClick, isLoading }) => (
+const BookmarkCard = ({ bookmark, onClick, onRemove, isLoading }) => (
   <Box
     borderRadius="8px"
     overflow="hidden"
@@ -42,6 +45,7 @@ const BookmarkCard = ({ bookmark, onClick, isLoading }) => (
       transition: "transform 0.3s",
     }}
     onClick={isLoading ? undefined : onClick}
+    position="relative"
   >
     <Box position="relative" pt="56.25%" overflow="hidden">
       {isLoading ? (
@@ -99,10 +103,25 @@ const BookmarkCard = ({ bookmark, onClick, isLoading }) => (
         </>
       )}
     </Box>
+    {!isLoading && (
+      <IconButton
+        icon={<CloseIcon />}
+        aria-label="Remove bookmark"
+        position="absolute"
+        top="5px"
+        right="5px"
+        size="sm"
+        colorScheme="red"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(bookmark._id);
+        }}
+      />
+    )}
   </Box>
 );
 
-const BookmarkListItem = ({ bookmark, onClick, isLoading }) => (
+const BookmarkListItem = ({ bookmark, onClick, onRemove, isLoading }) => (
   <HStack
     align="center"
     p="10px"
@@ -123,6 +142,7 @@ const BookmarkListItem = ({ bookmark, onClick, isLoading }) => (
       transition: "transform 0.3s",
     }}
     onClick={isLoading ? undefined : onClick}
+    position="relative"
   >
     {isLoading ? (
       <Skeleton
@@ -161,7 +181,7 @@ const BookmarkListItem = ({ bookmark, onClick, isLoading }) => (
         </>
       ) : (
         <>
-          <Heading fontSize="18px" mb="5px" color="#ffffff">
+          <Heading fontSize="18px" mb="5px" color="#ffffff" pr={"20px"}>
             {bookmark.title}
           </Heading>
           <Text
@@ -182,6 +202,21 @@ const BookmarkListItem = ({ bookmark, onClick, isLoading }) => (
         </>
       )}
     </Box>
+    {!isLoading && (
+      <IconButton
+        icon={<CloseIcon />}
+        aria-label="Remove bookmark"
+        position="absolute"
+        top="5px"
+        right="5px"
+        size="sm"
+        colorScheme="red"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(bookmark._id);
+        }}
+      />
+    )}
   </HStack>
 );
 
@@ -190,6 +225,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [bookmarks, setBookmarks] = useState([]);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const fetchBookmarks = async () => {
     try {
@@ -209,6 +245,28 @@ const Bookmarks = ({ isOpen, onClose }) => {
 
   const handleBookmarkClick = (id) => {
     navigate(`/article/${id}`);
+  };
+
+  const handleRemoveBookmark = async (articleId) => {
+    try {
+      await axios.get(`/api/user/removeBookmark?articleId=${articleId}`);
+      setBookmarks(bookmarks.filter((bookmark) => bookmark._id !== articleId));
+      toast({
+        title: "Bookmark removed",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error removing bookmark",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -259,7 +317,8 @@ const Bookmarks = ({ isOpen, onClose }) => {
                     <BookmarkCard
                       key={bookmark._id}
                       bookmark={bookmark}
-                      onClick={handleBookmarkClick.bind(this, bookmark._id)}
+                      onClick={() => handleBookmarkClick(bookmark._id)}
+                      onRemove={handleRemoveBookmark}
                     />
                   ))}
             </Grid>
@@ -273,7 +332,8 @@ const Bookmarks = ({ isOpen, onClose }) => {
                     <BookmarkListItem
                       key={bookmark._id}
                       bookmark={bookmark}
-                      onClick={handleBookmarkClick.bind(this, bookmark._id)}
+                      onClick={() => handleBookmarkClick(bookmark._id)}
+                      onRemove={handleRemoveBookmark}
                     />
                   ))}
             </VStack>
