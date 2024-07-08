@@ -38,10 +38,10 @@ let schedules = [
     "02:00",
     sendRecommendedNewsNotification
   ),
-  createSchedule("extractNews1", "02:25", () => extractNews("in")),
-  createSchedule("extractNews2", "09:00", () => extractNews(null)),
+  createSchedule("extractNews1", "02:25", () => extractNews(null)),
+  createSchedule("extractNews2", "09:00", () => extractNews("in")),
   createSchedule("extractNews3", "15:00", () => extractNews("in")),
-  createSchedule("extractNews4", "23:00", () => extractNews(null)),
+  createSchedule("extractNews4", "23:00", () => extractNews("in")),
   createSchedule("updateRecommendations", "01:00", updateDailyRecommendations),
   createSchedule("streakBrokenMails", "03:30", sendStreakBrokenMails),
   createSchedule(
