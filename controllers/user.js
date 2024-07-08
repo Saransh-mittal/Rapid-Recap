@@ -1300,6 +1300,25 @@ const getBookmarks = async (req, res) => {
   }
 };
 
+const removeBookmark = async (req, res) => {
+  const { articleId } = req.query;
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId);
+    const article = await Article.findById(articleId).select("_id");
+    if (!article) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+    user.bookmarks = user.bookmarks.filter(
+      (bookmark) => bookmark.toString() !== article._id.toString()
+    );
+    await user.save();
+    res.status(200).json({ message: "Bookmark removed successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+    console.log(error);
+  }
+};
 module.exports = {
   registerUser,
   loginUser,
@@ -1333,4 +1352,5 @@ module.exports = {
   seasonHistory,
   bookmark,
   getBookmarks,
+  removeBookmark,
 };

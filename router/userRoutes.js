@@ -33,6 +33,7 @@ const {
   updateNewSeasonModal,
   bookmark,
   getBookmarks,
+  removeBookmark,
   // mailForQuinBoost,
 } = require("../controllers/user");
 const { Authenticate } = require("../middleware/authenticate");
@@ -71,5 +72,6 @@ router.route("/newSeasonModal").get(Authenticate, updateNewSeasonModal);
 router.route("/seasonHistory/:inGameName").get(Authenticate, seasonHistory);
 router.route("/bookmark").get(Authenticate, bookmark);
 router.route("/getBookmarks").get(Authenticate, getBookmarks);
+router.route("/removeBookmark").get(Authenticate, removeBookmark);
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
 module.exports = router;
