@@ -23,9 +23,10 @@ import { useContext, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { AppContext } from "./contextAPI/appContext.jsx";
 // import Season from "./screens/Season.jsx";
-import { useDisclosure, useToast } from "@chakra-ui/react";
+import { Box, useDisclosure, useToast } from "@chakra-ui/react";
 import Dashboard from "./screens/Dashboard.jsx";
 import Signin from "./screens/Signin.jsx";
+import NotificationSubscription from "./components/Notifications/NotificationSubscription.jsx";
 
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
@@ -43,6 +44,21 @@ const App = () => {
   };
 
   useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/sw.js").then(
+          function (registration) {
+            console.log(
+              "ServiceWorker registration successful with scope: ",
+              registration.scope
+            );
+          },
+          function (err) {
+            console.log("ServiceWorker registration failed: ", err);
+          }
+        );
+      });
+    }
     const refreshAtMidnightUTC = () => {
       const now = new Date();
       const midnightUTC = new Date(
@@ -94,6 +110,11 @@ const App = () => {
 
   const shouldShowFooter = !location.pathname.includes("home");
 
+  const isSupported = () =>
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window;
+  const shouldShowNotification = !state.show && isSupported();
   return (
     <>
       <Helmet>
@@ -115,28 +136,35 @@ const App = () => {
           content="Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap."
         />
       </Helmet>
+
       <Navbar />
-      <Routes>
-        <Route exact path="/" element={<GetStarted />} />
-        <Route exact path="/contact/feedback" element={<ContactLayout />} />
-        <Route path="/home/:category" element={<Home />} />
-        <Route path="/home" element={<Home />} />
-        <Route exact path="/article/:id" element={<Article />} />
-        <Route path="/profile/:inGameName" element={<Profile />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route exact path="/contact" element={<ContactLayout />} />
-        <Route exact path="/leaderboard" element={<LeaderBoard />} />
-        {/* <Route exact path="/season" element={<Season />} /> */}
-        <Route
-          path="/dashboard"
-          element={
-            <AdminRoute>
-              <Dashboard />
-            </AdminRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Box
+        position="relative"
+        paddingTop={shouldShowNotification ? "64px" : "0"}
+      >
+        {shouldShowNotification && <NotificationSubscription />}
+        <Routes>
+          <Route exact path="/" element={<GetStarted />} />
+          <Route exact path="/contact/feedback" element={<ContactLayout />} />
+          <Route path="/home/:category" element={<Home />} />
+          <Route path="/home" element={<Home />} />
+          <Route exact path="/article/:id" element={<Article />} />
+          <Route path="/profile/:inGameName" element={<Profile />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route exact path="/contact" element={<ContactLayout />} />
+          <Route exact path="/leaderboard" element={<LeaderBoard />} />
+          {/* <Route exact path="/season" element={<Season />} /> */}
+          <Route
+            path="/dashboard"
+            element={
+              <AdminRoute>
+                <Dashboard />
+              </AdminRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Box>
       {shouldShowFooter && <Footer />}
     </>
   );

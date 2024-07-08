@@ -3,11 +3,9 @@ import Timeline from "../components/homeComponents/Timeline";
 import axios from "axios";
 import { AppContext } from "../contextAPI/appContext";
 import { useNavigate, useParams } from "react-router-dom";
-import useDrag from "../customHooks/useDrag";
 import { debounce } from "lodash";
 import { useToast, Box } from "@chakra-ui/react";
 import UpgradeModal from "../components/homeComponents/UpgradeModal";
-import NotificationSubscription from "../components/Notifications/NotificationSubscription";
 import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
 import { Helmet } from "react-helmet-async";
 
@@ -120,11 +118,6 @@ const Home = () => {
     }
   }, [category, page, prevCategory]);
 
-  const isSupported = () =>
-    "Notification" in window &&
-    "serviceWorker" in navigator &&
-    "PushManager" in window;
-
   return (
     <Box marginTop={"4rem"} w={"100%"}>
       <Helmet>
@@ -143,7 +136,6 @@ const Home = () => {
           content="Explore the latest news and articles on Rapid Recap. Stay informed and test your knowledge with our engaging quizzes."
         />
       </Helmet>
-      {!state.show && isSupported() ? <NotificationSubscription /> : null}
       {!state.show && USER_IQ > 90 && state.user.societyUpgradeMessage && (
         <UpgradeModal
           isOpen={showUpgradeModal}

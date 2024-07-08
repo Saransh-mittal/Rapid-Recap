@@ -1,9 +1,49 @@
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import { Box, ChakraProvider, extendTheme } from "@chakra-ui/react";
+import {
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Button,
+  List,
+  ListItem,
+  ListIcon,
+  VStack,
+  Text,
+  Spinner,
+} from "@chakra-ui/react";
+import { MdCheckCircle, MdError } from "react-icons/md";
+
+const StepStatus = ({ step, label }) => (
+  <ListItem>
+    <ListIcon
+      as={step === null ? Spinner : step ? MdCheckCircle : MdError}
+      color={step === null ? "blue.500" : step ? "green.500" : "red.500"}
+    />
+    <Text as={step === false ? "del" : "span"}>{label}</Text>
+    {step === null && " (Checking...)"}
+  </ListItem>
+);
 
 const NotificationSubscription = () => {
   const [subscription, setSubscription] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [instructionType, setInstructionType] = useState("site");
+  const [steps, setSteps] = useState({
+    browserSupport: null,
+    browserEnabled: null,
+    sitePermission: null,
+    backendSubscribed: null,
+  });
+  const [globalNotificationsAllowed, setGlobalNotificationsAllowed] =
+    useState(true);
+
+  const updateStep = (step, value) => {
+    setSteps((prev) => ({ ...prev, [step]: value }));
+  };
 
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -20,77 +60,301 @@ const NotificationSubscription = () => {
     return outputArray;
   }
 
-  const subscribe = async () => {
-    setIsLoading(true);
+  const checkBrowserNotificationSupport = () => {
+    const isSupported = "Notification" in window;
+    updateStep("browserSupport", isSupported);
+    return isSupported;
+  };
+
+  const checkBrowserNotificationEnabled = async () => {
+    if (!checkBrowserNotificationSupport()) return false;
+    console.log("Checking browser notification permission...");
+
     try {
-      const serviceWorker = await navigator.serviceWorker.register("/sw.js", {
-        scope: "/",
+      console.log("Requesting notification permission...");
+      const permission = await Notification.requestPermission();
+      console.log("Notification permission:", permission);
+      const isEnabled = permission === "granted";
+      updateStep("browserEnabled", isEnabled);
+      if (!isEnabled) {
+        await unsubscribe();
+      }
+
+      if (Notification.permission === "granted") {
+        updateStep("browserEnabled", true);
+        return true;
+      } else if (Notification.permission === "denied") {
+        console.log("Browser notifications denied");
+        updateStep("browserEnabled", false);
+        await unsubscribe();
+        return false;
+      }
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+      setGlobalNotificationsAllowed(false);
+      updateStep("browserEnabled", false);
+      await unsubscribe();
+      return false;
+    }
+  };
+
+  const createSubscription = async () => {
+    console.log("Creating subscription...");
+    const serviceWorker = await navigator.serviceWorker.register("/sw.js", {
+      scope: "/",
+    });
+    return await serviceWorker.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(
+        "BMtN9qkLo6TLtMK1erTFjiH_2Ivu9qd9cLpq3Cyiq0e8FHiDHtB022jiOB9d3HoocouCVUf6-scRF08RDzZ_kLY"
+      ),
+    });
+  };
+
+  const checkBackendSubscription = async () => {
+    try {
+      console.log("Checking if service worker is registered...");
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) {
+        console.log("No service worker registered. Attempting to register...");
+        await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        console.log("Service worker registered successfully.");
+      } else {
+        console.log("Service worker already registered.");
+      }
+
+      console.log("Waiting for service worker to become ready...");
+      const readyRegistration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Service Worker ready timeout")),
+            5000
+          )
+        ),
+      ]);
+      console.log("Service worker is ready.");
+      const subscription =
+        await readyRegistration.pushManager.getSubscription();
+      console.log("Existing subscription:", subscription);
+
+      if (!subscription) {
+        console.log("No existing subscription found");
+        updateStep("backendSubscribed", false);
+        return { isSubscribed: false, hasOtherSubscription: false };
+      }
+
+      console.log("Sending request to backend...");
+      const response = await fetch("/api/subs/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
       });
-      const subscription = await serviceWorker.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          "BMtN9qkLo6TLtMK1erTFjiH_2Ivu9qd9cLpq3Cyiq0e8FHiDHtB022jiOB9d3HoocouCVUf6-scRF08RDzZ_kLY"
-        ), // Use your public key here
-      });
-      await fetch("/api/subs/subscribe", {
+
+      console.log("Backend response:", response);
+
+      if (!response.ok) throw new Error("Failed to check backend subscription");
+
+      const data = await response.json();
+      console.log("Backend subscription check data:", data);
+      updateStep("backendSubscribed", data.isSubscribed);
+      return {
+        isSubscribed: data.isSubscribed,
+        hasOtherSubscription: data.hasOtherSubscription,
+      };
+    } catch (error) {
+      console.log("Backend subscription check error:", error);
+      updateStep("backendSubscribed", false);
+      return { isSubscribed: false, hasOtherSubscription: false };
+    }
+  };
+
+  const sendSubscriptionToBackend = async (subscription) => {
+    console.log("Sending subscription to backend...");
+    try {
+      const response = await fetch("/api/subs/subscribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(subscription),
       });
-      setSubscription(subscription);
-      Cookies.set("notificationSubscribed", true, { expires: 365 }); // expires in 1 year (permanently)
+      if (!response.ok) {
+        throw new Error("Failed to send subscription to backend");
+      }
     } catch (error) {
-      console.log(error);
+      console.log("Backend subscription error:", error);
+      throw error;
+    }
+  };
+
+  const subscribe = async () => {
+    setIsLoading(true);
+    try {
+      const subscription = await createSubscription();
+      await sendSubscriptionToBackend(subscription);
+      setSubscription(subscription);
+      updateStep("sitePermission", true);
+      updateStep("backendSubscribed", true);
+      Cookies.set("notificationSubscribed", "true", { expires: 365 });
+      Cookies.set("subscriptionComplete", "true", { expires: 365 });
+      setShowInstructions(false);
+    } catch (error) {
+      console.error("Subscription error:", error);
+      updateStep("sitePermission", false);
+      updateStep("backendSubscribed", false);
+      Cookies.remove("subscriptionComplete");
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    const notificationShown = Cookies.get("notificationShown");
-    const notificationSubscribed = Cookies.get("notificationSubscribed");
-    const currentPermission = Notification.permission;
+  const unsubscribe = async () => {
+    try {
+      console.log("Unsubscribing from notifications...");
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration) {
+        console.log("Service worker registration found");
+        const subscription = await registration.pushManager.getSubscription();
+        console.log("Existing subscription:", subscription);
+        if (subscription) {
+          await subscription.unsubscribe();
+          console.log("Unsubscribed from notifications");
+          await sendUnsubscriptionToBackend(subscription.endpoint);
+        }
+      }
+      Cookies.remove("notificationSubscribed");
+      Cookies.remove("subscriptionComplete");
+      setSubscription(null);
+      updateStep("sitePermission", false);
+      updateStep("backendSubscribed", false);
+    } catch (error) {
+      console.error("Error unsubscribing:", error);
+    }
+  };
+
+  const sendUnsubscriptionToBackend = async (endpoint) => {
+    try {
+      const response = await fetch("/api/subs/unsubscribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ endpoint }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to send unsubscription to backend");
+      }
+    } catch (error) {
+      console.error("Backend unsubscription error:", error);
+      throw error;
+    }
+  };
+
+  const checkAllSteps = async () => {
+    const lastPrompt = Cookies.get("lastNotificationPrompt");
+    const subscriptionComplete = Cookies.get("subscriptionComplete") === "true";
+    const currentTime = new Date().getTime();
 
     if (
-      !notificationShown &&
-      !notificationSubscribed &&
-      currentPermission !== "denied"
+      lastPrompt &&
+      currentTime - parseInt(lastPrompt) < 7 * 24 * 60 * 60 * 1000
     ) {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          subscribe();
-        }
+      setShowInstructions(false);
+    } else {
+      setShowInstructions(true);
+      Cookies.set("lastNotificationPrompt", currentTime.toString(), {
+        expires: 7,
       });
-      Cookies.set("notificationShown", true, { expires: 7 }); // expires in 7 days
-    } else if (notificationSubscribed === "true") {
-      // User has already subscribed, no need to prompt again
-    } else if (currentPermission === "denied" && !notificationShown) {
-      Cookies.set("notificationShown", true, { expires: 7 });
+    }
+    Cookies.remove("subscriptionComplete");
+
+    const isBrowserSupported = checkBrowserNotificationSupport();
+    if (!isBrowserSupported) {
+      setInstructionType("browser");
+      return;
     }
 
-    // Listen for changes to Notification permission
-    const handlePermissionChange = () => {
-      const newPermission = Notification.permission;
-      // console.log(newPermission);
-      if (newPermission === "granted") {
-        subscribe();
+    const isBrowserEnabled = await checkBrowserNotificationEnabled();
+    if (!isBrowserEnabled) {
+      setInstructionType(globalNotificationsAllowed ? "site" : "global");
+      return;
+    }
+
+    const { isSubscribed: backendSubscribed, hasOtherSubscription } =
+      await checkBackendSubscription();
+    updateStep("sitePermission", backendSubscribed);
+
+    if (!backendSubscribed) {
+      if (hasOtherSubscription) {
+        console.log("User is subscribed on another device/browser");
       }
-    };
+      await subscribe();
+    } else {
+      Cookies.set("notificationSubscribed", "true", { expires: 365 });
+      Cookies.set("subscriptionComplete", "true", { expires: 365 });
+      setShowInstructions(false);
+    }
+  };
 
-    Notification.requestPermission().then(handlePermissionChange);
-
-    // Add event listener for permissionchange event
-    document.addEventListener("permissionchange", handlePermissionChange);
-
-    return () => {
-      // Remove event listener when component unmounts
-      document.removeEventListener("permissionchange", handlePermissionChange);
-    };
+  useEffect(() => {
+    checkAllSteps();
   }, []);
 
-  return null; // No need to return any UI component
+  const content = (
+    <Box
+      position="fixed"
+      top="0"
+      left="0"
+      right="0"
+      zIndex="9999"
+      background={"transparent"}
+    >
+      <Alert
+        status="info"
+        variant="subtle"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        textAlign="center"
+        height="auto"
+        padding={4}
+        w={"50%"}
+        mt={"20px"}
+        marginX="auto"
+      >
+        <AlertIcon boxSize="40px" mr={0} />
+        <AlertTitle mt={4} mb={1} fontSize="lg">
+          Enable Notifications for Rapid Recap
+        </AlertTitle>
+        <AlertDescription maxWidth="sm">
+          <VStack spacing={3} align="stretch">
+            <List spacing={3}>
+              <StepStatus
+                step={steps.browserSupport}
+                label="Browser Supports Notifications"
+              />
+              <StepStatus
+                step={steps.browserEnabled}
+                label="Browser Notifications Enabled"
+              />
+              <StepStatus
+                step={steps.sitePermission}
+                label="Site Permission Granted"
+              />
+              <StepStatus
+                step={steps.backendSubscribed}
+                label="Subscribed to Backend"
+              />
+            </List>
+          </VStack>
+        </AlertDescription>
+      </Alert>
+    </Box>
+  );
+
+  return <ChakraProvider>{showInstructions && content}</ChakraProvider>;
 };
 
 export default NotificationSubscription;
