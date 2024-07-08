@@ -31,6 +31,8 @@ const {
   quinBoostChecker,
   seasonHistory,
   updateNewSeasonModal,
+  bookmark,
+  getBookmarks,
   // mailForQuinBoost,
 } = require("../controllers/user");
 const { Authenticate } = require("../middleware/authenticate");
@@ -67,5 +69,7 @@ router.route("/longestStreakCalculator").get(longestStreakCalculatorOfAllUsers);
 router.route("/quinBoostChecker").get(Authenticate, quinBoostChecker);
 router.route("/newSeasonModal").get(Authenticate, updateNewSeasonModal);
 router.route("/seasonHistory/:inGameName").get(Authenticate, seasonHistory);
+router.route("/bookmark").get(Authenticate, bookmark);
+router.route("/getBookmarks").get(Authenticate, getBookmarks);
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
 module.exports = router;
