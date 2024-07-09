@@ -21,3 +21,11 @@ self.addEventListener("notificationclick", function (event) {
   }
   event.notification.close();
 });
+
+self.addEventListener("install", (event) => {
+  console.log("Service Worker installed");
+});
+
+self.addEventListener("activate", (event) => {
+  console.log("Service Worker activated");
+});
