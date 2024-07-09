@@ -229,6 +229,11 @@ const userSchema = new mongoose.Schema(
         ref: "ARTICLE",
       },
     ],
+    isAdmin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     lastLogin: {
       type: Date,
       default: Date.now,
