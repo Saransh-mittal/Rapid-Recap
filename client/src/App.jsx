@@ -26,7 +26,7 @@ import { AppContext } from "./contextAPI/appContext.jsx";
 import { useDisclosure, useToast } from "@chakra-ui/react";
 import Dashboard from "./screens/Dashboard.jsx";
 import Signin from "./screens/Signin.jsx";
-import Messenger from "./screens/Messenger.jsx";
+import ChatPage from "./screens/ChatPage.jsx";
 
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
@@ -122,7 +122,7 @@ const App = () => {
         <Route exact path="/contact/feedback" element={<ContactLayout />} />
         <Route path="/home/:category" element={<Home />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/chats" element={<Messenger />} />
+        <Route path="/chats" element={<ChatPage />} />
         <Route exact path="/article/:id" element={<Article />} />
         <Route path="/profile/:inGameName" element={<Profile />} />
         <Route path="/profile" element={<Profile />} />

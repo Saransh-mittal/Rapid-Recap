@@ -9,7 +9,7 @@ import XPLevel from "./XPLevel";
 import IQScore from "./IQScore";
 import { AppContext } from "../../../contextAPI/appContext";
 // import { FaFacebookMessenger } from "react-icons/fa";
-import Messenger from "../../../screens/Messenger";
+// import Messenger from "../../../screens/Messenger";
 import { FaFacebookMessenger } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 

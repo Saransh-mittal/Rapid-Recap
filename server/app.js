@@ -11,6 +11,7 @@ const feedbackRoutes = require("./router/feedbackRoutes");
 const notificationRoutes = require("./router/notificationRoutes");
 const adminRoutes = require("./router/adminRoutes");
 const recommendationRoutes = require("./router/recommendationRoutes");
+// const chatsRoutes = require("./router/chatsRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -95,6 +96,7 @@ authRouter.use("/contact/feedback", feedbackRoutes);
 authRouter.use("/notify", notificationRoutes);
 authRouter.use("/admin", adminRoutes);
 authRouter.use("/recommendation", recommendationRoutes);
+// authRouter.use("/chats", chatsRoutes);
 app.use("/api", authRouter);
 
 app.listen(PORT, () => {
