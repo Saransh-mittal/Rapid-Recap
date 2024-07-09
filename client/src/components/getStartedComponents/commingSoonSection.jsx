@@ -17,6 +17,7 @@ import roadmap3 from "../../assets/roadmap/image-3.png";
 import roadmap4 from "../../assets/roadmap/image-4.png";
 import roadmap5 from "../../assets/roadmap/bookmark.png";
 import seasonUpdate from "../../assets/roadmap/seasonUpdate.png";
+import tournament from "../../assets/roadmap/tournament.png";
 import grid from "../../assets/grid.png";
 import gradientImage from "../../assets/gradient.png";
 import { useRef } from "react";
@@ -27,30 +28,35 @@ import { BottomLine, Gradient } from "./design/Roadmap";
 const roadmap = [
   {
     id: "0",
-    title: "IQ Quest: Seasonal Showdown",
-    text: `
-"Seasons" introduces dynamic user engagement by periodically adjusting rankings. This ensures lower-ranked users chances to challenge higher-ranked ones.
-    `,
-    date: "June 2024",
-    status: "done",
-    imageUrl: seasonUpdate,
-  },
-  {
-    id: "1",
-    title: "Bookmark feature",
-    text: "Capture the knowledge, keep it near. Save the words that you hold dear. With just a tap, I'm always here. Save me now, read me later. What am I?",
-    date: "July 2024",
-    status: "progress",
-    imageUrl: roadmap5,
-  },
-  {
-    id: "2",
     title: "Personalized Feed and Notifications",
     text: "Enjoy a tailored news and quiz experience with Rapid Recap's personalization feature, plus timely notifications to keep you updated and engaged with relevant content.",
     date: "June 2024",
     status: "done",
     imageUrl: roadmap2,
     colorful: true,
+  },
+  {
+    id: "1",
+    title: "Bookmark feature",
+    text: "Rapid Recap's new Bookmark feature lets you save, manage, and quickly access your favorite articles. Personalize your feed and track your reading progress easily. Stay informed effortlessly!",
+    date: "July 2024",
+    status: "done",
+    imageUrl: roadmap5,
+  },
+
+  {
+    id: "2",
+    title: "Tournament Mode",
+    text: `
+I come around every weekend,
+Where knowledge is the key to ascend.
+With five chances to prove you're wise,
+And on Monday, you'll see who gets the prize.
+What am I?
+    `,
+    date: "July 2024",
+    status: "progress",
+    imageUrl: tournament,
   },
   {
     id: "3",

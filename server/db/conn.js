@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(02.07.2024).json");
+// const updates = require("./updates/updates(09.07.2024).json");
 // const User = require("../model/userSchema");
 // const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 // const { progressBar } = require("../utils/progress.utils.js");
@@ -74,15 +74,15 @@ mongoose
 //           cnt--;
 //         }
 //         //console.log("User:", user.name);
-//         // const newUpdate = new ApplicationUpdates({
-//         //   title,
-//         //   mainText,
-//         //   img,
-//         //   userId: user._id, // Associate the update with the current user
-//         //   read,
-//         // });
-//         // await newUpdate.save();
-//         //console.log("Update saved:", title);
+//         const newUpdate = new ApplicationUpdates({
+//           title,
+//           mainText,
+//           img,
+//           userId: user._id, // Associate the update with the current user
+//           read,
+//         });
+//         await newUpdate.save();
+//         // console.log("Update saved:", title);
 //         const transporter = await mailTransporter();
 //         await transporter.sendMail({
 //           from: MailTemplates.AppUpdates.from,
@@ -115,14 +115,14 @@ mongoose
 //   }).select("_id");
 //   // const users = await User.find({ inGameName: "saransh_1234" }).select("_id");
 
-//   const updateTitle = `📢 Discover Your Personalized News Experience with Rapid Recap! 📰`;
-//   const url = "https://www.rapidrecap.co.in/home/all";
+//   const updateTitle = `📢 Introducing Bookmarks on Rapid Recap 📰`;
+//   const url = "https://www.rapidrecap.co.in/";
 //   for (let user of users) {
 //     await sendNotification({
 //       userId: user._id.toString(),
 //       title: updateTitle,
 //       url,
-//       icon: "https://res.cloudinary.com/dxstsrnbs/image/upload/v1719901928/image-2_j5jvxa.png",
+//       icon: "https://res.cloudinary.com/dxstsrnbs/image/upload/v1720508053/bookmark_1_h54dsd.png",
 //     });
 //   }
 //   console.log("Notification sent");
