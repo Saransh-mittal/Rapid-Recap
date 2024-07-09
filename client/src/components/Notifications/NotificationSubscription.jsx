@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { Box, ChakraProvider, extendTheme } from "@chakra-ui/react";
+import {
+  Box,
+  ChakraProvider,
+  CloseButton,
+  extendTheme,
+} from "@chakra-ui/react";
 import {
   Alert,
   AlertIcon,
@@ -16,17 +21,6 @@ import {
 } from "@chakra-ui/react";
 import { MdCheckCircle, MdError } from "react-icons/md";
 
-const StepStatus = ({ step, label }) => (
-  <ListItem>
-    <ListIcon
-      as={step === null ? Spinner : step ? MdCheckCircle : MdError}
-      color={step === null ? "blue.500" : step ? "green.500" : "red.500"}
-    />
-    <Text as={step === false ? "del" : "span"}>{label}</Text>
-    {step === null && " (Checking...)"}
-  </ListItem>
-);
-
 const NotificationSubscription = () => {
   const [subscription, setSubscription] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +34,15 @@ const NotificationSubscription = () => {
   });
   const [globalNotificationsAllowed, setGlobalNotificationsAllowed] =
     useState(true);
+  const [isAlertVisible, setIsAlertVisible] = useState(true);
+
+  const handleCloseAlert = () => {
+    setIsAlertVisible(false);
+    setShowInstructions(false);
+    Cookies.set("lastNotificationPrompt", new Date().getTime().toString(), {
+      expires: 7,
+    });
+  };
 
   const updateStep = (step, value) => {
     setSteps((prev) => ({ ...prev, [step]: value }));
@@ -68,12 +71,9 @@ const NotificationSubscription = () => {
 
   const checkBrowserNotificationEnabled = async () => {
     if (!checkBrowserNotificationSupport()) return false;
-    console.log("Checking browser notification permission...");
 
     try {
-      console.log("Requesting notification permission...");
       const permission = await Notification.requestPermission();
-      console.log("Notification permission:", permission);
       const isEnabled = permission === "granted";
       updateStep("browserEnabled", isEnabled);
       if (!isEnabled) {
@@ -113,17 +113,12 @@ const NotificationSubscription = () => {
 
   const checkBackendSubscription = async () => {
     try {
-      console.log("Checking if service worker is registered...");
       const registration = await navigator.serviceWorker.getRegistration();
       if (!registration) {
-        console.log("No service worker registered. Attempting to register...");
         await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-        console.log("Service worker registered successfully.");
       } else {
         console.log("Service worker already registered.");
       }
-
-      console.log("Waiting for service worker to become ready...");
       const readyRegistration = await Promise.race([
         navigator.serviceWorker.ready,
         new Promise((_, reject) =>
@@ -133,18 +128,15 @@ const NotificationSubscription = () => {
           )
         ),
       ]);
-      console.log("Service worker is ready.");
+
       const subscription =
         await readyRegistration.pushManager.getSubscription();
-      console.log("Existing subscription:", subscription);
 
       if (!subscription) {
-        console.log("No existing subscription found");
         updateStep("backendSubscribed", false);
         return { isSubscribed: false, hasOtherSubscription: false };
       }
 
-      console.log("Sending request to backend...");
       const response = await fetch("/api/subs/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -152,12 +144,9 @@ const NotificationSubscription = () => {
         body: JSON.stringify({ endpoint: subscription.endpoint }),
       });
 
-      console.log("Backend response:", response);
-
       if (!response.ok) throw new Error("Failed to check backend subscription");
 
       const data = await response.json();
-      console.log("Backend subscription check data:", data);
       updateStep("backendSubscribed", data.isSubscribed);
       return {
         isSubscribed: data.isSubscribed,
@@ -171,7 +160,6 @@ const NotificationSubscription = () => {
   };
 
   const sendSubscriptionToBackend = async (subscription) => {
-    console.log("Sending subscription to backend...");
     try {
       const response = await fetch("/api/subs/subscribe", {
         method: "POST",
@@ -212,15 +200,11 @@ const NotificationSubscription = () => {
 
   const unsubscribe = async () => {
     try {
-      console.log("Unsubscribing from notifications...");
       const registration = await navigator.serviceWorker.getRegistration();
       if (registration) {
-        console.log("Service worker registration found");
         const subscription = await registration.pushManager.getSubscription();
-        console.log("Existing subscription:", subscription);
         if (subscription) {
           await subscription.unsubscribe();
-          console.log("Unsubscribed from notifications");
           await sendUnsubscriptionToBackend(subscription.endpoint);
         }
       }
@@ -254,12 +238,16 @@ const NotificationSubscription = () => {
 
   const checkAllSteps = async () => {
     const lastPrompt = Cookies.get("lastNotificationPrompt");
-    const subscriptionComplete = Cookies.get("subscriptionComplete") === "true";
     const currentTime = new Date().getTime();
+    const isBrowserSupported = checkBrowserNotificationSupport();
+    const isBrowserEnabled = await checkBrowserNotificationEnabled();
+    const { isSubscribed: backendSubscribed, hasOtherSubscription } =
+      await checkBackendSubscription();
 
     if (
-      lastPrompt &&
-      currentTime - parseInt(lastPrompt) < 7 * 24 * 60 * 60 * 1000
+      (lastPrompt &&
+        currentTime - parseInt(lastPrompt) < 7 * 24 * 60 * 60 * 1000) ||
+      (isBrowserSupported && isBrowserEnabled && backendSubscribed)
     ) {
       setShowInstructions(false);
     } else {
@@ -270,20 +258,16 @@ const NotificationSubscription = () => {
     }
     Cookies.remove("subscriptionComplete");
 
-    const isBrowserSupported = checkBrowserNotificationSupport();
     if (!isBrowserSupported) {
       setInstructionType("browser");
       return;
     }
 
-    const isBrowserEnabled = await checkBrowserNotificationEnabled();
     if (!isBrowserEnabled) {
       setInstructionType(globalNotificationsAllowed ? "site" : "global");
       return;
     }
 
-    const { isSubscribed: backendSubscribed, hasOtherSubscription } =
-      await checkBackendSubscription();
     updateStep("sitePermission", backendSubscribed);
 
     if (!backendSubscribed) {
@@ -302,6 +286,17 @@ const NotificationSubscription = () => {
     checkAllSteps();
   }, []);
 
+  const StepStatus = ({ step, label }) => (
+    <ListItem>
+      <ListIcon
+        as={step === isLoading ? Spinner : step ? MdCheckCircle : MdError}
+        color={step === isLoading ? "blue.500" : step ? "green.500" : "red.500"}
+      />
+      <Text as={step === false ? "del" : "span"}>{label}</Text>
+      {step === null && " (Checking...)"}
+    </ListItem>
+  );
+
   const content = (
     <Box
       position="fixed"
@@ -312,25 +307,31 @@ const NotificationSubscription = () => {
       background={"transparent"}
     >
       <Alert
-        status="info"
-        variant="subtle"
+        status="warning"
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
-        textAlign="center"
         height="auto"
         padding={4}
-        w={"50%"}
+        w={{ base: "85%", md: "50%" }}
         mt={"20px"}
         marginX="auto"
+        color={"black"}
+        borderRadius={"xl"}
       >
+        <CloseButton
+          position="absolute"
+          right="8px"
+          top="8px"
+          onClick={handleCloseAlert}
+        />
         <AlertIcon boxSize="40px" mr={0} />
-        <AlertTitle mt={4} mb={1} fontSize="lg">
+        <AlertTitle mt={4} mb={3} fontSize="lg">
           Enable Notifications for Rapid Recap
         </AlertTitle>
         <AlertDescription maxWidth="sm">
           <VStack spacing={3} align="stretch">
-            <List spacing={3}>
+            <List spacing={3} p={0}>
               <StepStatus
                 step={steps.browserSupport}
                 label="Browser Supports Notifications"
@@ -354,7 +355,11 @@ const NotificationSubscription = () => {
     </Box>
   );
 
-  return <ChakraProvider>{showInstructions && content}</ChakraProvider>;
+  return (
+    <ChakraProvider>
+      {showInstructions && isAlertVisible && content}
+    </ChakraProvider>
+  );
 };
 
 export default NotificationSubscription;

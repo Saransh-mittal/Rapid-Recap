@@ -138,10 +138,7 @@ const App = () => {
       </Helmet>
 
       <Navbar />
-      <Box
-        position="relative"
-        paddingTop={shouldShowNotification ? "64px" : "0"}
-      >
+      <Box position="relative">
         {shouldShowNotification && <NotificationSubscription />}
         <Routes>
           <Route exact path="/" element={<GetStarted />} />
