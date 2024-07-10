@@ -5,69 +5,26 @@ import {
   useToast,
   Text,
   Stack,
+  Avatar,
 } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import GroupChatModal from "./miniComponents/GroupChatModal";
 import { ChatState } from "../../contextAPI/ChatProvider";
 import ChatSideDrawer from "./ChatSideDrawer";
 import { AddIcon } from "@chakra-ui/icons";
 import ChatLoading from "./ChatLoading";
 import Button from "../miscellaneous/ButtonComponent";
-
-const currentUser = {
-  _id: "user1",
-  name: "Current User",
-  email: "currentuser@example.com",
-};
-
-// Mock chat data
-const mockChats = [
-  {
-    _id: "chat1",
-    chatName: "John Doe",
-    isGroupChat: false,
-    users: [
-      { _id: "user1", name: "Current User" },
-      { _id: "user2", name: "John Doe" },
-    ],
-    latestMessage: {
-      sender: { _id: "user2", name: "John Doe" },
-      content: "Hey, how are you?",
-    },
-  },
-  {
-    _id: "chat2",
-    chatName: "Jane Smith",
-    isGroupChat: false,
-    users: [
-      { _id: "user1", name: "Current User" },
-      { _id: "user3", name: "Jane Smith" },
-    ],
-    latestMessage: {
-      sender: { _id: "user1", name: "Current User" },
-      content: "Looking forward to our meeting tomorrow!",
-    },
-  },
-  {
-    _id: "chat3",
-    chatName: "Project Team",
-    isGroupChat: true,
-    users: [
-      { _id: "user1", name: "Current User" },
-      { _id: "user2", name: "John Doe" },
-      { _id: "user3", name: "Jane Smith" },
-      { _id: "user4", name: "Bob Johnson" },
-    ],
-    latestMessage: {
-      sender: { _id: "user4", name: "Bob Johnson" },
-      content:
-        "I've updated the project timeline. Please review when you get a chance.",
-    },
-  },
-];
+import {
+  getRecieverInGameName,
+  getSender,
+  isSenderLoggedUser,
+} from "./config/ChatLogics";
+import { AppContext } from "../../contextAPI/appContext";
+import axios from "axios";
 
 const UserChats = ({ fetchAgain }) => {
-  const [loggedUser, setLoggedUser] = useState(currentUser);
+  const { state } = useContext(AppContext);
+  const [loggedUser, setLoggedUser] = useState();
 
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
 
@@ -75,8 +32,8 @@ const UserChats = ({ fetchAgain }) => {
 
   const fetchChats = async () => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setChats(mockChats);
+      const { data } = await axios.get("/api/chat");
+      setChats(data);
     } catch (error) {
       toast({
         title: "Error Occurred!",
@@ -84,19 +41,16 @@ const UserChats = ({ fetchAgain }) => {
         status: "error",
         duration: 5000,
         isClosable: true,
-        position: "bottom-left",
+        position: "top",
       });
     }
   };
 
   useEffect(() => {
+    setLoggedUser(state.user);
     fetchChats();
     // eslint-disable-next-line
   }, [fetchAgain]);
-
-  const getSender = (loggedUser, users) => {
-    return users[0]._id === loggedUser._id ? users[1].name : users[0].name;
-  };
 
   return (
     <Box
@@ -160,11 +114,7 @@ const UserChats = ({ fetchAgain }) => {
                 onClick={() => setSelectedChat(chat)}
                 cursor="pointer"
                 bg={selectedChat === chat ? "#38B2AC" : "#0f0d15"}
-                // color={selectedChat === chat ? "white" : "black"}
                 color={"white"}
-                // backgroundImage={
-                //   "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-                // }
                 boxShadow={
                   "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
                 }
@@ -174,14 +124,26 @@ const UserChats = ({ fetchAgain }) => {
                 borderRadius="lg"
                 key={chat._id}
               >
-                <Text>
-                  {!chat.isGroupChat
-                    ? getSender(loggedUser, chat.users)
-                    : chat.chatName}
-                </Text>
+                <Flex justifyContent={"space-between"} alignItems={"center"}>
+                  <Text>
+                    {!chat.isGroupChat
+                      ? getSender(loggedUser, chat.users)
+                      : chat.chatName}
+                  </Text>
+                  <Text fontSize="xs">
+                    {!chat.isGroupChat
+                      ? getRecieverInGameName(loggedUser, chat.users)
+                      : null}
+                  </Text>
+                </Flex>
                 {chat.latestMessage && (
                   <Text fontSize="xs">
-                    <b>{chat.latestMessage.sender.name} : </b>
+                    <b>
+                      {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
+                        ? "YOU"
+                        : chat.latestMessage.sender.name}{" "}
+                      :{" "}
+                    </b>
                     {chat.latestMessage.content.length > 50
                       ? chat.latestMessage.content.substring(0, 51) + "..."
                       : chat.latestMessage.content}

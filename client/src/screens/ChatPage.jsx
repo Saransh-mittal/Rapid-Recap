@@ -1,9 +1,7 @@
 import { Box, Flex } from "@chakra-ui/react";
-import React, { useContext, useState } from "react";
-import ChatSideDrawer from "../components/chatComponent/ChatSideDrawer";
+import React, { useState } from "react";
 import UserChats from "../components/chatComponent/userChats";
 import UserChatBox from "../components/chatComponent/userChatBox";
-// import { AppContext } from "../contextAPI/appContext";
 import { ChatState } from "../contextAPI/ChatProvider";
 
 const ChatPage = () => {
@@ -19,7 +17,6 @@ const ChatPage = () => {
     >
       <Box
         display="flex"
-        // justifyContent="space-between"
         justifyContent={"center"}
         w="100%"
         h="91.5vh"
@@ -31,7 +28,6 @@ const ChatPage = () => {
           w={{ base: "100%", md: "60%" }}
           mr={{ base: 0, md: 10 }}
         >
-          {/* {user && <ChatSideDrawer />} */}
           {user && <UserChats fetchAgain={fetchAgain} />}
         </Flex>
         <Flex

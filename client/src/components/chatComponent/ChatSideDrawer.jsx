@@ -15,6 +15,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerOverlay,
+  DrawerCloseButton,
 } from "@chakra-ui/modal";
 import { Flex, useBreakpointValue } from "@chakra-ui/react";
 import { Tooltip } from "@chakra-ui/tooltip";
@@ -30,8 +31,9 @@ import { Spinner } from "@chakra-ui/spinner";
 import { ChatState } from "../../contextAPI/ChatProvider";
 import Button from "../miscellaneous/ButtonComponent";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
+import { debounce } from "lodash";
 //import { getSender } from "../../config/ChatLogics";
-//import UserListItem from "../userAvatar/UserListItem";
+import UserListItem from "./userAvatar/UserListItem";
 
 // Mock Data
 const mockUsers = [
@@ -40,6 +42,15 @@ const mockUsers = [
   // Add more mock users here
 ];
 
+const debouncedSearch = debounce(async (query, callback) => {
+  try {
+    if (!query || query === "") return;
+    const response = await axios.get(`/api/user/search?query=${query}`);
+    callback(response.data);
+  } catch (error) {
+    console.error("Error searching users:", error);
+  }
+}, 800);
 const ChatSideDrawer = () => {
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
@@ -62,44 +73,29 @@ const ChatSideDrawer = () => {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const history = useNavigate();
-
-  const logoutHandler = () => {
-    localStorage.removeItem("userInfo");
-    history("/");
-  };
-
-  const handleSearch = async () => {
-    if (!search) {
-      toast({
-        title: "Please Enter something in search",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-        position: "top-left",
-      });
+  const handleSearch = async (event) => {
+    setLoading(true);
+    const { value } = event.target;
+    setSearch(value);
+    if (value === "") {
+      setLoading(false);
+      setSearchResult([]);
+      debouncedSearch.cancel();
       return;
     }
-
-    try {
-      setLoading(true);
-
-      // Mock API Call
-      const data = mockUsers.filter(
-        (user) => user.name.includes(search) || user.email.includes(search)
-      );
-
+    debouncedSearch(value, (responseData) => {
+      if (!value || value === "") return;
+      setSearchResult([...responseData]);
+      if (responseData.length === 0)
+        toast({
+          title: "No user found",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
       setLoading(false);
-      setSearchResult(data);
-    } catch (error) {
-      toast({
-        title: "Error Occurred!",
-        description: "Failed to Load the Search Results",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom-left",
-      });
-    }
+    });
   };
 
   const accessChat = async (userId) => {
@@ -107,9 +103,7 @@ const ChatSideDrawer = () => {
 
     try {
       setLoadingChat(true);
-
-      // Mock API Call
-      const data = { _id: userId, chatName: "Mock Chat" };
+      const { data } = await axios.post(`/api/chat`, { userId });
 
       if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
       setSelectedChat(data);
@@ -129,15 +123,7 @@ const ChatSideDrawer = () => {
 
   return (
     <>
-      <Box
-        display="flex"
-        alignItems="center"
-        w="100%"
-        p="5px 10px 5px 10px"
-
-        // color={"white"}
-        // flexDirection={"column"}
-      >
+      <Box display="flex" alignItems="center" w="100%" p="5px 10px 5px 10px">
         <ButtonGradient />
         <Tooltip
           label="Search Users to chat"
@@ -145,8 +131,6 @@ const ChatSideDrawer = () => {
           placement="bottom-end"
           color={"white"}
         >
-          {/* <Button variant="ghost" onClick={onOpen} colorScheme={"teal"}> */}
-
           <Button onClick={onOpen} buttonW={buttonW} textColor={"white"}>
             <Flex alignItems={"center"}>
               <Search2Icon />
@@ -207,26 +191,32 @@ const ChatSideDrawer = () => {
           }}
           color={"white"}
         >
+          <DrawerCloseButton />
           <DrawerHeader>Search Users</DrawerHeader>
-          <DrawerBody>
+          <DrawerBody
+            css={{
+              "&::-webkit-scrollbar": {
+                display: "none",
+              },
+            }}
+          >
             <Box display="flex" pb={2} gap={2}>
               <Input
-                placeholder="Search by name or email"
+                placeholder="Search by name or email..."
                 mr={2}
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={handleSearch}
               />
-              <Button onClick={handleSearch} buttonW={"80px"}>
-                Go
-              </Button>
             </Box>
             {loading ? (
               <Spinner />
             ) : (
               searchResult?.map((user) => (
-                <Box key={user._id} onClick={() => accessChat(user._id)}>
-                  {user.name}
-                </Box>
+                <UserListItem
+                  key={user._id}
+                  user={user}
+                  handleFunction={() => accessChat(user._id)}
+                />
               ))
             )}
             {loadingChat && <Spinner ml="auto" d="flex" />}

@@ -2,7 +2,7 @@ import { FormControl } from "@chakra-ui/form-control";
 import { Input } from "@chakra-ui/input";
 import { Box, Text } from "@chakra-ui/layout";
 import "../styles.css";
-import { IconButton, Spinner, useToast } from "@chakra-ui/react";
+import { IconButton, Spinner, useToast, Flex } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -35,25 +35,22 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       preserveAspectRatio: "xMidYMid slice",
     },
   };
-  const { selectedChat, setSelectedChat, user, notification, setNotification } =
-    ChatState();
+  const {
+    selectedChat,
+    setSelectedChat,
+    user,
+    notification,
+    setNotification,
+    setChats,
+  } = ChatState();
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
 
     try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      };
-
       setLoading(true);
 
-      const { data } = await axios.get(
-        `/api/message/${selectedChat._id}`,
-        config
-      );
+      const { data } = await axios.get(`/api/message/${selectedChat._id}`);
       setMessages(data);
       setLoading(false);
 
@@ -74,23 +71,33 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     if (event.key === "Enter" && newMessage) {
       socket.emit("stop typing", selectedChat._id);
       try {
-        const config = {
-          headers: {
-            "Content-type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-        };
         setNewMessage("");
-        const { data } = await axios.post(
-          "/api/message",
-          {
-            content: newMessage,
-            chatId: selectedChat,
-          },
-          config
-        );
+        const { data } = await axios.post("/api/message", {
+          content: newMessage,
+          chatId: selectedChat,
+        });
         socket.emit("new message", data);
         setMessages([...messages, data]);
+
+        setChats((prevChats) => {
+          const updatedChats = prevChats.map((chat) => {
+            if (chat._id === data.chat._id) {
+              return { ...chat, latestMessage: data };
+            }
+            return chat;
+          });
+
+          // Sort chats to bring the one with the new message to the top
+          return updatedChats.sort((a, b) => {
+            const aTime = a.latestMessage
+              ? new Date(a.latestMessage.createdAt).getTime()
+              : 0;
+            const bTime = b.latestMessage
+              ? new Date(b.latestMessage.createdAt).getTime()
+              : 0;
+            return bTime - aTime;
+          });
+        });
       } catch (error) {
         toast({
           title: "Error Occured!",
@@ -134,6 +141,26 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       } else {
         setMessages([...messages, newMessageRecieved]);
       }
+
+      setChats((prevChats) => {
+        const updatedChats = prevChats.map((chat) => {
+          if (chat._id === newMessageRecieved.chat._id) {
+            return { ...chat, latestMessage: newMessageRecieved };
+          }
+          return chat;
+        });
+
+        // Sort chats to bring the one with the new message to the top
+        return updatedChats.sort((a, b) => {
+          const aTime = a.latestMessage
+            ? new Date(a.latestMessage.createdAt).getTime()
+            : 0;
+          const bTime = b.latestMessage
+            ? new Date(b.latestMessage.createdAt).getTime()
+            : 0;
+          return bTime - aTime;
+        });
+      });
     });
   });
 
@@ -197,7 +224,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               ))}
           </Text>
           <Box
-            d="flex"
+            display="flex"
             flexDir="column"
             justifyContent="flex-end"
             p={3}
@@ -234,14 +261,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               mt={3}
             >
               {istyping ? (
-                <div>
+                <Flex marginBottom={15} marginLeft={0} w={"25%"}>
                   <Lottie
                     options={defaultOptions}
                     // height={50}
                     width={70}
-                    style={{ marginBottom: 15, marginLeft: 0 }}
+                    // style={{  }}
                   />
-                </div>
+                </Flex>
               ) : (
                 <></>
               )}

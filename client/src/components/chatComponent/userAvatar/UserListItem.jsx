@@ -1,26 +1,26 @@
 import { Avatar } from "@chakra-ui/avatar";
 import { Box, Text } from "@chakra-ui/layout";
-import { ChatState } from "../../../contextAPI/ChatProvider";
 
-const UserListItem = ({ handleFunction }) => {
-  const { user } = ChatState();
-
+const UserListItem = ({ handleFunction, user }) => {
   return (
     <Box
       onClick={handleFunction}
       cursor="pointer"
-      bg="#E8E8E8"
+      bg={"#0f0d15"}
       _hover={{
         background: "#38B2AC",
         color: "white",
       }}
+      color={"white"}
+      boxShadow={
+        "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
+      }
       w="100%"
       d="flex"
       alignItems="center"
-      color="black"
       px={3}
       py={2}
-      mb={2}
+      mb={4}
       borderRadius="lg"
     >
       <Avatar
@@ -32,9 +32,13 @@ const UserListItem = ({ handleFunction }) => {
       />
       <Box>
         <Text>{user.name}</Text>
+        <Text fontSize="xs" mb={0}>
+          <b>IQ Score : </b>
+          {user.IQ_score}
+        </Text>
         <Text fontSize="xs">
-          <b>Email : </b>
-          {user.email}
+          <b>InGameName : </b>
+          {user.inGameName}
         </Text>
       </Box>
     </Box>

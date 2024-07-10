@@ -13,6 +13,7 @@ const adminRoutes = require("./router/adminRoutes");
 const recommendationRoutes = require("./router/recommendationRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const chatsRoutes = require("./router/chatsRoutes");
+const messageRoutes = require("./router/messageRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -85,7 +86,7 @@ webpush.setVapidDetails(
 // exportDataToCSV();
 app.use(express.json());
 // Error Handling middlewares
-app.use(notFound);
+// app.use(notFound);
 app.use(errorHandler);
 // require("./scheduler/setupCronJobs");
 const PORT = process.env.PORT;
@@ -100,7 +101,8 @@ authRouter.use("/contact/feedback", feedbackRoutes);
 authRouter.use("/notify", notificationRoutes);
 authRouter.use("/admin", adminRoutes);
 authRouter.use("/recommendation", recommendationRoutes);
-authRouter.use("/chats", chatsRoutes);
+authRouter.use("/chat", chatsRoutes);
+authRouter.use("/message", messageRoutes);
 app.use("/api", authRouter);
 
 const server = app.listen(PORT, () => {
