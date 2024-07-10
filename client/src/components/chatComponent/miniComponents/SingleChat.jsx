@@ -1,20 +1,22 @@
+// SingleChat.jsx
 import { FormControl } from "@chakra-ui/form-control";
 import { Input } from "@chakra-ui/input";
 import { Box, Text } from "@chakra-ui/layout";
 import "../styles.css";
 import { IconButton, Spinner, useToast, Flex } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ProfileModal from "./ProfileModal";
 import ScrollableChat from "./ScrollableChat";
-import Lottie from "react-lottie";
-import animationData from "../animations/typing.json";
-
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
 import { ChatState } from "../../../contextAPI/ChatProvider";
+import { BsEmojiSmile, BsStickiesFill } from "react-icons/bs";
+import EmojiPicker from "emoji-picker-react";
+import StickerPicker from "./StickerPicker";
+
 const ENDPOINT = "http://localhost:3000"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
 var socket, selectedChatCompare;
 
@@ -25,16 +27,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
   const toast = useToast();
+  const emojiPickerRef = useRef(null);
+  const stickerPickerRef = useRef(null);
 
-  const defaultOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: animationData,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
-  };
   const {
     selectedChat,
     setSelectedChat,
@@ -57,7 +55,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       socket.emit("join chat", selectedChat._id);
     } catch (error) {
       toast({
-        title: "Error Occured!",
+        title: "Error Occurred!",
         description: "Failed to Load the Messages",
         status: "error",
         duration: 5000,
@@ -87,7 +85,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             return chat;
           });
 
-          // Sort chats to bring the one with the new message to the top
           return updatedChats.sort((a, b) => {
             const aTime = a.latestMessage
               ? new Date(a.latestMessage.createdAt).getTime()
@@ -100,7 +97,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         });
       } catch (error) {
         toast({
-          title: "Error Occured!",
+          title: "Error Occurred!",
           description: "Failed to send the Message",
           status: "error",
           duration: 5000,
@@ -118,39 +115,41 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket.on("typing", () => setIsTyping(true));
     socket.on("stop typing", () => setIsTyping(false));
 
-    // eslint-disable-next-line
+    return () => {
+      socket.off("connected");
+      socket.off("typing");
+      socket.off("stop typing");
+    };
   }, []);
 
   useEffect(() => {
     fetchMessages();
 
     selectedChatCompare = selectedChat;
-    // eslint-disable-next-line
   }, [selectedChat]);
 
   useEffect(() => {
-    socket.on("message recieved", (newMessageRecieved) => {
+    const handleNewMessage = (newMessageReceived) => {
       if (
-        !selectedChatCompare || // if chat is not selected or doesn't match current chat
-        selectedChatCompare._id !== newMessageRecieved.chat._id
+        !selectedChatCompare ||
+        selectedChatCompare._id !== newMessageReceived.chat._id
       ) {
-        if (!notification.includes(newMessageRecieved)) {
-          setNotification([newMessageRecieved, ...notification]);
+        if (!notification.includes(newMessageReceived)) {
+          setNotification([newMessageReceived, ...notification]);
           setFetchAgain(!fetchAgain);
         }
       } else {
-        setMessages([...messages, newMessageRecieved]);
+        setMessages([...messages, newMessageReceived]);
       }
 
       setChats((prevChats) => {
         const updatedChats = prevChats.map((chat) => {
-          if (chat._id === newMessageRecieved.chat._id) {
-            return { ...chat, latestMessage: newMessageRecieved };
+          if (chat._id === newMessageReceived.chat._id) {
+            return { ...chat, latestMessage: newMessageReceived };
           }
           return chat;
         });
 
-        // Sort chats to bring the one with the new message to the top
         return updatedChats.sort((a, b) => {
           const aTime = a.latestMessage
             ? new Date(a.latestMessage.createdAt).getTime()
@@ -161,8 +160,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           return bTime - aTime;
         });
       });
-    });
-  });
+    };
+
+    socket.on("message received", handleNewMessage);
+
+    return () => {
+      socket.off("message received", handleNewMessage);
+    };
+  }, [selectedChatCompare, notification, fetchAgain]);
 
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
@@ -185,6 +190,37 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }, timerLength);
   };
 
+  const onEmojiClick = (emojiObject) => {
+    setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
+  };
+
+  const onStickerSelect = (stickerUrl) => {
+    setNewMessage((prevMessage) => prevMessage + ` [sticker:${stickerUrl}] `);
+    setShowStickerPicker(false);
+  };
+
+  const handleClickOutside = (event) => {
+    if (
+      emojiPickerRef.current &&
+      !emojiPickerRef.current.contains(event.target)
+    ) {
+      setShowEmojiPicker(false);
+    }
+    if (
+      stickerPickerRef.current &&
+      !stickerPickerRef.current.contains(event.target)
+    ) {
+      setShowStickerPicker(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <>
       {selectedChat ? (
@@ -196,32 +232,40 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             w="100%"
             fontFamily="Work sans"
             display="flex"
+            flexDirection="column"
             justifyContent={{ base: "space-between" }}
             alignItems="center"
           >
-            <IconButton
-              d={{ base: "flex", md: "none" }}
-              icon={<ArrowBackIcon />}
-              onClick={() => setSelectedChat("")}
-            />
-            {messages &&
-              (!selectedChat.isGroupChat ? (
-                <>
-                  {getSender(user, selectedChat.users)}
-                  <ProfileModal
-                    user={getSenderFull(user, selectedChat.users)}
-                  />
-                </>
-              ) : (
-                <>
-                  {selectedChat.chatName.toUpperCase()}
-                  <UpdateGroupChatModal
-                    fetchMessages={fetchMessages}
-                    fetchAgain={fetchAgain}
-                    setFetchAgain={setFetchAgain}
-                  />
-                </>
-              ))}
+            <Flex w="100%" justifyContent="space-between" alignItems="center">
+              <IconButton
+                d={{ base: "flex", md: "none" }}
+                icon={<ArrowBackIcon />}
+                onClick={() => setSelectedChat("")}
+              />
+              {messages &&
+                (!selectedChat.isGroupChat ? (
+                  <>
+                    {getSender(user, selectedChat.users)}
+                    <ProfileModal
+                      user={getSenderFull(user, selectedChat.users)}
+                    />
+                  </>
+                ) : (
+                  <>
+                    {selectedChat.chatName.toUpperCase()}
+                    <UpdateGroupChatModal
+                      fetchMessages={fetchMessages}
+                      fetchAgain={fetchAgain}
+                      setFetchAgain={setFetchAgain}
+                    />
+                  </>
+                ))}
+            </Flex>
+            {istyping && (
+              <Text fontSize="xs" color="#05f03c">
+                is typing...
+              </Text>
+            )}
           </Text>
           <Box
             display="flex"
@@ -237,7 +281,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               backgroundImage:
                 "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
               boxShadow:
-                "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)", // Increased intensity of the shadow
+                "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
             }}
           >
             {loading ? (
@@ -260,30 +304,59 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               isRequired
               mt={3}
             >
-              {istyping ? (
-                <Flex marginBottom={15} marginLeft={0} w={"25%"}>
-                  <Lottie
-                    options={defaultOptions}
-                    // height={50}
-                    width={70}
-                    // style={{  }}
-                  />
-                </Flex>
-              ) : (
-                <></>
-              )}
-              <Input
-                variant="filled"
-                bg="#E0E0E0"
-                placeholder="Enter a message.."
-                value={newMessage}
-                onChange={typingHandler}
-              />
+              <Flex position="relative" alignItems="center">
+                <IconButton
+                  icon={<BsEmojiSmile />}
+                  onClick={() => {
+                    setShowEmojiPicker(!showEmojiPicker);
+                    setShowStickerPicker(false);
+                  }}
+                  variant="ghost"
+                />
+                <IconButton
+                  icon={<BsStickiesFill />}
+                  onClick={() => {
+                    setShowStickerPicker(!showStickerPicker);
+                    setShowEmojiPicker(false);
+                  }}
+                  variant="ghost"
+                  ml={2}
+                />
+                {showEmojiPicker && (
+                  <Box
+                    position="absolute"
+                    bottom="60px"
+                    left="0"
+                    zIndex={1}
+                    ref={emojiPickerRef}
+                  >
+                    <EmojiPicker onEmojiClick={onEmojiClick} />
+                  </Box>
+                )}
+                {showStickerPicker && (
+                  <Box
+                    position="absolute"
+                    bottom="60px"
+                    left="0"
+                    zIndex={1}
+                    ref={stickerPickerRef}
+                  >
+                    <StickerPicker onStickerSelect={onStickerSelect} />
+                  </Box>
+                )}
+                <Input
+                  variant="filled"
+                  bg="#E0E0E0"
+                  placeholder="Enter a message.."
+                  value={newMessage}
+                  onChange={typingHandler}
+                  ml={2}
+                />
+              </Flex>
             </FormControl>
           </Box>
         </>
       ) : (
-        // to get socket.io on same page
         <Box d="flex" alignItems="center" justifyContent="center" h="100%">
           <Text fontSize="3xl" pb={3} fontFamily="Work sans">
             Click on a user to start chatting
