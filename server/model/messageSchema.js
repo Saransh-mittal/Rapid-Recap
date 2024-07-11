@@ -6,6 +6,8 @@ const messageSchema = mongoose.Schema(
     content: { type: String, trim: true },
     chat: { type: mongoose.Schema.Types.ObjectId, ref: "Chat" },
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
+    isDeleted: { type: Boolean, default: false },
+    deletedFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
   },
   { timestamps: true }
 );

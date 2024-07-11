@@ -7,6 +7,15 @@ import {
   useToast,
   Flex,
   FormControl,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
 import { useEffect, useRef, useState } from "react";
@@ -25,6 +34,7 @@ const ENDPOINT = "http://localhost:3000"; // "https://talk-a-tive.herokuapp.com"
 var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -36,6 +46,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const toast = useToast();
   const emojiPickerRef = useRef(null);
   const stickerPickerRef = useRef(null);
+  const [deleteInfo, setDeleteInfo] = useState({ messageId: null, type: null });
 
   const {
     selectedChat,
@@ -56,6 +67,15 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       setMessages(data);
       setLoading(false);
 
+      data.forEach((message) => {
+        if (
+          message.sender._id !== user._id &&
+          !message.readBy.includes(user._id)
+        ) {
+          updateMessageReadBy(message._id);
+        }
+      });
+
       socket.emit("join chat", selectedChat._id);
     } catch (error) {
       toast({
@@ -66,6 +86,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         isClosable: true,
         position: "bottom",
       });
+    }
+  };
+
+  const updateMessageReadBy = async (messageId) => {
+    try {
+      await axios.put(`/api/message/readby/${messageId}`);
+    } catch (error) {
+      console.error("Error updating message read status:", error);
     }
   };
 
@@ -111,6 +139,53 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         });
       }
     }
+  };
+
+  const handleDeleteMessage = (messageId, type) => {
+    if (type === "everyone") {
+      setDeleteInfo({ messageId, type });
+      onOpen();
+    } else {
+      deleteMessage(messageId, type);
+    }
+  };
+
+  const deleteMessage = async (messageId, type) => {
+    try {
+      await axios.delete(`/api/message/${messageId}`, {
+        data: { deleteType: type },
+      });
+      setMessages(
+        messages.map((msg) =>
+          msg._id === messageId
+            ? type === "everyone"
+              ? (msg.isDeleted = true)
+              : msg.deletedFor.push(user._id)
+            : msg
+        )
+      );
+      toast({
+        title: "Message deleted",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } catch (error) {
+      toast({
+        title: "Error deleting message",
+        description: error.response?.data?.message || "An error occurred",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+
+  const confirmDelete = () => {
+    deleteMessage(deleteInfo.messageId, deleteInfo.type);
+    onClose();
   };
 
   useEffect(() => {
@@ -300,7 +375,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               />
             ) : (
               <div className="messages">
-                <ScrollableChat messages={messages} />
+                <ScrollableChat
+                  messages={messages}
+                  handleDeleteMessage={handleDeleteMessage}
+                />
               </div>
             )}
 
@@ -375,6 +453,24 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           </Text>
         </Box>
       )}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Delete Message</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            Are you sure you want to delete this message for everyone?
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="red" mr={3} onClick={confirmDelete}>
+              Delete for Everyone
+            </Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

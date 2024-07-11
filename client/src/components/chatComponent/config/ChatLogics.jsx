@@ -57,3 +57,7 @@ export const getRecieverPic = (loggedUser, users) => {
 export const getSenderFull = (loggedUser, users) => {
   return users[0]._id === loggedUser._id ? users[1] : users[0];
 };
+
+export const isMessageDeletedForUser = (message, userId) => {
+  return message?.deletedFor?.includes(userId);
+};
