@@ -36,12 +36,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const toast = useToast();
   const emojiPickerRef = useRef(null);
   const stickerPickerRef = useRef(null);
-  const scrollableStyle = {
-    height: "100%",
-    overflowY: "auto",
-    msOverflowStyle: "none", // IE and Edge
-    scrollbarWidth: "none", // Firefox
-  };
 
   const {
     selectedChat,
@@ -305,7 +299,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 margin="auto"
               />
             ) : (
-              <div className="messages" style={scrollableStyle}>
+              <div className="messages">
                 <ScrollableChat messages={messages} />
               </div>
             )}
