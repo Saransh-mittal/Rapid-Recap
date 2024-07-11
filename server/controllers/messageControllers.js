@@ -33,6 +33,7 @@ const sendMessage = asyncHandler(async (req, res) => {
     sender: req.user._id,
     content: content,
     chat: chatId,
+    sent: true,
   };
 
   try {
@@ -131,9 +132,32 @@ const deleteMessage = asyncHandler(async (req, res) => {
   }
 });
 
+const messageStatus = asyncHandler(async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { status } = req.body; // 'delivered' or 'read'
+
+    let update = {};
+    if (status === "delivered") {
+      update.delivered = true;
+    } else if (status === "read") {
+      update.delivered = true;
+      update.$addToSet = { readBy: req.user._id };
+    }
+
+    const message = await Message.findByIdAndUpdate(messageId, update, {
+      new: true,
+    });
+    res.json(message);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = {
   allMessages,
   sendMessage,
   deleteMessage,
   updateMessageReadBy,
+  messageStatus,
 };

@@ -141,6 +141,39 @@ io.on("connection", (socket) => {
 
       socket.in(user._id).emit("message recieved", newMessageRecieved);
     });
+    socket.emit("message sent", newMessageReceived._id);
+  });
+  // New event listener for message delivered
+  socket.on("message delivered", async ({ messageId, userId }) => {
+    try {
+      // Update message as delivered in the database
+      await Message.findByIdAndUpdate(messageId, { delivered: true });
+
+      // Broadcast to sender
+      socket
+        .to(userId)
+        .emit("message status updated", { messageId, status: "delivered" });
+    } catch (error) {
+      console.error("Error updating message delivery status:", error);
+    }
+  });
+
+  // New event listener for message read
+  socket.on("message read", async ({ messageId, userId }) => {
+    try {
+      // Update message as read in the database
+      await Message.findByIdAndUpdate(messageId, {
+        delivered: true,
+        $addToSet: { readBy: userId },
+      });
+
+      // Broadcast to sender
+      socket
+        .to(userId)
+        .emit("message status updated", { messageId, status: "read" });
+    } catch (error) {
+      console.error("Error updating message read status:", error);
+    }
   });
 
   socket.off("setup", () => {

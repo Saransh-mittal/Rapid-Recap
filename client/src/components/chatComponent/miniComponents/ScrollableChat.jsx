@@ -13,6 +13,7 @@ import { ChatState } from "../../../contextAPI/ChatProvider";
 import { Box, Text } from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./ContextMenu";
+import { BsCheck, BsCheckAll, BsClock } from "react-icons/bs";
 
 const ScrollableChat = ({ messages, handleDeleteMessage }) => {
   const { user } = ChatState();
@@ -120,6 +121,20 @@ const ScrollableChat = ({ messages, handleDeleteMessage }) => {
     };
   }, []);
 
+  const MessageStatus = ({ message }) => {
+    if (message.sender._id !== user._id) return null;
+
+    if (!message.sent) {
+      return <BsClock color="#999" size={16} />;
+    } else if (message.sent && !message.delivered) {
+      return <BsCheck color="#999" size={16} />;
+    } else if (message.delivered && message.readBy.length === 0) {
+      return <BsCheckAll color="#999" size={16} />;
+    } else if (message.readBy.length > 0) {
+      return <BsCheckAll color="#34B7F1" size={16} />;
+    }
+  };
+
   return (
     <>
       <style>
@@ -201,7 +216,7 @@ const ScrollableChat = ({ messages, handleDeleteMessage }) => {
                       ? "This message was deleted for you"
                       : m.content}
                   </Text>
-                  {m.sender._id.toString() === user._id.toString() && (
+                  {/* {m.sender._id.toString() === user._id.toString() && (
                     <Text
                       fontSize="xs"
                       color="gray.500"
@@ -211,16 +226,22 @@ const ScrollableChat = ({ messages, handleDeleteMessage }) => {
                     >
                       {m.readBy.length > 0 ? "Read" : "Sent"}
                     </Text>
-                  )}
+                  )} */}
                   <div
                     style={{
                       fontSize: "0.75rem",
                       color: "#555",
                       textAlign: "right",
                       marginTop: "2px",
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
                     }}
                   >
                     {formatTime(m.createdAt)}
+                    <span style={{ marginLeft: "4px" }}>
+                      <MessageStatus message={m} />
+                    </span>
                   </div>
                 </span>
               </Box>
