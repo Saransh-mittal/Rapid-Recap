@@ -4,7 +4,7 @@ import { Box, Text } from "@chakra-ui/layout";
 import "../styles.css";
 import { IconButton, Spinner, useToast, Flex } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ProfileModal from "./ProfileModal";
@@ -15,6 +15,9 @@ import animationData from "../animations/typing.json";
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
 import { ChatState } from "../../../contextAPI/ChatProvider";
+import { BsEmojiSmile, BsStickiesFill } from "react-icons/bs";
+import EmojiPicker from "emoji-picker-react";
+import StickerPicker from "./StickerPicker";
 const ENDPOINT = "http://localhost:3000"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
 var socket, selectedChatCompare;
 
@@ -25,16 +28,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
   const toast = useToast();
+  const emojiPickerRef = useRef(null);
+  const stickerPickerRef = useRef(null);
 
-  const defaultOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: animationData,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
-  };
   const {
     selectedChat,
     setSelectedChat,
@@ -168,7 +167,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     setNewMessage(e.target.value);
 
     if (!socketConnected) return;
-
+    if (e.target.value === "") {
+      socket.emit("stop typing", selectedChat._id);
+      setTyping(false);
+      return;
+    }
     if (!typing) {
       setTyping(true);
       socket.emit("typing", selectedChat._id);
@@ -185,11 +188,42 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }, timerLength);
   };
 
+  const onEmojiClick = (emojiObject) => {
+    setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
+  };
+
+  const onStickerSelect = (stickerUrl) => {
+    setNewMessage((prevMessage) => prevMessage + ` [sticker:${stickerUrl}] `);
+    setShowStickerPicker(false);
+  };
+
+  const handleClickOutside = (event) => {
+    if (
+      emojiPickerRef.current &&
+      !emojiPickerRef.current.contains(event.target)
+    ) {
+      setShowEmojiPicker(false);
+    }
+    if (
+      stickerPickerRef.current &&
+      !stickerPickerRef.current.contains(event.target)
+    ) {
+      setShowStickerPicker(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <>
       {selectedChat ? (
         <>
-          <Text
+          <Flex
             fontSize={{ base: "28px", md: "30px" }}
             pb={3}
             px={2}
@@ -198,6 +232,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             display="flex"
             justifyContent={{ base: "space-between" }}
             alignItems="center"
+            position={"relative"}
           >
             <IconButton
               d={{ base: "flex", md: "none" }}
@@ -222,7 +257,19 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   />
                 </>
               ))}
-          </Text>
+            {istyping && (
+              <Text
+                fontSize="xs"
+                color="#05f03c"
+                position={"absolute"}
+                bottom={"-1rem"}
+                left={"47%"}
+              >
+                is typing...
+              </Text>
+            )}
+          </Flex>
+
           <Box
             display="flex"
             flexDir="column"
@@ -260,25 +307,55 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               isRequired
               mt={3}
             >
-              {istyping ? (
-                <Flex marginBottom={15} marginLeft={0} w={"25%"}>
-                  <Lottie
-                    options={defaultOptions}
-                    // height={50}
-                    width={70}
-                    // style={{  }}
-                  />
-                </Flex>
-              ) : (
-                <></>
-              )}
-              <Input
-                variant="filled"
-                bg="#E0E0E0"
-                placeholder="Enter a message.."
-                value={newMessage}
-                onChange={typingHandler}
-              />
+              <Flex position="relative" alignItems="center">
+                <IconButton
+                  icon={<BsEmojiSmile />}
+                  onClick={() => {
+                    setShowEmojiPicker(!showEmojiPicker);
+                    setShowStickerPicker(false);
+                  }}
+                  variant="ghost"
+                />
+                <IconButton
+                  icon={<BsStickiesFill />}
+                  onClick={() => {
+                    setShowStickerPicker(!showStickerPicker);
+                    setShowEmojiPicker(false);
+                  }}
+                  variant="ghost"
+                  ml={2}
+                />
+                {showEmojiPicker && (
+                  <Box
+                    position="absolute"
+                    bottom="60px"
+                    left="0"
+                    zIndex={1}
+                    ref={emojiPickerRef}
+                  >
+                    <EmojiPicker onEmojiClick={onEmojiClick} />
+                  </Box>
+                )}
+                {showStickerPicker && (
+                  <Box
+                    position="absolute"
+                    bottom="60px"
+                    left="0"
+                    zIndex={1}
+                    ref={stickerPickerRef}
+                  >
+                    <StickerPicker onStickerSelect={onStickerSelect} />
+                  </Box>
+                )}
+                <Input
+                  variant="filled"
+                  bg="#E0E0E0"
+                  placeholder="Enter a message.."
+                  value={newMessage}
+                  onChange={typingHandler}
+                  ml={2}
+                />
+              </Flex>
             </FormControl>
           </Box>
         </>
