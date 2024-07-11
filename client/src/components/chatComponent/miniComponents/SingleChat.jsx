@@ -323,7 +323,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                     setShowEmojiPicker(!showEmojiPicker);
                     setShowStickerPicker(false);
                   }}
-                  variant="ghost"
+                  // variant="ghost"
+                  border={"1px solid white"}
+                  background={"transparent"}
+                  color={"white"}
+                  _hover={{ background: "#38B2AC", color: "white" }}
                 />
                 <IconButton
                   icon={<BsStickiesFill />}
@@ -331,7 +335,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                     setShowStickerPicker(!showStickerPicker);
                     setShowEmojiPicker(false);
                   }}
-                  variant="ghost"
+                  background={"transparent"}
+                  border={"1px solid white"}
+                  color={"white"}
+                  _hover={{ background: "#38B2AC", color: "white" }}
                   ml={2}
                 />
                 {showEmojiPicker && (
@@ -357,8 +364,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   </Box>
                 )}
                 <Input
-                  variant="filled"
-                  bg="#E0E0E0"
                   placeholder="Enter a message.."
                   value={newMessage}
                   onChange={typingHandler}

@@ -50,7 +50,7 @@ const ProfileModal = ({ user, children }) => {
             {user.name}
             {/* Gaurav Sahu */}
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color={"white"} />
           <ModalBody
             display="flex"
             flexDirection="column"
