@@ -12,6 +12,7 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
+  Box,
 } from "@chakra-ui/react";
 import React, { useContext } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -21,6 +22,7 @@ import LogoutButton from "./LogoutButton";
 import GetStarted from "./GetStarted";
 import NavBrand from "./NavBrand";
 import Inbox from "./Inbox";
+import { FaFacebookMessenger } from "react-icons/fa";
 
 const HamburgerModal = ({
   isOpen,
@@ -134,6 +136,27 @@ const HamburgerModal = ({
                 alignItems={"center"}
                 gap={"0.25rem"}
               >
+                <Box
+                  _hover={{
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    onClose();
+                    navigate("/chats");
+                  }}
+                  display={notLogined ? "none" : "block"}
+                  color={"white"}
+                >
+                  <FaFacebookMessenger size={25} />
+                </Box>
+              </ListItem>
+              <ListItem
+                className={`nav-item `}
+                display={"flex"}
+                justifyContent={"center"}
+                alignItems={"center"}
+                gap={"0.25rem"}
+              >
                 <Inbox
                   className={"inbox-button-lg"}
                   onClick={() => {
@@ -184,7 +207,7 @@ const HamburgerModal = ({
             <Rings />
             <SideLines />
             <BackgroundCircles />
-            <Flex position={"absolute"} bottom={notLogined ? "35%" : "26%"}>
+            <Flex position={"absolute"} bottom={notLogined ? "30%" : "22%"}>
               {notLogined ? (
                 <GetStarted
                   innerText={"Get Started"}

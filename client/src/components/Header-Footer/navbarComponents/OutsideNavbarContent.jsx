@@ -57,9 +57,10 @@ const OutsideNavbarContent = ({
                 _hover={{
                   cursor: "pointer",
                 }}
+                display={{ base: "none", lg: "flex" }}
                 onClick={() => navigate("/chats")}
               >
-                <FaFacebookMessenger />
+                <FaFacebookMessenger size={23} />
               </Box>
             )}
             {!isEmptyObject(user) && (

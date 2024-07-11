@@ -109,7 +109,8 @@ const App = () => {
     });
   }, [location]);
 
-  const shouldShowFooter = !location.pathname.includes("home");
+  const shouldShowFooter =
+    !location.pathname.includes("home") && location.pathname === "/";
 
   const isSupported = () =>
     "Notification" in window &&
