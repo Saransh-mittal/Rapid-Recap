@@ -15,7 +15,7 @@ import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./ContextMenu";
 import { BsCheck, BsCheckAll, BsClock } from "react-icons/bs";
 
-const ScrollableChat = ({ messages, handleDeleteMessage }) => {
+const ScrollableChat = ({ messages, handleDeleteMessage, MessageStatus }) => {
   const { user } = ChatState();
   const formatTime = (date) => {
     return new Date(date).toLocaleString("en-US", {
@@ -121,19 +121,19 @@ const ScrollableChat = ({ messages, handleDeleteMessage }) => {
     };
   }, []);
 
-  const MessageStatus = ({ message }) => {
-    if (message.sender._id !== user._id) return null;
+  // const MessageStatus = ({ message }) => {
+  //   if (message.sender._id !== user._id) return null;
 
-    if (!message.sent) {
-      return <BsClock color="#999" size={16} />;
-    } else if (message.sent && !message.delivered) {
-      return <BsCheck color="#999" size={16} />;
-    } else if (message.delivered && message.readBy.length === 0) {
-      return <BsCheckAll color="#999" size={16} />;
-    } else if (message.readBy.length > 0) {
-      return <BsCheckAll color="#34B7F1" size={16} />;
-    }
-  };
+  //   if (!message.sent) {
+  //     return <BsClock color="#999" size={16} />;
+  //   } else if (message.sent && !message.delivered) {
+  //     return <BsCheck color="#999" size={16} />;
+  //   } else if (message.delivered && message.readBy.length === 0) {
+  //     return <BsCheckAll color="#999" size={16} />;
+  //   } else if (message.readBy.length > 0) {
+  //     return <BsCheckAll color="#34B7F1" size={16} />;
+  //   }
+  // };
 
   return (
     <>
@@ -162,8 +162,8 @@ const ScrollableChat = ({ messages, handleDeleteMessage }) => {
                 marginBottom={"0.45rem"}
                 cursor="pointer"
               >
-                {(isSameSender(messages, m, i, user._id) ||
-                  isLastMessage(messages, i, user._id)) && (
+                {(isSameSender(msgs, m, i, user._id) ||
+                  isLastMessage(msgs, i, user._id)) && (
                   <Tooltip
                     label={m.sender.name}
                     placement="bottom-start"
@@ -184,8 +184,8 @@ const ScrollableChat = ({ messages, handleDeleteMessage }) => {
                     backgroundColor: `${
                       m.sender._id === user._id ? "#BEE3F8" : "#B9F5D0"
                     }`,
-                    marginLeft: isSameSenderMargin(messages, m, i, user._id),
-                    marginTop: isSameUser(messages, m, i, user._id) ? 3 : 5,
+                    marginLeft: isSameSenderMargin(msgs, m, i, user._id),
+                    marginTop: isSameUser(msgs, m, i, user._id) ? 3 : 5,
                     borderRadius: "20px",
                     padding: "5px 15px",
                     maxWidth: "75%",

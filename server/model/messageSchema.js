@@ -8,8 +8,11 @@ const messageSchema = mongoose.Schema(
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
     isDeleted: { type: Boolean, default: false },
     deletedFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
-    sent: { type: Boolean, default: false },
-    delivered: { type: Boolean, default: false },
+    status: {
+      type: String,
+      enum: ["sending", "sent", "delivered", "read"],
+      default: "sending",
+    },
   },
   { timestamps: true }
 );

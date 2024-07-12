@@ -27,7 +27,13 @@ import ScrollableChat from "./ScrollableChat";
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
 import { ChatState } from "../../../contextAPI/ChatProvider";
-import { BsEmojiSmile, BsStickiesFill } from "react-icons/bs";
+import {
+  BsCheck,
+  BsCheckAll,
+  BsClock,
+  BsEmojiSmile,
+  BsStickiesFill,
+} from "react-icons/bs";
 import EmojiPicker from "emoji-picker-react";
 import StickerPicker from "./StickerPicker";
 const ENDPOINT = "http://localhost:3000"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
@@ -217,6 +223,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         }
       } else {
         setMessages([...messages, newMessageRecieved]);
+        socket.emit("message delivered", {
+          messageId: newMessageRecieved._id,
+          userId: user._id,
+        });
       }
 
       setChats((prevChats) => {
@@ -239,7 +249,31 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         });
       });
     });
+    socket.on("message status updated", ({ messageId, status }) => {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === messageId ? { ...msg, status } : msg
+        )
+      );
+    });
   });
+
+  const MessageStatus = ({ message }) => {
+    if (message.sender._id !== user._id) return null;
+
+    switch (message.status) {
+      case "sending":
+        return <BsClock color="#999" size={16} />;
+      case "sent":
+        return <BsCheck color="#999" size={16} />;
+      case "delivered":
+        return <BsCheckAll color="#999" size={16} />;
+      case "read":
+        return <BsCheckAll color="#34B7F1" size={16} />;
+      default:
+        return null;
+    }
+  };
 
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
@@ -378,6 +412,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 <ScrollableChat
                   messages={messages}
                   handleDeleteMessage={handleDeleteMessage}
+                  MessageStatus={MessageStatus}
                 />
               </div>
             )}

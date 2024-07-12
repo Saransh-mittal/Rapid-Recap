@@ -17,6 +17,7 @@ const messageRoutes = require("./router/messageRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
+const Message = require("./model/messageSchema");
 
 dotenv.config({ path: "./config.env" });
 const app = express();
@@ -131,7 +132,7 @@ io.on("connection", (socket) => {
   socket.on("typing", (room) => socket.in(room).emit("typing"));
   socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
 
-  socket.on("new message", (newMessageRecieved) => {
+  socket.on("new message", async (newMessageRecieved) => {
     var chat = newMessageRecieved.chat;
 
     if (!chat.users) return console.log("chat.users not defined");
@@ -141,36 +142,50 @@ io.on("connection", (socket) => {
 
       socket.in(user._id).emit("message recieved", newMessageRecieved);
     });
-    socket.emit("message sent", newMessageReceived._id);
+    try {
+      const updatedMessage = await Message.findByIdAndUpdate(
+        newMessageReceived._id,
+        { status: "sent" },
+        { new: true }
+      );
+      socket.emit("message status updated", {
+        messageId: updatedMessage._id,
+        status: "sent",
+      });
+    } catch (error) {
+      console.error("Error updating message status:", error);
+    }
   });
   // New event listener for message delivered
   socket.on("message delivered", async ({ messageId, userId }) => {
     try {
-      // Update message as delivered in the database
-      await Message.findByIdAndUpdate(messageId, { delivered: true });
+      const updatedMessage = await Message.findByIdAndUpdate(
+        messageId,
+        { status: "delivered" },
+        { new: true }
+      );
 
-      // Broadcast to sender
-      socket
-        .to(userId)
-        .emit("message status updated", { messageId, status: "delivered" });
+      io.to(updatedMessage.sender.toString()).emit("message status updated", {
+        messageId,
+        status: "delivered",
+      });
     } catch (error) {
       console.error("Error updating message delivery status:", error);
     }
   });
 
-  // New event listener for message read
   socket.on("message read", async ({ messageId, userId }) => {
     try {
-      // Update message as read in the database
-      await Message.findByIdAndUpdate(messageId, {
-        delivered: true,
-        $addToSet: { readBy: userId },
-      });
+      const updatedMessage = await Message.findByIdAndUpdate(
+        messageId,
+        { status: "read", $addToSet: { readBy: userId } },
+        { new: true }
+      );
 
-      // Broadcast to sender
-      socket
-        .to(userId)
-        .emit("message status updated", { messageId, status: "read" });
+      io.to(updatedMessage.sender.toString()).emit("message status updated", {
+        messageId,
+        status: "read",
+      });
     } catch (error) {
       console.error("Error updating message read status:", error);
     }
