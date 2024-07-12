@@ -144,7 +144,7 @@ io.on("connection", (socket) => {
     });
     try {
       const updatedMessage = await Message.findByIdAndUpdate(
-        newMessageReceived._id,
+        newMessageRecieved._id,
         { status: "sent" },
         { new: true }
       );

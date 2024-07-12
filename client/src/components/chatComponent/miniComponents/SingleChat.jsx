@@ -98,6 +98,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const updateMessageReadBy = async (messageId) => {
     try {
       await axios.put(`/api/message/readby/${messageId}`);
+      socket.emit("message read", {
+        messageId,
+        userId: user._id,
+      });
     } catch (error) {
       console.error("Error updating message read status:", error);
     }
@@ -213,6 +217,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   useEffect(() => {
     socket.on("message recieved", (newMessageRecieved) => {
+      console.log(newMessageRecieved);
       if (
         !selectedChatCompare || // if chat is not selected or doesn't match current chat
         selectedChatCompare._id !== newMessageRecieved.chat._id
@@ -223,12 +228,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         }
       } else {
         setMessages([...messages, newMessageRecieved]);
-        socket.emit("message delivered", {
-          messageId: newMessageRecieved._id,
-          userId: user._id,
-        });
       }
-
+      socket.emit("message delivered", {
+        messageId: newMessageRecieved._id,
+        userId: user._id,
+      });
       setChats((prevChats) => {
         const updatedChats = prevChats.map((chat) => {
           if (chat._id === newMessageRecieved.chat._id) {
