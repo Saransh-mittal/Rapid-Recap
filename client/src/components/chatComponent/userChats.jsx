@@ -52,6 +52,25 @@ const UserChats = ({ fetchAgain }) => {
     // eslint-disable-next-line
   }, [fetchAgain]);
 
+  const getLatestMessageContent = (chat) => {
+    if (!chat.latestMessage) return "";
+
+    if (chat.latestMessage.isDeleted) {
+      return "This message was deleted";
+    }
+
+    if (
+      chat?.latestMessage?.deletedFor &&
+      chat?.latestMessage?.deletedFor.includes(loggedUser._id)
+    ) {
+      return "This message was deleted for you";
+    }
+
+    return chat.latestMessage.content.length > 50
+      ? chat.latestMessage.content.substring(0, 51) + "..."
+      : chat.latestMessage.content;
+  };
+
   return (
     <Box
       display={{ base: selectedChat ? "none" : "flex", md: "flex" }}
@@ -144,9 +163,7 @@ const UserChats = ({ fetchAgain }) => {
                         : chat.latestMessage.sender.name}{" "}
                       :{" "}
                     </b>
-                    {chat.latestMessage.content.length > 50
-                      ? chat.latestMessage.content.substring(0, 51) + "..."
-                      : chat.latestMessage.content}
+                    {getLatestMessageContent(chat)}
                   </Text>
                 )}
               </Box>

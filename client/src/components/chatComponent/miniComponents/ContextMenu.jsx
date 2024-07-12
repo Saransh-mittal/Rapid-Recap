@@ -1,5 +1,12 @@
 import React from "react";
-import { Menu, MenuButton, MenuList, MenuItem, Portal } from "@chakra-ui/react";
+import {
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  Portal,
+} from "@chakra-ui/react";
 
 const ContextMenu = ({
   isOpen,
@@ -9,6 +16,7 @@ const ContextMenu = ({
   onCopy,
   isSender,
   messageTime,
+  isMessageDeleted,
 }) => {
   const isWithinOneHour = new Date() - new Date(messageTime) <= 60 * 60 * 1000;
 
@@ -21,14 +29,40 @@ const ContextMenu = ({
           left={position.x}
           visibility="hidden"
         />
-        <MenuList>
-          {isSender && isWithinOneHour && (
-            <MenuItem onClick={() => onDelete("everyone")}>
-              Delete for Everyone
+        <MenuList minWidth="200px" boxShadow="md" borderRadius="md" bg="white">
+          {isSender && isWithinOneHour && !isMessageDeleted && (
+            <>
+              <MenuItem
+                onClick={() => onDelete("everyone")}
+                _hover={{ bg: "red.50" }}
+                color="red.500"
+                fontWeight="medium"
+              >
+                Delete for Everyone
+              </MenuItem>
+              <MenuDivider />
+            </>
+          )}
+          {!isMessageDeleted && (
+            <MenuItem
+              onClick={() => onDelete("me")}
+              _hover={{ bg: "gray.100" }}
+            >
+              Delete for Me
             </MenuItem>
           )}
-          <MenuItem onClick={() => onDelete("me")}>Delete for Me</MenuItem>
-          <MenuItem onClick={onCopy}>Copy</MenuItem>
+          {isMessageDeleted && (
+            <MenuItem
+              onClick={() => onDelete("permanent")}
+              _hover={{ bg: "gray.100" }}
+            >
+              Delete
+            </MenuItem>
+          )}
+          <MenuDivider />
+          <MenuItem onClick={onCopy} _hover={{ bg: "gray.100" }}>
+            Copy
+          </MenuItem>
         </MenuList>
       </Menu>
     </Portal>

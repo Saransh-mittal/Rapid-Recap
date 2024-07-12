@@ -7,11 +7,16 @@ const Chat = require("../model/chatSchema");
 //@route           GET /api/Message/:chatId
 //@access          Protected
 const allMessages = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
   try {
     const messages = await Message.find({ chat: req.params.chatId })
       .populate("sender", "name pic email")
       .populate("chat");
-    res.json(messages);
+    const filteredMessages = messages.filter(
+      (message) => !message.permanentDeleteFor.includes(userId)
+    );
+
+    res.json(filteredMessages);
   } catch (error) {
     res.status(400);
     throw new Error(error.message);
@@ -23,7 +28,7 @@ const allMessages = asyncHandler(async (req, res) => {
 //@access          Protected
 const sendMessage = asyncHandler(async (req, res) => {
   const { content, chatId } = req.body;
-
+  // console.log(chatId);
   if (!content || !chatId) {
     console.log("Invalid data passed into request");
     return res.sendStatus(400);
@@ -116,6 +121,16 @@ const deleteMessage = asyncHandler(async (req, res) => {
       message.isDeleted = true;
       message.content = "This message was deleted";
       await message.save();
+      // check the next latest message of chat and update it.
+      const nextLatestMessage = await Message.findOne({
+        chat: message.chat,
+        isDeleted: false,
+        deletedFor: { $nin: [req.user._id] },
+      }).sort({ createdAt: -1 });
+
+      await Chat.findByIdAndUpdate(message.chat, {
+        latestMessage: nextLatestMessage,
+      });
     } else if (deleteType === "me") {
       message.deletedFor.push(req.user._id);
       await message.save();
@@ -131,9 +146,70 @@ const deleteMessage = asyncHandler(async (req, res) => {
   }
 });
 
+//@description     Permanent Delete Message For
+//@route           DELETE /api/Message/:messageId
+//@access          Protected
+const permanentDeleteMessageFor = asyncHandler(async (req, res) => {
+  const { messageId } = req.params;
+  const userId = req.user._id;
+
+  try {
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      res.status(404);
+      throw new Error("Message not found");
+    }
+    if (
+      message.deletedFor.find((id) => id.toString() === userId.toString()) ||
+      message.isDeleted
+    ) {
+      //remove the user from deletedFor array
+      message.deletedFor = message.deletedFor.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+      message.permanentDeleteFor.push(userId);
+      await message.save();
+      // check if for all the users in chat the particular message is permanently deleted
+      const chat = await Chat.findById(message.chat);
+      const users = chat.users.map((id) => id.toString());
+      const permanentDeleteFor = message.permanentDeleteFor.map((id) =>
+        id.toString()
+      );
+      const allUsersDeleted =
+        permanentDeleteFor.every((id) => users.includes(id.toString())) &&
+        users.every((id) => permanentDeleteFor.includes(id.toString()));
+
+      if (allUsersDeleted) {
+        await Message.findByIdAndDelete(messageId);
+      }
+
+      // update the latestMessage of chat
+      const nextLatestMessage = await Message.findOne({
+        chat: message.chat,
+        isDeleted: false,
+        permanentDeleteFor: { $nin: [userId] },
+      }).sort({ createdAt: -1 });
+
+      await Chat.findByIdAndUpdate(message.chat, {
+        latestMessage: nextLatestMessage,
+      });
+
+      res.json({ message: "Message permanently deleted successfully" });
+    } else {
+      res.status(400);
+      throw new Error("Message not deleted for user");
+    }
+    return;
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
 module.exports = {
   allMessages,
   sendMessage,
   deleteMessage,
   updateMessageReadBy,
+  permanentDeleteMessageFor,
 };

@@ -14,6 +14,36 @@ const ChatProvider = ({ children }) => {
 
   const { state } = useContext(AppContext);
 
+  const sortChats = (chatsToSort) => {
+    return chatsToSort.sort((a, b) => {
+      const aTime = a.latestMessage
+        ? new Date(a.latestMessage.createdAt).getTime()
+        : 0;
+      const bTime = b.latestMessage
+        ? new Date(b.latestMessage.createdAt).getTime()
+        : 0;
+      return bTime - aTime;
+    });
+  };
+
+  const updateLatestMessage = (chatId, newLatestMessage) => {
+    setChats((prevChats) => {
+      const updatedChats = prevChats.map((chat) =>
+        chat._id === chatId
+          ? { ...chat, latestMessage: newLatestMessage }
+          : chat
+      );
+      return sortChats(updatedChats);
+    });
+
+    if (selectedChat && selectedChat._id === chatId) {
+      setSelectedChat((prevSelectedChat) => ({
+        ...prevSelectedChat,
+        latestMessage: newLatestMessage,
+      }));
+    }
+  };
+
   useEffect(() => {
     // const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     setUser(state.user);
@@ -34,6 +64,7 @@ const ChatProvider = ({ children }) => {
         setNotification,
         chats,
         setChats,
+        updateLatestMessage,
       }}
     >
       {children}

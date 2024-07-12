@@ -54,7 +54,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     user,
     notification,
     setNotification,
-    setChats,
+    updateLatestMessage,
   } = ChatState();
 
   const fetchMessages = async () => {
@@ -101,33 +101,16 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     if (event.key === "Enter" && newMessage) {
       socket.emit("stop typing", selectedChat._id);
       try {
-        setNewMessage("");
         const { data } = await axios.post("/api/message", {
           content: newMessage,
-          chatId: selectedChat,
+          chatId: selectedChat._id,
         });
         socket.emit("new message", data);
-        setMessages([...messages, data]);
+        setMessages((prevMessages) => [...prevMessages, data]);
 
-        setChats((prevChats) => {
-          const updatedChats = prevChats.map((chat) => {
-            if (chat._id === data.chat._id) {
-              return { ...chat, latestMessage: data };
-            }
-            return chat;
-          });
-
-          // Sort chats to bring the one with the new message to the top
-          return updatedChats.sort((a, b) => {
-            const aTime = a.latestMessage
-              ? new Date(a.latestMessage.createdAt).getTime()
-              : 0;
-            const bTime = b.latestMessage
-              ? new Date(b.latestMessage.createdAt).getTime()
-              : 0;
-            return bTime - aTime;
-          });
-        });
+        // Update latest message and sort chats
+        updateLatestMessage(selectedChat._id, data);
+        setNewMessage("");
       } catch (error) {
         toast({
           title: "Error Occured!",
@@ -145,25 +128,22 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     if (type === "everyone") {
       setDeleteInfo({ messageId, type });
       onOpen();
-    } else {
+    } else if (type === "me") {
       deleteMessage(messageId, type);
+    } else {
+      permanentDeleteMessage(messageId);
     }
   };
 
-  const deleteMessage = async (messageId, type) => {
+  const permanentDeleteMessage = async (messageId) => {
     try {
-      await axios.delete(`/api/message/${messageId}`, {
-        data: { deleteType: type },
+      await axios.delete(`/api/message/permanentdelete/${messageId}`);
+      let updatedMessages = messages;
+      setMessages((prevMessages) => {
+        return (updatedMessages = prevMessages.filter(
+          (msg) => msg._id !== messageId
+        ));
       });
-      setMessages(
-        messages.map((msg) =>
-          msg._id === messageId
-            ? type === "everyone"
-              ? (msg.isDeleted = true)
-              : msg.deletedFor.push(user._id)
-            : msg
-        )
-      );
       toast({
         title: "Message deleted",
         status: "success",
@@ -172,6 +152,57 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         position: "bottom",
       });
     } catch (error) {
+      console.log(error);
+      toast({
+        title: "Error deleting message",
+        description: error.response?.data?.message || "An error occurred",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+
+  const deleteMessage = async (messageId, type) => {
+    try {
+      await axios.delete(`/api/message/${messageId}`, {
+        data: { deleteType: type },
+      });
+      let updatedMessages = messages;
+      setMessages((prevMessages) => {
+        return (updatedMessages = prevMessages.map((msg) =>
+          msg._id === messageId
+            ? type === "everyone"
+              ? { ...msg, isDeleted: true }
+              : { ...msg, deletedFor: [...msg.deletedFor, user._id] }
+            : msg
+        ));
+      });
+      // Find the new latest message
+      const newLatestMessage = updatedMessages
+        .filter((msg) => !msg.isDeleted && !msg.deletedFor.includes(user._id))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+
+      // Update the latest message in the chat state
+      updateLatestMessage(selectedChat._id, newLatestMessage || null);
+      if (type === "everyone") {
+        socket.emit("delete message", {
+          chatId: selectedChat._id,
+          messageId: messageId,
+          deleteType: type,
+        });
+      }
+
+      toast({
+        title: "Message deleted",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } catch (error) {
+      console.log(error);
       toast({
         title: "Error deleting message",
         description: error.response?.data?.message || "An error occurred",
@@ -199,11 +230,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, []);
 
   useEffect(() => {
-    fetchMessages();
-
+    if (
+      selectedChat &&
+      (!messages.length || messages[0].chat._id !== selectedChat._id)
+    ) {
+      fetchMessages();
+    }
     selectedChatCompare = selectedChat;
-    // eslint-disable-next-line
-  }, [selectedChat]);
+  }, [selectedChat, messages]);
 
   useEffect(() => {
     socket.on("message recieved", (newMessageRecieved) => {
@@ -217,27 +251,30 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         }
       } else {
         setMessages([...messages, newMessageRecieved]);
+
+        updateLatestMessage(newMessageRecieved.chat._id, newMessageRecieved);
       }
+    });
 
-      setChats((prevChats) => {
-        const updatedChats = prevChats.map((chat) => {
-          if (chat._id === newMessageRecieved.chat._id) {
-            return { ...chat, latestMessage: newMessageRecieved };
-          }
-          return chat;
-        });
+    socket.on("message deleted", (deletedMessageInfo) => {
+      const { messageId, deleteType, chatId } = deletedMessageInfo;
+      const updatedMessages = messages.map((msg) =>
+        msg._id === messageId
+          ? deleteType === "everyone"
+            ? { ...msg, isDeleted: true }
+            : { ...msg, deletedFor: [...msg.deletedFor, user._id] }
+          : msg
+      );
 
-        // Sort chats to bring the one with the new message to the top
-        return updatedChats.sort((a, b) => {
-          const aTime = a.latestMessage
-            ? new Date(a.latestMessage.createdAt).getTime()
-            : 0;
-          const bTime = b.latestMessage
-            ? new Date(b.latestMessage.createdAt).getTime()
-            : 0;
-          return bTime - aTime;
-        });
-      });
+      setMessages(updatedMessages);
+
+      // Find the new latest message
+      const newLatestMessage = updatedMessages
+        .filter((msg) => !msg.isDeleted && !msg.deletedFor.includes(user._id))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+
+      // Update the latest message in the chat state
+      updateLatestMessage(chatId, newLatestMessage || null);
     });
   });
 

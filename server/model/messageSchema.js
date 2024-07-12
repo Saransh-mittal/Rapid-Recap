@@ -8,6 +8,7 @@ const messageSchema = mongoose.Schema(
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
     isDeleted: { type: Boolean, default: false },
     deletedFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
+    permanentDeleteFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
   },
   { timestamps: true }
 );
