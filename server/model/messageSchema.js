@@ -13,6 +13,7 @@ const messageSchema = mongoose.Schema(
       enum: ["sending", "sent", "delivered", "read"],
       default: "sending",
     },
+    permanentDeleteFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
   },
   { timestamps: true }
 );

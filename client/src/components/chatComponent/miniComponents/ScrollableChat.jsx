@@ -53,6 +53,7 @@ const ScrollableChat = ({ messages, handleDeleteMessage, MessageStatus }) => {
       }
       groups[date].push(message);
     });
+
     return groups;
   };
 
@@ -152,100 +153,90 @@ const ScrollableChat = ({ messages, handleDeleteMessage, MessageStatus }) => {
             >
               {date}
             </div>
-            {msgs.map((m, i) => (
-              <Box
-                style={{ display: "flex" }}
-                key={m._id}
-                onContextMenu={(e) => handleContextMenu(e, m._id)}
-                onTouchStart={(e) => handleTouchStart(e, m._id)}
-                onTouchEnd={handleTouchEnd}
-                marginBottom={"0.45rem"}
-                cursor="pointer"
-              >
-                {(isSameSender(msgs, m, i, user._id) ||
-                  isLastMessage(msgs, i, user._id)) && (
-                  <Tooltip
-                    label={m.sender.name}
-                    placement="bottom-start"
-                    hasArrow
-                  >
-                    <Avatar
-                      mt="7px"
-                      mr={3}
-                      size="sm"
-                      cursor="pointer"
-                      name={m.sender.name}
-                      src={m.sender.pic}
-                    />
-                  </Tooltip>
-                )}
-                <span
-                  style={{
-                    backgroundColor: `${
-                      m.sender._id === user._id ? "#BEE3F8" : "#B9F5D0"
-                    }`,
-                    marginLeft: isSameSenderMargin(msgs, m, i, user._id),
-                    marginTop: isSameUser(msgs, m, i, user._id) ? 3 : 5,
-                    borderRadius: "20px",
-                    padding: "5px 15px",
-                    maxWidth: "75%",
-                    color: "black",
-                    marginRight: "0.75rem",
-                    position: "relative",
-                  }}
+            {msgs.map((m, i) => {
+              const messageDeletedForUser = isMessageDeletedForUser(
+                m,
+                user._id.toString()
+              );
+              const messageDeleted = m.isDeleted;
+              return (
+                <Box
+                  style={{ display: "flex" }}
+                  key={m._id}
+                  marginBottom={"0.45rem"}
                 >
-                  <Text
-                    color={
-                      m.isDeleted ||
-                      isMessageDeletedForUser(m, user._id.toString())
-                        ? "#9CAFAA"
-                        : "black"
-                    }
-                    fontStyle={
-                      m.isDeleted ||
-                      isMessageDeletedForUser(m, user._id.toString())
-                        ? "italic"
-                        : ""
-                    }
-                    m={0}
-                    p={0}
-                  >
-                    {m.isDeleted
-                      ? "This message was deleted"
-                      : isMessageDeletedForUser(m, user._id.toString())
-                      ? "This message was deleted for you"
-                      : m.content}
-                  </Text>
-                  {/* {m.sender._id.toString() === user._id.toString() && (
-                    <Text
-                      fontSize="xs"
-                      color="gray.500"
-                      position="absolute"
-                      right="5px"
-                      bottom="-18px"
+                  {(isSameSender(msgs, m, i, user._id) ||
+                    isLastMessage(msgs, i, user._id)) && (
+                    <Tooltip
+                      label={m.sender.name}
+                      placement="bottom-start"
+                      hasArrow
                     >
-                      {m.readBy.length > 0 ? "Read" : "Sent"}
-                    </Text>
-                  )} */}
-                  <div
+                      <Avatar
+                        mt="7px"
+                        mr={3}
+                        size="sm"
+                        cursor="pointer"
+                        name={m.sender.name}
+                        src={m.sender.pic}
+                      />
+                    </Tooltip>
+                  )}
+                  <span
                     style={{
-                      fontSize: "0.75rem",
-                      color: "#555",
-                      textAlign: "right",
-                      marginTop: "2px",
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      alignItems: "center",
+                      backgroundColor: `${
+                        m.sender._id === user._id ? "#BEE3F8" : "#B9F5D0"
+                      }`,
+                      marginLeft: isSameSenderMargin(msgs, m, i, user._id),
+                      marginTop: isSameUser(msgs, m, i, user._id) ? 3 : 5,
+                      borderRadius: "20px",
+                      padding: "5px 15px",
+                      maxWidth: "75%",
+                      color: "black",
+                      marginRight: "0.75rem",
+                      position: "relative",
+                      cursor: "pointer",
                     }}
+                    onContextMenu={(e) => handleContextMenu(e, m._id)}
+                    onTouchStart={(e) => handleTouchStart(e, m._id)}
+                    onTouchEnd={handleTouchEnd}
                   >
-                    {formatTime(m.createdAt)}
-                    <span style={{ marginLeft: "4px" }}>
-                      <MessageStatus message={m} />
-                    </span>
-                  </div>
-                </span>
-              </Box>
-            ))}
+                    <Text
+                      color={
+                        messageDeleted || messageDeletedForUser
+                          ? "#9CAFAA"
+                          : "black"
+                      }
+                      fontStyle={
+                        messageDeleted || messageDeletedForUser ? "italic" : ""
+                      }
+                      m={0}
+                      p={0}
+                    >
+                      {messageDeleted
+                        ? "This message was deleted"
+                        : messageDeletedForUser
+                        ? "This message was deleted for you"
+                        : m.content}
+                    </Text>
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#555",
+                        textAlign: "right",
+                        marginTop: "2px",
+                        display: "flex",
+                      }}
+                    >
+                      {formatTime(m.createdAt)}
+                      <span style={{ marginLeft: "4px" }}>
+                        <MessageStatus message={m} />
+                      </span>
+                    </div>
+                  </span>
+                </Box>
+              );
+            })}
           </React.Fragment>
         ))}
         <ContextMenu
@@ -260,6 +251,13 @@ const ScrollableChat = ({ messages, handleDeleteMessage, MessageStatus }) => {
           }
           messageTime={
             messages.find((m) => m._id === contextMenu.messageId)?.createdAt
+          }
+          isMessageDeleted={
+            messages.find((m) => m._id === contextMenu.messageId)?.isDeleted ||
+            isMessageDeletedForUser(
+              messages.find((m) => m._id === contextMenu.messageId),
+              user._id.toString()
+            )
           }
         />
       </ScrollableFeed>

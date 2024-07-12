@@ -191,6 +191,15 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("delete message", (deletedMessageInfo) => {
+    const { chatId, messageId, deleteType } = deletedMessageInfo;
+
+    // Emit the delete event to all users in the chat except the sender
+    socket
+      .to(chatId)
+      .emit("message deleted", { messageId, deleteType, chatId });
+  });
+
   socket.off("setup", () => {
     console.log("USER DISCONNECTED");
     socket.leave(userData._id);
