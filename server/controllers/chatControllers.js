@@ -81,7 +81,6 @@ const fetchChats = asyncHandler(async (req, res) => {
             chat: chat._id,
           });
           const today = new Date();
-          console.log(today.getTime() - chat.createdAt.getTime());
           if (
             messagesCount <= 1 &&
             today.getTime() - chat.createdAt.getTime() < 86400000
