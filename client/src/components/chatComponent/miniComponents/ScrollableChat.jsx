@@ -1,7 +1,7 @@
 import { Avatar } from "@chakra-ui/avatar";
 import { Tooltip } from "@chakra-ui/tooltip";
 import ScrollableFeed from "react-scrollable-feed";
-import React from "react";
+import React, { useCallback } from "react";
 import {
   isLastMessage,
   isMessageDeletedForUser,
@@ -15,8 +15,18 @@ import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./ContextMenu";
 import { BsCheck, BsCheckAll, BsClock } from "react-icons/bs";
 
-const ScrollableChat = ({ messages, handleDeleteMessage, MessageStatus }) => {
+const ScrollableChat = ({
+  messages,
+  handleDeleteMessage,
+  MessageStatus,
+  loadMoreMessages,
+}) => {
   const { user } = ChatState();
+  const [loading, setLoading] = useState(false);
+  const scrollableFeedRef = useRef(null);
+  const loadingRef = useRef(null);
+  const observer = useRef(null);
+
   const formatTime = (date) => {
     return new Date(date).toLocaleString("en-US", {
       hour: "numeric",
@@ -58,6 +68,36 @@ const ScrollableChat = ({ messages, handleDeleteMessage, MessageStatus }) => {
   };
 
   const groupedMessages = groupMessagesByDate(messages);
+  const handleIntersect = useCallback(
+    (entries) => {
+      const firstEntry = entries[0];
+      if (firstEntry.isIntersecting && !loading) {
+        setLoading(true);
+        loadMoreMessages().then(() => setLoading(false));
+      }
+    },
+    [loadMoreMessages, loading]
+  );
+
+  useEffect(() => {
+    const options = {
+      root: null,
+      rootMargin: "0px",
+      threshold: 1.0,
+    };
+
+    observer.current = new IntersectionObserver(handleIntersect, options);
+
+    if (loadingRef.current) {
+      observer.current.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect();
+      }
+    };
+  }, [handleIntersect]);
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,
     position: { x: 0, y: 0 },
@@ -145,7 +185,12 @@ const ScrollableChat = ({ messages, handleDeleteMessage, MessageStatus }) => {
           }
         `}
       </style>
-      <ScrollableFeed>
+      <ScrollableFeed ref={scrollableFeedRef}>
+        {loading && (
+          <Box textAlign="center" py={2}>
+            <Spinner size="sm" />
+          </Box>
+        )}
         {Object.entries(groupedMessages).map(([date, msgs]) => (
           <React.Fragment key={date}>
             <div

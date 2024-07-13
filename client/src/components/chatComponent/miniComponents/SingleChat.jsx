@@ -18,7 +18,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ProfileModal from "./ProfileModal";
@@ -53,6 +53,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const toast = useToast();
   const emojiPickerRef = useRef(null);
   const stickerPickerRef = useRef(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [deleteInfo, setDeleteInfo] = useState({ messageId: null, type: null });
 
   const {
@@ -64,15 +66,18 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     updateLatestMessage,
   } = ChatState();
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!selectedChat) return;
 
     try {
       setLoading(true);
 
       const { data } = await axios.get(`/api/message/${selectedChat._id}`);
-      setMessages(data);
+      setMessages((prevMessages) => [...data, ...prevMessages]);
       setLoading(false);
+      if (data.length === 0) {
+        setHasMore(false);
+      }
 
       data.forEach((message) => {
         if (
@@ -94,8 +99,17 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         isClosable: true,
         position: "bottom",
       });
+      setLoading(false);
     }
-  };
+  }, [selectedChat, page, toast]);
+
+  const loadMoreMessages = useCallback(() => {
+    if (hasMore) {
+      setPage((prevPage) => prevPage + 1);
+      return fetchMessages();
+    }
+    return Promise.resolve();
+  }, [hasMore, fetchMessages]);
 
   const updateMessageReadBy = async (messageId) => {
     try {
@@ -457,6 +471,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   messages={messages}
                   handleDeleteMessage={handleDeleteMessage}
                   MessageStatus={MessageStatus}
+                  loadMoreMessages={loadMoreMessages}
+                  // hasMore={hasMore}
                 />
               </div>
             )}
