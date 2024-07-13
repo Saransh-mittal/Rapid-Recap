@@ -244,6 +244,41 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     deleteMessage(deleteInfo.messageId, deleteInfo.type);
     onClose();
   };
+  const handleAddReaction = async (messageId, emoji) => {
+    try {
+      const { data } = await axios.post(`/api/message/reaction/${messageId}`, {
+        emoji,
+      });
+      setMessages(messages.map((msg) => (msg._id === messageId ? data : msg)));
+      socket.emit("new reaction", data);
+    } catch (error) {
+      toast({
+        title: "Error adding reaction",
+        description: error.response?.data?.message || "An error occurred",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+
+  const handleRemoveReaction = async (messageId, userId) => {
+    try {
+      const { data } = await axios.delete(`/api/message/reaction/${messageId}`);
+      setMessages(messages.map((msg) => (msg._id === messageId ? data : msg)));
+      socket.emit("remove reaction", data);
+    } catch (error) {
+      toast({
+        title: "Error removing reaction",
+        description: error.response?.data?.message || "An error occurred",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
 
   useEffect(() => {
     socket = io(ENDPOINT);
@@ -311,6 +346,21 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg._id === messageId ? { ...msg, status } : msg
+        )
+      );
+    });
+    socket.on("reaction added", (updatedMessage) => {
+      setMessages(
+        messages.map((msg) =>
+          msg._id === updatedMessage._id ? updatedMessage : msg
+        )
+      );
+    });
+
+    socket.on("reaction removed", (updatedMessage) => {
+      setMessages(
+        messages.map((msg) =>
+          msg._id === updatedMessage._id ? updatedMessage : msg
         )
       );
     });
@@ -472,6 +522,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   handleDeleteMessage={handleDeleteMessage}
                   MessageStatus={MessageStatus}
                   loadMoreMessages={loadMoreMessages}
+                  handleAddReaction={handleAddReaction}
+                  handleRemoveReaction={handleRemoveReaction}
                   // hasMore={hasMore}
                 />
               </div>

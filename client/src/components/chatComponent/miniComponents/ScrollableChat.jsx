@@ -14,12 +14,15 @@ import { Box, Text } from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./ContextMenu";
 import { BsCheck, BsCheckAll, BsClock } from "react-icons/bs";
+import ReactionPicker from "./ReactionPicker";
 
 const ScrollableChat = ({
   messages,
   handleDeleteMessage,
   MessageStatus,
   loadMoreMessages,
+  handleAddReaction,
+  handleRemoveReaction,
 }) => {
   const { user } = ChatState();
   const [loading, setLoading] = useState(false);
@@ -175,6 +178,33 @@ const ScrollableChat = ({
   //     return <BsCheckAll color="#34B7F1" size={16} />;
   //   }
   // };
+  const renderReactions = (message) => {
+    if (!message.reactions || message.reactions.length === 0) return null;
+
+    return (
+      <Flex flexWrap="wrap" mt={1}>
+        {message.reactions.map((reaction, index) => (
+          <Tooltip key={index} label={reaction.user.name} placement="bottom">
+            <Box
+              bg="gray.100"
+              borderRadius="full"
+              px={2}
+              py={1}
+              mr={1}
+              mb={1}
+              fontSize="xs"
+              cursor="pointer"
+              onClick={() =>
+                handleRemoveReaction(message._id, reaction.user._id)
+              }
+            >
+              {reaction.emoji}
+            </Box>
+          </Tooltip>
+        ))}
+      </Flex>
+    );
+  };
 
   return (
     <>
@@ -264,6 +294,7 @@ const ScrollableChat = ({
                         ? "This message was deleted for you"
                         : m.content}
                     </Text>
+                    {renderReactions(m)}
                     <div
                       style={{
                         fontSize: "0.75rem",
@@ -281,6 +312,10 @@ const ScrollableChat = ({
                       )}
                     </div>
                   </span>
+                  <ReactionPicker
+                    messageId={m._id}
+                    onAddReaction={handleAddReaction}
+                  />
                 </Box>
               );
             })}

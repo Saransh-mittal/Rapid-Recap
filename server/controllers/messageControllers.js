@@ -207,10 +207,52 @@ const permanentDeleteMessageFor = asyncHandler(async (req, res) => {
     throw new Error(error.message);
   }
 });
+const addReaction = asyncHandler(async (req, res) => {
+  const { messageId } = req.params;
+  const { emoji } = req.body;
+  const userId = req.user._id;
+
+  const updatedMessage = await Message.findByIdAndUpdate(
+    messageId,
+    {
+      $push: { reactions: { user: userId, emoji } },
+    },
+    { new: true }
+  ).populate("reactions.user", "name pic");
+
+  if (!updatedMessage) {
+    res.status(404);
+    throw new Error("Message not found");
+  }
+
+  res.json(updatedMessage);
+});
+
+const removeReaction = asyncHandler(async (req, res) => {
+  const { messageId } = req.params;
+  const userId = req.user._id;
+
+  const updatedMessage = await Message.findByIdAndUpdate(
+    messageId,
+    {
+      $pull: { reactions: { user: userId } },
+    },
+    { new: true }
+  ).populate("reactions.user", "name pic");
+
+  if (!updatedMessage) {
+    res.status(404);
+    throw new Error("Message not found");
+  }
+
+  res.json(updatedMessage);
+});
 module.exports = {
   allMessages,
   sendMessage,
   deleteMessage,
   updateMessageReadBy,
   permanentDeleteMessageFor,
+  addReaction,
+  removeReaction,
 };

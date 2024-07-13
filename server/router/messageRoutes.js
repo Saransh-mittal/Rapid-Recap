@@ -5,6 +5,8 @@ const {
   deleteMessage,
   updateMessageReadBy,
   permanentDeleteMessageFor,
+  addReaction,
+  removeReaction,
 } = require("../controllers/messageControllers");
 const { Authenticate } = require("../middleware/authenticate");
 
@@ -17,5 +19,7 @@ router.route("/readby/:messageId").put(Authenticate, updateMessageReadBy);
 router
   .route("/permanentdelete/:messageId")
   .delete(Authenticate, permanentDeleteMessageFor);
+router.route("/reaction/:messageId").post(Authenticate, addReaction);
+router.route("/reaction/:messageId").delete(Authenticate, removeReaction);
 
 module.exports = router;

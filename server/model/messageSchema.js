@@ -14,6 +14,12 @@ const messageSchema = mongoose.Schema(
       default: "sending",
     },
     permanentDeleteFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
+    reactions: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "USER" },
+        emoji: String,
+      },
+    ],
   },
   { timestamps: true }
 );
