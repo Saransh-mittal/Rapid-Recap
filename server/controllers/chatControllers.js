@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Chat = require("../model/chatSchema");
 const User = require("../model/userSchema");
+const Message = require("../model/messageSchema");
 
 //@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
@@ -35,6 +36,7 @@ const accessChat = asyncHandler(async (req, res) => {
       chatName: "sender",
       isGroupChat: false,
       users: [req.user._id, userId],
+      chatCreatedBy: req.user._id,
     };
 
     try {
@@ -66,6 +68,28 @@ const fetchChats = asyncHandler(async (req, res) => {
           path: "latestMessage.sender",
           select: "name pic email",
         });
+        results = results.filter(
+          (chat) =>
+            chat.latestMessage ||
+            chat.chatCreatedBy.toString() === req.user._id.toString()
+        );
+        for (let i = 0; i < results.length; i++) {
+          let chat = results[i];
+          // const messages = await Message.find({ chat: chat._id });
+          // check if chat has more than one message from message schema
+          const messagesCount = await Message.countDocuments({
+            chat: chat._id,
+          });
+          const today = new Date();
+          console.log(today.getTime() - chat.createdAt.getTime());
+          if (
+            messagesCount <= 1 &&
+            today.getTime() - chat.createdAt.getTime() < 86400000
+          ) {
+            results[i] = chat.toObject();
+            results[i].new = true;
+          }
+        }
         res.status(200).send(results);
       });
   } catch (error) {

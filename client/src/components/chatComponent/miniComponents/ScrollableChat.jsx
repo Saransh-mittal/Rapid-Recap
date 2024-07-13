@@ -229,9 +229,11 @@ const ScrollableChat = ({ messages, handleDeleteMessage, MessageStatus }) => {
                       }}
                     >
                       {formatTime(m.createdAt)}
-                      <span style={{ marginLeft: "4px" }}>
-                        <MessageStatus message={m} />
-                      </span>
+                      {!messageDeleted && !messageDeletedForUser && (
+                        <span style={{ marginLeft: "4px" }}>
+                          <MessageStatus message={m} />
+                        </span>
+                      )}
                     </div>
                   </span>
                 </Box>

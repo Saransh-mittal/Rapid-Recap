@@ -6,6 +6,7 @@ import {
   Text,
   Stack,
   Avatar,
+  Badge,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 import GroupChatModal from "./miniComponents/GroupChatModal";
@@ -70,7 +71,6 @@ const UserChats = ({ fetchAgain }) => {
       ? chat.latestMessage.content.substring(0, 51) + "..."
       : chat.latestMessage.content;
   };
-
   return (
     <Box
       display={{ base: selectedChat ? "none" : "flex", md: "flex" }}
@@ -144,11 +144,18 @@ const UserChats = ({ fetchAgain }) => {
                 key={chat._id}
               >
                 <Flex justifyContent={"space-between"} alignItems={"center"}>
-                  <Text>
-                    {!chat.isGroupChat
-                      ? getSender(loggedUser, chat.users)
-                      : chat.chatName}
-                  </Text>
+                  <Flex gap={2}>
+                    <Text>
+                      {!chat.isGroupChat
+                        ? getSender(loggedUser, chat.users)
+                        : chat.chatName}
+                    </Text>
+                    {chat.new && (
+                      <Badge colorScheme="green" h={"50%"} mt={1}>
+                        New
+                      </Badge>
+                    )}
+                  </Flex>
                   <Text fontSize="xs">
                     {!chat.isGroupChat
                       ? getRecieverInGameName(loggedUser, chat.users)

@@ -42,6 +42,7 @@ var socket, selectedChatCompare;
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [messages, setMessages] = useState([]);
+  const [messagesFetched, setMessagesFetched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
@@ -83,6 +84,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       });
 
       socket.emit("join chat", selectedChat._id);
+      setMessagesFetched(true);
     } catch (error) {
       toast({
         title: "Error Occured!",
@@ -242,7 +244,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   useEffect(() => {
     if (
       selectedChat &&
-      (!messages.length || messages[0].chat._id !== selectedChat._id)
+      (!messages.length || messages[0].chat._id !== selectedChat._id) &&
+      !messagesFetched
     ) {
       fetchMessages();
     }
