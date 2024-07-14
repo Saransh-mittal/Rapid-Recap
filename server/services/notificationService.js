@@ -1,14 +1,22 @@
 const webpush = require("web-push");
 const Subscription = require("../model/subscriptionSchema");
 
-async function sendNotification({ title, body, icon, url, image, userId }) {
+async function sendNotification({
+  title,
+  body,
+  icon,
+  url,
+  image,
+  userId,
+  messageId,
+}) {
   try {
     const subscriptions = await Subscription.find({ userId });
     for (let subscription of subscriptions) {
       try {
         await webpush.sendNotification(
           subscription,
-          JSON.stringify({ title, body, icon, url, image })
+          JSON.stringify({ title, body, icon, url, image, messageId })
         );
       } catch (error) {
         if (error.statusCode === 410) {

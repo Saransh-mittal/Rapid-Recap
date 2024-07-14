@@ -36,6 +36,7 @@ import {
 } from "react-icons/bs";
 import EmojiPicker from "emoji-picker-react";
 import StickerPicker from "./StickerPicker";
+import { useNavigate } from "react-router-dom";
 const ENDPOINT = "http://localhost:3000"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
 var socket, selectedChatCompare;
 
@@ -54,6 +55,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const emojiPickerRef = useRef(null);
   const stickerPickerRef = useRef(null);
   const [deleteInfo, setDeleteInfo] = useState({ messageId: null, type: null });
+  const navigate = useNavigate();
 
   const {
     selectedChat,
@@ -203,6 +205,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           chatId: selectedChat._id,
           messageId: messageId,
           deleteType: type,
+          senderId: user?._id.toString(),
         });
       }
 
@@ -234,10 +237,17 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   useEffect(() => {
     socket = io(ENDPOINT);
     socket.emit("setup", user);
+
     socket.on("connected", () => setSocketConnected(true));
     socket.on("typing", () => setIsTyping(true));
     socket.on("stop typing", () => setIsTyping(false));
 
+    return () => {
+      socket.emit("close chat", {
+        userId: user?._id,
+        chatId: selectedChat?._id,
+      });
+    };
     // eslint-disable-next-line
   }, []);
 
@@ -281,16 +291,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             : { ...msg, deletedFor: [...msg.deletedFor, user._id] }
           : msg
       );
-
+      setFetchAgain(!fetchAgain);
       setMessages(updatedMessages);
-
-      // Find the new latest message
-      const newLatestMessage = updatedMessages
-        .filter((msg) => !msg.isDeleted && !msg.deletedFor.includes(user._id))
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
-
-      // Update the latest message in the chat state
-      updateLatestMessage(chatId, newLatestMessage || null);
+      console.log("Message Deleted");
     });
 
     socket.on("message status updated", ({ messageId, status }) => {
@@ -300,6 +303,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         )
       );
     });
+
+    socket.emit("open chat", { userId: user?._id, chatId: selectedChat?._id });
   });
 
   const MessageStatus = ({ message }) => {
@@ -393,7 +398,20 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             <IconButton
               d={{ base: "flex", md: "none" }}
               icon={<ArrowBackIcon />}
-              onClick={() => setSelectedChat("")}
+              onClick={() => {
+                const params = new URLSearchParams(location.search);
+                const chatId = params.get("chatId");
+                if (chatId) {
+                  navigate(`/chats`);
+                }
+                setMessagesFetched(false);
+                setMessages([]);
+                setSelectedChat(null);
+                socket.emit("close chat", {
+                  userId: user?._id,
+                  chatId: selectedChat?._id,
+                });
+              }}
             />
             {messages &&
               (!selectedChat.isGroupChat ? (

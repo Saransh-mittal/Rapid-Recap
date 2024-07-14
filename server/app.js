@@ -18,6 +18,8 @@ const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
 const Message = require("./model/messageSchema");
+const { userOpenChats } = require("./sharedState");
+const Chat = require("./model/chatSchema");
 
 dotenv.config({ path: "./config.env" });
 const app = express();
@@ -123,6 +125,7 @@ io.on("connection", (socket) => {
   socket.on("setup", (userData) => {
     socket.join(userData._id);
     socket.emit("connected");
+    userOpenChats.set(userData._id, new Set());
   });
 
   socket.on("join chat", (room) => {
@@ -164,7 +167,20 @@ io.on("connection", (socket) => {
         { status: "delivered" },
         { new: true }
       );
+      const userChats = userOpenChats.get(userId);
+      if (userChats && userChats.has(updatedMessage.chat.toString())) {
+        const updatedMessage = await Message.findByIdAndUpdate(
+          messageId,
+          { status: "read", $addToSet: { readBy: userId } },
+          { new: true }
+        );
 
+        io.to(updatedMessage.sender.toString()).emit("message status updated", {
+          messageId,
+          status: "read",
+        });
+        return;
+      }
       io.to(updatedMessage.sender.toString()).emit("message status updated", {
         messageId,
         status: "delivered",
@@ -191,13 +207,47 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("delete message", (deletedMessageInfo) => {
-    const { chatId, messageId, deleteType } = deletedMessageInfo;
-
+  socket.on("delete message", async (deletedMessageInfo) => {
+    const { chatId, messageId, deleteType, senderId } = deletedMessageInfo;
     // Emit the delete event to all users in the chat except the sender
     socket
       .to(chatId)
       .emit("message deleted", { messageId, deleteType, chatId });
+
+    const chat = await Chat.findById(chatId);
+    if (chat) {
+      const allUsersId = chat.users.map((user) => user._id.toString());
+      for (let userId of allUsersId) {
+        if (userId !== senderId) {
+          io.to(userId).emit("message deleted", {
+            messageId,
+            deleteType,
+            chatId,
+          });
+        }
+      }
+    }
+  });
+
+  // New event to handle when a user opens a chat
+  socket.on("open chat", ({ userId, chatId }) => {
+    if (userId && chatId) {
+      const userChats = userOpenChats.get(userId) || new Set();
+      userChats.add(chatId);
+      userOpenChats.set(userId, userChats);
+    }
+  });
+
+  // New event to handle when a user closes a chat
+  socket.on("close chat", ({ userId, chatId }) => {
+    if (userId && chatId) {
+      console.log("Closing chat", chatId);
+      const userChats = userOpenChats.get(userId);
+      if (userChats) {
+        console.log("Closing chat", chatId);
+        userChats.delete(chatId);
+      }
+    }
   });
 
   socket.off("setup", () => {
@@ -205,3 +255,5 @@ io.on("connection", (socket) => {
     socket.leave(userData._id);
   });
 });
+
+module.exports = { io, app, server };
