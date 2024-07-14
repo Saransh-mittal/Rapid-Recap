@@ -10,6 +10,7 @@ import {
   Flex,
   Tooltip,
   Badge,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { LockIcon, TriangleDownIcon } from "@chakra-ui/icons";
 import Alt_img from "/images/rr.png";
@@ -20,6 +21,8 @@ import TotalUserAttempted from "./TotalUserAttempted";
 import QuinBoost from "./quizComponents/QuinBoost";
 import starBoost from "/GIFs/starBoost.gif";
 import TextBackgound from "/images/textBackground.png";
+import ShareButton from "./ShareButton";
+import ShareChatModal from "../chatComponent/miniComponents/ShareChatModal";
 const Sidebar = ({
   givenQuiz,
   percentile,
@@ -44,6 +47,23 @@ const Sidebar = ({
   quinTour,
 }) => {
   const notLoggedIn = state.show;
+  const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure();
+  const handleShare = () => {
+    if (notLoggedIn) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to share this article.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    onOpenShareModal();
+
+    // In a real implementation, you might do something like:
+    // shareToChat(article);
+  };
   return (
     <Box
       boxShadow={"0 100px 200px rgba(1, 1, 1, 1.1)"}
@@ -110,11 +130,12 @@ const Sidebar = ({
         w={"100%"}
         marginTop={"2rem"}
         marginBottom={"2"}
-        gap={10}
-        flexDirection={{ base: "column", md: "row" }}
+        gap={3}
+        flexDirection={"column"}
         justifyContent={"center"}
         alignItems={"center"}
       >
+        <ShareButton onClick={handleShare} isDisabled={notLoggedIn} />
         <Flex
           flexDirection={"column"}
           position={"relative"}
@@ -309,6 +330,11 @@ const Sidebar = ({
           </Tooltip>
         )}
       </SimpleGrid>
+      <ShareChatModal
+        isOpen={isOpen}
+        onClose={onClose}
+        articleToShare={article}
+      />
     </Box>
   );
 };

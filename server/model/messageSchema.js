@@ -14,6 +14,11 @@ const messageSchema = mongoose.Schema(
       default: "sending",
     },
     permanentDeleteFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
+    type: {
+      type: String,
+      enum: ["text", "article_card", "score_card"],
+      default: "text",
+    },
   },
   { timestamps: true }
 );
