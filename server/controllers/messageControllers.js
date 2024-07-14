@@ -212,19 +212,44 @@ const addReaction = asyncHandler(async (req, res) => {
   const { emoji } = req.body;
   const userId = req.user._id;
 
-  const updatedMessage = await Message.findByIdAndUpdate(
-    messageId,
-    {
-      $push: { reactions: { user: userId, emoji } },
-    },
-    { new: true }
-  ).populate("reactions.user", "name pic");
+  // Retrieve the message
+  const message = await Message.findById(messageId).populate(
+    "reactions.user",
+    "name pic"
+  );
 
-  if (!updatedMessage) {
+  if (!message) {
     res.status(404);
     throw new Error("Message not found");
   }
 
+  // Check if the user has already reacted
+  const existingReactionIndex = message.reactions.findIndex(
+    (reaction) => reaction.user._id.toString() === userId.toString()
+  );
+  // console.log(message.reactions);
+  // console.log(existingReactionIndex);
+  if (existingReactionIndex > -1) {
+    // Update the existing reaction
+    message.reactions[existingReactionIndex].emoji = emoji;
+  } else {
+    // Add a new reaction
+    message.reactions.push({ user: userId, emoji });
+  }
+
+  // Save the updated message
+  let updatedMessage = await message.save();
+
+  // Populate the reactions.user field
+  updatedMessage = await updatedMessage.populate("reactions.user", "name pic");
+  updatedMessage = await updatedMessage.populate("sender", "name pic");
+  updatedMessage = await updatedMessage.populate("chat");
+  updatedMessage = await User.populate(updatedMessage, {
+    path: "chat.users",
+    select: "name pic email",
+  });
+
+  // Return the updated message
   res.json(updatedMessage);
 });
 

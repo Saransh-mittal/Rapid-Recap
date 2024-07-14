@@ -10,11 +10,11 @@ import {
   isSameUser,
 } from "../config/ChatLogics";
 import { ChatState } from "../../../contextAPI/ChatProvider";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./ContextMenu";
 import { BsCheck, BsCheckAll, BsClock } from "react-icons/bs";
-import ReactionPicker from "./ReactionPicker";
+// import ReactionPicker from "./ReactionPicker";
 
 const ScrollableChat = ({
   messages,
@@ -157,13 +157,10 @@ const ScrollableChat = ({
     handleCloseContextMenu();
   };
 
-  useEffect(() => {
-    return () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-      }
-    };
-  }, []);
+  const handleReact = (emoji) => {
+    handleAddReaction(contextMenu.messageId, emoji);
+    handleCloseContextMenu();
+  };
 
   // const MessageStatus = ({ message }) => {
   //   if (message.sender._id !== user._id) return null;
@@ -182,17 +179,22 @@ const ScrollableChat = ({
     if (!message.reactions || message.reactions.length === 0) return null;
 
     return (
-      <Flex flexWrap="wrap" mt={1}>
+      <Flex
+        flexWrap="wrap"
+        mt={1}
+        position={"absolute"}
+        right={"-0.65rem"}
+        bottom={"-1.2rem"}
+      >
         {message.reactions.map((reaction, index) => (
           <Tooltip key={index} label={reaction.user.name} placement="bottom">
             <Box
-              bg="gray.100"
               borderRadius="full"
               px={2}
               py={1}
               mr={1}
               mb={1}
-              fontSize="xs"
+              fontSize="md"
               cursor="pointer"
               onClick={() =>
                 handleRemoveReaction(message._id, reaction.user._id)
@@ -264,7 +266,7 @@ const ScrollableChat = ({
                       }`,
                       marginLeft: isSameSenderMargin(msgs, m, i, user._id),
                       marginTop: isSameUser(msgs, m, i, user._id) ? 3 : 5,
-                      borderRadius: "20px",
+                      borderRadius: "12px",
                       padding: "5px 15px",
                       maxWidth: "75%",
                       color: "black",
@@ -312,10 +314,10 @@ const ScrollableChat = ({
                       )}
                     </div>
                   </span>
-                  <ReactionPicker
+                  {/* <ReactionPicker
                     messageId={m._id}
                     onAddReaction={handleAddReaction}
-                  />
+                  /> */}
                 </Box>
               );
             })}
@@ -327,6 +329,7 @@ const ScrollableChat = ({
           position={contextMenu.position}
           onDelete={handleDelete}
           onCopy={handleCopy}
+          onReact={handleReact}
           isSender={
             messages.find((m) => m._id === contextMenu.messageId)?.sender
               ._id === user._id
