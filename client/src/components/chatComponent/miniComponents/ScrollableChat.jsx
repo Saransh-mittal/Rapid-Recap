@@ -14,6 +14,7 @@ import { Box, Flex, Text } from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./ContextMenu";
 import { BsCheck, BsCheckAll, BsClock } from "react-icons/bs";
+import { Emoji } from "emoji-picker-react";
 // import ReactionPicker from "./ReactionPicker";
 
 const ScrollableChat = ({
@@ -157,8 +158,8 @@ const ScrollableChat = ({
     handleCloseContextMenu();
   };
 
-  const handleReact = (emoji) => {
-    handleAddReaction(contextMenu.messageId, emoji);
+  const handleReact = ({ emoji, messageId }) => {
+    handleAddReaction(messageId, emoji);
     handleCloseContextMenu();
   };
 
@@ -184,7 +185,7 @@ const ScrollableChat = ({
         mt={1}
         position={"absolute"}
         right={"-0.65rem"}
-        bottom={"-1.2rem"}
+        bottom={"-1rem"}
       >
         {message.reactions.map((reaction, index) => (
           <Tooltip key={index} label={reaction.user.name} placement="bottom">
@@ -200,7 +201,8 @@ const ScrollableChat = ({
                 handleRemoveReaction(message._id, reaction.user._id)
               }
             >
-              {reaction.emoji}
+              <Emoji unified={reaction.emoji} size="20" />
+              {/* {reaction.emoji} */}
             </Box>
           </Tooltip>
         ))}
@@ -344,6 +346,7 @@ const ScrollableChat = ({
               user._id.toString()
             )
           }
+          messageId={contextMenu.messageId}
         />
       </ScrollableFeed>
     </>

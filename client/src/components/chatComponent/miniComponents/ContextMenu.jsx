@@ -21,9 +21,16 @@ import {
   ModalBody,
   ModalHeader,
 } from "@chakra-ui/react";
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { Emoji } from "emoji-picker-react";
 
-const emojis = ["👍", "❤️", "😂", "😮", "😢", "😡"];
+const emojis = [
+  "1f44d", // 👍
+  "2764-fe0f", // ❤️
+  "1f602", // 😂
+  "1f62e", // 😮
+  "1f622", // 😢
+  "1f621", // 😡
+];
 
 const ContextMenu = ({
   isOpen,
@@ -35,6 +42,7 @@ const ContextMenu = ({
   isSender,
   messageTime,
   isMessageDeleted,
+  messageId,
 }) => {
   const [showReactions, setShowReactions] = useState(false);
   const isWithinOneHour = new Date() - new Date(messageTime) <= 60 * 60 * 1000;
@@ -46,30 +54,15 @@ const ContextMenu = ({
   const emojiPickerRef = useRef(null);
 
   const handleReact = (emoji) => {
-    onReact(emoji);
+    onReact({ emoji, messageId });
     setShowReactions(false);
     onClose();
   };
   const handleEmojiSelect = (emojiObject) => {
-    handleReact(emojiObject.emoji);
+    console.log(emojiObject);
+    handleReact(emojiObject.unified);
     onEmojiModalClose();
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(event.target)
-      ) {
-        onEmojiModalClose();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onEmojiModalClose]);
 
   return (
     <Portal>
@@ -128,7 +121,7 @@ const ContextMenu = ({
                     p={2}
                     borderRadius="full"
                   >
-                    {emoji}
+                    <Emoji unified={emoji} size="28" />
                   </Box>
                 ))}
                 <Box
@@ -148,12 +141,14 @@ const ContextMenu = ({
       </Menu>
       <Modal isOpen={isEmojiModalOpen} onClose={onEmojiModalClose}>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Choose an Emoji</ModalHeader>
-          <ModalCloseButton />
+        <ModalContent bg={"transparent"} position={"relative"}>
           <ModalBody>
             <Box ref={emojiPickerRef}>
-              <EmojiPicker onEmojiClick={handleEmojiSelect} />
+              <EmojiPicker
+                onEmojiClick={handleEmojiSelect}
+                emojiStyle={"facebook"}
+                theme={"dark"}
+              />
             </Box>
           </ModalBody>
         </ModalContent>

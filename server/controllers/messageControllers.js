@@ -2,6 +2,8 @@ const asyncHandler = require("express-async-handler");
 const Message = require("../model/messageSchema");
 const User = require("../model/userSchema");
 const Chat = require("../model/chatSchema");
+const { sendNotification } = require("../services/notificationService");
+const { userOpenChats } = require("../sharedState");
 
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
@@ -52,6 +54,23 @@ const sendMessage = asyncHandler(async (req, res) => {
     });
 
     await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
+    const chatUsers = message.chat.users;
+    for (let user of chatUsers) {
+      if (user._id.toString() !== req.user._id.toString()) {
+        const userChats = userOpenChats.get(user._id.toString());
+        // Only send notification if the user doesn't have this chat open
+        if (!userChats || !userChats.has(chatId)) {
+          await sendNotification({
+            title: `New message from ${message.sender.name}`,
+            body: message.content,
+            icon: message.sender.pic,
+            url: `/chats?chatId=${chatId}`,
+            userId: user._id,
+            messageId: message._id.toString(),
+          });
+        }
+      }
+    }
 
     res.json(message);
   } catch (error) {
@@ -122,6 +141,21 @@ const deleteMessage = asyncHandler(async (req, res) => {
       message.isDeleted = true;
       message.content = "This message was deleted";
       await message.save();
+
+      // Send a special notification to all recipients
+      const chat = await Chat.findById(message.chat).populate("users");
+      for (let user of chat.users) {
+        if (user._id.toString() !== req.user._id.toString()) {
+          await sendNotification({
+            title: "Message Deleted",
+            body: "A message was deleted from this chat",
+            icon: req.user.pic,
+            url: `/chats?chatId=${message.chat}`,
+            userId: user._id,
+            messageId: message._id.toString(), // Include the messageId
+          });
+        }
+      }
       // check the next latest message of chat and update it.
       const nextLatestMessage = await Message.findOne({
         chat: message.chat,
@@ -211,7 +245,7 @@ const addReaction = asyncHandler(async (req, res) => {
   const { messageId } = req.params;
   const { emoji } = req.body;
   const userId = req.user._id;
-
+  console.log(messageId, emoji, userId);
   // Retrieve the message
   const message = await Message.findById(messageId).populate(
     "reactions.user",
@@ -257,13 +291,19 @@ const removeReaction = asyncHandler(async (req, res) => {
   const { messageId } = req.params;
   const userId = req.user._id;
 
-  const updatedMessage = await Message.findByIdAndUpdate(
+  let updatedMessage = await Message.findByIdAndUpdate(
     messageId,
     {
       $pull: { reactions: { user: userId } },
     },
     { new: true }
   ).populate("reactions.user", "name pic");
+  updatedMessage = await updatedMessage.populate("sender", "name pic");
+  updatedMessage = await updatedMessage.populate("chat");
+  updatedMessage = await User.populate(updatedMessage, {
+    path: "chat.users",
+    select: "name pic email",
+  });
 
   if (!updatedMessage) {
     res.status(404);

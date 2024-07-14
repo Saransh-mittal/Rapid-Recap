@@ -48,6 +48,18 @@ const UserChats = ({ fetchAgain }) => {
   };
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const chatId = params.get("chatId");
+
+    if (chatId && chats) {
+      const selectedChat = chats.find((chat) => chat?._id === chatId);
+      if (selectedChat) {
+        setSelectedChat(selectedChat);
+      }
+    }
+  }, [location, chats, setSelectedChat]);
+
+  useEffect(() => {
     setLoggedUser(state.user);
     fetchChats();
     // eslint-disable-next-line
@@ -128,7 +140,7 @@ const UserChats = ({ fetchAgain }) => {
       >
         {chats ? (
           <Stack>
-            {chats.map((chat) => {
+            {chats?.map((chat) => {
               const readByLoggedUser =
                 chat.latestMessage?.readBy.includes(user._id) ||
                 chat.latestMessage.sender._id.toString() ===
@@ -154,7 +166,12 @@ const UserChats = ({ fetchAgain }) => {
                     });
                   }}
                   cursor="pointer"
-                  bg={selectedChat === chat ? "#38B2AC" : "#0f0d15"}
+                  bg={
+                    selectedChat &&
+                    selectedChat?._id.toString() === chat?._id.toString()
+                      ? "#2D3748" // New background color for selected chat
+                      : "#0f0d15"
+                  }
                   color={"white"}
                   boxShadow={
                     "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
@@ -167,7 +184,10 @@ const UserChats = ({ fetchAgain }) => {
                 >
                   <Flex justifyContent={"space-between"} alignItems={"center"}>
                     <Flex gap={2}>
-                      <Text fontWeight={readByLoggedUser ? "normal" : "bold"}>
+                      <Text
+                        fontWeight={readByLoggedUser ? "normal" : "bold"}
+                        m={0}
+                      >
                         {!chat.isGroupChat
                           ? getSender(loggedUser, chat.users)
                           : chat.chatName}
@@ -179,6 +199,7 @@ const UserChats = ({ fetchAgain }) => {
                       )}
                     </Flex>
                     <Text
+                      m={0}
                       fontSize="xs"
                       color={readByLoggedUser ? "#9CAFAA" : "white"}
                     >
