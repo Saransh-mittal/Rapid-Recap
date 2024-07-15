@@ -135,19 +135,45 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     if (event.key === "Enter" && newMessage) {
       socket.emit("stop typing", selectedChat._id);
       try {
+        const tempId = Date.now().toString(); // Temporary ID for optimistic update
+        const optimisticMessage = {
+          _id: tempId,
+          sender: {
+            _id: user._id,
+            name: user.name,
+            pic: user.pic,
+          },
+          content: newMessage,
+          chat: selectedChat._id,
+          status: "sending",
+          createdAt: new Date().toISOString(),
+        };
+
+        setMessages((prevMessages) => [...prevMessages, optimisticMessage]);
+        setNewMessage(""); // Clear input immediately
+
         const { data } = await axios.post("/api/message", {
           content: newMessage,
           chatId: selectedChat._id,
         });
+
         socket.emit("new message", data);
-        setMessages((prevMessages) => [...prevMessages, data]);
+
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg._id === tempId ? { ...data, status: "sent" } : msg
+          )
+        );
 
         // Update latest message and sort chats
         updateLatestMessage(selectedChat._id, data);
-        setNewMessage("");
       } catch (error) {
+        // Handle error: remove optimistic message and show error toast
+        setMessages((prevMessages) =>
+          prevMessages.filter((msg) => msg._id !== tempId)
+        );
         toast({
-          title: "Error Occured!",
+          title: "Error Occurred!",
           description: "Failed to send the Message",
           status: "error",
           duration: 5000,

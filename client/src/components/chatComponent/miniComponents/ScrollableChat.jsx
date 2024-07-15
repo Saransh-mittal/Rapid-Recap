@@ -202,7 +202,7 @@ const ScrollableChat = ({
     handleCloseContextMenu();
   };
 
-  const renderReactions = (message) => {
+  const renderReactions = (message, isSameLoggedUser) => {
     if (!message.reactions || message.reactions.length === 0) return null;
     const distinctReactions = message.reactions.reduce((acc, reaction) => {
       if (!acc.find((r) => r.emoji === reaction.emoji)) {
@@ -215,7 +215,8 @@ const ScrollableChat = ({
       <Flex
         flexWrap="wrap"
         position={"absolute"}
-        right={"-0.65rem"}
+        right={isSameLoggedUser ? "0" : ""}
+        left={!isSameLoggedUser ? "0" : ""}
         bottom={"-0.9rem"}
         bg={"rgba(42, 36, 64, 0.7)"}
         px={2}
@@ -328,6 +329,7 @@ const ScrollableChat = ({
                 user._id.toString()
               );
               const messageDeleted = m.isDeleted;
+              const isSameLoggedUser = m.sender._id === user._id;
 
               if (
                 m.type === "article_card" &&
@@ -335,6 +337,7 @@ const ScrollableChat = ({
               ) {
                 return (
                   <Box
+                    mt={"1.5rem"}
                     key={m._id}
                     style={{
                       display: "flex",
@@ -369,10 +372,7 @@ const ScrollableChat = ({
                       onTouchStart={(e) => handleTouchStart(e, m._id)}
                       onTouchEnd={handleTouchEnd}
                       position={"relative"}
-                      _hover={{
-                        transform: "translateY(-5px)",
-                        transition: "transform 0.3s",
-                      }}
+                      marginLeft={isSameSenderMargin(msgs, m, i, user._id)}
                     >
                       <ArticleCard
                         article={m.article}
@@ -404,6 +404,7 @@ const ScrollableChat = ({
                           </span>
                         )}
                       </div>
+                      {renderReactions(m, isSameLoggedUser)}
                     </Flex>
                   </Box>
                 );
@@ -438,7 +439,7 @@ const ScrollableChat = ({
                         m.sender._id === user._id ? "#BEE3F8" : "#B9F5D0"
                       }`,
                       marginLeft: isSameSenderMargin(msgs, m, i, user._id),
-                      marginTop: isSameUser(msgs, m, i, user._id) ? 3 : 5,
+                      marginTop: isSameLoggedUser ? 3 : 5,
                       borderRadius: "12px",
                       padding: "5px 15px",
                       maxWidth: "75%",
@@ -469,7 +470,7 @@ const ScrollableChat = ({
                         ? "This message was deleted for you"
                         : m.content}
                     </Text>
-                    {renderReactions(m)}
+                    {renderReactions(m, isSameLoggedUser)}
                     <div
                       style={{
                         fontSize: "0.75rem",
@@ -488,10 +489,6 @@ const ScrollableChat = ({
                       )}
                     </div>
                   </span>
-                  {/* <ReactionPicker
-                    messageId={m._id}
-                    onAddReaction={handleAddReaction}
-                  /> */}
                 </Box>
               );
             })}

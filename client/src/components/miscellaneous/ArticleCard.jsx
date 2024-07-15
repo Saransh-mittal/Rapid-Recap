@@ -58,7 +58,7 @@ const ArticleCard = ({
         borderRadius="8px"
         cursor={isLoading ? "default" : "pointer"}
         _hover={
-          cancelHoverEffect && {
+          !cancelHoverEffect && {
             transform: isLoading ? "none" : "translateY(-5px)",
             transition: "transform 0.3s",
           }
@@ -131,7 +131,7 @@ const ArticleCard = ({
       flexDirection="column"
       cursor={isLoading ? "default" : "pointer"}
       _hover={
-        cancelHoverEffect && {
+        !cancelHoverEffect && {
           transform: isLoading ? "none" : "translateY(-5px)",
           transition: "transform 0.3s",
         }

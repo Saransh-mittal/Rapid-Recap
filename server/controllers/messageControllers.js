@@ -246,7 +246,6 @@ const addReaction = asyncHandler(async (req, res) => {
   const { messageId } = req.params;
   const { emoji } = req.body;
   const userId = req.user._id;
-  console.log(messageId, emoji, userId);
   // Retrieve the message
   const message = await Message.findById(messageId).populate(
     "reactions.user",
