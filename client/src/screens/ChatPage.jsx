@@ -23,7 +23,7 @@ const ChatPage = () => {
         p="10px"
       >
         <Flex
-          display={{ base: !selectedChat ? "flex" : "none", md: "flex" }}
+          display={{ base: !selectedChat ? "flex" : "none", lg: "flex" }}
           flexDirection={"column"}
           w={{ base: "100%", md: "60%" }}
           mr={{ base: 0, md: 10 }}
@@ -31,7 +31,7 @@ const ChatPage = () => {
           {user && <UserChats fetchAgain={fetchAgain} />}
         </Flex>
         <Flex
-          display={{ base: selectedChat ? "flex" : "none", md: "flex" }}
+          display={{ base: selectedChat ? "flex" : "none", lg: "flex" }}
           w={"100%"}
           className="userChatBox"
         >

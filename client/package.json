@@ -26,6 +26,7 @@
     "html-react-parser": "^5.1.10",
     "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
+    "lucide-react": "^0.408.0",
     "moment": "^2.30.1",
     "otp-timer-ts": "^3.0.1",
     "react": "^18.2.0",

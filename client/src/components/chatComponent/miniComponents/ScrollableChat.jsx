@@ -12,6 +12,8 @@ import {
 import { ChatState } from "../../../contextAPI/ChatProvider";
 import {
   Box,
+  Text,
+  useMediaQuery,
   Flex,
   Modal,
   ModalBody,
@@ -24,12 +26,13 @@ import {
   TabPanels,
   Tabs,
   Tab,
-  Text,
   useDisclosure,
 } from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./ContextMenu";
 import { BsCheck, BsCheckAll, BsClock } from "react-icons/bs";
+import ArticleCard from "../../miscellaneous/ArticleCard";
+import { useNavigate } from "react-router-dom";
 import { Emoji } from "emoji-picker-react";
 // import ReactionPicker from "./ReactionPicker";
 
@@ -55,6 +58,8 @@ const ScrollableChat = ({
       hour12: true,
     });
   };
+  const navigate = useNavigate();
+  const isScreenSmallerThan600px = useMediaQuery("(max-width: 600px)")[0];
 
   const formatDate = (date) => {
     const messageDate = new Date(date);
@@ -185,24 +190,18 @@ const ScrollableChat = ({
     handleCloseContextMenu();
   };
 
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+      }
+    };
+  }, []);
   const handleReact = ({ emoji, messageId }) => {
     handleAddReaction(messageId, emoji);
     handleCloseContextMenu();
   };
 
-  // const MessageStatus = ({ message }) => {
-  //   if (message.sender._id !== user._id) return null;
-
-  //   if (!message.sent) {
-  //     return <BsClock color="#999" size={16} />;
-  //   } else if (message.sent && !message.delivered) {
-  //     return <BsCheck color="#999" size={16} />;
-  //   } else if (message.delivered && message.readBy.length === 0) {
-  //     return <BsCheckAll color="#999" size={16} />;
-  //   } else if (message.readBy.length > 0) {
-  //     return <BsCheckAll color="#34B7F1" size={16} />;
-  //   }
-  // };
   const renderReactions = (message) => {
     if (!message.reactions || message.reactions.length === 0) return null;
     const distinctReactions = message.reactions.reduce((acc, reaction) => {
@@ -329,6 +328,87 @@ const ScrollableChat = ({
                 user._id.toString()
               );
               const messageDeleted = m.isDeleted;
+
+              if (
+                m.type === "article_card" &&
+                !(messageDeleted || messageDeletedForUser)
+              ) {
+                return (
+                  <Box
+                    key={m._id}
+                    style={{
+                      display: "flex",
+                      justifyContent:
+                        m.sender._id === user._id ? "flex-end" : "flex-start",
+                      marginBottom: "0.45rem",
+                      width: "100%",
+                      alignSelf:
+                        m.sender._id === user._id ? "flex-end" : "flex-start",
+                    }}
+                  >
+                    {(isSameSender(msgs, m, i, user._id) ||
+                      isLastMessage(msgs, i, user._id)) && (
+                      <Tooltip
+                        label={m.sender.name}
+                        placement="bottom-start"
+                        hasArrow
+                      >
+                        <Avatar
+                          mt="7px"
+                          mr={3}
+                          size="sm"
+                          cursor="pointer"
+                          name={m.sender.name}
+                          src={m.sender.pic}
+                        />
+                      </Tooltip>
+                    )}
+                    <Flex
+                      w={isScreenSmallerThan600px ? "75%" : "40%"}
+                      onContextMenu={(e) => handleContextMenu(e, m._id)}
+                      onTouchStart={(e) => handleTouchStart(e, m._id)}
+                      onTouchEnd={handleTouchEnd}
+                      position={"relative"}
+                      _hover={{
+                        transform: "translateY(-5px)",
+                        transition: "transform 0.3s",
+                      }}
+                    >
+                      <ArticleCard
+                        article={m.article}
+                        onClick={() => {
+                          /* Handle click event */
+                          navigate(`/article/${m.article._id}`);
+                        }}
+                        // viewMode={isScreenSmallerThan992px ? "grid" : "list"}
+                        viewMode="grid"
+                        width={"100%"}
+                        cancelHoverEffect={true}
+                      />
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#555",
+                          textAlign: "right",
+                          marginTop: "2px",
+                          display: "flex",
+                          position: "absolute",
+                          bottom: "0.5rem",
+                          right: "0.5rem",
+                        }}
+                      >
+                        {formatTime(m.createdAt)}
+                        {!messageDeleted && !messageDeletedForUser && (
+                          <span style={{ marginLeft: "4px" }}>
+                            <MessageStatus message={m} />
+                          </span>
+                        )}
+                      </div>
+                    </Flex>
+                  </Box>
+                );
+              }
+
               return (
                 <Box
                   style={{ display: "flex" }}

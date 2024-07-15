@@ -2,6 +2,10 @@ const asyncHandler = require("express-async-handler");
 const Chat = require("../model/chatSchema");
 const User = require("../model/userSchema");
 const Message = require("../model/messageSchema");
+const Article = require("../model/articleSchema");
+const { formatDate } = require("../utils/miscellaneous.utils");
+const { userOpenChats } = require("../sharedState");
+const { sendNotification } = require("../services/notificationService");
 
 //@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
@@ -216,6 +220,65 @@ const addToGroup = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Share a message to a particular chat
+// @route   POST /api/chat/share
+// @access  Protected
+const shareMessage = asyncHandler(async (req, res) => {
+  const { chatIds, type, articleId } = req.body;
+
+  const article = await Article.findById(articleId).select(
+    "_id title category dateTime imgURL"
+  );
+  if (!article) {
+    res.status(404);
+    throw new Error("Article not found");
+  }
+  const sender = await User.findById(req.user._id).select("pic name");
+  for (let chatId of chatIds) {
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      res.status(404);
+      throw new Error("Chat not found");
+    }
+    const newMessage = new Message({
+      sender: req.user._id,
+      chat: chatId,
+      type: type,
+      article: {
+        _id: article._id,
+        title: article.title,
+        category: article.category,
+        date: formatDate(article.dateTime),
+        image: article.imgURL[0],
+      },
+      status: "sent",
+    });
+    await newMessage.save();
+    chat.latestMessage = newMessage;
+    await chat.save();
+
+    const chatUsers = chat.users;
+    for (let user of chatUsers) {
+      if (user.toString() !== req.user._id.toString()) {
+        const userChats = userOpenChats.get(user._id.toString());
+        // Only send notification if the user doesn't have this chat open
+        if (!userChats || !userChats.has(chatId)) {
+          await sendNotification({
+            title: `New message from ${sender.name}`,
+            body: "Shared an Article",
+            icon: sender.pic,
+            url: `/chats?chatId=${chatId}`,
+            userId: user._id,
+            messageId: newMessage._id.toString(),
+          });
+        }
+      }
+    }
+  }
+
+  res.status(200).json({ message: "Article shared successfully" });
+});
+
 module.exports = {
   accessChat,
   fetchChats,
@@ -223,4 +286,5 @@ module.exports = {
   renameGroup,
   addToGroup,
   removeFromGroup,
+  shareMessage,
 };
