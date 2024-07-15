@@ -19,6 +19,16 @@ const messageSchema = mongoose.Schema(
       enum: ["text", "article_card", "score_card"],
       default: "text",
     },
+    article: {
+      type: {
+        _id: { type: mongoose.Schema.Types.ObjectId, ref: "ARTICLE" },
+        title: { type: String },
+        category: { type: String },
+        date: { type: String },
+        image: { type: String },
+      },
+      default: null,
+    },
   },
   { timestamps: true }
 );

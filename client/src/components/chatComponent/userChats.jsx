@@ -74,14 +74,18 @@ const UserChats = ({ fetchAgain }) => {
 
     if (
       chat?.latestMessage?.deletedFor &&
-      chat?.latestMessage?.deletedFor.includes(loggedUser._id)
+      chat?.latestMessage?.deletedFor.includes(loggedUser?._id)
     ) {
       return "This message was deleted for you";
     }
 
-    return chat.latestMessage.content.length > 50
-      ? chat.latestMessage.content.substring(0, 51) + "..."
-      : chat.latestMessage.content;
+    return chat.latestMessage.content
+      ? chat.latestMessage.content.length > 50
+        ? chat.latestMessage.content.substring(0, 51) + "..."
+        : chat.latestMessage.content
+      : chat.latestMessage.type === "article_card"
+      ? "Shared an Article"
+      : "Score Card";
   };
   return (
     <Box

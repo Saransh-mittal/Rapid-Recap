@@ -69,12 +69,11 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare }) => {
 
     try {
       // Here you would make an API call to share the article
-      // For example:
-      // await axios.post("/api/share-article", {
-      //   articleId: articleToShare._id,
-      //   chatIds: selectedChats
-      // });
-
+      await axios.post("/api/chat/share", {
+        articleId: articleToShare._id,
+        chatIds: selectedChats,
+        type: "article_card",
+      });
       toast({
         title: "Article Shared",
         description: `Article shared to ${selectedChats.length} chat(s) successfully!`,
