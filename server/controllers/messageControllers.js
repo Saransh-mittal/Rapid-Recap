@@ -13,7 +13,8 @@ const allMessages = asyncHandler(async (req, res) => {
   try {
     const messages = await Message.find({ chat: req.params.chatId })
       .populate("sender", "name pic email")
-      .populate("chat");
+      .populate("chat")
+      .populate("reactions.user", "name pic");
     const filteredMessages = messages.filter(
       (message) => !message.permanentDeleteFor.includes(userId)
     );

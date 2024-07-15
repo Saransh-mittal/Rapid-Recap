@@ -70,12 +70,18 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   const fetchMessages = useCallback(async () => {
     if (!selectedChat) return;
-
     try {
       setLoading(true);
 
       const { data } = await axios.get(`/api/message/${selectedChat._id}`);
-      setMessages((prevMessages) => [...data, ...prevMessages]);
+      setMessages((prevMessages) => {
+        if (
+          prevMessages.length > 0 &&
+          prevMessages[0].chat.toString() === selectedChat._id.toString()
+        )
+          return [...data, ...prevMessages];
+        return [...data];
+      });
       setLoading(false);
       if (data.length === 0) {
         setHasMore(false);
@@ -542,7 +548,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   loadMoreMessages={loadMoreMessages}
                   handleAddReaction={handleAddReaction}
                   handleRemoveReaction={handleRemoveReaction}
-                  // hasMore={hasMore}
                 />
               </div>
             )}

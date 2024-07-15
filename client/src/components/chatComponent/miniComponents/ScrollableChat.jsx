@@ -10,7 +10,23 @@ import {
   isSameUser,
 } from "../config/ChatLogics";
 import { ChatState } from "../../../contextAPI/ChatProvider";
-import { Box, Flex, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Tab,
+  Text,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./ContextMenu";
 import { BsCheck, BsCheckAll, BsClock } from "react-icons/bs";
@@ -24,6 +40,7 @@ const ScrollableChat = ({
   loadMoreMessages,
   handleAddReaction,
   handleRemoveReaction,
+  currUser,
 }) => {
   const { user } = ChatState();
   const [loading, setLoading] = useState(false);
@@ -110,6 +127,10 @@ const ScrollableChat = ({
   const longPressTimer = useRef(null);
   const longPressDelay = 500; // ms
 
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedReactions, setSelectedReactions] = useState(null);
+  const [activeTab, setActiveTab] = useState("All");
+
   const handleContextMenu = (event, messageId) => {
     event.preventDefault();
     setContextMenu({
@@ -145,6 +166,12 @@ const ScrollableChat = ({
     });
   };
 
+  const handleReactionClick = (message) => {
+    setSelectedReactions({ reactions: message.reactions, message });
+    setActiveTab("All");
+    onOpen();
+  };
+
   const handleDelete = (type) => {
     handleDeleteMessage(contextMenu.messageId, type);
     handleCloseContextMenu();
@@ -178,35 +205,99 @@ const ScrollableChat = ({
   // };
   const renderReactions = (message) => {
     if (!message.reactions || message.reactions.length === 0) return null;
+    const distinctReactions = message.reactions.reduce((acc, reaction) => {
+      if (!acc.find((r) => r.emoji === reaction.emoji)) {
+        acc.push(reaction);
+      }
+      return acc;
+    }, []);
 
     return (
       <Flex
         flexWrap="wrap"
-        mt={1}
         position={"absolute"}
         right={"-0.65rem"}
-        bottom={"-1rem"}
+        bottom={"-0.9rem"}
+        bg={"rgba(42, 36, 64, 0.7)"}
+        px={2}
+        gap={1}
+        borderRadius={"20px"}
+        backdropFilter={"blur(5px)"} // Added blur effect for better visibility
+        boxShadow={"0 2px 4px rgba(0, 0, 0, 0.2)"} // Subtle shadow for depth
+        onClick={() => handleReactionClick(message)}
       >
-        {message.reactions.map((reaction, index) => (
+        {distinctReactions.map((reaction, index) => (
           <Tooltip key={index} label={reaction.user.name} placement="bottom">
             <Box
               borderRadius="full"
-              px={2}
               py={1}
-              mr={1}
-              mb={1}
+              // mr={1}
+              // mb={1}
               fontSize="md"
               cursor="pointer"
-              onClick={() =>
-                handleRemoveReaction(message._id, reaction.user._id)
-              }
             >
-              <Emoji unified={reaction.emoji} size="20" />
+              <Emoji unified={reaction.emoji} size="15" />
               {/* {reaction.emoji} */}
             </Box>
           </Tooltip>
         ))}
+        {message.reactions.length > 1 && (
+          <Text m={0} fontSize={"sm"} mt={"2px"} ml={"2px"} color={"#9CAFAA"}>
+            {" "}
+            {message.reactions.length}{" "}
+          </Text>
+        )}
       </Flex>
+    );
+  };
+
+  const getDistinctEmojis = (reactions) => {
+    return [...new Set(reactions.map((r) => r.emoji))];
+  };
+  const filterReactionsByEmoji = (reactions, emoji) => {
+    return reactions.filter((r) => r.emoji === emoji);
+  };
+
+  const renderReactions2 = (reactions) => {
+    return reactions.length > 0 ? (
+      reactions.map((reaction) => (
+        <Flex
+          key={reaction.user._id}
+          p="10px"
+          borderRadius="10px"
+          mb={4}
+          _hover={{ bg: "#2a2440" }}
+          cursor={reaction.user._id === user._id ? "pointer" : "not-allowed"}
+          onClick={() => {
+            if (reaction.user._id === user._id) {
+              handleRemoveReaction(selectedReactions.message._id, user._id);
+              onClose();
+            }
+          }}
+        >
+          <Avatar
+            size="md"
+            src={reaction.user.pic}
+            name={reaction.user.name}
+            mr={2}
+          />
+          <Flex flexDirection="column">
+            <Text fontWeight="bold" m={0}>
+              {reaction.user._id === user._id ? "YOU" : reaction.user.name}
+            </Text>
+            {reaction.user._id === user._id && (
+              <Text color="#9CAFAA" m={0}>
+                Tap to remove
+              </Text>
+            )}
+          </Flex>
+          <Flex marginLeft="auto" alignItems="center">
+            <Emoji unified={reaction.emoji} size="25" />
+          </Flex>
+        </Flex>
+      ))
+    ) : (
+      <Text>No reactions in this category</Text>
     );
   };
 
@@ -242,7 +333,7 @@ const ScrollableChat = ({
                 <Box
                   style={{ display: "flex" }}
                   key={m._id}
-                  marginBottom={"0.45rem"}
+                  marginBottom={"0.75rem"}
                 >
                   {(isSameSender(msgs, m, i, user._id) ||
                     isLastMessage(msgs, i, user._id)) && (
@@ -306,6 +397,7 @@ const ScrollableChat = ({
                         textAlign: "right",
                         marginTop: "2px",
                         display: "flex",
+                        justifyContent: "flex-end",
                       }}
                     >
                       {formatTime(m.createdAt)}
@@ -349,6 +441,70 @@ const ScrollableChat = ({
           messageId={contextMenu.messageId}
         />
       </ScrollableFeed>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent
+          bg="#1e1a2e"
+          color="white"
+          borderRadius="10px"
+          boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+        >
+          <ModalHeader
+            bg="#2a2440"
+            borderTopLeftRadius="10px"
+            borderTopRightRadius="10px"
+            w="100%"
+          >
+            Reaction Details
+          </ModalHeader>
+          <ModalCloseButton color="white" />
+          <ModalBody maxH="60vh" overflowY="auto" w="100%" mt="1.5rem">
+            {selectedReactions && (
+              <Tabs
+                isFitted
+                variant="solid-rounded"
+                onChange={(index) =>
+                  setActiveTab(
+                    index === 0
+                      ? "All"
+                      : getDistinctEmojis(selectedReactions.reactions)[
+                          index - 1
+                        ]
+                  )
+                }
+              >
+                <TabList mb="1em">
+                  <Tab>All</Tab>
+                  {getDistinctEmojis(selectedReactions.reactions).map(
+                    (emoji, index) => (
+                      <Tab key={index}>
+                        <Emoji unified={emoji} size="20" />
+                      </Tab>
+                    )
+                  )}
+                </TabList>
+                <TabPanels>
+                  <TabPanel>
+                    {renderReactions2(selectedReactions.reactions)}
+                  </TabPanel>
+                  {getDistinctEmojis(selectedReactions.reactions).map(
+                    (emoji, index) => (
+                      <TabPanel key={index}>
+                        {renderReactions2(
+                          filterReactionsByEmoji(
+                            selectedReactions.reactions,
+                            emoji
+                          )
+                        )}
+                      </TabPanel>
+                    )
+                  )}
+                </TabPanels>
+              </Tabs>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </>
   );
 };
