@@ -10,16 +10,24 @@ const { userOpenChats } = require("../sharedState");
 //@access          Protected
 const allMessages = asyncHandler(async (req, res) => {
   const userId = req.user._id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
+
   try {
     const messages = await Message.find({ chat: req.params.chatId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .populate("sender", "name pic email")
       .populate("chat")
       .populate("reactions.user", "name pic");
+
     const filteredMessages = messages.filter(
       (message) => !message.permanentDeleteFor.includes(userId)
     );
 
-    res.json(filteredMessages);
+    res.json(filteredMessages.reverse());
   } catch (error) {
     res.status(400);
     throw new Error(error.message);

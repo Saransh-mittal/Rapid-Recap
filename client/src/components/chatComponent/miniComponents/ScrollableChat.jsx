@@ -27,13 +27,15 @@ import {
   Tabs,
   Tab,
   useDisclosure,
+  Spinner,
+  Skeleton,
 } from "@chakra-ui/react";
 import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./ContextMenu";
-import { BsCheck, BsCheckAll, BsClock } from "react-icons/bs";
 import ArticleCard from "../../miscellaneous/ArticleCard";
 import { useNavigate } from "react-router-dom";
 import { Emoji } from "emoji-picker-react";
+import _ from "lodash"; // Import lodash
 // import ReactionPicker from "./ReactionPicker";
 
 const ScrollableChat = ({
@@ -43,13 +45,53 @@ const ScrollableChat = ({
   loadMoreMessages,
   handleAddReaction,
   handleRemoveReaction,
-  currUser,
+  hasMore,
 }) => {
   const { user } = ChatState();
   const [loading, setLoading] = useState(false);
   const scrollableFeedRef = useRef(null);
-  const loadingRef = useRef(null);
-  const observer = useRef(null);
+  const [page, setPage] = useState(1);
+  const lastScrollTop = useRef(0);
+  const loadingRef = useRef(false);
+
+  const checkScrollPosition = () => {
+    if (loadingRef.current) return;
+    const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current;
+    if (!scrollableDiv) return;
+
+    const { scrollTop } = scrollableDiv;
+
+    // Check if scrolling up and near the top
+    if (
+      scrollTop < lastScrollTop.current &&
+      scrollTop <= 300 + (page - 1) * 100 &&
+      hasMore
+    ) {
+      scrollableDiv.style.overflowY = "hidden";
+      loadingRef.current = true;
+      setLoading(true);
+      loadMoreMessages(page + 1)
+        .then(() => {
+          setPage((prevPage) => prevPage + 1);
+        })
+        .finally(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          scrollableDiv.style.overflowY = "auto";
+          loadingRef.current = false;
+          setLoading(false);
+
+          // // Auto-scroll down by 300px
+          // const currentScrollTop = scrollableDiv.scrollTop;
+          // const targetScrollTop = currentScrollTop - 100;
+          // scrollableDiv.scrollTo({
+          //   top: targetScrollTop,
+          //   behavior: "smooth",
+          // });
+        });
+    }
+
+    lastScrollTop.current = scrollTop;
+  };
 
   const formatTime = (date) => {
     return new Date(date).toLocaleString("en-US", {
@@ -94,36 +136,7 @@ const ScrollableChat = ({
   };
 
   const groupedMessages = groupMessagesByDate(messages);
-  const handleIntersect = useCallback(
-    (entries) => {
-      const firstEntry = entries[0];
-      if (firstEntry.isIntersecting && !loading) {
-        setLoading(true);
-        loadMoreMessages().then(() => setLoading(false));
-      }
-    },
-    [loadMoreMessages, loading]
-  );
 
-  useEffect(() => {
-    const options = {
-      root: null,
-      rootMargin: "0px",
-      threshold: 1.0,
-    };
-
-    observer.current = new IntersectionObserver(handleIntersect, options);
-
-    if (loadingRef.current) {
-      observer.current.observe(loadingRef.current);
-    }
-
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, [handleIntersect]);
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,
     position: { x: 0, y: 0 },
@@ -301,19 +314,38 @@ const ScrollableChat = ({
     );
   };
 
+  useEffect(() => {
+    const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current;
+    if (!scrollableDiv) return;
+
+    const scrollListener = () => {
+      if (!loadingRef.current) {
+        checkScrollPosition();
+      }
+    };
+
+    scrollableDiv.addEventListener("scroll", scrollListener);
+
+    return () => {
+      scrollableDiv.removeEventListener("scroll", scrollListener);
+    };
+  }, [checkScrollPosition]);
+
   return (
     <>
-      <style>
+      {/* <style>
         {`
           div::-webkit-scrollbar {
             display: none;
           }
         `}
-      </style>
+      </style> */}
       <ScrollableFeed ref={scrollableFeedRef}>
-        {loading && (
+        {loadingRef.current && (
           <Box textAlign="center" py={2}>
-            <Spinner size="sm" />
+            {Array.from({ length: 20 }, (_, i) => (
+              <Skeleton key={i} height="40px" m={"10px"} />
+            ))}
           </Box>
         )}
         {Object.entries(groupedMessages).map(([date, msgs]) => (

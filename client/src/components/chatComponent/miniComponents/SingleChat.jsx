@@ -107,15 +107,30 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       });
       setLoading(false);
     }
-  }, [selectedChat, page, toast]);
+  }, [selectedChat, toast]);
 
-  const loadMoreMessages = useCallback(() => {
-    if (hasMore) {
-      setPage((prevPage) => prevPage + 1);
-      return fetchMessages();
+  const loadMoreMessages = async (page) => {
+    try {
+      const { data } = await axios.get(
+        `/api/message/${selectedChat._id}?page=${page}&limit=20`
+      );
+      if (!data.length) {
+        setHasMore(false);
+      }
+      console.log(data);
+      setMessages((prevMessages) => [...data, ...prevMessages]);
+      return data;
+    } catch (error) {
+      toast({
+        title: "Error Occured!",
+        description: "Failed to Load More Messages",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
     }
-    return Promise.resolve();
-  }, [hasMore, fetchMessages]);
+  };
 
   const updateMessageReadBy = async (messageId) => {
     try {
@@ -496,6 +511,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 if (chatId) {
                   navigate(`/chats`);
                 }
+                setHasMore(true);
                 setMessagesFetched(false);
                 setMessages([]);
                 setSelectedChat(null);
@@ -570,6 +586,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   loadMoreMessages={loadMoreMessages}
                   handleAddReaction={handleAddReaction}
                   handleRemoveReaction={handleRemoveReaction}
+                  hasMore={hasMore}
                 />
               </div>
             )}
