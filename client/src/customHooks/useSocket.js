@@ -8,13 +8,21 @@ export const useSocket = (user) => {
   const socketRef = useRef(null);
 
   const getSocket = useCallback(() => {
-    if (!socketRef.current && user) {
+    if (!socketRef.current && user && Object.keys(user).length > 0) {
       socketRef.current = io(ENDPOINT);
       socketRef.current.emit("setup", user);
       socketRef.current.on("connected", () => setSocketConnected(true));
     }
     return socketRef.current;
   }, [user]);
+
+  const disconnectSocket = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      setSocketConnected(false);
+    }
+  }, []);
 
   useEffect(() => {
     const socket = getSocket();
@@ -28,5 +36,10 @@ export const useSocket = (user) => {
     };
   }, [getSocket]);
 
-  return { socket: socketRef.current, socketConnected, getSocket };
+  return {
+    socket: socketRef.current,
+    socketConnected,
+    getSocket,
+    disconnectSocket,
+  };
 };

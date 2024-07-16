@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "./appContext";
+import { useSocket } from "../customHooks/useSocket";
 
 const ChatContext = createContext();
 
@@ -9,6 +10,8 @@ const ChatProvider = ({ children }) => {
   const [user, setUser] = useState();
   const [notification, setNotification] = useState([]);
   const [chats, setChats] = useState();
+  const { getSocket, disconnectSocket, socket, socketConnected } =
+    useSocket(user);
 
   const history = useNavigate();
 
@@ -50,8 +53,15 @@ const ChatProvider = ({ children }) => {
     // check state.user for empty object
 
     if (!state.user || Object.keys(state.user).length === 0) history("/");
+    else {
+      getSocket();
+    }
+
+    return () => {
+      disconnectSocket();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history]);
+  }, [state.user, getSocket]);
 
   return (
     <ChatContext.Provider
@@ -65,6 +75,8 @@ const ChatProvider = ({ children }) => {
         chats,
         setChats,
         updateLatestMessage,
+        socket,
+        socketConnected,
       }}
     >
       {children}
