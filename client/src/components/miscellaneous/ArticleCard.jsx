@@ -18,6 +18,7 @@ const ArticleCard = ({
   height,
   width,
   cancelHoverEffect,
+  showShareButton = false,
 }) => {
   const CardContent = () => (
     <>

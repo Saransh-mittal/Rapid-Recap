@@ -4,6 +4,8 @@ const User = require("../model/userSchema");
 const Chat = require("../model/chatSchema");
 const { sendNotification } = require("../services/notificationService");
 const { userOpenChats } = require("../sharedState");
+const Article = require("../model/articleSchema");
+const { formatDate } = require("../utils/miscellaneous.utils");
 
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
@@ -30,19 +32,47 @@ const allMessages = asyncHandler(async (req, res) => {
 //@route           POST /api/Message/
 //@access          Protected
 const sendMessage = asyncHandler(async (req, res) => {
-  const { content, chatId } = req.body;
+  const { content, chatId, type, articleId } = req.body;
   // console.log(chatId);
-  if (!content || !chatId) {
+  if (
+    !chatId ||
+    ((!type || type === "" || type === "text") && !content) ||
+    (type === "article_card" && !articleId)
+  ) {
     console.log("Invalid data passed into request");
     return res.sendStatus(400);
   }
-
-  var newMessage = {
-    sender: req.user._id,
-    content: content,
-    chat: chatId,
-    sent: true,
-  };
+  let article;
+  if (type === "article_card") {
+    article = await Article.findById(articleId).select(
+      "_id title category dateTime imgURL"
+    );
+    if (!article) {
+      res.status(404);
+      throw new Error("Article not found");
+    }
+  }
+  var newMessage =
+    !type || type === "" || type === "text"
+      ? {
+          sender: req.user._id,
+          content: content,
+          chat: chatId,
+          sent: true,
+        }
+      : {
+          sender: req.user._id,
+          type: type,
+          chat: chatId,
+          sent: true,
+          article: {
+            _id: article._id,
+            title: article.title,
+            category: article.category,
+            date: formatDate(article.dateTime),
+            image: article.imgURL[0],
+          },
+        };
 
   try {
     var message = await Message.create(newMessage);

@@ -17,6 +17,7 @@ import {
   Button,
   useDisclosure,
   Image,
+  Grid,
 } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -24,11 +25,13 @@ import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ProfileModal from "./ProfileModal";
 import ScrollableChat from "./ScrollableChat";
+import ShareArticleCard from "../../miscellaneous/ShareArticleCard";
 
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
 import { ChatState } from "../../../contextAPI/ChatProvider";
 import {
+  BsBookmarkFill,
   BsCheck,
   BsCheckAll,
   BsClock,
@@ -36,11 +39,11 @@ import {
   BsStickiesFill,
 } from "react-icons/bs";
 import EmojiPicker from "emoji-picker-react";
-import StickerPicker from "./StickerPicker";
 import { useNavigate } from "react-router-dom";
 const ENDPOINT = "http://localhost:3000"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
 var socket, selectedChatCompare;
 import greaterThan from "/images/greaterThan.png";
+import ArticleCard from "../../miscellaneous/ArticleCard";
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -60,6 +63,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [hasMore, setHasMore] = useState(true);
   const [deleteInfo, setDeleteInfo] = useState({ messageId: null, type: null });
   const navigate = useNavigate();
+  const [showBookmarksModal, setShowBookmarksModal] = useState(false);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false);
 
   const {
     selectedChat,
@@ -317,6 +323,56 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }
   };
 
+  const fetchBookmarks = async () => {
+    setIsLoadingBookmarks(true);
+    try {
+      const response = await axios.get("/api/user/getBookmarks");
+      setBookmarks(response.data.bookmarks);
+    } catch (error) {
+      console.error("Error fetching bookmarks:", error);
+    } finally {
+      setIsLoadingBookmarks(false);
+    }
+  };
+
+  const handleShareBookmark = async (articleId, article) => {
+    if (!selectedChat) return;
+
+    try {
+      setShowBookmarksModal(false);
+      const tempId = Date.now().toString(); // Temporary ID for optimistic update
+      const optimisticMessage = {
+        _id: tempId,
+        sender: {
+          _id: user._id,
+          name: user.name,
+          pic: user.pic,
+        },
+        chat: selectedChat._id,
+        status: "sending",
+        createdAt: new Date().toISOString(),
+        article,
+        type: "article_card",
+      };
+      console.log(article);
+      setMessages((prevMessages) => [...prevMessages, optimisticMessage]);
+      const { data } = await axios.post("/api/message", {
+        type: "article_card",
+        chatId: selectedChat._id,
+        articleId,
+      });
+
+      socket.emit("new message", data);
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === tempId ? { ...data, status: "sent" } : msg
+        )
+      );
+    } catch (error) {
+      console.error("Error sharing bookmark:", error);
+    }
+  };
+
   useEffect(() => {
     socket = io(ENDPOINT);
     socket.emit("setup", user);
@@ -449,11 +505,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   const onEmojiClick = (emojiObject) => {
     setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
-  };
-
-  const onStickerSelect = (stickerUrl) => {
-    setNewMessage((prevMessage) => prevMessage + ` [sticker:${stickerUrl}] `);
-    setShowStickerPicker(false);
   };
 
   const handleClickOutside = (event) => {
@@ -655,15 +706,15 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   _hover={{ background: "#38B2AC", color: "white" }}
                 />
                 <IconButton
-                  icon={<BsStickiesFill />}
+                  icon={<BsBookmarkFill />}
                   onClick={() => {
-                    setShowStickerPicker(!showStickerPicker);
-                    setShowEmojiPicker(false);
+                    setShowBookmarksModal(true);
+                    fetchBookmarks();
                   }}
-                  background={"transparent"}
-                  border={"1px solid white"}
-                  color={"white"}
-                  _hover={{ background: "#38B2AC", color: "white" }}
+                  bg="transparent"
+                  border="1px solid white"
+                  color="white"
+                  _hover={{ bg: "#38B2AC", color: "white" }}
                   ml={2}
                 />
                 {showEmojiPicker && (
@@ -679,17 +730,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                       emojiStyle={"facebook"}
                       theme={"dark"}
                     />
-                  </Box>
-                )}
-                {showStickerPicker && (
-                  <Box
-                    position="absolute"
-                    bottom="60px"
-                    left="0"
-                    zIndex={1}
-                    ref={stickerPickerRef}
-                  >
-                    <StickerPicker onStickerSelect={onStickerSelect} />
                   </Box>
                 )}
                 <Input
@@ -710,6 +750,48 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           </Text>
         </Box>
       )}
+
+      {/* Bookmarks Modal */}
+      <Modal
+        isOpen={showBookmarksModal}
+        onClose={() => setShowBookmarksModal(false)}
+        size={{ base: "full", md: "xl", lg: "3xl", xl: "4xl" }}
+        scrollBehavior="inside"
+      >
+        <ModalOverlay />
+        <ModalContent
+          bg="#0f0d15"
+          bgGradient="linear(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+        >
+          <ModalHeader color="#ffffff">Share Bookmarked Article</ModalHeader>
+          <ModalCloseButton color="#ffffff" />
+          <ModalBody
+            w="100%"
+            css={{ "&::-webkit-scrollbar": { display: "none" } }}
+          >
+            <Grid
+              templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
+              gap="20px"
+            >
+              {isLoadingBookmarks
+                ? Array.from({ length: 6 }).map((_, index) => (
+                    <ArticleCard key={index} isLoading={true} />
+                  ))
+                : bookmarks.map((bookmark) => (
+                    <ArticleCard
+                      key={bookmark._id}
+                      article={bookmark}
+                      onClick={() =>
+                        handleShareBookmark(bookmark._id, bookmark)
+                      }
+                    />
+                  ))}
+            </Grid>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* delete message modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
