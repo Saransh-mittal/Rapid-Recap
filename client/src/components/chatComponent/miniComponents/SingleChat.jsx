@@ -23,8 +23,6 @@ import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ProfileModal from "./ProfileModal";
 import ScrollableChat from "./ScrollableChat";
-
-import io from "socket.io-client";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
 import { ChatState } from "../../../contextAPI/ChatProvider";
 import {
@@ -37,8 +35,7 @@ import {
 import EmojiPicker from "emoji-picker-react";
 import StickerPicker from "./StickerPicker";
 import { useNavigate } from "react-router-dom";
-const ENDPOINT = "http://localhost:3000"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
-var socket, selectedChatCompare;
+var selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -46,7 +43,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messagesFetched, setMessagesFetched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -66,6 +62,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     notification,
     setNotification,
     updateLatestMessage,
+    socket,
+    socketConnected,
   } = ChatState();
 
   const fetchMessages = useCallback(async () => {
@@ -96,7 +94,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         }
       });
 
-      socket.emit("join chat", selectedChat._id);
+      socket?.emit("join chat", selectedChat._id);
       setMessagesFetched(true);
     } catch (error) {
       toast({
@@ -122,7 +120,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const updateMessageReadBy = async (messageId) => {
     try {
       await axios.put(`/api/message/readby/${messageId}`);
-      socket.emit("message read", {
+      socket?.emit("message read", {
         messageId,
         userId: user._id,
       });
@@ -133,7 +131,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   const sendMessage = async (event) => {
     if (event.key === "Enter" && newMessage) {
-      socket.emit("stop typing", selectedChat._id);
+      socket?.emit("stop typing", selectedChat._id);
       try {
         const tempId = Date.now().toString(); // Temporary ID for optimistic update
         const optimisticMessage = {
@@ -157,7 +155,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           chatId: selectedChat._id,
         });
 
-        socket.emit("new message", data);
+        socket?.emit("new message", data);
 
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
@@ -247,7 +245,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       // Update the latest message in the chat state
       updateLatestMessage(selectedChat._id, newLatestMessage || null);
       if (type === "everyone") {
-        socket.emit("delete message", {
+        socket?.emit("delete message", {
           chatId: selectedChat._id,
           messageId: messageId,
           deleteType: type,
@@ -285,7 +283,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         emoji,
       });
       setMessages(messages.map((msg) => (msg._id === messageId ? data : msg)));
-      socket.emit("new reaction", data);
+      socket?.emit("new reaction", data);
     } catch (error) {
       toast({
         title: "Error adding reaction",
@@ -302,7 +300,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     try {
       const { data } = await axios.delete(`/api/message/reaction/${messageId}`);
       setMessages(messages.map((msg) => (msg._id === messageId ? data : msg)));
-      socket.emit("remove reaction", data);
+      socket?.emit("remove reaction", data);
     } catch (error) {
       toast({
         title: "Error removing reaction",
@@ -316,15 +314,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   };
 
   useEffect(() => {
-    socket = io(ENDPOINT);
-    socket.emit("setup", user);
-
-    socket.on("connected", () => setSocketConnected(true));
-    socket.on("typing", () => setIsTyping(true));
-    socket.on("stop typing", () => setIsTyping(false));
+    if (socketConnected) {
+      socket?.on("typing", () => setIsTyping(true));
+      socket?.on("stop typing", () => setIsTyping(false));
+    }
 
     return () => {
-      socket.emit("close chat", {
+      socket?.emit("close chat", {
         userId: user?._id,
         chatId: selectedChat?._id,
       });
@@ -344,7 +340,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, [selectedChat, messages]);
 
   useEffect(() => {
-    socket.on("message recieved", (newMessageRecieved) => {
+    socket?.on("message recieved", (newMessageRecieved) => {
       if (
         !selectedChatCompare || // if chat is not selected or doesn't match current chat
         selectedChatCompare._id !== newMessageRecieved.chat._id
@@ -358,12 +354,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         updateLatestMessage(newMessageRecieved.chat._id, newMessageRecieved);
       }
 
-      socket.emit("message delivered", {
+      socket?.emit("message delivered", {
         messageId: newMessageRecieved._id,
         userId: user._id,
       });
     });
-    socket.on("message deleted", (deletedMessageInfo) => {
+    socket?.on("message deleted", (deletedMessageInfo) => {
       const { messageId, deleteType, chatId } = deletedMessageInfo;
       const updatedMessages = messages.map((msg) =>
         msg._id === messageId
@@ -377,14 +373,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       console.log("Message Deleted");
     });
 
-    socket.on("message status updated", ({ messageId, status }) => {
+    socket?.on("message status updated", ({ messageId, status }) => {
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg._id === messageId ? { ...msg, status } : msg
         )
       );
     });
-    socket.on("reaction added", (updatedMessage) => {
+    socket?.on("reaction added", (updatedMessage) => {
       setMessages(
         messages.map((msg) =>
           msg._id === updatedMessage._id ? updatedMessage : msg
@@ -392,7 +388,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       );
     });
 
-    socket.on("reaction removed", (updatedMessage) => {
+    socket?.on("reaction removed", (updatedMessage) => {
       setMessages(
         messages.map((msg) =>
           msg._id === updatedMessage._id ? updatedMessage : msg
@@ -400,7 +396,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       );
     });
 
-    socket.emit("open chat", { userId: user?._id, chatId: selectedChat?._id });
+    socket?.emit("open chat", { userId: user?._id, chatId: selectedChat?._id });
   });
 
   const MessageStatus = ({ message }) => {
@@ -425,13 +421,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
     if (!socketConnected) return;
     if (e.target.value === "") {
-      socket.emit("stop typing", selectedChat._id);
+      socket?.emit("stop typing", selectedChat._id);
       setTyping(false);
       return;
     }
     if (!typing) {
       setTyping(true);
-      socket.emit("typing", selectedChat._id);
+      socket?.emit("typing", selectedChat._id);
     }
     let lastTypingTime = new Date().getTime();
     var timerLength = 3000;
@@ -439,7 +435,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       var timeNow = new Date().getTime();
       var timeDiff = timeNow - lastTypingTime;
       if (timeDiff >= timerLength && typing) {
-        socket.emit("stop typing", selectedChat._id);
+        socket?.emit("stop typing", selectedChat._id);
         setTyping(false);
       }
     }, timerLength);
@@ -503,7 +499,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 setMessagesFetched(false);
                 setMessages([]);
                 setSelectedChat(null);
-                socket.emit("close chat", {
+                socket?.emit("close chat", {
                   userId: user?._id,
                   chatId: selectedChat?._id,
                 });

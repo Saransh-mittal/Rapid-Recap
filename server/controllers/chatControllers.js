@@ -234,13 +234,14 @@ const shareMessage = asyncHandler(async (req, res) => {
     throw new Error("Article not found");
   }
   const sender = await User.findById(req.user._id).select("pic name");
+  const newMessages = [];
   for (let chatId of chatIds) {
     const chat = await Chat.findById(chatId);
     if (!chat) {
       res.status(404);
       throw new Error("Chat not found");
     }
-    const newMessage = new Message({
+    let newMessage = new Message({
       sender: req.user._id,
       chat: chatId,
       type: type,
@@ -274,9 +275,16 @@ const shareMessage = asyncHandler(async (req, res) => {
         }
       }
     }
+    newMessage = await newMessage.populate("sender", "name pic");
+    newMessage = await newMessage.populate("chat");
+    newMessage = await User.populate(newMessage, {
+      path: "chat.users",
+      select: "name pic email",
+    });
+    newMessages.push(newMessage);
   }
 
-  res.status(200).json({ message: "Article shared successfully" });
+  res.status(200).json(newMessages);
 });
 
 module.exports = {

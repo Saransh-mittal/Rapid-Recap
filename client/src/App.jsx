@@ -44,6 +44,7 @@ const App = () => {
     return !state.show && state.user.inGameName ? state.user.inGameName : null;
   };
 
+  let timeout;
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {
@@ -75,7 +76,7 @@ const App = () => {
       const timeUntilMidnight = midnightUTC - now;
 
       // If it's already past midnight, schedule the refresh for the next day
-      const timeout =
+      timeout =
         timeUntilMidnight > 0
           ? timeUntilMidnight
           : 86400000 + timeUntilMidnight; // 86400000ms = 24 hours

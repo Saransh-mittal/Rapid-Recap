@@ -22,7 +22,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare }) => {
   const [chats, setChats] = useState([]);
   const [selectedChats, setSelectedChats] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = ChatState();
+  const { user, socket, socketConnected } = ChatState();
   const toast = useToast();
 
   useEffect(() => {
@@ -69,11 +69,18 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare }) => {
 
     try {
       // Here you would make an API call to share the article
-      await axios.post("/api/chat/share", {
+      const { data } = await axios.post("/api/chat/share", {
         articleId: articleToShare._id,
         chatIds: selectedChats,
         type: "article_card",
       });
+
+      data.forEach((message) => {
+        socket.emit("new message", message);
+      });
+      // if (socketConnected && socket) {
+      //   socket?.emit("new message", data);
+      // }
       toast({
         title: "Article Shared",
         description: `Article shared to ${selectedChats.length} chat(s) successfully!`,
