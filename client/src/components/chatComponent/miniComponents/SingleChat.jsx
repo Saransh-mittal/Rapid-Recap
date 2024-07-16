@@ -16,6 +16,7 @@ import {
   ModalCloseButton,
   Button,
   useDisclosure,
+  Image,
 } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -39,6 +40,7 @@ import StickerPicker from "./StickerPicker";
 import { useNavigate } from "react-router-dom";
 const ENDPOINT = "http://localhost:3000"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
 var socket, selectedChatCompare;
+import greaterThan from "/images/greaterThan.png";
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -512,7 +514,62 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             {messages &&
               (!selectedChat.isGroupChat ? (
                 <>
-                  {getSender(user, selectedChat.users)}
+                  <Flex
+                    gap={4}
+                    p={1}
+                    pl={3}
+                    _hover={{
+                      cursor: "pointer",
+                      borderRadius: "lg",
+                      bg: "linear-gradient(-180deg, rgba(32, 28, 46, 0.8), rgba(19, 16, 29, 0.8) 88%, rgba(19, 16, 29, 0.8) 99%)",
+                      boxShadow:
+                        "inset 0 0 15px rgba(255, 255, 255, 0.1), 0 6px 15px rgba(0, 0, 0, 0.4), 0 12px 30px rgba(0, 0, 0, 0.3)",
+                    }}
+                    onClick={() => {
+                      navigate(
+                        `/profile/${
+                          getSenderFull(user, selectedChat.users).inGameName
+                        }`
+                      );
+                    }}
+                  >
+                    <Flex mt={2}>
+                      <Image
+                        borderRadius="full"
+                        boxSize="50px"
+                        src={getSenderFull(user, selectedChat.users).pic}
+                        alt={getSenderFull(user, selectedChat.users).name}
+                      />
+                    </Flex>
+                    <Flex flexDirection={"column"}>
+                      <Flex>
+                        <Text fontSize={"2rem"} m={0}>
+                          {getSenderFull(user, selectedChat.users).name}
+                        </Text>
+                      </Flex>
+                      <Text
+                        fontSize={"1rem"}
+                        m={0}
+                        mt={-2}
+                        ml={1}
+                        textColor={"#9CAFAA"}
+                      >
+                        {getSenderFull(user, selectedChat.users).inGameName}
+                      </Text>
+                    </Flex>
+                    <Flex ml={-4} alignItems={"center"}>
+                      <Image
+                        borderRadius="full"
+                        boxSize="30px"
+                        src={greaterThan}
+                        alt={"greaterThan"}
+                        onClick={() => {
+                          navigate(`/chats/${selectedChat._id}`);
+                        }}
+                      ></Image>
+                    </Flex>
+                  </Flex>
+
                   <ProfileModal
                     user={getSenderFull(user, selectedChat.users)}
                   />
