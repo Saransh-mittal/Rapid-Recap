@@ -25,7 +25,6 @@ import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ProfileModal from "./ProfileModal";
 import ScrollableChat from "./ScrollableChat";
-import ShareArticleCard from "../../miscellaneous/ShareArticleCard";
 
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./UpdateGroupChatModal";
