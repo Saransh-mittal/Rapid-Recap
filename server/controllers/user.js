@@ -623,6 +623,7 @@ const profile = async (req, res) => {
         inGameName: user.inGameName,
         pic: user.pic,
         bio: user.bio,
+        _id: user._id.toString(),
       },
       experience: {
         level: user.level,

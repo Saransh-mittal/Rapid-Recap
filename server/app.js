@@ -14,6 +14,7 @@ const recommendationRoutes = require("./router/recommendationRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const chatsRoutes = require("./router/chatsRoutes");
 const messageRoutes = require("./router/messageRoutes");
+const friendsRoutes = require("./router/friendsRoutes");
 const authRouter = express.Router();
 const webpush = require("web-push");
 const cookieParser = require("cookie-parser");
@@ -106,6 +107,7 @@ authRouter.use("/admin", adminRoutes);
 authRouter.use("/recommendation", recommendationRoutes);
 authRouter.use("/chat", chatsRoutes);
 authRouter.use("/message", messageRoutes);
+authRouter.use("/friends", friendsRoutes);
 app.use("/api", authRouter);
 
 const server = app.listen(PORT, () => {
