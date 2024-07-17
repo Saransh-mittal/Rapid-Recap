@@ -34,24 +34,26 @@ import {
   SkeletonCircle,
 } from "@chakra-ui/react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SageItem = React.memo(
   ({ sage, index, openPopoverId, setOpenPopoverId }) => {
     const [hoveredOption, setHoveredOption] = useState(null);
     const itemRef = useRef(null);
+    const navigate = useNavigate();
 
     const handleToggle = useCallback(() => {
       setOpenPopoverId((prevId) => (prevId === index ? null : index));
     }, [index, setOpenPopoverId]);
 
     const handleCommune = useCallback(() => {
-      console.log(`Navigating to chat with ${sage.name}`);
       setOpenPopoverId(null);
+      navigate(`/chats?chatId=${sage.chatId}`);
     }, [sage.name, setOpenPopoverId]);
 
     const handleGlimpseWisdom = useCallback(() => {
-      console.log(`Visiting ${sage.name}'s profile`);
       setOpenPopoverId(null);
+      navigate(`/profile/${sage.inGameName}`);
     }, [sage.name, setOpenPopoverId]);
 
     const calculatePlacement = useCallback(() => {

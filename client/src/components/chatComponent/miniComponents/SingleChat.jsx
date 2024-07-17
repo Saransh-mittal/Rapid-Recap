@@ -125,7 +125,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       if (!data.length) {
         setHasMore(false);
       }
-      console.log(data);
+
       setMessages((prevMessages) => [...data, ...prevMessages]);
       return data;
     } catch (error) {

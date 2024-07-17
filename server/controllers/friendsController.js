@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const FriendRequest = require("../model/friendRequestSchema");
 const User = require("../model/userSchema");
+const Chat = require("../model/chatSchema");
 
 //@description     Send friend request
 //@route           POST /api/friends/send-request
@@ -120,7 +121,26 @@ const getFriends = asyncHandler(async (req, res) => {
       path: "friends",
       select: "name inGameName IQ_score pic",
     });
-    res.status(200).json(user.friends);
+    let userFriends = [];
+    for (let friend of user.friends) {
+      let chat = await Chat.findOne({
+        users: { $all: [userId, friend._id] },
+      }).select("_id");
+      // console.log(friend);
+      if (!chat) {
+        //create chat
+        chat = new Chat({
+          chatName: "sender",
+          chatCreatedBy: userId,
+          users: [userId, friend._id],
+        });
+        await chat.save();
+      }
+
+      userFriends.push({ ...friend._doc, chatId: chat._id.toString() });
+    }
+    // console.log(userFriends);
+    res.status(200).json(userFriends);
   } catch (error) {
     res.status(500).json({ error: error.message });
     throw new Error(error.message);

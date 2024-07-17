@@ -333,13 +333,13 @@ const ScrollableChat = ({
 
   return (
     <>
-      {/* <style>
+      <style>
         {`
           div::-webkit-scrollbar {
             display: none;
           }
         `}
-      </style> */}
+      </style>
       <ScrollableFeed ref={scrollableFeedRef}>
         {loadingRef.current && (
           <Box textAlign="center" py={2}>
