@@ -56,6 +56,7 @@ const Navbar = () => {
   const [isHomePage, setIsHomePage] = useState(
     location.pathname.split("/")[1] === "home"
   );
+  const [profileNotif, setProfileNotif] = useState(false);
   const calculateRequiredXp = (xp, xpBaseAtNextLevel) => {
     return xpBaseAtNextLevel - xp;
   };
@@ -72,6 +73,14 @@ const Navbar = () => {
     xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2;
     requiredXP = calculateRequiredXp(state.user.xp, xpBaseAtNextLevel);
   }
+
+  useEffect(() => {
+    if (state.unreadFriendRequests && state.unreadFriendRequests > 0) {
+      setProfileNotif(true);
+    } else {
+      setProfileNotif(false);
+    }
+  }, [state.unreadFriendRequests]);
 
   useEffect(() => {
     const isEmptyObject = (obj) => {
@@ -287,6 +296,7 @@ const Navbar = () => {
               navLinkRefs={navLinkRefs}
               setIsHamburgerOpen={setIsHamburgerOpen}
               level={state.user.level}
+              profileNotif={profileNotif}
             />
           </Flex>
           {isModalOpen && (

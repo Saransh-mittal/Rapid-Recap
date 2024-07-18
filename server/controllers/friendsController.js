@@ -147,23 +147,63 @@ const getFriends = asyncHandler(async (req, res) => {
   }
 });
 
-//@description     check request status
+//@description     check request status and clean up old rejected requests
 //@route           POST /api/friends/check-request-status
 //@access          Protected
 const checkRequestStatus = asyncHandler(async (req, res) => {
   const { fromId, toId } = req.body;
 
   try {
+    // Find the most recent request between these users
     const request = await FriendRequest.findOne({
       from: fromId,
       to: toId,
-      status: { $in: ["pending", "accepted"] },
-    });
+    }).sort({ createdAt: -1 });
 
     if (request) {
-      return res
-        .status(200)
-        .json({ message: "Request already sent", status: request.status });
+      if (request.status === "pending" || request.status === "accepted") {
+        return res.status(200).json({
+          message: "Request already sent",
+          status: request.status,
+        });
+      } else if (request.status === "rejected") {
+        const rejectionDate = new Date(request.createdAt);
+        const currentDate = new Date();
+        const diffDays = Math.floor(
+          (currentDate - rejectionDate) / (1000 * 60 * 60 * 24)
+        );
+
+        if (diffDays >= 10) {
+          // Delete the rejected request if it's older than 10 days
+          await FriendRequest.findByIdAndDelete(request._id);
+
+          // Remove references from users
+          await User.updateMany(
+            {
+              $or: [
+                { sentRequests: request._id },
+                { receivedRequests: request._id },
+              ],
+            },
+            {
+              $pull: {
+                sentRequests: request._id,
+                receivedRequests: request._id,
+              },
+            }
+          );
+
+          return res
+            .status(200)
+            .json({ message: "No request found", status: "none" });
+        } else {
+          return res.status(200).json({
+            message: "Request was rejected recently",
+            status: "rejected",
+            daysUntilNewRequest: 10 - diffDays,
+          });
+        }
+      }
     }
 
     res.status(200).json({ message: "No request found", status: "none" });
@@ -172,7 +212,6 @@ const checkRequestStatus = asyncHandler(async (req, res) => {
     throw new Error(error.message);
   }
 });
-
 //@description     check if user can send request
 //@route           POST /api/friends/can-send-request
 //@access          Protected
@@ -196,18 +235,124 @@ const canSendRequest = asyncHandler(async (req, res) => {
         (currentDate - rejectionDate) / (1000 * 60 * 60 * 24)
       );
 
-      if (diffDays < 10) {
+      if (diffDays >= 10) {
+        // Delete the rejected request if it's 10 days old or older
+        await FriendRequest.findByIdAndDelete(request._id);
+
+        // Remove references from users
+        await User.updateMany(
+          {
+            $or: [
+              { sentRequests: request._id },
+              { receivedRequests: request._id },
+            ],
+          },
+          {
+            $pull: { sentRequests: request._id, receivedRequests: request._id },
+          }
+        );
+
+        return res.status(200).json({ message: "Can send request" });
+      } else {
         return res.status(201).json({
           message: "Cannot send another request within 10 days of rejection",
+          daysUntilNewRequest: 10 - diffDays,
         });
       }
     } else if (request.status === "pending") {
       return res.status(201).json({ message: "Request already sent" });
     } else if (request.status === "accepted") {
-      return res.status(201).json({ message: "Already friends", friend: true });
+      // check if they are already friends or not
+      const user1 = await User.findById(fromId).select("friends");
+      const user2 = await User.findById(toId).select("friends");
+
+      const areFriends =
+        user1.friends.includes(toId) && user2.friends.includes(fromId);
+
+      if (!areFriends) await FriendRequest.findByIdAndDelete(request._id);
+
+      return res
+        .status(201)
+        .json({
+          message: "Already friends",
+          friend: areFriends,
+          allowed: true,
+        });
     }
 
     res.status(200).json({ message: "Can send request" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    throw new Error(error.message);
+  }
+});
+
+//@description     Sever ties (unfriend) with a user
+//@route           POST /api/friends/sever-ties
+//@access          Protected
+const severTies = asyncHandler(async (req, res) => {
+  const { friendId } = req.body;
+  const userId = req.user._id;
+
+  try {
+    // Remove friend from user's friends list
+    await User.findByIdAndUpdate(userId, {
+      $pull: { friends: friendId },
+    });
+
+    // Remove user from friend's friends list
+    await User.findByIdAndUpdate(friendId, {
+      $pull: { friends: userId },
+    });
+
+    // Find and remove the chat between the two users
+    await Chat.findOneAndDelete({
+      users: { $all: [userId, friendId] },
+    });
+
+    res.status(200).json({ message: "Ties severed successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    throw new Error(error.message);
+  }
+});
+
+// @description     Get count of unread friend requests
+// @route           GET /api/friend/unread-requests-count
+// @access          Protected
+const getUnreadRequestsCount = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  try {
+    const count = await FriendRequest.countDocuments({
+      to: userId,
+      status: "pending",
+      unread: true,
+    });
+
+    res.status(200).json({ unreadCount: count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    throw new Error(error.message);
+  }
+});
+
+// @description     Mark all friend requests as read
+// @route           POST /api/friend/request-mark-as-read
+// @access          Protected
+const markRequestsAsRead = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  try {
+    const result = await FriendRequest.updateMany(
+      { to: userId, status: "pending", unread: true },
+      { $set: { unread: false } }
+    );
+
+    res.status(200).json({
+      message: "Friend requests marked as read",
+      modifiedCount: result.nModified,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
     throw new Error(error.message);
@@ -221,4 +366,7 @@ module.exports = {
   getFriends,
   checkRequestStatus,
   canSendRequest,
+  severTies,
+  getUnreadRequestsCount,
+  markRequestsAsRead,
 };

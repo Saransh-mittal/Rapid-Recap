@@ -35,7 +35,7 @@ import WiseWeb from "../components/profileComponents/WiseWeb.jsx";
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour();
   const { inGameName } = useParams();
-  const { state, dispatch } = useContext(AppContext);
+  const { state, dispatch, readFriendRequests } = useContext(AppContext);
   const [profile, setProfile] = useState(state.userProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [showHideModal, setShowHideModal] = useState(false);
@@ -315,6 +315,18 @@ export default function Profile() {
                 alignItems={"center"}
                 position={"relative"}
               >
+                {state.unreadFriendRequests > 0 && (
+                  <Box
+                    h="8px"
+                    w="8px"
+                    bg={"red"}
+                    borderRadius={"50%"}
+                    position={"absolute"}
+                    right={"34%"}
+                    top={"35%"}
+                    zIndex={2}
+                  />
+                )}
                 <ProfileButton
                   buttonText="Wise Web"
                   inGameName={inGameName}
@@ -325,7 +337,12 @@ export default function Profile() {
                   icon={<FaUserFriends />} // Add icon here
                 />
 
-                <WiseWeb isOpen={isOpenWiseWeb} onClose={onCloseWiseWeb} />
+                <WiseWeb
+                  isOpen={isOpenWiseWeb}
+                  onClose={onCloseWiseWeb}
+                  requestNotif={state.unreadFriendRequests > 0}
+                  markRequestAsRead={readFriendRequests}
+                />
               </Flex>
             )
           )}

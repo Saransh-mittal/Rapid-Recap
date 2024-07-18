@@ -107,8 +107,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       } else {
         if (response.data.friend === true) {
           setIsFriend(true);
-        }
-        setCanSendRequest(false);
+        } else if (!response.data.allowed) setCanSendRequest(false);
       }
     } catch (error) {
       toast({
@@ -220,7 +219,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                 height={"fit-content"}
                 py={1}
               >
-                Friend
+                Sage Ally
               </Badge>
             ) : (
               <Flex

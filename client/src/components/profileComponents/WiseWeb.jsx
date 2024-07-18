@@ -6,13 +6,14 @@ import React, {
   useMemo,
   forwardRef,
 } from "react";
-import { UserPlus, Users, MessageCircle, User } from "lucide-react";
+import { UserPlus, Users, MessageCircle, User, Unlink } from "lucide-react";
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
   ModalBody,
+  ModalFooter,
   ModalCloseButton,
   Tabs,
   TabList,
@@ -32,15 +33,34 @@ import {
   Button,
   Skeleton,
   SkeletonCircle,
+  useToast,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const SageItem = React.memo(
-  ({ sage, index, openPopoverId, setOpenPopoverId }) => {
+  ({ sage, index, openPopoverId, setOpenPopoverId, onSeverTies }) => {
     const [hoveredOption, setHoveredOption] = useState(null);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const cancelRef = useRef();
     const itemRef = useRef(null);
     const navigate = useNavigate();
+
+    const handleSeverTies = useCallback(() => {
+      setOpenPopoverId(null);
+      setIsConfirmOpen(true);
+    }, [setOpenPopoverId]);
+
+    const onConfirmSeverTies = useCallback(() => {
+      setIsConfirmOpen(false);
+      onSeverTies(sage._id);
+    }, [sage._id, onSeverTies]);
 
     const handleToggle = useCallback(() => {
       setOpenPopoverId((prevId) => (prevId === index ? null : index));
@@ -73,117 +93,189 @@ const SageItem = React.memo(
     const subTextColor = useColorModeValue("#a0a0a0", "#a0a0a0");
 
     return (
-      <Popover
-        isOpen={openPopoverId === index}
-        onClose={() => setOpenPopoverId(null)}
-        placement={calculatePlacement()}
-        closeOnBlur={false}
-      >
-        <PopoverTrigger>
-          <Flex
-            ref={itemRef}
-            alignItems="center"
-            p={3}
-            borderRadius="lg"
-            transition="all 0.3s"
-            _hover={{ bg: hoverBg, transform: "scale(1.05)", boxShadow: "md" }}
-            cursor="pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggle();
-            }}
-          >
-            <Avatar
-              name={sage.name}
-              src={
-                sage.pic
-                  ? sage.pic
-                  : `https://api.dicebear.com/6.x/initials/svg?seed=${sage.name}`
-              }
-            />
-            <Box ml={4}>
-              <Text fontSize="sm" fontWeight="semibold" color={textColor}>
-                {sage.name}
-              </Text>
-              <Text fontSize="xs" color={subTextColor}>
-                IQ: {sage.IQ_score} | {sage.inGameName}
-              </Text>
-            </Box>
-          </Flex>
-        </PopoverTrigger>
-
-        <PopoverContent
-          bg="#2a2438"
-          borderColor="#3d355a"
-          boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
-          _focus={{ boxShadow: "none" }}
-          width="100%"
-          zIndex={1500}
+      <>
+        <Popover
+          isOpen={openPopoverId === index}
+          onClose={() => setOpenPopoverId(null)}
+          placement={calculatePlacement()}
+          closeOnBlur={false}
         >
-          <PopoverBody p={2} width="100%">
+          <PopoverTrigger>
             <Flex
-              align="center"
-              p={2}
+              ref={itemRef}
+              alignItems="center"
+              p={3}
+              borderRadius="lg"
+              transition="all 0.3s"
+              _hover={{
+                bg: hoverBg,
+                transform: "scale(1.05)",
+                boxShadow: "md",
+              }}
               cursor="pointer"
-              transition="all 0.3s ease"
-              color="#e0e0e0"
-              borderRadius="md"
-              bg={hoveredOption === "commune" ? "#3d355a" : "transparent"}
-              transform={
-                hoveredOption === "commune"
-                  ? "translateX(5px)"
-                  : "translateX(0)"
-              }
-              onClick={handleCommune}
-              onMouseEnter={() => setHoveredOption("commune")}
-              onMouseLeave={() => setHoveredOption(null)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggle();
+              }}
             >
-              <MessageCircle
-                color="#a49eb9"
-                size={16}
-                style={{ marginRight: "8px" }}
+              <Avatar
+                name={sage.name}
+                src={
+                  sage.pic
+                    ? sage.pic
+                    : `https://api.dicebear.com/6.x/initials/svg?seed=${sage.name}`
+                }
               />
-              <Text textAlign={"center"} m={0}>
-                Commune
-              </Text>
+              <Box ml={4}>
+                <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                  {sage.name}
+                </Text>
+                <Text fontSize="xs" color={subTextColor}>
+                  IQ: {sage.IQ_score} | {sage.inGameName}
+                </Text>
+              </Box>
             </Flex>
-            <Box
-              height="1px"
-              width="100%"
-              bg="linear-gradient(to right, #2a2438, #a49eb9, #2a2438)"
-              my={2}
-            />
-            <Flex
-              align="center"
-              p={2}
-              cursor="pointer"
-              transition="all 0.3s ease"
-              color="#e0e0e0"
-              borderRadius="md"
-              bg={hoveredOption === "glimpse" ? "#3d355a" : "transparent"}
-              transform={
-                hoveredOption === "glimpse"
-                  ? "translateX(5px)"
-                  : "translateX(0)"
-              }
-              onClick={handleGlimpseWisdom}
-              onMouseEnter={() => setHoveredOption("glimpse")}
-              onMouseLeave={() => setHoveredOption(null)}
-            >
-              <User color="#a49eb9" size={16} style={{ marginRight: "8px" }} />
-              <Text textAlign={"center"} m={0}>
-                Glimpse Wisdom
-              </Text>
-            </Flex>
-          </PopoverBody>
-        </PopoverContent>
-      </Popover>
+          </PopoverTrigger>
+
+          <PopoverContent
+            bg="#2a2438"
+            borderColor="#3d355a"
+            boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+            _focus={{ boxShadow: "none" }}
+            width="100%"
+            zIndex={1500}
+          >
+            <PopoverBody p={2} width="100%">
+              <Flex
+                align="center"
+                p={2}
+                cursor="pointer"
+                transition="all 0.3s ease"
+                color="#e0e0e0"
+                borderRadius="md"
+                bg={hoveredOption === "commune" ? "#3d355a" : "transparent"}
+                transform={
+                  hoveredOption === "commune"
+                    ? "translateX(5px)"
+                    : "translateX(0)"
+                }
+                onClick={handleCommune}
+                onMouseEnter={() => setHoveredOption("commune")}
+                onMouseLeave={() => setHoveredOption(null)}
+              >
+                <MessageCircle
+                  color="#a49eb9"
+                  size={16}
+                  style={{ marginRight: "8px" }}
+                />
+                <Text textAlign={"center"} m={0}>
+                  Commune
+                </Text>
+              </Flex>
+              <Box
+                height="1px"
+                width="100%"
+                bg="linear-gradient(to right, #2a2438, #a49eb9, #2a2438)"
+                my={2}
+              />
+              <Flex
+                align="center"
+                p={2}
+                cursor="pointer"
+                transition="all 0.3s ease"
+                color="#e0e0e0"
+                borderRadius="md"
+                bg={hoveredOption === "glimpse" ? "#3d355a" : "transparent"}
+                transform={
+                  hoveredOption === "glimpse"
+                    ? "translateX(5px)"
+                    : "translateX(0)"
+                }
+                onClick={handleGlimpseWisdom}
+                onMouseEnter={() => setHoveredOption("glimpse")}
+                onMouseLeave={() => setHoveredOption(null)}
+              >
+                <User
+                  color="#a49eb9"
+                  size={16}
+                  style={{ marginRight: "8px" }}
+                />
+                <Text textAlign={"center"} m={0}>
+                  Glimpse Wisdom
+                </Text>
+              </Flex>
+              <Box
+                height="1px"
+                width="100%"
+                bg="linear-gradient(to right, #2a2438, #a49eb9, #2a2438)"
+                my={2}
+              />
+              <Flex
+                align="center"
+                p={2}
+                cursor="pointer"
+                transition="all 0.3s ease"
+                color="#ff6b6b"
+                borderRadius="md"
+                bg={hoveredOption === "sever" ? "#3d355a" : "transparent"}
+                transform={
+                  hoveredOption === "sever"
+                    ? "translateX(5px)"
+                    : "translateX(0)"
+                }
+                onClick={handleSeverTies}
+                onMouseEnter={() => setHoveredOption("sever")}
+                onMouseLeave={() => setHoveredOption(null)}
+              >
+                <Unlink
+                  color="#ff6b6b"
+                  size={16}
+                  style={{ marginRight: "8px" }}
+                />
+                <Text textAlign={"center"} m={0} fontWeight="bold">
+                  Sever Ties
+                </Text>
+              </Flex>
+            </PopoverBody>
+          </PopoverContent>
+        </Popover>
+        <AlertDialog
+          isOpen={isConfirmOpen}
+          leastDestructiveRef={cancelRef}
+          onClose={() => setIsConfirmOpen(false)}
+        >
+          <AlertDialogOverlay>
+            <AlertDialogContent bg="#2a2438" color="white">
+              <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                Sever Ties with {sage.name}
+              </AlertDialogHeader>
+
+              <AlertDialogBody>
+                Are you sure? This action cannot be undone. You will no longer
+                be friends with {sage.name}.
+              </AlertDialogBody>
+
+              <AlertDialogFooter>
+                <Button ref={cancelRef} onClick={() => setIsConfirmOpen(false)}>
+                  Cancel
+                </Button>
+                <Button colorScheme="red" onClick={onConfirmSeverTies} ml={3}>
+                  Sever Ties
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogOverlay>
+        </AlertDialog>
+      </>
     );
   }
 );
 
 const SageList = forwardRef(
-  ({ items, startIndex = 0, openPopoverId, setOpenPopoverId }, ref) => (
+  (
+    { items, startIndex = 0, openPopoverId, setOpenPopoverId, onSeverTies },
+    ref
+  ) => (
     <VStack
       ref={ref}
       spacing={0}
@@ -217,6 +309,7 @@ const SageList = forwardRef(
             index={startIndex + index}
             openPopoverId={openPopoverId}
             setOpenPopoverId={setOpenPopoverId}
+            onSeverTies={onSeverTies}
           />
         </React.Fragment>
       ))}
@@ -293,15 +386,58 @@ const LoadingSkeleton = ({ count = 3 }) => (
   </VStack>
 );
 
-const WiseWeb = ({ isOpen, onClose }) => {
+const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
   const [sages, setSages] = useState([]);
   const [requests, setRequests] = useState([]);
   const [openPopoverId, setOpenPopoverId] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [isLoadingSages, setIsLoadingSages] = useState(true);
   const [isLoadingRequests, setIsLoadingRequests] = useState(true);
+  const [requestTabVisited, setRequestTabVisited] = useState(false);
+  const toast = useToast();
 
   const sageListRef = useRef(null);
+
+  const handleSeverTies = async (friendId) => {
+    try {
+      await axios.post("/api/friends/sever-ties", { friendId });
+      fetchFriends();
+      toast({
+        title: "Ties Severed",
+        description: "You have successfully unfriended the sage.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error severing ties:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sever ties. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleTabChange = (index) => {
+    if (index === 1) {
+      setRequestTabVisited(true);
+    } else if (index === 0 && requestTabVisited) {
+      markRequestAsRead();
+      setRequestTabVisited(false);
+    }
+    setActiveTab(index);
+  };
+
+  const handleClose = () => {
+    if (requestTabVisited) {
+      markRequestAsRead();
+      setRequestTabVisited(false);
+    }
+    onClose();
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -407,6 +543,7 @@ const WiseWeb = ({ isOpen, onClose }) => {
           openPopoverId={openPopoverId}
           setOpenPopoverId={setOpenPopoverId}
           ref={sageListRef}
+          onSeverTies={handleSeverTies}
         />
       ) : (
         <Text>No friends found.</Text>
@@ -438,7 +575,7 @@ const WiseWeb = ({ isOpen, onClose }) => {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       onCloseComplete={() => setOpenPopoverId(null)}
     >
       <ModalOverlay />
@@ -450,7 +587,6 @@ const WiseWeb = ({ isOpen, onClose }) => {
         borderRadius="md"
         maxW="400px"
         css={{ "&::-webkit-scrollbar": { display: "none" } }}
-        overflow={"hidden"}
       >
         <ModalHeader>Wise Web</ModalHeader>
         <ModalCloseButton />
@@ -460,13 +596,13 @@ const WiseWeb = ({ isOpen, onClose }) => {
           w={"100%"}
           position="relative"
           css={{ "&::-webkit-scrollbar": { display: "none" } }}
-          pb={"2.5rem"}
+          pb={"4rem"}
         >
           <Tabs
             isFitted
             variant="enclosed"
             index={activeTab}
-            onChange={setActiveTab}
+            onChange={handleTabChange}
           >
             <TabList
               mb="1em"
@@ -483,7 +619,19 @@ const WiseWeb = ({ isOpen, onClose }) => {
                 <Users size={16} style={{ marginRight: "8px" }} />
                 Sages
               </Tab>
-              <Tab style={tabStyle(activeTab === 1)}>
+              <Tab style={tabStyle(activeTab === 1)} position={"relative"}>
+                {requestNotif && (
+                  <Box
+                    h="8px"
+                    w="8px"
+                    bg={"red"}
+                    borderRadius={"50%"}
+                    position={"absolute"}
+                    right={"20%"}
+                    top={"25%"}
+                    zIndex={2}
+                  />
+                )}
                 <UserPlus size={16} style={{ marginRight: "8px" }} />
                 Requests
               </Tab>

@@ -1,13 +1,4 @@
-import {
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  MenuDivider,
-  Button,
-  Avatar,
-  Flex,
-} from "@chakra-ui/react";
+import { Avatar, Flex, Box } from "@chakra-ui/react";
 import React, { useContext, useState } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import { ChevronDownIcon } from "@chakra-ui/icons";
@@ -26,8 +17,10 @@ const ProfileDropDownMenu = ({
   toProfile,
   refProfile,
   className,
+  profileNotif,
 }) => {
   const listStyle = {
+    position: "relative",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -81,7 +74,26 @@ const ProfileDropDownMenu = ({
             alignItems: "center",
           }}
         >
-          <Avatar src={state.user.pic} h={"35px"} w={"35px"} rounded={"50%"} />
+          <Flex position={"relative"}>
+            {profileNotif && (
+              <Box
+                h="10px"
+                w="10px"
+                bg={"red"}
+                borderRadius={"50%"}
+                position={"absolute"}
+                right={"-0.1rem"}
+                top={"-0.1rem"}
+                zIndex={2}
+              />
+            )}
+            <Avatar
+              src={state.user.pic}
+              h={"35px"}
+              w={"35px"}
+              rounded={"50%"}
+            />
+          </Flex>
           <motion.div
             variants={{
               open: { rotate: 180 },
@@ -137,6 +149,18 @@ const ProfileDropDownMenu = ({
               style={listStyle}
               variants={itemVariants}
             >
+              {profileNotif && (
+                <Box
+                  h="8px"
+                  w="8px"
+                  bg={"red"}
+                  borderRadius={"50%"}
+                  position={"absolute"}
+                  right={"0.3rem"}
+                  top={"0.5rem"}
+                  zIndex={2}
+                />
+              )}
               View Profile
             </motion.li>
           </NavLink>

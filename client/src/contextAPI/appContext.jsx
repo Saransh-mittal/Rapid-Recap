@@ -85,6 +85,27 @@ async function currentArticle() {
   }
 }
 
+async function getUnreadFriendRequestCnt() {
+  try {
+    const response = await axios.get(`/api/friends/unread-requests-count`);
+    if (response.status === 200) {
+      return { unreadFriendRequests: response.data.unreadCount };
+    }
+    return { unreadFriendRequests: 0 };
+  } catch (error) {
+    console.log(error.message);
+    return { unreadFriendRequests: 0 };
+  }
+}
+
+async function markFriendRequestsAsRead() {
+  try {
+    await axios.post(`/api/friends/request-mark-as-read`);
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
 const category = getCategory();
 
 export const initialState = {
@@ -93,6 +114,7 @@ export const initialState = {
   ...(await currentArticle()),
   ...(await getAppUpdates()),
   ...(await getDailyStreak()),
+  ...(await getUnreadFriendRequestCnt()),
   modal: false,
   forgotPassword: false,
   verifyEmail: false,
@@ -115,8 +137,29 @@ export const AppProvider = ({ children }) => {
   const navLinkRefs = useRef([]);
   const [state, dispatch] = useReducer(Reducer, initialState);
 
+  const updateUnreadFriendRequests = async () => {
+    const { unreadFriendRequests } = await getUnreadFriendRequestCnt();
+    dispatch({
+      type: "UPDATE_UNREAD_FRIEND_REQUESTS",
+      payload: unreadFriendRequests,
+    });
+  };
+
+  const readFriendRequests = async () => {
+    await markFriendRequestsAsRead();
+    dispatch({ type: "UPDATE_UNREAD_FRIEND_REQUESTS", payload: 0 });
+  };
+
   return (
-    <AppContext.Provider value={{ state, dispatch, navLinkRefs }}>
+    <AppContext.Provider
+      value={{
+        state,
+        dispatch,
+        navLinkRefs,
+        updateUnreadFriendRequests,
+        readFriendRequests,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

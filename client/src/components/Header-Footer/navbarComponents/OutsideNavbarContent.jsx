@@ -29,6 +29,7 @@ const OutsideNavbarContent = ({
   setIsHamburgerOpen,
   level,
   user, // pass the user state
+  profileNotif,
 }) => {
   const isEmptyObject = (obj) => {
     return obj && Object.keys(obj).length === 0;
@@ -117,6 +118,7 @@ const OutsideNavbarContent = ({
               handleLogout={handleLogout}
               toProfile={"/profile"}
               refProfile={(ref) => (navLinkRefs.current[4] = ref)}
+              profileNotif={profileNotif}
             />
           </Flex>
         ) : null}
