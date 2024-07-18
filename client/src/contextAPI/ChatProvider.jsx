@@ -56,9 +56,16 @@ const ChatProvider = ({ children }) => {
     else {
       getSocket();
     }
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      disconnectSocket(state.user._id.toString());
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      disconnectSocket();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      disconnectSocket(state.user._id.toString());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.user, getSocket]);

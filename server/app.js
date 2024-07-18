@@ -21,6 +21,7 @@ const cookieParser = require("cookie-parser");
 const Message = require("./model/messageSchema");
 const { userOpenChats } = require("./sharedState");
 const Chat = require("./model/chatSchema");
+const User = require("./model/userSchema");
 
 dotenv.config({ path: "./config.env" });
 const app = express();
@@ -124,10 +125,13 @@ const io = require("socket.io")(server, {
 
 io.on("connection", (socket) => {
   // console.log("Connected to socket.io");
-  socket.on("setup", (userData) => {
+  socket.on("setup", async (userData) => {
     socket.join(userData._id);
     socket.emit("connected");
     userOpenChats.set(userData._id, new Set());
+    // update user online status in db
+    await User.findByIdAndUpdate(userData._id, { isOnline: true });
+    socket.broadcast.emit("user online", userData._id);
   });
 
   socket.on("join chat", (room) => {
@@ -251,11 +255,17 @@ io.on("connection", (socket) => {
       }
     }
   });
-
-  socket.off("setup", () => {
-    // console.log("USER DISCONNECTED");
+  socket.on("user-disconnected", async (userId) => {
+    // console.log("User disconnected", userId);
+    userOpenChats.delete(userId);
+    socket.leave(userId);
+    socket.broadcast.emit("user offline", userId);
+    await User.findByIdAndUpdate(userId, { isOnline: false });
+  });
+  socket.off("setup", (userData) => {
     userOpenChats.delete(userData._id);
     socket.leave(userData._id);
+    socket.broadcast.emit("user offline", userData._id);
   });
 });
 

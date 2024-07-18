@@ -337,12 +337,14 @@ export default function Profile() {
                   icon={<FaUserFriends />} // Add icon here
                 />
 
-                <WiseWeb
-                  isOpen={isOpenWiseWeb}
-                  onClose={onCloseWiseWeb}
-                  requestNotif={state.unreadFriendRequests > 0}
-                  markRequestAsRead={readFriendRequests}
-                />
+                {isOpenWiseWeb && (
+                  <WiseWeb
+                    isOpen={isOpenWiseWeb}
+                    onClose={onCloseWiseWeb}
+                    requestNotif={state.unreadFriendRequests > 0}
+                    markRequestAsRead={readFriendRequests}
+                  />
+                )}
               </Flex>
             )
           )}

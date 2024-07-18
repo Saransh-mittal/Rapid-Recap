@@ -43,6 +43,7 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { ChatState } from "../../contextAPI/ChatProvider";
 
 const SageItem = React.memo(
   ({ sage, index, openPopoverId, setOpenPopoverId, onSeverTies }) => {
@@ -91,6 +92,8 @@ const SageItem = React.memo(
     const hoverBg = useColorModeValue("#2a2438", "#2a2438");
     const textColor = useColorModeValue("white", "white");
     const subTextColor = useColorModeValue("#a0a0a0", "#a0a0a0");
+    const onlineColor = "#4CAF50";
+    const offlineColor = "#9e9e9e";
 
     return (
       <>
@@ -126,7 +129,7 @@ const SageItem = React.memo(
                     : `https://api.dicebear.com/6.x/initials/svg?seed=${sage.name}`
                 }
               />
-              <Box ml={4}>
+              <Box ml={4} flex={1}>
                 <Text fontSize="sm" fontWeight="semibold" color={textColor}>
                   {sage.name}
                 </Text>
@@ -134,6 +137,12 @@ const SageItem = React.memo(
                   IQ: {sage.IQ_score} | {sage.inGameName}
                 </Text>
               </Box>
+              <Box
+                width="10px"
+                height="10px"
+                borderRadius="50%"
+                bg={sage.isOnline ? onlineColor : offlineColor}
+              />
             </Flex>
           </PopoverTrigger>
 
@@ -275,46 +284,95 @@ const SageList = forwardRef(
   (
     { items, startIndex = 0, openPopoverId, setOpenPopoverId, onSeverTies },
     ref
-  ) => (
-    <VStack
-      ref={ref}
-      spacing={0}
-      align="stretch"
-      maxH="300px"
-      overflowY="auto"
-      borderColor={useColorModeValue("#2a2438", "#2a2438")}
-      borderWidth={1}
-      borderRadius="md"
-      p={2}
-      css={{
-        "&::-webkit-scrollbar": {
-          width: "8px",
-        },
-        "&::-webkit-scrollbar-track": {
-          background: "#1a1527",
-        },
-        "&::-webkit-scrollbar-thumb": {
-          background: "#2a2438",
-          borderRadius: "4px",
-        },
-        "&::-webkit-scrollbar-thumb:hover": {
-          background: "#3d355a",
-        },
-      }}
-    >
-      {items.map((item, index) => (
-        <React.Fragment key={startIndex + index}>
-          <SageItem
-            sage={item}
-            index={startIndex + index}
-            openPopoverId={openPopoverId}
-            setOpenPopoverId={setOpenPopoverId}
-            onSeverTies={onSeverTies}
-          />
-        </React.Fragment>
-      ))}
-    </VStack>
-  )
+  ) => {
+    const onlineSages = items
+      .filter((sage) => sage.isOnline)
+      .sort((a, b) => {
+        return b.IQ_score - a.IQ_score;
+      });
+    const offlineSages = items
+      .filter((sage) => !sage.isOnline)
+      .sort((a, b) => {
+        return b.IQ_score - a.IQ_score;
+      });
+
+    return (
+      <VStack
+        ref={ref}
+        spacing={0}
+        align="stretch"
+        maxH="300px"
+        overflowY="auto"
+        borderColor={useColorModeValue("#2a2438", "#2a2438")}
+        borderWidth={1}
+        borderRadius="md"
+        p={2}
+        css={{
+          "&::-webkit-scrollbar": {
+            width: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: "#1a1527",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: "#2a2438",
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            background: "#3d355a",
+          },
+        }}
+      >
+        {onlineSages.length > 0 && (
+          <>
+            <Text
+              fontSize="sm"
+              fontWeight="bold"
+              color="#a49eb9"
+              mb={2}
+              textAlign={"center"}
+            >
+              Online Sages
+            </Text>
+            {onlineSages.map((item, index) => (
+              <SageItem
+                key={startIndex + index}
+                sage={item}
+                index={startIndex + index}
+                openPopoverId={openPopoverId}
+                setOpenPopoverId={setOpenPopoverId}
+                onSeverTies={onSeverTies}
+              />
+            ))}
+          </>
+        )}
+        {offlineSages.length > 0 && (
+          <>
+            <Text
+              fontSize="sm"
+              fontWeight="bold"
+              color="#a49eb9"
+              mt={4}
+              mb={2}
+              textAlign={"center"}
+            >
+              LeaderBoard
+            </Text>
+            {offlineSages.map((item, index) => (
+              <SageItem
+                key={startIndex + onlineSages.length + index}
+                sage={item}
+                index={startIndex + onlineSages.length + index}
+                openPopoverId={openPopoverId}
+                setOpenPopoverId={setOpenPopoverId}
+                onSeverTies={onSeverTies}
+              />
+            ))}
+          </>
+        )}
+      </VStack>
+    );
+  }
 );
 
 const FriendRequestItem = ({ request, onAccept, onReject }) => {
@@ -394,6 +452,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
   const [isLoadingSages, setIsLoadingSages] = useState(true);
   const [isLoadingRequests, setIsLoadingRequests] = useState(true);
   const [requestTabVisited, setRequestTabVisited] = useState(false);
+  const { socket } = ChatState();
   const toast = useToast();
 
   const sageListRef = useRef(null);
@@ -472,7 +531,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
     setIsLoadingSages(true);
     try {
       const response = await axios.get(`/api/friends/`);
-      setSages(response.data);
+      setSages(response.data.map((sage) => ({ ...sage })));
     } catch (error) {
       console.error("Error fetching friends:", error);
     } finally {
@@ -505,6 +564,32 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
       fetchFriends();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (socket) {
+      // Set up listeners
+      socket.on("user online", (userId) => {
+        setSages((prevSages) =>
+          prevSages.map((sage) =>
+            sage._id === userId ? { ...sage, isOnline: true } : sage
+          )
+        );
+      });
+      socket.on("user offline", (userId) => {
+        setSages((prevSages) =>
+          prevSages.map((sage) =>
+            sage._id === userId ? { ...sage, isOnline: false } : sage
+          )
+        );
+      });
+
+      // Cleanup function
+      return () => {
+        socket.off("user online");
+        socket.off("user offline");
+      };
+    }
+  }, [socket]); // Only depend on socket, not sages
 
   const bgGradient = useColorModeValue(
     "linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)",

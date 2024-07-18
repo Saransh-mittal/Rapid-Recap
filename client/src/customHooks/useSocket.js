@@ -16,8 +16,9 @@ export const useSocket = (user) => {
     return socketRef.current;
   }, [user]);
 
-  const disconnectSocket = useCallback(() => {
+  const disconnectSocket = useCallback((userId) => {
     if (socketRef.current) {
+      socketRef.current.emit("user-disconnected", userId);
       socketRef.current.disconnect();
       socketRef.current = null;
       setSocketConnected(false);

@@ -119,7 +119,7 @@ const getFriends = asyncHandler(async (req, res) => {
   try {
     const user = await User.findById(userId).populate({
       path: "friends",
-      select: "name inGameName IQ_score pic",
+      select: "name inGameName IQ_score pic isOnline",
     });
     let userFriends = [];
     for (let friend of user.friends) {
@@ -271,13 +271,11 @@ const canSendRequest = asyncHandler(async (req, res) => {
 
       if (!areFriends) await FriendRequest.findByIdAndDelete(request._id);
 
-      return res
-        .status(201)
-        .json({
-          message: "Already friends",
-          friend: areFriends,
-          allowed: true,
-        });
+      return res.status(201).json({
+        message: "Already friends",
+        friend: areFriends,
+        allowed: true,
+      });
     }
 
     res.status(200).json({ message: "Can send request" });

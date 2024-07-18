@@ -252,6 +252,10 @@ const userSchema = new mongoose.Schema(
         ref: "FriendRequest",
       },
     ],
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
     lastLogin: {
       type: Date,
       default: Date.now,
