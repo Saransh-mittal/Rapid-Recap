@@ -130,6 +130,15 @@ export default function Profile() {
       isTutorialTakenCheck({ page: "profilePage", tour });
   }, [isLoading]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const requestId = params.get("requestId");
+
+    if (requestId) {
+      onOpenWiseWeb();
+    }
+  }, [location]);
+
   // Define keyframes for hover animation
   const hoverAnimation = keyframes`
     0% { transform: scale(1); }

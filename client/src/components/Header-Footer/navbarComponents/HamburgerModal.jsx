@@ -93,6 +93,20 @@ const HamburgerModal = ({
                 }}
                 cursor={"pointer"}
               >
+                <Flex w={"100%"} h={"100%"} position={"relative"}>
+                  {state.unreadFriendRequests > 0 && (
+                    <Box
+                      h="14px"
+                      w="14px"
+                      bg={"red"}
+                      borderRadius={"50%"}
+                      position={"absolute"}
+                      right={"30%"}
+                      top={"1rem"}
+                      zIndex={2}
+                    />
+                  )}
+                </Flex>
                 <Avatar
                   src={state.user.pic}
                   h={"6rem"}

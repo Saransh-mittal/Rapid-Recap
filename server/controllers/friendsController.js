@@ -2,6 +2,9 @@ const asyncHandler = require("express-async-handler");
 const FriendRequest = require("../model/friendRequestSchema");
 const User = require("../model/userSchema");
 const Chat = require("../model/chatSchema");
+const { sendNotification } = require("../services/notificationService");
+const { activityTypes } = require("../data/activityTypes");
+const { logActivity } = require("../utils/activity.utils");
 
 //@description     Send friend request
 //@route           POST /api/friends/send-request
@@ -13,11 +16,18 @@ const sendRequest = asyncHandler(async (req, res) => {
     const newRequest = new FriendRequest({ from: fromId, to: toId });
     await newRequest.save();
 
-    await User.findByIdAndUpdate(fromId, {
+    const sender = await User.findByIdAndUpdate(fromId, {
       $push: { sentRequests: newRequest._id },
-    });
-    await User.findByIdAndUpdate(toId, {
+    }).select("name pic");
+    const receiver = await User.findByIdAndUpdate(toId, {
       $push: { receivedRequests: newRequest._id },
+    }).select("inGameName");
+
+    await sendNotification({
+      title: `Friend request from ${sender.name}`,
+      icon: sender.pic,
+      url: `/profile/${receiver.inGameName}/?requestId=${newRequest._id}`,
+      userId: toId.toString(),
     });
 
     res.status(200).json({ message: "Friend request sent" });
@@ -40,11 +50,22 @@ const acceptRequest = asyncHandler(async (req, res) => {
     request.status = "accepted";
     await request.save();
 
-    await User.findByIdAndUpdate(request.from._id, {
+    const sender = await User.findByIdAndUpdate(request.from._id, {
       $push: { friends: request.to._id },
-    });
-    await User.findByIdAndUpdate(request.to._id, {
+    }).select("inGameName");
+    const receiver = await User.findByIdAndUpdate(request.to._id, {
       $push: { friends: request.from._id },
+    }).select("inGameName");
+    const currentDate = new Date().toISOString().split("T")[0];
+    logActivity({
+      userInGameName: sender.inGameName,
+      type: activityTypes.WISE_WEB_EXPANSION.type,
+      date: currentDate,
+    });
+    logActivity({
+      userInGameName: receiver.inGameName,
+      type: activityTypes.WISE_WEB_EXPANSION.type,
+      date: currentDate,
     });
 
     res.status(200).json({ message: "Friend request accepted" });

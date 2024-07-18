@@ -136,7 +136,20 @@ const OutsideNavbarContent = ({
                 marginBottom={isHamburgerOpen ? "2rem" : "0"}
                 height={"35px"}
                 width={"10px"}
+                position={"relative"}
               >
+                {state.unreadFriendRequests > 0 && (
+                  <Box
+                    h="14px"
+                    w="14px"
+                    bg={"red"}
+                    borderRadius={"50%"}
+                    position={"absolute"}
+                    right={"-0.25rem"}
+                    top={"-0.25rem"}
+                    zIndex={2}
+                  />
+                )}
                 <HamburgerIcon height={"35px"} width={"20px"} />
               </Button>
             </Flex>

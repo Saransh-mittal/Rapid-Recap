@@ -1,21 +1,9 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
-import {
-  useToast,
-  Button,
-  Flex,
-  Box,
-  useMediaQuery,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-} from "@chakra-ui/react";
+import { useToast, Button, Flex, Box, useMediaQuery } from "@chakra-ui/react";
 import useDrag from "../../customHooks/useDrag";
 
 import { CloseIcon } from "@chakra-ui/icons";

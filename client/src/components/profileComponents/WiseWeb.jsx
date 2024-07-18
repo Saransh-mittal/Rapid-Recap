@@ -40,6 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  Badge,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -94,6 +95,7 @@ const SageItem = React.memo(
     const subTextColor = useColorModeValue("#a0a0a0", "#a0a0a0");
     const onlineColor = "#4CAF50";
     const offlineColor = "#9e9e9e";
+    const badgeBg = useColorModeValue("#4CAF50", "#4CAF50");
 
     return (
       <>
@@ -105,14 +107,13 @@ const SageItem = React.memo(
         >
           <PopoverTrigger>
             <Flex
-              ref={itemRef}
               alignItems="center"
               p={3}
               borderRadius="lg"
               transition="all 0.3s"
               _hover={{
                 bg: hoverBg,
-                transform: "scale(1.05)",
+                transform: "scale(1.02)",
                 boxShadow: "md",
               }}
               cursor="pointer"
@@ -128,20 +129,44 @@ const SageItem = React.memo(
                     ? sage.pic
                     : `https://api.dicebear.com/6.x/initials/svg?seed=${sage.name}`
                 }
+                size="md"
               />
               <Box ml={4} flex={1}>
-                <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                <Text
+                  fontSize="sm"
+                  fontWeight="semibold"
+                  color={textColor}
+                  mb={"2px"}
+                >
                   {sage.name}
                 </Text>
-                <Text fontSize="xs" color={subTextColor}>
-                  IQ: {sage.IQ_score} | {sage.inGameName}
+                <Text fontSize="xs" color={subTextColor} mb={0}>
+                  @{sage.inGameName}
                 </Text>
               </Box>
+              <Badge
+                bg={badgeBg}
+                color="white"
+                borderRadius="full"
+                px={2}
+                py={1}
+                fontWeight="bold"
+                fontSize="xs"
+                boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+                display="flex"
+                alignItems="center"
+              >
+                <Text as="span" role="img" aria-label="brain" mr={1}>
+                  🧠
+                </Text>
+                {sage.IQ_score}
+              </Badge>
               <Box
                 width="10px"
                 height="10px"
                 borderRadius="50%"
                 bg={sage.isOnline ? onlineColor : offlineColor}
+                ml={2}
               />
             </Flex>
           </PopoverTrigger>
@@ -448,10 +473,12 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
   const [sages, setSages] = useState([]);
   const [requests, setRequests] = useState([]);
   const [openPopoverId, setOpenPopoverId] = useState(null);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(requestNotif ? 1 : 0);
   const [isLoadingSages, setIsLoadingSages] = useState(true);
   const [isLoadingRequests, setIsLoadingRequests] = useState(true);
-  const [requestTabVisited, setRequestTabVisited] = useState(false);
+  const [requestTabVisited, setRequestTabVisited] = useState(
+    requestNotif ? true : false
+  );
   const { socket } = ChatState();
   const toast = useToast();
 
