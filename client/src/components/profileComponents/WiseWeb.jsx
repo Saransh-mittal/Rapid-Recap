@@ -46,13 +46,56 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ChatState } from "../../contextAPI/ChatProvider";
 
+const PopoverOption = React.memo(
+  ({ icon: Icon, text, onClick, isRed = false }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+      <Flex
+        align="center"
+        p={2}
+        cursor="pointer"
+        transition="all 0.3s ease"
+        color={isRed ? "#ff6b6b" : "#e0e0e0"}
+        borderRadius="md"
+        bg={isHovered ? "#3d355a" : "transparent"}
+        transform={isHovered ? "translateX(5px)" : "translateX(0)"}
+        onClick={onClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <Icon
+          color={isRed ? "#ff6b6b" : "#a49eb9"}
+          size={16}
+          style={{ marginRight: "8px" }}
+        />
+        <Text textAlign={"center"} m={0} fontWeight={isRed ? "bold" : "normal"}>
+          {text}
+        </Text>
+      </Flex>
+    );
+  }
+);
 const SageItem = React.memo(
   ({ sage, index, openPopoverId, setOpenPopoverId, onSeverTies }) => {
-    const [hoveredOption, setHoveredOption] = useState(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const cancelRef = useRef();
-    const itemRef = useRef(null);
     const navigate = useNavigate();
+    const popoverRef = useRef(null);
+
+    useEffect(() => {
+      if (openPopoverId === index && popoverRef.current) {
+        const popoverRect = popoverRef.current.getBoundingClientRect();
+        const modalBody = popoverRef.current.closest(".chakra-modal__body");
+        if (modalBody) {
+          const modalBodyRect = modalBody.getBoundingClientRect();
+          if (popoverRect.bottom > modalBodyRect.bottom) {
+            modalBody.scrollTop +=
+              popoverRect.bottom - modalBodyRect.bottom + 10;
+          }
+        }
+      }
+    }, [openPopoverId, index]);
 
     const handleSeverTies = useCallback(() => {
       setOpenPopoverId(null);
@@ -71,22 +114,25 @@ const SageItem = React.memo(
     const handleCommune = useCallback(() => {
       setOpenPopoverId(null);
       navigate(`/chats?chatId=${sage.chatId}`);
-    }, [sage.name, setOpenPopoverId]);
+    }, [sage.chatId, setOpenPopoverId, navigate]);
 
     const handleGlimpseWisdom = useCallback(() => {
       setOpenPopoverId(null);
       navigate(`/profile/${sage.inGameName}`);
-    }, [sage.name, setOpenPopoverId]);
+    }, [sage.inGameName, setOpenPopoverId, navigate]);
 
     const calculatePlacement = useCallback(() => {
-      if (!itemRef.current || !itemRef.current.closest(".chakra-modal__body"))
+      if (
+        !popoverRef.current ||
+        !popoverRef.current.closest(".chakra-modal__body")
+      )
         return "bottom";
-      const itemRect = itemRef.current.getBoundingClientRect();
-      const modalRect = itemRef.current
+      const popoverRect = popoverRef.current.getBoundingClientRect();
+      const modalRect = popoverRef.current
         .closest(".chakra-modal__body")
         .getBoundingClientRect();
-      const spaceBelow = modalRect.bottom - itemRect.bottom;
-      const spaceAbove = itemRect.top - modalRect.top;
+      const spaceBelow = modalRect.bottom - popoverRect.bottom;
+      const spaceAbove = popoverRect.top - modalRect.top;
       return spaceBelow >= 100 || spaceBelow > spaceAbove ? "bottom" : "top";
     }, []);
 
@@ -172,6 +218,7 @@ const SageItem = React.memo(
           </PopoverTrigger>
 
           <PopoverContent
+            ref={popoverRef}
             bg="#2a2438"
             borderColor="#3d355a"
             boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
@@ -180,96 +227,34 @@ const SageItem = React.memo(
             zIndex={1500}
           >
             <PopoverBody p={2} width="100%">
-              <Flex
-                align="center"
-                p={2}
-                cursor="pointer"
-                transition="all 0.3s ease"
-                color="#e0e0e0"
-                borderRadius="md"
-                bg={hoveredOption === "commune" ? "#3d355a" : "transparent"}
-                transform={
-                  hoveredOption === "commune"
-                    ? "translateX(5px)"
-                    : "translateX(0)"
-                }
+              <PopoverOption
+                icon={MessageCircle}
+                text="Commune"
                 onClick={handleCommune}
-                onMouseEnter={() => setHoveredOption("commune")}
-                onMouseLeave={() => setHoveredOption(null)}
-              >
-                <MessageCircle
-                  color="#a49eb9"
-                  size={16}
-                  style={{ marginRight: "8px" }}
-                />
-                <Text textAlign={"center"} m={0}>
-                  Commune
-                </Text>
-              </Flex>
+              />
               <Box
                 height="1px"
                 width="100%"
                 bg="linear-gradient(to right, #2a2438, #a49eb9, #2a2438)"
                 my={2}
               />
-              <Flex
-                align="center"
-                p={2}
-                cursor="pointer"
-                transition="all 0.3s ease"
-                color="#e0e0e0"
-                borderRadius="md"
-                bg={hoveredOption === "glimpse" ? "#3d355a" : "transparent"}
-                transform={
-                  hoveredOption === "glimpse"
-                    ? "translateX(5px)"
-                    : "translateX(0)"
-                }
+              <PopoverOption
+                icon={User}
+                text="Glimpse Wisdom"
                 onClick={handleGlimpseWisdom}
-                onMouseEnter={() => setHoveredOption("glimpse")}
-                onMouseLeave={() => setHoveredOption(null)}
-              >
-                <User
-                  color="#a49eb9"
-                  size={16}
-                  style={{ marginRight: "8px" }}
-                />
-                <Text textAlign={"center"} m={0}>
-                  Glimpse Wisdom
-                </Text>
-              </Flex>
+              />
               <Box
                 height="1px"
                 width="100%"
                 bg="linear-gradient(to right, #2a2438, #a49eb9, #2a2438)"
                 my={2}
               />
-              <Flex
-                align="center"
-                p={2}
-                cursor="pointer"
-                transition="all 0.3s ease"
-                color="#ff6b6b"
-                borderRadius="md"
-                bg={hoveredOption === "sever" ? "#3d355a" : "transparent"}
-                transform={
-                  hoveredOption === "sever"
-                    ? "translateX(5px)"
-                    : "translateX(0)"
-                }
+              <PopoverOption
+                icon={Unlink}
+                text="Sever Ties"
                 onClick={handleSeverTies}
-                onMouseEnter={() => setHoveredOption("sever")}
-                onMouseLeave={() => setHoveredOption(null)}
-              >
-                <Unlink
-                  color="#ff6b6b"
-                  size={16}
-                  style={{ marginRight: "8px" }}
-                />
-                <Text textAlign={"center"} m={0} fontWeight="bold">
-                  Sever Ties
-                </Text>
-              </Flex>
+                isRed={true}
+              />
             </PopoverBody>
           </PopoverContent>
         </Popover>

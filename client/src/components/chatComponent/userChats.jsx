@@ -75,7 +75,7 @@ const UserChats = ({ fetchAgain }) => {
   }, [fetchAgain]);
 
   const getLatestMessageContent = (chat) => {
-    if (!chat.latestMessage) return "";
+    if (!chat.latestMessage) return "No messages yet";
 
     if (chat.latestMessage.isDeleted) {
       return "This message was deleted";
@@ -95,6 +95,32 @@ const UserChats = ({ fetchAgain }) => {
       : chat.latestMessage.type === "article_card"
       ? "Shared an Article"
       : "Score Card";
+  };
+
+  const handleChatClick = (chat) => {
+    setSelectedChat(chat);
+    setHasMore(true);
+    setMessagesFetched(false);
+
+    // Only update latestMessage if it exists
+    if (chat.latestMessage) {
+      setChats((prevChats) => {
+        return prevChats?.map((c) => {
+          if (c._id === chat._id) {
+            return {
+              ...c,
+              latestMessage: {
+                ...c.latestMessage,
+                readBy: [...(c.latestMessage.readBy || []), user._id],
+              },
+            };
+          }
+          return c;
+        });
+      });
+    }
+
+    setNotification((prev) => prev.filter((c) => c !== chat._id));
   };
   return (
     <Box
@@ -155,35 +181,15 @@ const UserChats = ({ fetchAgain }) => {
           <Stack>
             {Array.isArray(chats) &&
               chats.map((chat) => {
-                const readByLoggedUser =
-                  chat.latestMessage?.readBy.includes(user?._id) ||
-                  chat.latestMessage?.sender._id.toString() ===
-                    user?._id.toString();
+                const readByLoggedUser = chat.latestMessage
+                  ? chat.latestMessage.readBy.includes(user?._id) ||
+                    chat.latestMessage.sender._id.toString() ===
+                      user?._id.toString()
+                  : true; // Consider empty chats as "read"
 
                 return (
                   <Box
-                    onClick={() => {
-                      setSelectedChat(chat);
-                      setHasMore(true);
-                      setMessagesFetched(false);
-                      setChats((prevChats) => {
-                        return prevChats?.map((c) => {
-                          if (c._id === chat._id) {
-                            return {
-                              ...c,
-                              latestMessage: {
-                                ...c.latestMessage,
-                                readBy: [...c.latestMessage?.readBy, user._id],
-                              },
-                            };
-                          }
-                          return c;
-                        });
-                      });
-                      setNotification((prev) =>
-                        prev.filter((c) => c !== chat._id)
-                      );
-                    }}
+                    onClick={() => handleChatClick(chat)}
                     cursor="pointer"
                     bg={
                       selectedChat &&

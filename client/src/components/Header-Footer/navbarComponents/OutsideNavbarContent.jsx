@@ -56,33 +56,6 @@ const OutsideNavbarContent = ({
         {!notLogined && (
           <>
             {!isEmptyObject(user) && (
-              <Box
-                _hover={{
-                  cursor: "pointer",
-                }}
-                display={{ base: "none", lg: "flex" }}
-                onClick={() => navigate("/chats")}
-                position={"relative"}
-              >
-                {Array.isArray(notification) && notification.length && (
-                  <Badge
-                    bg={"red"}
-                    position={"absolute"}
-                    color={"white"}
-                    borderRadius={"50%"}
-                    h={"18px"}
-                    w={"18px"}
-                    textAlign={"center"}
-                    right={"-0.5rem"}
-                    top={"-0.7rem"}
-                  >
-                    {notification.length}
-                  </Badge>
-                )}
-                <FaFacebookMessenger size={23} />
-              </Box>
-            )}
-            {!isEmptyObject(user) && (
               <Box>
                 {" "}
                 <IQScore score={state.user.IQ_score} />
@@ -121,6 +94,33 @@ const OutsideNavbarContent = ({
               isBoosted={isBoosted}
               getBackgroundColor={getBackgroundColor}
             />
+            {!isEmptyObject(user) && (
+              <Box
+                _hover={{
+                  cursor: "pointer",
+                }}
+                display={{ base: "none", lg: "flex" }}
+                onClick={() => navigate("/chats")}
+                position={"relative"}
+              >
+                {Array.isArray(notification) && notification.length > 0 && (
+                  <Badge
+                    bg={"red"}
+                    position={"absolute"}
+                    color={"white"}
+                    borderRadius={"50%"}
+                    h={"18px"}
+                    w={"18px"}
+                    textAlign={"center"}
+                    right={"-0.5rem"}
+                    top={"-0.7rem"}
+                  >
+                    {notification.length}
+                  </Badge>
+                )}
+                <FaFacebookMessenger size={23} />
+              </Box>
+            )}
             <Inbox
               className={"inbox-button-lg"}
               onClick={() => setIsDrawerOpen(true)}
@@ -157,7 +157,7 @@ const OutsideNavbarContent = ({
                 position={"relative"}
               >
                 {(state.unreadFriendRequests > 0 ||
-                  (Array.isArray(notification) && notification.length)) && (
+                  (Array.isArray(notification) && notification.length > 0)) && (
                   <Box
                     h="14px"
                     w="14px"

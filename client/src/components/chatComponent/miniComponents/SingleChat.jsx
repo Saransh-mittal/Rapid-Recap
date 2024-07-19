@@ -157,35 +157,37 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const sendMessage = async (event) => {
     if (event.key === "Enter" && newMessage) {
       socket?.emit("stop typing", selectedChat._id);
+      const tempId = Date.now().toString(); // Temporary ID for optimistic update
+      const optimisticMessage = {
+        _id: tempId,
+        sender: {
+          _id: user._id,
+          name: user.name,
+          pic: user.pic,
+        },
+        content: newMessage,
+        chat: selectedChat._id,
+        status: "sending",
+        createdAt: new Date().toISOString(),
+      };
+
+      setMessages((prevMessages) => [...prevMessages, optimisticMessage]);
+      const currentNewMessage = newMessage;
+      setNewMessage(""); // Clear input immediately
       try {
-        const tempId = Date.now().toString(); // Temporary ID for optimistic update
-        const optimisticMessage = {
-          _id: tempId,
-          sender: {
-            _id: user._id,
-            name: user.name,
-            pic: user.pic,
-          },
-          content: newMessage,
-          chat: selectedChat._id,
-          status: "sending",
-          createdAt: new Date().toISOString(),
-        };
-
-        setMessages((prevMessages) => [...prevMessages, optimisticMessage]);
-        setNewMessage(""); // Clear input immediately
-
         const { data } = await axios.post("/api/message", {
-          content: newMessage,
+          content: currentNewMessage,
           chatId: selectedChat._id,
         });
 
         socket?.emit("new message", data);
 
         setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg._id === tempId ? { ...data, status: "sent" } : msg
-          )
+          prevMessages.find((msg) => msg._id === data._id)
+            ? prevMessages
+            : prevMessages.map((msg) =>
+                msg._id === tempId ? { ...data, status: "sent" } : msg
+              )
         );
 
         // Update latest message and sort chats
@@ -404,15 +406,31 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, []);
 
   useEffect(() => {
-    if (
-      selectedChat &&
-      ((messages.length === 0 && !messagesFetched) ||
-        (messages.length > 0 && messages[0].chat._id !== selectedChat._id))
-    ) {
+    const shouldFetchMessages = () => {
+      if (!selectedChat) return false;
+
+      if (messages.length === 0 && !messagesFetched) return true;
+
+      if (messages.length > 0) {
+        // Check if the first message is not a temporary message
+        const firstMessage = messages[0];
+        const isTemporaryMessage =
+          typeof firstMessage._id === "string" && firstMessage._id.length > 24;
+
+        if (!isTemporaryMessage && firstMessage.chat._id !== selectedChat._id) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    if (shouldFetchMessages()) {
+      console.log("fetching messages");
       fetchMessages();
     }
     selectedChatCompare = selectedChat;
-  }, [selectedChat, messages]);
+  }, [selectedChat]);
 
   useEffect(() => {
     socket?.on("message recieved", (newMessageRecieved) => {
@@ -598,25 +616,28 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                         }`
                       );
                     }}
+                    justifyContent={"center"}
+                    alignItems={"center"}
+                    w={"100%"}
                   >
                     <Flex mt={2}>
                       <Image
                         borderRadius="full"
-                        boxSize="50px"
+                        boxSize={{ base: "30px", md: "50px" }}
                         src={getSenderFull(user, selectedChat.users).pic}
                         alt={getSenderFull(user, selectedChat.users).name}
                       />
                     </Flex>
                     <Flex flexDirection={"column"}>
                       <Flex>
-                        <Text fontSize={"2rem"} m={0}>
+                        <Text fontSize={{ base: "1rem", md: "2rem" }} m={0}>
                           {getSenderFull(user, selectedChat.users).name}
                         </Text>
                       </Flex>
                       <Text
-                        fontSize={"1rem"}
+                        fontSize={{ base: "0.75rem", md: "1rem" }}
                         m={0}
-                        mt={-2}
+                        mt={{ base: "0", md: -2 }}
                         ml={1}
                         textColor={"#9CAFAA"}
                       >
@@ -626,7 +647,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                     <Flex ml={-4} alignItems={"center"}>
                       <Image
                         borderRadius="full"
-                        boxSize="30px"
+                        boxSize={{ base: "20px", md: "30px" }}
                         src={greaterThan}
                         alt={"greaterThan"}
                         onClick={() => {
@@ -636,9 +657,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                     </Flex>
                   </Flex>
 
-                  <ProfileModal
+                  {/* <ProfileModal
                     user={getSenderFull(user, selectedChat.users)}
-                  />
+                  /> */}
                 </>
               ) : (
                 <>
