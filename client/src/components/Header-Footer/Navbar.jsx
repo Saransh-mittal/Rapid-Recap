@@ -191,7 +191,7 @@ const Navbar = () => {
       <Box overflow={isHamburgerOpen ? "hidden" : "visible"}>
         <Box
           className={`navbar navbar-expand-lg`}
-          paddingX={{ base: "1.2rem", lg: "5rem" }}
+          paddingX={{ base: "1.2rem", xl: "5rem" }}
           height={"5rem"}
           w={"100vw"}
           onTouchStart={startDrag}

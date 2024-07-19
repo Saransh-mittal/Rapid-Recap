@@ -1,4 +1,4 @@
-import { LockIcon } from "@chakra-ui/icons";
+import { LockIcon, SearchIcon } from "@chakra-ui/icons";
 import {
   Avatar,
   Flex,
@@ -14,6 +14,7 @@ import {
   ModalBody,
   Box,
   Badge,
+  useDisclosure,
 } from "@chakra-ui/react";
 import React, { useContext } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -25,6 +26,7 @@ import NavBrand from "./NavBrand";
 import Inbox from "./Inbox";
 import { FaFacebookMessenger } from "react-icons/fa";
 import { ChatState } from "../../../contextAPI/ChatProvider";
+import UserSearchDrawer from "../../miscellaneous/UserSearchDrawer";
 
 const HamburgerModal = ({
   isOpen,
@@ -39,6 +41,11 @@ const HamburgerModal = ({
   const { state } = useContext(AppContext);
   const { notification } = ChatState();
   const navigate = useNavigate();
+  const {
+    isOpen: isOpenUserSearch,
+    onOpen: onOpenUserSearch,
+    onClose: onCloseUserSearch,
+  } = useDisclosure();
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="full">
       <ModalOverlay />
@@ -146,60 +153,84 @@ const HamburgerModal = ({
               position={"absolute"}
               top={notLogined ? "30%" : "32%"}
             >
-              <ListItem
-                className={`nav-item `}
-                display={"flex"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                gap={"0.25rem"}
-              >
-                <Box
-                  _hover={{
-                    cursor: "pointer",
-                  }}
-                  onClick={() => {
-                    onClose();
-                    navigate("/chats");
-                  }}
-                  display={notLogined ? "none" : "block"}
-                  color={"white"}
-                  position={"relative"}
+              <Flex gap={4}>
+                <ListItem
+                  className={`nav-item `}
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  gap={"0.25rem"}
                 >
-                  {Array.isArray(notification) && notification.length > 0 && (
-                    <Badge
-                      bg={"red"}
-                      position={"absolute"}
-                      color={"white"}
-                      borderRadius={"50%"}
-                      h={"18px"}
-                      w={"18px"}
-                      textAlign={"center"}
-                      right={"-0.5rem"}
-                      top={"-0.65rem"}
-                    >
-                      {notification.length}
-                    </Badge>
-                  )}
-                  <FaFacebookMessenger size={25} />
-                </Box>
-              </ListItem>
-              <ListItem
-                className={`nav-item `}
-                display={"flex"}
-                justifyContent={"center"}
-                alignItems={"center"}
-                gap={"0.25rem"}
-              >
-                <Inbox
-                  className={"inbox-button-lg"}
-                  onClick={() => {
-                    setIsDrawerOpen(true);
-                    onClose();
-                  }}
-                  notifyCont={notifyCont}
-                  display={notLogined ? "none" : "flex"}
-                />
-              </ListItem>
+                  <Box
+                    _hover={{
+                      cursor: "pointer",
+                    }}
+                    onClick={() => {
+                      onClose();
+                      navigate("/chats");
+                    }}
+                    display={notLogined ? "none" : "block"}
+                    color={"white"}
+                    position={"relative"}
+                  >
+                    {Array.isArray(notification) && notification.length > 0 && (
+                      <Badge
+                        bg={"red"}
+                        position={"absolute"}
+                        color={"white"}
+                        borderRadius={"50%"}
+                        h={"18px"}
+                        w={"18px"}
+                        textAlign={"center"}
+                        right={"-0.5rem"}
+                        top={"-0.65rem"}
+                      >
+                        {notification.length}
+                      </Badge>
+                    )}
+                    <FaFacebookMessenger size={25} />
+                  </Box>
+                </ListItem>
+                <ListItem
+                  className={`nav-item `}
+                  display={"flex"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  gap={"0.25rem"}
+                >
+                  <Inbox
+                    className={"inbox-button-lg"}
+                    onClick={() => {
+                      setIsDrawerOpen(true);
+                      onClose();
+                    }}
+                    notifyCont={notifyCont}
+                    display={notLogined ? "none" : "flex"}
+                  />
+                </ListItem>
+                <ListItem>
+                  <Box
+                    _hover={{
+                      cursor: "pointer",
+                    }}
+                    display={notLogined ? "none" : "flex"}
+                    onClick={() => {
+                      onOpenUserSearch();
+                    }}
+                    position={"relative"}
+                    mx={1}
+                  >
+                    <SearchIcon boxSize={6} color={"white"} />
+                    <UserSearchDrawer
+                      isOpen={isOpenUserSearch}
+                      onClose={onCloseUserSearch}
+                      onSearchClick={() => {
+                        onClose();
+                      }}
+                    />
+                  </Box>
+                </ListItem>
+              </Flex>
               {navItems.map((item, index) => (
                 <ListItem
                   className={`nav-item `}

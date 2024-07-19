@@ -4,6 +4,7 @@ import { AppContext } from "../../contextAPI/appContext";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
+import Inbox from "../Header-Footer/navbarComponents/Inbox";
 const itemVariants = {
   open: {
     opacity: 1,
@@ -18,6 +19,8 @@ const ProfileDropDownMenu = ({
   refProfile,
   className,
   profileNotif,
+  setIsDrawerOpen,
+  notifyCont,
 }) => {
   const listStyle = {
     position: "relative",
@@ -139,6 +142,20 @@ const ProfileDropDownMenu = ({
             top: "3rem",
           }}
         >
+          <motion.li
+            whileHover={listHoverStyle}
+            style={listStyle}
+            variants={itemVariants}
+          >
+            <Inbox
+              className={"inbox-button-lg"}
+              onClick={() => setIsDrawerOpen(true)}
+              notifyCont={notifyCont}
+              display={{ base: "none", md: "flex" }}
+              h="5"
+              w="5"
+            />
+          </motion.li>
           <NavLink
             to={`${toProfile}/${state.user.inGameName}`}
             ref={refProfile}

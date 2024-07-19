@@ -1,4 +1,4 @@
-import { Badge, Box, Button, Flex } from "@chakra-ui/react";
+import { Badge, Box, Button, Flex, useDisclosure } from "@chakra-ui/react";
 import React, { useContext } from "react";
 import Inbox from "./Inbox";
 import StreakFire from "./StreakFire";
@@ -13,6 +13,8 @@ import { AppContext } from "../../../contextAPI/appContext";
 import { FaFacebookMessenger } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { ChatState } from "../../../contextAPI/ChatProvider";
+import { SearchIcon } from "@chakra-ui/icons";
+import UserSearchDrawer from "../../miscellaneous/UserSearchDrawer";
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -38,6 +40,11 @@ const OutsideNavbarContent = ({
   const { state } = useContext(AppContext);
   const { notification } = ChatState();
   const navigate = useNavigate();
+  const {
+    isOpen: isOpenUserSearch,
+    onOpen: onOpenUserSearch,
+    onClose: onCloseUserSearch,
+  } = useDisclosure();
 
   return (
     <>
@@ -100,8 +107,26 @@ const OutsideNavbarContent = ({
                   cursor: "pointer",
                 }}
                 display={{ base: "none", lg: "flex" }}
+                onClick={() => onOpenUserSearch()}
+                position={"relative"}
+                mx={1}
+              >
+                <SearchIcon boxSize={6} />
+                <UserSearchDrawer
+                  isOpen={isOpenUserSearch}
+                  onClose={onCloseUserSearch}
+                />
+              </Box>
+            )}
+            {!isEmptyObject(user) && (
+              <Box
+                _hover={{
+                  cursor: "pointer",
+                }}
+                display={{ base: "none", lg: "flex" }}
                 onClick={() => navigate("/chats")}
                 position={"relative"}
+                mx={1}
               >
                 {Array.isArray(notification) && notification.length > 0 && (
                   <Badge
@@ -121,22 +146,18 @@ const OutsideNavbarContent = ({
                 <FaFacebookMessenger size={23} />
               </Box>
             )}
-            <Inbox
-              className={"inbox-button-lg"}
-              onClick={() => setIsDrawerOpen(true)}
-              notifyCont={notifyCont}
-              display={{ base: "none", md: "flex" }}
-            />
           </>
         )}
         {!notLogined && !isHamburgerOpen ? (
           <Flex display={{ base: "none", lg: "flex" }}>
             <ProfileDropDownMenu
+              setIsDrawerOpen={setIsDrawerOpen}
               className="profile-dropdown-lg"
               handleLogout={handleLogout}
               toProfile={"/profile"}
               refProfile={(ref) => (navLinkRefs.current[4] = ref)}
               profileNotif={profileNotif}
+              notifyCont={notifyCont}
             />
           </Flex>
         ) : null}

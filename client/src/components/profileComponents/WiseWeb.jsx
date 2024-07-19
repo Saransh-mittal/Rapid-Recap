@@ -674,6 +674,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
       isOpen={isOpen}
       onClose={handleClose}
       onCloseComplete={() => setOpenPopoverId(null)}
+      size={{ base: "full", md: "sm" }}
     >
       <ModalOverlay />
       <ModalContent
