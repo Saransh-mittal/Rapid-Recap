@@ -13,6 +13,7 @@ import {
   ModalCloseButton,
   ModalBody,
   Box,
+  Badge,
 } from "@chakra-ui/react";
 import React, { useContext } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -23,6 +24,7 @@ import GetStarted from "./GetStarted";
 import NavBrand from "./NavBrand";
 import Inbox from "./Inbox";
 import { FaFacebookMessenger } from "react-icons/fa";
+import { ChatState } from "../../../contextAPI/ChatProvider";
 
 const HamburgerModal = ({
   isOpen,
@@ -35,6 +37,7 @@ const HamburgerModal = ({
   setIsDrawerOpen,
 }) => {
   const { state } = useContext(AppContext);
+  const { notification } = ChatState();
   const navigate = useNavigate();
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="full">
@@ -160,7 +163,23 @@ const HamburgerModal = ({
                   }}
                   display={notLogined ? "none" : "block"}
                   color={"white"}
+                  position={"relative"}
                 >
+                  {Array.isArray(notification) && notification.length > 0 && (
+                    <Badge
+                      bg={"red"}
+                      position={"absolute"}
+                      color={"white"}
+                      borderRadius={"50%"}
+                      h={"18px"}
+                      w={"18px"}
+                      textAlign={"center"}
+                      right={"-0.5rem"}
+                      top={"-0.65rem"}
+                    >
+                      {notification.length}
+                    </Badge>
+                  )}
                   <FaFacebookMessenger size={25} />
                 </Box>
               </ListItem>

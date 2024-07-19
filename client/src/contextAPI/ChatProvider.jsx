@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "./appContext";
 import { useSocket } from "../customHooks/useSocket";
+import axios from "axios";
 
 const ChatContext = createContext();
 
@@ -10,6 +11,8 @@ const ChatProvider = ({ children }) => {
   const [user, setUser] = useState();
   const [notification, setNotification] = useState([]);
   const [chats, setChats] = useState();
+  const [messagesFetched, setMessagesFetched] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const { getSocket, disconnectSocket, socket, socketConnected } =
     useSocket(user);
 
@@ -47,8 +50,14 @@ const ChatProvider = ({ children }) => {
     }
   };
 
+  const getInitialNotificationCnt = async () => {
+    const { data } = await axios.get("/api/notify/new-message-chats");
+    setNotification(data.unreadChats);
+  };
+
   useEffect(() => {
     // const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    getInitialNotificationCnt();
     setUser(state.user);
     // check state.user for empty object
 
@@ -57,7 +66,6 @@ const ChatProvider = ({ children }) => {
       getSocket();
     }
     const handleBeforeUnload = (event) => {
-      event.preventDefault();
       disconnectSocket(state.user._id.toString());
     };
 
@@ -69,6 +77,17 @@ const ChatProvider = ({ children }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.user, getSocket]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("unread notification", (data) => {
+        // console.log(data);
+        setNotification((prev) => {
+          return prev.includes(data.chatId) ? prev : [...prev, data.chatId];
+        });
+      });
+    }
+  });
 
   return (
     <ChatContext.Provider
@@ -84,6 +103,10 @@ const ChatProvider = ({ children }) => {
         updateLatestMessage,
         socket,
         socketConnected,
+        messagesFetched,
+        setMessagesFetched,
+        hasMore,
+        setHasMore,
       }}
     >
       {children}

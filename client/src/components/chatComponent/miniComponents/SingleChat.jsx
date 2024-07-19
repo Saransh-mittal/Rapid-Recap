@@ -45,7 +45,6 @@ var selectedChatCompare;
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [messages, setMessages] = useState([]);
-  const [messagesFetched, setMessagesFetched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [typing, setTyping] = useState(false);
@@ -56,7 +55,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const emojiPickerRef = useRef(null);
   const stickerPickerRef = useRef(null);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [deleteInfo, setDeleteInfo] = useState({ messageId: null, type: null });
   const navigate = useNavigate();
   const [showBookmarksModal, setShowBookmarksModal] = useState(false);
@@ -72,6 +70,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     updateLatestMessage,
     socket,
     socketConnected,
+    messagesFetched,
+    setMessagesFetched,
+    hasMore,
+    setHasMore,
   } = ChatState();
 
   const fetchMessages = useCallback(async () => {
@@ -404,8 +406,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   useEffect(() => {
     if (
       selectedChat &&
-      ((!messages.length && !messagesFetched) ||
-        messages[0].chat._id !== selectedChat._id)
+      ((messages.length === 0 && !messagesFetched) ||
+        (messages.length > 0 && messages[0].chat._id !== selectedChat._id))
     ) {
       fetchMessages();
     }
@@ -415,18 +417,19 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   useEffect(() => {
     socket?.on("message recieved", (newMessageRecieved) => {
       if (
-        !selectedChatCompare || // if chat is not selected or doesn't match current chat
-        selectedChatCompare._id !== newMessageRecieved.chat._id
+        selectedChatCompare && // if chat is not selected or doesn't match current chat
+        selectedChatCompare._id === newMessageRecieved.chat._id
       ) {
-        if (!notification.includes(newMessageRecieved)) {
-          setNotification([newMessageRecieved, ...notification]);
-          setFetchAgain(!fetchAgain);
-        }
-      } else {
         setMessages([...messages, newMessageRecieved]);
         updateLatestMessage(newMessageRecieved.chat._id, newMessageRecieved);
+        setNotification((prevNotification) => {
+          return prevNotification.filter(
+            (chatId) => chatId !== newMessageRecieved.chat._id.toString()
+          );
+        });
+      } else {
+        setFetchAgain(!fetchAgain);
       }
-
       socket?.emit("message delivered", {
         messageId: newMessageRecieved._id,
         userId: user._id,

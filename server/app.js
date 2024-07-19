@@ -150,6 +150,12 @@ io.on("connection", (socket) => {
       if (user._id == newMessageRecieved.sender._id) return;
 
       socket.in(user._id).emit("message recieved", newMessageRecieved);
+      // Send notification for unread message
+      socket.in(user._id).emit("unread notification", {
+        messageId: newMessageRecieved._id,
+        chatId: chat._id,
+        senderId: newMessageRecieved.sender._id,
+      });
     });
     try {
       const updatedMessage = await Message.findByIdAndUpdate(

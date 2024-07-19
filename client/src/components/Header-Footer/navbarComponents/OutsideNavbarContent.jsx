@@ -1,4 +1,4 @@
-import { Box, Button, Flex } from "@chakra-ui/react";
+import { Badge, Box, Button, Flex } from "@chakra-ui/react";
 import React, { useContext } from "react";
 import Inbox from "./Inbox";
 import StreakFire from "./StreakFire";
@@ -12,6 +12,7 @@ import { AppContext } from "../../../contextAPI/appContext";
 // import Messenger from "../../../screens/Messenger";
 import { FaFacebookMessenger } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { ChatState } from "../../../contextAPI/ChatProvider";
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -35,6 +36,7 @@ const OutsideNavbarContent = ({
     return obj && Object.keys(obj).length === 0;
   };
   const { state } = useContext(AppContext);
+  const { notification } = ChatState();
   const navigate = useNavigate();
 
   return (
@@ -60,7 +62,23 @@ const OutsideNavbarContent = ({
                 }}
                 display={{ base: "none", lg: "flex" }}
                 onClick={() => navigate("/chats")}
+                position={"relative"}
               >
+                {Array.isArray(notification) && notification.length && (
+                  <Badge
+                    bg={"red"}
+                    position={"absolute"}
+                    color={"white"}
+                    borderRadius={"50%"}
+                    h={"18px"}
+                    w={"18px"}
+                    textAlign={"center"}
+                    right={"-0.5rem"}
+                    top={"-0.7rem"}
+                  >
+                    {notification.length}
+                  </Badge>
+                )}
                 <FaFacebookMessenger size={23} />
               </Box>
             )}
@@ -138,7 +156,8 @@ const OutsideNavbarContent = ({
                 width={"10px"}
                 position={"relative"}
               >
-                {state.unreadFriendRequests > 0 && (
+                {(state.unreadFriendRequests > 0 ||
+                  (Array.isArray(notification) && notification.length)) && (
                   <Box
                     h="14px"
                     w="14px"

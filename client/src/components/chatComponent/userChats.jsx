@@ -27,14 +27,23 @@ const UserChats = ({ fetchAgain }) => {
   const { state } = useContext(AppContext);
   const [loggedUser, setLoggedUser] = useState();
 
-  const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
+  const {
+    selectedChat,
+    setSelectedChat,
+    user,
+    chats,
+    setChats,
+    setMessagesFetched,
+    setHasMore,
+    setNotification,
+  } = ChatState();
 
   const toast = useToast();
 
   const fetchChats = async () => {
     try {
       const { data } = await axios.get("/api/chat");
-      setChats(data);
+      setChats(data || []);
     } catch (error) {
       toast({
         title: "Error Occurred!",
@@ -144,103 +153,115 @@ const UserChats = ({ fetchAgain }) => {
       >
         {chats ? (
           <Stack>
-            {chats?.map((chat) => {
-              const readByLoggedUser =
-                chat.latestMessage?.readBy.includes(user._id) ||
-                chat.latestMessage.sender._id.toString() ===
-                  user._id.toString();
+            {Array.isArray(chats) &&
+              chats.map((chat) => {
+                const readByLoggedUser =
+                  chat.latestMessage?.readBy.includes(user?._id) ||
+                  chat.latestMessage?.sender._id.toString() ===
+                    user?._id.toString();
 
-              return (
-                <Box
-                  onClick={() => {
-                    setSelectedChat(chat);
-                    setChats((prevChats) => {
-                      return prevChats.map((c) => {
-                        if (c._id === chat._id) {
-                          return {
-                            ...c,
-                            latestMessage: {
-                              ...c.latestMessage,
-                              readBy: [...c.latestMessage.readBy, user._id],
-                            },
-                          };
-                        }
-                        return c;
+                return (
+                  <Box
+                    onClick={() => {
+                      setSelectedChat(chat);
+                      setHasMore(true);
+                      setMessagesFetched(false);
+                      setChats((prevChats) => {
+                        return prevChats?.map((c) => {
+                          if (c._id === chat._id) {
+                            return {
+                              ...c,
+                              latestMessage: {
+                                ...c.latestMessage,
+                                readBy: [...c.latestMessage?.readBy, user._id],
+                              },
+                            };
+                          }
+                          return c;
+                        });
                       });
-                    });
-                  }}
-                  cursor="pointer"
-                  bg={
-                    selectedChat &&
-                    selectedChat?._id.toString() === chat?._id.toString()
-                      ? "#2D3748" // New background color for selected chat
-                      : "#0f0d15"
-                  }
-                  color={"white"}
-                  boxShadow={
-                    "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
-                  }
-                  px={3}
-                  py={2}
-                  my={1}
-                  borderRadius="lg"
-                  key={chat._id}
-                >
-                  <Flex justifyContent={"space-between"} alignItems={"center"}>
-                    <Flex gap={2}>
+                      setNotification((prev) =>
+                        prev.filter((c) => c !== chat._id)
+                      );
+                    }}
+                    cursor="pointer"
+                    bg={
+                      selectedChat &&
+                      selectedChat?._id.toString() === chat?._id.toString()
+                        ? "#2D3748" // New background color for selected chat
+                        : "#0f0d15"
+                    }
+                    color={"white"}
+                    boxShadow={
+                      "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
+                    }
+                    px={3}
+                    py={2}
+                    my={1}
+                    borderRadius="lg"
+                    key={chat._id}
+                  >
+                    <Flex
+                      justifyContent={"space-between"}
+                      alignItems={"center"}
+                    >
+                      <Flex gap={2}>
+                        <Text
+                          fontWeight={readByLoggedUser ? "normal" : "bold"}
+                          m={0}
+                        >
+                          {!chat.isGroupChat
+                            ? getSender(loggedUser, chat.users)
+                            : chat.chatName}
+                        </Text>
+                        {chat.new && (
+                          <Badge colorScheme="green" h={"50%"} mt={1}>
+                            New
+                          </Badge>
+                        )}
+                      </Flex>
                       <Text
-                        fontWeight={readByLoggedUser ? "normal" : "bold"}
                         m={0}
+                        fontSize="xs"
+                        color={readByLoggedUser ? "#9CAFAA" : "white"}
                       >
                         {!chat.isGroupChat
-                          ? getSender(loggedUser, chat.users)
-                          : chat.chatName}
+                          ? getRecieverInGameName(loggedUser, chat.users)
+                          : null}
                       </Text>
-                      {chat.new && (
-                        <Badge colorScheme="green" h={"50%"} mt={1}>
-                          New
-                        </Badge>
-                      )}
                     </Flex>
-                    <Text
-                      m={0}
-                      fontSize="xs"
-                      color={readByLoggedUser ? "#9CAFAA" : "white"}
-                    >
-                      {!chat.isGroupChat
-                        ? getRecieverInGameName(loggedUser, chat.users)
-                        : null}
-                    </Text>
-                  </Flex>
-                  {chat.latestMessage && (
-                    <Text
-                      fontSize="xs"
-                      color={readByLoggedUser ? "#9CAFAA" : "white"}
-                      display={"flex"}
-                      alignItems={"center"}
-                      fontWeight={readByLoggedUser ? "normal" : "bold"}
-                    >
-                      {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
-                        ? "YOU"
-                        : chat.latestMessage.sender.name}{" "}
-                      {": "}
-                      {getLatestMessageContent(chat)}
-                      {!readByLoggedUser && (
-                        <Badge
-                          colorScheme="blue"
-                          borderRadius={"50%"}
-                          h={"8px"}
-                          w={"8px"}
-                          top={"58%"}
-                          right={"10%"}
-                          marginLeft={"1rem"}
-                        />
-                      )}
-                    </Text>
-                  )}
-                </Box>
-              );
-            })}
+                    {chat.latestMessage && (
+                      <Text
+                        fontSize="xs"
+                        color={readByLoggedUser ? "#9CAFAA" : "white"}
+                        display={"flex"}
+                        alignItems={"center"}
+                        fontWeight={readByLoggedUser ? "normal" : "bold"}
+                      >
+                        {isSenderLoggedUser(
+                          loggedUser,
+                          chat.latestMessage.sender
+                        )
+                          ? "YOU"
+                          : chat.latestMessage.sender.name}{" "}
+                        {": "}
+                        {getLatestMessageContent(chat)}
+                        {!readByLoggedUser && (
+                          <Badge
+                            colorScheme="blue"
+                            borderRadius={"50%"}
+                            h={"8px"}
+                            w={"8px"}
+                            top={"58%"}
+                            right={"10%"}
+                            marginLeft={"1rem"}
+                          />
+                        )}
+                      </Text>
+                    )}
+                  </Box>
+                );
+              })}
           </Stack>
         ) : (
           <ChatLoading />
