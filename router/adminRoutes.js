@@ -4,6 +4,7 @@ const {
   getQuizAttemptsByUsers,
   getUsersWithLastLoginAfter,
   getTimeSpentByUsers,
+  getNotificationStatus,
 } = require("../controllers/stats");
 const router = express.Router();
 
@@ -20,5 +21,11 @@ router.get(
   getUsersWithLastLoginAfter
 );
 router.get("/time-spent", Authenticate, adminMiddleware, getTimeSpentByUsers);
+router.get(
+  "/notification-status",
+  Authenticate,
+  adminMiddleware,
+  getNotificationStatus
+);
 
 module.exports = router;

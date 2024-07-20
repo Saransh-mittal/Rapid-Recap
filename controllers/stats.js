@@ -1,3 +1,4 @@
+const { usersEnabledNotifs } = require("../scripts/usersEnabledNotifs");
 const { usersGivingQuizStats } = require("../scripts/usersGivingQuizStats");
 const {
   usersWithLastLoginAfter,
@@ -38,8 +39,19 @@ const getTimeSpentByUsers = async (req, res) => {
   }
 };
 
+const getNotificationStatus = async (req, res) => {
+  try {
+    const result = await usersEnabledNotifs();
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getQuizAttemptsByUsers,
   getUsersWithLastLoginAfter,
   getTimeSpentByUsers,
+  getNotificationStatus,
 };
