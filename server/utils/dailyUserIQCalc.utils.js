@@ -31,15 +31,16 @@ const handleSocietyOrCircleUpgrade = async (
     const currSocietyCircle = findSocietyCircleByIQ(currIQScore);
 
     if (!prevSocietyCircle || !currSocietyCircle) return;
-
+    const user = await User.findById(userId);
     if (
       (prevSocietyCircle.society !== currSocietyCircle.society ||
         prevSocietyCircle.circle !== currSocietyCircle.circle) &&
       prevSocietyCircle.IQ_Upper <= currSocietyCircle.IQ_Lower
     ) {
       const upgradeMsg = currSocietyCircle.upgradeMsg;
-      const user = await User.findById(userId);
+
       user.societyUpgradeMessage = upgradeMsg;
+      user.baseUpgradeIQ = currSocietyCircle.IQ_Lower;
       await user.save();
       if (awardableXpOrNot) {
         await logActivity({
@@ -49,6 +50,11 @@ const handleSocietyOrCircleUpgrade = async (
           previousIQ: previousIQForXp,
         });
       }
+    }
+    if (user.baseUpgradeIQ && user.baseUpgradeIQ > currIQScore) {
+      user.societyUpgradeMessage = "";
+      user.baseUpgradeIQ = null;
+      await user.save();
     }
   } catch (error) {
     console.error(
