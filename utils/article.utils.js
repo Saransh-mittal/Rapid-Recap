@@ -52,7 +52,7 @@ const hindiConverter = async (article) => {
                                 `;
 
     let result = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo-0125",
+      model: "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [
         {
@@ -82,7 +82,7 @@ const hindiConverter = async (article) => {
       cnt-- > 0
     ) {
       result = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo-0125",
+        model: "gpt-4o-mini",
         response_format: { type: "json_object" },
         messages: [
           {
@@ -170,7 +170,7 @@ fill these in the category key (only string). Also if total characters are more 
       });
 
       let output = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo-0125",
+        model: "gpt-4o-mini",
         response_format: { type: "json_object" },
         messages: [
           {
@@ -188,7 +188,7 @@ fill these in the category key (only string). Also if total characters are more 
 
       if (res.mainText.length > 2500) {
         output = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo-0125",
+          model: "gpt-4o-mini",
           response_format: { type: "json_object" },
           messages: [
             {
@@ -326,7 +326,8 @@ const processExtractedNews = async (news, category) => {
       const prompt = JSON.stringify(promptPayload);
 
       let output = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: initialInstructions },
           { role: "user", content: prompt },
@@ -350,7 +351,8 @@ const processExtractedNews = async (news, category) => {
 
       if (res.mainText.length > 2500) {
         output = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o-mini",
+          response_format: { type: "json_object" },
           messages: [
             { role: "system", content: summarizationInstructions },
             { role: "user", content: JSON.stringify(res) },
