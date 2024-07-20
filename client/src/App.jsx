@@ -54,6 +54,8 @@ const App = () => {
               "ServiceWorker registration successful with scope: ",
               registration.scope
             );
+            // Check for updates
+            registration.update();
           },
           function (err) {
             console.log("ServiceWorker registration failed: ", err);

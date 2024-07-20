@@ -1,4 +1,15 @@
+const VERSION = "v2"; // Increment this version number
 const RapidRecapLogo = "./images/rr.png";
+
+self.addEventListener("install", (event) => {
+  console.log("Service Worker installing - Version", VERSION);
+  event.waitUntil(self.skipWaiting()); // Activate worker immediately
+});
+
+self.addEventListener("activate", (event) => {
+  console.log("Service Worker activating - Version", VERSION);
+  event.waitUntil(clients.claim()); // Take control of all open pages
+});
 
 self.addEventListener("push", (event) => {
   const data = event.data.json();
@@ -40,12 +51,4 @@ self.addEventListener("notificationclick", function (event) {
     event.waitUntil(clients.openWindow(notificationData.url));
   }
   event.notification.close();
-});
-
-self.addEventListener("install", (event) => {
-  console.log("Service Worker installed");
-});
-
-self.addEventListener("activate", (event) => {
-  console.log("Service Worker activated");
 });
