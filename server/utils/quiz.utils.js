@@ -101,7 +101,7 @@ const generateQuestionsForQuiz = async ({
 
   try {
     const openai = new OpenAI(process.env.OPENAI_API_KEY);
-    let attempts = 3;
+    let attempts = 5;
     let result;
     let response;
 
@@ -111,8 +111,8 @@ const generateQuestionsForQuiz = async ({
 3. Provide 4 answer options for each question, with one correct answer labeled (a, b, c, or d).
 4. Include a brief explanation for each correct answer.
 5. Ensure all questions are derived from the provided text.
-6. Assign a difficulty level between 0 and 1 for each question. **This field is mandatory**.
-7. Evaluate the article's overall difficulty considering vocabulary complexity, sentence structure, conceptual difficulty, depth of analysis, required background knowledge, clarity, coherence, information density, language style, length, and reader engagement. Provide an overall difficulty rating between 0 and 1.
+6. Assign a difficulty level between 0 and 1 for each question (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)). **This field is mandatory**.
+7. Evaluate the article's overall difficulty considering vocabulary complexity, sentence structure, conceptual difficulty, depth of analysis, required background knowledge, clarity, coherence, information density, language style, length, and reader engagement. Provide an overall difficulty rating between 0 and 1 (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)).
 8. Return the response in the following JSON format:
 {
   "title": "Title of the article",
@@ -175,7 +175,8 @@ const generateQuestionsForQuiz = async ({
     while (attempts-- > 0) {
       try {
         result = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o-mini",
+          response_format: { type: "json_object" },
           messages: [
             {
               role: "system",
@@ -272,7 +273,7 @@ const generateQuestionsForHindiQuiz = async ({
                                 6. Each answer should have an explanation.
                                 7. Nothing should be outside of the article provided(important)
                                 8. Every question should be unique.
-                                9. Give each question a difficulty level between 0 to 1 (Important).
+                                9. Give each question a difficulty level between 0 to 1 (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)). **This field is mandatory**..
                                 10.Assess the overall difficulty level of the article by considering factors 
                                   such as vocabulary complexity, sentence structure, conceptual difficulty, 
                                   depth of analysis, background knowledge required, clarity and coherence, 
@@ -281,7 +282,7 @@ const generateQuestionsForHindiQuiz = async ({
                                   rating on a scale from 0 to 1, where 0 represents low difficulty and 1 represents 
                                   high difficulty. Aggregate these assessments to derive an overall difficulty level 
                                   that reflects the article's complexity and suitability for readers of varying 
-                                  proficiency levels.
+                                  proficiency levels (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)). **This field is mandatory**..
                                 10. Return response in following JSON object format:
                                   {
                                     title: "Title of the article",
@@ -345,7 +346,7 @@ const generateQuestionsForHindiQuiz = async ({
                                     overAllDifficulty: ""
                                   }`;
   let result = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo-0125",
+    model: "gpt-4o-mini",
     response_format: { type: "json_object" },
     messages: [
       {
@@ -372,7 +373,7 @@ const generateQuestionsForHindiQuiz = async ({
     cnt-- > 0
   ) {
     result = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo-0125",
+      model: "gpt-4o-mini",
       response_format: { type: "json_object" },
       messages: [
         {
