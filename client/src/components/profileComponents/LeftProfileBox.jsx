@@ -219,7 +219,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                 height={"fit-content"}
                 py={1}
               >
-                Sage Ally
+                Friend
               </Badge>
             ) : (
               <Flex

@@ -76,8 +76,8 @@ const PopoverOption = React.memo(
     );
   }
 );
-const SageItem = React.memo(
-  ({ sage, index, openPopoverId, setOpenPopoverId, onSeverTies }) => {
+const FriendItem = React.memo(
+  ({ friend, index, openPopoverId, setOpenPopoverId, onSeverTies }) => {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const cancelRef = useRef();
     const navigate = useNavigate();
@@ -104,8 +104,8 @@ const SageItem = React.memo(
 
     const onConfirmSeverTies = useCallback(() => {
       setIsConfirmOpen(false);
-      onSeverTies(sage._id);
-    }, [sage._id, onSeverTies]);
+      onSeverTies(friend._id);
+    }, [friend._id, onSeverTies]);
 
     const handleToggle = useCallback(() => {
       setOpenPopoverId((prevId) => (prevId === index ? null : index));
@@ -113,13 +113,13 @@ const SageItem = React.memo(
 
     const handleCommune = useCallback(() => {
       setOpenPopoverId(null);
-      navigate(`/chats?chatId=${sage.chatId}`);
-    }, [sage.chatId, setOpenPopoverId, navigate]);
+      navigate(`/chats?chatId=${friend.chatId}`);
+    }, [friend.chatId, setOpenPopoverId, navigate]);
 
     const handleGlimpseWisdom = useCallback(() => {
       setOpenPopoverId(null);
-      navigate(`/profile/${sage.inGameName}`);
-    }, [sage.inGameName, setOpenPopoverId, navigate]);
+      navigate(`/profile/${friend.inGameName}`);
+    }, [friend.inGameName, setOpenPopoverId, navigate]);
 
     const calculatePlacement = useCallback(() => {
       if (
@@ -169,11 +169,11 @@ const SageItem = React.memo(
               }}
             >
               <Avatar
-                name={sage.name}
+                name={friend.name}
                 src={
-                  sage.pic
-                    ? sage.pic
-                    : `https://api.dicebear.com/6.x/initials/svg?seed=${sage.name}`
+                  friend.pic
+                    ? friend.pic
+                    : `https://api.dicebear.com/6.x/initials/svg?seed=${friend.name}`
                 }
                 size="md"
               />
@@ -184,10 +184,10 @@ const SageItem = React.memo(
                   color={textColor}
                   mb={"2px"}
                 >
-                  {sage.name}
+                  {friend.name}
                 </Text>
                 <Text fontSize="xs" color={subTextColor} mb={0}>
-                  @{sage.inGameName}
+                  @{friend.inGameName}
                 </Text>
               </Box>
               <Badge
@@ -205,13 +205,13 @@ const SageItem = React.memo(
                 <Text as="span" role="img" aria-label="brain" mr={1}>
                   🧠
                 </Text>
-                {sage.IQ_score}
+                {friend.IQ_score}
               </Badge>
               <Box
                 width="10px"
                 height="10px"
                 borderRadius="50%"
-                bg={sage.isOnline ? onlineColor : offlineColor}
+                bg={friend.isOnline ? onlineColor : offlineColor}
                 ml={2}
               />
             </Flex>
@@ -266,12 +266,12 @@ const SageItem = React.memo(
           <AlertDialogOverlay>
             <AlertDialogContent bg="#2a2438" color="white">
               <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                Sever Ties with {sage.name}
+                Sever Ties with {friend.name}
               </AlertDialogHeader>
 
               <AlertDialogBody>
                 Are you sure? This action cannot be undone. You will no longer
-                be friends with {sage.name}.
+                be friends with {friend.name}.
               </AlertDialogBody>
 
               <AlertDialogFooter>
@@ -290,18 +290,18 @@ const SageItem = React.memo(
   }
 );
 
-const SageList = forwardRef(
+const FriendList = forwardRef(
   (
     { items, startIndex = 0, openPopoverId, setOpenPopoverId, onSeverTies },
     ref
   ) => {
-    const onlineSages = items
-      .filter((sage) => sage.isOnline)
+    const onlineFriends = items
+      .filter((friend) => friend.isOnline)
       .sort((a, b) => {
         return b.IQ_score - a.IQ_score;
       });
-    const offlineSages = items
-      .filter((sage) => !sage.isOnline)
+    const offlineFriends = items
+      .filter((friend) => !friend.isOnline)
       .sort((a, b) => {
         return b.IQ_score - a.IQ_score;
       });
@@ -333,7 +333,7 @@ const SageList = forwardRef(
           },
         }}
       >
-        {onlineSages.length > 0 && (
+        {onlineFriends.length > 0 && (
           <>
             <Text
               fontSize="sm"
@@ -342,12 +342,12 @@ const SageList = forwardRef(
               mb={2}
               textAlign={"center"}
             >
-              Online Sages
+              Online Friends
             </Text>
-            {onlineSages.map((item, index) => (
-              <SageItem
+            {onlineFriends.map((item, index) => (
+              <FriendItem
                 key={startIndex + index}
-                sage={item}
+                friend={item}
                 index={startIndex + index}
                 openPopoverId={openPopoverId}
                 setOpenPopoverId={setOpenPopoverId}
@@ -356,7 +356,7 @@ const SageList = forwardRef(
             ))}
           </>
         )}
-        {offlineSages.length > 0 && (
+        {offlineFriends.length > 0 && (
           <>
             <Text
               fontSize="sm"
@@ -368,11 +368,11 @@ const SageList = forwardRef(
             >
               LeaderBoard
             </Text>
-            {offlineSages.map((item, index) => (
-              <SageItem
-                key={startIndex + onlineSages.length + index}
-                sage={item}
-                index={startIndex + onlineSages.length + index}
+            {offlineFriends.map((item, index) => (
+              <FriendItem
+                key={startIndex + onlineFriends.length + index}
+                friend={item}
+                index={startIndex + onlineFriends.length + index}
                 openPopoverId={openPopoverId}
                 setOpenPopoverId={setOpenPopoverId}
                 onSeverTies={onSeverTies}
@@ -455,11 +455,11 @@ const LoadingSkeleton = ({ count = 3 }) => (
 );
 
 const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
-  const [sages, setSages] = useState([]);
+  const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
   const [openPopoverId, setOpenPopoverId] = useState(null);
   const [activeTab, setActiveTab] = useState(requestNotif ? 1 : 0);
-  const [isLoadingSages, setIsLoadingSages] = useState(true);
+  const [isLoadingFriends, setIsLoadingFriends] = useState(true);
   const [isLoadingRequests, setIsLoadingRequests] = useState(true);
   const [requestTabVisited, setRequestTabVisited] = useState(
     requestNotif ? true : false
@@ -467,7 +467,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
   const { socket } = ChatState();
   const toast = useToast();
 
-  const sageListRef = useRef(null);
+  const friendListRef = useRef(null);
 
   const handleSeverTies = async (friendId) => {
     try {
@@ -475,7 +475,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
       fetchFriends();
       toast({
         title: "Ties Severed",
-        description: "You have successfully unfriended the sage.",
+        description: "You have successfully unfriended the friend.",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -513,8 +513,8 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        sageListRef.current &&
-        !sageListRef.current.contains(event.target) &&
+        friendListRef.current &&
+        !friendListRef.current.contains(event.target) &&
         openPopoverId !== null
       ) {
         setOpenPopoverId(null);
@@ -540,14 +540,14 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
   };
 
   const fetchFriends = async () => {
-    setIsLoadingSages(true);
+    setIsLoadingFriends(true);
     try {
       const response = await axios.get(`/api/friends/`);
-      setSages(response.data.map((sage) => ({ ...sage })));
+      setFriends(response.data.map((friend) => ({ ...friend })));
     } catch (error) {
       console.error("Error fetching friends:", error);
     } finally {
-      setIsLoadingSages(false);
+      setIsLoadingFriends(false);
     }
   };
 
@@ -581,16 +581,16 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
     if (socket) {
       // Set up listeners
       socket.on("user online", (userId) => {
-        setSages((prevSages) =>
-          prevSages.map((sage) =>
-            sage._id === userId ? { ...sage, isOnline: true } : sage
+        setFriends((prevFriends) =>
+          prevFriends.map((f) =>
+            f._id === userId ? { ...f, isOnline: true } : f
           )
         );
       });
       socket.on("user offline", (userId) => {
-        setSages((prevSages) =>
-          prevSages.map((sage) =>
-            sage._id === userId ? { ...sage, isOnline: false } : sage
+        setFriends((prevFriends) =>
+          prevFriends.map((f) =>
+            f._id === userId ? { ...f, isOnline: false } : f
           )
         );
       });
@@ -601,7 +601,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
         socket.off("user offline");
       };
     }
-  }, [socket]); // Only depend on socket, not sages
+  }, [socket]); // Only depend on socket, not friends
 
   const bgGradient = useColorModeValue(
     "linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)",
@@ -630,22 +630,22 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
     []
   );
 
-  const memoizedSageList = useMemo(
+  const memoizedFriendList = useMemo(
     () =>
-      isLoadingSages ? (
+      isLoadingFriends ? (
         <LoadingSkeleton />
-      ) : sages.length > 0 ? (
-        <SageList
-          items={sages}
+      ) : friends.length > 0 ? (
+        <FriendList
+          items={friends}
           openPopoverId={openPopoverId}
           setOpenPopoverId={setOpenPopoverId}
-          ref={sageListRef}
+          ref={friendListRef}
           onSeverTies={handleSeverTies}
         />
       ) : (
         <Text>No friends found.</Text>
       ),
-    [sages, openPopoverId, isLoadingSages]
+    [friends, openPopoverId, isLoadingFriends]
   );
 
   const memoizedRequestList = useMemo(
@@ -715,7 +715,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
             >
               <Tab style={tabStyle(activeTab === 0)}>
                 <Users size={16} style={{ marginRight: "8px" }} />
-                Sages
+                Friends
               </Tab>
               <Tab style={tabStyle(activeTab === 1)} position={"relative"}>
                 {requestNotif && (
@@ -742,9 +742,9 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
                   mb={4}
                   color={headerColor}
                 >
-                  Your Sages
+                  Your Friends
                 </Text>
-                {memoizedSageList}
+                {memoizedFriendList}
               </TabPanel>
               <TabPanel p={0}>
                 <Text
