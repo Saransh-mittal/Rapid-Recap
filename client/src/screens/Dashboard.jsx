@@ -20,11 +20,19 @@ import {
   AlertIcon,
   Skeleton,
   useMediaQuery,
+  useDisclosure,
 } from "@chakra-ui/react";
 import DataTable from "../components/miscellaneous/DataTable";
+import NotificationStatus from "../components/miscellaneous/NotificationStatus";
 
 const Dashboard = () => {
   const [quizAttempts, setQuizAttempts] = useState([]);
+  const [notificationStatus, setNotificationStatus] = useState({
+    usersEnabled: [],
+    usersDisabled: [],
+    totalEnabled: 0,
+    totalDisabled: 0,
+  });
   const [lastLogin, setLastLogin] = useState([]);
   const [timeSpent, setTimeSpent] = useState([]);
   const [startDate, setStartDate] = useState("");
@@ -34,6 +42,8 @@ const Dashboard = () => {
   const [dateError, setDateError] = useState("");
   const [loading, setLoading] = useState(true);
   const isScreenSmallerThen650px = useMediaQuery("(max-width: 650px)")[0];
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
@@ -82,6 +92,12 @@ const Dashboard = () => {
             }))
           );
         }
+        const notificationResponse = await axios.get(
+          "/api/admin/notification-status",
+          config
+        );
+        setNotificationStatus(notificationResponse.data);
+        setIsLoadingStatus(false);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -91,6 +107,10 @@ const Dashboard = () => {
 
     fetchData();
   }, [startDate, endDate, lastLoginAfterDate, selectedTables]);
+
+  const handleNotificationStatusClick = () => {
+    onOpen();
+  };
 
   const handleTableChange = (table) => {
     setSelectedTables((prevSelectedTables) => {
@@ -174,7 +194,11 @@ const Dashboard = () => {
 
   const renderButton = (label, table) => (
     <Button
-      onClick={() => handleTableChange(table)}
+      onClick={
+        table === "notificationStatus"
+          ? handleNotificationStatusClick
+          : () => handleTableChange(table)
+      }
       backgroundColor={selectedTables.includes(table) ? "blue.500" : "gray.200"}
       color={selectedTables.includes(table) ? "white" : "black"}
     >
@@ -249,12 +273,14 @@ const Dashboard = () => {
               {renderButton("Show Quiz Attempts", "quizAttempts")}
               {renderButton("Show Last Login Times", "lastLogin")}
               {renderButton("Show Time Spent", "timeSpent")}
+              {renderButton("Show Notification Status", "notificationStatus")}
             </VStack>
           ) : (
             <HStack spacing={4} align="flex-start" marginTop={4}>
               {renderButton("Show Quiz Attempts", "quizAttempts")}
               {renderButton("Show Last Login Times", "lastLogin")}
               {renderButton("Show Time Spent", "timeSpent")}
+              {renderButton("Show Notification Status", "notificationStatus")}
             </HStack>
           )}
         </Flex>
@@ -339,6 +365,12 @@ const Dashboard = () => {
           )}
         </Box>
       )}
+      <NotificationStatus
+        isOpen={isOpen}
+        onClose={onClose}
+        data={notificationStatus}
+        isLoading={isLoadingStatus}
+      />
     </Box>
   );
 };

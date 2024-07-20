@@ -4,38 +4,39 @@ const User = require("../model/userSchema");
 const usersEnabledNotifs = async () => {
   try {
     const subscriptions = await Subscription.find({}).select("userId");
-    let users = [];
+    let usersEnabled = [];
     for (let subscription of subscriptions) {
       const user = await User.findById(subscription.userId).select(
-        "inGameName email"
+        "inGameName email name"
       );
       if (!user) continue;
 
-      if (users.find((u) => u.email === user.email)) continue;
-      //   console.log(user);
-      users.push(user);
+      if (usersEnabled.find((u) => u.email === user.email)) continue;
+      usersEnabled.push(user);
     }
-    let usersDisabledNotifs = [];
+
+    let usersDisabled = [];
     const allUsers = await User.find({
       email: { $not: /^dummy\d+@mail\.com$/ },
       inGameName: { $exists: true },
-    }).select("inGameName email");
+    }).select("inGameName email name");
 
     for (let user of allUsers) {
-      //   console.log(user);
-      if (!users.find((u) => u.email === user.email)) {
-        usersDisabledNotifs.push(user);
+      if (!usersEnabled.find((u) => u.email === user.email)) {
+        usersDisabled.push(user);
       }
     }
-    console.log("Users with disabled notifications:");
-    console.log(usersDisabledNotifs);
-    console.log(
-      "Total users with disabled notifications:",
-      usersDisabledNotifs.length
-    );
+
+    return {
+      usersEnabled,
+      usersDisabled,
+      totalEnabled: usersEnabled.length,
+      totalDisabled: usersDisabled.length,
+    };
   } catch (error) {
     console.log(error);
+    throw error;
   }
 };
 
-usersEnabledNotifs();
+module.exports = { usersEnabledNotifs };
