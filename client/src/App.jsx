@@ -10,24 +10,16 @@ import {
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js";
 import Navbar from "./components/Header-Footer/Navbar.jsx";
-import Home from "./screens/Home";
-import Contact from "./screens/Contact";
-import Footer from "./components/Header-Footer/Footer.jsx";
-import Article from "./screens/Article.jsx";
-import Profile from "./screens/Profile.jsx";
-import LeaderBoard from "./screens/LeaderBoard.jsx";
-import GetStarted from "./screens/GetStarted.jsx";
-import FeedbackModal from "./components/getStartedComponents/modals/FeedbackModal.jsx";
 import ReactGA from "react-ga4";
-import { useContext, useEffect } from "react";
+import { Suspense, useContext, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { AppContext } from "./contextAPI/appContext.jsx";
 // import Season from "./screens/Season.jsx";
 import { Box, useDisclosure, useToast } from "@chakra-ui/react";
-import Dashboard from "./screens/Dashboard.jsx";
 import Signin from "./screens/Signin.jsx";
 import NotificationSubscription from "./components/Notifications/NotificationSubscription.jsx";
-import ChatPage from "./screens/ChatPage.jsx";
+import * as DynamicComponents from "./DynamicImports";
+import Loading from "./components/miscellaneous/Loading.jsx";
 
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
@@ -145,30 +137,46 @@ const App = () => {
       <Navbar />
       <Box position="relative">
         {shouldShowNotification && <NotificationSubscription />}
-        <Routes>
-          <Route exact path="/" element={<GetStarted />} />
-          <Route exact path="/contact/feedback" element={<ContactLayout />} />
-          <Route path="/home/:category" element={<Home />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/chats" element={<ChatPage />} />
-          <Route exact path="/article/:id" element={<Article />} />
-          <Route path="/profile/:inGameName" element={<Profile />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route exact path="/contact" element={<ContactLayout />} />
-          <Route exact path="/leaderboard" element={<LeaderBoard />} />
-          {/* <Route exact path="/season" element={<Season />} /> */}
-          <Route
-            path="/dashboard"
-            element={
-              <AdminRoute>
-                <Dashboard />
-              </AdminRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<Loading />}>
+          <Routes>
+            <Route exact path="/" element={<DynamicComponents.GetStarted />} />
+            <Route exact path="/contact/feedback" element={<ContactLayout />} />
+            <Route
+              path="/home/:category"
+              element={<DynamicComponents.Home />}
+            />
+            <Route path="/home" element={<DynamicComponents.Home />} />
+            <Route path="/chats" element={<DynamicComponents.ChatPage />} />
+            <Route
+              exact
+              path="/article/:id"
+              element={<DynamicComponents.Article />}
+            />
+            <Route
+              path="/profile/:inGameName"
+              element={<DynamicComponents.Profile />}
+            />
+            <Route path="/profile" element={<DynamicComponents.Profile />} />
+            <Route exact path="/contact" element={<ContactLayout />} />
+            <Route
+              exact
+              path="/leaderboard"
+              element={<DynamicComponents.LeaderBoard />}
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <AdminRoute>
+                  <DynamicComponents.Dashboard />
+                </AdminRoute>
+              }
+            />
+            {/* <Route exact path="/season" element={<Season />} /> */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </Box>
-      {shouldShowFooter && <Footer />}
+      {shouldShowFooter && <DynamicComponents.Footer />}
     </>
   );
 };
@@ -222,8 +230,8 @@ const ContactLayout = () => {
 
   return (
     <>
-      <Contact />
-      <FeedbackModal
+      <DynamicComponents.Contact />
+      <DynamicComponents.FeedbackModal
         isOpen={isFeedbackRoute}
         onClose={() => navigate("/contact")}
       />
