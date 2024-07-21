@@ -75,7 +75,9 @@ const fetchChats = asyncHandler(async (req, res) => {
         results = results.filter(
           (chat) =>
             chat.latestMessage ||
-            chat.chatCreatedBy.toString() === req.user._id.toString()
+            (chat.chatCreatedBy
+              ? chat.chatCreatedBy.toString() === req.user._id.toString()
+              : true)
         );
         for (let i = 0; i < results.length; i++) {
           let chat = results[i];

@@ -152,7 +152,6 @@ const getFriends = asyncHandler(async (req, res) => {
         //create chat
         chat = new Chat({
           chatName: "sender",
-          chatCreatedBy: userId,
           users: [userId, friend._id],
         });
         await chat.save();

@@ -149,7 +149,7 @@ const UserChats = ({ fetchAgain }) => {
         alignItems="center"
       >
         <Flex>{user && <ChatSideDrawer />}</Flex>
-        <GroupChatModal>
+        {/* <GroupChatModal>
           <Flex position={"relative"}>
             <Button pl={"1.5rem"} textColor={"white"} buttonW="150px">
               New Group
@@ -158,7 +158,7 @@ const UserChats = ({ fetchAgain }) => {
               <AddIcon w={"0.75rem"} />
             </Flex>
           </Flex>
-        </GroupChatModal>
+        </GroupChatModal> */}
       </Box>
       <Box
         display="flex"
