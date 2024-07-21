@@ -39,8 +39,15 @@ export const Reducer = (state, action) => {
       return { ...state, longestStreak: action.payloadLongestDailyStreak };
     case "setIsBoosted":
       return { ...state, isBoosted: action.payloadIsBoosted };
+    case "UPDATE_UNREAD_FRIEND_REQUESTS":
+      return { ...state, unreadFriendRequests: action.payload };
     case "RESET_STATE":
-      return { ...initialState, show: true, user: {} };
+      return {
+        ...initialState,
+        show: true,
+        user: {},
+        unreadFriendRequests: 0, // Reset unread friend requests count
+      };
     default:
       return state;
   }

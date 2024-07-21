@@ -27,6 +27,7 @@ import { Box, useDisclosure, useToast } from "@chakra-ui/react";
 import Dashboard from "./screens/Dashboard.jsx";
 import Signin from "./screens/Signin.jsx";
 import NotificationSubscription from "./components/Notifications/NotificationSubscription.jsx";
+import ChatPage from "./screens/ChatPage.jsx";
 
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
@@ -43,6 +44,7 @@ const App = () => {
     return !state.show && state.user.inGameName ? state.user.inGameName : null;
   };
 
+  let timeout;
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {
@@ -52,6 +54,8 @@ const App = () => {
               "ServiceWorker registration successful with scope: ",
               registration.scope
             );
+            // Check for updates
+            registration.update();
           },
           function (err) {
             console.log("ServiceWorker registration failed: ", err);
@@ -74,7 +78,7 @@ const App = () => {
       const timeUntilMidnight = midnightUTC - now;
 
       // If it's already past midnight, schedule the refresh for the next day
-      const timeout =
+      timeout =
         timeUntilMidnight > 0
           ? timeUntilMidnight
           : 86400000 + timeUntilMidnight; // 86400000ms = 24 hours
@@ -108,7 +112,8 @@ const App = () => {
     });
   }, [location]);
 
-  const shouldShowFooter = !location.pathname.includes("home");
+  const shouldShowFooter =
+    !location.pathname.includes("home") && location.pathname === "/";
 
   const isSupported = () =>
     "Notification" in window &&
@@ -145,6 +150,7 @@ const App = () => {
           <Route exact path="/contact/feedback" element={<ContactLayout />} />
           <Route path="/home/:category" element={<Home />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/chats" element={<ChatPage />} />
           <Route exact path="/article/:id" element={<Article />} />
           <Route path="/profile/:inGameName" element={<Profile />} />
           <Route path="/profile" element={<Profile />} />

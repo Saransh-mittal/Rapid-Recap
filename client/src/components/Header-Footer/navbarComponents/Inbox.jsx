@@ -8,6 +8,8 @@ const Inbox = ({
   onClick,
   notifyCont,
   display,
+  h = "6",
+  w = "6",
 }) => {
   return (
     <>
@@ -20,8 +22,9 @@ const Inbox = ({
           color={"white"}
           _hover={{ background: "transparent" }}
           onClick={onClick} // Open drawer onClick
+          h={"fit-content"}
         >
-          <EmailIcon width={"6"} height={"6"} />
+          <EmailIcon width={w} height={h} />
           {notifyCont > 0 && (
             <Badge
               borderRadius="50%"

@@ -23,7 +23,6 @@ const NavbarContent = ({
         width={"100%"}
         flexDirection={isHamburgerOpen ? "column" : "row"}
         padding={isHamburgerOpen ? "2rem" : "0"}
-        gap={"2rem"}
         className="navbar-content-lg"
         textTransform={"uppercase"}
         marginLeft={{ lg: "12rem" }}
@@ -47,7 +46,7 @@ const NavbarContent = ({
             alignItems={"center"}
             height={"100%"}
             listStyleType={"none"}
-            gap={"3rem"}
+            gap={{ base: "1.5rem", xl: "3rem" }}
             letterSpacing={"2px"}
             flexDirection={{ base: "column", lg: "row" }}
           >

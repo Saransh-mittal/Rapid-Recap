@@ -13,7 +13,7 @@ const debouncedSearch = debounce(async (query, callback) => {
   }
 }, 800);
 
-const SearchBar = ({ setSearchResults, setSearchLoad }) => {
+const SearchBar = ({ setSearchResults, setSearchLoad, w = "50%" }) => {
   const toast = useToast();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -44,7 +44,7 @@ const SearchBar = ({ setSearchResults, setSearchLoad }) => {
 
   return (
     <Input
-      w={"50%"}
+      w={w}
       placeholder="Search for users..."
       value={searchQuery}
       onChange={handleSearch}

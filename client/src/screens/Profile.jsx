@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
 import { GiHistogram } from "react-icons/gi"; // Import the icon
-import { FaBookmark } from "react-icons/fa";
+import { FaBookmark, FaUserFriends } from "react-icons/fa";
 import { AppContext } from "../contextAPI/appContext";
 import IQLineGraph from "../components/profileComponents/IQLineGraph";
 import IQBarGraph from "../components/profileComponents/IQBarGraph";
@@ -30,11 +30,12 @@ import ProfileExperienceLevel from "../components/profileComponents/ProfileExper
 import SeasonSelectorModal from "../components/profileComponents/SeasonSelectorModal.jsx";
 import ProfileButton from "../components/profileComponents/ProfileButton.jsx";
 import Bookmarks from "../components/profileComponents/Bookmarks.jsx";
+import WiseWeb from "../components/profileComponents/WiseWeb.jsx";
 
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour();
   const { inGameName } = useParams();
-  const { state, dispatch } = useContext(AppContext);
+  const { state, dispatch, readFriendRequests } = useContext(AppContext);
   const [profile, setProfile] = useState(state.userProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [showHideModal, setShowHideModal] = useState(false);
@@ -60,6 +61,11 @@ export default function Profile() {
     isOpen: isOpenBookmarks,
     onOpen: onOpenBookmarks,
     onClose: onCloseBookmarks,
+  } = useDisclosure();
+  const {
+    isOpen: isOpenWiseWeb,
+    onOpen: onOpenWiseWeb,
+    onClose: onCloseWiseWeb,
   } = useDisclosure();
   const fetchProfile = async () => {
     setIsLoading(true);
@@ -123,6 +129,15 @@ export default function Profile() {
     )
       isTutorialTakenCheck({ page: "profilePage", tour });
   }, [isLoading]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const requestId = params.get("requestId");
+
+    if (requestId) {
+      onOpenWiseWeb();
+    }
+  }, [location]);
 
   // Define keyframes for hover animation
   const hoverAnimation = keyframes`
@@ -293,15 +308,68 @@ export default function Profile() {
               <Skeleton
                 w={{ md: "85%", lg: "95%", base: "100%" }}
                 borderRadius="10px"
-                marginTop={"12px"}
                 height="50px"
+                marginTop="12px"
+              />
+            </>
+          ) : (
+            inGameName == state.user.inGameName && (
+              <Flex
+                padding="15px"
+                borderRadius="10px"
+                flexDirection="column"
+                w={{ md: "85%", lg: "95%", base: "100%" }}
+                height="fit-content"
+                justifyContent={"center"}
+                alignItems={"center"}
+                position={"relative"}
+              >
+                {state.unreadFriendRequests > 0 && (
+                  <Box
+                    h="8px"
+                    w="8px"
+                    bg={"red"}
+                    borderRadius={"50%"}
+                    position={"absolute"}
+                    right={"34%"}
+                    top={"35%"}
+                    zIndex={2}
+                  />
+                )}
+                <ProfileButton
+                  buttonText="Wise Web"
+                  inGameName={inGameName}
+                  stateUserInGameName={state.user.inGameName}
+                  Private={true}
+                  hoverAnimation={hoverAnimation}
+                  onClick={onOpenWiseWeb}
+                  icon={<FaUserFriends />} // Add icon here
+                />
+
+                {isOpenWiseWeb && (
+                  <WiseWeb
+                    isOpen={isOpenWiseWeb}
+                    onClose={onCloseWiseWeb}
+                    requestNotif={state.unreadFriendRequests > 0}
+                    markRequestAsRead={readFriendRequests}
+                  />
+                )}
+              </Flex>
+            )
+          )}
+          {isLoading ? (
+            <>
+              <Skeleton
+                w={{ md: "85%", lg: "95%", base: "100%" }}
+                borderRadius="10px"
+                height="50px"
+                marginTop="12px"
               />
             </>
           ) : (
             (!privacyProfileData.seasonAnalytics ||
               inGameName == state.user.inGameName) && (
               <Flex
-                marginTop={"12px"}
                 padding="15px"
                 borderRadius="10px"
                 flexDirection="column"
@@ -341,14 +409,13 @@ export default function Profile() {
               <Skeleton
                 w={{ md: "85%", lg: "95%", base: "100%" }}
                 borderRadius="10px"
-                marginTop={"12px"}
                 height="50px"
+                marginTop="12px"
               />
             </>
           ) : (
             inGameName == state.user.inGameName && (
               <Flex
-                marginTop={"12px"}
                 padding="15px"
                 borderRadius="10px"
                 flexDirection="column"
@@ -374,7 +441,6 @@ export default function Profile() {
                   isLoading={isLoading}
                   profile={profile}
                   inGameName={inGameName}
-                  seasons={profile?.seasons}
                 />
               </Flex>
             )

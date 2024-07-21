@@ -1,18 +1,10 @@
-import {
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  MenuDivider,
-  Button,
-  Avatar,
-  Flex,
-} from "@chakra-ui/react";
+import { Avatar, Flex, Box } from "@chakra-ui/react";
 import React, { useContext, useState } from "react";
 import { AppContext } from "../../contextAPI/appContext";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
+import Inbox from "../Header-Footer/navbarComponents/Inbox";
 const itemVariants = {
   open: {
     opacity: 1,
@@ -26,8 +18,12 @@ const ProfileDropDownMenu = ({
   toProfile,
   refProfile,
   className,
+  profileNotif,
+  setIsDrawerOpen,
+  notifyCont,
 }) => {
   const listStyle = {
+    position: "relative",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -81,7 +77,26 @@ const ProfileDropDownMenu = ({
             alignItems: "center",
           }}
         >
-          <Avatar src={state.user.pic} h={"35px"} w={"35px"} rounded={"50%"} />
+          <Flex position={"relative"}>
+            {profileNotif && (
+              <Box
+                h="10px"
+                w="10px"
+                bg={"red"}
+                borderRadius={"50%"}
+                position={"absolute"}
+                right={"-0.1rem"}
+                top={"-0.1rem"}
+                zIndex={2}
+              />
+            )}
+            <Avatar
+              src={state.user.pic}
+              h={"35px"}
+              w={"35px"}
+              rounded={"50%"}
+            />
+          </Flex>
           <motion.div
             variants={{
               open: { rotate: 180 },
@@ -127,6 +142,20 @@ const ProfileDropDownMenu = ({
             top: "3rem",
           }}
         >
+          <motion.li
+            whileHover={listHoverStyle}
+            style={listStyle}
+            variants={itemVariants}
+          >
+            <Inbox
+              className={"inbox-button-lg"}
+              onClick={() => setIsDrawerOpen(true)}
+              notifyCont={notifyCont}
+              display={{ base: "none", md: "flex" }}
+              h="5"
+              w="5"
+            />
+          </motion.li>
           <NavLink
             to={`${toProfile}/${state.user.inGameName}`}
             ref={refProfile}
@@ -137,6 +166,18 @@ const ProfileDropDownMenu = ({
               style={listStyle}
               variants={itemVariants}
             >
+              {profileNotif && (
+                <Box
+                  h="8px"
+                  w="8px"
+                  bg={"red"}
+                  borderRadius={"50%"}
+                  position={"absolute"}
+                  right={"0.3rem"}
+                  top={"0.5rem"}
+                  zIndex={2}
+                />
+              )}
               View Profile
             </motion.li>
           </NavLink>

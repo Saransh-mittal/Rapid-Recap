@@ -1,21 +1,9 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
-import {
-  useToast,
-  Button,
-  Flex,
-  Box,
-  useMediaQuery,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-} from "@chakra-ui/react";
+import { useToast, Button, Flex, Box, useMediaQuery } from "@chakra-ui/react";
 import useDrag from "../../customHooks/useDrag";
 
 import { CloseIcon } from "@chakra-ui/icons";
@@ -56,6 +44,7 @@ const Navbar = () => {
   const [isHomePage, setIsHomePage] = useState(
     location.pathname.split("/")[1] === "home"
   );
+  const [profileNotif, setProfileNotif] = useState(false);
   const calculateRequiredXp = (xp, xpBaseAtNextLevel) => {
     return xpBaseAtNextLevel - xp;
   };
@@ -72,6 +61,14 @@ const Navbar = () => {
     xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2;
     requiredXP = calculateRequiredXp(state.user.xp, xpBaseAtNextLevel);
   }
+
+  useEffect(() => {
+    if (state.unreadFriendRequests && state.unreadFriendRequests > 0) {
+      setProfileNotif(true);
+    } else {
+      setProfileNotif(false);
+    }
+  }, [state.unreadFriendRequests]);
 
   useEffect(() => {
     const isEmptyObject = (obj) => {
@@ -194,7 +191,7 @@ const Navbar = () => {
       <Box overflow={isHamburgerOpen ? "hidden" : "visible"}>
         <Box
           className={`navbar navbar-expand-lg`}
-          paddingX={{ base: "1.2rem", lg: "5rem" }}
+          paddingX={{ base: "1.2rem", xl: "5rem" }}
           height={"5rem"}
           w={"100vw"}
           onTouchStart={startDrag}
@@ -287,6 +284,7 @@ const Navbar = () => {
               navLinkRefs={navLinkRefs}
               setIsHamburgerOpen={setIsHamburgerOpen}
               level={state.user.level}
+              profileNotif={profileNotif}
             />
           </Flex>
           {isModalOpen && (

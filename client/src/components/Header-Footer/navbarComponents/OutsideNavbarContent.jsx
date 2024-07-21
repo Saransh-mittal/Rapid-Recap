@@ -1,4 +1,4 @@
-import { Box, Button, Flex } from "@chakra-ui/react";
+import { Badge, Box, Button, Flex, useDisclosure } from "@chakra-ui/react";
 import React, { useContext } from "react";
 import Inbox from "./Inbox";
 import StreakFire from "./StreakFire";
@@ -8,6 +8,13 @@ import GetStarted from "./GetStarted";
 import XPLevel from "./XPLevel";
 import IQScore from "./IQScore";
 import { AppContext } from "../../../contextAPI/appContext";
+// import { FaFacebookMessenger } from "react-icons/fa";
+// import Messenger from "../../../screens/Messenger";
+import { FaFacebookMessenger } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { ChatState } from "../../../contextAPI/ChatProvider";
+import { SearchIcon } from "@chakra-ui/icons";
+import UserSearchDrawer from "../../miscellaneous/UserSearchDrawer";
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -25,11 +32,19 @@ const OutsideNavbarContent = ({
   setIsHamburgerOpen,
   level,
   user, // pass the user state
+  profileNotif,
 }) => {
   const isEmptyObject = (obj) => {
     return obj && Object.keys(obj).length === 0;
   };
   const { state } = useContext(AppContext);
+  const { notification } = ChatState();
+  const navigate = useNavigate();
+  const {
+    isOpen: isOpenUserSearch,
+    onOpen: onOpenUserSearch,
+    onClose: onCloseUserSearch,
+  } = useDisclosure();
 
   return (
     <>
@@ -86,21 +101,63 @@ const OutsideNavbarContent = ({
               isBoosted={isBoosted}
               getBackgroundColor={getBackgroundColor}
             />
-            <Inbox
-              className={"inbox-button-lg"}
-              onClick={() => setIsDrawerOpen(true)}
-              notifyCont={notifyCont}
-              display={{ base: "none", md: "flex" }}
-            />
+            {!isEmptyObject(user) && (
+              <Box
+                _hover={{
+                  cursor: "pointer",
+                }}
+                display={{ base: "none", lg: "flex" }}
+                onClick={() => onOpenUserSearch()}
+                position={"relative"}
+                mx={1}
+              >
+                <SearchIcon boxSize={6} />
+                <UserSearchDrawer
+                  isOpen={isOpenUserSearch}
+                  onClose={onCloseUserSearch}
+                />
+              </Box>
+            )}
+            {!isEmptyObject(user) && (
+              <Box
+                _hover={{
+                  cursor: "pointer",
+                }}
+                display={{ base: "none", lg: "flex" }}
+                onClick={() => navigate("/chats")}
+                position={"relative"}
+                mx={1}
+              >
+                {Array.isArray(notification) && notification.length > 0 && (
+                  <Badge
+                    bg={"red"}
+                    position={"absolute"}
+                    color={"white"}
+                    borderRadius={"50%"}
+                    h={"18px"}
+                    w={"18px"}
+                    textAlign={"center"}
+                    right={"-0.5rem"}
+                    top={"-0.7rem"}
+                  >
+                    {notification.length}
+                  </Badge>
+                )}
+                <FaFacebookMessenger size={23} />
+              </Box>
+            )}
           </>
         )}
         {!notLogined && !isHamburgerOpen ? (
           <Flex display={{ base: "none", lg: "flex" }}>
             <ProfileDropDownMenu
+              setIsDrawerOpen={setIsDrawerOpen}
               className="profile-dropdown-lg"
               handleLogout={handleLogout}
               toProfile={"/profile"}
               refProfile={(ref) => (navLinkRefs.current[4] = ref)}
+              profileNotif={profileNotif}
+              notifyCont={notifyCont}
             />
           </Flex>
         ) : null}
@@ -118,7 +175,21 @@ const OutsideNavbarContent = ({
                 marginBottom={isHamburgerOpen ? "2rem" : "0"}
                 height={"35px"}
                 width={"10px"}
+                position={"relative"}
               >
+                {(state.unreadFriendRequests > 0 ||
+                  (Array.isArray(notification) && notification.length > 0)) && (
+                  <Box
+                    h="14px"
+                    w="14px"
+                    bg={"red"}
+                    borderRadius={"50%"}
+                    position={"absolute"}
+                    right={"-0.25rem"}
+                    top={"-0.25rem"}
+                    zIndex={2}
+                  />
+                )}
                 <HamburgerIcon height={"35px"} width={"20px"} />
               </Button>
             </Flex>
