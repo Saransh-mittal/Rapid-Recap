@@ -18,7 +18,7 @@ import {
 import axios from "axios";
 import { ChatState } from "../../../contextAPI/ChatProvider";
 
-const ShareChatModal = ({ isOpen, onClose, articleToShare }) => {
+const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const [chats, setChats] = useState([]);
   const [selectedChats, setSelectedChats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +30,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare }) => {
   }, []);
 
   const fetchChats = async () => {
+    if (notLoggedIn) return;
     try {
       const { data } = await axios.get("/api/chat");
       setChats(data);

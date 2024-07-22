@@ -13,6 +13,7 @@ const Button = React.forwardRef((props, ref) => {
     white,
     textColor = "",
     buttonW = "",
+    display = "inline-flex",
   } = props;
 
   // Define responsive width using Chakra UI's useBreakpointValue hook
@@ -27,7 +28,7 @@ const Button = React.forwardRef((props, ref) => {
   const buttonStyles = {
     width: buttonWidth,
     position: "relative",
-    display: "inline-flex",
+    display: display,
     alignItems: "center",
     justifyContent: "center",
     height: "2.75rem", // 11 / 4 = 2.75rem

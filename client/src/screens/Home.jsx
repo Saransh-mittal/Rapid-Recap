@@ -33,10 +33,15 @@ const Home = () => {
 
     try {
       const response =
-        category === "all" || !category || category === ""
+        (category === "all" || !category || category === "") && !notLoggedIn
           ? await axios.get(`/api/recommendation?page=${page}&pageSize=9`)
           : await axios.get(
-              `/api/articles?page=${page}&pageSize=9&category=${category}`
+              `/api/articles?page=${page}&pageSize=9&category=${
+                notLoggedIn &&
+                (category === "all" || !category || category === "")
+                  ? "top"
+                  : category
+              }`
             );
 
       const newItems = response.data;
