@@ -430,6 +430,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       fetchMessages();
     }
     selectedChatCompare = selectedChat;
+
+    return () => {
+      socket?.emit("close chat", {
+        userId: user?._id,
+        chatId: selectedChat?._id,
+      });
+    };
   }, [selectedChat]);
 
   useEffect(() => {
@@ -563,14 +570,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   return (
     <>
-      {selectedChat ? (
+      {selectedChat && selectedChat._id ? (
         <>
           <Flex
             fontSize={{ base: "28px", md: "30px" }}
             pb={3}
             px={2}
             w="100%"
-            fontFamily="Work sans"
             display="flex"
             justifyContent={{ base: "space-between" }}
             alignItems="center"
@@ -588,11 +594,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 setHasMore(true);
                 setMessagesFetched(false);
                 setMessages([]);
-                setSelectedChat(null);
                 socket?.emit("close chat", {
                   userId: user?._id,
                   chatId: selectedChat?._id,
                 });
+                setSelectedChat(null);
               }}
             />
             {messages &&
@@ -620,34 +626,36 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                     alignItems={"center"}
                     w={"100%"}
                   >
-                    <Flex mt={2}>
+                    <Flex>
                       <Image
                         borderRadius="full"
-                        boxSize={{ base: "30px", md: "50px" }}
+                        boxSize={{ base: "35px", md: "45px" }}
                         src={getSenderFull(user, selectedChat.users).pic}
                         alt={getSenderFull(user, selectedChat.users).name}
                       />
                     </Flex>
                     <Flex flexDirection={"column"}>
                       <Flex>
-                        <Text fontSize={{ base: "1rem", md: "2rem" }} m={0}>
+                        <Text
+                          fontSize={{ base: "1.2rem", md: "1.5rem" }}
+                          mb={{ base: 0, md: "5px" }}
+                        >
                           {getSenderFull(user, selectedChat.users).name}
                         </Text>
                       </Flex>
                       <Text
-                        fontSize={{ base: "0.75rem", md: "1rem" }}
+                        fontSize={{ base: "0.75rem", md: "0.85rem" }}
                         m={0}
                         mt={{ base: "0", md: -2 }}
-                        ml={1}
                         textColor={"#9CAFAA"}
                       >
                         {getSenderFull(user, selectedChat.users).inGameName}
                       </Text>
                     </Flex>
-                    <Flex ml={-4} alignItems={"center"}>
+                    <Flex ml={-3} alignItems={"center"} mb={5}>
                       <Image
                         borderRadius="full"
-                        boxSize={{ base: "20px", md: "30px" }}
+                        boxSize={{ base: "15px", md: "20px" }}
                         src={greaterThan}
                         alt={"greaterThan"}
                         onClick={() => {
@@ -782,7 +790,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       ) : (
         // to get socket.io on same page
         <Box d="flex" alignItems="center" justifyContent="center" h="100%">
-          <Text fontSize="3xl" pb={3} fontFamily="Work sans">
+          <Text
+            fontSize="2xl"
+            pb={3}
+            textTransform={"uppercase"}
+            letterSpacing={"1px"}
+          >
             Click on a user to start chatting
           </Text>
         </Box>

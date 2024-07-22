@@ -131,7 +131,7 @@ const ChatSideDrawer = () => {
           placement="bottom-end"
           color={"white"}
         >
-          <Button onClick={onOpen} buttonW={buttonW} textColor={"white"}>
+          <Button onClick={onOpen} buttonW={buttonW}>
             <Flex alignItems={"center"}>
               <Search2Icon />
               <Text display={{ base: "none", md: "flex" }} px={2} m={0}>

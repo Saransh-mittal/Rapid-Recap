@@ -36,6 +36,7 @@ const UserChats = ({ fetchAgain }) => {
     setMessagesFetched,
     setHasMore,
     setNotification,
+    socket,
   } = ChatState();
 
   const toast = useToast();
@@ -72,6 +73,9 @@ const UserChats = ({ fetchAgain }) => {
     setLoggedUser(state.user);
     fetchChats();
     // eslint-disable-next-line
+    return () => {
+      setSelectedChat(null);
+    };
   }, [fetchAgain]);
 
   const getLatestMessageContent = (chat) => {
@@ -141,8 +145,6 @@ const UserChats = ({ fetchAgain }) => {
       <Box
         pb={3}
         px={3}
-        fontSize={{ base: "28px", md: "30px" }}
-        fontFamily="Work sans"
         display="flex"
         w="100%"
         justifyContent={{ base: "column", md: "space-between" }}
@@ -186,13 +188,14 @@ const UserChats = ({ fetchAgain }) => {
                     chat.latestMessage.sender._id.toString() ===
                       user?._id.toString()
                   : true; // Consider empty chats as "read"
-
+                // console.log(selectedChat);
                 return (
                   <Box
                     onClick={() => handleChatClick(chat)}
                     cursor="pointer"
                     bg={
                       selectedChat &&
+                      selectedChat._id &&
                       selectedChat?._id.toString() === chat?._id.toString()
                         ? "#2D3748" // New background color for selected chat
                         : "#0f0d15"
@@ -216,7 +219,10 @@ const UserChats = ({ fetchAgain }) => {
                           fontWeight={readByLoggedUser ? "normal" : "bold"}
                           m={0}
                         >
-                          {!chat.isGroupChat
+                          {chat._id &&
+                          !chat.isGroupChat &&
+                          chat.users &&
+                          chat.users.length > 0
                             ? getSender(loggedUser, chat.users)
                             : chat.chatName}
                         </Text>
@@ -231,12 +237,15 @@ const UserChats = ({ fetchAgain }) => {
                         fontSize="xs"
                         color={readByLoggedUser ? "#9CAFAA" : "white"}
                       >
-                        {!chat.isGroupChat
+                        {chat._id &&
+                        !chat.isGroupChat &&
+                        chat.users &&
+                        chat.users.length > 0
                           ? getRecieverInGameName(loggedUser, chat.users)
                           : null}
                       </Text>
                     </Flex>
-                    {chat.latestMessage && (
+                    {chat._id && chat.latestMessage && (
                       <Text
                         fontSize="xs"
                         color={readByLoggedUser ? "#9CAFAA" : "white"}
