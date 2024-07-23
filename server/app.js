@@ -186,7 +186,7 @@ io.on("connection", (socket) => {
           { status: "read", $addToSet: { readBy: userId } },
           { new: true }
         );
-
+        // console.log("Message read by user", userId);
         io.to(updatedMessage.sender.toString()).emit("message status updated", {
           messageId,
           status: "read",
