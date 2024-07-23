@@ -79,6 +79,9 @@ app.get("*", function (_, res) {
 });
 // ---------------------
 
+// Scheduler
+require("./scheduler/setupCronJobs");
+
 io.on("connection", (socket) => {
   socket.on("setup", async (userData) => {
     socket.join(userData._id);
