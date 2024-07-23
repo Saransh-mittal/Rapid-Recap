@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const DB = process.env.DATABASE;
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
-// const updates = require("./updates/updates(22.07.2024).json");
+// const updates = require("./updates/updates(23.07.2024).json");
 // const User = require("../model/userSchema");
 // const ApplicationUpdates = require("../model/applicationUpdatesSchema");
 // const { progressBar } = require("../utils/progress.utils.js");
@@ -118,14 +118,14 @@ mongoose
 //   }).select("_id");
 //   // const users = await User.find({ inGameName: "saransh_1234" }).select("_id");
 
-//   const updateTitle = `📢 Introducing Bookmarks on Rapid Recap 📰`;
+//   const updateTitle = `🚀 The Wise Web Has Launched! Connect, Chat, and Share on Rapid Recap 🌐`;
 //   const url = "https://www.rapidrecap.co.in/";
 //   for (let user of users) {
 //     await sendNotification({
 //       userId: user._id.toString(),
 //       title: updateTitle,
 //       url,
-//       icon: "https://res.cloudinary.com/dxstsrnbs/image/upload/v1720508053/bookmark_1_h54dsd.png",
+//       icon: "https://res.cloudinary.com/dxstsrnbs/image/upload/v1721632268/uxznhhrwqns1jedpwy4i.png",
 //     });
 //   }
 //   console.log("Notification sent");
