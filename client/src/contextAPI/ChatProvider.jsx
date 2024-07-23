@@ -91,6 +91,10 @@ const ChatProvider = ({ children }) => {
     document.addEventListener("pause", handleDisconnect);
     document.addEventListener("resume", handleReconnect);
 
+    // Blur and focus events with logging
+    window.addEventListener("blur", handleDisconnect);
+    window.addEventListener("focus", handleReconnect);
+
     return () => {
       window.removeEventListener("beforeunload", handleDisconnect);
       window.removeEventListener("pagehide", handleDisconnect);
@@ -98,7 +102,8 @@ const ChatProvider = ({ children }) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       document.removeEventListener("pause", handleDisconnect);
       document.removeEventListener("resume", handleReconnect);
-
+      window.removeEventListener("blur", handleDisconnect);
+      window.removeEventListener("focus", handleReconnect);
       handleDisconnect();
     };
   }, [state.user, getSocket]);
