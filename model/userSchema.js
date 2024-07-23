@@ -232,6 +232,33 @@ const userSchema = new mongoose.Schema(
         ref: "ARTICLE",
       },
     ],
+    isAdmin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    friends: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "USER",
+      },
+    ],
+    sentRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "FriendRequest",
+      },
+    ],
+    receivedRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "FriendRequest",
+      },
+    ],
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
     lastLogin: {
       type: Date,
       default: Date.now,

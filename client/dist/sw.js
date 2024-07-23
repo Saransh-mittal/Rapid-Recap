@@ -1,16 +1,47 @@
+const VERSION = "v2"; // Increment this version number
 const RapidRecapLogo = "./images/rr.png";
+
+self.addEventListener("install", (event) => {
+  console.log("Service Worker installing - Version", VERSION);
+  event.waitUntil(self.skipWaiting()); // Activate worker immediately
+});
+
+self.addEventListener("activate", (event) => {
+  console.log("Service Worker activating - Version", VERSION);
+  event.waitUntil(clients.claim()); // Take control of all open pages
+});
 
 self.addEventListener("push", (event) => {
   const data = event.data.json();
-  //console.log("Push received", data);
+
+  if (data.messageId && data.title === "Message Deleted") {
+    // This is a message deletion notification
+    // Remove the previous notification for this message
+    self.registration.getNotifications().then((notifications) => {
+      notifications.forEach((notification) => {
+        if (
+          notification.data &&
+          notification.data.messageId === data.messageId
+        ) {
+          notification.close();
+        }
+      });
+    });
+  }
   const notificationOptions = {
     body: data.body,
     icon: data.icon || RapidRecapLogo,
     image: data.image || null,
-    data: { url: data.url }, // Pass additional data
+    data: { url: data.url },
+    badge: RapidRecapLogo,
+    vibrate: [200, 100, 200],
+    tag: data.tag || "default",
+    renotify: true,
   };
 
-  self.registration.showNotification(data.title, notificationOptions);
+  event.waitUntil(
+    self.registration.showNotification(data.title, notificationOptions)
+  );
 });
 
 self.addEventListener("notificationclick", function (event) {
@@ -20,12 +51,4 @@ self.addEventListener("notificationclick", function (event) {
     event.waitUntil(clients.openWindow(notificationData.url));
   }
   event.notification.close();
-});
-
-self.addEventListener("install", (event) => {
-  console.log("Service Worker installed");
-});
-
-self.addEventListener("activate", (event) => {
-  console.log("Service Worker activated");
 });

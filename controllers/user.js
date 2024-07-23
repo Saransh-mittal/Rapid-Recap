@@ -623,6 +623,7 @@ const profile = async (req, res) => {
         inGameName: user.inGameName,
         pic: user.pic,
         bio: user.bio,
+        _id: user._id.toString(),
       },
       experience: {
         level: user.level,
@@ -859,6 +860,7 @@ const userSearch = async (req, res) => {
         name,
         inGameName,
         IQ_score,
+        email,
         pic,
         _id,
         maxIQScore,
@@ -879,6 +881,7 @@ const userSearch = async (req, res) => {
         _id,
         RQM_avg,
         name,
+        email,
         inGameName,
         IQ_score,
         pic,

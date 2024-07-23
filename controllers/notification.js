@@ -1,4 +1,7 @@
+const Chat = require("../model/chatSchema");
+const Message = require("../model/messageSchema");
 const { sendNotification } = require("../services/notificationService");
+const asyncHandler = require("express-async-handler");
 
 const notificationNews = async (req, res) => {
   try {
@@ -17,4 +20,38 @@ const notificationNews = async (req, res) => {
   }
 };
 
-module.exports = { notificationNews };
+//@description     Fetch all unique chats count with unread messages
+//@route           GET /api/notify/new-message-chats
+//@access          Protected
+const notificationNewMessageChats = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  try {
+    // Step 1: Find chats the user is part of
+    const chats = await Chat.find({ users: userId }).populate({
+      path: "latestMessage",
+      select: "readBy isDeleted content sender", // Select fields to check unread status
+    });
+
+    // Step 2: Filter chats with unread latest messages
+    const unreadChats = chats
+      .filter((chat) => {
+        const latestMessage = chat.latestMessage;
+        return (
+          latestMessage &&
+          !latestMessage.readBy.includes(userId) &&
+          !latestMessage.isDeleted &&
+          !latestMessage.sender.equals(userId)
+        );
+      })
+      .map((chat) => chat._id.toString());
+
+    // Step 3: Return the count of unique chats with unread messages
+    res.json({ unreadChats });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+    throw new Error(error.message);
+  }
+});
+
+module.exports = { notificationNews, notificationNewMessageChats };
