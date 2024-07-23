@@ -13,20 +13,16 @@ const ChatPage = () => {
         marginTop: "5rem",
         width: "100%",
         color: "b",
+        overflow: "hidden",
       }}
     >
-      <Box
-        display="flex"
-        justifyContent={"center"}
-        w="100%"
-        h="91.5vh"
-        p="10px"
-      >
+      <Box display="flex" justifyContent={"center"} w="100%" h="87vh" p="10px">
         <Flex
           display={{ base: !selectedChat ? "flex" : "none", lg: "flex" }}
           flexDirection={"column"}
           w={{ base: "100%", md: "60%" }}
           mr={{ base: 0, md: 10 }}
+          h={"100%"}
         >
           {user && <UserChats fetchAgain={fetchAgain} />}
         </Flex>

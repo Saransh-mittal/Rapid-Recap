@@ -133,7 +133,7 @@ const UserChats = ({ fetchAgain }) => {
       alignItems="center"
       p={3}
       w={"100%"}
-      h={"91.5vh"}
+      h={"100%"}
       borderRadius="lg"
       style={{
         backgroundImage:
@@ -175,12 +175,15 @@ const UserChats = ({ fetchAgain }) => {
             "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
         }}
         w="100%"
-        h="100%"
+        h="90%"
         borderRadius="lg"
         overflowY="hidden"
       >
         {chats ? (
-          <Stack>
+          <Stack
+            overflowY={"auto"}
+            css={{ "&::-webkit-scrollbar": { display: "none" } }}
+          >
             {Array.isArray(chats) &&
               chats.map((chat) => {
                 const readByLoggedUser = chat.latestMessage
