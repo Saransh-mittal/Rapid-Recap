@@ -18,7 +18,6 @@ function initializeSocket(server) {
   });
 
   io.on("connection", (socket) => {
-    // console.log("Connected to socket.io");
     socket.on("setup", async (userData) => {
       socket.join(userData._id);
       socket.emit("connected");
@@ -31,19 +30,16 @@ function initializeSocket(server) {
 
     socket.on("heartbeat", async (userId) => {
       await redis.setex(`user:${userId}:lastHeartbeat`, 90, Date.now());
-      console.log("Heartbeat received from user", userId);
     });
 
     socket.on("join chat", (room) => {
       socket.join(room);
-      // console.log("User Joined Room: " + room);
     });
     socket.on("typing", (room) => socket.in(room).emit("typing"));
     socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
 
     socket.on("new message", async (newMessageRecieved) => {
       var chat = newMessageRecieved.chat;
-      // console.log("New message recieved", newMessageRecieved);
       if (!chat.users) return console.log("chat.users not defined");
 
       chat.users.forEach((user) => {
@@ -156,16 +152,13 @@ function initializeSocket(server) {
     // New event to handle when a user closes a chat
     socket.on("close chat", ({ userId, chatId }) => {
       if (userId && chatId) {
-        // console.log("Closing chat", chatId);
         const userChats = userOpenChats.get(userId);
         if (userChats) {
-          // console.log("Closing chat", chatId);
           userChats.delete(chatId);
         }
       }
     });
     socket.on("user-disconnected", async (userId) => {
-      // console.log("User disconnected", userId);
       userOpenChats.delete(userId);
       socket.leave(userId);
       await redis.del(`user:${userId}:lastHeartbeat`);
@@ -174,7 +167,6 @@ function initializeSocket(server) {
     });
     socket.on("check online status", async (friendIds) => {
       const onlineStatuses = {};
-      console.log("Checking online status for", friendIds);
       for (const friendId of friendIds) {
         const isOnline = await checkUserOnlineStatus(friendId);
         if (!isOnline) {
@@ -183,7 +175,7 @@ function initializeSocket(server) {
         }
         onlineStatuses[friendId] = isOnline;
       }
-      console.log("Online statuses:", onlineStatuses);
+
       socket.emit("online status response", onlineStatuses);
     });
     socket.off("setup", (userData) => {
@@ -198,15 +190,12 @@ function initializeSocket(server) {
   const BATCH_SIZE = 1000;
 
   setInterval(async () => {
-    console.log("Checking online status for all users");
     const onlineUsers = await User.find({ isOnline: true }, "_id").lean();
-    console.log("Online users:", onlineUsers);
     for (let i = 0; i < onlineUsers.length; i += BATCH_SIZE) {
       const batch = onlineUsers
         .slice(i, i + BATCH_SIZE)
         .map((user) => user._id);
       const offlineUsers = await checkUserBatch(batch);
-      console.log("Offline users:", offlineUsers);
       if (offlineUsers.length > 0) {
         await User.updateMany(
           { _id: { $in: offlineUsers } },
@@ -218,7 +207,6 @@ function initializeSocket(server) {
         });
       }
     }
-    console.log("Online status check complete");
   }, HEARTBEAT_CHECK_INTERVAL);
 
   exports.io = io;

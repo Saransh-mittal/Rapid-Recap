@@ -576,7 +576,6 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
     if (socket && friends.length > 0) {
       setIsCheckingOnlineStatus(true);
       const friendIds = friends.map((friend) => friend._id);
-      console.log("Checking online status for:", friendIds);
       socket.emit("check online status", friendIds);
     }
   }, [friends]);
@@ -600,7 +599,6 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
         setIsCheckingOnlineStatus(false);
       });
       socket.on("user online", (userId) => {
-        console.log("User online:", userId);
         setFriends((prevFriends) =>
           prevFriends.map((f) =>
             f._id === userId ? { ...f, isOnline: true } : f
