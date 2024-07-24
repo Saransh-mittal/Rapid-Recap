@@ -15,6 +15,11 @@ COPY . .
 
 # Install Python and required packages
 RUN apt-get update && apt-get install -y python3 python3-venv python3-pip
+
+# Install Redis
+RUN apt-get install -y redis-server
+
+# Set up Python virtual environment
 RUN python3 -m venv /opt/venv
 RUN /opt/venv/bin/pip install --upgrade pip
 RUN /opt/venv/bin/pip install -r requirements.txt
@@ -28,8 +33,8 @@ RUN npm run build
 # Set environment variables
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Expose the port the app runs on
-EXPOSE 8600
+# Expose the ports the app and Redis run on
+EXPOSE 8600 6379
 
-# Command to run the application
-CMD [ "npm", "start" ]
+# Start Redis server and then run the application
+CMD service redis-server start && npm start
