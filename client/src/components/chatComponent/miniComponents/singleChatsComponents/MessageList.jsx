@@ -1,5 +1,6 @@
 import React from "react";
 import ScrollableChat from "./../ScrollableChat";
+import { Text } from "@chakra-ui/react";
 
 const MessageList = ({
   messages,
@@ -9,6 +10,7 @@ const MessageList = ({
   handleAddReaction,
   handleRemoveReaction,
   hasMore,
+  selectedChat,
 }) => {
   return (
     <div className="messages">

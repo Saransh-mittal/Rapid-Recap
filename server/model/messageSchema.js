@@ -16,7 +16,7 @@ const messageSchema = mongoose.Schema(
     permanentDeleteFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
     type: {
       type: String,
-      enum: ["text", "article_card", "score_card"],
+      enum: ["text", "article_card", "score_card", "system"],
       default: "text",
     },
     article: {

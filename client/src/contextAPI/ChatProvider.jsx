@@ -13,6 +13,7 @@ const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState();
   const [messagesFetched, setMessagesFetched] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [chatRequests, setChatRequests] = useState([]);
   const { getSocket, disconnectSocket, socket, socketConnected } =
     useSocket(user);
 
@@ -107,6 +108,8 @@ const ChatProvider = ({ children }) => {
         setMessagesFetched,
         hasMore,
         setHasMore,
+        chatRequests,
+        setChatRequests,
       }}
     >
       {children}

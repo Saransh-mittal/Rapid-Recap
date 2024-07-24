@@ -10,12 +10,8 @@ const ChatHeader = ({
   selectedChat,
   user,
   navigate,
-  setHasMore,
-  setMessagesFetched,
-  setMessages,
-  socket,
-  setSelectedChat,
   istyping,
+  handleClose,
 }) => {
   return (
     <Flex
@@ -32,21 +28,7 @@ const ChatHeader = ({
         position={"absolute"}
         left={0}
         icon={<ArrowBackIcon />}
-        onClick={() => {
-          const params = new URLSearchParams(location.search);
-          const chatId = params.get("chatId");
-          if (chatId) {
-            navigate(`/chats`);
-          }
-          setHasMore(true);
-          setMessagesFetched(false);
-          setMessages([]);
-          socket?.emit("close chat", {
-            userId: user?._id,
-            chatId: selectedChat?._id,
-          });
-          setSelectedChat(null);
-        }}
+        onClick={handleClose}
       />
       {messages &&
         (!selectedChat.isGroupChat ? (

@@ -7,6 +7,7 @@ const {
   addToGroup,
   renameGroup,
   shareMessage,
+  handleChatRequest,
 } = require("../controllers/chatControllers");
 const { Authenticate } = require("../middleware/authenticate");
 
@@ -19,5 +20,6 @@ router.route("/rename").put(Authenticate, renameGroup);
 router.route("/groupremove").put(Authenticate, removeFromGroup);
 router.route("/groupadd").put(Authenticate, addToGroup);
 router.route("/share").post(Authenticate, shareMessage);
+router.route("/request/handle").put(Authenticate, handleChatRequest);
 
 module.exports = router;

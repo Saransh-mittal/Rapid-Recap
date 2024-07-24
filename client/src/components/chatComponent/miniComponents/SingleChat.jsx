@@ -361,6 +361,29 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     };
   }, [selectedChat]);
 
+  const handleClose = () => {
+    const params = new URLSearchParams(location.search);
+    const chatId = params.get("chatId");
+    if (chatId) {
+      navigate(`/chats`);
+    }
+    setHasMore(true);
+    setMessagesFetched(false);
+    setMessages([]);
+    socket?.emit("close chat", {
+      userId: user?._id,
+      chatId: selectedChat?._id,
+    });
+    setSelectedChat(null);
+  };
+
+  useEffect(() => {
+    if (selectedChat && selectedChat.status === "rejected") {
+      setFetchAgain(!fetchAgain);
+      handleClose();
+    }
+  }, [selectedChat]);
+
   useEffect(() => {
     const socketEvents = {
       onTyping: () => setIsTyping(true),
@@ -504,12 +527,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             selectedChat={selectedChat}
             user={user}
             navigate={navigate}
-            setHasMore={setHasMore}
-            setMessagesFetched={setMessagesFetched}
-            setMessages={setMessages}
-            socket={socket}
-            setSelectedChat={setSelectedChat}
             istyping={istyping}
+            handleClose={handleClose}
           />
           <Box
             display="flex"
@@ -545,6 +564,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 handleAddReaction={handleAddReaction}
                 handleRemoveReaction={handleRemoveReaction}
                 hasMore={hasMore}
+                selectedChat={selectedChat}
               />
             )}
             <MessageInput
