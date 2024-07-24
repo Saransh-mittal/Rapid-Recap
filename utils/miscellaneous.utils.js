@@ -1,3 +1,5 @@
+const { redis } = require("../redis");
+
 function binarySearch(arr, target) {
   let left = 0;
   let right = arr.length - 1;
@@ -107,6 +109,36 @@ const shuffleArray = (array) => {
   return array;
 };
 
+const checkUserOnlineStatus = async (userId) => {
+  const lastHeartbeat = await redis.get(`user:${userId}:lastHeartbeat`);
+  const isOnline = !!lastHeartbeat;
+
+  return isOnline;
+};
+
+async function checkUserBatch(userIds) {
+  const pipeline = redis.pipeline();
+  userIds.forEach((id) => pipeline.get(`user:${id}:lastHeartbeat`));
+  const results = await pipeline.exec();
+
+  const offlineUsers = [];
+
+  results.forEach(([err, lastHeartbeat], index) => {
+    if (err) {
+      console.error(
+        `Error checking heartbeat for user ${userIds[index]}:`,
+        err
+      );
+      return;
+    }
+    if (!lastHeartbeat) {
+      offlineUsers.push(userIds[index]);
+    }
+  });
+
+  return offlineUsers;
+}
+
 module.exports = {
   binarySearch,
   binarySearchForLeftRange,
@@ -115,4 +147,6 @@ module.exports = {
   formatDate,
   averageReadTime,
   shuffleArray,
+  checkUserOnlineStatus,
+  checkUserBatch,
 };
