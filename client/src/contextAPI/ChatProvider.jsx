@@ -117,6 +117,14 @@ const ChatProvider = ({ children }) => {
         });
       });
     }
+    if (socket && user) {
+      const heartbeatInterval = setInterval(() => {
+        socket.emit("heartbeat", user._id);
+      }, 20000); // Send heartbeat every 20 seconds
+      return () => {
+        clearInterval(heartbeatInterval);
+      };
+    }
   });
 
   return (
