@@ -31,6 +31,7 @@ import {
   updateMessagesAfterSend,
   updateMessagesAfterDelete,
   handleSocketEvents,
+  sendArticleMessageApi,
 } from "../../../utils/chat.utils";
 import axios from "axios";
 import MessageRequestComponent from "./singleChatsComponents/MessageRequestComponent";
@@ -320,13 +321,23 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     if (!selectedChat) return;
     try {
       setShowBookmarksModal(false);
-      const optimisticMessage = optimisticSendMessage(
-        user,
-        selectedChat,
-        newMessage
-      );
+      const tempId = Date.now().toString(); // Temporary ID for optimistic update
+      const optimisticMessage = {
+        _id: tempId,
+        sender: {
+          _id: user._id,
+          name: user.name,
+          pic: user.pic,
+        },
+        chat: selectedChat._id,
+        status: "sending",
+        createdAt: new Date().toISOString(),
+        article,
+        type: "article_card",
+      };
+
       setMessages((prevMessages) => [...prevMessages, optimisticMessage]);
-      const data = await sendMessageApi(articleId, selectedChat._id);
+      const data = await sendArticleMessageApi(articleId, selectedChat._id);
       socket.emit("new message", data);
       setMessages((prevMessages) =>
         updateMessagesAfterSend(prevMessages, optimisticMessage._id, data)

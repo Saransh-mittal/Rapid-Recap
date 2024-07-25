@@ -24,6 +24,15 @@ export const sendMessageApi = async (content, chatId) => {
   return data;
 };
 
+export const sendArticleMessageApi = async (articleId, chatId) => {
+  const { data } = await axios.post("/api/message", {
+    articleId,
+    chatId,
+    type: "article_card",
+  });
+  return data;
+};
+
 export const deleteMessageApi = async (messageId, deleteType) => {
   await axios.delete(`/api/message/${messageId}`, { data: { deleteType } });
 };
