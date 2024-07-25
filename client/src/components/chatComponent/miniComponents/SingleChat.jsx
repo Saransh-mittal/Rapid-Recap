@@ -396,7 +396,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         article,
         type: "article_card",
       };
-      console.log(article);
+
       setMessages((prevMessages) => [...prevMessages, optimisticMessage]);
       const { data } = await axios.post("/api/message", {
         type: "article_card",
