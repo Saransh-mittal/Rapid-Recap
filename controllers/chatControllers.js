@@ -3,7 +3,7 @@ const Chat = require("../model/chatSchema");
 const User = require("../model/userSchema");
 const Message = require("../model/messageSchema");
 const Article = require("../model/articleSchema");
-const { formatDate } = require("../utils/miscellaneous.utils");
+const { formatDate, isEncrypted } = require("../utils/miscellaneous.utils");
 const { userOpenChats } = require("../sharedState");
 const { sendNotification } = require("../services/notificationService");
 
@@ -34,6 +34,13 @@ const accessChat = asyncHandler(async (req, res) => {
   });
 
   if (isChat.length > 0) {
+    if (
+      isChat[0].latestMessage &&
+      isEncrypted(isChat[0].latestMessage.content)
+    ) {
+      isChat[0].latestMessage.content =
+        isChat[0].latestMessage.decryptContent();
+    }
     res.send(isChat[0]);
   } else {
     var chatData = {
@@ -93,6 +100,14 @@ const fetchChats = asyncHandler(async (req, res) => {
           ) {
             results[i] = chat.toObject();
             results[i].new = true;
+          }
+          // Decrypt the latest message if it exists
+          if (
+            results[i].latestMessage &&
+            isEncrypted(results[i].latestMessage.content)
+          ) {
+            results[i].latestMessage.content =
+              results[i].latestMessage.decryptContent();
           }
         }
         res.status(200).send(results);

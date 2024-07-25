@@ -1,4 +1,5 @@
 const { redis } = require("../redis");
+const CryptoJS = require("crypto-js");
 
 function binarySearch(arr, target) {
   let left = 0;
@@ -139,6 +140,16 @@ async function checkUserBatch(userIds) {
   return offlineUsers;
 }
 
+const isEncrypted = (str) => {
+  try {
+    return CryptoJS.AES.decrypt(str, process.env.ENCRYPTION_KEY).toString(
+      CryptoJS.enc.Utf8
+    );
+  } catch (e) {
+    return false;
+  }
+};
+
 module.exports = {
   binarySearch,
   binarySearchForLeftRange,
@@ -149,4 +160,5 @@ module.exports = {
   shuffleArray,
   checkUserOnlineStatus,
   checkUserBatch,
+  isEncrypted,
 };

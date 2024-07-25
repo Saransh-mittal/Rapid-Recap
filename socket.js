@@ -42,10 +42,19 @@ function initializeSocket(server) {
       var chat = newMessageRecieved.chat;
       if (!chat.users) return console.log("chat.users not defined");
 
+      // Decrypt the message content before broadcasting
+      const decryptedMessage = { ...newMessageRecieved };
+      try {
+        const originalMessage = await Message.findById(newMessageRecieved._id);
+        decryptedMessage.content = originalMessage.decryptContent();
+      } catch (error) {
+        console.error("Error decrypting message:", error);
+      }
+
       chat.users.forEach((user) => {
         if (user._id == newMessageRecieved.sender._id) return;
 
-        socket.in(user._id).emit("message recieved", newMessageRecieved);
+        socket.in(user._id).emit("message recieved", decryptedMessage);
         // Send notification for unread message
         socket.in(user._id).emit("unread notification", {
           messageId: newMessageRecieved._id,
