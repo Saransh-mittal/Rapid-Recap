@@ -7,6 +7,7 @@ import {
   Stack,
   Avatar,
   Badge,
+  Heading,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 import { ChatState } from "../../contextAPI/ChatProvider";
@@ -165,7 +166,7 @@ const UserChats = ({ fetchAgain }) => {
     setNotification((prev) => prev.filter((c) => c !== chat._id));
   };
 
-  const renderChatItem = (chat, isRequest = false) => (
+  const renderChatItem = (chat) => (
     <Box
       onClick={() => handleChatClick(chat)}
       cursor={"pointer"}
@@ -196,6 +197,13 @@ const UserChats = ({ fetchAgain }) => {
               ? getSender(loggedUser, chat.users)
               : chat.chatName}
           </Text>
+          {chat.status === "pending" &&
+            chat.chatCreatedBy !== loggedUser._id && (
+              <Badge colorScheme="yellow">New Request</Badge>
+            )}
+          {chat.status === "rejected" && (
+            <Badge colorScheme="red">Rejected</Badge>
+          )}
           {chat.new && <Badge colorScheme="green">New</Badge>}
         </Flex>
         <Text fontSize="xs" color="#9CAFAA">
@@ -204,7 +212,7 @@ const UserChats = ({ fetchAgain }) => {
             : null}
         </Text>
       </Flex>
-      {isRequest && (
+      {/* {isRequest && (
         <Flex mt={2} justifyContent="flex-end">
           <Button
             size="sm"
@@ -222,8 +230,8 @@ const UserChats = ({ fetchAgain }) => {
             Reject
           </Button>
         </Flex>
-      )}
-      {!isRequest && chat._id && chat.latestMessage && (
+      )} */}
+      {chat._id && chat.latestMessage && (
         <Text fontSize="xs" color="#9CAFAA">
           {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
             ? "YOU"
@@ -260,8 +268,11 @@ const UserChats = ({ fetchAgain }) => {
         alignItems="center"
       >
         <Flex>{user && <ChatSideDrawer />}</Flex>
-        <Button onClick={() => setShowRequestsTab(!showRequestsTab)}>
-          {showRequestsTab ? "Show Chats" : "Show Requests"}
+        <Button
+          onClick={() => setShowRequestsTab(!showRequestsTab)}
+          white={showRequestsTab ? true : false}
+        >
+          {showRequestsTab ? "Chats" : "Requests"}
         </Button>
         {/* <GroupChatModal>
           <Flex position={"relative"}>
@@ -291,6 +302,9 @@ const UserChats = ({ fetchAgain }) => {
         borderRadius="lg"
         overflowY="hidden"
       >
+        <Heading size={"md"} pl={"5px"}>
+          {showRequestsTab ? "Requests" : "Chats"}
+        </Heading>
         {showRequestsTab ? (
           <Stack
             overflowY="auto"

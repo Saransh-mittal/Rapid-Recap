@@ -36,6 +36,23 @@ const GroupedMessages = ({
             const messageDeleted = m.isDeleted;
             const isSameLoggedUser = m.sender._id === user._id;
 
+            if (m.type === "system") {
+              if (m.sender._id === user._id) return;
+              return (
+                // design a system message that is centered and looks like a date style
+                <Box
+                  style={{
+                    textAlign: "center",
+                    margin: "10px 0",
+                    color: "#999",
+                  }}
+                  key={m._id}
+                >
+                  {m.content}
+                </Box>
+              );
+            }
+
             if (
               m.type === "article_card" &&
               !(messageDeleted || messageDeletedForUser)

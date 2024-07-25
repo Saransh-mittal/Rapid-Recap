@@ -333,11 +333,11 @@ const handleChatRequest = asyncHandler(async (req, res) => {
       res.status(404);
       throw new Error("Chat request not found or already handled");
     }
-
+    const { name } = await User.findById(req.user._id).select("name");
     // Create a system message for the chat
     const systemMessage = await Message.create({
       sender: req.user._id,
-      content: `Chat request ${action}ed by ${req.user.name}`,
+      content: `Chat request ${action}ed by ${name}`,
       chat: chatId,
       type: "system",
     });

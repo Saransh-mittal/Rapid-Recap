@@ -1,7 +1,14 @@
 // File: SingleChat.js
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Box, Spinner, Text, useDisclosure, useToast } from "@chakra-ui/react";
+import {
+  Box,
+  Spinner,
+  Text,
+  useDisclosure,
+  useToast,
+  Button as ChakraButton,
+} from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { ChatState } from "../../../contextAPI/ChatProvider";
 import ChatHeader from "./singleChatsComponents/ChatHeader";
@@ -25,6 +32,9 @@ import {
   updateMessagesAfterDelete,
   handleSocketEvents,
 } from "../../../utils/chat.utils";
+import axios from "axios";
+import MessageRequestComponent from "./singleChatsComponents/MessageRequestComponent";
+import { getSender } from "../config/ChatLogics";
 
 let selectedChatCompare;
 
@@ -46,6 +56,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [showBookmarksModal, setShowBookmarksModal] = useState(false);
   const [bookmarks, setBookmarks] = useState([]);
   const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false);
+  const [chatStatus, setChatStatus] = useState("pending");
+  const [showAcceptReject, setShowAcceptReject] = useState(false);
 
   const {
     selectedChat,
@@ -152,6 +164,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           updateMessagesAfterSend(prevMessages, optimisticMessage._id, data)
         );
         updateLatestMessage(selectedChat._id, data);
+        if (messages.length === 0 && selectedChat.chatCreatedBy === user._id) {
+          socket?.emit("chat request", {
+            chatId: selectedChat._id,
+            recipientId: selectedChat.users.find((u) => u._id !== user._id)._id,
+          });
+        }
       } catch (error) {
         setMessages((prevMessages) =>
           prevMessages.filter((msg) => msg._id !== optimisticMessage._id)
@@ -377,6 +395,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     setSelectedChat(null);
   };
 
+  console.log(selectedChat);
+
   useEffect(() => {
     if (selectedChat && selectedChat.status === "rejected") {
       setFetchAgain(!fetchAgain);
@@ -518,6 +538,71 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     };
   }, []);
 
+  const handleAccept = async () => {
+    try {
+      await axios.put("/api/chat/request/handle", {
+        chatId: selectedChat._id,
+        action: "accept",
+      });
+      navigate(`/chats?chatId=${selectedChat._id}`);
+      setSelectedChat({ ...selectedChat, status: "accepted" });
+      setFetchAgain(!fetchAgain);
+      toast({
+        title: "Chat request accepted",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } catch (error) {
+      toast({
+        title: "Error Occurred!",
+        description: "Failed to accept chat request",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      await axios.put("/api/chat/request/handle", {
+        chatId: selectedChat._id,
+        action: "reject",
+      });
+      toast({
+        title: "Chat request rejected",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setFetchAgain(!fetchAgain);
+      handleClose(); // Close the chat
+    } catch (error) {
+      toast({
+        title: "Error Occurred!",
+        description: "Failed to reject chat request",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (selectedChat) {
+      setChatStatus(selectedChat.status);
+      setShowAcceptReject(
+        selectedChat.status === "pending" &&
+          selectedChat.chatCreatedBy !== user._id
+      );
+    }
+  }, [selectedChat]);
+
   return (
     <>
       {selectedChat && selectedChat._id ? (
@@ -556,30 +641,44 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 margin="auto"
               />
             ) : (
-              <MessageList
-                messages={messages}
-                handleDeleteMessage={handleDeleteMessage}
-                MessageStatus={MessageStatus}
-                loadMoreMessages={loadMoreMessages}
-                handleAddReaction={handleAddReaction}
-                handleRemoveReaction={handleRemoveReaction}
-                hasMore={hasMore}
-                selectedChat={selectedChat}
+              <>
+                {selectedChat.status === "pending" &&
+                  selectedChat.chatCreatedBy !== user._id && (
+                    <MessageRequestComponent
+                      senderName={getSender(user, selectedChat.users)}
+                      onAccept={handleAccept}
+                      onReject={handleReject}
+                      // onBlock={handleBlock}
+                    />
+                  )}
+                <MessageList
+                  messages={messages}
+                  handleDeleteMessage={handleDeleteMessage}
+                  MessageStatus={MessageStatus}
+                  loadMoreMessages={loadMoreMessages}
+                  handleAddReaction={handleAddReaction}
+                  handleRemoveReaction={handleRemoveReaction}
+                  hasMore={hasMore}
+                  selectedChat={selectedChat}
+                />
+              </>
+            )}
+            {(selectedChat.status === "accepted" ||
+              selectedChat.chatCreatedBy === user._id) && (
+              <MessageInput
+                sendMessage={sendMessage}
+                newMessage={newMessage}
+                typingHandler={typingHandler}
+                showEmojiPicker={showEmojiPicker}
+                setShowEmojiPicker={setShowEmojiPicker}
+                setShowStickerPicker={setShowStickerPicker}
+                emojiPickerRef={emojiPickerRef}
+                stickerPickerRef={stickerPickerRef}
+                onEmojiClick={onEmojiClick}
+                setShowBookmarksModal={setShowBookmarksModal}
+                fetchBookmarks={fetchBookmarks}
               />
             )}
-            <MessageInput
-              sendMessage={sendMessage}
-              newMessage={newMessage}
-              typingHandler={typingHandler}
-              showEmojiPicker={showEmojiPicker}
-              setShowEmojiPicker={setShowEmojiPicker}
-              setShowStickerPicker={setShowStickerPicker}
-              emojiPickerRef={emojiPickerRef}
-              stickerPickerRef={stickerPickerRef}
-              onEmojiClick={onEmojiClick}
-              setShowBookmarksModal={setShowBookmarksModal}
-              fetchBookmarks={fetchBookmarks}
-            />
           </Box>
         </>
       ) : (
