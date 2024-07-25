@@ -17,7 +17,7 @@ const messageSchema = mongoose.Schema(
     permanentDeleteFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
     type: {
       type: String,
-      enum: ["text", "article_card", "score_card"],
+      enum: ["text", "article_card", "score_card", "system"],
       default: "text",
     },
     article: {
@@ -45,6 +45,9 @@ const messageSchema = mongoose.Schema(
 // Encrypt the message content before saving
 messageSchema.pre("save", function (next) {
   if (this.isModified("content")) {
+    if (this.content === "" || !this.content) {
+      return next();
+    }
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     this.content = CryptoJS.AES.encrypt(
       this.content,
@@ -56,6 +59,9 @@ messageSchema.pre("save", function (next) {
 
 // Method to decrypt the message content
 messageSchema.methods.decryptContent = function () {
+  if (this.content === "" || !this.content) {
+    return "";
+  }
   const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
   const bytes = CryptoJS.AES.decrypt(this.content, ENCRYPTION_KEY);
   return bytes.toString(CryptoJS.enc.Utf8);
