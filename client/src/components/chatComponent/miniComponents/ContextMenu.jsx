@@ -22,6 +22,7 @@ import {
   ModalHeader,
 } from "@chakra-ui/react";
 import EmojiPicker, { Emoji } from "emoji-picker-react";
+import { AddIcon } from "@chakra-ui/icons";
 
 const emojis = [
   "1f44d", // 👍
@@ -59,13 +60,12 @@ const ContextMenu = ({
     onClose();
   };
   const handleEmojiSelect = (emojiObject) => {
-    console.log(emojiObject);
     handleReact(emojiObject.unified);
     onEmojiModalClose();
   };
 
   return (
-    <Portal>
+    <>
       <Menu isOpen={isOpen} onClose={onClose}>
         <MenuButton
           position="absolute"
@@ -80,7 +80,7 @@ const ContextMenu = ({
                 onClick={() => onDelete("everyone")}
                 _hover={{ bg: "red.50" }}
                 color="red.500"
-                fontWeight="medium"
+                fontWeight="bold"
               >
                 Delete for Everyone
               </MenuItem>
@@ -91,6 +91,8 @@ const ContextMenu = ({
             <MenuItem
               onClick={() => onDelete("me")}
               _hover={{ bg: "gray.100" }}
+              color="red.500"
+              fontWeight="bold"
             >
               Delete for Me
             </MenuItem>
@@ -99,12 +101,19 @@ const ContextMenu = ({
             <MenuItem
               onClick={() => onDelete("permanent")}
               _hover={{ bg: "gray.100" }}
+              color={"red.500"}
+              fontWeight="bold"
             >
               Delete
             </MenuItem>
           )}
           <MenuDivider />
-          <MenuItem onClick={onCopy} _hover={{ bg: "gray.100" }}>
+          <MenuItem
+            onClick={onCopy}
+            _hover={{ bg: "gray.100" }}
+            color={"black"}
+            fontWeight="bold"
+          >
             Copy
           </MenuItem>
           {!isMessageDeleted && (
@@ -131,8 +140,9 @@ const ContextMenu = ({
                   _hover={{ bg: "gray.100" }}
                   p={2}
                   borderRadius="full"
+                  color={"black"}
                 >
-                  +
+                  <AddIcon fontSize={"1rem"} />
                 </Box>
               </Flex>
             </>
@@ -153,7 +163,7 @@ const ContextMenu = ({
           </ModalBody>
         </ModalContent>
       </Modal>
-    </Portal>
+    </>
   );
 };
 

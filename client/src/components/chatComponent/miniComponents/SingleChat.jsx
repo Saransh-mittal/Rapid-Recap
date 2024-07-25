@@ -305,6 +305,26 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     onClose();
   };
   const handleAddReaction = async (messageId, emoji) => {
+    const messageToUpdate = messages.find((msg) => msg._id === messageId);
+    if (!messageToUpdate) return;
+
+    // Create a temporary reaction
+    const tempReaction = {
+      _id: Date.now().toString(), // Temporary ID
+      emoji: emoji,
+      user: user._id,
+    };
+
+    // Add the temporary reaction to the message
+    const updatedMessage = {
+      ...messageToUpdate,
+      reactions: [...messageToUpdate.reactions, tempReaction],
+    };
+
+    // Update the messages state with the temporary reaction
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) => (msg._id === messageId ? updatedMessage : msg))
+    );
     try {
       const { data } = await axios.post(`/api/message/reaction/${messageId}`, {
         emoji,
@@ -312,6 +332,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       setMessages(messages.map((msg) => (msg._id === messageId ? data : msg)));
       socket?.emit("new reaction", data);
     } catch (error) {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === messageId ? messageToUpdate : msg
+        )
+      );
       toast({
         title: "Error adding reaction",
         description: error.response?.data?.message || "An error occurred",
@@ -639,6 +664,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                         <Text
                           fontSize={{ base: "1.2rem", md: "1.5rem" }}
                           mb={{ base: 0, md: "5px" }}
+                          color={"#ffffff"}
                         >
                           {getSenderFull(user, selectedChat.users).name}
                         </Text>
@@ -696,7 +722,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             display="flex"
             flexDir="column"
             justifyContent="flex-end"
-            p={3}
+            p={{ base: 1, md: 3 }}
+            px={0}
             w="100%"
             h="100%"
             borderRadius="lg"

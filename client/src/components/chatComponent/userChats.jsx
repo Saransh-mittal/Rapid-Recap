@@ -7,21 +7,27 @@ import {
   Stack,
   Avatar,
   Badge,
+  useDisclosure,
+  Tooltip,
+  useBreakpointValue,
+  Image,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 import GroupChatModal from "./miniComponents/GroupChatModal";
 import { ChatState } from "../../contextAPI/ChatProvider";
 import ChatSideDrawer from "./ChatSideDrawer";
-import { AddIcon } from "@chakra-ui/icons";
+import { AddIcon, Search2Icon } from "@chakra-ui/icons";
 import ChatLoading from "./ChatLoading";
 import Button from "../miscellaneous/ButtonComponent";
 import {
   getRecieverInGameName,
   getSender,
+  getSenderFull,
   isSenderLoggedUser,
 } from "./config/ChatLogics";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
+import ButtonGradient from "../../assets/svg/ButtonGradient";
 
 const UserChats = ({ fetchAgain }) => {
   const { state } = useContext(AppContext);
@@ -38,6 +44,11 @@ const UserChats = ({ fetchAgain }) => {
     setNotification,
     socket,
   } = ChatState();
+  const buttonW = useBreakpointValue({
+    base: "50px",
+    md: "150px", // width for large screens (>= 62em or 992px)
+  });
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const toast = useToast();
 
@@ -131,7 +142,7 @@ const UserChats = ({ fetchAgain }) => {
       display={{ base: selectedChat ? "none" : "flex", md: "flex" }}
       flexDir="column"
       alignItems="center"
-      p={3}
+      p={{ base: 1, lg: 3 }}
       w={"100%"}
       h={"100%"}
       borderRadius="lg"
@@ -150,7 +161,32 @@ const UserChats = ({ fetchAgain }) => {
         justifyContent={{ base: "column", md: "space-between" }}
         alignItems="center"
       >
-        <Flex>{user && <ChatSideDrawer />}</Flex>
+        <Flex>
+          {user && (
+            <>
+              <ButtonGradient />
+              <Tooltip
+                label="Search Users to chat"
+                hasArrow
+                placement="bottom-end"
+                color={"white"}
+              >
+                <Button onClick={onOpen} buttonW={buttonW} textColor={"white"}>
+                  <Flex
+                    alignItems={"center"}
+                    marginTop={{ base: "5px", lg: "0" }}
+                  >
+                    <Search2Icon fontSize={{ base: "1.3rem", md: "1rem" }} />
+                    <Text display={{ base: "none", md: "flex" }} px={2} m={0}>
+                      Search User
+                    </Text>
+                  </Flex>
+                </Button>
+              </Tooltip>
+              <ChatSideDrawer isOpen={isOpen} onClose={onClose} />
+            </>
+          )}
+        </Flex>
         {/* <GroupChatModal>
           <Flex position={"relative"}>
             <Button pl={"1.5rem"} textColor={"white"} buttonW="150px">
@@ -165,7 +201,7 @@ const UserChats = ({ fetchAgain }) => {
       <Box
         display="flex"
         flexDirection="column"
-        p={3}
+        p={{ base: 0, lg: 3 }}
         // bg="#F8F8F8"
         style={{
           backgroundColor: "#0f0d15",
@@ -207,34 +243,79 @@ const UserChats = ({ fetchAgain }) => {
                     boxShadow={
                       "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
                     }
-                    px={3}
+                    px={2}
                     py={2}
                     my={1}
                     borderRadius="lg"
                     key={chat._id}
                   >
-                    <Flex
-                      justifyContent={"space-between"}
-                      alignItems={"center"}
-                    >
-                      <Flex gap={2}>
-                        <Text
-                          fontWeight={readByLoggedUser ? "normal" : "bold"}
-                          m={0}
-                        >
-                          {chat._id &&
-                          !chat.isGroupChat &&
-                          chat.users &&
-                          chat.users.length > 0
-                            ? getSender(loggedUser, chat.users)
-                            : chat.chatName}
-                        </Text>
-                        {chat.new && (
-                          <Badge colorScheme="green" h={"50%"} mt={1}>
-                            New
-                          </Badge>
-                        )}
+                    <Flex justifyContent={"space-between"}>
+                      <Flex gap={2} position={"relative"}>
+                        <Flex>
+                          <Avatar
+                            mt={"3px"}
+                            borderRadius="full"
+                            boxSize={{ base: "35px", md: "45px" }}
+                            src={getSenderFull(user, chat.users).pic}
+                            alt={getSenderFull(user, chat.users).name}
+                          />
+                        </Flex>
+                        <Flex flexDirection={"column"}>
+                          <Flex gap={2}>
+                            <Text
+                              fontWeight={readByLoggedUser ? "normal" : "bold"}
+                              m={0}
+                            >
+                              {chat._id &&
+                              !chat.isGroupChat &&
+                              chat.users &&
+                              chat.users.length > 0
+                                ? getSender(loggedUser, chat.users)
+                                : chat.chatName}
+                            </Text>
+                            {chat.new && (
+                              <Badge
+                                colorScheme="green"
+                                h={"fit-content"}
+                                mt={1}
+                              >
+                                New
+                              </Badge>
+                            )}
+                          </Flex>
+
+                          {chat._id && chat.latestMessage && (
+                            <Text
+                              fontSize="xs"
+                              color={readByLoggedUser ? "#9CAFAA" : "white"}
+                              display={"flex"}
+                              alignItems={"center"}
+                              fontWeight={readByLoggedUser ? "normal" : "bold"}
+                            >
+                              {isSenderLoggedUser(
+                                loggedUser,
+                                chat.latestMessage.sender
+                              )
+                                ? "YOU"
+                                : chat.latestMessage.sender.name}{" "}
+                              {": "}
+                              {getLatestMessageContent(chat)}
+                              {!readByLoggedUser && (
+                                <Badge
+                                  colorScheme="blue"
+                                  borderRadius={"50%"}
+                                  h={"8px"}
+                                  w={"8px"}
+                                  top={"58%"}
+                                  right={"10%"}
+                                  marginLeft={"1rem"}
+                                />
+                              )}
+                            </Text>
+                          )}
+                        </Flex>
                       </Flex>
+
                       <Text
                         m={0}
                         fontSize="xs"
@@ -248,35 +329,6 @@ const UserChats = ({ fetchAgain }) => {
                           : null}
                       </Text>
                     </Flex>
-                    {chat._id && chat.latestMessage && (
-                      <Text
-                        fontSize="xs"
-                        color={readByLoggedUser ? "#9CAFAA" : "white"}
-                        display={"flex"}
-                        alignItems={"center"}
-                        fontWeight={readByLoggedUser ? "normal" : "bold"}
-                      >
-                        {isSenderLoggedUser(
-                          loggedUser,
-                          chat.latestMessage.sender
-                        )
-                          ? "YOU"
-                          : chat.latestMessage.sender.name}{" "}
-                        {": "}
-                        {getLatestMessageContent(chat)}
-                        {!readByLoggedUser && (
-                          <Badge
-                            colorScheme="blue"
-                            borderRadius={"50%"}
-                            h={"8px"}
-                            w={"8px"}
-                            top={"58%"}
-                            right={"10%"}
-                            marginLeft={"1rem"}
-                          />
-                        )}
-                      </Text>
-                    )}
                   </Box>
                 );
               })}

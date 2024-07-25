@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { AppContext } from "./appContext";
 import { useSocket } from "../customHooks/useSocket";
 import axios from "axios";
+import { useDisclosure } from "@chakra-ui/react";
+import { useNavigationCount } from "../customHooks/useNavigationCount.js";
 
 const ChatContext = createContext();
 
@@ -15,6 +17,12 @@ const ChatProvider = ({ children }) => {
   const [hasMore, setHasMore] = useState(true);
   const { getSocket, disconnectSocket, socket, socketConnected } =
     useSocket(user);
+  const {
+    isOpen: isChatOpen,
+    onOpen: openChat,
+    onClose: closeChat,
+  } = useDisclosure();
+  const { count: routeCount, isLastRoute } = useNavigationCount();
 
   const history = useNavigate();
 
@@ -139,6 +147,11 @@ const ChatProvider = ({ children }) => {
         setMessagesFetched,
         hasMore,
         setHasMore,
+        isChatOpen,
+        openChat,
+        closeChat,
+        isLastRoute,
+        routeCount,
       }}
     >
       {children}
