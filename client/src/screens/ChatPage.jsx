@@ -47,7 +47,6 @@ const ChatPage = () => {
         marginTop: "5rem",
         width: "100%",
         color: "b",
-        overflow: "hidden",
       }}
     >
       <Box display="flex" justifyContent="center" w="100%" h="87vh" p="10px">
@@ -90,7 +89,7 @@ const ChatPage = () => {
               )}
               <Flex
                 display={{ base: !selectedChat ? "flex" : "none", lg: "none" }}
-                h={"100vh"}
+                h={"92vh"}
                 p={0}
               >
                 {user && <UserChats fetchAgain={fetchAgain} />}
@@ -98,7 +97,7 @@ const ChatPage = () => {
               <Flex
                 display={{ base: selectedChat ? "flex" : "none", lg: "none" }}
                 w="100%"
-                h={"100vh"}
+                h={"92vh"}
                 className="userChatBox"
               >
                 {user && (
