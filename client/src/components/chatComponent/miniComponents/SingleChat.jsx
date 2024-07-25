@@ -366,7 +366,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       return false;
     };
     if (shouldFetchMessages()) {
-      console.log("fetching messages");
+      // console.log("fetching messages");
       fetchMessages();
     }
     selectedChatCompare = selectedChat;
@@ -395,7 +395,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     setSelectedChat(null);
   };
 
-  console.log(selectedChat);
+  // console.log(selectedChat);
 
   useEffect(() => {
     if (selectedChat && selectedChat.status === "rejected") {
@@ -423,7 +423,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         } else {
           setFetchAgain(!fetchAgain);
         }
-        console.log("Message Received");
+        // console.log("Message Received");
         socket?.emit("message delivered", {
           messageId: newMessageRecieved._id,
           userId: user._id,

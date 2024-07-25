@@ -5,7 +5,7 @@ const Chat = require("../model/chatSchema");
 const { sendNotification } = require("../services/notificationService");
 const { userOpenChats } = require("../sharedState");
 const Article = require("../model/articleSchema");
-const { formatDate } = require("../utils/miscellaneous.utils");
+const { formatDate, isEncrypted } = require("../utils/miscellaneous.utils");
 
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
@@ -29,7 +29,15 @@ const allMessages = asyncHandler(async (req, res) => {
       (message) => !message.permanentDeleteFor.includes(userId)
     );
 
-    res.json(filteredMessages.reverse());
+    // Decrypt the content of each message
+    const decryptedMessages = filteredMessages.map((message) => {
+      const messageObject = message.toObject();
+      if (isEncrypted(messageObject.content))
+        messageObject.content = message.decryptContent();
+      return messageObject;
+    });
+
+    res.json(decryptedMessages.reverse());
   } catch (error) {
     res.status(400);
     throw new Error(error.message);
@@ -94,6 +102,8 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
     const chatUsers = message.chat.users;
+    const decryptedMessage = message.toObject();
+    decryptedMessage.content = message.decryptContent();
     for (let user of chatUsers) {
       if (user._id.toString() !== req.user._id.toString()) {
         const userChats = userOpenChats.get(user._id.toString());
@@ -101,7 +111,7 @@ const sendMessage = asyncHandler(async (req, res) => {
         if (!userChats || !userChats.has(chatId)) {
           await sendNotification({
             title: `New message from ${message.sender.name}`,
-            body: message.content,
+            body: decryptedMessage.content,
             icon: message.sender.pic,
             url: `/chats?chatId=${chatId}`,
             userId: user._id,
@@ -111,10 +121,11 @@ const sendMessage = asyncHandler(async (req, res) => {
       }
     }
 
-    res.json(message);
+    res.json(decryptedMessage);
   } catch (error) {
+    console.log(error);
     res.status(400);
-    throw new Error(error.message);
+    throw new Error(error);
   }
 });
 
@@ -321,8 +332,12 @@ const addReaction = asyncHandler(async (req, res) => {
     select: "name pic email",
   });
 
-  // Return the updated message
-  res.json(updatedMessage);
+  // Decrypt the message content
+  const decryptedMessage = updatedMessage.toObject();
+  decryptedMessage.content = updatedMessage.decryptContent();
+
+  // Return the updated message with decrypted content
+  res.json(decryptedMessage);
 });
 
 const removeReaction = asyncHandler(async (req, res) => {
@@ -348,7 +363,11 @@ const removeReaction = asyncHandler(async (req, res) => {
     throw new Error("Message not found");
   }
 
-  res.json(updatedMessage);
+  // Decrypt the message content
+  const decryptedMessage = updatedMessage.toObject();
+  decryptedMessage.content = updatedMessage.decryptContent();
+
+  res.json(decryptedMessage);
 });
 module.exports = {
   allMessages,

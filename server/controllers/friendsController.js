@@ -52,10 +52,10 @@ const acceptRequest = asyncHandler(async (req, res) => {
 
     const sender = await User.findByIdAndUpdate(request.from._id, {
       $push: { friends: request.to._id },
-    }).select("inGameName");
+    }).select("inGameName _id");
     const receiver = await User.findByIdAndUpdate(request.to._id, {
       $push: { friends: request.from._id },
-    }).select("inGameName");
+    }).select("inGameName pic _id name");
     let chat = await Chat.findOne({
       users: { $all: [sender._id, receiver._id] },
     });
@@ -81,6 +81,13 @@ const acceptRequest = asyncHandler(async (req, res) => {
       userInGameName: receiver.inGameName,
       type: activityTypes.WISE_WEB_EXPANSION.type,
       date: currentDate,
+    });
+
+    await sendNotification({
+      title: `Friend request accepted by ${receiver.name}`,
+      icon: receiver.pic,
+      url: `/profile/${sender.inGameName}`,
+      userId: sender._id.toString(),
     });
 
     res.status(200).json({ message: "Friend request accepted" });
