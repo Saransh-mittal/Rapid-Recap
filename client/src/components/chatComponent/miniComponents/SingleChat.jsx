@@ -809,6 +809,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   value={newMessage}
                   onChange={typingHandler}
                   ml={2}
+                  color={"white"}
                 />
               </Flex>
             </FormControl>
