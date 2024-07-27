@@ -18,11 +18,22 @@ const accessChat = asyncHandler(async (req, res) => {
     return res.sendStatus(400);
   }
 
+  const isFriend =
+    (await User.findOne({
+      _id: userId,
+      friends: { $elemMatch: { $eq: req.user._id } },
+    })) &&
+    (await User.findOne({
+      _id: req.user._id,
+      friends: { $elemMatch: { $eq: userId } },
+    }));
+
   var isChat = await Chat.find({
     isGroupChat: false,
     $and: [
       { users: { $elemMatch: { $eq: req.user._id } } },
       { users: { $elemMatch: { $eq: userId } } },
+      { status: { $in: ["accepted", "pending"] } },
     ],
   })
     .populate("users", "-password")
@@ -48,6 +59,7 @@ const accessChat = asyncHandler(async (req, res) => {
       isGroupChat: false,
       users: [req.user._id, userId],
       chatCreatedBy: req.user._id,
+      status: isFriend ? "accepted" : "pending",
     };
 
     try {
@@ -69,7 +81,10 @@ const accessChat = asyncHandler(async (req, res) => {
 //@access          Protected
 const fetchChats = asyncHandler(async (req, res) => {
   try {
-    Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
+    Chat.find({
+      users: { $elemMatch: { $eq: req.user._id } },
+      status: { $in: ["accepted", "pending"] },
+    })
       .populate("users", "-password")
       .populate("groupAdmin", "-password")
       .populate("latestMessage")
@@ -258,6 +273,13 @@ const shareMessage = asyncHandler(async (req, res) => {
       res.status(404);
       throw new Error("Chat not found");
     }
+    if (
+      chat.status !== "accepted" &&
+      chat.latestMessage &&
+      chat.requestedBy.toString() !== req.user._id.toString()
+    ) {
+      continue; // Skip this chat if it's not accepted and the sender isn't the requester
+    }
     let newMessage = new Message({
       sender: req.user._id,
       chat: chatId,
@@ -304,6 +326,52 @@ const shareMessage = asyncHandler(async (req, res) => {
   res.status(200).json(newMessages);
 });
 
+// @desc    Handle Chat Request
+// @route   POST /api/chat//request/handle
+// @access  Protected
+const handleChatRequest = asyncHandler(async (req, res) => {
+  const { chatId, action } = req.body;
+
+  if (action !== "accept" && action !== "reject") {
+    res.status(400);
+    throw new Error("Invalid action");
+  }
+
+  try {
+    const updatedChat = await Chat.findOneAndUpdate(
+      { _id: chatId, status: "pending" },
+      { status: action === "accept" ? "accepted" : "rejected" },
+      { new: true }
+    ).populate("users", "-password");
+
+    if (!updatedChat) {
+      res.status(404);
+      throw new Error("Chat request not found or already handled");
+    }
+    const { name } = await User.findById(req.user._id).select("name");
+    // Create a system message for the chat
+    const systemMessage = await Message.create({
+      sender: req.user._id,
+      content: `Chat request ${action}ed by ${name}`,
+      chat: chatId,
+      type: "system",
+    });
+
+    await sendNotification({
+      title: "Chat Request Update",
+      body: `${req.user.name} has ${action}ed your chat request`,
+      icon: req.user.pic,
+      url: `/chats?chatId=${chatId}`,
+      userId: updatedChat.requestedBy,
+    });
+
+    res.json({ chat: updatedChat, systemMessage });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
 module.exports = {
   accessChat,
   fetchChats,
@@ -312,4 +380,5 @@ module.exports = {
   addToGroup,
   removeFromGroup,
   shareMessage,
+  handleChatRequest,
 };

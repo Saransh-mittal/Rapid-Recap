@@ -11,6 +11,13 @@ const chatSchema = mongoose.Schema(
       ref: "Message",
     },
     groupAdmin: { type: mongoose.Schema.Types.ObjectId, ref: "USER" },
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected"],
+      default: "pending",
+    },
+    requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "USER" },
+    requestedTo: { type: mongoose.Schema.Types.ObjectId, ref: "USER" },
   },
   { timestamps: true }
 );
