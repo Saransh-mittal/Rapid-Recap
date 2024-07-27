@@ -28,12 +28,12 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "/images/rr.png",
+            src: "/images/rrlogo.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/images/rr.png",
+            src: "/images/rrlogo.png",
             sizes: "512x512",
             type: "image/png",
           },
