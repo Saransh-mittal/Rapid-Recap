@@ -26,11 +26,17 @@ import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
 import Button from "../miscellaneous/ButtonComponent";
+import { Search2Icon } from "@chakra-ui/icons";
 
 const UserChats = ({ fetchAgain }) => {
   const { state } = useContext(AppContext);
   const [loggedUser, setLoggedUser] = useState();
   const [showRequestsTab, setShowRequestsTab] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const buttonW = useBreakpointValue({
+    base: "50px",
+    md: "150px", // width for large screens (>= 62em or 992px)
+  });
 
   const {
     selectedChat,
@@ -260,7 +266,7 @@ const UserChats = ({ fetchAgain }) => {
         px={3}
         display="flex"
         w="100%"
-        justifyContent={{ base: "column", md: "space-between" }}
+        justifyContent={{ base: "column", lg: "space-between" }}
         alignItems="center"
       >
         <Flex>

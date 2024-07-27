@@ -31,6 +31,7 @@ const MessageReactions = ({
       backdropFilter={"blur(5px)"} // Added blur effect for better visibility
       boxShadow={"0 2px 4px rgba(0, 0, 0, 0.2)"} // Subtle shadow for depth
       onClick={() => handleReactionClick(message)}
+      zIndex={1}
     >
       {distinctReactions.map((reaction, index) => (
         <Tooltip key={index} label={reaction.user.name} placement="bottom">

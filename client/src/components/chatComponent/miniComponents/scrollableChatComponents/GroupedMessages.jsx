@@ -122,11 +122,14 @@ const GroupedMessages = ({
                         </span>
                       )}
                     </div>
-                    <MessageReactions
-                      message={m}
-                      isSameLoggedUser={isSameLoggedUser}
-                      handleReactionClick={handleReactionClick}
-                    />
+                    <Box>
+                      {m.content}
+                      <MessageReactions
+                        message={m}
+                        isSameLoggedUser={isSameLoggedUser}
+                        handleReactionClick={handleReactionClick}
+                      />
+                    </Box>
                   </Flex>
                 </Box>
               );

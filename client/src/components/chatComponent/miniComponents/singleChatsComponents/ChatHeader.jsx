@@ -68,6 +68,7 @@ const ChatHeader = ({
                   <Text
                     fontSize={{ base: "1.2rem", md: "1.5rem" }}
                     mb={{ base: 0, md: "5px" }}
+                    textColor={"white"}
                   >
                     {getSenderFull(user, selectedChat.users).name}
                   </Text>

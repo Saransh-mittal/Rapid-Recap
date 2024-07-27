@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Box, useDisclosure, useMediaQuery, Skeleton } from "@chakra-ui/react";
 import ScrollableFeed from "react-scrollable-feed";
 import { ChatState } from "../../../contextAPI/ChatProvider";
-import ContextMenu from "./scrollableChatComponents/ContextMenu";
+import ContextMenu from "./ContextMenu";
 import ReactionModal from "./scrollableChatComponents/ReactionModal";
 import GroupedMessages from "./scrollableChatComponents/GroupedMessages";
 import {
