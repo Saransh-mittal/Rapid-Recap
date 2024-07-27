@@ -11,27 +11,32 @@ import {
   Tooltip,
   useBreakpointValue,
   Image,
+  Heading,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
-import GroupChatModal from "./miniComponents/GroupChatModal";
 import { ChatState } from "../../contextAPI/ChatProvider";
 import ChatSideDrawer from "./ChatSideDrawer";
-import { AddIcon, Search2Icon } from "@chakra-ui/icons";
 import ChatLoading from "./ChatLoading";
-import Button from "../miscellaneous/ButtonComponent";
 import {
   getRecieverInGameName,
   getSender,
-  getSenderFull,
   isSenderLoggedUser,
 } from "./config/ChatLogics";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
+import Button from "../miscellaneous/ButtonComponent";
+import { Search2Icon } from "@chakra-ui/icons";
 
 const UserChats = ({ fetchAgain }) => {
   const { state } = useContext(AppContext);
   const [loggedUser, setLoggedUser] = useState();
+  const [showRequestsTab, setShowRequestsTab] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const buttonW = useBreakpointValue({
+    base: "50px",
+    md: "150px", // width for large screens (>= 62em or 992px)
+  });
 
   const {
     selectedChat,
@@ -42,20 +47,30 @@ const UserChats = ({ fetchAgain }) => {
     setMessagesFetched,
     setHasMore,
     setNotification,
+    chatRequests,
+    setChatRequests,
     socket,
   } = ChatState();
-  const buttonW = useBreakpointValue({
-    base: "50px",
-    md: "150px", // width for large screens (>= 62em or 992px)
-  });
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const toast = useToast();
 
   const fetchChats = async () => {
     try {
       const { data } = await axios.get("/api/chat");
-      setChats(data || []);
+      setChats(
+        data.filter(
+          (chat) =>
+            chat.status === "accepted" ||
+            chat.chatCreatedBy.toString() === user._id.toString()
+        ) || []
+      );
+      setChatRequests(
+        data.filter(
+          (chat) =>
+            chat.status === "pending" &&
+            chat.chatCreatedBy.toString() !== user._id.toString()
+        ) || []
+      );
     } catch (error) {
       toast({
         title: "Error Occurred!",
@@ -137,12 +152,105 @@ const UserChats = ({ fetchAgain }) => {
 
     setNotification((prev) => prev.filter((c) => c !== chat._id));
   };
+
+  const renderChatItem = (chat) => {
+    const readByLoggedUser = chat.latestMessage
+      ? chat.latestMessage.readBy.includes(user?._id) ||
+        chat.latestMessage.sender._id.toString() === user?._id.toString()
+      : true;
+    return (
+      <Box
+        onClick={() => handleChatClick(chat)}
+        cursor={"pointer"}
+        bg={
+          selectedChat &&
+          selectedChat._id &&
+          selectedChat?._id.toString() === chat?._id.toString()
+            ? "#2D3748"
+            : "#0f0d15"
+        }
+        color={"white"}
+        boxShadow={
+          "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
+        }
+        px={3}
+        py={2}
+        my={1}
+        borderRadius="lg"
+        key={chat._id}
+      >
+        <Flex justifyContent={"space-between"} alignItems={"center"}>
+          <Flex gap={2}>
+            <Text fontWeight={readByLoggedUser ? "normal" : "bold"} m={0}>
+              {chat._id &&
+              !chat.isGroupChat &&
+              chat.users &&
+              chat.users.length > 0
+                ? getSender(loggedUser, chat.users)
+                : chat.chatName}
+            </Text>
+            {chat.status === "pending" &&
+              chat.chatCreatedBy !== loggedUser._id && (
+                <Badge colorScheme="yellow">New Request</Badge>
+              )}
+            {chat.status === "rejected" && (
+              <Badge colorScheme="red">Rejected</Badge>
+            )}
+            {chat.new && (
+              <Badge colorScheme="green" h={"fit-content"}>
+                New
+              </Badge>
+            )}
+          </Flex>
+          <Text
+            m={0}
+            fontSize="xs"
+            color={readByLoggedUser ? "#9CAFAA" : "white"}
+          >
+            {chat._id &&
+            !chat.isGroupChat &&
+            chat.users &&
+            chat.users.length > 0
+              ? getRecieverInGameName(loggedUser, chat.users)
+              : null}
+          </Text>
+        </Flex>
+        {chat._id && chat.latestMessage && (
+          <Text
+            fontSize="xs"
+            color={readByLoggedUser ? "#9CAFAA" : "white"}
+            display={"flex"}
+            alignItems={"center"}
+            fontWeight={readByLoggedUser ? "normal" : "bold"}
+          >
+            {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
+              ? "YOU"
+              : chat.latestMessage.sender.name}{" "}
+            {": "}
+            {getLatestMessageContent(chat)}
+            {!readByLoggedUser && (
+              <Badge
+                colorScheme="blue"
+                borderRadius={"50%"}
+                h={"8px"}
+                w={"8px"}
+                top={"58%"}
+                right={"10%"}
+                marginLeft={"1rem"}
+              />
+            )}
+          </Text>
+        )}
+      </Box>
+    );
+  };
+
   return (
     <Box
       display={{ base: selectedChat ? "none" : "flex", md: "flex" }}
       flexDir="column"
       alignItems="center"
-      p={{ base: 1, lg: 3 }}
+      p={3}
       w={"100%"}
       h={"100%"}
       borderRadius="lg"
@@ -158,7 +266,7 @@ const UserChats = ({ fetchAgain }) => {
         px={3}
         display="flex"
         w="100%"
-        justifyContent={{ base: "column", md: "space-between" }}
+        justifyContent={{ base: "column", lg: "space-between" }}
         alignItems="center"
       >
         <Flex>
@@ -187,6 +295,12 @@ const UserChats = ({ fetchAgain }) => {
             </>
           )}
         </Flex>
+        <Button
+          onClick={() => setShowRequestsTab(!showRequestsTab)}
+          white={showRequestsTab ? true : false}
+        >
+          {showRequestsTab ? "Chats" : "Requests"}
+        </Button>
         {/* <GroupChatModal>
           <Flex position={"relative"}>
             <Button pl={"1.5rem"} textColor={"white"} buttonW="150px">
@@ -201,7 +315,7 @@ const UserChats = ({ fetchAgain }) => {
       <Box
         display="flex"
         flexDirection="column"
-        p={{ base: 0, lg: 3 }}
+        p={3}
         // bg="#F8F8F8"
         style={{
           backgroundColor: "#0f0d15",
@@ -215,123 +329,22 @@ const UserChats = ({ fetchAgain }) => {
         borderRadius="lg"
         overflowY="hidden"
       >
-        {chats ? (
+        <Heading size={"md"} pl={"5px"}>
+          {showRequestsTab ? "Requests" : "Chats"}
+        </Heading>
+        {showRequestsTab ? (
           <Stack
-            overflowY={"auto"}
+            overflowY="auto"
             css={{ "&::-webkit-scrollbar": { display: "none" } }}
           >
-            {Array.isArray(chats) &&
-              chats.map((chat) => {
-                const readByLoggedUser = chat.latestMessage
-                  ? chat.latestMessage.readBy.includes(user?._id) ||
-                    chat.latestMessage.sender._id.toString() ===
-                      user?._id.toString()
-                  : true; // Consider empty chats as "read"
-                // console.log(selectedChat);
-                return (
-                  <Box
-                    onClick={() => handleChatClick(chat)}
-                    cursor="pointer"
-                    bg={
-                      selectedChat &&
-                      selectedChat._id &&
-                      selectedChat?._id.toString() === chat?._id.toString()
-                        ? "#2D3748" // New background color for selected chat
-                        : "#0f0d15"
-                    }
-                    color={"white"}
-                    boxShadow={
-                      "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
-                    }
-                    px={2}
-                    py={2}
-                    my={1}
-                    borderRadius="lg"
-                    key={chat._id}
-                  >
-                    <Flex justifyContent={"space-between"}>
-                      <Flex gap={2} position={"relative"}>
-                        <Flex>
-                          <Avatar
-                            mt={"3px"}
-                            borderRadius="full"
-                            boxSize={{ base: "35px", md: "45px" }}
-                            src={getSenderFull(user, chat.users).pic}
-                            alt={getSenderFull(user, chat.users).name}
-                          />
-                        </Flex>
-                        <Flex flexDirection={"column"}>
-                          <Flex gap={2}>
-                            <Text
-                              fontWeight={readByLoggedUser ? "normal" : "bold"}
-                              m={0}
-                            >
-                              {chat._id &&
-                              !chat.isGroupChat &&
-                              chat.users &&
-                              chat.users.length > 0
-                                ? getSender(loggedUser, chat.users)
-                                : chat.chatName}
-                            </Text>
-                            {chat.new && (
-                              <Badge
-                                colorScheme="green"
-                                h={"fit-content"}
-                                mt={1}
-                              >
-                                New
-                              </Badge>
-                            )}
-                          </Flex>
-
-                          {chat._id && chat.latestMessage && (
-                            <Text
-                              fontSize="xs"
-                              color={readByLoggedUser ? "#9CAFAA" : "white"}
-                              display={"flex"}
-                              alignItems={"center"}
-                              fontWeight={readByLoggedUser ? "normal" : "bold"}
-                            >
-                              {isSenderLoggedUser(
-                                loggedUser,
-                                chat.latestMessage.sender
-                              )
-                                ? "YOU"
-                                : chat.latestMessage.sender.name}{" "}
-                              {": "}
-                              {getLatestMessageContent(chat)}
-                              {!readByLoggedUser && (
-                                <Badge
-                                  colorScheme="blue"
-                                  borderRadius={"50%"}
-                                  h={"8px"}
-                                  w={"8px"}
-                                  top={"58%"}
-                                  right={"10%"}
-                                  marginLeft={"1rem"}
-                                />
-                              )}
-                            </Text>
-                          )}
-                        </Flex>
-                      </Flex>
-
-                      <Text
-                        m={0}
-                        fontSize="xs"
-                        color={readByLoggedUser ? "#9CAFAA" : "white"}
-                      >
-                        {chat._id &&
-                        !chat.isGroupChat &&
-                        chat.users &&
-                        chat.users.length > 0
-                          ? getRecieverInGameName(loggedUser, chat.users)
-                          : null}
-                      </Text>
-                    </Flex>
-                  </Box>
-                );
-              })}
+            {chatRequests.map((chat) => renderChatItem(chat, true))}
+          </Stack>
+        ) : chats ? (
+          <Stack
+            overflowY="auto"
+            css={{ "&::-webkit-scrollbar": { display: "none" } }}
+          >
+            {chats.map((chat) => renderChatItem(chat))}
           </Stack>
         ) : (
           <ChatLoading />

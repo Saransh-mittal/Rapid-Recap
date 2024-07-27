@@ -41,7 +41,8 @@ const notificationNewMessageChats = asyncHandler(async (req, res) => {
           latestMessage &&
           !latestMessage.readBy.includes(userId) &&
           !latestMessage.isDeleted &&
-          !latestMessage.sender.equals(userId)
+          !latestMessage.sender.equals(userId) &&
+          chat.status !== "rejected"
         );
       })
       .map((chat) => chat._id.toString());

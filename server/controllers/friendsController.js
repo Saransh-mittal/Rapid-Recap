@@ -56,6 +56,21 @@ const acceptRequest = asyncHandler(async (req, res) => {
     const receiver = await User.findByIdAndUpdate(request.to._id, {
       $push: { friends: request.from._id },
     }).select("inGameName pic _id name");
+    let chat = await Chat.findOne({
+      users: { $all: [sender._id, receiver._id] },
+    });
+    // console.log(friend);
+    if (!chat) {
+      //create chat
+      chat = new Chat({
+        chatName: "sender",
+        users: [sender._id, receiver._id],
+        status: "accepted",
+      });
+      await chat.save();
+    }
+    chat.status = "accepted";
+    await chat.save();
     const currentDate = new Date().toISOString().split("T")[0];
     logActivity({
       userInGameName: sender.inGameName,
@@ -160,6 +175,7 @@ const getFriends = asyncHandler(async (req, res) => {
         chat = new Chat({
           chatName: "sender",
           users: [userId, friend._id],
+          status: "accepted",
         });
         await chat.save();
       }

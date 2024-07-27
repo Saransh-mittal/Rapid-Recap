@@ -15,6 +15,7 @@ const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState();
   const [messagesFetched, setMessagesFetched] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [chatRequests, setChatRequests] = useState([]);
   const { getSocket, disconnectSocket, socket, socketConnected } =
     useSocket(user);
   const {
@@ -60,6 +61,7 @@ const ChatProvider = ({ children }) => {
 
   const getInitialNotificationCnt = async () => {
     const { data } = await axios.get("/api/notify/new-message-chats");
+    console.log(data);
     setNotification(data.unreadChats);
   };
 
@@ -147,6 +149,8 @@ const ChatProvider = ({ children }) => {
         setMessagesFetched,
         hasMore,
         setHasMore,
+        chatRequests,
+        setChatRequests,
         isChatOpen,
         openChat,
         closeChat,

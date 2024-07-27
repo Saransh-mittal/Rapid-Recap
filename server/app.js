@@ -83,6 +83,7 @@ webpush.setVapidDetails(
 // require("./scripts/script_prepare_article_data")();
 // require("./scripts/usersEnabledNotifs");
 // require("./scripts/generateCryptoKey");
+// require("./scripts/chatStatus");
 // -------------------
 
 // const { exportDataToCSV } = require("./services/recommendationService");
