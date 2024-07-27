@@ -179,9 +179,15 @@ const UserChats = ({ fetchAgain }) => {
         borderRadius="lg"
         key={chat._id}
       >
-        <Flex justifyContent={"space-between"} alignItems={"center"}>
+        <Flex
+          justifyContent={"space-between"}
+          alignItems={"center"}
+        >
           <Flex gap={2}>
-            <Text fontWeight={readByLoggedUser ? "normal" : "bold"} m={0}>
+            <Text
+              fontWeight={readByLoggedUser ? "normal" : "bold"}
+              m={0}
+            >
               {chat._id &&
               !chat.isGroupChat &&
               chat.users &&
@@ -190,14 +196,17 @@ const UserChats = ({ fetchAgain }) => {
                 : chat.chatName}
             </Text>
             {chat.status === "pending" &&
-              chat.chatCreatedBy !== loggedUser._id && (
+              chat.chatCreatedBy !== loggedUser?._id && (
                 <Badge colorScheme="yellow">New Request</Badge>
               )}
             {chat.status === "rejected" && (
               <Badge colorScheme="red">Rejected</Badge>
             )}
             {chat.new && (
-              <Badge colorScheme="green" h={"fit-content"}>
+              <Badge
+                colorScheme="green"
+                h={"fit-content"}
+              >
                 New
               </Badge>
             )}
@@ -279,19 +288,30 @@ const UserChats = ({ fetchAgain }) => {
                 placement="bottom-end"
                 color={"white"}
               >
-                <Button onClick={onOpen} buttonW={buttonW} textColor={"white"}>
+                <Button
+                  onClick={onOpen}
+                  buttonW={buttonW}
+                  textColor={"white"}
+                >
                   <Flex
                     alignItems={"center"}
                     marginTop={{ base: "5px", lg: "0" }}
                   >
                     <Search2Icon fontSize={{ base: "1.3rem", md: "1rem" }} />
-                    <Text display={{ base: "none", md: "flex" }} px={2} m={0}>
+                    <Text
+                      display={{ base: "none", md: "flex" }}
+                      px={2}
+                      m={0}
+                    >
                       Search User
                     </Text>
                   </Flex>
                 </Button>
               </Tooltip>
-              <ChatSideDrawer isOpen={isOpen} onClose={onClose} />
+              <ChatSideDrawer
+                isOpen={isOpen}
+                onClose={onClose}
+              />
             </>
           )}
         </Flex>
@@ -329,7 +349,10 @@ const UserChats = ({ fetchAgain }) => {
         borderRadius="lg"
         overflowY="hidden"
       >
-        <Heading size={"md"} pl={"5px"}>
+        <Heading
+          size={"md"}
+          pl={"5px"}
+        >
           {showRequestsTab ? "Requests" : "Chats"}
         </Heading>
         {showRequestsTab ? (
