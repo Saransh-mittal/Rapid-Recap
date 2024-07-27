@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import {
-  Box,
-  ChakraProvider,
-  CloseButton,
-  extendTheme,
-} from "@chakra-ui/react";
+import { Box, ChakraProvider, CloseButton } from "@chakra-ui/react";
 import {
   Alert,
   AlertIcon,
@@ -325,13 +320,26 @@ const NotificationSubscription = () => {
           top="8px"
           onClick={handleCloseAlert}
         />
-        <AlertIcon boxSize="40px" mr={0} />
-        <AlertTitle mt={4} mb={3} fontSize="lg">
+        <AlertIcon
+          boxSize="40px"
+          mr={0}
+        />
+        <AlertTitle
+          mt={4}
+          mb={3}
+          fontSize="lg"
+        >
           Enable Notifications for Rapid Recap
         </AlertTitle>
         <AlertDescription maxWidth="sm">
-          <VStack spacing={3} align="stretch">
-            <List spacing={3} p={0}>
+          <VStack
+            spacing={3}
+            align="stretch"
+          >
+            <List
+              spacing={3}
+              p={0}
+            >
               <StepStatus
                 step={steps.browserSupport}
                 label="Browser Supports Notifications"
