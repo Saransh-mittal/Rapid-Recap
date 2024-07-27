@@ -7,6 +7,10 @@ import {
   Stack,
   Avatar,
   Badge,
+  useDisclosure,
+  Tooltip,
+  useBreakpointValue,
+  Image,
   Heading,
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
@@ -20,6 +24,7 @@ import {
 } from "./config/ChatLogics";
 import { AppContext } from "../../contextAPI/appContext";
 import axios from "axios";
+import ButtonGradient from "../../assets/svg/ButtonGradient";
 import Button from "../miscellaneous/ButtonComponent";
 
 const UserChats = ({ fetchAgain }) => {
@@ -68,30 +73,6 @@ const UserChats = ({ fetchAgain }) => {
         duration: 5000,
         isClosable: true,
         position: "top",
-      });
-    }
-  };
-
-  const handleChatRequest = async (chatId, action) => {
-    try {
-      await axios.put("/api/chat/request/handle", { chatId, action });
-      fetchChats();
-
-      toast({
-        title: `Request ${action}ed`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-        position: "bottom",
-      });
-    } catch (error) {
-      toast({
-        title: "Error Occurred!",
-        description: `Failed to ${action} chat request`,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
       });
     }
   };
@@ -166,82 +147,97 @@ const UserChats = ({ fetchAgain }) => {
     setNotification((prev) => prev.filter((c) => c !== chat._id));
   };
 
-  const renderChatItem = (chat) => (
-    <Box
-      onClick={() => handleChatClick(chat)}
-      cursor={"pointer"}
-      bg={
-        selectedChat &&
-        selectedChat._id &&
-        selectedChat?._id.toString() === chat?._id.toString()
-          ? "#2D3748"
-          : "#0f0d15"
-      }
-      color={"white"}
-      boxShadow={
-        "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
-      }
-      px={3}
-      py={2}
-      my={1}
-      borderRadius="lg"
-      key={chat._id}
-    >
-      <Flex justifyContent={"space-between"} alignItems={"center"}>
-        <Flex gap={2}>
-          <Text>
+  const renderChatItem = (chat) => {
+    const readByLoggedUser = chat.latestMessage
+      ? chat.latestMessage.readBy.includes(user?._id) ||
+        chat.latestMessage.sender._id.toString() === user?._id.toString()
+      : true;
+    return (
+      <Box
+        onClick={() => handleChatClick(chat)}
+        cursor={"pointer"}
+        bg={
+          selectedChat &&
+          selectedChat._id &&
+          selectedChat?._id.toString() === chat?._id.toString()
+            ? "#2D3748"
+            : "#0f0d15"
+        }
+        color={"white"}
+        boxShadow={
+          "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
+        }
+        px={3}
+        py={2}
+        my={1}
+        borderRadius="lg"
+        key={chat._id}
+      >
+        <Flex justifyContent={"space-between"} alignItems={"center"}>
+          <Flex gap={2}>
+            <Text fontWeight={readByLoggedUser ? "normal" : "bold"} m={0}>
+              {chat._id &&
+              !chat.isGroupChat &&
+              chat.users &&
+              chat.users.length > 0
+                ? getSender(loggedUser, chat.users)
+                : chat.chatName}
+            </Text>
+            {chat.status === "pending" &&
+              chat.chatCreatedBy !== loggedUser._id && (
+                <Badge colorScheme="yellow">New Request</Badge>
+              )}
+            {chat.status === "rejected" && (
+              <Badge colorScheme="red">Rejected</Badge>
+            )}
+            {chat.new && (
+              <Badge colorScheme="green" h={"fit-content"}>
+                New
+              </Badge>
+            )}
+          </Flex>
+          <Text
+            m={0}
+            fontSize="xs"
+            color={readByLoggedUser ? "#9CAFAA" : "white"}
+          >
             {chat._id &&
             !chat.isGroupChat &&
             chat.users &&
             chat.users.length > 0
-              ? getSender(loggedUser, chat.users)
-              : chat.chatName}
+              ? getRecieverInGameName(loggedUser, chat.users)
+              : null}
           </Text>
-          {chat.status === "pending" &&
-            chat.chatCreatedBy !== loggedUser._id && (
-              <Badge colorScheme="yellow">New Request</Badge>
+        </Flex>
+        {chat._id && chat.latestMessage && (
+          <Text
+            fontSize="xs"
+            color={readByLoggedUser ? "#9CAFAA" : "white"}
+            display={"flex"}
+            alignItems={"center"}
+            fontWeight={readByLoggedUser ? "normal" : "bold"}
+          >
+            {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
+              ? "YOU"
+              : chat.latestMessage.sender.name}{" "}
+            {": "}
+            {getLatestMessageContent(chat)}
+            {!readByLoggedUser && (
+              <Badge
+                colorScheme="blue"
+                borderRadius={"50%"}
+                h={"8px"}
+                w={"8px"}
+                top={"58%"}
+                right={"10%"}
+                marginLeft={"1rem"}
+              />
             )}
-          {chat.status === "rejected" && (
-            <Badge colorScheme="red">Rejected</Badge>
-          )}
-          {chat.new && <Badge colorScheme="green">New</Badge>}
-        </Flex>
-        <Text fontSize="xs" color="#9CAFAA">
-          {chat._id && !chat.isGroupChat && chat.users && chat.users.length > 0
-            ? getRecieverInGameName(loggedUser, chat.users)
-            : null}
-        </Text>
-      </Flex>
-      {/* {isRequest && (
-        <Flex mt={2} justifyContent="flex-end">
-          <Button
-            size="sm"
-            colorScheme="green"
-            mr={2}
-            onClick={() => handleChatRequest(chat._id, "accept")}
-          >
-            Accept
-          </Button>
-          <Button
-            size="sm"
-            colorScheme="red"
-            onClick={() => handleChatRequest(chat._id, "reject")}
-          >
-            Reject
-          </Button>
-        </Flex>
-      )} */}
-      {chat._id && chat.latestMessage && (
-        <Text fontSize="xs" color="#9CAFAA">
-          {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
-            ? "YOU"
-            : chat.latestMessage.sender.name}{" "}
-          {": "}
-          {getLatestMessageContent(chat)}
-        </Text>
-      )}
-    </Box>
-  );
+          </Text>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <Box
@@ -267,7 +263,32 @@ const UserChats = ({ fetchAgain }) => {
         justifyContent={{ base: "column", md: "space-between" }}
         alignItems="center"
       >
-        <Flex>{user && <ChatSideDrawer />}</Flex>
+        <Flex>
+          {user && (
+            <>
+              <ButtonGradient />
+              <Tooltip
+                label="Search Users to chat"
+                hasArrow
+                placement="bottom-end"
+                color={"white"}
+              >
+                <Button onClick={onOpen} buttonW={buttonW} textColor={"white"}>
+                  <Flex
+                    alignItems={"center"}
+                    marginTop={{ base: "5px", lg: "0" }}
+                  >
+                    <Search2Icon fontSize={{ base: "1.3rem", md: "1rem" }} />
+                    <Text display={{ base: "none", md: "flex" }} px={2} m={0}>
+                      Search User
+                    </Text>
+                  </Flex>
+                </Button>
+              </Tooltip>
+              <ChatSideDrawer isOpen={isOpen} onClose={onClose} />
+            </>
+          )}
+        </Flex>
         <Button
           onClick={() => setShowRequestsTab(!showRequestsTab)}
           white={showRequestsTab ? true : false}

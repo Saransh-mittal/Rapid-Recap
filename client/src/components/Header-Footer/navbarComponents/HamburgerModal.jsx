@@ -39,7 +39,7 @@ const HamburgerModal = ({
   setIsDrawerOpen,
 }) => {
   const { state } = useContext(AppContext);
-  const { notification } = ChatState();
+  const { notification, openChat } = ChatState();
   const navigate = useNavigate();
   const {
     isOpen: isOpenUserSearch,
@@ -168,6 +168,7 @@ const HamburgerModal = ({
                     onClick={() => {
                       onClose();
                       navigate("/chats");
+                      openChat();
                     }}
                     display={notLogined ? "none" : "block"}
                     color={"white"}
