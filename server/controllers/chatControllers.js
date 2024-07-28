@@ -103,8 +103,6 @@ const fetchChats = asyncHandler(async (req, res) => {
         );
         for (let i = 0; i < results.length; i++) {
           let chat = results[i];
-          // const messages = await Message.find({ chat: chat._id });
-          // check if chat has more than one message from message schema
           const messagesCount = await Message.countDocuments({
             chat: chat._id,
           });
@@ -113,12 +111,30 @@ const fetchChats = asyncHandler(async (req, res) => {
             messagesCount <= 1 &&
             today.getTime() - chat.createdAt.getTime() < 86400000
           ) {
-            results[i] = chat.toObject();
-            results[i].new = true;
+            // Instead of using toObject(), we'll create a new object and copy properties
+            let chatObj = Object.assign({}, chat.toObject());
+            chatObj.new = true;
+
+            // Preserve the decryptContent method if it exists
+            if (
+              chat.latestMessage &&
+              typeof chat.latestMessage.decryptContent === "function"
+            ) {
+              chatObj.latestMessage = Object.assign(
+                {},
+                chat.latestMessage.toObject()
+              );
+              chatObj.latestMessage.decryptContent =
+                chat.latestMessage.decryptContent.bind(chatObj.latestMessage);
+            }
+
+            results[i] = chatObj;
           }
+
           // Decrypt the latest message if it exists
           if (
             results[i].latestMessage &&
+            results[i].latestMessage.content &&
             isEncrypted(results[i].latestMessage.content)
           ) {
             results[i].latestMessage.content =
@@ -371,6 +387,28 @@ const handleChatRequest = asyncHandler(async (req, res) => {
     throw new Error(error.message);
   }
 });
+// @desc    Make Chat Seen Request
+// @route   POST /api/chat/request/seen
+// @access  Protected
+const setSeenRequest = async (req, res) => {
+  const userId = req.user._id;
+  try {
+    console.log("Setting seen for user: ", userId);
+    // make all pending requests seen for the user
+    const chats = await Chat.updateMany(
+      {
+        users: { $elemMatch: { $eq: userId } },
+        status: "pending",
+      },
+      { isReqSeen: true }
+    );
+    console.log("Chats seen: ", chats);
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+};
 
 module.exports = {
   accessChat,
@@ -381,4 +419,5 @@ module.exports = {
   removeFromGroup,
   shareMessage,
   handleChatRequest,
+  setSeenRequest,
 };

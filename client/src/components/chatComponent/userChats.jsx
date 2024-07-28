@@ -27,16 +27,19 @@ import axios from "axios";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
 import Button from "../miscellaneous/ButtonComponent";
 import { Search2Icon } from "@chakra-ui/icons";
+import { useNavigate } from "react-router-dom";
 
 const UserChats = ({ fetchAgain }) => {
   const { state } = useContext(AppContext);
   const [loggedUser, setLoggedUser] = useState();
   const [showRequestsTab, setShowRequestsTab] = useState(false);
+  const [reqNotify, setReqNotify] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const buttonW = useBreakpointValue({
     base: "50px",
     md: "150px", // width for large screens (>= 62em or 992px)
   });
+  const navigate = useNavigate();
 
   const {
     selectedChat,
@@ -71,7 +74,20 @@ const UserChats = ({ fetchAgain }) => {
             chat.chatCreatedBy.toString() !== user._id.toString()
         ) || []
       );
+      const reqChatNotif = data.find(
+        (chat) => chat.status === "pending" && chat.isReqSeen === false
+      );
+      showRequestsTab
+        ? handleSeenRequest()
+        : setReqNotify(
+            reqChatNotif &&
+              reqChatNotif.hasOwnProperty("isReqSeen") &&
+              !reqChatNotif.isReqSeen
+              ? true
+              : false
+          );
     } catch (error) {
+      console.log(error);
       toast({
         title: "Error Occurred!",
         description: "Failed to Load the chats",
@@ -131,6 +147,7 @@ const UserChats = ({ fetchAgain }) => {
     setSelectedChat(chat);
     setHasMore(true);
     setMessagesFetched(false);
+    navigate(`/chats?chatId=${chat._id.toString()}`);
 
     // Only update latestMessage if it exists
     if (chat.latestMessage) {
@@ -189,13 +206,13 @@ const UserChats = ({ fetchAgain }) => {
                 ? getSender(loggedUser, chat.users)
                 : chat.chatName}
             </Text>
-            {chat.status === "pending" &&
-              chat.chatCreatedBy !== loggedUser._id && (
+            {/* {chat.status === "pending" &&
+              chat.chatCreatedBy !== loggedUser?._id && (
                 <Badge colorScheme="yellow">New Request</Badge>
-              )}
-            {chat.status === "rejected" && (
+              )} */}
+            {/* {chat.status === "rejected" && (
               <Badge colorScheme="red">Rejected</Badge>
-            )}
+            )} */}
             {chat.new && (
               <Badge colorScheme="green" h={"fit-content"}>
                 New
@@ -243,6 +260,21 @@ const UserChats = ({ fetchAgain }) => {
         )}
       </Box>
     );
+  };
+
+  const handleSeenRequest = async () => {
+    try {
+      await axios.put(`/api/chat/request/seen`);
+    } catch (error) {
+      toast({
+        title: "Error Occurred!",
+        description: "Failed to update the request",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+    }
   };
 
   return (
@@ -295,12 +327,36 @@ const UserChats = ({ fetchAgain }) => {
             </>
           )}
         </Flex>
-        <Button
-          onClick={() => setShowRequestsTab(!showRequestsTab)}
-          white={showRequestsTab ? true : false}
-        >
-          {showRequestsTab ? "Chats" : "Requests"}
-        </Button>
+        <Flex position={"relative"}>
+          <Button
+            onClick={() => {
+              if (!showRequestsTab) {
+                handleSeenRequest();
+                setReqNotify(false);
+              }
+
+              setShowRequestsTab(!showRequestsTab);
+            }}
+            textColor={"white"}
+            white={showRequestsTab ? true : false}
+          >
+            {showRequestsTab ? "Chats" : "Requests"}
+            {/* make a red dot for a request tab */}
+          </Button>
+          {!showRequestsTab && reqNotify && (
+            <Badge
+              colorScheme="red"
+              borderRadius={"50%"}
+              h={"8px"}
+              w={"8px"}
+              top={"38%"}
+              right={"10%"}
+              marginLeft={"1rem"}
+              position={"absolute"}
+            />
+          )}
+        </Flex>
+
         {/* <GroupChatModal>
           <Flex position={"relative"}>
             <Button pl={"1.5rem"} textColor={"white"} buttonW="150px">
