@@ -392,21 +392,21 @@ section {
   /* Add a strong shadow */
   background-image: linear-gradient(-180deg, #4a525d, #1a2839);
 }
-.shepherd-title {
+/* .shepherd-title {
   margin-top: 25px;
   font-size: 1.7rem;
   font-weight: 700;
 
   text-align: center;
-}
-.shepherd-text {
+} */
+/* .shepherd-text {
   font-size: 1.2rem;
   font-weight: 700;
 
   text-align: center;
-}
+} */
 
-.shepherd-cancel-icon {
+/* .shepherd-cancel-icon {
   color: white;
   font-size: 1.5rem;
   font-weight: 700;
@@ -414,16 +414,16 @@ section {
   top: 10px;
   right: 10px;
   cursor: pointer;
-}
+} */
 
-.shepherd-footer {
+/* .shepherd-footer {
   display: flex;
   justify-content: center;
   gap: 25px;
   margin-top: 20px;
-}
+} */
 
-.shepherd-footer button {
+/* .shepherd-footer button {
   padding: 5px;
   font-weight: 700;
   color: white;
@@ -431,7 +431,7 @@ section {
   border: none;
   cursor: pointer;
   width: 100px;
-}
+} */
 
 .card-guide {
   /* top: 22rem !important; */
@@ -459,49 +459,46 @@ section {
     /* Adjust padding */
   }
 }
-
+/* 
 .hand-click-img {
-  width: 60px; /* Adjust size as needed */
+  width: 60px; 
   height: 60px;
   z-index: 9999999;
   bottom: -5%;
-  right: 0%; /* Default position for small screens */
+  right: 0%; 
   position: absolute;
   background-color: transparent;
   filter: brightness(1.8);
   box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
   border-radius: 50%;
-}
+} */
 
-/* Apply styles for medium and larger screens */
-@media (min-width: 768px) {
+/* @media (min-width: 768px) {
   .hand-click-img {
-    right: -18%; /* Position for medium and larger screens */
+    right: -18%; 
   }
-}
+} */
 
-.hand-click-img {
-  opacity: 1; /* Show the hand on hover */
-  animation: moveHand 2s infinite; /* Adjust duration and timing as needed */
-}
+/* .hand-click-img {
+  opacity: 1; 
+  animation: moveHand 2s infinite; 
+} */
 
-.hand-click-img1 {
-  width: 40px; /* Adjust size as needed */
-  height: 40px;
+/* .hand-click-img1 {
+  width: 40px;
   z-index: 9999999;
   bottom: 18%;
-  /* right: -18%; */
   right: 10%;
   position: absolute;
   background-color: transparent;
   filter: brightness(1.8);
   box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.7);
   border-radius: 50%;
-}
+} */
 
-.hand-click-img1 {
-  opacity: 1; /* Show the hand on hover */
-  animation: moveHand 2s infinite; /* Adjust duration and timing as needed */
+/* .hand-click-img1 {
+  opacity: 1; 
+  animation: moveHand 2s infinite; 
 }
 @keyframes moveHand {
   0% {
@@ -509,11 +506,11 @@ section {
   }
   50% {
     transform: translateX(5px) translateY(5px);
-  } /* Adjust distance */
+  } 
   100% {
     transform: translateX(-10px) translateY(-10px);
   }
-}
+} */
 
 .highlighted-card-0 {
   /* Define your highlight styles here */
@@ -728,27 +725,22 @@ section {
   }
 }
 
-.highlighted-card-3 {
-  /* Define your highlight styles here */
-
-  /* Red border as highlight */
+/* .highlighted-card-3 {
   box-shadow: 1px 1px 10px 6px rgb(42, 157, 211);
   border: #000 solid 3px;
   position: relative;
-  /* margin-bottom: 100px; */
-  /* z-index: 999 !important; */
   animation: blink-animation-3 2s infinite alternate;
-}
+} */
 
-.highlighted-card-3:hover {
-  /* Override styles on hover */
-  box-shadow: none; /* Remove box-shadow on hover */
+/* .highlighted-card-3:hover {
+ 
+  box-shadow: none; 
   box-shadow: 10px 10px 10px 10px rgb(42, 157, 211);
 
   border: rgb(42, 157, 211) solid 3px;
-  /* border: none;  */
-  animation: none; /* Remove animation on hover */
-}
+
+  animation: none; 
+} */
 
 @keyframes neonGlow {
   0% {
@@ -855,14 +847,14 @@ section {
   }
 }
 
-.testimonial-container {
+/* .testimonial-container {
   max-width: 800px;
   margin-inline: auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
   height: 100vh;
-}
+} */
 
 .title {
   text-align: center;
@@ -877,104 +869,104 @@ section {
 }
 
 /* Slider container */
-.slider-container {
+/* .slider-container {
   position: relative;
   user-select: none;
   padding-inline: 1rem;
-}
+} */
 
-.slider-container .quote {
+/* .slider-container .quote {
   position: absolute;
   z-index: -1;
-}
+} */
 
-.slider-container .top-quote {
+/* .slider-container .top-quote {
   position: absolute;
   top: -1rem;
   left: -1rem;
-}
+} */
 
-.slider-container .bottom-quote {
+/* .slider-container .bottom-quote {
   position: absolute;
   bottom: -3rem;
   right: -0.5rem;
   transform: rotate(180deg);
-}
+} */
 
-.slider-container .review-img {
+/* .slider-container .review-img {
   width: 140px;
   height: 140px;
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 1rem;
   margin-inline: auto;
-}
+} */
 
 /* Splide customization */
-.splide__track {
+/* .splide__track {
   border-radius: 1rem;
-}
+} */
 
-.splide__slide {
+/* .splide__slide {
   display: flex;
   align-items: center;
   background-color: #fff;
   padding: 3rem 1.875rem;
   border-radius: 1rem;
   gap: 1rem;
-}
+} */
 
-.slider-container .content .text {
+/* .slider-container .content .text {
   color: #484646;
   margin-bottom: 1rem;
   font-size: 1.1rem;
-}
-
+} */
+/* 
 .slider-container .content .rating {
   display: inline-block;
   line-height: 1;
-}
+} */
 
-.slider-container .content .star {
+/* .slider-container .content .star {
   color: #ff6f59;
   font-size: 1.1rem;
-}
+} */
 
-.slider-container .content .user {
+/* .slider-container .content .user {
   font-weight: 600;
-}
+} */
 
-.splide__pagination__page.is-active {
+/* .splide__pagination__page.is-active {
   background-color: #ff6f59;
-}
+} */
 
-.splide__arrow {
+/* .splide__arrow {
   position: absolute;
   background-color: transparent;
   border: none;
   font-size: 2rem;
   color: #505050;
   font-weight: 300;
-}
+} */
 
-.splide__arrow--prev {
+/* .splide__arrow--prev {
   top: 50%;
   left: -3.5rem;
-}
+} */
 
-.splide__arrow--next {
+/* .splide__arrow--next {
   top: 50%;
   right: -3.5rem;
-}
+} */
 
-.splide__pagination__page {
+/* .splide__pagination__page {
   height: 10px;
   width: 10px;
   opacity: 1;
-}
+} */
 
 /* Media Query */
-@media (max-width: 576px) {
+/* @media (max-width: 576px) {
   .splide__slide {
     display: block;
     text-align: center;
@@ -995,4 +987,4 @@ section {
   .slider-container .bottom-quote {
     right: 0;
   }
-}
+} */

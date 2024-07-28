@@ -177,7 +177,7 @@ const CommigSoonSection = () => {
                               src={item.imageUrl}
                               alt={item.title}
                               width={"80%"}
-                              height="auto"
+                              height="80%"
                               objectFit="cover"
                               mb={4}
                               background={"transparent"}

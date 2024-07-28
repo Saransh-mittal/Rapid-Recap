@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Flex, Image, Tooltip, keyframes } from "@chakra-ui/react";
-import levelImage from "../../../assets/level.png"; // Make sure the path is correct
+import levelImage from "../../../assets/level.webp"; // Make sure the path is correct
 
 const XPLevel = ({ level, onClick, _hover, className }) => {
   return (

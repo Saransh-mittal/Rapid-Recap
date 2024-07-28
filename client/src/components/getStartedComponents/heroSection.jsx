@@ -184,7 +184,10 @@ const HeroSection = () => {
                   marginBottom="0"
                 />
                 <ButtonGradient />
-                <Button onClick={handleDownload}> Download</Button>
+                <Button className="download-button" onClick={handleDownload}>
+                  {" "}
+                  Download
+                </Button>
               </Flex>
             </Flex>
           </Box>
