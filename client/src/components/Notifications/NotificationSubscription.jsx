@@ -79,7 +79,6 @@ const NotificationSubscription = () => {
         updateStep("browserEnabled", true);
         return true;
       } else if (Notification.permission === "denied") {
-        console.log("Browser notifications denied");
         updateStep("browserEnabled", false);
         await unsubscribe();
         return false;
