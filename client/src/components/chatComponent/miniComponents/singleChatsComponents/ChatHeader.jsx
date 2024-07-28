@@ -53,7 +53,7 @@ const ChatHeader = ({
               }}
               justifyContent={"center"}
               alignItems={"center"}
-              w={"35%"}
+              w={"100%"}
             >
               <Flex>
                 <Image
@@ -82,7 +82,11 @@ const ChatHeader = ({
                   {getSenderFull(user, selectedChat.users).inGameName}
                 </Text>
               </Flex>
-              <Flex ml={-3} alignItems={"center"} mb={5}>
+              <Flex
+                ml={-3}
+                alignItems={"center"}
+                mb={5}
+              >
                 <Image
                   borderRadius="full"
                   boxSize={{ base: "15px", md: "20px" }}

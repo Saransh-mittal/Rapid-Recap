@@ -61,7 +61,6 @@ const ChatProvider = ({ children }) => {
 
   const getInitialNotificationCnt = async () => {
     const { data } = await axios.get("/api/notify/new-message-chats");
-    console.log(data);
     setNotification(data.unreadChats);
   };
 

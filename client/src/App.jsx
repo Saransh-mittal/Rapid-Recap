@@ -146,16 +146,51 @@ const App = () => {
       <Box position="relative">
         {shouldShowNotification && <NotificationSubscription />}
         <Routes>
-          <Route exact path="/" element={<GetStarted />} />
-          <Route exact path="/contact/feedback" element={<ContactLayout />} />
-          <Route path="/home/:category" element={<Home />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/chats" element={<ChatPage />} />
-          <Route exact path="/article/:id" element={<Article />} />
-          <Route path="/profile/:inGameName" element={<Profile />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route exact path="/contact" element={<ContactLayout />} />
-          <Route exact path="/leaderboard" element={<LeaderBoard />} />
+          <Route
+            exact
+            path="/"
+            element={<GetStarted />}
+          />
+          <Route
+            exact
+            path="/contact/feedback"
+            element={<ContactLayout />}
+          />
+          <Route
+            path="/home/:category"
+            element={<Home />}
+          />
+          <Route
+            path="/home"
+            element={<Home />}
+          />
+          <Route
+            path="/chats"
+            element={<ChatPage />}
+          />
+          <Route
+            exact
+            path="/article/:id"
+            element={<Article />}
+          />
+          <Route
+            path="/profile/:inGameName"
+            element={<Profile />}
+          />
+          <Route
+            path="/profile"
+            element={<Profile />}
+          />
+          <Route
+            exact
+            path="/contact"
+            element={<ContactLayout />}
+          />
+          <Route
+            exact
+            path="/leaderboard"
+            element={<LeaderBoard />}
+          />
           {/* <Route exact path="/season" element={<Season />} /> */}
           <Route
             path="/dashboard"
@@ -165,7 +200,15 @@ const App = () => {
               </AdminRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to="/"
+                replace
+              />
+            }
+          />
         </Routes>
       </Box>
       {shouldShowFooter && <Footer />}
@@ -209,7 +252,13 @@ const AdminRoute = ({ children }) => {
   }, [token, role, navigate, toast]);
 
   if (!token) {
-    return <Signin isOpen={true} onOpen={onOpen} onClose={handleClose} />;
+    return (
+      <Signin
+        isOpen={true}
+        onOpen={onOpen}
+        onClose={handleClose}
+      />
+    );
   }
 
   return children;
