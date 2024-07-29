@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from 'react'
 import {
   Menu,
   MenuButton,
@@ -20,18 +20,18 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalHeader,
-} from "@chakra-ui/react";
-import EmojiPicker, { Emoji } from "emoji-picker-react";
-import { AddIcon } from "@chakra-ui/icons";
+} from '@chakra-ui/react'
+import EmojiPicker, { Emoji } from 'emoji-picker-react'
+import { AddIcon } from '@chakra-ui/icons'
 
 const emojis = [
-  "1f44d", // 👍
-  "2764-fe0f", // ❤️
-  "1f602", // 😂
-  "1f62e", // 😮
-  "1f622", // 😢
-  "1f621", // 😡
-];
+  '1f44d', // 👍
+  '2764-fe0f', // ❤️
+  '1f602', // 😂
+  '1f62e', // 😮
+  '1f622', // 😢
+  '1f621', // 😡
+]
 
 const ContextMenu = ({
   isOpen,
@@ -45,24 +45,29 @@ const ContextMenu = ({
   isMessageDeleted,
   messageId,
 }) => {
-  const [showReactions, setShowReactions] = useState(false);
-  const isWithinOneHour = new Date() - new Date(messageTime) <= 60 * 60 * 1000;
+  const [showReactions, setShowReactions] = useState(false)
+  const [currentMessageId, setCurrentMessageId] = useState(messageId)
+  const isWithinOneHour = new Date() - new Date(messageTime) <= 60 * 60 * 1000
   const {
     isOpen: isEmojiModalOpen,
     onOpen: onEmojiModalOpen,
     onClose: onEmojiModalClose,
-  } = useDisclosure();
-  const emojiPickerRef = useRef(null);
+  } = useDisclosure()
+  const emojiPickerRef = useRef(null)
 
-  const handleReact = (emoji) => {
-    onReact({ emoji, messageId });
-    setShowReactions(false);
-    onClose();
-  };
-  const handleEmojiSelect = (emojiObject) => {
-    handleReact(emojiObject.unified);
-    onEmojiModalClose();
-  };
+  useEffect(() => {
+    if (messageId) setCurrentMessageId(messageId)
+  }, [messageId])
+
+  const handleReact = emoji => {
+    onReact({ emoji, messageId: currentMessageId })
+    setShowReactions(false)
+    onClose()
+  }
+  const handleEmojiSelect = emojiObject => {
+    handleReact(emojiObject.unified)
+    onEmojiModalClose()
+  }
 
   return (
     <>
@@ -77,8 +82,8 @@ const ContextMenu = ({
           {isSender && isWithinOneHour && !isMessageDeleted && (
             <>
               <MenuItem
-                onClick={() => onDelete("everyone")}
-                _hover={{ bg: "red.50" }}
+                onClick={() => onDelete('everyone')}
+                _hover={{ bg: 'red.50' }}
                 color="red.500"
                 fontWeight="bold"
               >
@@ -89,8 +94,8 @@ const ContextMenu = ({
           )}
           {!isMessageDeleted && (
             <MenuItem
-              onClick={() => onDelete("me")}
-              _hover={{ bg: "gray.100" }}
+              onClick={() => onDelete('me')}
+              _hover={{ bg: 'gray.100' }}
               color="red.500"
               fontWeight="bold"
             >
@@ -99,9 +104,9 @@ const ContextMenu = ({
           )}
           {isMessageDeleted && (
             <MenuItem
-              onClick={() => onDelete("permanent")}
-              _hover={{ bg: "gray.100" }}
-              color={"red.500"}
+              onClick={() => onDelete('permanent')}
+              _hover={{ bg: 'gray.100' }}
+              color={'red.500'}
               fontWeight="bold"
             >
               Delete
@@ -110,8 +115,8 @@ const ContextMenu = ({
           <MenuDivider />
           <MenuItem
             onClick={onCopy}
-            _hover={{ bg: "gray.100" }}
-            color={"black"}
+            _hover={{ bg: 'gray.100' }}
+            color={'black'}
             fontWeight="bold"
           >
             Copy
@@ -126,7 +131,7 @@ const ContextMenu = ({
                     as="button"
                     fontSize="xl"
                     onClick={() => handleReact(emoji)}
-                    _hover={{ bg: "gray.100" }}
+                    _hover={{ bg: 'gray.100' }}
                     p={2}
                     borderRadius="full"
                   >
@@ -137,12 +142,12 @@ const ContextMenu = ({
                   as="button"
                   fontSize="xl"
                   onClick={onEmojiModalOpen}
-                  _hover={{ bg: "gray.100" }}
+                  _hover={{ bg: 'gray.100' }}
                   p={2}
                   borderRadius="full"
-                  color={"black"}
+                  color={'black'}
                 >
-                  <AddIcon fontSize={"1rem"} />
+                  <AddIcon fontSize={'1rem'} />
                 </Box>
               </Flex>
             </>
@@ -151,20 +156,20 @@ const ContextMenu = ({
       </Menu>
       <Modal isOpen={isEmojiModalOpen} onClose={onEmojiModalClose}>
         <ModalOverlay />
-        <ModalContent bg={"transparent"} position={"relative"}>
+        <ModalContent bg={'transparent'} position={'relative'}>
           <ModalBody>
             <Box ref={emojiPickerRef}>
               <EmojiPicker
-                onEmojiClick={handleEmojiSelect}
-                emojiStyle={"facebook"}
-                theme={"dark"}
+                onEmojiClick={emojiObject => handleEmojiSelect(emojiObject)}
+                emojiStyle={'facebook'}
+                theme={'dark'}
               />
             </Box>
           </ModalBody>
         </ModalContent>
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default ContextMenu;
+export default ContextMenu
