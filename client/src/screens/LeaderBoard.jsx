@@ -13,7 +13,7 @@ import SearchBar from "../components/leaderBoardComponents/SearchBar";
 import SocietyButtons from "../components/leaderBoardComponents/SocietyButtons";
 import LeaderBoardTable from "../components/leaderBoardComponents/LeaderBoardTable";
 import { useLeaderBoardTour } from "../customHooks/useTours";
-import medalIcon from "../assets/medal.png";
+import medalIcon from "../assets/medal.webp";
 import { debounce } from "lodash";
 import Heading from "../components/miscellaneous/HeadingComponent";
 

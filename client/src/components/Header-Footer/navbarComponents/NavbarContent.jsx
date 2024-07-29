@@ -3,7 +3,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { LockIcon } from "@chakra-ui/icons";
 import { Tooltip } from "@chakra-ui/react";
-import newBadge from "/images/newBadge.png";
+import newBadge from "/images/newBadge.webp";
 
 const NavbarContent = ({
   isHamburgerOpen,

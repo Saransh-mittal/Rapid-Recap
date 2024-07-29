@@ -13,14 +13,14 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import Section from "../miscellaneous/Section";
-import curve from "../../assets/curve.png";
-import robot from "../../assets/hero/robot.jpeg";
+import curve from "../../assets/curve.webp";
+import robot from "../../assets/hero/robot.webp";
 import homeSmile from "../../assets/home-smile.svg";
 import file02 from "../../assets/file-02.svg";
 import searchMd from "../../assets/search-md.svg";
 import plusSquare from "../../assets/plus-square.svg";
 import { ScrollParallax } from "react-just-parallax";
-import heroBackground from "../../assets/hero/hero-background.jpg";
+import heroBackground from "../../assets/hero/hero-background.webp";
 import { AppContext } from "../../contextAPI/appContext";
 import {
   Gradient,

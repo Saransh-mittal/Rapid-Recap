@@ -21,7 +21,7 @@ import {
   Heading,
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
-import Trophy from "/images/trophy.png";
+import Trophy from "/images/trophy.webp";
 import axios from "axios";
 import Loading from "../miscellaneous/Loading";
 import { useNavigate } from "react-router-dom";

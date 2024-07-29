@@ -24,7 +24,7 @@ import {
 } from "@chakra-ui/react";
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../../contextAPI/appContext";
-import Rapid_recap from "/images/rr.png";
+import Rapid_recap from "/images/rrlogo.webp";
 import { DeleteIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import parse from "html-react-parser";

@@ -15,6 +15,7 @@ import "chartjs-adapter-date-fns";
 import axios from "axios";
 import ExpectedIQModal from "../articleComponents/ExpectedIQModal";
 import { AppContext } from "../../contextAPI/appContext";
+import Lock from "/images/lock.webp";
 
 const IQBarGraph = ({
   barGraph,
@@ -332,7 +333,7 @@ const IQBarGraph = ({
               h={"200px"}
               w={"200px"}
               background={"transparent"}
-              src="/images/lock.png"
+              src={Lock}
             />
           </Button>
         </Flex>

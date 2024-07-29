@@ -13,14 +13,14 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { LockIcon, TriangleDownIcon } from "@chakra-ui/icons";
-import Alt_img from "/images/rr.png";
+import Alt_img from "/images/rr.webp";
 import GivenQuiz from "./GivenQuiz";
 import QuizExpired from "./QuizExpired";
 import GenerateQuizButton from "./GenerateQuizButton";
 import TotalUserAttempted from "./TotalUserAttempted";
 import QuinBoost from "./quizComponents/QuinBoost";
 import starBoost from "/GIFs/starBoost.gif";
-import TextBackgound from "/images/textBackground.png";
+import TextBackgound from "/images/textBackground.webp";
 import ShareButton from "./ShareButton";
 import ShareChatModal from "../chatComponent/miniComponents/ShareChatModal";
 const Sidebar = ({

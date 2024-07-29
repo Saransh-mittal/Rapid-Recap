@@ -60,7 +60,7 @@ const stepsLeaderBoard = [
         // console.log(mainBoard);
         mainBoard.classList.add("highlighted-card-1");
         const img = document.createElement("img");
-        img.src = "../../images/arrow1.png"; // Replace with your image path
+        img.src = "../../images/arrow1.webp"; // Replace with your image path
         img.alt = "Hand Click Sign";
         img.classList.add("hand-click-img-leaderboard");
         mainBoard.appendChild(img);

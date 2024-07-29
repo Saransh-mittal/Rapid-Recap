@@ -1,9 +1,9 @@
-import sportsNews from "/images/sportsNews.jpeg";
-import techNews from "/images/techNews.jpg";
-import businessNews from "/images/businessNews.jpg";
-import healthNews from "/images/healthNews.jpg";
-import entertainmentNews from "/images/entertainmentNews.jpeg";
-import generalNews from "./alt_image.jpg";
+import sportsNews from "/images/sportsNews.webp";
+import techNews from "/images/techNews.webp";
+import businessNews from "/images/businessNews.webp";
+import healthNews from "/images/healthNews.webp";
+import entertainmentNews from "/images/entertainmentNews.webp";
+import generalNews from "./alt_image.webp";
 
 const imageData = [
   {

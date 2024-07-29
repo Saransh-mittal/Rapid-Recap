@@ -13,7 +13,7 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import Circles from "../../../assets/Circles";
 import { useSwipeable } from "react-swipeable";
-import circleImg from "/images/circle.png";
+import circleImg from "/images/circle.webp";
 
 const CircleModal = ({
   isOpen,

@@ -3,9 +3,9 @@ import React from "react";
 import { Box, Image, SimpleGrid } from "@chakra-ui/react";
 
 const stickers = [
-  "/images/arrow.png",
-  "/images/arrow1.png",
-  "/images/circle.png",
+  "/images/arrow.webp",
+  "/images/arrow1.webp",
+  "/images/circle.webp",
 
   // Add more sticker paths as needed
 ];

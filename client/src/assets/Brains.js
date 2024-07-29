@@ -1,8 +1,8 @@
-import Mavericks_Brain from "/images/Mavericks_Brain.png";
-import Explorers_Brain from "/images/Explorers_Brain.png";
-import Strivers_Brain from "/images/Strivers_Brain.png";
-import Elites_Brain from "/images/Elites_Brain.png";
-import Titans_Brain from "/images/Titans_Brain.png";
+import Mavericks_Brain from "/images/Mavericks_Brain.webp";
+import Explorers_Brain from "/images/Explorers_Brain.webp";
+import Strivers_Brain from "/images/Strivers_Brain.webp";
+import Elites_Brain from "/images/Elites_Brain.webp";
+import Titans_Brain from "/images/Titans_Brain.webp";
 const Brains = [
   {
     society: "Explorers",

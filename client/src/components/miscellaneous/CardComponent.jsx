@@ -31,7 +31,7 @@ const BenefitCard = ({
         p="1.6rem"
         pointerEvents="none"
       >
-        <Heading as="h5" size="sm" mb={"1.5rem"}>
+        <Heading size="sm" mb={"1.5rem"}>
           {title}
         </Heading>
         <Flex>
