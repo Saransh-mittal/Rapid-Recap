@@ -51,15 +51,11 @@ const debouncedSearch = debounce(async (query, callback) => {
     console.error("Error searching users:", error);
   }
 }, 800);
-const ChatSideDrawer = () => {
+const ChatSideDrawer = ({ isOpen, onClose }) => {
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
-  const buttonW = useBreakpointValue({
-    base: "50px",
-    md: "150px", // width for large screens (>= 62em or 992px)
-  });
 
   const {
     setSelectedChat,
@@ -71,7 +67,7 @@ const ChatSideDrawer = () => {
   } = ChatState();
 
   const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const history = useNavigate();
   const handleSearch = async (event) => {
     setLoading(true);
@@ -123,62 +119,6 @@ const ChatSideDrawer = () => {
 
   return (
     <>
-      <Box display="flex" alignItems="center" w="100%" p="5px 10px 5px 10px">
-        <ButtonGradient />
-        <Tooltip
-          label="Search Users to chat"
-          hasArrow
-          placement="bottom-end"
-          color={"white"}
-        >
-          <Button onClick={onOpen} buttonW={buttonW} textColor={"white"}>
-            <Flex alignItems={"center"}>
-              <Search2Icon />
-              <Text display={{ base: "none", md: "flex" }} px={2} m={0}>
-                Search User
-              </Text>
-            </Flex>
-          </Button>
-        </Tooltip>
-        {/* <div>
-          <Menu>
-            <MenuButton p={1}>
-              <NotificationBadge
-                count={notification.length}
-                effect={Effect.SCALE}
-              />
-              <BellIcon fontSize="2xl" m={1} color={"black"} />
-            </MenuButton>
-            <MenuList pl={2}>
-              {!notification.length && "No New Messages"}
-              {notification.map((notif) => (
-                <MenuItem
-                  key={notif._id}
-                  onClick={() => {
-                    setSelectedChat(notif.chat);
-                    setNotification(notification.filter((n) => n !== notif));
-                  }}
-                >
-                  {notif.chat.isGroupChat
-                    ? `New Message in ${notif.chat.chatName}`
-                    : `New Message from ${notif.chat.chatName}`}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
-          <Menu>
-            <MenuButton as={Button} bg="white" rightIcon={<ChevronDownIcon />}>
-              <Avatar size="sm" cursor="pointer" name="Gaurav" src="" />
-            </MenuButton>
-            <MenuList>
-              <MenuItem>My Profile</MenuItem>
-              <MenuDivider />
-              <MenuItem onClick={logoutHandler}>Logout</MenuItem>
-            </MenuList>
-          </Menu>
-        </div> */}
-      </Box>
-
       <Drawer placement="left" onClose={onClose} isOpen={isOpen}>
         <DrawerOverlay />
         <DrawerContent

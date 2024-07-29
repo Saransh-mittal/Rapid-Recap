@@ -186,8 +186,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           >
             <Heading
               as="h4"
-              size={"md"}
-              margin={"2px"}
+              size={"sm"}
+              marginY={"2px"}
               color={selectedDatafromCurrIQ?.textColor}
             >
               {profileData?.name}

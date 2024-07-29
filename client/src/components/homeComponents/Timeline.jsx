@@ -192,6 +192,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
           handleActiveCategory={handleActiveCategory}
           categories={categories}
           categoryRefs={categoryRefs}
+          notLoggedIn={notLoggedIn}
         />
       </Flex>
       <div

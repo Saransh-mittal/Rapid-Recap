@@ -1,4 +1,4 @@
-const VERSION = "v2"; // Increment this version number
+const VERSION = "v3"; // Increment this version number
 const RapidRecapLogo = "./images/rr.png";
 
 self.addEventListener("install", (event) => {

@@ -11,7 +11,7 @@ const notificationNews = async (req, res) => {
       image:
         "https://www.techspot.com/images2/news/bigimage/2024/07/2024-07-05-image-10.jpg",
       url: "https://www.rapidrecap.co.in/",
-      userId: "65f6b9f0ba995a8fd4acee64",
+      userId: "65b1ebbc90ba2e3794e9696d",
     });
     res.status(200).json({ message: "Notif sent successfully" });
   } catch (error) {
@@ -41,7 +41,8 @@ const notificationNewMessageChats = asyncHandler(async (req, res) => {
           latestMessage &&
           !latestMessage.readBy.includes(userId) &&
           !latestMessage.isDeleted &&
-          !latestMessage.sender.equals(userId)
+          !latestMessage.sender.equals(userId) &&
+          chat.status !== "rejected"
         );
       })
       .map((chat) => chat._id.toString());

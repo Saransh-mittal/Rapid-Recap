@@ -42,7 +42,6 @@ const ProfileModal = ({ user, children }) => {
         >
           <ModalHeader
             fontSize="40px"
-            fontFamily="Work sans"
             color={"white"}
             display="flex"
             justifyContent="center"
@@ -63,18 +62,10 @@ const ProfileModal = ({ user, children }) => {
               src={user.pic}
               alt={user.name}
             />
-            <Text
-              fontSize={{ base: "28px", md: "25px" }}
-              fontFamily="Work sans"
-              color={"white"}
-            >
+            <Text fontSize={{ base: "28px", md: "25px" }} color={"white"}>
               Email: {user.email}
             </Text>
-            <Text
-              fontSize={{ base: "28px", md: "25px" }}
-              fontFamily="Work sans"
-              color={"white"}
-            >
+            <Text fontSize={{ base: "28px", md: "25px" }} color={"white"}>
               inGameName: {user.inGameName}
             </Text>
           </ModalBody>

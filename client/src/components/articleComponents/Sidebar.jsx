@@ -334,6 +334,7 @@ const Sidebar = ({
         isOpen={isOpen}
         onClose={onClose}
         articleToShare={article}
+        notLoggedIn={notLoggedIn}
       />
     </Box>
   );

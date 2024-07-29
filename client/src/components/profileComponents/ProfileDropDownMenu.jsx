@@ -47,7 +47,10 @@ const ProfileDropDownMenu = ({
   const { state } = useContext(AppContext);
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <Flex className={className} position={"relative"}>
+    <Flex
+      className={className}
+      position={"relative"}
+    >
       <motion.nav
         initial={false}
         animate={isOpen ? "open" : "closed"}
@@ -91,7 +94,7 @@ const ProfileDropDownMenu = ({
               />
             )}
             <Avatar
-              src={state.user.pic}
+              src={state.user?.pic}
               h={"35px"}
               w={"35px"}
               rounded={"50%"}
@@ -105,8 +108,15 @@ const ProfileDropDownMenu = ({
             transition={{ duration: 0.2 }}
             style={{ originY: 0.55 }}
           >
-            <svg width="15" height="15" viewBox="0 0 20 20">
-              <path d="M0 7 L 20 7 L 10 16" fill="white" />
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 20 20"
+            >
+              <path
+                d="M0 7 L 20 7 L 10 16"
+                fill="white"
+              />
             </svg>
           </motion.div>
         </motion.button>
@@ -157,7 +167,7 @@ const ProfileDropDownMenu = ({
             />
           </motion.li>
           <NavLink
-            to={`${toProfile}/${state.user.inGameName}`}
+            to={`${toProfile}/${state.user?.inGameName}`}
             ref={refProfile}
             onClick={() => setIsOpen(false)}
           >

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { AppContext } from "./appContext";
 import { useSocket } from "../customHooks/useSocket";
 import axios from "axios";
+import { useDisclosure } from "@chakra-ui/react";
+import { useNavigationCount } from "../customHooks/useNavigationCount.js";
 
 const ChatContext = createContext();
 
@@ -13,8 +15,15 @@ const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState();
   const [messagesFetched, setMessagesFetched] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [chatRequests, setChatRequests] = useState([]);
   const { getSocket, disconnectSocket, socket, socketConnected } =
     useSocket(user);
+  const {
+    isOpen: isChatOpen,
+    onOpen: openChat,
+    onClose: closeChat,
+  } = useDisclosure();
+  const { count: routeCount, isLastRoute } = useNavigationCount();
 
   const history = useNavigate();
 
@@ -56,26 +65,47 @@ const ChatProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     getInitialNotificationCnt();
     setUser(state.user);
-    // check state.user for empty object
 
-    if (!state.user || Object.keys(state.user).length === 0) history("/");
-    else {
-      getSocket();
-    }
-    const handleBeforeUnload = (event) => {
-      disconnectSocket(state.user._id.toString());
-    };
+    getSocket();
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+    const handleDisconnect = () => {
       disconnectSocket(state.user?._id?.toString());
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const handleReconnect = () => {
+      console.log("Reconnecting...");
+      getSocket();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handleDisconnect();
+      } else {
+        handleReconnect();
+      }
+    };
+
+    // Use multiple events for better coverage
+    window.addEventListener("beforeunload", handleDisconnect);
+    window.addEventListener("pagehide", handleDisconnect);
+    window.addEventListener("pageshow", handleReconnect);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // For mobile browsers
+    document.addEventListener("pause", handleDisconnect);
+    document.addEventListener("resume", handleReconnect);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleDisconnect);
+      window.removeEventListener("pagehide", handleDisconnect);
+      window.removeEventListener("pageshow", handleReconnect);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("pause", handleDisconnect);
+      document.removeEventListener("resume", handleReconnect);
+      handleDisconnect();
+    };
   }, [state.user, getSocket]);
 
   useEffect(() => {
@@ -86,6 +116,14 @@ const ChatProvider = ({ children }) => {
           return prev.includes(data.chatId) ? prev : [...prev, data.chatId];
         });
       });
+    }
+    if (socket && user) {
+      const heartbeatInterval = setInterval(() => {
+        socket.emit("heartbeat", user._id);
+      }, 20000); // Send heartbeat every 20 seconds
+      return () => {
+        clearInterval(heartbeatInterval);
+      };
     }
   });
 
@@ -107,6 +145,13 @@ const ChatProvider = ({ children }) => {
         setMessagesFetched,
         hasMore,
         setHasMore,
+        chatRequests,
+        setChatRequests,
+        isChatOpen,
+        openChat,
+        closeChat,
+        isLastRoute,
+        routeCount,
       }}
     >
       {children}

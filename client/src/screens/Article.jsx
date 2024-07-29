@@ -41,6 +41,7 @@ const Article = () => {
   const [article, setArticle] = useState(null);
   const [latestNews, setLatestNews] = useState([]);
   const [load, setLoad] = useState(true);
+  const [articleLoading, setArticleLoading] = useState(true);
   const [showQuiz, setShowQuiz] = useState(false);
   const [textHeight, setTextHeight] = useState(0);
   const [articleHeight, setArticleHeight] = useState(0);
@@ -70,6 +71,7 @@ const Article = () => {
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false);
   const [isLargerThan820] = useMediaQuery("(min-width: 820px)");
   const [bookmark, setBookmark] = useState(false);
+  const notLoggedIn = state.show;
 
   const openModal = () => setIsQuinBoostModalOpen(true);
   const closeModal = () => setIsQuinBoostModalOpen(false);
@@ -93,6 +95,7 @@ const Article = () => {
   };
 
   const bookmarkStatus = async ({ view, update }) => {
+    if (notLoggedIn) return;
     try {
       const response = await axios.get(
         `/api/user/bookmark?articleId=${id}&view=${view}&update=${update}`
@@ -142,7 +145,7 @@ const Article = () => {
         position: "top",
       });
     } finally {
-      setLoad(false);
+      setArticleLoading(false);
     }
   };
 
@@ -453,6 +456,7 @@ const Article = () => {
               avgTimeRead={avgTimeRead}
               bookmark={bookmark}
               bookmarkStatus={bookmarkStatus}
+              articleLoading={articleLoading}
             />
 
             <Sidebar

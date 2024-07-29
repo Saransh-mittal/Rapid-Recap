@@ -464,7 +464,8 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
   const [requestTabVisited, setRequestTabVisited] = useState(
     requestNotif ? true : false
   );
-  const { socket } = ChatState();
+  const [isCheckingOnlineStatus, setIsCheckingOnlineStatus] = useState(false);
+  const { socket, user } = ChatState();
   const toast = useToast();
 
   const friendListRef = useRef(null);
@@ -544,6 +545,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
     try {
       const response = await axios.get(`/api/friends/`);
       setFriends(response.data.map((friend) => ({ ...friend })));
+      checkOnlineStatus();
     } catch (error) {
       console.error("Error fetching friends:", error);
     } finally {
@@ -570,6 +572,14 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
     }
   };
 
+  const checkOnlineStatus = useCallback(() => {
+    if (socket && friends.length > 0) {
+      setIsCheckingOnlineStatus(true);
+      const friendIds = friends.map((friend) => friend._id);
+      socket.emit("check online status", friendIds);
+    }
+  }, [friends]);
+
   useEffect(() => {
     if (isOpen) {
       fetchRequests();
@@ -579,7 +589,15 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
 
   useEffect(() => {
     if (socket) {
-      // Set up listeners
+      socket.on("online status response", (statuses) => {
+        setFriends((prevFriends) =>
+          prevFriends.map((friend) => ({
+            ...friend,
+            isOnline: statuses[friend._id],
+          }))
+        );
+        setIsCheckingOnlineStatus(false);
+      });
       socket.on("user online", (userId) => {
         setFriends((prevFriends) =>
           prevFriends.map((f) =>
@@ -594,14 +612,14 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
           )
         );
       });
-
       // Cleanup function
       return () => {
-        socket.off("user online");
-        socket.off("user offline");
+        socket?.off("online status response");
+        socket?.off("user online");
+        socket?.off("user offline");
       };
     }
-  }, [socket]); // Only depend on socket, not friends
+  }); // Only depend on socket, not friends
 
   const bgGradient = useColorModeValue(
     "linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)",

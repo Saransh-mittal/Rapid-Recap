@@ -1,26 +1,22 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useRef, useState, useEffect } from "react";
 import {
   Box,
   Heading as ChakraHeading,
   Text,
   Image,
+  Flex,
+  useBreakpointValue,
+  useDisclosure,
   UnorderedList,
   ListItem,
-  useBreakpointValue,
-  Flex,
-  Spinner,
-  Skeleton,
-  useDisclosure,
 } from "@chakra-ui/react";
 import Section from "../miscellaneous/Section";
 import curve from "../../assets/curve.png";
-import robot from "../../assets/hero/robot.jpeg";
 import homeSmile from "../../assets/home-smile.svg";
 import file02 from "../../assets/file-02.svg";
 import searchMd from "../../assets/search-md.svg";
 import plusSquare from "../../assets/plus-square.svg";
 import { ScrollParallax } from "react-just-parallax";
-import heroBackground from "../../assets/hero/hero-background.jpg";
 import { AppContext } from "../../contextAPI/appContext";
 import {
   Gradient,
@@ -28,12 +24,12 @@ import {
   MediumScreenbgGradient,
 } from "./design/Hero";
 import GetStarted from "../Header-Footer/navbarComponents/GetStarted";
-import { useEffect } from "react";
 import Button from "../miscellaneous/ButtonComponent";
 import ButtonGradient from "../../assets/svg/ButtonGradient";
 import FeedbackModal from "./modals/FeedbackModal";
 import { useNavigate } from "react-router-dom";
 import Heading from "../miscellaneous/HeadingComponent";
+
 const heroIcons = [homeSmile, file02, searchMd, plusSquare];
 
 const HeroSection = () => {
@@ -58,26 +54,21 @@ const HeroSection = () => {
   }, []);
 
   const handleDownload = () => {
-    // URL of the APK file served from the public directory
     const url = "/RapidRecap.apk";
-
-    // Create a temporary link element
     const link = document.createElement("a");
     link.href = url;
     link.download = "Rapid Recap - Your News Source.apk";
-
-    // Append link to the body
     document.body.appendChild(link);
-
-    // Trigger click on the link to start download
     link.click();
-
-    // Clean up and remove the link
     document.body.removeChild(link);
   };
 
   return (
-    <Section crosses customPaddings={`2.85rem 0 0 0`} id="hero">
+    <Section
+      crosses
+      customPaddings={`2.85rem 0 0 0`}
+      id="hero"
+    >
       <Box
         position="relative"
         textAlign="center"
@@ -110,7 +101,15 @@ const HeroSection = () => {
             },
           }}
         >
-          <Image src={heroBackground} width={1640} height={1200} alt="hero" />
+          <Image
+            src={
+              "https://res.cloudinary.com/dxstsrnbs/image/upload/v1722163918/hero-background_rudxmn.jpg"
+            }
+            width={1640}
+            height={1200}
+            alt="hero"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
         </Box>
 
         <Box display={"block"}>
@@ -123,9 +122,17 @@ const HeroSection = () => {
             position={"relative"}
             letterSpacing={"2px"}
           >
-            <ChakraHeading as="h2" size="2xl" mb="6">
+            <ChakraHeading
+              as="h2"
+              size="2xl"
+              mb="6"
+            >
               Turn News Into Knowledge with{" "}
-              <Box as="span" display="inline-block" position="relative">
+              <Box
+                as="span"
+                display="inline-block"
+                position="relative"
+              >
                 Rapid Recap{" "}
                 <Image
                   src={curve}
@@ -160,17 +167,18 @@ const HeroSection = () => {
               </Text>
             </Flex>
             <Flex
-              // flexDirection={"row"}
               justifyContent={"center"}
               gap={{ base: "3rem", md: "8rem" }}
               mt={6}
               flexDirection={{ base: "column-reverse", md: "row" }}
             >
               {state.show && isSmallScreen && (
-                <Flex justifyContent="center" alignItems="center" zIndex={10}>
-                  <GetStarted
-                    innerText="Get Started" /* hamburgerOnClose={onClose} */
-                  />
+                <Flex
+                  justifyContent="center"
+                  alignItems="center"
+                  zIndex={10}
+                >
+                  <GetStarted innerText="Get Started" />
                 </Flex>
               )}
               <Flex
@@ -189,7 +197,10 @@ const HeroSection = () => {
             </Flex>
           </Box>
 
-          <FeedbackModal isOpen={isOpen} onClose={onClose} />
+          <FeedbackModal
+            isOpen={isOpen}
+            onClose={onClose}
+          />
           <Flex
             position="relative"
             maxW={{ base: "23rem", md: "5xl" }}
@@ -205,9 +216,16 @@ const HeroSection = () => {
               bgGradient="linear(to-br, #FFBF00, #D10363)"
               w={{ base: "100%", md: "80%" }}
             >
-              <Box position="relative" bg="gray.600" borderRadius="1rem">
-                <Box height="1.4rem" bg="gray.600" borderTopRadius="0.9rem" />
-
+              <Box
+                position="relative"
+                bg="gray.600"
+                borderRadius="1rem"
+              >
+                <Box
+                  height="1.4rem"
+                  bg="gray.600"
+                  borderTopRadius="0.9rem"
+                />
                 <Box
                   borderBottomRadius="0.9rem"
                   overflow="hidden"
@@ -228,10 +246,13 @@ const HeroSection = () => {
                     }}
                   >
                     <Image
-                      src={robot}
+                      src={
+                        "https://res.cloudinary.com/dxstsrnbs/image/upload/v1722163918/robot_rdwfqk.jpg"
+                      }
                       width={{ base: 688, lg: 1024 }}
                       height={790}
                       alt="AI"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </Box>
 
@@ -250,7 +271,10 @@ const HeroSection = () => {
                       borderRadius="2xl"
                     >
                       {heroIcons.map((icon, index) => (
-                        <ListItem p={5} key={index}>
+                        <ListItem
+                          p={5}
+                          key={index}
+                        >
                           <Image
                             src={icon}
                             width={12}

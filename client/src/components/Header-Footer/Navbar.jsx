@@ -56,7 +56,7 @@ const Navbar = () => {
 
   let level, xpBaseAtNextLevel, requiredXP;
 
-  if (!isEmptyObject(state.user)) {
+  if (state.user && !isEmptyObject(state.user)) {
     level = state.user.level;
     xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2;
     requiredXP = calculateRequiredXp(state.user.xp, xpBaseAtNextLevel);
@@ -105,11 +105,12 @@ const Navbar = () => {
   useEffect(() => {
     //update notification count whose update is not read
     let count = 0;
-    state.updates.forEach((update) => {
-      if (!update.read) {
-        count++;
-      }
-    });
+    state.update &&
+      state?.updates?.forEach((update) => {
+        if (!update.read) {
+          count++;
+        }
+      });
     setNotifyCnt(count);
   }, [state.updates]);
 
@@ -283,7 +284,7 @@ const Navbar = () => {
               handleLogout={handleLogout}
               navLinkRefs={navLinkRefs}
               setIsHamburgerOpen={setIsHamburgerOpen}
-              level={state.user.level}
+              level={state.user && state.user.level}
               profileNotif={profileNotif}
             />
           </Flex>

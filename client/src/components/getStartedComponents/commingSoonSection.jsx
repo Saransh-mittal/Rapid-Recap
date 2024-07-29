@@ -73,7 +73,11 @@ const CommigSoonSection = () => {
   const parallaxRef = useRef(null);
 
   return (
-    <Section crosses customPaddings={`2.85rem 0 0 0`} id="CommingSoon">
+    <Section
+      crosses
+      customPaddings={`2.85rem 0 0 0`}
+      id="CommingSoon"
+    >
       <Box
         mb={"2rem"}
         textAlign="center"
@@ -81,8 +85,14 @@ const CommigSoonSection = () => {
         mx="auto"
         ref={parallaxRef}
       >
-        <Box className="overflow-hidden" id="roadmap">
-          <Box maxW="container" pb={{ md: 10 }}>
+        <Box
+          className="overflow-hidden"
+          id="roadmap"
+        >
+          <Box
+            maxW="container"
+            pb={{ md: 10 }}
+          >
             <Heading
               tag="Discover What's New and What's Coming Soon"
               title="Feature Highlights
@@ -145,10 +155,16 @@ const CommigSoonSection = () => {
                             justifyContent={"space-between"}
                             alignItems={"center"}
                           >
-                            <TagLine fontSize="sm" mb={2}>
+                            <TagLine
+                              fontSize="sm"
+                              mb={2}
+                            >
                               {item.date}
                             </TagLine>
-                            <Flex align="center" mb={4}>
+                            <Flex
+                              align="center"
+                              mb={4}
+                            >
                               {item.status === "done" ? (
                                 <Box mr={2}>
                                   <CheckIcon />
@@ -186,7 +202,10 @@ const CommigSoonSection = () => {
                           <Flex>
                             <Heading title={item.title} />
                           </Flex>
-                          <Box fontSize="md" color="gray.600">
+                          <Box
+                            fontSize="md"
+                            color="gray.600"
+                          >
                             {item.text}
                           </Box>
                         </Box>

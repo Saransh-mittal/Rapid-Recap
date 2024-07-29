@@ -8,8 +8,8 @@ const NameLightning = ({ boxShadow, MAX_IQ }) => {
     <motion.div
       style={{
         position: "absolute",
-        width: "100%",
-        height: "100%",
+        width: "115%",
+        height: "115%",
         background: "transparent", // Set background to transparent
         pointerEvents: "none",
         borderRadius: "10px",

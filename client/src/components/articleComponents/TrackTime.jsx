@@ -1,21 +1,20 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 
 const TrackTime = ({ userId, articleId }) => {
   const [startTime, setStartTime] = useState(Date.now());
   const [isTracking, setIsTracking] = useState(true);
   const timeoutRef = useRef(null);
+  const lastActivityRef = useRef(Date.now());
 
-  const getInactiveTime = () => {
-    if (window.innerWidth >= 1024) return 3 * 60 * 1000; // 3 mins for large screens
-    if (window.innerWidth >= 768) return 2 * 60 * 1000; // 2 mins for medium screens
-    return 60 * 1000; // 1 min for base screens
-  };
+  const getInactiveTime = useCallback(() => {
+    if (window.matchMedia("(min-width: 1024px)").matches) return 3 * 60 * 1000; // 3 mins for large screens
+    if (window.matchMedia("(min-width: 768px)").matches) return 2 * 60 * 1000; // 2 mins for medium screens
+    return 60 * 1000; // 1 min for small screens
+  }, []);
 
-  const handleUnload = () => {
+  const handleUnload = useCallback(() => {
     const endTime = Date.now();
     const timeSpent = endTime - startTime;
-
-    // console.log(`User ${userId} spent ${timeSpent} ms on article ${articleId}`);
 
     const payload = JSON.stringify({
       userId,
@@ -23,21 +22,30 @@ const TrackTime = ({ userId, articleId }) => {
       timeSpent,
     });
 
-    navigator.sendBeacon("/api/timeSpent", payload);
-  };
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon("/api/timeSpent", payload);
+    } else {
+      // Fallback for browsers that don't support sendBeacon
+      fetch("/api/timeSpent", {
+        method: "POST",
+        body: payload,
+        keepalive: true,
+      });
+    }
+  }, [userId, articleId, startTime]);
 
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === "hidden") {
+  const handleVisibilityChange = useCallback(() => {
+    if (document.hidden) {
       handleUnload();
       setIsTracking(false);
-    } else if (document.visibilityState === "visible") {
+    } else {
       setStartTime(Date.now());
       setIsTracking(true);
       resetTimer();
     }
-  };
+  }, [handleUnload]);
 
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -48,30 +56,39 @@ const TrackTime = ({ userId, articleId }) => {
         setIsTracking(false);
       }, getInactiveTime());
     }
-  };
+  }, [isTracking, handleUnload, getInactiveTime]);
 
-  const handleUserActivity = () => {
-    if (!isTracking) {
-      setStartTime(Date.now());
-      setIsTracking(true);
+  const handleUserActivity = useCallback(() => {
+    const now = Date.now();
+    if (now - lastActivityRef.current > 1000) {
+      // Throttle events to every 1 second
+      lastActivityRef.current = now;
+      if (!isTracking) {
+        setStartTime(now);
+        setIsTracking(true);
+      }
+      resetTimer();
     }
-    resetTimer();
-  };
+  }, [isTracking, resetTimer]);
 
   useEffect(() => {
     const events = [
+      "touchstart",
+      "touchmove",
+      "scroll",
       "mousemove",
       "mousedown",
       "keypress",
-      "touchmove",
-      "scroll",
     ];
 
     events.forEach((event) => {
-      window.addEventListener(event, handleUserActivity);
+      window.addEventListener(event, handleUserActivity, { passive: true });
     });
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
 
     resetTimer();
 
@@ -81,18 +98,15 @@ const TrackTime = ({ userId, articleId }) => {
       });
 
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
+
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       handleUnload();
     };
-  }, [userId, articleId]);
-
-  useEffect(() => {
-    if (isTracking) {
-      resetTimer();
-    }
-  }, [isTracking]);
+  }, [handleUserActivity, handleVisibilityChange, handleUnload, resetTimer]);
 
   return null;
 };

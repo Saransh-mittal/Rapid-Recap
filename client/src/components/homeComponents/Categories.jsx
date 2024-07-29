@@ -10,6 +10,7 @@ const Categories = ({
   setActiveCategoryIndex,
   categoryRefs,
   trackCategoryClick,
+  notLoggedIn,
 }) => {
   useEffect(() => {
     const activeCategoryRef = categoryRefs.current.find(
@@ -54,6 +55,9 @@ const Categories = ({
                 trackCategoryClick(category);
                 handleActiveCategory({ category });
               }}
+              display={
+                notLoggedIn && category === "all" ? "none" : "inline-flex"
+              }
             >
               {" "}
               {category}{" "}

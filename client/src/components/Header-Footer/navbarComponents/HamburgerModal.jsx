@@ -39,7 +39,7 @@ const HamburgerModal = ({
   setIsDrawerOpen,
 }) => {
   const { state } = useContext(AppContext);
-  const { notification } = ChatState();
+  const { notification, openChat } = ChatState();
   const navigate = useNavigate();
   const {
     isOpen: isOpenUserSearch,
@@ -47,7 +47,11 @@ const HamburgerModal = ({
     onClose: onCloseUserSearch,
   } = useDisclosure();
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="full">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="full"
+    >
       <ModalOverlay />
       <ModalContent
         backgroundImage={
@@ -74,7 +78,10 @@ const HamburgerModal = ({
             width={"40px"}
           />
         </ModalHeader>
-        <ModalBody p={0} w={"100%"}>
+        <ModalBody
+          p={0}
+          w={"100%"}
+        >
           <Flex
             height={"100vh"}
             backgroundImage={
@@ -103,7 +110,11 @@ const HamburgerModal = ({
                 }}
                 cursor={"pointer"}
               >
-                <Flex w={"100%"} h={"100%"} position={"relative"}>
+                <Flex
+                  w={"100%"}
+                  h={"100%"}
+                  position={"relative"}
+                >
                   {state.unreadFriendRequests > 0 && (
                     <Box
                       h="14px"
@@ -118,12 +129,15 @@ const HamburgerModal = ({
                   )}
                 </Flex>
                 <Avatar
-                  src={state.user.pic}
+                  src={state.user?.pic}
                   h={"6rem"}
                   w={"6rem"}
                   rounded={"50%"}
                 />
-                <Text letterSpacing={"2px"} fontWeight={"bold"}>
+                <Text
+                  letterSpacing={"2px"}
+                  fontWeight={"bold"}
+                >
                   <span
                     style={{
                       background: "#5ac8fa",
@@ -132,7 +146,7 @@ const HamburgerModal = ({
                       padding: "5px",
                     }}
                   >
-                    {state.user.name}
+                    {state.user?.name}
                   </span>
                 </Text>
               </Flex>
@@ -168,6 +182,7 @@ const HamburgerModal = ({
                     onClick={() => {
                       onClose();
                       navigate("/chats");
+                      openChat();
                     }}
                     display={notLogined ? "none" : "block"}
                     color={"white"}
@@ -220,7 +235,10 @@ const HamburgerModal = ({
                     position={"relative"}
                     mx={1}
                   >
-                    <SearchIcon boxSize={6} color={"white"} />
+                    <SearchIcon
+                      boxSize={6}
+                      color={"white"}
+                    />
                     <UserSearchDrawer
                       isOpen={isOpenUserSearch}
                       onClose={onCloseUserSearch}
@@ -271,7 +289,10 @@ const HamburgerModal = ({
             <Rings />
             <SideLines />
             <BackgroundCircles />
-            <Flex position={"absolute"} bottom={notLogined ? "30%" : "22%"}>
+            <Flex
+              position={"absolute"}
+              bottom={notLogined ? "30%" : "22%"}
+            >
               {notLogined ? (
                 <GetStarted
                   innerText={"Get Started"}

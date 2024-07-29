@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const CryptoJS = require("crypto-js");
 
 const messageSchema = mongoose.Schema(
   {
@@ -16,7 +17,7 @@ const messageSchema = mongoose.Schema(
     permanentDeleteFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "USER" }],
     type: {
       type: String,
-      enum: ["text", "article_card", "score_card"],
+      enum: ["text", "article_card", "score_card", "system"],
       default: "text",
     },
     article: {
@@ -38,6 +39,33 @@ const messageSchema = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Encryption key (store this securely, e.g., in environment variables)
+
+// Encrypt the message content before saving
+messageSchema.pre("save", function (next) {
+  if (this.isModified("content")) {
+    if (this.content === "" || !this.content) {
+      return next();
+    }
+    const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+    this.content = CryptoJS.AES.encrypt(
+      this.content,
+      ENCRYPTION_KEY
+    ).toString();
+  }
+  next();
+});
+
+// Method to decrypt the message content
+messageSchema.methods.decryptContent = function () {
+  if (this.content === "" || !this.content) {
+    return "";
+  }
+  const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+  const bytes = CryptoJS.AES.decrypt(this.content, ENCRYPTION_KEY);
+  return bytes.toString(CryptoJS.enc.Utf8);
+};
 
 const Message = mongoose.model("Message", messageSchema);
 module.exports = Message;

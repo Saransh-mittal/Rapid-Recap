@@ -43,34 +43,64 @@ const LeaderBoardTable = ({
   });
 
   return (
-    <TableContainer width={"100%"} className="mainBoard" overflowX="auto">
+    <TableContainer
+      width={"100%"}
+      className="mainBoard"
+      overflowX="auto"
+    >
       <Table variant={"unstyled"}>
-        <TableCaption color={"white"} placement="top">
+        <TableCaption
+          color={"white"}
+          placement="top"
+        >
           "Where Champions Stand Out!"
         </TableCaption>
         <Thead>
-          <Tr boxShadow={"dark-lg"} letterSpacing={"2px"}>
-            <Th textAlign={"center"} bg={"green.300"} color={"white"}>
+          <Tr
+            boxShadow={"dark-lg"}
+            letterSpacing={"2px"}
+          >
+            <Th
+              textAlign={"center"}
+              bg={"green.300"}
+              color={"white"}
+            >
               Rank
             </Th>
             {!isBaseScreen && (
-              <Th textAlign={"center"} bg={"red.300"}>
+              <Th
+                textAlign={"center"}
+                bg={"red.300"}
+              >
                 Name
               </Th>
             )}
-            <Th textAlign={"center"} bg={"blue.300"} px={"0.5rem"}>
+            <Th
+              textAlign={"center"}
+              bg={"blue.300"}
+              px={"0.5rem"}
+            >
               In Game Name
             </Th>
-            <Th textAlign={"center"} bg={"orange.300"}>
+            <Th
+              textAlign={"center"}
+              bg={"orange.300"}
+            >
               IQ Scores
             </Th>
             {!isLgScreen && (
-              <Th textAlign={"center"} bg={"teal.300"}>
+              <Th
+                textAlign={"center"}
+                bg={"teal.300"}
+              >
                 Quiz Submissions
               </Th>
             )}
             {!isMdScreen && (
-              <Th textAlign={"center"} bg={"pink.300"}>
+              <Th
+                textAlign={"center"}
+                bg={"pink.300"}
+              >
                 Avg. RQM Scores
               </Th>
             )}
@@ -79,7 +109,10 @@ const LeaderBoardTable = ({
         {searchLoad ? (
           <LoadingState />
         ) : (
-          <Tbody marginTop={"20px"} className="Entries">
+          <Tbody
+            marginTop={"20px"}
+            className="Entries"
+          >
             {uniqueData.length > 0 &&
               uniqueData.map((user, index) => (
                 <LeaderBoardRow
@@ -94,7 +127,7 @@ const LeaderBoardTable = ({
                   navigate={navigate}
                 />
               ))}
-            {state.user.rank > 500 && (
+            {state.user?.rank > 500 && (
               <>
                 <Tr>
                   <Td colSpan={6}>
@@ -119,7 +152,10 @@ const LeaderBoardTable = ({
               Array.from({ length: PAGE_LIMIT }).map((_, index) => (
                 <Tr key={index}>
                   <Td colSpan={6}>
-                    <Skeleton height="50px" borderRadius={"10px"} />
+                    <Skeleton
+                      height="50px"
+                      borderRadius={"10px"}
+                    />
                   </Td>
                 </Tr>
               ))}

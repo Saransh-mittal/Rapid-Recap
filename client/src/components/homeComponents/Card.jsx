@@ -44,10 +44,12 @@ const Card = ({ newsNumber, data }) => {
     project_meta.current.style.transform = `rotateY(${rotationY}deg) rotateX(${rotationX}deg)`;
   };
   const mouseleave = () => {
-    card.current.style.transition = "transform 0.5s ease-in-out";
-    card.current.style.transform = `rotateY(0) rotateX(0)`;
-    project_meta.current.style.transition = "transform 0.5s ease-in-out";
-    project_meta.current.style.transform = `rotateY(0) rotateX(0)`;
+    if (card.current && project_meta.current) {
+      card.current.style.transition = "transform 0.5s ease-in-out";
+      card.current.style.transform = `rotateY(0) rotateX(0)`;
+      project_meta.current.style.transition = "transform 0.5s ease-in-out";
+      project_meta.current.style.transform = `rotateY(0) rotateX(0)`;
+    }
   };
 
   useEffect(() => {}, [
@@ -56,6 +58,7 @@ const Card = ({ newsNumber, data }) => {
     data.imgURL,
     data.title,
     data.mainText,
+    card,
   ]);
 
   return (
@@ -77,7 +80,10 @@ const Card = ({ newsNumber, data }) => {
         onMouseMove={mousemove}
         onMouseLeave={mouseleave}
       >
-        <div className="project-meta" ref={project_meta}>
+        <div
+          className="project-meta"
+          ref={project_meta}
+        >
           <div className=" projects">
             <span className="block-reveal__text">{data?.title}</span>
           </div>
@@ -88,7 +94,10 @@ const Card = ({ newsNumber, data }) => {
                 {newsNumber}
                 <br /> <span className="arr">→</span>
               </span>
-              <Flex flexDirection={"column"} gap={1}>
+              <Flex
+                flexDirection={"column"}
+                gap={1}
+              >
                 <span
                   style={{
                     fontSize: "0.85rem",
@@ -116,8 +125,15 @@ const Card = ({ newsNumber, data }) => {
             </Flex>
           </div>
         </div>
-        <Slide direction="left" in={true} unmountOnExit>
-          <div className="cards" ref={card}>
+        <Slide
+          direction="left"
+          in={true}
+          unmountOnExit
+        >
+          <div
+            className="cards"
+            ref={card}
+          >
             <Box
               className="img-box"
               background="linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%)"
