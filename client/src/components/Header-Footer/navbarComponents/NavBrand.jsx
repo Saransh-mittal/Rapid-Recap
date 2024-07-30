@@ -1,9 +1,7 @@
 import { Flex, Image } from '@chakra-ui/react'
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import Logo from '/images/Rapid_Recap-withoutBG.webp'
-import Mic from '/images/mic.webp'
-import RR from '/images/rrlogo.webp'
+import RR from '/images/rr.png'
 import Heading from '../../miscellaneous/HeadingComponent'
 
 const NavBrand = ({ isHamburgerOpen }) => {
@@ -12,13 +10,13 @@ const NavBrand = ({ isHamburgerOpen }) => {
       <Flex position={!isHamburgerOpen ? 'absolute' : 'relative'}>
         <Image
           src={RR}
-          alt="logo"
+          alt="Rapid Recap"
           width={'2.5rem'}
           height={'2.5rem'}
           background={'transparent'}
-          // marginRight={'-5px'}
+          marginRight={'-5px'}
           // rotate to left by 2 degrees
-          // transform={"rotate(-0.5deg)"}
+          transform={'rotate(-0.5deg)'}
         />
         {/* <Image
           src={Logo}
