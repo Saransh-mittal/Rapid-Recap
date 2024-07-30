@@ -36,6 +36,7 @@ const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
   const location = useLocation()
   const { state } = useContext(AppContext)
+  const navigate = useNavigate()
 
   const isLoggedIn = () => {
     return !state.show
@@ -92,6 +93,12 @@ const App = () => {
       clearTimeout(timeout)
     }
   }, [])
+
+  useEffect(() => {
+    if (state.user && location.pathname === '/') {
+      navigate('/home')
+    }
+  }, [state.user])
 
   useEffect(() => {
     const loggedIn = isLoggedIn()

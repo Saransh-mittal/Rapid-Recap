@@ -1,7 +1,7 @@
 import { Flex, Image } from '@chakra-ui/react'
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import RR from '/images/rr.png'
+import RR from '/images/rrlogo.webp'
 import Heading from '../../miscellaneous/HeadingComponent'
 
 const NavBrand = ({ isHamburgerOpen }) => {
