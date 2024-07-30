@@ -1,17 +1,17 @@
 // src/components/chat/ScrollableChat.js
-import React, { useState, useRef, useEffect } from "react";
-import { Box, useDisclosure, useMediaQuery, Skeleton } from "@chakra-ui/react";
-import ScrollableFeed from "react-scrollable-feed";
-import { ChatState } from "../../../contextAPI/ChatProvider";
-import ContextMenu from "./ContextMenu";
-import ReactionModal from "./scrollableChatComponents/ReactionModal";
-import GroupedMessages from "./scrollableChatComponents/GroupedMessages";
+import React, { useState, useRef, useEffect } from 'react'
+import { Box, useDisclosure, useMediaQuery, Skeleton } from '@chakra-ui/react'
+import ScrollableFeed from 'react-scrollable-feed'
+import { ChatState } from '../../../contextAPI/ChatProvider'
+import ContextMenu from './ContextMenu'
+import ReactionModal from './scrollableChatComponents/ReactionModal'
+import GroupedMessages from './scrollableChatComponents/GroupedMessages'
 import {
   groupMessagesByDate,
   formatTime,
   checkScrollPosition,
-} from "../../../utils/chat.utils";
-import { isMessageDeletedForUser } from "../config/ChatLogics";
+} from '../../../utils/chat.utils'
+import { isMessageDeletedForUser } from '../config/ChatLogics'
 
 const ScrollableChat = ({
   messages,
@@ -22,83 +22,83 @@ const ScrollableChat = ({
   handleRemoveReaction,
   hasMore,
 }) => {
-  const { user } = ChatState();
-  const [loading, setLoading] = useState(false);
-  const scrollableFeedRef = useRef(null);
-  const [page, setPage] = useState(1);
-  const lastScrollTop = useRef(0);
-  const loadingRef = useRef(false);
+  const { user } = ChatState()
+  const [loading, setLoading] = useState(false)
+  const scrollableFeedRef = useRef(null)
+  const [page, setPage] = useState(1)
+  const lastScrollTop = useRef(0)
+  const loadingRef = useRef(false)
 
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,
     position: { x: 0, y: 0 },
     messageId: null,
-  });
-  const longPressTimer = useRef(null);
-  const longPressDelay = 500; // ms
+  })
+  const longPressTimer = useRef(null)
+  const longPressDelay = 500 // ms
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedReactions, setSelectedReactions] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [selectedReactions, setSelectedReactions] = useState(null)
 
-  const groupedMessages = groupMessagesByDate(messages);
-  const isScreenSmallerThan600px = useMediaQuery("(max-width: 600px)")[0];
+  const groupedMessages = groupMessagesByDate(messages)
+  const isScreenSmallerThan600px = useMediaQuery('(max-width: 600px)')[0]
 
   const handleContextMenu = (event, messageId) => {
-    event.preventDefault();
+    event.preventDefault()
     setContextMenu({
       isOpen: true,
       position: { x: event.clientX, y: event.clientY },
       messageId,
-    });
-  };
+    })
+  }
 
   const handleTouchStart = (event, messageId) => {
-    event.preventDefault();
+    event.preventDefault()
     longPressTimer.current = setTimeout(() => {
-      const touch = event.touches[0];
+      const touch = event.touches[0]
       setContextMenu({
         isOpen: true,
         position: { x: touch.clientX, y: touch.clientY },
         messageId,
-      });
-    }, longPressDelay);
-  };
+      })
+    }, longPressDelay)
+  }
 
   const handleTouchEnd = () => {
     if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
+      clearTimeout(longPressTimer.current)
     }
-  };
+  }
 
   const handleCloseContextMenu = () => {
     setContextMenu({
       isOpen: false,
       position: { x: 0, y: 0 },
       messageId: null,
-    });
-  };
+    })
+  }
 
-  const handleReactionClick = (message) => {
-    setSelectedReactions({ reactions: message.reactions, message });
-    onOpen();
-  };
+  const handleReactionClick = message => {
+    setSelectedReactions({ reactions: message.reactions, message })
+    onOpen()
+  }
 
-  const handleDelete = (type) => {
-    handleDeleteMessage(contextMenu.messageId, type);
-    handleCloseContextMenu();
-  };
+  const handleDelete = type => {
+    handleDeleteMessage(contextMenu.messageId, type)
+    handleCloseContextMenu()
+  }
 
   const handleCopy = () => {
-    const message = messages.find((m) => m._id === contextMenu.messageId);
+    const message = messages.find(m => m._id === contextMenu.messageId)
     if (message) {
-      navigator.clipboard.writeText(message.content);
+      navigator.clipboard.writeText(message.content)
     }
-    handleCloseContextMenu();
-  };
+    handleCloseContextMenu()
+  }
 
   useEffect(() => {
-    const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current;
-    if (!scrollableDiv) return;
+    const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current
+    if (!scrollableDiv) return
 
     const scrollListener = () => {
       if (!loadingRef.current) {
@@ -111,29 +111,29 @@ const ScrollableChat = ({
           page,
           setPage,
           hasMore,
-        });
+        })
       }
-    };
+    }
 
-    scrollableDiv.addEventListener("scroll", scrollListener);
+    scrollableDiv.addEventListener('scroll', scrollListener)
 
     return () => {
-      scrollableDiv.removeEventListener("scroll", scrollListener);
-    };
-  }, [checkScrollPosition]);
+      scrollableDiv.removeEventListener('scroll', scrollListener)
+    }
+  }, [checkScrollPosition])
 
   useEffect(() => {
     return () => {
       if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
+        clearTimeout(longPressTimer.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const handleReact = ({ emoji, messageId }) => {
-    handleAddReaction(messageId, emoji);
-    handleCloseContextMenu();
-  };
+    handleAddReaction(messageId, emoji)
+    handleCloseContextMenu()
+  }
 
   return (
     <>
@@ -142,7 +142,7 @@ const ScrollableChat = ({
         {loadingRef.current && (
           <Box textAlign="center" py={2}>
             {Array.from({ length: 20 }, (_, i) => (
-              <Skeleton key={i} height="40px" m={"10px"} />
+              <Skeleton key={i} height="40px" m={'10px'} />
             ))}
           </Box>
         )}
@@ -165,17 +165,17 @@ const ScrollableChat = ({
           onCopy={handleCopy}
           onReact={handleReact}
           isSender={
-            messages.find((m) => m._id === contextMenu.messageId)?.sender
-              ._id === user._id
+            messages.find(m => m._id === contextMenu.messageId)?.sender._id ===
+            user._id
           }
           messageTime={
-            messages.find((m) => m._id === contextMenu.messageId)?.createdAt
+            messages.find(m => m._id === contextMenu.messageId)?.createdAt
           }
           isMessageDeleted={
-            messages.find((m) => m._id === contextMenu.messageId)?.isDeleted ||
+            messages.find(m => m._id === contextMenu.messageId)?.isDeleted ||
             isMessageDeletedForUser(
-              messages.find((m) => m._id === contextMenu.messageId),
-              user._id.toString()
+              messages.find(m => m._id === contextMenu.messageId),
+              user._id.toString(),
             )
           }
           messageId={contextMenu.messageId}
@@ -189,7 +189,7 @@ const ScrollableChat = ({
         user={user}
       />
     </>
-  );
-};
+  )
+}
 
-export default ScrollableChat;
+export default ScrollableChat

@@ -1,13 +1,21 @@
-import React, { useContext, useEffect, useState } from "react";
-import Timeline from "../components/homeComponents/Timeline";
+import React, { lazy, Suspense, useContext, useEffect, useState } from "react";
+// import Timeline from "../components/homeComponents/Timeline";
 import axios from "axios";
 import { AppContext } from "../contextAPI/appContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { debounce } from "lodash";
-import { useToast, Box } from "@chakra-ui/react";
-import UpgradeModal from "../components/homeComponents/UpgradeModal";
-import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
+import { useToast, Box, Spinner } from "@chakra-ui/react";
+// import UpgradeModal from "../components/homeComponents/UpgradeModal";
+// import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
 import { Helmet } from "react-helmet-async";
+
+const Timeline = lazy(() => import("../components/homeComponents/Timeline"));
+const UpgradeModal = lazy(() =>
+  import("../components/homeComponents/UpgradeModal")
+);
+const ReadMoreNewsModal = lazy(() =>
+  import("../components/articleComponents/ReadMoreNewsModal")
+);
 
 const Home = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -141,23 +149,25 @@ const Home = () => {
           content="Explore the latest news and articles on Rapid Recap. Stay informed and test your knowledge with our engaging quizzes."
         />
       </Helmet>
-      {!state.show && USER_IQ > 90 && state.user.societyUpgradeMessage && (
-        <UpgradeModal
-          isOpen={showUpgradeModal}
-          onClose={() => setShowUpgradeModal(false)}
+      <Suspense fallback={<Spinner />}>
+        {!state.show && USER_IQ > 90 && state.user.societyUpgradeMessage && (
+          <UpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={() => setShowUpgradeModal(false)}
+          />
+        )}
+        {state.modal && (
+          <ReadMoreNewsModal
+            onClose={() => dispatch({ type: "showModal", payloadModal: false })}
+          ></ReadMoreNewsModal>
+        )}
+        <Timeline
+          setHasMoreItems={setHasMoreItems}
+          hasMoreItems={hasMoreItems}
+          data={items}
+          load={load}
         />
-      )}
-      {state.modal && (
-        <ReadMoreNewsModal
-          onClose={() => dispatch({ type: "showModal", payloadModal: false })}
-        ></ReadMoreNewsModal>
-      )}
-      <Timeline
-        setHasMoreItems={setHasMoreItems}
-        hasMoreItems={hasMoreItems}
-        data={items}
-        load={load}
-      />
+      </Suspense>
     </Box>
   );
 };

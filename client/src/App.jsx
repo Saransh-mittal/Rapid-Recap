@@ -9,25 +9,28 @@ import {
 } from "react-router-dom";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js";
-import Navbar from "./components/Header-Footer/Navbar.jsx";
-import Home from "./screens/Home";
-import Contact from "./screens/Contact";
-import Footer from "./components/Header-Footer/Footer.jsx";
-import Article from "./screens/Article.jsx";
-import Profile from "./screens/Profile.jsx";
-import LeaderBoard from "./screens/LeaderBoard.jsx";
-import GetStarted from "./screens/GetStarted.jsx";
-import FeedbackModal from "./components/getStartedComponents/modals/FeedbackModal.jsx";
 import ReactGA from "react-ga4";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, lazy, Suspense } from "react";
 import { Helmet } from "react-helmet";
 import { AppContext } from "./contextAPI/appContext.jsx";
-// import Season from "./screens/Season.jsx";
 import { Box, useDisclosure, useToast } from "@chakra-ui/react";
-import Dashboard from "./screens/Dashboard.jsx";
-import Signin from "./screens/Signin.jsx";
 import NotificationSubscription from "./components/Notifications/NotificationSubscription.jsx";
-import ChatPage from "./screens/ChatPage.jsx";
+import Navbar from "./components/Header-Footer/Navbar.jsx";
+import Contact from "./screens/Contact";
+import Footer from "./components/Header-Footer/Footer.jsx";
+import Loading from "./components/miscellaneous/Loading.jsx";
+
+const Home = lazy(() => import("./screens/Home"));
+const Article = lazy(() => import("./screens/Article.jsx"));
+const Profile = lazy(() => import("./screens/Profile.jsx"));
+const LeaderBoard = lazy(() => import("./screens/LeaderBoard.jsx"));
+const GetStarted = lazy(() => import("./screens/GetStarted.jsx"));
+const FeedbackModal = lazy(() =>
+  import("./components/getStartedComponents/modals/FeedbackModal.jsx")
+);
+const ChatPage = lazy(() => import("./screens/ChatPage.jsx"));
+const Signin = lazy(() => import("./screens/Signin.jsx"));
+const Dashboard = lazy(() => import("./screens/Dashboard.jsx"));
 
 const App = () => {
   ReactGA.initialize("G-ES5VQ8NW7Z");
@@ -35,13 +38,13 @@ const App = () => {
   const { state } = useContext(AppContext);
 
   const isLoggedIn = () => {
-    // Example logic
     return !state.show;
   };
 
   const getUserInGameName = () => {
-    // Example logic
-    return !state.show && state.user.inGameName ? state.user.inGameName : null;
+    return !state.show && state.user && state.user.inGameName
+      ? state.user?.inGameName
+      : null;
   };
 
   let timeout;
@@ -54,7 +57,6 @@ const App = () => {
               "ServiceWorker registration successful with scope: ",
               registration.scope
             );
-            // Check for updates
             registration.update();
           },
           function (err) {
@@ -69,19 +71,17 @@ const App = () => {
         now.getUTCFullYear(),
         now.getUTCMonth(),
         now.getUTCDate(),
-        24, // Hours (24-hour format)
-        0, // Minutes
-        0, // Seconds
-        0 // Milliseconds
+        24,
+        0,
+        0,
+        0
       );
 
       const timeUntilMidnight = midnightUTC - now;
-
-      // If it's already past midnight, schedule the refresh for the next day
       timeout =
         timeUntilMidnight > 0
           ? timeUntilMidnight
-          : 86400000 + timeUntilMidnight; // 86400000ms = 24 hours
+          : 86400000 + timeUntilMidnight;
 
       setTimeout(() => {
         window.location.reload(true);
@@ -90,7 +90,6 @@ const App = () => {
 
     refreshAtMidnightUTC();
 
-    // Cleanup function
     return () => {
       clearTimeout(timeout);
     };
@@ -100,7 +99,6 @@ const App = () => {
     const loggedIn = isLoggedIn();
     const userInGameName = getUserInGameName();
 
-    // Set custom dimensions
     ReactGA.set({
       "User Logged In": loggedIn ? "Logged In" : "Logged Out",
       "User InGameName": userInGameName ? userInGameName : "anonymous",
@@ -120,6 +118,7 @@ const App = () => {
     "serviceWorker" in navigator &&
     "PushManager" in window;
   const shouldShowNotification = !state.show && isSupported();
+
   return (
     <>
       <Helmet>
@@ -145,71 +144,72 @@ const App = () => {
       <Navbar />
       <Box position="relative">
         {shouldShowNotification && <NotificationSubscription />}
-        <Routes>
-          <Route
-            exact
-            path="/"
-            element={<GetStarted />}
-          />
-          <Route
-            exact
-            path="/contact/feedback"
-            element={<ContactLayout />}
-          />
-          <Route
-            path="/home/:category"
-            element={<Home />}
-          />
-          <Route
-            path="/home"
-            element={<Home />}
-          />
-          <Route
-            path="/chats"
-            element={<ChatPage />}
-          />
-          <Route
-            exact
-            path="/article/:id"
-            element={<Article />}
-          />
-          <Route
-            path="/profile/:inGameName"
-            element={<Profile />}
-          />
-          <Route
-            path="/profile"
-            element={<Profile />}
-          />
-          <Route
-            exact
-            path="/contact"
-            element={<ContactLayout />}
-          />
-          <Route
-            exact
-            path="/leaderboard"
-            element={<LeaderBoard />}
-          />
-          {/* <Route exact path="/season" element={<Season />} /> */}
-          <Route
-            path="/dashboard"
-            element={
-              <AdminRoute>
-                <Dashboard />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="*"
-            element={
-              <Navigate
-                to="/"
-                replace
-              />
-            }
-          />
-        </Routes>
+        <Suspense fallback={<Loading />}>
+          <Routes>
+            <Route
+              exact
+              path="/"
+              element={<GetStarted />}
+            />
+            <Route
+              exact
+              path="/contact/feedback"
+              element={<ContactLayout />}
+            />
+            <Route
+              path="/home/:category"
+              element={<Home />}
+            />
+            <Route
+              path="/home"
+              element={<Home />}
+            />
+            <Route
+              path="/chats"
+              element={<ChatPage />}
+            />
+            <Route
+              exact
+              path="/article/:id"
+              element={<Article />}
+            />
+            <Route
+              path="/profile/:inGameName"
+              element={<Profile />}
+            />
+            <Route
+              path="/profile"
+              element={<Profile />}
+            />
+            <Route
+              exact
+              path="/contact"
+              element={<ContactLayout />}
+            />
+            <Route
+              exact
+              path="/leaderboard"
+              element={<LeaderBoard />}
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <AdminRoute>
+                  <Dashboard />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="*"
+              element={
+                <Navigate
+                  to="/"
+                  replace
+                />
+              }
+            />
+          </Routes>
+        </Suspense>
       </Box>
       {shouldShowFooter && <Footer />}
     </>

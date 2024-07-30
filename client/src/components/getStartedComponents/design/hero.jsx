@@ -177,7 +177,10 @@ export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
     >
       <Rings />
 
-      <MouseParallax strength={0.07} parallaxContainerRef={parallaxRef}>
+      <MouseParallax
+        strength={0.07}
+        parallaxContainerRef={parallaxRef}
+      >
         <Box
           position="absolute"
           bottom="50%"

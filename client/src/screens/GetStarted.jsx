@@ -12,27 +12,6 @@ import axios from "axios";
 // import Loading from "../components/miscellaneous/Loading";
 
 const GetStarted = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { state } = useContext(AppContext);
-
-  const showNewSeasonModal = async () => {
-    try {
-      const response = await axios.get(
-        "/api/user/newSeasonModal" // Adjust the URL as needed
-      );
-      if (response.status === 200 && response.data.show) {
-        onOpen();
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  useEffect(() => {
-    if (!state.show) {
-      showNewSeasonModal();
-    }
-  }, [state.show, onOpen]);
-
   return (
     <Flex
       mt={{ base: "4rem", lg: "5rem" }}
@@ -40,9 +19,6 @@ const GetStarted = () => {
       overflow={"hidden"}
       letterSpacing={"2px"}
     >
-      {state.user.newSeasonModal && (
-        <SeasonalUpdateModal isOpen={isOpen} onClose={onClose} />
-      )}
       <HeroSection />
       <WhyToUseSection />
       {/* <PeopleReviews /> */}

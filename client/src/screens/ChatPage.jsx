@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Flex,
@@ -11,50 +11,57 @@ import {
   DrawerCloseButton,
   Heading,
   useMediaQuery,
-} from "@chakra-ui/react";
-import UserChats from "../components/chatComponent/userChats";
-import UserChatBox from "../components/chatComponent/userChatBox";
-import { ChatState } from "../contextAPI/ChatProvider";
-import { useNavigate } from "react-router-dom";
+} from '@chakra-ui/react'
+import UserChats from '../components/chatComponent/userChats'
+import UserChatBox from '../components/chatComponent/userChatBox'
+import { ChatState } from '../contextAPI/ChatProvider'
+import { useNavigate } from 'react-router-dom'
 
 const ChatPage = () => {
-  const [fetchAgain, setFetchAgain] = useState(false);
-  const { user, selectedChat, isChatOpen, closeChat, openChat, isLastRoute } =
-    ChatState();
-  const isScreenSmallerThan992px = useMediaQuery("(max-width: 992px)")[0];
-  const navigate = useNavigate();
+  const {
+    user,
+    selectedChat,
+    isChatOpen,
+    closeChat,
+    openChat,
+    isLastRoute,
+    setFetchAgain,
+    fetchAgain,
+  } = ChatState()
+  const isScreenSmallerThan992px = useMediaQuery('(max-width: 992px)')[0]
+  const navigate = useNavigate()
 
   const handleClose = () => {
-    closeChat();
+    closeChat()
     // go to the previous page
-    if (isLastRoute) navigate("/home");
-    else navigate(-1);
-  };
+    if (isLastRoute) navigate('/home')
+    else navigate(-1)
+  }
 
   useEffect(() => {
     if (
       isScreenSmallerThan992px &&
-      location.pathname === "/chats" &&
+      location.pathname === '/chats' &&
       !isChatOpen
     ) {
-      openChat();
+      openChat()
     }
-  }, [isScreenSmallerThan992px]);
+  }, [isScreenSmallerThan992px])
 
   return (
     <div
       style={{
-        marginTop: "5rem",
-        width: "100%",
-        color: "b",
+        marginTop: '5rem',
+        width: '100%',
+        color: 'b',
       }}
     >
       <Box display="flex" justifyContent="center" w="100%" h="87vh" p="10px">
         {/* UserChats for larger screens */}
         <Flex
-          display={{ base: "none", lg: "flex" }}
+          display={{ base: 'none', lg: 'flex' }}
           flexDirection="column"
-          w={{ base: "100%", md: "50%" }}
+          w={{ base: '100%', md: '50%' }}
           mr={{ base: 0, md: 10 }}
           h="100%"
         >
@@ -66,38 +73,38 @@ const ChatPage = () => {
           placement="right"
           onClose={handleClose}
           isOpen={isChatOpen}
-          size={"full"}
+          size={'full'}
         >
           <DrawerOverlay />
           <DrawerContent
             p={0}
             style={{
               backgroundImage:
-                "linear-gradient(-180deg, #201c2e, #13101d 88%, #13101d 99%)",
+                'linear-gradient(-180deg, #201c2e, #13101d 88%, #13101d 99%)',
               boxShadow:
-                "inset 0 0 10px rgba(255, 255, 255, 0.05), 0 4px 10px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.2)",
+                'inset 0 0 10px rgba(255, 255, 255, 0.05), 0 4px 10px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.2)',
             }}
           >
             <DrawerBody p={0}>
               {!selectedChat && (
                 <DrawerCloseButton
-                  size={"lg"}
-                  color={"white"}
-                  right={"6%"}
-                  top={"1.5%"}
+                  size={'lg'}
+                  color={'white'}
+                  right={'6%'}
+                  top={'1.5%'}
                 />
               )}
               <Flex
-                display={{ base: !selectedChat ? "flex" : "none", lg: "none" }}
-                h={"92vh"}
+                display={{ base: !selectedChat ? 'flex' : 'none', lg: 'none' }}
+                h={'92vh'}
                 p={0}
               >
                 {user && <UserChats fetchAgain={fetchAgain} />}
               </Flex>
               <Flex
-                display={{ base: selectedChat ? "flex" : "none", lg: "none" }}
+                display={{ base: selectedChat ? 'flex' : 'none', lg: 'none' }}
                 w="100%"
-                h={"92vh"}
+                h={'92vh'}
                 className="userChatBox"
               >
                 {user && (
@@ -114,7 +121,7 @@ const ChatPage = () => {
 
         {/* UserChatBox */}
         <Flex
-          display={{ base: selectedChat ? "flex" : "none", lg: "flex" }}
+          display={{ base: selectedChat ? 'flex' : 'none', lg: 'flex' }}
           w="100%"
           className="userChatBox"
         >
@@ -128,7 +135,7 @@ const ChatPage = () => {
         </Flex>
       </Box>
     </div>
-  );
-};
+  )
+}
 
-export default ChatPage;
+export default ChatPage

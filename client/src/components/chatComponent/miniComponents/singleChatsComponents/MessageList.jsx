@@ -1,6 +1,6 @@
-import React from "react";
-import ScrollableChat from "./../ScrollableChat";
-import { Text } from "@chakra-ui/react";
+import React from 'react'
+import ScrollableChat from './../ScrollableChat'
+import { Text } from '@chakra-ui/react'
 
 const MessageList = ({
   messages,
@@ -24,7 +24,7 @@ const MessageList = ({
         hasMore={hasMore}
       />
     </div>
-  );
-};
+  )
+}
 
-export default MessageList;
+export default MessageList

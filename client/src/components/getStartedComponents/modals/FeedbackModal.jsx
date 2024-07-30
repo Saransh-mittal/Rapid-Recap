@@ -38,8 +38,8 @@ const FeedbackModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    if (loggedIn) setEmail(state.user.email);
-  }, [state.show]);
+    if (loggedIn && state.user) setEmail(state.user?.email);
+  }, [state.show, state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -100,7 +100,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
   ];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "4xl" }}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={{ base: "full", md: "4xl" }}
+    >
       <ModalOverlay />
       <ModalContent
         sx={{
@@ -138,12 +142,30 @@ const FeedbackModal = ({ isOpen, onClose }) => {
           </Heading>
         </ModalHeader>
         <ModalCloseButton />
-        <Section crosses customPaddings={`0 4rem 0 4rem`} id="feedback">
-          <ModalBody letterSpacing={"0.105rem"} px={0}>
+        <Section
+          crosses
+          customPaddings={`0 4rem 0 4rem`}
+          id="feedback"
+        >
+          <ModalBody
+            letterSpacing={"0.105rem"}
+            px={0}
+          >
             <form onSubmit={handleSubmit}>
-              <Box mb={4} p={"2rem"}>
-                <FormControl id="email" isRequired mt={4}>
-                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+              <Box
+                mb={4}
+                p={"2rem"}
+              >
+                <FormControl
+                  id="email"
+                  isRequired
+                  mt={4}
+                >
+                  <FormLabel
+                    fontSize="lg"
+                    fontWeight="medium"
+                    color="cyan.300"
+                  >
                     Email
                   </FormLabel>
                   <Input
@@ -346,18 +368,34 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 handleSliderChange={handleSliderChange(setFormState)}
               />
 
-              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+              <Box
+                mb={4}
+                ml={"1rem"}
+                mt={"3rem"}
+              >
                 <FormControl id="mostUsedFeature">
-                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+                  <FormLabel
+                    fontSize="lg"
+                    fontWeight="medium"
+                    color="cyan.300"
+                  >
                     9. Which feature do you use the most?
                   </FormLabel>
                   <Input type="text" />
                 </FormControl>
               </Box>
 
-              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+              <Box
+                mb={4}
+                ml={"1rem"}
+                mt={"3rem"}
+              >
                 <FormControl id="missingFeatures">
-                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+                  <FormLabel
+                    fontSize="lg"
+                    fontWeight="medium"
+                    color="cyan.300"
+                  >
                     10. Are there any features you find missing or would like to
                     see added?
                   </FormLabel>
@@ -419,7 +457,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 handleSliderChange={handleSliderChange(setFormState)}
               />
 
-              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+              <Box
+                mb={4}
+                ml={"1rem"}
+                mt={"3rem"}
+              >
                 <FormControl as="fieldset">
                   <FormLabel
                     as="legend"
@@ -443,7 +485,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 </FormControl>
                 {quizIssueAnswer === "yes" && (
                   <>
-                    <FormControl id="inGameName" mt={4} isRequired>
+                    <FormControl
+                      id="inGameName"
+                      mt={4}
+                      isRequired
+                    >
                       <FormLabel
                         fontSize="lg"
                         fontWeight="medium"
@@ -453,16 +499,28 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                       </FormLabel>
                       <Input type="text" />
                     </FormControl>
-                    <FormControl id="quizIssues" mt={4} isRequired>
+                    <FormControl
+                      id="quizIssues"
+                      mt={4}
+                      isRequired
+                    >
                       <Textarea placeholder="Describe the issues..." />
                     </FormControl>
                   </>
                 )}
               </Box>
 
-              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+              <Box
+                mb={4}
+                ml={"1rem"}
+                mt={"3rem"}
+              >
                 <FormControl id="improvements">
-                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+                  <FormLabel
+                    fontSize="lg"
+                    fontWeight="medium"
+                    color="cyan.300"
+                  >
                     14. What improvements would you suggest for Rapid Recap?
                   </FormLabel>
                   <Textarea />
@@ -495,16 +553,31 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 handleSliderChange={handleSliderChange(setFormState)}
               />
 
-              <Box mb={4} ml={"1rem"} mt={"3rem"}>
+              <Box
+                mb={4}
+                ml={"1rem"}
+                mt={"3rem"}
+              >
                 <FormControl id="additionalComments">
-                  <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
+                  <FormLabel
+                    fontSize="lg"
+                    fontWeight="medium"
+                    color="cyan.300"
+                  >
                     16. Any additional comments or feedback?
                   </FormLabel>
                   <Textarea />
                 </FormControl>
               </Box>
-              <Flex justifyContent={"center"} alignItems={"center"}>
-                <Button my={"2rem"} colorScheme="teal" type="submit">
+              <Flex
+                justifyContent={"center"}
+                alignItems={"center"}
+              >
+                <Button
+                  my={"2rem"}
+                  colorScheme="teal"
+                  type="submit"
+                >
                   Submit
                 </Button>
               </Flex>

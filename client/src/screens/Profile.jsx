@@ -11,7 +11,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { ViewIcon } from "@chakra-ui/icons";
-import { GiHistogram } from "react-icons/gi"; // Import the icon
+import { GiHistogram } from "react-icons/gi";
 import { FaBookmark, FaUserFriends } from "react-icons/fa";
 import { AppContext } from "../contextAPI/appContext";
 import IQLineGraph from "../components/profileComponents/IQLineGraph";
@@ -39,9 +39,9 @@ export default function Profile() {
   const [profile, setProfile] = useState(state.userProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [showHideModal, setShowHideModal] = useState(false);
-  const userSocietyAndCircle = findSocietyAndCircle(state.user.IQ_score);
+  const userSocietyAndCircle = findSocietyAndCircle(state.user?.IQ_score);
 
-  const loginedUserProfile = inGameName === state.user.inGameName;
+  const loginedUserProfile = inGameName === state.user?.inGameName;
   const [privacyProfileData, setPrivacyProfileData] = useState({
     fullProfile: false,
     lineGraph: false,
@@ -67,15 +67,15 @@ export default function Profile() {
     onOpen: onOpenWiseWeb,
     onClose: onCloseWiseWeb,
   } = useDisclosure();
+
   const fetchProfile = async () => {
-    setIsLoading(true);
     try {
       const response = await axios.get(`/api/user/profile/${inGameName}`);
-      // console.log(response.data);
       setProfile(() => response.data);
-      if (inGameName === state.user.inGameName)
+      if (inGameName === state.user.inGameName) {
         dispatch({ type: "profile", payloadProfile: response.data });
-      else {
+        localStorage.setItem("userProfile", JSON.stringify(response.data)); // Cache profile
+      } else {
         setPrivacyProfileData(() => response.data.profilePrivacy);
         dispatch({
           type: "otherUserProfiles",
@@ -94,30 +94,34 @@ export default function Profile() {
 
   useEffect(() => {
     document.title = "Profile page";
+
     const otherUserStored = state.otherUserProfiles?.find((user) => {
       return user?.inGameName === inGameName;
     });
 
-    if (inGameName === state.user.inGameName && state.userProfile) {
-      setProfile(state.userProfile);
-      setPrivacyProfileData(
-        state.userProfile.profilePrivacy
-          ? state.userProfile.profilePrivacy
-          : privacyProfileData
-      );
-      setIsLoading(false);
+    if (inGameName === state.user?.inGameName) {
+      const cachedProfile = localStorage.getItem("userProfile");
+      if (cachedProfile) {
+        const parsedProfile = JSON.parse(cachedProfile);
+        setProfile(parsedProfile);
+        setIsLoading(false);
+        fetchProfile();
+      } else if (state.userProfile) {
+        setProfile(state.userProfile);
+        setIsLoading(false);
+      } else {
+        fetchProfile();
+      }
     } else if (otherUserStored) {
       setProfile(otherUserStored.profile);
       setPrivacyProfileData(
-        otherUserStored.profile.profilePrivacy
-          ? otherUserStored.profile.profilePrivacy
-          : privacyProfileData
+        otherUserStored.profile.profilePrivacy || privacyProfileData
       );
       setIsLoading(false);
     } else {
       fetchProfile();
     }
-  }, [inGameName]);
+  }, [inGameName, state]);
 
   useEffect(() => {
     if (
@@ -126,8 +130,9 @@ export default function Profile() {
       state.user &&
       state.user.tutorial.profilePage &&
       loginedUserProfile
-    )
+    ) {
       isTutorialTakenCheck({ page: "profilePage", tour });
+    }
   }, [isLoading]);
 
   useEffect(() => {
@@ -147,7 +152,10 @@ export default function Profile() {
   `;
 
   return (
-    <Box marginTop={"4.5rem"} w={"100%"}>
+    <Box
+      marginTop={"4.5rem"}
+      w={"100%"}
+    >
       <Helmet>
         <title>
           {profile?.username ? `${profile.username}'s Profile` : "Profile"}
@@ -160,20 +168,26 @@ export default function Profile() {
           name="keywords"
           content="profile, IQ score, quizzes, daily activities, user ranking, society, circles, explorers, strivers, elites, mavericks, pioneers"
         />
-        <meta property="og:title" content={`${profile?.username}'s Profile`} />
+        <meta
+          property="og:title"
+          content={`${profile?.username}'s Profile`}
+        />
         <meta
           property="og:description"
           content={`Explore ${
             profile?.username
           }'s profile with IQ score, solved quizzes, daily activities, and belongs to ${
-            userSocietyAndCircle.society
+            userSocietyAndCircle?.society
           } ${
-            userSocietyAndCircle.circle
-              ? `and ` + userSocietyAndCircle.circle
+            userSocietyAndCircle?.circle
+              ? `and ` + userSocietyAndCircle?.circle
               : ``
           }.`}
         />
-        <meta property="og:type" content="profile" />
+        <meta
+          property="og:type"
+          content="profile"
+        />
       </Helmet>
       <Flex
         flexDirection={{ base: "column", md: "row" }}
@@ -211,7 +225,7 @@ export default function Profile() {
             {showHideModal && (
               <ToggleProfileVisibilty setShowHideModal={setShowHideModal} />
             )}
-            {inGameName === state.user.inGameName && (
+            {inGameName === state.user?.inGameName && (
               <Tooltip label="Toggle Profile Visibility">
                 <ViewIcon
                   marginLeft={"auto"}
@@ -223,7 +237,11 @@ export default function Profile() {
             {isLoading ? (
               <>
                 <SkeletonCircle size="10" />
-                <SkeletonText mt="4" noOfLines={4} spacing="4" />
+                <SkeletonText
+                  mt="4"
+                  noOfLines={4}
+                  spacing="4"
+                />
               </>
             ) : (
               <LeftProfileBox
@@ -251,7 +269,12 @@ export default function Profile() {
             {isLoading ? (
               <>
                 <Container padding={0}>
-                  <Flex flexDirection="column" width="100%" h={"100%"} m={0}>
+                  <Flex
+                    flexDirection="column"
+                    width="100%"
+                    h={"100%"}
+                    m={0}
+                  >
                     <SkeletonText
                       noOfLines={1}
                       spacing="4"
@@ -271,9 +294,16 @@ export default function Profile() {
                         flexDirection="column"
                       >
                         <Box>
-                          <Skeleton height="20px" width="100px" mb={2} />
+                          <Skeleton
+                            height="20px"
+                            width="100px"
+                            mb={2}
+                          />
                         </Box>
-                        <Box position="relative" mb={4}>
+                        <Box
+                          position="relative"
+                          mb={4}
+                        >
                           <Skeleton
                             height="120px"
                             width="120px"
@@ -283,13 +313,23 @@ export default function Profile() {
                           />
                         </Box>
                         <Box textAlign="left">
-                          <Skeleton height="20px" width="100px" />
+                          <Skeleton
+                            height="20px"
+                            width="100px"
+                          />
                         </Box>
                       </Flex>
                       <Flex textAlign={"center"}>
                         <Box>
-                          <Skeleton height="20px" width="150px" mb={2} />
-                          <Skeleton height="20px" width="150px" />
+                          <Skeleton
+                            height="20px"
+                            width="150px"
+                            mb={2}
+                          />
+                          <Skeleton
+                            height="20px"
+                            width="150px"
+                          />
                         </Box>
                       </Flex>
                     </Box>
@@ -486,7 +526,11 @@ export default function Profile() {
                   borderRadius="10px"
                   marginRight={5}
                 />
-                <Skeleton height="200px" width="100%" borderRadius="10px" />
+                <Skeleton
+                  height="200px"
+                  width="100%"
+                  borderRadius="10px"
+                />
               </>
             ) : (
               <>
@@ -514,8 +558,16 @@ export default function Profile() {
           >
             {isLoading ? (
               <>
-                <Skeleton height="150px" width="100%" borderRadius="10px" />
-                <Skeleton height="150px" width="100%" borderRadius="10px" />
+                <Skeleton
+                  height="150px"
+                  width="100%"
+                  borderRadius="10px"
+                />
+                <Skeleton
+                  height="150px"
+                  width="100%"
+                  borderRadius="10px"
+                />
               </>
             ) : (
               <>
@@ -589,7 +641,11 @@ export default function Profile() {
             className="daily-activity"
           >
             {isLoading ? (
-              <Skeleton height="150px" width="100%" borderRadius="10px" />
+              <Skeleton
+                height="150px"
+                width="100%"
+                borderRadius="10px"
+              />
             ) : (
               <DailyActivity
                 dailyAct={profile.dailyActivity}

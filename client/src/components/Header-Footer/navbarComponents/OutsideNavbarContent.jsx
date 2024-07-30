@@ -62,13 +62,13 @@ const OutsideNavbarContent = ({
         )}
         {!notLogined && (
           <>
-            {!isEmptyObject(user) && (
+            {user && !isEmptyObject(user) && (
               <Box>
                 {" "}
-                <IQScore score={state.user.IQ_score} />
+                <IQScore score={state.user?.IQ_score} />
               </Box>
             )}
-            {!isEmptyObject(user) && (
+            {user && !isEmptyObject(user) && (
               <Box>
                 <XPLevel
                   level={level}
@@ -190,7 +190,10 @@ const OutsideNavbarContent = ({
                     zIndex={2}
                   />
                 )}
-                <HamburgerIcon height={"35px"} width={"20px"} />
+                <HamburgerIcon
+                  height={"35px"}
+                  width={"20px"}
+                />
               </Button>
             </Flex>
           </>
