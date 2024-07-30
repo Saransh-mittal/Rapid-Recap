@@ -19,7 +19,8 @@ import Lightning from "../profileComponents/RankAndSocietySubCompnents/Lightning
 import CircleLightning from "./CircleLighting/CircleLighting";
 import axios from "axios";
 import "./BlinkingButton.css";
-
+import Arrow from "/images/arrow.webp";
+import Circle from "/images/circle.webp";
 // const AnimatedText = motion(Text);
 
 const UpgradeModal = ({ isOpen, onClose }) => {
@@ -169,7 +170,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                     alignItems={"center"}
                   >
                     <Image
-                      src="/../../../images/arrow.png"
+                      src={Arrow}
                       alt="Arrow"
                       boxSize="50px"
                       background={"transparent"}
@@ -251,7 +252,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                     mt={-7}
                   >
                     <motion.img
-                      src="./../../../images/circle.png"
+                      src={Circle}
                       alt="Circle"
                       style={{
                         width: "150px",

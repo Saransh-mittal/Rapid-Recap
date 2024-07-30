@@ -3,7 +3,7 @@ import { Flex, IconButton, Image, Text } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { getSenderFull } from '../../config/ChatLogics'
 import UpdateGroupChatModal from '../UpdateGroupChatModal'
-import greaterThan from '/images/greaterThan.png'
+import greaterThan from '/images/greaterThan.webp'
 
 const ChatHeader = ({
   messages,

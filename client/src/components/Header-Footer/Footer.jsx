@@ -14,8 +14,10 @@ const Footer = () => {
             <a
               href="https://www.instagram.com/rrapidrecap/"
               target="_blank"
-              className="nav-link px-2 "
+              className="nav-link px-2"
               style={{ color: "#f9f9f9" }}
+              aria-label="Follow us on Instagram"
+              title="Follow us on Instagram"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -50,10 +52,12 @@ const Footer = () => {
           </li> */}
           <li className="nav-item">
             <a
-              href="https://www.linkedin.com/company/rapid-recap/"
+              href="https://www.linkedin.com/company/rrapidrecap/"
               target="_blank"
-              className="nav-link px-2 "
+              className="nav-link px-2"
               style={{ color: "#f9f9f9" }}
+              aria-label="Follow us on LinkedIn"
+              title="Follow us on LinkedIn"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -6,10 +6,10 @@ import {
   UnorderedList,
   ListItem,
 } from "@chakra-ui/react";
-import notification1 from "../../assets/notification/image-1.png";
-import notification2 from "../../assets/notification/image-2.png";
-import notification3 from "../../assets/notification/image-3.png";
-import notification4 from "../../assets/notification/image-4.png";
+import notification1 from "../../assets/notification/image-1.webp";
+import notification2 from "../../assets/notification/image-2.webp";
+import notification3 from "../../assets/notification/image-3.webp";
+import notification4 from "../../assets/notification/image-4.webp";
 
 const notificationImages = [notification4, notification3, notification2];
 

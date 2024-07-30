@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { MouseParallax } from "react-just-parallax";
 import { Box, Flex, Image } from "@chakra-ui/react";
 import PlusSvg from "../../../assets/svg/PlusSvg";
-import gradient from "../../../assets/gradient.png";
+import gradient from "../../../assets/gradient.webp";
 
 export const Gradient = () => {
   return (

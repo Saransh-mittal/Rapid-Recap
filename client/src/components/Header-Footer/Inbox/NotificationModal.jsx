@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import React, { useContext, useEffect } from "react";
 import { AppContext } from "../../../contextAPI/appContext";
-import rr from "/images/rr.png";
+import rr from "/images/rrlogo.webp";
 
 const NotificationModal = ({
   setIsModalOpen,

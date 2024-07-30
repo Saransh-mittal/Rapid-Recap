@@ -9,17 +9,17 @@ import {
 } from "@chakra-ui/react";
 import Heading from "../miscellaneous/HeadingComponent";
 import TagLine from "../miscellaneous/TaglineComponent";
-import check2 from "../../assets/check-02.svg";
-import loading1 from "../../assets/loading-01.svg";
-import roadmap1 from "../../assets/roadmap/image-1.png";
-import roadmap2 from "../../assets/roadmap/image-2.png";
-import roadmap3 from "../../assets/roadmap/image-3.png";
-import roadmap4 from "../../assets/roadmap/image-4.png";
-import roadmap5 from "../../assets/roadmap/bookmark.png";
-import seasonUpdate from "../../assets/roadmap/seasonUpdate.png";
-import tournament from "../../assets/roadmap/tournament.png";
-import grid from "../../assets/grid.png";
-import gradientImage from "../../assets/gradient.png";
+// import check2 from "../../assets/check-02.svg";
+// import loading1 from "../../assets/loading-01.svg";
+// import roadmap1 from "../../assets/roadmap/image-1.webp";
+import roadmap2 from "../../assets/roadmap/image-2.webp";
+// import roadmap3 from "../../assets/roadmap/image-3.webp";
+import roadmap4 from "../../assets/roadmap/image-4.webp";
+import roadmap5 from "../../assets/roadmap/bookmark.webp";
+// import seasonUpdate from "../../assets/roadmap/seasonUpdate.webp";
+import tournament from "../../assets/roadmap/tournament.webp";
+import grid from "../../assets/grid.webp";
+// import gradientImage from "../../assets/gradient.webp";
 import { useRef } from "react";
 import Section from "../miscellaneous/Section";
 import { RepeatClockIcon, CheckIcon } from "@chakra-ui/icons";
@@ -145,6 +145,7 @@ const CommigSoonSection = () => {
                         <Box position={"absolute"}>
                           <Image
                             src={grid}
+                            alt="grid"
                             w={550}
                             h={550}
                             bg={"transparent"}
@@ -193,7 +194,7 @@ const CommigSoonSection = () => {
                               src={item.imageUrl}
                               alt={item.title}
                               width={"80%"}
-                              height="auto"
+                              height="80%"
                               objectFit="cover"
                               mb={4}
                               background={"transparent"}

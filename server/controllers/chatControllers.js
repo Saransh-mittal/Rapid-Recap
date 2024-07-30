@@ -386,6 +386,28 @@ const handleChatRequest = asyncHandler(async (req, res) => {
     throw new Error(error.message)
   }
 })
+// @desc    Make Chat Seen Request
+// @route   POST /api/chat/request/seen
+// @access  Protected
+const setSeenRequest = async (req, res) => {
+  const userId = req.user._id
+  try {
+    console.log('Setting seen for user: ', userId)
+    // make all pending requests seen for the user
+    const chats = await Chat.updateMany(
+      {
+        users: { $elemMatch: { $eq: userId } },
+        status: 'pending',
+      },
+      { isReqSeen: true },
+    )
+    console.log('Chats seen: ', chats)
+    res.status(200).json({ ok: true })
+  } catch (error) {
+    res.status(400)
+    throw new Error(error.message)
+  }
+}
 
 module.exports = {
   accessChat,
@@ -396,4 +418,5 @@ module.exports = {
   removeFromGroup,
   shareMessage,
   handleChatRequest,
+  setSeenRequest,
 }

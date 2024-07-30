@@ -76,11 +76,11 @@ const ArticleCard = ({
           />
         ) : (
           <Image
-            src={article.image || "/images/rr.png"}
+            src={article.image || "/images/rr.webp"}
             alt={article.title}
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = "/images/rr.png";
+              e.target.src = "/images/rr.webp";
             }}
             width={{ base: "60px", md: "80px", lg: "90px", xl: "100px" }}
             height={{ base: "60px", md: "80px", lg: "90px", xl: "100px" }}
@@ -145,11 +145,11 @@ const ArticleCard = ({
           <Skeleton height="100%" width="100%" />
         ) : (
           <Image
-            src={article.image || "/images/rr.png"}
+            src={article.image || "/images/rr.webp"}
             alt={article.title}
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = "/images/rr.png";
+              e.target.src = "/images/rr.webp";
             }}
             position="absolute"
             top="0"

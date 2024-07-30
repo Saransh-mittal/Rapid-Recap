@@ -100,7 +100,7 @@ const stepsTutorialHome = [
             behavior: "smooth",
           });
           const img = document.createElement("img");
-          img.src = "../../../images/click.png"; // Replace with your image path
+          img.src = "../../../images/click.webp"; // Replace with your image path
           img.alt = "Hand Click Sign";
           img.classList.add("hand-click-img");
           cardWrapper.appendChild(img);

@@ -16,6 +16,7 @@ const chatSchema = mongoose.Schema(
       enum: ["pending", "accepted", "rejected"],
       default: "pending",
     },
+    isReqSeen: { type: Boolean, default: false },
     requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "USER" },
     requestedTo: { type: mongoose.Schema.Types.ObjectId, ref: "USER" },
   },

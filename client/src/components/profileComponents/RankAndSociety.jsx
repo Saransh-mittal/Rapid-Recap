@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Flex, Image, Tooltip, Text, Tag, Spinner } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import circle from "/images/circle.png";
-import Arrow from "/images/arrow.png";
+import circle from "/images/circle.webp";
+import Arrow from "/images/arrow.webp";
 import Lightning from "./RankAndSocietySubCompnents/Lightning";
 import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
 import { AppContext } from "../../contextAPI/appContext";

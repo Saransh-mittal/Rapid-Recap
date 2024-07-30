@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import TitansFrame from "/images/TitansFrame.png";
+import TitansFrame from "/images/TitansFrame.webp";
 import { Image } from "@chakra-ui/react";
 
 const NameLightning = ({ boxShadow, MAX_IQ }) => {

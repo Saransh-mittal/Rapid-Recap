@@ -25,7 +25,7 @@ const IQScore = ({ score }) => {
       <Text fontSize="1.1rem" fontWeight="bold" color="white" m={0} p={0}>
         IQ: {score}
       </Text>
-      <Image src={society} h={"25px"} w={"25px"} />
+      <Image src={society} alt={"Society"} h={"25px"} w={"25px"} />
     </Box>
   );
 };

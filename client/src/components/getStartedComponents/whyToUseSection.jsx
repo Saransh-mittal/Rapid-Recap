@@ -7,7 +7,7 @@ import benefitIcon1 from "../../assets/benefits/icon-1.svg";
 import benefitIcon2 from "../../assets/benefits/icon-2.svg";
 import benefitIcon3 from "../../assets/benefits/icon-3.svg";
 import benefitIcon4 from "../../assets/benefits/icon-4.svg";
-import benefitImage2 from "../../assets/benefits/image-2.png";
+import benefitImage2 from "../../assets/benefits/image-2.webp";
 import card1 from "../../assets/benefits/card-1.svg";
 import card2 from "../../assets/benefits/card-2.svg";
 import card3 from "../../assets/benefits/card-3.svg";

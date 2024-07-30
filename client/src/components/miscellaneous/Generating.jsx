@@ -1,5 +1,5 @@
 import { Image, Box, Text } from "@chakra-ui/react";
-import loading from "../../assets/loading.png";
+import loading from "../../assets/loading.webp";
 
 const Generating = ({ className }) => {
   return (

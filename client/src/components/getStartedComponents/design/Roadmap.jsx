@@ -1,5 +1,5 @@
 import { Image, Box } from "@chakra-ui/react";
-import gradient from "../../../assets/gradient.png";
+import gradient from "../../../assets/gradient.webp";
 import PlusSvg from "../../../assets/svg/PlusSvg";
 
 export const Gradient = ({ top, left, width }) => {

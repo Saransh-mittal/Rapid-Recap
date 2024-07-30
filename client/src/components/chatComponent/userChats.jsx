@@ -35,7 +35,7 @@ const UserChats = ({ fetchAgain }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const buttonW = useBreakpointValue({
     base: '50px',
-    md: '150px',
+    md: '150px', // width for large screens (>= 62em or 992px)
   })
 
   const {
@@ -57,22 +57,22 @@ const UserChats = ({ fetchAgain }) => {
   const fetchChats = async () => {
     try {
       const { data } = await axios.get('/api/chat')
-      const acceptedChats = data.filter(
-        chat =>
-          chat.status === 'accepted' ||
-          chat.chatCreatedBy.toString() === user._id.toString(),
+      setChats(
+        data.filter(
+          chat =>
+            chat.status === 'accepted' ||
+            chat.chatCreatedBy.toString() === user._id.toString(),
+        ) || [],
       )
-      const pendingChatRequests = data.filter(
-        chat =>
-          chat.status === 'pending' &&
-          chat.chatCreatedBy.toString() !== user._id.toString(),
+      setChatRequests(
+        data.filter(
+          chat =>
+            chat.status === 'pending' &&
+            chat.chatCreatedBy.toString() !== user._id.toString(),
+        ) || [],
       )
-
-      setChats(acceptedChats || [])
-      setChatRequests(pendingChatRequests || [])
-      localStorage.setItem('chats', JSON.stringify(acceptedChats))
-      localStorage.setItem('chatRequests', JSON.stringify(pendingChatRequests))
     } catch (error) {
+      console.log(error)
       toast({
         title: 'Error Occurred!',
         description: 'Failed to Load the chats',
@@ -138,6 +138,7 @@ const UserChats = ({ fetchAgain }) => {
     setHasMore(true)
     setMessagesFetched(false)
 
+    // Only update latestMessage if it exists
     if (chat.latestMessage) {
       setChats(prevChats => {
         return prevChats?.map(c => {
@@ -200,7 +201,7 @@ const UserChats = ({ fetchAgain }) => {
               )}
             {chat.status === 'rejected' && (
               <Badge colorScheme="red">Rejected</Badge>
-            )}
+            )}{' '}
             {chat.new && (
               <Badge colorScheme="green" h={'fit-content'}>
                 New
@@ -306,6 +307,16 @@ const UserChats = ({ fetchAgain }) => {
         >
           {showRequestsTab ? 'Chats' : 'Requests'}
         </Button>
+        {/* <GroupChatModal>
+          <Flex position={"relative"}>
+            <Button pl={"1.5rem"} textColor={"white"} buttonW="150px">
+              New Group
+            </Button>
+            <Flex position={"absolute"} left={4} top={"0.4rem"}>
+              <AddIcon w={"0.75rem"} />
+            </Flex>
+          </Flex>
+        </GroupChatModal> */}
       </Box>
       <Box
         display="flex"

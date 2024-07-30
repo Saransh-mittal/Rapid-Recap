@@ -3,7 +3,7 @@ import { useRef, useContext, useEffect } from 'react'
 import { AppContext } from '../../contextAPI/appContext'
 import imageData from '../../assets/AltNewsImage'
 import { useNavigate } from 'react-router-dom'
-import rrImage from '/images/rr.png'
+import rrImage from '/images/rr.webp'
 
 const Card = ({ newsNumber, data }) => {
   //console.log("card :", data);

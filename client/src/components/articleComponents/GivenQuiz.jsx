@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import medalIcon from "../../assets/medal.png";
+import medalIcon from "../../assets/medal.webp";
 import {
   Button,
   Flex,
