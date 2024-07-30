@@ -4,15 +4,15 @@ import React, {
   useEffect,
   useCallback,
   useRef,
-} from "react";
-import "./Signin.css";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { AppContext } from "../contextAPI/appContext";
-import EmailVerify from "../components/authComponents/EmailVerify";
-import Modal from "./Modal";
-import ResetPassword from "../components/authComponents/ResetPassword";
-import { throttle } from "lodash";
+} from 'react'
+import './Signin.css'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+import { AppContext } from '../contextAPI/appContext'
+import EmailVerify from '../components/authComponents/EmailVerify'
+import Modal from './Modal'
+import ResetPassword from '../components/authComponents/ResetPassword'
+import { throttle } from 'lodash'
 import {
   useToast,
   Button,
@@ -29,220 +29,222 @@ import {
   useDisclosure,
   Flex,
   //useMediaQuery,
-} from "@chakra-ui/react";
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import Register from "./Register";
-import { dailyStreakCheckerAndUpdater } from "../utils/quiz.utils";
+} from '@chakra-ui/react'
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
+import Register from './Register'
+import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   //const isScreenSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
-  const toast = useToast();
-  const { state, dispatch } = useContext(AppContext);
+  const toast = useToast()
+  const { state, dispatch } = useContext(AppContext)
   const [data, setData] = useState({
-    emailOrInGameName: "",
-    password: "",
+    emailOrInGameName: '',
+    password: '',
     showPassword: false,
-  });
-  const emailOrInGameNameRef = useRef();
+  })
+  const emailOrInGameNameRef = useRef()
   //const [inGameName, setInGameName] = useState("");
-  const [enterInGameName, setEnterInGameName] = useState(false);
-  const [inGameName, setInGameName] = useState("");
+  const [enterInGameName, setEnterInGameName] = useState(false)
+  const [inGameName, setInGameName] = useState('')
   const [load, setLoad] = useState({
     submitLoad: false,
     forgotLoad: false,
-  });
-  const navigate = useNavigate();
+  })
+  const navigate = useNavigate()
   const {
     isOpen: isRegisterOpen,
     onOpen: onRegisterOpen,
     onClose: onRegisterClose,
-  } = useDisclosure();
+  } = useDisclosure()
 
-  const inGameNameHandler = (e) => {
-    setInGameName(e.target.value);
-  };
-  const inputHandler = (e) => {
-    const { name, value } = e.target;
-    setData({ ...data, [name]: value });
-  };
+  const inGameNameHandler = e => {
+    setInGameName(e.target.value)
+  }
+  const inputHandler = e => {
+    const { name, value } = e.target
+    setData({ ...data, [name]: value })
+  }
 
   const handleInGameNameSubmit = async () => {
     try {
-      setLoad({ submitLoad: true, forgotLoad: false });
-      const response = await axios.post("/api/user/handleGoogleLogin", {
+      setLoad({ submitLoad: true, forgotLoad: false })
+      const response = await axios.post('/api/user/handleGoogleLogin', {
         credentialResponse: data.credentialResponse,
         inGameName,
-      });
-      handleGoogleResponse(response);
+      })
+      handleGoogleResponse(response)
     } catch (error) {
-      console.error(error.response.data.error);
+      console.error(error.response.data.error)
       toast({
-        title: "Login Failed",
+        title: 'Login Failed',
         description: error.response.data.error,
-        status: "error",
+        status: 'error',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
     } finally {
-      setLoad({ submitLoad: false, forgotLoad: false });
+      setLoad({ submitLoad: false, forgotLoad: false })
     }
-  };
+  }
 
-  const handleGoogleResponse = async (response) => {
+  const handleGoogleResponse = async response => {
     if (response.status === 201) {
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.user.role);
-      hamburgerOnClose && hamburgerOnClose();
-      dispatch({ type: "UNSHOW" });
+      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('role', response.data.user.role)
+      hamburgerOnClose && hamburgerOnClose()
+      dispatch({ type: 'UNSHOW' })
       dispatch({
-        type: "setUser",
+        type: 'setUser',
         payloadUser: response.data.user,
-      });
-      await dailyStreakCheckerAndUpdater({ dispatch });
+      })
+      await dailyStreakCheckerAndUpdater({ dispatch })
       toast({
-        title: "Login Successful",
-        status: "success",
+        title: 'Login Successful',
+        status: 'success',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
+      navigate('/home/all')
     }
-  };
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async e => {
+    e.preventDefault()
     try {
-      setLoad({ submitLoad: true, forgotLoad: false });
+      setLoad({ submitLoad: true, forgotLoad: false })
       const response = await axios.post(`/api/user/login`, {
         data,
-      });
+      })
       if (response.data.user.verified === false) {
         const responseOfResendOTP = await axios.post(`/api/user/resendOTP`, {
           email: response.data.user.email,
-        });
+        })
 
         if (responseOfResendOTP.status === 201) {
-          await dispatch({ type: "verifyEmail", payloadverifyEmail: true });
-          await dispatch({ type: "showModal", payloadModal: true });
+          await dispatch({ type: 'verifyEmail', payloadverifyEmail: true })
+          await dispatch({ type: 'showModal', payloadModal: true })
           toast({
-            title: "Email not verified",
-            description: "Please verify your email before continuing",
-            status: "warning",
+            title: 'Email not verified',
+            description: 'Please verify your email before continuing',
+            status: 'warning',
             duration: 5000,
             isClosable: true,
-            position: "top",
-          });
+            position: 'top',
+          })
         }
       } else if (
         response.status === 201 &&
         response.data.user.verified === true
       ) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("role", response.data.user.role);
-        dispatch({ type: "UNSHOW" });
+        localStorage.setItem('token', response.data.token)
+        localStorage.setItem('role', response.data.user.role)
+        dispatch({ type: 'UNSHOW' })
         dispatch({
-          type: "setUser",
+          type: 'setUser',
           payloadUser: response.data.user,
-        });
+        })
         //console.log(response);
-        hamburgerOnClose && hamburgerOnClose();
-        await dailyStreakCheckerAndUpdater({ dispatch });
+        hamburgerOnClose && hamburgerOnClose()
+        await dailyStreakCheckerAndUpdater({ dispatch })
 
         toast({
-          title: "Login-Successful",
-          status: "success",
+          title: 'Login-Successful',
+          status: 'success',
           duration: 5000,
           isClosable: true,
-          position: "top",
-        });
+          position: 'top',
+        })
+        navigate('/home/all')
       } else {
-        throw new Error("Login Failed");
+        throw new Error('Login Failed')
       }
     } catch (error) {
       toast({
         title: error.response.data.error,
-        status: "error",
+        status: 'error',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
-      console.error(error);
-      console.log(error.response.data.error);
+        position: 'top',
+      })
+      console.error(error)
+      console.log(error.response.data.error)
     } finally {
-      setLoad({ submitLoad: false, forgotLoad: false });
+      setLoad({ submitLoad: false, forgotLoad: false })
     }
-  };
+  }
 
   const forgotPassword = async () => {
     try {
-      setLoad({ submitLoad: false, forgotLoad: true });
+      setLoad({ submitLoad: false, forgotLoad: true })
       const response = await axios.post(`/api/user/resendOTP`, {
         email: data.emailOrInGameName,
-      });
+      })
       if (response.status === 201) {
-        let i = data.emailOrInGameName.indexOf("@");
+        let i = data.emailOrInGameName.indexOf('@')
 
         const starredEmail =
           data.emailOrInGameName.slice(0, 2) +
-          data.emailOrInGameName.slice(2, i).replace(/./g, "*") +
-          data.emailOrInGameName.slice(i);
-        await dispatch({ type: "forgotPassword", payloadForgotPassword: true });
-        await dispatch({ type: "verifyEmail", payloadverifyEmail: true });
+          data.emailOrInGameName.slice(2, i).replace(/./g, '*') +
+          data.emailOrInGameName.slice(i)
+        await dispatch({ type: 'forgotPassword', payloadForgotPassword: true })
+        await dispatch({ type: 'verifyEmail', payloadverifyEmail: true })
         toast({
-          title: "OTP sent to your email",
+          title: 'OTP sent to your email',
           description: starredEmail,
-          status: "success",
+          status: 'success',
           duration: 5000,
           isClosable: true,
-          position: "top",
-        });
+          position: 'top',
+        })
       }
-      await dispatch({ type: "showModal", payloadModal: true });
+      await dispatch({ type: 'showModal', payloadModal: true })
     } catch (error) {
-      emailOrInGameNameRef.current.focus();
+      emailOrInGameNameRef.current.focus()
       toast({
         description:
           error.response?.data?.error ||
-          "Enter a valid Email or try again later",
-        status: "error",
+          'Enter a valid Email or try again later',
+        status: 'error',
         duration: 9000,
         isClosable: true,
-        position: "top",
-      });
-      console.log(error);
-      console.error(error.response.data.error);
+        position: 'top',
+      })
+      console.log(error)
+      console.error(error.response.data.error)
     } finally {
-      setLoad({ submitLoad: false, forgotLoad: false });
+      setLoad({ submitLoad: false, forgotLoad: false })
     }
-  };
+  }
 
   useEffect(() => {
-    document.title = "Signin page";
-  }, []);
+    document.title = 'Signin page'
+  }, [])
 
   const handleForgotPasswordThrottled = useCallback(
     throttle(forgotPassword, 1000),
-    [data.emailOrInGameName]
-  );
+    [data.emailOrInGameName],
+  )
 
   useEffect(() => {
-    return () => handleForgotPasswordThrottled.cancel();
-  }, [handleForgotPasswordThrottled]);
+    return () => handleForgotPasswordThrottled.cancel()
+  }, [handleForgotPasswordThrottled])
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSubmit(e);
+  const handleKeyPress = e => {
+    if (e.key === 'Enter') {
+      handleSubmit(e)
     }
-  };
+  }
 
   return (
     <>
       <ChakraModal
         isOpen={isOpen}
         onClose={onClose}
-        size={{ base: "full", md: "xl" }}
+        size={{ base: 'full', md: 'xl' }}
       >
         <ModalOverlay
           bg="blackAlpha.300"
@@ -250,18 +252,18 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         />
         <ModalContent
           sx={{
-            backgroundColor: "#0f0d15",
+            backgroundColor: '#0f0d15',
             backgroundImage:
-              "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+              'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
           }}
         >
           <ModalHeader color="white">Sign In</ModalHeader>
           <ModalCloseButton color="white" />
-          <ModalBody w={"65%"} p={"20px"}>
+          <ModalBody w={'65%'} p={'20px'}>
             {state.modal && state.forgotPassword && !state.verifyEmail && (
               <Modal
                 onClose={() =>
-                  dispatch({ type: "showModal", payloadModal: false })
+                  dispatch({ type: 'showModal', payloadModal: false })
                 }
               >
                 <ResetPassword email={data.emailOrInGameName} />
@@ -270,7 +272,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
             {state.modal && state.verifyEmail && (
               <Modal
                 onClose={() =>
-                  dispatch({ type: "showModal", payloadModal: false })
+                  dispatch({ type: 'showModal', payloadModal: false })
                 }
               >
                 <EmailVerify email={data.emailOrInGameName} />
@@ -295,18 +297,18 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       onChange={inputHandler}
                       name="password"
                       value={data.password}
-                      type={data.showPassword ? "text" : "password"}
+                      type={data.showPassword ? 'text' : 'password'}
                       placeholder="Password"
                       color="white"
                     />
                     <InputRightElement width="4.5rem">
                       <IconButton
                         style={{
-                          backgroundColor: "transparent",
-                          color: "white",
+                          backgroundColor: 'transparent',
+                          color: 'white',
                         }}
                         onClick={() =>
-                          setData((prevData) => ({
+                          setData(prevData => ({
                             ...prevData,
                             showPassword: !prevData.showPassword,
                           }))
@@ -328,7 +330,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                     variant="outline"
                     type="submit"
                     size="lg"
-                    w={"100%"}
+                    w={'100%'}
                     mt={4}
                   >
                     Submit
@@ -337,15 +339,15 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                 <Flex
                   justifyContent="space-between"
                   mt={4}
-                  flexDirection={{ base: "column", md: "row" }}
+                  flexDirection={{ base: 'column', md: 'row' }}
                   gap={4}
                 >
                   <Button
                     variant="solid"
                     colorScheme="green"
                     onClick={() => {
-                      onClose();
-                      onRegisterOpen();
+                      onClose()
+                      onRegisterOpen()
                     }}
                   >
                     Create an account
@@ -359,51 +361,51 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                     Forgot Password?
                   </Button>
                 </Flex>
-                <Flex w={"100%"} justifyContent={"center"}>
+                <Flex w={'100%'} justifyContent={'center'}>
                   <Button mt={4} p={0}>
                     <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
                       <GoogleLogin
-                        onSuccess={async (credentialResponse) => {
-                          setData((prevData) => ({
+                        onSuccess={async credentialResponse => {
+                          setData(prevData => ({
                             ...prevData,
                             credentialResponse,
-                          }));
+                          }))
                           try {
                             const response = await axios.post(
-                              "/api/user/handleGoogleLogin",
-                              { credentialResponse }
-                            );
+                              '/api/user/handleGoogleLogin',
+                              { credentialResponse },
+                            )
                             // Store role in localStorage
                             if (response.data.EnterInGameName) {
                               toast({
-                                title: "Enter In-Game-Name",
+                                title: 'Enter In-Game-Name',
                                 description:
-                                  "Please enter your In-Game-Name to continue",
-                                status: "info",
+                                  'Please enter your In-Game-Name to continue',
+                                status: 'info',
                                 duration: 5000,
                                 isClosable: true,
-                                position: "top",
-                              });
-                              setEnterInGameName(true);
+                                position: 'top',
+                              })
+                              setEnterInGameName(true)
                             } else {
-                              handleGoogleResponse(response);
+                              handleGoogleResponse(response)
                             }
                           } catch (error) {
-                            console.error(error.response.data.error);
+                            console.error(error.response.data.error)
                             if (error.response.data.EnterInGameName)
-                              setEnterInGameName(true);
+                              setEnterInGameName(true)
                             toast({
-                              title: "Login Failed",
+                              title: 'Login Failed',
                               description: error.response.data.error,
-                              status: "error",
+                              status: 'error',
                               duration: 5000,
                               isClosable: true,
-                              position: "top",
-                            });
+                              position: 'top',
+                            })
                           }
                         }}
                         onError={() => {
-                          console.log("Login Failed");
+                          console.log('Login Failed')
                         }}
                       />
                     </GoogleOAuthProvider>
@@ -414,7 +416,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
               <>
                 <InputGroup mt={4}>
                   <Input
-                    onChange={(e) => setInGameName(e.target.value)}
+                    onChange={e => setInGameName(e.target.value)}
                     name="inGameName"
                     value={inGameName}
                     type="text"
@@ -429,7 +431,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                   variant="outline"
                   onClick={handleInGameNameSubmit}
                   size="lg"
-                  w={"100%"}
+                  w={'100%'}
                   mt={4}
                 >
                   Submit
@@ -445,5 +447,5 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         signinOnOpen={onOpen}
       />
     </>
-  );
+  )
 }
