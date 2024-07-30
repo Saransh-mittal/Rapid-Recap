@@ -20,7 +20,6 @@ const NavBrand = ({ isHamburgerOpen }) => {
           height={{ base: isHamburgerOpen ? "3rem" : "3rem", md: "2.5rem" }}
           background={"transparent"}
           marginRight={"-5px"}
-          mb={"15px"}
           // rotate to left by 2 degrees
           // transform={"rotate(-0.5deg)"}
         />
