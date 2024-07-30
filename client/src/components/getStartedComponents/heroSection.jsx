@@ -100,9 +100,7 @@ const HeroSection = () => {
           }}
         >
           <Image
-            src={
-              'https://res.cloudinary.com/dxstsrnbs/image/upload/v1722163918/hero-background_rudxmn.jpg'
-            }
+            src={heroBackground}
             width={1640}
             height={1200}
             alt="hero"
@@ -224,9 +222,7 @@ const HeroSection = () => {
                     }}
                   >
                     <Image
-                      src={
-                        'https://res.cloudinary.com/dxstsrnbs/image/upload/v1722163918/robot_rdwfqk.jpg'
-                      }
+                      src={robot}
                       width={{ base: 688, lg: 1024 }}
                       height={790}
                       alt="AI"
