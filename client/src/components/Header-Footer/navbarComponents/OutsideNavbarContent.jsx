@@ -1,20 +1,20 @@
-import { Badge, Box, Button, Flex, useDisclosure } from "@chakra-ui/react";
-import React, { useContext } from "react";
-import Inbox from "./Inbox";
-import StreakFire from "./StreakFire";
-import ProfileDropDownMenu from "../../profileComponents/ProfileDropDownMenu";
-import { HamburgerIcon } from "@chakra-ui/icons";
-import GetStarted from "./GetStarted";
-import XPLevel from "./XPLevel";
-import IQScore from "./IQScore";
-import { AppContext } from "../../../contextAPI/appContext";
+import { Badge, Box, Button, Flex, useDisclosure } from '@chakra-ui/react'
+import React, { useContext } from 'react'
+import Inbox from './Inbox'
+import StreakFire from './StreakFire'
+import ProfileDropDownMenu from '../../profileComponents/ProfileDropDownMenu'
+import { HamburgerIcon } from '@chakra-ui/icons'
+import GetStarted from './GetStarted'
+import XPLevel from './XPLevel'
+import IQScore from './IQScore'
+import { AppContext } from '../../../contextAPI/appContext'
 // import { FaFacebookMessenger } from "react-icons/fa";
 // import Messenger from "../../../screens/Messenger";
-import { FaFacebookMessenger } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { ChatState } from "../../../contextAPI/ChatProvider";
-import { SearchIcon } from "@chakra-ui/icons";
-import UserSearchDrawer from "../../miscellaneous/UserSearchDrawer";
+import { FaFacebookMessenger } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
+import { ChatState } from '../../../contextAPI/ChatProvider'
+import { SearchIcon } from '@chakra-ui/icons'
+import UserSearchDrawer from '../../miscellaneous/UserSearchDrawer'
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -31,84 +31,83 @@ const OutsideNavbarContent = ({
   navLinkRefs,
   setIsHamburgerOpen,
   level,
-  user, // pass the user state
   profileNotif,
 }) => {
-  const isEmptyObject = (obj) => {
-    return obj && Object.keys(obj).length === 0;
-  };
-  const { state } = useContext(AppContext);
-  const { notification } = ChatState();
-  const navigate = useNavigate();
+  const isEmptyObject = obj => {
+    return obj && Object.keys(obj).length === 0
+  }
+  const { state } = useContext(AppContext)
+  const { notification } = ChatState()
+  const navigate = useNavigate()
   const {
     isOpen: isOpenUserSearch,
     onOpen: onOpenUserSearch,
     onClose: onCloseUserSearch,
-  } = useDisclosure();
+  } = useDisclosure()
 
   return (
     <>
       <Flex
         gap={{ base: 1, lg: 3 }}
-        alignItems={"center"}
-        display={isHamburgerOpen ? "none" : "flex"}
+        alignItems={'center'}
+        display={isHamburgerOpen ? 'none' : 'flex'}
       >
         {/* Profile dropdown menu */}
         {notLogined && (
           <GetStarted
-            display={{ base: "none", lg: "flex" }}
-            innerText={"Get Started"}
+            display={{ base: 'none', lg: 'flex' }}
+            innerText={'Get Started'}
           />
         )}
         {!notLogined && (
           <>
-            {user && !isEmptyObject(user) && (
+            {state.user && !isEmptyObject(state.user) && (
               <Box>
-                {" "}
+                {' '}
                 <IQScore score={state.user?.IQ_score} />
               </Box>
             )}
-            {user && !isEmptyObject(user) && (
+            {state.user && !isEmptyObject(state.user) && (
               <Box>
                 <XPLevel
                   level={level}
                   _hover={{
-                    cursor: "pointer",
+                    cursor: 'pointer',
                   }}
-                  className={"xp-level"}
+                  className={'xp-level'}
                   onClick={() => {
-                    setShowXPLevelModal(true);
+                    setShowXPLevelModal(true)
                   }}
                 />
               </Box>
             )}
             <StreakFire
-              marginAroundBox={"auto"}
-              widthOfBox={"1.6em"}
-              heightOfBox={"1.6em"}
+              marginAroundBox={'auto'}
+              widthOfBox={'1.6em'}
+              heightOfBox={'1.6em'}
               _hover={{
-                cursor: "pointer",
-                backgroundColor: "#0f0d15",
+                cursor: 'pointer',
+                backgroundColor: '#0f0d15',
                 backgroundImage:
-                  "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                  'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
               }}
-              className={"streak-tracker-lg"}
+              className={'streak-tracker-lg'}
               onClick={() => {
-                setShowDailyStreakModal(true);
-                tourComplete();
+                setShowDailyStreakModal(true)
+                tourComplete()
               }}
               streak={streak}
               isBoosted={isBoosted}
               getBackgroundColor={getBackgroundColor}
             />
-            {!isEmptyObject(user) && (
+            {!isEmptyObject(state.user) && (
               <Box
                 _hover={{
-                  cursor: "pointer",
+                  cursor: 'pointer',
                 }}
-                display={{ base: "none", lg: "flex" }}
+                display={{ base: 'none', lg: 'flex' }}
                 onClick={() => onOpenUserSearch()}
-                position={"relative"}
+                position={'relative'}
                 mx={1}
               >
                 <SearchIcon boxSize={6} />
@@ -118,27 +117,27 @@ const OutsideNavbarContent = ({
                 />
               </Box>
             )}
-            {!isEmptyObject(user) && (
+            {!isEmptyObject(state.user) && (
               <Box
                 _hover={{
-                  cursor: "pointer",
+                  cursor: 'pointer',
                 }}
-                display={{ base: "none", lg: "flex" }}
-                onClick={() => navigate("/chats")}
-                position={"relative"}
+                display={{ base: 'none', lg: 'flex' }}
+                onClick={() => navigate('/chats')}
+                position={'relative'}
                 mx={1}
               >
                 {Array.isArray(notification) && notification.length > 0 && (
                   <Badge
-                    bg={"red"}
-                    position={"absolute"}
-                    color={"white"}
-                    borderRadius={"50%"}
-                    h={"18px"}
-                    w={"18px"}
-                    textAlign={"center"}
-                    right={"-0.5rem"}
-                    top={"-0.7rem"}
+                    bg={'red'}
+                    position={'absolute'}
+                    color={'white'}
+                    borderRadius={'50%'}
+                    h={'18px'}
+                    w={'18px'}
+                    textAlign={'center'}
+                    right={'-0.5rem'}
+                    top={'-0.7rem'}
                   >
                     {notification.length}
                   </Badge>
@@ -149,13 +148,13 @@ const OutsideNavbarContent = ({
           </>
         )}
         {!notLogined && !isHamburgerOpen ? (
-          <Flex display={{ base: "none", lg: "flex" }}>
+          <Flex display={{ base: 'none', lg: 'flex' }}>
             <ProfileDropDownMenu
               setIsDrawerOpen={setIsDrawerOpen}
               className="profile-dropdown-lg"
               handleLogout={handleLogout}
-              toProfile={"/profile"}
-              refProfile={(ref) => (navLinkRefs.current[4] = ref)}
+              toProfile={'/profile'}
+              refProfile={ref => (navLinkRefs.current[4] = ref)}
               profileNotif={profileNotif}
               notifyCont={notifyCont}
             />
@@ -170,37 +169,34 @@ const OutsideNavbarContent = ({
                 data-bs-target="#navbarNav"
                 aria-controls="navbarNav"
                 aria-label="Toggle navigation"
-                display={{ base: "flex", lg: "none" }}
+                display={{ base: 'flex', lg: 'none' }}
                 onClick={() => setIsHamburgerOpen(true)}
-                marginBottom={isHamburgerOpen ? "2rem" : "0"}
-                height={"35px"}
-                width={"10px"}
-                position={"relative"}
+                marginBottom={isHamburgerOpen ? '2rem' : '0'}
+                height={'35px'}
+                width={'10px'}
+                position={'relative'}
               >
                 {(state.unreadFriendRequests > 0 ||
                   (Array.isArray(notification) && notification.length > 0)) && (
                   <Box
                     h="14px"
                     w="14px"
-                    bg={"red"}
-                    borderRadius={"50%"}
-                    position={"absolute"}
-                    right={"-0.25rem"}
-                    top={"-0.25rem"}
+                    bg={'red'}
+                    borderRadius={'50%'}
+                    position={'absolute'}
+                    right={'-0.25rem'}
+                    top={'-0.25rem'}
                     zIndex={2}
                   />
                 )}
-                <HamburgerIcon
-                  height={"35px"}
-                  width={"20px"}
-                />
+                <HamburgerIcon height={'35px'} width={'20px'} />
               </Button>
             </Flex>
           </>
         ) : null}
       </Flex>
     </>
-  );
-};
+  )
+}
 
-export default OutsideNavbarContent;
+export default OutsideNavbarContent
