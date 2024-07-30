@@ -245,6 +245,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         userId: user?._id,
         chatId: selectedChat?._id,
       })
+      setMessagesFetched(false)
     }
   }, [selectedChat])
 
@@ -306,6 +307,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   handleRemoveReaction={handleRemoveReaction}
                   hasMore={hasMore}
                   selectedChat={selectedChat}
+                  setHasMore={setHasMore}
                 />
               </>
             )}

@@ -1,255 +1,266 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { AppContext } from "../contextAPI/appContext";
-import axios from "axios";
+import React, { useContext, useEffect, useRef, useState } from 'react'
+import { AppContext } from '../contextAPI/appContext'
+import axios from 'axios'
 import {
   Flex,
   useToast,
   useDisclosure,
   Grid,
   useMediaQuery,
-} from "@chakra-ui/react";
-import Loading from "../components/miscellaneous/Loading";
-import Quiz from "../components/articleComponents/Quiz";
-import SelectQuizLangModal from "../components/articleComponents/SelectQuizLangModal";
-import ExpectedIQModal from "../components/articleComponents/ExpectedIQModal";
-import QuinBoostModal from "../components/articleComponents/QuinBoostModal";
-import { useArticlePageTour } from "../customHooks/useTours";
-import { useQuinBoostTour } from "../customHooks/useTours";
+} from '@chakra-ui/react'
+import Loading from '../components/miscellaneous/Loading'
+import Quiz from '../components/articleComponents/Quiz'
+import SelectQuizLangModal from '../components/articleComponents/SelectQuizLangModal'
+import ExpectedIQModal from '../components/articleComponents/ExpectedIQModal'
+import QuinBoostModal from '../components/articleComponents/QuinBoostModal'
+import { useArticlePageTour } from '../customHooks/useTours'
+import { useQuinBoostTour } from '../customHooks/useTours'
 // import ArticleHeader from "../components/articleComponents/ArticleHeader";
-import MainArticleContent from "../components/articleComponents/MainArticleContent";
-import Sidebar from "../components/articleComponents/Sidebar";
-import imageData from "../assets/AltNewsImage";
-import { quinBoostChecker } from "../utils/quiz.utils";
-import { useParams } from "react-router-dom";
-import ReactGA from "react-ga4";
-import { Helmet } from "react-helmet";
-import TrackTime from "../components/articleComponents/TrackTime"; // Import TrackTime component
+import MainArticleContent from '../components/articleComponents/MainArticleContent'
+import Sidebar from '../components/articleComponents/Sidebar'
+import imageData from '../assets/AltNewsImage'
+import { quinBoostChecker } from '../utils/quiz.utils'
+import { useParams } from 'react-router-dom'
+import ReactGA from 'react-ga4'
+import { Helmet } from 'react-helmet'
+import TrackTime from '../components/articleComponents/TrackTime' // Import TrackTime component
 
 const Article = () => {
-  const toast = useToast();
-  const { state } = useContext(AppContext);
-  const data = state.news;
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast()
+  const { state } = useContext(AppContext)
+
+  const data = state.news
+  const { isOpen, onOpen, onClose } = useDisclosure()
   const [alt_image, setAlt_image] = useState(
     imageData.find(
-      (img) =>
+      img =>
         img?.category?.toLocaleLowerCase() ===
-        data?.category?.toLocaleLowerCase()
-    )?.image
-  );
-  const { id } = useParams();
-  const [article, setArticle] = useState(null);
-  const [latestNews, setLatestNews] = useState([]);
-  const [load, setLoad] = useState(true);
-  const [articleLoading, setArticleLoading] = useState(true);
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [textHeight, setTextHeight] = useState(0);
-  const [articleHeight, setArticleHeight] = useState(0);
-  const [givenQuiz, setGivenQuiz] = useState(false);
-  const textRef = useRef();
-  const articleRef = useRef();
-  const [percentile, setPercentile] = useState(null);
-  const [RQM_score, setRQM_score] = useState(null);
-  const [onGoingQuiz, setOnGoingQuiz] = useState(false);
-  const [quizExpired, setQuizExpired] = useState(false);
-  const [showExpectedIQ, setShowExpectedIQ] = useState(false);
-  const [expectedIQ, setExpectedIQ] = useState(null);
-  const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(0);
-  const [title, setTitle] = useState({ english: "", hindi: "" });
-  const [dateTime, setDateTime] = useState("");
-  const [avgTimeRead, setAvgTimeRead] = useState(0);
-  const [author, setAuthor] = useState({ english: "", hindi: "" });
-  const [mainText, setMainText] = useState({ english: [], hindi: [] });
-  const [translateLoading, setTranslateLoading] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState("english");
-  const [showQuizLangModal, setShowQuizLangModal] = useState(false);
-  const [selectLanForQuiz, setSelectLanForQuiz] = useState("english");
-  const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false);
-  const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5);
-  const { tour, isTutorialTakenCheck } = useArticlePageTour();
-  const { quinTour } = useQuinBoostTour();
-  const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false);
-  const [isLargerThan820] = useMediaQuery("(min-width: 820px)");
-  const [bookmark, setBookmark] = useState(false);
-  const notLoggedIn = state.show;
+        data?.category?.toLocaleLowerCase(),
+    )?.image,
+  )
+  const { id } = useParams()
+  const [article, setArticle] = useState(null)
+  const [imgURL, setImgURL] = useState('')
+  const [latestNews, setLatestNews] = useState([])
+  const [load, setLoad] = useState(true)
+  const [articleLoading, setArticleLoading] = useState(true)
+  const [showQuiz, setShowQuiz] = useState(false)
+  const [textHeight, setTextHeight] = useState(0)
+  const [articleHeight, setArticleHeight] = useState(0)
+  const [givenQuiz, setGivenQuiz] = useState(false)
+  const textRef = useRef()
+  const articleRef = useRef()
+  const [percentile, setPercentile] = useState(null)
+  const [RQM_score, setRQM_score] = useState(null)
+  const [onGoingQuiz, setOnGoingQuiz] = useState(false)
+  const [quizExpired, setQuizExpired] = useState(false)
+  const [showExpectedIQ, setShowExpectedIQ] = useState(false)
+  const [expectedIQ, setExpectedIQ] = useState(null)
+  const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(0)
+  const [title, setTitle] = useState({ english: '', hindi: '' })
+  const [dateTime, setDateTime] = useState('')
+  const [avgTimeRead, setAvgTimeRead] = useState(0)
+  const [author, setAuthor] = useState({ english: '', hindi: '' })
+  const [mainText, setMainText] = useState({ english: [], hindi: [] })
+  const [translateLoading, setTranslateLoading] = useState(false)
+  const [selectedLanguage, setSelectedLanguage] = useState('english')
+  const [showQuizLangModal, setShowQuizLangModal] = useState(false)
+  const [selectLanForQuiz, setSelectLanForQuiz] = useState('english')
+  const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false)
+  const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5)
+  const { tour, isTutorialTakenCheck } = useArticlePageTour()
+  const { quinTour } = useQuinBoostTour()
+  const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
+  const [isLargerThan820] = useMediaQuery('(min-width: 820px)')
+  const [bookmark, setBookmark] = useState(false)
+  const notLoggedIn = state.show
 
-  const openModal = () => setIsQuinBoostModalOpen(true);
-  const closeModal = () => setIsQuinBoostModalOpen(false);
+  const openModal = () => setIsQuinBoostModalOpen(true)
+  const closeModal = () => setIsQuinBoostModalOpen(false)
 
   const fetchQuizTitans = async () => {
     try {
-      const response = await axios.get(`/api/articles/quizTitan/${id}`);
-      setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
+      const response = await axios.get(`/api/articles/quizTitan/${id}`)
+      setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz)
     } catch (error) {
       toast({
-        title: "Error",
-        description: error.response.data.error || "Error Quiz Titans",
-        status: "error",
+        title: 'Error',
+        description: error.response.data.error || 'Error Quiz Titans',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
     } finally {
-      setLoad(false);
+      setLoad(false)
     }
-  };
+  }
 
   const bookmarkStatus = async ({ view, update }) => {
-    if (notLoggedIn) return;
+    if (notLoggedIn) return
     try {
       const response = await axios.get(
-        `/api/user/bookmark?articleId=${id}&view=${view}&update=${update}`
-      );
-      setBookmark(response.data.bookmarkStatus);
+        `/api/user/bookmark?articleId=${id}&view=${view}&update=${update}`,
+      )
+      setBookmark(response.data.bookmarkStatus)
     } catch (error) {
       toast({
-        title: "Error",
-        description: error.response.data.error || "Error Bookmark Status",
-        status: "error",
+        title: 'Error',
+        description: error.response.data.error || 'Error Bookmark Status',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
     }
-  };
+  }
 
   const fetchArticle = async () => {
     try {
-      const response = await axios.get(`/api/articles/article/${id}`);
+      const response = await axios.get(`/api/articles/article/${id}`)
       // console.log(response.data);
       // setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
-      setLatestNews(response.data.newArticle.relatedArticles);
-      setArticle(response.data.newArticle);
-      setDateTime(response.data.newArticle.date);
-      setAvgTimeRead(response.data.newArticle.avgReadTime);
+      setLatestNews(response.data.newArticle.relatedArticles)
+      setArticle(response.data.newArticle)
+      const image = Array.isArray(response.data.newArticle.imgURL)
+        ? response.data.newArticle.imgURL[0]
+        : response.data.newArticle.imgURL
+      setImgURL(image)
+      setDateTime(response.data.newArticle.date)
+      setAvgTimeRead(response.data.newArticle.avgReadTime)
       setTitle({
         english: response.data.newArticle.title,
         hindi: response.data.newArticle.hindiTitle,
-      });
+      })
       setAuthor({
         english: response.data.newArticle.author,
         hindi: response.data.newArticle.hindiAuthor,
-      });
+      })
       setMainText({
         english: response.data.newArticle.mainText,
         hindi: response.data.newArticle.hindiMainText,
-      });
-      setQuizExpired(response.data.quizExpired);
+      })
+      setQuizExpired(response.data.quizExpired)
     } catch (error) {
       toast({
-        title: "Error",
-        description: error.response.data.error || "Error fetching article",
-        status: "error",
+        title: 'Error',
+        description: error.response.data.error || 'Error fetching article',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
     } finally {
-      setArticleLoading(false);
+      setArticleLoading(false)
     }
-  };
+  }
 
   const isQuizGiven = async () => {
-    const userId = state.user._id;
-    const articleId = id;
+    const userId = state.user?._id
+    const articleId = id
+    if (!userId || !articleId) return
     try {
-      const response = await axios.get(
-        `/api/quiz/given/${articleId}/${userId}`
-      );
+      const response = await axios.get(`/api/quiz/given/${articleId}/${userId}`)
       if (response.data.given) {
-        setPercentile(response.data.percentile);
-        setRQM_score(response.data.RQM_score);
-        setGivenQuiz(true);
+        setPercentile(response.data.percentile)
+        setRQM_score(response.data.RQM_score)
+        setGivenQuiz(true)
       }
     } catch (error) {
-      console.log(error.message);
+      console.log(error.message)
     }
-  };
+  }
+
+  useEffect(() => {
+    isQuizGiven()
+    if (state.news) {
+    }
+  }, [id, state.user, state.news])
 
   const checkOnGoingQuiz = async () => {
     try {
-      const response = await axios.get(`/api/articles/quizStatus/${id}`);
-      setOnGoingQuiz(response.data.status);
+      const response = await axios.get(`/api/articles/quizStatus/${id}`)
+      setOnGoingQuiz(response.data.status)
     } catch (error) {
-      console.log(error.message);
+      console.log(error.message)
     } finally {
-      localStorage.setItem("isQuizGivenCalled", true);
+      localStorage.setItem('isQuizGivenCalled', true)
     }
-  };
+  }
 
   const getExpectedIQ = async () => {
     try {
-      const articlePage = document?.querySelector(".article-page");
-      document.querySelector("body").style.overflow = "hidden";
-      const overlay = document.createElement("div");
-      overlay.classList.add("custom-overlay");
-      const overlayNav = document.createElement("div");
-      overlayNav.classList.add("custom-overlay-nav");
-      articlePage?.appendChild(overlay);
-      document.querySelector(".navbar").appendChild(overlayNav);
-      articlePage?.classList.add("shepherd-active");
-      const loadingOverlay = document.createElement("div");
-      loadingOverlay.classList.add("loading-overlay");
-      const spinnerContainer = document.createElement("div");
-      spinnerContainer.classList.add("spinner-container");
-      const loadingSpinner = document.createElement("div");
-      loadingSpinner.classList.add("loading-spinner");
-      spinnerContainer.appendChild(loadingSpinner);
-      loadingOverlay.appendChild(spinnerContainer);
-      articlePage?.appendChild(loadingOverlay);
-      const response = await axios.get(`/api/user/expectedIQScore`);
-      setShowExpectedIQ(true);
-      setExpectedIQ(response.data.ExpectedIQScore);
+      const articlePage = document?.querySelector('.article-page')
+      document.querySelector('body').style.overflow = 'hidden'
+      const overlay = document.createElement('div')
+      overlay.classList.add('custom-overlay')
+      const overlayNav = document.createElement('div')
+      overlayNav.classList.add('custom-overlay-nav')
+      articlePage?.appendChild(overlay)
+      document.querySelector('.navbar').appendChild(overlayNav)
+      articlePage?.classList.add('shepherd-active')
+      const loadingOverlay = document.createElement('div')
+      loadingOverlay.classList.add('loading-overlay')
+      const spinnerContainer = document.createElement('div')
+      spinnerContainer.classList.add('spinner-container')
+      const loadingSpinner = document.createElement('div')
+      loadingSpinner.classList.add('loading-spinner')
+      spinnerContainer.appendChild(loadingSpinner)
+      loadingOverlay.appendChild(spinnerContainer)
+      articlePage?.appendChild(loadingOverlay)
+      const response = await axios.get(`/api/user/expectedIQScore`)
+      setShowExpectedIQ(true)
+      setExpectedIQ(response.data.ExpectedIQScore)
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          error.response.data.error || "Error checking for expected IQ",
-        status: "error",
+          error.response.data.error || 'Error checking for expected IQ',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
     } finally {
-      const loadingOverlay = document.querySelector(".loading-overlay");
-      if (loadingOverlay) loadingOverlay.remove();
-      document.querySelector("body").style.overflow = "auto";
-      const overlay = document.querySelector(".custom-overlay");
-      if (overlay) overlay.remove();
-      const overlayNav = document.querySelector(".custom-overlay-nav");
-      if (overlayNav) overlayNav.remove();
-      const articlePage = document?.querySelector(".article-page");
-      articlePage?.classList.remove("shepherd-active");
+      const loadingOverlay = document.querySelector('.loading-overlay')
+      if (loadingOverlay) loadingOverlay.remove()
+      document.querySelector('body').style.overflow = 'auto'
+      const overlay = document.querySelector('.custom-overlay')
+      if (overlay) overlay.remove()
+      const overlayNav = document.querySelector('.custom-overlay-nav')
+      if (overlayNav) overlayNav.remove()
+      const articlePage = document?.querySelector('.article-page')
+      articlePage?.classList.remove('shepherd-active')
     }
-  };
+  }
 
   useEffect(() => {
-    document.title = "Article page";
-    quinBoostChecker({ setIsQuinBoostAvailable, setQuizLeftToGetQuizBoost });
-    fetchArticle();
-    fetchQuizTitans();
-    checkOnGoingQuiz();
-    bookmarkStatus({ view: true, update: false });
-  }, []);
+    document.title = 'Article page'
+    quinBoostChecker({ setIsQuinBoostAvailable, setQuizLeftToGetQuizBoost })
+    fetchArticle()
+    fetchQuizTitans()
+    checkOnGoingQuiz()
+    bookmarkStatus({ view: true, update: false })
+  }, [])
 
   useEffect(() => {
-    isQuizGiven();
-  }, [givenQuiz]);
+    isQuizGiven()
+  }, [givenQuiz])
 
   useEffect(() => {
     if (textRef.current) {
-      setTextHeight(textRef.current.getBoundingClientRect().height);
+      setTextHeight(textRef.current.getBoundingClientRect().height)
     }
     if (articleRef.current) {
-      setArticleHeight(articleRef.current.getBoundingClientRect().height);
+      setArticleHeight(articleRef.current.getBoundingClientRect().height)
     }
-  }, [article, textHeight]);
+  }, [article, textHeight])
 
   useEffect(() => {
     if (!load && !state.show && state.user && state.user.tutorial.articlePage) {
       // isTutorialTakenCheck({ page: "articlePage", tour });
     }
-  }, [load]);
+  }, [load])
 
   useEffect(() => {
     if (
@@ -261,74 +272,74 @@ const Article = () => {
     ) {
       // isTutorialTakenCheck({ page: "quinBoostPage", tour: quinTour });
     }
-  }, [state?.user, state.show, state?.user?.tutorial?.articlePage, load]);
+  }, [state?.user, state.show, state?.user?.tutorial?.articlePage, load])
 
   useEffect(() => {
     setAlt_image(
       imageData.find(
-        (img) =>
+        img =>
           img?.category?.toLocaleLowerCase() ===
-          data.category?.toLocaleLowerCase()
-      )?.image
-    );
-  }, [data.category]);
+          data?.category?.toLocaleLowerCase(),
+      )?.image,
+    )
+  }, [data?.category])
 
-  const handleLanguageChange = async (event) => {
-    setTranslateLoading(true);
+  const handleLanguageChange = async event => {
+    setTranslateLoading(true)
     try {
-      if (event.target.value === "hindi") {
+      if (event.target.value === 'hindi') {
         if (article.hindiTitle) {
-          setTitle({ ...title, hindi: article.hindiTitle });
-          setAuthor({ ...author, hindi: article.hindiAuthor });
-          setMainText({ ...mainText, hindi: article.hindiMainText });
+          setTitle({ ...title, hindi: article.hindiTitle })
+          setAuthor({ ...author, hindi: article.hindiAuthor })
+          setMainText({ ...mainText, hindi: article.hindiMainText })
         } else {
           toast({
-            title: "Wait",
-            description: "Hindi translation Might Take 1 minute",
-            status: "info",
+            title: 'Wait',
+            description: 'Hindi translation Might Take 1 minute',
+            status: 'info',
             duration: 9000,
             isClosable: true,
-            position: "top",
-          });
+            position: 'top',
+          })
           const response = await axios.get(
-            `/api/articles/hindiTranslation/${id}`
-          );
-          if (response.data.status === "ok") {
-            setArticle(response.data.article);
-            setTitle({ ...title, hindi: response.data.article.hindiTitle });
-            setAuthor({ ...author, hindi: response.data.article.hindiAuthor });
+            `/api/articles/hindiTranslation/${id}`,
+          )
+          if (response.data.status === 'ok') {
+            setArticle(response.data.article)
+            setTitle({ ...title, hindi: response.data.article.hindiTitle })
+            setAuthor({ ...author, hindi: response.data.article.hindiAuthor })
             setMainText({
               ...mainText,
               hindi: response.data.article.hindiMainText,
-            });
+            })
           }
         }
-        setSelectedLanguage("hindi");
+        setSelectedLanguage('hindi')
       } else {
-        setSelectedLanguage("english");
+        setSelectedLanguage('english')
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "error setting language",
-        status: "error",
+        title: 'Error',
+        description: 'error setting language',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
     } finally {
-      setTranslateLoading(false);
+      setTranslateLoading(false)
     }
-  };
+  }
 
   const trackGenerateQuizClick = () => {
     ReactGA.send({
-      hitType: "event",
-      eventCategory: "Generate Quiz Click",
-      eventAction: "Click",
-      eventLabel: "Generate Quiz Button",
-    });
-  };
+      hitType: 'event',
+      eventCategory: 'Generate Quiz Click',
+      eventAction: 'Click',
+      eventLabel: 'Generate Quiz Button',
+    })
+  }
 
   return (
     <>
@@ -354,13 +365,13 @@ const Article = () => {
           article={article}
           isOpen={isOpen || true}
           onClose={() => {
-            onClose();
-            setShowQuiz(false);
+            onClose()
+            setShowQuiz(false)
           }}
           ofShowQuiz={() => {
-            setShowQuiz(false);
-            setGivenQuiz(true);
-            state.user.IQ_score === 0 && getExpectedIQ();
+            setShowQuiz(false)
+            setGivenQuiz(true)
+            state.user.IQ_score === 0 && getExpectedIQ()
           }}
           language={selectLanForQuiz}
         />
@@ -370,10 +381,10 @@ const Article = () => {
       ) : (
         <Flex
           className="article-page"
-          marginTop={"4.5rem"}
-          flexDirection={"column"}
-          w={"100vw"}
-          overflow={"hidden"}
+          marginTop={'4.5rem'}
+          flexDirection={'column'}
+          w={'100vw'}
+          overflow={'hidden'}
         >
           <Helmet>
             <title>{title[selectedLanguage]}</title>
@@ -431,21 +442,20 @@ const Article = () => {
           </Helmet>
 
           <Grid
-            templateColumns={isLargerThan820 ? "minmax(0, 9fr) 5fr" : "1fr"}
+            templateColumns={isLargerThan820 ? 'minmax(0, 9fr) 5fr' : '1fr'}
             gap={10}
-            minH={"85vh"}
-            p={{ base: "20px", md: "50px" }}
+            minH={'85vh'}
+            p={{ base: '20px', md: '50px' }}
             marginTop={0}
             className="article-all-content"
           >
             <MainArticleContent
-              article={article}
               translateLoading={translateLoading}
               selectedLanguage={selectedLanguage}
               title={title}
               author={author}
               mainText={mainText}
-              data={data}
+              imgURL={imgURL}
               alt_image={alt_image}
               textRef={textRef}
               articleRef={articleRef}
@@ -492,9 +502,9 @@ const Article = () => {
         isStateBoosted={state.isBoosted}
       />
       {/* Integrate the TrackTime component */}
-      <TrackTime userId={state.user._id} articleId={id} />
+      {state.user && <TrackTime userId={state.user?._id} articleId={id} />}
     </>
-  );
-};
+  )
+}
 
-export default Article;
+export default Article

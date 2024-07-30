@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Box,
   Flex,
@@ -6,10 +6,7 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerBody,
-  useDisclosure,
-  DrawerHeader,
   DrawerCloseButton,
-  Heading,
   useMediaQuery,
 } from '@chakra-ui/react'
 import UserChats from '../components/chatComponent/userChats'
@@ -30,10 +27,11 @@ const ChatPage = () => {
   } = ChatState()
   const isScreenSmallerThan992px = useMediaQuery('(max-width: 992px)')[0]
   const navigate = useNavigate()
+  const [contentHeight, setContentHeight] = useState('100vh')
+  const contentRef = useRef(null)
 
   const handleClose = () => {
     closeChat()
-    // go to the previous page
     if (isLastRoute) navigate('/home')
     else navigate(-1)
   }
@@ -48,22 +46,45 @@ const ChatPage = () => {
     }
   }, [isScreenSmallerThan992px])
 
+  useEffect(() => {
+    const updateHeight = () => {
+      if (contentRef.current) {
+        const viewportHeight = window.innerHeight
+        setContentHeight(`${viewportHeight}px`)
+      }
+    }
+
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
+    window.addEventListener('orientationchange', updateHeight)
+    return () => {
+      window.removeEventListener('resize', updateHeight)
+      window.removeEventListener('orientationchange', updateHeight)
+    }
+  }, [])
+
   return (
     <div
+      ref={contentRef}
       style={{
-        marginTop: '5rem',
         width: '100%',
         color: 'b',
+        height: '100vh',
+        overflow: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
       }}
     >
-      <Box display="flex" justifyContent="center" w="100%" h="87vh" p="10px">
+      <Box display="flex" justifyContent="center" w="100%" h="100%" p="10px">
         {/* UserChats for larger screens */}
         <Flex
+          mt={{ md: '7%', lg: '10%', xl: '7%', '2xl': '5%' }}
           display={{ base: 'none', lg: 'flex' }}
           flexDirection="column"
           w={{ base: '100%', md: '50%' }}
           mr={{ base: 0, md: 10 }}
-          h="100%"
+          h="85%"
         >
           {user && <UserChats fetchAgain={fetchAgain} />}
         </Flex>
@@ -96,7 +117,7 @@ const ChatPage = () => {
               )}
               <Flex
                 display={{ base: !selectedChat ? 'flex' : 'none', lg: 'none' }}
-                h={'92vh'}
+                h={contentHeight}
                 p={0}
               >
                 {user && <UserChats fetchAgain={fetchAgain} />}
@@ -104,7 +125,7 @@ const ChatPage = () => {
               <Flex
                 display={{ base: selectedChat ? 'flex' : 'none', lg: 'none' }}
                 w="100%"
-                h={'92vh'}
+                h={contentHeight}
                 className="userChatBox"
               >
                 {user && (
@@ -121,8 +142,10 @@ const ChatPage = () => {
 
         {/* UserChatBox */}
         <Flex
+          mt={{ md: '7%', lg: '10%', xl: '7%', '2xl': '5%' }}
           display={{ base: selectedChat ? 'flex' : 'none', lg: 'flex' }}
           w="100%"
+          h="85%"
           className="userChatBox"
         >
           {user && (

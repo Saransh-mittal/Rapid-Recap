@@ -13,7 +13,7 @@ const { formatDate, isEncrypted } = require('../utils/miscellaneous.utils')
 const allMessages = asyncHandler(async (req, res) => {
   const userId = req.user._id
   const page = parseInt(req.query.page) || 1
-  const limit = parseInt(req.query.limit) || 20
+  const limit = parseInt(req.query.limit) || 50
   const skip = (page - 1) * limit
 
   try {

@@ -1,6 +1,13 @@
 // src/components/chat/ScrollableChat.js
-import React, { useState, useRef, useEffect } from 'react'
-import { Box, useDisclosure, useMediaQuery, Skeleton } from '@chakra-ui/react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import {
+  Box,
+  useDisclosure,
+  useMediaQuery,
+  Skeleton,
+  Spinner,
+  Flex,
+} from '@chakra-ui/react'
 import ScrollableFeed from 'react-scrollable-feed'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import ContextMenu from './ContextMenu'
@@ -12,6 +19,7 @@ import {
   checkScrollPosition,
 } from '../../../utils/chat.utils'
 import { isMessageDeletedForUser } from '../config/ChatLogics'
+import { debounce, throttle } from 'lodash'
 
 const ScrollableChat = ({
   messages,
@@ -21,6 +29,7 @@ const ScrollableChat = ({
   handleAddReaction,
   handleRemoveReaction,
   hasMore,
+  setHasMore,
 }) => {
   const { user } = ChatState()
   const [loading, setLoading] = useState(false)
@@ -28,6 +37,7 @@ const ScrollableChat = ({
   const [page, setPage] = useState(1)
   const lastScrollTop = useRef(0)
   const loadingRef = useRef(false)
+  const messageIdsRef = useRef(new Set())
 
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,
@@ -95,32 +105,73 @@ const ScrollableChat = ({
     }
     handleCloseContextMenu()
   }
+  // Create the throttled scroll handler
+  const throttledScrollHandler = useCallback(
+    throttle(async (scrollTop, scrollHeight, clientHeight) => {
+      const SCROLL_THRESHOLD = 500
 
+      const isScrollingUp = scrollTop < lastScrollTop.current
+      const isNearTop = scrollTop <= SCROLL_THRESHOLD
+
+      if (isNearTop && !loadingRef.current && hasMore) {
+        try {
+          loadingRef.current = true
+          setLoading(true)
+          const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current
+          // if (scrollableDiv) scrollableDiv.style.overflowY = 'hidden'
+
+          const newMessages = await loadMoreMessages(page + 1)
+
+          if (newMessages.length === 0) {
+            setHasMore(false)
+          } else {
+            setPage(prevPage => prevPage + 1)
+
+            // Maintain scroll position
+            requestAnimationFrame(() => {
+              if (scrollableDiv) {
+                const newScrollHeight = scrollableDiv.scrollHeight
+                const scrollDiff = newScrollHeight - scrollHeight
+                scrollableDiv.scrollTop = scrollDiff
+              }
+            })
+          }
+        } catch (error) {
+          console.error('Error loading more messages:', error)
+        } finally {
+          await new Promise(resolve => setTimeout(resolve, 300))
+          const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current
+          if (scrollableDiv) scrollableDiv.style.overflowY = 'auto'
+          loadingRef.current = false
+          setLoading(false)
+        }
+      }
+
+      lastScrollTop.current = scrollTop
+    }, 200),
+    [loadMoreMessages, page, hasMore, setHasMore],
+  )
+
+  // Scroll event handler
+  const handleScroll = useCallback(() => {
+    const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current
+    if (scrollableDiv) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollableDiv
+      throttledScrollHandler(scrollTop, scrollHeight, clientHeight)
+    }
+  }, [throttledScrollHandler])
+
+  // Set up scroll listener
   useEffect(() => {
     const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current
     if (!scrollableDiv) return
-
-    const scrollListener = () => {
-      if (!loadingRef.current) {
-        checkScrollPosition({
-          scrollableDiv,
-          lastScrollTop,
-          loadingRef,
-          setLoading,
-          loadMoreMessages,
-          page,
-          setPage,
-          hasMore,
-        })
-      }
-    }
-
-    scrollableDiv.addEventListener('scroll', scrollListener)
+    scrollableDiv.addEventListener('scroll', handleScroll)
 
     return () => {
-      scrollableDiv.removeEventListener('scroll', scrollListener)
+      scrollableDiv.removeEventListener('scroll', handleScroll)
+      throttledScrollHandler.cancel()
     }
-  }, [checkScrollPosition])
+  }, [handleScroll, throttledScrollHandler])
 
   useEffect(() => {
     return () => {
@@ -139,12 +190,17 @@ const ScrollableChat = ({
     <>
       <style>{`div::-webkit-scrollbar { display: none; }`}</style>
       <ScrollableFeed ref={scrollableFeedRef}>
-        {loadingRef.current && (
+        {/* {loadingRef.current && (
           <Box textAlign="center" py={2}>
             {Array.from({ length: 20 }, (_, i) => (
               <Skeleton key={i} height="40px" m={'10px'} />
             ))}
           </Box>
+        )} */}
+        {loadingRef.current && (
+          <Flex w={'100%'} justifyContent={'center'} alignItems={'center'}>
+            <Spinner color="white" />
+          </Flex>
         )}
         <GroupedMessages
           groupedMessages={groupedMessages}
@@ -192,4 +248,4 @@ const ScrollableChat = ({
   )
 }
 
-export default ScrollableChat
+export default React.memo(ScrollableChat)

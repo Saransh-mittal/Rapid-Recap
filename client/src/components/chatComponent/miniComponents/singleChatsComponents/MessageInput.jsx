@@ -1,7 +1,7 @@
-import React from "react";
-import { Flex, FormControl, IconButton, Input, Box } from "@chakra-ui/react";
-import { BsEmojiSmile, BsBookmarkFill } from "react-icons/bs";
-import EmojiPicker from "emoji-picker-react";
+import React from 'react'
+import { Flex, FormControl, IconButton, Input, Box } from '@chakra-ui/react'
+import { BsEmojiSmile, BsBookmarkFill } from 'react-icons/bs'
+import EmojiPicker from 'emoji-picker-react'
 
 const MessageInput = ({
   sendMessage,
@@ -22,25 +22,27 @@ const MessageInput = ({
         <IconButton
           icon={<BsEmojiSmile />}
           onClick={() => {
-            setShowEmojiPicker(!showEmojiPicker);
-            setShowStickerPicker(false);
+            setShowEmojiPicker(!showEmojiPicker)
+            setShowStickerPicker(false)
           }}
-          border={"1px solid white"}
-          background={"transparent"}
-          color={"white"}
-          _hover={{ background: "#38B2AC", color: "white" }}
+          border={'1px solid white'}
+          background={'transparent'}
+          color={'white'}
+          _hover={{ background: '#38B2AC', color: 'white' }}
+          borderRadius={'50%'}
         />
         <IconButton
           icon={<BsBookmarkFill />}
           onClick={() => {
-            setShowBookmarksModal(true);
-            fetchBookmarks();
+            setShowBookmarksModal(true)
+            fetchBookmarks()
           }}
           bg="transparent"
           border="1px solid white"
           color="white"
-          _hover={{ bg: "#38B2AC", color: "white" }}
+          _hover={{ bg: '#38B2AC', color: 'white' }}
           ml={2}
+          borderRadius={'50%'}
         />
         {showEmojiPicker && (
           <Box
@@ -52,8 +54,8 @@ const MessageInput = ({
           >
             <EmojiPicker
               onEmojiClick={onEmojiClick}
-              emojiStyle={"facebook"}
-              theme={"dark"}
+              emojiStyle={'facebook'}
+              theme={'dark'}
             />
           </Box>
         )}
@@ -62,10 +64,12 @@ const MessageInput = ({
           value={newMessage}
           onChange={typingHandler}
           ml={2}
+          color={'white'}
+          borderRadius={'20px'}
         />
       </Flex>
     </FormControl>
-  );
-};
+  )
+}
 
-export default MessageInput;
+export default MessageInput
