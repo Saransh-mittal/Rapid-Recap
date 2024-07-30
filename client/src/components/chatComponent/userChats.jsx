@@ -20,6 +20,7 @@ import ChatLoading from './ChatLoading'
 import {
   getRecieverInGameName,
   getSender,
+  getSenderFull,
   isSenderLoggedUser,
 } from './config/ChatLogics'
 import { AppContext } from '../../contextAPI/appContext'
@@ -170,7 +171,7 @@ const UserChats = ({ fetchAgain }) => {
         chat.latestMessage.sender._id.toString() === user?._id.toString()
       : true
     return (
-      <Box
+      <Flex
         onClick={() => handleChatClick(chat)}
         cursor={'pointer'}
         bg={
@@ -189,70 +190,86 @@ const UserChats = ({ fetchAgain }) => {
         my={1}
         borderRadius="lg"
         key={chat._id}
+        gap={3}
+        // flexDirection={'row'}
       >
-        <Flex justifyContent={'space-between'} alignItems={'center'}>
-          <Flex gap={2}>
-            <Text fontWeight={readByLoggedUser ? 'normal' : 'bold'} m={0}>
-              {chat._id &&
-              !chat.isGroupChat &&
-              chat.users &&
-              chat.users.length > 0
-                ? getSender(loggedUser, chat.users)
-                : chat.chatName}
-            </Text>
-            {chat.status === 'pending' &&
-              chat.chatCreatedBy !== loggedUser?._id && (
-                <Badge colorScheme="yellow">New Request</Badge>
-              )}
-            {chat.status === 'rejected' && (
-              <Badge colorScheme="red">Rejected</Badge>
-            )}{' '}
-            {chat.new && (
-              <Badge colorScheme="green" h={'fit-content'}>
-                New
-              </Badge>
-            )}
-          </Flex>
-          <Text
-            m={0}
-            fontSize="xs"
-            color={readByLoggedUser ? '#9CAFAA' : 'white'}
-          >
-            {chat._id &&
-            !chat.isGroupChat &&
-            chat.users &&
-            chat.users.length > 0
-              ? getRecieverInGameName(loggedUser, chat.users)
-              : null}
-          </Text>
-        </Flex>
-        {chat._id && chat.latestMessage && (
-          <Text
-            fontSize="xs"
-            color={readByLoggedUser ? '#9CAFAA' : 'white'}
-            display={'flex'}
+        <Image
+          borderRadius="full"
+          boxSize={{ base: '35px', md: '45px' }}
+          src={getSenderFull(loggedUser, chat.users).pic}
+          alt={getSenderFull(loggedUser, chat.users).name}
+        />
+        <Flex flexDirection={'column'} w={'100%'}>
+          <Flex
+            justifyContent={'space-between'}
             alignItems={'center'}
-            fontWeight={readByLoggedUser ? 'normal' : 'bold'}
+            // w={'100%'}
           >
-            {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
-              ? 'YOU'
-              : chat.latestMessage.sender.name}{' '}
-            {': '}
-            {getLatestMessageContent(chat)}
-            {!readByLoggedUser && (
-              <Badge
-                colorScheme="blue"
-                borderRadius={'50%'}
-                h={'8px'}
-                w={'8px'}
-                top={'58%'}
-                right={'10%'}
-                marginLeft={'1rem'}
-              />
-            )}
-          </Text>
-        )}
-      </Box>
+            <Flex gap={2}>
+              <Text fontWeight={readByLoggedUser ? 'normal' : 'bold'} m={0}>
+                {chat._id &&
+                !chat.isGroupChat &&
+                chat.users &&
+                chat.users.length > 0
+                  ? getSender(loggedUser, chat.users)
+                  : chat.chatName}
+              </Text>
+              {/* {chat.status === 'pending' &&
+                chat.chatCreatedBy !== loggedUser?._id && (
+                  <Badge colorScheme="yellow">New Request</Badge>
+                )}
+              {chat.status === 'rejected' && (
+                <Badge colorScheme="red">Rejected</Badge>
+              )}{' '} */}
+              {chat.new && (
+                <Badge colorScheme="green" h={'fit-content'} mt={1}>
+                  New
+                </Badge>
+              )}
+            </Flex>
+            <Flex>
+              <Text
+                m={0}
+                fontSize="xs"
+                color={readByLoggedUser ? '#9CAFAA' : 'white'}
+              >
+                {chat._id &&
+                !chat.isGroupChat &&
+                chat.users &&
+                chat.users.length > 0
+                  ? getRecieverInGameName(loggedUser, chat.users)
+                  : null}
+              </Text>
+            </Flex>
+          </Flex>
+          {chat._id && chat.latestMessage && (
+            <Text
+              fontSize="xs"
+              color={readByLoggedUser ? '#9CAFAA' : 'white'}
+              display={'flex'}
+              alignItems={'center'}
+              fontWeight={readByLoggedUser ? 'normal' : 'bold'}
+            >
+              {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
+                ? 'YOU'
+                : chat.latestMessage.sender.name}{' '}
+              {': '}
+              {getLatestMessageContent(chat)}
+              {!readByLoggedUser && (
+                <Badge
+                  colorScheme="blue"
+                  borderRadius={'50%'}
+                  h={'8px'}
+                  w={'8px'}
+                  top={'58%'}
+                  right={'10%'}
+                  marginLeft={'1rem'}
+                />
+              )}
+            </Text>
+          )}
+        </Flex>
+      </Flex>
     )
   }
 

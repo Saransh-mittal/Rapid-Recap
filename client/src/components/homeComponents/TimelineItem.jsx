@@ -1,5 +1,5 @@
-import Loading from "../miscellaneous/Loading";
-import Card from "./Card";
+import Loading from '../miscellaneous/Loading'
+import Card from './Card'
 
 const TimelineItem = ({ newsNumber, data, tourComplete }) => {
   // console.log(data);
@@ -11,7 +11,7 @@ const TimelineItem = ({ newsNumber, data, tourComplete }) => {
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default TimelineItem;
+export default TimelineItem

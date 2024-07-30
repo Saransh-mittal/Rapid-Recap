@@ -5,16 +5,12 @@ import { AppContext } from '../contextAPI/appContext'
 import { useNavigate, useParams } from 'react-router-dom'
 import { debounce } from 'lodash'
 import { useToast, Box, Spinner } from '@chakra-ui/react'
-// import UpgradeModal from "../components/homeComponents/UpgradeModal";
-// import ReadMoreNewsModal from "../components/articleComponents/ReadMoreNewsModal";
+
 import { Helmet } from 'react-helmet-async'
 
 const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
 const UpgradeModal = lazy(() =>
   import('../components/homeComponents/UpgradeModal'),
-)
-const ReadMoreNewsModal = lazy(() =>
-  import('../components/articleComponents/ReadMoreNewsModal'),
 )
 
 const Home = () => {
@@ -155,11 +151,6 @@ const Home = () => {
             isOpen={showUpgradeModal}
             onClose={() => setShowUpgradeModal(false)}
           />
-        )}
-        {state.modal && (
-          <ReadMoreNewsModal
-            onClose={() => dispatch({ type: 'showModal', payloadModal: false })}
-          ></ReadMoreNewsModal>
         )}
         <Timeline
           setHasMoreItems={setHasMoreItems}

@@ -63,19 +63,18 @@ const Card = ({ newsNumber, data }) => {
 
   return (
     <div className={`containers`}>
-      <div
+      <Flex
         className={`cardWrapper`}
         ref={cardWrapper}
         onClick={() => {
-          // window.open(
-          //   `${data.url}`,
-          //   "_blank"
-          // )
-          //console.log(`hi`);
-          window.innerWidth < 768
-            ? navigate(`/article/${newArticle._id}`)
-            : dispatch({ type: 'showModal', payloadModal: true })
+          // window.innerWidth < 768
+          //   ? navigate(`/article/${newArticle._id}`)
+          //   : dispatch({ type: 'showModal', payloadModal: true })
+          navigate(`/article/${newArticle._id}`)
           dispatch({ type: 'setNews', payloadNews: newArticle })
+        }}
+        _hover={{
+          cursor: 'pointer',
         }}
         onMouseMove={mousemove}
         onMouseLeave={mouseleave}
@@ -145,7 +144,7 @@ const Card = ({ newsNumber, data }) => {
             </div>
           </div>
         </Slide>
-      </div>
+      </Flex>
     </div>
   )
 }

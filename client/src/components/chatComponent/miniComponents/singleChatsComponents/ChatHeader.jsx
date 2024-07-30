@@ -54,7 +54,6 @@ const ChatHeader = ({
               }}
               justifyContent={'center'}
               alignItems={'center'}
-              w={'100%'}
             >
               <Flex>
                 <Image

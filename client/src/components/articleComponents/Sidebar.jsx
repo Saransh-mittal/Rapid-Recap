@@ -1,6 +1,6 @@
 // components/articleComponents/Sidebar.js
 
-import React from "react";
+import React from 'react'
 import {
   Box,
   Heading,
@@ -11,18 +11,18 @@ import {
   Tooltip,
   Badge,
   useDisclosure,
-} from "@chakra-ui/react";
-import { LockIcon, TriangleDownIcon } from "@chakra-ui/icons";
-import Alt_img from "/images/rr.webp";
-import GivenQuiz from "./GivenQuiz";
-import QuizExpired from "./QuizExpired";
-import GenerateQuizButton from "./GenerateQuizButton";
-import TotalUserAttempted from "./TotalUserAttempted";
-import QuinBoost from "./quizComponents/QuinBoost";
-import starBoost from "/GIFs/starBoost.gif";
-import TextBackgound from "/images/textBackground.webp";
-import ShareButton from "./ShareButton";
-import ShareChatModal from "../chatComponent/miniComponents/ShareChatModal";
+} from '@chakra-ui/react'
+import { LockIcon, TriangleDownIcon } from '@chakra-ui/icons'
+import Alt_img from '/images/rr.webp'
+import GivenQuiz from './GivenQuiz'
+import QuizExpired from './QuizExpired'
+import TakeQuizButton from './TakeQuizButton'
+import TotalUserAttempted from './TotalUserAttempted'
+import QuinBoost from './quizComponents/QuinBoost'
+import starBoost from '/GIFs/starBoost.gif'
+import TextBackgound from '/images/textBackground.webp'
+import ShareButton from './ShareButton'
+import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
 const Sidebar = ({
   givenQuiz,
   percentile,
@@ -46,28 +46,28 @@ const Sidebar = ({
   openModal,
   quinTour,
 }) => {
-  const notLoggedIn = state.show;
-  const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure();
+  const notLoggedIn = state.show
+  const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const handleShare = () => {
     if (notLoggedIn) {
       toast({
-        title: "Login Required",
-        description: "Please log in to share this article.",
-        status: "warning",
+        title: 'Login Required',
+        description: 'Please log in to share this article.',
+        status: 'warning',
         duration: 3000,
         isClosable: true,
-      });
-      return;
+      })
+      return
     }
-    onOpenShareModal();
+    onOpenShareModal()
 
     // In a real implementation, you might do something like:
     // shareToChat(article);
-  };
+  }
   return (
     <Box
-      boxShadow={"0 100px 200px rgba(1, 1, 1, 1.1)"}
-      borderRadius={"15px"}
+      boxShadow={'0 100px 200px rgba(1, 1, 1, 1.1)'}
+      borderRadius={'15px'}
       p={1.5}
     >
       {givenQuiz ? (
@@ -77,31 +77,31 @@ const Sidebar = ({
           RQM_score={RQM_score}
         />
       ) : onGoingQuiz ? (
-        <Heading size="md" margin={"5px"} mb={5} height={"100px"} color={"red"}>
+        <Heading size="md" margin={'5px'} mb={5} height={'100px'} color={'red'}>
           Quiz is Already going on in some other tab or device
         </Heading>
       ) : quizExpired ? (
         <QuizExpired />
       ) : (
-        <Box position={"relative"}>
+        <Box position={'relative'}>
           <Box
             style={
               notLoggedIn
-                ? { filter: "blur(5px)", userSelect: "none" }
-                : { userSelect: "text" }
+                ? { filter: 'blur(5px)', userSelect: 'none' }
+                : { userSelect: 'text' }
             }
           >
-            <GenerateQuizButton
+            <TakeQuizButton
               isQuinBoostAvailable={isQuinBoostAvailable}
               onClick={() => {
                 if (notLoggedIn) {
-                  return;
+                  return
                 }
-                tour.complete();
-                trackGenerateQuizClick();
-                setShowQuizLangModal(true);
-                setShowQuiz(!showQuiz);
-                onOpen();
+                tour.complete()
+                trackGenerateQuizClick()
+                setShowQuizLangModal(true)
+                setShowQuiz(!showQuiz)
+                onOpen()
               }}
             />
           </Box>
@@ -127,18 +127,18 @@ const Sidebar = ({
         />
       </Box>
       <Flex
-        w={"100%"}
-        marginTop={"2rem"}
-        marginBottom={"2"}
+        w={'100%'}
+        marginTop={'2rem'}
+        marginBottom={'2'}
         gap={3}
-        flexDirection={"column"}
-        justifyContent={"center"}
-        alignItems={"center"}
+        flexDirection={'column'}
+        justifyContent={'center'}
+        alignItems={'center'}
       >
         <ShareButton onClick={handleShare} isDisabled={notLoggedIn} />
         <Flex
-          flexDirection={"column"}
-          position={"relative"}
+          flexDirection={'column'}
+          position={'relative'}
           className="quin-boost-tag"
         >
           {isQuinBoostAvailable ? (
@@ -151,45 +151,45 @@ const Sidebar = ({
                 <Text
                   m={0}
                   p={0}
-                  textAlign={"left"}
-                  paddingLeft={"30px"}
-                  position={"absolute"}
-                  color={"#9CAFAA"}
-                  fontWeight={"bold"}
+                  textAlign={'left'}
+                  paddingLeft={'30px'}
+                  position={'absolute'}
+                  color={'#9CAFAA'}
+                  fontWeight={'bold'}
                 >
                   Quin Boost
                 </Text>
                 <Flex
-                  marginTop={"5px"}
-                  position={"relative"}
-                  justifyContent={"center"}
-                  alignItems={"center"}
-                  onClick={(e) => {
+                  marginTop={'5px'}
+                  position={'relative'}
+                  justifyContent={'center'}
+                  alignItems={'center'}
+                  onClick={e => {
                     if (notLoggedIn) {
-                      e.preventDefault();
-                      return;
+                      e.preventDefault()
+                      return
                     }
-                    quinTour.complete();
-                    openModal();
+                    quinTour.complete()
+                    openModal()
                   }}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <Image
                     src={TextBackgound}
-                    background={"none"}
-                    height={"100px"}
-                    width={"200px"}
+                    background={'none'}
+                    height={'100px'}
+                    width={'200px'}
                     className="quin-boost-tracker"
-                    style={notLoggedIn ? { filter: "blur(5px)" } : {}}
+                    style={notLoggedIn ? { filter: 'blur(5px)' } : {}}
                   />
                   <Text
                     m={0}
                     p={0}
-                    textAlign={"left"}
-                    position={"absolute"}
-                    color={"black"}
-                    fontSize={"20px"}
-                    fontWeight={"bold"}
+                    textAlign={'left'}
+                    position={'absolute'}
+                    color={'black'}
+                    fontSize={'20px'}
+                    fontWeight={'bold'}
                   >
                     {quizLeftToGetQuizBoost} Quiz Left
                   </Text>
@@ -216,20 +216,20 @@ const Sidebar = ({
         </Flex>
         {state.isBoosted && (
           <Flex
-            justifyContent={"center"}
-            alignItems={"center"}
+            justifyContent={'center'}
+            alignItems={'center'}
             gap={2}
-            marginTop={"10px"}
+            marginTop={'10px'}
             onClick={openModal}
-            style={{ cursor: "pointer" }}
+            style={{ cursor: 'pointer' }}
           >
             <Image
               src={starBoost}
-              background={"none"}
-              height={"60px"}
-              w={"60px"}
+              background={'none'}
+              height={'60px'}
+              w={'60px'}
             />
-            <Badge fontSize={"1.2rem"} color={"yellow"} background={"none"}>
+            <Badge fontSize={'1.2rem'} color={'yellow'} background={'none'}>
               Enjoy!! 1.5x multiplier
             </Badge>
           </Flex>
@@ -241,54 +241,54 @@ const Sidebar = ({
       <SimpleGrid
         columns={1}
         marginTop={5}
-        display={"flex"}
-        flexDirection={"column"}
-        alignItems={"justify"}
-        position={"relative"}
+        display={'flex'}
+        flexDirection={'column'}
+        alignItems={'justify'}
+        position={'relative'}
       >
         {latestNews
           .filter(
             (_, idx) =>
-              idx < Math.floor(articleHeight / 100) && _._id !== article._id
+              idx < Math.floor(articleHeight / 100) && _._id !== article._id,
           )
-          .map((item) => {
+          .map(item => {
             return (
               <Box
                 minHeight="100px"
                 key={item._id}
-                onClick={(e) => {
+                onClick={e => {
                   if (notLoggedIn) {
-                    e.preventDefault();
-                    return;
+                    e.preventDefault()
+                    return
                   }
-                  window.location.href = `/article/${item._id}`;
+                  window.location.href = `/article/${item._id}`
                 }}
                 style={
                   notLoggedIn
-                    ? { filter: "blur(5px)", userSelect: "none" }
-                    : { userSelect: "text", cursor: "pointer" }
+                    ? { filter: 'blur(5px)', userSelect: 'none' }
+                    : { userSelect: 'text', cursor: 'pointer' }
                 }
-                borderTop={"2px solid lightblue"}
+                borderTop={'2px solid lightblue'}
                 p={2}
-                w={"100%"}
-                display={"flex"}
+                w={'100%'}
+                display={'flex'}
               >
                 <Image
                   width="100px"
                   mr={3}
                   mt={2}
-                  height={"100%"}
+                  height={'100%'}
                   float="left"
                   src={item.imgURL ? item.imgURL : Alt_img}
                   alt="Article img"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = Alt_img;
-                    e.target.style.height = `100%`;
+                  onError={e => {
+                    e.target.onerror = null
+                    e.target.src = Alt_img
+                    e.target.style.height = `100%`
                   }}
                 />
-                <Flex flexDirection={"column"} w={"100%"}>
-                  <Flex w={"100%"} justifyContent={"space-between"}>
+                <Flex flexDirection={'column'} w={'100%'}>
+                  <Flex w={'100%'} justifyContent={'space-between'}>
                     <Text
                       m={0}
                       p={0}
@@ -298,10 +298,10 @@ const Sidebar = ({
                       letterSpacing="1px"
                     >
                       {item.date}
-                      {","}
+                      {','}
                     </Text>
                     <Text
-                      fontSize={"0.8rem"}
+                      fontSize={'0.8rem'}
                       m={0}
                       p={0}
                       textTransform="uppercase"
@@ -314,7 +314,7 @@ const Sidebar = ({
                   <Text mt={2}>{item.title}</Text>
                 </Flex>
               </Box>
-            );
+            )
           })}
         {notLoggedIn && (
           <Tooltip label="Please log in to navigate" placement="top">
@@ -337,7 +337,7 @@ const Sidebar = ({
         notLoggedIn={notLoggedIn}
       />
     </Box>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export default Sidebar
