@@ -97,7 +97,6 @@ const UserChats = ({ fetchAgain }) => {
   }, [location, chats, setSelectedChat])
 
   useEffect(() => {
-    console.log('fetching chats')
     setLoggedUser(state.user)
     const cachedChats = JSON.parse(localStorage.getItem('chats'))
     const cachedChatRequests = JSON.parse(localStorage.getItem('chatRequests'))

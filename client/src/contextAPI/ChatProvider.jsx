@@ -78,7 +78,6 @@ const ChatProvider = ({ children }) => {
 
     const handleReconnect = () => {
       console.log('Reconnecting...')
-      console.log('fetchAgain', fetchAgain)
       setFetchAgain(true)
       getSocket()
     }
