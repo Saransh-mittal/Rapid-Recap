@@ -1,21 +1,21 @@
-const asyncHandler = require("express-async-handler");
-const Chat = require("../model/chatSchema");
-const User = require("../model/userSchema");
-const Message = require("../model/messageSchema");
-const Article = require("../model/articleSchema");
-const { formatDate, isEncrypted } = require("../utils/miscellaneous.utils");
-const { userOpenChats } = require("../sharedState");
-const { sendNotification } = require("../services/notificationService");
+const asyncHandler = require('express-async-handler')
+const Chat = require('../model/chatSchema')
+const User = require('../model/userSchema')
+const Message = require('../model/messageSchema')
+const Article = require('../model/articleSchema')
+const { formatDate, isEncrypted } = require('../utils/miscellaneous.utils')
+const { userOpenChats } = require('../sharedState')
+const { sendNotification } = require('../services/notificationService')
 
 //@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
 //@access          Protected
 const accessChat = asyncHandler(async (req, res) => {
-  const { userId } = req.body;
+  const { userId } = req.body
 
   if (!userId) {
-    console.log("UserId param not sent with request");
-    return res.sendStatus(400);
+    console.log('UserId param not sent with request')
+    return res.sendStatus(400)
   }
 
   const isFriend =
@@ -26,55 +26,54 @@ const accessChat = asyncHandler(async (req, res) => {
     (await User.findOne({
       _id: req.user._id,
       friends: { $elemMatch: { $eq: userId } },
-    }));
+    }))
 
   var isChat = await Chat.find({
     isGroupChat: false,
     $and: [
       { users: { $elemMatch: { $eq: req.user._id } } },
       { users: { $elemMatch: { $eq: userId } } },
-      { status: { $in: ["accepted", "pending"] } },
+      { status: { $in: ['accepted', 'pending'] } },
     ],
   })
-    .populate("users", "-password")
-    .populate("latestMessage");
+    .populate('users', '-password')
+    .populate('latestMessage')
 
   isChat = await User.populate(isChat, {
-    path: "latestMessage.sender",
-    select: "name pic email",
-  });
+    path: 'latestMessage.sender',
+    select: 'name pic email',
+  })
 
   if (isChat.length > 0) {
     if (
       isChat[0].latestMessage &&
       isEncrypted(isChat[0].latestMessage.content)
     ) {
-      isChat[0].latestMessage.content =
-        isChat[0].latestMessage.decryptContent();
+      isChat[0].latestMessage.content = isChat[0].latestMessage.decryptContent()
     }
-    res.send(isChat[0]);
+    res.send(isChat[0])
   } else {
     var chatData = {
-      chatName: "sender",
+      chatName: 'sender',
       isGroupChat: false,
       users: [req.user._id, userId],
       chatCreatedBy: req.user._id,
-      status: isFriend ? "accepted" : "pending",
-    };
+      status: isFriend ? 'accepted' : 'pending',
+    }
 
     try {
-      const createdChat = await Chat.create(chatData);
+      const createdChat = await Chat.create(chatData)
       const FullChat = await Chat.findOne({ _id: createdChat._id }).populate(
-        "users",
-        "-password"
-      );
-      res.status(200).json(FullChat);
+        'users',
+        '-password',
+      )
+      res.status(200).json(FullChat)
     } catch (error) {
-      res.status(400);
-      throw new Error(error.message);
+      res.status(400)
+      throw new Error(error.message)
     }
   }
-});
+})
 
 //@description     Fetch all chats for a user
 //@route           GET /api/chat/
@@ -83,52 +82,52 @@ const fetchChats = asyncHandler(async (req, res) => {
   try {
     Chat.find({
       users: { $elemMatch: { $eq: req.user._id } },
-      status: { $in: ["accepted", "pending"] },
+      status: { $in: ['accepted', 'pending'] },
     })
-      .populate("users", "-password")
-      .populate("groupAdmin", "-password")
-      .populate("latestMessage")
+      .populate('users', '-password')
+      .populate('groupAdmin', '-password')
+      .populate('latestMessage')
       .sort({ updatedAt: -1 })
-      .then(async (results) => {
+      .then(async results => {
         results = await User.populate(results, {
-          path: "latestMessage.sender",
-          select: "name pic email",
-        });
+          path: 'latestMessage.sender',
+          select: 'name pic email',
+        })
         results = results.filter(
-          (chat) =>
+          chat =>
             chat.latestMessage ||
             (chat.chatCreatedBy
               ? chat.chatCreatedBy.toString() === req.user._id.toString()
-              : true)
-        );
+              : true),
+        )
         for (let i = 0; i < results.length; i++) {
-          let chat = results[i];
+          let chat = results[i]
           const messagesCount = await Message.countDocuments({
             chat: chat._id,
-          });
-          const today = new Date();
+          })
+          const today = new Date()
           if (
             messagesCount <= 1 &&
             today.getTime() - chat.createdAt.getTime() < 86400000
           ) {
             // Instead of using toObject(), we'll create a new object and copy properties
-            let chatObj = Object.assign({}, chat.toObject());
-            chatObj.new = true;
+            let chatObj = Object.assign({}, chat.toObject())
+            chatObj.new = true
 
             // Preserve the decryptContent method if it exists
             if (
               chat.latestMessage &&
-              typeof chat.latestMessage.decryptContent === "function"
+              typeof chat.latestMessage.decryptContent === 'function'
             ) {
               chatObj.latestMessage = Object.assign(
                 {},
-                chat.latestMessage.toObject()
-              );
+                chat.latestMessage.toObject(),
+              )
               chatObj.latestMessage.decryptContent =
-                chat.latestMessage.decryptContent.bind(chatObj.latestMessage);
+                chat.latestMessage.decryptContent.bind(chatObj.latestMessage)
             }
 
-            results[i] = chatObj;
+            results[i] = chatObj
           }
 
           // Decrypt the latest message if it exists
@@ -138,34 +137,34 @@ const fetchChats = asyncHandler(async (req, res) => {
             isEncrypted(results[i].latestMessage.content)
           ) {
             results[i].latestMessage.content =
-              results[i].latestMessage.decryptContent();
+              results[i].latestMessage.decryptContent()
           }
         }
-        res.status(200).send(results);
-      });
+        res.status(200).send(results)
+      })
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message);
+    res.status(400)
+    throw new Error(error.message)
   }
-});
+})
 
 //@description     Create New Group Chat
 //@route           POST /api/chat/group
 //@access          Protected
 const createGroupChat = asyncHandler(async (req, res) => {
   if (!req.body.users || !req.body.name) {
-    return res.status(400).send({ message: "Please Fill all the feilds" });
+    return res.status(400).send({ message: 'Please Fill all the feilds' })
   }
 
-  var users = JSON.parse(req.body.users);
+  var users = JSON.parse(req.body.users)
 
   if (users.length < 2) {
     return res
       .status(400)
-      .send("More than 2 users are required to form a group chat");
+      .send('More than 2 users are required to form a group chat')
   }
 
-  users.push(req.user);
+  users.push(req.user)
 
   try {
     const groupChat = await Chat.create({
@@ -173,24 +172,24 @@ const createGroupChat = asyncHandler(async (req, res) => {
       users: users,
       isGroupChat: true,
       groupAdmin: req.user,
-    });
+    })
 
     const fullGroupChat = await Chat.findOne({ _id: groupChat._id })
-      .populate("users", "-password")
-      .populate("groupAdmin", "-password");
+      .populate('users', '-password')
+      .populate('groupAdmin', '-password')
 
-    res.status(200).json(fullGroupChat);
+    res.status(200).json(fullGroupChat)
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message);
+    res.status(400)
+    throw new Error(error.message)
   }
-});
+})
 
 // @desc    Rename Group
 // @route   PUT /api/chat/rename
 // @access  Protected
 const renameGroup = asyncHandler(async (req, res) => {
-  const { chatId, chatName } = req.body;
+  const { chatId, chatName } = req.body
 
   const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
@@ -199,24 +198,24 @@ const renameGroup = asyncHandler(async (req, res) => {
     },
     {
       new: true,
-    }
+    },
   )
-    .populate("users", "-password")
-    .populate("groupAdmin", "-password");
+    .populate('users', '-password')
+    .populate('groupAdmin', '-password')
 
   if (!updatedChat) {
-    res.status(404);
-    throw new Error("Chat Not Found");
+    res.status(404)
+    throw new Error('Chat Not Found')
   } else {
-    res.json(updatedChat);
+    res.json(updatedChat)
   }
-});
+})
 
 // @desc    Remove user from Group
 // @route   PUT /api/chat/groupremove
 // @access  Protected
 const removeFromGroup = asyncHandler(async (req, res) => {
-  const { chatId, userId } = req.body;
+  const { chatId, userId } = req.body
 
   // check if the requester is admin
 
@@ -227,24 +226,24 @@ const removeFromGroup = asyncHandler(async (req, res) => {
     },
     {
       new: true,
-    }
+    },
   )
-    .populate("users", "-password")
-    .populate("groupAdmin", "-password");
+    .populate('users', '-password')
+    .populate('groupAdmin', '-password')
 
   if (!removed) {
-    res.status(404);
-    throw new Error("Chat Not Found");
+    res.status(404)
+    throw new Error('Chat Not Found')
   } else {
-    res.json(removed);
+    res.json(removed)
   }
-});
+})
 
 // @desc    Add user to Group / Leave
 // @route   PUT /api/chat/groupadd
 // @access  Protected
 const addToGroup = asyncHandler(async (req, res) => {
-  const { chatId, userId } = req.body;
+  const { chatId, userId } = req.body
 
   // check if the requester is admin
 
@@ -255,46 +254,46 @@ const addToGroup = asyncHandler(async (req, res) => {
     },
     {
       new: true,
-    }
+    },
   )
-    .populate("users", "-password")
-    .populate("groupAdmin", "-password");
+    .populate('users', '-password')
+    .populate('groupAdmin', '-password')
 
   if (!added) {
-    res.status(404);
-    throw new Error("Chat Not Found");
+    res.status(404)
+    throw new Error('Chat Not Found')
   } else {
-    res.json(added);
+    res.json(added)
   }
-});
+})
 
 // @desc    Share a message to a particular chat
 // @route   POST /api/chat/share
 // @access  Protected
 const shareMessage = asyncHandler(async (req, res) => {
-  const { chatIds, type, articleId } = req.body;
+  const { chatIds, type, articleId } = req.body
 
   const article = await Article.findById(articleId).select(
-    "_id title category dateTime imgURL"
-  );
+    '_id title category dateTime imgURL',
+  )
   if (!article) {
-    res.status(404);
-    throw new Error("Article not found");
+    res.status(404)
+    throw new Error('Article not found')
   }
-  const sender = await User.findById(req.user._id).select("pic name");
-  const newMessages = [];
+  const sender = await User.findById(req.user._id).select('pic name')
+  const newMessages = []
   for (let chatId of chatIds) {
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId)
     if (!chat) {
-      res.status(404);
-      throw new Error("Chat not found");
+      res.status(404)
+      throw new Error('Chat not found')
     }
     if (
-      chat.status !== "accepted" &&
+      chat.status !== 'accepted' &&
       chat.latestMessage &&
       chat.requestedBy.toString() !== req.user._id.toString()
     ) {
-      continue; // Skip this chat if it's not accepted and the sender isn't the requester
+      continue // Skip this chat if it's not accepted and the sender isn't the requester
     }
     let newMessage = new Message({
       sender: req.user._id,
@@ -307,86 +306,108 @@ const shareMessage = asyncHandler(async (req, res) => {
         date: formatDate(article.dateTime),
         image: article.imgURL[0],
       },
-      status: "sent",
-    });
-    await newMessage.save();
-    chat.latestMessage = newMessage;
-    await chat.save();
+      status: 'sent',
+    })
+    await newMessage.save()
+    chat.latestMessage = newMessage
+    await chat.save()
 
-    const chatUsers = chat.users;
+    const chatUsers = chat.users
     for (let user of chatUsers) {
       if (user.toString() !== req.user._id.toString()) {
-        const userChats = userOpenChats.get(user._id.toString());
+        const userChats = userOpenChats.get(user._id.toString())
         // Only send notification if the user doesn't have this chat open
         if (!userChats || !userChats.has(chatId)) {
           await sendNotification({
             title: `New message from ${sender.name}`,
-            body: "Shared an Article",
+            body: 'Shared an Article',
             icon: sender.pic,
             url: `/chats?chatId=${chatId}`,
             userId: user._id,
             messageId: newMessage._id.toString(),
-          });
+          })
         }
       }
     }
-    newMessage = await newMessage.populate("sender", "name pic");
-    newMessage = await newMessage.populate("chat");
+    newMessage = await newMessage.populate('sender', 'name pic')
+    newMessage = await newMessage.populate('chat')
     newMessage = await User.populate(newMessage, {
-      path: "chat.users",
-      select: "name pic email",
-    });
-    newMessages.push(newMessage);
+      path: 'chat.users',
+      select: 'name pic email',
+    })
+    newMessages.push(newMessage)
   }
 
-  res.status(200).json(newMessages);
-});
+  res.status(200).json(newMessages)
+})
 
 // @desc    Handle Chat Request
 // @route   POST /api/chat//request/handle
 // @access  Protected
 const handleChatRequest = asyncHandler(async (req, res) => {
-  const { chatId, action } = req.body;
+  const { chatId, action } = req.body
 
-  if (action !== "accept" && action !== "reject") {
-    res.status(400);
-    throw new Error("Invalid action");
+  if (action !== 'accept' && action !== 'reject') {
+    res.status(400)
+    throw new Error('Invalid action')
   }
 
   try {
     const updatedChat = await Chat.findOneAndUpdate(
-      { _id: chatId, status: "pending" },
-      { status: action === "accept" ? "accepted" : "rejected" },
-      { new: true }
-    ).populate("users", "-password");
+      { _id: chatId, status: 'pending' },
+      { status: action === 'accept' ? 'accepted' : 'rejected' },
+      { new: true },
+    ).populate('users', '-password')
 
     if (!updatedChat) {
-      res.status(404);
-      throw new Error("Chat request not found or already handled");
+      res.status(404)
+      throw new Error('Chat request not found or already handled')
     }
-    const { name } = await User.findById(req.user._id).select("name");
+    const { name } = await User.findById(req.user._id).select('name')
     // Create a system message for the chat
     const systemMessage = await Message.create({
       sender: req.user._id,
       content: `Chat request ${action}ed by ${name}`,
       chat: chatId,
-      type: "system",
-    });
+      type: 'system',
+    })
 
     await sendNotification({
-      title: "Chat Request Update",
+      title: 'Chat Request Update',
       body: `${req.user.name} has ${action}ed your chat request`,
       icon: req.user.pic,
       url: `/chats?chatId=${chatId}`,
       userId: updatedChat.requestedBy,
-    });
+    })
 
-    res.json({ chat: updatedChat, systemMessage });
+    res.json({ chat: updatedChat, systemMessage })
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message);
+    res.status(400)
+    throw new Error(error.message)
   }
-});
+})
+// @desc    Make Chat Seen Request
+// @route   POST /api/chat/request/seen
+// @access  Protected
+const setSeenRequest = async (req, res) => {
+  const userId = req.user._id
+  try {
+    console.log('Setting seen for user: ', userId)
+    // make all pending requests seen for the user
+    const chats = await Chat.updateMany(
+      {
+        users: { $elemMatch: { $eq: userId } },
+        status: 'pending',
+      },
+      { isReqSeen: true },
+    )
+    console.log('Chats seen: ', chats)
+    res.status(200).json({ ok: true })
+  } catch (error) {
+    res.status(400)
+    throw new Error(error.message)
+  }
+}
 
 module.exports = {
   accessChat,
@@ -397,4 +418,5 @@ module.exports = {
   removeFromGroup,
   shareMessage,
   handleChatRequest,
-};
+  setSeenRequest,
+}

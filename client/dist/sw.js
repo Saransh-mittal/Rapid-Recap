@@ -1,5 +1,5 @@
-const VERSION = "v3"; // Increment this version number
-const RapidRecapLogo = "./images/rr.png";
+const VERSION = "v4"; // Increment this version number
+const RapidRecapLogo = "./images/rrlogo.webp";
 
 self.addEventListener("install", (event) => {
   console.log("Service Worker installing - Version", VERSION);
