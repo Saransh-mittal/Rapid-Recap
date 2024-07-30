@@ -46,6 +46,7 @@ const useMessageHandlers = ({
       )
       if (cachedMessages) {
         setMessages(cachedMessages)
+        setLoading(false)
       }
       const data = await fetchMessagesApi(selectedChat._id)
       setMessages(prevMessages => {

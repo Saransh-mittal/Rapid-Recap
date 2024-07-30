@@ -18,9 +18,16 @@ import { ChatState } from '../contextAPI/ChatProvider'
 import { useNavigate } from 'react-router-dom'
 
 const ChatPage = () => {
-  const [fetchAgain, setFetchAgain] = useState(false)
-  const { user, selectedChat, isChatOpen, closeChat, openChat, isLastRoute } =
-    ChatState()
+  const {
+    user,
+    selectedChat,
+    isChatOpen,
+    closeChat,
+    openChat,
+    isLastRoute,
+    setFetchAgain,
+    fetchAgain,
+  } = ChatState()
   const isScreenSmallerThan992px = useMediaQuery('(max-width: 992px)')[0]
   const navigate = useNavigate()
 

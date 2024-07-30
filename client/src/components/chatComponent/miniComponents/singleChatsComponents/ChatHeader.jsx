@@ -12,6 +12,7 @@ const ChatHeader = ({
   navigate,
   istyping,
   handleClose,
+  setFetchAgain,
 }) => {
   return (
     <Flex

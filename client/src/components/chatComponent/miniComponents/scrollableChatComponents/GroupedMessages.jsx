@@ -9,6 +9,7 @@ import {
 } from '../../config/ChatLogics'
 import ArticleCard from '../../../miscellaneous/ArticleCard'
 import MessageReactions from './MessageReactions'
+import { useNavigate } from 'react-router-dom'
 
 const GroupedMessages = ({
   groupedMessages,
@@ -21,6 +22,7 @@ const GroupedMessages = ({
   user,
   isScreenSmallerThan600px,
 }) => {
+  const navigate = useNavigate()
   return (
     <>
       {Object.entries(groupedMessages).map(([date, msgs]) => (
