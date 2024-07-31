@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -14,94 +14,94 @@ import {
   Checkbox,
   useToast,
   Flex,
-} from "@chakra-ui/react";
-import axios from "axios";
-import { ChatState } from "../../../contextAPI/ChatProvider";
+} from '@chakra-ui/react'
+import axios from 'axios'
+import { ChatState } from '../../../contextAPI/ChatProvider'
 
 const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
-  const [chats, setChats] = useState([]);
-  const [selectedChats, setSelectedChats] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { user, socket, socketConnected } = ChatState();
-  const toast = useToast();
+  const [chats, setChats] = useState([])
+  const [selectedChats, setSelectedChats] = useState([])
+  const [loading, setLoading] = useState(true)
+  const { user, socket, socketConnected } = ChatState()
+  const toast = useToast()
 
   useEffect(() => {
-    fetchChats();
-  }, []);
+    fetchChats()
+  }, [])
 
   const fetchChats = async () => {
-    if (notLoggedIn) return;
+    if (notLoggedIn) return
     try {
-      const { data } = await axios.get("/api/chat");
-      setChats(data);
-      setLoading(false);
+      const { data } = await axios.get('/api/chat')
+      setChats(data)
+      setLoading(false)
     } catch (error) {
       toast({
-        title: "Error Occurred!",
-        description: "Failed to Load the chats",
-        status: "error",
+        title: 'Error Occurred!',
+        description: 'Failed to Load the chats',
+        status: 'error',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
-      setLoading(false);
+        position: 'top',
+      })
+      setLoading(false)
     }
-  };
+  }
 
-  const handleChatToggle = (chatId) => {
-    setSelectedChats((prevSelected) =>
+  const handleChatToggle = chatId => {
+    setSelectedChats(prevSelected =>
       prevSelected.includes(chatId)
-        ? prevSelected.filter((id) => id !== chatId)
-        : [...prevSelected, chatId]
-    );
-  };
+        ? prevSelected.filter(id => id !== chatId)
+        : [...prevSelected, chatId],
+    )
+  }
 
   const handleShare = async () => {
     if (selectedChats.length === 0) {
       toast({
-        title: "No chats selected",
-        description: "Please select at least one chat to share the article.",
-        status: "warning",
+        title: 'No chats selected',
+        description: 'Please select at least one chat to share the article.',
+        status: 'warning',
         duration: 3000,
         isClosable: true,
-      });
-      return;
+      })
+      return
     }
 
     try {
       // Here you would make an API call to share the article
-      const { data } = await axios.post("/api/chat/share", {
+      const { data } = await axios.post('/api/chat/share', {
         articleId: articleToShare._id,
         chatIds: selectedChats,
-        type: "article_card",
-      });
+        type: 'article_card',
+      })
 
-      data.forEach((message) => {
-        socket.emit("new message", message);
-      });
+      data.forEach(message => {
+        socket.emit('new message', message)
+      })
       // if (socketConnected && socket) {
       //   socket?.emit("new message", data);
       // }
       toast({
-        title: "Article Shared",
+        title: 'Article Shared',
         description: `Article shared to ${selectedChats.length} chat(s) successfully!`,
-        status: "success",
+        status: 'success',
         duration: 3000,
         isClosable: true,
-      });
+      })
 
-      onClose();
+      onClose()
     } catch (error) {
       toast({
-        title: "Error Occurred!",
-        description: "Failed to share the article",
-        status: "error",
+        title: 'Error Occurred!',
+        description: 'Failed to share the article',
+        status: 'error',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
     }
-  };
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -116,17 +116,17 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
           bg="#2a2440"
           borderTopLeftRadius="10px"
           borderTopRightRadius="10px"
-          w={"100%"}
+          w={'100%'}
         >
           Share to Chat
         </ModalHeader>
         <ModalCloseButton color="white" />
-        <ModalBody maxH="60vh" overflowY="auto" w={"100%"}>
+        <ModalBody maxH="60vh" overflowY="auto" w={'100%'}>
           {loading ? (
             <Text>Loading chats...</Text>
           ) : (
             <VStack spacing={2} align="stretch">
-              {chats.map((chat) => (
+              {chats.map(chat => (
                 <Flex
                   key={chat._id}
                   p={3}
@@ -135,7 +135,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
                   borderRadius="md"
                   alignItems="center"
                   transition="background-color 0.3s ease"
-                  _hover={{ bg: "#2a2440" }}
+                  _hover={{ bg: '#2a2440' }}
                   cursor="pointer"
                   onClick={() => handleChatToggle(chat._id)}
                 >
@@ -148,7 +148,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
                   <Text fontWeight="bold">
                     {chat.isGroupChat
                       ? chat.chatName
-                      : chat.users.find((u) => u._id !== user._id).name}
+                      : chat.users.find(u => u?._id !== user?._id)?.name}
                   </Text>
                 </Flex>
               ))}
@@ -170,7 +170,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
         </ModalFooter>
       </ModalContent>
     </Modal>
-  );
-};
+  )
+}
 
-export default ShareChatModal;
+export default ShareChatModal

@@ -1,6 +1,6 @@
 // src/components/ModalComponent.js
 
-import React from "react";
+import React from 'react'
 import {
   Button,
   Modal,
@@ -13,10 +13,14 @@ import {
   Flex,
   Skeleton,
   SkeletonCircle,
-} from "@chakra-ui/react";
-import Countdown from "./Countdown";
+  useColorModeValue,
+} from '@chakra-ui/react'
+import Countdown from './Countdown'
+import { motion } from 'framer-motion'
+import { ArrowRight } from 'lucide-react'
 
 const ModalComponent = ({
+  isAnswered,
   isOpen,
   onClose,
   isCloseButtonHovered,
@@ -41,33 +45,27 @@ const ModalComponent = ({
   isQuinBoostAvailable,
   showSubmittedInterface,
 }) => {
+  const textColor = 'white'
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "3xl" }}>
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '2xl' }}>
       <ModalOverlay
         bg="blackAlpha.300"
         backdropFilter="blur(40px) hue-rotate(90deg)"
       />
       <ModalContent
-        background={
-          submitted &&
-          (state.isBoosted || isQuinBoostAvailable) &&
-          !showSubmittedInterface
-            ? "black"
-            : "linear-gradient(-45deg, #092635, #9EC8B9, #2a7575, #9EC8B9)"
-        }
-        backgroundSize="400% 400%"
-        className="animated-gradient scene"
-        minHeight={"80vh"}
-        borderRadius={{ md: "2px" }}
-        overflow="hidden"
+        bg="rgba(26, 21, 39, 0.9)"
+        color={textColor}
+        borderRadius="xl"
+        boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
       >
         {timer ? (
           <SkeletonCircle
             color="red"
             isLoaded={!load}
-            marginTop={load ? "10px" : "0"}
-            size={load ? "20" : "auto"}
-            marginBottom={load ? "10px" : "0"}
+            marginTop={load ? '10px' : '0'}
+            size={load ? '20' : 'auto'}
+            marginBottom={load ? '10px' : '0'}
           >
             {!submitted && timer ? (
               <Countdown
@@ -80,11 +78,12 @@ const ModalComponent = ({
         ) : null}
         <ModalCloseButton
           zIndex={1}
+          backgroundColor="purple.300"
           style={{
-            right: "10px",
-            color: isCloseButtonHovered ? "white" : "#FAF0E6",
-            backgroundColor: isCloseButtonHovered ? "#040D12" : "#183D3D",
-            transition: "background-color 0.3s, color 0.3s",
+            right: '10px',
+            color: 'white',
+
+            transition: 'background-color 0.3s, color 0.3s',
           }}
           onMouseEnter={() =>
             setIsCloseButtonHovered && setIsCloseButtonHovered(true)
@@ -93,78 +92,89 @@ const ModalComponent = ({
             setIsCloseButtonHovered && setIsCloseButtonHovered(false)
           }
         />
-        <ModalBody>{renderModalBody()}</ModalBody>
-        <Flex flexDirection={"column"} color={"white"}>
-          {load && showInstruction && (
-            <Text size={"lg"} color={"black"}>
-              Quiz is generating. Wait for the start button....
-            </Text>
-          )}
-          <Skeleton
-            isLoaded={!load}
-            borderRadius={"10px"}
-            marginBottom={load ? "10px" : ""}
-          >
-            <ModalFooter>
-              {showInstruction && (
-                <Button
-                  colorScheme="blue"
-                  mr={3}
-                  onClick={startQuiz}
-                  style={{
-                    transition: "background-color 0.3s, color 0.3s",
-                    backgroundColor: isStartQuizButtonHovered
-                      ? "#DDE6ED"
-                      : "#183D3D",
-                    color: isStartQuizButtonHovered ? "#27374D" : "#FAF0E6",
-                  }}
-                  onMouseEnter={() => setIsStartQuizButtonHovered(true)}
-                  onMouseLeave={() => setIsStartQuizButtonHovered(false)}
-                >
-                  Start Quiz
-                </Button>
-              )}
-              {!showInstruction &&
-                currentQuestionIndex < totalQuestions - 1 &&
-                !submitted && (
-                  <Button
-                    colorScheme="blue"
-                    mr={3}
-                    onClick={handleNextQuestion}
-                    bg="#FCECDD"
-                    color="#046582"
-                    _hover={{
-                      bg: "#046582",
-                      color: "#FCECDD",
+        <ModalBody w={'100%'} h={'100%'}>
+          {renderModalBody()}
+        </ModalBody>
+        {!submitted && (
+          <Flex flexDirection={'column'} color={'white'} w={'100%'}>
+            {load && showInstruction && (
+              <Text
+                fontSize="lg"
+                fontWeight={'semibold'}
+                color={textColor}
+                textAlign={'center'}
+              >
+                Quiz is generating. Wait for the start button....
+              </Text>
+            )}
+            <Skeleton
+              isLoaded={!load}
+              borderRadius={'10px'}
+              marginBottom={load ? '10px' : ''}
+              w={'100%'}
+            >
+              {totalQuestions && (
+                <ModalFooter w={'100%'}>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
                     }}
                   >
-                    Next
-                  </Button>
-                )}
-              {currentQuestionIndex === totalQuestions - 1 && !submitted && (
-                <Button
-                  colorScheme="blue"
-                  mr={3}
-                  onClick={() =>
-                    handleSubmitQuiz({ timeTaken, userAnswers, setSubmitted })
-                  }
-                  bg="#DCF2F1"
-                  color="#265073"
-                  _hover={{
-                    bg: "#265073",
-                    color: "#DCF2F1",
-                  }}
-                  isLoading={submitLoad}
-                >
-                  Submit
-                </Button>
+                    <Button
+                      borderRadius={'full'}
+                      color={'white'}
+                      rightIcon={<ArrowRight />}
+                      onClick={
+                        showInstruction
+                          ? startQuiz
+                          : currentQuestionIndex === totalQuestions - 1 &&
+                            !submitted
+                          ? () =>
+                              handleSubmitQuiz({
+                                timeTaken,
+                                userAnswers,
+                                setSubmitted,
+                              })
+                          : handleNextQuestion
+                      }
+                      isDisabled={showInstruction ? false : !isAnswered}
+                      mt={5}
+                      size="lg"
+                      width={{ base: '100%', lg: '50%' }}
+                      bg={
+                        isAnswered || showInstruction
+                          ? 'purple.500'
+                          : 'rgba(255, 255, 255, 0.1)'
+                      }
+                      _hover={{
+                        bg:
+                          isAnswered || showInstruction
+                            ? 'purple.600'
+                            : 'rgba(255, 255, 255, 0.15)',
+                      }}
+                      isLoading={submitLoad}
+                    >
+                      {showInstruction
+                        ? 'Start Quiz'
+                        : currentQuestionIndex < totalQuestions - 1 &&
+                          !submitted
+                        ? 'Next Question'
+                        : 'Finish Quiz'}
+                    </Button>
+                  </motion.div>
+                </ModalFooter>
               )}
-            </ModalFooter>
-          </Skeleton>
-        </Flex>
+            </Skeleton>
+          </Flex>
+        )}
       </ModalContent>
     </Modal>
-  );
-};
+  )
+}
 
-export default ModalComponent;
+export default ModalComponent

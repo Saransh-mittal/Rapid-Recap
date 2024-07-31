@@ -78,7 +78,6 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
           isClosable: true,
           position: 'top',
         })
-        navigate('/home/all')
       } else {
         throw new Error('Registration Failed')
       }

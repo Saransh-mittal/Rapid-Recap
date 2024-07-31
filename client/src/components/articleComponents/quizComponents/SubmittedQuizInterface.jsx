@@ -1,19 +1,22 @@
-// src/components/quizComponents/SubmittedQuizInterface.js
-
-import React from "react";
+import React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Text,
-  SlideFade,
+  ChakraProvider,
+  extendTheme,
   Box,
+  Text,
+  VStack,
+  Button,
   Flex,
   Stat,
   StatLabel,
   StatNumber,
   StatHelpText,
   StatGroup,
-  HStack,
-} from "@chakra-ui/react";
-import { Line } from "react-chartjs-2";
+  Progress,
+} from '@chakra-ui/react'
+import { ArrowRight } from 'lucide-react'
+import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -23,11 +26,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
-import ButtonGradient from "../../../assets/svg/ButtonGradient";
-import Button from "../../miscellaneous/ButtonComponent";
-import Heading from "../../miscellaneous/HeadingComponent";
-import { result } from "lodash";
+} from 'chart.js'
 
 ChartJS.register(
   CategoryScale,
@@ -36,59 +35,100 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
-);
+  Legend,
+)
+
+const theme = extendTheme({
+  styles: {
+    global: {
+      body: {
+        bg: 'transparent',
+        color: 'gray.100',
+      },
+    },
+  },
+  components: {
+    Button: {
+      baseStyle: {
+        fontWeight: 'bold',
+        borderRadius: 'full',
+      },
+      variants: {
+        solid: {
+          bg: 'rgba(255, 255, 255, 0.1)',
+          color: 'white',
+          backdropFilter: 'blur(10px)',
+          _hover: {
+            bg: 'rgba(255, 255, 255, 0.2)',
+          },
+        },
+      },
+    },
+    Progress: {
+      baseStyle: {
+        filledTrack: {
+          bg: 'purple.400',
+        },
+      },
+    },
+  },
+})
 
 const getReviewText = (field, value) => {
   const reviews = {
     score: {
-      0: "Needs improvement",
-      20: "Below average",
-      40: "Average",
-      60: "Good job",
-      80: "Great work",
-      100: "Excellent",
+      0: 'Needs improvement',
+      20: 'Below average',
+      40: 'Average',
+      60: 'Good job',
+      80: 'Great work',
+      100: 'Excellent',
     },
     timeTaken: {
-      slow: "Too slow",
-      average: "Decent speed",
-      fast: "Very quick",
+      slow: 'Too slow',
+      average: 'Decent speed',
+      fast: 'Very quick',
     },
     difficulty: {
-      Easy: "Keep practicing!",
-      Medium: "Well done!",
-      Hard: "Impressive!",
+      Easy: 'Keep practicing!',
+      Medium: 'Well done!',
+      Hard: 'Impressive!',
     },
     rqmscore: {
-      low: "Try harder",
-      medium: "Good effort",
-      high: "Outstanding",
+      low: 'Try harder',
+      medium: 'Good effort',
+      high: 'Outstanding',
     },
-  };
-  const reviewKeys = Object.keys(reviews[field])
-    .map(Number)
-    .sort((a, b) => a - b);
+  }
 
-  for (let i = 0; i < reviewKeys.length; i++) {
-    if (value <= reviewKeys[i]) {
-      return reviews[field][reviewKeys[i]];
+  if (field === 'score') {
+    const scorePercentage = (value[0] / value[1]) * 100
+    const reviewKeys = Object.keys(reviews.score)
+      .map(Number)
+      .sort((a, b) => a - b)
+    for (let i = 0; i < reviewKeys.length; i++) {
+      if (scorePercentage <= reviewKeys[i]) {
+        return reviews.score[reviewKeys[i]]
+      }
     }
   }
 
-  if (field === "timeTaken") {
-    if (value >= 33 && value <= 50) return reviews.timeTaken.slow;
-    if (value <= 16 && value > 33) return reviews.timeTaken.average;
-    if (value >= 0 && value < 16) return reviews.timeTaken.fast;
+  if (field === 'timeTaken') {
+    if (value >= 33 && value <= 50) return reviews.timeTaken.slow
+    if (value <= 16 && value > 33) return reviews.timeTaken.average
+    if (value >= 0 && value < 16) return reviews.timeTaken.fast
   }
-  if (field === "difficulty") {
-    return reviews.difficulty[value] || "Keep going!";
+
+  if (field === 'difficulty') {
+    return reviews.difficulty[value] || 'Keep going!'
   }
-  if (field === "rqmscore") {
-    if (value < 45) return reviews.rqmscore.low;
-    if (value >= 45 && value < 75) return reviews.rqmscore.medium;
-    return reviews.rqmscore.high;
+
+  if (field === 'rqmscore') {
+    if (value < 45) return reviews.rqmscore.low
+    if (value >= 45 && value < 75) return reviews.rqmscore.medium
+    return reviews.rqmscore.high
   }
-};
+}
 
 const SubmittedQuizInterface = ({
   isOpen,
@@ -96,66 +136,64 @@ const SubmittedQuizInterface = ({
   result,
   onViewReport,
 }) => {
-  const [scoreArr, setScoreArr] = React.useState([]);
-  const [quizData, setQuizData] = React.useState([]);
-  const [labels, setLabels] = React.useState([]);
+  const [scoreArr, setScoreArr] = React.useState([0, 1])
+  const [quizData, setQuizData] = React.useState([])
+  const [labels, setLabels] = React.useState([])
 
   React.useEffect(() => {
-    if (result?.score && result?.score.includes("/")) {
+    if (result?.score && result?.score.includes('/')) {
       setScoreArr(() => {
-        const arr = result?.score.split("/");
-        arr[0] = parseInt(arr[0]);
-        arr[1] = parseInt(arr[1]);
-        return arr;
-      });
+        const arr = result?.score.split('/')
+        return [parseInt(arr[0]), parseInt(arr[1])]
+      })
     }
     if (result.pastRQMs && result.pastRQMs.length > 0) {
-      setQuizData(result.pastRQMs);
+      setQuizData(result.pastRQMs)
       setLabels(() => {
         const labels = Array.from(
           { length: result.pastRQMs.length - 1 },
-          (_, i) => `Quiz ${i + 1}`
-        );
-        labels.push("Current Quiz");
-        return labels;
-      });
+          (_, i) => `Quiz ${i + 1}`,
+        )
+        labels.push('Current Quiz')
+        return labels
+      })
     }
-  }, [submitLoad, result?.score, result?.pastRQMs]);
+  }, [submitLoad, result?.score, result?.pastRQMs])
 
   const chartData = {
     labels: labels,
     datasets: [
       {
-        label: "RQM Score",
+        label: 'RQM Score',
         data: quizData,
         fill: false,
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-        borderColor: "rgba(75, 192, 192, 1)",
-        pointStyle: "circle",
+        backgroundColor: 'rgba(138, 43, 226, 0.6)',
+        borderColor: 'rgba(138, 43, 226, 1)',
+        pointStyle: 'circle',
         pointRadius: 5,
-        pointBorderColor: "#009FBD",
+        pointBorderColor: '#8A2BE2',
         pointBorderWidth: 2,
         tension: 0.1,
       },
     ],
-  };
+  }
 
   const chartOptions = {
     scales: {
       y: {
         beginAtZero: true,
         ticks: {
-          color: "#3E3232", // Dark color for the y-axis text
+          color: 'rgba(255, 255, 255, 0.8)',
           font: {
-            weight: "bold", // Bold text
+            weight: 'bold',
           },
         },
       },
       x: {
         ticks: {
-          color: "#3E3232", // Dark color for the x-axis text
+          color: 'rgba(255, 255, 255, 0.8)',
           font: {
-            weight: "bold", // Bold text
+            weight: 'bold',
           },
         },
       },
@@ -163,336 +201,227 @@ const SubmittedQuizInterface = ({
     plugins: {
       legend: {
         labels: {
-          color: "#3E3232", // Dark color for the legend text
+          color: 'rgba(255, 255, 255, 0.8)',
           font: {
-            weight: "bold", // Bold text
+            weight: 'bold',
           },
         },
       },
     },
-  };
+  }
 
   return (
-    <SlideFade direction="bottom" in={isOpen} offsetY="20px">
+    <ChakraProvider theme={theme}>
       <Box
-        textAlign="center"
-        py={8}
-        px={0}
-        borderRadius="md"
-        position={"relative"}
+        className="SubmittedQuizInterface"
+        w={'100%'}
+        margin="0 auto"
+        padding={{ base: '10px', md: '20px', lg: '30px', xl: '40px' }}
+        h={'100%'}
+        display="flex"
+        flexDirection="column"
+        justifyContent="space-between"
+        bg="rgba(26, 21, 39, 0.9)"
+        borderRadius="xl"
+        boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
       >
-        <Flex flexWrap={"wrap"} px={"2rem"}>
-          <Heading
-            title={"Quiz Completed Successfully!!"}
-            headingWeight="bold"
-          />
-        </Flex>
-        {submitLoad ? (
-          <Text color="#3E3232" fontSize="30px" textAlign="center" mb={4}>
-            Calculating...
-          </Text>
-        ) : (
-          <>
-            <StatGroup
-              border={{ base: "1px solid black", md: "none" }}
-              borderRadius={"xl"}
-            >
-              <Flex w={"100%"}>
-                <Flex
-                  justifyContent={"space-between"}
-                  w={"100%"}
-                  flexDirection={{ base: "column", md: "row" }}
-                >
-                  <Stat borderBottom={{ base: "1px solid black", md: "none" }}>
-                    <StatLabel color="#3E3232" mt={5}>
-                      Score
-                    </StatLabel>
-                    <StatNumber color="#3E3232">{result?.score}</StatNumber>
-                    <StatHelpText color="#3E3232">
-                      {getReviewText(
-                        "score",
-                        (scoreArr[0] / scoreArr[1]) * 100
-                      )}
-                    </StatHelpText>
-                  </Stat>
-                  <Stat>
-                    <StatLabel color="#3E3232" mt={5}>
-                      Time Taken
-                    </StatLabel>
-                    <StatNumber color="#3E3232">
-                      {result?.timeTaken} Sec
-                    </StatNumber>
-                    <StatHelpText color="#3E3232">
-                      {getReviewText("timeTaken", result?.timeTaken)}
-                    </StatHelpText>
-                  </Stat>
-                </Flex>
+        <AnimatePresence mode="wait">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Text fontSize="2xl" fontWeight="bold" mb={6} color="purple.200">
+              Quiz Completed Successfully!
+            </Text>
 
-                <Flex
-                  border={{ base: "1px solid black", md: "none" }}
-                  display={{ base: "black", md: "none" }}
-                  width={"0%"}
-                />
-                <Flex
-                  justifyContent={"space-between"}
-                  w={"100%"}
-                  flexDirection={{ base: "column", md: "row" }}
+            {submitLoad ? (
+              <Text color="gray.100" fontSize="xl" textAlign="center" mb={4}>
+                Calculating...
+              </Text>
+            ) : (
+              <>
+                <StatGroup
+                  border={{ base: '1px solid white', md: 'none' }}
+                  borderRadius={'xl'}
+                  color={'white'}
                 >
-                  <Stat borderBottom={{ base: "1px solid black", md: "none" }}>
-                    <StatLabel color="#3E3232" mt={5}>
-                      Article Difficulty
-                    </StatLabel>
-                    <StatNumber color="#3E3232">
-                      {result?.articleDifficulty}
-                    </StatNumber>
-                    <StatHelpText color="#3E3232">
-                      {getReviewText("difficulty", result?.articleDifficulty)}
-                    </StatHelpText>
-                  </Stat>
-
-                  <Stat>
-                    <StatLabel color="#3E3232" mt={5}>
-                      RQM Score
-                    </StatLabel>
-                    <StatNumber color="#3E3232">{result?.RQM_score}</StatNumber>
-                    <StatHelpText color="#3E3232">
-                      {getReviewText("rqmscore", result?.RQM_score)}
-                    </StatHelpText>
-                  </Stat>
-                </Flex>
-              </Flex>
-            </StatGroup>
-            <Box>
-              <Flex flexDirection={"column"}>
-                <HStack
-                  spacing={0}
-                  justifyContent={"center"}
-                  mb={4}
-                  w={"100%"}
-                  mt={4}
-                >
-                  <Flex
-                    flexDirection={"column"}
-                    alignItems={"center"}
-                    w={"100%"}
-                  >
-                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                      Rookie
-                    </Text>
-                    <Box
-                      h={"20px"}
-                      w={"100%"}
-                      bg="gray.300"
-                      zIndex={
-                        result?.RQM_score >= 0 && result?.RQM_score < 15 ? 1 : 0
-                      }
-                      boxShadow={
-                        result?.RQM_score >= 0 && result?.RQM_score < 15
-                          ? "0 0 10px 2px #00f"
-                          : "none"
-                      }
-                    ></Box>
-                  </Flex>
-                  <Flex
-                    flexDirection={"column"}
-                    alignItems={"center"}
-                    w={"100%"}
-                  >
-                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                      Amateur
-                    </Text>
-                    <Box
-                      h={"20px"}
-                      w={"100%"}
-                      bg="blue.400"
-                      zIndex={
-                        result?.RQM_score >= 15 && result?.RQM_score < 45
-                          ? 1
-                          : 0
-                      }
-                      boxShadow={
-                        result?.RQM_score >= 15 && result?.RQM_score < 45
-                          ? "0 0 10px 2px #00f"
-                          : "none"
-                      }
-                    ></Box>
-                  </Flex>
-                  <Flex
-                    flexDirection={"column"}
-                    alignItems={"center"}
-                    w={"100%"}
-                  >
-                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                      Advanced
-                    </Text>
-                    <Box
-                      h={"20px"}
-                      w={"100%"}
-                      bg="green.500"
-                      zIndex={
-                        result?.RQM_score >= 45 && result?.RQM_score < 75
-                          ? 1
-                          : 0
-                      }
-                      boxShadow={
-                        result?.RQM_score >= 45 && result?.RQM_score < 75
-                          ? "0 0 10px 2px #00f"
-                          : "none"
-                      }
-                    ></Box>
-                  </Flex>
-                  <Flex
-                    flexDirection={"column"}
-                    alignItems={"center"}
-                    w={"100%"}
-                  >
-                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                      Expert
-                    </Text>
-                    <Box
-                      h={"20px"}
-                      w={"100%"}
-                      bg="yellow.500"
-                      zIndex={
-                        result?.RQM_score >= 75 && result?.RQM_score < 105
-                          ? 1
-                          : 0
-                      }
-                      boxShadow={
-                        result?.RQM_score >= 75 && result?.RQM_score < 105
-                          ? "0 0 10px 2px #00f"
-                          : "none"
-                      }
-                    ></Box>
-                  </Flex>
-                  <Flex
-                    flexDirection={"column"}
-                    alignItems={"center"}
-                    w={"100%"}
-                  >
-                    <Text color="#3E3232" fontSize="xs" fontWeight={"bold"}>
-                      Maestro
-                    </Text>
-                    <Box
-                      h={"20px"}
-                      w={"100%"}
-                      bg="red.500"
-                      zIndex={result?.RQM_score >= 105 ? 1 : 0}
-                      boxShadow={
-                        result?.RQM_score >= 105
-                          ? "0 0 20px 10px #00ffe2"
-                          : "none"
-                      }
-                    />
-                  </Flex>
-                </HStack>
-                <HStack gap={0}>
-                  <Flex
-                    w={"100%"}
-                    textAlign={"center"}
-                    h="20px"
-                    position={"relative"}
-                  >
-                    <Text position={"absolute"} left={"-3px"}>
-                      0
-                    </Text>
-                  </Flex>
-                  <Flex
-                    w={"100%"}
-                    textAlign={"center"}
-                    h="20px"
-                    position={"relative"}
-                  >
-                    <Text position={"absolute"} left={"-3px"}>
-                      15
-                    </Text>
-                  </Flex>
-                  <Flex
-                    w={"100%"}
-                    textAlign={"center"}
-                    h="20px"
-                    position={"relative"}
-                  >
-                    <Text position={"absolute"} left={"-3px"}>
-                      45
-                    </Text>
-                  </Flex>
-                  <Flex
-                    w={"100%"}
-                    textAlign={"center"}
-                    h="20px"
-                    position={"relative"}
-                  >
-                    <Text position={"absolute"} left={"-3px"}>
-                      75
-                    </Text>
-                  </Flex>
-                  <Flex
-                    w={"100%"}
-                    textAlign={"center"}
-                    h="20px"
-                    position={"relative"}
-                  >
-                    <Text position={"absolute"} left={"-3px"}>
-                      105
-                    </Text>
-                    <Text
-                      position={"absolute"}
-                      right={"-3px"}
-                      letterSpacing={"3px"}
+                  <Flex w={'100%'}>
+                    <Flex
+                      justifyContent={'space-between'}
+                      w={'100%'}
+                      flexDirection={{ base: 'column', md: 'row' }}
                     >
-                      ...
-                    </Text>
+                      <Stat
+                        borderBottom={{ base: '1px solid white', md: 'none' }}
+                      >
+                        <StatLabel textAlign={'center'} mt={5}>
+                          Score
+                        </StatLabel>
+                        <StatNumber textAlign={'center'}>
+                          {result?.score}
+                        </StatNumber>
+                        <StatHelpText textAlign={'center'}>
+                          {getReviewText(
+                            'score',
+                            (scoreArr[0] / scoreArr[1]) * 100,
+                          )}
+                        </StatHelpText>
+                      </Stat>
+                      <Stat>
+                        <StatLabel textAlign={'center'} mt={5}>
+                          Time Taken
+                        </StatLabel>
+                        <StatNumber textAlign={'center'}>
+                          {result?.timeTaken} Sec
+                        </StatNumber>
+                        <StatHelpText textAlign={'center'}>
+                          {getReviewText('timeTaken', result?.timeTaken)}
+                        </StatHelpText>
+                      </Stat>
+                    </Flex>
+
+                    <Flex
+                      border={{ base: '1px solid white', md: 'none' }}
+                      display={{ base: 'black', md: 'none' }}
+                      width={'0%'}
+                    />
+                    <Flex
+                      justifyContent={'space-between'}
+                      w={'100%'}
+                      flexDirection={{ base: 'column', md: 'row' }}
+                    >
+                      <Stat
+                        borderBottom={{ base: '1px solid white', md: 'none' }}
+                      >
+                        <StatLabel textAlign={'center'} mt={5}>
+                          Article Difficulty
+                        </StatLabel>
+                        <StatNumber textAlign={'center'}>
+                          {result?.articleDifficulty}
+                        </StatNumber>
+                        <StatHelpText textAlign={'center'}>
+                          {getReviewText(
+                            'difficulty',
+                            result?.articleDifficulty,
+                          )}
+                        </StatHelpText>
+                      </Stat>
+
+                      <Stat>
+                        <StatLabel textAlign={'center'} mt={5}>
+                          RQM Score
+                        </StatLabel>
+                        <StatNumber textAlign={'center'}>
+                          {result?.RQM_score}
+                        </StatNumber>
+                        <StatHelpText textAlign={'center'}>
+                          {getReviewText('rqmscore', result?.RQM_score)}
+                        </StatHelpText>
+                      </Stat>
+                    </Flex>
                   </Flex>
-                </HStack>
-              </Flex>
-              {result.pastRQMs && (
-                <Flex
-                  flexDirection={"column"}
-                  alignItems={"center"}
-                  height={"300px"}
-                >
-                  <Flex justifyContent={"center"} mt={4}>
+                </StatGroup>
+
+                <Box mb={8} mt={{ base: 10, md: 4 }}>
+                  <Text color="gray.300" fontSize="lg" mb={2}>
+                    RQM Score Level
+                  </Text>
+                  <Progress
+                    value={result?.RQM_score}
+                    min={0}
+                    max={105}
+                    size="md"
+                    colorScheme="purple"
+                    borderRadius="full"
+                  />
+                  <Flex justifyContent="space-between" mt={1}>
+                    <Flex
+                      w={'100%'}
+                      justifyContent={'center'}
+                      color="gray.400"
+                      fontSize="xs"
+                    >
+                      Rookie
+                    </Flex>
+                    <Flex
+                      w={'100%'}
+                      justifyContent={'center'}
+                      color="gray.400"
+                      fontSize="xs"
+                    >
+                      Amateur
+                    </Flex>
+                    <Flex
+                      w={'100%'}
+                      justifyContent={'center'}
+                      color="gray.400"
+                      fontSize="xs"
+                    >
+                      Advanced
+                    </Flex>
+                    <Flex
+                      w={'100%'}
+                      justifyContent={'center'}
+                      color="gray.400"
+                      fontSize="xs"
+                    >
+                      Expert
+                    </Flex>
+                    <Flex
+                      w={'100%'}
+                      justifyContent={'center'}
+                      color="gray.400"
+                      fontSize="xs"
+                    >
+                      Maestro
+                    </Flex>
+                  </Flex>
+                </Box>
+
+                {result.pastRQMs && (
+                  <Box mb={8}>
                     <Text
-                      color="#3E3232"
-                      fontSize="20px"
-                      textAlign="center"
-                      my={4}
-                      fontWeight={"bold"}
-                      textTransform={"uppercase"}
+                      color="gray.300"
+                      fontSize="xl"
+                      fontWeight="bold"
+                      mb={4}
+                      textAlign={'center'}
                     >
                       Today's RQM Score Update
                     </Text>
-                  </Flex>
+                    <Box display={'flex'} w={'100%'} justifyContent={'center'}>
+                      <Line data={chartData} options={chartOptions} />
+                    </Box>
+                  </Box>
+                )}
 
-                  <Flex
-                    width="100%"
-                    height={"100%"}
-                    justifyContent={"center"}
-                    alignItems={"center"}
-                  >
-                    <Line data={chartData} options={chartOptions} />
-                  </Flex>
-                </Flex>
-              )}
-
-              <Flex mt={12} w={"100%"} justifyContent={"center"}>
-                <ButtonGradient />
-                <Button
-                  white={true}
-                  colorScheme="blue"
-                  mt={4}
-                  onClick={onViewReport} // New button to view Quiz Summary
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
                 >
-                  Quiz Summary
-                </Button>
-              </Flex>
-            </Box>
-          </>
-        )}
+                  <Button
+                    rightIcon={<ArrowRight />}
+                    onClick={onViewReport}
+                    size="lg"
+                    width="100%"
+                    bg="purple.500"
+                    _hover={{
+                      bg: 'purple.600',
+                    }}
+                  >
+                    View Quiz Summary
+                  </Button>
+                </motion.div>
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </Box>
-    </SlideFade>
-  );
-};
+    </ChakraProvider>
+  )
+}
 
-export default SubmittedQuizInterface;
+export default SubmittedQuizInterface

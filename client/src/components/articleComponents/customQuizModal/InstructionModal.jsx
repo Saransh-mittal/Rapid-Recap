@@ -1,88 +1,112 @@
-// InstructionModal.js
-import React, { useContext } from "react";
+import React from 'react'
 import {
-  ModalBody,
-  Heading,
-  Text,
   VStack,
+  Text,
   Box,
   Flex,
   Image,
   Badge,
-} from "@chakra-ui/react";
-import { AppContext } from "../../../contextAPI/appContext";
-import starBoost from "/GIFs/starBoost.gif";
-import QuinBoost from "../quizComponents/QuinBoost";
+  useColorModeValue,
+  ModalBody,
+} from '@chakra-ui/react'
+import { motion } from 'framer-motion'
 
-const InstructionModal = ({ isQuinBoostAvailable }) => {
-  const { state } = useContext(AppContext);
+const MotionBox = motion(Box)
+
+const InstructionModalBody = ({
+  isQuinBoostAvailable,
+  isBoosted,
+  language,
+}) => {
+  const textColor = 'white'
+  const headingColor = useColorModeValue('purple.600', 'purple.200')
+
+  const instructions = [
+    'Quiz will contain utmost five questions.',
+    'All questions will be from the given article only.',
+    'All questions are compulsory to attempt.',
+    'At last, you will get your score and your percentile.',
+    "You can't leave the quiz in between.",
+    'Attempting the quiz will affect your IQ score.',
+  ]
+  const hindiInstructions = [
+    'क्विज में अधिकतम पाँच प्रश्न होंगे।',
+    'सभी प्रश्न दिए गए लेख से ही होंगे।',
+    'सभी प्रश्न को हल करना अनिवार्य है।',
+    'अंत में, आपको अपना स्कोर और प्रतिशत प्राप्त होगा।',
+    'आप क्विज को बीच में छोड़ नहीं सकते।',
+    'क्विज का प्रयास करने से आपका आईक्यू स्कोर प्रभावित होगा।',
+  ]
+
   return (
-    <>
-      <ModalBody
-        p={"15px"}
-        display={"flex"}
-        flexDirection={"column"}
-        justifyContent={"center"}
-        alignItems={"center"}
-        width={"100%"}
-        color={"black"}
-      >
-        <Heading as="h1" size={"xl"} mb={2}>
-          Instructions
-        </Heading>
-        {isQuinBoostAvailable && <QuinBoost />}
-        {state.isBoosted && (
-          <Flex
-            justifyContent={"center"}
-            alignItems={"center"}
-            gap={2}
-            marginTop={"10px"}
-          >
-            <Image
-              src={starBoost}
-              background={"none"}
-              height={"60px"}
-              w={"60px"}
-            />
-            <Badge fontSize={"1.2rem"} color={"yellow"} background={"none"}>
-              Enjoy!! 1.5x multiplier
+    <ModalBody>
+      <Box color={textColor} p={6}>
+        <Text
+          fontSize="3xl"
+          fontWeight="bold"
+          color={headingColor}
+          textAlign="center"
+          mb={6}
+        >
+          {language === 'english' ? 'Quiz Instructions' : 'क्विज निर्देश'}
+        </Text>
+        {isQuinBoostAvailable && (
+          <Flex justifyContent="center" mb={4}>
+            <Badge colorScheme="purple" fontSize="md" p={2} borderRadius="md">
+              {language === 'english'
+                ? 'Quin Boost Available!'
+                : 'क्विन बूस्ट उपलब्ध है!'}
             </Badge>
           </Flex>
         )}
-
-        <VStack spacing={1} alignItems="start" textAlign="left">
-          <Box mt={5} mb={-1}>
-            <Text fontStyle={"italic"} fontWeight={"bold"}>
-              {" "}
-              * Read all the instructions carefully before attempting the quiz
-            </Text>
-          </Box>
-          <Box mt={-1} mb={-1}>
-            <Text>1. Quiz will contain utmost five questions.</Text>
-          </Box>
-          <Box mt={-1} mb={-1}>
-            <Text>
-              2. All the questions will be from the given article only.
-            </Text>
-          </Box>
-          <Box mt={-1} mb={-1}>
-            <Text>3. All questions are compulsory to attempt.</Text>
-          </Box>
-          <Box mt={-1} mb={-1}>
-            <Text>
-              4. At last, you will get your score and your percentile.
-            </Text>
-          </Box>
-          <Box mt={-1} mb={-1}>
-            <Text>5. You can't leave the quiz in between.</Text>
-          </Box>
-          <Box mt={-1}>
-            <Text>6. Attempting the quiz will affect your IQ score.</Text>
-          </Box>
+        {isBoosted && (
+          <Flex justifyContent="center" alignItems="center" gap={2} mb={4}>
+            <Image src="/GIFs/starBoost.gif" height="60px" width="60px" />
+            <Badge colorScheme="yellow" fontSize="xl" p={2}>
+              1.5x Score Multiplier Active!
+            </Badge>
+          </Flex>
+        )}
+        <Text fontStyle="italic" fontWeight="bold" mb={4}>
+          {language === 'english'
+            ? 'Please read all instructions carefully before starting the quiz:'
+            : 'क्विज का प्रयास करने से पहले सभी निर्देशों को ध्यानपूर्वक पढ़ें'}
+        </Text>
+        <VStack spacing={4} align="stretch">
+          {(language === 'english' ? instructions : hindiInstructions).map(
+            (instruction, index) => (
+              <MotionBox
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Flex align="center">
+                  <Box
+                    as="span"
+                    fontWeight="bold"
+                    fontSize="lg"
+                    color={headingColor}
+                    mr={3}
+                  >
+                    {index + 1}.
+                  </Box>
+                  <Text
+                    fontSize="lg"
+                    fontWeight={'semibold'}
+                    mb={0}
+                    color={textColor}
+                  >
+                    {instruction}
+                  </Text>
+                </Flex>
+              </MotionBox>
+            ),
+          )}
         </VStack>
-      </ModalBody>
-    </>
-  );
-};
+      </Box>
+    </ModalBody>
+  )
+}
 
-export default InstructionModal;
+export default InstructionModalBody

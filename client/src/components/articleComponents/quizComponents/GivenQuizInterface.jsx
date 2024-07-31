@@ -1,156 +1,167 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   Button,
-  Grid,
-  GridItem,
   Text,
   Box,
   Progress,
+  VStack,
+  Spinner,
+  Center,
   Flex,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+const OptionButton = React.memo(
+  ({ optionKey, optionText, isCorrect, isUserAnswer, isDisabled }) => (
+    <motion.div>
+      <Button
+        isDisabled={isDisabled}
+        variant="solid"
+        size="lg"
+        width="100%"
+        justifyContent="flex-start"
+        bg={
+          isCorrect
+            ? 'green.300'
+            : isUserAnswer && !isCorrect
+            ? 'red.300'
+            : 'rgba(255, 255, 255, 0.1)'
+        }
+        _hover={isDisabled}
+        mb={4}
+        color="white"
+        cursor={'default !important'}
+        onClick={e => {
+          e.preventDefault()
+        }}
+        whiteSpace="normal"
+        height="auto"
+        py={2}
+      >
+        <Flex alignItems="flex-start" width="100%">
+          <Text fontSize="xl" fontWeight="bold" mr={2} mb={0} flexShrink={0}>
+            {optionKey.toUpperCase()}.
+          </Text>
+          <Text fontSize="md" mb={0} textAlign="left" wordBreak="break-word">
+            {optionText}
+          </Text>
+        </Flex>
+      </Button>
+    </motion.div>
+  ),
+)
 
 const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
     if (quizGivenSummary.length > 0) {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [currentQuestionIndex, quizGivenSummary]);
+  }, [currentQuestionIndex, quizGivenSummary])
+
+  const currentQuestion = useMemo(
+    () => quizGivenSummary[currentQuestionIndex] || null,
+    [quizGivenSummary, currentQuestionIndex],
+  )
+
+  if (loading) {
+    return (
+      <Center height="100vh">
+        <Spinner size="xl" color="purple.500" />
+      </Center>
+    )
+  }
+
+  if (!currentQuestion) {
+    return (
+      <Center height="100vh">
+        <Text fontSize="xl" color="gray.100">
+          No quiz data available.
+        </Text>
+      </Center>
+    )
+  }
+
   return (
-    <>
-      {loading ? (
-        <Text>Loading...</Text>
-      ) : (
-        <>
-          <Flex
-            width={"100%"}
-            justifyContent={"center"}
-            gap={"10px"}
-            alignItems={"center"}
-            marginBottom={"20px"}
+    <Box
+      maxWidth="600px"
+      width="100%"
+      margin="0 auto"
+      padding={{ base: '20px', md: '40px' }}
+      paddingTop="0"
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      bg="rgba(26, 21, 39, 0.9)"
+      borderRadius="xl"
+      boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentQuestionIndex}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -20, opacity: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Text
+            fontSize={{ base: 'xl', md: '2xl' }}
+            fontWeight="bold"
+            mb={6}
+            color="purple.200"
+            textAlign="center"
           >
+            Question {currentQuestionIndex + 1} of {quizGivenSummary.length}
+          </Text>
+
+          <Flex width="100%" justifyContent="center" alignItems="center" mb={8}>
             <Progress
-              hasStripe
               value={
                 ((currentQuestionIndex + 1) / quizGivenSummary.length) * 100
               }
-              width={{ base: "100%", md: "80%" }}
-              height={"10px"}
-              marginBottom={"20px"}
-              borderRadius={"50px"}
-              colorScheme="blue"
-              marginY={"auto"}
+              size="sm"
+              width="100%"
+              borderRadius="full"
+              colorScheme="purple"
             />
-
-            <Text marginY={"auto"} color={"white"} textAlign={"center"}>
-              {`${currentQuestionIndex + 1} / ${quizGivenSummary.length}`}
+            <Text ml={4} color="white" flexShrink={0}>
+              {currentQuestionIndex + 1} / {quizGivenSummary.length}
             </Text>
           </Flex>
-          {quizGivenSummary.length > 0 && (
-            <>
-              <Text
-                p={2}
-                letterSpacing={0.5}
-                marginBottom={"50px"}
-                overflowWrap="break-word"
-                color={"black"}
-                fontSize={"20px"}
-                userSelect={"none"}
-              >
-                {quizGivenSummary.length > 0
-                  ? quizGivenSummary[currentQuestionIndex].question
-                  : ""}
-              </Text>
-              <Grid templateColumns={{ md: "1fr 1fr" }} gap="25px">
-                {quizGivenSummary[currentQuestionIndex]?.options &&
-                  Object.entries(
-                    quizGivenSummary?.length > 0
-                      ? quizGivenSummary[currentQuestionIndex]?.options
-                      : []
-                  )?.map(([optionKey, optionText]) => (
-                    <GridItem key={optionKey} display={"flex"}>
-                      <Box
-                        display={"flex"}
-                        flexDirection={"row"}
-                        alignItems={"center"}
-                        marginRight={2}
-                        color={"black"}
-                        fontWeight={"bold"}
-                        minW={"25px"}
-                        userSelect={"none"}
-                      >{`${optionKey.toLocaleUpperCase()} :`}</Box>
-                      <Button
-                        isDisabled={
-                          quizGivenSummary[
-                            currentQuestionIndex
-                          ].answer.toLocaleUpperCase() ===
-                            optionKey.toLocaleUpperCase() ||
-                          quizGivenSummary[
-                            currentQuestionIndex
-                          ].userAnswer.toLocaleUpperCase() ===
-                            optionKey.toLocaleUpperCase()
-                            ? false
-                            : true
-                        }
-                        border={"1px solid lightgray"}
-                        overflowWrap="break-word"
-                        display={"flex"}
-                        whiteSpace="normal"
-                        justifyContent={"flex-start"}
-                        bg={
-                          quizGivenSummary[
-                            currentQuestionIndex
-                          ].answer.toLocaleUpperCase() ===
-                          optionKey.toLocaleUpperCase()
-                            ? "green.300" // Background color when selected
-                            : quizGivenSummary[
-                                currentQuestionIndex
-                              ].userAnswer.toLocaleUpperCase() ===
-                              optionKey.toLocaleUpperCase()
-                            ? "red.300"
-                            : "#183D3D" // Default background color
-                        }
-                        variant={"outline"}
-                        width={"100%"}
-                        maxWidth={"400px"}
-                        textAlign={"left"}
-                        height={"auto"}
-                        px={2}
-                        py={2}
-                        color={
-                          "#FAF0E6" // Default text color
-                        }
-                        sx={{
-                          _hover: {
-                            bg:
-                              quizGivenSummary[
-                                currentQuestionIndex
-                              ].answer.toLocaleUpperCase() ===
-                              optionKey.toLocaleUpperCase()
-                                ? "green.300"
-                                : quizGivenSummary[
-                                    currentQuestionIndex
-                                  ].userAnswer.toLocaleUpperCase() ===
-                                  optionKey.toLocaleUpperCase()
-                                ? "red.300"
-                                : "#183D3D", // Same as the default background color
-                            color: "#FAF0E6", // Same as the default text color
-                            borderColor: "lightgray", // Same as the default border color
-                            cursor: "default",
-                          },
-                        }}
-                      >
-                        {`${optionText}`}
-                      </Button>
-                    </GridItem>
-                  ))}
-              </Grid>
-            </>
-          )}
-        </>
-      )}
-    </>
-  );
-};
 
-export default GivenQuizInterface;
+          <Text
+            fontSize={{ base: 'lg', md: 'xl' }}
+            mb={8}
+            color="gray.100"
+            wordBreak="break-word"
+          >
+            {currentQuestion.question}
+          </Text>
+
+          <VStack spacing={4} align="stretch">
+            {Object.entries(currentQuestion.options).map(([key, value]) => (
+              <OptionButton
+                key={key}
+                optionKey={key}
+                optionText={value}
+                isCorrect={
+                  currentQuestion.answer.toUpperCase() === key.toUpperCase()
+                }
+                isUserAnswer={
+                  currentQuestion.userAnswer.toUpperCase() === key.toUpperCase()
+                }
+                isDisabled={
+                  currentQuestion.answer.toUpperCase() !== key.toUpperCase() &&
+                  currentQuestion.userAnswer.toUpperCase() !== key.toUpperCase()
+                }
+              />
+            ))}
+          </VStack>
+        </motion.div>
+      </AnimatePresence>
+    </Box>
+  )
+}
+
+export default React.memo(GivenQuizInterface)

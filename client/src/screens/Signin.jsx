@@ -108,7 +108,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         isClosable: true,
         position: 'top',
       })
-      navigate('/home/all')
+      location.pathname = '/' && navigate('/home/all')
     }
   }
 
@@ -158,7 +158,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           isClosable: true,
           position: 'top',
         })
-        navigate('/home/all')
+        location.pathname = '/' && navigate('/home/all')
       } else {
         throw new Error('Login Failed')
       }
