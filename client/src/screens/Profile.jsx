@@ -69,6 +69,7 @@ export default function Profile() {
   } = useDisclosure()
 
   const fetchProfile = async () => {
+    if (!state.user) return
     try {
       const response = await axios.get(`/api/user/profile/${inGameName}`)
       setProfile(() => response.data)
@@ -121,7 +122,7 @@ export default function Profile() {
     } else {
       fetchProfile()
     }
-  }, [inGameName, state])
+  }, [inGameName, state, state.user])
 
   useEffect(() => {
     if (

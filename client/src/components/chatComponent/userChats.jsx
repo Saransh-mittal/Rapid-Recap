@@ -28,12 +28,14 @@ import axios from 'axios'
 import ButtonGradient from '../../assets/svg/ButtonGradient'
 import Button from '../miscellaneous/ButtonComponent'
 import { Search2Icon } from '@chakra-ui/icons'
+import { useNavigate } from 'react-router-dom'
 
 const UserChats = ({ fetchAgain }) => {
   const { state } = useContext(AppContext)
   const [loggedUser, setLoggedUser] = useState()
   const [showRequestsTab, setShowRequestsTab] = useState(false)
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const navigate = useNavigate()
   const buttonW = useBreakpointValue({
     base: '50px',
     md: '150px', // width for large screens (>= 62em or 992px)
@@ -58,20 +60,22 @@ const UserChats = ({ fetchAgain }) => {
   const fetchChats = async () => {
     try {
       const { data } = await axios.get('/api/chat')
-      setChats(
-        data.filter(
-          chat =>
-            chat.status === 'accepted' ||
-            chat.chatCreatedBy.toString() === user._id.toString(),
-        ) || [],
+      setChats(data || [])
+      const acceptedChats = data.filter(
+        chat =>
+          chat.status === 'accepted' ||
+          chat.chatCreatedBy.toString() === user._id.toString(),
       )
-      setChatRequests(
-        data.filter(
-          chat =>
-            chat.status === 'pending' &&
-            chat.chatCreatedBy.toString() !== user._id.toString(),
-        ) || [],
+      const pendingChatRequests = data.filter(
+        chat =>
+          chat.status === 'pending' &&
+          chat.chatCreatedBy.toString() !== user._id.toString(),
       )
+
+      setChats(acceptedChats || [])
+      setChatRequests(pendingChatRequests || [])
+      localStorage.setItem('chats', JSON.stringify(acceptedChats))
+      localStorage.setItem('chatRequests', JSON.stringify(pendingChatRequests))
     } catch (error) {
       console.log(error)
       toast({
@@ -158,6 +162,7 @@ const UserChats = ({ fetchAgain }) => {
     }
 
     setNotification(prev => prev.filter(c => c !== chat._id))
+    navigate(`/chats?chatId=${chat._id}`)
   }
 
   const renderChatItem = chat => {
@@ -321,6 +326,7 @@ const UserChats = ({ fetchAgain }) => {
         <Button
           onClick={() => setShowRequestsTab(!showRequestsTab)}
           white={showRequestsTab ? true : false}
+          textColor={'white'}
         >
           {showRequestsTab ? 'Chats' : 'Requests'}
         </Button>
@@ -351,7 +357,7 @@ const UserChats = ({ fetchAgain }) => {
         borderRadius="lg"
         overflowY="hidden"
       >
-        <Heading size={'md'} pl={'5px'}>
+        <Heading size={'md'} pl={'5px'} color={'white'}>
           {showRequestsTab ? 'Requests' : 'Chats'}
         </Heading>
         {showRequestsTab ? (

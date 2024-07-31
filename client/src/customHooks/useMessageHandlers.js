@@ -46,7 +46,6 @@ const useMessageHandlers = ({
       )
       if (cachedMessages) {
         setMessages(cachedMessages)
-        setLoading(false)
       }
       const data = await fetchMessagesApi(selectedChat._id)
       setMessages(prevMessages => {
@@ -90,11 +89,17 @@ const useMessageHandlers = ({
       if (!data.length) {
         setHasMore(false)
       }
-      setMessages(prevMessages => [...data, ...prevMessages])
+      setMessages(prevMessages => {
+        const newMessageIds = new Set(data.map(msg => msg._id))
+        const uniquePrevMessages = prevMessages.filter(
+          msg => !newMessageIds.has(msg._id),
+        )
+        return [...data, ...uniquePrevMessages]
+      })
       return data
     } catch (error) {
       toast({
-        title: 'Error Occured!',
+        title: 'Error Occurred!',
         description: 'Failed to Load More Messages',
         status: 'error',
         duration: 5000,

@@ -10,6 +10,7 @@ import {
 import ArticleCard from '../../../miscellaneous/ArticleCard'
 import MessageReactions from './MessageReactions'
 import { useNavigate } from 'react-router-dom'
+import { safelyAccessProperty } from '../../../../utils/helper.utils'
 
 const GroupedMessages = ({
   groupedMessages,
@@ -31,15 +32,20 @@ const GroupedMessages = ({
             {date}
           </div>
           {msgs.map((m, i) => {
+            const senderId = safelyAccessProperty(m, 'sender._id')
+            if (!senderId) {
+              // console.error('Message with missing sender ID:', m)
+              return null
+            }
             const messageDeletedForUser = isMessageDeletedForUser(
               m,
               user._id.toString(),
             )
             const messageDeleted = m.isDeleted
-            const isSameLoggedUser = m.sender._id === user._id
+            const isSameLoggedUser = senderId === user._id
 
             if (m.type === 'system') {
-              if (m.sender._id === user._id) return
+              if (senderId === user._id) return
               return (
                 // design a system message that is centered and looks like a date style
                 <Box
@@ -66,11 +72,11 @@ const GroupedMessages = ({
                   style={{
                     display: 'flex',
                     justifyContent:
-                      m.sender._id === user._id ? 'flex-end' : 'flex-start',
+                      senderId === user._id ? 'flex-end' : 'flex-start',
                     marginBottom: '0.45rem',
                     width: '100%',
                     alignSelf:
-                      m.sender._id === user._id ? 'flex-end' : 'flex-start',
+                      senderId === user._id ? 'flex-end' : 'flex-start',
                   }}
                 >
                   {(isSameSender(msgs, m, i, user._id) ||
@@ -100,7 +106,9 @@ const GroupedMessages = ({
                   >
                     <ArticleCard
                       article={m.article}
-                      onClick={() => navigate(`/article/${m.article._id}`)}
+                      onClick={() => {
+                        navigate(`/article/${m.article._id}`)
+                      }}
                       viewMode="grid"
                       width={'100%'}
                       cancelHoverEffect={true}
@@ -163,13 +171,13 @@ const GroupedMessages = ({
                 <span
                   style={{
                     backgroundColor: `${
-                      m.sender._id === user._id ? '#BEE3F8' : '#B9F5D0'
+                      senderId === user._id ? '#BEE3F8' : '#B9F5D0'
                     }`,
                     marginLeft: isSameSenderMargin(msgs, m, i, user._id),
                     marginTop: isSameLoggedUser ? 3 : 5,
                     borderRadius: '12px',
                     padding: '5px 15px',
-                    maxWidth: '75%',
+                    maxWidth: '80%',
                     color: 'black',
                     marginRight: '0.75rem',
                     position: 'relative',
