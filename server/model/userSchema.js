@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const configService = require("../configService");
+const mongoose = require('mongoose')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const configService = require('../configService')
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema(
     quizAttempts: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "QUIZ_ATTEMPT",
+        ref: 'QUIZ_ATTEMPT',
       },
     ],
     IQ_score: {
@@ -68,11 +68,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       default:
-        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+        'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
     },
     bio: {
       type: String,
-      default: "",
+      default: '',
     },
     inGameName: {
       type: String,
@@ -81,7 +81,7 @@ const userSchema = new mongoose.Schema(
     dailyIQScores: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "DailyIQ",
+        ref: 'DailyIQ',
       },
     ],
     easyQuizCount: {
@@ -121,13 +121,13 @@ const userSchema = new mongoose.Schema(
       lineGraph: { type: Boolean, default: false },
       barGraph: { type: Boolean, default: false },
       solvedQuizzes: { type: Boolean, default: false },
-      dailyActivity: { type: Boolean, default: false },
+      // dailyActivity: { type: Boolean, default: false },
       society: { type: Boolean, default: false },
       seasonAnalytics: { type: Boolean, default: false },
     },
     societyUpgradeMessage: {
       type: String,
-      default: "",
+      default: '',
     },
     baseUpgradeIQ: {
       type: Number,
@@ -135,7 +135,7 @@ const userSchema = new mongoose.Schema(
     applicationUpdates: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "APPLICATION_UPDATES", // This should match the model name
+        ref: 'APPLICATION_UPDATES', // This should match the model name
       },
     ],
     streak: {
@@ -146,10 +146,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: function () {
         // Set the default streak expiry to one day from now
-        const expiry = new Date();
-        expiry.setDate(expiry.getDate() + 1); // Set date to one day from now
-        expiry.setHours(0, 0, 0, 0); // Set time to start of the day
-        return expiry;
+        const expiry = new Date()
+        expiry.setDate(expiry.getDate() + 1) // Set date to one day from now
+        expiry.setHours(0, 0, 0, 0) // Set time to start of the day
+        return expiry
       },
     },
     longestStreak: {
@@ -176,7 +176,7 @@ const userSchema = new mongoose.Schema(
       {
         quinBoost: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "QUIN_BOOST",
+          ref: 'QUIN_BOOST',
         },
         boosted: {
           type: Boolean,
@@ -195,7 +195,7 @@ const userSchema = new mongoose.Schema(
     activities: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Activity",
+        ref: 'Activity',
       },
     ],
     timeSpent: [
@@ -205,7 +205,7 @@ const userSchema = new mongoose.Schema(
         date: { type: Date, default: Date.now },
       },
     ],
-    role: { type: String, enum: ["user", "admin"], default: "user" },
+    role: { type: String, enum: ['user', 'admin'], default: 'user' },
     rankedInCurrentSeason: {
       type: Boolean,
       default: false,
@@ -217,7 +217,7 @@ const userSchema = new mongoose.Schema(
     previousSeasonData: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "SEASON_DATA",
+        ref: 'SEASON_DATA',
       },
     ],
     maxIQScorePerSeason: [
@@ -229,7 +229,7 @@ const userSchema = new mongoose.Schema(
     bookmarks: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "ARTICLE",
+        ref: 'ARTICLE',
       },
     ],
     isAdmin: {
@@ -240,19 +240,19 @@ const userSchema = new mongoose.Schema(
     friends: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "USER",
+        ref: 'USER',
       },
     ],
     sentRequests: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "FriendRequest",
+        ref: 'FriendRequest',
       },
     ],
     receivedRequests: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "FriendRequest",
+        ref: 'FriendRequest',
       },
     ],
     isOnline: {
@@ -264,49 +264,49 @@ const userSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { collection: "Users" }
-);
+  { collection: 'Users' },
+)
 
-userSchema.pre("save", async function (next) {
-  if (this.isNew && this.isModified("rank")) {
+userSchema.pre('save', async function (next) {
+  if (this.isNew && this.isModified('rank')) {
     // Calculate the default rank as the number of existing users
-    const existingUsersCount = await this.constructor.countDocuments();
-    this.rank = existingUsersCount + 1;
+    const existingUsersCount = await this.constructor.countDocuments()
+    this.rank = existingUsersCount + 1
   }
 
-  if (this.isModified("password")) {
-    const pass = this.password;
-    this.password = await bcrypt.hash(pass, 12);
-    this.cpassword = await bcrypt.hash(pass, 12);
+  if (this.isModified('password')) {
+    const pass = this.password
+    this.password = await bcrypt.hash(pass, 12)
+    this.cpassword = await bcrypt.hash(pass, 12)
   }
-  next();
-});
+  next()
+})
 
 userSchema.methods.generateAuthToken = async function () {
   try {
     let token = jwt.sign(
       { _id: this._id, role: this.role },
-      process.env.SECRET_KEY
-    );
-    return token;
+      process.env.SECRET_KEY,
+    )
+    return token
   } catch (error) {
-    console.log(error);
+    console.log(error)
   }
-};
+}
 userSchema.methods.incrementOtpCnt = function () {
-  this.otpCnt++;
-};
+  this.otpCnt++
+}
 userSchema.methods.resetOtpCnt = function () {
-  this.otpCnt = 0;
-  this.otpCntResetTime = null;
-};
+  this.otpCnt = 0
+  this.otpCntResetTime = null
+}
 
 userSchema.methods.setOtpCntResetTime = function () {
-  const resetTime = new Date();
-  resetTime.setMinutes(resetTime.getMinutes() + 60); // Adjust the time as needed
-  this.otpCntResetTime = resetTime;
-};
+  const resetTime = new Date()
+  resetTime.setMinutes(resetTime.getMinutes() + 60) // Adjust the time as needed
+  this.otpCntResetTime = resetTime
+}
 
-const User = mongoose.model("USER", userSchema);
+const User = mongoose.model('USER', userSchema)
 
-module.exports = User;
+module.exports = User

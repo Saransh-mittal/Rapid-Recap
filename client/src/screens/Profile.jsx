@@ -19,7 +19,7 @@ import IQBarGraph from '../components/profileComponents/IQBarGraph'
 import LeftProfileBox from '../components/profileComponents/LeftProfileBox'
 import SolvedQuizzes from '../components/profileComponents/SolvedQuizzes'
 import RankAndSociety from '../components/profileComponents/RankAndSociety'
-import DailyActivity from '../components/profileComponents/DailyActivity'
+// import DailyActivity from '../components/profileComponents/DailyActivity'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import ToggleProfileVisibilty from '../components/profileComponents/LeftProfileSubComponents/ToggleProfileVisibilty.jsx'
@@ -48,7 +48,7 @@ export default function Profile() {
     barGraph: false,
     solvedQuizzes: false,
     society: false,
-    dailyActivity: false,
+    // dailyActivity: false,
     seasonAnalytics: false,
   })
 
@@ -460,7 +460,7 @@ export default function Profile() {
           }}
           flexDirection="column"
           margin="12px"
-          justifyContent={'center'}
+          // justifyContent={'center'}
           alignItems={'center'}
           borderRadius="10px"
           className="right-profile-box"
@@ -579,7 +579,7 @@ export default function Profile() {
               </>
             )}
           </Flex>
-          <Box
+          {/* <Box
             w={'100%'}
             margin="10px"
             p={isLoading ? 0 : '10px'}
@@ -602,7 +602,7 @@ export default function Profile() {
                 loginedUserProfile={loginedUserProfile}
               />
             )}
-          </Box>
+          </Box> */}
         </Flex>
       </Flex>
     </Box>

@@ -12,17 +12,17 @@ import {
   ModalOverlay,
   useDisclosure,
   useToast,
-} from "@chakra-ui/react";
-import React, { useContext, useEffect, useState } from "react";
-import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons"; // Import ViewOffIcon for visibility off
-import { AppContext } from "../../../contextAPI/appContext";
-import axios from "axios";
+} from '@chakra-ui/react'
+import React, { useContext, useEffect, useState } from 'react'
+import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons' // Import ViewOffIcon for visibility off
+import { AppContext } from '../../../contextAPI/appContext'
+import axios from 'axios'
 
 const ToggleProfileVisibility = ({ setShowHideModal }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
-  const [load, setLoad] = useState(false);
-  const { state, dispatch } = useContext(AppContext);
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const toast = useToast()
+  const [load, setLoad] = useState(false)
+  const { state, dispatch } = useContext(AppContext)
   const [hide, setHide] = useState({
     fullProfile: state.user.profilePrivacy
       ? state.user.profilePrivacy.fullProfile
@@ -36,78 +36,78 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
     solvedQuizzes: state.user.profilePrivacy
       ? state.user?.profilePrivacy.solvedQuizzes
       : false,
-    dailyActivity: state.user.profilePrivacy
-      ? state.user?.profilePrivacy.dailyActivity
-      : false,
+    // dailyActivity: state.user.profilePrivacy
+    //   ? state.user?.profilePrivacy.dailyActivity
+    //   : false,
     society: state.user.profilePrivacy
       ? state.user?.profilePrivacy.society
       : false,
     seasonAnalytics: state.user.profilePrivacy
       ? state.user?.profilePrivacy.seasonAnalytics
       : false,
-  });
+  })
   useEffect(() => {
-    onOpen();
-  }, []);
+    onOpen()
+  }, [])
 
-  const handleToggleVisibility = (key) => {
-    if (key === "fullProfile") {
+  const handleToggleVisibility = key => {
+    if (key === 'fullProfile') {
       // If fullProfile is toggled, set every other option accordingly
-      const isFullProfileVisible = !hide[key];
-      setHide((prevHide) => ({
+      const isFullProfileVisible = !hide[key]
+      setHide(prevHide => ({
         ...prevHide,
         fullProfile: isFullProfileVisible,
         lineGraph: isFullProfileVisible,
         barGraph: isFullProfileVisible,
         solvedQuizzes: isFullProfileVisible,
-        dailyActivity: isFullProfileVisible,
+        // dailyActivity: isFullProfileVisible,
         society: isFullProfileVisible,
-      }));
+      }))
     } else {
       // If any other option is toggled, just toggle that option
-      setHide((prevHide) => ({
+      setHide(prevHide => ({
         ...prevHide,
         [key]: !prevHide[key],
-      }));
+      }))
     }
-  };
+  }
 
   const handleSave = async () => {
-    setLoad(true);
+    setLoad(true)
     try {
-      const response = await axios.post("/api/user/profilePrivacy", {
+      const response = await axios.post('/api/user/profilePrivacy', {
         ...hide,
-      });
+      })
       if (response.status === 200) {
         toast({
-          title: "Success",
-          description: "Profile visibility saved successfully",
-          status: "success",
+          title: 'Success',
+          description: 'Profile visibility saved successfully',
+          status: 'success',
           duration: 3000,
           isClosable: true,
-          position: "top",
-        });
-        const updatedUser = state.user;
-        updatedUser.profilePrivacy = hide;
-        dispatch({ type: "setUser", payloadUser: updatedUser });
-        setShowHideModal(false);
-        onClose();
+          position: 'top',
+        })
+        const updatedUser = state.user
+        updatedUser.profilePrivacy = hide
+        dispatch({ type: 'setUser', payloadUser: updatedUser })
+        setShowHideModal(false)
+        onClose()
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Error in saving profile visibility",
-        status: "error",
+        title: 'Error',
+        description: 'Error in saving profile visibility',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
 
-      console.log(error);
+      console.log(error)
     } finally {
-      setLoad(false);
+      setLoad(false)
     }
-  };
+  }
 
   return (
     <>
@@ -115,19 +115,19 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
         closeOnOverlayClick={false}
         isOpen={isOpen}
         onClose={() => {
-          setShowHideModal(false);
-          onClose();
+          setShowHideModal(false)
+          onClose()
         }}
         size="lg"
       >
         <ModalOverlay />
         <ModalContent
-          backgroundColor={{ base: "#0f0d15" }}
+          backgroundColor={{ base: '#0f0d15' }}
           backgroundImage={{
-            base: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+            base: 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
           }}
           boxShadow={{
-            base: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+            base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
           }}
           backgroundSize="400% 400%"
           borderRadius="10px"
@@ -135,20 +135,20 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
           <ModalHeader as="h3" size="lg" color="white" textAlign="center">
             Toggle Profile Visibility
           </ModalHeader>
-          <ModalCloseButton color={"white"} isDisabled={load} />
+          <ModalCloseButton color={'white'} isDisabled={load} />
           <ModalBody>
             <Box
-              maxH={{ base: "80vh", md: "50vh" }}
+              maxH={{ base: '80vh', md: '50vh' }}
               overflowY="scroll"
               css={{
-                "&::-webkit-scrollbar": {
-                  display: "none",
+                '&::-webkit-scrollbar': {
+                  display: 'none',
                 },
               }}
             >
               <Grid
-                templateColumns={"repeat(2,4fr)"}
-                color={"white"}
+                templateColumns={'repeat(2,4fr)'}
+                color={'white'}
                 gap={6}
                 margin={2}
               >
@@ -158,12 +158,12 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
                     <GridItem colSpan={1}>
                       {value ? (
                         <ViewOffIcon
-                          _hover={{ cursor: "pointer" }}
+                          _hover={{ cursor: 'pointer' }}
                           onClick={() => handleToggleVisibility(key)}
                         />
                       ) : (
                         <ViewIcon
-                          _hover={{ cursor: "pointer" }}
+                          _hover={{ cursor: 'pointer' }}
                           onClick={() => handleToggleVisibility(key)}
                         />
                       )}
@@ -181,7 +181,7 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
         </ModalContent>
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default ToggleProfileVisibility;
+export default ToggleProfileVisibility
