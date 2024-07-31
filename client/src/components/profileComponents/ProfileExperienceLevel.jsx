@@ -1,41 +1,41 @@
-import { Box, Flex, Text, Container } from "@chakra-ui/react";
-import Heading from "../miscellaneous/HeadingComponent";
+import { Box, Flex, Text, Container } from '@chakra-ui/react'
+import Heading from '../miscellaneous/HeadingComponent'
 
 const ProgressBubble = ({ xp, level }) => {
   const calculateProgress = (transitionXp, requiredXP) => {
-    return Math.round(100 - (requiredXP / transitionXp) * 100);
-  };
+    return Math.round(100 - (requiredXP / transitionXp) * 100)
+  }
 
   const calculateRequiredXp = (xp, xpBaseAtNextLevel) => {
-    return xpBaseAtNextLevel - xp;
-  };
+    return xpBaseAtNextLevel - xp
+  }
 
-  const colorInc = 100 / 3;
+  const colorInc = 100 / 3
 
-  const xpBaseAtCurrLevel = (level * (level + 1) * 10) / 2;
-  const xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2;
-  const requiredXP = calculateRequiredXp(xp, xpBaseAtNextLevel);
+  const xpBaseAtCurrLevel = (level * (level + 1) * 10) / 2
+  const xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2
+  const requiredXP = calculateRequiredXp(xp, xpBaseAtNextLevel)
   const percent = calculateProgress(
     xpBaseAtNextLevel - xpBaseAtCurrLevel,
-    requiredXP
-  );
+    requiredXP,
+  )
 
   const getClass = () => {
-    if (percent < colorInc * 1) return "red";
-    else if (percent < colorInc * 2) return "orange";
-    else return "green";
-  };
+    if (percent < colorInc * 1) return 'red'
+    else if (percent < colorInc * 2) return 'orange'
+    else return 'green'
+  }
 
   return (
     <Container padding={0}>
-      <Flex flexDirection="column" width="100%" h={"100%"} m={0}>
+      <Flex flexDirection="column" width="100%" h={'100%'} m={0}>
         <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
           Experience
         </Text>
         <Box
           display="flex"
           flexDirection="row"
-          justifyContent={"space-between"}
+          justifyContent={'space-between'}
           alignItems="center"
           mt={4}
         >
@@ -66,18 +66,18 @@ const ProgressBubble = ({ xp, level }) => {
                 h="120px"
                 border="5px solid"
                 borderColor={
-                  getClass() === "green"
-                    ? "green.400"
-                    : getClass() === "orange"
-                    ? "orange.400"
-                    : "red.400"
+                  getClass() === 'green'
+                    ? 'green.400'
+                    : getClass() === 'orange'
+                    ? 'orange.400'
+                    : 'red.400'
                 }
                 boxShadow={`0 0 20px ${
-                  getClass() === "green"
-                    ? "green.400"
-                    : getClass() === "orange"
-                    ? "orange.400"
-                    : "red.400"
+                  getClass() === 'green'
+                    ? 'green.400'
+                    : getClass() === 'orange'
+                    ? 'orange.400'
+                    : 'red.400'
                 }`}
                 transition="all 1s ease"
               >
@@ -139,7 +139,7 @@ const ProgressBubble = ({ xp, level }) => {
               </Text>
             </Box>
           </Flex>
-          <Flex textAlign={"center"}>
+          <Flex textAlign={'center'}>
             <Box>
               <Heading
                 tag={`Required Level Up xP :`}
@@ -148,9 +148,9 @@ const ProgressBubble = ({ xp, level }) => {
               >
                 <span
                   style={{
-                    color: "blue",
-                    fontSize: "1.15rem",
-                    fontWeight: "bold",
+                    color: 'blue',
+                    fontSize: '1.15rem',
+                    fontWeight: 'bold',
                   }}
                 >
                   {requiredXP}
@@ -163,9 +163,9 @@ const ProgressBubble = ({ xp, level }) => {
               >
                 <span
                   style={{
-                    color: "blue",
-                    fontSize: "1.15rem",
-                    fontWeight: "bold",
+                    color: 'blue',
+                    fontSize: '1.15rem',
+                    fontWeight: 'bold',
                   }}
                 >
                   {xp}
@@ -176,7 +176,7 @@ const ProgressBubble = ({ xp, level }) => {
         </Box>
       </Flex>
     </Container>
-  );
-};
+  )
+}
 
-export default ProgressBubble;
+export default ProgressBubble

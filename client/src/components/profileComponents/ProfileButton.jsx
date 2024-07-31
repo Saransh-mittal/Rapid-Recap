@@ -1,5 +1,12 @@
-import { Button, Tag, Tooltip } from "@chakra-ui/react";
-import React from "react";
+import { Button, Tag, Tooltip } from '@chakra-ui/react'
+import React from 'react'
+import { keyframes } from '@emotion/react'
+
+// const pulseAnimation = keyframes`
+//   0% { box-shadow: 0 0 0 0 rgba(26, 21, 39, 0.7); }
+//   70% { box-shadow: 0 0 0 10px rgba(26, 21, 39, 0); }
+//   100% { box-shadow: 0 0 0 0 rgba(26, 21, 39, 0); }
+// `
 
 const ProfileButton = ({
   buttonText,
@@ -9,51 +16,85 @@ const ProfileButton = ({
   hoverAnimation,
   onClick,
   icon,
+  top,
 }) => {
   return (
     <>
       {inGameName == stateUserInGameName && (
         <Tooltip label="Visibility to others">
           <Tag
-            backgroundColor="#0f0d15"
+            backgroundColor="rgba(15, 13, 21, 0.8)"
             m={0}
-            position={"absolute"}
-            top={"1.2rem"}
-            right={"1.2rem"}
-            color={"#9CAFAA"}
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            w={"60px"}
-            height={"30px"}
+            position={'absolute'}
+            top={top}
+            right={'1.2rem'}
+            color={'#9CAFAA'}
+            display={'flex'}
+            justifyContent={'center'}
+            alignItems={'center'}
+            w={'60px'}
+            height={'28px'}
             zIndex={1}
+            borderRadius="5px"
+            backdropFilter="blur(5px)"
           >
-            {Private ? "HIDDEN" : "VISIBLE"}
+            {Private ? 'HIDDEN' : 'VISIBLE'}
           </Tag>
         </Tooltip>
       )}
 
       <Button
-        w={"100%"}
-        bgGradient="linear(to-r, teal.500, blue.500)"
+        w={'100%'}
+        bg="#1a1527"
         color="white"
-        fontWeight="bold"
-        fontFamily="Arial, sans-serif"
-        _hover={{
-          bgGradient: "linear(to-r, red.500, yellow.500)",
-          animation: `${hoverAnimation} 0.5s ease-in-out`,
-        }}
+        // fontWeight="bold"
+        // fontFamily="'Cyberpunk', Arial, sans-serif"
+        fontSize="0.9em"
+        letterSpacing="1px"
+        // _hover={{
+        //   bg: '#2c2541',
+        //   color: '#b8d4d0',
+        //   animation: `${pulseAnimation} 1.5s infinite`,
+        // }}
         _active={{
-          bgGradient: "linear(to-r, purple.500, pink.500)",
-          transform: "scale(0.95)",
+          bg: '#0f0d15',
+          transform: 'scale(0.98)',
         }}
-        leftIcon={icon} // Add icon here
+        // height={'50px'}
+        leftIcon={icon}
         onClick={onClick}
+        borderColor="#2c2541"
+        borderWidth="2px"
+        boxShadow="0 0 15px rgba(44, 37, 65, 0.5)"
+        transition="all 0.3s ease-in-out"
+        textTransform="uppercase"
+        // py={6}
+        position="relative"
+        overflow="hidden"
+        _before={{
+          content: '""',
+          position: 'absolute',
+          top: '-50%',
+          left: '-50%',
+          width: '200%',
+          height: '200%',
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          transform: 'rotate(45deg)',
+          pointerEvents: 'none',
+          zIndex: 1,
+          transition: 'all 0.6s ease-in-out',
+        }}
+        _hover={{
+          _before: {
+            left: '-100%',
+            top: '-100%',
+          },
+        }}
       >
         {buttonText}
       </Button>
     </>
-  );
-};
+  )
+}
 
-export default ProfileButton;
+export default ProfileButton

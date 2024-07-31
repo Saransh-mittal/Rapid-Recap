@@ -241,7 +241,9 @@ export default function Profile() {
           </Flex>
           <Flex
             marginTop={'12px'}
-            padding="15px"
+            // padding="15px"
+            px={'15px'}
+            py={'6px'}
             borderRadius="10px"
             flexDirection="column"
             w={{ md: '85%', lg: '95%', base: '100%' }}
@@ -309,7 +311,7 @@ export default function Profile() {
               />
             )}
           </Flex>
-          {isLoading ? (
+          {/* {isLoading ? (
             <>
               <Skeleton
                 w={{ md: '85%', lg: '95%', base: '100%' }}
@@ -362,7 +364,7 @@ export default function Profile() {
                 )}
               </Flex>
             )
-          )}
+          )} */}
           {isLoading ? (
             <>
               <Skeleton
@@ -376,14 +378,17 @@ export default function Profile() {
             (!privacyProfileData.seasonAnalytics ||
               inGameName == state.user.inGameName) && (
               <Flex
-                padding="15px"
+                // padding="15px"
+                py={'8px'}
+                // px={'6px'}
                 borderRadius="10px"
                 flexDirection="column"
-                w={{ md: '85%', lg: '95%', base: '100%' }}
+                w={{ md: '90%', lg: '95%', base: '100%' }}
                 height="fit-content"
                 justifyContent={'center'}
                 alignItems={'center'}
                 position={'relative'}
+                className="season-analytics"
               >
                 <ProfileButton
                   buttonText="Season Analytics"
@@ -393,6 +398,7 @@ export default function Profile() {
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenSeasonSelector}
                   icon={<GiHistogram />} // Add icon here
+                  top={'0.9rem'}
                 />
 
                 <SeasonSelectorModal
@@ -416,13 +422,14 @@ export default function Profile() {
                 w={{ md: '85%', lg: '95%', base: '100%' }}
                 borderRadius="10px"
                 height="50px"
-                marginTop="12px"
+                // marginTop="6px"
               />
             </>
           ) : (
             inGameName == state.user.inGameName && (
               <Flex
-                padding="15px"
+                // padding="15px"
+                // px={'15px'}
                 borderRadius="10px"
                 flexDirection="column"
                 w={{ md: '85%', lg: '95%', base: '100%' }}
