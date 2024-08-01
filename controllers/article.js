@@ -1,61 +1,61 @@
-const Article = require("../model/articleSchema");
-const QuizAttempt = require("../model/quizAttemptSchema");
+const Article = require('../model/articleSchema')
+const QuizAttempt = require('../model/quizAttemptSchema')
 const {
   genQuiz,
   generateQuestionsForQuiz,
   generateQuestionsForHindiQuiz,
   findQuizByLanguage,
-} = require("../utils/quiz.utils");
+} = require('../utils/quiz.utils')
 const {
   breakArticleIntoParagraphs,
   hindiConverter,
   fetchNews,
   processNews,
   extractNewsUtilityFunc,
-} = require("../utils/article.utils");
-const { sendNotification } = require("../services/notificationService");
-const { formatDate } = require("../utils/miscellaneous.utils");
-const Quiz = require("../model/quizSchema");
-const NewsAPI = require("newsapi");
+} = require('../utils/article.utils')
+const { sendNotification } = require('../services/notificationService')
+const { formatDate } = require('../utils/miscellaneous.utils')
+const Quiz = require('../model/quizSchema')
+const NewsAPI = require('newsapi')
 
 const allArticles = async (req, res) => {
-  const { page = 1, pageSize = 9, category = "general" } = req.query;
+  const { page = 1, pageSize = 9, category = 'general' } = req.query
   //console.log(page, pageSize, category);
   try {
     const article = await Article.find({
-      category: { $regex: new RegExp("^" + category, "i") },
+      category: { $regex: new RegExp('^' + category, 'i') },
     })
       .sort({
         dateTime: -1,
-        "sentiments.compound": -1,
+        'sentiments.compound': -1,
       })
       .skip((page - 1) * pageSize)
-      .limit(pageSize);
+      .limit(pageSize)
 
     if (!article) {
-      throw new Error("No articles found");
+      throw new Error('No articles found')
     }
-    res.send(article);
+    res.send(article)
   } catch (error) {
-    res.status(400).json({ error: error || "Something went wrong" });
-    console.log(error);
+    res.status(400).json({ error: error || 'Something went wrong' })
+    console.log(error)
   }
-};
+}
 
 const getArticle = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params
   try {
-    const article = await Article.findById(id);
+    const article = await Article.findById(id)
     if (!article) {
-      res.status(422).json({ error: "Article not found" });
-      throw new Error("Article not found");
+      res.status(422).json({ error: 'Article not found' })
+      throw new Error('Article not found')
     }
-    const paragraphs = await breakArticleIntoParagraphs(article.mainText);
-    const relatedArticles = [];
+    const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+    const relatedArticles = []
     for (let relatedArticleID of article.relatedArticles) {
       const relatedArticleFetch = await Article.findById(
-        relatedArticleID
-      ).select("_id title imgURL dateTime avgReadTime");
+        relatedArticleID,
+      ).select('_id title imgURL dateTime avgReadTime')
       if (relatedArticleFetch) {
         const relatedArticle = {
           _id: relatedArticleFetch._id,
@@ -64,11 +64,11 @@ const getArticle = async (req, res) => {
           date: formatDate(relatedArticleFetch.dateTime),
           dateTime: new Date(relatedArticleFetch.dateTime),
           avgReadTime: relatedArticleFetch.avgReadTime,
-        };
-        relatedArticles.push(relatedArticle);
+        }
+        relatedArticles.push(relatedArticle)
       }
     }
-    relatedArticles.sort((a, b) => b.dateTime - a.dateTime);
+    relatedArticles.sort((a, b) => b.dateTime - a.dateTime)
     const newArticle = {
       category: article.category,
       title: article.title,
@@ -82,8 +82,8 @@ const getArticle = async (req, res) => {
       avgReadTime: article?.avgReadTime,
       date: formatDate(article.dateTime),
       _id: article._id,
-    };
-    let quizExpired = false;
+    }
+    let quizExpired = false
     // if (article.quiz) {
     //   const quizId = article.quiz;
     //   const fullQuiz = await Quiz.findById(quizId);
@@ -101,66 +101,65 @@ const getArticle = async (req, res) => {
     //     quizExpired = true;
     //   }
     // }
-    res.status(201).send({ quizExpired, newArticle });
+    res.status(201).send({ quizExpired, newArticle })
   } catch (error) {
-    res.status(400).json({ error: error || "Something went wrong" });
-    console.log(error);
+    res.status(400).json({ error: error || 'Something went wrong' })
+    console.log(error)
   }
-};
+}
 
 const getQuizTitan = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params
   try {
     const totalUsersGivenQuiz = await QuizAttempt.find({
       article: id,
-    }).countDocuments();
-    res.status(200).send({ totalUsersGivenQuiz });
+    }).countDocuments()
+    res.status(200).send({ totalUsersGivenQuiz })
   } catch (error) {
-    res.status(400).json({ error: error || "Something went wrong" });
-    console.log(error);
+    res.status(400).json({ error: error || 'Something went wrong' })
+    console.log(error)
   }
-};
+}
 
 const getQuiz = async (req, res) => {
-  const { articleId } = req.params;
-  const userId = req.user._id;
+  const { articleId } = req.params
+  const userId = req.user._id
   //console.log(articleId);
   try {
     if (!articleId) {
-      throw new Error("No article provided");
+      throw new Error('No article provided')
     }
-    const article = await Article.findById(articleId);
+    const article = await Article.findById(articleId)
     if (!article) {
-      throw new Error("Article not found");
+      throw new Error('Article not found')
     }
     //console.log(article);
 
-    const { title, author, mainText } = article;
+    const { title, author, mainText } = article
     //console.log(title, author, mainText);
     if (!title || !mainText) {
-      throw new Error("Please provide all the details");
+      throw new Error('Please provide all the details')
     }
     if (
       article.userQuizStatus.find(
-        (status) =>
-          status.userId.toString() === userId && status.status === true
+        status => status.userId.toString() === userId && status.status === true,
       )
     ) {
-      throw new Error("Quiz already started");
+      throw new Error('Quiz already started')
     }
-    let fullQuiz;
+    let fullQuiz
     if (article.quiz && article.quiz.length > 0) {
       fullQuiz = await findQuizByLanguage({
-        language: "en",
+        language: 'en',
         articleId,
-      });
+      })
       if (!fullQuiz) {
         fullQuiz = await generateQuestionsForQuiz({
           title,
           author,
           mainText,
           articleId,
-        });
+        })
       }
     } else {
       fullQuiz = await generateQuestionsForQuiz({
@@ -168,72 +167,71 @@ const getQuiz = async (req, res) => {
         author,
         mainText,
         articleId,
-      });
+      })
     }
     const timer =
       Math.min(
         5,
         fullQuiz.para1.questions.length +
           fullQuiz.para2.questions.length +
-          fullQuiz.para3.questions.length
-      ) * 10;
-    const quiz = await genQuiz({ fullQuiz, title });
+          fullQuiz.para3.questions.length,
+      ) * 10
+    const quiz = await genQuiz({ fullQuiz, title })
     if (quiz.questions.length <= 2) {
-      throw new Error("Article is too short for a quiz");
+      throw new Error('Article is too short for a quiz')
     }
     return res.status(200).json({
       expired: false,
-      message: "Quiz Questions generated successfully",
+      message: 'Quiz Questions generated successfully',
       timer,
       quiz,
       quizId: fullQuiz._id,
-    });
+    })
   } catch (error) {
-    res.status(400).json({ error: "Something went wrong! Please try again" });
-    console.log(error);
+    res.status(400).json({ error: 'Something went wrong! Please try again' })
+    console.log(error)
   }
-};
+}
 
 const getHindiQuiz = async (req, res) => {
-  const { articleId } = req.params;
-  const userId = req.user._id;
+  const { articleId } = req.params
+  const userId = req.user._id
   //console.log(articleId);
   try {
     if (!articleId) {
-      throw new Error("No article provided");
+      throw new Error('No article provided')
     }
-    const article = await Article.findById(articleId);
+    const article = await Article.findById(articleId)
     if (!article) {
-      throw new Error("Article not found");
+      throw new Error('Article not found')
     }
     //console.log(article);
 
-    const { hindiTitle, hindiAuthor, hindiMainText } = article;
+    const { hindiTitle, hindiAuthor, hindiMainText } = article
     //console.log(title, author, mainText);
     if (!hindiTitle || !hindiMainText || !hindiAuthor) {
-      throw new Error("Please the select the hindi article first");
+      throw new Error('Please the select the hindi article first')
     }
     if (
       article.userQuizStatus.find(
-        (status) =>
-          status.userId.toString() === userId && status.status === true
+        status => status.userId.toString() === userId && status.status === true,
       )
     ) {
-      throw new Error("Quiz already started");
+      throw new Error('Quiz already started')
     }
-    let fullQuiz;
+    let fullQuiz
     if (article.quiz && article.quiz.length > 0) {
       fullQuiz = await findQuizByLanguage({
-        language: "hi",
+        language: 'hi',
         articleId,
-      });
+      })
       if (!fullQuiz) {
         fullQuiz = await generateQuestionsForHindiQuiz({
           title: hindiTitle,
           author: hindiAuthor,
           mainText: hindiMainText,
           articleId,
-        });
+        })
       }
 
       // Now you have a valid fullQuiz
@@ -244,106 +242,105 @@ const getHindiQuiz = async (req, res) => {
         author: hindiAuthor,
         mainText: hindiMainText,
         articleId,
-      });
+      })
     }
     const timer =
       Math.min(
         5,
         fullQuiz.para1.questions.length +
           fullQuiz.para2.questions.length +
-          fullQuiz.para3.questions.length
-      ) * 10;
-    const quiz = await genQuiz({ fullQuiz, title: hindiTitle });
+          fullQuiz.para3.questions.length,
+      ) * 10
+    const quiz = await genQuiz({ fullQuiz, title: hindiTitle })
     if (quiz.questions.length <= 2) {
-      throw new Error("Article is too short for a quiz");
+      throw new Error('Article is too short for a quiz')
     }
 
     return res.status(200).json({
       expired: false,
-      message: "Quiz Questions generated successfully",
+      message: 'Quiz Questions generated successfully',
       timer,
       quiz,
       quizId: fullQuiz._id,
-    });
+    })
   } catch (error) {
     res.status(400).json({
-      error: error || "Something went wrong! Please try again",
-    });
-    console.log(error);
+      error: error || 'Something went wrong! Please try again',
+    })
+    console.log(error)
   }
-};
+}
 
 const startQuiz = async (req, res) => {
-  const { articleId } = req.params;
-  const userId = req.user._id;
+  const { articleId } = req.params
+  const userId = req.user._id
   //console.log(userId);
   try {
     if (!articleId) {
-      throw new Error("No article provided");
+      throw new Error('No article provided')
     }
-    const article = await Article.findById(articleId);
+    const article = await Article.findById(articleId)
     if (!article) {
-      throw new Error("Article not found");
+      throw new Error('Article not found')
     }
-    const quiz = await Quiz.find({ article: articleId });
+    const quiz = await Quiz.find({ article: articleId })
     if (!quiz || quiz.length === 0) {
-      throw new Error("Quiz not found, Please try again!!");
+      throw new Error('Quiz not found, Please try again!!')
     }
     if (
       article.userQuizStatus.find(
-        (status) =>
-          status.userId.toString() === userId && status.status === true
+        status => status.userId.toString() === userId && status.status === true,
       )
     ) {
-      throw new Error("Quiz already started");
+      throw new Error('Quiz already started')
     }
-    article.userQuizStatus.push({ userId, status: true });
-    await article.save();
-    res.status(200).json({ message: "Quiz started successfully" });
+    article.userQuizStatus.push({ userId, status: true })
+    await article.save()
+    res.status(200).json({ message: 'Quiz started successfully' })
   } catch (error) {
-    res.status(400).json({ error: error || "Something went wrong" });
-    console.log(error);
+    res.status(400).json({ error: error || 'Something went wrong' })
+    console.log(error)
   }
-};
+}
 
 const getArticleQuizStatus = async (req, res) => {
-  const { articleId } = req.params;
-  const userId = req.user._id;
+  const { articleId } = req.params
+  const userId = req.user._id
   try {
-    const article = await Article.findById(articleId);
+    const article = await Article.findById(articleId)
     if (!article) {
-      throw new Error("Article not found");
+      throw new Error('Article not found')
     }
     const userStatus = article.userQuizStatus.find(
-      (status) => status.userId.toString() === userId
-    );
+      status => status.userId.toString() === userId,
+    )
     if (!userStatus) {
-      return res.status(200).json({ status: false });
+      return res.status(200).json({ status: false })
     }
-    res.status(200).json({ status: userStatus.status });
+    res.status(200).json({ status: userStatus.status })
   } catch (error) {
-    res.status(400).json({ error: error || "Something went wrong" });
-    console.log(error);
+    res.status(400).json({ error: error || 'Something went wrong' })
+    console.log(error)
   }
-};
+}
 
 const getTopRankers = async (req, res) => {
-  const { articleId } = req.query;
+  const { articleId } = req.query
   try {
     const quizAttempts = await QuizAttempt.find({ article: articleId })
       .sort({ RQM_score: -1 })
       .limit(3)
       .populate({
-        path: "user",
-        select: "name inGameName IQ_score maxIQScore", // Specify the fields you want to select
-      });
+        path: 'user',
+        select: 'name inGameName IQ_score maxIQScore', // Specify the fields you want to select
+      })
 
-    const rankers = [];
-    let rank = 1;
+    const rankers = []
+    let rank = 1
     quizAttempts.forEach((attempt, index) => {
       //console.log(attempt);
       if (!attempt.user) {
-        return;
+        return
       }
       rankers.push({
         rank: rank,
@@ -351,142 +348,142 @@ const getTopRankers = async (req, res) => {
         inGameName: attempt.user.inGameName,
         IQ_score: attempt.user.IQ_score,
         maxIQScore: attempt.user.maxIQScore,
-      });
-      rank++;
-    });
-    res.status(200).json({ rankers });
+      })
+      rank++
+    })
+    res.status(200).json({ rankers })
   } catch (error) {
-    res.status(500).json({ error: error || "Something went wrong" });
-    console.log(error);
+    res.status(500).json({ error: error || 'Something went wrong' })
+    console.log(error)
   }
-};
+}
 
 const hindiTranslation = async (req, res) => {
-  const { articleId } = req.params;
+  const { articleId } = req.params
   try {
-    const article = await Article.findById(articleId);
+    const article = await Article.findById(articleId)
     if (!article) {
-      throw new Error("Article not found");
+      throw new Error('Article not found')
     }
-    const response = await hindiConverter(article);
+    const response = await hindiConverter(article)
     if (!article.hindiMainText) {
-      article.hindiMainText = [];
-      await article.save();
+      article.hindiMainText = []
+      await article.save()
     }
-    article.hindiTitle = response.hindiTitle;
+    article.hindiTitle = response.hindiTitle
 
     for (let key in response.hindiMainText) {
-      if (!response.hindiMainText[key]) continue;
-      article.hindiMainText.push(response.hindiMainText[key]);
+      if (!response.hindiMainText[key]) continue
+      article.hindiMainText.push(response.hindiMainText[key])
     }
-    article.hindiAuthor = response.hindiAuthor;
-    await article.save();
-    res.status(200).json({ status: "ok", article });
+    article.hindiAuthor = response.hindiAuthor
+    await article.save()
+    res.status(200).json({ status: 'ok', article })
   } catch (error) {
-    res.status(500).json({ error: error || "Something went wrong" });
-    console.log(error);
+    res.status(500).json({ error: error || 'Something went wrong' })
+    console.log(error)
   }
-};
+}
 
 const testNewsApi = async (req, res) => {
-  const newsapi = new NewsAPI("fb29cd0efb7e4ed292134d083f457869");
-  console.log("Testing news api");
+  const newsapi = new NewsAPI('fb29cd0efb7e4ed292134d083f457869')
+  console.log('Testing news api')
   try {
     let options = {
-      category: "entertainment",
-      language: "en",
+      category: 'entertainment',
+      language: 'en',
       pageSize: 10,
-    };
-    let articles = [];
-    const entertainmentQueries = ["movies", "music", "bollywood"];
-    options.pageSize = 5;
+    }
+    let articles = []
+    const entertainmentQueries = ['movies', 'music', 'bollywood']
+    options.pageSize = 5
 
     for (let query of entertainmentQueries) {
-      options.q = query;
-      const response = await newsapi.v2.topHeadlines(options);
-      articles = articles.concat(response.articles);
+      options.q = query
+      const response = await newsapi.v2.topHeadlines(options)
+      articles = articles.concat(response.articles)
     }
     // remove q parameter to get general entertainment news
-    delete options.q;
-    const response = await newsapi.v2.topHeadlines(options);
-    articles = articles.concat(response.articles);
+    delete options.q
+    const response = await newsapi.v2.topHeadlines(options)
+    articles = articles.concat(response.articles)
     //console.log(response.articles[1]);
-    res.status(200).json(articles);
+    res.status(200).json(articles)
   } catch (error) {
-    console.log(error);
+    console.log(error)
   }
-};
+}
 
 const getWorldNews = async (req, res) => {
   try {
     const queries = [
-      "source-countries=in&text=IPL OR T20WorldCup",
-      "source-countries=in&text=elections OR dhruv OR rathee OR Modi OR ashok OR gehlot",
-      "text=Ramayan OR pakistani OR gandi OR krishna OR astrology",
-    ];
+      'source-countries=in&text=IPL OR T20WorldCup',
+      'source-countries=in&text=elections OR dhruv OR rathee OR Modi OR ashok OR gehlot',
+      'text=Ramayan OR pakistani OR gandi OR krishna OR astrology',
+    ]
 
-    let allProcessedOutput = [];
+    let allProcessedOutput = []
 
     for (let query of queries) {
-      const news = await fetchNews(query);
+      const news = await fetchNews(query)
 
       if (news.length === 0) {
-        console.log("No news articles found for query:", query);
-        continue;
+        console.log('No news articles found for query:', query)
+        continue
       }
 
-      console.log("\nProcessing news articles for query:", query, "\n");
+      console.log('\nProcessing news articles for query:', query, '\n')
 
-      const processedOutput = await processNews(news);
+      const processedOutput = await processNews(news)
 
       console.log(
-        "\nNews articles processed successfully for query:",
+        '\nNews articles processed successfully for query:',
         query,
-        "\n"
-      );
-      allProcessedOutput = allProcessedOutput.concat(processedOutput);
+        '\n',
+      )
+      allProcessedOutput = allProcessedOutput.concat(processedOutput)
     }
-    let genCnt = 0;
-    let entCnt = 0;
-    let techCnt = 0;
-    let sportsCnt = 0;
-    let scienceCnt = 0;
-    let healthCnt = 0;
-    let busiCnt = 0;
+    let genCnt = 0
+    let entCnt = 0
+    let techCnt = 0
+    let sportsCnt = 0
+    let scienceCnt = 0
+    let healthCnt = 0
+    let busiCnt = 0
 
     for (let article of allProcessedOutput) {
-      if (article.category.toLowerCase() === "general") genCnt++;
-      if (article.category.toLowerCase() === "entertainment") entCnt++;
-      if (article.category.toLowerCase() === "technology") techCnt++;
-      if (article.category.toLowerCase() === "sports") sportsCnt++;
-      if (article.category.toLowerCase() === "science") scienceCnt++;
-      if (article.category.toLowerCase() === "health") healthCnt++;
-      if (article.category.toLowerCase() === "business") busiCnt++;
+      if (article.category.toLowerCase() === 'general') genCnt++
+      if (article.category.toLowerCase() === 'entertainment') entCnt++
+      if (article.category.toLowerCase() === 'technology') techCnt++
+      if (article.category.toLowerCase() === 'sports') sportsCnt++
+      if (article.category.toLowerCase() === 'science') scienceCnt++
+      if (article.category.toLowerCase() === 'health') healthCnt++
+      if (article.category.toLowerCase() === 'business') busiCnt++
     }
     res.status(200).json({
       message: `No. of news fetched for DB : ${allProcessedOutput.length}\n General : ${genCnt}\n Entertainment : ${entCnt}\n Technology : ${techCnt}\n Sports : ${sportsCnt}\n Science : ${scienceCnt}\n Health : ${healthCnt}\n Business : ${busiCnt}`,
-    });
+    })
     // send notification to all users
-    const title = "📢 New Content Alert! 📰";
+    const title = '📢 New Content Alert! 📰'
     const body =
-      "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!";
-    const url = "https://www.rapidrecap.co.in/";
-    sendNotification({ title, body, url });
+      'Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!'
+    const url = 'https://www.rapidrecap.co.in/'
+    sendNotification({ title, body, url })
   } catch (error) {
-    res.status(500).json({ error: error || "Something went wrong" });
-    console.log(error);
+    res.status(500).json({ error: error || 'Something went wrong' })
+    console.log(error)
   }
-};
+}
 
 const extractNews = async (req, res) => {
   try {
     const { result, articlesSavedPerCategory, notificationCategories } =
-      await extractNewsUtilityFunc();
+      await extractNewsUtilityFunc()
 
     res.status(200).json({
       message: `No. of news fetched for DB : ${result.length}`,
       articlesSavedPerCategory: articlesSavedPerCategory,
-    });
+    })
 
     // if (result.length > 0) {
     //   const title = `📢 New ${notificationCategories} Content Alert! 📰`;
@@ -496,10 +493,10 @@ const extractNews = async (req, res) => {
     //   await sendNotification({ title, body, url });
     // }
   } catch (error) {
-    res.status(500).json({ error: error || "Something went wrong" });
-    console.log(error);
+    res.status(500).json({ error: error || 'Something went wrong' })
+    console.log(error)
   }
-};
+}
 
 module.exports = {
   allArticles,
@@ -514,4 +511,4 @@ module.exports = {
   extractNews,
   testNewsApi,
   getQuizTitan,
-};
+}

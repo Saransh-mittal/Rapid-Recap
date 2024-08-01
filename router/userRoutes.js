@@ -1,5 +1,5 @@
-const express = require("express");
-const router = express.Router();
+const express = require('express')
+const router = express.Router()
 const {
   registerUser,
   loginUser,
@@ -34,44 +34,46 @@ const {
   bookmark,
   getBookmarks,
   removeBookmark,
+  NavLineGraph,
   // mailForQuinBoost,
-} = require("../controllers/user");
-const { Authenticate } = require("../middleware/authenticate");
+} = require('../controllers/user')
+const { Authenticate } = require('../middleware/authenticate')
 
-router.route("/register").post(registerUser);
-router.route("/login").post(loginUser);
-router.route("/logout").post(Authenticate, logoutUser);
-router.route("/verifyEmail").post(verifyUser);
-router.route("/loginCheck").get(Authenticate, loginCheck);
-router.route("/resendOTP").post(resendOTP);
-router.route("/forgotPassword").post(forgotPassword);
-router.route("/handleGoogleLogin").post(handleGoogleLogin);
-router.route("/leaderboard").get(Authenticate, leaderBoard);
-router.route("/profile/:inGameName").get(Authenticate, profile);
+router.route('/register').post(registerUser)
+router.route('/login').post(loginUser)
+router.route('/logout').post(Authenticate, logoutUser)
+router.route('/verifyEmail').post(verifyUser)
+router.route('/loginCheck').get(Authenticate, loginCheck)
+router.route('/resendOTP').post(resendOTP)
+router.route('/forgotPassword').post(forgotPassword)
+router.route('/handleGoogleLogin').post(handleGoogleLogin)
+router.route('/leaderboard').get(Authenticate, leaderBoard)
+router.route('/profile/:inGameName').get(Authenticate, profile)
 router
-  .route("/isTutorialTakenCheck/:Page")
-  .get(Authenticate, tutorialTakenCheck);
-router.route("/isTutorialTakenUpdate").post(Authenticate, tutorialTakenUpdate);
-router.route("/editProfile").post(Authenticate, editProfile);
-router.route("/expectedIQScore").get(Authenticate, expectedIQScore);
-router.route("/calcUsersIQScore").get(calculateUserIQScores);
-router.route("/solvedQuizzesHistory").get(Authenticate, solvedQuizHistory);
-router.route("/search").get(Authenticate, userSearch);
-router.route("/profilePrivacy").post(Authenticate, profilePrivacy);
-router.route("/getUpdates").get(Authenticate, getUpdates);
-router.route("/readUpdates").put(Authenticate, readUpdates);
-router.route("/trashUpdates/:updateId").put(Authenticate, trashUpdate);
-router.route("/trashAllUpdates").put(Authenticate, trashAllUpdate);
-router.route("/upgradeMessageClose").put(Authenticate, upgradeMessageClose);
-router.route("/sendMailForNotifySubscribe").get(sendMailForNotifySubscribe);
-router.route("/quizDailyStreak").get(quizDailyStreakUpdator);
-router.route("/streakChecker").get(Authenticate, streakChecker);
-router.route("/longestStreakCalculator").get(longestStreakCalculatorOfAllUsers);
-router.route("/quinBoostChecker").get(Authenticate, quinBoostChecker);
-router.route("/newSeasonModal").get(Authenticate, updateNewSeasonModal);
-router.route("/seasonHistory/:inGameName").get(Authenticate, seasonHistory);
-router.route("/bookmark").get(Authenticate, bookmark);
-router.route("/getBookmarks").get(Authenticate, getBookmarks);
-router.route("/removeBookmark").get(Authenticate, removeBookmark);
+  .route('/isTutorialTakenCheck/:Page')
+  .get(Authenticate, tutorialTakenCheck)
+router.route('/isTutorialTakenUpdate').post(Authenticate, tutorialTakenUpdate)
+router.route('/editProfile').post(Authenticate, editProfile)
+router.route('/expectedIQScore').get(Authenticate, expectedIQScore)
+router.route('/calcUsersIQScore').get(calculateUserIQScores)
+router.route('/solvedQuizzesHistory').get(Authenticate, solvedQuizHistory)
+router.route('/search').get(Authenticate, userSearch)
+router.route('/profilePrivacy').post(Authenticate, profilePrivacy)
+router.route('/getUpdates').get(Authenticate, getUpdates)
+router.route('/readUpdates').put(Authenticate, readUpdates)
+router.route('/trashUpdates/:updateId').put(Authenticate, trashUpdate)
+router.route('/trashAllUpdates').put(Authenticate, trashAllUpdate)
+router.route('/upgradeMessageClose').put(Authenticate, upgradeMessageClose)
+router.route('/sendMailForNotifySubscribe').get(sendMailForNotifySubscribe)
+router.route('/quizDailyStreak').get(quizDailyStreakUpdator)
+router.route('/streakChecker').get(Authenticate, streakChecker)
+router.route('/longestStreakCalculator').get(longestStreakCalculatorOfAllUsers)
+router.route('/quinBoostChecker').get(Authenticate, quinBoostChecker)
+router.route('/newSeasonModal').get(Authenticate, updateNewSeasonModal)
+router.route('/seasonHistory/:inGameName').get(Authenticate, seasonHistory)
+router.route('/bookmark').get(Authenticate, bookmark)
+router.route('/getBookmarks').get(Authenticate, getBookmarks)
+router.route('/removeBookmark').get(Authenticate, removeBookmark)
+router.route('/lineGraph').get(Authenticate, NavLineGraph)
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
-module.exports = router;
+module.exports = router
