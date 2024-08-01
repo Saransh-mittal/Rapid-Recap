@@ -30,8 +30,8 @@ import ProfileExperienceLevel from '../components/profileComponents/ProfileExper
 import SeasonSelectorModal from '../components/profileComponents/SeasonSelectorModal.jsx'
 import ProfileButton from '../components/profileComponents/ProfileButton.jsx'
 import Bookmarks from '../components/profileComponents/Bookmarks.jsx'
-import WiseWeb from '../components/profileComponents/WiseWeb.jsx'
-
+// import WiseWeb from '../components/profileComponents/WiseWeb.jsx'
+//
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour()
   const { inGameName } = useParams()

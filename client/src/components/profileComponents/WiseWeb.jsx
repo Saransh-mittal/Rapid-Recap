@@ -5,8 +5,8 @@ import React, {
   useCallback,
   useMemo,
   forwardRef,
-} from "react";
-import { UserPlus, Users, MessageCircle, User, Unlink } from "lucide-react";
+} from 'react'
+import { UserPlus, Users, MessageCircle, User, Unlink } from 'lucide-react'
 import {
   Modal,
   ModalOverlay,
@@ -41,14 +41,15 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   Badge,
-} from "@chakra-ui/react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { ChatState } from "../../contextAPI/ChatProvider";
+  useMediaQuery,
+} from '@chakra-ui/react'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+import { ChatState } from '../../contextAPI/ChatProvider'
 
 const PopoverOption = React.memo(
   ({ icon: Icon, text, onClick, isRed = false }) => {
-    const [isHovered, setIsHovered] = useState(false);
+    const [isHovered, setIsHovered] = useState(false)
 
     return (
       <Flex
@@ -56,92 +57,92 @@ const PopoverOption = React.memo(
         p={2}
         cursor="pointer"
         transition="all 0.3s ease"
-        color={isRed ? "#ff6b6b" : "#e0e0e0"}
+        color={isRed ? '#ff6b6b' : '#e0e0e0'}
         borderRadius="md"
-        bg={isHovered ? "#3d355a" : "transparent"}
-        transform={isHovered ? "translateX(5px)" : "translateX(0)"}
+        bg={isHovered ? '#3d355a' : 'transparent'}
+        transform={isHovered ? 'translateX(5px)' : 'translateX(0)'}
         onClick={onClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <Icon
-          color={isRed ? "#ff6b6b" : "#a49eb9"}
+          color={isRed ? '#ff6b6b' : '#a49eb9'}
           size={16}
-          style={{ marginRight: "8px" }}
+          style={{ marginRight: '8px' }}
         />
-        <Text textAlign={"center"} m={0} fontWeight={isRed ? "bold" : "normal"}>
+        <Text textAlign={'center'} m={0} fontWeight={isRed ? 'bold' : 'normal'}>
           {text}
         </Text>
       </Flex>
-    );
-  }
-);
+    )
+  },
+)
 const FriendItem = React.memo(
   ({ friend, index, openPopoverId, setOpenPopoverId, onSeverTies }) => {
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const cancelRef = useRef();
-    const navigate = useNavigate();
-    const popoverRef = useRef(null);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+    const cancelRef = useRef()
+    const navigate = useNavigate()
+    const popoverRef = useRef(null)
 
     useEffect(() => {
       if (openPopoverId === index && popoverRef.current) {
-        const popoverRect = popoverRef.current.getBoundingClientRect();
-        const modalBody = popoverRef.current.closest(".chakra-modal__body");
+        const popoverRect = popoverRef.current.getBoundingClientRect()
+        const modalBody = popoverRef.current.closest('.chakra-modal__body')
         if (modalBody) {
-          const modalBodyRect = modalBody.getBoundingClientRect();
+          const modalBodyRect = modalBody.getBoundingClientRect()
           if (popoverRect.bottom > modalBodyRect.bottom) {
             modalBody.scrollTop +=
-              popoverRect.bottom - modalBodyRect.bottom + 10;
+              popoverRect.bottom - modalBodyRect.bottom + 10
           }
         }
       }
-    }, [openPopoverId, index]);
+    }, [openPopoverId, index])
 
     const handleSeverTies = useCallback(() => {
-      setOpenPopoverId(null);
-      setIsConfirmOpen(true);
-    }, [setOpenPopoverId]);
+      setOpenPopoverId(null)
+      setIsConfirmOpen(true)
+    }, [setOpenPopoverId])
 
     const onConfirmSeverTies = useCallback(() => {
-      setIsConfirmOpen(false);
-      onSeverTies(friend._id);
-    }, [friend._id, onSeverTies]);
+      setIsConfirmOpen(false)
+      onSeverTies(friend._id)
+    }, [friend._id, onSeverTies])
 
     const handleToggle = useCallback(() => {
-      setOpenPopoverId((prevId) => (prevId === index ? null : index));
-    }, [index, setOpenPopoverId]);
+      setOpenPopoverId(prevId => (prevId === index ? null : index))
+    }, [index, setOpenPopoverId])
 
     const handleCommune = useCallback(() => {
-      setOpenPopoverId(null);
-      navigate(`/chats?chatId=${friend.chatId}`);
-    }, [friend.chatId, setOpenPopoverId, navigate]);
+      setOpenPopoverId(null)
+      navigate(`/chats?chatId=${friend.chatId}`)
+    }, [friend.chatId, setOpenPopoverId, navigate])
 
     const handleGlimpseWisdom = useCallback(() => {
-      setOpenPopoverId(null);
-      navigate(`/profile/${friend.inGameName}`);
-    }, [friend.inGameName, setOpenPopoverId, navigate]);
+      setOpenPopoverId(null)
+      navigate(`/profile/${friend.inGameName}`)
+    }, [friend.inGameName, setOpenPopoverId, navigate])
 
     const calculatePlacement = useCallback(() => {
       if (
         !popoverRef.current ||
-        !popoverRef.current.closest(".chakra-modal__body")
+        !popoverRef.current.closest('.chakra-modal__body')
       )
-        return "bottom";
-      const popoverRect = popoverRef.current.getBoundingClientRect();
+        return 'bottom'
+      const popoverRect = popoverRef.current.getBoundingClientRect()
       const modalRect = popoverRef.current
-        .closest(".chakra-modal__body")
-        .getBoundingClientRect();
-      const spaceBelow = modalRect.bottom - popoverRect.bottom;
-      const spaceAbove = popoverRect.top - modalRect.top;
-      return spaceBelow >= 100 || spaceBelow > spaceAbove ? "bottom" : "top";
-    }, []);
+        .closest('.chakra-modal__body')
+        .getBoundingClientRect()
+      const spaceBelow = modalRect.bottom - popoverRect.bottom
+      const spaceAbove = popoverRect.top - modalRect.top
+      return spaceBelow >= 100 || spaceBelow > spaceAbove ? 'bottom' : 'top'
+    }, [])
 
-    const hoverBg = useColorModeValue("#2a2438", "#2a2438");
-    const textColor = useColorModeValue("white", "white");
-    const subTextColor = useColorModeValue("#a0a0a0", "#a0a0a0");
-    const onlineColor = "#4CAF50";
-    const offlineColor = "#9e9e9e";
-    const badgeBg = useColorModeValue("#4CAF50", "#4CAF50");
+    const hoverBg = useColorModeValue('#2a2438', '#2a2438')
+    const textColor = useColorModeValue('white', 'white')
+    const subTextColor = useColorModeValue('#a0a0a0', '#a0a0a0')
+    const onlineColor = '#4CAF50'
+    const offlineColor = '#9e9e9e'
+    const badgeBg = useColorModeValue('#4CAF50', '#4CAF50')
 
     return (
       <>
@@ -159,13 +160,13 @@ const FriendItem = React.memo(
               transition="all 0.3s"
               _hover={{
                 bg: hoverBg,
-                transform: "scale(1.02)",
-                boxShadow: "md",
+                transform: 'scale(1.02)',
+                boxShadow: 'md',
               }}
               cursor="pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleToggle();
+              onClick={e => {
+                e.stopPropagation()
+                handleToggle()
               }}
             >
               <Avatar
@@ -182,7 +183,7 @@ const FriendItem = React.memo(
                   fontSize="sm"
                   fontWeight="semibold"
                   color={textColor}
-                  mb={"2px"}
+                  mb={'2px'}
                 >
                   {friend.name}
                 </Text>
@@ -222,7 +223,7 @@ const FriendItem = React.memo(
             bg="#2a2438"
             borderColor="#3d355a"
             boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
-            _focus={{ boxShadow: "none" }}
+            _focus={{ boxShadow: 'none' }}
             width="100%"
             zIndex={1500}
           >
@@ -286,25 +287,25 @@ const FriendItem = React.memo(
           </AlertDialogOverlay>
         </AlertDialog>
       </>
-    );
-  }
-);
+    )
+  },
+)
 
 const FriendList = forwardRef(
   (
     { items, startIndex = 0, openPopoverId, setOpenPopoverId, onSeverTies },
-    ref
+    ref,
   ) => {
     const onlineFriends = items
-      .filter((friend) => friend.isOnline)
+      .filter(friend => friend.isOnline)
       .sort((a, b) => {
-        return b.IQ_score - a.IQ_score;
-      });
+        return b.IQ_score - a.IQ_score
+      })
     const offlineFriends = items
-      .filter((friend) => !friend.isOnline)
+      .filter(friend => !friend.isOnline)
       .sort((a, b) => {
-        return b.IQ_score - a.IQ_score;
-      });
+        return b.IQ_score - a.IQ_score
+      })
 
     return (
       <VStack
@@ -313,23 +314,23 @@ const FriendList = forwardRef(
         align="stretch"
         maxH="300px"
         overflowY="auto"
-        borderColor={useColorModeValue("#2a2438", "#2a2438")}
+        borderColor={useColorModeValue('#2a2438', '#2a2438')}
         borderWidth={1}
         borderRadius="md"
         p={2}
         css={{
-          "&::-webkit-scrollbar": {
-            width: "8px",
+          '&::-webkit-scrollbar': {
+            width: '8px',
           },
-          "&::-webkit-scrollbar-track": {
-            background: "#1a1527",
+          '&::-webkit-scrollbar-track': {
+            background: '#1a1527',
           },
-          "&::-webkit-scrollbar-thumb": {
-            background: "#2a2438",
-            borderRadius: "4px",
+          '&::-webkit-scrollbar-thumb': {
+            background: '#2a2438',
+            borderRadius: '4px',
           },
-          "&::-webkit-scrollbar-thumb:hover": {
-            background: "#3d355a",
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: '#3d355a',
           },
         }}
       >
@@ -340,7 +341,7 @@ const FriendList = forwardRef(
               fontWeight="bold"
               color="#a49eb9"
               mb={2}
-              textAlign={"center"}
+              textAlign={'center'}
             >
               Online Friends
             </Text>
@@ -364,7 +365,7 @@ const FriendList = forwardRef(
               color="#a49eb9"
               mt={4}
               mb={2}
-              textAlign={"center"}
+              textAlign={'center'}
             >
               LeaderBoard
             </Text>
@@ -381,18 +382,18 @@ const FriendList = forwardRef(
           </>
         )}
       </VStack>
-    );
-  }
-);
+    )
+  },
+)
 
 const FriendRequestItem = ({ request, onAccept, onReject }) => {
-  const bgColor = useColorModeValue("#2a2438", "#2a2438");
-  const textColor = useColorModeValue("white", "white");
-  const subTextColor = useColorModeValue("#a0a0a0", "#a0a0a0");
-  const iqColor = useColorModeValue("#ffd700", "#ffd700");
+  const bgColor = useColorModeValue('#2a2438', '#2a2438')
+  const textColor = useColorModeValue('white', 'white')
+  const subTextColor = useColorModeValue('#a0a0a0', '#a0a0a0')
+  const iqColor = useColorModeValue('#ffd700', '#ffd700')
 
-  const handleAccept = () => onAccept(request._id);
-  const handleReject = () => onReject(request._id);
+  const handleAccept = () => onAccept(request._id)
+  const handleReject = () => onReject(request._id)
 
   return (
     <Box
@@ -402,10 +403,10 @@ const FriendRequestItem = ({ request, onAccept, onReject }) => {
       mb={2}
       boxShadow="md"
       color={textColor}
-      w={"100%"}
+      w={'100%'}
     >
       <Flex>
-        <Flex alignItems={"flex-start"} h={"100%"}>
+        <Flex alignItems={'flex-start'} h={'100%'}>
           <Avatar
             size="sm"
             name={request.from.name}
@@ -415,7 +416,7 @@ const FriendRequestItem = ({ request, onAccept, onReject }) => {
           />
         </Flex>
         <Box flex={1} mr={2}>
-          <Flex alignItems="baseline" flexDirection={"column"}>
+          <Flex alignItems="baseline" flexDirection={'column'}>
             <Text fontWeight="bold" fontSize="sm" mr={1} mb={0}>
               {request.from.name}
             </Text>
@@ -427,7 +428,7 @@ const FriendRequestItem = ({ request, onAccept, onReject }) => {
             IQ: {request.from.IQ_score}
           </Text>
         </Box>
-        <Flex alignItems={"center"} gap={2}>
+        <Flex alignItems={'center'} gap={2}>
           <Button colorScheme="green" size="xs" mr={1} onClick={handleAccept}>
             Accept
           </Button>
@@ -437,8 +438,8 @@ const FriendRequestItem = ({ request, onAccept, onReject }) => {
         </Flex>
       </Flex>
     </Box>
-  );
-};
+  )
+}
 
 const LoadingSkeleton = ({ count = 3 }) => (
   <VStack spacing={4} align="stretch" width="100%">
@@ -452,201 +453,208 @@ const LoadingSkeleton = ({ count = 3 }) => (
       </Flex>
     ))}
   </VStack>
-);
+)
 
-const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
-  const [friends, setFriends] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [openPopoverId, setOpenPopoverId] = useState(null);
-  const [activeTab, setActiveTab] = useState(requestNotif ? 1 : 0);
-  const [isLoadingFriends, setIsLoadingFriends] = useState(true);
-  const [isLoadingRequests, setIsLoadingRequests] = useState(true);
+const WiseWeb = ({
+  isOpen,
+  onClose,
+  requestNotif,
+  markRequestAsRead,
+  setIsHamburgerOpen,
+}) => {
+  const [friends, setFriends] = useState([])
+  const [requests, setRequests] = useState([])
+  const [openPopoverId, setOpenPopoverId] = useState(null)
+  const [activeTab, setActiveTab] = useState(requestNotif ? 1 : 0)
+  const [isLoadingFriends, setIsLoadingFriends] = useState(true)
+  const [isLoadingRequests, setIsLoadingRequests] = useState(true)
+  const isScreenSmallerThan48em = useMediaQuery('(max-width: 48em)')[0]
   const [requestTabVisited, setRequestTabVisited] = useState(
-    requestNotif ? true : false
-  );
-  const [isCheckingOnlineStatus, setIsCheckingOnlineStatus] = useState(false);
-  const { socket, user } = ChatState();
-  const toast = useToast();
+    requestNotif ? true : false,
+  )
+  const [isCheckingOnlineStatus, setIsCheckingOnlineStatus] = useState(false)
+  const { socket, user } = ChatState()
+  const toast = useToast()
 
-  const friendListRef = useRef(null);
+  const friendListRef = useRef(null)
 
-  const handleSeverTies = async (friendId) => {
+  const handleSeverTies = async friendId => {
     try {
-      await axios.post("/api/friends/sever-ties", { friendId });
-      fetchFriends();
+      await axios.post('/api/friends/sever-ties', { friendId })
+      fetchFriends()
       toast({
-        title: "Ties Severed",
-        description: "You have successfully unfriended the friend.",
-        status: "success",
+        title: 'Ties Severed',
+        description: 'You have successfully unfriended the friend.',
+        status: 'success',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } catch (error) {
-      console.error("Error severing ties:", error);
+      console.error('Error severing ties:', error)
       toast({
-        title: "Error",
-        description: "Failed to sever ties. Please try again.",
-        status: "error",
+        title: 'Error',
+        description: 'Failed to sever ties. Please try again.',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     }
-  };
+  }
 
-  const handleTabChange = (index) => {
+  const handleTabChange = index => {
     if (index === 1) {
-      setRequestTabVisited(true);
+      setRequestTabVisited(true)
     } else if (index === 0 && requestTabVisited) {
-      markRequestAsRead();
-      setRequestTabVisited(false);
+      markRequestAsRead()
+      setRequestTabVisited(false)
     }
-    setActiveTab(index);
-  };
+    setActiveTab(index)
+  }
 
   const handleClose = () => {
     if (requestTabVisited) {
-      markRequestAsRead();
-      setRequestTabVisited(false);
+      markRequestAsRead()
+      setRequestTabVisited(false)
     }
-    onClose();
-  };
+    onClose()
+  }
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       if (
         friendListRef.current &&
         !friendListRef.current.contains(event.target) &&
         openPopoverId !== null
       ) {
-        setOpenPopoverId(null);
+        setOpenPopoverId(null)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [openPopoverId]);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openPopoverId])
 
   const fetchRequests = async () => {
-    setIsLoadingRequests(true);
+    setIsLoadingRequests(true)
     try {
-      const response = await axios.get(`/api/friends/get-requests`);
-      setRequests(response.data);
+      const response = await axios.get(`/api/friends/get-requests`)
+      setRequests(response.data)
     } catch (error) {
-      console.error("Error fetching friend requests:", error);
+      console.error('Error fetching friend requests:', error)
     } finally {
-      setIsLoadingRequests(false);
+      setIsLoadingRequests(false)
     }
-  };
+  }
 
   const fetchFriends = async () => {
-    setIsLoadingFriends(true);
+    setIsLoadingFriends(true)
     try {
-      const response = await axios.get(`/api/friends/`);
-      setFriends(response.data.map((friend) => ({ ...friend })));
-      checkOnlineStatus();
+      const response = await axios.get(`/api/friends/`)
+      setFriends(response.data.map(friend => ({ ...friend })))
+      checkOnlineStatus()
     } catch (error) {
-      console.error("Error fetching friends:", error);
+      console.error('Error fetching friends:', error)
     } finally {
-      setIsLoadingFriends(false);
+      setIsLoadingFriends(false)
     }
-  };
+  }
 
-  const handleAcceptRequest = async (requestId) => {
+  const handleAcceptRequest = async requestId => {
     try {
-      await axios.post("/api/friends/accept-request", { requestId });
-      fetchRequests();
-      fetchFriends();
+      await axios.post('/api/friends/accept-request', { requestId })
+      fetchRequests()
+      fetchFriends()
     } catch (error) {
-      console.error("Error accepting friend request:", error);
+      console.error('Error accepting friend request:', error)
     }
-  };
+  }
 
-  const handleRejectRequest = async (requestId) => {
+  const handleRejectRequest = async requestId => {
     try {
-      await axios.post("/api/friends/reject-request", { requestId });
-      fetchRequests();
+      await axios.post('/api/friends/reject-request', { requestId })
+      fetchRequests()
     } catch (error) {
-      console.error("Error rejecting friend request:", error);
+      console.error('Error rejecting friend request:', error)
     }
-  };
+  }
 
   const checkOnlineStatus = useCallback(() => {
     if (socket && friends.length > 0) {
-      setIsCheckingOnlineStatus(true);
-      const friendIds = friends.map((friend) => friend._id);
-      socket.emit("check online status", friendIds);
+      setIsCheckingOnlineStatus(true)
+      const friendIds = friends.map(friend => friend._id)
+      socket.emit('check online status', friendIds)
     }
-  }, [friends]);
+  }, [friends])
 
   useEffect(() => {
     if (isOpen) {
-      fetchRequests();
-      fetchFriends();
+      fetchRequests()
+      fetchFriends()
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   useEffect(() => {
     if (socket) {
-      socket.on("online status response", (statuses) => {
-        setFriends((prevFriends) =>
-          prevFriends.map((friend) => ({
+      socket.on('online status response', statuses => {
+        setFriends(prevFriends =>
+          prevFriends.map(friend => ({
             ...friend,
             isOnline: statuses[friend._id],
-          }))
-        );
-        setIsCheckingOnlineStatus(false);
-      });
-      socket.on("user online", (userId) => {
-        setFriends((prevFriends) =>
-          prevFriends.map((f) =>
-            f._id === userId ? { ...f, isOnline: true } : f
-          )
-        );
-      });
-      socket.on("user offline", (userId) => {
-        setFriends((prevFriends) =>
-          prevFriends.map((f) =>
-            f._id === userId ? { ...f, isOnline: false } : f
-          )
-        );
-      });
+          })),
+        )
+        setIsCheckingOnlineStatus(false)
+      })
+      socket.on('user online', userId => {
+        setFriends(prevFriends =>
+          prevFriends.map(f =>
+            f._id === userId ? { ...f, isOnline: true } : f,
+          ),
+        )
+      })
+      socket.on('user offline', userId => {
+        setFriends(prevFriends =>
+          prevFriends.map(f =>
+            f._id === userId ? { ...f, isOnline: false } : f,
+          ),
+        )
+      })
       // Cleanup function
       return () => {
-        socket?.off("online status response");
-        socket?.off("user online");
-        socket?.off("user offline");
-      };
+        socket?.off('online status response')
+        socket?.off('user online')
+        socket?.off('user offline')
+      }
     }
-  }); // Only depend on socket, not friends
+  }) // Only depend on socket, not friends
 
   const bgGradient = useColorModeValue(
-    "linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-    "linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-  );
+    'linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+    'linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+  )
 
-  const borderColor = useColorModeValue("#2a2438", "#2a2438");
-  const textColor = useColorModeValue("white", "white");
-  const headerColor = useColorModeValue("#a49eb9", "#a49eb9");
+  const borderColor = useColorModeValue('#2a2438', '#2a2438')
+  const textColor = useColorModeValue('white', 'white')
+  const headerColor = useColorModeValue('#a49eb9', '#a49eb9')
 
   const tabStyle = useCallback(
-    (isActive) => ({
-      padding: "8px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer",
-      backgroundColor: isActive ? "#2a2438" : "transparent",
-      color: isActive ? "#ffffff" : "#a49eb9",
-      border: "none",
-      transition: "all 0.3s ease",
-      borderRadius: "4px",
-      transform: isActive ? "scale(1.05)" : "scale(1)",
-      boxShadow: isActive ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
+    isActive => ({
+      padding: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      backgroundColor: isActive ? '#2a2438' : 'transparent',
+      color: isActive ? '#ffffff' : '#a49eb9',
+      border: 'none',
+      transition: 'all 0.3s ease',
+      borderRadius: '4px',
+      transform: isActive ? 'scale(1.05)' : 'scale(1)',
+      boxShadow: isActive ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
     }),
-    []
-  );
+    [],
+  )
 
   const memoizedFriendList = useMemo(
     () =>
@@ -663,8 +671,8 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
       ) : (
         <Text>No friends found.</Text>
       ),
-    [friends, openPopoverId, isLoadingFriends]
-  );
+    [friends, openPopoverId, isLoadingFriends],
+  )
 
   const memoizedRequestList = useMemo(
     () =>
@@ -672,7 +680,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
         <LoadingSkeleton />
       ) : requests.length > 0 ? (
         <VStack spacing={4}>
-          {requests.map((request) => (
+          {requests.map(request => (
             <FriendRequestItem
               key={request._id}
               request={request}
@@ -684,15 +692,18 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
       ) : (
         <Text>No friend requests found.</Text>
       ),
-    [requests, isLoadingRequests]
-  );
+    [requests, isLoadingRequests],
+  )
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={() => {
+        handleClose()
+        isScreenSmallerThan48em && setIsHamburgerOpen(true)
+      }}
       onCloseComplete={() => setOpenPopoverId(null)}
-      size={{ base: "full", md: "sm" }}
+      size={{ base: 'full', md: 'sm' }}
     >
       <ModalOverlay />
       <ModalContent
@@ -702,17 +713,17 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
         borderWidth={1}
         borderRadius="md"
         maxW="400px"
-        css={{ "&::-webkit-scrollbar": { display: "none" } }}
+        css={{ '&::-webkit-scrollbar': { display: 'none' } }}
       >
         <ModalHeader>Wise Web</ModalHeader>
         <ModalCloseButton />
         <ModalBody
           maxH="75vh"
           overflowY="auto"
-          w={"100%"}
+          w={'100%'}
           position="relative"
-          css={{ "&::-webkit-scrollbar": { display: "none" } }}
-          pb={"4rem"}
+          css={{ '&::-webkit-scrollbar': { display: 'none' } }}
+          pb={'4rem'}
         >
           <Tabs
             isFitted
@@ -723,32 +734,32 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
             <TabList
               mb="1em"
               style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                backgroundColor: "#1a1527",
-                borderRadius: "4px",
-                overflow: "hidden",
-                padding: "4px",
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                backgroundColor: '#1a1527',
+                borderRadius: '4px',
+                overflow: 'hidden',
+                padding: '4px',
               }}
             >
               <Tab style={tabStyle(activeTab === 0)}>
-                <Users size={16} style={{ marginRight: "8px" }} />
+                <Users size={16} style={{ marginRight: '8px' }} />
                 Friends
               </Tab>
-              <Tab style={tabStyle(activeTab === 1)} position={"relative"}>
+              <Tab style={tabStyle(activeTab === 1)} position={'relative'}>
                 {requestNotif && (
                   <Box
                     h="8px"
                     w="8px"
-                    bg={"red"}
-                    borderRadius={"50%"}
-                    position={"absolute"}
-                    right={"20%"}
-                    top={"25%"}
+                    bg={'red'}
+                    borderRadius={'50%'}
+                    position={'absolute'}
+                    right={'20%'}
+                    top={'25%'}
                     zIndex={2}
                   />
                 )}
-                <UserPlus size={16} style={{ marginRight: "8px" }} />
+                <UserPlus size={16} style={{ marginRight: '8px' }} />
                 Requests
               </Tab>
             </TabList>
@@ -780,7 +791,7 @@ const WiseWeb = ({ isOpen, onClose, requestNotif, markRequestAsRead }) => {
         </ModalBody>
       </ModalContent>
     </Modal>
-  );
-};
+  )
+}
 
-export default WiseWeb;
+export default WiseWeb

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect } from 'react'
 import {
   Button,
   Modal,
@@ -12,17 +12,17 @@ import {
   useDisclosure,
   Image,
   Box,
-} from "@chakra-ui/react";
-import { motion, AnimatePresence } from "framer-motion";
-import { AppContext } from "../../contextAPI/appContext";
+} from '@chakra-ui/react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { AppContext } from '../../contextAPI/appContext'
 
 const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { state } = useContext(AppContext);
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { state } = useContext(AppContext)
 
   useEffect(() => {
-    onOpen();
-  }, []);
+    onOpen()
+  }, [])
 
   return (
     <AnimatePresence>
@@ -35,23 +35,24 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
           <Modal
             isOpen={isOpen}
             onClose={() => {
-              onClose();
-              setShowDailyStreakModal(false);
+              onClose()
+              setShowDailyStreakModal(false)
             }}
-            size={"4xl"}
+            size={'4xl'}
           >
             <ModalOverlay />
             <ModalContent
-              initial={{ y: "-100vh" }}
+              initial={{ y: '-100vh' }}
               animate={{ y: 0 }}
-              transition={{ type: "spring", stiffness: 150 }}
-              background="linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
+              transition={{ type: 'spring', stiffness: 150 }}
+              background="linear-gradient(135deg, #1a1527 0%, #0e0c16 100%)"
               borderRadius="10px"
+              boxShadow="0 4px 20px rgba(0, 0, 0, 0.3)"
             >
               <ModalHeader
                 as="h3"
                 size="lg"
-                color="white"
+                color="#a595c9"
                 textAlign="center"
                 fontWeight="bold"
                 borderBottom="1px solid rgba(255,255,255,0.1)"
@@ -60,18 +61,18 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
               >
                 Your Streak Insights
               </ModalHeader>
-              <ModalCloseButton />
+              <ModalCloseButton color="#a595c9" />
               <ModalBody
                 pb={4}
-                display={"flex"}
+                display={'flex'}
                 gap={4}
-                flexDirection={"column"}
+                flexDirection={'column'}
                 p={1}
               >
                 {state.streak === 0 && state.longestStreak === 0 && (
                   <>
                     <Text
-                      color="white"
+                      color="#d1c9e6"
                       fontSize="20px"
                       textAlign="center"
                       fontWeight="medium"
@@ -177,37 +178,37 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                       fontWeight="medium"
                       mb={4}
                     >
-                      You've maintained a streak for{" "}
+                      You've maintained a streak for{' '}
                       <Text
                         as="span"
-                        color="green.300"
+                        color="#8b7daf"
                         backgroundColor="rgba(255,255,255,0.1)"
                         borderRadius="md"
                         px={2}
                         fontWeight="semibold"
                         textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
                       >
-                        {state.streak} days{" "}
+                        {state.streak} days{' '}
                         <Box
                           as="svg"
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox={
-                            state.streak === 0 ? "0 0 18 18" : "0 0 24 24"
+                            state.streak === 0 ? '0 0 18 18' : '0 0 24 24'
                           }
-                          width={{ base: "1rem", lg: "1.3em" }}
-                          height={{ base: "1rem", lg: "1.3em" }}
+                          width={{ base: '1rem', lg: '1.3em' }}
+                          height={{ base: '1rem', lg: '1.3em' }}
                           fill="currentColor"
-                          display={"inline-flex"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          zIndex={"1000"}
-                          borderRadius={"50%"}
+                          display={'inline-flex'}
+                          justifyContent={'center'}
+                          alignItems={'center'}
+                          zIndex={'1000'}
+                          borderRadius={'50%'}
                           style={{
                             boxShadow: state.isBoosted
-                              ? "0 0 10px 0 rgba(0, 150, 255, 0.7), 0 4px 8px 0 rgba(0, 150, 255, 0.3), 0 8px 20px 0 rgba(0, 150, 255, 0.2)"
-                              : "none",
+                              ? '0 0 10px 0 rgba(0, 150, 255, 0.7), 0 4px 8px 0 rgba(0, 150, 255, 0.3), 0 8px 20px 0 rgba(0, 150, 255, 0.2)'
+                              : 'none',
                           }}
-                          marginBottom={"5px"}
+                          marginBottom={'5px'}
                         >
                           {state.streak > 0 ? (
                             <>
@@ -283,7 +284,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                             </>
                           )}
                         </Box>
-                      </Text>{" "}
+                      </Text>{' '}
                       Keep it up!
                     </Text>
                     <Text
@@ -293,7 +294,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                       fontWeight="medium"
                       mb={6}
                     >
-                      Your longest streak is{" "}
+                      Your longest streak is{' '}
                       <Text
                         as="span"
                         color="green.300"
@@ -303,24 +304,24 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                         fontWeight="semibold"
                         textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
                       >
-                        {state.longestStreak} days{" "}
+                        {state.longestStreak} days{' '}
                         <Box
                           as="svg"
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox={
                             state.longestStreak === 0
-                              ? "0 0 18 18"
-                              : "0 0 24 24"
+                              ? '0 0 18 18'
+                              : '0 0 24 24'
                           }
-                          width={{ base: "1.2rem", lg: "1.2em" }}
-                          height={{ base: "1.2rem", lg: "1.2em" }}
+                          width={{ base: '1.2rem', lg: '1.2em' }}
+                          height={{ base: '1.2rem', lg: '1.2em' }}
                           fill="currentColor"
-                          display={"inline-flex"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          zIndex={"1000"}
-                          borderRadius={"50%"}
-                          marginBottom={"5px"}
+                          display={'inline-flex'}
+                          justifyContent={'center'}
+                          alignItems={'center'}
+                          zIndex={'1000'}
+                          borderRadius={'50%'}
+                          marginBottom={'5px'}
                         >
                           {state.longestStreak > 0 ? (
                             <>
@@ -403,15 +404,15 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                 {state.streak === 0 && state.longestStreak === 0 && (
                   <>
                     <Text
-                      textAlign={"center"}
-                      color={"#FFFFFF"}
+                      textAlign={'center'}
+                      color={'#FFFFFF'}
                       p={0}
                       m={0}
-                      fontWeight={"bold"}
-                      fontStyle={"italic"}
-                      fontSize={"1.2em"}
-                      borderLeft={"5px solid #CCCCCC"}
-                      paddingLeft={"10px"}
+                      fontWeight={'bold'}
+                      fontStyle={'italic'}
+                      fontSize={'1.2em'}
+                      borderLeft={'5px solid #CCCCCC'}
+                      paddingLeft={'10px'}
                     >
                       Get started now and see how far your streak can take you!
                     </Text>
@@ -420,15 +421,15 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                 {state.streak === 0 && state.longestStreak > 0 && (
                   <>
                     <Text
-                      textAlign={"center"}
-                      color={"#FFFFFF"}
+                      textAlign={'center'}
+                      color={'#FFFFFF'}
                       p={0}
                       m={0}
-                      fontWeight={"bold"}
-                      fontStyle={"italic"}
-                      fontSize={"1.2em"}
-                      borderLeft={"5px solid #CCCCCC"}
-                      paddingLeft={"10px"}
+                      fontWeight={'bold'}
+                      fontStyle={'italic'}
+                      fontSize={'1.2em'}
+                      borderLeft={'5px solid #CCCCCC'}
+                      paddingLeft={'10px'}
                     >
                       Every day is a fresh start to unlock new achievements and
                       rewards!
@@ -441,15 +442,15 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                   state.longestStreak === state.streak && (
                     <>
                       <Text
-                        textAlign={"center"}
-                        color={"#FFFFFF"}
+                        textAlign={'center'}
+                        color={'#FFFFFF'}
                         p={0}
                         m={0}
-                        fontWeight={"bold"}
-                        fontStyle={"italic"}
-                        fontSize={"1.2em"}
-                        borderLeft={"5px solid #CCCCCC"}
-                        paddingLeft={"10px"}
+                        fontWeight={'bold'}
+                        fontStyle={'italic'}
+                        fontSize={'1.2em'}
+                        borderLeft={'5px solid #CCCCCC'}
+                        paddingLeft={'10px'}
                       >
                         Keep up the fantastic work! Your consistency is key to
                         unlocking even more rewards and achievements.
@@ -461,15 +462,15 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                   state.streak % 7 !== 0 &&
                   state.longestStreak > state.streak && (
                     <Text
-                      textAlign={"center"}
-                      color={"#FFFFFF"}
+                      textAlign={'center'}
+                      color={'gray.400'}
                       p={0}
                       m={0}
-                      fontWeight={"bold"}
-                      fontStyle={"italic"}
-                      fontSize={"1.2em"}
-                      borderLeft={"5px solid #CCCCCC"}
-                      paddingLeft={"10px"}
+                      // fontWeight={'bold'}
+                      fontStyle={'italic'}
+                      fontSize={'1.2em'}
+                      borderLeft={'5px solid #CCCCCC'}
+                      paddingLeft={'10px'}
                     >
                       "Every day counts towards your success. Keep striving for
                       greatness!"
@@ -478,15 +479,15 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                 {state.streak > 0 && state.streak % 7 >= 5 && (
                   <>
                     <Text
-                      textAlign={"center"}
-                      color={"#FFFFFF"}
+                      textAlign={'center'}
+                      color={'#FFFFFF'}
                       p={0}
                       m={0}
-                      fontWeight={"bold"}
-                      fontStyle={"italic"}
-                      fontSize={"1.2em"}
-                      borderLeft={"5px solid #CCCCCC"}
-                      paddingLeft={"10px"}
+                      fontWeight={'bold'}
+                      fontStyle={'italic'}
+                      fontSize={'1.2em'}
+                      borderLeft={'5px solid #CCCCCC'}
+                      paddingLeft={'10px'}
                     >
                       Just a little more effort and you'll unlock something
                       special. Keep up the fantastic work!
@@ -496,15 +497,15 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                 {state.isBoosted && (
                   <>
                     <Text
-                      textAlign={"center"}
-                      color={"#FFFFFF"}
+                      textAlign={'center'}
+                      color={'#FFFFFF'}
                       p={0}
                       m={0}
-                      fontWeight={"bold"}
-                      fontStyle={"italic"}
-                      fontSize={"1.2em"}
-                      borderLeft={"5px solid #CCCCCC"}
-                      paddingLeft={"10px"}
+                      fontWeight={'bold'}
+                      fontStyle={'italic'}
+                      fontSize={'1.2em'}
+                      borderLeft={'5px solid #CCCCCC'}
+                      paddingLeft={'10px'}
                     >
                       "Take advantage of this boost to conquer new challenges
                       and reach even greater heights!"
@@ -514,10 +515,12 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
               </ModalBody>
               <ModalFooter justifyContent="center">
                 <Button
-                  colorScheme="green"
+                  bg="#4a3b78"
+                  color="#d1c9e6"
+                  _hover={{ bg: '#5d4b96' }}
                   onClick={() => {
-                    onClose();
-                    setShowDailyStreakModal(false);
+                    onClose()
+                    setShowDailyStreakModal(false)
                   }}
                 >
                   Close
@@ -528,7 +531,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
         </motion.div>
       )}
     </AnimatePresence>
-  );
-};
+  )
+}
 
-export default DailyStreakModal;
+export default DailyStreakModal

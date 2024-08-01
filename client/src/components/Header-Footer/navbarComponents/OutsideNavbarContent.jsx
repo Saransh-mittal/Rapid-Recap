@@ -21,6 +21,7 @@ const OutsideNavbarContent = ({
   notifyCont,
   setShowDailyStreakModal,
   setShowXPLevelModal,
+  setShowIQScoreModal,
   tourComplete,
   streak,
   isBoosted,
@@ -64,7 +65,16 @@ const OutsideNavbarContent = ({
             {state.user && !isEmptyObject(state.user) && (
               <Box>
                 {' '}
-                <IQScore score={state.user?.IQ_score} />
+                <IQScore
+                  score={state.user?.IQ_score}
+                  _hover={{
+                    cursor: 'pointer',
+                  }}
+                  className={'xp-level'}
+                  onClick={() => {
+                    setShowIQScoreModal(true)
+                  }}
+                />
               </Box>
             )}
             {state.user && !isEmptyObject(state.user) && (

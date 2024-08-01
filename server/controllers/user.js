@@ -1320,6 +1320,26 @@ const removeBookmark = async (req, res) => {
     console.log(error)
   }
 }
+
+const NavLineGraph = async (req, res) => {
+  const userId = req.user._id
+  try {
+    const user = await User.findById(userId)
+
+    // console.log('User found:', userId)
+
+    const iqScoresHistory = await getUserIQScoreHistory({ userId })
+
+    res.status(200).json({
+      lineGraph: iqScoresHistory,
+      inGameName: user.inGameName,
+    })
+  } catch (error) {
+    console.error('Error fetching user profile line graph:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1354,4 +1374,5 @@ module.exports = {
   bookmark,
   getBookmarks,
   removeBookmark,
+  NavLineGraph,
 }
