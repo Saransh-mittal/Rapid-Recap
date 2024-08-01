@@ -25,7 +25,7 @@ const IQLineGraph = ({
   viewingHistory = false,
   isNavIQ = false,
 }) => {
-  const { state } = useContext(AppContext)
+  const { state, playClick } = useContext(AppContext)
   const [isLoading, setIsLoading] = useState(true)
   const toast = useToast()
   const [IQScoreHistory, setIQScoreHistory] = useState([])
@@ -269,6 +269,7 @@ const IQLineGraph = ({
   }, [isHovering])
 
   const getExpectedIQ = async () => {
+    playClick()
     setIsLoading(true)
     try {
       const response = await axios.get('/api/user/expectedIQScore')
@@ -295,7 +296,7 @@ const IQLineGraph = ({
     <Flex
       w={'100%'}
       flexDirection={'column'}
-      // borderRight={{ xl: '1px' }}
+      borderRight={{ xl: '1px' }}
       padding={{ base: '20px', xl: '0' }}
       paddingX={{ base: '20px', xl: '30px' }}
       flex={1}
@@ -442,18 +443,16 @@ const IQLineGraph = ({
 
           {/* Render chart only when chartOptions and chartData are not null */}
 
-          {!isNavIQ && (
-            <Flex
-              w={'100%'}
-              justifyContent={'center'}
-              alignItems={'center'}
-              height={'150px'}
-              p={0}
-              m={0}
-            >
-              <Line ref={chartRef} data={chartData} options={chartOptions} />
-            </Flex>
-          )}
+          <Flex
+            w={'100%'}
+            justifyContent={'center'}
+            alignItems={'center'}
+            height={'150px'}
+            p={0}
+            m={0}
+          >
+            <Line ref={chartRef} data={chartData} options={chartOptions} />
+          </Flex>
         </>
       )}
     </Flex>

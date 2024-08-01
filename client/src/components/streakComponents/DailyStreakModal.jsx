@@ -18,7 +18,7 @@ import { AppContext } from '../../contextAPI/appContext'
 
 const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { state } = useContext(AppContext)
+  const { state, playClick } = useContext(AppContext)
 
   useEffect(() => {
     onOpen()
@@ -519,6 +519,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                   color="#d1c9e6"
                   _hover={{ bg: '#5d4b96' }}
                   onClick={() => {
+                    playClick()
                     onClose()
                     setShowDailyStreakModal(false)
                   }}

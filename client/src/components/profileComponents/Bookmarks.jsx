@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from 'react'
 import {
   Box,
   Button,
@@ -13,66 +13,69 @@ import {
   ModalCloseButton,
   VStack,
   useToast,
-} from "@chakra-ui/react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import ArticleCard from "../miscellaneous/ArticleCard";
+} from '@chakra-ui/react'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+import ArticleCard from '../miscellaneous/ArticleCard'
+import useSound from '../../customHooks/useSound'
+import { AppContext } from '../../contextAPI/appContext'
 
 const Bookmarks = ({ isOpen, onClose }) => {
-  const [viewMode, setViewMode] = useState("grid");
-  const [isLoading, setIsLoading] = useState(true);
-  const [bookmarks, setBookmarks] = useState([]);
-  const navigate = useNavigate();
-  const toast = useToast();
+  const [viewMode, setViewMode] = useState('grid')
+  const [isLoading, setIsLoading] = useState(true)
+  const [bookmarks, setBookmarks] = useState([])
+  const navigate = useNavigate()
+  const toast = useToast()
+  const { playClick } = useContext(AppContext)
 
   const fetchBookmarks = async () => {
     try {
-      const response = await axios.get("/api/user/getBookmarks");
-      setBookmarks(response.data.bookmarks);
+      const response = await axios.get('/api/user/getBookmarks')
+      setBookmarks(response.data.bookmarks)
     } catch (error) {
-      console.error(error);
-      onClose();
+      console.error(error)
+      onClose()
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    if (isOpen) fetchBookmarks();
-  }, [isOpen]);
+    if (isOpen) fetchBookmarks()
+  }, [isOpen])
 
-  const handleBookmarkClick = (id) => {
-    navigate(`/article/${id}`);
-  };
+  const handleBookmarkClick = id => {
+    navigate(`/article/${id}`)
+  }
 
-  const handleRemoveBookmark = async (articleId) => {
+  const handleRemoveBookmark = async articleId => {
     try {
-      await axios.get(`/api/user/removeBookmark?articleId=${articleId}`);
-      setBookmarks(bookmarks.filter((bookmark) => bookmark._id !== articleId));
+      await axios.get(`/api/user/removeBookmark?articleId=${articleId}`)
+      setBookmarks(bookmarks.filter(bookmark => bookmark._id !== articleId))
       toast({
-        title: "Bookmark removed",
-        status: "success",
+        title: 'Bookmark removed',
+        status: 'success',
         duration: 3000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
     } catch (error) {
-      console.error(error);
+      console.error(error)
       toast({
-        title: "Error removing bookmark",
-        status: "error",
+        title: 'Error removing bookmark',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     }
-  };
+  }
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size={{ base: "full", md: "xl", lg: "3xl", xl: "4xl" }}
-      scrollBehavior={"inside"}
+      size={{ base: 'full', md: 'xl', lg: '3xl', xl: '4xl' }}
+      scrollBehavior={'inside'}
     >
       <ModalOverlay />
       <ModalContent
@@ -82,27 +85,30 @@ const Bookmarks = ({ isOpen, onClose }) => {
         <ModalHeader color="#ffffff">Your Bookmarks</ModalHeader>
         <ModalCloseButton color="#ffffff" />
         <ModalBody
-          w={"100%"}
+          w={'100%'}
           css={{
-            "&::-webkit-scrollbar": {
-              display: "none",
+            '&::-webkit-scrollbar': {
+              display: 'none',
             },
           }}
         >
           <Flex align="center" mb="20px">
             <Button
-              marginLeft={"auto"}
-              onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+              marginLeft={'auto'}
+              onClick={() => {
+                playClick()
+                setViewMode(viewMode === 'grid' ? 'list' : 'grid')
+              }}
               bg="#2a2438"
               color="#ffffff"
-              _hover={{ bg: "#1f1b2e" }}
+              _hover={{ bg: '#1f1b2e' }}
             >
-              {viewMode === "grid"
-                ? "Switch to List View"
-                : "Switch to Grid View"}
+              {viewMode === 'grid'
+                ? 'Switch to List View'
+                : 'Switch to Grid View'}
             </Button>
           </Flex>
-          {viewMode === "grid" ? (
+          {viewMode === 'grid' ? (
             <Grid
               templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
               gap="20px"
@@ -111,7 +117,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
                 ? Array.from({ length: 6 }).map((_, index) => (
                     <ArticleCard key={index} isLoading={true} />
                   ))
-                : bookmarks.map((bookmark) => (
+                : bookmarks.map(bookmark => (
                     <ArticleCard
                       key={bookmark._id}
                       article={bookmark}
@@ -126,7 +132,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
                 ? Array.from({ length: 6 }).map((_, index) => (
                     <ArticleCard key={index} isLoading={true} viewMode="list" />
                   ))
-                : bookmarks.map((bookmark) => (
+                : bookmarks.map(bookmark => (
                     <ArticleCard
                       key={bookmark._id}
                       article={bookmark}
@@ -140,17 +146,20 @@ const Bookmarks = ({ isOpen, onClose }) => {
         </ModalBody>
         <ModalFooter>
           <Button
-            onClick={onClose}
+            onClick={() => {
+              playClick()
+              onClose()
+            }}
             bg="#2a2438"
             color="#ffffff"
-            _hover={{ bg: "#1f1b2e" }}
+            _hover={{ bg: '#1f1b2e' }}
           >
             Close
           </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
-  );
-};
+  )
+}
 
-export default Bookmarks;
+export default Bookmarks

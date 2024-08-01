@@ -39,7 +39,7 @@ const App = () => {
   const navigate = useNavigate()
 
   const isLoggedIn = () => {
-    return !state.show
+    return state.show === undefined ? false : !state.show
   }
 
   const getUserInGameName = () => {
@@ -95,12 +95,6 @@ const App = () => {
   }, [])
 
   useEffect(() => {
-    if (state.user && location.pathname === '/') {
-      navigate('/home')
-    }
-  }, [state.user])
-
-  useEffect(() => {
     const loggedIn = isLoggedIn()
     const userInGameName = getUserInGameName()
 
@@ -151,7 +145,11 @@ const App = () => {
         {shouldShowNotification && <NotificationSubscription />}
         <Suspense fallback={<Loading />}>
           <Routes>
-            <Route exact path="/" element={<GetStarted />} />
+            <Route
+              path="/"
+              element={isLoggedIn() ? <Navigate to="/home" /> : <GetStarted />}
+            />
+            <Route path="/get-started" element={<GetStarted />} />
             <Route exact path="/contact/feedback" element={<ContactLayout />} />
             <Route path="/home/:category" element={<Home />} />
             <Route path="/home" element={<Home />} />

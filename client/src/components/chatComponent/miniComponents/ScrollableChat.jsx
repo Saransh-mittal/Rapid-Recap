@@ -1,5 +1,11 @@
 // src/components/chat/ScrollableChat.js
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useContext,
+} from 'react'
 import {
   Box,
   useDisclosure,
@@ -20,6 +26,8 @@ import {
 } from '../../../utils/chat.utils'
 import { isMessageDeletedForUser } from '../config/ChatLogics'
 import { debounce, throttle } from 'lodash'
+import useSound from '../../../customHooks/useSound'
+import { AppContext } from '../../../contextAPI/appContext'
 
 const ScrollableChat = ({
   messages,
@@ -38,6 +46,7 @@ const ScrollableChat = ({
   const lastScrollTop = useRef(0)
   const loadingRef = useRef(false)
   const messageIdsRef = useRef(new Set())
+  const { playClick } = useContext(AppContext)
 
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,
@@ -54,6 +63,7 @@ const ScrollableChat = ({
   const isScreenSmallerThan600px = useMediaQuery('(max-width: 600px)')[0]
 
   const handleContextMenu = (event, messageId) => {
+    playClick()
     event.preventDefault()
     setContextMenu({
       isOpen: true,
@@ -63,6 +73,7 @@ const ScrollableChat = ({
   }
 
   const handleTouchStart = (event, messageId) => {
+    playClick()
     event.preventDefault()
     longPressTimer.current = setTimeout(() => {
       const touch = event.touches[0]
@@ -81,6 +92,7 @@ const ScrollableChat = ({
   }
 
   const handleCloseContextMenu = () => {
+    playClick()
     setContextMenu({
       isOpen: false,
       position: { x: 0, y: 0 },
@@ -89,16 +101,19 @@ const ScrollableChat = ({
   }
 
   const handleReactionClick = message => {
+    playClick()
     setSelectedReactions({ reactions: message.reactions, message })
     onOpen()
   }
 
   const handleDelete = type => {
+    playClick()
     handleDeleteMessage(contextMenu.messageId, type)
     handleCloseContextMenu()
   }
 
   const handleCopy = () => {
+    playClick()
     const message = messages.find(m => m._id === contextMenu.messageId)
     if (message) {
       navigator.clipboard.writeText(message.content)
@@ -182,6 +197,7 @@ const ScrollableChat = ({
   }, [])
 
   const handleReact = ({ emoji, messageId }) => {
+    playClick()
     handleAddReaction(messageId, emoji)
     handleCloseContextMenu()
   }

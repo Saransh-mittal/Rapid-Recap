@@ -22,7 +22,7 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const [load, setLoad] = useState(false)
-  const { state, dispatch } = useContext(AppContext)
+  const { state, dispatch, playClick } = useContext(AppContext)
   const [hide, setHide] = useState({
     fullProfile: state.user.profilePrivacy
       ? state.user.profilePrivacy.fullProfile
@@ -73,6 +73,7 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
   }
 
   const handleSave = async () => {
+    playClick()
     setLoad(true)
     try {
       const response = await axios.post('/api/user/profilePrivacy', {

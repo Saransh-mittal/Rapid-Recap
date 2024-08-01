@@ -41,7 +41,7 @@ const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
-  const { state, dispatch, navLinkRefs, readFriendRequests } =
+  const { state, dispatch, navLinkRefs, readFriendRequests, playClick } =
     useContext(AppContext)
   const [visible, setVisible] = useState(true)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
@@ -264,7 +264,10 @@ const Navbar = () => {
               aria-controls="navbarNav"
               aria-label="Toggle navigation"
               display={{ base: 'flex', lg: 'none' }}
-              onClick={() => setIsHamburgerOpen(false)}
+              onClick={() => {
+                playClick()
+                setIsHamburgerOpen(false)
+              }}
               height={'35px'}
               width={'10px'}
               marginLeft={'auto'}
@@ -306,6 +309,7 @@ const Navbar = () => {
               setIsHamburgerOpen={setIsHamburgerOpen}
               level={state.user && state.user.level}
               profileNotif={profileNotif}
+              onOpenWiseWeb={onOpenWiseWeb}
             />
           </Flex>
           {isModalOpen && (

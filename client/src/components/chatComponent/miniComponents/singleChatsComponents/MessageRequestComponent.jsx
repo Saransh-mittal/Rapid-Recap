@@ -1,7 +1,10 @@
-import React from "react";
-import { Box, Text, Button, VStack, HStack } from "@chakra-ui/react";
+import React, { useContext } from 'react'
+import { Box, Text, Button, VStack, HStack } from '@chakra-ui/react'
+import useSound from '../../../../customHooks/useSound'
+import { AppContext } from '../../../../contextAPI/appContext'
 
 const MessageRequestComponent = ({ senderName, onAccept, onReject }) => {
+  const { playClick } = useContext(AppContext)
   return (
     <Box
       bg="rgba(255, 255, 255, 0.1)"
@@ -22,16 +25,30 @@ const MessageRequestComponent = ({ senderName, onAccept, onReject }) => {
           activities from this user.
         </Text>
         <HStack spacing={4} width="100%">
-          <Button colorScheme="red" onClick={onReject} flexGrow={1}>
+          <Button
+            colorScheme="red"
+            onClick={() => {
+              playClick()
+              onReject()
+            }}
+            flexGrow={1}
+          >
             Reject
           </Button>
-          <Button colorScheme="green" onClick={onAccept} flexGrow={1}>
+          <Button
+            colorScheme="green"
+            onClick={() => {
+              playClick()
+              onAccept()
+            }}
+            flexGrow={1}
+          >
             Accept
           </Button>
         </HStack>
       </VStack>
     </Box>
-  );
-};
+  )
+}
 
-export default MessageRequestComponent;
+export default MessageRequestComponent

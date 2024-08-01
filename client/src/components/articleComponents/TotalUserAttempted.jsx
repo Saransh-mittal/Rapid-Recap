@@ -1,49 +1,52 @@
 // File path: src/components/TotalUserAttempted.js
 
-import React, { useState, useEffect } from "react";
-import { Button, Flex, Text } from "@chakra-ui/react";
-import QuizTitansModal from "./QuizTitansModal";
-import { set } from "lodash";
+import React, { useState, useEffect, useContext } from 'react'
+import { Button, Flex, Text } from '@chakra-ui/react'
+import QuizTitansModal from './QuizTitansModal'
+import { set } from 'lodash'
+import useSound from '../../customHooks/useSound'
+import { AppContext } from '../../contextAPI/appContext'
 
 const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
-  const [showQuizTitans, setShowQuizTitans] = useState(false);
+  const [showQuizTitans, setShowQuizTitans] = useState(false)
   const [updatedTotalUsersGivenQuiz, setUpdatedTotalUsersGivenQuiz] =
-    useState(totalUsersGivenQuiz);
+    useState(totalUsersGivenQuiz)
 
   useEffect(() => {
-    setUpdatedTotalUsersGivenQuiz(totalUsersGivenQuiz);
-  }, [totalUsersGivenQuiz]);
+    setUpdatedTotalUsersGivenQuiz(totalUsersGivenQuiz)
+  }, [totalUsersGivenQuiz])
+  const { playClick } = useContext(AppContext)
 
   return (
     <Flex
       style={
         notLoggedIn
-          ? { filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }
-          : { userSelect: "text", border: "2px", padding: "0.5rem" }
+          ? { filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none' }
+          : { userSelect: 'text', border: '2px', padding: '0.5rem' }
       }
       css={css}
       borderRadius="xl"
       backgroundColor="#2A2F4F"
       marginBottom="2rem"
-      flexDirection={"column"}
-      justifyContent={"center"}
-      alignItems={"center"}
+      flexDirection={'column'}
+      justifyContent={'center'}
+      alignItems={'center'}
     >
       <Text
         fontSize="18px"
         fontWeight="bold"
         letterSpacing={0.25}
         color="#FDE2F3"
-        textAlign={"center"}
-        w={"100%"}
+        textAlign={'center'}
+        w={'100%'}
         m={0}
       >
-        Total Users Attempted the Quiz :{" "}
+        Total Users Attempted the Quiz :{' '}
         <span
           style={{
-            backgroundColor: "green",
-            borderRadius: "15px",
-            padding: "8px",
+            backgroundColor: 'green',
+            borderRadius: '15px',
+            padding: '8px',
           }}
         >
           {updatedTotalUsersGivenQuiz}
@@ -53,20 +56,21 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
         <QuizTitansModal setShowQuizTitans={setShowQuizTitans} />
       )}
       <Button
-        margin={"1rem"}
-        w={"50%"}
-        onClick={(e) => {
+        margin={'1rem'}
+        w={'50%'}
+        onClick={e => {
+          playClick()
           if (notLoggedIn) {
-            e.preventDefault();
-            return;
+            e.preventDefault()
+            return
           }
-          setShowQuizTitans(true);
+          setShowQuizTitans(true)
         }}
       >
         Quiz Titans
       </Button>
     </Flex>
-  );
-};
+  )
+}
 
-export default TotalUserAttempted;
+export default TotalUserAttempted

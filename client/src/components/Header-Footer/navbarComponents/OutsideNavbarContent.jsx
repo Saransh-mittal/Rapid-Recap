@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import { SearchIcon } from '@chakra-ui/icons'
 import UserSearchDrawer from '../../miscellaneous/UserSearchDrawer'
+import useSound from '../../../customHooks/useSound'
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -33,11 +34,12 @@ const OutsideNavbarContent = ({
   setIsHamburgerOpen,
   level,
   profileNotif,
+  onOpenWiseWeb,
 }) => {
   const isEmptyObject = obj => {
     return obj && Object.keys(obj).length === 0
   }
-  const { state } = useContext(AppContext)
+  const { state, playClick } = useContext(AppContext)
   const { notification } = ChatState()
   const navigate = useNavigate()
   const {
@@ -72,6 +74,7 @@ const OutsideNavbarContent = ({
                   }}
                   className={'xp-level'}
                   onClick={() => {
+                    playClick()
                     setShowIQScoreModal(true)
                   }}
                 />
@@ -86,6 +89,7 @@ const OutsideNavbarContent = ({
                   }}
                   className={'xp-level'}
                   onClick={() => {
+                    playClick()
                     setShowXPLevelModal(true)
                   }}
                 />
@@ -103,6 +107,7 @@ const OutsideNavbarContent = ({
               }}
               className={'streak-tracker-lg'}
               onClick={() => {
+                playClick()
                 setShowDailyStreakModal(true)
                 tourComplete()
               }}
@@ -116,7 +121,10 @@ const OutsideNavbarContent = ({
                   cursor: 'pointer',
                 }}
                 display={{ base: 'none', lg: 'flex' }}
-                onClick={() => onOpenUserSearch()}
+                onClick={() => {
+                  playClick()
+                  onOpenUserSearch()
+                }}
                 position={'relative'}
                 mx={1}
               >
@@ -167,6 +175,7 @@ const OutsideNavbarContent = ({
               refProfile={ref => (navLinkRefs.current[4] = ref)}
               profileNotif={profileNotif}
               notifyCont={notifyCont}
+              onOpenWiseWeb={onOpenWiseWeb}
             />
           </Flex>
         ) : null}
@@ -180,7 +189,10 @@ const OutsideNavbarContent = ({
                 aria-controls="navbarNav"
                 aria-label="Toggle navigation"
                 display={{ base: 'flex', lg: 'none' }}
-                onClick={() => setIsHamburgerOpen(true)}
+                onClick={() => {
+                  playClick()
+                  setIsHamburgerOpen(true)
+                }}
                 marginBottom={isHamburgerOpen ? '2rem' : '0'}
                 height={'35px'}
                 width={'10px'}

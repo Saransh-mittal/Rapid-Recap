@@ -1,4 +1,4 @@
-import { Avatar, Flex, Box, useDisclosure } from '@chakra-ui/react'
+import { Avatar, Flex, Box } from '@chakra-ui/react'
 import React, { useContext, useState } from 'react'
 import { AppContext } from '../../contextAPI/appContext'
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -6,7 +6,6 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Inbox from '../Header-Footer/navbarComponents/Inbox'
 import { FaUserFriends } from 'react-icons/fa'
-import WiseWeb from './WiseWeb'
 const itemVariants = {
   open: {
     opacity: 1,
@@ -23,6 +22,7 @@ const ProfileDropDownMenu = ({
   profileNotif,
   setIsDrawerOpen,
   notifyCont,
+  onOpenWiseWeb,
 }) => {
   const listStyle = {
     position: 'relative',
@@ -46,13 +46,8 @@ const ProfileDropDownMenu = ({
     backgroundColor: '#27374D',
   }
 
-  const { state, readFriendRequests } = useContext(AppContext)
+  const { state, playClick } = useContext(AppContext)
   const [isOpen, setIsOpen] = useState(false)
-  const {
-    isOpen: isOpenWiseWeb,
-    onOpen: onOpenWiseWeb,
-    onClose: onCloseWiseWeb,
-  } = useDisclosure()
   return (
     <Flex className={className} position={'relative'}>
       <motion.nav
@@ -188,19 +183,14 @@ const ProfileDropDownMenu = ({
                 />
               )}
             </Flex>
-            {isOpenWiseWeb && (
-              <WiseWeb
-                isOpen={isOpenWiseWeb}
-                onClose={onCloseWiseWeb}
-                requestNotif={state.unreadFriendRequests > 0}
-                markRequestAsRead={readFriendRequests}
-              />
-            )}
           </motion.li>
           <NavLink
             to={`${toProfile}/${state.user?.inGameName}`}
             ref={refProfile}
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              playClick()
+              setIsOpen(false)
+            }}
           >
             <motion.li
               whileHover={listHoverStyle}

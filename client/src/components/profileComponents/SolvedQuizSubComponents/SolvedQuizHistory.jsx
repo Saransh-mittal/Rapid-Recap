@@ -17,24 +17,26 @@ import {
   Thead,
   Tr,
   useDisclosure,
-} from "@chakra-ui/react";
-import React, { useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { AppContext } from "../../../contextAPI/appContext";
+} from '@chakra-ui/react'
+import React, { useContext, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { AppContext } from '../../../contextAPI/appContext'
+import useSound from '../../../customHooks/useSound'
 
 const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
-  const navigate = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { dispatch } = useContext(AppContext);
-  const { history } = solvedHistory;
+  const navigate = useNavigate()
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { dispatch, playClick } = useContext(AppContext)
+  const { history } = solvedHistory
+
   const diffColor = {
-    Easy: "green.300",
-    Medium: "yellow.300",
-    Hard: "red.300",
-  };
+    Easy: 'green.300',
+    Medium: 'yellow.300',
+    Hard: 'red.300',
+  }
   useEffect(() => {
-    onOpen();
-  }, []);
+    onOpen()
+  }, [])
 
   return (
     <>
@@ -42,79 +44,79 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
         closeOnOverlayClick={false}
         isOpen={isOpen}
         onClose={() => {
-          onClose();
-          setShowHistory(false);
+          onClose()
+          setShowHistory(false)
         }}
-        size={{ base: "full", md: "3xl" }}
+        size={{ base: 'full', md: '3xl' }}
       >
         <ModalOverlay />
         <ModalContent
           // background="linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
-          backgroundColor={{ base: "#0f0d15" }}
+          backgroundColor={{ base: '#0f0d15' }}
           backgroundImage={{
-            base: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+            base: 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
           }}
           boxShadow={{
-            base: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+            base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
           }}
           backgroundSize="400% 400%"
           borderRadius="10px"
-          overflow={"hidden"}
+          overflow={'hidden'}
           //boxShadow="0 0 10px rgba(0, 0, 0, 0.5)" // Added boxShadow to make it standout
         >
           <ModalHeader as="h3" size="lg" color="white" textAlign="center">
             Latest 50 Solved Quiz History
           </ModalHeader>
-          <ModalCloseButton color={"white"} />
+          <ModalCloseButton color={'white'} />
           <ModalBody>
             <Box
-              maxH={{ base: "80vh", md: "50vh" }}
+              maxH={{ base: '80vh', md: '50vh' }}
               overflowY="scroll"
               css={{
-                "&::-webkit-scrollbar": {
-                  display: "none",
+                '&::-webkit-scrollbar': {
+                  display: 'none',
                 },
               }}
             >
-              <TableContainer width={"100%"} className="mainBoard" p={"10px"}>
-                <Table variant={"unstyled"} w={"100%"}>
-                  <Thead w={"100%"}>
-                    <Tr boxShadow={"dark-lg"}>
+              <TableContainer width={'100%'} className="mainBoard" p={'10px'}>
+                <Table variant={'unstyled'} w={'100%'}>
+                  <Thead w={'100%'}>
+                    <Tr boxShadow={'dark-lg'}>
                       <Th
-                        textAlign={"center"}
-                        bg={"orange.300"}
-                        color={"white"}
-                        display={{ base: "none", md: "block" }}
+                        textAlign={'center'}
+                        bg={'orange.300'}
+                        color={'white'}
+                        display={{ base: 'none', md: 'block' }}
                         px={0}
                       >
                         Serial No.
                       </Th>
                       <Th
-                        textAlign={"center"}
-                        bg={"green.300"}
-                        color={"white"}
+                        textAlign={'center'}
+                        bg={'green.300'}
+                        color={'white'}
                         px={0}
                       >
                         Percentile
                       </Th>
-                      <Th textAlign={"center"} bg={"red.300"} px={0}>
+                      <Th textAlign={'center'} bg={'red.300'} px={0}>
                         Article
                       </Th>
                       <Th
-                        textAlign={"center"}
-                        bg={"blue.300"}
-                        display={{ base: "none", md: "block" }}
+                        textAlign={'center'}
+                        bg={'blue.300'}
+                        display={{ base: 'none', md: 'block' }}
                         px={0}
                       >
                         RQM Score
                       </Th>
-                      <Th textAlign={"center"} bg={"orange.300"} px={0}>
+                      <Th textAlign={'center'} bg={'orange.300'} px={0}>
                         Article Diff
                       </Th>
                     </Tr>
                   </Thead>
 
-                  <Tbody marginTop={"20px"} className="Entries">
+                  <Tbody marginTop={'20px'} className="Entries">
                     {history?.length > 0 &&
                       history.map((attempt, index) => {
                         const {
@@ -125,38 +127,38 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                           _id,
                           userPercentile,
                           newsArticle,
-                        } = attempt;
+                        } = attempt
 
                         return (
                           <Tr // Clickable row to the profile of the user
-                            height={"80px"}
+                            height={'80px'}
                             key={_id}
                             onClick={() => {
                               dispatch({
-                                type: "setNews",
+                                type: 'setNews',
                                 payloadNews: newsArticle,
-                              });
-                              navigate(`/article/${article}`);
+                              })
+                              navigate(`/article/${article}`)
                             }}
                             _hover={{
                               backgroundImage:
-                                "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+                                'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
                               boxShadow:
-                                "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+                                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
                             }}
-                            cursor={"pointer"}
-                            textColor={"white"}
+                            cursor={'pointer'}
+                            textColor={'white'}
                           >
                             <Td
-                              textAlign={"center"}
-                              display={{ base: "none", md: "block" }}
+                              textAlign={'center'}
+                              display={{ base: 'none', md: 'block' }}
                             >
                               <Flex
-                                justifyContent={"center"}
-                                alignItems={"center"}
+                                justifyContent={'center'}
+                                alignItems={'center'}
                                 bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
                                 p={2}
-                                gap={"35px"}
+                                gap={'35px'}
                                 borderRadius="md"
                               >
                                 {index + 1}
@@ -168,7 +170,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                             </Td>
                             <Td
                               textAlign="center"
-                              display={{ base: "none", md: "block" }}
+                              display={{ base: 'none', md: 'block' }}
                             >
                               {RQM_score}
                             </Td>
@@ -176,18 +178,18 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                               textAlign="center"
                               color={
                                 diffColor[
-                                  articleDifficulty === "Easy"
-                                    ? "Easy"
-                                    : articleDifficulty === "Medium"
-                                    ? "Medium"
-                                    : "Hard"
+                                  articleDifficulty === 'Easy'
+                                    ? 'Easy'
+                                    : articleDifficulty === 'Medium'
+                                    ? 'Medium'
+                                    : 'Hard'
                                 ]
                               }
                             >
                               {articleDifficulty}
                             </Td>
                           </Tr>
-                        );
+                        )
                       })}
                   </Tbody>
                 </Table>
@@ -197,8 +199,9 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
           <ModalFooter>
             <Button
               onClick={() => {
-                onClose();
-                setShowHistory(false);
+                playClick()
+                onClose()
+                setShowHistory(false)
               }}
             >
               Close
@@ -207,7 +210,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
         </ModalContent>
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default SolvedQuizHistory;
+export default SolvedQuizHistory

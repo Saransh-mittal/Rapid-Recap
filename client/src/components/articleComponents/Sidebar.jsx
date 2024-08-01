@@ -1,6 +1,6 @@
 // components/articleComponents/Sidebar.js
 
-import React from 'react'
+import React, { useContext } from 'react'
 import {
   Box,
   Heading,
@@ -11,6 +11,7 @@ import {
   Tooltip,
   Badge,
   useDisclosure,
+  Spinner,
 } from '@chakra-ui/react'
 import { LockIcon, TriangleDownIcon } from '@chakra-ui/icons'
 import Alt_img from '/images/rr.webp'
@@ -23,6 +24,8 @@ import starBoost from '/GIFs/starBoost.gif'
 import TextBackgound from '/images/textBackground.webp'
 import ShareButton from './ShareButton'
 import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
+import useSound from '../../customHooks/useSound'
+import { AppContext } from '../../contextAPI/appContext'
 const Sidebar = ({
   givenQuiz,
   percentile,
@@ -45,9 +48,11 @@ const Sidebar = ({
   quizLeftToGetQuizBoost,
   openModal,
   quinTour,
+  isQuizGivenLoading,
 }) => {
   const notLoggedIn = state.show
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
+  const { playClick } = useContext(AppContext)
   const handleShare = () => {
     if (notLoggedIn) {
       toast({
@@ -90,20 +95,28 @@ const Sidebar = ({
                 ? { filter: 'blur(5px)', userSelect: 'none' }
                 : { userSelect: 'text' }
             }
+            display={'flex'}
+            justifyContent={'center'}
+            alignItems={'center'}
           >
-            <TakeQuizButton
-              isQuinBoostAvailable={isQuinBoostAvailable}
-              onClick={() => {
-                if (notLoggedIn) {
-                  return
-                }
-                tour.complete()
-                trackGenerateQuizClick()
-                setShowQuizLangModal(true)
-                setShowQuiz(!showQuiz)
-                onOpen()
-              }}
-            />
+            {isQuizGivenLoading ? (
+              <Spinner />
+            ) : (
+              <TakeQuizButton
+                isQuinBoostAvailable={isQuinBoostAvailable}
+                onClick={() => {
+                  playClick()
+                  if (notLoggedIn) {
+                    return
+                  }
+                  tour.complete()
+                  trackGenerateQuizClick()
+                  setShowQuizLangModal(true)
+                  setShowQuiz(!showQuiz)
+                  onOpen()
+                }}
+              />
+            )}
           </Box>
           {notLoggedIn && (
             <Tooltip label="Please log in to give quiz" placement="top">
@@ -165,6 +178,7 @@ const Sidebar = ({
                   justifyContent={'center'}
                   alignItems={'center'}
                   onClick={e => {
+                    playClick()
                     if (notLoggedIn) {
                       e.preventDefault()
                       return
@@ -220,7 +234,10 @@ const Sidebar = ({
             alignItems={'center'}
             gap={2}
             marginTop={'10px'}
-            onClick={openModal}
+            onClick={() => {
+              playClick()
+              openModal()
+            }}
             style={{ cursor: 'pointer' }}
           >
             <Image
@@ -261,6 +278,7 @@ const Sidebar = ({
                     e.preventDefault()
                     return
                   }
+                  playClick()
                   window.location.href = `/article/${item._id}`
                 }}
                 style={

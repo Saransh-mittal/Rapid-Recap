@@ -1,13 +1,6 @@
 import { Button, Tag, Tooltip } from '@chakra-ui/react'
-import React from 'react'
-import { keyframes } from '@emotion/react'
-
-// const pulseAnimation = keyframes`
-//   0% { box-shadow: 0 0 0 0 rgba(26, 21, 39, 0.7); }
-//   70% { box-shadow: 0 0 0 10px rgba(26, 21, 39, 0); }
-//   100% { box-shadow: 0 0 0 0 rgba(26, 21, 39, 0); }
-// `
-
+import React, { useContext } from 'react'
+import { AppContext } from '../../contextAPI/appContext'
 const ProfileButton = ({
   buttonText,
   inGameName,
@@ -18,6 +11,7 @@ const ProfileButton = ({
   icon,
   top,
 }) => {
+  const { playClick } = useContext(AppContext)
   return (
     <>
       {inGameName == stateUserInGameName && (
@@ -47,22 +41,18 @@ const ProfileButton = ({
         w={'100%'}
         bg="#1a1527"
         color="white"
-        // fontWeight="bold"
-        // fontFamily="'Cyberpunk', Arial, sans-serif"
         fontSize="0.9em"
         letterSpacing="1px"
-        // _hover={{
-        //   bg: '#2c2541',
-        //   color: '#b8d4d0',
-        //   animation: `${pulseAnimation} 1.5s infinite`,
-        // }}
         _active={{
           bg: '#0f0d15',
           transform: 'scale(0.98)',
         }}
         // height={'50px'}
         leftIcon={icon}
-        onClick={onClick}
+        onClick={() => {
+          playClick()
+          onClick()
+        }}
         borderColor="#2c2541"
         borderWidth="2px"
         boxShadow="0 0 15px rgba(44, 37, 65, 0.5)"

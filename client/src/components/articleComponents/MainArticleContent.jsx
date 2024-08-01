@@ -1,6 +1,6 @@
 // components/articleComponents/MainArticleContent.js
 
-import React from 'react'
+import React, { useContext, useState } from 'react'
 import {
   Box,
   Flex,
@@ -16,6 +16,8 @@ import {
 import { LockIcon } from '@chakra-ui/icons'
 import { CiBookmark } from 'react-icons/ci'
 import { FaBookmark } from 'react-icons/fa'
+import useSound from '../../customHooks/useSound'
+import { AppContext } from '../../contextAPI/appContext'
 
 const MainArticleContent = ({
   avgTimeRead,
@@ -36,6 +38,15 @@ const MainArticleContent = ({
   articleLoading,
 }) => {
   const notLoggedIn = state.show
+  const { playClick } = useContext(AppContext)
+  const [useAltImage, setUseAltImage] = useState(false)
+
+  const handleImageError = () => {
+    if (!useAltImage) {
+      setUseAltImage(true)
+    }
+  }
+
   return (
     <>
       <GridItem
@@ -91,7 +102,10 @@ const MainArticleContent = ({
                 mt={'10px'}
                 ml={'10px'}
                 cursor={'pointer'}
-                onClick={() => bookmarkStatus({ view: false, update: true })}
+                onClick={() => {
+                  playClick()
+                  bookmarkStatus({ view: false, update: true })
+                }}
               >
                 {bookmark ? (
                   <FaBookmark size={30} color="red" />
@@ -113,7 +127,10 @@ const MainArticleContent = ({
                 mt={'10px'}
                 ml={'10px'}
                 cursor={'pointer'}
-                onClick={() => bookmarkStatus({ view: false, update: true })}
+                onClick={() => {
+                  playClick()
+                  bookmarkStatus({ view: false, update: true })
+                }}
               >
                 {bookmark ? (
                   <FaBookmark size={30} color="red" />
@@ -183,10 +200,7 @@ const MainArticleContent = ({
                 width={{ base: '100%', sm: '100%', md: '80%', lg: '80%' }}
                 height="auto"
                 objectFit="contain"
-                onError={e => {
-                  e.target.onerror = null
-                  e.target.src = alt_image
-                }}
+                onError={handleImageError}
               />
             </Flex>
             <Flex

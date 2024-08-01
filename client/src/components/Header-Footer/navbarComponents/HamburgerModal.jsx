@@ -39,7 +39,7 @@ const HamburgerModal = ({
   setIsDrawerOpen,
   onOpenWiseWeb,
 }) => {
-  const { state } = useContext(AppContext)
+  const { state, playClick } = useContext(AppContext)
   const { notification, openChat } = ChatState()
   const navigate = useNavigate()
   const {
@@ -235,6 +235,7 @@ const HamburgerModal = ({
                     onClick={onOpenWiseWeb}
                     width={'100%'}
                     justifyContent={'center'}
+                    display={notLogined ? 'none' : 'block'}
                   >
                     <FaUserFriends size={22} color="white" />
                     {state.unreadFriendRequests > 0 && (

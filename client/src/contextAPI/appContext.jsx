@@ -9,6 +9,7 @@ import React, {
 } from 'react'
 import { Reducer } from '../reducer/useReducer'
 import axios from 'axios'
+import useSound from '../customHooks/useSound'
 
 // Define async functions to fetch data
 const showState = async () => {
@@ -136,6 +137,7 @@ export const AppContext = createContext()
 export const AppProvider = ({ children }) => {
   const navLinkRefs = useRef([])
   const [state, dispatch] = useReducer(Reducer, initialState)
+  const { playClick } = useSound()
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -191,6 +193,7 @@ export const AppProvider = ({ children }) => {
       state,
       dispatch,
       navLinkRefs,
+      playClick,
       updateUnreadFriendRequests,
       readFriendRequests,
     }),

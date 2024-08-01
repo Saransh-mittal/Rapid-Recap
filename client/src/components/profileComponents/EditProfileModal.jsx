@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { AppContext } from "../../contextAPI/appContext";
+import React, { useContext, useState } from 'react'
+import { AppContext } from '../../contextAPI/appContext'
 import {
   Button,
   Modal,
@@ -15,8 +15,9 @@ import {
   Textarea,
   Image,
   Box,
-} from "@chakra-ui/react";
-import axios from "axios";
+} from '@chakra-ui/react'
+import axios from 'axios'
+import useSound from '../../customHooks/useSound'
 
 const EditProfileModal = ({
   isOpen,
@@ -26,109 +27,112 @@ const EditProfileModal = ({
   onSubmit,
   leftProfileView,
 }) => {
-  const { state } = React.useContext(AppContext);
-  const [formData, setFormData] = useState(profileData);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [picDisplay, setPicDisplay] = useState(profileData.pic);
-  const [load, setLoad] = useState(false);
+  const { state, playClick } = useContext(AppContext)
+  const [formData, setFormData] = useState(profileData)
+  const [imageLoading, setImageLoading] = useState(false)
+  const [picDisplay, setPicDisplay] = useState(profileData.pic)
+  const [load, setLoad] = useState(false)
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
+  const handleInputChange = e => {
+    const { name, value } = e.target
+    setFormData(prevData => ({
       ...prevData,
       [name]: value,
-    }));
-  };
+    }))
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoad(true);
+  const handleSubmit = async e => {
+    playClick()
+    e.preventDefault()
+    setLoad(true)
     try {
-      const newData = formData;
-      const pic = await submitImage(formData);
-      newData.pic = pic;
-      console.log(newData);
-      onSubmit(newData);
-      onClose();
+      const newData = formData
+      const pic = await submitImage(formData)
+      newData.pic = pic
+      console.log(newData)
+      onSubmit(newData)
+      onClose()
     } catch (error) {
       toast({
-        title: "Update Failed",
+        title: 'Update Failed',
         description: error.response.data.error,
-        status: "error",
+        status: 'error',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
       //console.log(error);
     } finally {
-      setLoad(false);
+      setLoad(false)
     }
-  };
+  }
 
-  const submitImage = async (dataForPic) => {
+  const submitImage = async dataForPic => {
+    playClick()
     try {
-      const img = dataForPic.pic;
-      const data = new FormData();
-      data.append("file", img);
-      data.append("upload_preset", "ProfilePics");
-      data.append("cloud_name", "dxstsrnbs");
+      const img = dataForPic.pic
+      const data = new FormData()
+      data.append('file', img)
+      data.append('upload_preset', 'ProfilePics')
+      data.append('cloud_name', 'dxstsrnbs')
       const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dxstsrnbs/image/upload",
-        data
-      );
-      const pic = response.data.url;
+        'https://api.cloudinary.com/v1_1/dxstsrnbs/image/upload',
+        data,
+      )
+      const pic = response.data.url
       // setFormData({ ...formData, pic });
-      return pic;
+      return pic
     } catch (e) {
-      console.log(e);
+      console.log(e)
     }
-  };
-  const handleImageChange = async (e) => {
-    setImageLoading(true);
+  }
+  const handleImageChange = async e => {
+    playClick()
+    setImageLoading(true)
     try {
-      const img = e.target.files[0];
-      const reader = new FileReader();
+      const img = e.target.files[0]
+      const reader = new FileReader()
       reader.onloadend = () => {
         // reader.result contains the data URL representing the file
-        setPicDisplay(reader.result);
-        setFormData({ ...formData, pic: img });
-      };
-      reader.readAsDataURL(img);
+        setPicDisplay(reader.result)
+        setFormData({ ...formData, pic: img })
+      }
+      reader.readAsDataURL(img)
     } catch (error) {
       toast({
-        title: "Image upload Failed",
+        title: 'Image upload Failed',
         description: error,
-        status: "error",
+        status: 'error',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
-      console.error(error);
+        position: 'top',
+      })
+      console.error(error)
     } finally {
-      setImageLoading(false);
+      setImageLoading(false)
     }
-  };
+  }
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={() => {
-        onClose();
+        onClose()
         setProfileData({
           name: leftProfileView.name,
           pic: leftProfileView.pic
             ? leftProfileView.pic
-            : "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+            : 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
           bio: leftProfileView.bio,
-        });
+        })
       }}
       size="xl"
     >
       <ModalOverlay />
-      <ModalContent style={{ backgroundColor: "#0f0d15", color: "white" }}>
+      <ModalContent style={{ backgroundColor: '#0f0d15', color: 'white' }}>
         <ModalHeader fontSize="3xl">Edit Profile</ModalHeader>
         <ModalCloseButton color="white" />
-        <ModalBody width={"80%"}>
+        <ModalBody width={'80%'}>
           <Box display="flex" justifyContent="center" mb={4}>
             <Image
               src={picDisplay}
@@ -191,7 +195,7 @@ const EditProfileModal = ({
         </ModalFooter>
       </ModalContent>
     </Modal>
-  );
-};
+  )
+}
 
-export default EditProfileModal;
+export default EditProfileModal

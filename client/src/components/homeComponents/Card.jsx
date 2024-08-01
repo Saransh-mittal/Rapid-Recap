@@ -18,7 +18,7 @@ const Card = ({ newsNumber, data }) => {
     )
   })?.image
   //console.log(alt_img);
-  const { state, dispatch } = useContext(AppContext)
+  const { state, dispatch, playClick } = useContext(AppContext)
   const cardWrapper = useRef(null)
   const card = useRef(null)
   const project_meta = useRef(null)
@@ -70,6 +70,7 @@ const Card = ({ newsNumber, data }) => {
           // window.innerWidth < 768
           //   ? navigate(`/article/${newArticle._id}`)
           //   : dispatch({ type: 'showModal', payloadModal: true })
+          playClick()
           navigate(`/article/${newArticle._id}`)
           dispatch({ type: 'setNews', payloadNews: newArticle })
         }}
