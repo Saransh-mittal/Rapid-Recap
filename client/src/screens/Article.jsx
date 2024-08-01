@@ -24,6 +24,7 @@ import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import TrackTime from '../components/articleComponents/TrackTime' // Import TrackTime component
+import useSound from '../customHooks/useSound'
 
 const Article = () => {
   const toast = useToast()
@@ -73,10 +74,25 @@ const Article = () => {
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
   const [isLargerThan820] = useMediaQuery('(min-width: 820px)')
   const [bookmark, setBookmark] = useState(false)
+  const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(true)
+  const quizFetchTimer = useRef(null)
+
   const notLoggedIn = state.show
 
   const openModal = () => setIsQuinBoostModalOpen(true)
   const closeModal = () => setIsQuinBoostModalOpen(false)
+
+  const fetchQuiz = async () => {
+    try {
+      selectedLanguage === 'english'
+        ? await axios.put(`/api/articles/genQuiz/${id}`)
+        : await axios.put(`/api/articles/genHindiQuiz/${id}`)
+
+      console.log('Quiz generated')
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
 
   const fetchQuizTitans = async () => {
     try {
@@ -168,6 +184,8 @@ const Article = () => {
       }
     } catch (error) {
       console.log(error.message)
+    } finally {
+      setIsQuizGivenLoading(false)
     }
   }
 
@@ -241,6 +259,16 @@ const Article = () => {
     fetchQuizTitans()
     checkOnGoingQuiz()
     bookmarkStatus({ view: true, update: false })
+
+    quizFetchTimer.current = setTimeout(() => {
+      fetchQuiz()
+    }, 5000) // 20 seconds
+
+    return () => {
+      if (quizFetchTimer.current) {
+        clearTimeout(quizFetchTimer.current)
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -470,6 +498,7 @@ const Article = () => {
             />
 
             <Sidebar
+              isQuizGivenLoading={isQuizGivenLoading}
               state={state}
               givenQuiz={givenQuiz}
               percentile={percentile}

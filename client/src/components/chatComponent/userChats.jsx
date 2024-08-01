@@ -29,9 +29,10 @@ import ButtonGradient from '../../assets/svg/ButtonGradient'
 import Button from '../miscellaneous/ButtonComponent'
 import { Search2Icon } from '@chakra-ui/icons'
 import { useNavigate } from 'react-router-dom'
+import useSound from '../../customHooks/useSound'
 
 const UserChats = ({ fetchAgain }) => {
-  const { state } = useContext(AppContext)
+  const { state, playClick } = useContext(AppContext)
   const [loggedUser, setLoggedUser] = useState()
   const [showRequestsTab, setShowRequestsTab] = useState(false)
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -139,6 +140,7 @@ const UserChats = ({ fetchAgain }) => {
   }
 
   const handleChatClick = chat => {
+    playClick()
     setSelectedChat(chat)
     setHasMore(true)
     setMessagesFetched(false)

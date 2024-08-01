@@ -12,13 +12,15 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react'
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 import GivenQuizInterface from './GivenQuizInterface'
 import Loading from '../../miscellaneous/Loading'
 import Heading from '../../miscellaneous/HeadingComponent'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
+import useSound from '../../../customHooks/useSound'
+import { AppContext } from '../../../contextAPI/appContext'
 const QuizGivenSummary = ({
   isOpen,
   onClose,
@@ -35,6 +37,7 @@ const QuizGivenSummary = ({
   )
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [timeTaken, setTimeTaken] = useState(timeTakenInitial)
+  const { playClick } = useContext(AppContext)
 
   const fetchQuizSummary = async () => {
     try {
@@ -57,12 +60,14 @@ const QuizGivenSummary = ({
   }
 
   const handleNextQuestion = () => {
+    playClick()
     if (currentQuestionIndex < quizGivenSummary.length - 1) {
       setCurrentQuestionIndex(prevIndex => prevIndex + 1)
     }
   }
 
   const handlePrevQuestion = () => {
+    playClick()
     if (currentQuestionIndex >= 1) {
       setCurrentQuestionIndex(prevIndex => prevIndex - 1)
     }
@@ -124,12 +129,12 @@ const QuizGivenSummary = ({
             <ModalCloseButton
               style={{
                 right: '10px',
-                color: isCloseButtonHovered ? 'white' : '#FAF0E6',
-                backgroundColor: isCloseButtonHovered ? '#040D12' : '#183D3D',
+
                 transition: 'backgroundColor 0.3s, color 0.3s',
               }}
               onMouseEnter={() => setIsCloseButtonHovered(true)}
               onMouseLeave={() => setIsCloseButtonHovered(false)}
+              bg={'purple.300'}
             />
             <ModalBody
               display={'flex'}

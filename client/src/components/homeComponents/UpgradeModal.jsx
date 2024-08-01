@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -11,61 +11,63 @@ import {
   Image,
   Text,
   Box,
-} from "@chakra-ui/react";
-import { AppContext } from "./../../contextAPI/appContext";
-import CircleAndSocietyData from "../../assets/CircleAndSocietyData";
-import { motion } from "framer-motion";
-import Lightning from "../profileComponents/RankAndSocietySubCompnents/Lightning";
-import CircleLightning from "./CircleLighting/CircleLighting";
-import axios from "axios";
-import "./BlinkingButton.css";
-import Arrow from "/images/arrow.webp";
-import Circle from "/images/circle.webp";
+} from '@chakra-ui/react'
+import { AppContext } from './../../contextAPI/appContext'
+import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
+import { motion } from 'framer-motion'
+import Lightning from '../profileComponents/RankAndSocietySubCompnents/Lightning'
+import CircleLightning from './CircleLighting/CircleLighting'
+import axios from 'axios'
+import './BlinkingButton.css'
+import Arrow from '/images/arrow.webp'
+import Circle from '/images/circle.webp'
+import useSound from '../../customHooks/useSound'
 // const AnimatedText = motion(Text);
 
 const UpgradeModal = ({ isOpen, onClose }) => {
-  const { state, dispatch } = useContext(AppContext);
+  const { state, dispatch, playClick } = useContext(AppContext)
 
-  const USER_IQ = state.user.IQ_score;
+  const USER_IQ = state.user.IQ_score
   // console.log(USER_IQ);
   // const USER_IQ = 111;
-  const findSocietyAndCircle = (USER_IQ) => {
-    let SocietyOrCircle = null;
+  const findSocietyAndCircle = USER_IQ => {
+    let SocietyOrCircle = null
     // Iterate through CircleAndSocietyData to find the appropriate entry
-    CircleAndSocietyData.forEach((entry) => {
+    CircleAndSocietyData.forEach(entry => {
       // Check if USER_IQ falls within the IQ range of the entry
       if (
         USER_IQ >= entry.IQ_Lower &&
         (entry.IQ_Upper === null || USER_IQ < entry.IQ_Upper)
       ) {
-        SocietyOrCircle = entry;
+        SocietyOrCircle = entry
       }
-    });
+    })
 
-    return SocietyOrCircle;
-  };
+    return SocietyOrCircle
+  }
 
   // Determine the society and circle for the current USER_IQ
-  const upgradedSocietyOrCircle = findSocietyAndCircle(USER_IQ);
+  const upgradedSocietyOrCircle = findSocietyAndCircle(USER_IQ)
   // console.log(upgradedSocietyOrCircle);
-  const prevSocietyOrCircle = findSocietyAndCircle(state.user.prevIQScore);
+  const prevSocietyOrCircle = findSocietyAndCircle(state.user.prevIQScore)
   // console.log(prevSocietyOrCircle);
 
   const isCircleUpdgraded =
-    upgradedSocietyOrCircle.society === prevSocietyOrCircle.society;
+    upgradedSocietyOrCircle.society === prevSocietyOrCircle.society
 
   const handleUpgradeMessageClose = async () => {
+    playClick()
     try {
-      await axios.put("/api/user/upgradeMessageClose");
+      await axios.put('/api/user/upgradeMessageClose')
       dispatch({
-        type: "setUser",
-        payloadUser: { ...state.user, societyUpgradeMessage: "" },
-      });
-      onClose();
+        type: 'setUser',
+        payloadUser: { ...state.user, societyUpgradeMessage: '' },
+      })
+      onClose()
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error)
     }
-  };
+  }
 
   // useEffect(() => {
   //   if (USER_IQ <= state.prevIQScore) {
@@ -78,7 +80,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
   //   }
   // }, []);
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "xl" }}>
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'xl' }}>
       <ModalOverlay />
       <ModalContent
         backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
@@ -89,10 +91,10 @@ const UpgradeModal = ({ isOpen, onClose }) => {
           <ModalHeader fontSize="3xl" fontWeight="bold">
             <span
               style={{
-                background: "-webkit-linear-gradient(45deg, #ff9a9e, #fecfef)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                textShadow: "0px 0px 8px rgba(255, 255, 255, 0.8)",
+                background: '-webkit-linear-gradient(45deg, #ff9a9e, #fecfef)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: '0px 0px 8px rgba(255, 255, 255, 0.8)',
               }}
             >
               Congratulations, {state.user.name}!
@@ -143,9 +145,9 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                         src={prevSocietyOrCircle.image}
                         alt="Brain"
                         style={{
-                          width: "80px",
-                          height: "80px",
-                          background: "transparent",
+                          width: '80px',
+                          height: '80px',
+                          background: 'transparent',
                         }}
                       />
                       {/* <Lightning /> */}
@@ -156,24 +158,24 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       fontWeight="bold"
                       color={prevSocietyOrCircle.textColor}
                       textShadow="2px 2px 4px rgba(0,0,0,0.4)"
-                      paddingLeft={{ base: "5.5%", md: "9.5%", xl: "0.5%" }}
+                      paddingLeft={{ base: '5.5%', md: '9.5%', xl: '0.5%' }}
                     >
                       {/* {prevSocietyOrCircle.society} */}
-                      {prevSocietyOrCircle?.society?.split(" ")[0]}
+                      {prevSocietyOrCircle?.society?.split(' ')[0]}
                       <span> Society</span>
                     </Text>
                   </Flex>
                   <Flex
-                    w={"100%"}
-                    mt={"-5rem"}
-                    justifyContent={"center"}
-                    alignItems={"center"}
+                    w={'100%'}
+                    mt={'-5rem'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
                   >
                     <Image
                       src={Arrow}
                       alt="Arrow"
                       boxSize="50px"
-                      background={"transparent"}
+                      background={'transparent'}
                       // mx={4}
                     />
                   </Flex>
@@ -199,15 +201,15 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                         src={upgradedSocietyOrCircle.image}
                         alt="Brain"
                         style={{
-                          width: "80px",
-                          height: "80px",
-                          background: "transparent",
+                          width: '80px',
+                          height: '80px',
+                          background: 'transparent',
                         }}
                         animate={{ scale: [1, 1.1, 1] }}
                         transition={{
                           duration: 1.5,
                           repeat: Infinity,
-                          repeatType: "reverse",
+                          repeatType: 'reverse',
                         }}
                       />
                       <Lightning />
@@ -218,9 +220,9 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       fontWeight="bold"
                       color={upgradedSocietyOrCircle.textColor}
                       textShadow="2px 2px 4px rgba(0,0,0,0.4)"
-                      paddingLeft={{ base: "5.5%", md: "9.5%", xl: "0.5%" }}
+                      paddingLeft={{ base: '5.5%', md: '9.5%', xl: '0.5%' }}
                     >
-                      {upgradedSocietyOrCircle.society.split(" ")[0]}
+                      {upgradedSocietyOrCircle.society.split(' ')[0]}
                       <p>Society</p>
                     </Text>
                   </Flex>
@@ -245,19 +247,19 @@ const UpgradeModal = ({ isOpen, onClose }) => {
               <Flex align="center" justify="center" mt={4}>
                 <Flex align="center" justify="center" mt={4}>
                   <Flex
-                    flexDirection={"column"}
+                    flexDirection={'column'}
                     align="center"
                     justify="center"
-                    position={"relative"}
+                    position={'relative'}
                     mt={-7}
                   >
                     <motion.img
                       src={Circle}
                       alt="Circle"
                       style={{
-                        width: "150px",
-                        height: "150px",
-                        background: "transparent",
+                        width: '150px',
+                        height: '150px',
+                        background: 'transparent',
                       }}
                     />
                     <CircleLightning />
@@ -281,7 +283,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                         letterSpacing="wide"
                         fontFamily="heading"
                       >
-                        {upgradedSocietyOrCircle?.circle?.split(" ")[0]}
+                        {upgradedSocietyOrCircle?.circle?.split(' ')[0]}
                       </Text>
                       <Text
                         align="center"
@@ -294,7 +296,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                         letterSpacing="wide"
                         fontFamily="heading"
                       >
-                        {upgradedSocietyOrCircle?.circle?.split(" ")[1]}
+                        {upgradedSocietyOrCircle?.circle?.split(' ')[1]}
                       </Text>
                     </Flex>
                   </Flex>
@@ -341,7 +343,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
         </ModalFooter>
       </ModalContent>
     </Modal>
-  );
-};
+  )
+}
 
-export default UpgradeModal;
+export default UpgradeModal

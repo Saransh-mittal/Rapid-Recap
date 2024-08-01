@@ -70,7 +70,7 @@ const Quiz = ({
   const [showQuizSummary, setShowQuizSummary] = useState(false) // New state
   const [result, setResult] = useState({})
   const [isAnswered, setIsAnswered] = useState(false)
-  const { playClick } = useSound()
+  const { playClick } = useContext(AppContext)
 
   useEffect(() => {
     const initialAnswers = Array(totalQuestions).fill('')
@@ -116,6 +116,7 @@ const Quiz = ({
 
   const startQuiz = async () => {
     setLoad(true)
+    playClick()
     try {
       await axios.get(`/api/articles/startQuiz/${articleId}`)
       localStorage.removeItem('isQuizGivenCalled')
@@ -277,7 +278,10 @@ const Quiz = ({
           isOpen={isOpen}
           submitLoad={submitLoad}
           result={result}
-          onViewReport={() => setShowQuizSummary(true)}
+          onViewReport={() => {
+            playClick()
+            setShowQuizSummary(true)
+          }}
         />
       )
     }
@@ -309,14 +313,20 @@ const Quiz = ({
             isOpen={isOpen}
             score={result?.RQM_score}
             submitLoad={submitLoad}
-            onViewReport={() => setShowSubmittedInterface(true)}
+            onViewReport={() => {
+              playClick()
+              setShowSubmittedInterface(true)
+            }}
           />
         ) : (
           <SubmittedQuizInterface
             isOpen={isOpen}
             submitLoad={submitLoad}
             result={result}
-            onViewReport={() => setShowQuizSummary(true)} // New prop
+            onViewReport={() => {
+              playClick()
+              setShowQuizSummary(true)
+            }} // New prop
           />
         )}
       </Flex>

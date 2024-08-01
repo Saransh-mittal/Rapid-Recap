@@ -39,73 +39,78 @@ const InstructionModalBody = ({
   ]
 
   return (
-    <ModalBody>
-      <Box color={textColor} p={6}>
-        <Text
-          fontSize="3xl"
-          fontWeight="bold"
-          color={headingColor}
-          textAlign="center"
-          mb={6}
-        >
-          {language === 'english' ? 'Quiz Instructions' : 'क्विज निर्देश'}
-        </Text>
-        {isQuinBoostAvailable && (
-          <Flex justifyContent="center" mb={4}>
-            <Badge colorScheme="purple" fontSize="md" p={2} borderRadius="md">
-              {language === 'english'
-                ? 'Quin Boost Available!'
-                : 'क्विन बूस्ट उपलब्ध है!'}
-            </Badge>
-          </Flex>
+    <Box
+      color={textColor}
+      p={6}
+      display={'flex'}
+      flexDirection={'column'}
+      justifyContent={'center'}
+      alignItems={'center'}
+    >
+      <Text
+        fontSize="3xl"
+        fontWeight="bold"
+        color={headingColor}
+        textAlign="center"
+        mb={6}
+      >
+        {language === 'english' ? 'Quiz Instructions' : 'क्विज निर्देश'}
+      </Text>
+      {isQuinBoostAvailable && (
+        <Flex justifyContent="center" mb={4}>
+          <Badge colorScheme="purple" fontSize="md" p={2} borderRadius="md">
+            {language === 'english'
+              ? 'Quin Boost Available!'
+              : 'क्विन बूस्ट उपलब्ध है!'}
+          </Badge>
+        </Flex>
+      )}
+      {isBoosted && (
+        <Flex justifyContent="center" alignItems="center" gap={2} mb={4}>
+          <Image src="/GIFs/starBoost.gif" height="60px" width="60px" />
+          <Badge colorScheme="yellow" fontSize="xl" p={2}>
+            1.5x Score Multiplier Active!
+          </Badge>
+        </Flex>
+      )}
+      <Text fontStyle="italic" fontWeight="bold" mb={4}>
+        {language === 'english'
+          ? 'Please read all instructions carefully before starting the quiz:'
+          : 'क्विज का प्रयास करने से पहले सभी निर्देशों को ध्यानपूर्वक पढ़ें'}
+      </Text>
+      <VStack spacing={4} align="stretch">
+        {(language === 'english' ? instructions : hindiInstructions).map(
+          (instruction, index) => (
+            <MotionBox
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <Flex align="center">
+                <Box
+                  as="span"
+                  fontWeight="bold"
+                  fontSize="lg"
+                  color={headingColor}
+                  mr={3}
+                >
+                  {index + 1}.
+                </Box>
+                <Text
+                  fontSize="lg"
+                  fontWeight={'semibold'}
+                  mb={0}
+                  color={textColor}
+                >
+                  {instruction}
+                </Text>
+              </Flex>
+            </MotionBox>
+          ),
         )}
-        {isBoosted && (
-          <Flex justifyContent="center" alignItems="center" gap={2} mb={4}>
-            <Image src="/GIFs/starBoost.gif" height="60px" width="60px" />
-            <Badge colorScheme="yellow" fontSize="xl" p={2}>
-              1.5x Score Multiplier Active!
-            </Badge>
-          </Flex>
-        )}
-        <Text fontStyle="italic" fontWeight="bold" mb={4}>
-          {language === 'english'
-            ? 'Please read all instructions carefully before starting the quiz:'
-            : 'क्विज का प्रयास करने से पहले सभी निर्देशों को ध्यानपूर्वक पढ़ें'}
-        </Text>
-        <VStack spacing={4} align="stretch">
-          {(language === 'english' ? instructions : hindiInstructions).map(
-            (instruction, index) => (
-              <MotionBox
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Flex align="center">
-                  <Box
-                    as="span"
-                    fontWeight="bold"
-                    fontSize="lg"
-                    color={headingColor}
-                    mr={3}
-                  >
-                    {index + 1}.
-                  </Box>
-                  <Text
-                    fontSize="lg"
-                    fontWeight={'semibold'}
-                    mb={0}
-                    color={textColor}
-                  >
-                    {instruction}
-                  </Text>
-                </Flex>
-              </MotionBox>
-            ),
-          )}
-        </VStack>
-      </Box>
-    </ModalBody>
+      </VStack>
+    </Box>
   )
 }
 

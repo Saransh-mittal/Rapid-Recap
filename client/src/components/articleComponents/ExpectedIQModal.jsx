@@ -9,34 +9,37 @@ import {
   ModalOverlay,
   Text,
   useDisclosure,
-} from "@chakra-ui/react";
-import React, { useEffect } from "react";
+} from '@chakra-ui/react'
+import React, { useContext, useEffect } from 'react'
+import useSound from '../../customHooks/useSound'
+import { AppContext } from '../../contextAPI/appContext'
 
 const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure()
   useEffect(() => {
-    onOpen();
-  }, []);
+    onOpen()
+  }, [])
+  const { playClick } = useContext(AppContext)
   return (
     <>
       <Modal
         closeOnOverlayClick={false}
         isOpen={isOpen}
         onClose={() => {
-          onClose();
-          setShowExpectedIQ(false);
+          onClose()
+          setShowExpectedIQ(false)
         }}
-        size={{ base: "full", md: "3xl" }}
+        size={{ base: 'full', md: '3xl' }}
       >
         <ModalOverlay />
         <ModalContent
           // background="linear-gradient(-45deg, #092635, #9EC8B9, #1B4242, #9EC8B9)"
-          backgroundColor={{ base: "#0f0d15", xl: "transparent" }}
+          backgroundColor={{ base: '#0f0d15', xl: 'transparent' }}
           backgroundImage={{
-            base: "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
+            base: 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
           }}
           boxShadow={{
-            base: "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
+            base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
           }}
           backgroundSize="400% 400%"
           borderRadius="10px"
@@ -53,12 +56,12 @@ const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ }) => {
               similar results.
             </Text>
             <Text color="white" fontSize="30px" textAlign="center" mt={4}>
-              Expected Information Quotient (IQ):{" "}
+              Expected Information Quotient (IQ):{' '}
               <span
                 style={{
-                  backgroundColor: "Green",
-                  borderRadius: "15px",
-                  padding: "3px",
+                  backgroundColor: 'Green',
+                  borderRadius: '15px',
+                  padding: '3px',
                 }}
               >
                 {expectedIQ}
@@ -68,8 +71,9 @@ const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ }) => {
           <ModalFooter>
             <Button
               onClick={() => {
-                onClose();
-                setShowExpectedIQ(false);
+                playClick()
+                onClose()
+                setShowExpectedIQ(false)
               }}
             >
               Close
@@ -78,7 +82,7 @@ const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ }) => {
         </ModalContent>
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default ExpectedIQModal;
+export default ExpectedIQModal

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -17,6 +17,8 @@ import {
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { ChatState } from '../../../contextAPI/ChatProvider'
+import useSound from '../../../customHooks/useSound'
+import { AppContext } from '../../../contextAPI/appContext'
 
 const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const [chats, setChats] = useState([])
@@ -24,6 +26,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const [loading, setLoading] = useState(true)
   const { user, socket, socketConnected } = ChatState()
   const toast = useToast()
+  const { playClick } = useContext(AppContext)
 
   useEffect(() => {
     fetchChats()
@@ -137,7 +140,10 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
                   transition="background-color 0.3s ease"
                   _hover={{ bg: '#2a2440' }}
                   cursor="pointer"
-                  onClick={() => handleChatToggle(chat._id)}
+                  onClick={() => {
+                    playClick()
+                    handleChatToggle(chat._id)
+                  }}
                 >
                   <Checkbox
                     isChecked={selectedChats.includes(chat._id)}
@@ -159,12 +165,22 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
           <Button
             colorScheme="green"
             mr={3}
-            onClick={handleShare}
+            onClick={() => {
+              playClick()
+              handleShare()
+            }}
             isDisabled={selectedChats.length === 0}
           >
             Send
           </Button>
-          <Button variant="solid" colorScheme="red" onClick={onClose}>
+          <Button
+            variant="solid"
+            colorScheme="red"
+            onClick={() => {
+              playClick()
+              onClose()
+            }}
+          >
             Cancel
           </Button>
         </ModalFooter>

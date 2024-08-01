@@ -34,11 +34,13 @@ import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import Register from './Register'
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
+import useSound from '../customHooks/useSound'
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   //const isScreenSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
+
   const toast = useToast()
-  const { state, dispatch } = useContext(AppContext)
+  const { state, dispatch, playClick } = useContext(AppContext)
   const [data, setData] = useState({
     emailOrInGameName: '',
     password: '',
@@ -68,6 +70,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   }
 
   const handleInGameNameSubmit = async () => {
+    playClick()
     try {
       setLoad({ submitLoad: true, forgotLoad: false })
       const response = await axios.post('/api/user/handleGoogleLogin', {
@@ -108,12 +111,14 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         isClosable: true,
         position: 'top',
       })
-      location.pathname = '/' && navigate('/home/all')
+
+      location.pathname === '/' && navigate('/home/all')
     }
   }
 
   const handleSubmit = async e => {
     e.preventDefault()
+    playClick()
     try {
       setLoad({ submitLoad: true, forgotLoad: false })
       const response = await axios.post(`/api/user/login`, {
@@ -158,7 +163,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           isClosable: true,
           position: 'top',
         })
-        location.pathname = '/' && navigate('/home/all')
+        location.pathname === '/' && navigate('/home/all')
       } else {
         throw new Error('Login Failed')
       }
@@ -178,6 +183,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   }
 
   const forgotPassword = async () => {
+    playClick()
     try {
       setLoad({ submitLoad: false, forgotLoad: true })
       const response = await axios.post(`/api/user/resendOTP`, {

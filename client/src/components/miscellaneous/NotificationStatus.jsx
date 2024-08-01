@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useContext } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -24,24 +24,27 @@ import {
   useMediaQuery,
   Spinner,
   Center,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react'
+import useSound from '../../customHooks/useSound'
+import { AppContext } from '../../contextAPI/appContext'
 
 const NotificationStatus = ({ isOpen, onClose, data, isLoading }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isMobile] = useMediaQuery("(max-width: 48em)");
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isMobile] = useMediaQuery('(max-width: 48em)')
+  const { playClick } = useContext(AppContext)
 
   const filteredUsers = useMemo(() => {
-    if (!data) return [];
-    const allUsers = [...data.usersEnabled, ...data.usersDisabled];
-    return allUsers.filter((user) =>
-      [user.name, user.inGameName, user.email].some((field) =>
-        field.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  }, [data, searchTerm]);
+    if (!data) return []
+    const allUsers = [...data.usersEnabled, ...data.usersDisabled]
+    return allUsers.filter(user =>
+      [user.name, user.inGameName, user.email].some(field =>
+        field.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    )
+  }, [data, searchTerm])
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", lg: "5xl" }}>
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', lg: '5xl' }}>
       <ModalOverlay />
       <ModalContent bg="#1a1527" color="#ffffff">
         <ModalHeader>Notification Status</ModalHeader>
@@ -72,10 +75,10 @@ const NotificationStatus = ({ isOpen, onClose, data, isLoading }) => {
                 <Input
                   placeholder="Search by name, in-game name, or email"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   bg="#2a2337"
                   border="none"
-                  _focus={{ boxShadow: "0 0 0 1px #66d9ef" }}
+                  _focus={{ boxShadow: '0 0 0 1px #66d9ef' }}
                 />
               </Box>
 
@@ -95,7 +98,7 @@ const NotificationStatus = ({ isOpen, onClose, data, isLoading }) => {
                   </Thead>
                   <Tbody>
                     {filteredUsers.map((user, index) => (
-                      <Tr key={index} _hover={{ bg: "#2a2337" }}>
+                      <Tr key={index} _hover={{ bg: '#2a2337' }}>
                         <Td>{user.name}</Td>
                         {!isMobile && (
                           <>
@@ -106,13 +109,13 @@ const NotificationStatus = ({ isOpen, onClose, data, isLoading }) => {
                         <Td
                           color={
                             data.usersEnabled.includes(user)
-                              ? "#66d9ef"
-                              : "#f92672"
+                              ? '#66d9ef'
+                              : '#f92672'
                           }
                         >
                           {data.usersEnabled.includes(user)
-                            ? "Enabled"
-                            : "Disabled"}
+                            ? 'Enabled'
+                            : 'Disabled'}
                         </Td>
                       </Tr>
                     ))}
@@ -124,13 +127,20 @@ const NotificationStatus = ({ isOpen, onClose, data, isLoading }) => {
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={onClose}>
+          <Button
+            colorScheme="blue"
+            mr={3}
+            onClick={() => {
+              playClick()
+              onClose()
+            }}
+          >
             Close
           </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
-  );
-};
+  )
+}
 
-export default NotificationStatus;
+export default NotificationStatus

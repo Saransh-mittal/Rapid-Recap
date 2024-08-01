@@ -1,76 +1,77 @@
-import React, { useState, useContext, useEffect, useCallback } from "react";
-import { AppContext } from "../../contextAPI/appContext";
-import axios from "axios";
-import { throttle } from "lodash";
+import React, { useState, useContext, useEffect, useCallback } from 'react'
+import { AppContext } from '../../contextAPI/appContext'
+import axios from 'axios'
+import { throttle } from 'lodash'
 import {
   useToast,
   Button,
   Input,
   InputGroup,
   InputRightElement,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react'
+import useSound from '../../customHooks/useSound'
 
 const ResetPassword = ({ email }) => {
-  const toast = useToast();
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const { state, dispatch } = useContext(AppContext);
-  const [load, setLoad] = useState(false); //for loading spinner
+  const toast = useToast()
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const { state, dispatch, playClick } = useContext(AppContext)
+  const [load, setLoad] = useState(false) //for loading spinner
   const [show, setShow] = useState({
     new_p: false,
     confirm_p: false,
-  });
+  })
 
   const handleResetPassword = async () => {
-    setLoad(true);
+    setLoad(true)
     if (newPassword !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
+      alert('Passwords do not match')
+      return
     }
 
     try {
       const response = await axios.post(`/api/user/forgotPassword`, {
         email,
         newPassword,
-      });
+      })
 
       if (response.status === 201) {
         toast({
-          title: "Password Reset Successfully",
-          status: "success",
+          title: 'Password Reset Successfully',
+          status: 'success',
           duration: 5000,
           isClosable: true,
-          position: "top",
-        });
+          position: 'top',
+        })
 
-        dispatch({ type: "forgotPassword", payloadForgotPassword: false });
-        dispatch({ type: "showModal", payloadModal: false });
+        dispatch({ type: 'forgotPassword', payloadForgotPassword: false })
+        dispatch({ type: 'showModal', payloadModal: false })
       }
     } catch (error) {
-      console.log(error);
+      console.log(error)
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.response.data.error,
-        status: "error",
+        status: 'error',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
+        position: 'top',
+      })
       //alert(error.response.data.error);
-      console.log(error.response.data.error);
+      console.log(error.response.data.error)
     } finally {
-      setLoad(false);
+      setLoad(false)
     }
-  };
+  }
 
   const handleResetPasswordThrottled = useCallback(
     throttle(handleResetPassword, 1000),
-    [newPassword, confirmPassword]
-  );
+    [newPassword, confirmPassword],
+  )
 
   useEffect(() => {
-    return () => handleResetPasswordThrottled.cancel();
-  }, [handleResetPasswordThrottled]);
+    return () => handleResetPasswordThrottled.cancel()
+  }, [handleResetPasswordThrottled])
 
   return (
     <>
@@ -86,25 +87,26 @@ const ResetPassword = ({ email }) => {
                 <InputGroup size="md">
                   <Input
                     pr="4.5rem"
-                    type={show.new_p ? "text" : "password"}
+                    type={show.new_p ? 'text' : 'password'}
                     placeholder="Enter password"
                     minLength={8}
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    onChange={e => setNewPassword(e.target.value)}
                   />
                   <InputRightElement width="4.5rem">
                     <Button
                       h="1.75rem"
                       size="sm"
                       name="new_p"
-                      onClick={(e) =>
+                      onClick={e => {
+                        playClick()
                         setShow({
                           ...show,
                           [e.target.name]: !show[e.target.name],
                         })
-                      }
+                      }}
                     >
-                      {show.new_p ? "Hide" : "Show"}
+                      {show.new_p ? 'Hide' : 'Show'}
                     </Button>
                   </InputRightElement>
                 </InputGroup>
@@ -122,25 +124,26 @@ const ResetPassword = ({ email }) => {
                 <InputGroup size="md">
                   <Input
                     pr="4.5rem"
-                    type={show.confirm_p ? "text" : "password"}
+                    type={show.confirm_p ? 'text' : 'password'}
                     placeholder="Enter password"
                     minLength={8}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={e => setConfirmPassword(e.target.value)}
                   />
                   <InputRightElement width="4.5rem">
                     <Button
                       h="1.75rem"
                       size="sm"
                       name="confirm_p"
-                      onClick={(e) =>
+                      onClick={e => {
+                        playClick()
                         setShow({
                           ...show,
                           [e.target.name]: !show[e.target.name],
                         })
-                      }
+                      }}
                     >
-                      {show.confirm_p ? "Hide" : "Show"}
+                      {show.confirm_p ? 'Hide' : 'Show'}
                     </Button>
                   </InputRightElement>
                 </InputGroup>
@@ -151,14 +154,17 @@ const ResetPassword = ({ email }) => {
         <Button
           colorScheme="messenger"
           className="mt-5 rounded-2"
-          onClick={handleResetPasswordThrottled}
+          onClick={() => {
+            playClick()
+            handleResetPasswordThrottled()
+          }}
           isLoading={load}
         >
           Reset Password
         </Button>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default ResetPassword;
+export default ResetPassword

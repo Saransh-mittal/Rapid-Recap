@@ -404,7 +404,9 @@ const SubmittedQuizInterface = ({
                 >
                   <Button
                     rightIcon={<ArrowRight />}
-                    onClick={onViewReport}
+                    onClick={() => {
+                      onViewReport()
+                    }}
                     size="lg"
                     width="100%"
                     bg="purple.500"

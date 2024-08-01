@@ -4,12 +4,18 @@ import { NavLink } from 'react-router-dom'
 import RR from '/images/rrlogo.webp'
 import Heading from '../../miscellaneous/HeadingComponent'
 import { AppContext } from '../../../contextAPI/appContext'
+import useSound from '../../../customHooks/useSound'
 
 const NavBrand = ({ isHamburgerOpen }) => {
-  const { state } = useContext(AppContext)
+  const { state, playClick } = useContext(AppContext)
   const notLoggedIn = state.show
+
   return (
-    <NavLink to={notLoggedIn ? '/' : '/get-started'} className={`navbar-brand`}>
+    <NavLink
+      to={notLoggedIn ? '/' : '/get-started'}
+      className={`navbar-brand`}
+      onClick={playClick}
+    >
       <Flex position={!isHamburgerOpen ? 'absolute' : 'relative'}>
         <Image
           src={RR}

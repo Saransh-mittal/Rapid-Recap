@@ -1,14 +1,24 @@
-import React from "react";
-import { Button, useDisclosure } from "@chakra-ui/react";
-import "./GetStarted.css";
-import Signin from "../../../screens/Signin";
+import React, { useContext } from 'react'
+import { Button, useDisclosure } from '@chakra-ui/react'
+import './GetStarted.css'
+import Signin from '../../../screens/Signin'
+import useSound from '../../../customHooks/useSound'
+import { AppContext } from '../../../contextAPI/appContext'
 
-const GetStarted = ({ display = "flex", innerText, hamburgerOnClose }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+const GetStarted = ({ display = 'flex', innerText, hamburgerOnClose }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { playClick } = useContext(AppContext)
 
   return (
     <>
-      <Button display={display} className="get-started-button" onClick={onOpen}>
+      <Button
+        display={display}
+        className="get-started-button"
+        onClick={() => {
+          playClick()
+          onOpen()
+        }}
+      >
         {innerText}
       </Button>
       <Signin
@@ -18,7 +28,7 @@ const GetStarted = ({ display = "flex", innerText, hamburgerOnClose }) => {
         hamburgerOnClose={hamburgerOnClose}
       />
     </>
-  );
-};
+  )
+}
 
-export default GetStarted;
+export default GetStarted

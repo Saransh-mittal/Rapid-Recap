@@ -6,6 +6,7 @@ import Bubbles from '../miscellaneous/bubbles'
 const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
   const { state } = useContext(AppContext)
   const isBoosted = state.isBoosted
+
   const buttonStyle = {
     height: '35px',
     width: '110px',
@@ -55,9 +56,15 @@ const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
       >
         !!! Compete in the quiz for a chance at the LeaderBoard !!!
       </Text>
-      <Button onClick={onClick} style={buttonStyle} position={'relative'}>
+      <Button
+        onClick={() => {
+          onClick()
+        }}
+        style={buttonStyle}
+        position={'relative'}
+      >
         {/* Generate bubbles */}
-        {isBoosted || (isQuinBoostAvailable && <Bubbles />)}
+        {(isBoosted || isQuinBoostAvailable) && <Bubbles />}
         Take Quiz
       </Button>
     </Flex>

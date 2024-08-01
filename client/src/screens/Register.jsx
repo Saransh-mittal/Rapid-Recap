@@ -26,13 +26,13 @@ import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
 import _ from 'lodash'
 
 import { Helmet } from 'react-helmet-async'
-import { useNavigate } from 'react-router-dom'
+import useSound from '../customHooks/useSound'
 
 export default function Register({ isOpen, onClose, signinOnOpen }) {
   const [emailVerified, setEmailVerified] = useState(false)
   const toast = useToast()
-  const { state, dispatch } = useContext(AppContext)
-  const navigate = useNavigate()
+  const { state, dispatch, playClick } = useContext(AppContext)
+
   const [data, setData] = useState({
     name: '',
     inGameName: '',
@@ -55,6 +55,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
   }
 
   const togglePasswordVisibility = field => {
+    playClick()
     setData({
       ...data,
       [field]: !data[field],
@@ -62,6 +63,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
   }
 
   const handleSubmit = async e => {
+    playClick()
     setLoad(true)
     e.preventDefault()
     try {
@@ -121,6 +123,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
   }
 
   const submitImage = async dataForPic => {
+    playClick()
     try {
       const img = dataForPic.pic
       const data = new FormData()
@@ -139,6 +142,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
   }
 
   const handleImageChange = async e => {
+    playClick()
     setImageLoading(true)
     try {
       const img = e.target.files[0]

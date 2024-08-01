@@ -34,7 +34,13 @@ const OptionButton = React.memo(
           <Text fontSize="xl" fontWeight="bold" mr={2} mb={0} flexShrink={0}>
             {optionKey.toUpperCase()}.
           </Text>
-          <Text fontSize="md" mb={0} textAlign="left" wordBreak="break-word">
+          <Text
+            fontSize="md"
+            mb={0}
+            textAlign="left"
+            wordBreak="break-word"
+            mt={'4px'}
+          >
             {optionText}
           </Text>
         </Flex>
