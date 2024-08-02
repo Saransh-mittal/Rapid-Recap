@@ -73,7 +73,6 @@ const ScrollableChat = ({
   }
 
   const handleTouchStart = (event, messageId) => {
-    playClick()
     event.preventDefault()
     longPressTimer.current = setTimeout(() => {
       const touch = event.touches[0]
