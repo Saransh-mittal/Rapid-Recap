@@ -1,4 +1,11 @@
-import { Badge, Box, Button, Flex, useDisclosure } from '@chakra-ui/react'
+import {
+  Badge,
+  Box,
+  Button,
+  Flex,
+  Spinner,
+  useDisclosure,
+} from '@chakra-ui/react'
 import React, { useContext } from 'react'
 import Inbox from './Inbox'
 import StreakFire from './StreakFire'
@@ -64,7 +71,7 @@ const OutsideNavbarContent = ({
         )}
         {!notLogined && (
           <>
-            {state.user && !isEmptyObject(state.user) && (
+            {state.user && !isEmptyObject(state.user) ? (
               <Box>
                 {' '}
                 <IQScore
@@ -79,6 +86,8 @@ const OutsideNavbarContent = ({
                   }}
                 />
               </Box>
+            ) : (
+              <Spinner />
             )}
             {state.user && !isEmptyObject(state.user) && (
               <Box>
@@ -95,26 +104,30 @@ const OutsideNavbarContent = ({
                 />
               </Box>
             )}
-            <StreakFire
-              marginAroundBox={'auto'}
-              widthOfBox={'1.6em'}
-              heightOfBox={'1.6em'}
-              _hover={{
-                cursor: 'pointer',
-                backgroundColor: '#0f0d15',
-                backgroundImage:
-                  'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-              }}
-              className={'streak-tracker-lg'}
-              onClick={() => {
-                playClick()
-                setShowDailyStreakModal(true)
-                tourComplete()
-              }}
-              streak={streak}
-              isBoosted={isBoosted}
-              getBackgroundColor={getBackgroundColor}
-            />
+            {streak === undefined ? (
+              <Spinner />
+            ) : (
+              <StreakFire
+                marginAroundBox={'auto'}
+                widthOfBox={'1.6em'}
+                heightOfBox={'1.6em'}
+                _hover={{
+                  cursor: 'pointer',
+                  backgroundColor: '#0f0d15',
+                  backgroundImage:
+                    'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+                }}
+                className={'streak-tracker-lg'}
+                onClick={() => {
+                  playClick()
+                  setShowDailyStreakModal(true)
+                  tourComplete()
+                }}
+                streak={streak}
+                isBoosted={isBoosted}
+                getBackgroundColor={getBackgroundColor}
+              />
+            )}
             {!isEmptyObject(state.user) && (
               <Box
                 _hover={{
