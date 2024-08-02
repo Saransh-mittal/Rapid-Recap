@@ -94,23 +94,23 @@ const Article = () => {
     }
   }
 
-  const fetchQuizTitans = async () => {
-    try {
-      const response = await axios.get(`/api/articles/quizTitan/${id}`)
-      setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz)
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error.response.data.error || 'Error Quiz Titans',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
-    } finally {
-      setLoad(false)
-    }
-  }
+  // const fetchQuizTitans = async () => {
+  //   try {
+  //     const response = await axios.get(`/api/articles/quizTitan/${id}`)
+  //     setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz)
+  //   } catch (error) {
+  //     toast({
+  //       title: 'Error',
+  //       description: error.response.data.error || 'Error Quiz Titans',
+  //       status: 'error',
+  //       duration: 3000,
+  //       isClosable: true,
+  //       position: 'top',
+  //     })
+  //   } finally {
+  //     setLoad(false)
+  //   }
+  // }
 
   const bookmarkStatus = async ({ view, update }) => {
     if (notLoggedIn || notLoggedIn === undefined) return
@@ -140,6 +140,8 @@ const Article = () => {
       // setTotalUsersGivenQuiz(response.data.totalUsersGivenQuiz);
       setLatestNews(response.data.newArticle.relatedArticles)
       setArticle(response.data.newArticle)
+      setTotalUsersGivenQuiz(response.data.newArticle.quizAttemptCnt)
+
       const image = Array.isArray(response.data.newArticle.imgURL)
         ? response.data.newArticle.imgURL[0]
         : response.data.newArticle.imgURL
@@ -205,6 +207,7 @@ const Article = () => {
       console.log(error.message)
     } finally {
       localStorage.setItem('isQuizGivenCalled', true)
+      setLoad(false)
     }
   }
 
@@ -258,7 +261,7 @@ const Article = () => {
     document.title = 'Article page'
     quinBoostChecker({ setIsQuinBoostAvailable, setQuizLeftToGetQuizBoost })
     fetchArticle()
-    fetchQuizTitans()
+    // fetchQuizTitans()
     checkOnGoingQuiz()
     bookmarkStatus({ view: true, update: false })
 
@@ -388,7 +391,8 @@ const Article = () => {
       {/* {((showQuiz && !givenQuiz && !showQuizLangModal) || true) && !load ? ( */}
       {showQuiz && !givenQuiz && !showQuizLangModal ? (
         <Quiz
-          fetchQuizTitans={fetchQuizTitans}
+          // fetchQuizTitans={fetchQuizTitans}
+          setTotalUsersGivenQuiz={setTotalUsersGivenQuiz}
           setIsQuinBoostAvailable={setIsQuinBoostAvailable}
           setQuizLeftToGetQuizBoost={setQuizLeftToGetQuizBoost}
           isQuinBoostAvailable={isQuinBoostAvailable}

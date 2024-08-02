@@ -148,6 +148,9 @@ const saveAttempt = async (req, res) => {
     })
     await newQuizAttempt.save({ session })
 
+    article.quizAttemptCnt++
+    await article.save({ session })
+
     let sumOfRQM = user.avgRQM * user.quizAttempts.length
     sumOfRQM += RQM_score
     user.avgRQM = sumOfRQM / (user.quizAttempts.length + 1)

@@ -52,7 +52,7 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
           {updatedTotalUsersGivenQuiz}
         </span>
       </Text>
-      {showQuizTitans && (
+      {/* {showQuizTitans && (
         <QuizTitansModal setShowQuizTitans={setShowQuizTitans} />
       )}
       <Button
@@ -68,7 +68,7 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
         }}
       >
         Quiz Titans
-      </Button>
+      </Button> */}
     </Flex>
   )
 }

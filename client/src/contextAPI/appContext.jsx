@@ -145,6 +145,7 @@ export const AppProvider = ({ children }) => {
     play20SecSound,
     play10SecSound,
     playEndChime,
+    playGetSetGoSound,
   } = useSound()
 
   useEffect(() => {
@@ -208,6 +209,7 @@ export const AppProvider = ({ children }) => {
       play20SecSound,
       play10SecSound,
       playEndChime,
+      playGetSetGoSound,
     }),
     [state],
   )

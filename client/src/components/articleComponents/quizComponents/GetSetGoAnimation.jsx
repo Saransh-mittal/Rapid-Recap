@@ -1,19 +1,32 @@
 // src/components/quizComponents/GetSetGoAnimation.js
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { Box, Text } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AppContext } from '../../../contextAPI/appContext'
 
 const MotionBox = motion(Box)
 
 const GetSetGoAnimation = ({ onComplete }) => {
   const [step, setStep] = useState(0)
   const steps = ['Get', 'Set', 'Go!']
+  const { playGetSetGoSound } = useContext(AppContext)
+
+  useEffect(() => {
+    playGetSetGoSound(1000, 0.2)
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (step < steps.length - 1) {
         setStep(step + 1)
+        setTimeout(
+          () =>
+            step === 0
+              ? playGetSetGoSound(1200, 0.4)
+              : playGetSetGoSound(1400, 0.8),
+          400,
+        )
       } else {
         onComplete()
       }
