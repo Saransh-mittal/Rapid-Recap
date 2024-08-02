@@ -92,7 +92,7 @@ app.use(express.json())
 // Error Handling middlewares
 // app.use(notFound);
 app.use(errorHandler)
-// require("./scheduler/setupCronJobs");
+// require('./scheduler/setupCronJobs')
 const PORT = process.env.PORT
 authRouter.use(cookieParser())
 authRouter.use('/user', userRoutes)
