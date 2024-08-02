@@ -119,7 +119,6 @@ const Quiz = ({
 
   const startQuiz = async () => {
     setLoad(true)
-    playClick()
     try {
       await axios.get(`/api/articles/startQuiz/${articleId}`)
       localStorage.removeItem('isQuizGivenCalled')

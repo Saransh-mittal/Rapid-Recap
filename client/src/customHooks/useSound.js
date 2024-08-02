@@ -72,6 +72,28 @@ const useSound = () => {
     })
   }, [audio])
 
+  const playGetSetGoSound = useCallback(
+    (frequency, duration) => {
+      const oscillator = audio.createOscillator()
+      const gainNode = audio.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audio.destination)
+
+      oscillator.type = 'sine'
+      oscillator.frequency.setValueAtTime(frequency, audio.currentTime)
+      gainNode.gain.setValueAtTime(0.5, audio.currentTime)
+
+      oscillator.start()
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.00001,
+        audio.currentTime + duration,
+      )
+      oscillator.stop(audio.currentTime + duration)
+    },
+    [audio],
+  )
+
   const play30SecSound = useCallback(() => playSound(330, 0.3), [playSound])
   const play20SecSound = useCallback(() => playSound(440, 0.3), [playSound])
   const play10SecSound = useCallback(() => playSound(880, 0.2), [playSound])
@@ -82,6 +104,7 @@ const useSound = () => {
     play20SecSound,
     play10SecSound,
     playEndChime,
+    playGetSetGoSound,
   }
 }
 
