@@ -115,6 +115,7 @@ const Article = () => {
   const bookmarkStatus = async ({ view, update }) => {
     if (notLoggedIn) return
     try {
+      setBookmark(true)
       const response = await axios.get(
         `/api/user/bookmark?articleId=${id}&view=${view}&update=${update}`,
       )
@@ -128,6 +129,7 @@ const Article = () => {
         isClosable: true,
         position: 'top',
       })
+      setBookmark(false)
     }
   }
 

@@ -17,13 +17,16 @@ import {
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import ArticleCard from '../miscellaneous/ArticleCard'
-import useSound from '../../customHooks/useSound'
+// import useSound from '../../customHooks/useSound'
 import { AppContext } from '../../contextAPI/appContext'
 
 const Bookmarks = ({ isOpen, onClose }) => {
   const [viewMode, setViewMode] = useState('grid')
   const [isLoading, setIsLoading] = useState(true)
   const [bookmarks, setBookmarks] = useState([])
+  const [isMobileListView, setIsMobileListView] = useState(
+    window.innerWidth <= 768,
+  )
   const navigate = useNavigate()
   const toast = useToast()
   const { playClick } = useContext(AppContext)
@@ -70,6 +73,17 @@ const Bookmarks = ({ isOpen, onClose }) => {
     }
   }
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileListView(window.innerWidth <= 768)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
   return (
     <Modal
       isOpen={isOpen}
@@ -91,6 +105,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
               display: 'none',
             },
           }}
+          px={4}
         >
           <Flex align="center" mb="20px">
             <Button
@@ -139,6 +154,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
                       onClick={() => handleBookmarkClick(bookmark._id)}
                       onRemove={handleRemoveBookmark}
                       viewMode="list"
+                      isMobileListView={isMobileListView}
                     />
                   ))}
             </VStack>

@@ -42,8 +42,8 @@ const OutsideNavbarContent = ({
   const { state, playClick } = useContext(AppContext)
   const { notification } = ChatState()
   const navigate = useNavigate()
-  console.log('unread freined', state.unreadFriendRequests)
-  console.log('notify ciunt', notifyCont)
+  // console.log('unread freined', state.unreadFriendRequests)
+  // console.log('notify ciunt', notifyCont)
   const {
     isOpen: isOpenUserSearch,
     onOpen: onOpenUserSearch,

@@ -334,7 +334,6 @@ const RankAndSociety = ({
         <BrainModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
-          // currentUserSociety={"Mavericks"}
           currentUserSociety={circleAndSociety.society.split(' ')[0]}
           setShowBrainModal={setShowBrainModal}
         />
@@ -343,18 +342,12 @@ const RankAndSociety = ({
         <CircleModal
           isOpen={isCircleModalOpen}
           onClose={handleCloseCircleModal}
-          // currentUserCircle={"Masters"}
           currentUserCircle={
             circleAndSociety.circle ? circleAndSociety.circle.split(' ')[0] : ''
           }
           setShowCircleModal={setShowCircleModal}
         />
       )}
-      {/* <CircleModal
-        isOpen={isCircleModalOpen}
-        onClose={handleCloseCircleModal}
-      />{" "} */}
-      {/* Pass the state and handler */}
     </Flex>
   )
 }
