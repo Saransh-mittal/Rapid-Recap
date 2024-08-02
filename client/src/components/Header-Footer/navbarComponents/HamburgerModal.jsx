@@ -109,20 +109,7 @@ const HamburgerModal = ({
                 }}
                 cursor={'pointer'}
               >
-                <Flex w={'100%'} h={'100%'} position={'relative'}>
-                  {state.unreadFriendRequests > 0 && (
-                    <Box
-                      h="14px"
-                      w="14px"
-                      bg={'red'}
-                      borderRadius={'50%'}
-                      position={'absolute'}
-                      right={'30%'}
-                      top={'1rem'}
-                      zIndex={2}
-                    />
-                  )}
-                </Flex>
+                <Flex w={'100%'} h={'100%'} position={'relative'}></Flex>
                 <Avatar
                   src={state.user?.pic}
                   h={'6rem'}
@@ -232,21 +219,23 @@ const HamburgerModal = ({
                     display={notLogined ? 'none' : 'flex'}
                   /> */}
                   <Flex
-                    onClick={onOpenWiseWeb}
+                    onClick={() => {
+                      onClose(), onOpenWiseWeb()
+                    }}
                     width={'100%'}
                     justifyContent={'center'}
                     display={notLogined ? 'none' : 'block'}
                   >
                     <FaUserFriends size={22} color="white" />
-                    {state.unreadFriendRequests > 0 && (
+                    {state.unreadFriendRequests !== 0 && (
                       <Box
                         h="8px"
                         w="8px"
                         bg={'red'}
                         borderRadius={'50%'}
                         position={'absolute'}
-                        right={'22%'}
-                        top={'40%'}
+                        right={'39%'}
+                        top={'0'}
                         zIndex={2}
                       />
                     )}

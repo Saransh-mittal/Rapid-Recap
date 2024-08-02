@@ -100,12 +100,12 @@ const getUnreadFriendRequestCnt = async () => {
   try {
     const response = await axios.get(`/api/friends/unread-requests-count`)
     if (response.status === 200) {
-      return { unreadFriendRequests: response.data.unreadCount }
+      return response.data.unreadCount
     }
-    return { unreadFriendRequests: 0 }
+    return 0
   } catch (error) {
     console.log(error.message)
-    return { unreadFriendRequests: 0 }
+    return 0
   }
 }
 
@@ -129,6 +129,8 @@ export const initialState = {
   category: getCategory() ? getCategory() : 'all',
   userProfile: null,
   otherUserProfiles: [],
+  unreadFriendRequests: 0,
+  notifyCnt: 0,
 }
 
 // Create context

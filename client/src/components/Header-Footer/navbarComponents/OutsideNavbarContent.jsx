@@ -1,6 +1,6 @@
 import { Badge, Box, Button, Flex, useDisclosure } from '@chakra-ui/react'
 import React, { useContext } from 'react'
-import Inbox from './Inbox'
+// import Inbox from './Inbox'
 import StreakFire from './StreakFire'
 import ProfileDropDownMenu from '../../profileComponents/ProfileDropDownMenu'
 import { HamburgerIcon } from '@chakra-ui/icons'
@@ -42,6 +42,8 @@ const OutsideNavbarContent = ({
   const { state, playClick } = useContext(AppContext)
   const { notification } = ChatState()
   const navigate = useNavigate()
+  console.log('unread freined', state.unreadFriendRequests)
+  console.log('notify ciunt', notifyCont)
   const {
     isOpen: isOpenUserSearch,
     onOpen: onOpenUserSearch,
@@ -177,6 +179,18 @@ const OutsideNavbarContent = ({
               notifyCont={notifyCont}
               onOpenWiseWeb={onOpenWiseWeb}
             />
+            {(state.unreadFriendRequests !== 0 || notifyCont !== 0) && (
+              <Box
+                h="14px"
+                w="14px"
+                bg={'red'}
+                borderRadius={'50%'}
+                position={'absolute'}
+                right={'2.3%'}
+                top={'10%'}
+                zIndex={2}
+              />
+            )}
           </Flex>
         ) : null}
         {!isHamburgerOpen ? (
@@ -212,6 +226,18 @@ const OutsideNavbarContent = ({
                   />
                 )}
                 <HamburgerIcon height={'35px'} width={'20px'} />
+                {(state.unreadFriendRequests !== 0 || notifyCont !== 0) && (
+                  <Box
+                    h="15px"
+                    w="15px"
+                    bg={'red'}
+                    borderRadius={'50%'}
+                    position={'absolute'}
+                    right={'-18%'}
+                    top={'-18%'}
+                    zIndex={2}
+                  />
+                )}
               </Button>
             </Flex>
           </>

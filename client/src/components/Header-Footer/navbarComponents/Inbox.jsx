@@ -34,18 +34,20 @@ const Inbox = ({
           {notifyCont > 0 && (
             <Badge
               borderRadius="50%"
-              h={'20px'}
-              w={'20px'}
+              h={'15px'}
+              w={'15px'}
               display={'flex'}
               justifyContent={'center'}
               alignItems={'center'}
               backgroundColor="red"
               color="white"
-              fontSize="md"
+              fontSize="sm"
               position="absolute"
-              top="-1px"
-              right="-1px"
-              padding="2px"
+              top="-5px"
+              right="0"
+              // padding="2px"
+              pb={'2px'}
+              pr={'5px'}
             >
               {notifyCont}
             </Badge>

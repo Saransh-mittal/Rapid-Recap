@@ -48,6 +48,7 @@ const ProfileDropDownMenu = ({
 
   const { state, playClick } = useContext(AppContext)
   const [isOpen, setIsOpen] = useState(false)
+  // console.log(state.unreadFriendRequests)
   return (
     <Flex className={className} position={'relative'}>
       <motion.nav
@@ -170,7 +171,7 @@ const ProfileDropDownMenu = ({
               justifyContent={'center'}
             >
               <FaUserFriends size={22} />
-              {state.unreadFriendRequests > 0 && (
+              {state.unreadFriendRequests !== 0 && (
                 <Box
                   h="8px"
                   w="8px"
@@ -197,7 +198,7 @@ const ProfileDropDownMenu = ({
               style={listStyle}
               variants={itemVariants}
             >
-              {profileNotif && (
+              {/* {profileNotif && (
                 <Box
                   h="8px"
                   w="8px"
@@ -208,7 +209,7 @@ const ProfileDropDownMenu = ({
                   top={'0.5rem'}
                   zIndex={2}
                 />
-              )}
+              )} */}
               View Profile
             </motion.li>
           </NavLink>
