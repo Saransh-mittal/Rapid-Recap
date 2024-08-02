@@ -1,102 +1,112 @@
-const moment = require("moment-timezone");
-const extractNews = require("./tasks/extractNews");
-const sendRecommendedNewsNotification = require("./tasks/notifForRecommendedNews");
-const updateDailyRecommendations = require("./tasks/updateRecommendations");
-const resetNewSeasonModal = require("./tasks/newSeasonSevenDays");
-const sendStreakBrokenMails = require("./tasks/mailsForStreakBroken");
-const sendStreakReminder = require("./tasks/mailsForStreakReminder");
-const calculateUserIQScores = require("./tasks/userIQScoreScheduler");
+const moment = require('moment-timezone')
+const extractNews = require('./tasks/extractNews')
+const sendRecommendedNewsNotification = require('./tasks/notifForRecommendedNews')
+const updateDailyRecommendations = require('./tasks/updateRecommendations')
+const resetNewSeasonModal = require('./tasks/newSeasonSevenDays')
+const sendStreakBrokenMails = require('./tasks/mailsForStreakBroken')
+const sendStreakReminder = require('./tasks/mailsForStreakReminder')
+const calculateUserIQScores = require('./tasks/userIQScoreScheduler')
+const incFakeQuizAttempts = require('./tasks/incFakeQuizAttempts')
 
-const currentDate = moment().format("YYYY-MM-DD");
+const currentDate = moment().format('YYYY-MM-DD')
 
 const createSchedule = (name, time, task) => ({
   name,
-  time: moment.tz(`${currentDate} ${time}`, "Asia/Kolkata"),
+  time: moment.tz(`${currentDate} ${time}`, 'Asia/Kolkata'),
   task,
-});
+})
 
 let schedules = [
-  createSchedule("newSeasonReset", "00:00", resetNewSeasonModal),
-  createSchedule("userIQScore", "00:01", calculateUserIQScores),
+  createSchedule('newSeasonReset', '00:00', resetNewSeasonModal),
+  createSchedule('userIQScore', '00:01', calculateUserIQScores),
+  createSchedule('incFakeQuizAttempts', '20:00', incFakeQuizAttempts),
   createSchedule(
-    "recommendedNewsNotification11",
-    "20:25",
-    sendRecommendedNewsNotification
+    'recommendedNewsNotification11',
+    '20:25',
+    sendRecommendedNewsNotification,
+  ),
+  createSchedule('incFakeQuizAttempts', '21:00', incFakeQuizAttempts),
+  createSchedule(
+    'recommendedNewsNotification12',
+    '22:25',
+    sendRecommendedNewsNotification,
   ),
   createSchedule(
-    "recommendedNewsNotification12",
-    "22:25",
-    sendRecommendedNewsNotification
+    'recommendedNewsNotification1',
+    '00:25',
+    sendRecommendedNewsNotification,
   ),
   createSchedule(
-    "recommendedNewsNotification1",
-    "00:25",
-    sendRecommendedNewsNotification
+    'recommendedNewsNotification2',
+    '02:00',
+    sendRecommendedNewsNotification,
+  ),
+  createSchedule('incFakeQuizAttempts', '03:00', incFakeQuizAttempts),
+  createSchedule('extractNews1', '02:25', () => extractNews(null)),
+  createSchedule('extractNews2', '09:00', () => extractNews('in')),
+  createSchedule('extractNews3', '15:00', () => extractNews('in')),
+  createSchedule('extractNews4', '23:00', () => extractNews('in')),
+  createSchedule('updateRecommendations', '01:00', updateDailyRecommendations),
+  createSchedule('streakBrokenMails', '03:30', sendStreakBrokenMails),
+  createSchedule(
+    'recommendedNewsNotification3',
+    '04:25',
+    sendRecommendedNewsNotification,
+  ),
+  createSchedule('incFakeQuizAttempts', '05:00', incFakeQuizAttempts),
+  createSchedule(
+    'recommendedNewsNotification4',
+    '06:25',
+    sendRecommendedNewsNotification,
+  ),
+  createSchedule('incFakeQuizAttempts', '07:00', incFakeQuizAttempts),
+  createSchedule(
+    'recommendedNewsNotification5',
+    '08:25',
+    sendRecommendedNewsNotification,
+  ),
+  createSchedule('incFakeQuizAttempts', '08:45', incFakeQuizAttempts),
+  createSchedule(
+    'recommendedNewsNotification6',
+    '10:00',
+    sendRecommendedNewsNotification,
+  ),
+  createSchedule('incFakeQuizAttempts', '10:40', incFakeQuizAttempts),
+  createSchedule('streakReminder1', '12:30', () => sendStreakReminder(0)),
+  createSchedule(
+    'recommendedNewsNotification7',
+    '12:25',
+    sendRecommendedNewsNotification,
+  ),
+  createSchedule('incFakeQuizAttempts', '13:30', incFakeQuizAttempts),
+  createSchedule(
+    'recommendedNewsNotification8',
+    '14:25',
+    sendRecommendedNewsNotification,
   ),
   createSchedule(
-    "recommendedNewsNotification2",
-    "02:00",
-    sendRecommendedNewsNotification
+    'recommendedNewsNotification9',
+    '16:25',
+    sendRecommendedNewsNotification,
   ),
-  createSchedule("extractNews1", "02:25", () => extractNews(null)),
-  createSchedule("extractNews2", "09:00", () => extractNews("in")),
-  createSchedule("extractNews3", "15:00", () => extractNews("in")),
-  createSchedule("extractNews4", "23:00", () => extractNews("in")),
-  createSchedule("updateRecommendations", "01:00", updateDailyRecommendations),
-  createSchedule("streakBrokenMails", "03:30", sendStreakBrokenMails),
+  createSchedule('incFakeQuizAttempts', '17:00', incFakeQuizAttempts),
   createSchedule(
-    "recommendedNewsNotification3",
-    "04:25",
-    sendRecommendedNewsNotification
+    'recommendedNewsNotification10',
+    '18:00',
+    sendRecommendedNewsNotification,
   ),
-  createSchedule(
-    "recommendedNewsNotification4",
-    "06:25",
-    sendRecommendedNewsNotification
-  ),
-  createSchedule(
-    "recommendedNewsNotification5",
-    "08:25",
-    sendRecommendedNewsNotification
-  ),
-  createSchedule(
-    "recommendedNewsNotification6",
-    "10:00",
-    sendRecommendedNewsNotification
-  ),
-  createSchedule("streakReminder1", "12:30", () => sendStreakReminder(0)),
-  createSchedule(
-    "recommendedNewsNotification7",
-    "12:25",
-    sendRecommendedNewsNotification
-  ),
-  createSchedule(
-    "recommendedNewsNotification8",
-    "14:25",
-    sendRecommendedNewsNotification
-  ),
-  createSchedule(
-    "recommendedNewsNotification9",
-    "16:25",
-    sendRecommendedNewsNotification
-  ),
-  createSchedule(
-    "recommendedNewsNotification10",
-    "18:00",
-    sendRecommendedNewsNotification
-  ),
-  createSchedule("streakReminder2", "19:00", () => sendStreakReminder(1)),
-  createSchedule("streakReminder3", "22:00", () => sendStreakReminder(2)),
-];
+  createSchedule('streakReminder2', '19:00', () => sendStreakReminder(1)),
+  createSchedule('streakReminder3', '22:00', () => sendStreakReminder(2)),
+]
 
 // Sort schedules by time
-schedules.sort((a, b) => a.time.valueOf() - b.time.valueOf());
+schedules.sort((a, b) => a.time.valueOf() - b.time.valueOf())
 
 // Convert times to cron patterns and add them to each schedule
-schedules.forEach((schedule) => {
-  const timeUTC = schedule.time.clone().tz("UTC");
-  const timeLocal = timeUTC.clone().local();
-  schedule.cronPattern = `${timeLocal.minute()} ${timeLocal.hour()} * * *`;
-});
+schedules.forEach(schedule => {
+  const timeUTC = schedule.time.clone().tz('UTC')
+  const timeLocal = timeUTC.clone().local()
+  schedule.cronPattern = `${timeLocal.minute()} ${timeLocal.hour()} * * *`
+})
 
-module.exports = schedules;
+module.exports = schedules

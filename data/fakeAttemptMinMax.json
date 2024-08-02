@@ -1,0 +1,66 @@
+{
+  "top": {
+    "min": 31,
+    "max": 60
+  },
+  "general": {
+    "min": 31,
+    "max": 60
+  },
+  "world": {
+    "min": 16,
+    "max": 30
+  },
+  "politics": {
+    "min": 31,
+    "max": 60
+  },
+  "business": {
+    "min": 16,
+    "max": 30
+  },
+  "technology": {
+    "min": 16,
+    "max": 30
+  },
+  "sports": {
+    "min": 31,
+    "max": 60
+  },
+  "health": {
+    "min": 31,
+    "max": 60
+  },
+  "science": {
+    "min": 1,
+    "max": 15
+  },
+  "environment": {
+    "min": 1,
+    "max": 15
+  },
+  "crime": {
+    "min": 16,
+    "max": 30
+  },
+  "education": {
+    "min": 16,
+    "max": 30
+  },
+  "entertainment": {
+    "min": 16,
+    "max": 30
+  },
+  "food": {
+    "min": 1,
+    "max": 15
+  },
+  "lifestyle": {
+    "min": 1,
+    "max": 15
+  },
+  "tourism": {
+    "min": 1,
+    "max": 15
+  }
+}

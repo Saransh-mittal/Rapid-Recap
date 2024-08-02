@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const articleSchema = new mongoose.Schema(
   {
@@ -12,11 +12,11 @@ const articleSchema = new mongoose.Schema(
     },
     author: {
       type: String,
-      default: "Rapid Recap Team",
+      default: 'Rapid Recap Team',
     },
     hindiAuthor: {
       type: String,
-      default: "",
+      default: '',
     },
     title: {
       type: String,
@@ -25,7 +25,7 @@ const articleSchema = new mongoose.Schema(
     },
     hindiTitle: {
       type: String,
-      default: "",
+      default: '',
     },
     mainText: {
       type: String,
@@ -49,7 +49,7 @@ const articleSchema = new mongoose.Schema(
       type: [
         {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "QUIZ",
+          ref: 'QUIZ',
         },
       ],
       default: [],
@@ -58,7 +58,7 @@ const articleSchema = new mongoose.Schema(
       {
         userId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "USER",
+          ref: 'USER',
         },
         status: {
           type: Boolean,
@@ -69,30 +69,34 @@ const articleSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      default: "General",
+      default: 'General',
     },
     relatedArticles: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "ARTICLE",
+        ref: 'ARTICLE',
       },
     ],
     avgReadTime: {
       type: Number,
     },
+    quizAttemptCnt: {
+      type: Number,
+      default: 0,
+    },
   },
-  { collection: "Articles" }
-);
+  { collection: 'Articles' },
+)
 
-articleSchema.index({ title: 1 }, { unique: true });
-articleSchema.index({ dateTime: 1 });
-articleSchema.pre("save", function (next) {
+articleSchema.index({ title: 1 }, { unique: true })
+articleSchema.index({ dateTime: 1 })
+articleSchema.pre('save', function (next) {
   if (this.author === null) {
-    this.author = "Rapid Recap Team";
+    this.author = 'Rapid Recap Team'
   }
-  next();
-});
+  next()
+})
 
-const Article = mongoose.model("ARTICLE", articleSchema);
+const Article = mongoose.model('ARTICLE', articleSchema)
 
-module.exports = Article;
+module.exports = Article
