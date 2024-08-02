@@ -113,7 +113,7 @@ const Article = () => {
   }
 
   const bookmarkStatus = async ({ view, update }) => {
-    if (notLoggedIn) return
+    if (notLoggedIn || notLoggedIn === undefined) return
     try {
       setBookmark(true)
       const response = await axios.get(

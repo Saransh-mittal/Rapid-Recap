@@ -33,7 +33,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   }, [])
 
   const fetchChats = async () => {
-    if (notLoggedIn) return
+    if (notLoggedIn || notLoggedIn === undefined) return
     try {
       const { data } = await axios.get('/api/chat')
       setChats(data)

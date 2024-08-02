@@ -1,19 +1,65 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback, useContext } from 'react'
 import { Box, Text } from '@chakra-ui/react'
+import { AppContext } from '../../contextAPI/appContext'
 
 const Countdown = ({ timer, submitted }) => {
   const [offset, setOffset] = useState(0)
+  const [isFlashing, setIsFlashing] = useState(false)
   const initialTimer = 50
-  const color = timer > 10 ? '#9F7AEA' : '#F56565'
+  const { play30SecSound, play20SecSound, play10SecSound, playEndSound } =
+    useContext(AppContext)
+
+  const getColor = useCallback(() => {
+    if (timer > 30) return '#9F7AEA'
+    if (timer > 20) return '#F6E05E'
+    if (timer > 10) return '#ED8936'
+    return '#F56565'
+  }, [timer])
 
   useEffect(() => {
     const percentage = (timer / initialTimer) * 100
     const newOffset = 283 - (283 * percentage) / 100
     setOffset(newOffset)
-  }, [timer, initialTimer])
+
+    if (!submitted) {
+      if (timer === 30) {
+        play30SecSound()
+        setIsFlashing(true)
+        setTimeout(() => setIsFlashing(false), 1000)
+      } else if (timer === 20) {
+        play20SecSound()
+        setIsFlashing(true)
+        setTimeout(() => setIsFlashing(false), 1000)
+      } else if (timer <= 10 && timer > 0) {
+        play10SecSound()
+        setIsFlashing(true)
+        setTimeout(() => setIsFlashing(false), 200)
+      }
+    }
+  }, [
+    timer,
+    initialTimer,
+    play30SecSound,
+    play20SecSound,
+    play10SecSound,
+    playEndSound,
+    submitted,
+  ])
 
   return (
-    <Box position="relative" width="80px" height="80px" mt={'1rem'}>
+    <Box
+      position="relative"
+      width="80px"
+      height="80px"
+      mt={'1rem'}
+      animation={isFlashing ? 'flash 0.5s' : 'none'}
+      css={{
+        '@keyframes flash': {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: 0.5 },
+        },
+      }}
+    >
       <svg viewBox="0 0 100 100" width="100%" height="100%">
         <circle
           cx="50"
@@ -28,7 +74,7 @@ const Countdown = ({ timer, submitted }) => {
           cy="50"
           r="45"
           fill="none"
-          stroke={color}
+          stroke={getColor()}
           strokeWidth="10"
           strokeDasharray="283"
           strokeDashoffset={offset}
@@ -42,7 +88,7 @@ const Countdown = ({ timer, submitted }) => {
         transform="translate(-50%, -50%)"
         fontSize={timer > 9 ? '24px' : '20px'}
         fontWeight="bold"
-        color={color}
+        color={getColor()}
       >
         {timer}
       </Text>

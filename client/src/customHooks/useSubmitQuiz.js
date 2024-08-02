@@ -2,7 +2,6 @@
 import { useContext, useState } from 'react'
 import axios from 'axios'
 import { useToast } from '@chakra-ui/react'
-import useSound from './useSound'
 import { AppContext } from '../contextAPI/appContext'
 
 const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
@@ -10,10 +9,10 @@ const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
   const [submitLoad, setSubmitLoad] = useState(false)
 
   const toast = useToast()
-  const { playClick } = useContext(AppContext)
+  const { playEndChime } = useContext(AppContext)
 
   const handleSubmitQuiz = async ({ timeTaken, userAnswers, setSubmitted }) => {
-    playClick()
+    playEndChime()
     setSubmitLoad(true)
     setSubmitted(true)
     try {

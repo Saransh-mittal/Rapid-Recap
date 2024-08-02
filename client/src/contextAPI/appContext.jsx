@@ -139,7 +139,13 @@ export const AppContext = createContext()
 export const AppProvider = ({ children }) => {
   const navLinkRefs = useRef([])
   const [state, dispatch] = useReducer(Reducer, initialState)
-  const { playClick } = useSound()
+  const {
+    playClick,
+    play30SecSound,
+    play20SecSound,
+    play10SecSound,
+    playEndChime,
+  } = useSound()
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -198,6 +204,10 @@ export const AppProvider = ({ children }) => {
       playClick,
       updateUnreadFriendRequests,
       readFriendRequests,
+      play30SecSound,
+      play20SecSound,
+      play10SecSound,
+      playEndChime,
     }),
     [state],
   )

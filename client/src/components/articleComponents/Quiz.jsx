@@ -15,6 +15,7 @@ import {
   Skeleton,
   SkeletonCircle,
   useToast,
+  Box,
 } from '@chakra-ui/react'
 import './Quiz.css'
 import Countdown from './Countdown'
@@ -37,6 +38,7 @@ import useSubmitQuiz from '../../customHooks/useSubmitQuiz'
 import axios from 'axios'
 import ModalComponent from './ModalComponent'
 import useSound from '../../customHooks/useSound'
+import GetSetGoAnimation from './quizComponents/GetSetGoAnimation'
 
 const Quiz = ({
   article,
@@ -71,6 +73,7 @@ const Quiz = ({
   const [result, setResult] = useState({})
   const [isAnswered, setIsAnswered] = useState(false)
   const { playClick } = useContext(AppContext)
+  const [showGetSetGo, setShowGetSetGo] = useState(false)
 
   useEffect(() => {
     const initialAnswers = Array(totalQuestions).fill('')
@@ -120,7 +123,7 @@ const Quiz = ({
     try {
       await axios.get(`/api/articles/startQuiz/${articleId}`)
       localStorage.removeItem('isQuizGivenCalled')
-      setShowInstruction(false)
+      setShowGetSetGo(true)
     } catch (error) {
       console.log(error)
       toast({
@@ -139,6 +142,14 @@ const Quiz = ({
         action: 'Start Quiz Button Clicked',
       })
     }
+  }
+  const handleAnimationComplete = () => {
+    setShowGetSetGo(false)
+    setShowInstruction(false)
+    ReactGA.event({
+      category: 'Quiz',
+      action: 'Quiz Started After Get-Set-Go Animation',
+    })
   }
 
   const showConfirmation = () => {
@@ -255,10 +266,15 @@ const Quiz = ({
   const renderModalBody = () => {
     if (showInstruction) {
       return (
-        <InstructionModal
-          isQuinBoostAvailable={isQuinBoostAvailable}
-          language={language}
-        />
+        <Box position={'relative'}>
+          {showGetSetGo && (
+            <GetSetGoAnimation onComplete={handleAnimationComplete} />
+          )}
+          <InstructionModal
+            isQuinBoostAvailable={isQuinBoostAvailable}
+            language={language}
+          />
+        </Box>
       )
     }
 
