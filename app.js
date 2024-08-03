@@ -1,95 +1,95 @@
-const dotenv = require("dotenv");
-const bodyParser = require("body-parser");
-const express = require("express");
-const userRoutes = require("./router/userRoutes");
-const articleRoutes = require("./router/articleRoutes");
-const quizRoutes = require("./router/quizRoutes");
-const subscriptionRoutes = require("./router/subscriptionRoutes");
-const mailRoutes = require("./router/mailRoutes");
-const timeSpentRoutes = require("./router/timeSpentRoutes");
-const feedbackRoutes = require("./router/feedbackRoutes");
-const notificationRoutes = require("./router/notificationRoutes");
-const adminRoutes = require("./router/adminRoutes");
-const recommendationRoutes = require("./router/recommendationRoutes");
-const chatsRoutes = require("./router/chatsRoutes");
-const messageRoutes = require("./router/messageRoutes");
-const friendsRoutes = require("./router/friendsRoutes");
-const { notFound, errorHandler } = require("./middleware/errorMiddleware");
-const authRouter = express.Router();
-const webpush = require("web-push");
-const cookieParser = require("cookie-parser");
-const Message = require("./model/messageSchema");
-const { userOpenChats } = require("./sharedState");
-const Chat = require("./model/chatSchema");
-const User = require("./model/userSchema");
-const path = require("path");
-const http = require("http");
+const dotenv = require('dotenv')
+const bodyParser = require('body-parser')
+const express = require('express')
+const userRoutes = require('./router/userRoutes')
+const articleRoutes = require('./router/articleRoutes')
+const quizRoutes = require('./router/quizRoutes')
+const subscriptionRoutes = require('./router/subscriptionRoutes')
+const mailRoutes = require('./router/mailRoutes')
+const timeSpentRoutes = require('./router/timeSpentRoutes')
+const feedbackRoutes = require('./router/feedbackRoutes')
+const notificationRoutes = require('./router/notificationRoutes')
+const adminRoutes = require('./router/adminRoutes')
+const recommendationRoutes = require('./router/recommendationRoutes')
+const chatsRoutes = require('./router/chatsRoutes')
+const messageRoutes = require('./router/messageRoutes')
+const friendsRoutes = require('./router/friendsRoutes')
+const { notFound, errorHandler } = require('./middleware/errorMiddleware')
+const authRouter = express.Router()
+const webpush = require('web-push')
+const cookieParser = require('cookie-parser')
+const Message = require('./model/messageSchema')
+const { userOpenChats } = require('./sharedState')
+const Chat = require('./model/chatSchema')
+const User = require('./model/userSchema')
+const path = require('path')
+const http = require('http')
 
-dotenv.config({ path: "./config.env" });
-const app = express();
-const server = http.createServer(app);
+dotenv.config({ path: './config.env' })
+const app = express()
+const server = http.createServer(app)
 
 // Body parser middleware
-app.use(bodyParser.json());
-const connectDB = require("./db/conn");
-const { initializeSocket } = require("./socket");
+app.use(bodyParser.json())
+const connectDB = require('./db/conn')
+const { initializeSocket } = require('./socket')
 
 webpush.setVapidDetails(
-  "mailto:rapidrecap2k23@gmail.com",
+  'mailto:rapidrecap2k23@gmail.com',
   process.env.PUBLIC_VAPID_KEY,
-  process.env.PRIVATE_VAPID_KEY
-);
+  process.env.PRIVATE_VAPID_KEY,
+)
 
-app.use(express.json());
+app.use(express.json())
 // Error Handling middlewares
-app.use(errorHandler);
+app.use(errorHandler)
 
-const PORT = process.env.PORT;
-authRouter.use(cookieParser());
-authRouter.use("/user", userRoutes);
-authRouter.use("/articles", articleRoutes);
-authRouter.use("/quiz", quizRoutes);
-authRouter.use("/subs", subscriptionRoutes);
-authRouter.use("/mail", mailRoutes);
-authRouter.use("/timeSpent", timeSpentRoutes);
-authRouter.use("/contact/feedback", feedbackRoutes);
-authRouter.use("/notify", notificationRoutes);
-authRouter.use("/admin", adminRoutes);
-authRouter.use("/recommendation", recommendationRoutes);
-authRouter.use("/chat", chatsRoutes);
-authRouter.use("/message", messageRoutes);
-authRouter.use("/friends", friendsRoutes);
-app.use("/api", authRouter);
+const PORT = process.env.PORT
+authRouter.use(cookieParser())
+authRouter.use('/user', userRoutes)
+authRouter.use('/articles', articleRoutes)
+authRouter.use('/quiz', quizRoutes)
+authRouter.use('/subs', subscriptionRoutes)
+authRouter.use('/mail', mailRoutes)
+authRouter.use('/timeSpent', timeSpentRoutes)
+authRouter.use('/contact/feedback', feedbackRoutes)
+authRouter.use('/notify', notificationRoutes)
+authRouter.use('/admin', adminRoutes)
+authRouter.use('/recommendation', recommendationRoutes)
+authRouter.use('/chat', chatsRoutes)
+authRouter.use('/message', messageRoutes)
+authRouter.use('/friends', friendsRoutes)
+app.use('/api', authRouter)
 
 // -----Production-----
-app.use(express.static(path.join(__dirname, "./client/dist")));
-app.get("*", function (_, res) {
+app.use(express.static(path.join(__dirname, './client/dist')))
+app.get('*', function (_, res) {
   res.sendFile(
-    path.join(__dirname, "./client/dist/index.html"),
+    path.join(__dirname, './client/dist/index.html'),
     function (err) {
-      res.status(500).send(err);
-    }
-  );
-});
+      res.status(500).send(err)
+    },
+  )
+})
 // ---------------------
 
 // Scheduler
-require("./scheduler/setupCronJobs");
+require('./scheduler/setupCronJobs')
 
-initializeSocket(server);
+initializeSocket(server)
 
 // Connect to the database before starting the server
 const startServer = async () => {
   try {
-    await connectDB();
+    await connectDB()
     server.listen(PORT, () => {
-      console.log(`Listening to port no. ${PORT}`);
-    });
+      console.log(`Listening to port no. ${PORT}`)
+    })
   } catch (err) {
-    console.error("Failed to connect to MongoDB:", err);
+    console.error('Failed to connect to MongoDB:', err)
   }
-};
+}
 
-startServer();
+startServer()
 
-module.exports = { app, server };
+module.exports = { app, server }
