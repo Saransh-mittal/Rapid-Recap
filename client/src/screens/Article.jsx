@@ -25,6 +25,7 @@ import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import TrackTime from '../components/articleComponents/TrackTime' // Import TrackTime component
 import useSound from '../customHooks/useSound'
+import ArticleHeader from '../components/articleComponents/ArticleHeader'
 
 const Article = () => {
   const toast = useToast()
@@ -474,12 +475,31 @@ const Article = () => {
               `}
             </script>
           </Helmet>
-
+          <Flex
+            justifyContent={'center'}
+            mt={5}
+            px={{ base: '20px', md: '50px' }}
+          >
+            <ArticleHeader
+              title={title}
+              author={author}
+              selectedLanguage={selectedLanguage}
+              bookmark={bookmark}
+              handleLanguageChange={handleLanguageChange}
+              avgTimeRead={avgTimeRead}
+              dateTime={dateTime}
+              bookmarkStatus={bookmarkStatus}
+              state={state}
+              article={article}
+              isQuinBoostAvailable={isQuinBoostAvailable}
+              quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
+            />
+          </Flex>
           <Grid
-            templateColumns={isLargerThan820 ? 'minmax(0, 9fr) 5fr' : '1fr'}
+            templateColumns={isLargerThan820 ? 'minmax(0, 9fr) 5.3fr' : '1fr'}
             gap={10}
             minH={'85vh'}
-            p={{ base: '20px', md: '50px' }}
+            px={{ base: '20px', md: '50px' }}
             marginTop={0}
             className="article-all-content"
           >

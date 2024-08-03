@@ -22,9 +22,6 @@ import TotalUserAttempted from './TotalUserAttempted'
 import QuinBoost from './quizComponents/QuinBoost'
 import starBoost from '/GIFs/starBoost.gif'
 import TextBackgound from '/images/textBackground.webp'
-import ShareButton from './ShareButton'
-import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
-import useSound from '../../customHooks/useSound'
 import { AppContext } from '../../contextAPI/appContext'
 const Sidebar = ({
   givenQuiz,
@@ -51,24 +48,8 @@ const Sidebar = ({
   isQuizGivenLoading,
 }) => {
   const notLoggedIn = state.show
-  const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const { playClick } = useContext(AppContext)
-  const handleShare = () => {
-    if (notLoggedIn) {
-      toast({
-        title: 'Login Required',
-        description: 'Please log in to share this article.',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
-    }
-    onOpenShareModal()
 
-    // In a real implementation, you might do something like:
-    // shareToChat(article);
-  }
   return (
     <Box
       boxShadow={'0 100px 200px rgba(1, 1, 1, 1.1)'}
@@ -148,8 +129,7 @@ const Sidebar = ({
         justifyContent={'center'}
         alignItems={'center'}
       >
-        <ShareButton onClick={handleShare} isDisabled={notLoggedIn} />
-        <Flex
+        {/* <Flex
           flexDirection={'column'}
           position={'relative'}
           className="quin-boost-tag"
@@ -227,7 +207,7 @@ const Sidebar = ({
               </>
             )
           )}
-        </Flex>
+        </Flex> */}
         {state.isBoosted && (
           <Flex
             justifyContent={'center'}
@@ -348,12 +328,6 @@ const Sidebar = ({
           </Tooltip>
         )}
       </SimpleGrid>
-      <ShareChatModal
-        isOpen={isOpen}
-        onClose={onClose}
-        articleToShare={article}
-        notLoggedIn={notLoggedIn}
-      />
     </Box>
   )
 }
