@@ -151,11 +151,19 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
                     colorScheme="green"
                     pointerEvents="none"
                   />
-                  <Text fontWeight="bold">
-                    {chat.isGroupChat
-                      ? chat.chatName
-                      : chat.users.find(u => u?._id !== user?._id)?.name}
-                  </Text>
+                  <Flex flexDirection={'column'}>
+                    <Text fontWeight="bold" mb={'2px'}>
+                      {chat.isGroupChat
+                        ? chat.chatName
+                        : chat.users.find(u => u?._id !== user?._id)?.name}
+                    </Text>
+                    {!chat.isGroupChat && (
+                      <Text fontSize="xs" color={'gray.300'} mb={0}>
+                        @
+                        {chat.users.find(u => u?._id !== user?._id)?.inGameName}
+                      </Text>
+                    )}
+                  </Flex>
                 </Flex>
               ))}
             </VStack>
