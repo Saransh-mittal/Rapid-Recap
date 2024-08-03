@@ -6,6 +6,7 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Inbox from '../Header-Footer/navbarComponents/Inbox'
 import { FaUserFriends } from 'react-icons/fa'
+import { useSelector } from 'react-redux'
 const itemVariants = {
   open: {
     opacity: 1,
@@ -47,6 +48,8 @@ const ProfileDropDownMenu = ({
   }
 
   const { state, playClick } = useContext(AppContext)
+  const { user } = useSelector(state => state.auth)
+
   const [isOpen, setIsOpen] = useState(false)
   // console.log(state.unreadFriendRequests)
   return (
@@ -93,12 +96,7 @@ const ProfileDropDownMenu = ({
                 zIndex={2}
               />
             )}
-            <Avatar
-              src={state.user?.pic}
-              h={'35px'}
-              w={'35px'}
-              rounded={'50%'}
-            />
+            <Avatar src={user?.pic} h={'35px'} w={'35px'} rounded={'50%'} />
           </Flex>
           <motion.div
             variants={{
@@ -186,7 +184,7 @@ const ProfileDropDownMenu = ({
             </Flex>
           </motion.li>
           <NavLink
-            to={`${toProfile}/${state.user?.inGameName}`}
+            to={`${toProfile}/${user?.inGameName}`}
             ref={refProfile}
             onClick={() => {
               playClick()

@@ -24,8 +24,8 @@ import starBoost from '/GIFs/starBoost.gif'
 import TextBackgound from '/images/textBackground.webp'
 import ShareButton from './ShareButton'
 import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
-import useSound from '../../customHooks/useSound'
 import { AppContext } from '../../contextAPI/appContext'
+import { useSelector } from 'react-redux'
 const Sidebar = ({
   givenQuiz,
   percentile,
@@ -50,7 +50,8 @@ const Sidebar = ({
   quinTour,
   isQuizGivenLoading,
 }) => {
-  const notLoggedIn = state.show
+  const { isAuthenticated } = useSelector(state => state.auth)
+  const notLoggedIn = !isAuthenticated
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const { playClick } = useContext(AppContext)
   const handleShare = () => {

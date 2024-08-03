@@ -4,11 +4,13 @@ import { NavLink } from 'react-router-dom'
 import RR from '/images/rrlogo.webp'
 import Heading from '../../miscellaneous/HeadingComponent'
 import { AppContext } from '../../../contextAPI/appContext'
-import useSound from '../../../customHooks/useSound'
+import { useSelector } from 'react-redux'
 
 const NavBrand = ({ isHamburgerOpen }) => {
-  const { state, playClick } = useContext(AppContext)
-  const notLoggedIn = state.show
+  const { playClick } = useContext(AppContext)
+  const { isAuthenticated } = useSelector(state => state.auth)
+
+  const notLoggedIn = !isAuthenticated
 
   return (
     <NavLink

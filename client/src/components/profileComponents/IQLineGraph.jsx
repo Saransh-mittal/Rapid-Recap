@@ -17,6 +17,7 @@ import axios from 'axios'
 import ExpectedIQModal from '../articleComponents/ExpectedIQModal'
 import { AppContext } from '../../contextAPI/appContext'
 import Lock from '/images/lock.webp'
+import { useSelector } from 'react-redux'
 
 const IQLineGraph = ({
   lineGraph,
@@ -25,7 +26,8 @@ const IQLineGraph = ({
   viewingHistory = false,
   isNavIQ = false,
 }) => {
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useContext(AppContext)
+  const { user } = useSelector(state => state.auth)
   const [isLoading, setIsLoading] = useState(true)
   const toast = useToast()
   const [IQScoreHistory, setIQScoreHistory] = useState([])
@@ -405,7 +407,7 @@ const IQLineGraph = ({
                   w={'60px'}
                   height={'30px'}
                 >
-                  {state.user.profilePrivacy.lineGraph ? 'HIDDEN' : 'VISIBLE'}
+                  {user.profilePrivacy.lineGraph ? 'HIDDEN' : 'VISIBLE'}
                 </Tag>
               </Tooltip>
             )}

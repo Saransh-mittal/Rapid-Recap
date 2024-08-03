@@ -7,6 +7,7 @@ import { debounce } from 'lodash'
 import { useToast, Box, Spinner } from '@chakra-ui/react'
 
 import { Helmet } from 'react-helmet-async'
+import { useSelector } from 'react-redux'
 
 const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
 const UpgradeModal = lazy(() =>
@@ -15,7 +16,9 @@ const UpgradeModal = lazy(() =>
 
 const Home = () => {
   const { state, dispatch } = useContext(AppContext)
-  let notLoggedIn = state.show
+  const { isAuthenticated, user } = useSelector(state => state.auth)
+
+  let notLoggedIn = !isAuthenticated
 
   const [items, setItems] = useState(state.items)
   const [page, setPage] = useState(state.page + 1)
@@ -27,7 +30,7 @@ const Home = () => {
   const [hasMoreItems, setHasMoreItems] = useState(true)
   const [prevCategory, setPrevCategory] = useState(state.category)
 
-  const USER_IQ = state.user?.IQ_score ?? null
+  const USER_IQ = user?.IQ_score ?? null
 
   async function fetchData() {
     if (!hasMoreItems) {
@@ -103,7 +106,7 @@ const Home = () => {
     dispatch({ type: 'setNews', payloadNews: {} })
 
     return () => window.removeEventListener('scroll', debouncedHandleScroll)
-  }, [state.show, category])
+  }, [isAuthenticated, category])
 
   useEffect(() => {
     if (!state.modal) dispatch({ type: 'setNews', payloadNews: {} })
@@ -146,7 +149,7 @@ const Home = () => {
         />
       </Helmet>
       <Suspense fallback={<Spinner />}>
-        {!state.show && USER_IQ > 90 && state.user.societyUpgradeMessage && (
+        {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
           <UpgradeModal
             isOpen={showUpgradeModal}
             onClose={() => setShowUpgradeModal(false)}

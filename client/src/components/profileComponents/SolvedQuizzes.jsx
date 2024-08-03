@@ -9,11 +9,11 @@ import {
   Tooltip,
   useToast,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import axios from 'axios'
 import { useState } from 'react'
 import SolvedQuizHistory from './SolvedQuizSubComponents/SolvedQuizHistory'
-import { AppContext } from '../../contextAPI/appContext'
+import { useSelector } from 'react-redux'
 
 const SolvedQuizzes = ({
   solvedQuizzes,
@@ -22,7 +22,8 @@ const SolvedQuizzes = ({
   loginedUserProfile,
   isDisabled = false,
 }) => {
-  const { state } = useContext(AppContext)
+  const { user } = useSelector(state => state.auth)
+
   const toast = useToast()
   const [solvedQuizzesCount, setSolvedQuizzesCount] = useState(0)
   const [easySolved, setEasySolved] = useState(0)
@@ -149,9 +150,7 @@ const SolvedQuizzes = ({
                   w={'60px'}
                   height={'30px'}
                 >
-                  {state.user.profilePrivacy.solvedQuizzes
-                    ? 'HIDDEN'
-                    : 'VISIBLE'}
+                  {user.profilePrivacy.solvedQuizzes ? 'HIDDEN' : 'VISIBLE'}
                 </Tag>
               </Tooltip>
             )}

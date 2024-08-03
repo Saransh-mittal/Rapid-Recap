@@ -24,11 +24,12 @@ import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import TrackTime from '../components/articleComponents/TrackTime' // Import TrackTime component
-import useSound from '../customHooks/useSound'
+import { useSelector } from 'react-redux'
 
 const Article = () => {
   const toast = useToast()
   const { state } = useContext(AppContext)
+  const { isAuthenticated, user } = useSelector(state => state.auth)
 
   const data = state.news
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -77,7 +78,7 @@ const Article = () => {
   const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(true)
   const quizFetchTimer = useRef(null)
 
-  const notLoggedIn = state.show
+  const notLoggedIn = !isAuthenticated
 
   const openModal = () => setIsQuinBoostModalOpen(true)
   const closeModal = () => setIsQuinBoostModalOpen(false)
@@ -176,7 +177,7 @@ const Article = () => {
   }
 
   const isQuizGiven = async () => {
-    const userId = state.user?._id
+    const userId = user?._id
     const articleId = id
     if (!userId || !articleId) return
     try {
@@ -197,7 +198,7 @@ const Article = () => {
     isQuizGiven()
     if (state.news) {
     }
-  }, [id, state.user, state.news])
+  }, [id, user, state.news])
 
   const checkOnGoingQuiz = async () => {
     try {
@@ -290,22 +291,22 @@ const Article = () => {
   }, [article, textHeight])
 
   useEffect(() => {
-    if (!load && !state.show && state.user && state.user.tutorial.articlePage) {
+    if (!load && isAuthenticated && user && user.tutorial.articlePage) {
       // isTutorialTakenCheck({ page: "articlePage", tour });
     }
-  }, [load])
+  }, [load, isAuthenticated, user, user?.tutorial?.articlePage])
 
   useEffect(() => {
     if (
       !load &&
-      !state.show &&
-      state?.user &&
-      state.user.tutorial.quinBoostPage &&
-      !state.user.tutorial.articlePage
+      isAuthenticated &&
+      user &&
+      user.tutorial.quinBoostPage &&
+      !user.tutorial.articlePage
     ) {
       // isTutorialTakenCheck({ page: "quinBoostPage", tour: quinTour });
     }
-  }, [state?.user, state.show, state?.user?.tutorial?.articlePage, load])
+  }, [user, isAuthenticated, user?.tutorial?.articlePage, load])
 
   useEffect(() => {
     setAlt_image(
@@ -405,7 +406,7 @@ const Article = () => {
           ofShowQuiz={() => {
             setShowQuiz(false)
             setGivenQuiz(true)
-            state.user.IQ_score === 0 && getExpectedIQ()
+            user.IQ_score === 0 && getExpectedIQ()
           }}
           language={selectLanForQuiz}
         />
@@ -494,7 +495,6 @@ const Article = () => {
               textRef={textRef}
               articleRef={articleRef}
               textHeight={textHeight}
-              state={state}
               handleLanguageChange={handleLanguageChange}
               dateTime={dateTime}
               avgTimeRead={avgTimeRead}
@@ -537,7 +537,7 @@ const Article = () => {
         isStateBoosted={state.isBoosted}
       />
       {/* Integrate the TrackTime component */}
-      {state.user && <TrackTime userId={state.user?._id} articleId={id} />}
+      {user && <TrackTime userId={user?._id} articleId={id} />}
     </>
   )
 }

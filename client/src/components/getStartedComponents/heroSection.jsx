@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import {
   Box,
   Heading as ChakraHeading,
@@ -19,7 +19,6 @@ import searchMd from '../../assets/search-md.svg'
 import plusSquare from '../../assets/plus-square.svg'
 import { ScrollParallax } from 'react-just-parallax'
 import heroBackground from '../../assets/hero/hero-background.webp'
-import { AppContext } from '../../contextAPI/appContext'
 import {
   Gradient,
   BackgroundCircles,
@@ -31,10 +30,13 @@ import ButtonGradient from '../../assets/svg/ButtonGradient'
 import FeedbackModal from './modals/FeedbackModal'
 import { useNavigate } from 'react-router-dom'
 import Heading from '../miscellaneous/HeadingComponent'
+import { useSelector } from 'react-redux'
 
 const heroIcons = [homeSmile, file02, searchMd, plusSquare]
 
 const HeroSection = () => {
+  const { isAuthenticated } = useSelector(state => state.auth)
+
   const parallaxRef = useRef(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
   const navigate = useNavigate()
@@ -43,7 +45,6 @@ const HeroSection = () => {
     lg: 'translateY(5.25rem)',
   })
 
-  const { state } = useContext(AppContext)
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 992)
 
   useEffect(() => {
@@ -160,7 +161,7 @@ const HeroSection = () => {
               mt={6}
               flexDirection={{ base: 'column-reverse', md: 'row' }}
             >
-              {state.show && isSmallScreen && (
+              {!isAuthenticated && isSmallScreen && (
                 <Flex justifyContent="center" alignItems="center" zIndex={10}>
                   <GetStarted innerText="Get Started" />
                 </Flex>

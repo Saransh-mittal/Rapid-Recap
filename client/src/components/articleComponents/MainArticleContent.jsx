@@ -16,8 +16,8 @@ import {
 import { LockIcon } from '@chakra-ui/icons'
 import { CiBookmark } from 'react-icons/ci'
 import { FaBookmark } from 'react-icons/fa'
-import useSound from '../../customHooks/useSound'
 import { AppContext } from '../../contextAPI/appContext'
+import { useSelector } from 'react-redux'
 
 const MainArticleContent = ({
   avgTimeRead,
@@ -31,13 +31,13 @@ const MainArticleContent = ({
   textRef,
   articleRef,
   bookmarkStatus,
-  state,
   handleLanguageChange,
   dateTime,
   bookmark,
   articleLoading,
 }) => {
-  const notLoggedIn = state.show
+  const { isAuthenticated } = useSelector(state => state.auth)
+  const notLoggedIn = !isAuthenticated
   const { playClick } = useContext(AppContext)
   const [useAltImage, setUseAltImage] = useState(false)
 
