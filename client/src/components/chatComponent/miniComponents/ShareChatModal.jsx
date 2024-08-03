@@ -14,11 +14,21 @@ import {
   Checkbox,
   useToast,
   Flex,
+  Divider,
+  Image,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import useSound from '../../../customHooks/useSound'
 import { AppContext } from '../../../contextAPI/appContext'
+import { CopyIcon } from '@chakra-ui/icons'
+const socialPlatforms = [
+  { name: 'whatsapp', logo: '/images/whatsapp-logo.png', color: '#25D366' },
+  // { name: 'instagram', logo: '/images/instagram-logo.png', color: '#E4405F' },
+  { name: 'twitter', logo: '/images/twitter-logo.png', color: '#1DA1F2' },
+  { name: 'facebook', logo: '/images/facebook-logo.png', color: '#1877F2' },
+  { name: 'linkedin', logo: '/images/linkedin-logo.png', color: '#0A66C2' },
+]
 
 const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const [chats, setChats] = useState([])
@@ -51,12 +61,56 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
     }
   }
 
+  const handleSocialShare = platform => {
+    playClick()
+    let url = ''
+    const articleUrl = `https://rapidrecap.co.in/article/${articleToShare._id}` // Replace with your actual article URL
+    const text = encodeURIComponent(
+      `Check out this article: ${articleToShare.title}`,
+    )
+
+    switch (platform) {
+      case 'whatsapp':
+        url = `https://api.whatsapp.com/send?text=${text} ${articleUrl}`
+        break
+      // case 'instagram':
+      //   url = `https://www.instagram.com/sharer.php?u=${articleUrl}`
+      //   break
+      case 'twitter':
+        url = `https://twitter.com/intent/tweet?text=${text}&url=${articleUrl}`
+        break
+      case 'facebook':
+        url = `https://www.facebook.com/sharer/sharer.php?u=${articleUrl}`
+        break
+      case 'linkedin':
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${articleUrl}`
+        break
+      default:
+        return
+    }
+
+    window.open(url, '_blank')
+  }
+
   const handleChatToggle = chatId => {
     setSelectedChats(prevSelected =>
       prevSelected.includes(chatId)
         ? prevSelected.filter(id => id !== chatId)
         : [...prevSelected, chatId],
     )
+  }
+
+  const handleCopyArticleUrl = () => {
+    playClick()
+    const articleUrl = `https://rapidrecap.co.in/article/${articleToShare._id}`
+    navigator.clipboard.writeText(articleUrl)
+    toast({
+      title: 'Link Copied',
+      description: 'Article URL copied to clipboard',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    })
   }
 
   const handleShare = async () => {
@@ -124,7 +178,18 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
           Share to Chat
         </ModalHeader>
         <ModalCloseButton color="white" />
-        <ModalBody maxH="60vh" overflowY="auto" w={'100%'}>
+        <ModalBody
+          maxH="60vh"
+          overflowY="auto"
+          w={'100%'}
+          // hide scrollbar
+          sx={{
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            scrollbarWidth: 'none',
+          }}
+        >
           {loading ? (
             <Text>Loading chats...</Text>
           ) : (
@@ -169,6 +234,33 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
             </VStack>
           )}
         </ModalBody>
+        <Divider my={2} />
+        <Box p={4} w={'75%'}>
+          <Text mb={2}>Share on social media:</Text>
+          <Flex justifyContent="space-around">
+            {socialPlatforms.map(platform => (
+              <Button
+                key={platform.name}
+                onClick={() => handleSocialShare(platform.name)}
+                aria-label={`Share on ${platform.name}`}
+                bg="transparent"
+                _hover={{ bg: platform.color, opacity: 0.8 }}
+                p={2}
+              >
+                <Image src={platform.logo} alt={platform.name} boxSize="32px" />
+              </Button>
+            ))}
+          </Flex>
+          <Flex justifyContent="center" mt={4}>
+            <Button
+              onClick={handleCopyArticleUrl}
+              colorScheme="blue"
+              leftIcon={<CopyIcon />}
+            >
+              Copy Article URL
+            </Button>
+          </Flex>
+        </Box>
         <ModalFooter borderTop="1px solid #3a3454">
           <Button
             colorScheme="green"

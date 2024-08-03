@@ -157,7 +157,7 @@ const App = () => {
       </Helmet>
 
       <Navbar />
-      <Box position="relative">
+      <Box position="relative" overflow={'hidden'}>
         {shouldShowNotification && <NotificationSubscription />}
         <Suspense fallback={<Loading />}>
           <Routes>

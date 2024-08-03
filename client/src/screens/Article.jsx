@@ -443,7 +443,7 @@ const Article = () => {
             <meta name="twitter:image" content={alt_image} />
             <link
               rel="canonical"
-              href={`https://yourdomain.com/articles/${id}`}
+              href={`https://rapidrecap.co.in/articles/${id}`}
             />
             <script type="application/ld+json">
               {`
@@ -452,7 +452,7 @@ const Article = () => {
                   "@type": "NewsArticle",
                   "mainEntityOfPage": {
                     "@type": "WebPage",
-                    "@id": "https://yourdomain.com/articles/${id}"
+                    "@id": "https://rapidrecap.co.in/articles/${id}"
                   },
                   "headline": "${title[selectedLanguage]}",
                   "image": ["${alt_image}"],
@@ -467,7 +467,7 @@ const Article = () => {
                     "name": "Rapid Recap",
                     "logo": {
                       "@type": "ImageObject",
-                      "url": "https://www.rapidrecap.co.in/logo.png"
+                      "url": "https://www.rapidrecap.co.in/images/rrlogo.png"
                     }
                   },
                   "description": "${mainText[selectedLanguage]?.[0]}"
