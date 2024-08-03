@@ -54,6 +54,7 @@ const Sidebar = ({
   const notLoggedIn = !isAuthenticated
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const { playClick } = useContext(AppContext)
+  const { isBoosted } = useSelector(state => state.app)
   const handleShare = () => {
     if (notLoggedIn) {
       toast({
@@ -160,7 +161,7 @@ const Sidebar = ({
               <QuinBoost />
             </Flex>
           ) : (
-            !state.isBoosted && (
+            !isBoosted && (
               <>
                 <Text
                   m={0}
@@ -229,7 +230,7 @@ const Sidebar = ({
             )
           )}
         </Flex>
-        {state.isBoosted && (
+        {isBoosted && (
           <Flex
             justifyContent={'center'}
             alignItems={'center'}

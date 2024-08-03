@@ -34,8 +34,7 @@ import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import Register from './Register'
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
-import useSound from '../customHooks/useSound'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { setUser } from '../redux/authSlice'
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
@@ -43,6 +42,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
 
   const toast = useToast()
   const { state, dispatch, playClick } = useContext(AppContext)
+  const { status } = useSelector(state => state.app)
   const dispatchRedux = useDispatch()
   const [data, setData] = useState({
     emailOrInGameName: '',
@@ -107,7 +107,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         payloadUser: response.data.user,
       })
       dispatchRedux(setUser(response.data.user))
-      await dailyStreakCheckerAndUpdater({ dispatch })
+      dailyStreakCheckerAndUpdater(dispatchRedux, () => ({ app: { status } }))
       toast({
         title: 'Login Successful',
         status: 'success',
@@ -159,7 +159,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         dispatchRedux(setUser(response.data.user))
         //console.log(response);
         hamburgerOnClose && hamburgerOnClose()
-        await dailyStreakCheckerAndUpdater({ dispatch })
+        dailyStreakCheckerAndUpdater(dispatchRedux, () => ({ app: { status } }))
 
         toast({
           title: 'Login-Successful',

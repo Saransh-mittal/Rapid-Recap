@@ -15,10 +15,12 @@ import {
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AppContext } from '../../contextAPI/appContext'
+import { useSelector } from 'react-redux'
 
 const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useContext(AppContext)
+  const { streak, longestStreak, isBoosted } = useSelector(state => state.app)
 
   useEffect(() => {
     onOpen()
@@ -69,7 +71,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                 flexDirection={'column'}
                 p={1}
               >
-                {state.streak === 0 && state.longestStreak === 0 && (
+                {streak === 0 && longestStreak === 0 && (
                   <>
                     <Text
                       color="#d1c9e6"
@@ -92,7 +94,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     </Text>
                   </>
                 )}
-                {state.streak === 0 && state.longestStreak > 0 && (
+                {streak === 0 && longestStreak > 0 && (
                   <>
                     <Text
                       color="white"
@@ -106,11 +108,11 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     </Text>
                   </>
                 )}
-                {state.streak > 0 &&
-                  state.streak >= 4 &&
-                  state.streak % 7 < 5 &&
-                  state.streak % 7 !== 0 &&
-                  state.longestStreak === state.streak && (
+                {streak > 0 &&
+                  streak >= 4 &&
+                  streak % 7 < 5 &&
+                  streak % 7 !== 0 &&
+                  longestStreak === streak && (
                     <>
                       <Text
                         color="white"
@@ -124,10 +126,10 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                       </Text>
                     </>
                   )}
-                {state.streak > 0 &&
-                  state.streak % 7 < 5 &&
-                  state.streak % 7 !== 0 &&
-                  state.longestStreak > state.streak && (
+                {streak > 0 &&
+                  streak % 7 < 5 &&
+                  streak % 7 !== 0 &&
+                  longestStreak > streak && (
                     <>
                       <Text
                         color="white"
@@ -141,7 +143,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                       </Text>
                     </>
                   )}
-                {state.streak > 0 && state.streak % 7 >= 5 && (
+                {streak > 0 && streak % 7 >= 5 && (
                   <>
                     <Text
                       color="white"
@@ -155,7 +157,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     </Text>
                   </>
                 )}
-                {state.isBoosted && (
+                {isBoosted && (
                   <>
                     <Text
                       color="white"
@@ -169,7 +171,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     </Text>
                   </>
                 )}
-                {state.longestStreak > 0 && (
+                {longestStreak > 0 && (
                   <>
                     <Text
                       color="white"
@@ -188,13 +190,11 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                         fontWeight="semibold"
                         textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
                       >
-                        {state.streak} days{' '}
+                        {streak} days{' '}
                         <Box
                           as="svg"
                           xmlns="http://www.w3.org/2000/svg"
-                          viewBox={
-                            state.streak === 0 ? '0 0 18 18' : '0 0 24 24'
-                          }
+                          viewBox={streak === 0 ? '0 0 18 18' : '0 0 24 24'}
                           width={{ base: '1rem', lg: '1.3em' }}
                           height={{ base: '1rem', lg: '1.3em' }}
                           fill="currentColor"
@@ -204,13 +204,13 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                           zIndex={'1000'}
                           borderRadius={'50%'}
                           style={{
-                            boxShadow: state.isBoosted
+                            boxShadow: isBoosted
                               ? '0 0 10px 0 rgba(0, 150, 255, 0.7), 0 4px 8px 0 rgba(0, 150, 255, 0.3), 0 8px 20px 0 rgba(0, 150, 255, 0.2)'
                               : 'none',
                           }}
                           marginBottom={'5px'}
                         >
-                          {state.streak > 0 ? (
+                          {streak > 0 ? (
                             <>
                               <g filter="url(#hot-filled_svg__filter0_i_289_12318)">
                                 <path
@@ -218,7 +218,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                                   d="M9.588 2.085a1 1 0 01.97.092c2.85 1.966 4.498 4.744 5.31 6.67l.854-.885a1 1 0 011.56.154c2.177 3.38 2.211 7.383.521 10.3C17.039 21.459 13.583 22 11.977 22c-1.569 0-4.905-.27-6.825-3.584-.832-1.435-1.27-3.053-1.125-4.704.146-1.66.876-3.284 2.264-4.721.86-.891 1.505-2.122 1.957-3.322.449-1.193.68-2.278.752-2.806a1 1 0 01.588-.778z"
                                   clipRule="evenodd"
                                   fill={getBackgroundColor({
-                                    heatLevel: state.streak / 7,
+                                    heatLevel: streak / 7,
                                   })}
                                 ></path>
                               </g>
@@ -304,14 +304,12 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                         fontWeight="semibold"
                         textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
                       >
-                        {state.longestStreak} days{' '}
+                        {longestStreak} days{' '}
                         <Box
                           as="svg"
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox={
-                            state.longestStreak === 0
-                              ? '0 0 18 18'
-                              : '0 0 24 24'
+                            longestStreak === 0 ? '0 0 18 18' : '0 0 24 24'
                           }
                           width={{ base: '1.2rem', lg: '1.2em' }}
                           height={{ base: '1.2rem', lg: '1.2em' }}
@@ -323,7 +321,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                           borderRadius={'50%'}
                           marginBottom={'5px'}
                         >
-                          {state.longestStreak > 0 ? (
+                          {longestStreak > 0 ? (
                             <>
                               <g filter="url(#hot-filled_svg__filter0_i_289_12318)">
                                 <path
@@ -331,7 +329,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                                   d="M9.588 2.085a1 1 0 01.97.092c2.85 1.966 4.498 4.744 5.31 6.67l.854-.885a1 1 0 011.56.154c2.177 3.38 2.211 7.383.521 10.3C17.039 21.459 13.583 22 11.977 22c-1.569 0-4.905-.27-6.825-3.584-.832-1.435-1.27-3.053-1.125-4.704.146-1.66.876-3.284 2.264-4.721.86-.891 1.505-2.122 1.957-3.322.449-1.193.68-2.278.752-2.806a1 1 0 01.588-.778z"
                                   clipRule="evenodd"
                                   fill={getBackgroundColor({
-                                    heatLevel: state.longestStreak / 7,
+                                    heatLevel: longestStreak / 7,
                                   })}
                                 ></path>
                               </g>
@@ -401,7 +399,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     </Text>
                   </>
                 )}
-                {state.streak === 0 && state.longestStreak === 0 && (
+                {streak === 0 && longestStreak === 0 && (
                   <>
                     <Text
                       textAlign={'center'}
@@ -418,7 +416,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     </Text>
                   </>
                 )}
-                {state.streak === 0 && state.longestStreak > 0 && (
+                {streak === 0 && longestStreak > 0 && (
                   <>
                     <Text
                       textAlign={'center'}
@@ -436,10 +434,10 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     </Text>
                   </>
                 )}
-                {state.streak > 0 &&
-                  state.streak % 7 < 5 &&
-                  state.streak % 7 !== 0 &&
-                  state.longestStreak === state.streak && (
+                {streak > 0 &&
+                  streak % 7 < 5 &&
+                  streak % 7 !== 0 &&
+                  longestStreak === streak && (
                     <>
                       <Text
                         textAlign={'center'}
@@ -457,10 +455,10 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                       </Text>
                     </>
                   )}
-                {state.streak > 0 &&
-                  state.streak % 7 < 5 &&
-                  state.streak % 7 !== 0 &&
-                  state.longestStreak > state.streak && (
+                {streak > 0 &&
+                  streak % 7 < 5 &&
+                  streak % 7 !== 0 &&
+                  longestStreak > streak && (
                     <Text
                       textAlign={'center'}
                       color={'gray.400'}
@@ -476,7 +474,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                       greatness!"
                     </Text>
                   )}
-                {state.streak > 0 && state.streak % 7 >= 5 && (
+                {streak > 0 && streak % 7 >= 5 && (
                   <>
                     <Text
                       textAlign={'center'}
@@ -494,7 +492,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     </Text>
                   </>
                 )}
-                {state.isBoosted && (
+                {isBoosted && (
                   <>
                     <Text
                       textAlign={'center'}

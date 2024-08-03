@@ -37,8 +37,8 @@ import useTimer from '../../customHooks/useTimer'
 import useSubmitQuiz from '../../customHooks/useSubmitQuiz'
 import axios from 'axios'
 import ModalComponent from './ModalComponent'
-import useSound from '../../customHooks/useSound'
 import GetSetGoAnimation from './quizComponents/GetSetGoAnimation'
+import { useDispatch, useSelector } from 'react-redux'
 
 const Quiz = ({
   article,
@@ -60,6 +60,9 @@ const Quiz = ({
   const totalQuestions = quizData ? quizData.questions.length : 0
   const toast = useToast()
   const { state, dispatch } = useContext(AppContext)
+  const { isBoosted, status } = useSelector(state => state.app)
+  const dispatchRedux = useDispatch()
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [submitted, setSubmitted] = useState(false)
   const [userAnswers, setUserAnswers] = useState([])
@@ -164,7 +167,7 @@ const Quiz = ({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       })
-      dailyStreakCheckerAndUpdater({ dispatch })
+      dailyStreakCheckerAndUpdater(dispatchRedux, () => ({ app: { status } }))
       if (
         !submitted &&
         currentQuestionIndex < totalQuestions &&
@@ -224,7 +227,7 @@ const Quiz = ({
   }, [])
 
   useEffect(() => {
-    if (submitted && !load && (state.isBoosted || isQuinBoostAvailable)) {
+    if (submitted && !load && (isBoosted || isQuinBoostAvailable)) {
       stars()
     }
   }, [submitted, load])
@@ -324,7 +327,7 @@ const Quiz = ({
             handleAnswer={handleAnswer}
             userAnswers={userAnswers}
           />
-        ) : state.isBoosted || isQuinBoostAvailable ? (
+        ) : isBoosted || isQuinBoostAvailable ? (
           <BoostedSubmittedQuizInterface
             isOpen={isOpen}
             score={result?.RQM_score}

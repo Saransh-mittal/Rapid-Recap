@@ -27,6 +27,11 @@ import IQScoreModal from './navbarComponents/IQScoreModal'
 import WiseWeb from '../profileComponents/WiseWeb'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/authSlice'
+import {
+  fetchAppUpdates,
+  fetchDailyStreak,
+  fetchUnreadFriendRequestsCount,
+} from '../../redux/appSlice'
 
 const Navbar = () => {
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
@@ -45,6 +50,8 @@ const Navbar = () => {
   const { state, dispatch, navLinkRefs, readFriendRequests, playClick } =
     useContext(AppContext)
   const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { updates, streak, unreadFriendRequests, status, isBoosted } =
+    useSelector(state => state.app)
   const dispatchRedux = useDispatch()
   const [visible, setVisible] = useState(true)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
@@ -123,15 +130,24 @@ const Navbar = () => {
   }, [user])
   useEffect(() => {
     //update notification count whose update is not read
+    if (updates.length === 0) return
     let count = 0
-    state.update &&
-      state?.updates?.forEach(update => {
-        if (!update.read) {
-          count++
-        }
-      })
+
+    updates?.forEach(update => {
+      if (!update.read) {
+        count++
+      }
+    })
     setNotifyCnt(count)
-  }, [state.updates])
+  }, [updates])
+
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatchRedux(fetchAppUpdates())
+      dispatchRedux(fetchDailyStreak())
+      dispatchRedux(fetchUnreadFriendRequestsCount())
+    }
+  }, [status, dispatch])
 
   const handleLogout = async () => {
     try {
@@ -297,8 +313,8 @@ const Navbar = () => {
               setShowXPLevelModal={setShowXPLevelModal}
               setShowIQScoreModal={setShowIQScoreModal}
               tourComplete={tour.complete}
-              streak={state.streak}
-              isBoosted={state.isBoosted}
+              streak={streak}
+              isBoosted={isBoosted}
               getBackgroundColor={getBackgroundColor}
               notLogined={!isAuthenticated}
               isHamburgerOpen={isHamburgerOpen}

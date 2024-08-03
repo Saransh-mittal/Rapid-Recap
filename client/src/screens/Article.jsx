@@ -30,6 +30,7 @@ const Article = () => {
   const toast = useToast()
   const { state } = useContext(AppContext)
   const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { isBoosted } = useSelector(state => state.app)
 
   const data = state.news
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -534,7 +535,7 @@ const Article = () => {
         isOpen={isQuinBoostModalOpen}
         onClose={closeModal}
         quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
-        isStateBoosted={state.isBoosted}
+        isStateBoosted={isBoosted}
       />
       {/* Integrate the TrackTime component */}
       {user && <TrackTime userId={user?._id} articleId={id} />}
