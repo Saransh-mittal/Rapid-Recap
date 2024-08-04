@@ -161,14 +161,6 @@ async function updateBots() {
         }
       }
       console.log(`\nGenerated fake quiz attempts for ${currentDate}\n`)
-      try {
-        await dailyUserIQCalc()
-      } catch (err) {
-        console.error(
-          `Error in dailyUserIQCalc after processing date ${currentDate}: ${err.message}`,
-        )
-        console.error(`Stack trace: ${err.stack}`)
-      }
     }
   } catch (err) {
     console.error(`Error in updateBots: ${err.message}`)
