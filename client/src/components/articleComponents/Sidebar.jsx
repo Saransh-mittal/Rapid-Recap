@@ -26,6 +26,7 @@ import ShareButton from './ShareButton'
 import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
 import { AppContext } from '../../contextAPI/appContext'
 import { useSelector } from 'react-redux'
+import Signin from '../../screens/Signin'
 const Sidebar = ({
   givenQuiz,
   percentile,
@@ -50,12 +51,18 @@ const Sidebar = ({
   quinTour,
   isQuizGivenLoading,
 }) => {
+  const {
+    isOpen: isOpenSignin,
+    onOpen: onOpenSignin,
+    onClose: onCloseSignin,
+  } = useDisclosure()
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const { playClick } = useContext(AppContext)
   const handleShare = () => {
     if (notLoggedIn) {
+      onOpenSignin()
       toast({
         title: 'Login Required',
         description: 'Please log in to share this article.',
@@ -76,6 +83,11 @@ const Sidebar = ({
       borderRadius={'15px'}
       p={1.5}
     >
+      <Signin
+        isOpen={isOpenSignin}
+        onClose={onCloseSignin}
+        onOpen={onOpenSignin}
+      />
       {givenQuiz ? (
         <GivenQuiz
           articleId={id}
@@ -129,6 +141,7 @@ const Sidebar = ({
                 color="white"
                 boxSize={8}
                 zIndex={2}
+                onClick={() => onOpenSignin()}
               />
             </Tooltip>
           )}
@@ -149,7 +162,11 @@ const Sidebar = ({
         justifyContent={'center'}
         alignItems={'center'}
       >
-        <ShareButton onClick={handleShare} isDisabled={notLoggedIn} />
+        <ShareButton
+          onClick={handleShare}
+          isDisabled={notLoggedIn}
+          onOpenSignin={onOpenSignin}
+        />
         <Flex
           flexDirection={'column'}
           position={'relative'}
@@ -221,6 +238,7 @@ const Sidebar = ({
                         color="white"
                         boxSize={8}
                         zIndex={2}
+                        onClick={() => onOpenSignin()}
                       />
                     </Tooltip>
                   )}
@@ -345,6 +363,7 @@ const Sidebar = ({
               color="white"
               boxSize={8}
               zIndex={2}
+              onClick={() => onOpenSignin()}
             />
           </Tooltip>
         )}

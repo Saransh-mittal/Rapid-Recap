@@ -12,12 +12,15 @@ import {
   Skeleton,
   Text,
   Tooltip,
+  useDisclosure,
 } from '@chakra-ui/react'
 import { LockIcon } from '@chakra-ui/icons'
 import { CiBookmark } from 'react-icons/ci'
 import { FaBookmark } from 'react-icons/fa'
 import { AppContext } from '../../contextAPI/appContext'
 import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import Signin from '../../screens/Signin'
 
 const MainArticleContent = ({
   avgTimeRead,
@@ -40,6 +43,11 @@ const MainArticleContent = ({
   const notLoggedIn = !isAuthenticated
   const { playClick } = useContext(AppContext)
   const [useAltImage, setUseAltImage] = useState(false)
+  const {
+    isOpen: isOpenSignin,
+    onOpen: onOpenSignin,
+    onClose: onCloseSignin,
+  } = useDisclosure()
 
   const handleImageError = () => {
     if (!useAltImage) {
@@ -49,6 +57,11 @@ const MainArticleContent = ({
 
   return (
     <>
+      <Signin
+        isOpen={isOpenSignin}
+        onClose={onCloseSignin}
+        onOpen={onOpenSignin}
+      />
       <GridItem
         w="100%"
         className="article-container"
@@ -174,6 +187,7 @@ const MainArticleContent = ({
                       color="white"
                       boxSize={8}
                       zIndex={2}
+                      onClick={() => onOpenSignin()}
                     />
                   </Tooltip>
                 )}
@@ -271,6 +285,7 @@ const MainArticleContent = ({
                           color="white"
                           boxSize={8}
                           zIndex={2}
+                          onClick={() => onOpenSignin()}
                         />
                       </Tooltip>
                     )}
@@ -329,6 +344,7 @@ const MainArticleContent = ({
                         color="white"
                         boxSize={8}
                         zIndex={2}
+                        onClick={() => onOpenSignin()}
                       />
                     </Tooltip>
                   )}

@@ -1,13 +1,13 @@
-import React from "react";
-import { Flex, Icon, Tooltip } from "@chakra-ui/react";
-import { Share2 } from "lucide-react";
-import Button from "../miscellaneous/ButtonComponent";
-import ButtonGradient from "../../assets/svg/ButtonGradient";
-import { LockIcon } from "@chakra-ui/icons";
+import React from 'react'
+import { Flex, Icon, Tooltip } from '@chakra-ui/react'
+import { Share2 } from 'lucide-react'
+import Button from '../miscellaneous/ButtonComponent'
+import ButtonGradient from '../../assets/svg/ButtonGradient'
+import { LockIcon } from '@chakra-ui/icons'
 
-const ShareButton = ({ onClick, isDisabled }) => {
+const ShareButton = ({ onClick, isDisabled, onOpenSignin }) => {
   return (
-    <Flex position={"relative"}>
+    <Flex position={'relative'}>
       {isDisabled && (
         <Tooltip label="Please log in to share" placement="top">
           <LockIcon
@@ -18,14 +18,15 @@ const ShareButton = ({ onClick, isDisabled }) => {
             color="white"
             boxSize={8}
             zIndex={2}
+            onClick={onOpenSignin}
           />
         </Tooltip>
       )}
       <Flex
         style={
           isDisabled
-            ? { filter: "blur(5px)", userSelect: "none" }
-            : { userSelect: "text" }
+            ? { filter: 'blur(5px)', userSelect: 'none' }
+            : { userSelect: 'text' }
         }
       >
         <Button onClick={onClick} buttonW="12rem">
@@ -34,7 +35,7 @@ const ShareButton = ({ onClick, isDisabled }) => {
         <ButtonGradient />
       </Flex>
     </Flex>
-  );
-};
+  )
+}
 
-export default ShareButton;
+export default ShareButton
