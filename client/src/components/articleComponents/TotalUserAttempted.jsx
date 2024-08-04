@@ -1,12 +1,15 @@
-// File path: src/components/TotalUserAttempted.js
-
 import React, { useState, useEffect, useContext } from 'react'
 import { Button, Flex, Text, Box } from '@chakra-ui/react'
 import { AppContext } from '../../contextAPI/appContext'
 import { Chart, registerables } from 'chart.js'
 Chart.register(...registerables)
 
-const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
+const TotalUserAttempted = ({
+  css,
+  totalUsersGivenQuiz,
+  notLoggedIn,
+  RQM_score,
+}) => {
   const [updatedTotalUsersGivenQuiz, setUpdatedTotalUsersGivenQuiz] =
     useState(totalUsersGivenQuiz)
   const { playClick } = useContext(AppContext)
@@ -14,8 +17,10 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
   useEffect(() => {
     setUpdatedTotalUsersGivenQuiz(totalUsersGivenQuiz)
   }, [totalUsersGivenQuiz])
+  console.log('totalUsersGivenQuiz', totalUsersGivenQuiz)
 
   useEffect(() => {
+    if (totalUsersGivenQuiz === null) return
     const ctx = document.getElementById('quizChart').getContext('2d')
     new Chart(ctx, {
       type: 'bar',
@@ -24,7 +29,7 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
         datasets: [
           {
             label: 'Quiz Statistics',
-            data: [150, 75, 85],
+            data: [updatedTotalUsersGivenQuiz, 60, RQM_score],
             backgroundColor: [
               'rgba(253, 226, 243, 0.6)',
               'rgba(229, 190, 236, 0.6)',
@@ -62,7 +67,7 @@ const TotalUserAttempted = ({ css, totalUsersGivenQuiz, notLoggedIn }) => {
         },
       },
     })
-  }, [])
+  }, [updatedTotalUsersGivenQuiz])
 
   return (
     <Box

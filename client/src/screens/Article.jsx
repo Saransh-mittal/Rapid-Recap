@@ -58,7 +58,7 @@ const Article = () => {
   const [quizExpired, setQuizExpired] = useState(false)
   const [showExpectedIQ, setShowExpectedIQ] = useState(false)
   const [expectedIQ, setExpectedIQ] = useState(null)
-  const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(0)
+  const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(null)
   const [title, setTitle] = useState({ english: '', hindi: '' })
   const [dateTime, setDateTime] = useState('')
   const [avgTimeRead, setAvgTimeRead] = useState(0)
@@ -376,7 +376,7 @@ const Article = () => {
   }
 
   return (
-    <>
+    <Flex w={'100vw'}>
       {showQuizLangModal && (
         <SelectQuizLangModal
           setSelectLanForQuiz={setSelectLanForQuiz}
@@ -479,6 +479,7 @@ const Article = () => {
             justifyContent={'center'}
             mt={5}
             px={{ base: '20px', md: '50px' }}
+            w={'100%'}
           >
             <ArticleHeader
               title={title}
@@ -493,6 +494,8 @@ const Article = () => {
               article={article}
               isQuinBoostAvailable={isQuinBoostAvailable}
               quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
+              openModal={openModal}
+              quinTour={quinTour}
             />
           </Flex>
           <Grid
@@ -524,8 +527,6 @@ const Article = () => {
             />
 
             <Sidebar
-              isQuizGivenLoading={isQuizGivenLoading}
-              state={state}
               givenQuiz={givenQuiz}
               percentile={percentile}
               RQM_score={RQM_score}
@@ -543,9 +544,8 @@ const Article = () => {
               articleHeight={articleHeight}
               article={article}
               id={id}
-              quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
-              openModal={openModal}
-              quinTour={quinTour}
+              state={state}
+              isQuizGivenLoading={isQuizGivenLoading}
             />
           </Grid>
         </Flex>
@@ -558,7 +558,7 @@ const Article = () => {
       />
       {/* Integrate the TrackTime component */}
       {state.user && <TrackTime userId={state.user?._id} articleId={id} />}
-    </>
+    </Flex>
   )
 }
 
