@@ -226,25 +226,6 @@ const ArticleHeader = ({
                     }}
                     cursor="pointer"
                   >
-                    {/* <Image
-                      src={TextBackgound}
-                      bg="none"
-                      h={['80px', '100px']}
-                      w={['160px', '200px']}
-                      className="quin-boost-tracker"
-                      filter={notLoggedIn ? 'blur(5px)' : 'none'}
-                    />
-                    <Text
-                      position="absolute"
-                      top="50%"
-                      left="50%"
-                      transform="translate(-50%, -50%)"
-                      color="black"
-                      fontSize={['md', 'lg', 'xl']}
-                      fontWeight="bold"
-                    >
-                      {quizLeftToGetQuizBoost} Quiz Left
-                    </Text> */}
                     <Button textColor={'white'}>
                       {quizLeftToGetQuizBoost} Quiz Left
                     </Button>
