@@ -17,6 +17,7 @@ import ExpectedIQModal from '../articleComponents/ExpectedIQModal'
 import { AppContext } from '../../contextAPI/appContext'
 import Lock from '/images/lock.webp'
 import useSound from '../../customHooks/useSound'
+import { useSelector } from 'react-redux'
 
 const IQBarGraph = ({
   barGraph,
@@ -24,7 +25,8 @@ const IQBarGraph = ({
   loginedUserProfile,
   viewingHistory = false,
 }) => {
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useContext(AppContext)
+  const { user } = useSelector(state => state.auth)
   const [USER_IQ, setUSER_IQ] = useState(null) // [USER_IQ, setUSER_IQ
   const [TOP_PERCENT, setTOP_PERCENT] = useState(null)
   const [filteredIQData, setFilteredIQData] = useState(null)
@@ -374,7 +376,7 @@ const IQBarGraph = ({
                   w={'60px'}
                   height={'30px'}
                 >
-                  {state.user.profilePrivacy.barGraph ? 'HIDDEN' : 'VISIBLE'}
+                  {user.profilePrivacy.barGraph ? 'HIDDEN' : 'VISIBLE'}
                 </Tag>
               </Tooltip>
             )}

@@ -1,15 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { AppContext } from './appContext'
 import { useSocket } from '../customHooks/useSocket'
 import axios from 'axios'
 import { useDisclosure } from '@chakra-ui/react'
 import { useNavigationCount } from '../customHooks/useNavigationCount.js'
+import { useSelector } from 'react-redux'
 
 const ChatContext = createContext()
 
 const ChatProvider = ({ children }) => {
   const [selectedChat, setSelectedChat] = useState()
+  const { user: loggedInUser } = useSelector(state => state.auth)
+
   const [user, setUser] = useState()
   const [notification, setNotification] = useState([])
   const [chats, setChats] = useState()
@@ -25,10 +26,6 @@ const ChatProvider = ({ children }) => {
     onClose: closeChat,
   } = useDisclosure()
   const { count: routeCount, isLastRoute } = useNavigationCount()
-
-  const history = useNavigate()
-
-  const { state } = useContext(AppContext)
 
   const sortChats = chatsToSort => {
     return chatsToSort.sort((a, b) => {
@@ -67,13 +64,13 @@ const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     getInitialNotificationCnt()
-    setUser(state.user)
+    setUser(loggedInUser)
 
     getSocket()
 
     const handleDisconnect = () => {
       setFetchAgain(false)
-      disconnectSocket(state.user?._id?.toString())
+      disconnectSocket(loggedInUser?._id?.toString())
     }
 
     const handleReconnect = () => {
@@ -109,7 +106,7 @@ const ChatProvider = ({ children }) => {
       document.removeEventListener('resume', handleReconnect)
       handleDisconnect()
     }
-  }, [state.user, getSocket])
+  }, [loggedInUser, getSocket])
 
   useEffect(() => {
     if (socket) {

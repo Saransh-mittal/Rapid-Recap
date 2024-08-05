@@ -17,33 +17,30 @@ import React, { useContext, useEffect, useState } from 'react'
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons' // Import ViewOffIcon for visibility off
 import { AppContext } from '../../../contextAPI/appContext'
 import axios from 'axios'
+import { useDispatch, useSelector } from 'react-redux'
+import { setUser } from '../../../redux/authSlice'
 
 const ToggleProfileVisibility = ({ setShowHideModal }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const [load, setLoad] = useState(false)
-  const { state, dispatch, playClick } = useContext(AppContext)
+  const { playClick } = useContext(AppContext)
+  const dispatchRedux = useDispatch()
+  const { user } = useSelector(state => state.auth)
+
   const [hide, setHide] = useState({
-    fullProfile: state.user.profilePrivacy
-      ? state.user.profilePrivacy.fullProfile
+    fullProfile: user.profilePrivacy ? user.profilePrivacy.fullProfile : false,
+    lineGraph: user.profilePrivacy ? user?.profilePrivacy.lineGraph : false,
+    barGraph: user.profilePrivacy ? user?.profilePrivacy.barGraph : false,
+    solvedQuizzes: user.profilePrivacy
+      ? user?.profilePrivacy.solvedQuizzes
       : false,
-    lineGraph: state.user.profilePrivacy
-      ? state.user?.profilePrivacy.lineGraph
-      : false,
-    barGraph: state.user.profilePrivacy
-      ? state.user?.profilePrivacy.barGraph
-      : false,
-    solvedQuizzes: state.user.profilePrivacy
-      ? state.user?.profilePrivacy.solvedQuizzes
-      : false,
-    // dailyActivity: state.user.profilePrivacy
-    //   ? state.user?.profilePrivacy.dailyActivity
+    // dailyActivity: user.profilePrivacy
+    //   ? user?.profilePrivacy.dailyActivity
     //   : false,
-    society: state.user.profilePrivacy
-      ? state.user?.profilePrivacy.society
-      : false,
-    seasonAnalytics: state.user.profilePrivacy
-      ? state.user?.profilePrivacy.seasonAnalytics
+    society: user.profilePrivacy ? user?.profilePrivacy.society : false,
+    seasonAnalytics: user.profilePrivacy
+      ? user?.profilePrivacy.seasonAnalytics
       : false,
   })
   useEffect(() => {
@@ -88,9 +85,9 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
           isClosable: true,
           position: 'top',
         })
-        const updatedUser = state.user
+        const updatedUser = user
         updatedUser.profilePrivacy = hide
-        dispatch({ type: 'setUser', payloadUser: updatedUser })
+        dispatchRedux(setUser(updatedUser))
         setShowHideModal(false)
         onClose()
       }

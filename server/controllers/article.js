@@ -17,6 +17,7 @@ const { sendNotification } = require('../services/notificationService')
 const { formatDate } = require('../utils/miscellaneous.utils')
 const Quiz = require('../model/quizSchema')
 const NewsAPI = require('newsapi')
+const asyncHandler = require('express-async-handler')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general' } = req.query
@@ -41,6 +42,42 @@ const allArticles = async (req, res) => {
     console.log(error)
   }
 }
+
+const getAvgRQMOnArticle = asyncHandler(async (req, res) => {
+  const { articleId } = req.query
+  try {
+    const quizAttempts = await QuizAttempt.find({ article: articleId })
+    if (!quizAttempts) {
+      res.status(201).json({ avgRQM: 0 })
+    }
+    let totalRQM = 0
+    quizAttempts.forEach(attempt => {
+      totalRQM += attempt.RQM_score
+    })
+    const avgRQM = Math.floor(totalRQM / quizAttempts.length)
+    res.status(201).json(avgRQM)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+    throw new Error(error)
+  }
+})
+
+const getArticleIds = asyncHandler(async (req, res) => {
+  const { limit = 10 } = req.query
+  try {
+    const articles = await Article.find({}, '_id')
+      .sort({ dateTime: -1 })
+      .limit(parseInt(limit))
+    if (!articles) {
+      res.status(422).json({ error: 'No articles found' })
+      throw new Error('No articles found')
+    }
+    const articleIds = articles.map(article => article._id)
+    res.status(201).send(articleIds)
+  } catch (error) {
+    throw new Error(error.message)
+  }
+})
 
 const getArticle = async (req, res) => {
   const { id } = req.params
@@ -512,4 +549,6 @@ module.exports = {
   extractNews,
   testNewsApi,
   getQuizTitan,
+  getArticleIds,
+  getAvgRQMOnArticle,
 }

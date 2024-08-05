@@ -27,61 +27,82 @@ import TextBackgound from '/images/textBackground.webp'
 import starBoost from '/GIFs/starBoost.gif'
 import Button from '../miscellaneous/ButtonComponent'
 
-const LanguageToggle = ({ isEnglish, onToggle, isDisabled }) => (
+const LanguageToggle = ({ isEnglish, onToggle, isDisabled, onSigninOpen }) => (
   <Tooltip
     label={isDisabled ? 'Please log in to change language' : 'Toggle language'}
+    position={'relative'}
   >
-    <Box
-      as="button"
-      display="flex"
-      alignItems="center"
-      bg="rgba(255, 255, 255, 0.1)"
-      borderRadius="full"
-      p="2px"
-      cursor={isDisabled ? 'not-allowed' : 'pointer'}
-      onClick={isDisabled ? null : onToggle}
-      position="relative"
-      border="1px solid"
-      borderColor="whiteAlpha.300"
-      _hover={isDisabled ? {} : { borderColor: 'whiteAlpha.500' }}
-    >
-      <Box
-        px={2}
-        py={1}
-        borderRadius="full"
-        bg={isEnglish ? 'white' : 'transparent'}
-        color={isEnglish ? 'purple.800' : 'white'}
-        fontWeight="bold"
-        transition="all 0.3s"
-        fontSize={['xs', 'sm']}
-      >
-        ENG
-      </Box>
-      <Box
-        px={2}
-        py={1}
-        borderRadius="full"
-        bg={!isEnglish ? 'white' : 'transparent'}
-        color={!isEnglish ? 'purple.800' : 'white'}
-        fontWeight="bold"
-        transition="all 0.3s"
-        fontSize={['xs', 'sm']}
-      >
-        HIN
-      </Box>
+    <Flex position={'relative'}>
       {isDisabled && (
-        <Box
+        <LockIcon
           position="absolute"
           top="50%"
           left="50%"
           transform="translate(-50%, -50%)"
           color="white"
+          boxSize={6}
           zIndex={2}
-        >
-          <AiOutlineLock size={16} />
-        </Box>
+          onClick={onSigninOpen}
+          cursor={'pointer'}
+        />
       )}
-    </Box>
+      <Box
+        as="button"
+        display="flex"
+        alignItems="center"
+        bg="rgba(255, 255, 255, 0.1)"
+        borderRadius="full"
+        p="2px"
+        cursor={isDisabled ? 'not-allowed' : 'pointer'}
+        onClick={onToggle}
+        position="relative"
+        border="1px solid"
+        borderColor="whiteAlpha.300"
+        _hover={isDisabled ? {} : { borderColor: 'whiteAlpha.500' }}
+        style={
+          isDisabled
+            ? { filter: 'blur(5px)', userSelect: 'none' }
+            : { userSelect: 'text' }
+        }
+      >
+        <Box
+          px={2}
+          py={1}
+          borderRadius="full"
+          bg={isEnglish ? 'white' : 'transparent'}
+          color={isEnglish ? 'purple.800' : 'white'}
+          fontWeight="bold"
+          transition="all 0.3s"
+          fontSize={['xs', 'sm']}
+        >
+          ENG
+        </Box>
+        <Box
+          px={2}
+          py={1}
+          borderRadius="full"
+          bg={!isEnglish ? 'white' : 'transparent'}
+          color={!isEnglish ? 'purple.800' : 'white'}
+          fontWeight="bold"
+          transition="all 0.3s"
+          fontSize={['xs', 'sm']}
+        >
+          HIN
+        </Box>
+        {isDisabled && (
+          <Box
+            position="absolute"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            color="white"
+            zIndex={2}
+          >
+            <AiOutlineLock size={16} />
+          </Box>
+        )}
+      </Box>
+    </Flex>
   </Tooltip>
 )
 
@@ -100,6 +121,7 @@ const ArticleHeader = ({
   quizLeftToGetQuizBoost,
   openModal,
   quinTour,
+  onSigninOpen,
 }) => {
   const notLoggedIn = state.show
   const { playClick } = useContext(AppContext)
@@ -108,6 +130,16 @@ const ArticleHeader = ({
   const toast = useToast()
 
   const toggleLanguage = () => {
+    if (notLoggedIn) {
+      toast({
+        title: 'Login Required',
+        description: 'Please log in to share this article.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
     const newLanguage = selectedLanguage === 'english' ? 'hindi' : 'english'
     handleLanguageChange({ target: { value: newLanguage } })
   }
@@ -199,6 +231,7 @@ const ArticleHeader = ({
                   isEnglish={selectedLanguage === 'english'}
                   onToggle={toggleLanguage}
                   isDisabled={notLoggedIn}
+                  onSigninOpen={onSigninOpen}
                 />
               </Flex>
             )}
@@ -209,83 +242,112 @@ const ArticleHeader = ({
             gap={2}
             w={'100%'}
             justifyContent={{ base: 'space-between', xl: 'flex-end' }}
+            position={'relative'}
           >
-            <Flex mb={4}>
-              {isQuinBoostAvailable ? (
-                <QuinBoost />
-              ) : (
-                !state.isBoosted && (
-                  <Flex flexDirection={'column'}>
-                    <Text
-                      m={0}
-                      p={0}
-                      textAlign={'left'}
-                      fontSize={'0.8rem'}
-                      fontWeight={'bold'}
-                    >
-                      Quin Boost
-                    </Text>
-                    <Flex
-                      position="relative"
-                      onClick={e => {
-                        playClick()
-                        if (notLoggedIn) {
-                          e.preventDefault()
-                          return
-                        }
-                        quinTour.complete()
-                        openModal()
-                      }}
-                      cursor="pointer"
-                    >
-                      <Button buttonW="7rem" textColor={'white'}>
-                        {quizLeftToGetQuizBoost} Quiz Left
-                      </Button>
-                      {notLoggedIn && (
-                        <LockIcon
-                          position="absolute"
-                          top="50%"
-                          left="50%"
-                          transform="translate(-50%, -50%)"
-                          color="white"
-                          boxSize={6}
-                          zIndex={2}
-                        />
-                      )}
-                    </Flex>
-                  </Flex>
-                )
+            <Flex>
+              {notLoggedIn && (
+                <LockIcon
+                  position="absolute"
+                  top="50%"
+                  left="50%"
+                  transform="translate(-50%, -50%)"
+                  color="white"
+                  boxSize={6}
+                  zIndex={2}
+                  onClick={onSigninOpen}
+                  cursor={'pointer'}
+                />
               )}
 
-              {state.isBoosted && (
-                <Flex
-                  alignItems="center"
-                  gap={2}
-                  cursor="pointer"
-                  onClick={() => {
-                    playClick()
-                    openModal()
-                  }}
-                >
-                  <Image
-                    src={starBoost}
-                    bg="none"
-                    h={['40px', '50px', '60px']}
-                    w={['40px', '50px', '60px']}
-                  />
-                  <Badge fontSize={['sm', 'md', 'lg']} color="yellow" bg="none">
-                    Enjoy!! 1.5x multiplier
-                  </Badge>
-                </Flex>
-              )}
+              <Flex
+                mb={4}
+                style={
+                  notLoggedIn
+                    ? { filter: 'blur(5px)', userSelect: 'none' }
+                    : { userSelect: 'text' }
+                }
+              >
+                {isQuinBoostAvailable ? (
+                  <QuinBoost />
+                ) : (
+                  !state.isBoosted && (
+                    <Flex flexDirection={'column'}>
+                      <Text
+                        m={0}
+                        p={0}
+                        textAlign={'left'}
+                        fontSize={'0.8rem'}
+                        fontWeight={'bold'}
+                      >
+                        Quin Boost
+                      </Text>
+                      <Flex position="relative">
+                        <Button
+                          buttonW="7rem"
+                          textColor={'white'}
+                          onClick={e => {
+                            playClick()
+                            if (notLoggedIn) {
+                              toast({
+                                title: 'Login Required',
+                                description:
+                                  'Please log in to share this article.',
+                                status: 'warning',
+                                duration: 3000,
+                                isClosable: true,
+                              })
+                              return
+                            }
+                            quinTour.complete()
+                            openModal()
+                          }}
+                        >
+                          {quizLeftToGetQuizBoost} Quiz Left
+                        </Button>
+                      </Flex>
+                    </Flex>
+                  )
+                )}
+
+                {state.isBoosted && (
+                  <Flex
+                    alignItems="center"
+                    gap={2}
+                    cursor="pointer"
+                    onClick={() => {
+                      playClick()
+                      openModal()
+                    }}
+                  >
+                    <Image
+                      src={starBoost}
+                      bg="none"
+                      h={['40px', '50px', '60px']}
+                      w={['40px', '50px', '60px']}
+                    />
+                    <Badge
+                      fontSize={['sm', 'md', 'lg']}
+                      color="yellow"
+                      bg="none"
+                    >
+                      Enjoy!! 1.5x multiplier
+                    </Badge>
+                  </Flex>
+                )}
+              </Flex>
             </Flex>
 
-            <ShareButton onClick={handleShare} isDisabled={notLoggedIn} />
+            <ShareButton
+              onClick={handleShare}
+              isDisabled={notLoggedIn}
+              onOpenSignin={onSigninOpen}
+            />
             {isLargerThan768 && (
               <LanguageToggle
                 isEnglish={selectedLanguage === 'english'}
                 onToggle={toggleLanguage}
                 isDisabled={notLoggedIn}
+                onSigninOpen={onSigninOpen}
               />
             )}
           </Flex>

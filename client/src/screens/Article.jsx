@@ -24,12 +24,14 @@ import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import TrackTime from '../components/articleComponents/TrackTime' // Import TrackTime component
-import useSound from '../customHooks/useSound'
+import { useSelector } from 'react-redux'
 import ArticleHeader from '../components/articleComponents/ArticleHeader'
+import Signin from './Signin'
 
 const Article = () => {
   const toast = useToast()
   const { state } = useContext(AppContext)
+  const { isAuthenticated, user } = useSelector(state => state.auth)
 
   const data = state.news
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -49,13 +51,13 @@ const Article = () => {
   const [showQuiz, setShowQuiz] = useState(false)
   const [textHeight, setTextHeight] = useState(0)
   const [articleHeight, setArticleHeight] = useState(0)
-  const [givenQuiz, setGivenQuiz] = useState(false)
+  const [givenQuiz, setGivenQuiz] = useState(null)
   const textRef = useRef()
   const articleRef = useRef()
   const [percentile, setPercentile] = useState(null)
   const [RQM_score, setRQM_score] = useState(null)
-  const [onGoingQuiz, setOnGoingQuiz] = useState(false)
-  const [quizExpired, setQuizExpired] = useState(false)
+  const [onGoingQuiz, setOnGoingQuiz] = useState(null)
+  const [quizExpired, setQuizExpired] = useState(null)
   const [showExpectedIQ, setShowExpectedIQ] = useState(false)
   const [expectedIQ, setExpectedIQ] = useState(null)
   const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(null)
@@ -75,10 +77,15 @@ const Article = () => {
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
   const [isLargerThan820] = useMediaQuery('(min-width: 820px)')
   const [bookmark, setBookmark] = useState(false)
-  const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(true)
+  const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(null)
   const quizFetchTimer = useRef(null)
+  const {
+    isOpen: isSigninOpen,
+    onOpen: onSigninOpen,
+    onClose: onSigninClose,
+  } = useDisclosure()
 
-  const notLoggedIn = state.show
+  const notLoggedIn = !isAuthenticated
 
   const openModal = () => setIsQuinBoostModalOpen(true)
   const closeModal = () => setIsQuinBoostModalOpen(false)
@@ -115,14 +122,13 @@ const Article = () => {
 
   const bookmarkStatus = async ({ view, update }) => {
     if (notLoggedIn || notLoggedIn === undefined) return
-    console.log(view, update)
-    console.log('bookmarkStatus called')
+
     try {
       setBookmark(true)
       const response = await axios.get(
         `/api/user/bookmark?articleId=${id}&view=${view}&update=${update}`,
       )
-      console.log(response.data.bookmarkStatus)
+
       setBookmark(response.data.bookmarkStatus)
     } catch (error) {
       toast({
@@ -180,9 +186,14 @@ const Article = () => {
   }
 
   const isQuizGiven = async () => {
-    const userId = state.user?._id
+    const userId = user?._id
     const articleId = id
-    if (!userId || !articleId) return
+    if (!userId || !articleId) {
+      setGivenQuiz(false)
+      setIsQuizGivenLoading(false)
+      return
+    }
+    setIsQuizGivenLoading(true)
     try {
       const response = await axios.get(`/api/quiz/given/${articleId}/${userId}`)
       if (response.data.given) {
@@ -192,6 +203,7 @@ const Article = () => {
       }
     } catch (error) {
       console.log(error.message)
+      setGivenQuiz(false)
     } finally {
       setIsQuizGivenLoading(false)
     }
@@ -201,7 +213,7 @@ const Article = () => {
     isQuizGiven()
     if (state.news) {
     }
-  }, [id, state.user, state.news])
+  }, [id, user, state.news])
 
   const checkOnGoingQuiz = async () => {
     try {
@@ -209,6 +221,7 @@ const Article = () => {
       setOnGoingQuiz(response.data.status)
     } catch (error) {
       console.log(error.message)
+      setOnGoingQuiz(false)
     } finally {
       localStorage.setItem('isQuizGivenCalled', true)
       setLoad(false)
@@ -278,7 +291,7 @@ const Article = () => {
         clearTimeout(quizFetchTimer.current)
       }
     }
-  }, [])
+  }, [state.news])
 
   useEffect(() => {
     isQuizGiven()
@@ -294,22 +307,22 @@ const Article = () => {
   }, [article, textHeight])
 
   useEffect(() => {
-    if (!load && !state.show && state.user && state.user.tutorial.articlePage) {
+    if (!load && isAuthenticated && user && user.tutorial.articlePage) {
       // isTutorialTakenCheck({ page: "articlePage", tour });
     }
-  }, [load])
+  }, [load, isAuthenticated, user, user?.tutorial?.articlePage])
 
   useEffect(() => {
     if (
       !load &&
-      !state.show &&
-      state?.user &&
-      state.user.tutorial.quinBoostPage &&
-      !state.user.tutorial.articlePage
+      isAuthenticated &&
+      user &&
+      user.tutorial.quinBoostPage &&
+      !user.tutorial.articlePage
     ) {
       // isTutorialTakenCheck({ page: "quinBoostPage", tour: quinTour });
     }
-  }, [state?.user, state.show, state?.user?.tutorial?.articlePage, load])
+  }, [user, isAuthenticated, user?.tutorial?.articlePage, load])
 
   useEffect(() => {
     setAlt_image(
@@ -409,7 +422,7 @@ const Article = () => {
           ofShowQuiz={() => {
             setShowQuiz(false)
             setGivenQuiz(true)
-            state.user.IQ_score === 0 && getExpectedIQ()
+            user.IQ_score === 0 && getExpectedIQ()
           }}
           language={selectLanForQuiz}
         />
@@ -446,7 +459,7 @@ const Article = () => {
             <meta name="twitter:image" content={alt_image} />
             <link
               rel="canonical"
-              href={`https://yourdomain.com/articles/${id}`}
+              href={`https://www.rapidrecap.co.in/articles/${id}`}
             />
             <script type="application/ld+json">
               {`
@@ -455,7 +468,7 @@ const Article = () => {
                   "@type": "NewsArticle",
                   "mainEntityOfPage": {
                     "@type": "WebPage",
-                    "@id": "https://yourdomain.com/articles/${id}"
+                    "@id": "https://www.rapidrecap.co.in/articles/${id}"
                   },
                   "headline": "${title[selectedLanguage]}",
                   "image": ["${alt_image}"],
@@ -470,7 +483,7 @@ const Article = () => {
                     "name": "Rapid Recap",
                     "logo": {
                       "@type": "ImageObject",
-                      "url": "https://www.rapidrecap.co.in/logo.png"
+                      "url": "https://www.rapidrecap.co.in/images/rrlogo.png"
                     }
                   },
                   "description": "${mainText[selectedLanguage]?.[0]}"
@@ -499,6 +512,7 @@ const Article = () => {
               quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
               openModal={openModal}
               quinTour={quinTour}
+              onSigninOpen={onSigninOpen}
             />
           </Flex>
           <Grid
@@ -520,7 +534,6 @@ const Article = () => {
               textRef={textRef}
               articleRef={articleRef}
               textHeight={textHeight}
-              state={state}
               handleLanguageChange={handleLanguageChange}
               dateTime={dateTime}
               avgTimeRead={avgTimeRead}
@@ -549,6 +562,7 @@ const Article = () => {
               id={id}
               state={state}
               isQuizGivenLoading={isQuizGivenLoading}
+              onSigninOpen={onSigninOpen}
             />
           </Grid>
         </Flex>
@@ -560,7 +574,12 @@ const Article = () => {
         isStateBoosted={state.isBoosted}
       />
       {/* Integrate the TrackTime component */}
-      {state.user && <TrackTime userId={state.user?._id} articleId={id} />}
+      {user && <TrackTime userId={user?._id} articleId={id} />}
+      <Signin
+        isOpen={isSigninOpen}
+        onOpen={onSigninOpen}
+        onClose={onSigninClose}
+      />
     </Flex>
   )
 }

@@ -10,15 +10,17 @@ import {
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import '../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js'
 import ReactGA from 'react-ga4'
-import { useContext, useEffect, lazy, Suspense } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Helmet } from 'react-helmet'
-import { AppContext } from './contextAPI/appContext.jsx'
 import { Box, useDisclosure, useToast } from '@chakra-ui/react'
 import NotificationSubscription from './components/Notifications/NotificationSubscription.jsx'
 import Navbar from './components/Header-Footer/Navbar.jsx'
 import Contact from './screens/Contact'
 import Footer from './components/Header-Footer/Footer.jsx'
 import Loading from './components/miscellaneous/Loading.jsx'
+import { useDispatch, useSelector } from 'react-redux'
+import axios from 'axios'
+import { setUser } from './redux/authSlice.js'
 
 const Home = lazy(() => import('./screens/Home'))
 const Article = lazy(() => import('./screens/Article.jsx'))
@@ -35,17 +37,16 @@ const Dashboard = lazy(() => import('./screens/Dashboard.jsx'))
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
   const location = useLocation()
-  const { state } = useContext(AppContext)
-  const navigate = useNavigate()
+
+  const dispatch = useDispatch()
+  const { isAuthenticated, user } = useSelector(state => state.auth)
 
   const isLoggedIn = () => {
-    return state.show === undefined ? false : !state.show
+    return isAuthenticated && user
   }
 
   const getUserInGameName = () => {
-    return !state.show && state.user && state.user.inGameName
-      ? state.user?.inGameName
-      : null
+    return isLoggedIn() ? user?.inGameName : null
   }
 
   let timeout
@@ -107,7 +108,22 @@ const App = () => {
       page: location.pathname + location.search,
       title: document.title,
     })
-  }, [location])
+  }, [location, user, isAuthenticated])
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const response = await axios.get(`/api/user/loginCheck`)
+        if (response.status === 201) {
+          dispatch(setUser(response.data))
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    fetchInitialData()
+  }, [dispatch])
 
   const shouldShowFooter =
     !location.pathname.includes('home') && location.pathname === '/'
@@ -116,7 +132,7 @@ const App = () => {
     'Notification' in window &&
     'serviceWorker' in navigator &&
     'PushManager' in window
-  const shouldShowNotification = !state.show && isSupported()
+  const shouldShowNotification = isAuthenticated && isSupported()
 
   return (
     <>

@@ -25,6 +25,8 @@ import HamburgerModal from './navbarComponents/HamburgerModal'
 import XPLevelModal from './navbarComponents/XPLevelModal'
 import IQScoreModal from './navbarComponents/IQScoreModal'
 import WiseWeb from '../profileComponents/WiseWeb'
+import { useDispatch, useSelector } from 'react-redux'
+import { logout } from '../../redux/authSlice'
 
 const Navbar = () => {
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
@@ -35,7 +37,6 @@ const Navbar = () => {
     // { to: "/season", label: "Season" },
   ]
   const location = useLocation()
-  const [showCategory, setShowCategory] = useState(false)
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -43,6 +44,8 @@ const Navbar = () => {
   const toast = useToast()
   const { state, dispatch, navLinkRefs, readFriendRequests, playClick } =
     useContext(AppContext)
+  const { isAuthenticated, user } = useSelector(state => state.auth)
+  const dispatchRedux = useDispatch()
   const [visible, setVisible] = useState(true)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
   const { startDrag, drag, endDrag } = useDrag()
@@ -72,10 +75,10 @@ const Navbar = () => {
 
   let level, xpBaseAtNextLevel, requiredXP
 
-  if (state.user && !isEmptyObject(state.user)) {
-    level = state.user.level
+  if (user && !isEmptyObject(user)) {
+    level = user.level
     xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2
-    requiredXP = calculateRequiredXp(state.user.xp, xpBaseAtNextLevel)
+    requiredXP = calculateRequiredXp(user.xp, xpBaseAtNextLevel)
   }
 
   useEffect(() => {
@@ -92,14 +95,14 @@ const Navbar = () => {
     }
 
     if (
-      !state.show &&
-      state.user &&
-      state.user.tutorial.dailyStreakPage &&
-      !state.user.tutorial.homePage &&
+      isAuthenticated &&
+      user &&
+      user.tutorial.dailyStreakPage &&
+      user.tutorial.homePage &&
       (isEmptyObject(state.news) || !state.news)
     )
       isTutorialTakenCheck({ page: 'dailyStreakPage', tour })
-  }, [state.user, state.show, state?.user?.tutorial?.homePage, state?.news])
+  }, [user, isAuthenticated, user?.tutorial?.homePage, state?.news])
 
   async function getAppUpdates() {
     try {
@@ -114,10 +117,10 @@ const Navbar = () => {
   }
 
   useEffect(() => {
-    if (state.user) {
+    if (user) {
       getAppUpdates()
     }
-  }, [state.user])
+  }, [user])
   useEffect(() => {
     //update notification count whose update is not read
     let count = 0
@@ -137,6 +140,7 @@ const Navbar = () => {
         setIsDrawerOpen(false)
         setIsHamburgerOpen(false)
         localStorage.removeItem('token')
+        dispatchRedux(logout())
         toast({
           title: 'Logout Successful',
           status: 'success',
@@ -244,13 +248,7 @@ const Navbar = () => {
             />
           )}
           {showXPLevelModal && (
-            <XPLevelModal
-              level={level}
-              xp={state.user.xp}
-              requiredXP={requiredXP}
-              setShowXPLevelModal={setShowXPLevelModal}
-              // getBackgroundColor={getBackgroundColor}
-            />
+            <XPLevelModal setShowXPLevelModal={setShowXPLevelModal} />
           )}
           {showIQScoreModal && (
             <IQScoreModal setShowIQScoreModal={setShowIQScoreModal} />
@@ -286,7 +284,7 @@ const Navbar = () => {
             <NavbarContent
               notifyCont={notifyCont}
               isHamburgerOpen={isHamburgerOpen}
-              notLogined={state.show}
+              notLogined={!isAuthenticated}
               setIsHamburgerOpen={setIsHamburgerOpen}
               navLinkRefs={navLinkRefs}
               navItems={navItems}
@@ -302,12 +300,12 @@ const Navbar = () => {
               streak={state.streak}
               isBoosted={state.isBoosted}
               getBackgroundColor={getBackgroundColor}
-              notLogined={state.show}
+              notLogined={!isAuthenticated}
               isHamburgerOpen={isHamburgerOpen}
               handleLogout={handleLogout}
               navLinkRefs={navLinkRefs}
               setIsHamburgerOpen={setIsHamburgerOpen}
-              level={state.user && state.user.level}
+              level={user?.level}
               profileNotif={profileNotif}
               onOpenWiseWeb={onOpenWiseWeb}
             />
@@ -343,7 +341,7 @@ const Navbar = () => {
         isOpen={isHamburgerOpen}
         onClose={() => setIsHamburgerOpen(false)}
         navItems={navItems}
-        notLogined={state.show}
+        notLogined={!isAuthenticated}
         navLinkRefs={navLinkRefs}
         notifyCont={notifyCont}
         handleLogout={handleLogout}

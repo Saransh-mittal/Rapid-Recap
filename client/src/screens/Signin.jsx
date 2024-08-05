@@ -35,12 +35,15 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import Register from './Register'
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 import useSound from '../customHooks/useSound'
+import { useDispatch } from 'react-redux'
+import { setUser } from '../redux/authSlice'
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   //const isScreenSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
 
   const toast = useToast()
   const { state, dispatch, playClick } = useContext(AppContext)
+  const dispatchRedux = useDispatch()
   const [data, setData] = useState({
     emailOrInGameName: '',
     password: '',
@@ -103,6 +106,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         type: 'setUser',
         payloadUser: response.data.user,
       })
+      dispatchRedux(setUser(response.data.user))
       await dailyStreakCheckerAndUpdater({ dispatch })
       toast({
         title: 'Login Successful',
@@ -152,6 +156,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           type: 'setUser',
           payloadUser: response.data.user,
         })
+        dispatchRedux(setUser(response.data.user))
         //console.log(response);
         hamburgerOnClose && hamburgerOnClose()
         await dailyStreakCheckerAndUpdater({ dispatch })

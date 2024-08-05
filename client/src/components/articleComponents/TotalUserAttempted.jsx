@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect, useContext, useRef } from 'react'
 import { Button, Flex, Text, Box } from '@chakra-ui/react'
 import { AppContext } from '../../contextAPI/appContext'
 import { Chart, registerables } from 'chart.js'
+import axios from 'axios'
 Chart.register(...registerables)
 
 const TotalUserAttempted = ({
@@ -9,27 +10,48 @@ const TotalUserAttempted = ({
   totalUsersGivenQuiz,
   notLoggedIn,
   RQM_score,
+  articleId,
 }) => {
   const [updatedTotalUsersGivenQuiz, setUpdatedTotalUsersGivenQuiz] =
     useState(totalUsersGivenQuiz)
-  const { playClick } = useContext(AppContext)
+  const [avgRQM, setAvgRQM] = useState(0)
+  const chartRef = useRef(null)
+
+  const getAvgRQM = async () => {
+    try {
+      const { data } = await axios.get(
+        `/api/articles/getAvgRQMOnArticle?articleId=${articleId}`,
+      )
+      setAvgRQM(data)
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   useEffect(() => {
+    getAvgRQM()
     setUpdatedTotalUsersGivenQuiz(totalUsersGivenQuiz)
   }, [totalUsersGivenQuiz])
-  console.log('totalUsersGivenQuiz', totalUsersGivenQuiz)
 
   useEffect(() => {
     if (totalUsersGivenQuiz === null) return
+
     const ctx = document.getElementById('quizChart').getContext('2d')
-    new Chart(ctx, {
+
+    // Destroy existing chart if it exists
+    if (chartRef.current) {
+      chartRef.current.destroy()
+    }
+
+    // Create new chart
+    chartRef.current = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: ['Attempted', 'Avg. Score', 'Your Score'],
         datasets: [
           {
             label: 'Quiz Statistics',
-            data: [updatedTotalUsersGivenQuiz, 60, RQM_score],
+            data: [updatedTotalUsersGivenQuiz, avgRQM, RQM_score],
             backgroundColor: [
               'rgba(253, 226, 243, 0.6)',
               'rgba(229, 190, 236, 0.6)',
@@ -67,7 +89,14 @@ const TotalUserAttempted = ({
         },
       },
     })
-  }, [updatedTotalUsersGivenQuiz])
+
+    // Cleanup function to destroy chart when component unmounts
+    return () => {
+      if (chartRef.current) {
+        chartRef.current.destroy()
+      }
+    }
+  }, [updatedTotalUsersGivenQuiz, RQM_score, avgRQM])
 
   return (
     <Box
