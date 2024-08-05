@@ -39,7 +39,11 @@ const MainArticleContent = ({
 
   return (
     <Flex w={{ base: '90vw', md: '100%' }} overflow="hidden">
-      <Skeleton isLoaded={!translateLoading && !articleLoading}>
+      <Skeleton
+        isLoaded={!translateLoading && !articleLoading}
+        // isLoaded={false}
+        w={'100%'}
+      >
         <Box
           ref={articleRef}
           px={padding}

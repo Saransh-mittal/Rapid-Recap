@@ -115,11 +115,14 @@ const Article = () => {
 
   const bookmarkStatus = async ({ view, update }) => {
     if (notLoggedIn || notLoggedIn === undefined) return
+    console.log(view, update)
+    console.log('bookmarkStatus called')
     try {
       setBookmark(true)
       const response = await axios.get(
         `/api/user/bookmark?articleId=${id}&view=${view}&update=${update}`,
       )
+      console.log(response.data.bookmarkStatus)
       setBookmark(response.data.bookmarkStatus)
     } catch (error) {
       toast({

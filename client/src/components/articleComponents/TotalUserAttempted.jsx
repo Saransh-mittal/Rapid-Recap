@@ -79,13 +79,21 @@ const TotalUserAttempted = ({
       css={css}
       borderRadius="8px"
       backgroundColor="#1a1527"
-      marginBottom="2rem"
+      mb={{ base: '1rem', md: '2rem' }}
       boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+      p={{ base: '1rem', md: '1.5rem' }}
     >
-      <Box className="sidebar">
-        <Box mb="6">
-          <Text as="h3">Quiz Statistics</Text>
-          <canvas id="quizChart" width="400" height="200"></canvas>
+      <Box className="sidebar" w="100%">
+        <Box mb={{ base: '4', md: '6' }}>
+          <Text as="h3" fontSize={{ base: 'lg', md: 'xl' }} color="white">
+            Quiz Statistics
+          </Text>
+          <Box
+            as="canvas"
+            id="quizChart"
+            width="100%"
+            height={{ base: '200', md: '400' }}
+          ></Box>
         </Box>
       </Box>
     </Box>
