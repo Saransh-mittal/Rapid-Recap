@@ -1,69 +1,61 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   Box,
-  Heading as ChakraHeading,
-  Text,
-  Image,
   Flex,
-  useBreakpointValue,
+  Image,
+  Text,
+  Heading as ChakraHeading,
   useDisclosure,
-  UnorderedList,
-  ListItem,
 } from '@chakra-ui/react'
+import { motion, useAnimation, useScroll, useTransform } from 'framer-motion'
 import Section from '../miscellaneous/Section'
 import curve from '../../assets/curve.webp'
-import robot from '../../assets/hero/robot.webp'
-import homeSmile from '../../assets/home-smile.svg'
-import file02 from '../../assets/file-02.svg'
-import searchMd from '../../assets/search-md.svg'
-import plusSquare from '../../assets/plus-square.svg'
-import { ScrollParallax } from 'react-just-parallax'
+import laptop from '/images/laptop-frame.webp'
+import ipad from '/images/ipad-frame.webp'
+import mobile from '/images/mobile-frame.png'
 import heroBackground from '../../assets/hero/hero-background.webp'
-import {
-  Gradient,
-  BackgroundCircles,
-  MediumScreenbgGradient,
-} from './design/Hero'
-import GetStarted from '../Header-Footer/navbarComponents/GetStarted'
-import Button from '../miscellaneous/ButtonComponent'
-import ButtonGradient from '../../assets/svg/ButtonGradient'
-import FeedbackModal from './modals/FeedbackModal'
-import { useNavigate } from 'react-router-dom'
-import Heading from '../miscellaneous/HeadingComponent'
-import { useSelector } from 'react-redux'
+import { BackgroundCircles, MediumScreenbgGradient } from './design/Hero'
 
-const heroIcons = [homeSmile, file02, searchMd, plusSquare]
+const MotionBox = motion(Box)
+const MotionImage = motion(Image)
 
-const HeroSection = () => {
-  const { isAuthenticated } = useSelector(state => state.auth)
-
+const EnhancedHeroSection = () => {
   const parallaxRef = useRef(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const navigate = useNavigate()
-  const crossesOffset = useBreakpointValue({
-    base: 'translateY(0)',
-    lg: 'translateY(5.25rem)',
+  const controls = useAnimation()
+  const { scrollYProgress } = useScroll({
+    target: parallaxRef,
+    offset: ['start start', 'end start'],
   })
-
-  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 992)
+  const laptopY = useTransform(scrollYProgress, [0, 1], [0, 100])
+  const ipadY = useTransform(scrollYProgress, [0, 1], [0, 50])
+  const mobileY = useTransform(scrollYProgress, [0, 1], [0, 80])
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 992)
-    }
+    controls.start('visible')
+  }, [controls])
 
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  }
 
-  const handleDownload = () => {
-    const url = '/RapidRecap.apk'
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'Rapid Recap - Your News Source.apk'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        damping: 12,
+        stiffness: 100,
+      },
+    },
   }
 
   return (
@@ -100,13 +92,13 @@ const HeroSection = () => {
             },
           }}
         >
-          <Image
+          {/* <Image
             src={heroBackground}
             width={1640}
             height={1200}
             alt="hero"
             sizes="(max-width: 768px) 100vw, 50vw"
-          />
+          /> */}
         </Box>
 
         <Box display={'block'}>
@@ -155,117 +147,56 @@ const HeroSection = () => {
                 for excellence.
               </Text>
             </Flex>
-            <Flex
-              justifyContent={'center'}
-              gap={{ base: '3rem', md: '8rem' }}
-              mt={6}
-              flexDirection={{ base: 'column-reverse', md: 'row' }}
-            >
-              {!isAuthenticated && isSmallScreen && (
-                <Flex justifyContent="center" alignItems="center" zIndex={10}>
-                  <GetStarted innerText="Get Started" />
-                </Flex>
-              )}
-              <Flex
-                justifyContent="center"
-                alignItems="center"
-                zIndex={10}
-                flexDirection={'column'}
-              >
-                <Heading
-                  tag="For better and smoother experience"
-                  marginBottom="0"
-                />
-                <ButtonGradient />
-                <Button className="download-button" onClick={handleDownload}>
-                  {' '}
-                  Download
-                </Button>
-              </Flex>
-            </Flex>
           </Box>
 
-          <FeedbackModal isOpen={isOpen} onClose={onClose} />
-          <Flex
+          <MotionBox
+            animate={controls}
+            initial="hidden"
+            variants={containerVariants}
             position="relative"
             maxW={{ base: '23rem', md: '5xl' }}
             mx="auto"
-            justifyContent={'center'}
-            alignItems={'center'}
+            height={{ base: '400px', md: '500px' }}
           >
-            <Box
-              position="relative"
-              zIndex={1}
-              p={0.5}
-              borderRadius="2xl"
-              bgGradient="linear(to-br, #FFBF00, #D10363)"
-              w={{ base: '100%', md: '80%' }}
-            >
-              <Box position="relative" bg="gray.600" borderRadius="1rem">
-                <Box height="1.4rem" bg="gray.600" borderTopRadius="0.9rem" />
-                <Box
-                  borderBottomRadius="0.9rem"
-                  overflow="hidden"
-                  sx={{
-                    aspectRatio: '33 / 40',
-                    '@media (min-width: 769px)': { aspectRatio: '688 / 390' },
-                    '@media (min-width: 1240px)': {
-                      aspectRatio: '800 / 390',
-                    },
-                  }}
-                >
-                  <Box
-                    width="100%"
-                    height={'100%'}
-                    transform={{
-                      base: 'scale(1.7) translateY(8%)',
-                      md: 'scale(1) translateY(-10%)',
-                    }}
-                  >
-                    <Image
-                      src={robot}
-                      width={{ base: 688, lg: 1024 }}
-                      height={790}
-                      alt="AI"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
-                  </Box>
-
-                  <ScrollParallax isAbsolutelyPositioned>
-                    <UnorderedList
-                      listStyleType={'none'}
-                      display={{ base: 'none', xl: 'flex' }}
-                      position="absolute"
-                      left="-5.5rem"
-                      bottom="7.5rem"
-                      px={1}
-                      py={1}
-                      bg="rgba(0, 0, 0, 0.4)"
-                      backdropFilter="blur(10px)"
-                      border="1px solid rgba(0, 0, 0, 0.1)"
-                      borderRadius="2xl"
-                    >
-                      {heroIcons.map((icon, index) => (
-                        <ListItem p={5} key={index}>
-                          <Image
-                            src={icon}
-                            width={12}
-                            height={25}
-                            alt={icon}
-                            background={'transparent'}
-                          />
-                        </ListItem>
-                      ))}
-                    </UnorderedList>
-                  </ScrollParallax>
-                </Box>
-              </Box>
-
-              <Gradient />
-            </Box>
+            <MotionImage
+              variants={itemVariants}
+              position="absolute"
+              left={{ base: '50%', md: '0%' }}
+              top={{ base: '50%', md: '10%' }}
+              transform={{ base: 'translate(-50%, -50%)', md: 'none' }}
+              zIndex={3}
+              h={{ base: '200px', md: '300px' }}
+              src={laptop}
+              alt="Article Interface"
+              style={{ y: laptopY }}
+            />
+            <MotionImage
+              variants={itemVariants}
+              position="absolute"
+              left={{ base: '50%', md: '42%' }}
+              top={{ base: '10%', md: '30%' }}
+              transform={{ base: 'translateX(-50%)', md: 'none' }}
+              zIndex={2}
+              h={{ base: '150px', md: '250px' }}
+              src={ipad}
+              alt="Quiz Instructions"
+              style={{ y: ipadY }}
+            />
+            <MotionImage
+              variants={itemVariants}
+              position="absolute"
+              left={{ base: '50%', md: '73%' }}
+              top={{ base: '70%', md: '5%' }}
+              transform={{ base: 'translateX(-50%)', md: 'none' }}
+              zIndex={3}
+              h={{ base: '100px', md: '400px' }}
+              src={mobile}
+              alt="Quiz Interface"
+              style={{ y: mobileY }}
+            />
 
             <BackgroundCircles />
-          </Flex>
+          </MotionBox>
         </Box>
       </Box>
 
@@ -283,4 +214,4 @@ const HeroSection = () => {
   )
 }
 
-export default HeroSection
+export default EnhancedHeroSection

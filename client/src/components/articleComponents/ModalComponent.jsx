@@ -44,6 +44,7 @@ const ModalComponent = ({
   state,
   isQuinBoostAvailable,
   showSubmittedInterface,
+  showGetSetGo,
 }) => {
   const textColor = 'white'
 
@@ -115,7 +116,7 @@ const ModalComponent = ({
               marginBottom={load ? '10px' : ''}
               w={'100%'}
             >
-              {totalQuestions && (
+              {totalQuestions && !showGetSetGo && (
                 <ModalFooter w={'100%'}>
                   <motion.div
                     initial={{ opacity: 0 }}
