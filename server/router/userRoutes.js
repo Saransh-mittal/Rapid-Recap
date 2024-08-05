@@ -35,6 +35,7 @@ const {
   getBookmarks,
   removeBookmark,
   NavLineGraph,
+  getUserIds,
   // mailForQuinBoost,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
@@ -75,5 +76,6 @@ router.route('/bookmark').get(Authenticate, bookmark)
 router.route('/getBookmarks').get(Authenticate, getBookmarks)
 router.route('/removeBookmark').get(Authenticate, removeBookmark)
 router.route('/lineGraph').get(Authenticate, NavLineGraph)
+router.route('/getUserIds').get(getUserIds)
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
 module.exports = router

@@ -275,7 +275,7 @@ const Article = () => {
         clearTimeout(quizFetchTimer.current)
       }
     }
-  }, [])
+  }, [state.news])
 
   useEffect(() => {
     isQuizGiven()

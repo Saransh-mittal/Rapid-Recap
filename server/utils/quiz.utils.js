@@ -519,6 +519,17 @@ const fakeQuizAttemptCnt = async () => {
         const skew = 1 // Adjust this value to control the skewness
         const weightedRandom = Math.pow(Math.random(), skew) * (max - 1) + 1
         quizAttemptCnt += Math.floor(weightedRandom)
+        for (let i = 0; i < Math.floor(weightedRandom); i++) {
+          const topScore = Math.floor(Math.random() * 50)
+          const newQuizAttempt = new QuizAttempt({
+            article: article._id,
+            RQM_score: Math.floor(Math.random() * topScore),
+            articleDifficulty: Math.random(),
+            userPercentile: Math.random() * 100,
+            timeTaken: Math.floor(Math.random() * 100),
+          })
+          await newQuizAttempt.save()
+        }
       }
 
       article.quizAttemptCnt = quizAttemptCnt

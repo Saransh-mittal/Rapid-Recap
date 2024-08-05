@@ -31,6 +31,7 @@ const {
   generateRecommendations,
 } = require('../services/recommendationService.js')
 const Article = require('../model/articleSchema.js')
+const asyncHandler = require('express-async-handler')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -124,6 +125,27 @@ const registerUser = async (req, res) => {
     console.log(err)
   }
 }
+
+const getUserIds = asyncHandler(async (req, res) => {
+  const { limit = 10, sort = 'active' } = req.query
+  try {
+    let users = []
+    if (sort === 'active') {
+      users = await User.find()
+        .sort({ lastLogin: -1 })
+        .limit(parseInt(limit))
+        .select('_id inGameName')
+    } else if (sort === 'new') {
+      users = await User.find().sort({ createdAt: -1 }).limit(parseInt(limit))
+    } else if (sort === 'old') {
+      users = await User.find().sort({ createdAt: 1 }).limit(parseInt(limit))
+    }
+    const userIds = users.map(user => user.inGameName)
+    res.status(200).json(userIds)
+  } catch (error) {
+    throw new Error(error)
+  }
+})
 
 const loginUser = async (req, res) => {
   // Implement login logic here
@@ -1243,6 +1265,7 @@ const seasonHistory = async (req, res) => {
 const bookmark = async (req, res) => {
   const { articleId, view, update } = req.query
   const userId = req.user._id
+  console.log('Bookmark:', articleId, view, update)
   try {
     const user = await User.findById(userId)
     const article = await Article.findById(articleId).select('_id')
@@ -1250,6 +1273,7 @@ const bookmark = async (req, res) => {
       return res.status(404).json({ error: 'Article not found' })
     }
     const isBookmarked = user.bookmarks.includes(article._id)
+    console.log('Bookmark status:', isBookmarked)
     if (view === 'true' && update === 'false') {
       return res.status(200).json({ bookmarkStatus: isBookmarked })
     }
@@ -1375,4 +1399,5 @@ module.exports = {
   getBookmarks,
   removeBookmark,
   NavLineGraph,
+  getUserIds,
 }

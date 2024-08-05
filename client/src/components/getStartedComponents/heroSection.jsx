@@ -39,7 +39,7 @@ const EnhancedHeroSection = () => {
         opacity: 1,
         y: 0,
         rotate: 0,
-        transition: { delay: 0.1, duration: 0.2 },
+        transition: { delay: 0, duration: 0.1 },
       })
       await ipadControls.start({
         opacity: 1,
@@ -101,13 +101,13 @@ const EnhancedHeroSection = () => {
             },
           }}
         >
-          {/* <Image
+          <Image
             src={heroBackground}
             width={1640}
             height={1200}
             alt="hero"
             sizes="(max-width: 768px) 100vw, 50vw"
-          /> */}
+          />
         </Box>
 
         <Box display={'block'}>
@@ -115,7 +115,7 @@ const EnhancedHeroSection = () => {
             maxW="62rem"
             maxH={{ base: 'auto', lg: '30rem' }}
             mx="auto"
-            mb={{ base: '3.875rem', md: '5rem' }}
+            mb={{ base: '0', md: '2rem' }}
             zIndex={99}
             position={'relative'}
             letterSpacing={'2px'}
@@ -140,7 +140,7 @@ const EnhancedHeroSection = () => {
             </ChakraHeading>
             <Flex justifyContent={'center'}>
               <Text
-                fontSize="lg"
+                fontSize={{ base: 'md', md: 'lg' }}
                 maxW="3xl"
                 px={{ base: '1rem', md: '0rem' }}
                 mb={{ base: '6', lg: '0' }}
@@ -169,11 +169,11 @@ const EnhancedHeroSection = () => {
               initial={{ opacity: 0, y: 50, rotate: -5 }}
               variants={deviceVariants}
               position="absolute"
-              left={{ base: '50%', md: '0%' }}
-              top={{ base: '50%', md: '-5%' }}
+              left={{ base: '5%', md: '7%', lg: '15%', xl: '0' }}
+              top={'-5%'}
               transform={{ base: 'translate(-50%, -50%)', md: 'none' }}
               zIndex={3}
-              h={{ base: '200px', md: '525px' }}
+              h={{ base: '175px', md: '350px', lg: '400px', xl: '525px' }}
               src={laptop}
               alt="Article Interface"
               style={{ y: laptopY }}
@@ -184,11 +184,11 @@ const EnhancedHeroSection = () => {
               initial={{ opacity: 0, y: 50, rotate: 5 }}
               variants={deviceVariants}
               position="absolute"
-              left={{ base: '50%', md: '42%' }}
-              top={{ base: '10%', md: '30%' }}
+              left={{ base: '46%', md: '43%', lg: '49%', xl: '42%' }}
+              top={{ base: '10%', md: '22%', lg: '30%' }}
               transform={{ base: 'translateX(-50%)', md: 'none' }}
               zIndex={2}
-              h={{ base: '150px', md: '250px' }}
+              h={{ base: '90px', md: '170px', lg: '180px', xl: '250px' }}
               src={ipad}
               alt="Quiz Instructions"
               style={{ y: ipadY }}
@@ -199,11 +199,11 @@ const EnhancedHeroSection = () => {
               initial={{ opacity: 0, y: -50, rotate: -5 }}
               variants={deviceVariants}
               position="absolute"
-              left={{ base: '50%', md: '73%' }}
-              top={{ base: '70%', md: '5%' }}
+              left={{ base: '75%', md: '70%', xl: '73%' }}
+              top={{ base: '5%', md: '5%' }}
               transform={{ base: 'translateX(-50%)', md: 'none' }}
               zIndex={3}
-              h={{ base: '100px', md: '400px' }}
+              h={{ base: '110px', md: '245px', lg: '275px', xl: '400px' }}
               src={mobile}
               alt="Quiz Interface"
               style={{ y: mobileY }}
