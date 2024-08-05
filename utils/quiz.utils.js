@@ -4,6 +4,7 @@ const Quiz = require('../model/quizSchema')
 const Article = require('../model/articleSchema')
 const moment = require('moment')
 const fakeQuizAttemptMinMax = require('../data/fakeAttemptMinMax.json')
+const configService = require('../configService')
 const genQuiz = async ({ fullQuiz, title }) => {
   const selectedQuestions = new Set() // Using a Set to ensure uniqueness
 
@@ -519,6 +520,18 @@ const fakeQuizAttemptCnt = async () => {
         const skew = 1 // Adjust this value to control the skewness
         const weightedRandom = Math.pow(Math.random(), skew) * (max - 1) + 1
         quizAttemptCnt += Math.floor(weightedRandom)
+        for (let i = 0; i < Math.floor(weightedRandom); i++) {
+          const topScore = Math.floor(Math.random() * 50)
+          const newQuizAttempt = new QuizAttempt({
+            article: article._id,
+            RQM_score: Math.floor(Math.random() * topScore),
+            articleDifficulty: Math.random(),
+            userPercentile: Math.random() * 100,
+            timeTaken: Math.floor(Math.random() * 100),
+            season: parseInt(configService.getCurrentSeason(), 10),
+          })
+          await newQuizAttempt.save()
+        }
       }
 
       article.quizAttemptCnt = quizAttemptCnt
