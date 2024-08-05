@@ -115,11 +115,14 @@ const Article = () => {
 
   const bookmarkStatus = async ({ view, update }) => {
     if (notLoggedIn || notLoggedIn === undefined) return
+    console.log(view, update)
+    console.log('bookmarkStatus called')
     try {
       setBookmark(true)
       const response = await axios.get(
         `/api/user/bookmark?articleId=${id}&view=${view}&update=${update}`,
       )
+      console.log(response.data.bookmarkStatus)
       setBookmark(response.data.bookmarkStatus)
     } catch (error) {
       toast({
@@ -499,7 +502,7 @@ const Article = () => {
             />
           </Flex>
           <Grid
-            templateColumns={isLargerThan820 ? 'minmax(0, 9fr) 5.3fr' : '1fr'}
+            templateColumns={isLargerThan820 ? 'minmax(0, 9fr) 5fr' : '1fr'}
             gap={10}
             minH={'85vh'}
             px={{ base: '20px', md: '50px' }}

@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import {
   Box,
-  Divider,
   Flex,
   GridItem,
   Image,
   Skeleton,
   Text,
   Tooltip,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 import { LockIcon } from '@chakra-ui/icons'
 
@@ -30,28 +30,39 @@ const MainArticleContent = ({
     }
   }
 
+  const fontSize = useBreakpointValue({
+    base: '0.9rem',
+    md: '1rem',
+    lg: '1.1rem',
+  })
+  const padding = useBreakpointValue({ base: 3, md: 4, lg: 6 })
+
   return (
-    <GridItem w="100%" overflow={'hidden'}>
-      <Skeleton isLoaded={!translateLoading && !articleLoading}>
+    <Flex w={{ base: '90vw', md: '100%' }} overflow="hidden">
+      <Skeleton
+        isLoaded={!translateLoading && !articleLoading}
+        // isLoaded={false}
+        w={'100%'}
+      >
         <Box
           ref={articleRef}
-          px={6} // Added padding for better spacing
+          px={padding}
           py={3}
-          bg="rgba(26, 21, 39, 0.6)" // Matched background color with the HTML design
+          bg="rgba(26, 21, 39, 0.6)"
           bgGradient="linear(to-r, rgba(26, 21, 39, 0.8), rgba(34, 32, 52, 0.9), rgba(48, 44, 66, 1))"
           borderRadius="lg"
-          boxShadow="lg" // Added box shadow to mimic the shadow effect
+          boxShadow="lg"
           color="#E5E7EB"
           fontFamily="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-          fontSize="1.1rem"
+          fontSize={fontSize}
           lineHeight="1.8"
         >
-          <Flex justifyContent={'center'} mt={5}>
+          <Flex justifyContent="center" mt={[2, 3, 5]}>
             <Image
               src={imgURL}
               alt="Article Image"
               borderRadius="md"
-              mb={5}
+              mb={[3, 4, 5]}
               width={{ base: '100%', sm: '100%', md: '80%', lg: '98%' }}
               height="auto"
               objectFit="contain"
@@ -63,29 +74,27 @@ const MainArticleContent = ({
             <>
               <Text
                 align="justify"
-                mb={4}
-                mx={2}
-                fontSize="1.1rem"
+                mb={[2, 3, 4]}
+                mx={[1, 2]}
+                fontSize={fontSize}
                 letterSpacing={1}
-                // style={{ fontFamily: 'Georgia, serif' }}
               >
                 {mainText[selectedLanguage][0]}
               </Text>
-              {/* <Divider my={2} color="#bfbbb4" width={'10%'} /> */}
 
               <Box mt={2} mb={2}>
-                <Flex position={'relative'} width="100%">
+                <Flex position="relative" width="100%">
                   <Text
                     ref={textRef}
                     align="justify"
                     letterSpacing={1}
-                    fontSize="1.1rem"
+                    fontSize={fontSize}
                     style={
                       notLoggedIn
                         ? { filter: 'blur(5px)', userSelect: 'none' }
                         : { userSelect: 'text' }
                     }
-                    mx={2}
+                    mx={[1, 2]}
                   >
                     {mainText[selectedLanguage][1]}
                   </Text>
@@ -100,26 +109,26 @@ const MainArticleContent = ({
                         left="50%"
                         transform="translate(-50%, -50%)"
                         color="white"
-                        boxSize={8}
+                        boxSize={[6, 7, 8]}
                         zIndex={2}
                       />
                     </Tooltip>
                   )}
                 </Flex>
               </Box>
-              {/* <Divider my={2} borderColor="gray.200" width={'10%'} /> */}
+
               <Flex mt={2} mb={2}>
                 <Text
                   ref={textRef}
                   align="justify"
                   letterSpacing={1}
-                  fontSize="1.1rem"
+                  fontSize={fontSize}
                   style={
                     notLoggedIn
                       ? { filter: 'blur(5px)', userSelect: 'none' }
                       : { userSelect: 'text' }
                   }
-                  mx={2}
+                  mx={[1, 2]}
                 >
                   {mainText[selectedLanguage][2]}
                 </Text>
@@ -127,14 +136,19 @@ const MainArticleContent = ({
             </>
           ) : (
             <>
-              <Text align="justify" letterSpacing={1} mb={4} fontSize="1.1rem">
+              <Text
+                align="justify"
+                letterSpacing={1}
+                mb={[2, 3, 4]}
+                fontSize={fontSize}
+              >
                 {mainText[selectedLanguage][0]}
               </Text>
-              <Flex position={'relative'} width="100%">
+              <Flex position="relative" width="100%">
                 <Text
                   align="justify"
                   letterSpacing={1}
-                  fontSize="1.1rem"
+                  fontSize={fontSize}
                   style={
                     notLoggedIn
                       ? { filter: 'blur(5px)', userSelect: 'none' }
@@ -154,7 +168,7 @@ const MainArticleContent = ({
                       left="50%"
                       transform="translate(-50%, -50%)"
                       color="white"
-                      boxSize={8}
+                      boxSize={[6, 7, 8]}
                       zIndex={2}
                     />
                   </Tooltip>
@@ -164,7 +178,7 @@ const MainArticleContent = ({
           )}
         </Box>
       </Skeleton>
-    </GridItem>
+    </Flex>
   )
 }
 
