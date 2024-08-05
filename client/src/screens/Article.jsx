@@ -499,7 +499,7 @@ const Article = () => {
             />
           </Flex>
           <Grid
-            templateColumns={isLargerThan820 ? 'minmax(0, 9fr) 5.3fr' : '1fr'}
+            templateColumns={isLargerThan820 ? 'minmax(0, 9fr) 5fr' : '1fr'}
             gap={10}
             minH={'85vh'}
             px={{ base: '20px', md: '50px' }}

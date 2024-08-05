@@ -151,9 +151,14 @@ const ArticleHeader = ({
         // justifyContent={'flex-end'}
         align={['flex-start', 'flex-start', 'center']}
       >
-        <Flex>
-          <Flex alignItems="center" gap={2} justifyContent={'center'}>
-            <Text fontSize={['md', 'lg', 'xl']}>
+        <Flex w={'100%'} mb={4}>
+          <Flex
+            alignItems="center"
+            gap={1}
+            justifyContent={'flex-start'}
+            w={'100%'}
+          >
+            <Flex fontSize={['md', 'lg', 'xl']} alignItems={'center'}>
               <Highlight
                 query="Author"
                 styles={{
@@ -165,16 +170,19 @@ const ArticleHeader = ({
               >
                 Author
               </Highlight>
-              <b>{' : '}</b>
-              {author[selectedLanguage]}
-            </Text>
+
+              <Flex>
+                {' : '}
+                {author[selectedLanguage]}
+              </Flex>
+            </Flex>
             <Flex
               onClick={() => {
                 playClick()
                 bookmarkStatus({ view: false, update: true })
               }}
               cursor="pointer"
-              mb={4}
+              // mb={4}
             >
               {bookmark ? (
                 <FaBookmark size={20} color="red" />
@@ -184,7 +192,7 @@ const ArticleHeader = ({
             </Flex>
           </Flex>
           {!isLargerThan768 && (
-            <Flex alignItems={'center'} mb={4} ml={6}>
+            <Flex alignItems={'center'} ml={6}>
               <LanguageToggle
                 isEnglish={selectedLanguage === 'english'}
                 onToggle={toggleLanguage}
@@ -194,7 +202,12 @@ const ArticleHeader = ({
           )}
         </Flex>
 
-        <Flex alignItems={'center'} gap={2}>
+        <Flex
+          alignItems={'center'}
+          gap={2}
+          w={'100%'}
+          justifyContent={{ base: 'space-between', xl: 'flex-end' }}
+        >
           <Flex mb={4}>
             {isQuinBoostAvailable ? (
               <QuinBoost />
@@ -226,7 +239,7 @@ const ArticleHeader = ({
                     }}
                     cursor="pointer"
                   >
-                    <Button textColor={'white'}>
+                    <Button buttonW="7rem" textColor={'white'}>
                       {quizLeftToGetQuizBoost} Quiz Left
                     </Button>
                     {notLoggedIn && (
@@ -276,23 +289,35 @@ const ArticleHeader = ({
               isDisabled={notLoggedIn}
             />
           )}
-          {isLargerThan768 && (
+          {/* {isLargerThan768 && (
             <Flex
-              justifyContent={{ base: 'flex-end', md: '' }}
-              w={{ base: '100%', md: 'auto' }}
+              justifyContent={{ base: 'flex-end', lg: 'flex-start' }}
+              w={{ base: '100%', lg: 'auto' }}
             >
               <Text fontSize={['sm', 'md', 'lg']} mb={0}>
                 {avgTimeRead} min read • {dateTime}
               </Text>
             </Flex>
-          )}
+          )} */}
         </Flex>
         {!isLargerThan768 && (
           <Flex
-            justifyContent={{ base: 'flex-end', md: '' }}
-            w={{ base: '100%', md: 'auto' }}
+            justifyContent={{ base: 'flex-end', lg: '' }}
+            w={{ base: '100%', lg: 'auto' }}
           >
             <Text fontSize={['sm', 'md', 'lg']}>
+              {avgTimeRead} min read • {dateTime}
+            </Text>
+          </Flex>
+        )}
+      </Flex>
+      <Flex w={'100%'} justifyContent={'flex-end'}>
+        {isLargerThan768 && (
+          <Flex
+            justifyContent={{ base: 'flex-end', lg: 'flex-start' }}
+            w={{ base: '100%', lg: 'auto' }}
+          >
+            <Text fontSize={['sm', 'md', 'lg']} mb={0}>
               {avgTimeRead} min read • {dateTime}
             </Text>
           </Flex>

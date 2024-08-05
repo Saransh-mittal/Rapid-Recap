@@ -49,6 +49,7 @@ const Sidebar = ({
       boxShadow={'0 100px 200px rgba(1, 1, 1, 1.1)'}
       borderRadius={'15px'}
       p={1.5}
+      w={{ base: '90vw', md: '100%' }}
     >
       {givenQuiz ? (
         <GivenQuiz
@@ -162,11 +163,36 @@ const Sidebar = ({
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
               }}
               mb={3}
+              flexDirection={'column'}
             >
-              <Flex mr={3} mb={2}>
+              <Flex w="100%" justifyContent="space-between">
+                <Text
+                  m={0}
+                  p={0}
+                  textTransform="uppercase"
+                  color="#9CAFAA"
+                  fontWeight="bold"
+                  letterSpacing="1px"
+                >
+                  {item.date},
+                </Text>
+                <Text
+                  fontSize="0.8rem"
+                  m={0}
+                  p={0}
+                  textTransform="uppercase"
+                  color="#9CAFAA"
+                  letterSpacing="1px"
+                >
+                  {item.avgReadTime} MIN READ
+                </Text>
+              </Flex>
+              <Flex mr={3} mb={2} alignItems={'center'}>
                 <Image
-                  width="160px"
-                  height="auto"
+                  // width={{ base: 'auto', md: '160px' }}
+                  // height={{ base: '6.5rem', md: 'auto' }}
+                  w={{ base: '130px', md: '160px' }}
+                  h="auto"
                   mr={3}
                   mt={2}
                   // height="100%"
@@ -180,33 +206,11 @@ const Sidebar = ({
                   }}
                   borderRadius="8px"
                 />
-              </Flex>
-              <Flex flexDirection="column" w="100%">
-                <Flex w="100%" justifyContent="space-between">
-                  <Text
-                    m={0}
-                    p={0}
-                    textTransform="uppercase"
-                    color="#9CAFAA"
-                    fontWeight="bold"
-                    letterSpacing="1px"
-                  >
-                    {item.date},
-                  </Text>
-                  <Text
-                    fontSize="0.8rem"
-                    m={0}
-                    p={0}
-                    textTransform="uppercase"
-                    color="#9CAFAA"
-                    letterSpacing="1px"
-                  >
-                    {item.avgReadTime} MIN READ
+                <Flex flexDirection="column" w="100%">
+                  <Text mt={2} color="#e0e0e0">
+                    {item.title}
                   </Text>
                 </Flex>
-                <Text mt={2} color="#e0e0e0">
-                  {item.title}
-                </Text>
               </Flex>
             </Box>
           ))}
