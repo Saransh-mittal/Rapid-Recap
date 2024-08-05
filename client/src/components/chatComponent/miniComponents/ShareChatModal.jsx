@@ -64,7 +64,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const handleSocialShare = platform => {
     playClick()
     let url = ''
-    const articleUrl = `https://rapidrecap.co.in/article/${articleToShare._id}` // Replace with your actual article URL
+    const articleUrl = `https://www.rapidrecap.co.in/article/${articleToShare._id}` // Replace with your actual article URL
     const text = encodeURIComponent(
       `Check out this article: ${articleToShare.title}`,
     )
@@ -102,7 +102,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
 
   const handleCopyArticleUrl = () => {
     playClick()
-    const articleUrl = `https://rapidrecap.co.in/article/${articleToShare._id}`
+    const articleUrl = `https://www.rapidrecap.co.in/article/${articleToShare._id}`
     navigator.clipboard.writeText(articleUrl)
     toast({
       title: 'Link Copied',

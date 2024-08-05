@@ -10,7 +10,7 @@ import {
 import { motion, useAnimation, useScroll, useTransform } from 'framer-motion'
 import Section from '../miscellaneous/Section'
 import curve from '../../assets/curve.webp'
-import laptop from '/images/laptop-frame.webp'
+import laptop from '/images/laptop-frame-min.webp'
 import ipad from '/images/ipad-frame.webp'
 import mobile from '/images/mobile-frame.png'
 import heroBackground from '../../assets/hero/hero-background.webp'
@@ -22,7 +22,9 @@ const MotionImage = motion(Image)
 const EnhancedHeroSection = () => {
   const parallaxRef = useRef(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const controls = useAnimation()
+  const laptopControls = useAnimation()
+  const ipadControls = useAnimation()
+  const mobileControls = useAnimation()
   const { scrollYProgress } = useScroll({
     target: parallaxRef,
     offset: ['start start', 'end start'],
@@ -32,32 +34,39 @@ const EnhancedHeroSection = () => {
   const mobileY = useTransform(scrollYProgress, [0, 1], [0, 80])
 
   useEffect(() => {
-    controls.start('visible')
-  }, [controls])
+    const sequence = async () => {
+      await laptopControls.start({
+        opacity: 1,
+        y: 0,
+        rotate: 0,
+        transition: { delay: 0.1, duration: 0.2 },
+      })
+      await ipadControls.start({
+        opacity: 1,
+        y: 0,
+        rotate: 0,
+        transition: { delay: 0.1, duration: 0.2 },
+      })
+      await mobileControls.start({
+        opacity: 1,
+        y: 0,
+        rotate: 0,
+        transition: { delay: 0.1, duration: 0.2 },
+      })
+    }
+    sequence()
+  }, [laptopControls, ipadControls, mobileControls])
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
+  const deviceVariants = {
+    hover: {
+      scale: 1.05,
+      rotate: [0, 2, -2, 0],
       transition: {
-        staggerChildren: 0.2,
+        duration: 0.3,
+        yoyo: Infinity,
       },
     },
   }
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: 'spring',
-        damping: 12,
-        stiffness: 100,
-      },
-    },
-  }
-
   return (
     <Section crosses customPaddings={`2.85rem 0 0 0`} id="hero">
       <Box
@@ -150,28 +159,30 @@ const EnhancedHeroSection = () => {
           </Box>
 
           <MotionBox
-            animate={controls}
-            initial="hidden"
-            variants={containerVariants}
             position="relative"
             maxW={{ base: '23rem', md: '5xl' }}
             mx="auto"
             height={{ base: '400px', md: '500px' }}
           >
             <MotionImage
-              variants={itemVariants}
+              animate={laptopControls}
+              initial={{ opacity: 0, y: 50, rotate: -5 }}
+              variants={deviceVariants}
               position="absolute"
               left={{ base: '50%', md: '0%' }}
-              top={{ base: '50%', md: '10%' }}
+              top={{ base: '50%', md: '-5%' }}
               transform={{ base: 'translate(-50%, -50%)', md: 'none' }}
               zIndex={3}
-              h={{ base: '200px', md: '300px' }}
+              h={{ base: '200px', md: '525px' }}
               src={laptop}
               alt="Article Interface"
               style={{ y: laptopY }}
+              whileHover="hover"
             />
             <MotionImage
-              variants={itemVariants}
+              animate={ipadControls}
+              initial={{ opacity: 0, y: 50, rotate: 5 }}
+              variants={deviceVariants}
               position="absolute"
               left={{ base: '50%', md: '42%' }}
               top={{ base: '10%', md: '30%' }}
@@ -181,9 +192,12 @@ const EnhancedHeroSection = () => {
               src={ipad}
               alt="Quiz Instructions"
               style={{ y: ipadY }}
+              whileHover="hover"
             />
             <MotionImage
-              variants={itemVariants}
+              animate={mobileControls}
+              initial={{ opacity: 0, y: -50, rotate: -5 }}
+              variants={deviceVariants}
               position="absolute"
               left={{ base: '50%', md: '73%' }}
               top={{ base: '70%', md: '5%' }}
@@ -193,6 +207,7 @@ const EnhancedHeroSection = () => {
               src={mobile}
               alt="Quiz Interface"
               style={{ y: mobileY }}
+              whileHover="hover"
             />
 
             <BackgroundCircles />
