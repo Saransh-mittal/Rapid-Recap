@@ -156,13 +156,13 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
         w={{ base: '100%', lg: '15%' }}
         h={{ base: 'auto', lg: '100vh' }}
         position={'fixed'}
-        backgroundColor={'#0f0d15'}
-        backgroundImage={
-          'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)'
-        }
+        backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
         boxShadow={
           '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
         }
+        // backgroundImage={
+        //   'linear-gradient(-180deg, rgba(26, 21, 39, 0.8), rgba(14, 12, 22, 0.8) 88%, rgba(14, 12, 22, 0.8) 99%)'
+        // }
         overflow={'auto'}
         sx={{
           '::-webkit-scrollbar': {

@@ -1,7 +1,7 @@
-import { useContext, useEffect, useState, useRef } from "react";
-import { AppContext } from "../contextAPI/appContext";
-import { useNavigate } from "react-router-dom";
-import useDrag from "../customHooks/useDrag";
+import { useContext, useEffect, useState, useRef } from 'react'
+import { AppContext } from '../contextAPI/appContext'
+import { useNavigate } from 'react-router-dom'
+import useDrag from '../customHooks/useDrag'
 import {
   Box,
   Flex,
@@ -12,29 +12,29 @@ import {
   FormControl,
   FormLabel,
   Link,
-} from "@chakra-ui/react";
-import { Helmet } from "react-helmet";
-import ButtonGradient from "../assets/svg/ButtonGradient";
-import ButtonComponent from "../components/miscellaneous/ButtonComponent";
-import { FaEnvelope, FaInstagram, FaLinkedin } from "react-icons/fa";
-import Heading from "../components/miscellaneous/HeadingComponent";
+} from '@chakra-ui/react'
+import { Helmet } from 'react-helmet'
+import ButtonGradient from '../assets/svg/ButtonGradient'
+import ButtonComponent from '../components/miscellaneous/ButtonComponent'
+import { FaEnvelope, FaInstagram, FaLinkedin } from 'react-icons/fa'
+import Heading from '../components/miscellaneous/HeadingComponent'
 
 const Contact = () => {
-  const { startDrag, drag, endDrag } = useDrag();
-  const navigate = useNavigate();
-  const { state, dispatch } = useContext(AppContext);
-  const buttonRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
+  const { startDrag, drag, endDrag } = useDrag()
+  const navigate = useNavigate()
+  const { state, dispatch } = useContext(AppContext)
+  const buttonRef = useRef(null)
+  const [isHovered, setIsHovered] = useState(false)
   const buttonStyle = {
-    backgroundColor: isHovered ? "#f9f9f9" : "#6c757d",
-    borderColor: isHovered ? "#f9f9f9" : "#6c757d",
-    transition: "all 0.3s ease-in-out",
-    color: isHovered ? "#6c757d" : "#f9f9f9",
-  };
+    backgroundColor: isHovered ? '#f9f9f9' : '#6c757d',
+    borderColor: isHovered ? '#f9f9f9' : '#6c757d',
+    transition: 'all 0.3s ease-in-out',
+    color: isHovered ? '#6c757d' : '#f9f9f9',
+  }
 
   useEffect(() => {
-    document.title = "Contact Us - Rapid Recap";
-  }, []);
+    document.title = 'Contact Us - Rapid Recap'
+  }, [])
 
   return (
     <>
@@ -57,42 +57,47 @@ const Contact = () => {
       <Flex
         minHeight="77vh"
         onTouchStart={startDrag}
-        onTouchMove={(e) => drag(e.touches[0])}
+        onTouchMove={e => drag(e.touches[0])}
         onTouchEnd={endDrag}
         mt="4.5rem"
         className="contact-container"
         // width={"50%"}
-        justifyContent={"center"}
-        alignItems={"center"}
+        justifyContent={'center'}
+        alignItems={'center'}
         // flexDirection="row"
       >
         <Flex
           // w="full"
           // px={5}
           my={5}
-          flexDirection={{ base: "column", lg: "row" }}
-          alignItems={"center"}
-          justifyContent={"space-between"}
-          w={"100%"}
+          flexDirection={{ base: 'column', lg: 'row' }}
+          alignItems={'center'}
+          justifyContent={'space-between'}
+          w={'100%'}
         >
-          <Flex w={"100%"} justifyContent={"center"} alignItems={"center"}>
+          <Flex w={'100%'} justifyContent={'center'} alignItems={'center'}>
             <Flex
               borderRadius="lg"
               overflow="hidden"
               textColor="white"
-              bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-              boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
+              // bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+              // boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
+              backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
+              boxShadow={
+                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
+              }
+              border={'1px solid white'}
               // w={{ base: "40rem", lg: "40rem" }}
               // p={8}
-              w={{ base: "40rem", lg: "30rem" }}
+              w={{ base: '40rem', lg: '30rem' }}
             >
-              <Flex direction="column" p={6} w={"100%"}>
+              <Flex direction="column" p={6} w={'100%'}>
                 {/* <Heading textAlign="center" mb={4}>
                   How can we help?
                 </Heading> */}
                 <Heading
-                  tag={"Contact our team for any query"}
-                  title={"How can we help?"}
+                  tag={'Contact our team for any query'}
+                  title={'How can we help?'}
                 />
                 {/* <Text textAlign="center" mb={8}>
                   Contact our team for any query
@@ -109,7 +114,7 @@ const Contact = () => {
                       name="Name"
                       placeholder="Name"
                       autoComplete="off"
-                      bgColor="#1a1527"
+                      // bgColor="#1a1527"
                       borderColor="#6c757d"
                       color="#f9f9f9"
                     />
@@ -121,7 +126,7 @@ const Contact = () => {
                       name="Email"
                       placeholder="Email Address"
                       autoComplete="off"
-                      bgColor="#1a1527"
+                      // bgColor="#1a1527"
                       borderColor="#6c757d"
                       color="#f9f9f9"
                     />
@@ -133,7 +138,7 @@ const Contact = () => {
                       placeholder="Message"
                       autoComplete="off"
                       height="10rem"
-                      bgColor="#1a1527"
+                      // bgColor="#1a1527"
                       borderColor="#6c757d"
                       color="#f9f9f9"
                     />
@@ -153,31 +158,36 @@ const Contact = () => {
               </Flex>
             </Flex>
           </Flex>
-          <Flex justify="center" align="center" w={{ base: "100%" }}>
+          <Flex justify="center" align="center" w={{ base: '100%' }}>
             <Box
               borderRadius="lg"
               overflow="hidden"
               textColor="white"
-              bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-              boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
+              // bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+              // boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
+              backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
+              boxShadow={
+                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
+              }
+              border={'1px solid white'}
               // w={{ base: "none", md: "40rem" }}
               p={8}
             >
-              <Heading title={"Contact Information"} />
-              <Text textAlign="center" mb={4} fontSize={"1.2rem"}>
+              <Heading title={'Contact Information'} />
+              <Text textAlign="center" mb={4} fontSize={'1.2rem'}>
                 <FaEnvelope
-                  style={{ display: "inline-block", marginRight: "8px" }}
+                  style={{ display: 'inline-block', marginRight: '8px' }}
                 />
-                Email:{" "}
+                Email:{' '}
                 <Link href="mailto:rapidrecap2k23@gmail.com" color="teal.200">
                   rapidrecap2k23@gmail.com
                 </Link>
               </Text>
-              <Text textAlign="center" mb={4} fontSize={"1.2rem"}>
+              <Text textAlign="center" mb={4} fontSize={'1.2rem'}>
                 <FaInstagram
-                  style={{ display: "inline-block", marginRight: "8px" }}
+                  style={{ display: 'inline-block', marginRight: '8px' }}
                 />
-                Instagram:{" "}
+                Instagram:{' '}
                 <Link
                   href="https://www.instagram.com/rapid.recap.2k23/"
                   isExternal
@@ -186,11 +196,11 @@ const Contact = () => {
                   @rapid.recap.2k23
                 </Link>
               </Text>
-              <Text textAlign="center" mb={8} fontSize={"1.2rem"}>
+              <Text textAlign="center" mb={8} fontSize={'1.2rem'}>
                 <FaLinkedin
-                  style={{ display: "inline-block", marginRight: "8px" }}
+                  style={{ display: 'inline-block', marginRight: '8px' }}
                 />
-                LinkedIn:{" "}
+                LinkedIn:{' '}
                 <Link
                   href="https://www.linkedin.com/company/rapid-recap/"
                   isExternal
@@ -200,21 +210,21 @@ const Contact = () => {
                 </Link>
               </Text>
               <Flex
-                justifyContent={"center"}
+                justifyContent={'center'}
                 mt={6}
-                border={"1px solid white"}
-                flexDirection={"column"}
-                p={"1rem"}
-                borderRadius={"xl"}
+                border={'1px solid white'}
+                flexDirection={'column'}
+                p={'1rem'}
+                borderRadius={'xl'}
               >
-                <Text textAlign="center" mb={4} fontSize={"2xl"}>
+                <Text textAlign="center" mb={4} fontSize={'2xl'}>
                   Your feedback helps us improve. Share your thoughts!
                 </Text>
                 <Flex justifyContent="center" alignItems="center" zIndex={10}>
                   <ButtonGradient />
                   <ButtonComponent
                     onClick={() => {
-                      navigate("/contact/feedback");
+                      navigate('/contact/feedback')
                     }}
                   >
                     FeedBack
@@ -238,7 +248,7 @@ const Contact = () => {
         </Flex>
       </Flex>
     </>
-  );
-};
+  )
+}
 
-export default Contact;
+export default Contact

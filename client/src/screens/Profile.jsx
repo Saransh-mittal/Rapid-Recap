@@ -207,11 +207,16 @@ export default function Profile() {
             w={{ md: '85%', lg: '95%', base: '100%' }}
             height="fit-content"
             style={{
-              backgroundColor: '#0f0d15',
-              backgroundImage:
-                'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+              // backgroundColor: '#0f0d15',
+              // backgroundImage:
+              //   'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+              // boxShadow:
+              //   '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)', // Increased intensity of the shadow
+              backgroundColor: 'rgba(15, 13, 21, 0.8)', // Adjust the alpha value (0.8) for transparency
               boxShadow:
-                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)', // Increased intensity of the shadow
+                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+
+              // border: '1px solid white',
             }}
           >
             {showHideModal && (
@@ -249,11 +254,14 @@ export default function Profile() {
             w={{ md: '85%', lg: '95%', base: '100%' }}
             height="fit-content"
             style={{
-              backgroundColor: '#0f0d15',
-              backgroundImage:
-                'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+              // backgroundColor: '#0f0d15',
+              // backgroundImage:
+              //   'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+              // boxShadow:
+              //   '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)', // Increased intensity of the shadow
+              backgroundColor: 'rgba(15, 13, 21, 0.8)', // Adjust the alpha value (0.8) for transparency
               boxShadow:
-                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)', // Increased intensity of the shadow
+                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
             }}
           >
             {isLoading ? (
@@ -311,60 +319,6 @@ export default function Profile() {
               />
             )}
           </Flex>
-          {/* {isLoading ? (
-            <>
-              <Skeleton
-                w={{ md: '85%', lg: '95%', base: '100%' }}
-                borderRadius="10px"
-                height="50px"
-                marginTop="12px"
-              />
-            </>
-          ) : (
-            inGameName == state.user.inGameName && (
-              <Flex
-                padding="15px"
-                borderRadius="10px"
-                flexDirection="column"
-                w={{ md: '85%', lg: '95%', base: '100%' }}
-                height="fit-content"
-                justifyContent={'center'}
-                alignItems={'center'}
-                position={'relative'}
-              >
-                {state.unreadFriendRequests > 0 && (
-                  <Box
-                    h="8px"
-                    w="8px"
-                    bg={'red'}
-                    borderRadius={'50%'}
-                    position={'absolute'}
-                    right={'34%'}
-                    top={'35%'}
-                    zIndex={2}
-                  />
-                )}
-                <ProfileButton
-                  buttonText="Wise Web"
-                  inGameName={inGameName}
-                  stateUserInGameName={state.user.inGameName}
-                  Private={true}
-                  hoverAnimation={hoverAnimation}
-                  onClick={onOpenWiseWeb}
-                  icon={<FaUserFriends />} // Add icon here
-                />
-
-                {isOpenWiseWeb && (
-                  <WiseWeb
-                    isOpen={isOpenWiseWeb}
-                    onClose={onCloseWiseWeb}
-                    requestNotif={state.unreadFriendRequests > 0}
-                    markRequestAsRead={readFriendRequests}
-                  />
-                )}
-              </Flex>
-            )
-          )} */}
           {isLoading ? (
             <>
               <Skeleton
@@ -480,15 +434,20 @@ export default function Profile() {
             padding={{ xl: isLoading ? 0 : '20px', base: '0' }}
             borderRadius="10px"
             flexDirection={{ base: 'column', xl: 'row' }}
-            backgroundColor={{ base: 'transparent', xl: '#0f0d15' }}
-            backgroundImage={{
-              base: 'none',
-              xl: 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+            backgroundColor={{
+              base: 'transparent',
+              xl: 'rgba(15, 13, 21, 0.8)',
             }}
+            // backgroundImage={{
+            //   base: 'none',
+            //   // xl: 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+            // }}
             boxShadow={{
               base: 'none',
               xl: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
             }}
+            // backgroundColor="rgba(15, 13, 21, 0.8)" // Adjust the alpha value (0.8) for transparency
+            // boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
             gap={{ base: '20px', xl: '0' }}
           >
             {isLoading ? (
@@ -536,9 +495,12 @@ export default function Profile() {
                   borderRadius="10px"
                   width={'100%'}
                   style={{
-                    backgroundColor: '#0f0d15',
-                    backgroundImage:
-                      'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+                    // backgroundColor: '#0f0d15',
+                    // backgroundImage:
+                    //   'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+                    // boxShadow:
+                    //   '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+                    backgroundColor: 'rgba(15, 13, 21, 0.8)', // Adjust the alpha value (0.8) for transparency
                     boxShadow:
                       '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
                   }}
@@ -570,9 +532,12 @@ export default function Profile() {
                   borderRadius="10px"
                   width={'100%'}
                   style={{
-                    backgroundColor: '#0f0d15',
-                    backgroundImage:
-                      'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+                    // backgroundColor: '#0f0d15',
+                    // backgroundImage:
+                    //   'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+                    // boxShadow:
+                    //   '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+                    backgroundColor: 'rgba(15, 13, 21, 0.8)', // Adjust the alpha value (0.8) for transparency
                     boxShadow:
                       '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
                   }}

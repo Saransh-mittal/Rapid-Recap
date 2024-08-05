@@ -75,7 +75,7 @@ const HeroSection = () => {
         mb={'2rem'}
         ref={parallaxRef}
       >
-        <Box
+        {/* <Box
           position="absolute"
           left="50%"
           transform="translateX(-50%)"
@@ -106,7 +106,7 @@ const HeroSection = () => {
             alt="hero"
             sizes="(max-width: 768px) 100vw, 50vw"
           />
-        </Box>
+        </Box> */}
 
         <Box display={'block'}>
           <Box

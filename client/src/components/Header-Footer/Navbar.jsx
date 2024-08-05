@@ -218,9 +218,13 @@ const Navbar = () => {
           zIndex={'1000'}
           transform={visible ? 'translateY(0)' : 'translateY(-100%)'}
           transition="transform 0.3s ease-in-out"
-          backgroundImage={
-            'linear-gradient(-180deg, rgba(26, 21, 39, 0.9), rgba(14, 12, 22, 0.9) 88%, rgba(14, 12, 22, 0.9) 99%)'
-          }
+          // backgroundImage={
+          //   'linear-gradient(-180deg, rgba(26, 21, 39, 0.9), rgba(14, 12, 22, 0.9) 88%, rgba(14, 12, 22, 0.9) 99%)'
+          // }
+          backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
+          // boxShadow={
+          //   '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
+          // }
           borderBottom={'1px solid rgba(255, 255, 255, 0.1)'}
           boxShadow={visible ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'}
           style={{

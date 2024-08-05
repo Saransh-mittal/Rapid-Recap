@@ -331,15 +331,22 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           </Box>
         </>
       ) : (
-        <Box d="flex" alignItems="center" justifyContent="center" h="100%">
-          <Text
+        <Box
+          d="flex"
+          alignItems="center"
+          justifyContent="center"
+          // alignItems={'center'}
+          h="100%"
+        >
+          {/* <Text
             fontSize="2xl"
             pb={3}
             textTransform={'uppercase'}
             letterSpacing={'1px'}
-          >
-            Click on a user to start chatting
-          </Text>
+            textAlign={'center'}
+          > */}
+          Click on a user to start chatting
+          {/* </Text> */}
         </Box>
       )}
       <BookmarksModal

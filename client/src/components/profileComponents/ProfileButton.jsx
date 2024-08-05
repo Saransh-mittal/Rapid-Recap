@@ -55,7 +55,9 @@ const ProfileButton = ({
         }}
         borderColor="#2c2541"
         borderWidth="2px"
-        boxShadow="0 0 15px rgba(44, 37, 65, 0.5)"
+        // boxShadow="0 0 15px rgba(44, 37, 65, 0.5)"
+        backgroundColor="rgba(15, 13, 21, 0.8)" // Adjust the alpha value (0.8) for transparency
+        boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
         transition="all 0.3s ease-in-out"
         textTransform="uppercase"
         // py={6}
