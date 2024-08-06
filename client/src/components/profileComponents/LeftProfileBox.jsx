@@ -99,9 +99,10 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
 
   const checkCanSendRequest = async () => {
     setLoading(true)
+    if (!user) return setLoading(false)
     try {
       const response = await axios.post('/api/friends/can-send-request', {
-        fromId: user._id,
+        fromId: user?._id,
         toId: leftProfileView._id,
       })
       if (
@@ -210,11 +211,11 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             Rank : {leftProfileView.rank}
           </Heading>
         </Box>
-        {window.location.pathname.split('/').pop() !== user.inGameName && (
+        {window.location.pathname.split('/').pop() !== user?.inGameName && (
           <Flex marginLeft={'1.5rem'} paddingTop={'10px'}>
             {loading ? (
               <Spinner />
-            ) : isFriend ? (
+            ) : !user ? null : isFriend ? (
               <Badge
                 colorScheme="green"
                 variant="solid"
@@ -246,7 +247,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
 
       <Box marginTop={'10px'} w={{ lg: '300px', base: '100%' }}>
         <Text align={'justify'}>{profileData?.bio}</Text>
-        {window.location.pathname.split('/').pop() === user.inGameName ? (
+        {window.location.pathname.split('/').pop() === user?.inGameName ? (
           <Flex w={'100%'} justifyContent={'center'}>
             <Button
               size="md"

@@ -129,30 +129,10 @@ const MainArticleContent = ({
                   align="justify"
                   letterSpacing={1}
                   fontSize={fontSize}
-                  style={
-                    notLoggedIn
-                      ? { filter: 'blur(5px)', userSelect: 'none' }
-                      : { userSelect: 'text' }
-                  }
+                  style={{ userSelect: 'text' }}
                 >
                   {mainText[selectedLanguage][1]}
                 </Text>
-                {notLoggedIn && (
-                  <Tooltip
-                    label="Please log in to view content"
-                    placement="top"
-                  >
-                    <LockIcon
-                      position="absolute"
-                      top="50%"
-                      left="50%"
-                      transform="translate(-50%, -50%)"
-                      color="white"
-                      boxSize={[6, 7, 8]}
-                      zIndex={2}
-                    />
-                  </Tooltip>
-                )}
               </Flex>
             </>
           )}
