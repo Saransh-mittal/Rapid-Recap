@@ -64,8 +64,7 @@ async function generateSitemap() {
     const sitemap = root.end({ pretty: true })
 
     // Write sitemap to file
-    // './client/dist',
-    const outputPath = path.join(__dirname, 'sitemap.xml')
+    const outputPath = path.join(__dirname, './client/dist', 'sitemap.xml')
     await fs.writeFile(outputPath, sitemap)
 
     console.log(`Sitemap generated successfully at ${outputPath}`)
