@@ -13,6 +13,7 @@ import UserChats from '../components/chatComponent/userChats'
 import UserChatBox from '../components/chatComponent/userChatBox'
 import { ChatState } from '../contextAPI/ChatProvider'
 import { useNavigate } from 'react-router-dom'
+import chatBg from '../assets/hero/hero-bg.webp'
 
 const ChatPage = () => {
   const {
@@ -99,15 +100,13 @@ const ChatPage = () => {
           <DrawerOverlay />
           <DrawerContent
             p={0}
-            style={{
-              // backgroundImage:
-              //   'linear-gradient(-180deg, #201c2e, #13101d 88%, #13101d 99%)',
-              // boxShadow:
-              //   'inset 0 0 10px rgba(255, 255, 255, 0.05), 0 4px 10px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.2)',
-              backgroundColor: 'rgba(15, 13, 21, 0.2)', // Adjust the alpha value (0.8) for transparency
-              boxShadow:
-                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-            }}
+            backgroundImage={chatBg}
+            backgroundAttachment="fixed"
+            backgroundPosition="center"
+            backgroundRepeat="no-repeat"
+            backgroundSize="cover"
+            backfaceVisibility="hidden"
+            perspective="1000"
           >
             <DrawerBody p={0}>
               {!selectedChat && (
