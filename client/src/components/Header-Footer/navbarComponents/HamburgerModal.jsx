@@ -42,6 +42,7 @@ const HamburgerModal = ({
 }) => {
   const { state } = useContext(AppContext)
   const { user } = useSelector(state => state.auth)
+  const { unreadFriendRequests } = useSelector(state => state.app)
 
   const { notification, openChat } = ChatState()
   const navigate = useNavigate()
@@ -225,7 +226,7 @@ const HamburgerModal = ({
                     display={notLogined ? 'none' : 'block'}
                   >
                     <FaUserFriends size={22} color="white" />
-                    {state.unreadFriendRequests !== 0 && (
+                    {unreadFriendRequests !== 0 && (
                       <Box
                         h="8px"
                         w="8px"

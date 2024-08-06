@@ -45,14 +45,14 @@ const OutsideNavbarContent = ({
   onOpenWiseWeb,
 }) => {
   const { user } = useSelector(state => state.auth)
+  const { unreadFriendRequests } = useSelector(state => state.app)
   const isEmptyObject = obj => {
     return obj && Object.keys(obj).length === 0
   }
   const { state, playClick } = useContext(AppContext)
   const { notification } = ChatState()
   const navigate = useNavigate()
-  // console.log('unread freined', state.unreadFriendRequests)
-  // console.log('notify ciunt', notifyCont)
+
   const {
     isOpen: isOpenUserSearch,
     onOpen: onOpenUserSearch,
@@ -194,7 +194,7 @@ const OutsideNavbarContent = ({
               notifyCont={notifyCont}
               onOpenWiseWeb={onOpenWiseWeb}
             />
-            {(state.unreadFriendRequests !== 0 || notifyCont !== 0) && (
+            {(unreadFriendRequests !== 0 || notifyCont !== 0) && (
               <Box
                 h="14px"
                 w="14px"
@@ -227,7 +227,7 @@ const OutsideNavbarContent = ({
                 width={'10px'}
                 position={'relative'}
               >
-                {(state.unreadFriendRequests > 0 ||
+                {(unreadFriendRequests > 0 ||
                   (Array.isArray(notification) && notification.length > 0)) && (
                   <Box
                     h="14px"
@@ -241,7 +241,7 @@ const OutsideNavbarContent = ({
                   />
                 )}
                 <HamburgerIcon height={'35px'} width={'20px'} />
-                {(state.unreadFriendRequests !== 0 || notifyCont !== 0) && (
+                {(unreadFriendRequests !== 0 || notifyCont !== 0) && (
                   <Box
                     h="15px"
                     w="15px"

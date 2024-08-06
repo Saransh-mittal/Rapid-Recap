@@ -26,6 +26,7 @@ import { LockIcon } from '@chakra-ui/icons'
 import TextBackgound from '/images/textBackground.webp'
 import starBoost from '/GIFs/starBoost.gif'
 import Button from '../miscellaneous/ButtonComponent'
+import { useSelector } from 'react-redux'
 
 const LanguageToggle = ({ isEnglish, onToggle, isDisabled, onSigninOpen }) => (
   <Tooltip
@@ -114,7 +115,6 @@ const ArticleHeader = ({
   handleLanguageChange,
   avgTimeRead,
   dateTime,
-  state,
   bookmarkStatus,
   article,
   isQuinBoostAvailable,
@@ -123,8 +123,11 @@ const ArticleHeader = ({
   quinTour,
   onSigninOpen,
 }) => {
-  const notLoggedIn = state.show
+  const { isAuthenticated } = useSelector(state => state.auth)
+  const notLoggedIn = !isAuthenticated
   const { playClick } = useContext(AppContext)
+  const { isBoosted } = useSelector(state => state.app)
+
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()
@@ -270,7 +273,7 @@ const ArticleHeader = ({
                 {isQuinBoostAvailable ? (
                   <QuinBoost />
                 ) : (
-                  !state.isBoosted && (
+                  !isBoosted && (
                     <Flex flexDirection={'column'}>
                       <Text
                         m={0}
@@ -309,7 +312,7 @@ const ArticleHeader = ({
                   )
                 )}
 
-                {state.isBoosted && (
+                {isBoosted && (
                   <Flex
                     alignItems="center"
                     gap={2}

@@ -36,7 +36,7 @@ import { useSelector } from 'react-redux'
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour()
   const { inGameName } = useParams()
-  const { state, dispatch, readFriendRequests } = useContext(AppContext)
+  const { state, dispatch } = useContext(AppContext)
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const [profile, setProfile] = useState(state.userProfile)
   const [isLoading, setIsLoading] = useState(true)

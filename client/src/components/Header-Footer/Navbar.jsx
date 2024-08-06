@@ -31,6 +31,7 @@ import {
   fetchAppUpdates,
   fetchDailyStreak,
   fetchUnreadFriendRequestsCount,
+  markFriendRequestsAsRead,
 } from '../../redux/appSlice'
 
 const Navbar = () => {
@@ -50,8 +51,15 @@ const Navbar = () => {
   const { state, dispatch, navLinkRefs, readFriendRequests, playClick } =
     useContext(AppContext)
   const { isAuthenticated, user } = useSelector(state => state.auth)
-  const { updates, streak, unreadFriendRequests, status, isBoosted } =
-    useSelector(state => state.app)
+  const {
+    updates,
+    streak,
+    unreadFriendRequests,
+    updatesLoading,
+    streakLoading,
+    friendRequestsLoading,
+    isBoosted,
+  } = useSelector(state => state.app)
   const dispatchRedux = useDispatch()
   const [visible, setVisible] = useState(true)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
@@ -89,12 +97,12 @@ const Navbar = () => {
   }
 
   useEffect(() => {
-    if (state.unreadFriendRequests && state.unreadFriendRequests > 0) {
+    if (unreadFriendRequests && unreadFriendRequests > 0) {
       setProfileNotif(true)
     } else {
       setProfileNotif(false)
     }
-  }, [state.unreadFriendRequests])
+  }, [unreadFriendRequests])
 
   useEffect(() => {
     const isEmptyObject = obj => {
@@ -142,12 +150,16 @@ const Navbar = () => {
   }, [updates])
 
   useEffect(() => {
-    if (status === 'idle') {
+    if (!updatesLoading) {
       dispatchRedux(fetchAppUpdates())
+    }
+    if (!streakLoading) {
       dispatchRedux(fetchDailyStreak())
+    }
+    if (!friendRequestsLoading) {
       dispatchRedux(fetchUnreadFriendRequestsCount())
     }
-  }, [status, dispatch])
+  }, [dispatchRedux, user, isAuthenticated])
 
   const handleLogout = async () => {
     try {
@@ -346,8 +358,10 @@ const Navbar = () => {
               isOpen={isOpenWiseWeb}
               onClose={onCloseWiseWeb}
               setIsHamburgerOpen={setIsHamburgerOpen}
-              requestNotif={state.unreadFriendRequests > 0}
-              markRequestAsRead={readFriendRequests}
+              requestNotif={unreadFriendRequests > 0}
+              markRequestAsRead={() =>
+                dispatchRedux(markFriendRequestsAsRead())
+              }
             />
           )}
         </Box>

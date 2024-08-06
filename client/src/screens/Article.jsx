@@ -507,7 +507,6 @@ const Article = () => {
               avgTimeRead={avgTimeRead}
               dateTime={dateTime}
               bookmarkStatus={bookmarkStatus}
-              state={state}
               article={article}
               isQuinBoostAvailable={isQuinBoostAvailable}
               quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}

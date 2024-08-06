@@ -49,9 +49,10 @@ const ProfileDropDownMenu = ({
 
   const { state, playClick } = useContext(AppContext)
   const { user } = useSelector(state => state.auth)
+  const { unreadFriendRequests } = useSelector(state => state.app)
 
   const [isOpen, setIsOpen] = useState(false)
-  // console.log(state.unreadFriendRequests)
+
   return (
     <Flex className={className} position={'relative'}>
       <motion.nav
@@ -84,18 +85,6 @@ const ProfileDropDownMenu = ({
           }}
         >
           <Flex position={'relative'}>
-            {profileNotif && (
-              <Box
-                h="10px"
-                w="10px"
-                bg={'red'}
-                borderRadius={'50%'}
-                position={'absolute'}
-                right={'-0.1rem'}
-                top={'-0.1rem'}
-                zIndex={2}
-              />
-            )}
             <Avatar src={user?.pic} h={'35px'} w={'35px'} rounded={'50%'} />
           </Flex>
           <motion.div
@@ -169,7 +158,7 @@ const ProfileDropDownMenu = ({
               justifyContent={'center'}
             >
               <FaUserFriends size={22} />
-              {state.unreadFriendRequests !== 0 && (
+              {unreadFriendRequests !== 0 && (
                 <Box
                   h="8px"
                   w="8px"

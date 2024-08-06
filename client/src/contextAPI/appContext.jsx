@@ -11,54 +11,6 @@ import { Reducer } from '../reducer/useReducer'
 import axios from 'axios'
 import useSound from '../customHooks/useSound'
 
-// Define async functions to fetch data
-const showState = async () => {
-  try {
-    const response = await axios.get(`/api/user/loginCheck`)
-    if (response.status === 201) {
-      return { show: false, user: response.data }
-    } else {
-      return { show: true, user: {} }
-    }
-  } catch (error) {
-    console.log(error.message)
-    return { show: true, user: {} }
-  }
-}
-
-const getDailyStreak = async () => {
-  try {
-    const response = await axios.get(`/api/user/streakChecker`)
-    if (response.status === 200) {
-      return {
-        streak: response.data.streak,
-        longestStreak: response.data.longestStreak,
-        isBoosted: response.data.isBoosted,
-      }
-    }
-  } catch (error) {
-    console.log(error.message)
-    return {
-      streak: 0,
-      longestStreak: 0,
-      isBoosted: false,
-    }
-  }
-}
-
-const getAppUpdates = async () => {
-  try {
-    const response = await axios.get(`/api/user/getUpdates`)
-    if (response.status === 200) {
-      return { updates: response.data.updates }
-    }
-    return { updates: [] }
-  } catch (error) {
-    console.log(error.message)
-    return { updates: [] }
-  }
-}
-
 const parseURL = url => {
   const urlObj = new URL(url)
   return urlObj.pathname.split('/').filter(Boolean)
@@ -109,14 +61,6 @@ const getUnreadFriendRequestCnt = async () => {
   }
 }
 
-const markFriendRequestsAsRead = async () => {
-  try {
-    await axios.post(`/api/friends/request-mark-as-read`)
-  } catch (error) {
-    console.log(error.message)
-  }
-}
-
 // Define and export initial state
 export const initialState = {
   modal: false,
@@ -150,7 +94,6 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const showStateData = await showState()
       let currentArticleData = {}
 
       const articleId = getArticleId()
@@ -161,18 +104,9 @@ export const AppProvider = ({ children }) => {
       dispatch({
         type: 'INITIALIZE_STATE',
         payload: {
-          ...showStateData,
           ...currentArticleData,
         },
       })
-
-      // Fetch less critical data in the background
-      getAppUpdates().then(getAppUpdatesData =>
-        dispatch({ type: 'APP_UPDATES', payloadAppUpdates: getAppUpdatesData }),
-      )
-      getDailyStreak().then(getDailyStreakData =>
-        dispatch({ type: 'UPDATE_DAILY_STREAK', payload: getDailyStreakData }),
-      )
       getUnreadFriendRequestCnt().then(getUnreadFriendRequestCntData =>
         dispatch({
           type: 'UPDATE_UNREAD_FRIEND_REQUESTS',
@@ -184,27 +118,12 @@ export const AppProvider = ({ children }) => {
     fetchInitialData()
   }, [])
 
-  const updateUnreadFriendRequests = async () => {
-    const { unreadFriendRequests } = await getUnreadFriendRequestCnt()
-    dispatch({
-      type: 'UPDATE_UNREAD_FRIEND_REQUESTS',
-      payload: unreadFriendRequests,
-    })
-  }
-
-  const readFriendRequests = async () => {
-    await markFriendRequestsAsRead()
-    dispatch({ type: 'UPDATE_UNREAD_FRIEND_REQUESTS', payload: 0 })
-  }
-
   const memoizedValue = useMemo(
     () => ({
       state,
       dispatch,
       navLinkRefs,
       playClick,
-      updateUnreadFriendRequests,
-      readFriendRequests,
       play30SecSound,
       play20SecSound,
       play10SecSound,

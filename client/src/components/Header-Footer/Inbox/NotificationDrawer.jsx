@@ -29,6 +29,7 @@ import { DeleteIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import parse from 'html-react-parser'
 import useSound from '../../../customHooks/useSound'
+import { useSelector } from 'react-redux'
 
 const NotificationDrawer = ({
   setIsDrawerOpen,
@@ -36,10 +37,11 @@ const NotificationDrawer = ({
   setSelectedNotification,
   setIsHamburgerOpen,
 }) => {
-  const { state, dispatch, playClick } = useContext(AppContext)
+  const { dispatch, playClick } = useContext(AppContext)
+  const { updates } = useSelector(state => state.app)
   const toast = useToast()
   const isScreenSmallerThan48em = useMediaQuery('(max-width: 48em)')[0]
-  const [notificationData, setNotificationData] = useState(state.updates) // State for notification data
+  const [notificationData, setNotificationData] = useState(updates) // State for notification data
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false) // State for delete confirmation modal
   const [notificationToDelete, setNotificationToDelete] = useState(null) // State to store notification to delete
