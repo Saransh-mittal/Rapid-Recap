@@ -1,4 +1,4 @@
-import { Button, Flex, Text } from '@chakra-ui/react'
+import { Box, Button, Flex, Text } from '@chakra-ui/react'
 import React from 'react'
 import Bubbles from '../miscellaneous/bubbles'
 import { useSelector } from 'react-redux'
@@ -7,11 +7,6 @@ const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
   const { isBoosted } = useSelector(state => state.app)
 
   const buttonStyle = {
-    height: '35px',
-    width: '110px',
-    borderRadius: 'xl',
-    color: '#37306B',
-    backgroundColor: '#F7EFE5',
     border: isBoosted ? 'yellow solid 3px' : 'none',
     transition: isBoosted ? 'box-shadow 2s ease-in-out' : 'none',
     animation: isBoosted ? 'shine 1s infinite alternate' : 'none', // Use CSS animation for shining effect
@@ -31,42 +26,42 @@ const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
     }
   `
   return (
-    <Flex
-      flexDirection={'column'}
-      alignItems="center"
-      textAlign={'center'}
-      css={[css, keyframes]}
-      style={{
-        border: '2px',
-        padding: '1rem',
-        position: 'relative', // Set position relative for containing bubbles
-      }}
-      borderRadius="xl"
-      backgroundColor="#2A2F4F"
-      marginBottom="1rem"
-      className="generate-quiz-button"
-    >
-      <Text
-        fontSize="18px"
-        fontWeight="bold"
-        marginBottom="1rem"
-        letterSpacing={0.25}
-        color="#FDE2F3" // Change the color here
-      >
-        !!! Compete in the quiz for a chance at the LeaderBoard !!!
-      </Text>
+    <Box m={4} width="100%">
       <Button
-        onClick={() => {
-          onClick()
+        onClick={onClick}
+        width="100%"
+        height="auto"
+        py={3}
+        px={6}
+        borderRadius="full"
+        bgGradient="linear(to-r, #FDE2F3, #E5BEEC)"
+        _hover={{
+          transform: 'translateY(-2px)',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}
+        _active={{
+          transform: 'translateY(0)',
+        }}
+        transition="all 0.3s ease"
+        position="relative"
+        overflow="hidden"
         style={buttonStyle}
-        position={'relative'}
       >
-        {/* Generate bubbles */}
         {(isBoosted || isQuinBoostAvailable) && <Bubbles />}
-        Take Quiz
+        <Text
+          fontSize="2xl"
+          fontWeight="bold"
+          color="#2A2F4F"
+          textAlign="center"
+          width="100%"
+          m={0}
+          py={2}
+          fontFamily="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+        >
+          Take Quiz
+        </Text>
       </Button>
-    </Flex>
+    </Box>
   )
 }
 

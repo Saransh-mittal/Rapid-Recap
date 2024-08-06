@@ -110,15 +110,15 @@ const LeaderBoard = () => {
 
   const debouncedHandleScroll = debounce(handleScroll, 300)
 
-  useEffect(() => {
-    handleLoginAlert()
-  }, [isAuthenticated])
+  // useEffect(() => {
+  //   handleLoginAlert()
+  // }, [isAuthenticated])
 
   useEffect(() => {
     document.title = 'LeaderBoard Page'
-    if (isAuthenticated) {
-      fetchLeaderBoard()
-    }
+    //if (isAuthenticated) {
+    fetchLeaderBoard()
+    //}
     window.addEventListener('scroll', debouncedHandleScroll)
     return () => {
       window.removeEventListener('scroll', debouncedHandleScroll)

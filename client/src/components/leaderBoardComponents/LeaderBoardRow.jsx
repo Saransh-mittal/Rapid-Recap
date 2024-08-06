@@ -18,7 +18,7 @@ const LeaderBoardRow = ({
       height={'80px'}
       key={user._id}
       className={
-        currUserChar.inGameName === user.inGameName ? 'highlighted-card-2' : ''
+        currUserChar?.inGameName === user.inGameName ? 'highlighted-card-2' : ''
       }
       onClick={() => navigate(`/profile/${urlInGameName}`)}
       _hover={{

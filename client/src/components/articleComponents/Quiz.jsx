@@ -380,6 +380,7 @@ const Quiz = ({
         handleSubmitQuiz={handleSubmitQuiz}
         setShowInstruction={setShowInstruction}
         isAnswered={isAnswered}
+        showGetSetGo={showGetSetGo}
       />
       {!showInstruction && showConfirmationModal && (
         <ConfirmationModal

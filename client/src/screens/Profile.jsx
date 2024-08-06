@@ -71,11 +71,10 @@ export default function Profile() {
   } = useDisclosure()
 
   const fetchProfile = async () => {
-    if (!user) return
     try {
       const response = await axios.get(`/api/user/profile/${inGameName}`)
       setProfile(() => response.data)
-      if (inGameName === user.inGameName) {
+      if (inGameName === user?.inGameName) {
         dispatch({ type: 'profile', payloadProfile: response.data })
         localStorage.setItem('userProfile', JSON.stringify(response.data)) // Cache profile
       } else {
@@ -131,7 +130,7 @@ export default function Profile() {
       !isLoading &&
       isAuthenticated &&
       user &&
-      user.tutorial.profilePage &&
+      user?.tutorial.profilePage &&
       loginedUserProfile
     ) {
       isTutorialTakenCheck({ page: 'profilePage', tour })
@@ -378,7 +377,7 @@ export default function Profile() {
             </>
           ) : (
             (!privacyProfileData.seasonAnalytics ||
-              inGameName == user.inGameName) && (
+              inGameName == user?.inGameName) && (
               <Flex
                 // padding="15px"
                 py={'8px'}
@@ -395,8 +394,8 @@ export default function Profile() {
                 <ProfileButton
                   buttonText="Season Analytics"
                   inGameName={inGameName}
-                  stateUserInGameName={user.inGameName}
-                  Private={user.profilePrivacy.seasonAnalytics}
+                  stateUserInGameName={user?.inGameName}
+                  Private={user?.profilePrivacy.seasonAnalytics}
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenSeasonSelector}
                   icon={<GiHistogram />} // Add icon here
@@ -428,7 +427,7 @@ export default function Profile() {
               />
             </>
           ) : (
-            inGameName == user.inGameName && (
+            inGameName == user?.inGameName && (
               <Flex
                 // padding="15px"
                 // px={'15px'}
@@ -443,7 +442,7 @@ export default function Profile() {
                 <ProfileButton
                   buttonText="Bookmarks"
                   inGameName={inGameName}
-                  stateUserInGameName={user.inGameName}
+                  stateUserInGameName={user?.inGameName}
                   Private={true}
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenBookmarks}

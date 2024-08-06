@@ -225,7 +225,7 @@ const Navbar = () => {
 
   return (
     <>
-      <Box overflow={isHamburgerOpen ? 'hidden' : 'visible'}>
+      <Box overflow={isHamburgerOpen ? 'hidden' : 'visible'} width="100vw">
         <Box
           className={`navbar navbar-expand-lg`}
           paddingX={{ base: '1.2rem', xl: '5rem' }}

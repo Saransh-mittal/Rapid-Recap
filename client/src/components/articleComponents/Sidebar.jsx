@@ -12,6 +12,8 @@ import {
   Badge,
   useDisclosure,
   Spinner,
+  Skeleton,
+  useToast,
 } from '@chakra-ui/react'
 import { LockIcon, TriangleDownIcon } from '@chakra-ui/icons'
 import Alt_img from '/images/rr.webp'
@@ -19,13 +21,10 @@ import GivenQuiz from './GivenQuiz'
 import QuizExpired from './QuizExpired'
 import TakeQuizButton from './TakeQuizButton'
 import TotalUserAttempted from './TotalUserAttempted'
-import QuinBoost from './quizComponents/QuinBoost'
-import starBoost from '/GIFs/starBoost.gif'
-import TextBackgound from '/images/textBackground.webp'
-import ShareButton from './ShareButton'
-import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
 import { AppContext } from '../../contextAPI/appContext'
 import { useSelector } from 'react-redux'
+import Signin from '../../screens/Signin'
+
 const Sidebar = ({
   givenQuiz,
   percentile,
@@ -45,239 +44,136 @@ const Sidebar = ({
   article,
   id,
   state,
-  quizLeftToGetQuizBoost,
-  openModal,
-  quinTour,
   isQuizGivenLoading,
+  onSigninOpen,
 }) => {
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
-  const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const { playClick } = useContext(AppContext)
-  const { isBoosted } = useSelector(state => state.app)
-  const handleShare = () => {
-    if (notLoggedIn) {
-      toast({
-        title: 'Login Required',
-        description: 'Please log in to share this article.',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
-    }
-    onOpenShareModal()
+  const toast = useToast()
 
-    // In a real implementation, you might do something like:
-    // shareToChat(article);
-  }
+  const isLoaded =
+    onGoingQuiz !== null && quizExpired !== null && isQuizGivenLoading !== null
+
   return (
-    <Box
-      boxShadow={'0 100px 200px rgba(1, 1, 1, 1.1)'}
-      borderRadius={'15px'}
-      p={1.5}
-    >
-      {givenQuiz ? (
-        <GivenQuiz
-          articleId={id}
-          percentile={percentile}
-          RQM_score={RQM_score}
-        />
-      ) : onGoingQuiz ? (
-        <Heading size="md" margin={'5px'} mb={5} height={'100px'} color={'red'}>
-          Quiz is Already going on in some other tab or device
-        </Heading>
-      ) : quizExpired ? (
-        <QuizExpired />
-      ) : (
-        <Box position={'relative'}>
-          <Box
-            style={
-              notLoggedIn
-                ? { filter: 'blur(5px)', userSelect: 'none' }
-                : { userSelect: 'text' }
-            }
-            display={'flex'}
-            justifyContent={'center'}
-            alignItems={'center'}
-          >
-            {isQuizGivenLoading ? (
-              <Spinner />
-            ) : (
-              <TakeQuizButton
-                isQuinBoostAvailable={isQuinBoostAvailable}
-                onClick={() => {
-                  playClick()
-                  if (notLoggedIn) {
-                    return
-                  }
-                  tour.complete()
-                  trackGenerateQuizClick()
-                  setShowQuizLangModal(true)
-                  setShowQuiz(!showQuiz)
-                  onOpen()
-                }}
-              />
-            )}
-          </Box>
-          {notLoggedIn && (
-            <Tooltip label="Please log in to give quiz" placement="top">
-              <LockIcon
-                position="absolute"
-                top="50%"
-                left="50%"
-                transform="translate(-50%, -50%)"
-                color="white"
-                boxSize={8}
-                zIndex={2}
-              />
-            </Tooltip>
-          )}
-        </Box>
-      )}
-      <Box>
-        <TotalUserAttempted
-          totalUsersGivenQuiz={totalUsersGivenQuiz}
-          notLoggedIn={notLoggedIn}
-        />
-      </Box>
-      <Flex
-        w={'100%'}
-        marginTop={'2rem'}
-        marginBottom={'2'}
-        gap={3}
-        flexDirection={'column'}
-        justifyContent={'center'}
-        alignItems={'center'}
+    <Skeleton isLoaded={isLoaded}>
+      <Box
+        boxShadow={'0 100px 200px rgba(1, 1, 1, 1.1)'}
+        borderRadius={'15px'}
+        p={1.5}
+        w={{ base: '90vw', md: '100%' }}
       >
-        <ShareButton onClick={handleShare} isDisabled={notLoggedIn} />
-        <Flex
-          flexDirection={'column'}
-          position={'relative'}
-          className="quin-boost-tag"
-        >
-          {isQuinBoostAvailable ? (
-            <Flex mb={5}>
-              <QuinBoost />
-            </Flex>
-          ) : (
-            !isBoosted && (
-              <>
-                <Text
-                  m={0}
-                  p={0}
-                  textAlign={'left'}
-                  paddingLeft={'30px'}
-                  position={'absolute'}
-                  color={'#9CAFAA'}
-                  fontWeight={'bold'}
-                >
-                  Quin Boost
-                </Text>
-                <Flex
-                  marginTop={'5px'}
-                  position={'relative'}
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  onClick={e => {
+        {givenQuiz ? (
+          <GivenQuiz
+            articleId={id}
+            percentile={percentile}
+            RQM_score={RQM_score}
+          />
+        ) : onGoingQuiz ? (
+          <Heading
+            size="md"
+            margin={'5px'}
+            mb={5}
+            height={'100px'}
+            color={'red'}
+          >
+            Quiz is Already going on in some other tab or device
+          </Heading>
+        ) : quizExpired ? (
+          <QuizExpired />
+        ) : (
+          <Box position={'relative'}>
+            <Box
+              style={
+                notLoggedIn
+                  ? { filter: 'blur(5px)', userSelect: 'none' }
+                  : { userSelect: 'text' }
+              }
+              display={'flex'}
+              justifyContent={'center'}
+              alignItems={'center'}
+            >
+              {isQuizGivenLoading ? (
+                <Spinner />
+              ) : (
+                <TakeQuizButton
+                  isQuinBoostAvailable={isQuinBoostAvailable}
+                  onClick={() => {
                     playClick()
                     if (notLoggedIn) {
-                      e.preventDefault()
+                      toast({
+                        title: 'Login Required',
+                        description: 'Please log in to share this article.',
+                        status: 'warning',
+                        duration: 3000,
+                        isClosable: true,
+                      })
                       return
                     }
-                    quinTour.complete()
-                    openModal()
+                    tour.complete()
+                    trackGenerateQuizClick()
+                    setShowQuizLangModal(true)
+                    setShowQuiz(!showQuiz)
+                    onOpen()
                   }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <Image
-                    src={TextBackgound}
-                    background={'none'}
-                    height={'100px'}
-                    width={'200px'}
-                    className="quin-boost-tracker"
-                    style={notLoggedIn ? { filter: 'blur(5px)' } : {}}
-                  />
-                  <Text
-                    m={0}
-                    p={0}
-                    textAlign={'left'}
-                    position={'absolute'}
-                    color={'black'}
-                    fontSize={'20px'}
-                    fontWeight={'bold'}
-                  >
-                    {quizLeftToGetQuizBoost} Quiz Left
-                  </Text>
-                  {notLoggedIn && (
-                    <Tooltip
-                      label="Please log in to use the feature"
-                      placement="top"
-                    >
-                      <LockIcon
-                        position="absolute"
-                        top="50%"
-                        left="50%"
-                        transform="translate(-50%, -50%)"
-                        color="white"
-                        boxSize={8}
-                        zIndex={2}
-                      />
-                    </Tooltip>
-                  )}
-                </Flex>
-              </>
-            )
-          )}
-        </Flex>
-        {isBoosted && (
-          <Flex
-            justifyContent={'center'}
-            alignItems={'center'}
-            gap={2}
-            marginTop={'10px'}
-            onClick={() => {
-              playClick()
-              openModal()
-            }}
-            style={{ cursor: 'pointer' }}
-          >
-            <Image
-              src={starBoost}
-              background={'none'}
-              height={'60px'}
-              w={'60px'}
-            />
-            <Badge fontSize={'1.2rem'} color={'yellow'} background={'none'}>
-              Enjoy!! 1.5x multiplier
-            </Badge>
-          </Flex>
+                />
+              )}
+            </Box>
+            {notLoggedIn && (
+              <Tooltip label="Please log in to give quiz" placement="top">
+                <LockIcon
+                  position="absolute"
+                  top="50%"
+                  left="50%"
+                  transform="translate(-50%, -50%)"
+                  color="white"
+                  boxSize={8}
+                  zIndex={2}
+                  onClick={onSigninOpen}
+                  cursor={'pointer'}
+                />
+              </Tooltip>
+            )}
+          </Box>
         )}
-      </Flex>
-      <Heading as="h3" fontSize="25px" color="white" letterSpacing={1}>
-        <TriangleDownIcon color="#F2D7D9" /> Related Articles
-      </Heading>
-      <SimpleGrid
-        columns={1}
-        marginTop={5}
-        display={'flex'}
-        flexDirection={'column'}
-        alignItems={'justify'}
-        position={'relative'}
-      >
-        {latestNews
-          .filter(
-            (_, idx) =>
-              idx < Math.floor(articleHeight / 100) && _._id !== article._id,
-          )
-          .map(item => {
-            return (
+        <Box>
+          <TotalUserAttempted
+            totalUsersGivenQuiz={totalUsersGivenQuiz}
+            notLoggedIn={notLoggedIn}
+            RQM_score={RQM_score}
+            articleId={id}
+          />
+        </Box>
+        <Text as="h3" color="white" letterSpacing={1} ml={4}>
+          Related Articles:
+        </Text>
+        <SimpleGrid
+          columns={1}
+          marginTop={5}
+          display="flex"
+          flexDirection="column"
+          alignItems="flex-start"
+          position="relative"
+        >
+          {latestNews
+            .filter(
+              (_, idx) =>
+                idx < Math.floor(articleHeight / 100) && _._id !== article._id,
+            )
+            .map(item => (
               <Box
                 minHeight="100px"
                 key={item._id}
                 onClick={e => {
                   if (notLoggedIn) {
                     e.preventDefault()
+                    toast({
+                      title: 'Login Required',
+                      description: 'Please log in to share this article.',
+                      status: 'warning',
+                      duration: 3000,
+                      isClosable: true,
+                    })
                     return
                   }
                   playClick()
@@ -288,75 +184,86 @@ const Sidebar = ({
                     ? { filter: 'blur(5px)', userSelect: 'none' }
                     : { userSelect: 'text', cursor: 'pointer' }
                 }
-                borderTop={'2px solid lightblue'}
+                borderTop="2px solid lightblue"
                 p={2}
-                w={'100%'}
-                display={'flex'}
+                w="100%"
+                h={'auto'}
+                display="flex"
+                className="related-article"
+                backgroundColor="#2A2F4F"
+                borderRadius="xl"
+                transition="all 0.3s ease"
+                _hover={{
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                }}
+                mb={3}
+                flexDirection={'column'}
               >
-                <Image
-                  width="100px"
-                  mr={3}
-                  mt={2}
-                  height={'100%'}
-                  float="left"
-                  src={item.imgURL ? item.imgURL : Alt_img}
-                  alt="Article img"
-                  onError={e => {
-                    e.target.onerror = null
-                    e.target.src = Alt_img
-                    e.target.style.height = `100%`
-                  }}
-                />
-                <Flex flexDirection={'column'} w={'100%'}>
-                  <Flex w={'100%'} justifyContent={'space-between'}>
-                    <Text
-                      m={0}
-                      p={0}
-                      textTransform="uppercase"
-                      color="#9CAFAA"
-                      fontWeight="bold"
-                      letterSpacing="1px"
-                    >
-                      {item.date}
-                      {','}
-                    </Text>
-                    <Text
-                      fontSize={'0.8rem'}
-                      m={0}
-                      p={0}
-                      textTransform="uppercase"
-                      color="#9CAFAA"
-                      letterSpacing="1px"
-                    >
-                      {item.avgReadTime} MIN READ
+                <Flex w="100%" justifyContent="space-between">
+                  <Text
+                    m={0}
+                    p={0}
+                    textTransform="uppercase"
+                    color="#9CAFAA"
+                    fontWeight="bold"
+                    letterSpacing="1px"
+                  >
+                    {item.date},
+                  </Text>
+                  <Text
+                    fontSize="0.8rem"
+                    m={0}
+                    p={0}
+                    textTransform="uppercase"
+                    color="#9CAFAA"
+                    letterSpacing="1px"
+                  >
+                    {item.avgReadTime} MIN READ
+                  </Text>
+                </Flex>
+                <Flex mr={3} mb={2} alignItems={'center'}>
+                  <Image
+                    w={{ base: '130px', md: '160px' }}
+                    h="auto"
+                    mr={3}
+                    mt={2}
+                    float="left"
+                    src={item.imgURL ? item.imgURL : Alt_img}
+                    alt="Article img"
+                    onError={e => {
+                      e.target.onerror = null
+                      e.target.src = Alt_img
+                      e.target.style.height = '100%'
+                    }}
+                    borderRadius="8px"
+                  />
+                  <Flex flexDirection="column" w="100%">
+                    <Text mt={2} color="#e0e0e0">
+                      {item.title}
                     </Text>
                   </Flex>
-                  <Text mt={2}>{item.title}</Text>
                 </Flex>
               </Box>
-            )
-          })}
-        {notLoggedIn && (
-          <Tooltip label="Please log in to navigate" placement="top">
-            <LockIcon
-              position="absolute"
-              top="50%"
-              left="50%"
-              transform="translate(-50%, -50%)"
-              color="white"
-              boxSize={8}
-              zIndex={2}
-            />
-          </Tooltip>
-        )}
-      </SimpleGrid>
-      <ShareChatModal
-        isOpen={isOpen}
-        onClose={onClose}
-        articleToShare={article}
-        notLoggedIn={notLoggedIn}
-      />
-    </Box>
+            ))}
+          {notLoggedIn && (
+            <Tooltip label="Please log in to navigate" placement="top">
+              <LockIcon
+                position="absolute"
+                top="50%"
+                left="50%"
+                transform="translate(-50%, -50%)"
+                color="white"
+                boxSize={8}
+                zIndex={2}
+                onClick={onSigninOpen}
+                cursor={'pointer'}
+              />
+            </Tooltip>
+          )}
+        </SimpleGrid>
+      </Box>
+    </Skeleton>
   )
 }
 

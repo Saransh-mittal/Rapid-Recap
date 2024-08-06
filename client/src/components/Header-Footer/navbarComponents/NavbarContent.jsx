@@ -68,54 +68,41 @@ const NavbarContent = ({
                 gap={'0.25rem'}
                 position={'relative'}
               >
-                <Tooltip
-                  label="You need to sign in to access this page"
-                  isDisabled={!(notLogined && item.label === 'Leaderboard')}
-                  placement="bottom"
-                  hasArrow
+                <NavLink
+                  to={item.to}
+                  className={`nav-link`}
+                  onClick={e => {
+                    playClick()
+                  }}
+                  ref={ref => (navLinkRefs.current[index] = ref)}
                 >
-                  <NavLink
-                    to={item.to}
-                    className={`nav-link ${
-                      notLogined && item.label === 'Leaderboard' ? 'locked' : ''
-                    }`}
-                    onClick={e => {
-                      playClick()
-                      notLogined && item.label === 'Leaderboard'
-                        ? e.preventDefault()
-                        : null
-                    }}
-                    ref={ref => (navLinkRefs.current[index] = ref)}
-                  >
-                    {item.label}
-                    {item.label === 'Season' && (
-                      <>
-                        <Image
-                          position="absolute"
-                          src={newBadge}
-                          bg={'transparent'}
-                          height={'1.5rem'}
-                          w={'3rem'}
-                          right={'-2.2rem'}
-                          top={'-1.2rem'}
-                        />
-                        <Text
-                          position="absolute"
-                          right={'-1.9rem'}
-                          top={'-1.05rem'}
-                          fontSize="0.75rem"
-                          fontWeight={'bold'}
-                          color="white"
-                          bg="transparent"
-                          padding="0.1rem 0.3rem"
-                        >
-                          New
-                        </Text>
-                      </>
-                    )}
-                  </NavLink>
-                </Tooltip>
-                {notLogined && item.label === 'Leaderboard' && <LockIcon />}
+                  {item.label}
+                  {item.label === 'Season' && (
+                    <>
+                      <Image
+                        position="absolute"
+                        src={newBadge}
+                        bg={'transparent'}
+                        height={'1.5rem'}
+                        w={'3rem'}
+                        right={'-2.2rem'}
+                        top={'-1.2rem'}
+                      />
+                      <Text
+                        position="absolute"
+                        right={'-1.9rem'}
+                        top={'-1.05rem'}
+                        fontSize="0.75rem"
+                        fontWeight={'bold'}
+                        color="white"
+                        bg="transparent"
+                        padding="0.1rem 0.3rem"
+                      >
+                        New
+                      </Text>
+                    </>
+                  )}
+                </NavLink>
               </ListItem>
             ))}
             {/* Sign in link or email icon */}

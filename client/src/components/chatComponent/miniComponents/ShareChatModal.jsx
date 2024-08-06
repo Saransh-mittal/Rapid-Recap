@@ -16,6 +16,7 @@ import {
   Flex,
   Divider,
   Image,
+  Spinner,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { ChatState } from '../../../contextAPI/ChatProvider'
@@ -39,8 +40,8 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const { playClick } = useContext(AppContext)
 
   useEffect(() => {
-    fetchChats()
-  }, [])
+    if (isOpen) fetchChats()
+  }, [notLoggedIn, articleToShare, isOpen])
 
   const fetchChats = async () => {
     if (notLoggedIn || notLoggedIn === undefined) return
@@ -64,7 +65,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const handleSocialShare = platform => {
     playClick()
     let url = ''
-    const articleUrl = `https://rapidrecap.co.in/article/${articleToShare._id}` // Replace with your actual article URL
+    const articleUrl = `https://www.rapidrecap.co.in/article/${articleToShare._id}` // Replace with your actual article URL
     const text = encodeURIComponent(
       `Check out this article: ${articleToShare.title}`,
     )
@@ -102,7 +103,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
 
   const handleCopyArticleUrl = () => {
     playClick()
-    const articleUrl = `https://rapidrecap.co.in/article/${articleToShare._id}`
+    const articleUrl = `https://www.rapidrecap.co.in/article/${articleToShare._id}`
     navigator.clipboard.writeText(articleUrl)
     toast({
       title: 'Link Copied',
@@ -191,7 +192,14 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
           }}
         >
           {loading ? (
-            <Text>Loading chats...</Text>
+            <Flex
+              w={'100%'}
+              h={'300px'}
+              justifyContent={'center'}
+              alignItems={'center'}
+            >
+              <Spinner />
+            </Flex>
           ) : (
             <VStack spacing={2} align="stretch">
               {chats.map(chat => (
