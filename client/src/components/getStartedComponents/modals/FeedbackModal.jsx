@@ -28,19 +28,20 @@ import {
   getLabelForValue,
 } from './utils/formState'
 import { AppContext } from '../../../contextAPI/appContext'
-import useSound from '../../../customHooks/useSound'
+import { useSelector } from 'react-redux'
 
 const FeedbackModal = ({ isOpen, onClose }) => {
   const toast = useToast()
-  const { state, playClick } = useContext(AppContext)
-  const loggedIn = !state.show
+  const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { playClick } = useContext(AppContext)
+  const loggedIn = isAuthenticated
   const [formState, setFormState] = useState(initialFormState)
   const [quizIssueAnswer, setQuizIssueAnswer] = useState('no')
   const [email, setEmail] = useState('')
 
   useEffect(() => {
-    if (loggedIn && state.user) setEmail(state.user?.email)
-  }, [state.show, state])
+    if (loggedIn && user) setEmail(user?.email)
+  }, [isAuthenticated, user])
 
   const handleSubmit = async e => {
     playClick()

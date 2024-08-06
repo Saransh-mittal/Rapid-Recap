@@ -5,7 +5,7 @@ import Button from '../miscellaneous/ButtonComponent'
 import ButtonGradient from '../../assets/svg/ButtonGradient'
 import { LockIcon } from '@chakra-ui/icons'
 
-const ShareButton = ({ onClick, isDisabled }) => {
+const ShareButton = ({ onClick, isDisabled, onOpenSignin }) => {
   return (
     <Flex position={'relative'}>
       {isDisabled && (
@@ -16,8 +16,10 @@ const ShareButton = ({ onClick, isDisabled }) => {
             left="50%"
             transform="translate(-50%, -50%)"
             color="white"
-            boxSize={8}
+            boxSize={6}
             zIndex={2}
+            onClick={onOpenSignin}
+            cursor={'pointer'}
           />
         </Tooltip>
       )}

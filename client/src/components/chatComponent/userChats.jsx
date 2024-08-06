@@ -30,9 +30,11 @@ import Button from '../miscellaneous/ButtonComponent'
 import { Search2Icon } from '@chakra-ui/icons'
 import { useNavigate } from 'react-router-dom'
 import useSound from '../../customHooks/useSound'
+import { useSelector } from 'react-redux'
 
 const UserChats = ({ fetchAgain }) => {
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useContext(AppContext)
+  const { user: loggedInUser } = useSelector(state => state.auth)
   const [loggedUser, setLoggedUser] = useState()
   const [showRequestsTab, setShowRequestsTab] = useState(false)
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -103,7 +105,7 @@ const UserChats = ({ fetchAgain }) => {
   }, [location, chats, setSelectedChat])
 
   useEffect(() => {
-    setLoggedUser(state.user)
+    setLoggedUser(loggedInUser)
     const cachedChats = JSON.parse(localStorage.getItem('chats'))
     const cachedChatRequests = JSON.parse(localStorage.getItem('chatRequests'))
 

@@ -6,7 +6,6 @@ import XPLevel from '../Header-Footer/navbarComponents/XPLevel'
 const LeaderBoardRow = ({
   user,
   index,
-  state,
   currUserChar,
   isBaseScreen,
   isLgScreen,
@@ -19,19 +18,14 @@ const LeaderBoardRow = ({
       height={'80px'}
       key={user._id}
       className={
-        state.user.inGameName === user.inGameName ? 'highlighted-card-2' : ''
+        currUserChar?.inGameName === user.inGameName ? 'highlighted-card-2' : ''
       }
       onClick={() => navigate(`/profile/${urlInGameName}`)}
       _hover={{
-        // backgroundImage:
-        //   "linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)",
-        // boxShadow:
-        //   "0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)",
-        backgroundColor: 'rgba(15, 13, 21, 0.4)', // Adjust the alpha value (0.8) for transparency
+        backgroundImage:
+          'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
         boxShadow:
           '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-
-        border: '1px solid white',
       }}
       cursor={'pointer'}
     >
@@ -39,12 +33,7 @@ const LeaderBoardRow = ({
         <Flex
           justifyContent={'center'}
           alignItems={'center'}
-          // bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-          backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
-          boxShadow={
-            '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
-          }
-          border={'1px solid white'}
+          bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
           p={2}
           gap={'25px'}
           borderRadius="md"

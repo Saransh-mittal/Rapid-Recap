@@ -82,7 +82,7 @@ const Contact = () => {
               textColor="white"
               // bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
               // boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
-              backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
+              backgroundColor={'rgba(15, 13, 21, 0.7)'} // Adjust the alpha value (0.8) for transparency
               boxShadow={
                 '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
               }
@@ -165,7 +165,7 @@ const Contact = () => {
               textColor="white"
               // bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
               // boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
-              backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
+              backgroundColor={'rgba(15, 13, 21, 0.7)'} // Adjust the alpha value (0.8) for transparency
               boxShadow={
                 '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
               }
@@ -189,11 +189,11 @@ const Contact = () => {
                 />
                 Instagram:{' '}
                 <Link
-                  href="https://www.instagram.com/rapid.recap.2k23/"
+                  href="https://www.instagram.com/rrapidrecap/"
                   isExternal
                   color="teal.200"
                 >
-                  @rapid.recap.2k23
+                  @rrapidrecap
                 </Link>
               </Text>
               <Text textAlign="center" mb={8} fontSize={'1.2rem'}>
@@ -202,7 +202,7 @@ const Contact = () => {
                 />
                 LinkedIn:{' '}
                 <Link
-                  href="https://www.linkedin.com/company/rapid-recap/"
+                  href="https://www.linkedin.com/company/rrapidrecap/"
                   isExternal
                   color="teal.200"
                 >

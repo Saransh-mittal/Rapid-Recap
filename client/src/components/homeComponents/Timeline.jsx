@@ -15,18 +15,20 @@ import { useSwipeable } from 'react-swipeable' // Import the swipeable hook
 import { categories } from '../../assets/Categories'
 import { useNavigate, useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4' // Import Google Analytics library
+import { useSelector } from 'react-redux'
 
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { state, dispatch } = useContext(AppContext)
+  const { isAuthenticated, user } = useSelector(state => state.auth)
   const [swipeDisable, setSwipeDisable] = useState(false)
   const { tour, isTutorialTakenCheck } = useHomeTour({ setSwipeDisable })
   const flexDirectionOfTimeline = useBreakpointValue({
     base: 'column',
     lg: 'row',
   })
-  const notLoggedIn = state.show
+  const notLoggedIn = !isAuthenticated
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
 
   const [isFixed, setIsFixed] = useState(false)
@@ -90,10 +92,10 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   }, [prevScrollPos, isFixed, isSmallerThan992])
 
   useEffect(() => {
-    if (!load && !state.show && state.user && state.user.tutorial.homePage) {
+    if (!load && isAuthenticated && user && user.tutorial.homePage) {
       // isTutorialTakenCheck({ page: "homePage", tour });
     }
-  }, [load, state.show, state.user, isTutorialTakenCheck, tour])
+  }, [load, isAuthenticated, user, isTutorialTakenCheck, tour])
 
   useEffect(() => {
     const pathCategory = location.pathname.split('/')[2] || 'all'

@@ -6,8 +6,7 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import axios from 'axios'
-import { useState, useEffect, useContext } from 'react'
-import { AppContext } from '../contextAPI/appContext'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SearchBar from '../components/leaderBoardComponents/SearchBar'
 import SocietyButtons from '../components/leaderBoardComponents/SocietyButtons'
@@ -16,11 +15,12 @@ import { useLeaderBoardTour } from '../customHooks/useTours'
 import medalIcon from '../assets/medal.webp'
 import { debounce } from 'lodash'
 import Heading from '../components/miscellaneous/HeadingComponent'
+import { useSelector } from 'react-redux'
 
 const LeaderBoard = () => {
   const PAGE_LIMIT = 20
   const navigate = useNavigate()
-  const { state } = useContext(AppContext)
+  const { isAuthenticated, user } = useSelector(state => state.auth)
   const toast = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [searchLoad, setSearchLoad] = useState(false)
@@ -70,7 +70,7 @@ const LeaderBoard = () => {
   }
 
   const handleLoginAlert = () => {
-    if (state.show) {
+    if (!isAuthenticated) {
       navigate('/signin')
       toast({
         title: 'Please Sign In First',
@@ -82,16 +82,16 @@ const LeaderBoard = () => {
     }
   }
 
-  // const handleSocietyButtonClick = (society) => {
-  //   setPage(1); // Reset page when society changes
-  //   if (activeSociety === society) {
-  //     setActiveSociety(null);
-  //     fetchLeaderBoard();
-  //   } else {
-  //     setActiveSociety(society);
-  //     fetchLeaderBoard(society);
-  //   }
-  // };
+  const handleSocietyButtonClick = society => {
+    setPage(1) // Reset page when society changes
+    if (activeSociety === society) {
+      setActiveSociety(null)
+      fetchLeaderBoard()
+    } else {
+      setActiveSociety(society)
+      fetchLeaderBoard(society)
+    }
+  }
 
   const handleScroll = async () => {
     try {
@@ -110,31 +110,31 @@ const LeaderBoard = () => {
 
   const debouncedHandleScroll = debounce(handleScroll, 300)
 
-  useEffect(() => {
-    handleLoginAlert()
-  }, [state.show])
+  // useEffect(() => {
+  //   handleLoginAlert()
+  // }, [isAuthenticated])
 
   useEffect(() => {
     document.title = 'LeaderBoard Page'
-    if (!state.show) {
-      fetchLeaderBoard()
-    }
+    //if (isAuthenticated) {
+    fetchLeaderBoard()
+    //}
     window.addEventListener('scroll', debouncedHandleScroll)
     return () => {
       window.removeEventListener('scroll', debouncedHandleScroll)
     }
-  }, [state.show])
+  }, [isAuthenticated])
 
   useEffect(() => {
     if (
       !isLoading &&
-      !state.show &&
-      state.user &&
-      state.user.tutorial.leaderBoardPage
+      isAuthenticated &&
+      user &&
+      user.tutorial.leaderBoardPage
     ) {
       isTutorialTakenCheck({ page: 'leaderBoardPage', tour })
     }
-  }, [isLoading])
+  }, [isLoading, isAuthenticated, user])
 
   useEffect(() => {
     if (page > 1) {
@@ -215,8 +215,7 @@ const LeaderBoard = () => {
           isBaseScreen={isBaseScreen}
           isLgScreen={isLgScreen}
           isMdScreen={isMdScreen}
-          state={state}
-          currUserChar={state.user}
+          currUserChar={user}
           navigate={navigate}
           setLoadNextPage={setLoadNextPage}
         />

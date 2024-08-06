@@ -92,6 +92,8 @@ app.use(express.json())
 // Error Handling middlewares
 // app.use(notFound);
 app.use(errorHandler)
+// const generateSitemap = require('./generate-sitemap')
+// generateSitemap()
 // require('./scheduler/setupCronJobs')
 const PORT = process.env.PORT
 authRouter.use(cookieParser())

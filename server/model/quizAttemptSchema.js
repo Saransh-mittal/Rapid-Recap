@@ -1,19 +1,18 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const quizAttemptSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "USER",
-    required: true,
+    ref: 'USER',
   },
   article: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "ARTICLE",
+    ref: 'ARTICLE',
     required: true,
   },
   quiz: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "QUIZ",
+    ref: 'QUIZ',
   },
   responses: [
     {
@@ -61,10 +60,10 @@ const quizAttemptSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
-quizAttemptSchema.index({ user: 1 });
-quizAttemptSchema.index({ createdAt: 1 });
+})
+quizAttemptSchema.index({ user: 1 })
+quizAttemptSchema.index({ createdAt: 1 })
 
-const QuizAttempt = mongoose.model("QUIZ_ATTEMPT", quizAttemptSchema);
+const QuizAttempt = mongoose.model('QUIZ_ATTEMPT', quizAttemptSchema)
 
-module.exports = QuizAttempt;
+module.exports = QuizAttempt

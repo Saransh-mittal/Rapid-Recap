@@ -21,13 +21,16 @@ import axios from 'axios'
 import './BlinkingButton.css'
 import Arrow from '/images/arrow.webp'
 import Circle from '/images/circle.webp'
-import useSound from '../../customHooks/useSound'
+import { useDispatch, useSelector } from 'react-redux'
+import { setUser } from '../../redux/authSlice'
 // const AnimatedText = motion(Text);
 
 const UpgradeModal = ({ isOpen, onClose }) => {
-  const { state, dispatch, playClick } = useContext(AppContext)
+  const { playClick } = useContext(AppContext)
+  const { user } = useSelector(state => state.auth)
+  const dispatchRedux = useDispatch()
 
-  const USER_IQ = state.user.IQ_score
+  const USER_IQ = user.IQ_score
   // console.log(USER_IQ);
   // const USER_IQ = 111;
   const findSocietyAndCircle = USER_IQ => {
@@ -49,7 +52,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
   // Determine the society and circle for the current USER_IQ
   const upgradedSocietyOrCircle = findSocietyAndCircle(USER_IQ)
   // console.log(upgradedSocietyOrCircle);
-  const prevSocietyOrCircle = findSocietyAndCircle(state.user.prevIQScore)
+  const prevSocietyOrCircle = findSocietyAndCircle(user.prevIQScore)
   // console.log(prevSocietyOrCircle);
 
   const isCircleUpdgraded =
@@ -59,10 +62,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
     playClick()
     try {
       await axios.put('/api/user/upgradeMessageClose')
-      dispatch({
-        type: 'setUser',
-        payloadUser: { ...state.user, societyUpgradeMessage: '' },
-      })
+      dispatchRedux(setUser({ ...user, societyUpgradeMessage: '' }))
       onClose()
     } catch (error) {
       console.error('Error:', error)
@@ -97,7 +97,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                 textShadow: '0px 0px 8px rgba(255, 255, 255, 0.8)',
               }}
             >
-              Congratulations, {state.user.name}!
+              Congratulations, {user.name}!
             </span>
           </ModalHeader>
         </Box>
@@ -313,7 +313,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
             textAlign="center"
             // fontStyle="italic"
           >
-            {state.user.societyUpgradeMessage}
+            {user.societyUpgradeMessage}
           </Text>
           <Text
             // mt={4}

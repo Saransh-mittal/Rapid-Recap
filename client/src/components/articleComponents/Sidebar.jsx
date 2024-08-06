@@ -13,6 +13,7 @@ import {
   useDisclosure,
   Spinner,
   Skeleton,
+  useToast,
 } from '@chakra-ui/react'
 import { LockIcon, TriangleDownIcon } from '@chakra-ui/icons'
 import Alt_img from '/images/rr.webp'
@@ -21,6 +22,8 @@ import QuizExpired from './QuizExpired'
 import TakeQuizButton from './TakeQuizButton'
 import TotalUserAttempted from './TotalUserAttempted'
 import { AppContext } from '../../contextAPI/appContext'
+import { useSelector } from 'react-redux'
+import Signin from '../../screens/Signin'
 
 const Sidebar = ({
   givenQuiz,
@@ -42,15 +45,18 @@ const Sidebar = ({
   id,
   state,
   isQuizGivenLoading,
+  onSigninOpen,
 }) => {
-  const notLoggedIn = state.show
+  const { isAuthenticated } = useSelector(state => state.auth)
+  const notLoggedIn = !isAuthenticated
   const { playClick } = useContext(AppContext)
+  const toast = useToast()
 
-  const isLoading =
-    !givenQuiz && !onGoingQuiz && !quizExpired && isQuizGivenLoading
+  const isLoaded =
+    onGoingQuiz !== null && quizExpired !== null && isQuizGivenLoading !== null
 
   return (
-    <Skeleton isLoaded={!isLoading}>
+    <Skeleton isLoaded={isLoaded}>
       <Box
         boxShadow={'0 100px 200px rgba(1, 1, 1, 1.1)'}
         borderRadius={'15px'}
@@ -95,6 +101,13 @@ const Sidebar = ({
                   onClick={() => {
                     playClick()
                     if (notLoggedIn) {
+                      toast({
+                        title: 'Login Required',
+                        description: 'Please log in to share this article.',
+                        status: 'warning',
+                        duration: 3000,
+                        isClosable: true,
+                      })
                       return
                     }
                     tour.complete()
@@ -116,6 +129,8 @@ const Sidebar = ({
                   color="white"
                   boxSize={8}
                   zIndex={2}
+                  onClick={onSigninOpen}
+                  cursor={'pointer'}
                 />
               </Tooltip>
             )}
@@ -126,6 +141,7 @@ const Sidebar = ({
             totalUsersGivenQuiz={totalUsersGivenQuiz}
             notLoggedIn={notLoggedIn}
             RQM_score={RQM_score}
+            articleId={id}
           />
         </Box>
         <Text as="h3" color="white" letterSpacing={1} ml={4}>
@@ -151,6 +167,13 @@ const Sidebar = ({
                 onClick={e => {
                   if (notLoggedIn) {
                     e.preventDefault()
+                    toast({
+                      title: 'Login Required',
+                      description: 'Please log in to share this article.',
+                      status: 'warning',
+                      duration: 3000,
+                      isClosable: true,
+                    })
                     return
                   }
                   playClick()
@@ -233,6 +256,8 @@ const Sidebar = ({
                 color="white"
                 boxSize={8}
                 zIndex={2}
+                onClick={onSigninOpen}
+                cursor={'pointer'}
               />
             </Tooltip>
           )}

@@ -27,6 +27,7 @@ import Inbox from './Inbox'
 import { FaFacebookMessenger, FaUserFriends } from 'react-icons/fa'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import UserSearchDrawer from '../../miscellaneous/UserSearchDrawer'
+import { useSelector } from 'react-redux'
 
 const HamburgerModal = ({
   isOpen,
@@ -39,7 +40,9 @@ const HamburgerModal = ({
   setIsDrawerOpen,
   onOpenWiseWeb,
 }) => {
-  const { state, playClick } = useContext(AppContext)
+  const { state } = useContext(AppContext)
+  const { user } = useSelector(state => state.auth)
+
   const { notification, openChat } = ChatState()
   const navigate = useNavigate()
   const {
@@ -105,17 +108,12 @@ const HamburgerModal = ({
                 alignItems={'center'}
                 onClick={() => {
                   onClose()
-                  navigate(`/profile/${state.user.inGameName}`)
+                  navigate(`/profile/${user.inGameName}`)
                 }}
                 cursor={'pointer'}
               >
                 <Flex w={'100%'} h={'100%'} position={'relative'}></Flex>
-                <Avatar
-                  src={state.user?.pic}
-                  h={'6rem'}
-                  w={'6rem'}
-                  rounded={'50%'}
-                />
+                <Avatar src={user?.pic} h={'6rem'} w={'6rem'} rounded={'50%'} />
                 <Text letterSpacing={'2px'} fontWeight={'bold'}>
                   <span
                     style={{
@@ -125,7 +123,7 @@ const HamburgerModal = ({
                       padding: '5px',
                     }}
                   >
-                    {state.user?.name}
+                    {user?.name}
                   </span>
                 </Text>
               </Flex>

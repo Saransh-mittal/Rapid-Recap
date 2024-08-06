@@ -4,6 +4,7 @@ const Quiz = require('../model/quizSchema')
 const Article = require('../model/articleSchema')
 const moment = require('moment')
 const fakeQuizAttemptMinMax = require('../data/fakeAttemptMinMax.json')
+const configService = require('../configService')
 const genQuiz = async ({ fullQuiz, title }) => {
   const selectedQuestions = new Set() // Using a Set to ensure uniqueness
 
@@ -114,8 +115,9 @@ const generateQuestionsForQuiz = async ({
 4. Include a brief explanation for each correct answer.
 5. Ensure all questions are derived from the provided text.
 6. Assign a difficulty level between 0 and 1 for each question (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)). **This field is mandatory**.
-7. Evaluate the article's overall difficulty considering vocabulary complexity, sentence structure, conceptual difficulty, depth of analysis, required background knowledge, clarity, coherence, information density, language style, length, and reader engagement. Provide an overall difficulty rating between 0 and 1 (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)).
-8. Return the response in the following JSON format:
+7. If the question requires remembering numerical data, specific dates, or names, assign a higher difficulty level. Give These things higher priority while assigning difficulty.
+8. Evaluate the article's overall difficulty considering factors such as vocabulary complexity, sentence structure,clarity, coherence, information density, length, and reader engagement. If the article involves a significant amount of numerical or name-based information, assign a higher overall difficulty rating. Provide an overall difficulty rating between 0 and 1 (It can't be 0 or 1; it has to be a decimal value between 0 to 1, with two decimal accuracy).
+9. Return the response in the following JSON format:
 {
   "title": "Title of the article",
   "paragraphs": [
@@ -518,6 +520,18 @@ const fakeQuizAttemptCnt = async () => {
         const skew = 1 // Adjust this value to control the skewness
         const weightedRandom = Math.pow(Math.random(), skew) * (max - 1) + 1
         quizAttemptCnt += Math.floor(weightedRandom)
+        for (let i = 0; i < Math.floor(weightedRandom); i++) {
+          const topScore = Math.floor(Math.random() * 50)
+          const newQuizAttempt = new QuizAttempt({
+            article: article._id,
+            RQM_score: Math.floor(Math.random() * topScore),
+            articleDifficulty: Math.random(),
+            userPercentile: Math.random() * 100,
+            timeTaken: Math.floor(Math.random() * 100),
+            season: parseInt(configService.getCurrentSeason(), 10),
+          })
+          await newQuizAttempt.save()
+        }
       }
 
       article.quizAttemptCnt = quizAttemptCnt

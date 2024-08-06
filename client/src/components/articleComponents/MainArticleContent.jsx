@@ -10,6 +10,9 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react'
 import { LockIcon } from '@chakra-ui/icons'
+import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import Signin from '../../screens/Signin'
 
 const MainArticleContent = ({
   imgURL,
@@ -21,7 +24,8 @@ const MainArticleContent = ({
   state,
   articleLoading,
 }) => {
-  const notLoggedIn = state.show
+  const { isAuthenticated } = useSelector(state => state.auth)
+  const notLoggedIn = !isAuthenticated
   const [useAltImage, setUseAltImage] = useState(false)
 
   const handleImageError = () => {
@@ -89,31 +93,11 @@ const MainArticleContent = ({
                     align="justify"
                     letterSpacing={1}
                     fontSize={fontSize}
-                    style={
-                      notLoggedIn
-                        ? { filter: 'blur(5px)', userSelect: 'none' }
-                        : { userSelect: 'text' }
-                    }
+                    style={{ userSelect: 'text' }}
                     mx={[1, 2]}
                   >
                     {mainText[selectedLanguage][1]}
                   </Text>
-                  {notLoggedIn && (
-                    <Tooltip
-                      label="Please log in to view content"
-                      placement="top"
-                    >
-                      <LockIcon
-                        position="absolute"
-                        top="50%"
-                        left="50%"
-                        transform="translate(-50%, -50%)"
-                        color="white"
-                        boxSize={[6, 7, 8]}
-                        zIndex={2}
-                      />
-                    </Tooltip>
-                  )}
                 </Flex>
               </Box>
 
@@ -123,11 +107,7 @@ const MainArticleContent = ({
                   align="justify"
                   letterSpacing={1}
                   fontSize={fontSize}
-                  style={
-                    notLoggedIn
-                      ? { filter: 'blur(5px)', userSelect: 'none' }
-                      : { userSelect: 'text' }
-                  }
+                  style={{ userSelect: 'text' }}
                   mx={[1, 2]}
                 >
                   {mainText[selectedLanguage][2]}
@@ -149,30 +129,10 @@ const MainArticleContent = ({
                   align="justify"
                   letterSpacing={1}
                   fontSize={fontSize}
-                  style={
-                    notLoggedIn
-                      ? { filter: 'blur(5px)', userSelect: 'none' }
-                      : { userSelect: 'text' }
-                  }
+                  style={{ userSelect: 'text' }}
                 >
                   {mainText[selectedLanguage][1]}
                 </Text>
-                {notLoggedIn && (
-                  <Tooltip
-                    label="Please log in to view content"
-                    placement="top"
-                  >
-                    <LockIcon
-                      position="absolute"
-                      top="50%"
-                      left="50%"
-                      transform="translate(-50%, -50%)"
-                      color="white"
-                      boxSize={[6, 7, 8]}
-                      zIndex={2}
-                    />
-                  </Tooltip>
-                )}
               </Flex>
             </>
           )}

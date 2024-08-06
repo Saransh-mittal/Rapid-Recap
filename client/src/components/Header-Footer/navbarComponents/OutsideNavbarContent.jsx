@@ -23,6 +23,7 @@ import { ChatState } from '../../../contextAPI/ChatProvider'
 import { SearchIcon } from '@chakra-ui/icons'
 import UserSearchDrawer from '../../miscellaneous/UserSearchDrawer'
 import useSound from '../../../customHooks/useSound'
+import { useSelector } from 'react-redux'
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -43,6 +44,7 @@ const OutsideNavbarContent = ({
   profileNotif,
   onOpenWiseWeb,
 }) => {
+  const { user } = useSelector(state => state.auth)
   const isEmptyObject = obj => {
     return obj && Object.keys(obj).length === 0
   }
@@ -73,11 +75,11 @@ const OutsideNavbarContent = ({
         )}
         {!notLogined && (
           <>
-            {state.user && !isEmptyObject(state.user) ? (
+            {user && !isEmptyObject(user) ? (
               <Box>
                 {' '}
                 <IQScore
-                  score={state.user?.IQ_score}
+                  score={user?.IQ_score}
                   _hover={{
                     cursor: 'pointer',
                   }}
@@ -91,7 +93,7 @@ const OutsideNavbarContent = ({
             ) : (
               <Spinner />
             )}
-            {state.user && !isEmptyObject(state.user) && (
+            {user && !isEmptyObject(user) && (
               <Box>
                 <XPLevel
                   level={level}
@@ -130,7 +132,7 @@ const OutsideNavbarContent = ({
                 getBackgroundColor={getBackgroundColor}
               />
             )}
-            {!isEmptyObject(state.user) && (
+            {!isEmptyObject(user) && (
               <Box
                 _hover={{
                   cursor: 'pointer',
@@ -150,7 +152,7 @@ const OutsideNavbarContent = ({
                 />
               </Box>
             )}
-            {!isEmptyObject(state.user) && (
+            {!isEmptyObject(user) && (
               <Box
                 _hover={{
                   cursor: 'pointer',

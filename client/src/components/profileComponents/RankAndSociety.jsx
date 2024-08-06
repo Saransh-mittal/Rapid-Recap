@@ -1,13 +1,13 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Flex, Image, Tooltip, Text, Tag, Spinner } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import circle from '/images/circle.webp'
 import Arrow from '/images/arrow.webp'
 import Lightning from './RankAndSocietySubCompnents/Lightning'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
-import { AppContext } from '../../contextAPI/appContext'
 import BrainModal from './RankAndSocietySubCompnents/BrainModal'
 import CircleModal from './RankAndSocietySubCompnents/CircleModal' // Import CircleModal
+import { useSelector } from 'react-redux'
 
 const RankAndSociety = ({
   USER_IQ = 0,
@@ -15,7 +15,7 @@ const RankAndSociety = ({
   loginedUserProfile,
   isDisabled = false,
 }) => {
-  const { state, dispatch } = useContext(AppContext)
+  const { user } = useSelector(state => state.auth)
   const [circleAndSociety, setCircleAndSociety] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false) // State for BrainModal
@@ -113,7 +113,7 @@ const RankAndSociety = ({
                   w={'60px'}
                   height={'30px'}
                 >
-                  {state.user.profilePrivacy.society ? 'HIDDEN' : 'VISIBLE'}
+                  {user.profilePrivacy.society ? 'HIDDEN' : 'VISIBLE'}
                 </Tag>
               </Tooltip>
             )}

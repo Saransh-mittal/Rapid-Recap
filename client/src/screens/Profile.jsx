@@ -30,18 +30,20 @@ import ProfileExperienceLevel from '../components/profileComponents/ProfileExper
 import SeasonSelectorModal from '../components/profileComponents/SeasonSelectorModal.jsx'
 import ProfileButton from '../components/profileComponents/ProfileButton.jsx'
 import Bookmarks from '../components/profileComponents/Bookmarks.jsx'
+import { useSelector } from 'react-redux'
 // import WiseWeb from '../components/profileComponents/WiseWeb.jsx'
 //
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour()
   const { inGameName } = useParams()
   const { state, dispatch, readFriendRequests } = useContext(AppContext)
+  const { isAuthenticated, user } = useSelector(state => state.auth)
   const [profile, setProfile] = useState(state.userProfile)
   const [isLoading, setIsLoading] = useState(true)
   const [showHideModal, setShowHideModal] = useState(false)
-  const userSocietyAndCircle = findSocietyAndCircle(state.user?.IQ_score)
+  const userSocietyAndCircle = findSocietyAndCircle(user?.IQ_score)
 
-  const loginedUserProfile = inGameName === state.user?.inGameName
+  const loginedUserProfile = inGameName === user?.inGameName
   const [privacyProfileData, setPrivacyProfileData] = useState({
     fullProfile: false,
     lineGraph: false,
@@ -69,11 +71,10 @@ export default function Profile() {
   } = useDisclosure()
 
   const fetchProfile = async () => {
-    if (!state.user) return
     try {
       const response = await axios.get(`/api/user/profile/${inGameName}`)
       setProfile(() => response.data)
-      if (inGameName === state.user.inGameName) {
+      if (inGameName === user?.inGameName) {
         dispatch({ type: 'profile', payloadProfile: response.data })
         localStorage.setItem('userProfile', JSON.stringify(response.data)) // Cache profile
       } else {
@@ -100,7 +101,7 @@ export default function Profile() {
       return user?.inGameName === inGameName
     })
 
-    if (inGameName === state.user?.inGameName) {
+    if (inGameName === user?.inGameName) {
       const cachedProfile = localStorage.getItem('userProfile')
       if (cachedProfile) {
         const parsedProfile = JSON.parse(cachedProfile)
@@ -122,19 +123,19 @@ export default function Profile() {
     } else {
       fetchProfile()
     }
-  }, [inGameName, state, state.user])
+  }, [inGameName, state, user])
 
   useEffect(() => {
     if (
       !isLoading &&
-      !state.show &&
-      state.user &&
-      state.user.tutorial.profilePage &&
+      isAuthenticated &&
+      user &&
+      user?.tutorial.profilePage &&
       loginedUserProfile
     ) {
       isTutorialTakenCheck({ page: 'profilePage', tour })
     }
-  }, [isLoading])
+  }, [isLoading, isAuthenticated, user, loginedUserProfile])
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
@@ -222,7 +223,7 @@ export default function Profile() {
             {showHideModal && (
               <ToggleProfileVisibilty setShowHideModal={setShowHideModal} />
             )}
-            {inGameName === state.user?.inGameName && (
+            {inGameName === user?.inGameName && (
               <Tooltip label="Toggle Profile Visibility">
                 <ViewIcon
                   marginLeft={'auto'}
@@ -330,7 +331,7 @@ export default function Profile() {
             </>
           ) : (
             (!privacyProfileData.seasonAnalytics ||
-              inGameName == state.user.inGameName) && (
+              inGameName == user?.inGameName) && (
               <Flex
                 // padding="15px"
                 py={'8px'}
@@ -347,8 +348,8 @@ export default function Profile() {
                 <ProfileButton
                   buttonText="Season Analytics"
                   inGameName={inGameName}
-                  stateUserInGameName={state.user.inGameName}
-                  Private={state.user.profilePrivacy.seasonAnalytics}
+                  stateUserInGameName={user?.inGameName}
+                  Private={user?.profilePrivacy.seasonAnalytics}
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenSeasonSelector}
                   icon={<GiHistogram />} // Add icon here
@@ -380,7 +381,7 @@ export default function Profile() {
               />
             </>
           ) : (
-            inGameName == state.user.inGameName && (
+            inGameName == user?.inGameName && (
               <Flex
                 // padding="15px"
                 // px={'15px'}
@@ -395,7 +396,7 @@ export default function Profile() {
                 <ProfileButton
                   buttonText="Bookmarks"
                   inGameName={inGameName}
-                  stateUserInGameName={state.user.inGameName}
+                  stateUserInGameName={user?.inGameName}
                   Private={true}
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenBookmarks}
