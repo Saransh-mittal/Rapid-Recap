@@ -8,14 +8,17 @@
   box-sizing: border-box;
 }
 
+
 #root {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   font-family: "Roboto Condensed", "Lato", sans-serif !important;
   color: white;
-  /* background-color: #0f0d15; */
-  background-image: url('./assets/hero/hero-bg.webp');
+  background-color: #0f0d15; /* Fallback background color */
+   /* background-color: #0f0d15; */
+  /* background-image: url('./assets/hero/hero-bg.webp'); */
+  background-image: url('./assets/hero/Designer.webp');
   background-attachment: fixed;
   background-position: center;
   background-repeat: no-repeat;

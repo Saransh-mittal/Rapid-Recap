@@ -161,7 +161,7 @@ const ArticleHeader = ({
   return (
     <Skeleton isLoaded={!!title[selectedLanguage]} w={'100%'} mb={[3, 4, 5]}>
       <Flex
-        bg="linear-gradient(135deg, #2A2F4F 0%, #917FB3 100%)"
+        bg="linear-gradient(135deg, rgba(42, 47, 79, 0.7) 0%, rgba(145, 127, 179, 0.7) 100%)"
         px={[3, 4, 6]}
         py={[2, 3]}
         borderTopRadius="xl"

@@ -21,7 +21,7 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
 
   return (
     <Box
-      bgGradient="linear(to-b, #2A2F4F, #917FB3)"
+      bgGradient="linear(to-b, rgba(42, 47, 79, 0.7), rgba(145, 127, 179, 0.7))"
       color="white"
       borderRadius="lg"
       p={6}
