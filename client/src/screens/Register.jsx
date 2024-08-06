@@ -26,12 +26,14 @@ import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
 import _ from 'lodash'
 
 import { Helmet } from 'react-helmet-async'
-import useSound from '../customHooks/useSound'
+import { useDispatch, useSelector } from 'react-redux'
 
 export default function Register({ isOpen, onClose, signinOnOpen }) {
   const [emailVerified, setEmailVerified] = useState(false)
   const toast = useToast()
-  const { state, dispatch, playClick } = useContext(AppContext)
+  const { playClick } = useContext(AppContext)
+  const dispatch = useDispatch()
+  const { modal } = useSelector(state => state.ui)
 
   const [data, setData] = useState({
     name: '',
@@ -72,7 +74,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
       newData.pic = pic
       const response = await axios.post(`/api/user/register`, newData)
       if (response.status === 201) {
-        await dispatch({ type: 'showModal', payloadModal: true })
+        dispatch(setModal(true))
         toast({
           title: 'Registered Successfully',
           status: 'success',
@@ -204,12 +206,8 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
         <ModalHeader color="white">Register</ModalHeader>
         <ModalCloseButton color="white" />
         <ModalBody>
-          {state.modal && (
-            <Modal
-              onClose={() =>
-                dispatch({ type: 'showModal', payloadModal: false })
-              }
-            >
+          {modal && (
+            <Modal onClose={() => dispatch(setModal(false))}>
               <EmailVerify
                 email={data.email}
                 setEmailVerified={setEmailVerified}

@@ -7,7 +7,8 @@ import { debounce } from 'lodash'
 import { useToast, Box, Spinner } from '@chakra-ui/react'
 
 import { Helmet } from 'react-helmet-async'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setPageRedux } from '../redux/uiSlice'
 
 const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
 const UpgradeModal = lazy(() =>
@@ -17,11 +18,13 @@ const UpgradeModal = lazy(() =>
 const Home = () => {
   const { state, dispatch } = useContext(AppContext)
   const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { page: statePage } = useSelector(state => state.ui)
+  const dispatchRedux = useDispatch()
 
   let notLoggedIn = !isAuthenticated
 
   const [items, setItems] = useState(state.items)
-  const [page, setPage] = useState(state.page + 1)
+  const [page, setPage] = useState(statePage + 1)
   const toast = useToast()
   const [load, setLoad] = useState(true)
   const navigate = useNavigate()
@@ -55,7 +58,7 @@ const Home = () => {
       if (newItems.length === 0) {
         setHasMoreItems(false)
       } else {
-        dispatch({ type: 'PAGE', payloadPage: page - 1 })
+        dispatchRedux(setPageRedux(page - 1))
         dispatch({
           type: 'ITEMS',
           payloadItems: [...items, ...newItems],
@@ -99,8 +102,6 @@ const Home = () => {
     if (!category || category === '') {
       navigate('/home/all')
     }
-
-    dispatch({ type: 'homeInitialRender' })
     window.addEventListener('scroll', debouncedHandleScroll)
 
     dispatch({ type: 'setNews', payloadNews: {} })
@@ -109,17 +110,13 @@ const Home = () => {
   }, [isAuthenticated, category])
 
   useEffect(() => {
-    if (!state.modal) dispatch({ type: 'setNews', payloadNews: {} })
-  }, [state.modal])
-
-  useEffect(() => {
     if (category !== prevCategory) {
       // Category has changed
       setPage(1)
       setItems([])
       setHasMoreItems(true)
       dispatch({ type: 'category', payloadCategory: category })
-      dispatch({ type: 'PAGE', payloadPage: 0 })
+      dispatchRedux(setPageRedux(0))
       dispatch({ type: 'ITEMS', payloadItems: [] })
       setPrevCategory(category)
     } else if (items.length < page * 9) {

@@ -2,19 +2,19 @@ import { useState, useContext, useRef, useEffect, useCallback } from 'react'
 import './EmailVerify.css'
 import axios from 'axios'
 import { Otptimer } from 'otp-timer-ts'
-import { useNavigate } from 'react-router-dom'
 import { AppContext } from '../../contextAPI/appContext'
 import Loading from '../miscellaneous/Loading'
 import { Box, Flex } from '@chakra-ui/react'
 import { useToast } from '@chakra-ui/react'
 import { throttle } from 'lodash'
-import useSound from '../../customHooks/useSound'
+import { useDispatch, useSelector } from 'react-redux'
+import { setModal } from '../../redux/uiSlice'
+import { setVerifyEmail } from '../../redux/authSlice'
 const EmailVerify = ({ email, setEmailVerified }) => {
   const toast = useToast()
-  const { state, dispatch } = useContext(AppContext)
-  const forgetPassword = state.forgotPassword
+  const dispatch = useDispatch()
+  const { forgotPassword } = useSelector(state => state.auth)
   const [load, setLoad] = useState(false) //for loading spinner
-  const navigate = useNavigate()
   const { playClick } = useContext(AppContext)
   const [otp, setOtp] = useState({
     i1: '',
@@ -53,19 +53,17 @@ const EmailVerify = ({ email, setEmailVerified }) => {
   }
 
   const submitOTP = async e => {
-    console.log(email)
-    console.log(otp)
-    e.preventDefault()
     const otpValue = `${otp.i1}${otp.i2}${otp.i3}${otp.i4}${otp.i5}${otp.i6}`
     const data = { otp: otpValue, email: email }
     setLoad(true)
     try {
       const response = await axios.post(
-        `/api/user/verifyEmail?forgotPassword=${forgetPassword}`,
+        `/api/user/verifyEmail?forgotPassword=${forgotPassword}`,
         data,
       )
+
       if (response.status === 201) {
-        setEmailVerified(true)
+        setEmailVerified && setEmailVerified(true)
         toast({
           title: 'Email Verified',
           status: 'success',
@@ -74,13 +72,17 @@ const EmailVerify = ({ email, setEmailVerified }) => {
           position: 'top',
         })
         //alert("Email Verified");
-        if (forgetPassword) {
-          //console.log(forgetPassword);
-          await dispatch({ type: 'verifyEmail', payloadverifyEmail: false })
+        if (forgotPassword) {
+          dispatch(setVerifyEmail(false))
         } else {
-          // console.log(forgetPassword);
-          // console.log(state.modal);
-          await dispatch({ type: 'showModal', payloadModal: false })
+          dispatch(setModal(false))
+          toast({
+            title: 'Email Verified',
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
         }
       } else {
         throw new Error('Email Verification Failed')

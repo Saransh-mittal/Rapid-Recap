@@ -18,9 +18,7 @@ const quinBoostChecker = async ({
   }
 }
 
-const dailyStreakCheckerAndUpdater = async (dispatch, getState) => {
-  const { status } = getState().app
-
+const dailyStreakCheckerAndUpdater = async dispatch => {
   console.log('Checking daily streak...')
   try {
     await dispatch(fetchDailyStreak()).unwrap()

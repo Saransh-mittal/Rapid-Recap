@@ -167,7 +167,7 @@ const Quiz = ({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       })
-      dailyStreakCheckerAndUpdater(dispatchRedux, () => ({ app: { status } }))
+      dailyStreakCheckerAndUpdater(dispatchRedux)
       if (
         !submitted &&
         currentQuestionIndex < totalQuestions &&

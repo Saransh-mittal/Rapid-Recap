@@ -15,33 +15,13 @@ export const Reducer = (state, action) => {
     case 'ITEMS':
       return { ...state, items: action.payloadItems }
 
-    // Update current page number
-    case 'PAGE':
-      return { ...state, page: action.payloadPage }
-
-    // Show modal with specific payload
-    case 'showModal':
-      return { ...state, modal: action.payloadModal }
-
     // Set news data
     case 'setNews':
       return { ...state, news: action.payloadNews }
 
-    // Toggle forgot password state
-    case 'forgotPassword':
-      return { ...state, forgotPassword: action.payloadForgotPassword }
-
-    // Toggle verify email state
-    case 'verifyEmail':
-      return { ...state, verifyEmail: action.payloadverifyEmail }
-
     // Set focused navigation link
     case 'setFocusedNavLink':
       return { ...state, focusedNavLink: action.payloadFocusedNavLink }
-
-    // Set home initial render state to false
-    case 'homeInitialRender':
-      return { ...state, homeInitialRender: false }
 
     // Set category
     case 'category':

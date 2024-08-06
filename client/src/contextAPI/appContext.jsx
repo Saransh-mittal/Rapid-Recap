@@ -63,13 +63,8 @@ const getUnreadFriendRequestCnt = async () => {
 
 // Define and export initial state
 export const initialState = {
-  modal: false,
-  forgotPassword: false,
-  verifyEmail: false,
   focusedNavLink: 0,
-  page: 0,
   items: [],
-  homeInitialRender: true,
   category: getCategory() ? getCategory() : 'all',
   userProfile: null,
   otherUserProfiles: [],

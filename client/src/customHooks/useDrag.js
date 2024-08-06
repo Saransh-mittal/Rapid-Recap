@@ -1,58 +1,58 @@
 // hooks/useDrag.js
-import { useRef, useContext } from "react";
-import { AppContext } from "../contextAPI/appContext";
+import { useRef, useContext } from 'react'
+import { AppContext } from '../contextAPI/appContext'
 
 const useDrag = () => {
-  const startX = useRef(0);
-  const isDragging = useRef(false);
-  const { state, dispatch, navLinkRefs } = useContext(AppContext);
-  const threshold = 500;
+  const startX = useRef(0)
+  const isDragging = useRef(false)
+  const { state, dispatch, navLinkRefs } = useContext(AppContext)
+  const threshold = 500
 
-  const onDragRight = (nextIndex) => {
-    navLinkRefs.current[nextIndex].click();
-  };
-  const onDragLeft = (nextIndex) => {
-    navLinkRefs.current[nextIndex].click();
-  };
-  const startDrag = (e) => {
-    startX.current = e.clientX || e.touches[0].clientX;
-    isDragging.current = true;
-  };
+  const onDragRight = nextIndex => {
+    navLinkRefs.current[nextIndex].click()
+  }
+  const onDragLeft = nextIndex => {
+    navLinkRefs.current[nextIndex].click()
+  }
+  const startDrag = e => {
+    startX.current = e.clientX || e.touches[0].clientX
+    isDragging.current = true
+  }
 
-  const drag = (e) => {
-    if (!isDragging.current) return;
-    const currentX = e.clientX || e.touches[0].clientX;
-    const diff = currentX - startX.current;
+  const drag = e => {
+    if (!isDragging.current) return
+    const currentX = e.clientX || e.touches[0].clientX
+    const diff = currentX - startX.current
     if (Math.abs(diff) > threshold) {
-      const nextIndex = (state.focusedNavLink + 1) % navLinkRefs.current.length;
+      const nextIndex = (state.focusedNavLink + 1) % navLinkRefs.current.length
       const prevIndex =
         (state.focusedNavLink - 1 + navLinkRefs.current.length) %
-        navLinkRefs.current.length;
+        navLinkRefs.current.length
 
-      if (!navLinkRefs.current[nextIndex]) return;
+      if (!navLinkRefs.current[nextIndex]) return
 
       if (diff < 0) {
         dispatch({
-          type: "setFocusedNavLink",
+          type: 'setFocusedNavLink',
           payloadFocusedNavLink: nextIndex,
-        });
-        onDragRight(nextIndex);
+        })
+        onDragRight(nextIndex)
       } else {
         dispatch({
-          type: "setFocusedNavLink",
+          type: 'setFocusedNavLink',
           payloadFocusedNavLink: prevIndex,
-        });
-        onDragLeft(prevIndex);
+        })
+        onDragLeft(prevIndex)
       }
-      isDragging.current = false;
+      isDragging.current = false
     }
-  };
+  }
 
   const endDrag = () => {
-    isDragging.current = false;
-  };
+    isDragging.current = false
+  }
 
-  return { startDrag, drag, endDrag };
-};
+  return { startDrag, drag, endDrag }
+}
 
-export default useDrag;
+export default useDrag

@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect, useCallback } from 'react'
 import { AppContext } from '../../contextAPI/appContext'
 import axios from 'axios'
-import { throttle } from 'lodash'
+import { set, throttle } from 'lodash'
 import {
   useToast,
   Button,
@@ -9,13 +9,16 @@ import {
   InputGroup,
   InputRightElement,
 } from '@chakra-ui/react'
-import useSound from '../../customHooks/useSound'
+import { useDispatch } from 'react-redux'
+import { setModal } from '../../redux/uiSlice'
+import { setForgotPassword } from '../../redux/authSlice'
 
 const ResetPassword = ({ email }) => {
   const toast = useToast()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const { state, dispatch, playClick } = useContext(AppContext)
+  const { playClick } = useContext(AppContext)
+  const dispatch = useDispatch()
   const [load, setLoad] = useState(false) //for loading spinner
   const [show, setShow] = useState({
     new_p: false,
@@ -44,8 +47,8 @@ const ResetPassword = ({ email }) => {
           position: 'top',
         })
 
-        dispatch({ type: 'forgotPassword', payloadForgotPassword: false })
-        dispatch({ type: 'showModal', payloadModal: false })
+        dispatch(setForgotPassword(false))
+        dispatch(setModal(false))
       }
     } catch (error) {
       console.log(error)

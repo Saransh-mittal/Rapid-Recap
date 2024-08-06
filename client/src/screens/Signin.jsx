@@ -35,14 +35,16 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import Register from './Register'
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 import { useDispatch, useSelector } from 'react-redux'
-import { setUser } from '../redux/authSlice'
+import { setForgotPassword, setUser, setVerifyEmail } from '../redux/authSlice'
+import { setModal } from '../redux/uiSlice'
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   //const isScreenSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
 
   const toast = useToast()
-  const { state, dispatch, playClick } = useContext(AppContext)
-  const { status } = useSelector(state => state.app)
+  const { playClick } = useContext(AppContext)
+  const { modal } = useSelector(state => state.ui)
+  const { forgotPassword, verifyEmail } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
   const [data, setData] = useState({
     emailOrInGameName: '',
@@ -101,13 +103,8 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('role', response.data.user.role)
       hamburgerOnClose && hamburgerOnClose()
-      dispatch({ type: 'UNSHOW' })
-      dispatch({
-        type: 'setUser',
-        payloadUser: response.data.user,
-      })
       dispatchRedux(setUser(response.data.user))
-      dailyStreakCheckerAndUpdater(dispatchRedux, () => ({ app: { status } }))
+      dailyStreakCheckerAndUpdater(dispatchRedux)
       toast({
         title: 'Login Successful',
         status: 'success',
@@ -134,8 +131,8 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         })
 
         if (responseOfResendOTP.status === 201) {
-          await dispatch({ type: 'verifyEmail', payloadverifyEmail: true })
-          await dispatch({ type: 'showModal', payloadModal: true })
+          dispatchRedux(setVerifyEmail(true))
+          dispatchRedux(setModal(true))
           toast({
             title: 'Email not verified',
             description: 'Please verify your email before continuing',
@@ -151,15 +148,9 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
       ) {
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('role', response.data.user.role)
-        dispatch({ type: 'UNSHOW' })
-        dispatch({
-          type: 'setUser',
-          payloadUser: response.data.user,
-        })
         dispatchRedux(setUser(response.data.user))
-        //console.log(response);
         hamburgerOnClose && hamburgerOnClose()
-        dailyStreakCheckerAndUpdater(dispatchRedux, () => ({ app: { status } }))
+        dailyStreakCheckerAndUpdater(dispatchRedux)
 
         toast({
           title: 'Login-Successful',
@@ -187,7 +178,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     }
   }
 
-  const forgotPassword = async () => {
+  const doForgotPassword = async () => {
     playClick()
     try {
       setLoad({ submitLoad: false, forgotLoad: true })
@@ -201,8 +192,8 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           data.emailOrInGameName.slice(0, 2) +
           data.emailOrInGameName.slice(2, i).replace(/./g, '*') +
           data.emailOrInGameName.slice(i)
-        await dispatch({ type: 'forgotPassword', payloadForgotPassword: true })
-        await dispatch({ type: 'verifyEmail', payloadverifyEmail: true })
+        dispatchRedux(setForgotPassword(true))
+        dispatchRedux(setVerifyEmail(true))
         toast({
           title: 'OTP sent to your email',
           description: starredEmail,
@@ -212,7 +203,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           position: 'top',
         })
       }
-      await dispatch({ type: 'showModal', payloadModal: true })
+      dispatchRedux(setModal(true))
     } catch (error) {
       emailOrInGameNameRef.current.focus()
       toast({
@@ -236,7 +227,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   }, [])
 
   const handleForgotPasswordThrottled = useCallback(
-    throttle(forgotPassword, 1000),
+    throttle(doForgotPassword, 1000),
     [data.emailOrInGameName],
   )
 
@@ -271,21 +262,13 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           <ModalHeader color="white">Sign In</ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody w={'65%'} p={'20px'}>
-            {state.modal && state.forgotPassword && !state.verifyEmail && (
-              <Modal
-                onClose={() =>
-                  dispatch({ type: 'showModal', payloadModal: false })
-                }
-              >
+            {modal && forgotPassword && !verifyEmail && (
+              <Modal onClose={() => dispatchRedux(setModal(false))}>
                 <ResetPassword email={data.emailOrInGameName} />
               </Modal>
             )}
-            {state.modal && state.verifyEmail && (
-              <Modal
-                onClose={() =>
-                  dispatch({ type: 'showModal', payloadModal: false })
-                }
-              >
+            {modal && verifyEmail && (
+              <Modal onClose={() => dispatchRedux(setModal(false))}>
                 <EmailVerify email={data.emailOrInGameName} />
               </Modal>
             )}
