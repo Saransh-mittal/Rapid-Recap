@@ -162,7 +162,7 @@ const EnhancedHeroSection = () => {
             position="relative"
             maxW={{ base: '23rem', md: '5xl' }}
             mx="auto"
-            height={{ base: '400px', md: '500px' }}
+            height={{ base: '150px', md: '300px', lg: '450px', xl: '500px' }}
           >
             <MotionImage
               animate={laptopControls}

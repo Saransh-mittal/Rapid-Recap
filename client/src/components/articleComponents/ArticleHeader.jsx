@@ -183,40 +183,68 @@ const ArticleHeader = ({
           justify="space-between"
           align={['flex-start', 'flex-start', 'center']}
         >
-          <Flex w={'100%'} mb={4}>
+          <Flex w={'100%'} mb={4} gap={1} mt={2}>
             <Flex
               alignItems="center"
               gap={1}
               justifyContent={'flex-start'}
               w={'100%'}
             >
-              <Flex fontSize={['md', 'lg', 'xl']} alignItems={'center'}>
-                <Highlight
-                  query="Author"
-                  styles={{
-                    px: '2',
-                    py: '1',
-                    rounded: 'full',
-                    bg: '#F7EFE5',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  Author
-                </Highlight>
+              <Flex
+                fontSize={['md', 'lg', 'xl']}
+                gap={1}
+                w={{ md: '75%', lg: 'auto' }}
+              >
+                <Flex height="fit-content">
+                  <Highlight
+                    query="Author"
+                    styles={{
+                      px: '2',
+                      py: '1',
+                      rounded: 'full',
+                      bg: '#F7EFE5',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Author
+                  </Highlight>
+                </Flex>
+
+                <Flex>{'  : '}</Flex>
 
                 <Flex>
                   <Text mb={0} fontWeight={'bold'}>
-                    {'  : '}
                     {author[selectedLanguage]}
                   </Text>
                 </Flex>
               </Flex>
+              {isLargerThan768 && (
+                <Flex
+                  onClick={() => {
+                    playClick()
+                    bookmarkStatus({ view: false, update: true })
+                  }}
+                  cursor="pointer"
+                  h={'100%'}
+                  mt={3}
+                >
+                  {bookmark ? (
+                    <FaBookmark size={20} color="red" />
+                  ) : (
+                    <CiBookmark size={20} />
+                  )}
+                </Flex>
+              )}
+            </Flex>
+            {!isLargerThan768 && (
               <Flex
                 onClick={() => {
                   playClick()
                   bookmarkStatus({ view: false, update: true })
                 }}
                 cursor="pointer"
+                h={'100%'}
+                mt={1}
               >
                 {bookmark ? (
                   <FaBookmark size={20} color="red" />
@@ -224,9 +252,9 @@ const ArticleHeader = ({
                   <CiBookmark size={20} />
                 )}
               </Flex>
-            </Flex>
+            )}
             {!isLargerThan768 && (
-              <Flex alignItems={'center'} ml={6}>
+              <Flex alignItems={'center'} h={'100%'}>
                 <LanguageToggle
                   isEnglish={selectedLanguage === 'english'}
                   onToggle={toggleLanguage}

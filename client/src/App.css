@@ -17,8 +17,8 @@
   color: white;
   background-color: #0f0d15; /* Fallback background color */
    /* background-color: #0f0d15; */
-  /* background-image: url('./assets/hero/hero-bg.webp'); */
-  background-image: url('./assets/hero/Designer.webp');
+  background-image: url('./assets/hero/hero-bg.webp');
+  /* background-image: url('./assets/hero/Designer.webp'); */
   background-attachment: fixed;
   background-position: center;
   background-repeat: no-repeat;
@@ -251,7 +251,6 @@ section {
 }
 
 .timeline-item {
-  margin-top: 5rem;
   margin-left: 7rem;
   border: none;
 }
