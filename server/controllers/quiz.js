@@ -331,7 +331,7 @@ const givenQuiz = async (req, res) => {
         (a, b) => b.RQM_score - a.RQM_score,
       )
       const userAttempt = sortedQuizAttempts.find(
-        attempt => attempt.user.toString() === userId,
+        attempt => attempt.user && attempt.user.toString() === userId,
       )
       if (!userAttempt) {
         throw new Error('User has not attempted the quiz for the article.')
