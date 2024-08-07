@@ -18,6 +18,20 @@ async function generateSitemap() {
       { url: '/home', priority: 0.9, changefreq: 'daily' },
       { url: '/home/top', priority: 0.8, changefreq: 'daily' },
       { url: '/home/general', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/world', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/entertainment', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/sports', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/technology', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/health', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/politics', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/business', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/science', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/environment', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/crime', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/education', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/food', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/lifestyle', priority: 0.8, changefreq: 'daily' },
+      { url: '/home/tourism', priority: 0.8, changefreq: 'daily' },
       { url: '/leaderboard', priority: 0.8, changefreq: 'daily' },
       { url: '/contact', priority: 0.5, changefreq: 'monthly' },
     ]
@@ -40,8 +54,8 @@ async function generateSitemap() {
       .select('inGameName')
     const profileRoutes = users.map(user => ({
       url: `/profile/${user.inGameName}`,
-      priority: 0.6,
-      changefreq: 'monthly',
+      priority: 0.8,
+      changefreq: 'daily',
     }))
 
     // Combine all routes
@@ -64,7 +78,6 @@ async function generateSitemap() {
     const sitemap = root.end({ pretty: true })
 
     // Write sitemap to file
-
     const outputPath = path.join(__dirname, './client/dist', 'sitemap.xml')
     await fs.writeFile(outputPath, sitemap)
 
