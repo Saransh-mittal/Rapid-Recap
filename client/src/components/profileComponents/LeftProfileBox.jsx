@@ -16,21 +16,24 @@ import EditProfileModal from './EditProfileModal'
 import NameLightning from '../miscellaneous/NameLightning'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
 import { FaUserPlus } from 'react-icons/fa'
-import useSound from '../../customHooks/useSound'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { setUser } from '../../redux/authSlice'
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const toast = useToast()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const { playClick } = useContext(AppContext)
   const { user } = useSelector(state => state.auth)
-
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [profileData, setProfileData] = useState({
     name: leftProfileView.name,
     pic: leftProfileView.pic
       ? leftProfileView.pic
       : 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
     bio: leftProfileView.bio,
+    inGameName: leftProfileView.inGameName,
   })
   const [loading, setLoading] = useState(true)
   const [canSendRequest, setCanSendRequest] = useState(true)
@@ -44,6 +47,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         ? leftProfileView.pic
         : 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
       bio: leftProfileView.bio,
+      inGameName: user.inGameName,
     })
   }, [leftProfileView])
 
@@ -51,8 +55,11 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     playClick()
     setProfileData({
       name: leftProfileView.name,
-      pic: leftProfileView.pic,
+      pic: leftProfileView.pic
+        ? leftProfileView.pic
+        : 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
       bio: leftProfileView.bio,
+      inGameName: user.inGameName,
     })
     setIsEditModalOpen(true)
   }
@@ -60,6 +67,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const handleSubmitModal = async formData => {
     try {
       const response = await axios.post(`/api/user/editProfile`, formData)
+      dispatch(setUser({ ...user, ...formData }))
+      navigate(`/profile/${formData.inGameName}`)
       if (response.status === 200) {
         toast({
           title: 'Success',
@@ -279,6 +288,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           onSubmit={handleSubmitModal}
           setProfileData={setProfileData}
           leftProfileView={leftProfileView}
+          user={user}
         />
       )}
     </Flex>

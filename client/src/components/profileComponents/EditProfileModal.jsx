@@ -15,6 +15,7 @@ import {
   Textarea,
   Image,
   Box,
+  Flex,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import useSound from '../../customHooks/useSound'
@@ -26,9 +27,12 @@ const EditProfileModal = ({
   setProfileData,
   onSubmit,
   leftProfileView,
+  user,
 }) => {
   const { state, playClick } = useContext(AppContext)
   const [formData, setFormData] = useState(profileData)
+  // console.log(profileData)
+  // cs
   const [imageLoading, setImageLoading] = useState(false)
   const [picDisplay, setPicDisplay] = useState(profileData.pic)
   const [load, setLoad] = useState(false)
@@ -124,6 +128,7 @@ const EditProfileModal = ({
             ? leftProfileView.pic
             : 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
           bio: leftProfileView.bio,
+          inGameName: leftProfileView.inGameName || '',
         })
       }}
       size="xl"
@@ -157,11 +162,13 @@ const EditProfileModal = ({
               onChange={handleImageChange}
               display="none"
             />
-            <label htmlFor="profile-pic">
-              <Button as="span" colorScheme="blue" size="sm">
-                Choose File
-              </Button>
-            </label>
+            <Flex w={'100%'} justifyContent={'center'}>
+              <label htmlFor="profile-pic">
+                <Button as="span" colorScheme="blue" size="sm">
+                  Choose File
+                </Button>
+              </label>
+            </Flex>
           </FormControl>
 
           <FormControl mb={4}>
@@ -170,6 +177,15 @@ const EditProfileModal = ({
               type="text"
               name="name"
               value={formData.name}
+              onChange={handleInputChange}
+            />
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel>InGameName</FormLabel>
+            <Input
+              type="text"
+              name="inGameName"
+              value={formData.inGameName}
               onChange={handleInputChange}
             />
           </FormControl>

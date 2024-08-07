@@ -664,8 +664,28 @@ const profile = async (req, res) => {
 }
 
 const editProfile = async (req, res) => {
-  const { name, bio, pic } = req.body
+  const { name, bio, pic, inGameName } = req.body
   try {
+    if (inGameName) {
+      if (isValidEmail(inGameName)) {
+        return res
+          .status(422)
+          .json({ error: 'Email cannot be used as an In-Game Name' })
+      }
+
+      // InGameName cannot be greater than 16 characters
+      if (inGameName.length > 16) {
+        return res
+          .status(422)
+          .json({ error: 'In Game Name cannot be greater than 16 characters' })
+      }
+
+      if (inGameName.includes(' ')) {
+        return res
+          .status(422)
+          .json({ error: 'In Game Name cannot have spaces' })
+      }
+    }
     const user = await User.findById(req.user._id)
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
@@ -673,6 +693,7 @@ const editProfile = async (req, res) => {
     user.name = name
     user.bio = bio
     user.pic = pic
+    user.inGameName = inGameName
     await user.save()
     res.status(200).json({ message: 'Profile updated successfully' })
   } catch (error) {
