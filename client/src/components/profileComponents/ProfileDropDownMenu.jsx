@@ -1,12 +1,11 @@
 import { Avatar, Flex, Box } from '@chakra-ui/react'
-import React, { useContext, useState } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
-import { ChevronDownIcon } from '@chakra-ui/icons'
-import { NavLink } from 'react-router-dom'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import Inbox from '../Header-Footer/navbarComponents/Inbox'
 import { FaUserFriends } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
+import useSound from '../../customHooks/useSound'
+import { NavLink } from 'react-router-dom'
 const itemVariants = {
   open: {
     opacity: 1,
@@ -47,7 +46,7 @@ const ProfileDropDownMenu = ({
     backgroundColor: '#27374D',
   }
 
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
 

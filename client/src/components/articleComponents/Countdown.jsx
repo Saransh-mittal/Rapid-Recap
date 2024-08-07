@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useCallback, useContext } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Box, Text } from '@chakra-ui/react'
-import { AppContext } from '../../contextAPI/appContext'
+import useSound from '../../customHooks/useSound'
 
 const Countdown = ({ timer, submitted }) => {
   const [offset, setOffset] = useState(0)
   const [isFlashing, setIsFlashing] = useState(false)
   const initialTimer = 50
   const { play30SecSound, play20SecSound, play10SecSound, playEndSound } =
-    useContext(AppContext)
+    useSound()
 
   const getColor = useCallback(() => {
     if (timer > 30) return '#9F7AEA'

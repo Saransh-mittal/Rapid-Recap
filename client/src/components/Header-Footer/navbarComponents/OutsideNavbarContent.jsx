@@ -6,7 +6,7 @@ import {
   Spinner,
   useDisclosure,
 } from '@chakra-ui/react'
-import React, { useContext } from 'react'
+import React from 'react'
 // import Inbox from './Inbox'
 import StreakFire from './StreakFire'
 import ProfileDropDownMenu from '../../profileComponents/ProfileDropDownMenu'
@@ -14,7 +14,6 @@ import { HamburgerIcon } from '@chakra-ui/icons'
 import GetStarted from './GetStarted'
 import XPLevel from './XPLevel'
 import IQScore from './IQScore'
-import { AppContext } from '../../../contextAPI/appContext'
 // import { FaFacebookMessenger } from "react-icons/fa";
 // import Messenger from "../../../screens/Messenger";
 import { FaFacebookMessenger } from 'react-icons/fa'
@@ -49,7 +48,7 @@ const OutsideNavbarContent = ({
   const isEmptyObject = obj => {
     return obj && Object.keys(obj).length === 0
   }
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { notification } = ChatState()
   const navigate = useNavigate()
 

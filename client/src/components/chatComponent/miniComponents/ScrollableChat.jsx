@@ -1,33 +1,15 @@
 // src/components/chat/ScrollableChat.js
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  useContext,
-} from 'react'
-import {
-  Box,
-  useDisclosure,
-  useMediaQuery,
-  Skeleton,
-  Spinner,
-  Flex,
-} from '@chakra-ui/react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { useDisclosure, useMediaQuery, Spinner, Flex } from '@chakra-ui/react'
 import ScrollableFeed from 'react-scrollable-feed'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import ContextMenu from './ContextMenu'
 import ReactionModal from './scrollableChatComponents/ReactionModal'
 import GroupedMessages from './scrollableChatComponents/GroupedMessages'
-import {
-  groupMessagesByDate,
-  formatTime,
-  checkScrollPosition,
-} from '../../../utils/chat.utils'
+import { groupMessagesByDate, formatTime } from '../../../utils/chat.utils'
 import { isMessageDeletedForUser } from '../config/ChatLogics'
-import { debounce, throttle } from 'lodash'
+import { throttle } from 'lodash'
 import useSound from '../../../customHooks/useSound'
-import { AppContext } from '../../../contextAPI/appContext'
 
 const ScrollableChat = ({
   messages,
@@ -46,7 +28,7 @@ const ScrollableChat = ({
   const lastScrollTop = useRef(0)
   const loadingRef = useRef(false)
   const messageIdsRef = useRef(new Set())
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,

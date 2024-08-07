@@ -13,18 +13,18 @@ import {
   useDisclosure,
   useToast,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons' // Import ViewOffIcon for visibility off
-import { AppContext } from '../../../contextAPI/appContext'
 import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUser } from '../../../redux/authSlice'
+import useSound from '../../../customHooks/useSound'
 
 const ToggleProfileVisibility = ({ setShowHideModal }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const [load, setLoad] = useState(false)
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const dispatchRedux = useDispatch()
   const { user } = useSelector(state => state.auth)
 

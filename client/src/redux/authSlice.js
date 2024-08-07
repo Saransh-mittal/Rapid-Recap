@@ -5,6 +5,7 @@ const initialState = {
   isAuthenticated: false,
   forgotPassword: false,
   verifyEmail: false,
+  loginCheckStatus: 'pending',
 }
 
 export const authSlice = createSlice({
@@ -14,6 +15,7 @@ export const authSlice = createSlice({
     setUser: (state, action) => {
       state.user = action.payload
       state.isAuthenticated = !!action.payload
+      state.loginCheckStatus = 'fulfilled'
     },
     logout: state => {
       state.user = null

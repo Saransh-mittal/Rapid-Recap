@@ -1,10 +1,9 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { Box, Text, Button, VStack, HStack } from '@chakra-ui/react'
 import useSound from '../../../../customHooks/useSound'
-import { AppContext } from '../../../../contextAPI/appContext'
 
 const MessageRequestComponent = ({ senderName, onAccept, onReject }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   return (
     <Box
       bg="rgba(255, 255, 255, 0.1)"

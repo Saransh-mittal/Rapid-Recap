@@ -1,31 +1,14 @@
 // src/components/Quiz.js
 
-import React, {
-  useContext,
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-} from 'react'
-import {
-  Button,
-  ModalOverlay,
-  Text,
-  Flex,
-  Skeleton,
-  SkeletonCircle,
-  useToast,
-  Box,
-} from '@chakra-ui/react'
+import React, { useState, useCallback, useEffect } from 'react'
+import { Flex, useToast, Box } from '@chakra-ui/react'
 import './Quiz.css'
-import Countdown from './Countdown'
 import ConfirmationModal from './customQuizModal/ConfirmationModal'
 import InstructionModal from './customQuizModal/InstructionModal'
 import QuizInterface from './quizComponents/quizInterface'
 import SubmittedQuizInterface from './quizComponents/SubmittedQuizInterface'
 
 import ReactGA from 'react-ga4'
-import { AppContext } from '../../contextAPI/appContext'
 import BoostedSubmittedQuizInterface from './quizComponents/BoostedSubmittedQuizInterface'
 import QuizGivenSummary from './quizComponents/QuizGivenSummary'
 import {
@@ -39,6 +22,7 @@ import axios from 'axios'
 import ModalComponent from './ModalComponent'
 import GetSetGoAnimation from './quizComponents/GetSetGoAnimation'
 import { useDispatch, useSelector } from 'react-redux'
+import useSound from '../../customHooks/useSound'
 
 const Quiz = ({
   article,
@@ -59,7 +43,6 @@ const Quiz = ({
   )
   const totalQuestions = quizData ? quizData.questions.length : 0
   const toast = useToast()
-  const { state, dispatch } = useContext(AppContext)
   const { isBoosted, status } = useSelector(state => state.app)
   const dispatchRedux = useDispatch()
 
@@ -75,7 +58,7 @@ const Quiz = ({
   const [showQuizSummary, setShowQuizSummary] = useState(false) // New state
   const [result, setResult] = useState({})
   const [isAnswered, setIsAnswered] = useState(false)
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const [showGetSetGo, setShowGetSetGo] = useState(false)
 
   useEffect(() => {
@@ -357,7 +340,6 @@ const Quiz = ({
       <ModalComponent
         showSubmittedInterface={showSubmittedInterface}
         isQuinBoostAvailable={isQuinBoostAvailable}
-        state={state}
         setSubmitted={setSubmitted}
         timer={timer}
         isOpen={isOpen}

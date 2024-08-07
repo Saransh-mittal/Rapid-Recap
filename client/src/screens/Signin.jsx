@@ -1,14 +1,7 @@
-import React, {
-  useState,
-  useContext,
-  useEffect,
-  useCallback,
-  useRef,
-} from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import './Signin.css'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import { AppContext } from '../contextAPI/appContext'
 import EmailVerify from '../components/authComponents/EmailVerify'
 import Modal from './Modal'
 import ResetPassword from '../components/authComponents/ResetPassword'
@@ -37,12 +30,13 @@ import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 import { useDispatch, useSelector } from 'react-redux'
 import { setForgotPassword, setUser, setVerifyEmail } from '../redux/authSlice'
 import { setModal } from '../redux/uiSlice'
+import useSound from '../customHooks/useSound'
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   //const isScreenSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
 
   const toast = useToast()
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { modal } = useSelector(state => state.ui)
   const { forgotPassword, verifyEmail } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()

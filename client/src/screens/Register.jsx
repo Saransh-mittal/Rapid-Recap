@@ -1,9 +1,8 @@
-import React, { useState, useContext, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import './Register.css'
 import axios from 'axios'
 import Modal from './Modal'
 import EmailVerify from '../components/authComponents/EmailVerify'
-import { AppContext } from '../contextAPI/appContext'
 import {
   Button,
   useToast,
@@ -27,11 +26,12 @@ import _ from 'lodash'
 
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
+import useSound from '../customHooks/useSound'
 
 export default function Register({ isOpen, onClose, signinOnOpen }) {
   const [emailVerified, setEmailVerified] = useState(false)
   const toast = useToast()
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const dispatch = useDispatch()
   const { modal } = useSelector(state => state.ui)
 

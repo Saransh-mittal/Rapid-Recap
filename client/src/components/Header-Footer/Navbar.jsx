@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'
-import { AppContext } from '../../contextAPI/appContext'
 import axios from 'axios'
 import {
   useToast,
@@ -11,7 +10,6 @@ import {
   useMediaQuery,
   useDisclosure,
 } from '@chakra-ui/react'
-import useDrag from '../../customHooks/useDrag'
 
 import { CloseIcon } from '@chakra-ui/icons'
 import NotificationDrawer from './Inbox/NotificationDrawer'
@@ -33,6 +31,7 @@ import {
   fetchUnreadFriendRequestsCount,
   markFriendRequestsAsRead,
 } from '../../redux/appSlice'
+import useSound from '../../customHooks/useSound'
 
 const Navbar = () => {
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
@@ -48,8 +47,8 @@ const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
-  const { state, dispatch, navLinkRefs, readFriendRequests, playClick } =
-    useContext(AppContext)
+  const { playClick } = useSound()
+  const navLinkRefs = useRef([])
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const {
     updates,
@@ -63,7 +62,6 @@ const Navbar = () => {
   const dispatchRedux = useDispatch()
   const [visible, setVisible] = useState(true)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
-  const { startDrag, drag, endDrag } = useDrag()
   const [notifyCont, setNotifyCnt] = useState(0)
   const [selectedNotification, setSelectedNotification] = useState(null)
   const [showDailyStreakModal, setShowDailyStreakModal] = useState(false)
@@ -113,29 +111,11 @@ const Navbar = () => {
       isAuthenticated &&
       user &&
       user.tutorial.dailyStreakPage &&
-      user.tutorial.homePage &&
-      (isEmptyObject(state.news) || !state.news)
+      user.tutorial.homePage
     )
       isTutorialTakenCheck({ page: 'dailyStreakPage', tour })
-  }, [user, isAuthenticated, user?.tutorial?.homePage, state?.news])
+  }, [user, isAuthenticated, user?.tutorial?.homePage])
 
-  async function getAppUpdates() {
-    try {
-      const response = await axios.get(`/api/user/getUpdates`)
-      dispatch({
-        type: 'APP_UPDATES',
-        payloadAppUpdates: response.data.updates,
-      })
-    } catch (error) {
-      console.log(error.message)
-    }
-  }
-
-  useEffect(() => {
-    if (user) {
-      getAppUpdates()
-    }
-  }, [user])
   useEffect(() => {
     //update notification count whose update is not read
     if (updates.length === 0) return
@@ -176,7 +156,7 @@ const Navbar = () => {
           isClosable: true,
           position: 'top',
         })
-        dispatch({ type: 'RESET_STATE' })
+
         navigate('/')
       } else {
         throw new Error('Logout Failed')
@@ -243,9 +223,6 @@ const Navbar = () => {
           paddingX={{ base: '1.2rem', xl: '5rem' }}
           height={'5rem'}
           w={'100vw'}
-          onTouchStart={startDrag}
-          onTouchMove={e => drag(e.touches[0])}
-          onTouchEnd={endDrag}
           position={'fixed'}
           zIndex={'1000'}
           transform={visible ? 'translateY(0)' : 'translateY(-100%)'}

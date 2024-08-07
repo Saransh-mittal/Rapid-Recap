@@ -1,8 +1,7 @@
-import { useState, useContext, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import './EmailVerify.css'
 import axios from 'axios'
 import { Otptimer } from 'otp-timer-ts'
-import { AppContext } from '../../contextAPI/appContext'
 import Loading from '../miscellaneous/Loading'
 import { Box, Flex } from '@chakra-ui/react'
 import { useToast } from '@chakra-ui/react'
@@ -10,12 +9,13 @@ import { throttle } from 'lodash'
 import { useDispatch, useSelector } from 'react-redux'
 import { setModal } from '../../redux/uiSlice'
 import { setVerifyEmail } from '../../redux/authSlice'
+import useSound from '../../customHooks/useSound'
 const EmailVerify = ({ email, setEmailVerified }) => {
   const toast = useToast()
   const dispatch = useDispatch()
   const { forgotPassword } = useSelector(state => state.auth)
   const [load, setLoad] = useState(false) //for loading spinner
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const [otp, setOtp] = useState({
     i1: '',
     i2: '',

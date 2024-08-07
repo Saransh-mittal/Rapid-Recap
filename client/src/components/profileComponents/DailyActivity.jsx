@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Flex,
@@ -9,7 +9,7 @@ import {
   Tooltip,
   useToast,
 } from '@chakra-ui/react'
-import { AppContext } from '../../contextAPI/appContext'
+
 import { useSelector } from 'react-redux'
 
 const DAYS_IN_WEEK = 7
@@ -30,7 +30,6 @@ const MONTH_NAMES = [
 ]
 
 const DailyActivity = ({ dailyAct, privateDailyAct, loginedUserProfile }) => {
-  const { state } = useContext(AppContext)
   const { user } = useSelector(state => state.auth)
   const toast = useToast()
   const [isLoading, setIsLoading] = useState(true)

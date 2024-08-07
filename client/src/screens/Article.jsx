@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { AppContext } from '../contextAPI/appContext'
+import React, { useEffect, useRef, useState } from 'react'
+
 import axios from 'axios'
 import {
   Flex,
@@ -30,19 +30,10 @@ import Signin from './Signin'
 
 const Article = () => {
   const toast = useToast()
-  const { state } = useContext(AppContext)
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { isBoosted } = useSelector(state => state.app)
-
-  const data = state.news
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const [alt_image, setAlt_image] = useState(
-    imageData.find(
-      img =>
-        img?.category?.toLocaleLowerCase() ===
-        data?.category?.toLocaleLowerCase(),
-    )?.image,
-  )
+  const [alt_image, setAlt_image] = useState(null)
   const { id } = useParams()
   const [article, setArticle] = useState(null)
   const [imgURL, setImgURL] = useState('')
@@ -212,9 +203,7 @@ const Article = () => {
 
   useEffect(() => {
     isQuizGiven()
-    if (state.news) {
-    }
-  }, [id, user, state.news])
+  }, [id, user])
 
   const checkOnGoingQuiz = async () => {
     try {
@@ -280,8 +269,6 @@ const Article = () => {
     quinBoostChecker({ setIsQuinBoostAvailable, setQuizLeftToGetQuizBoost })
     fetchArticle()
     // fetchQuizTitans()
-    checkOnGoingQuiz()
-    bookmarkStatus({ view: true, update: false })
 
     quizFetchTimer.current = setTimeout(() => {
       fetchQuiz()
@@ -292,7 +279,12 @@ const Article = () => {
         clearTimeout(quizFetchTimer.current)
       }
     }
-  }, [state.news])
+  }, [])
+
+  useEffect(() => {
+    checkOnGoingQuiz()
+    bookmarkStatus({ view: true, update: false })
+  }, [notLoggedIn])
 
   useEffect(() => {
     isQuizGiven()
@@ -330,10 +322,10 @@ const Article = () => {
       imageData.find(
         img =>
           img?.category?.toLocaleLowerCase() ===
-          data?.category?.toLocaleLowerCase(),
+          article?.category?.toLocaleLowerCase(),
       )?.image,
     )
-  }, [data?.category])
+  }, [article?.category])
 
   const handleLanguageChange = async event => {
     setTranslateLoading(true)
@@ -560,7 +552,6 @@ const Article = () => {
               articleHeight={articleHeight}
               article={article}
               id={id}
-              state={state}
               isQuizGivenLoading={isQuizGivenLoading}
               onSigninOpen={onSigninOpen}
             />

@@ -1,7 +1,6 @@
 import {
   Button,
   Flex,
-  Heading as ChakraHeading,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -12,7 +11,7 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import GivenQuizInterface from './GivenQuizInterface'
 import Loading from '../../miscellaneous/Loading'
@@ -20,7 +19,6 @@ import Heading from '../../miscellaneous/HeadingComponent'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import useSound from '../../../customHooks/useSound'
-import { AppContext } from '../../../contextAPI/appContext'
 const QuizGivenSummary = ({
   isOpen,
   onClose,
@@ -37,7 +35,7 @@ const QuizGivenSummary = ({
   )
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [timeTaken, setTimeTaken] = useState(timeTakenInitial)
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   const fetchQuizSummary = async () => {
     try {

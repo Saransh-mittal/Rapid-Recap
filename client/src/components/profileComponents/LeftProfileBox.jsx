@@ -9,8 +9,7 @@ import {
   Spinner,
   Badge,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect, useState } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import EditProfileModal from './EditProfileModal'
 import NameLightning from '../miscellaneous/NameLightning'
@@ -22,7 +21,7 @@ import { useSelector } from 'react-redux'
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const toast = useToast()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
 
   const [profileData, setProfileData] = useState({

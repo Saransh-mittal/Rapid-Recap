@@ -1,6 +1,6 @@
 import { Button, Tag, Tooltip } from '@chakra-ui/react'
-import React, { useContext } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
+import React from 'react'
+import useSound from '../../customHooks/useSound'
 const ProfileButton = ({
   buttonText,
   inGameName,
@@ -11,7 +11,7 @@ const ProfileButton = ({
   icon,
   top,
 }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   return (
     <>
       {inGameName == stateUserInGameName && (

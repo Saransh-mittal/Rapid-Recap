@@ -1,7 +1,6 @@
-import React from "react";
-import { Box, Heading, Text, Flex, Image, Button } from "@chakra-ui/react";
-import ClipPath from "../../assets/svg/ClipPath";
-import Arrow from "../../assets/svg/Arrow";
+import React from 'react'
+import { Box, Heading, Text, Flex, Image, Button } from '@chakra-ui/react'
+import Arrow from '../../assets/svg/Arrow'
 
 const BenefitCard = ({
   id,
@@ -19,8 +18,8 @@ const BenefitCard = ({
       p={0.5}
       bgImage={`url(${backgroundUrl})`}
       bgSize="cover"
-      width={{ base: "20.5rem", md: "23rem" }}
-      height={{ base: "19.5rem", md: "22rem" }}
+      width={{ base: '20.5rem', md: '23rem' }}
+      height={{ base: '19.5rem', md: '22rem' }}
     >
       <Box
         position="relative"
@@ -31,23 +30,23 @@ const BenefitCard = ({
         p="1.6rem"
         pointerEvents="none"
       >
-        <Heading size="sm" mb={"1.5rem"}>
+        <Heading size="sm" mb={'1.5rem'}>
           {title}
         </Heading>
         <Flex>
-          <Flex flexDirection={"column"}>
-            {text.split("\n").map((line, index) => (
+          <Flex flexDirection={'column'}>
+            {text.split('\n').map((line, index) => (
               <Flex key={index}>
-                <Flex marginRight={"5px"}>➤</Flex>
+                <Flex marginRight={'5px'}>➤</Flex>
                 <Flex>
                   <Text
                     fontSize="sm"
                     mb={4}
                     color="gray.500"
-                    textAlign={"left"}
+                    textAlign={'left'}
                   >
                     {line}
-                  </Text>{" "}
+                  </Text>{' '}
                 </Flex>
                 <br />
               </Flex>
@@ -56,8 +55,8 @@ const BenefitCard = ({
         </Flex>
         <Flex
           mt="auto" // This pushes the Flex container to the bottom
-          position={"absolute"}
-          bottom={"5%"}
+          position={'absolute'}
+          bottom={'5%'}
           alignItems="center"
           justifyContent="flex-end"
         >
@@ -84,7 +83,7 @@ const BenefitCard = ({
         </Flex>
       </Box>
 
-      {light && (
+      {/* {light && (
         <Box
           position="absolute"
           top="0"
@@ -95,13 +94,9 @@ const BenefitCard = ({
           bgGradient="radial-gradient(circle, #28206C, rgba(40, 32, 108, 0) 70%)"
           pointerEvents="none"
         />
-      )}
+      )} */}
 
-      <Box
-        position="absolute"
-        inset="0.5"
-        style={{ clipPath: "url(#benefits)" }}
-      >
+      <Box position="absolute" inset="0.5">
         <Box
           position="absolute"
           inset="0"
@@ -109,7 +104,7 @@ const BenefitCard = ({
           transition="opacity 0.2s"
           _hover={{ opacity: 0.1 }}
         >
-          {imageUrl && (
+          {!imageUrl && (
             <Image
               src={imageUrl}
               alt={title}
@@ -120,10 +115,8 @@ const BenefitCard = ({
           )}
         </Box>
       </Box>
-
-      <ClipPath />
     </Box>
-  );
-};
+  )
+}
 
-export default BenefitCard;
+export default BenefitCard

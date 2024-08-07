@@ -1,15 +1,15 @@
 // /hooks/useSubmitQuiz.js
-import { useContext, useState } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
 import { useToast } from '@chakra-ui/react'
-import { AppContext } from '../contextAPI/appContext'
+import useSound from './useSound'
 
 const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
   // console.log(userAnswers);
   const [submitLoad, setSubmitLoad] = useState(false)
 
   const toast = useToast()
-  const { playEndChime } = useContext(AppContext)
+  const { playEndChime } = useSound()
 
   const handleSubmitQuiz = async ({ timeTaken, userAnswers, setSubmitted }) => {
     playEndChime()

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -10,10 +10,9 @@ import {
   Button,
 } from '@chakra-ui/react'
 import useSound from '../../../../customHooks/useSound'
-import { AppContext } from '../../../../contextAPI/appContext'
 
 const DeleteMessageModal = ({ isOpen, onClose, confirmDelete }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />

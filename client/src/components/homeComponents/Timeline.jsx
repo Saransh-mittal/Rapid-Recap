@@ -1,6 +1,5 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TimelineItem from './TimelineItem'
-import { AppContext } from '../../contextAPI/appContext'
 import { useHomeTour } from '../../customHooks/useTours'
 import {
   Box,
@@ -15,13 +14,16 @@ import { useSwipeable } from 'react-swipeable' // Import the swipeable hook
 import { categories } from '../../assets/Categories'
 import { useNavigate, useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4' // Import Google Analytics library
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setCategory, setItemsState } from '../../redux/contentSlice'
+import { setPageRedux } from '../../redux/uiSlice'
 
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { state, dispatch } = useContext(AppContext)
   const { isAuthenticated, user } = useSelector(state => state.auth)
+  const dispatchRedux = useDispatch()
+  const { category } = useSelector(state => state.content)
   const [swipeDisable, setSwipeDisable] = useState(false)
   const { tour, isTutorialTakenCheck } = useHomeTour({ setSwipeDisable })
   const flexDirectionOfTimeline = useBreakpointValue({
@@ -34,12 +36,12 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const [isFixed, setIsFixed] = useState(false)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
 
-  const [activeCategory, setActiveCategory] = useState(state.category)
+  const [activeCategory, setActiveCategory] = useState(category)
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(
     categories?.findIndex(
       category =>
         category?.toLocaleLowerCase() ===
-        (state.category || 'all').toLocaleLowerCase(),
+        (category || 'all').toLocaleLowerCase(),
     ),
   )
   const categoryRefs = useRef([])
@@ -47,12 +49,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const handleActiveCategory = ({ category, shouldNavigateOrNot = true }) => {
     setHasMoreItems(true)
     setActiveCategory(category.toLowerCase())
-    dispatch({
-      type: 'category',
-      payloadCategory: category.toLowerCase(),
-    })
-    dispatch({ type: 'PAGE', payloadPage: 0 })
-    dispatch({ type: 'ITEMS', payloadItems: [] })
+    dispatchRedux(setCategory(category.toLowerCase()))
+    dispatchRedux(setPageRedux(0))
+    dispatchRedux(setItemsState([]))
     shouldNavigateOrNot && navigate(`/home/${category.toLowerCase()}`)
   }
 
@@ -217,7 +216,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
               key={id}
               // onClick={() => {
               //   navigate(`/article/${item._id}`)
-              //   dispatch({ type: 'setNews', payloadNews: item })
+
               // }}
               // _hover={{
               //   cursor: 'pointer',

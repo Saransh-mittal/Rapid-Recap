@@ -13,7 +13,7 @@ import curve from '../../assets/curve.webp'
 import laptop from '/images/laptop-frame-min.webp'
 import ipad from '/images/ipad-frame.webp'
 import mobile from '/images/mobile-frame.png'
-import { BackgroundCircles, MediumScreenbgGradient } from './design/Hero'
+import { BackgroundCircles } from './design/Hero'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -144,6 +144,7 @@ const EnhancedHeroSection = () => {
               alt="Article Interface"
               style={{ y: laptopY }}
               whileHover="hover"
+              loading={'eager'}
             />
             <MotionImage
               animate={ipadControls}
@@ -159,6 +160,7 @@ const EnhancedHeroSection = () => {
               alt="Quiz Instructions"
               style={{ y: ipadY }}
               whileHover="hover"
+              loading={'lazy'}
             />
             <MotionImage
               animate={mobileControls}
@@ -174,23 +176,13 @@ const EnhancedHeroSection = () => {
               alt="Quiz Interface"
               style={{ y: mobileY }}
               whileHover="hover"
+              loading={'lazy'}
             />
 
             <BackgroundCircles />
           </MotionBox>
         </Box>
       </Box>
-
-      <MediumScreenbgGradient
-        top="18.25rem"
-        left="-25.375rem"
-        width="56.625rem"
-      />
-      <MediumScreenbgGradient
-        top="36.25rem"
-        left="40.375rem"
-        width="56.625rem"
-      />
     </Section>
   )
 }

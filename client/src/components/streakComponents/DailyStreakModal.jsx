@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import {
   Button,
   Modal,
@@ -10,16 +10,15 @@ import {
   ModalOverlay,
   Text,
   useDisclosure,
-  Image,
   Box,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AppContext } from '../../contextAPI/appContext'
 import { useSelector } from 'react-redux'
+import useSound from '../../customHooks/useSound'
 
 const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { streak, longestStreak, isBoosted } = useSelector(state => state.app)
 
   useEffect(() => {

@@ -16,10 +16,9 @@ import {
   Badge,
   useDisclosure,
 } from '@chakra-ui/react'
-import React, { useContext } from 'react'
+import React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { BackgroundCircles, Rings, SideLines } from '../../design/Header'
-import { AppContext } from '../../../contextAPI/appContext'
 import LogoutButton from './LogoutButton'
 import GetStarted from './GetStarted'
 import NavBrand from './NavBrand'
@@ -40,7 +39,6 @@ const HamburgerModal = ({
   setIsDrawerOpen,
   onOpenWiseWeb,
 }) => {
-  const { state } = useContext(AppContext)
   const { user } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
 

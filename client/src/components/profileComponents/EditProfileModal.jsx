@@ -1,5 +1,4 @@
-import React, { useContext, useState } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
+import React, { useState } from 'react'
 import {
   Button,
   Modal,
@@ -27,7 +26,7 @@ const EditProfileModal = ({
   onSubmit,
   leftProfileView,
 }) => {
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const [formData, setFormData] = useState(profileData)
   const [imageLoading, setImageLoading] = useState(false)
   const [picDisplay, setPicDisplay] = useState(profileData.pic)

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Button,
@@ -8,14 +8,14 @@ import {
   Tooltip,
   useDisclosure,
 } from '@chakra-ui/react'
-import { AppContext } from '../../contextAPI/appContext'
 import QuizReport from './quizComponents/QuizReport'
 import medalIcon from '../../assets/medal.webp'
+import useSound from '../../customHooks/useSound'
 
 const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [showQuizSummary, setShowQuizSummary] = useState(false)
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   useEffect(() => {}, [percentile, RQM_score, articleId, css])
 

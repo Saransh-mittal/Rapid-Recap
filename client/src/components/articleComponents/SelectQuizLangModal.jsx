@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import {
   ModalBody,
   Heading,
@@ -8,15 +8,13 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalFooter,
   Button,
 } from '@chakra-ui/react'
 import useSound from '../../customHooks/useSound'
-import { AppContext } from '../../contextAPI/appContext'
 
 const SelectQuizLangModal = ({ setShowQuizLangModal, setSelectLanForQuiz }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   const handleLanguageChange = e => {
     setSelectLanForQuiz(e.target.value)

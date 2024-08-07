@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Button,
@@ -18,7 +18,7 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import ArticleCard from '../miscellaneous/ArticleCard'
 // import useSound from '../../customHooks/useSound'
-import { AppContext } from '../../contextAPI/appContext'
+import useSound from '../../customHooks/useSound'
 
 const Bookmarks = ({ isOpen, onClose }) => {
   const [viewMode, setViewMode] = useState('grid')
@@ -29,7 +29,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
   )
   const navigate = useNavigate()
   const toast = useToast()
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   const fetchBookmarks = async () => {
     try {

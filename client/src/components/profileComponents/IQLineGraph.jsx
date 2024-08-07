@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Line } from 'react-chartjs-2'
 import {
   Button,
@@ -15,9 +15,9 @@ import moment from 'moment'
 import 'chartjs-adapter-date-fns'
 import axios from 'axios'
 import ExpectedIQModal from '../articleComponents/ExpectedIQModal'
-import { AppContext } from '../../contextAPI/appContext'
 import Lock from '/images/lock.webp'
 import { useSelector } from 'react-redux'
+import useSound from '../../customHooks/useSound'
 
 const IQLineGraph = ({
   lineGraph,
@@ -26,7 +26,7 @@ const IQLineGraph = ({
   viewingHistory = false,
   isNavIQ = false,
 }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const [isLoading, setIsLoading] = useState(true)
   const toast = useToast()

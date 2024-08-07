@@ -1,11 +1,8 @@
 import { Flex, Image, ListItem, Text, UnorderedList } from '@chakra-ui/react'
-import React, { useContext } from 'react'
+import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { LockIcon } from '@chakra-ui/icons'
-import { Tooltip } from '@chakra-ui/react'
 import newBadge from '/images/newBadge.webp'
 import useSound from '../../../customHooks/useSound'
-import { AppContext } from '../../../contextAPI/appContext'
 
 const NavbarContent = ({
   isHamburgerOpen,
@@ -14,7 +11,7 @@ const NavbarContent = ({
   navItems,
   notLogined,
 }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   return (
     <>
       <Flex
@@ -60,7 +57,7 @@ const NavbarContent = ({
                 key={index}
                 onClick={() => {
                   playClick()
-                  setIsHamburgerOpen(false)
+                  setIsHamburgerOpen && setIsHamburgerOpen(false)
                 }}
                 display={'flex'}
                 justifyContent={'center'}

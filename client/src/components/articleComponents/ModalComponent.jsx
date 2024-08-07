@@ -41,7 +41,6 @@ const ModalComponent = ({
   handleSubmitQuiz,
   timer,
   setSubmitted,
-  state,
   isQuinBoostAvailable,
   showSubmittedInterface,
   showGetSetGo,

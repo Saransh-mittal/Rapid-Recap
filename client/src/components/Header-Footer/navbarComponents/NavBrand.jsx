@@ -1,13 +1,13 @@
 import { Flex, Image } from '@chakra-ui/react'
-import React, { useContext } from 'react'
+import React from 'react'
 import { NavLink } from 'react-router-dom'
 import RR from '/images/rrlogo.webp'
 import Heading from '../../miscellaneous/HeadingComponent'
-import { AppContext } from '../../../contextAPI/appContext'
 import { useSelector } from 'react-redux'
+import useSound from '../../../customHooks/useSound'
 
 const NavBrand = ({ isHamburgerOpen }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { isAuthenticated } = useSelector(state => state.auth)
 
   const notLoggedIn = !isAuthenticated

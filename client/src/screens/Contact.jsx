@@ -1,7 +1,5 @@
-import { useContext, useEffect, useState, useRef } from 'react'
-import { AppContext } from '../contextAPI/appContext'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useDrag from '../customHooks/useDrag'
 import {
   Box,
   Flex,
@@ -20,9 +18,7 @@ import { FaEnvelope, FaInstagram, FaLinkedin } from 'react-icons/fa'
 import Heading from '../components/miscellaneous/HeadingComponent'
 
 const Contact = () => {
-  const { startDrag, drag, endDrag } = useDrag()
   const navigate = useNavigate()
-  const { state, dispatch } = useContext(AppContext)
   const buttonRef = useRef(null)
   const [isHovered, setIsHovered] = useState(false)
   const buttonStyle = {
@@ -56,9 +52,6 @@ const Contact = () => {
       </Helmet>
       <Flex
         minHeight="77vh"
-        onTouchStart={startDrag}
-        onTouchMove={e => drag(e.touches[0])}
-        onTouchEnd={endDrag}
         mt="4.5rem"
         className="contact-container"
         // width={"50%"}

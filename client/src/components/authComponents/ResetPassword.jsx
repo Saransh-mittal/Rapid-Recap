@@ -1,5 +1,4 @@
-import React, { useState, useContext, useEffect, useCallback } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
+import React, { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { set, throttle } from 'lodash'
 import {
@@ -12,12 +11,13 @@ import {
 import { useDispatch } from 'react-redux'
 import { setModal } from '../../redux/uiSlice'
 import { setForgotPassword } from '../../redux/authSlice'
+import useSound from '../../customHooks/useSound'
 
 const ResetPassword = ({ email }) => {
   const toast = useToast()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const dispatch = useDispatch()
   const [load, setLoad] = useState(false) //for loading spinner
   const [show, setShow] = useState({

@@ -1,6 +1,6 @@
 // File: src/components/ArticleHeader.jsx
 
-import React, { useContext } from 'react'
+import React from 'react'
 import {
   Flex,
   Text,
@@ -18,7 +18,6 @@ import {
 import { FaBookmark } from 'react-icons/fa'
 import { CiBookmark } from 'react-icons/ci'
 import { AiOutlineLock } from 'react-icons/ai'
-import { AppContext } from '../../contextAPI/appContext'
 import ShareButton from './ShareButton'
 import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
 import QuinBoost from './quizComponents/QuinBoost'
@@ -27,6 +26,7 @@ import TextBackgound from '/images/textBackground.webp'
 import starBoost from '/GIFs/starBoost.gif'
 import Button from '../miscellaneous/ButtonComponent'
 import { useSelector } from 'react-redux'
+import useSound from '../../customHooks/useSound'
 
 const LanguageToggle = ({ isEnglish, onToggle, isDisabled, onSigninOpen }) => (
   <Tooltip
@@ -125,7 +125,7 @@ const ArticleHeader = ({
 }) => {
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { isBoosted } = useSelector(state => state.app)
 
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()

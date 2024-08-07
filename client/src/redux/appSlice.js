@@ -54,6 +54,9 @@ export const appSlice = createSlice({
     updateUnreadFriendRequests: (state, action) => {
       state.unreadFriendRequests = action.payload
     },
+    setUpdates: (state, action) => {
+      state.updates = action.payload
+    },
     resetLoadingFlags: state => {
       state.updatesLoading = false
       state.streakLoading = false
@@ -111,7 +114,7 @@ export const appSlice = createSlice({
   },
 })
 
-export const { updateUnreadFriendRequests, resetLoadingFlags } =
+export const { updateUnreadFriendRequests, resetLoadingFlags, setUpdates } =
   appSlice.actions
 
 export default appSlice.reducer

@@ -8,7 +8,6 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
-import '../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js'
 import ReactGA from 'react-ga4'
 import { useEffect, lazy, Suspense } from 'react'
 import { Helmet } from 'react-helmet'
@@ -118,6 +117,7 @@ const App = () => {
           dispatch(setUser(response.data))
         }
       } catch (error) {
+        dispatch(setUser(null))
         console.log(error)
       }
     }
