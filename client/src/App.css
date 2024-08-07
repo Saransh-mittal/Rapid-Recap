@@ -8,14 +8,24 @@
   box-sizing: border-box;
 }
 
+
 #root {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   font-family: "Roboto Condensed", "Lato", sans-serif !important;
   color: white;
-  background-color: #0f0d15;
-  background-image: linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%);
+  background-color: #0f0d15; /* Fallback background color */
+   /* background-color: #0f0d15; */
+  background-image: url('./assets/hero/hero-bg.webp');
+  /* background-image: url('./assets/hero/Designer.webp'); */
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  perspective: 1000;
 }
 
 section {
@@ -241,7 +251,6 @@ section {
 }
 
 .timeline-item {
-  margin-top: 5rem;
   margin-left: 7rem;
   border: none;
 }

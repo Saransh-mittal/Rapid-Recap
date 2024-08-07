@@ -123,7 +123,14 @@ const SolvedQuizzes = ({
           </Text>
         </Flex>
       ) : isLoading ? (
-        <Spinner />
+        <Flex
+          w={'100%'}
+          h={'100%'}
+          justifyContent={'center'}
+          alignItems={'center'}
+        >
+          <Spinner />
+        </Flex>
       ) : (
         <>
           <Box

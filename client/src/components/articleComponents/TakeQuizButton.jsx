@@ -8,9 +8,6 @@ const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
 
   const buttonStyle = {
     border: isBoosted ? 'yellow solid 3px' : 'none',
-    transition: isBoosted ? 'box-shadow 2s ease-in-out' : 'none',
-    animation: isBoosted ? 'shine 1s infinite alternate' : 'none', // Use CSS animation for shining effect
-    _hover: { opacity: 0.3 },
   }
   const keyframes = `
     @keyframes shine {
@@ -34,7 +31,8 @@ const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
         py={3}
         px={6}
         borderRadius="full"
-        bgGradient="linear(to-r, #FDE2F3, #E5BEEC)"
+        border={isBoosted ? 'yellow solid 3px' : 'none'}
+        bgGradient="linear(to-r, rgba(253, 226, 243, 1), rgba(229, 190, 236, 1))"
         _hover={{
           transform: 'translateY(-2px)',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -42,16 +40,16 @@ const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
         _active={{
           transform: 'translateY(0)',
         }}
-        transition="all 0.3s ease"
+        transition="all 0.3s ease, box-shadow 2s ease-in-out"
         position="relative"
         overflow="hidden"
-        style={buttonStyle}
+        animation={isBoosted ? 'shine 1s infinite alternate' : 'none'}
       >
         {(isBoosted || isQuinBoostAvailable) && <Bubbles />}
         <Text
           fontSize="2xl"
           fontWeight="bold"
-          color="#2A2F4F"
+          color="rgba(42, 47, 79, 1)"
           textAlign="center"
           width="100%"
           m={0}

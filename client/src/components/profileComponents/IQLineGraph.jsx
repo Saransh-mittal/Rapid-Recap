@@ -303,11 +303,7 @@ const IQLineGraph = ({
       paddingX={{ base: '20px', xl: '30px' }}
       flex={1}
       paddingRight={'30px'}
-      backgroundColor={{ base: '#0f0d15', xl: 'transparent' }}
-      backgroundImage={{
-        xl: 'none',
-        base: 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-      }}
+      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
       boxShadow={{
         xl: 'none',
         base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',

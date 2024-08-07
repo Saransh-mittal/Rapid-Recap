@@ -119,7 +119,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   const renderSkeletons = () => {
     return Array.from({ length: 9 }).map((_, index) => (
-      <Box key={index} className="timeline-item">
+      <Box key={index} className="timeline-item" mt={'5rem'}>
         <Box className="timeline-item-content">
           <Box className="containers">
             <Skeleton className="cardWrapper" />
@@ -158,13 +158,21 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
         w={{ base: '100%', lg: '15%' }}
         h={{ base: 'auto', lg: '100vh' }}
         position={'fixed'}
-        backgroundColor={'#0f0d15'}
-        backgroundImage={
-          'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)'
-        }
-        boxShadow={
-          '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
-        }
+        backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
+        // boxShadow={
+        //   '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
+        // }
+        borderBottom={'1px solid rgba(255, 255, 255, 0.1)'}
+        boxShadow={'0 2px 4px rgba(0, 0, 0, 0.1)'}
+        style={{
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderImage:
+            'linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1',
+        }}
+        // backgroundImage={
+        //   'linear-gradient(-180deg, rgba(26, 21, 39, 0.8), rgba(14, 12, 22, 0.8) 88%, rgba(14, 12, 22, 0.8) 99%)'
+        // }
         overflow={'auto'}
         sx={{
           '::-webkit-scrollbar': {
@@ -204,6 +212,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
         <div className="row item-container">
           {data.map((item, id) => (
             <Flex
+              mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
               className="col-md-6 col-xxl-4 item"
               key={id}
               // onClick={() => {

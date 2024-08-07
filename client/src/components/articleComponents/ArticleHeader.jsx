@@ -74,7 +74,7 @@ const LanguageToggle = ({ isEnglish, onToggle, isDisabled, onSigninOpen }) => (
           color={isEnglish ? 'purple.800' : 'white'}
           fontWeight="bold"
           transition="all 0.3s"
-          fontSize={['xs', 'sm']}
+          fontSize={['sm', 'md']}
         >
           ENG
         </Box>
@@ -86,7 +86,7 @@ const LanguageToggle = ({ isEnglish, onToggle, isDisabled, onSigninOpen }) => (
           color={!isEnglish ? 'purple.800' : 'white'}
           fontWeight="bold"
           transition="all 0.3s"
-          fontSize={['xs', 'sm']}
+          fontSize={['sm', 'md']}
         >
           HIN
         </Box>
@@ -164,7 +164,7 @@ const ArticleHeader = ({
   return (
     <Skeleton isLoaded={!!title[selectedLanguage]} w={'100%'} mb={[3, 4, 5]}>
       <Flex
-        bg="linear-gradient(135deg, #2A2F4F 0%, #917FB3 100%)"
+        bg="linear-gradient(135deg, rgba(42, 47, 79, 0.7) 0%, rgba(145, 127, 179, 0.7) 100%)"
         px={[3, 4, 6]}
         py={[2, 3]}
         borderTopRadius="xl"
@@ -172,7 +172,7 @@ const ArticleHeader = ({
         w="100%"
       >
         <Text
-          fontSize={['xl', '2xl', '2.2rem']}
+          fontSize={['2xl', '2xl', '2.2rem']}
           mb={2}
           fontWeight="bold"
           letterSpacing="1px"
@@ -186,40 +186,68 @@ const ArticleHeader = ({
           justify="space-between"
           align={['flex-start', 'flex-start', 'center']}
         >
-          <Flex w={'100%'} mb={4}>
+          <Flex w={'100%'} mb={4} gap={1} mt={2}>
             <Flex
               alignItems="center"
               gap={1}
               justifyContent={'flex-start'}
               w={'100%'}
             >
-              <Flex fontSize={['md', 'lg', 'xl']} alignItems={'center'}>
-                <Highlight
-                  query="Author"
-                  styles={{
-                    px: '2',
-                    py: '1',
-                    rounded: 'full',
-                    bg: '#F7EFE5',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  Author
-                </Highlight>
+              <Flex
+                fontSize={['lg', 'lg', 'xl']}
+                gap={1}
+                w={{ md: '75%', lg: 'auto' }}
+              >
+                <Flex height="fit-content">
+                  <Highlight
+                    query="Author"
+                    styles={{
+                      px: '2',
+                      py: '1',
+                      rounded: 'full',
+                      bg: '#F7EFE5',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    Author
+                  </Highlight>
+                </Flex>
+
+                <Flex>{'  : '}</Flex>
 
                 <Flex>
                   <Text mb={0} fontWeight={'bold'}>
-                    {'  : '}
                     {author[selectedLanguage]}
                   </Text>
                 </Flex>
               </Flex>
+              {isLargerThan768 && (
+                <Flex
+                  onClick={() => {
+                    playClick()
+                    bookmarkStatus({ view: false, update: true })
+                  }}
+                  cursor="pointer"
+                  h={'100%'}
+                  mt={3}
+                >
+                  {bookmark ? (
+                    <FaBookmark size={20} color="red" />
+                  ) : (
+                    <CiBookmark size={20} />
+                  )}
+                </Flex>
+              )}
+            </Flex>
+            {!isLargerThan768 && (
               <Flex
                 onClick={() => {
                   playClick()
                   bookmarkStatus({ view: false, update: true })
                 }}
                 cursor="pointer"
+                h={'100%'}
+                mt={1}
               >
                 {bookmark ? (
                   <FaBookmark size={20} color="red" />
@@ -227,9 +255,9 @@ const ArticleHeader = ({
                   <CiBookmark size={20} />
                 )}
               </Flex>
-            </Flex>
+            )}
             {!isLargerThan768 && (
-              <Flex alignItems={'center'} ml={6}>
+              <Flex alignItems={'center'} h={'100%'}>
                 <LanguageToggle
                   isEnglish={selectedLanguage === 'english'}
                   onToggle={toggleLanguage}

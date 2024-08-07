@@ -183,9 +183,9 @@ const UserChats = ({ fetchAgain }) => {
           selectedChat._id &&
           selectedChat?._id.toString() === chat?._id.toString()
             ? '#2D3748'
-            : '#0f0d15'
+            : ''
         }
-        color={'white'}
+        color={'rgba(255, 255, 255, 0.7)'}
         boxShadow={
           '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
         }
@@ -288,7 +288,7 @@ const UserChats = ({ fetchAgain }) => {
       borderRadius="lg"
       style={{
         backgroundImage:
-          'linear-gradient(-180deg, #201c2e, #13101d 88%, #13101d 99%)',
+          'linear-gradient(-180deg, rgba(32, 28, 46, 0.7), rgba(19, 16, 29, 0.7) 88%, rgba(19, 16, 29, 0.7) 99%)',
         boxShadow:
           'inset 0 0 10px rgba(255, 255, 255, 0.05), 0 4px 10px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.2)',
       }}
@@ -349,13 +349,13 @@ const UserChats = ({ fetchAgain }) => {
         display="flex"
         flexDirection="column"
         p={3}
-        style={{
-          backgroundColor: '#0f0d15',
-          backgroundImage:
-            'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-          boxShadow:
-            '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-        }}
+        // style={{
+        //   backgroundColor: '#0f0d15',
+        //   backgroundImage:
+        //     'linear-gradient(-180deg, rgba(26, 21, 39, 0.6), rgba(14, 12, 22, 0.6) 88%, rgba(14, 12, 22, 0.6) 99%)',
+        //   boxShadow:
+        //     '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+        // }}
         w="100%"
         h="90%"
         borderRadius="lg"

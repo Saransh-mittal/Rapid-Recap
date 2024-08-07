@@ -6,7 +6,7 @@ import axios from 'axios'
 Chart.register(...registerables)
 
 const TotalUserAttempted = ({
-  css,
+  // css,
   totalUsersGivenQuiz,
   notLoggedIn,
   RQM_score,
@@ -54,12 +54,12 @@ const TotalUserAttempted = ({
             data: [updatedTotalUsersGivenQuiz, avgRQM, RQM_score],
             backgroundColor: [
               'rgba(253, 226, 243, 0.6)',
-              'rgba(229, 190, 236, 0.6)',
+              'rgba(229, 190, 237, 0.6)',
               'rgba(145, 127, 179, 0.6)',
             ],
             borderColor: [
               'rgba(253, 226, 243, 1)',
-              'rgba(229, 190, 236, 1)',
+              'rgba(229, 190, 237, 1)',
               'rgba(145, 127, 179, 1)',
             ],
             borderWidth: 1,
@@ -105,9 +105,9 @@ const TotalUserAttempted = ({
           ? { filter: 'blur(5px)', userSelect: 'none', pointerEvents: 'none' }
           : { userSelect: 'text', border: '2px', padding: '1.5rem' }
       }
-      css={css}
+      // css={css}
       borderRadius="8px"
-      backgroundColor="#1a1527"
+      backgroundColor="rgba(26, 21, 39, 0.7)"
       mb={{ base: '1rem', md: '2rem' }}
       boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
       p={{ base: '1rem', md: '1.5rem' }}

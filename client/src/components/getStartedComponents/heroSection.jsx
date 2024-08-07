@@ -13,7 +13,6 @@ import curve from '../../assets/curve.webp'
 import laptop from '/images/laptop-frame-min.webp'
 import ipad from '/images/ipad-frame.webp'
 import mobile from '/images/mobile-frame.png'
-import heroBackground from '../../assets/hero/hero-background.webp'
 import { BackgroundCircles, MediumScreenbgGradient } from './design/Hero'
 
 const MotionBox = motion(Box)
@@ -77,39 +76,6 @@ const EnhancedHeroSection = () => {
         mb={'2rem'}
         ref={parallaxRef}
       >
-        <Box
-          position="absolute"
-          left="50%"
-          transform="translateX(-50%)"
-          display={{ base: 'block', md: 'none', lg: 'block' }}
-          sx={{
-            '@media (max-width: 768px)': {
-              top: '-20% !important',
-              width: '138%',
-              left: '55% !important',
-            },
-            '@media (max-width: 1024px)': {
-              top: '-13%',
-              width: '138%',
-              left: '50% ',
-            },
-            '@media (min-width: 1280px)': {
-              top: '-21%',
-              width: '234%',
-              left: '100%',
-              height: 'auto',
-            },
-          }}
-        >
-          <Image
-            src={heroBackground}
-            width={1640}
-            height={1200}
-            alt="hero"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-        </Box>
-
         <Box display={'block'}>
           <Box
             maxW="62rem"
@@ -162,7 +128,7 @@ const EnhancedHeroSection = () => {
             position="relative"
             maxW={{ base: '23rem', md: '5xl' }}
             mx="auto"
-            height={{ base: '400px', md: '500px' }}
+            height={{ base: '150px', md: '300px', lg: '450px', xl: '500px' }}
           >
             <MotionImage
               animate={laptopControls}

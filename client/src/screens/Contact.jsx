@@ -80,8 +80,13 @@ const Contact = () => {
               borderRadius="lg"
               overflow="hidden"
               textColor="white"
-              bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-              boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
+              // bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+              // boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
+              backgroundColor={'rgba(15, 13, 21, 0.7)'} // Adjust the alpha value (0.8) for transparency
+              boxShadow={
+                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
+              }
+              border={'1px solid white'}
               // w={{ base: "40rem", lg: "40rem" }}
               // p={8}
               w={{ base: '40rem', lg: '30rem' }}
@@ -109,7 +114,7 @@ const Contact = () => {
                       name="Name"
                       placeholder="Name"
                       autoComplete="off"
-                      bgColor="#1a1527"
+                      // bgColor="#1a1527"
                       borderColor="#6c757d"
                       color="#f9f9f9"
                     />
@@ -121,7 +126,7 @@ const Contact = () => {
                       name="Email"
                       placeholder="Email Address"
                       autoComplete="off"
-                      bgColor="#1a1527"
+                      // bgColor="#1a1527"
                       borderColor="#6c757d"
                       color="#f9f9f9"
                     />
@@ -133,7 +138,7 @@ const Contact = () => {
                       placeholder="Message"
                       autoComplete="off"
                       height="10rem"
-                      bgColor="#1a1527"
+                      // bgColor="#1a1527"
                       borderColor="#6c757d"
                       color="#f9f9f9"
                     />
@@ -158,8 +163,13 @@ const Contact = () => {
               borderRadius="lg"
               overflow="hidden"
               textColor="white"
-              bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-              boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
+              // bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+              // boxShadow="0 0 20px rgba(0, 0, 0, 0.5)"
+              backgroundColor={'rgba(15, 13, 21, 0.7)'} // Adjust the alpha value (0.8) for transparency
+              boxShadow={
+                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
+              }
+              border={'1px solid white'}
               // w={{ base: "none", md: "40rem" }}
               p={8}
             >

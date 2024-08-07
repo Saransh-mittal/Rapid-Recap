@@ -1,6 +1,14 @@
 // File: SingleChat.js
 import React, { useState, useRef, useEffect } from 'react'
-import { Box, Spinner, Text, useDisclosure, useToast } from '@chakra-ui/react'
+import {
+  Box,
+  Flex,
+  Image,
+  Spinner,
+  Text,
+  useDisclosure,
+  useToast,
+} from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import ChatHeader from './singleChatsComponents/ChatHeader'
@@ -13,6 +21,7 @@ import { getSender } from '../config/ChatLogics'
 import useMessageHandlers from '../../../customHooks/useMessageHandlers'
 import useSocketHandlers from '../../../customHooks/useSocketHandlers'
 import MessageStatus from './singleChatsComponents/MessageStatus'
+import rrlogoOutlined from '/images/rrlogo_badge.png'
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -271,13 +280,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             h="100%"
             borderRadius="lg"
             overflowY="hidden"
-            style={{
-              backgroundColor: '#0f0d15',
-              backgroundImage:
-                'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-              boxShadow:
-                '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-            }}
+            // style={{
+            //   backgroundImage:
+            //     'linear-gradient(-180deg, rgba(26, 21, 39, 0.6), rgba(14, 12, 22, 0.6) 88%, rgba(14, 12, 22, 0.6) 99%)',
+            //   boxShadow:
+            //     '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+            // }}
           >
             {loading ? (
               <Spinner
@@ -331,16 +339,39 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           </Box>
         </>
       ) : (
-        <Box d="flex" alignItems="center" justifyContent="center" h="100%">
-          <Text
-            fontSize="2xl"
-            pb={3}
-            textTransform={'uppercase'}
-            letterSpacing={'1px'}
-          >
-            Click on a user to start chatting
-          </Text>
-        </Box>
+        <Flex alignItems="center" justifyContent="center" h="100%">
+          <Box textAlign="center">
+            <Flex justifyContent={'center'}>
+              <Image
+                src={rrlogoOutlined}
+                alt="App Logo"
+                mb={4}
+                w={'10rem'}
+                h={'auto'}
+              />
+            </Flex>
+            <Flex justifyContent={'center'}>
+              <Text
+                fontSize="xl"
+                textTransform="uppercase"
+                letterSpacing="1px"
+                mb={0}
+                w={'75%'}
+              >
+                Give Feedback About the Application and Chatting Experience
+                through contact us.
+              </Text>
+            </Flex>
+            <Text
+              fontSize="lg"
+              // textTransform="uppercase"
+              letterSpacing="1px"
+              mb={0}
+            >
+              Get Started by Selecting a Chat or searching user....
+            </Text>
+          </Box>
+        </Flex>
       )}
       <BookmarksModal
         showBookmarksModal={showBookmarksModal}

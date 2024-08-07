@@ -26,11 +26,14 @@ const ChatHeader = ({
       position={'relative'}
     >
       <IconButton
-        position={'absolute'}
+        position="absolute"
         left={0}
         icon={<ArrowBackIcon />}
         onClick={handleClose}
+        bg="rgba(255, 255, 255, 0.7)" // White background with 80% opacity
+        _hover={{ bg: 'rgba(255, 255, 255, 0.9)' }} // Optional: Less transparent on hover
       />
+
       {messages &&
         (!selectedChat.isGroupChat ? (
           <>

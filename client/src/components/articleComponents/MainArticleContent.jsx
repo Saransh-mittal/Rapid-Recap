@@ -35,9 +35,9 @@ const MainArticleContent = ({
   }
 
   const fontSize = useBreakpointValue({
-    base: '0.9rem',
-    md: '1rem',
-    lg: '1.1rem',
+    base: '1.1rem',
+    md: '1.2rem',
+    lg: '1.25rem',
   })
   const padding = useBreakpointValue({ base: 3, md: 4, lg: 6 })
 
@@ -52,11 +52,11 @@ const MainArticleContent = ({
           ref={articleRef}
           px={padding}
           py={3}
-          bg="rgba(26, 21, 39, 0.6)"
-          bgGradient="linear(to-r, rgba(26, 21, 39, 0.8), rgba(34, 32, 52, 0.9), rgba(48, 44, 66, 1))"
+          bg="rgba(26, 21, 39, 0.8)"
+          // bgGradient="linear(to-r, rgba(26, 21, 39, 0.6), rgba(34, 32, 52, 0.6), rgba(48, 44, 66, 6))"
           borderRadius="lg"
           boxShadow="lg"
-          color="#E5E7EB"
+          // color="#E5E7EB"
           fontFamily="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
           fontSize={fontSize}
           lineHeight="1.8"

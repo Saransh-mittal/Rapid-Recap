@@ -21,22 +21,23 @@ const LeaderBoardRow = ({
         currUserChar?.inGameName === user.inGameName ? 'highlighted-card-2' : ''
       }
       onClick={() => navigate(`/profile/${urlInGameName}`)}
-      _hover={{
-        backgroundImage:
-          'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-        boxShadow:
-          '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-      }}
+      // _hover={{
+      //   backgroundImage:
+      //     'linear-gradient(-180deg, rgba(26, 21, 39, 0.7), rgba(14, 12, 22, 0.7) 88%, rgba(14, 12, 22, 0.7) 99%)',
+      //   boxShadow:
+      //     '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+      // }}
       cursor={'pointer'}
     >
       <Td textAlign={'center'}>
         <Flex
           justifyContent={'center'}
           alignItems={'center'}
-          bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+          bgGradient="linear(to-b, rgba(26, 21, 39, 0.7), rgba(14, 12, 22, 0.7) 88%, rgba(14, 12, 22, 0.7) 99%)"
+          border={'1px solid rgba(255, 255, 255, 0.1)'}
           p={2}
           gap={'25px'}
-          borderRadius="md"
+          borderRadius="xl"
         >
           {user.rank ? user.rank : index + 1}
           {!isBaseScreen && (
