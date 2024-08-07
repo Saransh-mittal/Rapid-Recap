@@ -73,7 +73,7 @@ const LanguageToggle = ({ isEnglish, onToggle, isDisabled, onSigninOpen }) => (
           color={isEnglish ? 'purple.800' : 'white'}
           fontWeight="bold"
           transition="all 0.3s"
-          fontSize={['xs', 'sm']}
+          fontSize={['sm', 'md']}
         >
           ENG
         </Box>
@@ -85,7 +85,7 @@ const LanguageToggle = ({ isEnglish, onToggle, isDisabled, onSigninOpen }) => (
           color={!isEnglish ? 'purple.800' : 'white'}
           fontWeight="bold"
           transition="all 0.3s"
-          fontSize={['xs', 'sm']}
+          fontSize={['sm', 'md']}
         >
           HIN
         </Box>
@@ -169,7 +169,7 @@ const ArticleHeader = ({
         w="100%"
       >
         <Text
-          fontSize={['xl', '2xl', '2.2rem']}
+          fontSize={['2xl', '2xl', '2.2rem']}
           mb={2}
           fontWeight="bold"
           letterSpacing="1px"
@@ -191,7 +191,7 @@ const ArticleHeader = ({
               w={'100%'}
             >
               <Flex
-                fontSize={['md', 'lg', 'xl']}
+                fontSize={['lg', 'lg', 'xl']}
                 gap={1}
                 w={{ md: '75%', lg: 'auto' }}
               >

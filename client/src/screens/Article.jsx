@@ -75,7 +75,7 @@ const Article = () => {
   const { tour, isTutorialTakenCheck } = useArticlePageTour()
   const { quinTour } = useQuinBoostTour()
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
-  const [isLargerThan820] = useMediaQuery('(min-width: 820px)')
+  const [isLargerThan821] = useMediaQuery('(min-width: 821px)')
   const [bookmark, setBookmark] = useState(false)
   const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(null)
   const quizFetchTimer = useRef(null)
@@ -516,7 +516,7 @@ const Article = () => {
             />
           </Flex>
           <Grid
-            templateColumns={isLargerThan820 ? 'minmax(0, 9fr) 5fr' : '1fr'}
+            templateColumns={isLargerThan821 ? 'minmax(0, 9fr) 5fr' : '1fr'}
             gap={10}
             minH={'85vh'}
             px={{ base: '20px', md: '50px' }}
