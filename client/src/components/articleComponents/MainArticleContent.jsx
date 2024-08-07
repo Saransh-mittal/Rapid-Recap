@@ -35,9 +35,9 @@ const MainArticleContent = ({
   }
 
   const fontSize = useBreakpointValue({
-    base: '0.9rem',
-    md: '1rem',
-    lg: '1.1rem',
+    base: '1.1rem',
+    md: '1.2rem',
+    lg: '1.25rem',
   })
   const padding = useBreakpointValue({ base: 3, md: 4, lg: 6 })
 
