@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { AppContext } from '../../contextAPI/appContext'
 import {
   Button,
@@ -13,9 +13,11 @@ import {
   FormLabel,
   Input,
   Textarea,
+  Text,
   Image,
   Box,
   Flex,
+  useToast,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import useSound from '../../customHooks/useSound'
@@ -36,6 +38,28 @@ const EditProfileModal = ({
   const [imageLoading, setImageLoading] = useState(false)
   const [picDisplay, setPicDisplay] = useState(profileData.pic)
   const [load, setLoad] = useState(false)
+  const [isInGameNameDisabled, setIsInGameNameDisabled] = useState(false)
+  const [remainingDays, setRemainingDays] = useState(0)
+  const toast = useToast()
+
+  useEffect(() => {
+    checkInGameNameChangeEligibility()
+  }, [profileData])
+
+  const checkInGameNameChangeEligibility = () => {
+    const lastChangeDate = new Date(profileData.lastInGameNameChange || 0)
+    const currentDate = new Date()
+    const daysSinceLastChange = Math.floor(
+      (currentDate - lastChangeDate) / (1000 * 60 * 60 * 24),
+    )
+    if (daysSinceLastChange < 15) {
+      setIsInGameNameDisabled(true)
+      setRemainingDays(15 - daysSinceLastChange)
+    } else {
+      setIsInGameNameDisabled(false)
+      setRemainingDays(0)
+    }
+  }
 
   const handleInputChange = e => {
     const { name, value } = e.target
@@ -53,6 +77,14 @@ const EditProfileModal = ({
       const newData = formData
       const pic = await submitImage(formData)
       newData.pic = pic
+      if (
+        newData.inGameName !== profileData.inGameName &&
+        !isInGameNameDisabled
+      ) {
+        newData.lastInGameNameChange = new Date().toISOString()
+      } else {
+        newData.lastInGameNameChange = profileData.lastInGameNameChange
+      }
       console.log(newData)
       onSubmit(newData)
       onClose()
@@ -129,6 +161,7 @@ const EditProfileModal = ({
             : 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
           bio: leftProfileView.bio,
           inGameName: leftProfileView.inGameName || '',
+          lastInGameNameChange: leftProfileView.lastInGameNameChange,
         })
       }}
       size="xl"
@@ -187,7 +220,14 @@ const EditProfileModal = ({
               name="inGameName"
               value={formData.inGameName}
               onChange={handleInputChange}
+              isDisabled={isInGameNameDisabled}
             />
+            {isInGameNameDisabled && (
+              <Text fontSize="sm" color="red.500" mt={1}>
+                You can change your in-game name again in {remainingDays}{' '}
+                day(s).
+              </Text>
+            )}
           </FormControl>
           <FormControl mb={4}>
             <FormLabel>Bio</FormLabel>

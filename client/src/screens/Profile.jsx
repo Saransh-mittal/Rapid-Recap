@@ -123,7 +123,7 @@ export default function Profile() {
     } else {
       fetchProfile()
     }
-  }, [inGameName, state, user])
+  }, [user, inGameName])
 
   useEffect(() => {
     if (

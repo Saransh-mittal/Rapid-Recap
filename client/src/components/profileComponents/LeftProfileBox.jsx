@@ -34,6 +34,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       : 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
     bio: leftProfileView.bio,
     inGameName: leftProfileView.inGameName,
+    lastInGameNameChange: user.lastInGameNameChange,
   })
   const [loading, setLoading] = useState(true)
   const [canSendRequest, setCanSendRequest] = useState(true)
@@ -48,6 +49,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         : 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
       bio: leftProfileView.bio,
       inGameName: user.inGameName,
+      lastInGameNameChange: user.lastInGameNameChange,
     })
   }, [leftProfileView])
 
@@ -60,6 +62,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         : 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
       bio: leftProfileView.bio,
       inGameName: user.inGameName,
+      lastInGameNameChange: user.lastInGameNameChange,
     })
     setIsEditModalOpen(true)
   }
@@ -67,8 +70,9 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const handleSubmitModal = async formData => {
     try {
       const response = await axios.post(`/api/user/editProfile`, formData)
-      dispatch(setUser({ ...user, ...formData }))
       navigate(`/profile/${formData.inGameName}`)
+      dispatch(setUser({ ...user, ...formData }))
+
       if (response.status === 200) {
         toast({
           title: 'Success',
@@ -83,7 +87,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     } catch (e) {
       toast({
         title: 'Error',
-        description: 'Something went wrong in updating profile',
+        description:
+          e?.response.data.error || 'Error updating profile please try again!!',
         status: 'error',
         duration: 9000,
         isClosable: true,
