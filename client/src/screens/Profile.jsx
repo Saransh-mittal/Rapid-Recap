@@ -158,21 +158,24 @@ export default function Profile() {
     <Box marginTop={'4.5rem'} w={'100%'}>
       <Helmet>
         <title>
-          {profile?.username ? `${profile.username}'s Profile` : 'Profile'}
+          {profile?.inGameName ? `${profile.inGameName}'s Profile` : 'Profile'}
         </title>
         <meta
           name="description"
-          content={`View ${profile?.username}'s profile, check their IQ score, solved quizzes, daily activities, and society.`}
+          content={`View ${profile?.inGameName}'s profile, check their IQ score, solved quizzes, daily activities, and society.`}
         />
         <meta
           name="keywords"
           content="profile, IQ score, quizzes, daily activities, user ranking, society, circles, explorers, strivers, elites, mavericks, pioneers"
         />
-        <meta property="og:title" content={`${profile?.username}'s Profile`} />
+        <meta
+          property="og:title"
+          content={`${profile?.inGameName}'s Profile`}
+        />
         <meta
           property="og:description"
           content={`Explore ${
-            profile?.username
+            profile?.inGameName
           }'s profile with IQ score, solved quizzes, daily activities, and belongs to ${
             userSocietyAndCircle?.society
           } ${
@@ -182,6 +185,10 @@ export default function Profile() {
           }.`}
         />
         <meta property="og:type" content="profile" />
+        <link
+          rel="canonical"
+          href={`https://www.rapidrecap.co.in/profile/${inGameName}`}
+        />
       </Helmet>
       <Flex
         flexDirection={{ base: 'column', md: 'row' }}
