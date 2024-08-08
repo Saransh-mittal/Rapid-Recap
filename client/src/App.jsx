@@ -187,7 +187,7 @@ const App = () => {
           </Routes>
         </Suspense>
       </Box>
-      {!shouldShowFooter && <Footer />}
+      {shouldShowFooter && <Footer />}
     </>
   )
 }

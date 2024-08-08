@@ -9,7 +9,7 @@ import grid from '../../assets/grid.webp'
 import { useRef } from 'react'
 import Section from '../miscellaneous/Section'
 import { RepeatClockIcon, CheckIcon } from '@chakra-ui/icons'
-import { BottomLine, Gradient } from './design/Roadmap'
+import { BottomLine } from './design/Roadmap'
 
 const roadmap = [
   {
@@ -182,16 +182,6 @@ const CommigSoonSection = () => {
                   </Box>
                 )
               })}
-              <Gradient
-                top={'18.25rem'}
-                left={'-20.375rem'}
-                width={'56.625rem'}
-              />
-              <Gradient
-                top={'62.25rem'}
-                left={'50.375rem'}
-                width={'56.625rem'}
-              />
             </Flex>
           </Box>
         </Box>
