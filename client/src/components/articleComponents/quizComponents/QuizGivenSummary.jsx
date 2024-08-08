@@ -16,9 +16,10 @@ import axios from 'axios'
 import GivenQuizInterface from './GivenQuizInterface'
 import Loading from '../../miscellaneous/Loading'
 import Heading from '../../miscellaneous/HeadingComponent'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import useSound from '../../../customHooks/useSound'
+import ArrowLeftSVG from '../../../assets/svg/ArrowLeftSVG'
+import ArrowRightSVG from '../../../assets/svg/ArrowRightSVG'
 const QuizGivenSummary = ({
   isOpen,
   onClose,
@@ -180,7 +181,13 @@ const QuizGivenSummary = ({
                     <Button
                       borderRadius={'full'}
                       color={'white'}
-                      rightIcon={<ArrowRight />}
+                      rightIcon={
+                        <ArrowRightSVG
+                          width={'20px'}
+                          height={'20px'}
+                          fill={'#fff'}
+                        />
+                      }
                       onClick={handleNextQuestion}
                       mt={5}
                       size={'lg'}
@@ -209,7 +216,13 @@ const QuizGivenSummary = ({
                       w={'100%'}
                       borderRadius={'full'}
                       color={'white'}
-                      leftIcon={<ArrowLeft />}
+                      leftIcon={
+                        <ArrowLeftSVG
+                          width={'20px'}
+                          height={'20px'}
+                          fill={'#fff'}
+                        />
+                      }
                       onClick={handlePrevQuestion}
                       mt={5}
                       size={'lg'}

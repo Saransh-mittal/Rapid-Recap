@@ -21,12 +21,13 @@ import {
   ModalCloseButton,
   Flex,
 } from '@chakra-ui/react'
-import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
-import _ from 'lodash'
+import throttle from 'lodash.throttle'
 
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../customHooks/useSound'
+import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
+import FillEyeVisible from '../assets/svg/FillEyeVisible'
 
 export default function Register({ isOpen, onClose, signinOnOpen }) {
   const [emailVerified, setEmailVerified] = useState(false)
@@ -103,7 +104,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
     document.title = 'Register - Rapid Recap'
   }, [])
 
-  const handleSubmitThrottled = useCallback(_.throttle(handleSubmit, 1000), [
+  const handleSubmitThrottled = useCallback(throttle(handleSubmit, 1000), [
     data,
   ])
 
@@ -308,7 +309,19 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
                     style={{ backgroundColor: 'transparent', color: 'white' }}
                     onClick={() => togglePasswordVisibility('showPassword')}
                     icon={
-                      data.showPassword ? <AiFillEyeInvisible /> : <AiFillEye />
+                      data.showPassword ? (
+                        <FillEyeInvisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
+                      ) : (
+                        <FillEyeVisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
+                      )
                     }
                   />
                 </InputRightElement>
@@ -329,10 +342,18 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
                     style={{ backgroundColor: 'transparent', color: 'white' }}
                     onClick={() => togglePasswordVisibility('showCPassword')}
                     icon={
-                      data.showCPassword ? (
-                        <AiFillEyeInvisible />
+                      data.showPassword ? (
+                        <FillEyeInvisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       ) : (
-                        <AiFillEye />
+                        <FillEyeVisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       )
                     }
                   />

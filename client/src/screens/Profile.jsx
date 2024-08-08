@@ -11,8 +11,6 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import { ViewIcon } from '@chakra-ui/icons'
-import { GiHistogram } from 'react-icons/gi'
-import { FaBookmark } from 'react-icons/fa'
 import IQLineGraph from '../components/profileComponents/IQLineGraph'
 import IQBarGraph from '../components/profileComponents/IQBarGraph'
 import LeftProfileBox from '../components/profileComponents/LeftProfileBox'
@@ -31,6 +29,8 @@ import ProfileButton from '../components/profileComponents/ProfileButton.jsx'
 import Bookmarks from '../components/profileComponents/Bookmarks.jsx'
 import { useDispatch, useSelector } from 'react-redux'
 import { setOtherUserProfiles, setUserProfile } from '../redux/contentSlice.js'
+import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
+import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 // import WiseWeb from '../components/profileComponents/WiseWeb.jsx'
 //
 export default function Profile() {
@@ -353,7 +353,13 @@ export default function Profile() {
                   Private={user?.profilePrivacy.seasonAnalytics}
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenSeasonSelector}
-                  icon={<GiHistogram />} // Add icon here
+                  icon={
+                    <HistogramSVG
+                      width={'20px'}
+                      height={'20px'}
+                      fill={'#fff'}
+                    />
+                  } // Add icon here
                   top={'0.9rem'}
                 />
 
@@ -401,7 +407,7 @@ export default function Profile() {
                   Private={true}
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenBookmarks}
-                  icon={<FaBookmark />} // Add icon here
+                  icon={<BookmarkSVG width={'20px'} height={'20px'} />} // Add icon here
                 />
 
                 <Bookmarks

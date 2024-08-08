@@ -14,9 +14,9 @@ import axios from 'axios'
 import EditProfileModal from './EditProfileModal'
 import NameLightning from '../miscellaneous/NameLightning'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
-import { FaUserPlus } from 'react-icons/fa'
 import useSound from '../../customHooks/useSound'
 import { useSelector } from 'react-redux'
+import UserPlusSVG from '../../assets/svg/UserPlusSVG'
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const toast = useToast()
@@ -234,9 +234,10 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                 onClick={handleRequestClick}
                 disabled={!canSendRequest || requestSent}
               >
-                <FaUserPlus
-                  size={20}
-                  color={!canSendRequest || requestSent ? 'grey' : 'white'}
+                <UserPlusSVG
+                  height={'20px'}
+                  width={'20px'}
+                  fill={!canSendRequest || requestSent ? 'grey' : 'white'}
                 />
               </Flex>
             )}

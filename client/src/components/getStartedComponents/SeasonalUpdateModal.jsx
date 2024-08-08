@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -20,19 +20,18 @@ import {
   Tr,
   Td,
   keyframes,
-} from "@chakra-ui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { FaMedal, FaGamepad, FaTrophy } from "react-icons/fa";
-import { motion, AnimatePresence } from "framer-motion";
-import Confetti from "react-confetti";
-import seasonGIF from "/GIFs/season.gif";
-import decayImage from "/images/decay.webp";
-import arrowImage from "/images/arrow.webp";
-import decrease from "/images/decrease.webp";
-import { AiOutlineArrowDown } from "react-icons/ai";
-import { useNavigate } from "react-router-dom";
-import { useSwipeable } from "react-swipeable";
-import axios from "axios"; // Import axios for API calls
+} from '@chakra-ui/react'
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
+// import { FaMedal, FaGamepad, FaTrophy } from "react-icons/fa";
+import { motion, AnimatePresence } from 'framer-motion'
+import Confetti from 'react-confetti'
+import seasonGIF from '/GIFs/season.gif'
+import decayImage from '/images/decay.webp'
+import arrowImage from '/images/arrow.webp'
+import decrease from '/images/decrease.webp'
+import { useNavigate } from 'react-router-dom'
+import { useSwipeable } from 'react-swipeable'
+import axios from 'axios' // Import axios for API calls
 
 const gradientAnimation = keyframes`
   0% {
@@ -44,7 +43,7 @@ const gradientAnimation = keyframes`
   100% {
     background-position: 0% 50%;
   }
-`;
+`
 
 const arrowMotion = {
   animate: {
@@ -53,25 +52,25 @@ const arrowMotion = {
   transition: {
     repeat: Infinity,
     duration: 2,
-    ease: "easeInOut",
+    ease: 'easeInOut',
   },
-};
+}
 
 const SeasonalUpdateModal = ({ isOpen, onClose }) => {
-  const [page, setPage] = useState(1);
-  const navigate = useNavigate();
+  const [page, setPage] = useState(1)
+  const navigate = useNavigate()
 
-  const nextPage = () => setPage((prev) => (prev < 3 ? prev + 1 : prev));
-  const prevPage = () => setPage((prev) => (prev > 1 ? prev - 1 : prev));
+  const nextPage = () => setPage(prev => (prev < 3 ? prev + 1 : prev))
+  const prevPage = () => setPage(prev => (prev > 1 ? prev - 1 : prev))
 
   const handlers = useSwipeable({
     onSwipedLeft: () => nextPage(),
     onSwipedRight: () => prevPage(),
     preventDefaultTouchmoveEvent: true,
     trackMouse: true,
-  });
+  })
 
-  const Animation = ({ src, height = "20rem" }) => (
+  const Animation = ({ src, height = '20rem' }) => (
     <motion.div
       animate={{ scale: [0.5, 1], opacity: [0, 1] }}
       transition={{ duration: 0.5 }}
@@ -80,7 +79,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
         <Image src={src} alt="Animation" h={height} borderRadius="5%" />
       </Flex>
     </motion.div>
-  );
+  )
 
   const renderPageContent = () => {
     switch (page) {
@@ -92,7 +91,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
               fontWeight="bold"
               color="purple.700"
               fontStyle="italic"
-              textDecoration={"underline"}
+              textDecoration={'underline'}
             >
               SEASON 2: THE CYCLE OF KNOWLEDGE!
             </Text>
@@ -102,21 +101,21 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                 mt={2}
                 color="#2C7865"
                 fontStyle="italic"
-                fontWeight={"bold"}
+                fontWeight={'bold'}
               >
                 The adventure continues as we dive into the new season, "THE
                 CYCLE OF KNOWLEDGE."
               </Text>
-              <Flex flexDirection={"row"}>
+              <Flex flexDirection={'row'}>
                 <Flex mt={4} ml={4}>
-                  <FaMedal color="black" />
+                  {/* <FaMedal color="black" /> */}
                 </Flex>
                 <Text
                   fontSize="md"
                   mt={2}
                   color="blue.800"
-                  textAlign={"center"}
-                  fontWeight={"bold"}
+                  textAlign={'center'}
+                  fontWeight={'bold'}
                 >
                   Get ready for a thrilling season of challenges and
                   opportunities that will push your skills and intellect to new
@@ -137,17 +136,17 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
               </Text>
             </Box>
           </>
-        );
+        )
       case 2:
         return (
           <>
-            <Flex flexDirection={"row"} justifyContent={"center"}>
+            <Flex flexDirection={'row'} justifyContent={'center'}>
               <Text
                 fontSize="lg"
                 fontWeight="bold"
                 color="purple.700"
                 fontStyle="italic"
-                textDecoration={"underline"}
+                textDecoration={'underline'}
               >
                 IQ SCORE DECAY
               </Text>
@@ -160,30 +159,30 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
               <List spacing={3}>
                 <ListItem>
                   <Text fontSize="md" color="blue.800">
-                    <ListIcon as={FaGamepad} color="teal.500" />
+                    {/* <ListIcon as={FaGamepad} color="teal.500" /> */}
                     <Text as="span" fontWeight="bold">
                       IQ scores will decrease
-                    </Text>{" "}
+                    </Text>{' '}
                     at the end of every season. So, make sure to make the most
                     out of the season and keep your score high!
                   </Text>
                 </ListItem>
                 <ListItem>
                   <Text fontSize="md" color="blue.800">
-                    <ListIcon as={FaMedal} color="teal.500" />
+                    {/* <ListIcon as={FaMedal} color="teal.500" /> */}
                     <Text as="span" fontWeight="bold">
                       This process ensures
-                    </Text>{" "}
+                    </Text>{' '}
                     a fresh and competitive environment for all users.
                   </Text>
                 </ListItem>
                 <ListItem>
                   <Text fontSize="md" color="blue.800">
-                    <ListIcon as={FaTrophy} color="teal.500" />
+                    {/* <ListIcon as={FaTrophy} color="teal.500" /> */}
                     <Text as="span" fontWeight="bold">
                       Societies such as Titans, Mavericks, Elites, Strivers, and
                       Explorers
-                    </Text>{" "}
+                    </Text>{' '}
                     will see their scores adjusted to maintain balanced
                     competition.
                   </Text>
@@ -204,7 +203,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
               </Text>
             </Box>
           </>
-        );
+        )
       case 3:
         return (
           <>
@@ -225,7 +224,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                   <Tr>
                     <Td fontWeight="bold">Titans society</Td>
                     <Td>
-                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                      <Flex width={{ base: '2.5rem', md: '3.5rem' }}>
                         <motion.div {...arrowMotion}>
                           <Image
                             src={arrowImage}
@@ -243,7 +242,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                       Mavericks society (Visionaries circle and Pioneers circle)
                     </Td>
                     <Td>
-                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                      <Flex width={{ base: '2.5rem', md: '3.5rem' }}>
                         <motion.div {...arrowMotion}>
                           <Image
                             src={arrowImage}
@@ -261,7 +260,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                       Elites society (Scholars circle and Master circle)
                     </Td>
                     <Td>
-                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                      <Flex width={{ base: '2.5rem', md: '3.5rem' }}>
                         <motion.div {...arrowMotion}>
                           <Image
                             src={arrowImage}
@@ -280,7 +279,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                       Progressors circle)
                     </Td>
                     <Td>
-                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                      <Flex width={{ base: '2.5rem', md: '3.5rem' }}>
                         <motion.div {...arrowMotion}>
                           <Image
                             src={arrowImage}
@@ -296,7 +295,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
                   <Tr>
                     <Td fontWeight="bold">Explorers</Td>
                     <Td>
-                      <Flex width={{ base: "2.5rem", md: "3.5rem" }}>
+                      <Flex width={{ base: '2.5rem', md: '3.5rem' }}>
                         <motion.div {...arrowMotion}>
                           <Image
                             src={arrowImage}
@@ -315,28 +314,28 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
               </Table>
             </Box>
           </>
-        );
+        )
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   const handleLetsGoClick = async () => {
     try {
       const response = await axios.get(
-        `/api/user/newSeasonModal?newSeasonModal=false` // Adjust the URL as needed
-      );
+        `/api/user/newSeasonModal?newSeasonModal=false`, // Adjust the URL as needed
+      )
 
       if (response.status === 200 && !response.data.show) {
-        navigate("/home");
-        onClose();
+        navigate('/home')
+        onClose()
       } else {
-        console.error("Failed to update new season modal status");
+        console.error('Failed to update new season modal status')
       }
     } catch (error) {
-      console.error("Error updating new season modal status", error);
+      console.error('Error updating new season modal status', error)
     }
-  };
+  }
 
   return (
     <AnimatePresence>
@@ -355,14 +354,14 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
           <Modal
             isOpen={isOpen}
             onClose={onClose}
-            size={{ base: "full", md: "2xl" }}
+            size={{ base: 'full', md: '2xl' }}
             closeOnOverlayClick={false}
           >
             <ModalOverlay />
             <ModalContent
-              initial={{ y: "-100vh" }}
+              initial={{ y: '-100vh' }}
               animate={{ y: 0 }}
-              transition={{ type: "spring", stiffness: 150 }}
+              transition={{ type: 'spring', stiffness: 150 }}
               background="linear-gradient(135deg, #f6d365 0%, #fda085 100%)"
               borderRadius="20px"
               boxShadow="0px 10px 30px rgba(0, 0, 0, 0.2)"
@@ -417,7 +416,7 @@ const SeasonalUpdateModal = ({ isOpen, onClose }) => {
         </motion.div>
       )}
     </AnimatePresence>
-  );
-};
+  )
+}
 
-export default SeasonalUpdateModal;
+export default SeasonalUpdateModal

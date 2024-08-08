@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import EmailVerify from '../components/authComponents/EmailVerify'
 import Modal from './Modal'
 import ResetPassword from '../components/authComponents/ResetPassword'
-import { throttle } from 'lodash'
+import throttle from 'lodash.throttle'
 import {
   useToast,
   Button,
@@ -23,7 +23,7 @@ import {
   Flex,
   //useMediaQuery,
 } from '@chakra-ui/react'
-import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
+
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import Register from './Register'
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
@@ -31,6 +31,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setForgotPassword, setUser, setVerifyEmail } from '../redux/authSlice'
 import { setModal } from '../redux/uiSlice'
 import useSound from '../customHooks/useSound'
+import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
+import FillEyeVisible from '../assets/svg/FillEyeVisible'
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   //const isScreenSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
@@ -303,9 +305,17 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                         }
                         icon={
                           data.showPassword ? (
-                            <AiFillEyeInvisible />
+                            <FillEyeInvisible
+                              width="20px"
+                              height="20px"
+                              fill="white"
+                            />
                           ) : (
-                            <AiFillEye />
+                            <FillEyeVisible
+                              width="20px"
+                              height="20px"
+                              fill="white"
+                            />
                           )
                         }
                       />

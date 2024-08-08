@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
-import { set, throttle } from 'lodash'
+import throttle from 'lodash.throttle'
 import {
   useToast,
   Button,

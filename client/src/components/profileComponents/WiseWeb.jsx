@@ -6,7 +6,6 @@ import React, {
   useMemo,
   forwardRef,
 } from 'react'
-import { UserPlus, Users, MessageCircle, User, Unlink } from 'lucide-react'
 import {
   Modal,
   ModalOverlay,
@@ -46,6 +45,11 @@ import {
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { ChatState } from '../../contextAPI/ChatProvider'
+import UserPlusSVG from '../../assets/svg/UserPlusSVG'
+import UnlinkSVG from '../../assets/svg/UnlinkSVG'
+import UserSVG from '../../assets/svg/UserSVG'
+import MessageCircleSVG from '../../assets/svg/MessageCircleSVG'
+import UserFriendsSVG from '../../assets/svg/UserFriendsSVG'
 
 const PopoverOption = React.memo(
   ({ icon: Icon, text, onClick, isRed = false }) => {
@@ -229,7 +233,7 @@ const FriendItem = React.memo(
           >
             <PopoverBody p={2} width="100%">
               <PopoverOption
-                icon={MessageCircle}
+                icon={MessageCircleSVG}
                 text="Commune"
                 onClick={handleCommune}
               />
@@ -240,7 +244,7 @@ const FriendItem = React.memo(
                 my={2}
               />
               <PopoverOption
-                icon={User}
+                icon={UserSVG}
                 text="Glimpse Wisdom"
                 onClick={handleGlimpseWisdom}
               />
@@ -251,7 +255,7 @@ const FriendItem = React.memo(
                 my={2}
               />
               <PopoverOption
-                icon={Unlink}
+                icon={UnlinkSVG}
                 text="Sever Ties"
                 onClick={handleSeverTies}
                 isRed={true}
@@ -743,7 +747,12 @@ const WiseWeb = ({
               }}
             >
               <Tab style={tabStyle(activeTab === 0)}>
-                <Users size={16} style={{ marginRight: '8px' }} />
+                <UserFriendsSVG
+                  width={'16px'}
+                  height={'16px'}
+                  fill={'#a49eb9'}
+                  style={{ marginRight: '8px' }}
+                />
                 Friends
               </Tab>
               <Tab style={tabStyle(activeTab === 1)} position={'relative'}>
@@ -759,7 +768,12 @@ const WiseWeb = ({
                     zIndex={2}
                   />
                 )}
-                <UserPlus size={16} style={{ marginRight: '8px' }} />
+                <UserPlusSVG
+                  width={'16px'}
+                  height={'16px'}
+                  fill={'#a49eb9'}
+                  style={{ marginRight: '8px' }}
+                />
                 Requests
               </Tab>
             </TabList>

@@ -1,6 +1,4 @@
 // File: src/components/ArticleHeader.jsx
-
-import React from 'react'
 import {
   Flex,
   Text,
@@ -9,24 +7,21 @@ import {
   useDisclosure,
   Image,
   Badge,
-  Stack,
   useMediaQuery,
   Tooltip,
   useToast,
   Skeleton,
 } from '@chakra-ui/react'
-import { FaBookmark } from 'react-icons/fa'
-import { CiBookmark } from 'react-icons/ci'
-import { AiOutlineLock } from 'react-icons/ai'
 import ShareButton from './ShareButton'
 import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
 import QuinBoost from './quizComponents/QuinBoost'
 import { LockIcon } from '@chakra-ui/icons'
-import TextBackgound from '/images/textBackground.webp'
 import starBoost from '/GIFs/starBoost.gif'
 import Button from '../miscellaneous/ButtonComponent'
 import { useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
+import BookmarkSVG from '../../assets/svg/BookmarkSVG'
+import FilledBookmarkSVG from '../../assets/svg/FilledBookmarkSVG'
 
 const LanguageToggle = ({ isEnglish, onToggle, isDisabled, onSigninOpen }) => (
   <Tooltip
@@ -90,18 +85,6 @@ const LanguageToggle = ({ isEnglish, onToggle, isDisabled, onSigninOpen }) => (
         >
           HIN
         </Box>
-        {isDisabled && (
-          <Box
-            position="absolute"
-            top="50%"
-            left="50%"
-            transform="translate(-50%, -50%)"
-            color="white"
-            zIndex={2}
-          >
-            <AiOutlineLock size={16} />
-          </Box>
-        )}
       </Box>
     </Flex>
   </Tooltip>
@@ -232,9 +215,9 @@ const ArticleHeader = ({
                   mt={3}
                 >
                   {bookmark ? (
-                    <FaBookmark size={20} color="red" />
+                    <FilledBookmarkSVG width={'25px'} height={'25px'} />
                   ) : (
-                    <CiBookmark size={20} />
+                    <BookmarkSVG width={'25px'} height={'25px'} />
                   )}
                 </Flex>
               )}
@@ -250,9 +233,9 @@ const ArticleHeader = ({
                 mt={1}
               >
                 {bookmark ? (
-                  <FaBookmark size={20} color="red" />
+                  <FilledBookmarkSVG width={'25px'} height={'25px'} />
                 ) : (
-                  <CiBookmark size={20} />
+                  <BookmarkSVG width={'25px'} height={'25px'} />
                 )}
               </Flex>
             )}

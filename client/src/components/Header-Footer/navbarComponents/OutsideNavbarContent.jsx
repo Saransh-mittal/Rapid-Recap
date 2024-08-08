@@ -14,15 +14,13 @@ import { HamburgerIcon } from '@chakra-ui/icons'
 import GetStarted from './GetStarted'
 import XPLevel from './XPLevel'
 import IQScore from './IQScore'
-// import { FaFacebookMessenger } from "react-icons/fa";
-// import Messenger from "../../../screens/Messenger";
-import { FaFacebookMessenger } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import { SearchIcon } from '@chakra-ui/icons'
 import UserSearchDrawer from '../../miscellaneous/UserSearchDrawer'
 import useSound from '../../../customHooks/useSound'
 import { useSelector } from 'react-redux'
+import FaMessenger from '../../../assets/svg/FaMessenger'
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -176,7 +174,7 @@ const OutsideNavbarContent = ({
                     {notification.length}
                   </Badge>
                 )}
-                <FaFacebookMessenger size={23} />
+                <FaMessenger width={'23px'} />
               </Box>
             )}
           </>

@@ -26,7 +26,8 @@
     "framer-motion": "^10.18.0",
     "html-react-parser": "^5.1.10",
     "js-cookie": "^3.0.5",
-    "lodash": "^4.17.21",
+    "lodash.debounce": "^4.0.8",
+    "lodash.throttle": "^4.1.1",
     "lucide-react": "^0.408.0",
     "moment": "^2.30.1",
     "otp-timer-ts": "^3.0.1",
@@ -63,6 +64,6 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.1",
     "rollup-plugin-visualizer": "^5.12.0",
-    "vite": "^4.4.0"
+    "vite": "^4.5.3"
   }
 }

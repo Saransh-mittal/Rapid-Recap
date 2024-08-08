@@ -17,7 +17,7 @@ import {
 } from '@chakra-ui/react'
 import Countdown from './Countdown'
 import { motion } from 'framer-motion'
-import { ArrowRight } from 'lucide-react'
+import ArrowRightSVG from '../../assets/svg/ArrowRightSVG'
 
 const ModalComponent = ({
   isAnswered,
@@ -130,7 +130,13 @@ const ModalComponent = ({
                     <Button
                       borderRadius={'full'}
                       color={'white'}
-                      rightIcon={<ArrowRight />}
+                      rightIcon={
+                        <ArrowRightSVG
+                          height={'20px'}
+                          width={'20px'}
+                          fill={'#fff'}
+                        />
+                      }
                       onClick={
                         showInstruction
                           ? startQuiz

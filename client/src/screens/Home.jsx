@@ -3,7 +3,7 @@ import React, { lazy, Suspense, useEffect, useState } from 'react'
 import axios from 'axios'
 
 import { useNavigate, useParams } from 'react-router-dom'
-import { debounce } from 'lodash'
+import debounce from 'lodash.debounce'
 import { useToast, Box, Spinner } from '@chakra-ui/react'
 
 import { Helmet } from 'react-helmet-async'

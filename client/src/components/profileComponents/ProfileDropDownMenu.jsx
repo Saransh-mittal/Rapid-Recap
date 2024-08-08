@@ -2,10 +2,10 @@ import { Avatar, Flex, Box } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import Inbox from '../Header-Footer/navbarComponents/Inbox'
-import { FaUserFriends } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import { NavLink } from 'react-router-dom'
+import UserFriendsSVG from '../../assets/svg/UserFriendsSVG'
 const itemVariants = {
   open: {
     opacity: 1,
@@ -156,7 +156,7 @@ const ProfileDropDownMenu = ({
               width={'100%'}
               justifyContent={'center'}
             >
-              <FaUserFriends size={22} />
+              <UserFriendsSVG fill={'white'} width={'20px'} height={'20px'} />
               {unreadFriendRequests !== 0 && (
                 <Box
                   h="8px"

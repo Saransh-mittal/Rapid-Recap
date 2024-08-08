@@ -8,7 +8,7 @@ import ReactionModal from './scrollableChatComponents/ReactionModal'
 import GroupedMessages from './scrollableChatComponents/GroupedMessages'
 import { groupMessagesByDate, formatTime } from '../../../utils/chat.utils'
 import { isMessageDeletedForUser } from '../config/ChatLogics'
-import { throttle } from 'lodash'
+import throttle from 'lodash.throttle';
 import useSound from '../../../customHooks/useSound'
 
 const ScrollableChat = ({
