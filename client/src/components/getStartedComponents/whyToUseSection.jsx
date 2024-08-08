@@ -3,11 +3,6 @@ import { Box, Flex } from '@chakra-ui/react'
 import Section from '../miscellaneous/Section'
 import Heading from '../miscellaneous/HeadingComponent'
 import BenefitCard from '../miscellaneous/CardComponent'
-import benefitIcon1 from '../../assets/benefits/icon-1.svg'
-import benefitIcon2 from '../../assets/benefits/icon-2.svg'
-import benefitIcon3 from '../../assets/benefits/icon-3.svg'
-import benefitIcon4 from '../../assets/benefits/icon-4.svg'
-import benefitImage2 from '../../assets/benefits/image-2.webp'
 import rrlogo from '/images/rrlogo.webp'
 import card1 from '../../assets/benefits/card-1.svg'
 import card2 from '../../assets/benefits/card-2.svg'
@@ -35,7 +30,7 @@ const WhyToUseSection = () => {
       backgroundUrl: card2,
       // iconUrl: benefitIcon2,
       imageUrl: rrlogo,
-      light: true,
+      // light: true,
     },
     {
       id: '2',
@@ -52,7 +47,7 @@ const WhyToUseSection = () => {
       backgroundUrl: card4,
       // iconUrl: benefitIcon4,
       imageUrl: rrlogo,
-      light: true,
+      // light: true,
     },
 
     {

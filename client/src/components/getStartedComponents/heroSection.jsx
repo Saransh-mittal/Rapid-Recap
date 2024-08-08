@@ -10,13 +10,31 @@ import {
 import { motion, useAnimation, useScroll, useTransform } from 'framer-motion'
 import Section from '../miscellaneous/Section'
 import curve from '../../assets/curve.webp'
-import laptop from '/images/laptop-frame-min.webp'
-import ipad from '/images/ipad-frame.webp'
-import mobile from '/images/mobile-frame.png'
-import { BackgroundCircles, MediumScreenbgGradient } from './design/Hero'
+
+// Laptop Images
+import laptopXl from '../../assets/hero/Laptop/laptop_xl.webp'
+import laptopLg from '../../assets/hero/Laptop/laptop_lg.webp'
+import laptopMd from '../../assets/hero/Laptop/laptop_md.webp'
+import laptopBase from '../../assets/hero/Laptop/laptop_base.webp'
+// Ipad Images
+import ipadXL from '../../assets/hero/Ipad/ipad_xl.webp'
+import ipadLg from '../../assets/hero/Ipad/ipad_lg.webp'
+import ipadMd from '../../assets/hero/Ipad/ipad_md.webp'
+import ipadBase from '../../assets/hero/Ipad/ipad_base.webp'
+// Mobile Images
+import mobileXL from '../../assets/hero/Mobile/mobile_xl.webp'
+import mobileLg from '../../assets/hero/Mobile/mobile_lg.webp'
+import mobileMd from '../../assets/hero/Mobile/mobile_md.webp'
+import mobileBase from '../../assets/hero/Mobile/mobile_base.webp'
+
+import {
+  BackgroundCircles,
+  // MediumScreenbgGradient
+} from './design/Hero'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
+// const laptop = '/images/laptop-frame-min.webp'
 
 const EnhancedHeroSection = () => {
   const parallaxRef = useRef(null)
@@ -139,9 +157,13 @@ const EnhancedHeroSection = () => {
               top={'-5%'}
               transform={{ base: 'translate(-50%, -50%)', md: 'none' }}
               zIndex={3}
-              h={{ base: '175px', md: '350px', lg: '400px', xl: '525px' }}
-              src={laptop}
+              width="auto"
+              height={{ base: '175px', md: '350px', lg: '400px', xl: '525px' }}
+              src={laptopXl}
+              srcSet={`${laptopXl} 525px, ${laptopLg} 400px, ${laptopMd} 350px, ${laptopBase} 175px`}
+              sizes="(max-width: 768px) 175px, (max-width: 1024px) 350px, (max-width: 1280px) 400px, 525px"
               alt="Article Interface"
+              loading="eager"
               style={{ y: laptopY }}
               whileHover="hover"
             />
@@ -154,9 +176,13 @@ const EnhancedHeroSection = () => {
               top={{ base: '10%', md: '22%', lg: '30%' }}
               transform={{ base: 'translateX(-50%)', md: 'none' }}
               zIndex={2}
-              h={{ base: '90px', md: '170px', lg: '180px', xl: '250px' }}
-              src={ipad}
+              width="auto"
+              height={{ base: '90px', md: '170px', lg: '180px', xl: '250px' }}
+              src={ipadXL}
+              srcSet={`${ipadBase} 90w, ${ipadMd} 170w, ${ipadLg} 180w, ${ipadXL} 250w`}
+              sizes="(max-width: 768px) 90px, (max-width: 1024px) 170px, (max-width: 1280px) 180px, 250px"
               alt="Quiz Instructions"
+              loading="eager"
               style={{ y: ipadY }}
               whileHover="hover"
             />
@@ -169,9 +195,13 @@ const EnhancedHeroSection = () => {
               top={{ base: '5%', md: '5%' }}
               transform={{ base: 'translateX(-50%)', md: 'none' }}
               zIndex={3}
-              h={{ base: '110px', md: '245px', lg: '275px', xl: '400px' }}
-              src={mobile}
+              width="auto"
+              height={{ base: '110px', md: '245px', lg: '275px', xl: '400px' }}
+              src={mobileXL}
+              srcSet={`${mobileBase} 110w, ${mobileMd} 245w, ${mobileLg} 275w, ${mobileXL} 400w`}
+              sizes="(max-width: 768px) 110px, (max-width: 1024px) 245px, (max-width: 1280px) 275px, 400px"
               alt="Quiz Interface"
+              loading="eager"
               style={{ y: mobileY }}
               whileHover="hover"
             />
@@ -181,7 +211,7 @@ const EnhancedHeroSection = () => {
         </Box>
       </Box>
 
-      <MediumScreenbgGradient
+      {/* <MediumScreenbgGradient
         top="18.25rem"
         left="-25.375rem"
         width="56.625rem"
@@ -190,7 +220,7 @@ const EnhancedHeroSection = () => {
         top="36.25rem"
         left="40.375rem"
         width="56.625rem"
-      />
+      /> */}
     </Section>
   )
 }
