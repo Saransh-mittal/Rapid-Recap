@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { setUser } from '../../redux/authSlice'
 import UserPlusSVG from '../../assets/svg/UserPlusSVG'
+import useSound from '../../customHooks/useSound'
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const toast = useToast()

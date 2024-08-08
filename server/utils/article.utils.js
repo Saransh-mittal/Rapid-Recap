@@ -484,9 +484,9 @@ const processCategories = async (
       language: 'en',
       pageSize: 10,
     }
-    if (country) {
-      options.country = country
-    }
+    // if (country) {
+    //   options.country = country
+    // }
 
     let articles = []
     if (category === 'sports') {
