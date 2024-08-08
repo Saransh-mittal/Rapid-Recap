@@ -1,6 +1,5 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TimelineItem from './TimelineItem'
-import { AppContext } from '../../contextAPI/appContext'
 import { useHomeTour } from '../../customHooks/useTours'
 import {
   Box,
@@ -15,13 +14,16 @@ import { useSwipeable } from 'react-swipeable' // Import the swipeable hook
 import { categories } from '../../assets/Categories'
 import { useNavigate, useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4' // Import Google Analytics library
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setCategory, setItemsState } from '../../redux/contentSlice'
+import { setPageRedux } from '../../redux/uiSlice'
 
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { state, dispatch } = useContext(AppContext)
   const { isAuthenticated, user } = useSelector(state => state.auth)
+  const dispatchRedux = useDispatch()
+  const { category } = useSelector(state => state.content)
   const [swipeDisable, setSwipeDisable] = useState(false)
   const { tour, isTutorialTakenCheck } = useHomeTour({ setSwipeDisable })
   const flexDirectionOfTimeline = useBreakpointValue({
@@ -34,12 +36,12 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const [isFixed, setIsFixed] = useState(false)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
 
-  const [activeCategory, setActiveCategory] = useState(state.category)
+  const [activeCategory, setActiveCategory] = useState(category)
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(
     categories?.findIndex(
       category =>
         category?.toLocaleLowerCase() ===
-        (state.category || 'all').toLocaleLowerCase(),
+        (category || 'all').toLocaleLowerCase(),
     ),
   )
   const categoryRefs = useRef([])
@@ -47,12 +49,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const handleActiveCategory = ({ category, shouldNavigateOrNot = true }) => {
     setHasMoreItems(true)
     setActiveCategory(category.toLowerCase())
-    dispatch({
-      type: 'category',
-      payloadCategory: category.toLowerCase(),
-    })
-    dispatch({ type: 'PAGE', payloadPage: 0 })
-    dispatch({ type: 'ITEMS', payloadItems: [] })
+    dispatchRedux(setCategory(category.toLowerCase()))
+    dispatchRedux(setPageRedux(0))
+    dispatchRedux(setItemsState([]))
     shouldNavigateOrNot && navigate(`/home/${category.toLowerCase()}`)
   }
 
@@ -139,41 +138,32 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   }
 
   return (
-    <div
-      className="pr-3 pl-1 timeline"
-      style={{
-        display: 'flex',
-        flexDirection: flexDirectionOfTimeline,
-        gap: '2%',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-      // Spread swipe handlers here
+    <Flex
+      className="timeline"
+      flexDirection={flexDirectionOfTimeline}
+      gap="2%"
+      position="relative"
+      overflow="hidden"
+      px={{ base: 3, lg: 1 }}
     >
       <Flex
         zIndex={999}
         transform={!isFixed ? 'translateY(0)' : 'translateY(-68%)'}
         transition="transform 0.3s ease-in-out"
-        padding={'1rem'}
-        w={{ base: '100%', lg: '15%' }}
-        h={{ base: 'auto', lg: '100vh' }}
-        position={'fixed'}
-        backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
-        // boxShadow={
-        //   '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
-        // }
-        borderBottom={'1px solid rgba(255, 255, 255, 0.1)'}
-        boxShadow={'0 2px 4px rgba(0, 0, 0, 0.1)'}
+        padding="1rem"
+        width={{ base: '100%', lg: '15%' }}
+        height={{ base: 'auto', lg: '100vh' }}
+        position="fixed"
+        backgroundColor="rgba(15, 13, 21, 0.4)"
+        borderBottom="1px solid rgba(255, 255, 255, 0.1)"
+        boxShadow="0 2px 4px rgba(0, 0, 0, 0.1)"
         style={{
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           borderImage:
             'linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1',
         }}
-        // backgroundImage={
-        //   'linear-gradient(-180deg, rgba(26, 21, 39, 0.8), rgba(14, 12, 22, 0.8) 88%, rgba(14, 12, 22, 0.8) 99%)'
-        // }
-        overflow={'auto'}
+        overflow="auto"
         sx={{
           '::-webkit-scrollbar': {
             width: '4px',
@@ -204,24 +194,13 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
           notLoggedIn={notLoggedIn}
         />
       </Flex>
-      <div
-        className="timeline-container"
-        {...(!swipeDisable && swipeHandlers)}
-        //style={!notLoggedIn && { paddingBottom: "6rem" }}
-      >
-        <div className="row item-container">
+      <Box className="timeline-container" {...(!swipeDisable && swipeHandlers)}>
+        <Flex wrap="wrap" justify="space-between">
           {data.map((item, id) => (
             <Flex
               mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
-              className="col-md-6 col-xxl-4 item"
+              className="item"
               key={id}
-              // onClick={() => {
-              //   navigate(`/article/${item._id}`)
-              //   dispatch({ type: 'setNews', payloadNews: item })
-              // }}
-              // _hover={{
-              //   cursor: 'pointer',
-              // }}
             >
               <TimelineItem
                 newsNumber={id}
@@ -230,45 +209,41 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
               />
             </Flex>
           ))}
-          {load && (
-            <Flex wrap="wrap" justify="space-between">
-              {renderSkeletons()}
-            </Flex>
-          )}
-        </div>
+          {load && renderSkeletons()}
+        </Flex>
         {notLoggedIn && (
           <Flex
-            marginTop={'2rem'}
-            height={'6rem'}
-            w={'100%'}
-            color={'white'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            borderRadius={'8px'}
-            padding={'1rem'}
-            textAlign={'center'}
+            marginTop="2rem"
+            height="6rem"
+            width="100%"
+            color="white"
+            justifyContent="center"
+            alignItems="center"
+            borderRadius="8px"
+            padding="1rem"
+            textAlign="center"
           >
-            <GetStarted innerText={'Login To Continue further'} />
+            <GetStarted innerText="Login To Continue further" />
           </Flex>
         )}
         {!hasMoreItems && (
           <Flex
-            marginTop={'2rem'}
-            height={'6rem'}
-            w={'100%'}
-            color={'white'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            borderRadius={'8px'}
-            padding={'1rem'}
-            paddingTop={'4rem'}
-            textAlign={'center'}
+            marginTop="2rem"
+            height="6rem"
+            width="100%"
+            color="white"
+            justifyContent="center"
+            alignItems="center"
+            borderRadius="8px"
+            padding="1rem"
+            paddingTop="4rem"
+            textAlign="center"
           >
             No more news to show
           </Flex>
         )}
-      </div>
-    </div>
+      </Box>
+    </Flex>
   )
 }
 export default Timeline

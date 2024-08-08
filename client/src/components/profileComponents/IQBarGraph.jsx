@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Bar } from 'react-chartjs-2'
 import {
   Button,
@@ -14,7 +14,6 @@ import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
 import axios from 'axios'
 import ExpectedIQModal from '../articleComponents/ExpectedIQModal'
-import { AppContext } from '../../contextAPI/appContext'
 import Lock from '/images/lock.webp'
 import useSound from '../../customHooks/useSound'
 import { useSelector } from 'react-redux'
@@ -25,7 +24,7 @@ const IQBarGraph = ({
   loginedUserProfile,
   viewingHistory = false,
 }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const [USER_IQ, setUSER_IQ] = useState(null) // [USER_IQ, setUSER_IQ
   const [TOP_PERCENT, setTOP_PERCENT] = useState(null)

@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
+import React, { useState, useEffect } from 'react'
 import {
   Button,
   Modal,
@@ -31,7 +30,7 @@ const EditProfileModal = ({
   leftProfileView,
   user,
 }) => {
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const [formData, setFormData] = useState(profileData)
   // console.log(profileData)
   // cs

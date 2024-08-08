@@ -15,7 +15,7 @@ import {
   StatGroup,
   Progress,
 } from '@chakra-ui/react'
-import { ArrowRight } from 'lucide-react'
+
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -27,6 +27,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import ArrowRightSVG from '../../../assets/svg/ArrowRightSVG'
 
 ChartJS.register(
   CategoryScale,
@@ -403,7 +404,13 @@ const SubmittedQuizInterface = ({
                   transition={{ delay: 0.5 }}
                 >
                   <Button
-                    rightIcon={<ArrowRight />}
+                    rightIcon={
+                      <ArrowRightSVG
+                        width={'20px'}
+                        height={'20px'}
+                        fill={'#fff'}
+                      />
+                    }
                     onClick={() => {
                       onViewReport()
                     }}

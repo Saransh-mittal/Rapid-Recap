@@ -9,11 +9,9 @@ import {
   Button,
 } from '@chakra-ui/react'
 import useSound from '../../../customHooks/useSound'
-import { AppContext } from '../../../contextAPI/appContext'
-import { useContext } from 'react'
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, message }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />

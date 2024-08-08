@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import {
   Modal,
@@ -11,13 +11,11 @@ import {
   Box,
   // Heading,
 } from '@chakra-ui/react'
-import { AppContext } from '../../../contextAPI/appContext'
 import IQLineGraph from '../../profileComponents/IQLineGraph'
 import Heading from '../../miscellaneous/HeadingComponent'
 
 const IQScoreModal = ({ setShowIQScoreModal }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { state } = useContext(AppContext)
   const [lineGraph, setLineGraph] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

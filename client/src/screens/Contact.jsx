@@ -1,7 +1,5 @@
-import { useContext, useEffect, useState, useRef } from 'react'
-import { AppContext } from '../contextAPI/appContext'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useDrag from '../customHooks/useDrag'
 import {
   Box,
   Flex,
@@ -16,13 +14,13 @@ import {
 import { Helmet } from 'react-helmet'
 import ButtonGradient from '../assets/svg/ButtonGradient'
 import ButtonComponent from '../components/miscellaneous/ButtonComponent'
-import { FaEnvelope, FaInstagram, FaLinkedin } from 'react-icons/fa'
 import Heading from '../components/miscellaneous/HeadingComponent'
+import EnvelopeSVG from '../assets/svg/EnvelopeSVG'
+import InstagramSVG from '../assets/svg/InstagramSVG'
+import LinkedinSVG from '../assets/svg/LinkedinSVG'
 
 const Contact = () => {
-  const { startDrag, drag, endDrag } = useDrag()
   const navigate = useNavigate()
-  const { state, dispatch } = useContext(AppContext)
   const buttonRef = useRef(null)
   const [isHovered, setIsHovered] = useState(false)
   const buttonStyle = {
@@ -56,9 +54,6 @@ const Contact = () => {
       </Helmet>
       <Flex
         minHeight="77vh"
-        onTouchStart={startDrag}
-        onTouchMove={e => drag(e.touches[0])}
-        onTouchEnd={endDrag}
         mt="4.5rem"
         className="contact-container"
         // width={"50%"}
@@ -175,8 +170,11 @@ const Contact = () => {
             >
               <Heading title={'Contact Information'} />
               <Text textAlign="center" mb={4} fontSize={'1.2rem'}>
-                <FaEnvelope
+                <EnvelopeSVG
                   style={{ display: 'inline-block', marginRight: '8px' }}
+                  fill={'#f9f9f9'}
+                  width={'20px'}
+                  height={'20px'}
                 />
                 Email:{' '}
                 <Link href="mailto:rapidrecap2k23@gmail.com" color="teal.200">
@@ -184,8 +182,11 @@ const Contact = () => {
                 </Link>
               </Text>
               <Text textAlign="center" mb={4} fontSize={'1.2rem'}>
-                <FaInstagram
+                <InstagramSVG
                   style={{ display: 'inline-block', marginRight: '8px' }}
+                  fill={'#f9f9f9'}
+                  width={'20px'}
+                  height={'20px'}
                 />
                 Instagram:{' '}
                 <Link
@@ -197,8 +198,11 @@ const Contact = () => {
                 </Link>
               </Text>
               <Text textAlign="center" mb={8} fontSize={'1.2rem'}>
-                <FaLinkedin
+                <LinkedinSVG
                   style={{ display: 'inline-block', marginRight: '8px' }}
+                  fill={'#f9f9f9'}
+                  width={'20px'}
+                  height={'20px'}
                 />
                 LinkedIn:{' '}
                 <Link

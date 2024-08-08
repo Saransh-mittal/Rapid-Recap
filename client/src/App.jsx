@@ -7,8 +7,6 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom'
-import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
-import '../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js'
 import ReactGA from 'react-ga4'
 import { useEffect, lazy, Suspense } from 'react'
 import { Helmet } from 'react-helmet'
@@ -118,6 +116,7 @@ const App = () => {
           dispatch(setUser(response.data))
         }
       } catch (error) {
+        dispatch(setUser(null))
         console.log(error)
       }
     }
@@ -126,7 +125,8 @@ const App = () => {
   }, [dispatch])
 
   const shouldShowFooter =
-    !location.pathname.includes('home') && location.pathname === '/'
+    !location.pathname.includes('home') &&
+    (location.pathname === '/' || location.pathname === '/get-started')
 
   const isSupported = () =>
     'Notification' in window &&
@@ -187,7 +187,7 @@ const App = () => {
           </Routes>
         </Suspense>
       </Box>
-      {shouldShowFooter && <Footer />}
+      {!shouldShowFooter && <Footer />}
     </>
   )
 }

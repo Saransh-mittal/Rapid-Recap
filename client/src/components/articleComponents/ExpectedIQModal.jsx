@@ -10,16 +10,15 @@ import {
   Text,
   useDisclosure,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import useSound from '../../customHooks/useSound'
-import { AppContext } from '../../contextAPI/appContext'
 
 const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   useEffect(() => {
     onOpen()
   }, [])
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   return (
     <>
       <Modal

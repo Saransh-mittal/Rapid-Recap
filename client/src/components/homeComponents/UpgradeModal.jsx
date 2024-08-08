@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import React from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -12,7 +12,6 @@ import {
   Text,
   Box,
 } from '@chakra-ui/react'
-import { AppContext } from './../../contextAPI/appContext'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
 import { motion } from 'framer-motion'
 import Lightning from '../profileComponents/RankAndSocietySubCompnents/Lightning'
@@ -23,10 +22,11 @@ import Arrow from '/images/arrow.webp'
 import Circle from '/images/circle.webp'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUser } from '../../redux/authSlice'
+import useSound from '../../customHooks/useSound'
 // const AnimatedText = motion(Text);
 
 const UpgradeModal = ({ isOpen, onClose }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
 

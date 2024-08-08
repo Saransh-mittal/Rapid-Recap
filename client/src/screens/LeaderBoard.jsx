@@ -13,7 +13,7 @@ import SocietyButtons from '../components/leaderBoardComponents/SocietyButtons'
 import LeaderBoardTable from '../components/leaderBoardComponents/LeaderBoardTable'
 import { useLeaderBoardTour } from '../customHooks/useTours'
 import medalIcon from '../assets/medal.webp'
-import { debounce } from 'lodash'
+import debounce from 'lodash.debounce'
 import Heading from '../components/miscellaneous/HeadingComponent'
 import { useSelector } from 'react-redux'
 

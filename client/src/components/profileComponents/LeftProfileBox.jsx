@@ -9,21 +9,20 @@ import {
   Spinner,
   Badge,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect, useState } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import EditProfileModal from './EditProfileModal'
 import NameLightning from '../miscellaneous/NameLightning'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
-import { FaUserPlus } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { setUser } from '../../redux/authSlice'
+import UserPlusSVG from '../../assets/svg/UserPlusSVG'
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const toast = useToast()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -249,9 +248,10 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                 onClick={handleRequestClick}
                 disabled={!canSendRequest || requestSent}
               >
-                <FaUserPlus
-                  size={20}
-                  color={!canSendRequest || requestSent ? 'grey' : 'white'}
+                <UserPlusSVG
+                  height={'20px'}
+                  width={'20px'}
+                  fill={!canSendRequest || requestSent ? 'grey' : 'white'}
                 />
               </Flex>
             )}

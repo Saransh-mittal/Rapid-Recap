@@ -1,12 +1,11 @@
 import { Avatar, Flex, Box } from '@chakra-ui/react'
-import React, { useContext, useState } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
-import { ChevronDownIcon } from '@chakra-ui/icons'
-import { NavLink } from 'react-router-dom'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import Inbox from '../Header-Footer/navbarComponents/Inbox'
-import { FaUserFriends } from 'react-icons/fa'
 import { useSelector } from 'react-redux'
+import useSound from '../../customHooks/useSound'
+import { NavLink } from 'react-router-dom'
+import UserFriendsSVG from '../../assets/svg/UserFriendsSVG'
 const itemVariants = {
   open: {
     opacity: 1,
@@ -47,11 +46,12 @@ const ProfileDropDownMenu = ({
     backgroundColor: '#27374D',
   }
 
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
+  const { unreadFriendRequests } = useSelector(state => state.app)
 
   const [isOpen, setIsOpen] = useState(false)
-  // console.log(state.unreadFriendRequests)
+
   return (
     <Flex className={className} position={'relative'}>
       <motion.nav
@@ -84,18 +84,6 @@ const ProfileDropDownMenu = ({
           }}
         >
           <Flex position={'relative'}>
-            {profileNotif && (
-              <Box
-                h="10px"
-                w="10px"
-                bg={'red'}
-                borderRadius={'50%'}
-                position={'absolute'}
-                right={'-0.1rem'}
-                top={'-0.1rem'}
-                zIndex={2}
-              />
-            )}
             <Avatar src={user?.pic} h={'35px'} w={'35px'} rounded={'50%'} />
           </Flex>
           <motion.div
@@ -168,8 +156,8 @@ const ProfileDropDownMenu = ({
               width={'100%'}
               justifyContent={'center'}
             >
-              <FaUserFriends size={22} />
-              {state.unreadFriendRequests !== 0 && (
+              <UserFriendsSVG fill={'white'} width={'20px'} height={'20px'} />
+              {unreadFriendRequests !== 0 && (
                 <Box
                   h="8px"
                   w="8px"

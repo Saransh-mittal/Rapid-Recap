@@ -16,18 +16,18 @@ import {
   Badge,
   useDisclosure,
 } from '@chakra-ui/react'
-import React, { useContext } from 'react'
+import React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { BackgroundCircles, Rings, SideLines } from '../../design/Header'
-import { AppContext } from '../../../contextAPI/appContext'
 import LogoutButton from './LogoutButton'
 import GetStarted from './GetStarted'
 import NavBrand from './NavBrand'
 import Inbox from './Inbox'
-import { FaFacebookMessenger, FaUserFriends } from 'react-icons/fa'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import UserSearchDrawer from '../../miscellaneous/UserSearchDrawer'
 import { useSelector } from 'react-redux'
+import FaMessenger from '../../../assets/svg/FaMessenger'
+import UserFriendsSVG from '../../../assets/svg/UserFriendsSVG'
 
 const HamburgerModal = ({
   isOpen,
@@ -40,8 +40,8 @@ const HamburgerModal = ({
   setIsDrawerOpen,
   onOpenWiseWeb,
 }) => {
-  const { state } = useContext(AppContext)
   const { user } = useSelector(state => state.auth)
+  const { unreadFriendRequests } = useSelector(state => state.app)
 
   const { notification, openChat } = ChatState()
   const navigate = useNavigate()
@@ -180,7 +180,7 @@ const HamburgerModal = ({
                         {notification.length}
                       </Badge>
                     )}
-                    <FaFacebookMessenger size={25} />
+                    <FaMessenger width={'25px'} height={'25px'} fill={'#fff'} />
                   </Box>
                 </ListItem>
                 <ListItem
@@ -198,6 +198,8 @@ const HamburgerModal = ({
                     }}
                     notifyCont={notifyCont}
                     display={notLogined ? 'none' : 'flex'}
+                    h="25px"
+                    w="25px"
                   />
                 </ListItem>
                 <ListItem
@@ -207,15 +209,6 @@ const HamburgerModal = ({
                   alignItems={'center'}
                   gap={'0.25rem'}
                 >
-                  {/* <Inbox
-                    className={'inbox-button-lg'}
-                    onClick={() => {
-                      setIsDrawerOpen(true)
-                      onClose()
-                    }}
-                    notifyCont={notifyCont}
-                    display={notLogined ? 'none' : 'flex'}
-                  /> */}
                   <Flex
                     onClick={() => {
                       onClose(), onOpenWiseWeb()
@@ -224,8 +217,12 @@ const HamburgerModal = ({
                     justifyContent={'center'}
                     display={notLogined ? 'none' : 'block'}
                   >
-                    <FaUserFriends size={22} color="white" />
-                    {state.unreadFriendRequests !== 0 && (
+                    <UserFriendsSVG
+                      width={'25px'}
+                      height={'25px'}
+                      fill={'#fff'}
+                    />
+                    {unreadFriendRequests !== 0 && (
                       <Box
                         h="8px"
                         w="8px"

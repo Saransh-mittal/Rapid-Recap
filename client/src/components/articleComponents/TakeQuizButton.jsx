@@ -1,11 +1,10 @@
 import { Box, Button, Flex, Text } from '@chakra-ui/react'
-import React, { useContext, useState } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
+import React from 'react'
 import Bubbles from '../miscellaneous/bubbles'
+import { useSelector } from 'react-redux'
 
 const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
-  const { state } = useContext(AppContext)
-  const isBoosted = state.isBoosted
+  const { isBoosted } = useSelector(state => state.app)
 
   const buttonStyle = {
     border: isBoosted ? 'yellow solid 3px' : 'none',

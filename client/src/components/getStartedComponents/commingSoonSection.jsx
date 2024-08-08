@@ -1,32 +1,15 @@
-import {
-  Box,
-  Flex,
-  useColorModeValue,
-  Badge,
-  useMediaQuery,
-  Text,
-  Image,
-} from '@chakra-ui/react'
+import { Box, Flex, Badge, useMediaQuery, Image } from '@chakra-ui/react'
 import Heading from '../miscellaneous/HeadingComponent'
 import TagLine from '../miscellaneous/TaglineComponent'
-// import check2 from "../../assets/check-02.svg";
-// import loading1 from "../../assets/loading-01.svg";
-// import roadmap1 from "../../assets/roadmap/image-1.webp";
 import roadmap2 from '../../assets/roadmap/image-2.webp'
-// import roadmap3 from "../../assets/roadmap/image-3.webp";
 import roadmap4 from '../../assets/roadmap/image-4.webp'
 import roadmap5 from '../../assets/roadmap/bookmark.webp'
-// import seasonUpdate from "../../assets/roadmap/seasonUpdate.webp";
 import tournament from '../../assets/roadmap/tournament.webp'
 import grid from '../../assets/grid.webp'
-// import gradientImage from "../../assets/gradient.webp";
 import { useRef } from 'react'
 import Section from '../miscellaneous/Section'
 import { RepeatClockIcon, CheckIcon } from '@chakra-ui/icons'
-import {
-  BottomLine,
-  // , Gradient
-} from './design/Roadmap'
+import { BottomLine, Gradient } from './design/Roadmap'
 
 const roadmap = [
   {
@@ -199,16 +182,16 @@ const CommigSoonSection = () => {
                   </Box>
                 )
               })}
-              {/* <Gradient
-                top={"18.25rem"}
-                left={"-20.375rem"}
-                width={"56.625rem"}
+              <Gradient
+                top={'18.25rem'}
+                left={'-20.375rem'}
+                width={'56.625rem'}
               />
               <Gradient
-                top={"62.25rem"}
-                left={"50.375rem"}
-                width={"56.625rem"}
-              /> */}
+                top={'62.25rem'}
+                left={'50.375rem'}
+                width={'56.625rem'}
+              />
             </Flex>
           </Box>
         </Box>

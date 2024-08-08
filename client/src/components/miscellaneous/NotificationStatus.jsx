@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useContext } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -26,12 +26,11 @@ import {
   Center,
 } from '@chakra-ui/react'
 import useSound from '../../customHooks/useSound'
-import { AppContext } from '../../contextAPI/appContext'
 
 const NotificationStatus = ({ isOpen, onClose, data, isLoading }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [isMobile] = useMediaQuery('(max-width: 48em)')
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   const filteredUsers = useMemo(() => {
     if (!data) return []

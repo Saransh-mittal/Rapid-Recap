@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -27,13 +27,13 @@ import {
   handleSliderChange,
   getLabelForValue,
 } from './utils/formState'
-import { AppContext } from '../../../contextAPI/appContext'
 import { useSelector } from 'react-redux'
+import useSound from '../../../customHooks/useSound'
 
 const FeedbackModal = ({ isOpen, onClose }) => {
   const toast = useToast()
   const { isAuthenticated, user } = useSelector(state => state.auth)
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const loggedIn = isAuthenticated
   const [formState, setFormState] = useState(initialFormState)
   const [quizIssueAnswer, setQuizIssueAnswer] = useState('no')

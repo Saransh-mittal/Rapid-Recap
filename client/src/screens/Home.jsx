@@ -1,13 +1,15 @@
-import React, { lazy, Suspense, useContext, useEffect, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useState } from 'react'
 // import Timeline from "../components/homeComponents/Timeline";
 import axios from 'axios'
-import { AppContext } from '../contextAPI/appContext'
+
 import { useNavigate, useParams } from 'react-router-dom'
-import { debounce } from 'lodash'
+import debounce from 'lodash.debounce'
 import { useToast, Box, Spinner } from '@chakra-ui/react'
 
 import { Helmet } from 'react-helmet-async'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setPageRedux } from '../redux/uiSlice'
+import { setCategory, setItemsState } from '../redux/contentSlice'
 
 const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
 const UpgradeModal = lazy(() =>
@@ -15,24 +17,31 @@ const UpgradeModal = lazy(() =>
 )
 
 const Home = () => {
-  const { state, dispatch } = useContext(AppContext)
-  const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { isAuthenticated, user, loginCheckStatus } = useSelector(
+    state => state.auth,
+  )
+  const { page: statePage } = useSelector(state => state.ui)
+  const { items: stateItems, category: stateCategory } = useSelector(
+    state => state.content,
+  )
+  const dispatchRedux = useDispatch()
 
   let notLoggedIn = !isAuthenticated
 
-  const [items, setItems] = useState(state.items)
-  const [page, setPage] = useState(state.page + 1)
+  const [items, setItems] = useState(stateItems)
+  const [page, setPage] = useState(statePage + 1)
   const toast = useToast()
   const [load, setLoad] = useState(true)
   const navigate = useNavigate()
   const { category } = useParams()
   const [showUpgradeModal, setShowUpgradeModal] = useState(true)
   const [hasMoreItems, setHasMoreItems] = useState(true)
-  const [prevCategory, setPrevCategory] = useState(state.category)
+  const [prevCategory, setPrevCategory] = useState(stateCategory)
 
   const USER_IQ = user?.IQ_score ?? null
 
   async function fetchData() {
+    if (loginCheckStatus === 'pending') return
     if (!hasMoreItems) {
       setLoad(false)
       return
@@ -55,11 +64,8 @@ const Home = () => {
       if (newItems.length === 0) {
         setHasMoreItems(false)
       } else {
-        dispatch({ type: 'PAGE', payloadPage: page - 1 })
-        dispatch({
-          type: 'ITEMS',
-          payloadItems: [...items, ...newItems],
-        })
+        dispatchRedux(setPageRedux(page - 1))
+        dispatchRedux(setItemsState([...items, ...newItems]))
         setItems(prev => [...prev, ...newItems])
       }
     } catch (error) {
@@ -99,18 +105,10 @@ const Home = () => {
     if (!category || category === '') {
       navigate('/home/all')
     }
-
-    dispatch({ type: 'homeInitialRender' })
     window.addEventListener('scroll', debouncedHandleScroll)
-
-    dispatch({ type: 'setNews', payloadNews: {} })
 
     return () => window.removeEventListener('scroll', debouncedHandleScroll)
   }, [isAuthenticated, category])
-
-  useEffect(() => {
-    if (!state.modal) dispatch({ type: 'setNews', payloadNews: {} })
-  }, [state.modal])
 
   useEffect(() => {
     if (category !== prevCategory) {
@@ -118,9 +116,13 @@ const Home = () => {
       setPage(1)
       setItems([])
       setHasMoreItems(true)
-      dispatch({ type: 'category', payloadCategory: category })
-      dispatch({ type: 'PAGE', payloadPage: 0 })
-      dispatch({ type: 'ITEMS', payloadItems: [] })
+      dispatchRedux(
+        setCategory(
+          category !== '' && category ? category.toLocaleLowerCase() : category,
+        ),
+      )
+      dispatchRedux(setPageRedux(0))
+      dispatchRedux(setItemsState([]))
       setPrevCategory(category)
     } else if (items.length < page * 9) {
       // Same category, need to fetch more items
@@ -128,7 +130,7 @@ const Home = () => {
     } else {
       setLoad(false)
     }
-  }, [category, page, prevCategory])
+  }, [category, page, prevCategory, loginCheckStatus])
 
   return (
     <Box marginTop={'4rem'} w={'100%'}>

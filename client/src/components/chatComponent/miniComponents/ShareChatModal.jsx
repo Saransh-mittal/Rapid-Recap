@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -21,7 +21,6 @@ import {
 import axios from 'axios'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import useSound from '../../../customHooks/useSound'
-import { AppContext } from '../../../contextAPI/appContext'
 import { CopyIcon } from '@chakra-ui/icons'
 const socialPlatforms = [
   { name: 'whatsapp', logo: '/images/whatsapp-logo.png', color: '#25D366' },
@@ -37,7 +36,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const [loading, setLoading] = useState(true)
   const { user, socket, socketConnected } = ChatState()
   const toast = useToast()
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   useEffect(() => {
     if (isOpen) fetchChats()

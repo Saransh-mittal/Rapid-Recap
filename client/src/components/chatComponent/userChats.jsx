@@ -13,7 +13,7 @@ import {
   Image,
   Heading,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ChatState } from '../../contextAPI/ChatProvider'
 import ChatSideDrawer from './ChatSideDrawer'
 import ChatLoading from './ChatLoading'
@@ -23,7 +23,6 @@ import {
   getSenderFull,
   isSenderLoggedUser,
 } from './config/ChatLogics'
-import { AppContext } from '../../contextAPI/appContext'
 import axios from 'axios'
 import ButtonGradient from '../../assets/svg/ButtonGradient'
 import Button from '../miscellaneous/ButtonComponent'
@@ -33,7 +32,7 @@ import useSound from '../../customHooks/useSound'
 import { useSelector } from 'react-redux'
 
 const UserChats = ({ fetchAgain }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { user: loggedInUser } = useSelector(state => state.auth)
   const [loggedUser, setLoggedUser] = useState()
   const [showRequestsTab, setShowRequestsTab] = useState(false)

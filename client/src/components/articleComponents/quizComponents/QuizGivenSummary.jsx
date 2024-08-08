@@ -1,7 +1,6 @@
 import {
   Button,
   Flex,
-  Heading as ChakraHeading,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -12,15 +11,15 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import GivenQuizInterface from './GivenQuizInterface'
 import Loading from '../../miscellaneous/Loading'
 import Heading from '../../miscellaneous/HeadingComponent'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import useSound from '../../../customHooks/useSound'
-import { AppContext } from '../../../contextAPI/appContext'
+import ArrowLeftSVG from '../../../assets/svg/ArrowLeftSVG'
+import ArrowRightSVG from '../../../assets/svg/ArrowRightSVG'
 const QuizGivenSummary = ({
   isOpen,
   onClose,
@@ -37,7 +36,7 @@ const QuizGivenSummary = ({
   )
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [timeTaken, setTimeTaken] = useState(timeTakenInitial)
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   const fetchQuizSummary = async () => {
     try {
@@ -182,7 +181,13 @@ const QuizGivenSummary = ({
                     <Button
                       borderRadius={'full'}
                       color={'white'}
-                      rightIcon={<ArrowRight />}
+                      rightIcon={
+                        <ArrowRightSVG
+                          width={'20px'}
+                          height={'20px'}
+                          fill={'#fff'}
+                        />
+                      }
                       onClick={handleNextQuestion}
                       mt={5}
                       size={'lg'}
@@ -211,7 +216,13 @@ const QuizGivenSummary = ({
                       w={'100%'}
                       borderRadius={'full'}
                       color={'white'}
-                      leftIcon={<ArrowLeft />}
+                      leftIcon={
+                        <ArrowLeftSVG
+                          width={'20px'}
+                          height={'20px'}
+                          fill={'#fff'}
+                        />
+                      }
                       onClick={handlePrevQuestion}
                       mt={5}
                       size={'lg'}

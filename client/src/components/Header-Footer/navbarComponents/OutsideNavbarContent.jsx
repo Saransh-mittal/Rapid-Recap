@@ -6,7 +6,7 @@ import {
   Spinner,
   useDisclosure,
 } from '@chakra-ui/react'
-import React, { useContext } from 'react'
+import React from 'react'
 // import Inbox from './Inbox'
 import StreakFire from './StreakFire'
 import ProfileDropDownMenu from '../../profileComponents/ProfileDropDownMenu'
@@ -14,16 +14,13 @@ import { HamburgerIcon } from '@chakra-ui/icons'
 import GetStarted from './GetStarted'
 import XPLevel from './XPLevel'
 import IQScore from './IQScore'
-import { AppContext } from '../../../contextAPI/appContext'
-// import { FaFacebookMessenger } from "react-icons/fa";
-// import Messenger from "../../../screens/Messenger";
-import { FaFacebookMessenger } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import { SearchIcon } from '@chakra-ui/icons'
 import UserSearchDrawer from '../../miscellaneous/UserSearchDrawer'
 import useSound from '../../../customHooks/useSound'
 import { useSelector } from 'react-redux'
+import FaMessenger from '../../../assets/svg/FaMessenger'
 
 const OutsideNavbarContent = ({
   setIsDrawerOpen,
@@ -45,14 +42,14 @@ const OutsideNavbarContent = ({
   onOpenWiseWeb,
 }) => {
   const { user } = useSelector(state => state.auth)
+  const { unreadFriendRequests } = useSelector(state => state.app)
   const isEmptyObject = obj => {
     return obj && Object.keys(obj).length === 0
   }
-  const { state, playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { notification } = ChatState()
   const navigate = useNavigate()
-  // console.log('unread freined', state.unreadFriendRequests)
-  // console.log('notify ciunt', notifyCont)
+
   const {
     isOpen: isOpenUserSearch,
     onOpen: onOpenUserSearch,
@@ -177,7 +174,7 @@ const OutsideNavbarContent = ({
                     {notification.length}
                   </Badge>
                 )}
-                <FaFacebookMessenger size={23} />
+                <FaMessenger width={'23px'} />
               </Box>
             )}
           </>
@@ -194,7 +191,7 @@ const OutsideNavbarContent = ({
               notifyCont={notifyCont}
               onOpenWiseWeb={onOpenWiseWeb}
             />
-            {(state.unreadFriendRequests !== 0 || notifyCont !== 0) && (
+            {(unreadFriendRequests !== 0 || notifyCont !== 0) && (
               <Box
                 h="14px"
                 w="14px"
@@ -227,7 +224,7 @@ const OutsideNavbarContent = ({
                 width={'10px'}
                 position={'relative'}
               >
-                {(state.unreadFriendRequests > 0 ||
+                {(unreadFriendRequests > 0 ||
                   (Array.isArray(notification) && notification.length > 0)) && (
                   <Box
                     h="14px"
@@ -241,7 +238,7 @@ const OutsideNavbarContent = ({
                   />
                 )}
                 <HamburgerIcon height={'35px'} width={'20px'} />
-                {(state.unreadFriendRequests !== 0 || notifyCont !== 0) && (
+                {(unreadFriendRequests !== 0 || notifyCont !== 0) && (
                   <Box
                     h="15px"
                     w="15px"

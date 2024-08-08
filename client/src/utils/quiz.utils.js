@@ -1,42 +1,32 @@
-import axios from "axios";
+import axios from 'axios'
+import { fetchDailyStreak } from '../redux/appSlice'
+import { useSelector } from 'react-redux'
 
 const quinBoostChecker = async ({
   setIsQuinBoostAvailable,
   setQuizLeftToGetQuizBoost,
 }) => {
   try {
-    const response = await axios.get(`/api/user/quinBoostChecker`);
+    const response = await axios.get(`/api/user/quinBoostChecker`)
 
     if (response.status === 200) {
-      setQuizLeftToGetQuizBoost(response.data.quizLeftToGetQuizBoost);
-      setIsQuinBoostAvailable(response.data.isQuinBoostAvailable);
+      setQuizLeftToGetQuizBoost(response.data.quizLeftToGetQuizBoost)
+      setIsQuinBoostAvailable(response.data.isQuinBoostAvailable)
     }
   } catch (error) {
-    console.log(error);
+    console.log(error)
   }
-};
+}
 
-const dailyStreakCheckerAndUpdater = async ({ dispatch }) => {
+const dailyStreakCheckerAndUpdater = async dispatch => {
+  console.log('Checking daily streak...')
   try {
-    const res = await axios.get(`/api/user/streakChecker`);
-    //console.log(res);
-    if (res.status === 200) {
-      dispatch({
-        type: "setIsBoosted",
-        payloadIsBoosted: res.data.isBoosted,
-      });
-      dispatch({
-        type: "setDailyStreak",
-        payloadDailyStreak: res.data.streak,
-      });
-      dispatch({
-        type: "setLongestDailyStreak",
-        payloadLongestDailyStreak: res.data.longestStreak,
-      });
-    }
+    await dispatch(fetchDailyStreak()).unwrap()
+    // Optional: Do something with the result if needed
   } catch (error) {
-    console.error(error.message);
+    console.error('Failed to fetch daily streak:', error)
+    // Optional: Handle the error (e.g., show a notification to the user)
   }
-};
+}
 
-export { quinBoostChecker, dailyStreakCheckerAndUpdater };
+export { quinBoostChecker, dailyStreakCheckerAndUpdater }

@@ -1,7 +1,8 @@
 import React from 'react'
 import { Flex, FormControl, IconButton, Input, Box } from '@chakra-ui/react'
-import { BsEmojiSmile, BsBookmarkFill } from 'react-icons/bs'
 import EmojiPicker from 'emoji-picker-react'
+import FilledBookmarkSVG from '../../../../assets/svg/FilledBookmarkSVG'
+import EmojiSmileSVG from '../../../../assets/svg/EmojiSmileSVG'
 
 const MessageInput = ({
   sendMessage,
@@ -20,7 +21,7 @@ const MessageInput = ({
     <FormControl onKeyDown={sendMessage} id="first-name" isRequired mt={3}>
       <Flex position="relative" alignItems="center">
         <IconButton
-          icon={<BsEmojiSmile />}
+          icon={<EmojiSmileSVG width={'20px'} fill={'#fff'} />}
           onClick={() => {
             setShowEmojiPicker(!showEmojiPicker)
             setShowStickerPicker(false)
@@ -32,7 +33,7 @@ const MessageInput = ({
           borderRadius={'50%'}
         />
         <IconButton
-          icon={<BsBookmarkFill />}
+          icon={<FilledBookmarkSVG fill={'#fff'} width={'20px'} />}
           onClick={() => {
             setShowBookmarksModal(true)
             fetchBookmarks()

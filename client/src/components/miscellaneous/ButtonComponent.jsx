@@ -1,8 +1,7 @@
 import { useBreakpointValue } from '@chakra-ui/react'
 import ButtonSvg from '../../assets/svg/ButtonSvg'
-import React, { useContext } from 'react'
+import React from 'react'
 import useSound from '../../customHooks/useSound'
-import { AppContext } from '../../contextAPI/appContext'
 
 const Button = React.forwardRef((props, ref) => {
   const {
@@ -49,7 +48,7 @@ const Button = React.forwardRef((props, ref) => {
     textTransform: 'uppercase',
   }
 
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   return (
     <button

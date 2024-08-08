@@ -1,8 +1,7 @@
 import { EmailIcon } from '@chakra-ui/icons'
 import { Badge, Button, Flex } from '@chakra-ui/react'
-import React, { useContext } from 'react'
+import React from 'react'
 import useSound from '../../../customHooks/useSound'
-import { AppContext } from '../../../contextAPI/appContext'
 
 const Inbox = ({
   className,
@@ -13,7 +12,7 @@ const Inbox = ({
   h = '6',
   w = '6',
 }) => {
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   return (
     <>
       <Flex className={className} display={display}>

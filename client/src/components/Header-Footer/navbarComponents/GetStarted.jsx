@@ -1,14 +1,12 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { Button, useDisclosure } from '@chakra-ui/react'
 import './GetStarted.css'
 import Signin from '../../../screens/Signin'
 import useSound from '../../../customHooks/useSound'
-import { AppContext } from '../../../contextAPI/appContext'
 
 const GetStarted = ({ display = 'flex', innerText, hamburgerOnClose }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { playClick } = useContext(AppContext)
-
+  const { playClick } = useSound()
   return (
     <>
       <Button

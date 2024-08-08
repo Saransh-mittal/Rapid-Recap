@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Flex,
@@ -11,9 +11,6 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import { ViewIcon } from '@chakra-ui/icons'
-import { GiHistogram } from 'react-icons/gi'
-import { FaBookmark, FaUserFriends } from 'react-icons/fa'
-import { AppContext } from '../contextAPI/appContext'
 import IQLineGraph from '../components/profileComponents/IQLineGraph'
 import IQBarGraph from '../components/profileComponents/IQBarGraph'
 import LeftProfileBox from '../components/profileComponents/LeftProfileBox'
@@ -30,15 +27,19 @@ import ProfileExperienceLevel from '../components/profileComponents/ProfileExper
 import SeasonSelectorModal from '../components/profileComponents/SeasonSelectorModal.jsx'
 import ProfileButton from '../components/profileComponents/ProfileButton.jsx'
 import Bookmarks from '../components/profileComponents/Bookmarks.jsx'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setOtherUserProfiles, setUserProfile } from '../redux/contentSlice.js'
+import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
+import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 // import WiseWeb from '../components/profileComponents/WiseWeb.jsx'
 //
 export default function Profile() {
   const { tour, isTutorialTakenCheck } = useProfileTour()
   const { inGameName } = useParams()
-  const { state, dispatch, readFriendRequests } = useContext(AppContext)
   const { isAuthenticated, user } = useSelector(state => state.auth)
-  const [profile, setProfile] = useState(state.userProfile)
+  const { userProfile, otherUserProfiles } = useSelector(state => state.content)
+  const dispatchRedux = useDispatch()
+  const [profile, setProfile] = useState(userProfile)
   const [isLoading, setIsLoading] = useState(true)
   const [showHideModal, setShowHideModal] = useState(false)
   const userSocietyAndCircle = findSocietyAndCircle(user?.IQ_score)
@@ -75,17 +76,17 @@ export default function Profile() {
       const response = await axios.get(`/api/user/profile/${inGameName}`)
       setProfile(() => response.data)
       if (inGameName === user?.inGameName) {
-        dispatch({ type: 'profile', payloadProfile: response.data })
+        dispatchRedux(setUserProfile(response.data))
+
         localStorage.setItem('userProfile', JSON.stringify(response.data)) // Cache profile
       } else {
         setPrivacyProfileData(() => response.data.profilePrivacy)
-        dispatch({
-          type: 'otherUserProfiles',
-          payloadOtherUserProfiles: [
-            ...state.otherUserProfiles,
+        dispatchRedux(
+          setOtherUserProfiles([
+            ...otherUserProfiles,
             { profile: response.data, inGameName: inGameName },
-          ],
-        })
+          ]),
+        )
       }
     } catch (error) {
       console.log(error)
@@ -97,7 +98,7 @@ export default function Profile() {
   useEffect(() => {
     document.title = 'Profile page'
 
-    const otherUserStored = state.otherUserProfiles?.find(user => {
+    const otherUserStored = otherUserProfiles?.find(user => {
       return user?.inGameName === inGameName
     })
 
@@ -108,8 +109,8 @@ export default function Profile() {
         setProfile(parsedProfile)
         setIsLoading(false)
         fetchProfile()
-      } else if (state.userProfile) {
-        setProfile(state.userProfile)
+      } else if (userProfile) {
+        setProfile(userProfile)
         setIsLoading(false)
       } else {
         fetchProfile()
@@ -123,7 +124,7 @@ export default function Profile() {
     } else {
       fetchProfile()
     }
-  }, [user, inGameName])
+  }, [inGameName, user, userProfile, otherUserProfiles])
 
   useEffect(() => {
     if (
@@ -352,7 +353,13 @@ export default function Profile() {
                   Private={user?.profilePrivacy.seasonAnalytics}
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenSeasonSelector}
-                  icon={<GiHistogram />} // Add icon here
+                  icon={
+                    <HistogramSVG
+                      width={'20px'}
+                      height={'20px'}
+                      fill={'#fff'}
+                    />
+                  } // Add icon here
                   top={'0.9rem'}
                 />
 
@@ -400,7 +407,7 @@ export default function Profile() {
                   Private={true}
                   hoverAnimation={hoverAnimation}
                   onClick={onOpenBookmarks}
-                  icon={<FaBookmark />} // Add icon here
+                  icon={<BookmarkSVG width={'20px'} height={'20px'} />} // Add icon here
                 />
 
                 <Bookmarks

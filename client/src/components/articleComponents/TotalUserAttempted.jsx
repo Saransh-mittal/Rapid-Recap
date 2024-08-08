@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useContext, useRef } from 'react'
-import { Button, Flex, Text, Box } from '@chakra-ui/react'
-import { AppContext } from '../../contextAPI/appContext'
+import React, { useState, useEffect, useRef } from 'react'
+import { Text, Box } from '@chakra-ui/react'
 import { Chart, registerables } from 'chart.js'
 import axios from 'axios'
 Chart.register(...registerables)
 
 const TotalUserAttempted = ({
-  // css,
   totalUsersGivenQuiz,
   notLoggedIn,
   RQM_score,

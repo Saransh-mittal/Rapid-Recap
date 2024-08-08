@@ -1,7 +1,7 @@
 // File: chat.utils.js
 
 import axios from 'axios'
-import { debounce } from 'lodash'
+import debounce from 'lodash.debounce'
 
 // API Requests
 export const fetchMessagesApi = async chatId => {

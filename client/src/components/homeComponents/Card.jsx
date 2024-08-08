@@ -1,9 +1,9 @@
 import { Box, Flex, Slide } from '@chakra-ui/react'
-import { useRef, useContext, useEffect } from 'react'
-import { AppContext } from '../../contextAPI/appContext'
+import { useRef, useEffect } from 'react'
 import imageData from '../../assets/AltNewsImage'
 import { useNavigate } from 'react-router-dom'
 import rrImage from '/images/rr.webp'
+import useSound from '../../customHooks/useSound'
 
 const Card = ({ newsNumber, data }) => {
   //console.log("card :", data);
@@ -18,7 +18,7 @@ const Card = ({ newsNumber, data }) => {
     )
   })?.image
   //console.log(alt_img);
-  const { state, dispatch, playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const cardWrapper = useRef(null)
   const card = useRef(null)
   const project_meta = useRef(null)
@@ -72,7 +72,6 @@ const Card = ({ newsNumber, data }) => {
           //   : dispatch({ type: 'showModal', payloadModal: true })
           playClick()
           navigate(`/article/${newArticle._id}`)
-          dispatch({ type: 'setNews', payloadNews: newArticle })
         }}
         _hover={{
           cursor: 'pointer',

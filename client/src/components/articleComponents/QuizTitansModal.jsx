@@ -20,7 +20,7 @@ import {
   Flex,
   Heading,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Trophy from '/images/trophy.webp'
 import axios from 'axios'
 import Loading from '../miscellaneous/Loading'
@@ -28,7 +28,6 @@ import { useNavigate } from 'react-router-dom'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
 import NameLightning from '../miscellaneous/NameLightning'
 import useSound from '../../customHooks/useSound'
-import { AppContext } from '../../contextAPI/appContext'
 
 const QuizTitansModal = ({ setShowQuizTitans, quizSubmitted }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -36,7 +35,7 @@ const QuizTitansModal = ({ setShowQuizTitans, quizSubmitted }) => {
   const [rankers, setRankers] = useState([])
   const navigate = useNavigate()
   const toast = useToast()
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
 
   const fetchRankers = async () => {
     try {

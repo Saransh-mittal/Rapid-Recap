@@ -1,6 +1,6 @@
 // components/articleComponents/Sidebar.js
 
-import React, { useContext } from 'react'
+import React from 'react'
 import {
   Box,
   Heading,
@@ -21,9 +21,9 @@ import GivenQuiz from './GivenQuiz'
 import QuizExpired from './QuizExpired'
 import TakeQuizButton from './TakeQuizButton'
 import TotalUserAttempted from './TotalUserAttempted'
-import { AppContext } from '../../contextAPI/appContext'
 import { useSelector } from 'react-redux'
 import Signin from '../../screens/Signin'
+import useSound from '../../customHooks/useSound'
 
 const Sidebar = ({
   givenQuiz,
@@ -43,13 +43,12 @@ const Sidebar = ({
   articleHeight,
   article,
   id,
-  state,
   isQuizGivenLoading,
   onSigninOpen,
 }) => {
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
-  const { playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const toast = useToast()
 
   const isLoaded =

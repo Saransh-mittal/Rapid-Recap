@@ -1,9 +1,9 @@
 import React from 'react'
 import { Flex, Icon, Tooltip } from '@chakra-ui/react'
-import { Share2 } from 'lucide-react'
 import Button from '../miscellaneous/ButtonComponent'
 import ButtonGradient from '../../assets/svg/ButtonGradient'
 import { LockIcon } from '@chakra-ui/icons'
+import ShareSVG from '../../assets/svg/ShareSVG'
 
 const ShareButton = ({ onClick, isDisabled, onOpenSignin }) => {
   return (
@@ -31,7 +31,8 @@ const ShareButton = ({ onClick, isDisabled, onOpenSignin }) => {
         }
       >
         <Button onClick={onClick} buttonW="7rem" textColor={'white'}>
-          Share <Icon as={Share2} />
+          Share
+          <Icon as={ShareSVG} />
         </Button>
         <ButtonGradient />
       </Flex>

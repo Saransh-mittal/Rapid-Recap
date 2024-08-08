@@ -18,15 +18,14 @@ import {
   Tr,
   useDisclosure,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AppContext } from '../../../contextAPI/appContext'
 import useSound from '../../../customHooks/useSound'
 
 const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { dispatch, playClick } = useContext(AppContext)
+  const { playClick } = useSound()
   const { history } = solvedHistory
 
   const diffColor = {
@@ -134,10 +133,6 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                             height={'80px'}
                             key={_id}
                             onClick={() => {
-                              dispatch({
-                                type: 'setNews',
-                                payloadNews: newsArticle,
-                              })
                               navigate(`/article/${article}`)
                             }}
                             _hover={{

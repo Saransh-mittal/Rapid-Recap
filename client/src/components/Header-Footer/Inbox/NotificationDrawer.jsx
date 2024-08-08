@@ -22,13 +22,15 @@ import {
   ModalCloseButton,
   useMediaQuery,
 } from '@chakra-ui/react'
-import React, { useContext, useEffect, useState } from 'react'
-import { AppContext } from '../../../contextAPI/appContext'
+import React, { useEffect, useState } from 'react'
+
 import Rapid_recap from '/images/rrlogo.webp'
 import { DeleteIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import parse from 'html-react-parser'
 import useSound from '../../../customHooks/useSound'
+import { useDispatch, useSelector } from 'react-redux'
+import { setUpdates } from '../../../redux/appSlice'
 
 const NotificationDrawer = ({
   setIsDrawerOpen,
@@ -36,10 +38,12 @@ const NotificationDrawer = ({
   setSelectedNotification,
   setIsHamburgerOpen,
 }) => {
-  const { state, dispatch, playClick } = useContext(AppContext)
+  const { playClick } = useSound()
+  const dispatch = useDispatch()
+  const { updates } = useSelector(state => state.app)
   const toast = useToast()
   const isScreenSmallerThan48em = useMediaQuery('(max-width: 48em)')[0]
-  const [notificationData, setNotificationData] = useState(state.updates) // State for notification data
+  const [notificationData, setNotificationData] = useState(updates) // State for notification data
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false) // State for delete confirmation modal
   const [notificationToDelete, setNotificationToDelete] = useState(null) // State to store notification to delete
@@ -57,10 +61,7 @@ const NotificationDrawer = ({
         update._id === updateId ? { ...update, read: true } : update,
       )
       setNotificationData(updatedNotifications)
-      dispatch({
-        type: 'APP_UPDATES',
-        payloadAppUpdates: updatedNotifications,
-      })
+      dispatch(setUpdates(updatedNotifications))
     } catch (error) {
       toast({
         title: 'Error',
@@ -93,10 +94,7 @@ const NotificationDrawer = ({
         update => update._id !== notificationToDelete._id,
       )
       setNotificationData(updatedNotificationData)
-      dispatch({
-        type: 'APP_UPDATES',
-        payloadAppUpdates: updatedNotificationData,
-      })
+      dispatch(setUpdates(updatedNotificationData))
     } catch (error) {
       toast({
         title: 'Error',
@@ -119,10 +117,7 @@ const NotificationDrawer = ({
 
       if (response.status === 200) {
         setNotificationData([])
-        dispatch({
-          type: 'APP_UPDATES',
-          payloadAppUpdates: [],
-        })
+        dispatch(setUpdates([]))
         toast({
           title: 'Success',
           description: 'All notifications removed successfully',

@@ -27,10 +27,7 @@ import mobileLg from '../../assets/hero/Mobile/mobile_lg.webp'
 import mobileMd from '../../assets/hero/Mobile/mobile_md.webp'
 import mobileBase from '../../assets/hero/Mobile/mobile_base.webp'
 
-import {
-  BackgroundCircles,
-  // MediumScreenbgGradient
-} from './design/Hero'
+import { BackgroundCircles } from './design/Hero'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -182,7 +179,6 @@ const EnhancedHeroSection = () => {
               srcSet={`${ipadBase} 90w, ${ipadMd} 170w, ${ipadLg} 180w, ${ipadXL} 250w`}
               sizes="(max-width: 768px) 90px, (max-width: 1024px) 170px, (max-width: 1280px) 180px, 250px"
               alt="Quiz Instructions"
-              loading="eager"
               style={{ y: ipadY }}
               whileHover="hover"
             />
@@ -201,7 +197,6 @@ const EnhancedHeroSection = () => {
               srcSet={`${mobileBase} 110w, ${mobileMd} 245w, ${mobileLg} 275w, ${mobileXL} 400w`}
               sizes="(max-width: 768px) 110px, (max-width: 1024px) 245px, (max-width: 1280px) 275px, 400px"
               alt="Quiz Interface"
-              loading="eager"
               style={{ y: mobileY }}
               whileHover="hover"
             />
@@ -210,17 +205,6 @@ const EnhancedHeroSection = () => {
           </MotionBox>
         </Box>
       </Box>
-
-      {/* <MediumScreenbgGradient
-        top="18.25rem"
-        left="-25.375rem"
-        width="56.625rem"
-      />
-      <MediumScreenbgGradient
-        top="36.25rem"
-        left="40.375rem"
-        width="56.625rem"
-      /> */}
     </Section>
   )
 }
