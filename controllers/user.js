@@ -664,12 +664,49 @@ const profile = async (req, res) => {
 }
 
 const editProfile = async (req, res) => {
-  const { name, bio, pic } = req.body
+  const { name, bio, pic, inGameName } = req.body
   try {
+    if (inGameName) {
+      if (isValidEmail(inGameName)) {
+        return res
+          .status(422)
+          .json({ error: 'Email cannot be used as an In-Game Name' })
+      }
+
+      // InGameName cannot be greater than 16 characters
+      if (inGameName.length > 16) {
+        return res
+          .status(422)
+          .json({ error: 'In Game Name cannot be greater than 16 characters' })
+      }
+
+      if (inGameName.includes(' ')) {
+        return res
+          .status(422)
+          .json({ error: 'In Game Name cannot have spaces' })
+      }
+    }
     const user = await User.findById(req.user._id)
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }
+    if (inGameName && inGameName !== user.inGameName) {
+      const lastChangeDate = user.lastInGameNameChange || new Date(0)
+      const daysSinceLastChange = Math.floor(
+        (new Date() - lastChangeDate) / (1000 * 60 * 60 * 24),
+      )
+
+      if (daysSinceLastChange < 15) {
+        return res.status(400).json({
+          error: `You can change your in-game name after ${
+            15 - daysSinceLastChange
+          } days`,
+        })
+      }
+      user.inGameName = inGameName
+      user.lastInGameNameChange = new Date()
+    }
+    // user.inGameName = inGameName
     user.name = name
     user.bio = bio
     user.pic = pic

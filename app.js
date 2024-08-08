@@ -1,5 +1,6 @@
 const dotenv = require('dotenv')
 const bodyParser = require('body-parser')
+dotenv.config({ path: './config.env' })
 const express = require('express')
 const userRoutes = require('./router/userRoutes')
 const articleRoutes = require('./router/articleRoutes')
@@ -24,9 +25,24 @@ const Chat = require('./model/chatSchema')
 const User = require('./model/userSchema')
 const path = require('path')
 const http = require('http')
+// const compression = require('compression')
+// const helmet = require('helmet')
+// const rateLimit = require('express-rate-limit')
 
-dotenv.config({ path: './config.env' })
 const app = express()
+// app.use(
+//   compression({
+//     level: 6,
+//     threshold: 0,
+//     filter: () => true,
+//   }),
+// )
+// app.use(helmet())
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // limit each IP to 100 requests per windowMs
+// })
+// app.use(limiter)
 const server = http.createServer(app)
 
 // Body parser middleware

@@ -263,6 +263,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    lastInGameNameChange: {
+      type: Date,
+      default: null,
+    },
   },
   { collection: 'Users' },
 )
