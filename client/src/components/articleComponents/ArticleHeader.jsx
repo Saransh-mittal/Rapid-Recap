@@ -29,7 +29,6 @@ const ArticleHeader = ({
   isQuinBoostAvailable,
   quizLeftToGetQuizBoost,
   openModal,
-  quinTour,
   onSigninOpen,
 }) => {
   const { isAuthenticated } = useSelector(state => state.auth)
@@ -148,7 +147,6 @@ const ArticleHeader = ({
               notLoggedIn={notLoggedIn}
               toast={toast}
               isBoosted={isBoosted}
-              quinTour={quinTour}
             />
 
             <ShareButton

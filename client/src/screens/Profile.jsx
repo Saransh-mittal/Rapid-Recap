@@ -24,7 +24,6 @@ import { Helmet } from 'react-helmet'
 import { setOtherUserProfiles, setUserProfile } from '../redux/contentSlice.js'
 import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
 import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
-import { useProfileTour } from '../customHooks/useTours.js'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
 
 // Dynamic imports for code splitting
@@ -62,7 +61,6 @@ const Bookmarks = React.lazy(() =>
 )
 
 export default function Profile() {
-  const { tour, isTutorialTakenCheck } = useProfileTour()
   const { inGameName } = useParams()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
@@ -153,25 +151,6 @@ export default function Profile() {
       fetchProfile()
     }
   }, [inGameName, user, userProfile, otherUserProfiles, fetchProfile])
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      isAuthenticated &&
-      user &&
-      user?.tutorial.profilePage &&
-      loginedUserProfile
-    ) {
-      isTutorialTakenCheck({ page: 'profilePage', tour })
-    }
-  }, [
-    isLoading,
-    isAuthenticated,
-    user,
-    loginedUserProfile,
-    tour,
-    isTutorialTakenCheck,
-  ])
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)

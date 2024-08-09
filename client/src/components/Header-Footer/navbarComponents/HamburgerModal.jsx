@@ -18,7 +18,7 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { BackgroundCircles, Rings, SideLines } from '../../design/Header'
+import { BackgroundCircles, Rings, SideLines } from '../design/Header'
 import LogoutButton from './LogoutButton'
 import GetStarted from './GetStarted'
 import NavBrand from './NavBrand'

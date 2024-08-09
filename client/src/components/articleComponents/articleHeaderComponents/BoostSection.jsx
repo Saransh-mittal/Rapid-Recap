@@ -13,7 +13,6 @@ const BoostSection = React.memo(
     notLoggedIn,
     toast,
     isBoosted,
-    quinTour,
   }) => {
     const handleBoostClick = () => {
       playClick()
@@ -27,7 +26,7 @@ const BoostSection = React.memo(
         })
         return
       }
-      quinTour.complete()
+
       openModal()
     }
 

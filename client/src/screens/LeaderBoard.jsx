@@ -26,7 +26,6 @@ const Heading = React.lazy(() =>
   import('../components/miscellaneous/HeadingComponent'),
 )
 
-import { useLeaderBoardTour } from '../customHooks/useTours'
 import medalIcon from '../assets/medal.webp'
 
 const LeaderBoard = () => {
@@ -41,7 +40,6 @@ const LeaderBoard = () => {
   const [leaders, setLeaders] = useState([])
   const [searchResults, setSearchResults] = useState([])
   const [activeSociety, setActiveSociety] = useState(null)
-  const { tour, isTutorialTakenCheck } = useLeaderBoardTour()
 
   // Media query hooks
   const [isLgScreen] = useMediaQuery('(max-width: 1024px)')
@@ -141,17 +139,6 @@ const LeaderBoard = () => {
       window.removeEventListener('scroll', debouncedHandleScroll)
     }
   }, [isAuthenticated, debouncedHandleScroll])
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      isAuthenticated &&
-      user &&
-      user.tutorial.leaderBoardPage
-    ) {
-      isTutorialTakenCheck({ page: 'leaderBoardPage', tour })
-    }
-  }, [isLoading, isAuthenticated, user, isTutorialTakenCheck, tour])
 
   useEffect(() => {
     if (page > 1) {

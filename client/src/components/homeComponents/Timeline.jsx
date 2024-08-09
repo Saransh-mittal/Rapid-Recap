@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import TimelineItem from './TimelineItem'
-import { useHomeTour } from '../../customHooks/useTours'
 import {
   Box,
   Flex,
@@ -25,7 +24,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const dispatchRedux = useDispatch()
   const { category } = useSelector(state => state.content)
   const [swipeDisable, setSwipeDisable] = useState(false)
-  const { tour, isTutorialTakenCheck } = useHomeTour({ setSwipeDisable })
   const flexDirectionOfTimeline = useBreakpointValue({
     base: 'column',
     lg: 'row',
@@ -89,12 +87,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
       window.removeEventListener('scroll', handleScroll)
     }
   }, [prevScrollPos, isFixed, isSmallerThan992])
-
-  useEffect(() => {
-    if (!load && isAuthenticated && user && user.tutorial.homePage) {
-      // isTutorialTakenCheck({ page: "homePage", tour });
-    }
-  }, [load, isAuthenticated, user, isTutorialTakenCheck, tour])
 
   useEffect(() => {
     const pathCategory = location.pathname.split('/')[2] || 'all'
@@ -202,11 +194,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
               className="item"
               key={id}
             >
-              <TimelineItem
-                newsNumber={id}
-                data={item}
-                tourComplete={tour.complete}
-              />
+              <TimelineItem newsNumber={id} data={item} />
             </Flex>
           ))}
           {load && renderSkeletons()}

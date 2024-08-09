@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Box } from '@chakra-ui/react'
 
 export const Rings = () => {
   return (
@@ -36,8 +36,8 @@ export const Rings = () => {
         transform="translate(-50%, -50%)"
       />
     </Box>
-  );
-};
+  )
+}
 
 export const SideLines = () => {
   return (
@@ -59,8 +59,8 @@ export const SideLines = () => {
         bg="gray.600" // assuming bg-n-6 is a shade of gray
       />
     </>
-  );
-};
+  )
+}
 
 export const BackgroundCircles = () => {
   return (
@@ -93,5 +93,5 @@ export const BackgroundCircles = () => {
         borderRadius="full"
       />
     </>
-  );
-};
+  )
+}

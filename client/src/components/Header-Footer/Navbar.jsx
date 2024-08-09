@@ -15,7 +15,6 @@ import { CloseIcon } from '@chakra-ui/icons'
 import NotificationDrawer from './Inbox/NotificationDrawer'
 import DailyStreakModal from '../streakComponents/DailyStreakModal'
 import NotificationModal from './Inbox/NotificationModal'
-import { useDailyStreakTour } from '../../customHooks/useTours'
 import NavbarContent from './navbarComponents/NavbarContent'
 import OutsideNavbarContent from './navbarComponents/OutsideNavbarContent'
 import NavBrand from './navbarComponents/NavBrand'
@@ -67,7 +66,6 @@ const Navbar = () => {
   const [showDailyStreakModal, setShowDailyStreakModal] = useState(false)
   const [showXPLevelModal, setShowXPLevelModal] = useState(false)
   const [showIQScoreModal, setShowIQScoreModal] = useState(false)
-  const { tour, isTutorialTakenCheck } = useDailyStreakTour()
   const {
     isOpen: isOpenWiseWeb,
     onOpen: onOpenWiseWeb,
@@ -101,20 +99,6 @@ const Navbar = () => {
       setProfileNotif(false)
     }
   }, [unreadFriendRequests])
-
-  useEffect(() => {
-    const isEmptyObject = obj => {
-      return obj && Object.keys(obj).length === 0
-    }
-
-    if (
-      isAuthenticated &&
-      user &&
-      user.tutorial.dailyStreakPage &&
-      user.tutorial.homePage
-    )
-      isTutorialTakenCheck({ page: 'dailyStreakPage', tour })
-  }, [user, isAuthenticated, user?.tutorial?.homePage])
 
   useEffect(() => {
     //update notification count whose update is not read
@@ -305,7 +289,6 @@ const Navbar = () => {
               setShowDailyStreakModal={setShowDailyStreakModal}
               setShowXPLevelModal={setShowXPLevelModal}
               setShowIQScoreModal={setShowIQScoreModal}
-              tourComplete={tour.complete}
               streak={streak}
               isBoosted={isBoosted}
               getBackgroundColor={getBackgroundColor}

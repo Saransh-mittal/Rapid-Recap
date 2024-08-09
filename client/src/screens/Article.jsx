@@ -21,7 +21,6 @@ import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import { useSelector } from 'react-redux'
-import { useArticlePageTour, useQuinBoostTour } from '../customHooks/useTours'
 import imageData from '../assets/AltNewsImage'
 import debounce from 'lodash.debounce'
 import { quinBoostChecker } from '../utils/quiz.utils'
@@ -86,8 +85,6 @@ const Article = () => {
   const [selectLanForQuiz, setSelectLanForQuiz] = useState('english')
   const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false)
   const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5)
-  const { tour, isTutorialTakenCheck } = useArticlePageTour()
-  const { quinTour } = useQuinBoostTour()
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
   const [isLargerThan821] = useMediaQuery('(min-width: 821px)')
   const [bookmark, setBookmark] = useState(false)
@@ -366,24 +363,6 @@ const Article = () => {
   }, [article, textHeight])
 
   useEffect(() => {
-    if (!load && isAuthenticated && user && user.tutorial.articlePage) {
-      // isTutorialTakenCheck({ page: "articlePage", tour });
-    }
-  }, [load, isAuthenticated, user, user?.tutorial?.articlePage])
-
-  useEffect(() => {
-    if (
-      !load &&
-      isAuthenticated &&
-      user &&
-      user.tutorial.quinBoostPage &&
-      !user.tutorial.articlePage
-    ) {
-      // isTutorialTakenCheck({ page: "quinBoostPage", tour: quinTour });
-    }
-  }, [user, isAuthenticated, user?.tutorial?.articlePage, load])
-
-  useEffect(() => {
     setAlt_image(
       imageData.find(
         img =>
@@ -511,7 +490,6 @@ const Article = () => {
                 isQuinBoostAvailable={isQuinBoostAvailable}
                 quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
                 openModal={openModal}
-                quinTour={quinTour}
                 onSigninOpen={onSigninOpen}
               />
             </Flex>
@@ -549,7 +527,6 @@ const Article = () => {
                 onGoingQuiz={onGoingQuiz}
                 quizExpired={quizExpired}
                 isQuinBoostAvailable={isQuinBoostAvailable}
-                tour={tour}
                 trackGenerateQuizClick={trackGenerateQuizClick}
                 setShowQuizLangModal={setShowQuizLangModal}
                 setShowQuiz={setShowQuiz}
