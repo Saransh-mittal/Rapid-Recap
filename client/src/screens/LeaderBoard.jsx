@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Flex,
   Heading as ChakraHeading,
@@ -6,70 +7,89 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import axios from 'axios'
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import SearchBar from '../components/leaderBoardComponents/SearchBar'
-import SocietyButtons from '../components/leaderBoardComponents/SocietyButtons'
-import LeaderBoardTable from '../components/leaderBoardComponents/LeaderBoardTable'
+import debounce from 'lodash.debounce'
+import { useSelector } from 'react-redux'
+
+// Dynamic imports for code splitting
+const SearchBar = React.lazy(() =>
+  import('../components/leaderBoardComponents/SearchBar'),
+)
+const SocietyButtons = React.lazy(() =>
+  import('../components/leaderBoardComponents/SocietyButtons'),
+)
+const LeaderBoardTable = React.lazy(() =>
+  import('../components/leaderBoardComponents/LeaderBoardTable'),
+)
+const Heading = React.lazy(() =>
+  import('../components/miscellaneous/HeadingComponent'),
+)
+
 import { useLeaderBoardTour } from '../customHooks/useTours'
 import medalIcon from '../assets/medal.webp'
-import debounce from 'lodash.debounce'
-import Heading from '../components/miscellaneous/HeadingComponent'
-import { useSelector } from 'react-redux'
 
 const LeaderBoard = () => {
   const PAGE_LIMIT = 20
   const navigate = useNavigate()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const toast = useToast()
+
+  // State hooks
   const [isLoading, setIsLoading] = useState(true)
   const [searchLoad, setSearchLoad] = useState(false)
   const [leaders, setLeaders] = useState([])
   const [searchResults, setSearchResults] = useState([])
   const [activeSociety, setActiveSociety] = useState(null)
   const { tour, isTutorialTakenCheck } = useLeaderBoardTour()
+
+  // Media query hooks
   const [isLgScreen] = useMediaQuery('(max-width: 1024px)')
   const [isMdScreen] = useMediaQuery('(max-width: 820px)')
   const [isBaseScreen] = useMediaQuery('(max-width: 768px)')
+
+  // Pagination state
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [loadNextPage, setLoadNextPage] = useState(true)
 
-  const fetchLeaderBoard = async (society = '', page = 1) => {
-    if (!hasMore) {
-      setIsLoading(false)
-      setLoadNextPage(false)
-      return // Exit if no more items to load
-    }
-    try {
-      const response = await axios.get(
-        `/api/user/leaderboard?society=${society}&page=${page}&limit=${PAGE_LIMIT}`,
-      )
-      const fetchedLeaders = response.data.users
-      if (fetchedLeaders.length === 0) {
-        setHasMore(false)
+  const fetchLeaderBoard = useCallback(
+    async (society = '', page = 1) => {
+      if (!hasMore) {
+        setIsLoading(false)
+        setLoadNextPage(false)
         return
       }
-      setLeaders(prevLeaders => {
-        if (page === 1) return fetchedLeaders
-        return [...prevLeaders, ...fetchedLeaders]
-      })
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch leaderboard',
-        status: 'error',
-        duration: 9000,
-        isClosable: true,
-        position: 'top',
-      })
-    } finally {
-      setLoadNextPage(false)
-      setIsLoading(false)
-    }
-  }
+      try {
+        const response = await axios.get(
+          `/api/user/leaderboard?society=${society}&page=${page}&limit=${PAGE_LIMIT}`,
+        )
+        const fetchedLeaders = response.data.users
+        if (fetchedLeaders.length === 0) {
+          setHasMore(false)
+          return
+        }
+        setLeaders(prevLeaders => {
+          if (page === 1) return fetchedLeaders
+          return [...prevLeaders, ...fetchedLeaders]
+        })
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch leaderboard',
+          status: 'error',
+          duration: 9000,
+          isClosable: true,
+          position: 'top',
+        })
+      } finally {
+        setLoadNextPage(false)
+        setIsLoading(false)
+      }
+    },
+    [hasMore, PAGE_LIMIT, toast],
+  )
 
-  const handleLoginAlert = () => {
+  const handleLoginAlert = useCallback(() => {
     if (!isAuthenticated) {
       navigate('/signin')
       toast({
@@ -80,50 +100,46 @@ const LeaderBoard = () => {
         position: 'top',
       })
     }
-  }
+  }, [isAuthenticated, navigate, toast])
 
-  const handleSocietyButtonClick = society => {
-    setPage(1) // Reset page when society changes
-    if (activeSociety === society) {
-      setActiveSociety(null)
-      fetchLeaderBoard()
-    } else {
-      setActiveSociety(society)
-      fetchLeaderBoard(society)
-    }
-  }
-
-  const handleScroll = async () => {
-    try {
-      if (
-        window.innerHeight + document.documentElement.scrollTop + 500 >
-          document.documentElement.scrollHeight &&
-        hasMore
-      ) {
-        setLoadNextPage(true)
-        setPage(prevPage => prevPage + 1)
+  const handleSocietyButtonClick = useCallback(
+    society => {
+      setPage(1)
+      if (activeSociety === society) {
+        setActiveSociety(null)
+        fetchLeaderBoard()
+      } else {
+        setActiveSociety(society)
+        fetchLeaderBoard(society)
       }
-    } catch (error) {
-      console.log(error)
+    },
+    [activeSociety, fetchLeaderBoard],
+  )
+
+  const handleScroll = useCallback(async () => {
+    if (
+      window.innerHeight + document.documentElement.scrollTop + 500 >
+        document.documentElement.scrollHeight &&
+      hasMore
+    ) {
+      setLoadNextPage(true)
+      setPage(prevPage => prevPage + 1)
     }
-  }
+  }, [hasMore])
 
-  const debouncedHandleScroll = debounce(handleScroll, 300)
-
-  // useEffect(() => {
-  //   handleLoginAlert()
-  // }, [isAuthenticated])
+  const debouncedHandleScroll = useMemo(
+    () => debounce(handleScroll, 300),
+    [handleScroll],
+  )
 
   useEffect(() => {
     document.title = 'LeaderBoard Page'
-    //if (isAuthenticated) {
     fetchLeaderBoard()
-    //}
     window.addEventListener('scroll', debouncedHandleScroll)
     return () => {
       window.removeEventListener('scroll', debouncedHandleScroll)
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, debouncedHandleScroll])
 
   useEffect(() => {
     if (
@@ -134,13 +150,13 @@ const LeaderBoard = () => {
     ) {
       isTutorialTakenCheck({ page: 'leaderBoardPage', tour })
     }
-  }, [isLoading, isAuthenticated, user])
+  }, [isLoading, isAuthenticated, user, isTutorialTakenCheck, tour])
 
   useEffect(() => {
     if (page > 1) {
       fetchLeaderBoard(activeSociety, page)
     }
-  }, [page])
+  }, [page, activeSociety, fetchLeaderBoard])
 
   return (
     <Flex
@@ -152,18 +168,12 @@ const LeaderBoard = () => {
       <Flex
         margin={'20px'}
         justifyContent={'center'}
-        // alignItems={"center"}
         w={'100%'}
         flexDirection={'column'}
       >
         <Flex alignItems={'center'} justifyContent={'center'}>
           <ChakraHeading>
-            <Flex
-              alignItems={'center'}
-              w={'100%'}
-              justifyContent={'center'}
-              // alignItems={"center"}
-            >
+            <Flex alignItems={'center'} w={'100%'} justifyContent={'center'}>
               <Image
                 src={medalIcon}
                 alt="Rating"
@@ -188,37 +198,42 @@ const LeaderBoard = () => {
             </Flex>
           </ChakraHeading>
         </Flex>
-        <Flex
-          alignItems="center"
-          justifyContent="center"
-          marginBottom="20px"
-          marginTop={'20px'}
-        >
-          <SearchBar
-            setSearchResults={setSearchResults}
-            setSearchLoad={setSearchLoad}
+
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <Flex
+            alignItems="center"
+            justifyContent="center"
+            marginBottom="20px"
+            marginTop={'20px'}
+          >
+            <SearchBar
+              setSearchResults={setSearchResults}
+              setSearchLoad={setSearchLoad}
+            />
+          </Flex>
+
+          <SocietyButtons
+            activeSociety={activeSociety}
+            handleSocietyButtonClick={handleSocietyButtonClick}
+            searchLoad={searchLoad}
+            isLoading={isLoading}
           />
-        </Flex>
-        {/* <SocietyButtons
-          activeSociety={activeSociety}
-          handleSocietyButtonClick={handleSocietyButtonClick}
-          searchLoad={searchLoad}
-          isLoading={isLoading}
-        /> */}
-        <LeaderBoardTable
-          hasMore={hasMore}
-          PAGE_LIMIT={PAGE_LIMIT}
-          loadNextPage={loadNextPage}
-          leaders={leaders}
-          searchResults={searchResults}
-          searchLoad={searchLoad}
-          isBaseScreen={isBaseScreen}
-          isLgScreen={isLgScreen}
-          isMdScreen={isMdScreen}
-          currUserChar={user}
-          navigate={navigate}
-          setLoadNextPage={setLoadNextPage}
-        />
+
+          <LeaderBoardTable
+            hasMore={hasMore}
+            PAGE_LIMIT={PAGE_LIMIT}
+            loadNextPage={loadNextPage}
+            leaders={leaders}
+            searchResults={searchResults}
+            searchLoad={searchLoad}
+            isBaseScreen={isBaseScreen}
+            isLgScreen={isLgScreen}
+            isMdScreen={isMdScreen}
+            currUserChar={user}
+            navigate={navigate}
+            setLoadNextPage={setLoadNextPage}
+          />
+        </React.Suspense>
       </Flex>
     </Flex>
   )

@@ -1,11 +1,17 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react'
-// import Timeline from "../components/homeComponents/Timeline";
-import axios from 'axios'
+// /pages/Home.jsx
 
+import React, {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react'
+import axios from 'axios'
 import { useNavigate, useParams } from 'react-router-dom'
 import debounce from 'lodash.debounce'
 import { useToast, Box, Spinner } from '@chakra-ui/react'
-
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
 import { setPageRedux } from '../redux/uiSlice'
@@ -25,36 +31,32 @@ const Home = () => {
     state => state.content,
   )
   const dispatchRedux = useDispatch()
-
-  let notLoggedIn = !isAuthenticated
+  const navigate = useNavigate()
+  const { category } = useParams()
+  const toast = useToast()
 
   const [items, setItems] = useState(stateItems)
   const [page, setPage] = useState(statePage + 1)
-  const toast = useToast()
   const [load, setLoad] = useState(true)
-  const navigate = useNavigate()
-  const { category } = useParams()
   const [showUpgradeModal, setShowUpgradeModal] = useState(true)
   const [hasMoreItems, setHasMoreItems] = useState(true)
   const [prevCategory, setPrevCategory] = useState(stateCategory)
 
   const USER_IQ = user?.IQ_score ?? null
+  const notLoggedIn = !isAuthenticated
 
-  async function fetchData() {
-    if (loginCheckStatus === 'pending') return
-    if (!hasMoreItems) {
-      setLoad(false)
-      return
-    }
+  const fetchData = useCallback(async () => {
+    if (loginCheckStatus === 'pending' || !hasMoreItems) return
+
+    setLoad(true)
 
     try {
       const response =
-        (category === 'all' || !category || category === '') && !notLoggedIn
+        (category === 'all' || !category) && !notLoggedIn
           ? await axios.get(`/api/recommendation?page=${page}&pageSize=9`)
           : await axios.get(
               `/api/articles?page=${page}&pageSize=9&category=${
-                notLoggedIn &&
-                (category === 'all' || !category || category === '')
+                notLoggedIn && (category === 'all' || !category)
                   ? 'top'
                   : category
               }`,
@@ -69,7 +71,7 @@ const Home = () => {
         setItems(prev => [...prev, ...newItems])
       }
     } catch (error) {
-      console.log(error.message)
+      console.error(error.message)
       toast({
         title: 'Error',
         description: 'Failed to fetch news',
@@ -81,25 +83,33 @@ const Home = () => {
     } finally {
       setLoad(false)
     }
-  }
+  }, [
+    page,
+    category,
+    hasMoreItems,
+    loginCheckStatus,
+    notLoggedIn,
+    items,
+    dispatchRedux,
+    toast,
+  ])
 
-  const handleScroll = async () => {
-    try {
-      if (
-        !notLoggedIn &&
-        window.innerHeight + document.documentElement.scrollTop + 1000 >
-          document.documentElement.scrollHeight &&
-        hasMoreItems
-      ) {
-        setLoad(true)
-        setPage(prevPage => prevPage + 1)
-      }
-    } catch (error) {
-      console.log(error)
+  const handleScroll = useCallback(async () => {
+    if (
+      !notLoggedIn &&
+      window.innerHeight + document.documentElement.scrollTop + 1000 >
+        document.documentElement.scrollHeight &&
+      hasMoreItems
+    ) {
+      setLoad(true)
+      setPage(prevPage => prevPage + 1)
     }
-  }
+  }, [hasMoreItems, notLoggedIn])
 
-  const debouncedHandleScroll = debounce(handleScroll, 300)
+  const debouncedHandleScroll = useMemo(
+    () => debounce(handleScroll, 300),
+    [handleScroll],
+  )
 
   useEffect(() => {
     if (!category || category === '') {
@@ -108,11 +118,10 @@ const Home = () => {
     window.addEventListener('scroll', debouncedHandleScroll)
 
     return () => window.removeEventListener('scroll', debouncedHandleScroll)
-  }, [isAuthenticated, category])
+  }, [category, isAuthenticated, debouncedHandleScroll])
 
   useEffect(() => {
     if (category !== prevCategory) {
-      // Category has changed
       setPage(1)
       setItems([])
       setHasMoreItems(true)
@@ -125,12 +134,19 @@ const Home = () => {
       dispatchRedux(setItemsState([]))
       setPrevCategory(category)
     } else if (items.length < page * 9) {
-      // Same category, need to fetch more items
       fetchData()
     } else {
       setLoad(false)
     }
-  }, [category, page, prevCategory, loginCheckStatus])
+  }, [
+    category,
+    page,
+    prevCategory,
+    fetchData,
+    items.length,
+    dispatchRedux,
+    loginCheckStatus,
+  ])
 
   return (
     <Box marginTop={'4rem'} w={'100%'}>

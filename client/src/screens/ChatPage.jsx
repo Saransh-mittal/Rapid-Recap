@@ -1,4 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from 'react'
 import {
   Box,
   Flex,
@@ -8,12 +16,16 @@ import {
   DrawerBody,
   DrawerCloseButton,
   useMediaQuery,
+  Spinner,
 } from '@chakra-ui/react'
-import UserChats from '../components/chatComponent/userChats'
-import UserChatBox from '../components/chatComponent/userChatBox'
 import { ChatState } from '../contextAPI/ChatProvider'
 import { useNavigate } from 'react-router-dom'
 import chatBg from '../assets/hero/hero-bg.webp'
+
+const UserChats = lazy(() => import('../components/chatComponent/userChats'))
+const UserChatBox = lazy(() =>
+  import('../components/chatComponent/userChatBox'),
+)
 
 const ChatPage = () => {
   const {
@@ -31,11 +43,28 @@ const ChatPage = () => {
   const [contentHeight, setContentHeight] = useState('100vh')
   const contentRef = useRef(null)
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     closeChat()
     if (isLastRoute) navigate('/home')
     else navigate(-1)
-  }
+  }, [closeChat, isLastRoute, navigate])
+
+  const updateHeight = useCallback(() => {
+    if (contentRef.current) {
+      const viewportHeight = window.innerHeight
+      setContentHeight(`${viewportHeight}px`)
+    }
+  }, [])
+
+  useEffect(() => {
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
+    window.addEventListener('orientationchange', updateHeight)
+    return () => {
+      window.removeEventListener('resize', updateHeight)
+      window.removeEventListener('orientationchange', updateHeight)
+    }
+  }, [updateHeight])
 
   useEffect(() => {
     if (
@@ -45,31 +74,29 @@ const ChatPage = () => {
     ) {
       openChat()
     }
-  }, [isScreenSmallerThan992px])
+  }, [isScreenSmallerThan992px, isChatOpen, openChat])
 
-  useEffect(() => {
-    const updateHeight = () => {
-      if (contentRef.current) {
-        const viewportHeight = window.innerHeight
-        setContentHeight(`${viewportHeight}px`)
-      }
-    }
+  const MemoizedUserChats = useMemo(() => {
+    return user && <UserChats fetchAgain={fetchAgain} />
+  }, [user, fetchAgain])
 
-    updateHeight()
-    window.addEventListener('resize', updateHeight)
-    window.addEventListener('orientationchange', updateHeight)
-    return () => {
-      window.removeEventListener('resize', updateHeight)
-      window.removeEventListener('orientationchange', updateHeight)
-    }
-  }, [])
+  const MemoizedUserChatBox = useMemo(() => {
+    return (
+      user && (
+        <UserChatBox
+          selectedChat={selectedChat}
+          fetchAgain={fetchAgain}
+          setFetchAgain={setFetchAgain}
+        />
+      )
+    )
+  }, [user, selectedChat, fetchAgain, setFetchAgain])
 
   return (
     <div
       ref={contentRef}
       style={{
         width: '100%',
-        color: 'b',
         height: '100vh',
         overflow: 'hidden',
         position: 'fixed',
@@ -87,7 +114,7 @@ const ChatPage = () => {
           mr={{ base: 0, md: 10 }}
           h="85%"
         >
-          {user && <UserChats fetchAgain={fetchAgain} />}
+          <Suspense fallback={<Spinner />}>{MemoizedUserChats}</Suspense>
         </Flex>
 
         {/* Drawer for smaller screens */}
@@ -122,7 +149,7 @@ const ChatPage = () => {
                 h={contentHeight}
                 p={0}
               >
-                {user && <UserChats fetchAgain={fetchAgain} />}
+                <Suspense fallback={<Spinner />}>{MemoizedUserChats}</Suspense>
               </Flex>
               <Flex
                 display={{ base: selectedChat ? 'flex' : 'none', lg: 'none' }}
@@ -130,13 +157,9 @@ const ChatPage = () => {
                 h={contentHeight}
                 className="userChatBox"
               >
-                {user && (
-                  <UserChatBox
-                    selectedChat={selectedChat}
-                    fetchAgain={fetchAgain}
-                    setFetchAgain={setFetchAgain}
-                  />
-                )}
+                <Suspense fallback={<Spinner />}>
+                  {MemoizedUserChatBox}
+                </Suspense>
               </Flex>
             </DrawerBody>
           </DrawerContent>
@@ -150,13 +173,7 @@ const ChatPage = () => {
           h="85%"
           className="userChatBox"
         >
-          {user && (
-            <UserChatBox
-              selectedChat={selectedChat}
-              fetchAgain={fetchAgain}
-              setFetchAgain={setFetchAgain}
-            />
-          )}
+          <Suspense fallback={<Spinner />}>{MemoizedUserChatBox}</Suspense>
         </Flex>
       </Box>
     </div>
