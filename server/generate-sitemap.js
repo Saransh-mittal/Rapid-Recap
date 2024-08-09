@@ -38,7 +38,7 @@ async function generateSitemap() {
 
     // Fetch article IDs
     const articles = await Article.find()
-      .sort({ createdAt: -1 })
+      .sort({ dateTime: -1 })
       .limit(MAX_ARTICLES)
       .select('_id')
     const articleRoutes = articles.map(article => ({
