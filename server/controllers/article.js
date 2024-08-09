@@ -424,25 +424,26 @@ const hindiTranslation = async (req, res) => {
 }
 
 const testNewsApi = async (req, res) => {
-  const newsapi = new NewsAPI('fb29cd0efb7e4ed292134d083f457869')
+  const newsapi = new NewsAPI('d934f2488faf498aa6ba4a3be52bb439')
   console.log('Testing news api')
   try {
     let options = {
-      category: 'entertainment',
+      category: 'general',
       language: 'en',
       pageSize: 10,
+      country: 'in',
     }
     let articles = []
-    const entertainmentQueries = ['movies', 'music', 'bollywood']
-    options.pageSize = 5
+    // const entertainmentQueries = ['movies', 'music', 'bollywood']
+    // options.pageSize = 5
 
-    for (let query of entertainmentQueries) {
-      options.q = query
-      const response = await newsapi.v2.topHeadlines(options)
-      articles = articles.concat(response.articles)
-    }
-    // remove q parameter to get general entertainment news
-    delete options.q
+    // for (let query of entertainmentQueries) {
+    //   options.q = query
+    //   const response = await newsapi.v2.topHeadlines(options)
+    //   articles = articles.concat(response.articles)
+    // }
+    // // remove q parameter to get general entertainment news
+    // delete options.q
     const response = await newsapi.v2.topHeadlines(options)
     articles = articles.concat(response.articles)
     //console.log(response.articles[1]);
