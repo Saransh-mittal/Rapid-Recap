@@ -17,8 +17,6 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
   const [showQuizSummary, setShowQuizSummary] = useState(false)
   const { playClick } = useSound()
 
-  useEffect(() => {}, [percentile, RQM_score, articleId, css])
-
   return (
     <Box
       bgGradient="linear(to-b, rgba(42, 47, 79, 0.7), rgba(145, 127, 179, 0.7))"

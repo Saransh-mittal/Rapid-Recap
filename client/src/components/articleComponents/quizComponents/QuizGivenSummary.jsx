@@ -1,3 +1,11 @@
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from 'react'
 import {
   Button,
   Flex,
@@ -11,15 +19,17 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react'
-import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-import GivenQuizInterface from './GivenQuizInterface'
 import Loading from '../../miscellaneous/Loading'
-import Heading from '../../miscellaneous/HeadingComponent'
 import { motion } from 'framer-motion'
 import useSound from '../../../customHooks/useSound'
-import ArrowLeftSVG from '../../../assets/svg/ArrowLeftSVG'
-import ArrowRightSVG from '../../../assets/svg/ArrowRightSVG'
+
+// Lazy load components and assets
+const GivenQuizInterface = lazy(() => import('./GivenQuizInterface'))
+const Heading = lazy(() => import('../../miscellaneous/HeadingComponent'))
+const ArrowLeftSVG = lazy(() => import('../../../assets/svg/ArrowLeftSVG'))
+const ArrowRightSVG = lazy(() => import('../../../assets/svg/ArrowRightSVG'))
+
 const QuizGivenSummary = ({
   isOpen,
   onClose,
@@ -38,7 +48,7 @@ const QuizGivenSummary = ({
   const [timeTaken, setTimeTaken] = useState(timeTakenInitial)
   const { playClick } = useSound()
 
-  const fetchQuizSummary = async () => {
+  const fetchQuizSummary = useCallback(async () => {
     try {
       const response = await axios.get(`/api/quiz/summary/${articleId}`)
       setTimeTaken(response.data.timeTaken)
@@ -56,26 +66,29 @@ const QuizGivenSummary = ({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [articleId, toast])
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = useCallback(() => {
     playClick()
-    if (currentQuestionIndex < quizGivenSummary.length - 1) {
-      setCurrentQuestionIndex(prevIndex => prevIndex + 1)
-    }
-  }
+    setCurrentQuestionIndex(prevIndex =>
+      Math.min(prevIndex + 1, quizGivenSummary.length - 1),
+    )
+  }, [playClick, quizGivenSummary.length])
 
-  const handlePrevQuestion = () => {
+  const handlePrevQuestion = useCallback(() => {
     playClick()
-    if (currentQuestionIndex >= 1) {
-      setCurrentQuestionIndex(prevIndex => prevIndex - 1)
-    }
-  }
+    setCurrentQuestionIndex(prevIndex => Math.max(prevIndex - 1, 0))
+  }, [playClick])
 
   useEffect(() => {
     if (!fetchQuizSummaryFromAnotherComp) fetchQuizSummary()
     else setIsLoading(false)
-  }, [])
+  }, [fetchQuizSummary, fetchQuizSummaryFromAnotherComp])
+
+  const currentQuestion = useMemo(
+    () => quizGivenSummary[currentQuestionIndex],
+    [quizGivenSummary, currentQuestionIndex],
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '3xl' }}>
@@ -102,33 +115,34 @@ const QuizGivenSummary = ({
               alignItems={'center'}
             >
               <Flex flexDirection={'column'}>
-                <Heading
-                  title={`Total Time Taken: ${timeTaken} seconds`}
-                  tag={
-                    !quizGivenSummary[currentQuestionIndex].userAnswer
-                      ? 'Not Answered'
-                      : quizGivenSummary[currentQuestionIndex].isCorrect
-                      ? 'Correct'
-                      : 'Wrong'
-                  }
-                  tagMarginBottom={0}
-                  marginBottom="0"
-                  tagColor={
-                    !quizGivenSummary[currentQuestionIndex].userAnswer
-                      ? 'blue'
-                      : quizGivenSummary[currentQuestionIndex].isCorrect
-                      ? 'green'
-                      : 'red'
-                  }
-                  tagFontSize="xl"
-                  tagFontWeight="bold"
-                />
+                <Suspense fallback={<Loading />}>
+                  <Heading
+                    title={`Total Time Taken: ${timeTaken} seconds`}
+                    tag={
+                      !currentQuestion.userAnswer
+                        ? 'Not Answered'
+                        : currentQuestion.isCorrect
+                        ? 'Correct'
+                        : 'Wrong'
+                    }
+                    tagMarginBottom={0}
+                    marginBottom="0"
+                    tagColor={
+                      !currentQuestion.userAnswer
+                        ? 'blue'
+                        : currentQuestion.isCorrect
+                        ? 'green'
+                        : 'red'
+                    }
+                    tagFontSize="xl"
+                    tagFontWeight="bold"
+                  />
+                </Suspense>
               </Flex>
             </ModalHeader>
             <ModalCloseButton
               style={{
                 right: '10px',
-
                 transition: 'backgroundColor 0.3s, color 0.3s',
               }}
               onMouseEnter={() => setIsCloseButtonHovered(true)}
@@ -145,10 +159,12 @@ const QuizGivenSummary = ({
               px={'15px'}
               py={0}
             >
-              <GivenQuizInterface
-                quizGivenSummary={quizGivenSummary}
-                currentQuestionIndex={currentQuestionIndex}
-              />
+              <Suspense fallback={<Loading />}>
+                <GivenQuizInterface
+                  quizGivenSummary={quizGivenSummary}
+                  currentQuestionIndex={currentQuestionIndex}
+                />
+              </Suspense>
             </ModalBody>
             <ModalFooter
               pt={0}
@@ -158,8 +174,7 @@ const QuizGivenSummary = ({
               flexDirection={'column'}
             >
               <Text textColor={'white'} marginBottom={4} marginTop={2}>
-                Explanation:{' '}
-                {quizGivenSummary[currentQuestionIndex].explanation}
+                Explanation: {currentQuestion.explanation}
               </Text>
               <Flex
                 justifyContent={'center'}
@@ -178,27 +193,29 @@ const QuizGivenSummary = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Button
-                      borderRadius={'full'}
-                      color={'white'}
-                      rightIcon={
-                        <ArrowRightSVG
-                          width={'20px'}
-                          height={'20px'}
-                          fill={'#fff'}
-                        />
-                      }
-                      onClick={handleNextQuestion}
-                      mt={5}
-                      size={'lg'}
-                      width={'150px'}
-                      bg={'purple.500'}
-                      _hover={{
-                        bg: 'purple.600',
-                      }}
-                    >
-                      Next
-                    </Button>
+                    <Suspense fallback={<Loading />}>
+                      <Button
+                        borderRadius={'full'}
+                        color={'white'}
+                        rightIcon={
+                          <ArrowRightSVG
+                            width={'20px'}
+                            height={'20px'}
+                            fill={'#fff'}
+                          />
+                        }
+                        onClick={handleNextQuestion}
+                        mt={5}
+                        size={'lg'}
+                        width={'150px'}
+                        bg={'purple.500'}
+                        _hover={{
+                          bg: 'purple.600',
+                        }}
+                      >
+                        Next
+                      </Button>
+                    </Suspense>
                   </motion.div>
                 )}
                 {currentQuestionIndex >= 1 && (
@@ -212,28 +229,30 @@ const QuizGivenSummary = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Button
-                      w={'100%'}
-                      borderRadius={'full'}
-                      color={'white'}
-                      leftIcon={
-                        <ArrowLeftSVG
-                          width={'20px'}
-                          height={'20px'}
-                          fill={'#fff'}
-                        />
-                      }
-                      onClick={handlePrevQuestion}
-                      mt={5}
-                      size={'lg'}
-                      width={'150px'}
-                      bg={'purple.500'}
-                      _hover={{
-                        bg: 'purple.600',
-                      }}
-                    >
-                      Previous
-                    </Button>
+                    <Suspense fallback={<Loading />}>
+                      <Button
+                        w={'100%'}
+                        borderRadius={'full'}
+                        color={'white'}
+                        leftIcon={
+                          <ArrowLeftSVG
+                            width={'20px'}
+                            height={'20px'}
+                            fill={'#fff'}
+                          />
+                        }
+                        onClick={handlePrevQuestion}
+                        mt={5}
+                        size={'lg'}
+                        width={'150px'}
+                        bg={'purple.500'}
+                        _hover={{
+                          bg: 'purple.600',
+                        }}
+                      >
+                        Previous
+                      </Button>
+                    </Suspense>
                   </motion.div>
                 )}
               </Flex>

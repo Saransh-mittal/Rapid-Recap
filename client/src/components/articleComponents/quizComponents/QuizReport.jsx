@@ -1,9 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  Suspense,
+} from 'react'
 import ModalComponent from '../ModalComponent'
-import QuizGivenSummary from './QuizGivenSummary'
-import SubmittedQuizInterface from './SubmittedQuizInterface'
-import { Flex, Skeleton, useToast, Spinner } from '@chakra-ui/react'
+import { Flex, useToast, Spinner } from '@chakra-ui/react'
 import axios from 'axios'
+
+const QuizGivenSummary = React.lazy(() => import('./QuizGivenSummary'))
+const SubmittedQuizInterface = React.lazy(() =>
+  import('./SubmittedQuizInterface'),
+)
 
 const QuizReport = ({ isOpen, articleId, onClose }) => {
   const [showQuizSummary, setShowQuizSummary] = useState(false)
@@ -12,7 +21,8 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
   const [quizGivenSummary, setQuizGivenSummary] = useState([])
   const [result, setResult] = useState({})
   const toast = useToast()
-  const fetchQuizSummary = async () => {
+
+  const fetchQuizSummary = useCallback(async () => {
     try {
       const response = await axios.get(`/api/quiz/summary/${articleId}`)
       setTimeTaken(response.data.timeTaken)
@@ -31,23 +41,28 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
     } finally {
       setLoad(false)
     }
-  }
+  }, [articleId, toast])
+
   useEffect(() => {
     fetchQuizSummary()
-  }, [])
-  const renderModalBody = () => {
+  }, [fetchQuizSummary])
+
+  const renderModalBody = useCallback(() => {
     if (showQuizSummary) {
       return (
-        <QuizGivenSummary
-          timeTakenInitial={timeTaken}
-          quizGivenSummaryInitial={quizGivenSummary}
-          isOpen={isOpen}
-          onClose={() => setShowQuizSummary(false)}
-          articleId={articleId}
-          fetchQuizSummaryFromAnotherComp={true}
-        />
+        <Suspense fallback={<Spinner />}>
+          <QuizGivenSummary
+            timeTakenInitial={timeTaken}
+            quizGivenSummaryInitial={quizGivenSummary}
+            isOpen={isOpen}
+            onClose={() => setShowQuizSummary(false)}
+            articleId={articleId}
+            fetchQuizSummaryFromAnotherComp={true}
+          />
+        </Suspense>
       )
     }
+
     if (load) {
       return (
         <Flex
@@ -60,15 +75,26 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
         </Flex>
       )
     }
+
     return (
-      <SubmittedQuizInterface
-        isOpen={isOpen}
-        submitLoad={false}
-        result={result}
-        onViewReport={() => setShowQuizSummary(true)}
-      />
+      <Suspense fallback={<Spinner />}>
+        <SubmittedQuizInterface
+          submitLoad={false}
+          result={result}
+          onViewReport={() => setShowQuizSummary(true)}
+        />
+      </Suspense>
     )
-  }
+  }, [
+    showQuizSummary,
+    load,
+    timeTaken,
+    quizGivenSummary,
+    result,
+    isOpen,
+    articleId,
+  ])
+
   return (
     <ModalComponent
       load={load}
@@ -79,4 +105,4 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
   )
 }
 
-export default QuizReport
+export default React.memo(QuizReport)

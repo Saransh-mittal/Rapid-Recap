@@ -1,114 +1,113 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 
 const TrackTime = ({ userId, articleId }) => {
-  const [startTime, setStartTime] = useState(Date.now());
-  const [isTracking, setIsTracking] = useState(true);
-  const timeoutRef = useRef(null);
-  const lastActivityRef = useRef(Date.now());
+  const [startTime, setStartTime] = useState(Date.now())
+  const [isTracking, setIsTracking] = useState(true)
+  const timeoutRef = useRef(null)
+  const lastActivityRef = useRef(Date.now())
 
   const getInactiveTime = useCallback(() => {
-    if (window.matchMedia("(min-width: 1024px)").matches) return 3 * 60 * 1000; // 3 mins for large screens
-    if (window.matchMedia("(min-width: 768px)").matches) return 2 * 60 * 1000; // 2 mins for medium screens
-    return 60 * 1000; // 1 min for small screens
-  }, []);
+    return window.matchMedia('(min-width: 1024px)').matches
+      ? 3 * 60 * 1000 // 3 mins for large screens
+      : window.matchMedia('(min-width: 768px)').matches
+      ? 2 * 60 * 1000 // 2 mins for medium screens
+      : 60 * 1000 // 1 min for small screens
+  }, [])
 
   const handleUnload = useCallback(() => {
-    const endTime = Date.now();
-    const timeSpent = endTime - startTime;
+    const endTime = Date.now()
+    const timeSpent = endTime - startTime
 
     const payload = JSON.stringify({
       userId,
       articleId,
       timeSpent,
-    });
+    })
 
     if (navigator.sendBeacon) {
-      navigator.sendBeacon("/api/timeSpent", payload);
+      navigator.sendBeacon('/api/timeSpent', payload)
     } else {
-      // Fallback for browsers that don't support sendBeacon
-      fetch("/api/timeSpent", {
-        method: "POST",
+      fetch('/api/timeSpent', {
+        method: 'POST',
         body: payload,
         keepalive: true,
-      });
+      })
     }
-  }, [userId, articleId, startTime]);
+  }, [userId, articleId, startTime])
 
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden) {
-      handleUnload();
-      setIsTracking(false);
+      handleUnload()
+      setIsTracking(false)
     } else {
-      setStartTime(Date.now());
-      setIsTracking(true);
-      resetTimer();
+      setStartTime(Date.now())
+      setIsTracking(true)
+      resetTimer()
     }
-  }, [handleUnload]);
+  }, [handleUnload])
 
   const resetTimer = useCallback(() => {
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+      clearTimeout(timeoutRef.current)
     }
 
     if (isTracking) {
       timeoutRef.current = setTimeout(() => {
-        handleUnload();
-        setIsTracking(false);
-      }, getInactiveTime());
+        handleUnload()
+        setIsTracking(false)
+      }, getInactiveTime())
     }
-  }, [isTracking, handleUnload, getInactiveTime]);
+  }, [isTracking, handleUnload, getInactiveTime])
 
   const handleUserActivity = useCallback(() => {
-    const now = Date.now();
+    const now = Date.now()
     if (now - lastActivityRef.current > 1000) {
-      // Throttle events to every 1 second
-      lastActivityRef.current = now;
+      lastActivityRef.current = now
       if (!isTracking) {
-        setStartTime(now);
-        setIsTracking(true);
+        setStartTime(now)
+        setIsTracking(true)
       }
-      resetTimer();
+      resetTimer()
     }
-  }, [isTracking, resetTimer]);
+  }, [isTracking, resetTimer])
 
   useEffect(() => {
     const events = [
-      "touchstart",
-      "touchmove",
-      "scroll",
-      "mousemove",
-      "mousedown",
-      "keypress",
-    ];
+      'touchstart',
+      'touchmove',
+      'scroll',
+      'mousemove',
+      'mousedown',
+      'keypress',
+    ]
 
-    events.forEach((event) => {
-      window.addEventListener(event, handleUserActivity, { passive: true });
-    });
+    events.forEach(event =>
+      window.addEventListener(event, handleUserActivity, { passive: true }),
+    )
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('beforeunload', handleUnload)
+    window.addEventListener('pagehide', handleUnload)
 
-    window.addEventListener("beforeunload", handleUnload);
-    window.addEventListener("pagehide", handleUnload);
-
-    resetTimer();
+    resetTimer()
 
     return () => {
-      events.forEach((event) => {
-        window.removeEventListener(event, handleUserActivity);
-      });
+      events.forEach(event =>
+        window.removeEventListener(event, handleUserActivity),
+      )
 
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("beforeunload", handleUnload);
-      window.removeEventListener("pagehide", handleUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('beforeunload', handleUnload)
+      window.removeEventListener('pagehide', handleUnload)
 
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+        clearTimeout(timeoutRef.current)
       }
-      handleUnload();
-    };
-  }, [handleUserActivity, handleVisibilityChange, handleUnload, resetTimer]);
+      handleUnload()
+    }
+  }, [handleUserActivity, handleVisibilityChange, handleUnload, resetTimer])
 
-  return null;
-};
+  return null
+}
 
-export default TrackTime;
+export default React.memo(TrackTime)

@@ -42,6 +42,10 @@ const App = () => {
   const isLoggedIn = () => {
     return isAuthenticated && user
   }
+  const isToken = () => {
+    const token = localStorage.getItem('token')
+    return token
+  }
 
   const getUserInGameName = () => {
     return isLoggedIn() ? user?.inGameName : null
@@ -163,7 +167,7 @@ const App = () => {
           <Routes>
             <Route
               path="/"
-              element={isLoggedIn() ? <Navigate to="/home" /> : <GetStarted />}
+              element={isToken() ? <Navigate to="/home" /> : <GetStarted />}
             />
             <Route path="/get-started" element={<GetStarted />} />
             <Route exact path="/contact/feedback" element={<ContactLayout />} />

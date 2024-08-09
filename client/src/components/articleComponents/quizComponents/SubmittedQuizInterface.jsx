@@ -1,11 +1,17 @@
-import React from 'react'
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChakraProvider,
   extendTheme,
   Box,
   Text,
-  VStack,
   Button,
   Flex,
   Stat,
@@ -14,9 +20,9 @@ import {
   StatHelpText,
   StatGroup,
   Progress,
+  Spinner,
 } from '@chakra-ui/react'
 
-import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -27,7 +33,12 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
-import ArrowRightSVG from '../../../assets/svg/ArrowRightSVG'
+
+// Lazy load components and assets
+const Line = lazy(() =>
+  import('react-chartjs-2').then(module => ({ default: module.Line })),
+)
+const ArrowRightSVG = lazy(() => import('../../../assets/svg/ArrowRightSVG'))
 
 ChartJS.register(
   CategoryScale,
@@ -132,16 +143,15 @@ const getReviewText = (field, value) => {
 }
 
 const SubmittedQuizInterface = ({
-  isOpen,
   submitLoad = false,
   result,
   onViewReport,
 }) => {
-  const [scoreArr, setScoreArr] = React.useState([0, 1])
-  const [quizData, setQuizData] = React.useState([])
-  const [labels, setLabels] = React.useState([])
+  const [scoreArr, setScoreArr] = useState([0, 1])
+  const [quizData, setQuizData] = useState([])
+  const [labels, setLabels] = useState([])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (result?.score && result?.score.includes('/')) {
       setScoreArr(() => {
         const arr = result?.score.split('/')
@@ -161,55 +171,65 @@ const SubmittedQuizInterface = ({
     }
   }, [submitLoad, result?.score, result?.pastRQMs])
 
-  const chartData = {
-    labels: labels,
-    datasets: [
-      {
-        label: 'RQM Score',
-        data: quizData,
-        fill: false,
-        backgroundColor: 'rgba(138, 43, 226, 0.6)',
-        borderColor: 'rgba(138, 43, 226, 1)',
-        pointStyle: 'circle',
-        pointRadius: 5,
-        pointBorderColor: '#8A2BE2',
-        pointBorderWidth: 2,
-        tension: 0.1,
-      },
-    ],
-  }
+  const chartData = useMemo(
+    () => ({
+      labels: labels,
+      datasets: [
+        {
+          label: 'RQM Score',
+          data: quizData,
+          fill: false,
+          backgroundColor: 'rgba(138, 43, 226, 0.6)',
+          borderColor: 'rgba(138, 43, 226, 1)',
+          pointStyle: 'circle',
+          pointRadius: 5,
+          pointBorderColor: '#8A2BE2',
+          pointBorderWidth: 2,
+          tension: 0.1,
+        },
+      ],
+    }),
+    [labels, quizData],
+  )
 
-  const chartOptions = {
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          color: 'rgba(255, 255, 255, 0.8)',
-          font: {
-            weight: 'bold',
+  const chartOptions = useMemo(
+    () => ({
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: 'rgba(255, 255, 255, 0.8)',
+            font: {
+              weight: 'bold',
+            },
+          },
+        },
+        x: {
+          ticks: {
+            color: 'rgba(255, 255, 255, 0.8)',
+            font: {
+              weight: 'bold',
+            },
           },
         },
       },
-      x: {
-        ticks: {
-          color: 'rgba(255, 255, 255, 0.8)',
-          font: {
-            weight: 'bold',
+      plugins: {
+        legend: {
+          labels: {
+            color: 'rgba(255, 255, 255, 0.8)',
+            font: {
+              weight: 'bold',
+            },
           },
         },
       },
-    },
-    plugins: {
-      legend: {
-        labels: {
-          color: 'rgba(255, 255, 255, 0.8)',
-          font: {
-            weight: 'bold',
-          },
-        },
-      },
-    },
-  }
+    }),
+    [],
+  )
+
+  const handleViewReport = useCallback(() => {
+    onViewReport()
+  }, [onViewReport])
 
   return (
     <ChakraProvider theme={theme}>
@@ -392,9 +412,17 @@ const SubmittedQuizInterface = ({
                     >
                       Today's RQM Score Update
                     </Text>
-                    <Box display={'flex'} w={'100%'} justifyContent={'center'}>
-                      <Line data={chartData} options={chartOptions} />
-                    </Box>
+                    <Suspense
+                      fallback={<Text color="gray.300">Loading Chart...</Text>}
+                    >
+                      <Box
+                        display={'flex'}
+                        w={'100%'}
+                        justifyContent={'center'}
+                      >
+                        <Line data={chartData} options={chartOptions} />
+                      </Box>
+                    </Suspense>
                   </Box>
                 )}
 
@@ -403,26 +431,26 @@ const SubmittedQuizInterface = ({
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
                 >
-                  <Button
-                    rightIcon={
-                      <ArrowRightSVG
-                        width={'20px'}
-                        height={'20px'}
-                        fill={'#fff'}
-                      />
-                    }
-                    onClick={() => {
-                      onViewReport()
-                    }}
-                    size="lg"
-                    width="100%"
-                    bg="purple.500"
-                    _hover={{
-                      bg: 'purple.600',
-                    }}
-                  >
-                    View Quiz Summary
-                  </Button>
+                  <Suspense fallback={<Spinner />}>
+                    <Button
+                      rightIcon={
+                        <ArrowRightSVG
+                          width={'20px'}
+                          height={'20px'}
+                          fill={'#fff'}
+                        />
+                      }
+                      onClick={handleViewReport}
+                      size="lg"
+                      width="100%"
+                      bg="purple.500"
+                      _hover={{
+                        bg: 'purple.600',
+                      }}
+                    >
+                      View Quiz Summary
+                    </Button>
+                  </Suspense>
                 </motion.div>
               </>
             )}

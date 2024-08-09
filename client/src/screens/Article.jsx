@@ -197,7 +197,7 @@ const Article = () => {
     } finally {
       setIsQuizGivenLoading(false)
     }
-  }, [id, user])
+  }, [id, user, givenQuiz])
 
   const checkOnGoingQuiz = useCallback(async () => {
     try {
@@ -354,7 +354,7 @@ const Article = () => {
 
   useEffect(() => {
     isQuizGiven()
-  }, [isQuizGiven])
+  }, [givenQuiz, isQuizGiven])
 
   useEffect(() => {
     if (textRef.current) {

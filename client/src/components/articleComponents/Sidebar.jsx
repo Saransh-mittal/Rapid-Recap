@@ -1,6 +1,4 @@
-// components/articleComponents/Sidebar.js
-
-import React from 'react'
+import React, { useCallback, useMemo, Suspense } from 'react'
 import {
   Box,
   Heading,
@@ -9,21 +7,20 @@ import {
   Image,
   Flex,
   Tooltip,
-  Badge,
-  useDisclosure,
-  Spinner,
   Skeleton,
   useToast,
+  Spinner,
 } from '@chakra-ui/react'
-import { LockIcon, TriangleDownIcon } from '@chakra-ui/icons'
+import { LockIcon } from '@chakra-ui/icons'
 import Alt_img from '/images/rr.webp'
-import GivenQuiz from './GivenQuiz'
-import QuizExpired from './QuizExpired'
-import TakeQuizButton from './TakeQuizButton'
-import TotalUserAttempted from './TotalUserAttempted'
 import { useSelector } from 'react-redux'
-import Signin from '../../screens/Signin'
 import useSound from '../../customHooks/useSound'
+
+const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
+const QuizExpired = React.lazy(() => import('./QuizExpired'))
+const TakeQuizButton = React.lazy(() => import('./TakeQuizButton'))
+const TotalUserAttempted = React.lazy(() => import('./TotalUserAttempted'))
+const Signin = React.lazy(() => import('../../screens/Signin'))
 
 const Sidebar = ({
   givenQuiz,
@@ -51,8 +48,61 @@ const Sidebar = ({
   const { playClick } = useSound()
   const toast = useToast()
 
-  const isLoaded =
-    onGoingQuiz !== null && quizExpired !== null && isQuizGivenLoading !== null
+  const isLoaded = useMemo(() => {
+    return (
+      onGoingQuiz !== null &&
+      quizExpired !== null &&
+      isQuizGivenLoading !== null
+    )
+  }, [onGoingQuiz, quizExpired, isQuizGivenLoading])
+
+  const handleQuizButtonClick = useCallback(() => {
+    playClick()
+    if (notLoggedIn) {
+      toast({
+        title: 'Login Required',
+        description: 'Please log in to share this article.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
+    tour.complete()
+    trackGenerateQuizClick()
+    setShowQuizLangModal(true)
+    setShowQuiz(!showQuiz)
+    onOpen()
+  }, [
+    notLoggedIn,
+    playClick,
+    toast,
+    tour,
+    trackGenerateQuizClick,
+    setShowQuizLangModal,
+    setShowQuiz,
+    showQuiz,
+    onOpen,
+  ])
+
+  const handleRelatedArticleClick = useCallback(
+    (e, item) => {
+      if (notLoggedIn) {
+        e.preventDefault()
+        toast({
+          title: 'Login Required',
+          description: 'Please log in to share this article.',
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        })
+        return
+      }
+      playClick()
+      window.location.href = `/article/${item._id}`
+    },
+    [notLoggedIn, playClick, toast],
+  )
 
   return (
     <Skeleton isLoaded={isLoaded}>
@@ -62,87 +112,72 @@ const Sidebar = ({
         p={1.5}
         w={{ base: '90vw', md: '100%' }}
       >
-        {givenQuiz ? (
-          <GivenQuiz
-            articleId={id}
-            percentile={percentile}
-            RQM_score={RQM_score}
-          />
-        ) : onGoingQuiz ? (
-          <Heading
-            size="md"
-            margin={'5px'}
-            mb={5}
-            height={'100px'}
-            color={'red'}
-          >
-            Quiz is Already going on in some other tab or device
-          </Heading>
-        ) : quizExpired ? (
-          <QuizExpired />
-        ) : (
-          <Box position={'relative'}>
-            <Box
-              style={
-                notLoggedIn
-                  ? { filter: 'blur(5px)', userSelect: 'none' }
-                  : { userSelect: 'text' }
-              }
-              display={'flex'}
-              justifyContent={'center'}
-              alignItems={'center'}
+        <Suspense fallback={<Spinner />}>
+          {givenQuiz ? (
+            <GivenQuiz
+              articleId={id}
+              percentile={percentile}
+              RQM_score={RQM_score}
+            />
+          ) : onGoingQuiz ? (
+            <Heading
+              size="md"
+              margin={'5px'}
+              mb={5}
+              height={'100px'}
+              color={'red'}
             >
-              {isQuizGivenLoading ? (
-                <Spinner />
-              ) : (
-                <TakeQuizButton
-                  isQuinBoostAvailable={isQuinBoostAvailable}
-                  onClick={() => {
-                    playClick()
-                    if (notLoggedIn) {
-                      toast({
-                        title: 'Login Required',
-                        description: 'Please log in to share this article.',
-                        status: 'warning',
-                        duration: 3000,
-                        isClosable: true,
-                      })
-                      return
-                    }
-                    tour.complete()
-                    trackGenerateQuizClick()
-                    setShowQuizLangModal(true)
-                    setShowQuiz(!showQuiz)
-                    onOpen()
-                  }}
-                />
+              Quiz is Already going on in some other tab or device
+            </Heading>
+          ) : quizExpired ? (
+            <QuizExpired />
+          ) : (
+            <Box position={'relative'}>
+              <Box
+                style={
+                  notLoggedIn
+                    ? { filter: 'blur(5px)', userSelect: 'none' }
+                    : { userSelect: 'text' }
+                }
+                display={'flex'}
+                justifyContent={'center'}
+                alignItems={'center'}
+              >
+                {isQuizGivenLoading ? (
+                  <Spinner />
+                ) : (
+                  <TakeQuizButton
+                    isQuinBoostAvailable={isQuinBoostAvailable}
+                    onClick={handleQuizButtonClick}
+                  />
+                )}
+              </Box>
+              {notLoggedIn && (
+                <Tooltip label="Please log in to give quiz" placement="top">
+                  <LockIcon
+                    position="absolute"
+                    top="50%"
+                    left="50%"
+                    transform="translate(-50%, -50%)"
+                    color="white"
+                    boxSize={8}
+                    zIndex={2}
+                    onClick={onSigninOpen}
+                    cursor={'pointer'}
+                  />
+                </Tooltip>
               )}
             </Box>
-            {notLoggedIn && (
-              <Tooltip label="Please log in to give quiz" placement="top">
-                <LockIcon
-                  position="absolute"
-                  top="50%"
-                  left="50%"
-                  transform="translate(-50%, -50%)"
-                  color="white"
-                  boxSize={8}
-                  zIndex={2}
-                  onClick={onSigninOpen}
-                  cursor={'pointer'}
-                />
-              </Tooltip>
-            )}
-          </Box>
-        )}
-        <Box>
+          )}
+        </Suspense>
+        <Suspense fallback={<Spinner />}>
           <TotalUserAttempted
             totalUsersGivenQuiz={totalUsersGivenQuiz}
             notLoggedIn={notLoggedIn}
             RQM_score={RQM_score}
             articleId={id}
           />
-        </Box>
+        </Suspense>
         <Text as="h3" color="white" letterSpacing={1} ml={4}>
           Related Articles:
         </Text>
@@ -163,21 +198,7 @@ const Sidebar = ({
               <Box
                 minHeight="100px"
                 key={item._id}
-                onClick={e => {
-                  if (notLoggedIn) {
-                    e.preventDefault()
-                    toast({
-                      title: 'Login Required',
-                      description: 'Please log in to share this article.',
-                      status: 'warning',
-                      duration: 3000,
-                      isClosable: true,
-                    })
-                    return
-                  }
-                  playClick()
-                  window.location.href = `/article/${item._id}`
-                }}
+                onClick={e => handleRelatedArticleClick(e, item)}
                 style={
                   notLoggedIn
                     ? { filter: 'blur(5px)', userSelect: 'none' }
@@ -266,4 +287,4 @@ const Sidebar = ({
   )
 }
 
-export default Sidebar
+export default React.memo(Sidebar)

@@ -25,6 +25,7 @@ import {
   ModalCloseButton,
   useDisclosure,
   Flex,
+  Spinner,
 } from '@chakra-ui/react'
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import useSound from '../customHooks/useSound'
@@ -265,7 +266,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           <ModalHeader color="white">Sign In</ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody w={'65%'} p={'20px'}>
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<Spinner />}>
               {modal && forgotPassword && !verifyEmail && (
                 <Modal onClose={() => dispatchRedux(setModal(false))}>
                   <ResetPassword email={data.emailOrInGameName} />
@@ -447,7 +448,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           </ModalBody>
         </ModalContent>
       </ChakraModal>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<Spinner />}>
         <Register
           isOpen={isRegisterOpen}
           onClose={onRegisterClose}

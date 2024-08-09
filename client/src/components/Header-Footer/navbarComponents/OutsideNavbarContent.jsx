@@ -170,11 +170,12 @@ const OutsideNavbarContent = ({
                     textAlign={'center'}
                     right={'-0.5rem'}
                     top={'-0.7rem'}
+                    zIndex={2}
                   >
                     {notification.length}
                   </Badge>
                 )}
-                <FaMessenger width={'23px'} />
+                <FaMessenger width={'23px'} height={'23px'} />
               </Box>
             )}
           </>

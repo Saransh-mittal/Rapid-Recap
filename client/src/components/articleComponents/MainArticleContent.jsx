@@ -2,17 +2,11 @@ import React, { useState } from 'react'
 import {
   Box,
   Flex,
-  GridItem,
   Image,
   Skeleton,
   Text,
-  Tooltip,
   useBreakpointValue,
 } from '@chakra-ui/react'
-import { LockIcon } from '@chakra-ui/icons'
-import { useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
-import Signin from '../../screens/Signin'
 
 const MainArticleContent = ({
   imgURL,
@@ -21,11 +15,8 @@ const MainArticleContent = ({
   mainText,
   textRef,
   articleRef,
-  state,
   articleLoading,
 }) => {
-  const { isAuthenticated } = useSelector(state => state.auth)
-  const notLoggedIn = !isAuthenticated
   const [useAltImage, setUseAltImage] = useState(false)
 
   const handleImageError = () => {

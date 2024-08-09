@@ -7,7 +7,6 @@ import {
   Image,
   Badge,
   useColorModeValue,
-  ModalBody,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 

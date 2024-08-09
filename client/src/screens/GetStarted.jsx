@@ -1,6 +1,6 @@
 // /pages/GetStarted.jsx
 import React from 'react'
-import { Flex } from '@chakra-ui/react'
+import { Flex, Spinner } from '@chakra-ui/react'
 import { Suspense, useMemo, useCallback } from 'react'
 
 const HeroSection = React.lazy(() =>
@@ -32,7 +32,7 @@ const GetStarted = () => {
 
   return (
     <Flex {...flexStyles}>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<Spinner />}>
         {renderHeroSection()}
         {renderWhyToUseSection()}
         {renderCommingSoonSection()}

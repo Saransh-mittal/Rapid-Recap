@@ -1,28 +1,44 @@
-// src/components/Quiz.js
-
-import React, { useState, useCallback, useEffect } from 'react'
-import { Flex, useToast, Box } from '@chakra-ui/react'
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  lazy,
+  Suspense,
+  useMemo,
+} from 'react'
+import { Flex, useToast, Box, Spinner } from '@chakra-ui/react'
 import './Quiz.css'
-import ConfirmationModal from './customQuizModal/ConfirmationModal'
-import InstructionModal from './customQuizModal/InstructionModal'
-import QuizInterface from './quizComponents/quizInterface'
-import SubmittedQuizInterface from './quizComponents/SubmittedQuizInterface'
-
 import ReactGA from 'react-ga4'
-import BoostedSubmittedQuizInterface from './quizComponents/BoostedSubmittedQuizInterface'
-import QuizGivenSummary from './quizComponents/QuizGivenSummary'
+import { useDispatch, useSelector } from 'react-redux'
+import axios from 'axios'
+import useFetchQuiz from '../../customHooks/useFetchQuiz'
+import useTimer from '../../customHooks/useTimer'
+import useSubmitQuiz from '../../customHooks/useSubmitQuiz'
+import useSound from '../../customHooks/useSound'
 import {
   dailyStreakCheckerAndUpdater,
   quinBoostChecker,
 } from '../../utils/quiz.utils'
-import useFetchQuiz from '../../customHooks/useFetchQuiz'
-import useTimer from '../../customHooks/useTimer'
-import useSubmitQuiz from '../../customHooks/useSubmitQuiz'
-import axios from 'axios'
-import ModalComponent from './ModalComponent'
-import GetSetGoAnimation from './quizComponents/GetSetGoAnimation'
-import { useDispatch, useSelector } from 'react-redux'
-import useSound from '../../customHooks/useSound'
+
+// Lazy load components
+const ConfirmationModal = lazy(() =>
+  import('./customQuizModal/ConfirmationModal'),
+)
+const InstructionModal = lazy(() =>
+  import('./customQuizModal/InstructionModal'),
+)
+const QuizInterface = lazy(() => import('./quizComponents/quizInterface'))
+const SubmittedQuizInterface = lazy(() =>
+  import('./quizComponents/SubmittedQuizInterface'),
+)
+const BoostedSubmittedQuizInterface = lazy(() =>
+  import('./quizComponents/BoostedSubmittedQuizInterface'),
+)
+const QuizGivenSummary = lazy(() => import('./quizComponents/QuizGivenSummary'))
+const ModalComponent = lazy(() => import('./ModalComponent'))
+const GetSetGoAnimation = lazy(() =>
+  import('./quizComponents/GetSetGoAnimation'),
+)
 
 const Quiz = ({
   article,
@@ -54,8 +70,8 @@ const Quiz = ({
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false)
   const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
     useState(false)
-  const [showSubmittedInterface, setShowSubmittedInterface] = useState(false) // New state
-  const [showQuizSummary, setShowQuizSummary] = useState(false) // New state
+  const [showSubmittedInterface, setShowSubmittedInterface] = useState(false)
+  const [showQuizSummary, setShowQuizSummary] = useState(false)
   const [result, setResult] = useState({})
   const [isAnswered, setIsAnswered] = useState(false)
   const { playClick } = useSound()
@@ -88,7 +104,7 @@ const Quiz = ({
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(prevIndex => prevIndex + 1)
     }
-  }, [currentQuestionIndex, totalQuestions])
+  }, [playClick, currentQuestionIndex, totalQuestions])
 
   const handleAnswer = useCallback(
     selectedOption => {
@@ -96,11 +112,10 @@ const Quiz = ({
       setUserAnswers(prevAnswers => {
         const newAnswers = [...prevAnswers]
         newAnswers[currentQuestionIndex] = selectedOption
-
         return newAnswers
       })
     },
-    [currentQuestionIndex],
+    [playClick, currentQuestionIndex],
   )
 
   const startQuiz = async () => {
@@ -114,8 +129,8 @@ const Quiz = ({
       toast({
         title: 'Quiz failed!',
         description:
-          error.response.data.error ||
-          'Please try again (Close the quiz and Try refreshing the page)',
+          error.response?.data?.error ||
+          'Please try again (Close the quiz and try refreshing the page)',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -128,25 +143,25 @@ const Quiz = ({
       })
     }
   }
-  const handleAnimationComplete = () => {
+
+  const handleAnimationComplete = useCallback(() => {
     setShowGetSetGo(false)
     setShowInstruction(false)
     ReactGA.event({
       category: 'Quiz',
       action: 'Quiz Started After Get-Set-Go Animation',
     })
-  }
+  }, [])
 
-  const showConfirmation = () => {
+  const showConfirmation = useCallback(() => {
     setShowConfirmationModal(true)
-  }
+  }, [])
 
   const handleClose = async () => {
     console.log('close')
     try {
-      // fetchQuizTitans()
       setTotalUsersGivenQuiz(prev => prev + 1)
-      quinBoostChecker({
+      await quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       })
@@ -169,7 +184,7 @@ const Quiz = ({
     }
   }
 
-  const handleConfirmClose = async () => {
+  const handleConfirmClose = useCallback(async () => {
     try {
       await quinBoostChecker({
         setIsQuinBoostAvailable,
@@ -186,7 +201,8 @@ const Quiz = ({
       toast({
         title: 'Error',
         description:
-          error.response.data.error || 'Quiz closing failed! Please try again.',
+          error.response?.data?.error ||
+          'Quiz closing failed! Please try again.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -194,7 +210,14 @@ const Quiz = ({
       })
       handleClose()
     }
-  }
+  }, [
+    handleSubmitQuiz,
+    timeTaken,
+    userAnswers,
+    setSubmitted,
+    toast,
+    handleClose,
+  ])
 
   useEffect(() => {
     const handleBeforeUnload = event => {
@@ -207,20 +230,19 @@ const Quiz = ({
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [])
+  }, [showInstruction])
 
   useEffect(() => {
     if (submitted && !load && (isBoosted || isQuinBoostAvailable)) {
       stars()
     }
-  }, [submitted, load])
+  }, [submitted, load, isBoosted, isQuinBoostAvailable])
 
   useEffect(() => {
     setIsAnswered(userAnswers[currentQuestionIndex] !== '')
   }, [userAnswers, currentQuestionIndex])
 
   useEffect(() => {
-    // remove stars on !showSubmittedInterface
     if (showSubmittedInterface) {
       const scene = document.querySelector('.scene')
       if (!scene) return
@@ -249,42 +271,49 @@ const Quiz = ({
     }
   }
 
-  const renderModalBody = () => {
+  const renderModalBody = useCallback(() => {
     if (showInstruction) {
       return (
         <Box position={'relative'}>
           {showGetSetGo && (
-            <GetSetGoAnimation onComplete={handleAnimationComplete} />
+            <Suspense fallback={<Spinner />}>
+              <GetSetGoAnimation onComplete={handleAnimationComplete} />
+            </Suspense>
           )}
-          <InstructionModal
-            isQuinBoostAvailable={isQuinBoostAvailable}
-            language={language}
-          />
+          <Suspense fallback={<Spinner />}>
+            <InstructionModal
+              isQuinBoostAvailable={isQuinBoostAvailable}
+              language={language}
+            />
+          </Suspense>
         </Box>
       )
     }
 
     if (showQuizSummary) {
       return (
-        <QuizGivenSummary
-          isOpen={isOpen}
-          onClose={() => setShowQuizSummary(false)}
-          articleId={articleId}
-        />
+        <Suspense fallback={<Spinner />}>
+          <QuizGivenSummary
+            isOpen={isOpen}
+            onClose={() => setShowQuizSummary(false)}
+            articleId={articleId}
+          />
+        </Suspense>
       )
     }
 
     if (showSubmittedInterface) {
       return (
-        <SubmittedQuizInterface
-          isOpen={isOpen}
-          submitLoad={submitLoad}
-          result={result}
-          onViewReport={() => {
-            playClick()
-            setShowQuizSummary(true)
-          }}
-        />
+        <Suspense fallback={<Spinner />}>
+          <SubmittedQuizInterface
+            submitLoad={submitLoad}
+            result={result}
+            onViewReport={() => {
+              playClick()
+              setShowQuizSummary(true)
+            }}
+          />
+        </Suspense>
       )
     }
 
@@ -302,76 +331,100 @@ const Quiz = ({
         position={'relative'}
       >
         {!submitted ? (
-          <QuizInterface
-            load={load}
-            currentQuestionIndex={currentQuestionIndex}
-            totalQuestions={totalQuestions}
-            quizData={quizData}
-            handleAnswer={handleAnswer}
-            userAnswers={userAnswers}
-          />
+          <Suspense fallback={<Spinner />}>
+            <QuizInterface
+              load={load}
+              currentQuestionIndex={currentQuestionIndex}
+              totalQuestions={totalQuestions}
+              quizData={quizData}
+              handleAnswer={handleAnswer}
+              userAnswers={userAnswers}
+            />
+          </Suspense>
         ) : isBoosted || isQuinBoostAvailable ? (
-          <BoostedSubmittedQuizInterface
-            isOpen={isOpen}
-            score={result?.RQM_score}
-            submitLoad={submitLoad}
-            onViewReport={() => {
-              playClick()
-              setShowSubmittedInterface(true)
-            }}
-          />
+          <Suspense fallback={<Spinner />}>
+            <BoostedSubmittedQuizInterface
+              isOpen={isOpen}
+              score={result?.RQM_score}
+              submitLoad={submitLoad}
+              onViewReport={() => {
+                playClick()
+                setShowQuizSummary(true)
+              }}
+            />
+          </Suspense>
         ) : (
-          <SubmittedQuizInterface
-            isOpen={isOpen}
-            submitLoad={submitLoad}
-            result={result}
-            onViewReport={() => {
-              playClick()
-              setShowQuizSummary(true)
-            }} // New prop
-          />
+          <Suspense fallback={<Spinner />}>
+            <SubmittedQuizInterface
+              submitLoad={submitLoad}
+              result={result}
+              onViewReport={() => {
+                playClick()
+                setShowQuizSummary(true)
+              }}
+            />
+          </Suspense>
         )}
       </Flex>
     )
-  }
+  }, [
+    showInstruction,
+    showGetSetGo,
+    handleAnimationComplete,
+    isQuinBoostAvailable,
+    language,
+    showQuizSummary,
+    isOpen,
+    articleId,
+    submitLoad,
+    result,
+    playClick,
+    submitted,
+    isBoosted,
+    load,
+    currentQuestionIndex,
+    totalQuestions,
+    quizData,
+    handleAnswer,
+    userAnswers,
+  ])
 
   return (
     <>
-      <ModalComponent
-        showSubmittedInterface={showSubmittedInterface}
-        isQuinBoostAvailable={isQuinBoostAvailable}
-        setSubmitted={setSubmitted}
-        timer={timer}
-        isOpen={isOpen}
-        onClose={handleClose}
-        isCloseButtonHovered={isCloseButtonHovered}
-        setIsCloseButtonHovered={setIsCloseButtonHovered}
-        isStartQuizButtonHovered={isStartQuizButtonHovered}
-        setIsStartQuizButtonHovered={setIsStartQuizButtonHovered}
-        renderModalBody={renderModalBody}
-        load={load}
-        showInstruction={showInstruction}
-        startQuiz={startQuiz}
-        handleNextQuestion={handleNextQuestion}
-        currentQuestionIndex={currentQuestionIndex}
-        totalQuestions={totalQuestions}
-        submitted={submitted}
-        submitLoad={submitLoad}
-        timeTaken={timeTaken}
-        userAnswers={userAnswers}
-        handleSubmitQuiz={handleSubmitQuiz}
-        setShowInstruction={setShowInstruction}
-        isAnswered={isAnswered}
-        showGetSetGo={showGetSetGo}
-      />
-      {!showInstruction && showConfirmationModal && (
-        <ConfirmationModal
-          bg={'black'}
-          isOpen={showConfirmationModal}
-          onClose={() => setShowConfirmationModal(false)}
-          onConfirm={handleConfirmClose}
-          message="Clicking on Confirm will result in submission of the quiz with 0 score. Are you sure you want to submit the quiz?"
+      <Suspense fallback={<Spinner />}>
+        <ModalComponent
+          setSubmitted={setSubmitted}
+          timer={timer}
+          isOpen={isOpen}
+          onClose={handleClose}
+          setIsCloseButtonHovered={setIsCloseButtonHovered}
+          renderModalBody={renderModalBody}
+          load={load}
+          showInstruction={showInstruction}
+          startQuiz={startQuiz}
+          handleNextQuestion={handleNextQuestion}
+          currentQuestionIndex={currentQuestionIndex}
+          totalQuestions={totalQuestions}
+          submitted={submitted}
+          submitLoad={submitLoad}
+          timeTaken={timeTaken}
+          userAnswers={userAnswers}
+          handleSubmitQuiz={handleSubmitQuiz}
+          setShowInstruction={setShowInstruction}
+          isAnswered={isAnswered}
+          showGetSetGo={showGetSetGo}
         />
+      </Suspense>
+      {!showInstruction && showConfirmationModal && (
+        <Suspense fallback={<Spinner />}>
+          <ConfirmationModal
+            bg={'black'}
+            isOpen={showConfirmationModal}
+            onClose={() => setShowConfirmationModal(false)}
+            onConfirm={handleConfirmClose}
+            message="Clicking on Confirm will result in submission of the quiz with 0 score. Are you sure you want to submit the quiz?"
+          />
+        </Suspense>
       )}
     </>
   )

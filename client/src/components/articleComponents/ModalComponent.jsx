@@ -1,6 +1,4 @@
-// src/components/ModalComponent.js
-
-import React from 'react'
+import React, { useMemo, useCallback, lazy, Suspense } from 'react'
 import {
   Button,
   Modal,
@@ -13,20 +11,19 @@ import {
   Flex,
   Skeleton,
   SkeletonCircle,
-  useColorModeValue,
+  Spinner,
 } from '@chakra-ui/react'
-import Countdown from './Countdown'
 import { motion } from 'framer-motion'
-import ArrowRightSVG from '../../assets/svg/ArrowRightSVG'
+
+// Lazy load components and assets
+const Countdown = lazy(() => import('./Countdown'))
+const ArrowRightSVG = lazy(() => import('../../assets/svg/ArrowRightSVG'))
 
 const ModalComponent = ({
   isAnswered,
   isOpen,
   onClose,
-  isCloseButtonHovered,
   setIsCloseButtonHovered,
-  isStartQuizButtonHovered,
-  setIsStartQuizButtonHovered,
   renderModalBody,
   load,
   showInstruction,
@@ -41,11 +38,44 @@ const ModalComponent = ({
   handleSubmitQuiz,
   timer,
   setSubmitted,
-  isQuinBoostAvailable,
-  showSubmittedInterface,
   showGetSetGo,
 }) => {
   const textColor = 'white'
+
+  // Memoize the button text based on the state
+  const buttonText = useMemo(() => {
+    if (showInstruction) return 'Start Quiz'
+    if (currentQuestionIndex < totalQuestions - 1 && !submitted)
+      return 'Next Question'
+    return 'Finish Quiz'
+  }, [showInstruction, currentQuestionIndex, totalQuestions, submitted])
+
+  const buttonAction = useCallback(() => {
+    if (showInstruction) {
+      return startQuiz
+    }
+    if (currentQuestionIndex === totalQuestions - 1 && !submitted) {
+      return () => handleSubmitQuiz({ timeTaken, userAnswers, setSubmitted })
+    }
+    return handleNextQuestion
+  }, [
+    showInstruction,
+    startQuiz,
+    currentQuestionIndex,
+    totalQuestions,
+    submitted,
+    handleSubmitQuiz,
+    timeTaken,
+    userAnswers,
+    setSubmitted,
+    handleNextQuestion,
+  ])
+
+  // Adding a simple console log to check if the function is being called
+  const handleClick = () => {
+    const action = buttonAction()
+    action()
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '2xl' }}>
@@ -61,7 +91,7 @@ const ModalComponent = ({
         className="animated-gradient scene"
         overflow={'hidden'}
       >
-        {timer ? (
+        {timer && (
           <SkeletonCircle
             color="red"
             isLoaded={!load}
@@ -69,22 +99,23 @@ const ModalComponent = ({
             size={load ? '20' : 'auto'}
             marginBottom={load ? '10px' : '0'}
           >
-            {!submitted && timer ? (
-              <Countdown
-                timer={timer}
-                submitted={submitted}
-                start={!showInstruction}
-              />
-            ) : null}
+            {!submitted && timer && (
+              <Suspense fallback={<Spinner />}>
+                <Countdown
+                  timer={timer}
+                  submitted={submitted}
+                  start={!showInstruction}
+                />
+              </Suspense>
+            )}
           </SkeletonCircle>
-        ) : null}
+        )}
         <ModalCloseButton
           zIndex={1}
           backgroundColor="purple.300"
           style={{
             right: '10px',
             color: 'white',
-
             transition: 'background-color 0.3s, color 0.3s',
           }}
           onMouseEnter={() =>
@@ -127,53 +158,38 @@ const ModalComponent = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Button
-                      borderRadius={'full'}
-                      color={'white'}
-                      rightIcon={
-                        <ArrowRightSVG
-                          height={'20px'}
-                          width={'20px'}
-                          fill={'#fff'}
-                        />
-                      }
-                      onClick={
-                        showInstruction
-                          ? startQuiz
-                          : currentQuestionIndex === totalQuestions - 1 &&
-                            !submitted
-                          ? () =>
-                              handleSubmitQuiz({
-                                timeTaken,
-                                userAnswers,
-                                setSubmitted,
-                              })
-                          : handleNextQuestion
-                      }
-                      isDisabled={showInstruction ? false : !isAnswered}
-                      mt={5}
-                      size="lg"
-                      width={{ base: '100%', lg: '50%' }}
-                      bg={
-                        isAnswered || showInstruction
-                          ? 'purple.500'
-                          : 'rgba(255, 255, 255, 0.1)'
-                      }
-                      _hover={{
-                        bg:
+                    <Suspense fallback={<Spinner />}>
+                      <Button
+                        borderRadius={'full'}
+                        color={'white'}
+                        rightIcon={
+                          <ArrowRightSVG
+                            height={'20px'}
+                            width={'20px'}
+                            fill={'#fff'}
+                          />
+                        }
+                        onClick={handleClick}
+                        isDisabled={showInstruction ? false : !isAnswered}
+                        mt={5}
+                        size="lg"
+                        width={{ base: '100%', lg: '50%' }}
+                        bg={
                           isAnswered || showInstruction
-                            ? 'purple.600'
-                            : 'rgba(255, 255, 255, 0.15)',
-                      }}
-                      isLoading={submitLoad}
-                    >
-                      {showInstruction
-                        ? 'Start Quiz'
-                        : currentQuestionIndex < totalQuestions - 1 &&
-                          !submitted
-                        ? 'Next Question'
-                        : 'Finish Quiz'}
-                    </Button>
+                            ? 'purple.500'
+                            : 'rgba(255, 255, 255, 0.1)'
+                        }
+                        _hover={{
+                          bg:
+                            isAnswered || showInstruction
+                              ? 'purple.600'
+                              : 'rgba(255, 255, 255, 0.15)',
+                        }}
+                        isLoading={submitLoad}
+                      >
+                        {buttonText}
+                      </Button>
+                    </Suspense>
                   </motion.div>
                 </ModalFooter>
               )}

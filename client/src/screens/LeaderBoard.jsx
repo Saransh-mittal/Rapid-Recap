@@ -5,6 +5,7 @@ import {
   Image,
   useMediaQuery,
   useToast,
+  Spinner,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
@@ -199,7 +200,7 @@ const LeaderBoard = () => {
           </ChakraHeading>
         </Flex>
 
-        <React.Suspense fallback={<div>Loading...</div>}>
+        <React.Suspense fallback={<Spinner />}>
           <Flex
             alignItems="center"
             justifyContent="center"

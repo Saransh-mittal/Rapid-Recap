@@ -157,7 +157,7 @@ const EnhancedHeroSection = () => {
               width="auto"
               height={{ base: '175px', md: '350px', lg: '400px', xl: '525px' }}
               src={laptopXl}
-              srcSet={`${laptopXl} 525px, ${laptopLg} 400px, ${laptopMd} 350px, ${laptopBase} 175px`}
+              srcSet={`${laptopXl} 525w, ${laptopLg} 400w, ${laptopMd} 350w, ${laptopBase} 175w`}
               sizes="(max-width: 768px) 175px, (max-width: 1024px) 350px, (max-width: 1280px) 400px, 525px"
               alt="Article Interface"
               loading="eager"

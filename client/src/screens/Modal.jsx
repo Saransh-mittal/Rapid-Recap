@@ -1,3 +1,4 @@
+import { Spinner } from '@chakra-ui/react'
 import React, { useState, useCallback, useMemo, lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom'
 
@@ -61,7 +62,7 @@ const Modal = ({ children, onClose }) => {
         >
           X
         </button>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<Spinner />}>
           <ModalContent>{children}</ModalContent>
         </Suspense>
       </div>

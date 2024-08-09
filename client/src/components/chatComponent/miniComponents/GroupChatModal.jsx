@@ -12,82 +12,83 @@ import {
   Input,
   useToast,
   Box,
-} from "@chakra-ui/react";
-import axios from "axios";
-import { useState } from "react";
-import { ChatState } from "../../../contextAPI/ChatProvider";
-import UserBadgeItem from "../userAvatar/UserBadgeItem";
-import UserListItem from "../userAvatar/UserListItem";
+  Spinner,
+} from '@chakra-ui/react'
+import axios from 'axios'
+import { useState } from 'react'
+import { ChatState } from '../../../contextAPI/ChatProvider'
+import UserBadgeItem from '../userAvatar/UserBadgeItem'
+import UserListItem from '../userAvatar/UserListItem'
 
 const GroupChatModal = ({ children }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [groupChatName, setGroupChatName] = useState();
-  const [selectedUsers, setSelectedUsers] = useState([]);
-  const [search, setSearch] = useState("");
-  const [searchResult, setSearchResult] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [groupChatName, setGroupChatName] = useState()
+  const [selectedUsers, setSelectedUsers] = useState([])
+  const [search, setSearch] = useState('')
+  const [searchResult, setSearchResult] = useState([])
+  const [loading, setLoading] = useState(false)
+  const toast = useToast()
 
-  const { user, chats, setChats } = ChatState();
+  const { user, chats, setChats } = ChatState()
 
-  const handleGroup = (userToAdd) => {
+  const handleGroup = userToAdd => {
     if (selectedUsers.includes(userToAdd)) {
       toast({
-        title: "User already added",
-        status: "warning",
+        title: 'User already added',
+        status: 'warning',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
-      return;
+        position: 'top',
+      })
+      return
     }
 
-    setSelectedUsers([...selectedUsers, userToAdd]);
-  };
+    setSelectedUsers([...selectedUsers, userToAdd])
+  }
 
-  const handleSearch = async (query) => {
-    setSearch(query);
+  const handleSearch = async query => {
+    setSearch(query)
     if (!query) {
-      return;
+      return
     }
 
     try {
-      setLoading(true);
+      setLoading(true)
       const config = {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
-      };
+      }
       // const { data } = await axios.get(`/api/user?search=${search}`, config);
-      console.log(data);
-      setLoading(false);
-      setSearchResult(data);
+      console.log(data)
+      setLoading(false)
+      setSearchResult(data)
     } catch (error) {
       toast({
-        title: "Error Occured!",
-        description: "Failed to Load the Search Results",
-        status: "error",
+        title: 'Error Occured!',
+        description: 'Failed to Load the Search Results',
+        status: 'error',
         duration: 5000,
         isClosable: true,
-        position: "bottom-left",
-      });
+        position: 'bottom-left',
+      })
     }
-  };
+  }
 
-  const handleDelete = (delUser) => {
-    setSelectedUsers(selectedUsers.filter((sel) => sel._id !== delUser._id));
-  };
+  const handleDelete = delUser => {
+    setSelectedUsers(selectedUsers.filter(sel => sel._id !== delUser._id))
+  }
 
   const handleSubmit = async () => {
     if (!groupChatName || !selectedUsers) {
       toast({
-        title: "Please fill all the feilds",
-        status: "warning",
+        title: 'Please fill all the feilds',
+        status: 'warning',
         duration: 5000,
         isClosable: true,
-        position: "top",
-      });
-      return;
+        position: 'top',
+      })
+      return
     }
 
     try {
@@ -104,26 +105,26 @@ const GroupChatModal = ({ children }) => {
       //   },
       //   config
       // );
-      setChats([data, ...chats]);
-      onClose();
+      setChats([data, ...chats])
+      onClose()
       toast({
-        title: "New Group Chat Created!",
-        status: "success",
+        title: 'New Group Chat Created!',
+        status: 'success',
         duration: 5000,
         isClosable: true,
-        position: "bottom",
-      });
+        position: 'bottom',
+      })
     } catch (error) {
       toast({
-        title: "Failed to Create the Chat!",
+        title: 'Failed to Create the Chat!',
         description: error.response.data,
-        status: "error",
+        status: 'error',
         duration: 5000,
         isClosable: true,
-        position: "bottom",
-      });
+        position: 'bottom',
+      })
     }
-  };
+  }
 
   return (
     <>
@@ -141,18 +142,18 @@ const GroupChatModal = ({ children }) => {
               <Input
                 placeholder="Chat Name"
                 mb={3}
-                onChange={(e) => setGroupChatName(e.target.value)}
+                onChange={e => setGroupChatName(e.target.value)}
               />
             </FormControl>
             <FormControl>
               <Input
                 placeholder="Add Users eg: John, Piyush, Jane"
                 mb={1}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={e => handleSearch(e.target.value)}
               />
             </FormControl>
             <Box w="100%" d="flex" flexWrap="wrap">
-              {selectedUsers.map((u) => (
+              {selectedUsers.map(u => (
                 <UserBadgeItem
                   key={u._id}
                   user={u}
@@ -162,11 +163,11 @@ const GroupChatModal = ({ children }) => {
             </Box>
             {loading ? (
               // <ChatLoading />
-              <div>Loading...</div>
+              <Spinner />
             ) : (
               searchResult
                 ?.slice(0, 4)
-                .map((user) => (
+                .map(user => (
                   <UserListItem
                     key={user._id}
                     user={user}
@@ -183,7 +184,7 @@ const GroupChatModal = ({ children }) => {
         </ModalContent>
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default GroupChatModal;
+export default GroupChatModal
