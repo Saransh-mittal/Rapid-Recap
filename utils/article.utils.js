@@ -412,7 +412,7 @@ const extractNewsUtilityFunc = async (country = '') => {
     '819c3bf3fab848a89741017dd5e67091',
   ]
   apiKeys = shuffleArray(apiKeys)
-  const newsAPICategories = ['general', 'sports', 'entertainment']
+  const newsAPICategories = ['general']
   const newsDataIoCategories = [
     'business',
     'crime',
@@ -422,13 +422,15 @@ const extractNewsUtilityFunc = async (country = '') => {
     'food',
     'health',
     'lifestyle',
-    // "other",
+    'other',
     'politics',
     'science',
     'technology',
     'top',
     'tourism',
     'world',
+    'sports',
+    'entertainment',
   ]
   const requestsPerKey = 5
   let keyTracker = { currentKeyIndex: 0, requestsMadeWithCurrentKey: 0 }
@@ -490,7 +492,7 @@ const processCategories = async (
 
     let articles = []
     if (category === 'sports') {
-      const sportsQueries = ['football', 'cricket', 'badminton', 'NBA']
+      const sportsQueries = ['football', 'cricket', 'badminton', 'olympics']
       options.pageSize = 5
 
       for (let query of sportsQueries) {
@@ -576,7 +578,7 @@ const processDataIoCategories = async (
     )
     const AiProcessedNews = await processExtractedNews(
       allProcessedOutput,
-      category,
+      category === 'other' ? 'general' : category,
     )
 
     result.push(...AiProcessedNews)
