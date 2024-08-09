@@ -32,7 +32,6 @@ const Sidebar = ({
   onGoingQuiz,
   quizExpired,
   isQuinBoostAvailable,
-  tour,
   trackGenerateQuizClick,
   setShowQuizLangModal,
   setShowQuiz,
@@ -109,7 +108,6 @@ const Sidebar = ({
                       })
                       return
                     }
-                    tour.complete()
                     trackGenerateQuizClick()
                     setShowQuizLangModal(true)
                     setShowQuiz(!showQuiz)

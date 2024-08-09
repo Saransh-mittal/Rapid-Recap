@@ -28,7 +28,6 @@ const OutsideNavbarContent = ({
   setShowDailyStreakModal,
   setShowXPLevelModal,
   setShowIQScoreModal,
-  tourComplete,
   streak,
   isBoosted,
   getBackgroundColor,
@@ -122,7 +121,6 @@ const OutsideNavbarContent = ({
                 onClick={() => {
                   playClick()
                   setShowDailyStreakModal(true)
-                  tourComplete()
                 }}
                 streak={streak}
                 isBoosted={isBoosted}

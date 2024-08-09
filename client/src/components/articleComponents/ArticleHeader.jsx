@@ -103,7 +103,6 @@ const ArticleHeader = ({
   isQuinBoostAvailable,
   quizLeftToGetQuizBoost,
   openModal,
-  quinTour,
   onSigninOpen,
 }) => {
   const { isAuthenticated } = useSelector(state => state.auth)
@@ -312,7 +311,6 @@ const ArticleHeader = ({
                               })
                               return
                             }
-                            quinTour.complete()
                             openModal()
                           }}
                         >

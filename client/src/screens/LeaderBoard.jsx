@@ -9,9 +9,7 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SearchBar from '../components/leaderBoardComponents/SearchBar'
-import SocietyButtons from '../components/leaderBoardComponents/SocietyButtons'
 import LeaderBoardTable from '../components/leaderBoardComponents/LeaderBoardTable'
-import { useLeaderBoardTour } from '../customHooks/useTours'
 import medalIcon from '../assets/medal.webp'
 import debounce from 'lodash.debounce'
 import Heading from '../components/miscellaneous/HeadingComponent'
@@ -27,7 +25,6 @@ const LeaderBoard = () => {
   const [leaders, setLeaders] = useState([])
   const [searchResults, setSearchResults] = useState([])
   const [activeSociety, setActiveSociety] = useState(null)
-  const { tour, isTutorialTakenCheck } = useLeaderBoardTour()
   const [isLgScreen] = useMediaQuery('(max-width: 1024px)')
   const [isMdScreen] = useMediaQuery('(max-width: 820px)')
   const [isBaseScreen] = useMediaQuery('(max-width: 768px)')
@@ -124,17 +121,6 @@ const LeaderBoard = () => {
       window.removeEventListener('scroll', debouncedHandleScroll)
     }
   }, [isAuthenticated])
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      isAuthenticated &&
-      user &&
-      user.tutorial.leaderBoardPage
-    ) {
-      isTutorialTakenCheck({ page: 'leaderBoardPage', tour })
-    }
-  }, [isLoading, isAuthenticated, user])
 
   useEffect(() => {
     if (page > 1) {

@@ -1,28 +1,28 @@
-import { Box, Flex } from "@chakra-ui/react";
-import TagLine from "./TaglineComponent";
+import { Box, Flex } from '@chakra-ui/react'
+import TagLine from './TaglineComponent'
 
 const Heading = ({
   className,
   title,
   text,
   tag,
-  marginBottom = "8",
-  textTransform = "",
+  marginBottom = '8',
+  textTransform = '',
   children,
-  tagMarginBottom = "4",
-  tagColor = "white",
+  tagMarginBottom = '4',
+  tagColor = 'white',
   tagFontSize,
   tagFontWeight,
-  headingWeight = "",
+  headingWeight = '',
 }) => {
   return (
     <Flex
       maxWidth="50rem"
       marginX="auto"
       marginBottom={marginBottom}
-      justifyContent={"center"}
-      alignItems={"center"}
-      flexDirection={"column"}
+      justifyContent={'center'}
+      alignItems={'center'}
+      flexDirection={'column'}
       textAlign="center"
       className={className}
       textTransform={textTransform}
@@ -45,7 +45,7 @@ const Heading = ({
         </Box>
       )}
     </Flex>
-  );
-};
+  )
+}
 
-export default Heading;
+export default Heading

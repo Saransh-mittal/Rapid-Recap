@@ -20,7 +20,6 @@ import RankAndSociety from '../components/profileComponents/RankAndSociety'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import ToggleProfileVisibilty from '../components/profileComponents/LeftProfileSubComponents/ToggleProfileVisibilty.jsx'
-import { useProfileTour } from '../customHooks/useTours.js'
 import { Helmet } from 'react-helmet'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
 import ProfileExperienceLevel from '../components/profileComponents/ProfileExperienceLevel'
@@ -34,7 +33,6 @@ import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 // import WiseWeb from '../components/profileComponents/WiseWeb.jsx'
 //
 export default function Profile() {
-  const { tour, isTutorialTakenCheck } = useProfileTour()
   const { inGameName } = useParams()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
@@ -125,18 +123,6 @@ export default function Profile() {
       fetchProfile()
     }
   }, [inGameName, user, userProfile, otherUserProfiles])
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      isAuthenticated &&
-      user &&
-      user?.tutorial.profilePage &&
-      loginedUserProfile
-    ) {
-      isTutorialTakenCheck({ page: 'profilePage', tour })
-    }
-  }, [isLoading, isAuthenticated, user, loginedUserProfile])
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
