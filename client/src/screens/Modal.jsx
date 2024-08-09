@@ -1,43 +1,54 @@
-import React, { useState } from "react";
-import ReactDom from "react-dom";
+import React, { useState, useCallback, useMemo, lazy, Suspense } from 'react'
+import ReactDOM from 'react-dom'
 
 const MODAL_STYLES = {
-  position: "fixed",
-  top: "50%",
-  left: "50%",
-  backgroundColor: "rgb(34,34,34)",
-  transform: "translate(-50%, -50%)",
+  position: 'fixed',
+  top: '50%',
+  left: '50%',
+  backgroundColor: 'rgb(34,34,34)',
+  transform: 'translate(-50%, -50%)',
   zIndex: 2000,
-  minheight: "90%",
-  width: "90%",
-};
+  minHeight: '90%',
+  width: '90%',
+}
 
 const OVERLAY_STYLES = {
-  position: "fixed",
+  position: 'fixed',
   top: 0,
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: "rgba(0, 0, 0, .7)",
+  backgroundColor: 'rgba(0, 0, 0, .7)',
   zIndex: 2000,
-};
+}
 
-export default function Modal({ children, onClose }) {
-  const [isHovered, setIsHovered] = useState(false);
+// Lazy load the modal content component
+const ModalContent = lazy(() =>
+  import('../components/miscellaneous/ModalContent.jsx'),
+)
 
-  const buttonStyle = {
-    marginLeft: "100%",
-    marginTop: "-5px",
-    zIndex: 2001,
-    position: "absolute",
-    top: "21px",
-    right: "10px",
-    color: isHovered ? "#f0f0f0" : "#253547",
-    backgroundColor: isHovered ? "#37474f" : "white",
-    transition: "background-color 0.3s, color 0.3s", // Hover effect transition
-  };
+const Modal = ({ children, onClose }) => {
+  const [isHovered, setIsHovered] = useState(false)
 
-  return ReactDom.createPortal(
+  const buttonStyle = useMemo(
+    () => ({
+      marginLeft: '100%',
+      marginTop: '-5px',
+      zIndex: 2001,
+      position: 'absolute',
+      top: '21px',
+      right: '10px',
+      color: isHovered ? '#f0f0f0' : '#253547',
+      backgroundColor: isHovered ? '#37474f' : 'white',
+      transition: 'background-color 0.3s, color 0.3s',
+    }),
+    [isHovered],
+  )
+
+  const handleMouseOver = useCallback(() => setIsHovered(true), [])
+  const handleMouseOut = useCallback(() => setIsHovered(false), [])
+
+  return ReactDOM.createPortal(
     <>
       <div style={OVERLAY_STYLES} />
       <div style={MODAL_STYLES}>
@@ -45,14 +56,18 @@ export default function Modal({ children, onClose }) {
           className="btn fs-6"
           style={buttonStyle}
           onClick={onClose}
-          onMouseOver={() => setIsHovered(true)}
-          onMouseOut={() => setIsHovered(false)}
+          onMouseOver={handleMouseOver}
+          onMouseOut={handleMouseOut}
         >
           X
         </button>
-        {children}
+        <Suspense fallback={<div>Loading...</div>}>
+          <ModalContent>{children}</ModalContent>
+        </Suspense>
       </div>
     </>,
-    document.getElementById("overlay")
-  );
+    document.getElementById('overlay'),
+  )
 }
+
+export default Modal

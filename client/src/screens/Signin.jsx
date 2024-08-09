@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import './Signin.css'
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  lazy,
+  Suspense,
+} from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import EmailVerify from '../components/authComponents/EmailVerify'
-import Modal from './Modal'
-import ResetPassword from '../components/authComponents/ResetPassword'
 import throttle from 'lodash.throttle'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   useToast,
   Button,
@@ -21,22 +25,25 @@ import {
   ModalCloseButton,
   useDisclosure,
   Flex,
-  //useMediaQuery,
 } from '@chakra-ui/react'
-
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
-import Register from './Register'
-import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
-import { useDispatch, useSelector } from 'react-redux'
-import { setForgotPassword, setUser, setVerifyEmail } from '../redux/authSlice'
-import { setModal } from '../redux/uiSlice'
 import useSound from '../customHooks/useSound'
 import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
 import FillEyeVisible from '../assets/svg/FillEyeVisible'
+import { setForgotPassword, setUser, setVerifyEmail } from '../redux/authSlice'
+import { setModal } from '../redux/uiSlice'
+import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
+
+const Modal = lazy(() => import('./Modal'))
+const ResetPassword = lazy(() =>
+  import('../components/authComponents/ResetPassword'),
+)
+const EmailVerify = lazy(() =>
+  import('../components/authComponents/EmailVerify'),
+)
+const Register = lazy(() => import('./Register'))
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
-  //const isScreenSmallerThan992 = useMediaQuery("(max-width: 992px)")[0];
-
   const toast = useToast()
   const { playClick } = useSound()
   const { modal } = useSelector(state => state.ui)
@@ -48,7 +55,6 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     showPassword: false,
   })
   const emailOrInGameNameRef = useRef()
-  //const [inGameName, setInGameName] = useState("");
   const [enterInGameName, setEnterInGameName] = useState(false)
   const [inGameName, setInGameName] = useState('')
   const [load, setLoad] = useState({
@@ -65,6 +71,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   const inGameNameHandler = e => {
     setInGameName(e.target.value)
   }
+
   const inputHandler = e => {
     const { name, value } = e.target
     setData({ ...data, [name]: value })
@@ -258,192 +265,195 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           <ModalHeader color="white">Sign In</ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody w={'65%'} p={'20px'}>
-            {modal && forgotPassword && !verifyEmail && (
-              <Modal onClose={() => dispatchRedux(setModal(false))}>
-                <ResetPassword email={data.emailOrInGameName} />
-              </Modal>
-            )}
-            {modal && verifyEmail && (
-              <Modal onClose={() => dispatchRedux(setModal(false))}>
-                <EmailVerify email={data.emailOrInGameName} />
-              </Modal>
-            )}
-            {!enterInGameName ? (
-              <>
-                <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>
-                  <InputGroup>
-                    <Input
-                      ref={emailOrInGameNameRef}
-                      onChange={inputHandler}
-                      name="emailOrInGameName"
-                      value={data.emailOrInGameName}
-                      type="text"
-                      placeholder="Email / In-Game-Name"
-                      color="white"
-                    />
-                  </InputGroup>
+            <Suspense fallback={<div>Loading...</div>}>
+              {modal && forgotPassword && !verifyEmail && (
+                <Modal onClose={() => dispatchRedux(setModal(false))}>
+                  <ResetPassword email={data.emailOrInGameName} />
+                </Modal>
+              )}
+              {modal && verifyEmail && (
+                <Modal onClose={() => dispatchRedux(setModal(false))}>
+                  <EmailVerify email={data.emailOrInGameName} />
+                </Modal>
+              )}
+              {!enterInGameName ? (
+                <>
+                  <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>
+                    <InputGroup>
+                      <Input
+                        ref={emailOrInGameNameRef}
+                        onChange={inputHandler}
+                        name="emailOrInGameName"
+                        value={data.emailOrInGameName}
+                        type="text"
+                        placeholder="Email / In-Game-Name"
+                        color="white"
+                      />
+                    </InputGroup>
+                    <InputGroup mt={4}>
+                      <Input
+                        onChange={inputHandler}
+                        name="password"
+                        value={data.password}
+                        type={data.showPassword ? 'text' : 'password'}
+                        placeholder="Password"
+                        color="white"
+                      />
+                      <InputRightElement width="4.5rem">
+                        <IconButton
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: 'white',
+                          }}
+                          onClick={() =>
+                            setData(prevData => ({
+                              ...prevData,
+                              showPassword: !prevData.showPassword,
+                            }))
+                          }
+                          icon={
+                            data.showPassword ? (
+                              <FillEyeInvisible
+                                width="20px"
+                                height="20px"
+                                fill="white"
+                              />
+                            ) : (
+                              <FillEyeVisible
+                                width="20px"
+                                height="20px"
+                                fill="white"
+                              />
+                            )
+                          }
+                        />
+                      </InputRightElement>
+                    </InputGroup>
+                    <Button
+                      isLoading={load.submitLoad}
+                      loadingText="Submitting"
+                      colorScheme="teal"
+                      variant="outline"
+                      type="submit"
+                      size="lg"
+                      w={'100%'}
+                      mt={4}
+                    >
+                      Submit
+                    </Button>
+                  </form>
+                  <Flex
+                    justifyContent="space-between"
+                    mt={4}
+                    flexDirection={{ base: 'column', md: 'row' }}
+                    gap={4}
+                  >
+                    <Button
+                      variant="solid"
+                      colorScheme="green"
+                      onClick={() => {
+                        onClose()
+                        onRegisterOpen()
+                      }}
+                    >
+                      Create an account
+                    </Button>
+                    <Button
+                      isLoading={load.forgotLoad}
+                      variant="solid"
+                      colorScheme="red"
+                      onClick={handleForgotPasswordThrottled}
+                    >
+                      Forgot Password?
+                    </Button>
+                  </Flex>
+                  <Flex w={'100%'} justifyContent={'center'}>
+                    <Button mt={4} p={0}>
+                      <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
+                        <GoogleLogin
+                          onSuccess={async credentialResponse => {
+                            setData(prevData => ({
+                              ...prevData,
+                              credentialResponse,
+                            }))
+                            try {
+                              const response = await axios.post(
+                                '/api/user/handleGoogleLogin',
+                                { credentialResponse },
+                              )
+                              if (response.data.EnterInGameName) {
+                                toast({
+                                  title: 'Enter In-Game-Name',
+                                  description:
+                                    'Please enter your In-Game-Name to continue',
+                                  status: 'info',
+                                  duration: 5000,
+                                  isClosable: true,
+                                  position: 'top',
+                                })
+                                setEnterInGameName(true)
+                              } else {
+                                handleGoogleResponse(response)
+                              }
+                            } catch (error) {
+                              console.error(error.response.data.error)
+                              if (error.response.data.EnterInGameName)
+                                setEnterInGameName(true)
+                              toast({
+                                title: 'Login Failed',
+                                description: error.response.data.error,
+                                status: 'error',
+                                duration: 5000,
+                                isClosable: true,
+                                position: 'top',
+                              })
+                            }
+                          }}
+                          onError={() => {
+                            console.log('Login Failed')
+                          }}
+                        />
+                      </GoogleOAuthProvider>
+                    </Button>
+                  </Flex>
+                </>
+              ) : (
+                <>
                   <InputGroup mt={4}>
                     <Input
-                      onChange={inputHandler}
-                      name="password"
-                      value={data.password}
-                      type={data.showPassword ? 'text' : 'password'}
-                      placeholder="Password"
+                      onChange={inGameNameHandler}
+                      name="inGameName"
+                      value={inGameName}
+                      type="text"
+                      placeholder="Enter In-Game-Name"
                       color="white"
                     />
-                    <InputRightElement width="4.5rem">
-                      <IconButton
-                        style={{
-                          backgroundColor: 'transparent',
-                          color: 'white',
-                        }}
-                        onClick={() =>
-                          setData(prevData => ({
-                            ...prevData,
-                            showPassword: !prevData.showPassword,
-                          }))
-                        }
-                        icon={
-                          data.showPassword ? (
-                            <FillEyeInvisible
-                              width="20px"
-                              height="20px"
-                              fill="white"
-                            />
-                          ) : (
-                            <FillEyeVisible
-                              width="20px"
-                              height="20px"
-                              fill="white"
-                            />
-                          )
-                        }
-                      />
-                    </InputRightElement>
                   </InputGroup>
                   <Button
                     isLoading={load.submitLoad}
                     loadingText="Submitting"
                     colorScheme="teal"
                     variant="outline"
-                    type="submit"
+                    onClick={handleInGameNameSubmit}
                     size="lg"
                     w={'100%'}
                     mt={4}
                   >
                     Submit
                   </Button>
-                </form>
-                <Flex
-                  justifyContent="space-between"
-                  mt={4}
-                  flexDirection={{ base: 'column', md: 'row' }}
-                  gap={4}
-                >
-                  <Button
-                    variant="solid"
-                    colorScheme="green"
-                    onClick={() => {
-                      onClose()
-                      onRegisterOpen()
-                    }}
-                  >
-                    Create an account
-                  </Button>
-                  <Button
-                    isLoading={load.forgotLoad}
-                    variant="solid"
-                    colorScheme="red"
-                    onClick={handleForgotPasswordThrottled}
-                  >
-                    Forgot Password?
-                  </Button>
-                </Flex>
-                <Flex w={'100%'} justifyContent={'center'}>
-                  <Button mt={4} p={0}>
-                    <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
-                      <GoogleLogin
-                        onSuccess={async credentialResponse => {
-                          setData(prevData => ({
-                            ...prevData,
-                            credentialResponse,
-                          }))
-                          try {
-                            const response = await axios.post(
-                              '/api/user/handleGoogleLogin',
-                              { credentialResponse },
-                            )
-                            // Store role in localStorage
-                            if (response.data.EnterInGameName) {
-                              toast({
-                                title: 'Enter In-Game-Name',
-                                description:
-                                  'Please enter your In-Game-Name to continue',
-                                status: 'info',
-                                duration: 5000,
-                                isClosable: true,
-                                position: 'top',
-                              })
-                              setEnterInGameName(true)
-                            } else {
-                              handleGoogleResponse(response)
-                            }
-                          } catch (error) {
-                            console.error(error.response.data.error)
-                            if (error.response.data.EnterInGameName)
-                              setEnterInGameName(true)
-                            toast({
-                              title: 'Login Failed',
-                              description: error.response.data.error,
-                              status: 'error',
-                              duration: 5000,
-                              isClosable: true,
-                              position: 'top',
-                            })
-                          }
-                        }}
-                        onError={() => {
-                          console.log('Login Failed')
-                        }}
-                      />
-                    </GoogleOAuthProvider>
-                  </Button>
-                </Flex>
-              </>
-            ) : (
-              <>
-                <InputGroup mt={4}>
-                  <Input
-                    onChange={e => setInGameName(e.target.value)}
-                    name="inGameName"
-                    value={inGameName}
-                    type="text"
-                    placeholder="Enter In-Game-Name"
-                    color="white"
-                  />
-                </InputGroup>
-                <Button
-                  isLoading={load.submitLoad}
-                  loadingText="Submitting"
-                  colorScheme="teal"
-                  variant="outline"
-                  onClick={handleInGameNameSubmit}
-                  size="lg"
-                  w={'100%'}
-                  mt={4}
-                >
-                  Submit
-                </Button>
-              </>
-            )}
+                </>
+              )}
+            </Suspense>
           </ModalBody>
         </ModalContent>
       </ChakraModal>
-      <Register
-        isOpen={isRegisterOpen}
-        onClose={onRegisterClose}
-        signinOnOpen={onOpen}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Register
+          isOpen={isRegisterOpen}
+          onClose={onRegisterClose}
+          signinOnOpen={onOpen}
+        />
+      </Suspense>
     </>
   )
 }
