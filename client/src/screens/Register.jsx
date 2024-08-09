@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import './Register.css'
 import axios from 'axios'
-import Modal from './Modal'
-import EmailVerify from '../components/authComponents/EmailVerify'
+import throttle from 'lodash.throttle'
 import {
   Button,
   useToast,
@@ -21,13 +20,17 @@ import {
   ModalCloseButton,
   Flex,
 } from '@chakra-ui/react'
-import throttle from 'lodash.throttle'
-
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../customHooks/useSound'
 import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
 import FillEyeVisible from '../assets/svg/FillEyeVisible'
+
+// Lazy load components
+const Modal = lazy(() => import('./Modal'))
+const EmailVerify = lazy(() =>
+  import('../components/authComponents/EmailVerify'),
+)
 
 export default function Register({ isOpen, onClose, signinOnOpen }) {
   const [emailVerified, setEmailVerified] = useState(false)
@@ -54,15 +57,15 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
 
   const inputHandler = e => {
     const { name, value } = e.target
-    setData({ ...data, [name]: value })
+    setData(prevData => ({ ...prevData, [name]: value }))
   }
 
   const togglePasswordVisibility = field => {
     playClick()
-    setData({
-      ...data,
-      [field]: !data[field],
-    })
+    setData(prevData => ({
+      ...prevData,
+      [field]: !prevData[field],
+    }))
   }
 
   const handleSubmit = async e => {
@@ -70,10 +73,8 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
     setLoad(true)
     e.preventDefault()
     try {
-      const newData = data
       const pic = await submitImage(data)
-      newData.pic = pic
-      const response = await axios.post(`/api/user/register`, newData)
+      const response = await axios.post(`/api/user/register`, { ...data, pic })
       if (response.status === 201) {
         dispatch(setModal(true))
         toast({
@@ -89,7 +90,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
     } catch (error) {
       toast({
         title: 'Registration Failed',
-        description: error.response.data.error,
+        description: error.response?.data?.error || error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -100,24 +101,21 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
     }
   }
 
-  useEffect(() => {
-    document.title = 'Register - Rapid Recap'
-  }, [])
-
   const handleSubmitThrottled = useCallback(throttle(handleSubmit, 1000), [
     data,
   ])
+
+  useEffect(() => {
+    document.title = 'Register - Rapid Recap'
+    return () => handleSubmitThrottled.cancel()
+  }, [handleSubmitThrottled])
 
   useEffect(() => {
     if (emailVerified) {
       onClose()
       signinOnOpen()
     }
-  }, [emailVerified])
-
-  useEffect(() => {
-    return () => handleSubmitThrottled.cancel()
-  }, [handleSubmitThrottled])
+  }, [emailVerified, onClose, signinOnOpen])
 
   const handleKeyPress = e => {
     if (e.key === 'Enter') {
@@ -125,22 +123,20 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
     }
   }
 
-  const submitImage = async dataForPic => {
+  const submitImage = async ({ pic }) => {
     playClick()
     try {
-      const img = dataForPic.pic
       const data = new FormData()
-      data.append('file', img)
+      data.append('file', pic)
       data.append('upload_preset', 'ProfilePics')
       data.append('cloud_name', 'dxstsrnbs')
       const response = await axios.post(
         'https://api.cloudinary.com/v1_1/dxstsrnbs/image/upload',
         data,
       )
-      const pic = response.data.url
-      return pic
-    } catch (e) {
-      console.log(e)
+      return response.data.url
+    } catch (error) {
+      console.error('Image upload failed:', error)
     }
   }
 
@@ -152,13 +148,13 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
       const reader = new FileReader()
       reader.onloadend = () => {
         setPicDisplay(reader.result)
-        setData({ ...data, pic: img })
+        setData(prevData => ({ ...prevData, pic: img }))
       }
       reader.readAsDataURL(img)
     } catch (error) {
       toast({
         title: 'Image upload Failed',
-        description: error,
+        description: error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -207,50 +203,40 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
         <ModalHeader color="white">Register</ModalHeader>
         <ModalCloseButton color="white" />
         <ModalBody>
-          {modal && (
-            <Modal onClose={() => dispatch(setModal(false))}>
-              <EmailVerify
-                email={data.email}
-                setEmailVerified={setEmailVerified}
-              />
-            </Modal>
-          )}
+          <Suspense fallback={<Spinner size="lg" color="white" />}>
+            {modal && (
+              <Modal onClose={() => dispatch(setModal(false))}>
+                <EmailVerify
+                  email={data.email}
+                  setEmailVerified={setEmailVerified}
+                />
+              </Modal>
+            )}
+          </Suspense>
           <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: '25px',
-              }}
-            >
+            <Flex direction="column" align="center" mb="4">
               {imageLoading ? (
-                <Spinner size="lg" />
+                <Spinner size="lg" color="white" />
               ) : (
                 <Image
-                  loading={'eager'}
                   src={picDisplay}
                   alt="Profile Picture"
-                  style={{
-                    width: '100px',
-                    height: '100px',
-                    borderRadius: '50%',
-                    marginBottom: '10px',
-                  }}
+                  w="100px"
+                  h="100px"
+                  borderRadius="50%"
+                  mb="4"
                 />
               )}
-              <div>
-                <label
-                  style={{
-                    color: 'white',
-                    fontWeight: 'bold',
-                    marginBottom: '10px',
-                  }}
-                >
-                  Upload Profile Picture
-                </label>
-              </div>
+              <label
+                htmlFor="profile-pic"
+                style={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                  marginBottom: '10px',
+                }}
+              >
+                Upload Profile Picture
+              </label>
               <Input
                 id="profile-pic"
                 type="file"
@@ -259,12 +245,15 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
                 onChange={handleImageChange}
                 style={{ display: 'none' }}
               />
-              <label htmlFor="profile-pic">
-                <Button as="span" colorScheme="blue" style={{ size: 'sm' }}>
-                  Choose File
-                </Button>
-              </label>
-            </div>
+              <Button
+                as="span"
+                colorScheme="blue"
+                size="sm"
+                onClick={() => document.getElementById('profile-pic').click()}
+              >
+                Choose File
+              </Button>
+            </Flex>
             <Flex direction="column" gap="4" mb="4">
               <Input
                 name="email"
@@ -342,7 +331,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
                     style={{ backgroundColor: 'transparent', color: 'white' }}
                     onClick={() => togglePasswordVisibility('showCPassword')}
                     icon={
-                      data.showPassword ? (
+                      data.showCPassword ? (
                         <FillEyeInvisible
                           width="20px"
                           height="20px"
@@ -382,7 +371,6 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
             <Button
               variant="solid"
               colorScheme="green"
-              type="button"
               onClick={() => {
                 onClose()
                 signinOnOpen()
