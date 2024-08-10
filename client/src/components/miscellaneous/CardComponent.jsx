@@ -6,9 +6,7 @@ const BenefitCard = ({
   title,
   text,
   backgroundUrl,
-  iconUrl,
   imageUrl,
-  light,
 }) => {
   return (
     <Box
@@ -29,21 +27,18 @@ const BenefitCard = ({
         p="1.6rem"
         pointerEvents="none"
       >
-        <Heading size="sm" mb={'1.5rem'}>
+        <Heading size="sm" mb={'1.5rem'} color={'#64FFDA'}>
           {title}
         </Heading>
         <Flex>
           <Flex flexDirection={'column'}>
             {text.split('\n').map((line, index) => (
               <Flex key={index}>
-                <Flex marginRight={'5px'}>➤</Flex>
+                <Flex marginRight={'5px'} color={'#FFA500'}>
+                  ➤
+                </Flex>
                 <Flex>
-                  <Text
-                    fontSize="sm"
-                    mb={4}
-                    color="gray.500"
-                    textAlign={'left'}
-                  >
+                  <Text fontSize="sm" mb={4} color="#E6F1FF" textAlign={'left'}>
                     {line}
                   </Text>{' '}
                 </Flex>
@@ -62,7 +57,7 @@ const BenefitCard = ({
           transition="opacity 0.2s"
           _hover={{ opacity: 0.1 }}
         >
-          {!imageUrl && (
+          {imageUrl && (
             <Image
               src={imageUrl}
               alt={title}

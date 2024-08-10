@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { MouseParallax } from "react-just-parallax";
-import { Box, Flex, Image } from "@chakra-ui/react";
-import PlusSvg from "../../../assets/svg/PlusSvg";
-import gradient from "../../../assets/gradient.webp";
+import { useEffect, useState } from 'react'
+import { MouseParallax } from 'react-just-parallax'
+import { Box, Flex, Image } from '@chakra-ui/react'
+import PlusSvg from '../../../assets/svg/PlusSvg'
+import gradient from '../../../assets/gradient.webp'
 
 export const Gradient = () => {
   return (
@@ -28,8 +28,8 @@ export const Gradient = () => {
         lg={{ h: 6, mx: 20 }}
       />
     </>
-  );
-};
+  )
+}
 
 export const MediumScreenbgGradient = ({ top, left, width }) => {
   return (
@@ -58,20 +58,20 @@ export const MediumScreenbgGradient = ({ top, left, width }) => {
           width="942px"
           height="942px"
           alt="Gradient"
-          bg={"transparent"}
+          bg={'transparent'}
         />
       </Box>
     </Box>
-  );
-};
+  )
+}
 
 export const BottomLine = ({ lineTop, plusTop, persistOnEveryVP }) => {
   return (
     <>
       <Box
-        display={persistOnEveryVP ? "block" : { xl: "block", base: "none" }}
+        display={persistOnEveryVP ? 'block' : { xl: 'block', base: 'none' }}
         position="absolute"
-        top={lineTop ? lineTop : "55.25rem"}
+        top={lineTop ? lineTop : '55.25rem'}
         left={10}
         right={10}
         h="1px"
@@ -80,9 +80,9 @@ export const BottomLine = ({ lineTop, plusTop, persistOnEveryVP }) => {
         zIndex={1}
       />
       <Box
-        display={persistOnEveryVP ? "block" : { xl: "block", base: "none" }}
+        display={persistOnEveryVP ? 'block' : { xl: 'block', base: 'none' }}
         position="absolute"
-        top={plusTop ? plusTop : "54.9375rem"}
+        top={plusTop ? plusTop : '54.9375rem'}
         left="2.1875rem"
         zIndex={2}
         pointerEvents="none"
@@ -90,9 +90,9 @@ export const BottomLine = ({ lineTop, plusTop, persistOnEveryVP }) => {
         <PlusSvg />
       </Box>
       <Box
-        display={persistOnEveryVP ? "block" : { xl: "block", base: "none" }}
+        display={persistOnEveryVP ? 'block' : { xl: 'block', base: 'none' }}
         position="absolute"
-        top={plusTop ? plusTop : "54.9375rem"}
+        top={plusTop ? plusTop : '54.9375rem'}
         right="2.1875rem"
         zIndex={2}
         pointerEvents="none"
@@ -100,8 +100,8 @@ export const BottomLine = ({ lineTop, plusTop, persistOnEveryVP }) => {
         <PlusSvg />
       </Box>
     </>
-  );
-};
+  )
+}
 
 const Rings = () => {
   return (
@@ -141,7 +141,7 @@ const Rings = () => {
       />
       <Box
         position="absolute"
-        top={"50%"}
+        top={'50%'}
         left="50%"
         w="11rem"
         aspectRatio="1"
@@ -151,23 +151,23 @@ const Rings = () => {
         transform="translate(-50%, -50%)"
       />
     </>
-  );
-};
+  )
+}
 
 export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   return (
     <Box
       position="absolute"
       // top={{ base: "70%", md: "60%", xl: "50%" }}
-      display={{ base: "none", md: "block" }}
-      top={bTop ? bTop : { base: "-50%", md: "-50%", lg: "-100%", xl: "-110%" }}
-      left={bLeft ? bLeft : "50%"}
+      display={{ base: 'none', md: 'block' }}
+      top={bTop ? bTop : { base: '-50%', md: '-50%', lg: '-100%', xl: '-110%' }}
+      left={bLeft ? bLeft : '50%'}
       w="55rem"
       aspectRatio="1"
       border="1px"
@@ -177,10 +177,7 @@ export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
     >
       <Rings />
 
-      <MouseParallax
-        strength={0.07}
-        parallaxContainerRef={parallaxRef}
-      >
+      <MouseParallax strength={0.07} parallaxContainerRef={parallaxRef}>
         <Box
           position="absolute"
           bottom="50%"
@@ -198,8 +195,8 @@ export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
             bgGradient="linear(to-b, #DD734F, #1A1A32)"
             rounded="full"
             transition="transform 0.5s ease-out, opacity 0.5s ease-out"
-            transform={mounted ? "translateY(0)" : "translateY(10)"}
-            opacity={mounted ? "1" : "0"}
+            transform={mounted ? 'translateY(0)' : 'translateY(10)'}
+            opacity={mounted ? '1' : '0'}
           />
         </Box>
 
@@ -220,8 +217,8 @@ export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
             bgGradient="linear(to-b, #DD734F, #1A1A32)"
             rounded="full"
             transition="transform 0.5s ease-out, opacity 0.5s ease-out"
-            transform={mounted ? "translateY(0)" : "translateY(10)"}
-            opacity={mounted ? "1" : "0"}
+            transform={mounted ? 'translateY(0)' : 'translateY(10)'}
+            opacity={mounted ? '1' : '0'}
           />
         </Box>
 
@@ -235,7 +232,7 @@ export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
           transform="rotate(54deg)"
         >
           <Box
-            display={{ xl: "block", base: "none" }}
+            display={{ xl: 'block', base: 'none' }}
             w="4"
             h="4"
             ml="-1"
@@ -243,8 +240,8 @@ export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
             bgGradient="linear(to-b, #B9AEDF, #1A1A32)"
             rounded="full"
             transition="transform 0.5s ease-out, opacity 0.5s ease-out"
-            transform={mounted ? "translateY(0)" : "translateY(10)"}
-            opacity={mounted ? "1" : "0"}
+            transform={mounted ? 'translateY(0)' : 'translateY(10)'}
+            opacity={mounted ? '1' : '0'}
           />
         </Box>
 
@@ -265,8 +262,8 @@ export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
             bgGradient="linear(to-b, #B9AEDF, #1A1A32)"
             rounded="full"
             transition="transform 0.5s ease-out, opacity 0.5s ease-out"
-            transform={mounted ? "translateY(0)" : "translateY(10)"}
-            opacity={mounted ? "1" : "0"}
+            transform={mounted ? 'translateY(0)' : 'translateY(10)'}
+            opacity={mounted ? '1' : '0'}
           />
         </Box>
 
@@ -287,8 +284,8 @@ export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
             bgGradient="linear(to-b, #88E5BE, #1A1A32)"
             rounded="full"
             transition="transform 0.5s ease-out, opacity 0.5s ease-out"
-            transform={mounted ? "translateY(0)" : "translateY(10)"}
-            opacity={mounted ? "1" : "0"}
+            transform={mounted ? 'translateY(0)' : 'translateY(10)'}
+            opacity={mounted ? '1' : '0'}
           />
         </Box>
 
@@ -309,11 +306,11 @@ export const BackgroundCircles = ({ parallaxRef, bTop, bLeft }) => {
             bgGradient="linear(to-b, #88E5BE, #1A1A32)"
             rounded="full"
             transition="transform 0.5s ease-out, opacity 0.5s ease-out"
-            transform={mounted ? "translateY(0)" : "translateY(10)"}
-            opacity={mounted ? "1" : "0"}
+            transform={mounted ? 'translateY(0)' : 'translateY(10)'}
+            opacity={mounted ? '1' : '0'}
           />
         </Box>
       </MouseParallax>
     </Box>
-  );
-};
+  )
+}
