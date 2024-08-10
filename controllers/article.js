@@ -84,7 +84,6 @@ const getArticle = async (req, res) => {
   try {
     const article = await Article.findById(id)
     if (!article) {
-      res.status(422).json({ error: 'Article not found' })
       throw new Error('Article not found')
     }
     const paragraphs = await breakArticleIntoParagraphs(article.mainText)
