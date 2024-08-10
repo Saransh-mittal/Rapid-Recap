@@ -1,5 +1,5 @@
 // src/components/chat/GroupedMessages.js
-import React from 'react'
+import React, { useMemo, useCallback, useRef } from 'react'
 import { Box, Tooltip, Flex, Avatar, Text } from '@chakra-ui/react'
 import {
   isSameSender,
@@ -11,6 +11,203 @@ import ArticleCard from '../../../miscellaneous/ArticleCard'
 import MessageReactions from './MessageReactions'
 import { useNavigate } from 'react-router-dom'
 import { safelyAccessProperty } from '../../../../utils/helper.utils'
+
+const SystemMessage = ({ content, id }) => (
+  <Box
+    style={{
+      textAlign: 'center',
+      margin: '40px 0',
+      color: '#999',
+      userSelect: 'none',
+    }}
+    key={id}
+  >
+    {content}
+  </Box>
+)
+
+const ArticleMessage = ({
+  message,
+  isSameSender,
+  isLastMessage,
+  user,
+  handleContextMenu,
+  handleTouchStart,
+  handleTouchEnd,
+  isScreenSmallerThan600px,
+  formatTime,
+  MessageStatus,
+  navigate,
+  handleReactionClick,
+  isSameLoggedUser,
+}) => {
+  const messageRef = useRef()
+  return (
+    <Box
+      ref={messageRef}
+      userSelect={'none'}
+      mt={'1.5rem'}
+      key={message._id}
+      style={{
+        display: 'flex',
+        justifyContent: isSameLoggedUser ? 'flex-end' : 'flex-start',
+        marginBottom: '0.45rem',
+        width: '100%',
+        alignSelf: isSameLoggedUser ? 'flex-end' : 'flex-start',
+      }}
+    >
+      {(isSameSender || isLastMessage) && (
+        <Tooltip label={message.sender.name} placement="bottom-start" hasArrow>
+          <Avatar
+            mt="7px"
+            mr={3}
+            size="sm"
+            cursor="pointer"
+            name={message.sender.name}
+            src={message.sender.pic}
+          />
+        </Tooltip>
+      )}
+      <Flex
+        w={isScreenSmallerThan600px ? '75%' : '40%'}
+        onContextMenu={e =>
+          handleContextMenu(e, message._id, messageRef.current)
+        }
+        onTouchStart={e => handleTouchStart(e, message._id, messageRef.current)}
+        onTouchEnd={handleTouchEnd}
+        position={'relative'}
+        marginLeft={isSameSenderMargin}
+      >
+        <ArticleCard
+          article={message.article}
+          onClick={() => {
+            navigate(`/article/${message.article._id}`)
+          }}
+          viewMode="grid"
+          width={'100%'}
+          cancelHoverEffect={true}
+        />
+        <div
+          style={{
+            fontSize: '0.75rem',
+            color: '#555',
+            textAlign: 'right',
+            marginTop: '2px',
+            display: 'flex',
+            position: 'absolute',
+            bottom: '0.5rem',
+            right: '0.5rem',
+          }}
+        >
+          {formatTime(message.createdAt)}
+          {!message.isDeleted && (
+            <span style={{ marginLeft: '4px' }}>
+              <MessageStatus message={message} user={user} />
+            </span>
+          )}
+        </div>
+        <Box>
+          {message.content}
+          <MessageReactions
+            message={message}
+            isSameLoggedUser={isSameLoggedUser}
+            handleReactionClick={handleReactionClick}
+          />
+        </Box>
+      </Flex>
+    </Box>
+  )
+}
+
+const TextMessage = ({
+  message,
+  isSameSender,
+  isLastMessage,
+  user,
+  handleContextMenu,
+  handleTouchStart,
+  handleTouchEnd,
+  isSameSenderMargin,
+  formatTime,
+  MessageStatus,
+  handleReactionClick,
+  isSameLoggedUser,
+}) => {
+  const messageRef = useRef()
+  return (
+    <Box
+      ref={messageRef}
+      style={{ display: 'flex' }}
+      key={message._id}
+      marginBottom={'0.75rem'}
+      className="message-container"
+      userSelect={'none'}
+    >
+      {(isSameSender || isLastMessage) && (
+        <Tooltip label={message.sender.name} placement="bottom-start" hasArrow>
+          <Avatar
+            mt="7px"
+            mr={3}
+            size="sm"
+            cursor="pointer"
+            name={message.sender.name}
+            src={message.sender.pic}
+          />
+        </Tooltip>
+      )}
+      <span
+        style={{
+          backgroundColor: isSameLoggedUser ? '#BEE3F8' : '#B9F5D0',
+          marginLeft: isSameSenderMargin,
+          marginTop: isSameLoggedUser ? 3 : 5,
+          borderRadius: '12px',
+          padding: '5px 15px',
+          maxWidth: '80%',
+          color: 'black',
+          marginRight: '0.75rem',
+          position: 'relative',
+          cursor: 'pointer',
+        }}
+        onContextMenu={e =>
+          handleContextMenu(e, message._id, messageRef.current)
+        }
+        onTouchStart={e => handleTouchStart(e, message._id, messageRef.current)}
+        onTouchEnd={handleTouchEnd}
+      >
+        <Text
+          color={message.isDeleted ? '#9CAFAA' : 'black'}
+          fontStyle={message.isDeleted ? 'italic' : ''}
+          m={0}
+          p={0}
+        >
+          {message.isDeleted ? 'This message was deleted' : message.content}
+        </Text>
+        <MessageReactions
+          message={message}
+          isSameLoggedUser={isSameLoggedUser}
+          handleReactionClick={handleReactionClick}
+        />
+        <div
+          style={{
+            fontSize: '0.75rem',
+            color: '#555',
+            textAlign: 'right',
+            marginTop: '2px',
+            display: 'flex',
+            justifyContent: 'flex-end',
+          }}
+        >
+          {formatTime(message.createdAt)}
+          {!message.isDeleted && (
+            <span style={{ marginLeft: '4px' }}>
+              <MessageStatus message={message} user={user} />
+            </span>
+          )}
+        </div>
+      </span>
+    </Box>
+  )
+}
 
 const GroupedMessages = ({
   groupedMessages,
@@ -24,217 +221,99 @@ const GroupedMessages = ({
   isScreenSmallerThan600px,
 }) => {
   const navigate = useNavigate()
-  return (
-    <>
-      {Object.entries(groupedMessages).map(([date, msgs]) => (
-        <React.Fragment key={date}>
-          <div style={{ textAlign: 'center', margin: '10px 0', color: '#999' }}>
-            {date}
-          </div>
-          {msgs.map((m, i) => {
-            const senderId = safelyAccessProperty(m, 'sender._id')
-            if (!senderId) {
-              // console.error('Message with missing sender ID:', m)
-              return null
-            }
-            const messageDeletedForUser = isMessageDeletedForUser(
-              m,
-              user._id.toString(),
+
+  const memoizedMessages = useMemo(() => {
+    return Object.entries(groupedMessages).map(([date, msgs]) => (
+      <React.Fragment key={date}>
+        <div style={{ textAlign: 'center', margin: '40px 0', color: '#999' }}>
+          {date}
+        </div>
+        {msgs.map((m, i) => {
+          const senderId = safelyAccessProperty(m, 'sender._id')
+          if (!senderId) {
+            return null
+          }
+          const messageDeletedForUser = isMessageDeletedForUser(
+            m,
+            user._id.toString(),
+          )
+          const messageDeleted = m.isDeleted
+          const isSameLoggedUser = senderId === user._id
+          const isSameSenderValue = isSameSender(msgs, m, i, user._id)
+          const isLastMessageValue = isLastMessage(msgs, i, user._id)
+          const isSameSenderMarginValue = isSameSenderMargin(
+            msgs,
+            m,
+            i,
+            user._id,
+          )
+
+          let messageComponent
+
+          if (m.type === 'system') {
+            messageComponent = (
+              <SystemMessage key={m._id} content={m.content} id={m._id} />
             )
-            const messageDeleted = m.isDeleted
-            const isSameLoggedUser = senderId === user._id
-
-            if (m.type === 'system') {
-              if (senderId === user._id) return
-              return (
-                // design a system message that is centered and looks like a date style
-                <Box
-                  style={{
-                    textAlign: 'center',
-                    margin: '10px 0',
-                    color: '#999',
-                  }}
-                  key={m._id}
-                >
-                  {m.content}
-                </Box>
-              )
-            }
-
-            if (
-              m.type === 'article_card' &&
-              !(messageDeleted || messageDeletedForUser)
-            ) {
-              return (
-                <Box
-                  mt={'1.5rem'}
-                  key={m._id}
-                  style={{
-                    display: 'flex',
-                    justifyContent:
-                      senderId === user._id ? 'flex-end' : 'flex-start',
-                    marginBottom: '0.45rem',
-                    width: '100%',
-                    alignSelf:
-                      senderId === user._id ? 'flex-end' : 'flex-start',
-                  }}
-                >
-                  {(isSameSender(msgs, m, i, user._id) ||
-                    isLastMessage(msgs, i, user._id)) && (
-                    <Tooltip
-                      label={m.sender.name}
-                      placement="bottom-start"
-                      hasArrow
-                    >
-                      <Avatar
-                        mt="7px"
-                        mr={3}
-                        size="sm"
-                        cursor="pointer"
-                        name={m.sender.name}
-                        src={m.sender.pic}
-                      />
-                    </Tooltip>
-                  )}
-                  <Flex
-                    w={isScreenSmallerThan600px ? '75%' : '40%'}
-                    onContextMenu={e => handleContextMenu(e, m._id)}
-                    onTouchStart={e => handleTouchStart(e, m._id)}
-                    onTouchEnd={handleTouchEnd}
-                    position={'relative'}
-                    marginLeft={isSameSenderMargin(msgs, m, i, user._id)}
-                  >
-                    <ArticleCard
-                      article={m.article}
-                      onClick={() => {
-                        navigate(`/article/${m.article._id}`)
-                      }}
-                      viewMode="grid"
-                      width={'100%'}
-                      cancelHoverEffect={true}
-                    />
-                    <div
-                      style={{
-                        fontSize: '0.75rem',
-                        color: '#555',
-                        textAlign: 'right',
-                        marginTop: '2px',
-                        display: 'flex',
-                        position: 'absolute',
-                        bottom: '0.5rem',
-                        right: '0.5rem',
-                      }}
-                    >
-                      {formatTime(m.createdAt)}
-                      {!messageDeleted && !messageDeletedForUser && (
-                        <span style={{ marginLeft: '4px' }}>
-                          <MessageStatus message={m} user={user} />
-                        </span>
-                      )}
-                    </div>
-                    <Box>
-                      {m.content}
-                      <MessageReactions
-                        message={m}
-                        isSameLoggedUser={isSameLoggedUser}
-                        handleReactionClick={handleReactionClick}
-                      />
-                    </Box>
-                  </Flex>
-                </Box>
-              )
-            }
-
-            return (
-              <Box
-                style={{ display: 'flex' }}
+          } else if (
+            m.type === 'article_card' &&
+            !(messageDeleted || messageDeletedForUser)
+          ) {
+            messageComponent = (
+              <ArticleMessage
                 key={m._id}
-                marginBottom={'0.75rem'}
-              >
-                {(isSameSender(msgs, m, i, user._id) ||
-                  isLastMessage(msgs, i, user._id)) && (
-                  <Tooltip
-                    label={m.sender.name}
-                    placement="bottom-start"
-                    hasArrow
-                  >
-                    <Avatar
-                      mt="7px"
-                      mr={3}
-                      size="sm"
-                      cursor="pointer"
-                      name={m.sender.name}
-                      src={m.sender.pic}
-                    />
-                  </Tooltip>
-                )}
-                <span
-                  style={{
-                    backgroundColor: `${
-                      senderId === user._id ? '#BEE3F8' : '#B9F5D0'
-                    }`,
-                    marginLeft: isSameSenderMargin(msgs, m, i, user._id),
-                    marginTop: isSameLoggedUser ? 3 : 5,
-                    borderRadius: '12px',
-                    padding: '5px 15px',
-                    maxWidth: '80%',
-                    color: 'black',
-                    marginRight: '0.75rem',
-                    position: 'relative',
-                    cursor: 'pointer',
-                  }}
-                  onContextMenu={e => handleContextMenu(e, m._id)}
-                  onTouchStart={e => handleTouchStart(e, m._id)}
-                  onTouchEnd={handleTouchEnd}
-                >
-                  <Text
-                    color={
-                      messageDeleted || messageDeletedForUser
-                        ? '#9CAFAA'
-                        : 'black'
-                    }
-                    fontStyle={
-                      messageDeleted || messageDeletedForUser ? 'italic' : ''
-                    }
-                    m={0}
-                    p={0}
-                  >
-                    {messageDeleted
-                      ? 'This message was deleted'
-                      : messageDeletedForUser
-                      ? 'This message was deleted for you'
-                      : m.content}
-                  </Text>
-                  <MessageReactions
-                    message={m}
-                    isSameLoggedUser={isSameLoggedUser}
-                    handleReactionClick={handleReactionClick}
-                  />
-                  <div
-                    style={{
-                      fontSize: '0.75rem',
-                      color: '#555',
-                      textAlign: 'right',
-                      marginTop: '2px',
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                    }}
-                  >
-                    {formatTime(m.createdAt)}
-                    {!messageDeleted && !messageDeletedForUser && (
-                      <span style={{ marginLeft: '4px' }}>
-                        <MessageStatus message={m} user={user} />
-                      </span>
-                    )}
-                  </div>
-                </span>
-              </Box>
+                message={m}
+                isSameSender={isSameSenderValue}
+                isLastMessage={isLastMessageValue}
+                user={user}
+                handleContextMenu={handleContextMenu}
+                handleTouchStart={handleTouchStart}
+                handleTouchEnd={handleTouchEnd}
+                isScreenSmallerThan600px={isScreenSmallerThan600px}
+                formatTime={formatTime}
+                MessageStatus={MessageStatus}
+                navigate={navigate}
+                handleReactionClick={handleReactionClick}
+                isSameLoggedUser={isSameLoggedUser}
+              />
             )
-          })}
-        </React.Fragment>
-      ))}
-    </>
-  )
+          } else {
+            messageComponent = (
+              <TextMessage
+                key={m._id}
+                message={m}
+                isSameSender={isSameSenderValue}
+                isLastMessage={isLastMessageValue}
+                user={user}
+                handleContextMenu={handleContextMenu}
+                handleTouchStart={handleTouchStart}
+                handleTouchEnd={handleTouchEnd}
+                isSameSenderMargin={isSameSenderMarginValue}
+                formatTime={formatTime}
+                MessageStatus={MessageStatus}
+                handleReactionClick={handleReactionClick}
+                isSameLoggedUser={isSameLoggedUser}
+              />
+            )
+          }
+
+          return messageComponent
+        })}
+      </React.Fragment>
+    ))
+  }, [
+    groupedMessages,
+    user._id,
+    handleContextMenu,
+    handleTouchStart,
+    handleTouchEnd,
+    handleReactionClick,
+    formatTime,
+    MessageStatus,
+    isScreenSmallerThan600px,
+    navigate,
+  ])
+
+  return <>{memoizedMessages}</>
 }
 
 export default GroupedMessages

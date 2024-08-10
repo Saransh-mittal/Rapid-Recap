@@ -9,23 +9,16 @@ import {
   DrawerCloseButton,
 } from '@chakra-ui/modal'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useCallback, useMemo, lazy, Suspense } from 'react'
 import axios from 'axios'
 import { useToast } from '@chakra-ui/toast'
 import { Spinner } from '@chakra-ui/spinner'
 import { ChatState } from '../../contextAPI/ChatProvider'
 import debounce from 'lodash.debounce'
-import UserListItem from './userAvatar/UserListItem'
 
-const debouncedSearch = debounce(async (query, callback) => {
-  try {
-    if (!query || query === '') return
-    const response = await axios.get(`/api/user/search?query=${query}`)
-    callback(response.data)
-  } catch (error) {
-    console.error('Error searching users:', error)
-  }
-}, 800)
+// Lazy load UserListItem component
+const UserListItem = lazy(() => import('./userAvatar/UserListItem'))
+
 const ChatSideDrawer = ({ isOpen, onClose }) => {
   const [search, setSearch] = useState('')
   const [searchResult, setSearchResult] = useState([])
@@ -42,55 +35,80 @@ const ChatSideDrawer = ({ isOpen, onClose }) => {
   } = ChatState()
 
   const toast = useToast()
-
   const history = useNavigate()
-  const handleSearch = async event => {
-    setLoading(true)
-    const { value } = event.target
-    setSearch(value)
-    if (value === '') {
-      setLoading(false)
-      setSearchResult([])
-      debouncedSearch.cancel()
-      return
-    }
-    debouncedSearch(value, responseData => {
-      if (!value || value === '') return
-      setSearchResult([...responseData])
-      if (responseData.length === 0)
-        toast({
-          title: 'No user found',
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-          position: 'top',
-        })
-      setLoading(false)
-    })
-  }
 
-  const accessChat = async userId => {
-    console.log(userId)
+  const debouncedSearch = useCallback(
+    debounce(async (query, callback) => {
+      try {
+        if (!query || query === '') return
+        const response = await axios.get(`/api/user/search?query=${query}`)
+        callback(response.data)
+      } catch (error) {
+        console.error('Error searching users:', error)
+      }
+    }, 800),
+    [],
+  )
 
-    try {
-      setLoadingChat(true)
-      const { data } = await axios.post(`/api/chat`, { userId })
+  const handleSearch = useCallback(
+    async event => {
+      setLoading(true)
+      const { value } = event.target
+      setSearch(value)
+      if (value === '') {
+        setLoading(false)
+        setSearchResult([])
+        debouncedSearch.cancel()
+        return
+      }
+      debouncedSearch(value, responseData => {
+        if (!value || value === '') return
+        setSearchResult(
+          responseData.filter(u => {
+            if (user._id === u._id) return false
+            return !searchResult.find(sr => sr._id === u._id)
+          }),
+        )
 
-      if (!chats.find(c => c._id === data._id)) setChats([data, ...chats])
-      setSelectedChat(data)
-      setLoadingChat(false)
-      onClose()
-    } catch (error) {
-      toast({
-        title: 'Error fetching the chat',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'bottom-left',
+        if (responseData.length === 0)
+          toast({
+            title: 'No user found',
+            status: 'info',
+            duration: 3000,
+            isClosable: true,
+            position: 'top',
+          })
+        setLoading(false)
       })
-    }
-  }
+    },
+    [debouncedSearch, toast],
+  )
+
+  const accessChat = useCallback(
+    async userId => {
+      console.log(userId)
+
+      try {
+        setLoadingChat(true)
+        const { data } = await axios.post(`/api/chat`, { userId })
+
+        if (!chats.find(c => c._id === data._id)) setChats([data, ...chats])
+        setSelectedChat(data)
+        setLoadingChat(false)
+        onClose()
+      } catch (error) {
+        toast({
+          title: 'Error fetching the chat',
+          description: error.message,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+          position: 'bottom-left',
+        })
+      }
+    },
+    [chats, onClose, setChats, setSelectedChat, toast],
+  )
 
   return (
     <>
@@ -102,7 +120,7 @@ const ChatSideDrawer = ({ isOpen, onClose }) => {
             backgroundImage:
               'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
             boxShadow:
-              '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)', // Increased intensity of the shadow
+              '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
           }}
           color={'white'}
         >
@@ -126,13 +144,15 @@ const ChatSideDrawer = ({ isOpen, onClose }) => {
             {loading ? (
               <Spinner />
             ) : (
-              searchResult?.map(user => (
-                <UserListItem
-                  key={user._id}
-                  user={user}
-                  handleFunction={() => accessChat(user._id)}
-                />
-              ))
+              <Suspense fallback={<Spinner />}>
+                {searchResult?.map(user => (
+                  <UserListItem
+                    key={user._id}
+                    user={user}
+                    handleFunction={() => accessChat(user._id)}
+                  />
+                ))}
+              </Suspense>
             )}
             {loadingChat && <Spinner ml="auto" d="flex" />}
           </DrawerBody>

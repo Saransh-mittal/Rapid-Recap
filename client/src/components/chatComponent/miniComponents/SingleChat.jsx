@@ -1,5 +1,12 @@
 // File: SingleChat.js
-import React, { useState, useRef, useEffect } from 'react'
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  Suspense,
+} from 'react'
 import {
   Box,
   Flex,
@@ -12,16 +19,27 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import ChatHeader from './singleChatsComponents/ChatHeader'
-import MessageInput from './singleChatsComponents/MessageInput'
-import MessageList from './singleChatsComponents/MessageList'
-import DeleteMessageModal from './singleChatsComponents/DeleteMessageModal'
-import BookmarksModal from './singleChatsComponents/BookmarksModal'
+import MessageStatus from './singleChatsComponents/MessageStatus'
+import rrlogoOutlined from '/images/rrlogo_badge.png'
+
+// Lazy load components
+const MessageInput = React.lazy(() =>
+  import('./singleChatsComponents/MessageInput'),
+)
+const MessageList = React.lazy(() =>
+  import('./singleChatsComponents/MessageList'),
+)
+const DeleteMessageModal = React.lazy(() =>
+  import('./singleChatsComponents/DeleteMessageModal'),
+)
+const BookmarksModal = React.lazy(() =>
+  import('./singleChatsComponents/BookmarksModal'),
+)
+
 import axios from 'axios'
 import { getSender } from '../config/ChatLogics'
 import useMessageHandlers from '../../../customHooks/useMessageHandlers'
 import useSocketHandlers from '../../../customHooks/useSocketHandlers'
-import MessageStatus from './singleChatsComponents/MessageStatus'
-import rrlogoOutlined from '/images/rrlogo_badge.png'
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -100,36 +118,42 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     fetchAgain,
   )
 
-  const typingHandler = e => {
-    setNewMessage(e.target.value)
+  const typingHandler = useCallback(
+    e => {
+      setNewMessage(e.target.value)
 
-    if (!socketConnected) return
-    if (e.target.value === '') {
-      socket?.emit('stop typing', selectedChat._id)
-      setTyping(false)
-      return
-    }
-    if (!typing) {
-      setTyping(true)
-      socket?.emit('typing', selectedChat._id)
-    }
-    let lastTypingTime = new Date().getTime()
-    var timerLength = 3000
-    setTimeout(() => {
-      var timeNow = new Date().getTime()
-      var timeDiff = timeNow - lastTypingTime
-      if (timeDiff >= timerLength && typing) {
+      if (!socketConnected) return
+      if (e.target.value === '') {
         socket?.emit('stop typing', selectedChat._id)
         setTyping(false)
+        return
       }
-    }, timerLength)
-  }
+      if (!typing) {
+        setTyping(true)
+        socket?.emit('typing', selectedChat._id)
+      }
+      let lastTypingTime = new Date().getTime()
+      const timerLength = 3000
+      setTimeout(() => {
+        const timeNow = new Date().getTime()
+        const timeDiff = timeNow - lastTypingTime
+        if (timeDiff >= timerLength && typing) {
+          socket?.emit('stop typing', selectedChat._id)
+          setTyping(false)
+        }
+      }, timerLength)
+    },
+    [socketConnected, typing, selectedChat?._id, socket, setNewMessage],
+  )
 
-  const onEmojiClick = emojiObject => {
-    setNewMessage(prevMessage => prevMessage + emojiObject.emoji)
-  }
+  const onEmojiClick = useCallback(
+    emojiObject => {
+      setNewMessage(prevMessage => prevMessage + emojiObject.emoji)
+    },
+    [setNewMessage],
+  )
 
-  const handleClickOutside = event => {
+  const handleClickOutside = useCallback(event => {
     if (
       emojiPickerRef.current &&
       !emojiPickerRef.current.contains(event.target)
@@ -142,16 +166,16 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     ) {
       setShowStickerPicker(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [])
+  }, [handleClickOutside])
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     const params = new URLSearchParams(location.search)
     const chatId = params.get('chatId')
     if (chatId) {
@@ -165,9 +189,18 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       chatId: selectedChat?._id,
     })
     setSelectedChat(null)
-  }
+  }, [
+    navigate,
+    socket,
+    user?._id,
+    selectedChat?._id,
+    setHasMore,
+    setMessagesFetched,
+    setMessages,
+    setSelectedChat,
+  ])
 
-  const handleAccept = async () => {
+  const handleAccept = useCallback(async () => {
     try {
       await axios.put('/api/chat/request/handle', {
         chatId: selectedChat._id,
@@ -193,9 +226,16 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         position: 'bottom',
       })
     }
-  }
+  }, [
+    selectedChat?._id,
+    navigate,
+    setSelectedChat,
+    setFetchAgain,
+    fetchAgain,
+    toast,
+  ])
 
-  const handleReject = async () => {
+  const handleReject = useCallback(async () => {
     try {
       await axios.put('/api/chat/request/handle', {
         chatId: selectedChat._id,
@@ -220,14 +260,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         position: 'bottom',
       })
     }
-  }
+  }, [selectedChat?._id, setFetchAgain, fetchAgain, handleClose, toast])
 
   useEffect(() => {
     if (selectedChat && selectedChat.status === 'rejected') {
       setFetchAgain(!fetchAgain)
       handleClose()
     }
-  }, [selectedChat?.status])
+  }, [selectedChat?.status, setFetchAgain, fetchAgain, handleClose])
 
   useEffect(() => {
     const shouldFetchMessages = () => {
@@ -244,7 +284,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       return false
     }
     if (shouldFetchMessages()) {
-      // console.log("fetching messages");
       fetchMessages()
     }
     selectedChatCompare.current = selectedChat
@@ -256,7 +295,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       })
       setMessagesFetched(false)
     }
-  }, [selectedChat])
+  }, [
+    selectedChat,
+    messages,
+    messagesFetched,
+    fetchMessages,
+    socket,
+    user?._id,
+  ])
 
   return (
     <>
@@ -280,12 +326,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             h="100%"
             borderRadius="lg"
             overflowY="hidden"
-            // style={{
-            //   backgroundImage:
-            //     'linear-gradient(-180deg, rgba(26, 21, 39, 0.6), rgba(14, 12, 22, 0.6) 88%, rgba(14, 12, 22, 0.6) 99%)',
-            //   boxShadow:
-            //     '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-            // }}
           >
             {loading ? (
               <Spinner
@@ -298,43 +338,46 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               />
             ) : (
               <>
-                {selectedChat.status === 'pending' &&
-                  selectedChat.chatCreatedBy !== user._id && (
-                    <MessageRequestComponent
-                      senderName={getSender(user, selectedChat.users)}
-                      onAccept={handleAccept}
-                      onReject={handleReject}
-                      // onBlock={handleBlock}
-                    />
-                  )}
-                <MessageList
-                  messages={messages}
-                  handleDeleteMessage={handleDeleteMessage}
-                  MessageStatus={MessageStatus}
-                  loadMoreMessages={loadMoreMessages}
-                  handleAddReaction={handleAddReaction}
-                  handleRemoveReaction={handleRemoveReaction}
-                  hasMore={hasMore}
-                  selectedChat={selectedChat}
-                  setHasMore={setHasMore}
-                />
+                <Suspense fallback={<Spinner color="white" />}>
+                  {selectedChat.status === 'pending' &&
+                    selectedChat.chatCreatedBy !== user._id && (
+                      <MessageRequestComponent
+                        senderName={getSender(user, selectedChat.users)}
+                        onAccept={handleAccept}
+                        onReject={handleReject}
+                      />
+                    )}
+                  <MessageList
+                    messages={messages}
+                    handleDeleteMessage={handleDeleteMessage}
+                    MessageStatus={MessageStatus}
+                    loadMoreMessages={loadMoreMessages}
+                    handleAddReaction={handleAddReaction}
+                    handleRemoveReaction={handleRemoveReaction}
+                    hasMore={hasMore}
+                    selectedChat={selectedChat}
+                    setHasMore={setHasMore}
+                  />
+                </Suspense>
               </>
             )}
             {(selectedChat.status === 'accepted' ||
               selectedChat.chatCreatedBy === user._id) && (
-              <MessageInput
-                sendMessage={sendMessage}
-                newMessage={newMessage}
-                typingHandler={typingHandler}
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
-                setShowStickerPicker={setShowStickerPicker}
-                emojiPickerRef={emojiPickerRef}
-                stickerPickerRef={stickerPickerRef}
-                onEmojiClick={onEmojiClick}
-                setShowBookmarksModal={setShowBookmarksModal}
-                fetchBookmarks={fetchBookmarks}
-              />
+              <Suspense fallback={<Spinner color="white" />}>
+                <MessageInput
+                  sendMessage={sendMessage}
+                  newMessage={newMessage}
+                  typingHandler={typingHandler}
+                  showEmojiPicker={showEmojiPicker}
+                  setShowEmojiPicker={setShowEmojiPicker}
+                  setShowStickerPicker={setShowStickerPicker}
+                  emojiPickerRef={emojiPickerRef}
+                  stickerPickerRef={stickerPickerRef}
+                  onEmojiClick={onEmojiClick}
+                  setShowBookmarksModal={setShowBookmarksModal}
+                  fetchBookmarks={fetchBookmarks}
+                />
+              </Suspense>
             )}
           </Box>
         </>
@@ -362,31 +405,28 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 through contact us.
               </Text>
             </Flex>
-            <Text
-              fontSize="lg"
-              // textTransform="uppercase"
-              letterSpacing="1px"
-              mb={0}
-            >
+            <Text fontSize="lg" letterSpacing="1px" mb={0}>
               Get Started by Selecting a Chat or searching user....
             </Text>
           </Box>
         </Flex>
       )}
-      <BookmarksModal
-        showBookmarksModal={showBookmarksModal}
-        setShowBookmarksModal={setShowBookmarksModal}
-        isLoadingBookmarks={isLoadingBookmarks}
-        bookmarks={bookmarks}
-        handleShareBookmark={handleShareBookmark}
-      />
-      <DeleteMessageModal
-        isOpen={isOpen}
-        onClose={onClose}
-        confirmDelete={confirmDelete}
-      />
+      <Suspense fallback={<Spinner color="white" />}>
+        <BookmarksModal
+          showBookmarksModal={showBookmarksModal}
+          setShowBookmarksModal={setShowBookmarksModal}
+          isLoadingBookmarks={isLoadingBookmarks}
+          bookmarks={bookmarks}
+          handleShareBookmark={handleShareBookmark}
+        />
+        <DeleteMessageModal
+          isOpen={isOpen}
+          onClose={onClose}
+          confirmDelete={confirmDelete}
+        />
+      </Suspense>
     </>
   )
 }
 
-export default SingleChat
+export default React.memo(SingleChat)

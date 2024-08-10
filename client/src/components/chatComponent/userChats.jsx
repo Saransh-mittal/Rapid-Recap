@@ -1,3 +1,11 @@
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from 'react'
 import {
   Box,
   Button as ChakraButton,
@@ -13,10 +21,9 @@ import {
   Image,
   Heading,
 } from '@chakra-ui/react'
-import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { ChatState } from '../../contextAPI/ChatProvider'
-import ChatSideDrawer from './ChatSideDrawer'
-import ChatLoading from './ChatLoading'
 import {
   getRecieverInGameName,
   getSender,
@@ -27,9 +34,10 @@ import axios from 'axios'
 import ButtonGradient from '../../assets/svg/ButtonGradient'
 import Button from '../miscellaneous/ButtonComponent'
 import { Search2Icon } from '@chakra-ui/icons'
-import { useNavigate } from 'react-router-dom'
 import useSound from '../../customHooks/useSound'
-import { useSelector } from 'react-redux'
+import ChatLoading from './ChatLoading'
+
+const ChatSideDrawer = lazy(() => import('./ChatSideDrawer'))
 
 const UserChats = ({ fetchAgain }) => {
   const { playClick } = useSound()
@@ -40,7 +48,7 @@ const UserChats = ({ fetchAgain }) => {
   const navigate = useNavigate()
   const buttonW = useBreakpointValue({
     base: '50px',
-    md: '150px', // width for large screens (>= 62em or 992px)
+    md: '150px',
   })
 
   const {
@@ -59,10 +67,9 @@ const UserChats = ({ fetchAgain }) => {
 
   const toast = useToast()
 
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
     try {
       const { data } = await axios.get('/api/chat')
-      setChats(data || [])
       const acceptedChats = data.filter(
         chat =>
           chat.status === 'accepted' ||
@@ -89,7 +96,7 @@ const UserChats = ({ fetchAgain }) => {
         position: 'top',
       })
     }
-  }
+  }, [setChats, setChatRequests, toast, user._id])
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
@@ -114,167 +121,196 @@ const UserChats = ({ fetchAgain }) => {
     }
 
     fetchChats()
-    // eslint-disable-next-line
-  }, [fetchAgain])
+  }, [fetchAgain, fetchChats])
 
-  const getLatestMessageContent = chat => {
-    if (!chat.latestMessage) return 'No messages yet'
+  const getLatestMessageContent = useCallback(
+    chat => {
+      if (!chat.latestMessage) return 'No messages yet'
 
-    if (chat.latestMessage.isDeleted) {
-      return 'This message was deleted'
-    }
+      if (chat.latestMessage.isDeleted) {
+        return 'This message was deleted'
+      }
 
-    if (
-      chat?.latestMessage?.deletedFor &&
-      chat?.latestMessage?.deletedFor.includes(loggedUser?._id)
-    ) {
-      return 'This message was deleted for you'
-    }
+      if (
+        chat?.latestMessage?.deletedFor &&
+        chat?.latestMessage?.deletedFor.includes(loggedUser?._id)
+      ) {
+        return 'This message was deleted for you'
+      }
 
-    return chat.latestMessage.content
-      ? chat.latestMessage.content.length > 50
-        ? chat.latestMessage.content.substring(0, 51) + '...'
-        : chat.latestMessage.content
-      : chat.latestMessage.type === 'article_card'
-      ? 'Shared an Article'
-      : 'Score Card'
-  }
+      return chat.latestMessage.content
+        ? chat.latestMessage.content.length > 50
+          ? chat.latestMessage.content.substring(0, 51) + '...'
+          : chat.latestMessage.content
+        : chat.latestMessage.type === 'article_card'
+        ? 'Shared an Article'
+        : 'Score Card'
+    },
+    [loggedUser?._id],
+  )
 
-  const handleChatClick = chat => {
-    playClick()
-    setSelectedChat(chat)
-    setHasMore(true)
-    setMessagesFetched(false)
+  const handleChatClick = useCallback(
+    chat => {
+      playClick()
+      setSelectedChat(chat)
+      setHasMore(true)
+      setMessagesFetched(false)
 
-    // Only update latestMessage if it exists
-    if (chat.latestMessage) {
-      setChats(prevChats => {
-        return prevChats?.map(c => {
-          if (c._id === chat._id) {
-            return {
-              ...c,
-              latestMessage: {
-                ...c.latestMessage,
-                readBy: [...(c.latestMessage.readBy || []), user._id],
-              },
+      if (chat.latestMessage) {
+        setChats(prevChats => {
+          return prevChats?.map(c => {
+            if (c._id === chat._id) {
+              return {
+                ...c,
+                latestMessage: {
+                  ...c.latestMessage,
+                  readBy: [...(c.latestMessage.readBy || []), user._id],
+                },
+              }
             }
-          }
-          return c
+            return c
+          })
         })
-      })
-    }
+      }
 
-    setNotification(prev => prev.filter(c => c !== chat._id))
-    navigate(`/chats?chatId=${chat._id}`)
-  }
+      setNotification(prev => prev.filter(c => c !== chat._id))
+      navigate(`/chats?chatId=${chat._id}`)
+    },
+    [
+      navigate,
+      playClick,
+      setChats,
+      setHasMore,
+      setMessagesFetched,
+      setNotification,
+      setSelectedChat,
+      user._id,
+    ],
+  )
 
-  const renderChatItem = chat => {
-    const readByLoggedUser = chat.latestMessage
-      ? chat.latestMessage.readBy.includes(user?._id) ||
-        chat.latestMessage.sender._id.toString() === user?._id.toString()
-      : true
-    return (
-      <Flex
-        onClick={() => handleChatClick(chat)}
-        cursor={'pointer'}
-        bg={
-          selectedChat &&
-          selectedChat._id &&
-          selectedChat?._id.toString() === chat?._id.toString()
-            ? '#2D3748'
-            : ''
-        }
-        color={'rgba(255, 255, 255, 0.7)'}
-        boxShadow={
-          '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
-        }
-        px={3}
-        py={2}
-        my={1}
-        borderRadius="lg"
-        key={chat._id}
-        gap={3}
-        // flexDirection={'row'}
-      >
-        <Image
-          borderRadius="full"
-          boxSize={{ base: '35px', md: '45px' }}
-          src={getSenderFull(loggedUser, chat.users).pic}
-          alt={getSenderFull(loggedUser, chat.users).name}
-        />
-        <Flex flexDirection={'column'} w={'100%'}>
-          <Flex
-            justifyContent={'space-between'}
-            alignItems={'center'}
-            // w={'100%'}
-          >
-            <Flex gap={2}>
-              <Text fontWeight={readByLoggedUser ? 'normal' : 'bold'} m={0}>
-                {chat._id &&
-                !chat.isGroupChat &&
-                chat.users &&
-                chat.users.length > 0
-                  ? getSender(loggedUser, chat.users)
-                  : chat.chatName}
-              </Text>
-              {/* {chat.status === 'pending' &&
-                chat.chatCreatedBy !== loggedUser?._id && (
-                  <Badge colorScheme="yellow">New Request</Badge>
+  const renderChatItem = useCallback(
+    chat => {
+      const readByLoggedUser = chat.latestMessage
+        ? chat.latestMessage.readBy.includes(user?._id) ||
+          chat.latestMessage.sender._id.toString() === user?._id.toString()
+        : true
+
+      return (
+        <Flex
+          onClick={() => handleChatClick(chat)}
+          cursor={'pointer'}
+          bg={
+            selectedChat &&
+            selectedChat._id &&
+            selectedChat?._id.toString() === chat?._id.toString()
+              ? '#2D3748'
+              : ''
+          }
+          color={'rgba(255, 255, 255, 0.7)'}
+          boxShadow={
+            '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
+          }
+          px={3}
+          py={2}
+          my={1}
+          borderRadius="lg"
+          key={chat._id}
+          gap={3}
+        >
+          <Image
+            borderRadius="full"
+            boxSize={{ base: '35px', md: '45px' }}
+            src={getSenderFull(loggedUser, chat.users).pic}
+            alt={getSenderFull(loggedUser, chat.users).name}
+          />
+          <Flex flexDirection={'column'} w={'100%'}>
+            <Flex justifyContent={'space-between'} alignItems={'center'}>
+              <Flex gap={2}>
+                <Text fontWeight={readByLoggedUser ? 'normal' : 'bold'} m={0}>
+                  {chat._id &&
+                  !chat.isGroupChat &&
+                  chat.users &&
+                  chat.users.length > 0
+                    ? getSender(loggedUser, chat.users)
+                    : chat.chatName}
+                </Text>
+                {chat.new && (
+                  <Badge colorScheme="green" h={'fit-content'} mt={1}>
+                    New
+                  </Badge>
                 )}
-              {chat.status === 'rejected' && (
-                <Badge colorScheme="red">Rejected</Badge>
-              )}{' '} */}
-              {chat.new && (
-                <Badge colorScheme="green" h={'fit-content'} mt={1}>
-                  New
-                </Badge>
-              )}
+              </Flex>
+              <Flex>
+                <Text
+                  m={0}
+                  fontSize="xs"
+                  color={readByLoggedUser ? '#9CAFAA' : 'white'}
+                >
+                  {chat._id &&
+                  !chat.isGroupChat &&
+                  chat.users &&
+                  chat.users.length > 0
+                    ? getRecieverInGameName(loggedUser, chat.users)
+                    : null}
+                </Text>
+              </Flex>
             </Flex>
-            <Flex>
+            {chat._id && chat.latestMessage && (
               <Text
-                m={0}
                 fontSize="xs"
                 color={readByLoggedUser ? '#9CAFAA' : 'white'}
+                display={'flex'}
+                alignItems={'center'}
+                fontWeight={readByLoggedUser ? 'normal' : 'bold'}
               >
-                {chat._id &&
-                !chat.isGroupChat &&
-                chat.users &&
-                chat.users.length > 0
-                  ? getRecieverInGameName(loggedUser, chat.users)
-                  : null}
+                {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
+                  ? 'YOU'
+                  : chat.latestMessage.sender.name}{' '}
+                {': '}
+                {getLatestMessageContent(chat)}
+                {!readByLoggedUser && (
+                  <Badge
+                    colorScheme="blue"
+                    borderRadius={'50%'}
+                    h={'8px'}
+                    w={'8px'}
+                    top={'58%'}
+                    right={'10%'}
+                    marginLeft={'1rem'}
+                  />
+                )}
               </Text>
-            </Flex>
+            )}
           </Flex>
-          {chat._id && chat.latestMessage && (
-            <Text
-              fontSize="xs"
-              color={readByLoggedUser ? '#9CAFAA' : 'white'}
-              display={'flex'}
-              alignItems={'center'}
-              fontWeight={readByLoggedUser ? 'normal' : 'bold'}
-            >
-              {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
-                ? 'YOU'
-                : chat.latestMessage.sender.name}{' '}
-              {': '}
-              {getLatestMessageContent(chat)}
-              {!readByLoggedUser && (
-                <Badge
-                  colorScheme="blue"
-                  borderRadius={'50%'}
-                  h={'8px'}
-                  w={'8px'}
-                  top={'58%'}
-                  right={'10%'}
-                  marginLeft={'1rem'}
-                />
-              )}
-            </Text>
-          )}
         </Flex>
-      </Flex>
+      )
+    },
+    [
+      getLatestMessageContent,
+      handleChatClick,
+      isSenderLoggedUser,
+      loggedUser,
+      selectedChat,
+      user?._id,
+    ],
+  )
+
+  const chatList = useMemo(() => {
+    return chats ? (
+      <Stack
+        overflowY="auto"
+        css={{ '&::-webkit-scrollbar': { display: 'none' } }}
+      >
+        {chats.map(chat => renderChatItem(chat))}
+      </Stack>
+    ) : (
+      <ChatLoading />
     )
-  }
+  }, [chats, renderChatItem])
+
+  const chatRequestsList = useMemo(() => {
+    return chatRequests.map(chat => renderChatItem(chat, true))
+  }, [chatRequests, renderChatItem])
 
   return (
     <Box
@@ -322,7 +358,9 @@ const UserChats = ({ fetchAgain }) => {
                   </Flex>
                 </Button>
               </Tooltip>
-              <ChatSideDrawer isOpen={isOpen} onClose={onClose} />
+              <Suspense fallback={<div>Loading...</div>}>
+                <ChatSideDrawer isOpen={isOpen} onClose={onClose} />
+              </Suspense>
             </>
           )}
         </Flex>
@@ -333,28 +371,11 @@ const UserChats = ({ fetchAgain }) => {
         >
           {showRequestsTab ? 'Chats' : 'Requests'}
         </Button>
-        {/* <GroupChatModal>
-          <Flex position={"relative"}>
-            <Button pl={"1.5rem"} textColor={"white"} buttonW="150px">
-              New Group
-            </Button>
-            <Flex position={"absolute"} left={4} top={"0.4rem"}>
-              <AddIcon w={"0.75rem"} />
-            </Flex>
-          </Flex>
-        </GroupChatModal> */}
       </Box>
       <Box
         display="flex"
         flexDirection="column"
         p={3}
-        // style={{
-        //   backgroundColor: '#0f0d15',
-        //   backgroundImage:
-        //     'linear-gradient(-180deg, rgba(26, 21, 39, 0.6), rgba(14, 12, 22, 0.6) 88%, rgba(14, 12, 22, 0.6) 99%)',
-        //   boxShadow:
-        //     '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-        // }}
         w="100%"
         h="90%"
         borderRadius="lg"
@@ -368,17 +389,10 @@ const UserChats = ({ fetchAgain }) => {
             overflowY="auto"
             css={{ '&::-webkit-scrollbar': { display: 'none' } }}
           >
-            {chatRequests.map(chat => renderChatItem(chat, true))}
-          </Stack>
-        ) : chats ? (
-          <Stack
-            overflowY="auto"
-            css={{ '&::-webkit-scrollbar': { display: 'none' } }}
-          >
-            {chats.map(chat => renderChatItem(chat))}
+            {chatRequestsList}
           </Stack>
         ) : (
-          <ChatLoading />
+          chatList
         )}
       </Box>
     </Box>

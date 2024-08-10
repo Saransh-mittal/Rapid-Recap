@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useMemo, useCallback, lazy, Suspense } from 'react'
 import { Flex, IconButton, Image, Text } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { getSenderFull } from '../../config/ChatLogics'
-import UpdateGroupChatModal from '../UpdateGroupChatModal'
 import greaterThan from '/images/greaterThan.webp'
+
+const UpdateGroupChatModal = lazy(() => import('../UpdateGroupChatModal'))
 
 const ChatHeader = ({
   messages,
@@ -14,6 +15,19 @@ const ChatHeader = ({
   handleClose,
   setFetchAgain,
 }) => {
+  const senderDetails = useMemo(
+    () => getSenderFull(user, selectedChat.users),
+    [user, selectedChat.users],
+  )
+
+  const handleProfileClick = useCallback(() => {
+    navigate(`/profile/${senderDetails.inGameName}`)
+  }, [navigate, senderDetails.inGameName])
+
+  const handleNavigateChat = useCallback(() => {
+    navigate(`/chats/${selectedChat._id}`)
+  }, [navigate, selectedChat._id])
+
   return (
     <Flex
       fontSize={{ base: '28px', md: '30px' }}
@@ -30,8 +44,8 @@ const ChatHeader = ({
         left={0}
         icon={<ArrowBackIcon />}
         onClick={handleClose}
-        bg="rgba(255, 255, 255, 0.7)" // White background with 80% opacity
-        _hover={{ bg: 'rgba(255, 255, 255, 0.9)' }} // Optional: Less transparent on hover
+        bg="rgba(255, 255, 255, 0.7)"
+        _hover={{ bg: 'rgba(255, 255, 255, 0.9)' }}
       />
 
       {messages &&
@@ -48,13 +62,7 @@ const ChatHeader = ({
                 boxShadow:
                   'inset 0 0 15px rgba(255, 255, 255, 0.1), 0 6px 15px rgba(0, 0, 0, 0.4), 0 12px 30px rgba(0, 0, 0, 0.3)',
               }}
-              onClick={() => {
-                navigate(
-                  `/profile/${
-                    getSenderFull(user, selectedChat.users).inGameName
-                  }`,
-                )
-              }}
+              onClick={handleProfileClick}
               justifyContent={'center'}
               alignItems={'center'}
             >
@@ -62,8 +70,8 @@ const ChatHeader = ({
                 <Image
                   borderRadius="full"
                   boxSize={{ base: '35px', md: '45px' }}
-                  src={getSenderFull(user, selectedChat.users).pic}
-                  alt={getSenderFull(user, selectedChat.users).name}
+                  src={senderDetails.pic}
+                  alt={senderDetails.name}
                 />
               </Flex>
               <Flex flexDirection={'column'}>
@@ -73,7 +81,7 @@ const ChatHeader = ({
                     mb={{ base: 0, md: '5px' }}
                     textColor={'white'}
                   >
-                    {getSenderFull(user, selectedChat.users).name}
+                    {senderDetails.name}
                   </Text>
                 </Flex>
                 <Text
@@ -82,7 +90,7 @@ const ChatHeader = ({
                   mt={{ base: '0', md: -2 }}
                   textColor={'#9CAFAA'}
                 >
-                  {getSenderFull(user, selectedChat.users).inGameName}
+                  {senderDetails.inGameName}
                 </Text>
               </Flex>
               <Flex ml={-3} alignItems={'center'} mb={5}>
@@ -91,21 +99,21 @@ const ChatHeader = ({
                   boxSize={{ base: '15px', md: '20px' }}
                   src={greaterThan}
                   alt={'greaterThan'}
-                  onClick={() => {
-                    navigate(`/chats/${selectedChat._id}`)
-                  }}
-                ></Image>
+                  onClick={handleNavigateChat}
+                />
               </Flex>
             </Flex>
           </>
         ) : (
           <>
             {selectedChat.chatName.toUpperCase()}
-            <UpdateGroupChatModal
-              fetchMessages={fetchMessages}
-              fetchAgain={fetchAgain}
-              setFetchAgain={setFetchAgain}
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+              <UpdateGroupChatModal
+                fetchMessages={fetchMessages}
+                fetchAgain={fetchAgain}
+                setFetchAgain={setFetchAgain}
+              />
+            </Suspense>
           </>
         ))}
       {istyping && (

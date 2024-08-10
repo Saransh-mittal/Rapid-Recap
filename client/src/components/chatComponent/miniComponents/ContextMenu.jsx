@@ -36,7 +36,7 @@ const emojis = [
 const ContextMenu = ({
   isOpen,
   onClose,
-  position,
+  messageRect,
   onDelete,
   onCopy,
   onReact,
@@ -44,8 +44,10 @@ const ContextMenu = ({
   messageTime,
   isMessageDeleted,
   messageId,
+  position,
 }) => {
   const [showReactions, setShowReactions] = useState(false)
+  const menuRef = useRef(null)
   const [currentMessageId, setCurrentMessageId] = useState(messageId)
   const isWithinOneHour = new Date() - new Date(messageTime) <= 60 * 60 * 1000
   const {
@@ -58,6 +60,17 @@ const ContextMenu = ({
   useEffect(() => {
     if (messageId) setCurrentMessageId(messageId)
   }, [messageId])
+
+  useEffect(() => {
+    if (isOpen && messageRect && menuRef.current) {
+      const scrollableDiv = document.querySelector('.scrollable-div') // Adjust this selector based on your scroll container
+      const scrollTop = scrollableDiv.scrollTop
+
+      menuRef.current.style.position = 'absolute'
+      menuRef.current.style.top = `${messageRect.top + scrollTop}px`
+      menuRef.current.style.left = `${messageRect.left}px`
+    }
+  }, [isOpen, messageRect])
 
   const handleReact = emoji => {
     onReact({ emoji, messageId: currentMessageId })

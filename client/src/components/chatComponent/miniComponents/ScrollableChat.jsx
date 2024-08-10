@@ -1,15 +1,29 @@
-// src/components/chat/ScrollableChat.js
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  lazy,
+  Suspense,
+  useMemo,
+} from 'react'
 import { useDisclosure, useMediaQuery, Spinner, Flex } from '@chakra-ui/react'
 import ScrollableFeed from 'react-scrollable-feed'
 import { ChatState } from '../../../contextAPI/ChatProvider'
-import ContextMenu from './ContextMenu'
-import ReactionModal from './scrollableChatComponents/ReactionModal'
-import GroupedMessages from './scrollableChatComponents/GroupedMessages'
+import throttle from 'lodash.throttle'
+import useSound from '../../../customHooks/useSound'
+
+// Lazy load components
+const ContextMenu = lazy(() => import('./ContextMenu'))
+const ReactionModal = lazy(() =>
+  import('./scrollableChatComponents/ReactionModal'),
+)
+const GroupedMessages = lazy(() =>
+  import('./scrollableChatComponents/GroupedMessages'),
+)
+
 import { groupMessagesByDate, formatTime } from '../../../utils/chat.utils'
 import { isMessageDeletedForUser } from '../config/ChatLogics'
-import throttle from 'lodash.throttle';
-import useSound from '../../../customHooks/useSound'
 
 const ScrollableChat = ({
   messages,
@@ -27,13 +41,15 @@ const ScrollableChat = ({
   const [page, setPage] = useState(1)
   const lastScrollTop = useRef(0)
   const loadingRef = useRef(false)
-  const messageIdsRef = useRef(new Set())
+  const isScrolling = useRef(false)
+  const scrollTimeout = useRef(null)
   const { playClick } = useSound()
 
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,
-    position: { x: 0, y: 0 },
     messageId: null,
+    position: { x: 0, y: 0 },
+    messageRect: null, // Add this to store the message's position
   })
   const longPressTimer = useRef(null)
   const longPressDelay = 500 // ms
@@ -41,20 +57,45 @@ const ScrollableChat = ({
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [selectedReactions, setSelectedReactions] = useState(null)
 
-  const groupedMessages = groupMessagesByDate(messages)
+  const groupedMessages = useMemo(
+    () => groupMessagesByDate(messages),
+    [messages],
+  )
   const isScreenSmallerThan600px = useMediaQuery('(max-width: 600px)')[0]
 
-  const handleContextMenu = (event, messageId) => {
-    playClick()
-    event.preventDefault()
-    setContextMenu({
-      isOpen: true,
-      position: { x: event.clientX, y: event.clientY },
-      messageId,
-    })
-  }
+  const disableScroll = useCallback(() => {
+    const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current
+    if (scrollableDiv) {
+      scrollableDiv.style.overflow = 'hidden'
+    }
+  }, [])
 
-  const handleTouchStart = (event, messageId) => {
+  const enableScroll = useCallback(() => {
+    const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current
+    if (scrollableDiv) {
+      scrollableDiv.style.overflow = 'auto'
+    }
+  }, [])
+
+  const handleContextMenu = useCallback(
+    (event, messageId, messageElement) => {
+      if (isScrolling.current) return
+      playClick()
+      event.preventDefault()
+      const messageRect = messageElement.getBoundingClientRect()
+      setContextMenu({
+        isOpen: true,
+        messageId,
+        position: { x: event.clientX, y: event.clientY },
+        messageRect,
+      })
+      disableScroll()
+    },
+    [playClick, disableScroll],
+  )
+
+  const handleTouchStart = useCallback((event, messageId) => {
+    if (isScrolling.current) return
     event.preventDefault()
     longPressTimer.current = setTimeout(() => {
       const touch = event.touches[0]
@@ -64,48 +105,64 @@ const ScrollableChat = ({
         messageId,
       })
     }, longPressDelay)
-  }
+  }, [])
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current)
     }
-  }
+  }, [])
 
-  const handleCloseContextMenu = () => {
+  const handleCloseContextMenu = useCallback(() => {
     playClick()
     setContextMenu({
       isOpen: false,
       position: { x: 0, y: 0 },
       messageId: null,
     })
-  }
+    enableScroll()
+  }, [playClick, enableScroll])
 
-  const handleReactionClick = message => {
-    playClick()
-    setSelectedReactions({ reactions: message.reactions, message })
-    onOpen()
-  }
+  const handleReactionClick = useCallback(
+    message => {
+      playClick()
+      setSelectedReactions({ reactions: message.reactions, message })
+      onOpen()
+    },
+    [playClick, onOpen],
+  )
 
-  const handleDelete = type => {
-    playClick()
-    handleDeleteMessage(contextMenu.messageId, type)
-    handleCloseContextMenu()
-  }
+  const handleDelete = useCallback(
+    type => {
+      playClick()
+      handleDeleteMessage(contextMenu.messageId, type)
+      handleCloseContextMenu()
+    },
+    [
+      handleDeleteMessage,
+      contextMenu.messageId,
+      handleCloseContextMenu,
+      playClick,
+    ],
+  )
 
-  const handleCopy = () => {
+  const handleCopy = useCallback(() => {
     playClick()
     const message = messages.find(m => m._id === contextMenu.messageId)
     if (message) {
       navigator.clipboard.writeText(message.content)
     }
     handleCloseContextMenu()
-  }
-  // Create the throttled scroll handler
+  }, [messages, contextMenu.messageId, handleCloseContextMenu, playClick])
+
   const throttledScrollHandler = useCallback(
     throttle(async (scrollTop, scrollHeight, clientHeight) => {
+      isScrolling.current = true
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current)
+      scrollTimeout.current = setTimeout(() => {
+        isScrolling.current = false
+      }, 150)
       const SCROLL_THRESHOLD = 500
-
       const isScrollingUp = scrollTop < lastScrollTop.current
       const isNearTop = scrollTop <= SCROLL_THRESHOLD
 
@@ -114,7 +171,6 @@ const ScrollableChat = ({
           loadingRef.current = true
           setLoading(true)
           const scrollableDiv = scrollableFeedRef.current?.wrapperRef?.current
-          // if (scrollableDiv) scrollableDiv.style.overflowY = 'hidden'
 
           const newMessages = await loadMoreMessages(page + 1)
 
@@ -122,8 +178,6 @@ const ScrollableChat = ({
             setHasMore(false)
           } else {
             setPage(prevPage => prevPage + 1)
-
-            // Maintain scroll position
             requestAnimationFrame(() => {
               if (scrollableDiv) {
                 const newScrollHeight = scrollableDiv.scrollHeight
@@ -174,26 +228,37 @@ const ScrollableChat = ({
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current)
       }
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current)
+      }
     }
   }, [])
+  useEffect(() => {
+    return () => {
+      // Make sure to re-enable scroll when component unmounts
+      enableScroll()
+    }
+  }, [enableScroll])
 
-  const handleReact = ({ emoji, messageId }) => {
-    playClick()
-    handleAddReaction(messageId, emoji)
-    handleCloseContextMenu()
-  }
+  const handleReact = useCallback(
+    ({ emoji, messageId }) => {
+      playClick()
+      handleAddReaction(messageId, emoji)
+      handleCloseContextMenu()
+    },
+    [handleAddReaction, handleCloseContextMenu, playClick],
+  )
 
   return (
     <>
-      <style>{`div::-webkit-scrollbar { display: none; }`}</style>
-      <ScrollableFeed ref={scrollableFeedRef}>
-        {/* {loadingRef.current && (
-          <Box textAlign="center" py={2}>
-            {Array.from({ length: 20 }, (_, i) => (
-              <Skeleton key={i} height="40px" m={'10px'} />
-            ))}
-          </Box>
-        )} */}
+      <style>{`
+        div::-webkit-scrollbar { display: none; }
+        .scroll-disabled { overflow: hidden !important; }
+      `}</style>
+      <ScrollableFeed
+        ref={scrollableFeedRef}
+        className={contextMenu.isOpen ? 'scroll-disabled' : ''}
+      >
         {loadingRef.current && (
           <Flex w={'100%'} justifyContent={'center'} alignItems={'center'}>
             <Spinner color="white" />
@@ -210,37 +275,40 @@ const ScrollableChat = ({
           user={user}
           isScreenSmallerThan600px={isScreenSmallerThan600px}
         />
-        <ContextMenu
-          isOpen={contextMenu.isOpen}
-          onClose={handleCloseContextMenu}
-          position={contextMenu.position}
-          onDelete={handleDelete}
-          onCopy={handleCopy}
-          onReact={handleReact}
-          isSender={
-            messages.find(m => m._id === contextMenu.messageId)?.sender._id ===
-            user._id
-          }
-          messageTime={
-            messages.find(m => m._id === contextMenu.messageId)?.createdAt
-          }
-          isMessageDeleted={
-            messages.find(m => m._id === contextMenu.messageId)?.isDeleted ||
-            isMessageDeletedForUser(
-              messages.find(m => m._id === contextMenu.messageId),
-              user._id.toString(),
-            )
-          }
-          messageId={contextMenu.messageId}
-        />
+        <Suspense fallback={<Spinner color="white" />}>
+          <ContextMenu
+            isOpen={contextMenu.isOpen}
+            onClose={handleCloseContextMenu}
+            messageRect={contextMenu.messageRect}
+            position={contextMenu.position}
+            onDelete={handleDelete}
+            onCopy={handleCopy}
+            onReact={handleReact}
+            isSender={
+              messages.find(m => m._id === contextMenu.messageId)?.sender
+                ._id === user._id
+            }
+            messageTime={
+              messages.find(m => m._id === contextMenu.messageId)?.createdAt
+            }
+            isMessageDeleted={
+              messages.find(m => m._id === contextMenu.messageId)?.isDeleted ||
+              isMessageDeletedForUser(
+                messages.find(m => m._id === contextMenu.messageId),
+                user._id.toString(),
+              )
+            }
+            messageId={contextMenu.messageId}
+          />
+          <ReactionModal
+            isOpen={isOpen}
+            onClose={onClose}
+            selectedReactions={selectedReactions}
+            handleRemoveReaction={handleRemoveReaction}
+            user={user}
+          />
+        </Suspense>
       </ScrollableFeed>
-      <ReactionModal
-        isOpen={isOpen}
-        onClose={onClose}
-        selectedReactions={selectedReactions}
-        handleRemoveReaction={handleRemoveReaction}
-        user={user}
-      />
     </>
   )
 }
