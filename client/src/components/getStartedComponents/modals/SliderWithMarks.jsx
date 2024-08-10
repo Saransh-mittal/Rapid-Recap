@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 import {
   Box,
   Flex,
@@ -7,8 +7,8 @@ import {
   SliderFilledTrack,
   SliderThumb,
   Text,
-} from "@chakra-ui/react";
-import { getColorForLabel } from "./utils/formState";
+} from '@chakra-ui/react'
+import { getColorForLabel } from './utils/formState'
 
 const SliderWithMarks = ({
   name,
@@ -27,7 +27,7 @@ const SliderWithMarks = ({
       max={max}
       step={step}
       width="80%"
-      ml={"10%"}
+      ml={'10%'}
       value={formState[name]}
       onChange={handleSliderChange(name)}
     >
@@ -38,15 +38,15 @@ const SliderWithMarks = ({
         boxSize={4}
         _before={{
           content: '""',
-          boxSize: "10px",
-          borderRadius: "full",
-          bg: "teal.500",
-          filter: "blur(4px)",
+          boxSize: '10px',
+          borderRadius: 'full',
+          bg: 'teal.500',
+          filter: 'blur(4px)',
         }}
       />
     </Slider>
     <Flex justifyContent="space-between" mt={2}>
-      {marks.map((mark) => (
+      {marks.map(mark => (
         <Text
           key={mark.value}
           fontSize="sm"
@@ -59,6 +59,6 @@ const SliderWithMarks = ({
       ))}
     </Flex>
   </Box>
-);
+)
 
-export default SliderWithMarks;
+export default SliderWithMarks

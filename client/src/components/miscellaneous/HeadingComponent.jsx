@@ -1,4 +1,4 @@
-import { Box, Flex } from '@chakra-ui/react'
+import { Box, Flex, Text } from '@chakra-ui/react'
 import TagLine from './TaglineComponent'
 
 const Heading = ({
@@ -35,9 +35,9 @@ const Heading = ({
         </Box>
       )}
       {title && (
-        <Box as="h2" className="h2" fontWeight={headingWeight}>
-          {title}
-        </Box>
+        <Flex fontWeight={headingWeight}>
+          <Text fontSize="3xl">{title}</Text>
+        </Flex>
       )}
       {text && (
         <Box as="p" fontSize="md" marginTop="4" color="gray.600">
