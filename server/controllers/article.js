@@ -82,9 +82,12 @@ const getArticleIds = asyncHandler(async (req, res) => {
 const getArticle = async (req, res) => {
   const { id } = req.params
   try {
+    console.log('Article ID:', id)
     const article = await Article.findById(id)
+    console.log('Article:', article)
     if (!article) {
-      res.status(422).json({ error: 'Article not found' })
+      console.log('Article not found')
+
       throw new Error('Article not found')
     }
     const paragraphs = await breakArticleIntoParagraphs(article.mainText)
