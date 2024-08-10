@@ -1,0 +1,1 @@
+import{j as r,C as i,z as n}from"./index-9e30437b.js";const t=({css:e})=>r.jsx(i,{css:e,margin:"5px",mb:5,height:"100px",children:r.jsx(n,{color:"red",children:"Quiz Expired"})});export{t as default};
