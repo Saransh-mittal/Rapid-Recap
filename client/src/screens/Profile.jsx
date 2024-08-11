@@ -170,38 +170,90 @@ export default function Profile() {
   return (
     <Box marginTop={'4.5rem'} w={'100%'}>
       <Helmet>
-        <title>
-          {profile?.inGameName ? `${profile.inGameName}'s Profile` : 'Profile'}
-        </title>
+        <title>{`${profile?.inGameName}'s Rapid Recap Profile | IQ Score: ${profile?.USER_IQ}`}</title>
         <meta
           name="description"
-          content={`View ${profile?.inGameName}'s profile, check their IQ score, solved quizzes, daily activities, and society.`}
-        />
-        <meta
-          name="keywords"
-          content="profile, IQ score, quizzes, daily activities, user ranking, society, circles, explorers, strivers, elites, mavericks, pioneers"
+          content={`Explore ${
+            profile?.inGameName
+          }'s Rapid Recap profile. IQ score: ${profile?.USER_IQ}, ${
+            profile?.solvedQuizzes?.length
+          } quizzes solved. Member of ${userSocietyAndCircle?.society} ${
+            userSocietyAndCircle?.circle
+              ? `and ${userSocietyAndCircle?.circle}`
+              : ''
+          }. View their progress and achievements!`}
         />
         <meta
           property="og:title"
-          content={`${profile?.inGameName}'s Profile`}
+          content={`${profile?.inGameName}'s Rapid Recap Profile`}
         />
         <meta
           property="og:description"
-          content={`Explore ${
+          content={`Check out ${
             profile?.inGameName
-          }'s profile with IQ score, solved quizzes, daily activities, and belongs to ${
-            userSocietyAndCircle?.society
-          } ${
+          }'s profile on Rapid Recap. IQ score: ${
+            profile?.USER_IQ
+          }, quizzes solved: ${
+            profile?.solvedQuizzes?.length
+          }. See their progress in ${userSocietyAndCircle?.society} ${
             userSocietyAndCircle?.circle
-              ? `and ` + userSocietyAndCircle?.circle
-              : ``
+              ? `and ${userSocietyAndCircle?.circle}`
+              : ''
           }.`}
         />
         <meta property="og:type" content="profile" />
+        <meta
+          property="og:url"
+          content={`https://www.rapidrecap.co.in/profile/${inGameName}`}
+        />
+        <meta
+          property="og:image"
+          content={
+            profile?.pic ||
+            'http://res.cloudinary.com/dxstsrnbs/image/upload/v1712729332/ProfilePIcs/p7zujdgjs1m301vsss1q.png'
+          }
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content={`${profile?.inGameName}'s Rapid Recap Profile`}
+        />
+        <meta
+          name="twitter:description"
+          content={`Explore ${profile?.inGameName}'s Rapid Recap profile. IQ score: ${profile?.USER_IQ}, ${profile?.solvedQuizzes?.length} quizzes solved. View their progress!`}
+        />
+        <meta
+          name="twitter:image"
+          content={
+            profile?.pic ||
+            'http://res.cloudinary.com/dxstsrnbs/image/upload/v1712729332/ProfilePIcs/p7zujdgjs1m301vsss1q.png'
+          }
+        />
         <link
           rel="canonical"
           href={`https://www.rapidrecap.co.in/profile/${inGameName}`}
         />
+        <script type="application/ld+json">
+          {`
+      {
+        "@context": "http://schema.org",
+        "@type": "Person",
+        "name": "${profile?.inGameName}",
+        "url": "https://www.rapidrecap.co.in/profile/${inGameName}",
+        "image": "${
+          profile?.pic ||
+          'http://res.cloudinary.com/dxstsrnbs/image/upload/v1712729332/ProfilePIcs/p7zujdgjs1m301vsss1q.png'
+        }",
+        "description": "Rapid Recap user with an IQ score of ${
+          profile?.USER_IQ
+        }",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "${userSocietyAndCircle?.society}"
+        }
+      }
+    `}
+        </script>
       </Helmet>
       <Flex
         flexDirection={{ base: 'column', md: 'row' }}

@@ -16,9 +16,6 @@ import { useSelector } from 'react-redux'
 const SearchBar = React.lazy(() =>
   import('../components/leaderBoardComponents/SearchBar'),
 )
-const SocietyButtons = React.lazy(() =>
-  import('../components/leaderBoardComponents/SocietyButtons'),
-)
 const LeaderBoardTable = React.lazy(() =>
   import('../components/leaderBoardComponents/LeaderBoardTable'),
 )
@@ -27,6 +24,7 @@ const Heading = React.lazy(() =>
 )
 
 import medalIcon from '../assets/medal.webp'
+import { Helmet } from 'react-helmet'
 
 const LeaderBoard = () => {
   const PAGE_LIMIT = 20
@@ -147,83 +145,102 @@ const LeaderBoard = () => {
   }, [page, activeSociety, fetchLeaderBoard])
 
   return (
-    <Flex
-      minH={'85vh'}
-      justifyContent={'center'}
-      className="leaderboard"
-      marginTop={'4.5rem'}
-    >
+    <>
+      <Helmet>
+        <title>
+          Rapid Recap Leaderboard - Season 2 | Top Information Quotient Scores
+        </title>
+        <meta
+          name="description"
+          content="Explore the Rapid Recap Leaderboard for Season 2. See top Information Quotient (IQ) scores, quiz submissions, and rankings across different societies. Join the intellectual elite!"
+        />
+        <meta
+          name="keywords"
+          content="Rapid Recap, Leaderboard, Information Quotient, IQ Score, Quiz, News, Societies, Intellectual Circles"
+        />
+        <link rel="canonical" href="https://rapidrecap.com/leaderboard" />
+        <meta
+          property="og:title"
+          content="Rapid Recap Leaderboard - Season 2"
+        />
+        <meta
+          property="og:description"
+          content="Discover top performers in Rapid Recap's Season 2 Leaderboard. Compare IQ scores, quiz submissions, and society rankings."
+        />
+        <meta property="og:url" content="https://rapidrecap.com/leaderboard" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Flex
-        margin={'20px'}
+        minH={'85vh'}
         justifyContent={'center'}
-        w={'100%'}
-        flexDirection={'column'}
+        className="leaderboard"
+        marginTop={'4.5rem'}
       >
-        <Flex alignItems={'center'} justifyContent={'center'}>
-          <ChakraHeading>
-            <Flex alignItems={'center'} w={'100%'} justifyContent={'center'}>
-              <Image
-                src={medalIcon}
-                alt="Rating"
-                width={'35px'}
-                height={'35px'}
-                bg={'none'}
-                mt={'2.5rem'}
-              />
-              <Heading
-                title={'LEADERBOARD'}
-                tag={'SEASON 2'}
-                tagFontSize={'1.05rem'}
-              />
-              <Image
-                src={medalIcon}
-                alt="Rating"
-                width={'35px'}
-                height={'35px'}
-                bg={'none'}
-                mt={'2.5rem'}
-              />
-            </Flex>
-          </ChakraHeading>
-        </Flex>
-
-        <React.Suspense fallback={<Spinner />}>
-          <Flex
-            alignItems="center"
-            justifyContent="center"
-            marginBottom="20px"
-            marginTop={'20px'}
-          >
-            <SearchBar
-              setSearchResults={setSearchResults}
-              setSearchLoad={setSearchLoad}
-            />
+        <Flex
+          margin={'20px'}
+          justifyContent={'center'}
+          w={'100%'}
+          flexDirection={'column'}
+        >
+          <Flex alignItems={'center'} justifyContent={'center'}>
+            <ChakraHeading>
+              <Flex alignItems={'center'} w={'100%'} justifyContent={'center'}>
+                <Image
+                  src={medalIcon}
+                  alt="Rating"
+                  width={'35px'}
+                  height={'35px'}
+                  bg={'none'}
+                  mt={'2.5rem'}
+                />
+                <Heading
+                  title={'LEADERBOARD'}
+                  tag={'SEASON 2'}
+                  tagFontSize={'1.05rem'}
+                />
+                <Image
+                  src={medalIcon}
+                  alt="Rating"
+                  width={'35px'}
+                  height={'35px'}
+                  bg={'none'}
+                  mt={'2.5rem'}
+                />
+              </Flex>
+            </ChakraHeading>
           </Flex>
 
-          <SocietyButtons
-            activeSociety={activeSociety}
-            handleSocietyButtonClick={handleSocietyButtonClick}
-            searchLoad={searchLoad}
-            isLoading={isLoading}
-          />
+          <React.Suspense fallback={<Spinner />}>
+            <Flex
+              alignItems="center"
+              justifyContent="center"
+              marginBottom="20px"
+              marginTop={'20px'}
+            >
+              <SearchBar
+                setSearchResults={setSearchResults}
+                setSearchLoad={setSearchLoad}
+              />
+            </Flex>
 
-          <LeaderBoardTable
-            hasMore={hasMore}
-            PAGE_LIMIT={PAGE_LIMIT}
-            loadNextPage={loadNextPage}
-            leaders={leaders}
-            searchResults={searchResults}
-            searchLoad={searchLoad}
-            isBaseScreen={isBaseScreen}
-            isLgScreen={isLgScreen}
-            isMdScreen={isMdScreen}
-            currUserChar={user}
-            navigate={navigate}
-            setLoadNextPage={setLoadNextPage}
-          />
-        </React.Suspense>
+            <LeaderBoardTable
+              hasMore={hasMore}
+              PAGE_LIMIT={PAGE_LIMIT}
+              loadNextPage={loadNextPage}
+              leaders={leaders}
+              searchResults={searchResults}
+              searchLoad={searchLoad}
+              isBaseScreen={isBaseScreen}
+              isLgScreen={isLgScreen}
+              isMdScreen={isMdScreen}
+              currUserChar={user}
+              navigate={navigate}
+              setLoadNextPage={setLoadNextPage}
+            />
+          </React.Suspense>
+        </Flex>
       </Flex>
-    </Flex>
+    </>
   )
 }
 

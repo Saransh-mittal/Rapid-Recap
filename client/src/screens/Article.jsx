@@ -22,7 +22,6 @@ import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import { useSelector } from 'react-redux'
 import imageData from '../assets/AltNewsImage'
-import debounce from 'lodash.debounce'
 import { quinBoostChecker } from '../utils/quiz.utils'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
@@ -428,7 +427,7 @@ const Article = () => {
                 property="og:description"
                 content={mainText[selectedLanguage]?.[0]}
               />
-              <meta property="og:image" content={alt_image} />
+              <meta property="og:image" content={imgURL} />
               <meta property="og:type" content="article" />
               <meta name="twitter:card" content="summary_large_image" />
               <meta name="twitter:title" content={title[selectedLanguage]} />
@@ -436,7 +435,7 @@ const Article = () => {
                 name="twitter:description"
                 content={mainText[selectedLanguage]?.[0]}
               />
-              <meta name="twitter:image" content={alt_image} />
+              <meta name="twitter:image" content={imgURL} />
               <link
                 rel="canonical"
                 href={`https://www.rapidrecap.co.in/articles/${id}`}
@@ -451,7 +450,7 @@ const Article = () => {
                     "@id": "https://www.rapidrecap.co.in/articles/${id}"
                   },
                   "headline": "${title[selectedLanguage]}",
-                  "image": ["${alt_image}"],
+                  "image": ["${imgURL}"],
                   "datePublished": "${new Date().toISOString()}",
                   "dateModified": "${new Date().toISOString()}",
                   "author": {
