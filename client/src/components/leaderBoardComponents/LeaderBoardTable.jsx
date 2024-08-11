@@ -1,3 +1,4 @@
+import React, { useMemo, useCallback, Suspense } from 'react'
 import {
   Table,
   TableCaption,
@@ -9,9 +10,13 @@ import {
   Tr,
   Skeleton,
 } from '@chakra-ui/react'
-import LeaderBoardRow from './LeaderBoardRow'
-import LoadingState from './LoadingState'
-import VerticalDotsSeparator from './VerticalDotsSeparator'
+
+// Lazy load components
+const LeaderBoardRow = React.lazy(() => import('./LeaderBoardRow'))
+const LoadingState = React.lazy(() => import('./LoadingState'))
+const VerticalDotsSeparator = React.lazy(() =>
+  import('./VerticalDotsSeparator'),
+)
 
 const LeaderBoardTable = ({
   leaders,
@@ -26,20 +31,27 @@ const LeaderBoardTable = ({
   PAGE_LIMIT,
   hasMore,
 }) => {
-  const data = searchResults.length > 0 ? searchResults : leaders
+  // Memoize the data to avoid re-calculation
+  const data = useMemo(
+    () => (searchResults.length > 0 ? searchResults : leaders),
+    [searchResults, leaders],
+  )
 
-  // Use a Set to track unique user IDs
-  const seenUserIds = new Set()
+  // Memoize the uniqueData
+  const uniqueData = useMemo(() => {
+    const seenUserIds = new Set()
+    return data.filter(user => {
+      if (seenUserIds.has(user._id)) {
+        return false
+      } else {
+        seenUserIds.add(user._id)
+        return true
+      }
+    })
+  }, [data])
 
-  // Filter out duplicates
-  const uniqueData = data.filter(user => {
-    if (seenUserIds.has(user._id)) {
-      return false
-    } else {
-      seenUserIds.add(user._id)
-      return true
-    }
-  })
+  // Memoize the navigate function
+  const handleNavigate = useCallback(route => navigate(route), [navigate])
 
   return (
     <TableContainer width={'100%'} className="mainBoard" overflowX="auto">
@@ -75,53 +87,55 @@ const LeaderBoardTable = ({
             )}
           </Tr>
         </Thead>
-        {searchLoad ? (
-          <LoadingState />
-        ) : (
-          <Tbody marginTop={'20px'} className="Entries">
-            {uniqueData.length > 0 &&
-              uniqueData.map((user, index) => (
-                <LeaderBoardRow
-                  key={`${user._id}-${index}`}
-                  user={user}
-                  index={index}
-                  currUserChar={currUserChar}
-                  isBaseScreen={isBaseScreen}
-                  isLgScreen={isLgScreen}
-                  isMdScreen={isMdScreen}
-                  navigate={navigate}
-                />
-              ))}
-            {currUserChar?.rank > 500 && (
-              <>
-                <Tr>
-                  <Td colSpan={6}>
-                    <VerticalDotsSeparator />
-                  </Td>
-                </Tr>
-                <LeaderBoardRow
-                  key={`currentUser-${currUserChar._id}`}
-                  user={currUserChar}
-                  index={50}
-                  currUserChar={currUserChar}
-                  isBaseScreen={isBaseScreen}
-                  navigate={navigate}
-                  isLgScreen={isLgScreen}
-                  isMdScreen={isMdScreen}
-                />
-              </>
-            )}
-            {loadNextPage &&
-              hasMore &&
-              Array.from({ length: PAGE_LIMIT }).map((_, index) => (
-                <Tr key={index}>
-                  <Td colSpan={6}>
-                    <Skeleton height="50px" borderRadius={'10px'} />
-                  </Td>
-                </Tr>
-              ))}
-          </Tbody>
-        )}
+        <Suspense fallback={<LoadingState />}>
+          {searchLoad ? (
+            <LoadingState />
+          ) : (
+            <Tbody marginTop={'20px'} className="Entries">
+              {uniqueData.length > 0 &&
+                uniqueData.map((user, index) => (
+                  <LeaderBoardRow
+                    key={`${user._id}-${index}`}
+                    user={user}
+                    index={index}
+                    currUserChar={currUserChar}
+                    isBaseScreen={isBaseScreen}
+                    isLgScreen={isLgScreen}
+                    isMdScreen={isMdScreen}
+                    navigate={handleNavigate}
+                  />
+                ))}
+              {currUserChar?.rank > 500 && (
+                <>
+                  <Tr>
+                    <Td colSpan={6}>
+                      <VerticalDotsSeparator />
+                    </Td>
+                  </Tr>
+                  <LeaderBoardRow
+                    key={`currentUser-${currUserChar._id}`}
+                    user={currUserChar}
+                    index={50}
+                    currUserChar={currUserChar}
+                    isBaseScreen={isBaseScreen}
+                    navigate={handleNavigate}
+                    isLgScreen={isLgScreen}
+                    isMdScreen={isMdScreen}
+                  />
+                </>
+              )}
+              {loadNextPage &&
+                hasMore &&
+                Array.from({ length: PAGE_LIMIT }).map((_, index) => (
+                  <Tr key={index}>
+                    <Td colSpan={6}>
+                      <Skeleton height="50px" borderRadius={'10px'} />
+                    </Td>
+                  </Tr>
+                ))}
+            </Tbody>
+          )}
+        </Suspense>
       </Table>
     </TableContainer>
   )

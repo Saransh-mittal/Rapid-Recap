@@ -19,6 +19,7 @@ import Loading from './components/miscellaneous/Loading.jsx'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { setUser } from './redux/authSlice.js'
+import FixedBackground from './components/miscellaneous/FixedBackground.jsx'
 
 const Home = lazy(() => import('./screens/Home'))
 const Article = lazy(() => import('./screens/Article.jsx'))
@@ -159,9 +160,14 @@ const App = () => {
           content="Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap."
         />
       </Helmet>
-
+      <FixedBackground />
       <Navbar />
-      <Box position="relative" overflowX={'hidden'}>
+      <Box
+        position="relative"
+        minHeight="100vh"
+        zIndex={1}
+        overflowX={'hidden'}
+      >
         {shouldShowNotification && <NotificationSubscription />}
         <Suspense fallback={<Loading />}>
           <Routes>

@@ -9,7 +9,7 @@ import {
   DrawerCloseButton,
 } from '@chakra-ui/modal'
 import { useNavigate } from 'react-router-dom'
-import { useState, useCallback, useMemo, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import axios from 'axios'
 import { useToast } from '@chakra-ui/toast'
 import { Spinner } from '@chakra-ui/spinner'

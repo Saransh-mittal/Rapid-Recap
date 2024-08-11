@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, lazy, Suspense, useCallback, useMemo } from 'react'
 import {
   Modal,
   ModalCloseButton,
@@ -6,10 +6,13 @@ import {
   ModalOverlay,
   useDisclosure,
 } from '@chakra-ui/react'
-import ProfileExperienceLevel from '../../profileComponents/ProfileExperienceLevel'
-
-import Heading from '../../miscellaneous/HeadingComponent'
 import { useSelector } from 'react-redux'
+
+// Lazy loading the components
+const ProfileExperienceLevel = lazy(() =>
+  import('../../profileComponents/ProfileExperienceLevel'),
+)
+const Heading = lazy(() => import('../../miscellaneous/HeadingComponent'))
 
 const XPLevelModal = ({ setShowXPLevelModal }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -17,18 +20,20 @@ const XPLevelModal = ({ setShowXPLevelModal }) => {
 
   useEffect(() => {
     onOpen()
-  }, [])
+  }, [onOpen])
+
+  const handleClose = useCallback(() => {
+    onClose()
+    setShowXPLevelModal(false)
+  }, [onClose, setShowXPLevelModal])
+
+  const userXP = useMemo(() => user.xp, [user.xp])
+  const userLevel = useMemo(() => user.level, [user.level])
 
   return (
     <>
       {isOpen && (
-        <Modal
-          isOpen={isOpen}
-          onClose={() => {
-            onClose()
-            setShowXPLevelModal(false)
-          }}
-        >
+        <Modal isOpen={isOpen} onClose={handleClose}>
           <ModalOverlay bg="rgba(15, 13, 21, 0.8)" />
           <ModalContent
             bg="#1a1527"
@@ -41,8 +46,10 @@ const XPLevelModal = ({ setShowXPLevelModal }) => {
             fontFamily="'Roboto', sans-serif"
           >
             <ModalCloseButton color={'white'} />
-            <Heading title="Experience Level" />
-            <ProfileExperienceLevel xp={user.xp} level={user.level} />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Heading title="Experience Level" />
+              <ProfileExperienceLevel xp={userXP} level={userLevel} />
+            </Suspense>
           </ModalContent>
         </Modal>
       )}

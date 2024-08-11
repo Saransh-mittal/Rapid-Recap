@@ -1,8 +1,9 @@
+import React, { lazy, Suspense, useCallback, useMemo } from 'react'
 import { Flex, Image, ListItem, Text, UnorderedList } from '@chakra-ui/react'
-import React from 'react'
 import { NavLink } from 'react-router-dom'
-import newBadge from '/images/newBadge.webp'
 import useSound from '../../../customHooks/useSound'
+
+const newBadge = lazy(() => import('/images/newBadge.webp'))
 
 const NavbarContent = ({
   isHamburgerOpen,
@@ -12,6 +13,63 @@ const NavbarContent = ({
   notLogined,
 }) => {
   const { playClick } = useSound()
+
+  const handleClick = useCallback(() => {
+    playClick()
+    if (setIsHamburgerOpen) setIsHamburgerOpen(false)
+  }, [playClick, setIsHamburgerOpen])
+
+  const memoizedNavItems = useMemo(() => {
+    return navItems.map((item, index) => (
+      <ListItem
+        className={`nav-item `}
+        key={index}
+        onClick={handleClick}
+        display={'flex'}
+        justifyContent={'center'}
+        alignItems={'center'}
+        gap={'0.25rem'}
+        position={'relative'}
+      >
+        <NavLink
+          to={item.to}
+          className={`nav-link`}
+          onClick={playClick}
+          ref={ref => (navLinkRefs.current[index] = ref)}
+        >
+          {item.label}
+          {item.label === 'Season' && (
+            <Suspense fallback={<div>Loading...</div>}>
+              <>
+                <Image
+                  position="absolute"
+                  src={newBadge}
+                  bg={'transparent'}
+                  height={'1.5rem'}
+                  w={'3rem'}
+                  right={'-2.2rem'}
+                  top={'-1.2rem'}
+                />
+                <Text
+                  position="absolute"
+                  right={'-1.9rem'}
+                  top={'-1.05rem'}
+                  fontSize="0.75rem"
+                  fontWeight={'bold'}
+                  color="white"
+                  bg="transparent"
+                  padding="0.1rem 0.3rem"
+                >
+                  New
+                </Text>
+              </>
+            </Suspense>
+          )}
+        </NavLink>
+      </ListItem>
+    ))
+  }, [navItems, playClick, navLinkRefs, handleClick])
+
   return (
     <>
       <Flex
@@ -51,58 +109,7 @@ const NavbarContent = ({
             flexDirection={{ base: 'column', lg: 'row' }}
           >
             {/* Navigation items */}
-            {navItems.map((item, index) => (
-              <ListItem
-                className={`nav-item `}
-                key={index}
-                onClick={() => {
-                  playClick()
-                  setIsHamburgerOpen && setIsHamburgerOpen(false)
-                }}
-                display={'flex'}
-                justifyContent={'center'}
-                alignItems={'center'}
-                gap={'0.25rem'}
-                position={'relative'}
-              >
-                <NavLink
-                  to={item.to}
-                  className={`nav-link`}
-                  onClick={e => {
-                    playClick()
-                  }}
-                  ref={ref => (navLinkRefs.current[index] = ref)}
-                >
-                  {item.label}
-                  {item.label === 'Season' && (
-                    <>
-                      <Image
-                        position="absolute"
-                        src={newBadge}
-                        bg={'transparent'}
-                        height={'1.5rem'}
-                        w={'3rem'}
-                        right={'-2.2rem'}
-                        top={'-1.2rem'}
-                      />
-                      <Text
-                        position="absolute"
-                        right={'-1.9rem'}
-                        top={'-1.05rem'}
-                        fontSize="0.75rem"
-                        fontWeight={'bold'}
-                        color="white"
-                        bg="transparent"
-                        padding="0.1rem 0.3rem"
-                      >
-                        New
-                      </Text>
-                    </>
-                  )}
-                </NavLink>
-              </ListItem>
-            ))}
-            {/* Sign in link or email icon */}
+            {memoizedNavItems}
           </UnorderedList>
         </Flex>
       </Flex>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback, Suspense } from 'react'
 import axios from 'axios'
 import {
   Modal,
@@ -9,10 +9,13 @@ import {
   Text,
   useDisclosure,
   Box,
-  // Heading,
 } from '@chakra-ui/react'
-import IQLineGraph from '../../profileComponents/IQLineGraph'
-import Heading from '../../miscellaneous/HeadingComponent'
+
+// Lazy load components
+const IQLineGraph = React.lazy(() =>
+  import('../../profileComponents/IQLineGraph'),
+)
+const Heading = React.lazy(() => import('../../miscellaneous/HeadingComponent'))
 
 const IQScoreModal = ({ setShowIQScoreModal }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -25,7 +28,8 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
     fetchLineGraphData() // Fetch data on component mount
   }, [])
 
-  const fetchLineGraphData = async () => {
+  // Memoized function to fetch line graph data
+  const fetchLineGraphData = useCallback(async () => {
     try {
       const response = await axios.get(`/api/user/lineGraph`)
       setLineGraph(response.data.lineGraph)
@@ -35,12 +39,13 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
     } finally {
       setLoading(false) // Set loading to false regardless of the result
     }
-  }
+  }, [])
 
-  const handleClose = () => {
+  // Memoized function to handle modal close
+  const handleClose = useCallback(() => {
     onClose() // Close the modal
     setShowIQScoreModal(false) // Ensure parent state is updated
-  }
+  }, [onClose, setShowIQScoreModal])
 
   return (
     <>
@@ -48,13 +53,9 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
         <Modal isOpen={isOpen} onClose={handleClose}>
           <ModalOverlay bg="rgba(15, 13, 21, 0.8)" />
           <ModalContent
-            // className="iq-score-modal"
             bg="#1a1527"
             backgroundImage="linear-gradient(135deg, #2d2a47 0%, #0e0c16 100%)"
             maxW={{ base: '100vw', md: '60vw' }}
-            // maxH={'auto'} // h="auto"
-            // w="auto"
-            // h={'30vw'}
             py={8}
             px={{ base: 2, md: 8 }}
             borderRadius="lg"
@@ -62,22 +63,22 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
             color="white"
             fontFamily="'Roboto', sans-serif"
           >
-            <ModalCloseButton
-              color={'white'}
-              onClick={handleClose} // Use the handleClose function
-            />
-            <Heading title="IQ Score History" />
+            <ModalCloseButton color={'white'} onClick={handleClose} />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Heading title="IQ Score History" />
+            </Suspense>
 
-            {loading ? (
-              <Text>Loading IQ score history...</Text>
-            ) : error ? (
-              <Text color="red.500">{error}</Text>
-            ) : (
-              <IQLineGraph
-                lineGraph={lineGraph}
-                // isNavIQ={true}
-              />
-            )}
+            <ModalBody>
+              {loading ? (
+                <Text>Loading IQ score history...</Text>
+              ) : error ? (
+                <Text color="red.500">{error}</Text>
+              ) : (
+                <Suspense fallback={<Text>Loading chart...</Text>}>
+                  <IQLineGraph lineGraph={lineGraph} iOpenedFromNav={true} />
+                </Suspense>
+              )}
+            </ModalBody>
           </ModalContent>
         </Modal>
       )}

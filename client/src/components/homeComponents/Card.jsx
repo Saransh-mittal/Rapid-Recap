@@ -1,86 +1,74 @@
 import { Box, Flex, Slide } from '@chakra-ui/react'
-import { useRef, useEffect } from 'react'
-import imageData from '../../assets/AltNewsImage'
+import { useRef, useEffect, useMemo, useCallback, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import rrImage from '/images/rr.webp'
 import useSound from '../../customHooks/useSound'
 
 const Card = ({ newsNumber, data }) => {
-  //console.log("card :", data);
   const navigate = useNavigate()
-  const newArticle = {
-    ...data,
-    imgURL: data?.imgURL[0],
-  }
-  const alt_img = imageData.find(img => {
-    return (
-      img.category.toLocaleLowerCase() === data.category.toLocaleLowerCase()
-    )
-  })?.image
-  //console.log(alt_img);
   const { playClick } = useSound()
+
+  // Memoize the new article object
+  const newArticle = useMemo(
+    () => ({
+      ...data,
+      imgURL: data?.imgURL[0],
+    }),
+    [data],
+  )
+
   const cardWrapper = useRef(null)
   const card = useRef(null)
   const project_meta = useRef(null)
-  // highest values for angle
-  const mostX = 10 // 10 or -10
-  const mostY = 10 // 10 or -10
-  const mousemove = e => {
-    card.current.style.transition = 'none'
-    project_meta.current.style.transition = 'none'
 
-    const x = e.nativeEvent.offsetX
-    const y = e.nativeEvent.offsetY
-    const { width, height } = cardWrapper.current.getBoundingClientRect()
-    const halfWidth = width / 2
-    const halfHeight = height / 2
+  // Mouse movement handler
+  const mousemove = useCallback(e => {
+    if (card.current && project_meta.current) {
+      card.current.style.transition = 'none'
+      project_meta.current.style.transition = 'none'
 
-    // calculate angle
-    const rotationY = ((x - halfWidth) / halfWidth) * mostX
-    const rotationX = ((y - halfHeight) / halfHeight) * mostY
+      const x = e.nativeEvent.offsetX
+      const y = e.nativeEvent.offsetY
+      const { width, height } = cardWrapper.current.getBoundingClientRect()
+      const halfWidth = width / 2
+      const halfHeight = height / 2
 
-    // set rotation
-    card.current.style.transform = `rotateY(${rotationY}deg) rotateX(${rotationX}deg)`
-    project_meta.current.style.transform = `rotateY(${rotationY}deg) rotateX(${rotationX}deg)`
-  }
-  const mouseleave = () => {
+      const rotationY = ((x - halfWidth) / halfWidth) * 10
+      const rotationX = ((y - halfHeight) / halfHeight) * 10
+
+      card.current.style.transform = `rotateY(${rotationY}deg) rotateX(${rotationX}deg)`
+      project_meta.current.style.transform = `rotateY(${rotationY}deg) rotateX(${rotationX}deg)`
+    }
+  }, [])
+
+  // Mouse leave handler
+  const mouseleave = useCallback(() => {
     if (card.current && project_meta.current) {
       card.current.style.transition = 'transform 0.5s ease-in-out'
       card.current.style.transform = `rotateY(0) rotateX(0)`
       project_meta.current.style.transition = 'transform 0.5s ease-in-out'
       project_meta.current.style.transform = `rotateY(0) rotateX(0)`
     }
-  }
+  }, [])
 
-  useEffect(() => {}, [
-    data,
-    newsNumber,
-    data.imgURL,
-    data.title,
-    data.mainText,
-    card,
-  ])
+  // Click handler for card
+  const handleCardClick = useCallback(() => {
+    playClick()
+    navigate(`/article/${newArticle._id}`)
+  }, [playClick, navigate, newArticle._id])
 
   return (
-    <div className={`containers`}>
+    <div className="containers">
       <Flex
-        className={`cardWrapper`}
+        className="cardWrapper"
         ref={cardWrapper}
-        onClick={() => {
-          // window.innerWidth < 768
-          //   ? navigate(`/article/${newArticle._id}`)
-          //   : dispatch({ type: 'showModal', payloadModal: true })
-          playClick()
-          navigate(`/article/${newArticle._id}`)
-        }}
-        _hover={{
-          cursor: 'pointer',
-        }}
+        onClick={handleCardClick}
+        _hover={{ cursor: 'pointer' }}
         onMouseMove={mousemove}
         onMouseLeave={mouseleave}
       >
         <div className="project-meta" ref={project_meta}>
-          <div className=" projects">
+          <div className="projects">
             <span className="block-reveal__text">{data?.title}</span>
           </div>
           <div className="divider"></div>
@@ -90,7 +78,7 @@ const Card = ({ newsNumber, data }) => {
                 {newsNumber}
                 <br /> <span className="arr">→</span>
               </span>
-              <Flex flexDirection={'column'} gap={1}>
+              <Flex flexDirection="column" gap={1}>
                 <span
                   style={{
                     fontSize: '0.85rem',
@@ -100,7 +88,6 @@ const Card = ({ newsNumber, data }) => {
                     textAlign: 'left',
                   }}
                 >
-                  {' '}
                   {data?.category}
                 </span>
                 <span
@@ -124,18 +111,20 @@ const Card = ({ newsNumber, data }) => {
               className="img-box"
               background="linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%)"
             >
-              <img
-                src={data?.imgURL[0] ? data?.imgURL[0] : rrImage}
-                alt=""
-                onError={e => {
-                  e.target.onerror = null
-                  e.target.src = rrImage
-                }}
-                loading="lazy"
-              />
+              <Suspense fallback={<img src={rrImage} alt="" loading="lazy" />}>
+                <img
+                  src={newArticle.imgURL ? newArticle.imgURL : rrImage}
+                  alt="Article Image"
+                  onError={e => {
+                    e.target.onerror = null
+                    e.target.src = rrImage
+                  }}
+                  loading="lazy"
+                />
+              </Suspense>
             </Box>
             <div className="contents text-white">
-              <h2> Click here to know More </h2>
+              <h2>Click here to know More</h2>
               <p>
                 {data?.mainText[0].length > 135
                   ? `${data?.mainText[0].substring(0, 135)}...`

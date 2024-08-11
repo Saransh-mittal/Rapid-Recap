@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  Suspense,
+} from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'
 import axios from 'axios'
@@ -9,19 +16,9 @@ import {
   Box,
   useMediaQuery,
   useDisclosure,
+  Spinner,
 } from '@chakra-ui/react'
-
 import { CloseIcon } from '@chakra-ui/icons'
-import NotificationDrawer from './Inbox/NotificationDrawer'
-import DailyStreakModal from '../streakComponents/DailyStreakModal'
-import NotificationModal from './Inbox/NotificationModal'
-import NavbarContent from './navbarComponents/NavbarContent'
-import OutsideNavbarContent from './navbarComponents/OutsideNavbarContent'
-import NavBrand from './navbarComponents/NavBrand'
-import HamburgerModal from './navbarComponents/HamburgerModal'
-import XPLevelModal from './navbarComponents/XPLevelModal'
-import IQScoreModal from './navbarComponents/IQScoreModal'
-import WiseWeb from '../profileComponents/WiseWeb'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/authSlice'
 import {
@@ -29,25 +26,53 @@ import {
   fetchDailyStreak,
   fetchUnreadFriendRequestsCount,
   markFriendRequestsAsRead,
+  resetAllState,
+  resetLoadingFlags,
 } from '../../redux/appSlice'
 import useSound from '../../customHooks/useSound'
 
+// Lazy load components
+const NotificationDrawer = React.lazy(() =>
+  import('./Inbox/NotificationDrawer'),
+)
+const DailyStreakModal = React.lazy(() =>
+  import('../streakComponents/DailyStreakModal'),
+)
+const NotificationModal = React.lazy(() => import('./Inbox/NotificationModal'))
+const NavbarContent = React.lazy(() =>
+  import('./navbarComponents/NavbarContent'),
+)
+const OutsideNavbarContent = React.lazy(() =>
+  import('./navbarComponents/OutsideNavbarContent'),
+)
+const NavBrand = React.lazy(() => import('./navbarComponents/NavBrand'))
+const HamburgerModal = React.lazy(() =>
+  import('./navbarComponents/HamburgerModal'),
+)
+const XPLevelModal = React.lazy(() => import('./navbarComponents/XPLevelModal'))
+const IQScoreModal = React.lazy(() => import('./navbarComponents/IQScoreModal'))
+const WiseWeb = React.lazy(() => import('../profileComponents/WiseWeb'))
+
 const Navbar = () => {
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
-  const navItems = [
-    { to: '/home', label: 'Home' },
-    { to: '/contact', label: 'Contact Us' },
-    { to: '/leaderboard', label: 'Leaderboard' },
-    // { to: "/season", label: "Season" },
-  ]
   const location = useLocation()
-  const [isHamburgerOpen, setIsHamburgerOpen] = useState(false)
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
   const { playClick } = useSound()
   const navLinkRefs = useRef([])
+
+  const [isHamburgerOpen, setIsHamburgerOpen] = useState(false)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [visible, setVisible] = useState(true)
+  const [prevScrollPos, setPrevScrollPos] = useState(0)
+  const [notifyCont, setNotifyCnt] = useState(0)
+  const [selectedNotification, setSelectedNotification] = useState(null)
+  const [showDailyStreakModal, setShowDailyStreakModal] = useState(false)
+  const [showXPLevelModal, setShowXPLevelModal] = useState(false)
+  const [showIQScoreModal, setShowIQScoreModal] = useState(false)
+
+  const dispatchRedux = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const {
     updates,
@@ -58,31 +83,34 @@ const Navbar = () => {
     friendRequestsLoading,
     isBoosted,
   } = useSelector(state => state.app)
-  const dispatchRedux = useDispatch()
-  const [visible, setVisible] = useState(true)
-  const [prevScrollPos, setPrevScrollPos] = useState(0)
-  const [notifyCont, setNotifyCnt] = useState(0)
-  const [selectedNotification, setSelectedNotification] = useState(null)
-  const [showDailyStreakModal, setShowDailyStreakModal] = useState(false)
-  const [showXPLevelModal, setShowXPLevelModal] = useState(false)
-  const [showIQScoreModal, setShowIQScoreModal] = useState(false)
+
   const {
     isOpen: isOpenWiseWeb,
     onOpen: onOpenWiseWeb,
     onClose: onCloseWiseWeb,
   } = useDisclosure()
+
   const [isHomePage, setIsHomePage] = useState(
     location.pathname.split('/')[1] === 'home',
   )
   const [profileNotif, setProfileNotif] = useState(false)
-  const calculateRequiredXp = (xp, xpBaseAtNextLevel) => {
-    return xpBaseAtNextLevel - xp
-  }
 
-  // Helper function to check if an object is empty
-  const isEmptyObject = obj => {
+  const navItems = useMemo(
+    () => [
+      { to: '/home', label: 'Home' },
+      { to: '/contact', label: 'Contact Us' },
+      { to: '/leaderboard', label: 'Leaderboard' },
+    ],
+    [],
+  )
+
+  const calculateRequiredXp = useCallback((xp, xpBaseAtNextLevel) => {
+    return xpBaseAtNextLevel - xp
+  }, [])
+
+  const isEmptyObject = useCallback(obj => {
     return obj && Object.keys(obj).length === 0
-  }
+  }, [])
 
   let level, xpBaseAtNextLevel, requiredXP
 
@@ -101,7 +129,6 @@ const Navbar = () => {
   }, [unreadFriendRequests])
 
   useEffect(() => {
-    //update notification count whose update is not read
     if (updates.length === 0) return
     let count = 0
 
@@ -123,9 +150,9 @@ const Navbar = () => {
     if (!friendRequestsLoading) {
       dispatchRedux(fetchUnreadFriendRequestsCount())
     }
-  }, [dispatchRedux, user, isAuthenticated])
+  }, [dispatchRedux, user])
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       const response = await axios.post('/api/user/logout')
       if (response.status === 201) {
@@ -133,6 +160,8 @@ const Navbar = () => {
         setIsHamburgerOpen(false)
         localStorage.removeItem('token')
         dispatchRedux(logout())
+        dispatchRedux(resetLoadingFlags())
+        dispatchRedux(resetAllState())
         toast({
           title: 'Logout Successful',
           status: 'success',
@@ -155,15 +184,26 @@ const Navbar = () => {
       })
       console.error(error.message)
     }
-  }
+  }, [dispatchRedux, navigate, toast])
 
   useEffect(() => {
     const checkIfHomePage = () => {
       setIsHomePage(location.pathname.split('/')[1] === 'home')
     }
+    const handleScroll = () => {
+      const currentScrollPos = window.scrollY
+      const shouldSetVisible =
+        prevScrollPos > currentScrollPos || currentScrollPos < 10
+
+      if ((isHomePage && isSmallerThan992) || !isHomePage) {
+        setVisible(shouldSetVisible)
+      }
+      setPrevScrollPos(currentScrollPos)
+    }
+
     window.addEventListener('scroll', handleScroll)
     window.addEventListener('popstate', checkIfHomePage)
-    window.addEventListener('pushState', checkIfHomePage) // Custom event if using history.pushState
+    window.addEventListener('pushState', checkIfHomePage)
 
     checkIfHomePage()
     return () => {
@@ -171,21 +211,9 @@ const Navbar = () => {
       window.removeEventListener('popstate', checkIfHomePage)
       window.removeEventListener('pushState', checkIfHomePage)
     }
-  }, [prevScrollPos, visible, location])
+  }, [prevScrollPos, visible, location, isHomePage, isSmallerThan992])
 
-  const handleScroll = () => {
-    const currentScrollPos = window.scrollY
-    // const isHomePage = location.pathname.split("/")[1] === "home";
-    const shouldSetVisible =
-      prevScrollPos > currentScrollPos || currentScrollPos < 10
-
-    if ((isHomePage && isSmallerThan992) || !isHomePage) {
-      setVisible(shouldSetVisible)
-    }
-    setPrevScrollPos(currentScrollPos)
-  }
-
-  const getBackgroundColor = ({ heatLevel }) => {
+  const getBackgroundColor = useCallback(({ heatLevel }) => {
     if (heatLevel <= 0.2) {
       return 'rgba(139, 0, 0, 1)'
     } else if (heatLevel <= 0.4) {
@@ -197,7 +225,7 @@ const Navbar = () => {
     } else {
       return 'rgba(0, 0, 255, 1)'
     }
-  }
+  }, [])
 
   return (
     <>
@@ -211,13 +239,7 @@ const Navbar = () => {
           zIndex={'1000'}
           transform={visible ? 'translateY(0)' : 'translateY(-100%)'}
           transition="transform 0.3s ease-in-out"
-          // backgroundImage={
-          //   'linear-gradient(-180deg, rgba(26, 21, 39, 0.9), rgba(14, 12, 22, 0.9) 88%, rgba(14, 12, 22, 0.9) 99%)'
-          // }
-          backgroundColor={'rgba(15, 13, 21, 0.4)'} // Adjust the alpha value (0.8) for transparency
-          // boxShadow={
-          //   '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)'
-          // }
+          backgroundColor={'rgba(15, 13, 21, 0.4)'}
           borderBottom={'1px solid rgba(255, 255, 255, 0.1)'}
           boxShadow={visible ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'}
           style={{
@@ -232,116 +254,122 @@ const Navbar = () => {
           borderBottomStyle={'solid'}
           justifyContent={'center'}
         >
-          {isHamburgerOpen && <NavBrand isHamburgerOpen={isHamburgerOpen} />}
+          <Suspense fallback={<Spinner />}>
+            {isHamburgerOpen && <NavBrand isHamburgerOpen={isHamburgerOpen} />}
 
-          {showDailyStreakModal && (
-            <DailyStreakModal
-              setShowDailyStreakModal={setShowDailyStreakModal}
-              getBackgroundColor={getBackgroundColor}
-            />
-          )}
-          {showXPLevelModal && (
-            <XPLevelModal setShowXPLevelModal={setShowXPLevelModal} />
-          )}
-          {showIQScoreModal && (
-            <IQScoreModal setShowIQScoreModal={setShowIQScoreModal} />
-          )}
+            {showDailyStreakModal && (
+              <DailyStreakModal
+                setShowDailyStreakModal={setShowDailyStreakModal}
+                getBackgroundColor={getBackgroundColor}
+              />
+            )}
+            {showXPLevelModal && (
+              <XPLevelModal setShowXPLevelModal={setShowXPLevelModal} />
+            )}
+            {showIQScoreModal && (
+              <IQScoreModal setShowIQScoreModal={setShowIQScoreModal} />
+            )}
 
-          {isHamburgerOpen ? (
-            <Button
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarNav"
-              aria-controls="navbarNav"
-              aria-label="Toggle navigation"
-              display={{ base: 'flex', lg: 'none' }}
-              onClick={() => {
-                playClick()
-                setIsHamburgerOpen(false)
-              }}
-              height={'35px'}
-              width={'10px'}
-              marginLeft={'auto'}
+            {isHamburgerOpen ? (
+              <Button
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-label="Toggle navigation"
+                display={{ base: 'flex', lg: 'none' }}
+                onClick={() => {
+                  playClick()
+                  setIsHamburgerOpen(false)
+                }}
+                height={'35px'}
+                width={'10px'}
+                marginLeft={'auto'}
+              >
+                <CloseIcon />
+              </Button>
+            ) : null}
+
+            <Flex
+              w={'100%'}
+              height={'100%'}
+              flexDirection={'row'}
+              display={isHamburgerOpen ? 'none' : 'flex'}
+              position={'relative'}
             >
-              <CloseIcon />
-            </Button>
-          ) : null}
-          <Flex
-            w={'100%'}
-            height={'100%'}
-            flexDirection={'row'}
-            display={isHamburgerOpen ? 'none' : 'flex'}
-            position={'relative'}
-          >
-            <NavBrand isHamburgerOpen={isHamburgerOpen} />
-            <NavbarContent
-              notifyCont={notifyCont}
-              isHamburgerOpen={isHamburgerOpen}
-              notLogined={!isAuthenticated}
-              setIsHamburgerOpen={setIsHamburgerOpen}
-              navLinkRefs={navLinkRefs}
-              navItems={navItems}
-            />
+              <NavBrand isHamburgerOpen={isHamburgerOpen} />
+              <NavbarContent
+                notifyCont={notifyCont}
+                isHamburgerOpen={isHamburgerOpen}
+                notLogined={!isAuthenticated}
+                setIsHamburgerOpen={setIsHamburgerOpen}
+                navLinkRefs={navLinkRefs}
+                navItems={navItems}
+              />
 
-            <OutsideNavbarContent
-              setIsDrawerOpen={setIsDrawerOpen}
-              notifyCont={notifyCont}
-              setShowDailyStreakModal={setShowDailyStreakModal}
-              setShowXPLevelModal={setShowXPLevelModal}
-              setShowIQScoreModal={setShowIQScoreModal}
-              streak={streak}
-              isBoosted={isBoosted}
-              getBackgroundColor={getBackgroundColor}
-              notLogined={!isAuthenticated}
-              isHamburgerOpen={isHamburgerOpen}
-              handleLogout={handleLogout}
-              navLinkRefs={navLinkRefs}
-              setIsHamburgerOpen={setIsHamburgerOpen}
-              level={user?.level}
-              profileNotif={profileNotif}
-              onOpenWiseWeb={onOpenWiseWeb}
-            />
-          </Flex>
-          {isModalOpen && (
-            <NotificationModal
-              selectedNotification={selectedNotification}
-              setIsModalOpen={setIsModalOpen}
-              setIsDrawerOpen={setIsDrawerOpen}
-            />
-          )}
-          {isDrawerOpen && (
-            <NotificationDrawer
-              setIsHamburgerOpen={setIsHamburgerOpen}
-              setIsDrawerOpen={setIsDrawerOpen}
-              setIsModalOpen={setIsModalOpen}
-              setSelectedNotification={setSelectedNotification}
-            />
-          )}
-          {isOpenWiseWeb && (
-            <WiseWeb
-              isOpen={isOpenWiseWeb}
-              onClose={onCloseWiseWeb}
-              setIsHamburgerOpen={setIsHamburgerOpen}
-              requestNotif={unreadFriendRequests > 0}
-              markRequestAsRead={() =>
-                dispatchRedux(markFriendRequestsAsRead())
-              }
-            />
-          )}
+              <OutsideNavbarContent
+                setIsDrawerOpen={setIsDrawerOpen}
+                notifyCont={notifyCont}
+                setShowDailyStreakModal={setShowDailyStreakModal}
+                setShowXPLevelModal={setShowXPLevelModal}
+                setShowIQScoreModal={setShowIQScoreModal}
+                streak={streak}
+                isBoosted={isBoosted}
+                getBackgroundColor={getBackgroundColor}
+                notLogined={!isAuthenticated}
+                isHamburgerOpen={isHamburgerOpen}
+                handleLogout={handleLogout}
+                navLinkRefs={navLinkRefs}
+                setIsHamburgerOpen={setIsHamburgerOpen}
+                level={user?.level}
+                profileNotif={profileNotif}
+                onOpenWiseWeb={onOpenWiseWeb}
+              />
+            </Flex>
+
+            {isModalOpen && (
+              <NotificationModal
+                selectedNotification={selectedNotification}
+                setIsModalOpen={setIsModalOpen}
+                setIsDrawerOpen={setIsDrawerOpen}
+              />
+            )}
+            {isDrawerOpen && (
+              <NotificationDrawer
+                setIsHamburgerOpen={setIsHamburgerOpen}
+                setIsDrawerOpen={setIsDrawerOpen}
+                setIsModalOpen={setIsModalOpen}
+                setSelectedNotification={setSelectedNotification}
+              />
+            )}
+            {isOpenWiseWeb && (
+              <WiseWeb
+                isOpen={isOpenWiseWeb}
+                onClose={onCloseWiseWeb}
+                setIsHamburgerOpen={setIsHamburgerOpen}
+                requestNotif={unreadFriendRequests > 0}
+                markRequestAsRead={() =>
+                  dispatchRedux(markFriendRequestsAsRead())
+                }
+              />
+            )}
+          </Suspense>
         </Box>
       </Box>
 
-      <HamburgerModal
-        isOpen={isHamburgerOpen}
-        onClose={() => setIsHamburgerOpen(false)}
-        navItems={navItems}
-        notLogined={!isAuthenticated}
-        navLinkRefs={navLinkRefs}
-        notifyCont={notifyCont}
-        handleLogout={handleLogout}
-        setIsDrawerOpen={setIsDrawerOpen}
-        onOpenWiseWeb={onOpenWiseWeb}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <HamburgerModal
+          isOpen={isHamburgerOpen}
+          onClose={() => setIsHamburgerOpen(false)}
+          navItems={navItems}
+          notLogined={!isAuthenticated}
+          navLinkRefs={navLinkRefs}
+          notifyCont={notifyCont}
+          handleLogout={handleLogout}
+          setIsDrawerOpen={setIsDrawerOpen}
+          onOpenWiseWeb={onOpenWiseWeb}
+        />
+      </Suspense>
     </>
   )
 }

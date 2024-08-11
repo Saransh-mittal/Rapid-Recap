@@ -1,4 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  Suspense,
+} from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -11,9 +17,10 @@ import {
   Text,
 } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
-import Circles from '../../../assets/Circles'
 import { useSwipeable } from 'react-swipeable'
-import circleImg from '/images/circle.webp'
+
+// Lazy load the circle image
+const circleImg = React.lazy(() => import('/images/circle.webp'))
 
 const CircleModal = ({
   isOpen,
@@ -24,8 +31,13 @@ const CircleModal = ({
   const [currentPage, setCurrentPage] = useState(1)
   const [glowAnimation, setGlowAnimation] = useState(false)
 
+  // Memoize the current circle to avoid recalculations
+  const currentCircle = useMemo(() => Circles[currentPage - 1], [currentPage])
+
+  // Determine the initial page based on the current user's circle
   useEffect(() => {
     if (!isOpen || !currentUserCircle || Circles.length === 0) return
+
     const circleIndex = Circles.findIndex(
       circle => circle.circle.toLowerCase() === currentUserCircle.toLowerCase(),
     )
@@ -40,11 +52,13 @@ const CircleModal = ({
         }
       })
     }, 200)
+
     return () => {
       clearInterval(intervalId)
     }
   }, [isOpen, currentUserCircle])
 
+  // Handle glow animation
   useEffect(() => {
     if (isOpen) {
       setGlowAnimation(true)
@@ -60,17 +74,16 @@ const CircleModal = ({
     }
   }, [glowAnimation])
 
-  const handlePreviousPage = () => {
+  // Memoize page navigation handlers
+  const handlePreviousPage = useCallback(() => {
     setCurrentPage(prevPage => (prevPage === 1 ? 7 : prevPage - 1))
     setGlowAnimation(true)
-  }
+  }, [])
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     setCurrentPage(prevPage => (prevPage === 7 ? 1 : prevPage + 1))
     setGlowAnimation(true)
-  }
-
-  const currentCircle = Circles[currentPage - 1]
+  }, [])
 
   return (
     <Modal
@@ -89,8 +102,8 @@ const CircleModal = ({
           borderRadius: '10px',
         }}
         {...useSwipeable({
-          onSwipedLeft: () => handleNextPage(),
-          onSwipedRight: () => handlePreviousPage(),
+          onSwipedLeft: handleNextPage,
+          onSwipedRight: handlePreviousPage,
         })}
       >
         <ModalHeader
@@ -171,19 +184,33 @@ const CircleModal = ({
                 animation: glowAnimation ? 'glow 1.5s 2 alternate' : 'none',
               }}
             >
-              <img
-                src={circleImg}
-                alt={'circle img'}
-                style={{
-                  width: '340px',
-                  height: '340px',
-                  background: 'transparent',
-                  display: 'block',
-                  margin: '0 auto',
-                  position: 'relative',
-                  zIndex: '1',
-                }}
-              />
+              <Suspense
+                fallback={
+                  <img
+                    src={circleImg}
+                    alt="Loading..."
+                    style={{
+                      width: '340px',
+                      height: '340px',
+                      margin: '0 auto',
+                    }}
+                  />
+                }
+              >
+                <img
+                  src={circleImg}
+                  alt={'circle img'}
+                  style={{
+                    width: '340px',
+                    height: '340px',
+                    background: 'transparent',
+                    display: 'block',
+                    margin: '0 auto',
+                    position: 'relative',
+                    zIndex: '1',
+                  }}
+                />
+              </Suspense>
               <div
                 style={{
                   position: 'absolute',

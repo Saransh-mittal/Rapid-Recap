@@ -22,7 +22,7 @@ import {
   ModalCloseButton,
   useMediaQuery,
 } from '@chakra-ui/react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 
 import Rapid_recap from '/images/rrlogo.webp'
 import { DeleteIcon } from '@chakra-ui/icons'
@@ -43,57 +43,67 @@ const NotificationDrawer = ({
   const { updates } = useSelector(state => state.app)
   const toast = useToast()
   const isScreenSmallerThan48em = useMediaQuery('(max-width: 48em)')[0]
-  const [notificationData, setNotificationData] = useState(updates) // State for notification data
+
+  const notificationData = useMemo(() => updates, [updates]) // Memoize notifications data
+
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false) // State for delete confirmation modal
-  const [notificationToDelete, setNotificationToDelete] = useState(null) // State to store notification to delete
-  const [removeAllModalOpen, setRemoveAllModalOpen] = useState(false) // State for remove all notifications modal
-  const handleNotificationClick = notification => {
-    setSelectedNotification(notification)
-    setIsModalOpen(true)
-    setIsDrawerOpen(false)
-  }
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [notificationToDelete, setNotificationToDelete] = useState(null)
+  const [removeAllModalOpen, setRemoveAllModalOpen] = useState(false)
 
-  const setReadUpdate = async updateId => {
-    try {
-      await axios.put(`/api/user/readUpdates?updateId=${updateId}`)
-      const updatedNotifications = notificationData.map(update =>
-        update._id === updateId ? { ...update, read: true } : update,
-      )
-      setNotificationData(updatedNotifications)
-      dispatch(setUpdates(updatedNotifications))
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to mark as read',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
-      console.log(error)
-    }
-  }
+  const handleNotificationClick = useCallback(
+    notification => {
+      setSelectedNotification(notification)
+      setIsModalOpen(true)
+      setIsDrawerOpen(false)
+    },
+    [setSelectedNotification, setIsModalOpen, setIsDrawerOpen],
+  )
 
-  const handleDeleteClick = notification => {
-    playClick()
-    setNotificationToDelete(notification)
-    setIsDeleteModalOpen(true)
-  }
+  const setReadUpdate = useCallback(
+    async updateId => {
+      try {
+        await axios.put(`/api/user/readUpdates?updateId=${updateId}`)
+        const updatedNotifications = notificationData.map(update =>
+          update._id === updateId ? { ...update, read: true } : update,
+        )
+        dispatch(setUpdates(updatedNotifications))
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to mark as read',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+          position: 'top',
+        })
+        console.log(error)
+      }
+    },
+    [notificationData, dispatch, toast],
+  )
 
-  const handleRemoveAllClick = () => {
+  const handleDeleteClick = useCallback(
+    notification => {
+      playClick()
+      setNotificationToDelete(notification)
+      setIsDeleteModalOpen(true)
+    },
+    [playClick],
+  )
+
+  const handleRemoveAllClick = useCallback(() => {
     playClick()
     setRemoveAllModalOpen(true)
-  }
+  }, [playClick])
 
-  const trashUpdate = async () => {
+  const trashUpdate = useCallback(async () => {
     playClick()
     try {
       await axios.put(`/api/user/trashUpdates/${notificationToDelete._id}`)
       const updatedNotificationData = notificationData.filter(
         update => update._id !== notificationToDelete._id,
       )
-      setNotificationData(updatedNotificationData)
       dispatch(setUpdates(updatedNotificationData))
     } catch (error) {
       toast({
@@ -108,15 +118,14 @@ const NotificationDrawer = ({
     } finally {
       setIsDeleteModalOpen(false)
     }
-  }
+  }, [notificationToDelete, notificationData, dispatch, playClick, toast])
 
-  const removeAllNotifications = async () => {
+  const removeAllNotifications = useCallback(async () => {
     playClick()
     try {
       const response = await axios.put('/api/user/trashAllUpdates')
 
       if (response.status === 200) {
-        setNotificationData([])
         dispatch(setUpdates([]))
         toast({
           title: 'Success',
@@ -149,11 +158,11 @@ const NotificationDrawer = ({
     } finally {
       setRemoveAllModalOpen(false)
     }
-  }
+  }, [playClick, dispatch, toast])
 
   useEffect(() => {
     onOpen()
-  }, [])
+  }, [onOpen])
 
   return (
     <>

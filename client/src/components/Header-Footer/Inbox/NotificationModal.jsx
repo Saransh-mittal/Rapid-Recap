@@ -1,3 +1,4 @@
+import React, { useEffect, useMemo, useCallback, Suspense } from 'react'
 import {
   Modal,
   ModalBody,
@@ -10,10 +11,15 @@ import {
   Flex,
   Heading,
   Text,
+  Spinner,
 } from '@chakra-ui/react'
-import React, { useEffect } from 'react'
-import rr from '/images/rrlogo.webp'
 import { useSelector } from 'react-redux'
+import rr from '/images/rrlogo.webp'
+
+// Lazy load large components or sections if needed
+const LazyNotificationContent = React.lazy(() =>
+  import('./LazyNotificationContent'),
+)
 
 const NotificationModal = ({
   setIsModalOpen,
@@ -25,16 +31,24 @@ const NotificationModal = ({
 
   useEffect(() => {
     onOpen()
-  }, [])
+  }, [onOpen])
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false)
+    setIsDrawerOpen(true)
+    onClose()
+  }, [onClose, setIsModalOpen, setIsDrawerOpen])
+
+  const formattedDate = useMemo(() => {
+    return selectedNotification
+      ? new Date(selectedNotification.date).toLocaleString()
+      : ''
+  }, [selectedNotification])
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => {
-        setIsModalOpen(false)
-        setIsDrawerOpen(true)
-        onClose()
-      }}
+      onClose={handleModalClose}
       size={{ base: 'full', md: 'xl' }}
     >
       <ModalOverlay />
@@ -88,59 +102,16 @@ const NotificationModal = ({
           )}
         </ModalHeader>
 
-        <ModalCloseButton />
+        <ModalCloseButton onClick={handleModalClose} />
         <ModalBody>
           {selectedNotification && (
-            <>
-              {/* Circular image */}
-
-              {/* Greetings section */}
-              <Flex mt={8} ml={4} mb={2}>
-                <Heading as="h3" size="md" color="teal">
-                  Hello, {user.name || 'User'}!
-                </Heading>
-              </Flex>
-
-              {/* Image for update */}
-              {selectedNotification.img && (
-                <Flex justifyContent="center">
-                  <Image
-                    src={selectedNotification.img}
-                    mt={3}
-                    alt="Notification Image"
-                    width="12rem"
-                    height="12rem"
-                    // borderRadius="50%"
-                    borderRadius={'2px'}
-                    objectFit="cover"
-                    objectPosition="center center"
-                  />
-                </Flex>
-              )}
-
-              {/* Main content */}
-              <Flex
-                flexDirection="column"
-                alignItems="center"
-                marginTop={'30px'}
-              >
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: selectedNotification.mainText,
-                  }}
-                  style={{
-                    fontSize: 'lg',
-                    color: 'gray.400',
-                    fontStyle: 'italic',
-                    textAlign: 'center',
-                    marginBottom: '20px',
-                  }}
-                />
-                <Text fontSize="sm" color="gray.600">
-                  {new Date(selectedNotification.date).toLocaleString()}
-                </Text>
-              </Flex>
-            </>
+            <Suspense fallback={<Spinner />}>
+              <LazyNotificationContent
+                user={user}
+                selectedNotification={selectedNotification}
+                formattedDate={formattedDate}
+              />
+            </Suspense>
           )}
         </ModalBody>
       </ModalContent>

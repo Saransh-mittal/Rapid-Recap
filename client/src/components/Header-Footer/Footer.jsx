@@ -1,8 +1,11 @@
+import React, { lazy, Suspense } from 'react'
 import { Box, Flex, Link, Text } from '@chakra-ui/react'
-import InstagramSVG from '../../assets/svg/InstagramSVG'
-import LinkedinSVG from '../../assets/svg/LinkedinSVG'
 
-const Footer = () => {
+// Lazy loading the SVG components
+const InstagramSVG = lazy(() => import('../../assets/svg/InstagramSVG'))
+const LinkedinSVG = lazy(() => import('../../assets/svg/LinkedinSVG'))
+
+const Footer = React.memo(() => {
   return (
     <Box as="footer" pt={3}>
       <Flex
@@ -21,7 +24,9 @@ const Footer = () => {
             aria-label="Follow us on Instagram"
             title="Follow us on Instagram"
           >
-            <InstagramSVG width={'25px'} height={'25px'} fill={'#fff'} />
+            <Suspense fallback={<div>Loading...</div>}>
+              <InstagramSVG width="25px" height="25px" fill="#fff" />
+            </Suspense>
           </Link>
         </Box>
         <Box mr={4}>
@@ -32,7 +37,9 @@ const Footer = () => {
             aria-label="Follow us on LinkedIn"
             title="Follow us on LinkedIn"
           >
-            <LinkedinSVG width={'25px'} height={'25px'} fill={'#fff'} />
+            <Suspense fallback={<div>Loading...</div>}>
+              <LinkedinSVG width="25px" height="25px" fill="#fff" />
+            </Suspense>
           </Link>
         </Box>
       </Flex>
@@ -41,6 +48,6 @@ const Footer = () => {
       </Text>
     </Box>
   )
-}
+})
 
 export default Footer

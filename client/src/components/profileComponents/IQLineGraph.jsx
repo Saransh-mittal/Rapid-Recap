@@ -172,6 +172,7 @@ const IQLineGraph = ({
   loginedUserProfile,
   viewingHistory = false,
   isNavIQ = false,
+  iOpenedFromNav = false,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -278,7 +279,7 @@ const IQLineGraph = ({
     <Flex
       w="100%"
       flexDirection="column"
-      borderRight={{ xl: '1px' }}
+      borderRight={{ xl: iOpenedFromNav ? '0' : '1px' }}
       padding={{ base: '20px', xl: '0' }}
       paddingX={{ base: '20px', xl: '30px' }}
       flex={1}

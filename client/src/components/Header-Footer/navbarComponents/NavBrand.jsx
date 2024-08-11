@@ -1,10 +1,12 @@
 import { Flex, Image } from '@chakra-ui/react'
-import React from 'react'
+import React, { Suspense } from 'react'
 import { NavLink } from 'react-router-dom'
 import RR from '/images/rrlogo.webp'
-import Heading from '../../miscellaneous/HeadingComponent'
 import { useSelector } from 'react-redux'
 import useSound from '../../../customHooks/useSound'
+
+// Lazy load Heading component
+const Heading = React.lazy(() => import('../../miscellaneous/HeadingComponent'))
 
 const NavBrand = ({ isHamburgerOpen }) => {
   const { playClick } = useSound()
@@ -15,37 +17,27 @@ const NavBrand = ({ isHamburgerOpen }) => {
   return (
     <NavLink
       to={notLoggedIn ? '/' : '/get-started'}
-      className={`navbar-brand`}
+      className="navbar-brand"
       onClick={playClick}
     >
       <Flex position={!isHamburgerOpen ? 'absolute' : 'relative'}>
         <Image
           src={RR}
           alt="Rapid Recap"
-          width={'2.5rem'}
-          height={'2.5rem'}
-          background={'transparent'}
-          marginRight={'-5px'}
-          // rotate to left by 2 degrees
-          transform={'rotate(-0.5deg)'}
+          width="2.5rem"
+          height="2.5rem"
+          background="transparent"
+          marginRight="-5px"
+          transform="rotate(-0.5deg)"
         />
-        {/* <Image
-          src={Logo}
-          alt="Rapid Recap"
-          width={{
-            base: isHamburgerOpen ? "5rem" : "4.8rem",
-            md: "6rem",
-          }}
-          height={"2.5rem"}
-          background={"transparent"}
-        /> */}
-        {/* <Heading>Rapid Recap</Heading> */}
         <Flex
           ml={3}
           display={{ base: isHamburgerOpen ? 'flex' : 'none', md: 'block' }}
-          color={'white'}
+          color="white"
         >
-          <Heading title={'Rapid Recap'} marginBottom="0" />
+          <Suspense fallback={<div>Loading...</div>}>
+            <Heading title="Rapid Recap" marginBottom="0" />
+          </Suspense>
         </Flex>
       </Flex>
     </NavLink>

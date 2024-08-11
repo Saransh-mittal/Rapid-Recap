@@ -1,33 +1,48 @@
-import { LockIcon, SearchIcon } from '@chakra-ui/icons'
+import React, { lazy, Suspense, useCallback, useMemo } from 'react'
 import {
   Avatar,
+  Badge,
+  Box,
   Flex,
   ListItem,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
   Text,
   Tooltip,
   UnorderedList,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  Box,
-  Badge,
   useDisclosure,
 } from '@chakra-ui/react'
-import React from 'react'
+import { LockIcon, SearchIcon } from '@chakra-ui/icons'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { BackgroundCircles, Rings, SideLines } from '../design/Header'
-import LogoutButton from './LogoutButton'
-import GetStarted from './GetStarted'
-import NavBrand from './NavBrand'
-import Inbox from './Inbox'
-import { ChatState } from '../../../contextAPI/ChatProvider'
-import UserSearchDrawer from '../../miscellaneous/UserSearchDrawer'
 import { useSelector } from 'react-redux'
-import FaMessenger from '../../../assets/svg/FaMessenger'
-import UserFriendsSVG from '../../../assets/svg/UserFriendsSVG'
+import { ChatState } from '../../../contextAPI/ChatProvider'
+import heroBG from '../../../assets/hero/hero-bg.webp'
+import FixedBackground from '../../miscellaneous/FixedBackground'
+
+const BackgroundCircles = lazy(() =>
+  import('../design/Header').then(module => ({
+    default: module.BackgroundCircles,
+  })),
+)
+const Rings = lazy(() =>
+  import('../design/Header').then(module => ({ default: module.Rings })),
+)
+const SideLines = lazy(() =>
+  import('../design/Header').then(module => ({ default: module.SideLines })),
+)
+const LogoutButton = lazy(() => import('./LogoutButton'))
+const GetStarted = lazy(() => import('./GetStarted'))
+const NavBrand = lazy(() => import('./NavBrand'))
+const Inbox = lazy(() => import('./Inbox'))
+const UserSearchDrawer = lazy(() =>
+  import('../../miscellaneous/UserSearchDrawer'),
+)
+const FaMessenger = lazy(() => import('../../../assets/svg/FaMessenger'))
+const UserFriendsSVG = lazy(() => import('../../../assets/svg/UserFriendsSVG'))
 
 const HamburgerModal = ({
   isOpen,
@@ -50,30 +65,78 @@ const HamburgerModal = ({
     onOpen: onOpenUserSearch,
     onClose: onCloseUserSearch,
   } = useDisclosure()
-  // const {
-  //   isOpen: isOpenWiseWeb,
-  //   onOpen: onOpenWiseWeb,
-  //   onClose: onCloseWiseWeb,
-  // } = useDisclosure()
+
+  const handleProfileClick = useCallback(() => {
+    onClose()
+    navigate(`/profile/${user.inGameName}`)
+  }, [onClose, navigate, user?.inGameName])
+
+  const handleChatClick = useCallback(() => {
+    onClose()
+    navigate('/chats')
+    openChat()
+  }, [onClose, navigate, openChat])
+
+  const handleInboxClick = useCallback(() => {
+    setIsDrawerOpen(true)
+    onClose()
+  }, [setIsDrawerOpen, onClose])
+
+  const handleUserSearchClick = useCallback(() => {
+    onOpenUserSearch()
+  }, [onOpenUserSearch])
+
+  const memoizedNavItems = useMemo(() => {
+    return navItems.map((item, index) => (
+      <ListItem
+        className={`nav-item `}
+        key={index}
+        onClick={onClose}
+        display={'flex'}
+        justifyContent={'center'}
+        alignItems={'center'}
+        gap={'0.25rem'}
+      >
+        <Tooltip
+          label="You need to sign in to access this page"
+          isDisabled={!(notLogined && item.label === 'Leaderboard')}
+          placement="bottom"
+          hasArrow
+        >
+          <NavLink
+            to={item.to}
+            className={`nav-link ${
+              notLogined && item.label === 'Leaderboard' ? 'locked' : ''
+            }`}
+            onClick={e =>
+              notLogined && item.label === 'Leaderboard'
+                ? e.preventDefault()
+                : null
+            }
+            ref={ref => (navLinkRefs.current[index] = ref)}
+          >
+            {item.label}
+          </NavLink>
+        </Tooltip>
+        {notLogined && item.label === 'Leaderboard' && <LockIcon />}
+      </ListItem>
+    ))
+  }, [navItems, notLogined, onClose, navLinkRefs])
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="full">
       <ModalOverlay />
-      <ModalContent
-        backgroundImage={
-          'linear-gradient(-180deg, rgba(26, 21, 39, 0.9), rgba(14, 12, 22, 0.9) 88%, rgba(14, 12, 22, 0.9) 99%)'
-        }
-      >
+      <ModalContent>
+        <FixedBackground />
         <ModalHeader
-          backgroundImage={
-            'linear-gradient(-180deg, rgba(26, 21, 39, 0.9), rgba(14, 12, 22, 0.9) 88%, rgba(14, 12, 22, 0.9) 99%)'
-          }
-          boxShadow={'0 2px 4px rgba(0, 0, 0, 0.1)'}
           w={'100%'}
           alignItems={'center'}
           p={'20px'}
           display={'flex'}
         >
-          <NavBrand isHamburgerOpen={true} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <NavBrand isHamburgerOpen={true} />
+          </Suspense>
           <ModalCloseButton
             marginTop={'15px'}
             marginRight={'10px'}
@@ -86,9 +149,6 @@ const HamburgerModal = ({
         <ModalBody p={0} w={'100%'}>
           <Flex
             height={'100vh'}
-            backgroundImage={
-              'linear-gradient(-180deg, rgba(26, 21, 39, 0.9), rgba(14, 12, 22, 0.9) 88%, rgba(14, 12, 22, 0.9) 99%)'
-            }
             width={'100%'}
             position={'relative'}
             justifyContent={'center'}
@@ -106,10 +166,7 @@ const HamburgerModal = ({
                 gap={4}
                 justifyContent={'center'}
                 alignItems={'center'}
-                onClick={() => {
-                  onClose()
-                  navigate(`/profile/${user.inGameName}`)
-                }}
+                onClick={handleProfileClick}
                 cursor={'pointer'}
               >
                 <Flex w={'100%'} h={'100%'} position={'relative'}></Flex>
@@ -153,14 +210,8 @@ const HamburgerModal = ({
                   gap={'0.25rem'}
                 >
                   <Box
-                    _hover={{
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => {
-                      onClose()
-                      navigate('/chats')
-                      openChat()
-                    }}
+                    _hover={{ cursor: 'pointer' }}
+                    onClick={handleChatClick}
                     display={notLogined ? 'none' : 'block'}
                     color={'white'}
                     position={'relative'}
@@ -180,7 +231,13 @@ const HamburgerModal = ({
                         {notification.length}
                       </Badge>
                     )}
-                    <FaMessenger width={'25px'} height={'25px'} fill={'#fff'} />
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <FaMessenger
+                        width={'25px'}
+                        height={'25px'}
+                        fill={'#fff'}
+                      />
+                    </Suspense>
                   </Box>
                 </ListItem>
                 <ListItem
@@ -190,17 +247,16 @@ const HamburgerModal = ({
                   alignItems={'center'}
                   gap={'0.25rem'}
                 >
-                  <Inbox
-                    className={'inbox-button-lg'}
-                    onClick={() => {
-                      setIsDrawerOpen(true)
-                      onClose()
-                    }}
-                    notifyCont={notifyCont}
-                    display={notLogined ? 'none' : 'flex'}
-                    h="25px"
-                    w="25px"
-                  />
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Inbox
+                      className={'inbox-button-lg'}
+                      onClick={handleInboxClick}
+                      notifyCont={notifyCont}
+                      display={notLogined ? 'none' : 'flex'}
+                      h="25px"
+                      w="25px"
+                    />
+                  </Suspense>
                 </ListItem>
                 <ListItem
                   className={`nav-item `}
@@ -211,17 +267,20 @@ const HamburgerModal = ({
                 >
                   <Flex
                     onClick={() => {
-                      onClose(), onOpenWiseWeb()
+                      onClose()
+                      onOpenWiseWeb()
                     }}
                     width={'100%'}
                     justifyContent={'center'}
                     display={notLogined ? 'none' : 'block'}
                   >
-                    <UserFriendsSVG
-                      width={'25px'}
-                      height={'25px'}
-                      fill={'#fff'}
-                    />
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <UserFriendsSVG
+                        width={'25px'}
+                        height={'25px'}
+                        fill={'#fff'}
+                      />
+                    </Suspense>
                     {unreadFriendRequests !== 0 && (
                       <Box
                         h="8px"
@@ -238,75 +297,42 @@ const HamburgerModal = ({
                 </ListItem>
                 <ListItem>
                   <Box
-                    _hover={{
-                      cursor: 'pointer',
-                    }}
+                    _hover={{ cursor: 'pointer' }}
                     display={notLogined ? 'none' : 'flex'}
-                    onClick={() => {
-                      onOpenUserSearch()
-                    }}
+                    onClick={handleUserSearchClick}
                     position={'relative'}
                     mx={1}
                   >
                     <SearchIcon boxSize={6} color={'white'} />
-                    <UserSearchDrawer
-                      isOpen={isOpenUserSearch}
-                      onClose={onCloseUserSearch}
-                      onSearchClick={() => {
-                        onClose()
-                      }}
-                    />
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <UserSearchDrawer
+                        isOpen={isOpenUserSearch}
+                        onClose={onCloseUserSearch}
+                        onSearchClick={onClose}
+                      />
+                    </Suspense>
                   </Box>
                 </ListItem>
               </Flex>
-              {navItems.map((item, index) => (
-                <ListItem
-                  className={`nav-item `}
-                  key={index}
-                  onClick={() => onClose()}
-                  display={'flex'}
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  gap={'0.25rem'}
-                >
-                  <Tooltip
-                    label="You need to sign in to access this page"
-                    isDisabled={!(notLogined && item.label === 'Leaderboard')}
-                    placement="bottom"
-                    hasArrow
-                  >
-                    <NavLink
-                      to={item.to}
-                      className={`nav-link ${
-                        notLogined && item.label === 'Leaderboard'
-                          ? 'locked'
-                          : ''
-                      }`}
-                      onClick={e =>
-                        notLogined && item.label === 'Leaderboard'
-                          ? e.preventDefault()
-                          : null
-                      }
-                      ref={ref => (navLinkRefs.current[index] = ref)}
-                    >
-                      {item.label}
-                    </NavLink>
-                  </Tooltip>
-                  {notLogined && item.label === 'Leaderboard' && <LockIcon />}
-                </ListItem>
-              ))}
+              {memoizedNavItems}
             </UnorderedList>
-            <Rings />
-            <SideLines />
-            <BackgroundCircles />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Rings />
+              <SideLines />
+              <BackgroundCircles />
+            </Suspense>
             <Flex position={'absolute'} bottom={notLogined ? '30%' : '22%'}>
               {notLogined ? (
-                <GetStarted
-                  innerText={'Get Started'}
-                  hamburgerOnClose={onClose}
-                />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <GetStarted
+                    innerText={'Get Started'}
+                    hamburgerOnClose={onClose}
+                  />
+                </Suspense>
               ) : (
-                <LogoutButton handleLogout={handleLogout} />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <LogoutButton handleLogout={handleLogout} />
+                </Suspense>
               )}
             </Flex>
           </Flex>

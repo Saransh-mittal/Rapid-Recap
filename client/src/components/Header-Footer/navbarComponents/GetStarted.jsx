@@ -1,12 +1,15 @@
-import React from 'react'
-import { Button, useDisclosure } from '@chakra-ui/react'
+import React, { Suspense } from 'react'
+import { Button, Spinner, useDisclosure } from '@chakra-ui/react'
 import './GetStarted.css'
-import Signin from '../../../screens/Signin'
 import useSound from '../../../customHooks/useSound'
+
+// Lazy load the Signin component
+const Signin = React.lazy(() => import('../../../screens/Signin'))
 
 const GetStarted = ({ display = 'flex', innerText, hamburgerOnClose }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { playClick } = useSound()
+
   return (
     <>
       <Button
@@ -19,12 +22,16 @@ const GetStarted = ({ display = 'flex', innerText, hamburgerOnClose }) => {
       >
         {innerText}
       </Button>
-      <Signin
-        isOpen={isOpen}
-        onOpen={onOpen}
-        onClose={onClose}
-        hamburgerOnClose={hamburgerOnClose}
-      />
+      <Suspense fallback={<Spinner />}>
+        {isOpen && (
+          <Signin
+            isOpen={isOpen}
+            onOpen={onOpen}
+            onClose={onClose}
+            hamburgerOnClose={hamburgerOnClose}
+          />
+        )}
+      </Suspense>
     </>
   )
 }

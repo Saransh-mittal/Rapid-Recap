@@ -1,13 +1,22 @@
 /* @import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,700;1,400;1,500;1,700&display=swap"); */
 @import url("https://fonts.googleapis.com/css2?family=Courier+Prime&family=Lato:wght@100;400;700&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@100&display=swap");
 /* @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap"); */
-
+@supports (-webkit-overflow-scrolling: touch) {
+  #root {
+    background-attachment: scroll;
+  }
+}
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: #0f0d15;
+}
 
 #root {
   display: flex;
@@ -15,17 +24,9 @@
   min-height: 100vh;
   font-family: "Roboto Condensed", "Lato", sans-serif !important;
   color: white;
-  background-color: #0f0d15; /* Fallback background color */
-   /* background-color: #0f0d15; */
-  background-image: url('./assets/hero/hero-bg.webp');
-  /* background-image: url('./assets/hero/Designer.webp'); */
-  background-attachment: fixed;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  perspective: 1000;
+  background-color: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 section {

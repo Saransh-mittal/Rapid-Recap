@@ -62,6 +62,18 @@ export const appSlice = createSlice({
       state.streakLoading = false
       state.friendRequestsLoading = false
     },
+    resetAllState: state => {
+      state.updates = []
+      state.streak = 0
+      state.longestStreak = 0
+      state.isBoosted = false
+      state.unreadFriendRequests = 0
+      state.error = null
+      state.updatesLoading = false
+      state.streakLoading = false
+      state.friendRequestsLoading = false
+      state.markingRequestsAsRead = false
+    },
   },
   extraReducers: builder => {
     builder
@@ -114,7 +126,11 @@ export const appSlice = createSlice({
   },
 })
 
-export const { updateUnreadFriendRequests, resetLoadingFlags, setUpdates } =
-  appSlice.actions
+export const {
+  updateUnreadFriendRequests,
+  resetLoadingFlags,
+  setUpdates,
+  resetAllState,
+} = appSlice.actions
 
 export default appSlice.reducer

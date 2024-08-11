@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  Suspense,
+} from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -13,10 +19,14 @@ import {
   Heading,
 } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
-import Brains from '../../../assets/Brains' // Import the Brains array
 import { motion } from 'framer-motion'
-import NameLightning from '../../miscellaneous/NameLightning'
 import { useSwipeable } from 'react-swipeable'
+
+// Lazy load components and data
+const NameLightning = React.lazy(() =>
+  import('../../miscellaneous/NameLightning'),
+)
+const Brains = React.lazy(() => import('../../../assets/Brains'))
 
 const BrainModal = ({
   isOpen,
@@ -24,20 +34,20 @@ const BrainModal = ({
   currentUserSociety,
   setShowBrainModal,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1) // Initialize current page to 1
-  const [imageLoaded, setImageLoaded] = useState(false) // Track image load status
+  const [currentPage, setCurrentPage] = useState(1)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
+  // Preload images and start auto-navigation
   useEffect(() => {
     if (!isOpen || !currentUserSociety || Brains.length === 0) return
     const societyIndex = Brains.findIndex(
       brain => brain.society.toLowerCase() === currentUserSociety.toLowerCase(),
     )
 
-    // Start auto-navigation to current page when modal opens
     const intervalId = setInterval(() => {
       setCurrentPage(prevPage => {
         if (prevPage === societyIndex + 1) {
-          clearInterval(intervalId) // Stop the interval if it reaches the end
+          clearInterval(intervalId)
           return prevPage
         } else {
           return prevPage + 1
@@ -50,24 +60,32 @@ const BrainModal = ({
   }, [isOpen, currentUserSociety])
 
   useEffect(() => {
-    // Preload images
     Brains.forEach(brain => {
       const img = new Image()
       img.src = brain.image
     })
   }, [])
 
-  const handlePreviousPage = () => {
+  const handlePreviousPage = useCallback(() => {
     setCurrentPage(prevPage => (prevPage === 1 ? Brains.length : prevPage - 1))
-  }
+  }, [])
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     setCurrentPage(prevPage => (prevPage === Brains.length ? 1 : prevPage + 1))
-  }
+  }, [])
 
-  if (!isOpen || !Brains[currentPage - 1]) return null // Return null if modal is closed or currentPage is out of bounds
+  if (!isOpen || !Brains[currentPage - 1]) return null
 
-  const currentBrain = Brains[currentPage - 1]
+  const currentBrain = useMemo(() => Brains[currentPage - 1], [currentPage])
+
+  const currentSocietyIndex = useMemo(
+    () =>
+      Brains.findIndex(
+        brain =>
+          brain.society.toLowerCase() === currentUserSociety.toLowerCase(),
+      ),
+    [currentUserSociety],
+  )
 
   return (
     <Modal
@@ -86,8 +104,8 @@ const BrainModal = ({
           borderRadius: '10px',
         }}
         {...useSwipeable({
-          onSwipedLeft: () => handleNextPage(),
-          onSwipedRight: () => handlePreviousPage(),
+          onSwipedLeft: handleNextPage,
+          onSwipedRight: handlePreviousPage,
         })}
       >
         <ModalHeader
@@ -95,11 +113,10 @@ const BrainModal = ({
             textAlign: 'center',
             fontSize: '36px',
             fontWeight: 'bold',
-            color: 'transparent' /* Transparent text color */,
+            color: 'transparent',
             fontFamily: "'Poppins', sans-serif",
-            backgroundImage:
-              'linear-gradient(45deg, #ff7e5f, #feb47b)' /* Gradient background */,
-            backgroundClip: 'text' /* Clip text to background gradient */,
+            backgroundImage: 'linear-gradient(45deg, #ff7e5f, #feb47b)',
+            backgroundClip: 'text',
             textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
             backgroundColor: '#0f0d15',
             padding: '10px',
@@ -120,9 +137,7 @@ const BrainModal = ({
               icon={<ChevronLeftIcon />}
               aria-label="Previous Page"
               onClick={handlePreviousPage}
-              isDisabled={
-                currentPage === 1
-              } /* Disable previous button at page 1 */
+              isDisabled={currentPage === 1}
               _hover={{
                 bgGradient: 'linear(to-r, #7928CA, #FF0080)',
                 color: 'white',
@@ -134,7 +149,7 @@ const BrainModal = ({
               icon={<ChevronRightIcon />}
               aria-label="Next Page"
               onClick={handleNextPage}
-              isDisabled={currentPage === 5} /* Disable next button at page 5 */
+              isDisabled={currentPage === 5}
               _hover={{
                 bgGradient: 'linear(to-r, #7928CA, #FF0080)',
                 color: 'white',
@@ -143,13 +158,7 @@ const BrainModal = ({
               transition="all 0.2s"
             />
           </Flex>
-          {currentPage ===
-            Brains.findIndex(
-              brain =>
-                brain.society.toLowerCase() ===
-                currentUserSociety.toLowerCase(),
-            ) +
-              1 && (
+          {currentPage === currentSocietyIndex + 1 && (
             <Text
               textAlign="center"
               color="yellow"
@@ -177,10 +186,12 @@ const BrainModal = ({
               >
                 {currentBrain.society} Society
               </Heading>
-              <NameLightning
-                boxShadow={currentBrain.boxShadow}
-                MAX_IQ={currentBrain.IQ_Lower}
-              />
+              <Suspense fallback={<div>Loading...</div>}>
+                <NameLightning
+                  boxShadow={currentBrain.boxShadow}
+                  MAX_IQ={currentBrain.IQ_Lower}
+                />
+              </Suspense>
             </Flex>
 
             <Text mb={2} color={currentBrain.textColor} mt={4}>
@@ -197,8 +208,8 @@ const BrainModal = ({
                 display: 'block',
                 margin: '0 auto',
                 filter: 'drop-shadow(0 0 0.75rem #fff)',
-                transition: 'opacity 0.3s ease', // Add smooth transition
-                opacity: imageLoaded ? 1 : 0, // Control opacity
+                transition: 'opacity 0.3s ease',
+                opacity: imageLoaded ? 1 : 0,
               }}
               onLoad={() => setImageLoaded(true)}
               animate={{ scale: [1, 1.1, 1] }}
@@ -246,4 +257,4 @@ const BrainModal = ({
   )
 }
 
-export default BrainModal
+export default React.memo(BrainModal)
