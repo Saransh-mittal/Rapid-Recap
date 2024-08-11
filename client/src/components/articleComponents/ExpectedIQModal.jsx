@@ -7,13 +7,14 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Spinner,
   Text,
   useDisclosure,
 } from '@chakra-ui/react'
 import React, { useEffect } from 'react'
 import useSound from '../../customHooks/useSound'
 
-const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ }) => {
+const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ, isLoading }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   useEffect(() => {
     onOpen()
@@ -47,7 +48,7 @@ const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ }) => {
           <ModalHeader as="h3" size="lg" color="white" textAlign="center">
             Your Expected Information Quotient (IQ)
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color={'white'} />
           <ModalBody pb={6}>
             <Text color="white" fontSize="20px" textAlign="center" mt={4}>
               Your Expected IQ is based on your performance in past quizzes,
@@ -56,15 +57,19 @@ const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ }) => {
             </Text>
             <Text color="white" fontSize="30px" textAlign="center" mt={4}>
               Expected Information Quotient (IQ):{' '}
-              <span
-                style={{
-                  backgroundColor: 'Green',
-                  borderRadius: '15px',
-                  padding: '3px',
-                }}
-              >
-                {expectedIQ}
-              </span>
+              {isLoading ? (
+                <Spinner />
+              ) : (
+                <span
+                  style={{
+                    backgroundColor: 'Green',
+                    borderRadius: '15px',
+                    padding: '3px',
+                  }}
+                >
+                  {expectedIQ}
+                </span>
+              )}
             </Text>
           </ModalBody>
           <ModalFooter>

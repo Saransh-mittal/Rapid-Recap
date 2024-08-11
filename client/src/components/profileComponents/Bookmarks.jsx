@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  Suspense,
+} from 'react'
 import {
-  Box,
   Button,
   Flex,
   Grid,
@@ -16,9 +21,9 @@ import {
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import ArticleCard from '../miscellaneous/ArticleCard'
-// import useSound from '../../customHooks/useSound'
 import useSound from '../../customHooks/useSound'
+
+const ArticleCard = React.lazy(() => import('../miscellaneous/ArticleCard'))
 
 const Bookmarks = ({ isOpen, onClose }) => {
   const [viewMode, setViewMode] = useState('grid')
@@ -31,7 +36,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
   const toast = useToast()
   const { playClick } = useSound()
 
-  const fetchBookmarks = async () => {
+  const fetchBookmarks = useCallback(async () => {
     try {
       const response = await axios.get('/api/user/getBookmarks')
       setBookmarks(response.data.bookmarks)
@@ -41,37 +46,45 @@ const Bookmarks = ({ isOpen, onClose }) => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [onClose])
 
   useEffect(() => {
     if (isOpen) fetchBookmarks()
-  }, [isOpen])
+  }, [isOpen, fetchBookmarks])
 
-  const handleBookmarkClick = id => {
-    navigate(`/article/${id}`)
-  }
+  const handleBookmarkClick = useCallback(
+    id => {
+      navigate(`/article/${id}`)
+    },
+    [navigate],
+  )
 
-  const handleRemoveBookmark = async articleId => {
-    try {
-      await axios.get(`/api/user/removeBookmark?articleId=${articleId}`)
-      setBookmarks(bookmarks.filter(bookmark => bookmark._id !== articleId))
-      toast({
-        title: 'Bookmark removed',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
-    } catch (error) {
-      console.error(error)
-      toast({
-        title: 'Error removing bookmark',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-    }
-  }
+  const handleRemoveBookmark = useCallback(
+    async articleId => {
+      try {
+        await axios.get(`/api/user/removeBookmark?articleId=${articleId}`)
+        setBookmarks(prevBookmarks =>
+          prevBookmarks.filter(bookmark => bookmark._id !== articleId),
+        )
+        toast({
+          title: 'Bookmark removed',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top',
+        })
+      } catch (error) {
+        console.error(error)
+        toast({
+          title: 'Error removing bookmark',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    },
+    [toast],
+  )
 
   useEffect(() => {
     const handleResize = () => {
@@ -84,6 +97,33 @@ const Bookmarks = ({ isOpen, onClose }) => {
       window.removeEventListener('resize', handleResize)
     }
   }, [])
+
+  const renderedBookmarks = useMemo(
+    () =>
+      isLoading
+        ? Array.from({ length: 6 }).map((_, index) => (
+            <ArticleCard key={index} isLoading={true} viewMode={viewMode} />
+          ))
+        : bookmarks.map(bookmark => (
+            <ArticleCard
+              key={bookmark._id}
+              article={bookmark}
+              onClick={() => handleBookmarkClick(bookmark._id)}
+              onRemove={handleRemoveBookmark}
+              viewMode={viewMode}
+              isMobileListView={isMobileListView}
+            />
+          )),
+    [
+      isLoading,
+      bookmarks,
+      handleBookmarkClick,
+      handleRemoveBookmark,
+      viewMode,
+      isMobileListView,
+    ],
+  )
+
   return (
     <Modal
       isOpen={isOpen}
@@ -123,42 +163,18 @@ const Bookmarks = ({ isOpen, onClose }) => {
                 : 'Switch to Grid View'}
             </Button>
           </Flex>
-          {viewMode === 'grid' ? (
-            <Grid
-              templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
-              gap="20px"
-            >
-              {isLoading
-                ? Array.from({ length: 6 }).map((_, index) => (
-                    <ArticleCard key={index} isLoading={true} />
-                  ))
-                : bookmarks.map(bookmark => (
-                    <ArticleCard
-                      key={bookmark._id}
-                      article={bookmark}
-                      onClick={() => handleBookmarkClick(bookmark._id)}
-                      onRemove={handleRemoveBookmark}
-                    />
-                  ))}
-            </Grid>
-          ) : (
-            <VStack>
-              {isLoading
-                ? Array.from({ length: 6 }).map((_, index) => (
-                    <ArticleCard key={index} isLoading={true} viewMode="list" />
-                  ))
-                : bookmarks.map(bookmark => (
-                    <ArticleCard
-                      key={bookmark._id}
-                      article={bookmark}
-                      onClick={() => handleBookmarkClick(bookmark._id)}
-                      onRemove={handleRemoveBookmark}
-                      viewMode="list"
-                      isMobileListView={isMobileListView}
-                    />
-                  ))}
-            </VStack>
-          )}
+          <Suspense fallback={<div>Loading...</div>}>
+            {viewMode === 'grid' ? (
+              <Grid
+                templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
+                gap="20px"
+              >
+                {renderedBookmarks}
+              </Grid>
+            ) : (
+              <VStack>{renderedBookmarks}</VStack>
+            )}
+          </Suspense>
         </ModalBody>
         <ModalFooter>
           <Button

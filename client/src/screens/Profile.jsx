@@ -122,7 +122,7 @@ export default function Profile() {
   }, [dispatchRedux, inGameName, otherUserProfiles, user?.inGameName])
 
   useEffect(() => {
-    document.title = 'Profile page'
+    document.title = `${user?.inGameName}'s Rapid Recap Profile | IQ Score: ${user?.USER_IQ}`
 
     const otherUserStored = otherUserProfiles?.find(
       user => user?.inGameName === inGameName,
@@ -150,7 +150,7 @@ export default function Profile() {
     } else {
       fetchProfile()
     }
-  }, [inGameName, user, userProfile, otherUserProfiles, fetchProfile])
+  }, [inGameName, user, otherUserProfiles])
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
@@ -414,7 +414,7 @@ export default function Profile() {
                   py={'8px'}
                   borderRadius="10px"
                   flexDirection="column"
-                  w={{ md: '90%', lg: '95%', base: '100%' }}
+                  w={{ md: '85%', lg: '95%', base: '100%' }}
                   height="fit-content"
                   justifyContent={'center'}
                   alignItems={'center'}

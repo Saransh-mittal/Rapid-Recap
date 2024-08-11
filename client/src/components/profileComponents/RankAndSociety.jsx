@@ -1,13 +1,24 @@
-import React, { useEffect, useState } from 'react'
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from 'react'
 import { Flex, Image, Tooltip, Text, Tag, Spinner } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import circle from '/images/circle.webp'
 import Arrow from '/images/arrow.webp'
-import Lightning from './RankAndSocietySubCompnents/Lightning'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
-import BrainModal from './RankAndSocietySubCompnents/BrainModal'
-import CircleModal from './RankAndSocietySubCompnents/CircleModal' // Import CircleModal
 import { useSelector } from 'react-redux'
+
+// Lazy load components
+const Lightning = lazy(() => import('./RankAndSocietySubCompnents/Lightning'))
+const BrainModal = lazy(() => import('./RankAndSocietySubCompnents/BrainModal'))
+const CircleModal = lazy(() =>
+  import('./RankAndSocietySubCompnents/CircleModal'),
+)
 
 const RankAndSociety = ({
   USER_IQ = 0,
@@ -16,43 +27,44 @@ const RankAndSociety = ({
   isDisabled = false,
 }) => {
   const { user } = useSelector(state => state.auth)
-  const [circleAndSociety, setCircleAndSociety] = useState({})
   const [isLoading, setIsLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false) // State for BrainModal
-  const [isCircleModalOpen, setIsCircleModalOpen] = useState(false) // State for CircleModal
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCircleModalOpen, setIsCircleModalOpen] = useState(false)
   const [showBrainModal, setShowBrainModal] = useState(false)
   const [showCircleModal, setShowCircleModal] = useState(false)
 
-  useEffect(() => {
-    const userIQ = USER_IQ
-    const circleAndSocietyData = CircleAndSocietyData
-    const userCircleAndSociety = circleAndSocietyData.filter(
+  // Memoize the circleAndSociety calculation
+  const circleAndSociety = useMemo(() => {
+    const userCircleAndSociety = CircleAndSocietyData.filter(
       data =>
-        data.IQ_Lower <= userIQ &&
-        (data.IQ_Upper ? data.IQ_Upper > userIQ : true),
+        data.IQ_Lower <= USER_IQ &&
+        (data.IQ_Upper ? data.IQ_Upper > USER_IQ : true),
     )
-
-    setCircleAndSociety(userCircleAndSociety[0] || {})
-    setIsLoading(false)
+    return userCircleAndSociety[0] || {}
   }, [USER_IQ])
 
-  const handleBrainClick = () => {
+  useEffect(() => {
+    setIsLoading(false)
+  }, [])
+
+  // Memoized event handlers
+  const handleBrainClick = useCallback(() => {
     setShowBrainModal(true)
-    setIsModalOpen(true) // Open the BrainModal upon clicking the brain image
-  }
+    setIsModalOpen(true)
+  }, [])
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false) // Close the BrainModal
-  }
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false)
+  }, [])
 
-  const handleCircleClick = () => {
+  const handleCircleClick = useCallback(() => {
     setShowCircleModal(true)
-    setIsCircleModalOpen(true) // Open the CircleModal upon clicking the circle image
-  }
+    setIsCircleModalOpen(true)
+  }, [])
 
-  const handleCloseCircleModal = () => {
-    setIsCircleModalOpen(false) // Close the CircleModal
-  }
+  const handleCloseCircleModal = useCallback(() => {
+    setIsCircleModalOpen(false)
+  }, [])
 
   return (
     <Flex
@@ -61,10 +73,7 @@ const RankAndSociety = ({
       h={'100%'}
       flexDirection="column"
       position="relative"
-      p={3}
-      // mt={4}
-      // mr={1}
-      // ml={6}
+      p={5}
       justifyContent={'center'}
       alignItems={'center'}
     >
@@ -145,8 +154,8 @@ const RankAndSociety = ({
                   w="100%"
                   position="relative"
                   flexDirection="column"
-                  onClick={!isDisabled ? handleBrainClick : null} // Add onClick handler to the brain image
-                  style={{ cursor: isDisabled ? 'default' : 'pointer' }} // Change cursor to pointer to indicate it's clickable
+                  onClick={!isDisabled ? handleBrainClick : null}
+                  style={{ cursor: isDisabled ? 'default' : 'pointer' }}
                   h={'100%'}
                 >
                   <Flex
@@ -170,7 +179,9 @@ const RankAndSociety = ({
                         repeatType: 'reverse',
                       }}
                     />
-                    <Lightning />
+                    <Suspense fallback={<Spinner />}>
+                      <Lightning />
+                    </Suspense>
                   </Flex>
 
                   <Text
@@ -246,7 +257,6 @@ const RankAndSociety = ({
                       <div
                         style={{
                           position: 'absolute',
-
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
@@ -320,34 +330,32 @@ const RankAndSociety = ({
                 </Flex>
               </motion.button>
             </Flex>
-            <Flex
-              mt={5}
-              w="100%"
-              alignItems="center"
-              justifyContent="space-between"
-            ></Flex>
           </Flex>
         </>
       )}
       {/* Modals */}
-      {showBrainModal && (
-        <BrainModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          currentUserSociety={circleAndSociety.society.split(' ')[0]}
-          setShowBrainModal={setShowBrainModal}
-        />
-      )}
-      {showCircleModal && (
-        <CircleModal
-          isOpen={isCircleModalOpen}
-          onClose={handleCloseCircleModal}
-          currentUserCircle={
-            circleAndSociety.circle ? circleAndSociety.circle.split(' ')[0] : ''
-          }
-          setShowCircleModal={setShowCircleModal}
-        />
-      )}
+      <Suspense fallback={<Spinner />}>
+        {showBrainModal && (
+          <BrainModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            currentUserSociety={circleAndSociety.society.split(' ')[0]}
+            setShowBrainModal={setShowBrainModal}
+          />
+        )}
+        {showCircleModal && (
+          <CircleModal
+            isOpen={isCircleModalOpen}
+            onClose={handleCloseCircleModal}
+            currentUserCircle={
+              circleAndSociety.circle
+                ? circleAndSociety.circle.split(' ')[0]
+                : ''
+            }
+            setShowCircleModal={setShowCircleModal}
+          />
+        )}
+      </Suspense>
     </Flex>
   )
 }

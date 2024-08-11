@@ -1,11 +1,17 @@
 import { Avatar, Flex, Box } from '@chakra-ui/react'
-import React, { useState } from 'react'
+import React, { useState, useMemo, useCallback, Suspense } from 'react'
 import { motion } from 'framer-motion'
-import Inbox from '../Header-Footer/navbarComponents/Inbox'
 import { useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import { NavLink } from 'react-router-dom'
-import UserFriendsSVG from '../../assets/svg/UserFriendsSVG'
+
+const Inbox = React.lazy(() =>
+  import('../Header-Footer/navbarComponents/Inbox'),
+)
+const UserFriendsSVG = React.lazy(() =>
+  import('../../assets/svg/UserFriendsSVG'),
+)
+
 const itemVariants = {
   open: {
     opacity: 1,
@@ -14,43 +20,58 @@ const itemVariants = {
   },
   closed: { opacity: 0, y: 20, transition: { duration: 0.2 } },
 }
+
 const ProfileDropDownMenu = ({
   handleLogout,
   toProfile,
   refProfile,
   className,
-  profileNotif,
   setIsDrawerOpen,
   notifyCont,
   onOpenWiseWeb,
 }) => {
-  const listStyle = {
-    position: 'relative',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '10px',
-    backgroundColor: '#526D82',
-    color: 'white',
-    cursor: 'pointer',
-    width: '100px',
-    borderBottom: '1px solid',
-    backgroundImage:
-      'linear-gradient(to right, transparent, #27374D, transparent)',
-    backgroundClip: 'border-box',
-    borderImage:
-      'linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1',
-  }
+  const listStyle = useMemo(
+    () => ({
+      position: 'relative',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '10px',
+      backgroundColor: '#526D82',
+      color: 'white',
+      cursor: 'pointer',
+      width: '100px',
+      borderBottom: '1px solid',
+      backgroundImage:
+        'linear-gradient(to right, transparent, #27374D, transparent)',
+      backgroundClip: 'border-box',
+      borderImage:
+        'linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1',
+    }),
+    [],
+  )
 
-  const listHoverStyle = {
-    backgroundColor: '#27374D',
-  }
+  const listHoverStyle = useMemo(
+    () => ({
+      backgroundColor: '#27374D',
+    }),
+    [],
+  )
 
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
 
   const [isOpen, setIsOpen] = useState(false)
+
+  const toggleDropdown = useCallback(() => {
+    setIsOpen(prev => !prev)
+  }, [])
+
+  const handleProfileClick = useCallback(() => {
+    playClick()
+    setIsOpen(false)
+  }, [playClick])
 
   return (
     <Flex className={className} position={'relative'}>
@@ -71,7 +92,7 @@ const ProfileDropDownMenu = ({
       >
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={toggleDropdown}
           style={{
             position: 'absolute',
             border: 'none',
@@ -126,90 +147,76 @@ const ProfileDropDownMenu = ({
             pointerEvents: isOpen ? 'auto' : 'none',
             display: 'flex',
             flexDirection: 'column',
-
             padding: '0',
             top: '3rem',
           }}
         >
-          <motion.li
-            whileHover={listHoverStyle}
-            style={listStyle}
-            variants={itemVariants}
-          >
-            <Inbox
-              className={'inbox-button-lg'}
-              onClick={() => setIsDrawerOpen(true)}
-              notifyCont={notifyCont}
-              display={{ base: 'none', md: 'flex' }}
-              h="5"
-              w="5"
-            />
-          </motion.li>
-          <motion.li
-            whileHover={listHoverStyle}
-            style={listStyle}
-            variants={itemVariants}
-            padding={0}
-          >
-            <Flex
-              onClick={onOpenWiseWeb}
-              width={'100%'}
-              justifyContent={'center'}
-            >
-              <UserFriendsSVG fill={'white'} width={'20px'} height={'20px'} />
-              {unreadFriendRequests !== 0 && (
-                <Box
-                  h="8px"
-                  w="8px"
-                  bg={'red'}
-                  borderRadius={'50%'}
-                  position={'absolute'}
-                  right={'22%'}
-                  top={'40%'}
-                  zIndex={2}
-                />
-              )}
-            </Flex>
-          </motion.li>
-          <NavLink
-            to={`${toProfile}/${user?.inGameName}`}
-            ref={refProfile}
-            onClick={() => {
-              playClick()
-              setIsOpen(false)
-            }}
-          >
+          <Suspense fallback={<div>Loading...</div>}>
             <motion.li
               whileHover={listHoverStyle}
               style={listStyle}
               variants={itemVariants}
             >
-              {/* {profileNotif && (
-                <Box
-                  h="8px"
-                  w="8px"
-                  bg={'red'}
-                  borderRadius={'50%'}
-                  position={'absolute'}
-                  right={'0.3rem'}
-                  top={'0.5rem'}
-                  zIndex={2}
-                />
-              )} */}
-              View Profile
+              <Inbox
+                className={'inbox-button-lg'}
+                onClick={() => setIsDrawerOpen(true)}
+                notifyCont={notifyCont}
+                display={{ base: 'none', md: 'flex' }}
+                h="5"
+                w="5"
+              />
             </motion.li>
-          </NavLink>
-          <motion.li
-            whileHover={listHoverStyle}
-            style={listStyle}
-            variants={itemVariants}
-            onClick={() => {
-              setIsOpen(false)
-              handleLogout()
-            }}
-          >
-            Logout
-          </motion.li>
+            <motion.li
+              whileHover={listHoverStyle}
+              style={listStyle}
+              variants={itemVariants}
+              padding={0}
+            >
+              <Flex
+                onClick={onOpenWiseWeb}
+                width={'100%'}
+                justifyContent={'center'}
+              >
+                <UserFriendsSVG fill={'white'} width={'20px'} height={'20px'} />
+                {unreadFriendRequests !== 0 && (
+                  <Box
+                    h="8px"
+                    w="8px"
+                    bg={'red'}
+                    borderRadius={'50%'}
+                    position={'absolute'}
+                    right={'22%'}
+                    top={'40%'}
+                    zIndex={2}
+                  />
+                )}
+              </Flex>
+            </motion.li>
+            <NavLink
+              to={`${toProfile}/${user?.inGameName}`}
+              ref={refProfile}
+              onClick={handleProfileClick}
+            >
+              <motion.li
+                whileHover={listHoverStyle}
+                style={listStyle}
+                variants={itemVariants}
+              >
+                View Profile
+              </motion.li>
+            </NavLink>
+            <motion.li
+              whileHover={listHoverStyle}
+              style={listStyle}
+              variants={itemVariants}
+              onClick={() => {
+                setIsOpen(false)
+                handleLogout()
+              }}
+            >
+              Logout
+            </motion.li>
+          </Suspense>
         </motion.ul>
       </motion.nav>
     </Flex>

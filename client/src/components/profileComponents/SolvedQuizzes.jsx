@@ -9,11 +9,21 @@ import {
   Tooltip,
   useToast,
 } from '@chakra-ui/react'
-import React, { useEffect } from 'react'
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from 'react'
 import axios from 'axios'
-import { useState } from 'react'
-import SolvedQuizHistory from './SolvedQuizSubComponents/SolvedQuizHistory'
 import { useSelector } from 'react-redux'
+
+// Lazy load the SolvedQuizHistory component
+const SolvedQuizHistory = lazy(() =>
+  import('./SolvedQuizSubComponents/SolvedQuizHistory'),
+)
 
 const SolvedQuizzes = ({
   solvedQuizzes,
@@ -25,22 +35,35 @@ const SolvedQuizzes = ({
   const { user } = useSelector(state => state.auth)
 
   const toast = useToast()
-  const [solvedQuizzesCount, setSolvedQuizzesCount] = useState(0)
-  const [easySolved, setEasySolved] = useState(0)
-  const [mediumSolved, setMediumSolved] = useState(0)
-  const [hardSolved, setHardSolved] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [history, setHistory] = useState([])
   const [showHistory, setShowHistory] = useState(false)
 
-  const fetchSolvedQuizzes = async () => {
+  // Memoize solved quizzes data
+  const { solvedQuizzesCount, easySolved, mediumSolved, hardSolved } =
+    useMemo(() => {
+      return {
+        solvedQuizzesCount: solvedQuizzes.solvedQuizzesCount || 0,
+        easySolved: solvedQuizzes.easy || {
+          easyQuizzesCount: 0,
+          easyBeatsPercentage: 0,
+        },
+        mediumSolved: solvedQuizzes.medium || {
+          mediumQuizzesCount: 0,
+          medBeatsPercentage: 0,
+        },
+        hardSolved: solvedQuizzes.hard || {
+          hardQuizzesCount: 0,
+          hardBeatsPercentage: 0,
+        },
+      }
+    }, [solvedQuizzes])
+
+  const fetchSolvedQuizzes = useCallback(async () => {
+    setIsLoading(true)
     try {
       //const response = await axios.get("/api/user/solvedQuizzesCount");
-      const data = solvedQuizzes
-      setSolvedQuizzesCount(data.solvedQuizzesCount)
-      setEasySolved(data.easy)
-      setMediumSolved(data.medium)
-      setHardSolved(data.hard)
+      setIsLoading(false)
     } catch (error) {
       toast({
         title: 'An error occurred.',
@@ -51,12 +74,11 @@ const SolvedQuizzes = ({
         position: 'top',
       })
       console.error(error)
-    } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast])
 
-  const getHistory = async () => {
+  const getHistory = useCallback(async () => {
     setIsLoading(true)
     try {
       const response = await axios.get(
@@ -78,27 +100,30 @@ const SolvedQuizzes = ({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [inGameName, toast])
+
   useEffect(() => {
     fetchSolvedQuizzes()
-  }, [solvedQuizzes])
+  }, [fetchSolvedQuizzes])
+
   return (
     <Flex
       margin="10px"
       borderRadius="10px"
       w={'100%'}
       flexDirection={'column'}
-      // p={4}
       gap={6}
       mt={4}
       mr={10}
       onClick={!privateSolvedQuiz && !isDisabled ? getHistory : null}
     >
       {showHistory && (
-        <SolvedQuizHistory
-          solvedHistory={history}
-          setShowHistory={setShowHistory}
-        />
+        <Suspense fallback={<Spinner />}>
+          <SolvedQuizHistory
+            solvedHistory={history}
+            setShowHistory={setShowHistory}
+          />
+        </Suspense>
       )}
       {privateSolvedQuiz ? (
         <Flex

@@ -1,30 +1,41 @@
 import { Box, Flex, Text, Container } from '@chakra-ui/react'
 import Heading from '../miscellaneous/HeadingComponent'
+import React, { useMemo, useCallback, Suspense } from 'react'
 
 const ProgressBubble = ({ xp, level }) => {
-  const calculateProgress = (transitionXp, requiredXP) => {
+  const calculateProgress = useCallback((transitionXp, requiredXP) => {
     return Math.round(100 - (requiredXP / transitionXp) * 100)
-  }
+  }, [])
 
-  const calculateRequiredXp = (xp, xpBaseAtNextLevel) => {
+  const calculateRequiredXp = useCallback((xp, xpBaseAtNextLevel) => {
     return xpBaseAtNextLevel - xp
-  }
+  }, [])
 
   const colorInc = 100 / 3
 
-  const xpBaseAtCurrLevel = (level * (level + 1) * 10) / 2
-  const xpBaseAtNextLevel = ((level + 1) * (level + 2) * 10) / 2
-  const requiredXP = calculateRequiredXp(xp, xpBaseAtNextLevel)
-  const percent = calculateProgress(
-    xpBaseAtNextLevel - xpBaseAtCurrLevel,
-    requiredXP,
+  const xpBaseAtCurrLevel = useMemo(
+    () => (level * (level + 1) * 10) / 2,
+    [level],
+  )
+  const xpBaseAtNextLevel = useMemo(
+    () => ((level + 1) * (level + 2) * 10) / 2,
+    [level],
   )
 
-  const getClass = () => {
+  const requiredXP = useMemo(
+    () => calculateRequiredXp(xp, xpBaseAtNextLevel),
+    [xp, xpBaseAtNextLevel, calculateRequiredXp],
+  )
+  const percent = useMemo(
+    () => calculateProgress(xpBaseAtNextLevel - xpBaseAtCurrLevel, requiredXP),
+    [xpBaseAtNextLevel, xpBaseAtCurrLevel, requiredXP, calculateProgress],
+  )
+
+  const getClass = useCallback(() => {
     if (percent < colorInc * 1) return 'red'
     else if (percent < colorInc * 2) return 'orange'
     else return 'green'
-  }
+  }, [percent, colorInc])
 
   return (
     <Container padding={0}>
@@ -179,4 +190,5 @@ const ProgressBubble = ({ xp, level }) => {
   )
 }
 
-export default ProgressBubble
+// use react.useMemo
+export default React.memo(ProgressBubble)

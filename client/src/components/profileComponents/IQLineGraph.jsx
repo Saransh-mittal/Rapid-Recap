@@ -1,23 +1,170 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Line } from 'react-chartjs-2'
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  lazy,
+  Suspense,
+} from 'react'
 import {
-  Button,
   Flex,
+  Text,
+  Tooltip,
   Image,
   Spinner,
   Tag,
-  Text,
-  Tooltip,
   useToast,
+  useBreakpointValue,
 } from '@chakra-ui/react'
-import Chart from 'chart.js/auto'
 import moment from 'moment'
-import 'chartjs-adapter-date-fns'
 import axios from 'axios'
-import ExpectedIQModal from '../articleComponents/ExpectedIQModal'
 import Lock from '/images/lock.webp'
 import { useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
+import SVGIQLineGraph from '../../assets/svg/SVGIQLineGraph'
+
+// Lazy load the ExpectedIQModal component
+const ExpectedIQModal = lazy(() =>
+  import('../articleComponents/ExpectedIQModal'),
+)
+
+// LoadingSpinner Component
+const LoadingSpinner = React.memo(() => (
+  <Flex
+    w="100%"
+    justifyContent="center"
+    alignItems="center"
+    flexDirection="column"
+    position="relative"
+    backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
+    boxShadow={{
+      xl: 'none',
+      base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+    }}
+    height={'150px'}
+  >
+    <Spinner />
+  </Flex>
+))
+
+// NoDataMessage Component
+const NoDataMessage = React.memo(
+  ({
+    viewingHistory,
+    getExpectedIQ,
+    showExpectedIQ,
+    expectedIQ,
+    isLoading,
+    setShowExpectedIQ,
+  }) => (
+    <Flex
+      w="100%"
+      justifyContent="center"
+      alignItems="center"
+      flexDirection="column"
+      position="relative"
+      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
+      boxShadow={{
+        xl: 'none',
+        base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+      }}
+    >
+      <Text m={0}>
+        {viewingHistory
+          ? `No Data Available`
+          : `Give 10 Quizzes to get the IQ score and enter the ranking`}
+      </Text>
+
+      <Image
+        h="200px"
+        w="200px"
+        background="transparent"
+        src={Lock}
+        onClick={getExpectedIQ}
+      />
+
+      {showExpectedIQ && (
+        <Suspense fallback={<Spinner />}>
+          <ExpectedIQModal
+            expectedIQ={expectedIQ}
+            setShowExpectedIQ={setShowExpectedIQ}
+            isLoading={isLoading}
+          />
+        </Suspense>
+      )}
+    </Flex>
+  ),
+)
+
+// GraphHeader Component
+const GraphHeader = React.memo(({ hoveredData, loginedUserProfile, user }) => (
+  <Flex justifyContent="space-between" position="relative">
+    {loginedUserProfile && (
+      <Tooltip label="Visibility to others">
+        <Tag
+          backgroundColor="#0f0d15"
+          m={0}
+          position="absolute"
+          top={0}
+          right={0}
+          color="#9CAFAA"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          w="60px"
+          height="30px"
+        >
+          {user.profilePrivacy.lineGraph ? 'HIDDEN' : 'VISIBLE'}
+        </Tag>
+      </Tooltip>
+    )}
+    <Flex justifyContent="space-between" w="100%" marginTop="2rem">
+      <Flex flexDirection="column">
+        <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
+          IQ Score
+        </Text>
+        <Text textAlign="left" fontSize="1.5rem">
+          {hoveredData?.IQScore}
+        </Text>
+      </Flex>
+      <Flex flexDirection="column">
+        <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
+          Date
+        </Text>
+        <Text textAlign="left">
+          {hoveredData?.date
+            ? moment(hoveredData.date).format('MMM DD, YYYY')
+            : ''}
+        </Text>
+      </Flex>
+      <Flex flexDirection="column">
+        <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
+          Daily Rank
+        </Text>
+        <Text textAlign="left">{hoveredData?.dailyRank}</Text>
+      </Flex>
+    </Flex>
+  </Flex>
+))
+
+// GraphBody Component
+const GraphBody = React.memo(
+  ({ chartData, responsiveChartWidth, handleHover }) => (
+    <Flex
+      height="150px"
+      marginTop="1rem"
+      justifyContent={'center'}
+      alignItems={'center'}
+    >
+      <SVGIQLineGraph
+        data={chartData}
+        width={responsiveChartWidth}
+        height={150}
+        onHover={handleHover}
+      />
+    </Flex>
+  ),
+)
 
 const IQLineGraph = ({
   lineGraph,
@@ -30,255 +177,45 @@ const IQLineGraph = ({
   const { user } = useSelector(state => state.auth)
   const [isLoading, setIsLoading] = useState(true)
   const toast = useToast()
-  const [IQScoreHistory, setIQScoreHistory] = useState([])
-  const [hoveredIndex, setHoveredIndex] = useState(null)
-  const [minIQ, setMinIQ] = useState(0)
-  const [maxIQ, setMaxIQ] = useState(0)
-
+  const responsiveChartWidth = useBreakpointValue({
+    base: 350,
+    md: 300,
+    lg: 400,
+    xl: 300,
+    '2xl': 500,
+  })
   const [hoveredData, setHoveredData] = useState(null)
-  const [isHovering, setIsHovering] = useState(false)
-  const [chartOptions, setChartOptions] = useState(null)
   const [expectedIQ, setExpectedIQ] = useState(0)
   const [showExpectedIQ, setShowExpectedIQ] = useState(false)
-  const chartRef = useRef(null)
-  const handleHover = (event, array) => {
-    const chart = chartRef.current
-    setIsHovering(true)
-    if (array && array.length) {
-      const point = array[0]
-      const index = point.index
-      if (index !== hoveredIndex) {
-        // Update hovered index only when index changes
-        setHoveredIndex(index)
-        setIsHovering(true)
-        const ctx = chart.ctx
-        const x = point.element.x
-        const topY = chart.scales.y.top
-        const bottomY = chart.scales.y.bottom
 
-        ctx.save()
-        ctx.beginPath()
-        ctx.moveTo(x, topY)
-        ctx.lineTo(x, bottomY)
-        //console.log(ctx);
-        ctx.lineWidth = 1
-        ctx.strokeStyle = '#B3A492'
-        ctx.stroke()
-        ctx.restore()
-
-        const y = point.element.y
-        const radius = 8 // Adjust the size of the shadow
-        ctx.beginPath()
-        ctx.arc(x, y, radius, 0, 2 * Math.PI, false)
-        ctx.fillStyle = 'rgba(255, 152, 0, 0.2)' // Orangish color with opacity
-        ctx.fill()
-        ctx.closePath()
-        //console.log(IQScoreHistory);
-        //setHoveredData(() => IQScoreHistory[index]);
-      }
-    } else {
-      setHoveredData(null)
-    }
-  }
-  useEffect(() => {
-    setHoveredData(IQScoreHistory[hoveredIndex])
-  }, [hoveredIndex])
-  const [chartData, setChartData] = useState(null)
-
-  const nextDateFunc = dateString => {
-    // Split the date string into year, month, and day
-    const [yearStr, monthStr, dayStr] = dateString.split(':')
-
-    // Parse the year, month, and day as integers
-    const year = parseInt(yearStr)
-    const month = parseInt(monthStr) - 1 // Months are 0-indexed
-    const day = parseInt(dayStr)
-
-    // Create a new Date object
-    const dateObject = new Date(year, month, day)
-
-    // Add one day to the date
-    dateObject.setDate(dateObject.getDate() + 1)
-
-    // Get the updated year, month, and day
-    const newYear = dateObject.getFullYear()
-    const newMonth = dateObject.getMonth() + 1 // Adding 1 to adjust for 0-indexed months
-    const newDay = dateObject.getDate()
-
-    return `${newYear}:${newMonth.toString().padStart(2, '0')}:${newDay
-      .toString()
-      .padStart(2, '0')}`
-  }
-
-  const fetchIQData = async () => {
-    try {
-      //const response = await axios.get(`/api/user/getUserIQScoreHistory`);
-      //console.log(response.data);
-      if (lineGraph.length === 0) {
-        return
-      }
-      const dateString = lineGraph[lineGraph.length - 1].date // Assuming the date format is "YYYY:MM:DD"
-
-      const newDateString = nextDateFunc(dateString)
-      setIQScoreHistory(prev => [
-        { date: null, IQScore: null, dailyRank: null },
-        ...lineGraph,
-        { date: newDateString, IQScore: null, dailyRank: null },
-      ])
-      const minimumIQ = Math.min(...lineGraph.map(entry => entry.IQScore))
-      const maximumIQ = Math.max(...lineGraph.map(entry => entry.IQScore))
-      // Convert the date string to a Date object
-
-      const IQData = [
-        { date: null, IQScore: null, dailyRank: null },
-        ...lineGraph,
-        { date: newDateString, IQScore: null, dailyRank: null },
-      ]
-      setChartData({
-        labels: IQData.map(entry => entry.date),
-        datasets: [
-          {
-            data: IQData.map(entry => entry.IQScore),
-            borderColor: '#F2D8D8', // Orangish color for the line
-            pointBorderColor: '#FFF6F6',
-            pointBackgroundColor: context => {
-              return context.dataIndex === IQData.length - 2 && !isHovering
-                ? 'white'
-                : '#ff9800'
-            },
-            backgroundColor: 'rgba(0, 0, 0, 0)', // Transparent background
-            borderWidth: 1, // Thin line
-          },
-        ],
-      })
-      setMinIQ(minimumIQ)
-      setMaxIQ(maximumIQ)
-
-      setHoveredData(() => IQData[IQData.length - 2])
-      setChartOptions({
-        animation: {
-          duration: 0,
-        },
-        onHover: handleHover,
-        plugins: {
-          tooltip: {
-            enabled: false,
-          },
-          legend: {
-            display: false,
-          },
-        },
-        interaction: {
-          mode: 'index', // Enable interaction mode for closest point
-          intersect: false,
-        },
-        scales: {
-          x: {
-            ticks: {
-              color: '#ccc',
-              font: {
-                size: 12,
-              },
-              callback: function (value, index, values) {
-                if (index === values.length - 1 || index === 1)
-                  return moment(
-                    this.getLabelForValue(value),
-                    'YYYY:MM:DD',
-                  ).format('MMM YYYY')
-                else return null
-              },
-              min: IQData[1].date, // Set min to the second date in the data array
-              max: newDateString, // Set max to the last date in the data array
-            },
-          },
-
-          y: {
-            beginAtZero: true,
-            display: false,
-            ticks: {
-              stepSize: 0.5,
-            },
-            min: minimumIQ - 20 >= 0 ? minimumIQ - 20 : 0,
-            max: maximumIQ + 10,
-          },
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-        elements: {
-          line: {
-            z: 2,
-            tension: 0, // Set tension to 0 for straight lines
-          },
-          point: {
-            z: 2, // Set z-index for points
-            radius: context => {
-              // Adjust point radius dynamically
-              if (context.dataIndex === IQData.length - 2 && !isHovering) {
-                return 3 // Set radius to 4 for the last point when not hovered
-              } else {
-                return 0 // Set radius to 0 for other points or when hovered
-              }
-            },
-          },
-        },
-      })
-    } catch (error) {
-      toast({
-        title: 'An error occurred.',
-        description: 'Unable to fetch IQ data. Please try again later.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-      console.error(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchIQData()
+  const chartData = useMemo(() => {
+    return lineGraph.map(entry => ({
+      date: entry.date ? moment(entry.date, 'YYYY:MM:DD').toDate() : null,
+      IQScore: entry.IQScore,
+      dailyRank: entry.dailyRank,
+    }))
   }, [lineGraph])
-  useEffect(() => {
-    if (chartData)
-      setChartData(prevChartData => ({
-        ...prevChartData,
-        datasets: prevChartData.datasets.map(dataset => ({
-          ...dataset,
-          pointBackgroundColor: context =>
-            context.dataIndex === IQScoreHistory.length - 2 && !isHovering
-              ? 'white'
-              : '#ff9800',
-        })),
-      }))
 
-    const chartCanvas = chartRef.current?.canvas
-    const handleMouseLeave = () => {
-      setIsHovering(false)
-      setHoveredData(IQScoreHistory[IQScoreHistory.length - 2])
-    }
-
-    if (chartCanvas) {
-      chartCanvas.addEventListener('mouseleave', handleMouseLeave)
-    }
-
-    return () => {
-      if (chartCanvas) {
-        chartCanvas.removeEventListener('mouseleave', handleMouseLeave)
+  const handleHover = useCallback(
+    index => {
+      if (index !== null && index < chartData.length) {
+        setHoveredData(chartData[index])
+      } else {
+        setHoveredData(chartData[chartData.length - 1])
       }
-    }
-  }, [isHovering])
+    },
+    [chartData],
+  )
 
-  const getExpectedIQ = async () => {
+  const getExpectedIQ = useCallback(async () => {
     playClick()
     setIsLoading(true)
+    setShowExpectedIQ(true)
     try {
       const response = await axios.get('/api/user/expectedIQScore')
       if (response.data.ExpectedIQScore) {
         setExpectedIQ(response.data.ExpectedIQScore)
       }
-      setShowExpectedIQ(true)
     } catch (error) {
       toast({
         title: 'An error occurred.',
@@ -292,17 +229,60 @@ const IQLineGraph = ({
     } finally {
       setIsLoading(false)
     }
+  }, [playClick, toast])
+
+  useEffect(() => {
+    setHoveredData(chartData[chartData.length - 2])
+    setIsLoading(false)
+  }, [chartData])
+
+  if (privateLineGraph) {
+    return (
+      <Flex h="100%" w="100%" justifyContent="center" alignItems="center">
+        <Text
+          backgroundColor="#0f0d15"
+          m={0}
+          top={0}
+          right={10}
+          color="#9CAFAA"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          w="60px"
+          height="30px"
+        >
+          Hidden
+        </Text>
+      </Flex>
+    )
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner />
+  }
+
+  if (chartData.length <= 10) {
+    return (
+      <NoDataMessage
+        viewingHistory={viewingHistory}
+        getExpectedIQ={getExpectedIQ}
+        showExpectedIQ={showExpectedIQ}
+        expectedIQ={expectedIQ}
+        isLoading={isLoading}
+        setShowExpectedIQ={setShowExpectedIQ}
+      />
+    )
   }
 
   return (
     <Flex
-      w={'100%'}
-      flexDirection={'column'}
+      w="100%"
+      flexDirection="column"
       borderRight={{ xl: '1px' }}
       padding={{ base: '20px', xl: '0' }}
       paddingX={{ base: '20px', xl: '30px' }}
       flex={1}
-      paddingRight={'30px'}
+      paddingRight="30px"
       backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
       boxShadow={{
         xl: 'none',
@@ -310,151 +290,18 @@ const IQLineGraph = ({
       }}
       className="iq-line-graph"
     >
-      {showExpectedIQ && (
-        <ExpectedIQModal
-          expectedIQ={expectedIQ}
-          setShowExpectedIQ={setShowExpectedIQ}
-        />
-      )}
-      {privateLineGraph ? (
-        <Flex
-          h={'100%'}
-          w={'100%'}
-          justifyContent={'center'}
-          alignItems={'center'}
-        >
-          <Text
-            backgroundColor="#0f0d15"
-            m={0}
-            top={0}
-            right={10}
-            color={'#9CAFAA'}
-            display={'flex'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            w={'60px'}
-            height={'30px'}
-          >
-            Hidden
-          </Text>
-        </Flex>
-      ) : isLoading ? (
-        <Spinner />
-      ) : IQScoreHistory.length === 0 ? (
-        <Flex
-          w={'100%'}
-          justifyContent={'center'}
-          alignItems={'center'}
-          flexDirection={'column'}
-          position={'relative'}
-        >
-          <Text m={0}>
-            {viewingHistory
-              ? `No Data Available`
-              : `Give 10 Quizzes to get the IQ score and enter the ranking`}
-          </Text>
-
-          <Button
-            backgroundColor="transparent"
-            onClick={getExpectedIQ}
-            h={'200px'}
-            w={'200px'}
-            borderRadius={'50%'}
-            _hover={{
-              backgroundColor: { base: '#0f0d15', xl: 'transparent' },
-              backgroundImage: {
-                xl: 'none',
-                base: 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-              },
-              boxShadow: {
-                xl: 'none',
-                base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-              },
-            }}
-            _active={{
-              bg: '#dddfe2',
-              transform: 'scale(0.98)',
-              borderColor: '#bec3c9',
-            }}
-          >
-            <Image
-              h={'200px'}
-              w={'200px'}
-              background={'transparent'}
-              src={Lock}
-            />
-          </Button>
-        </Flex>
-      ) : (
-        <>
-          <Flex justifyContent={'space-between'} position={'relative'}>
-            {loginedUserProfile && (
-              <Tooltip label="Visibility to others">
-                <Tag
-                  backgroundColor="#0f0d15"
-                  m={0}
-                  position={'absolute'}
-                  top={0}
-                  right={0}
-                  color={'#9CAFAA'}
-                  display={'flex'}
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  w={'60px'}
-                  height={'30px'}
-                >
-                  {user.profilePrivacy.lineGraph ? 'HIDDEN' : 'VISIBLE'}
-                </Tag>
-              </Tooltip>
-            )}
-            <Flex
-              justifyContent={'space-between'}
-              w={'100%'}
-              marginTop={'2rem'}
-            >
-              <Flex flexDirection={'column'}>
-                <Text textAlign={'left'} color={'#9CAFAA'} p={0} m={0}>
-                  IQ Score
-                </Text>
-                <Text textAlign={'left'} fontSize={'1.5rem'}>
-                  {hoveredData?.IQScore}
-                </Text>
-              </Flex>
-              <Flex flexDirection={'column'}>
-                <Text textAlign={'left'} color={'#9CAFAA'} p={0} m={0}>
-                  Date
-                </Text>
-                <Text textAlign={'left'}>
-                  {moment(hoveredData?.date, 'YYYY:MM:DD').format(
-                    'MMM DD, YYYY',
-                  )}
-                </Text>
-              </Flex>
-              <Flex flexDirection={'column'}>
-                <Text textAlign={'left'} color={'#9CAFAA'} p={0} m={0}>
-                  Daily Rank
-                </Text>
-                <Text textAlign={'left'}>{hoveredData?.dailyRank}</Text>
-              </Flex>
-            </Flex>
-          </Flex>
-
-          {/* Render chart only when chartOptions and chartData are not null */}
-
-          <Flex
-            w={'100%'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            height={'150px'}
-            p={0}
-            m={0}
-          >
-            <Line ref={chartRef} data={chartData} options={chartOptions} />
-          </Flex>
-        </>
-      )}
+      <GraphHeader
+        hoveredData={hoveredData}
+        loginedUserProfile={loginedUserProfile}
+        user={user}
+      />
+      <GraphBody
+        chartData={chartData}
+        responsiveChartWidth={responsiveChartWidth}
+        handleHover={handleHover}
+      />
     </Flex>
   )
 }
 
-export default IQLineGraph
+export default React.memo(IQLineGraph)
