@@ -629,6 +629,8 @@ const profile = async (req, res) => {
     }
 
     res.status(200).json({
+      inGameName: user.inGameName,
+      pic: user.pic,
       lineGraph: iqScoresHistory,
       barGraph: {
         Top_Percentage,
@@ -779,7 +781,9 @@ const expectedIQScore = async (req, res) => {
     const standardDeviation = Math.sqrt(sumOfSquares / users.length)
     const normalizedScore = (userScore - meanOfUserScores) / standardDeviation
     const ExpectedIQScore = Math.round(100 + 15 * normalizedScore)
-    res.status(200).json({ ExpectedIQScore })
+    res
+      .status(200)
+      .json({ ExpectedIQScore: ExpectedIQScore ? ExpectedIQScore : 0 })
   } catch (error) {
     console.error('Error calculating user IQ expected score:', error)
     res.status(500).json({ error: 'Internal Server Error' })
