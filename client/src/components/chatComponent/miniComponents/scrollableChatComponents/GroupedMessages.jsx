@@ -40,6 +40,7 @@ const ArticleMessage = ({
   navigate,
   handleReactionClick,
   isSameLoggedUser,
+  isSameSenderMarginValue,
 }) => {
   const messageRef = useRef()
   return (
@@ -76,7 +77,7 @@ const ArticleMessage = ({
         onTouchStart={e => handleTouchStart(e, message._id, messageRef.current)}
         onTouchEnd={handleTouchEnd}
         position={'relative'}
-        marginLeft={isSameSenderMargin}
+        marginLeft={isSameSenderMarginValue}
       >
         <ArticleCard
           article={message.article}
@@ -264,6 +265,7 @@ const GroupedMessages = ({
                 message={m}
                 isSameSender={isSameSenderValue}
                 isLastMessage={isLastMessageValue}
+                isSameSenderMarginValue={isSameSenderMarginValue}
                 user={user}
                 handleContextMenu={handleContextMenu}
                 handleTouchStart={handleTouchStart}
