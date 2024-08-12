@@ -681,6 +681,18 @@ const getTopThreeRecommendedArticles = async userId => {
     throw new Error('Failed to fetch recommended articles')
   }
 }
+
+const loadTfidfModel = async () => {
+  const modelPath = path.join(
+    __dirname,
+    '..',
+    'model',
+    'tfidf_models',
+    'tfv.pkl',
+  )
+  const rawData = await fs.readFile(modelPath)
+  return JSON.parse(rawData)
+}
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
@@ -692,4 +704,5 @@ module.exports = {
   getTopArticle,
   getSecondTopArticle,
   getTopThreeRecommendedArticles,
+  loadTfidfModel,
 }

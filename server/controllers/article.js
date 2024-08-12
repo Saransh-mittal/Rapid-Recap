@@ -12,12 +12,21 @@ const {
   fetchNews,
   processNews,
   extractNewsUtilityFunc,
+  loadTfidfModel,
 } = require('../utils/article.utils')
 const { sendNotification } = require('../services/notificationService')
 const { formatDate } = require('../utils/miscellaneous.utils')
 const Quiz = require('../model/quizSchema')
 const NewsAPI = require('newsapi')
 const asyncHandler = require('express-async-handler')
+const { TfidfVectorizer } = require('natural')
+const cosineDistances = require('compute-cosine-distance')
+const {
+  startSession,
+  commitSession,
+  abortSession,
+  endSession,
+} = require('../db/session')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general' } = req.query
@@ -536,6 +545,216 @@ const extractNews = async (req, res) => {
   }
 }
 
+// @desc    Update an article
+// @route   PUT /api/admin/articles/:id
+// @access  Admin
+const updateArticle = asyncHandler(async (req, res) => {
+  const { id } = req.params
+  const updatedData = req.body
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400)
+    throw new Error('Invalid article ID')
+  }
+
+  // Find the article by ID
+  const article = await Article.findById(id)
+
+  if (!article) {
+    res.status(404)
+    throw new Error('Article not found')
+  }
+
+  // Start a transaction
+  const session = await startSession()
+
+  try {
+    // Update main article fields
+    Object.keys(updatedData).forEach(key => {
+      if (key !== 'quiz' && key !== 'userQuizStatus') {
+        article[key] = updatedData[key]
+      }
+    })
+
+    // Update quiz
+    if (updatedData.quiz) {
+      article.quiz = []
+      for (let quizData of updatedData.quiz) {
+        let quiz
+        if (mongoose.Types.ObjectId.isValid(quizData._id)) {
+          quiz = await Quiz.findByIdAndUpdate(quizData._id, quizData, {
+            new: true,
+            session,
+          })
+        } else {
+          quiz = new Quiz(quizData)
+          await quiz.save({ session })
+        }
+        article.quiz.push(quiz._id)
+      }
+    }
+
+    // Update user quiz status
+    if (updatedData.userQuizStatus) {
+      article.userQuizStatus = updatedData.userQuizStatus.map(status => ({
+        userId: status.userId._id || status.userId,
+        status: status.status,
+      }))
+    }
+
+    // Save the updated article
+    await article.save({ session })
+
+    // Commit the transaction
+    await commitSession()
+
+    // Fetch the updated article with populated fields
+    const updatedArticle = await Article.findById(id)
+      .populate('quiz')
+      .populate('relatedArticles', 'title author category dateTime')
+      .populate('userQuizStatus.userId', 'name email')
+
+    res.status(200).json({
+      message: 'Article updated successfully',
+      article: updatedArticle,
+    })
+  } catch (error) {
+    // If an error occurred, abort the transaction
+    await abortSession(session)
+    throw error
+  } finally {
+    // End the session
+    endSession()
+  }
+})
+
+// @desc    Search  article
+// @route   GET /api/articles/search?query={query}
+// @access  Protected
+const searchArticles = asyncHandler(async (req, res) => {
+  const { query } = req.query
+
+  if (!query) {
+    return res.status(400).json({ message: 'Search query is required' })
+  }
+
+  // Load TF-IDF model
+  const tfidfModel = await loadTfidfModel()
+  const tfidfVectorizer = new TfidfVectorizer()
+  tfidfVectorizer.setVocabulary(tfidfModel.vocabulary)
+
+  // Transform query
+  const queryVector = tfidfVectorizer.transform([query])
+
+  // Get all articles
+  const articles = await Article.find(
+    {},
+    'title mainText category author dateTime',
+  )
+
+  // Calculate similarity
+  const similarities = articles.map(article => {
+    const articleVector = tfidfVectorizer.transform([
+      `${article.title} ${article.mainText}`,
+    ])
+    return {
+      article,
+      similarity: 1 - cosineDistances(queryVector[0], articleVector[0]),
+    }
+  })
+
+  // Sort by similarity
+  similarities.sort((a, b) => b.similarity - a.similarity)
+
+  // Return top 10 results
+  const results = similarities.slice(0, 10).map(item => item.article)
+
+  res.json(results)
+})
+
+// @desc    Admin search articles with filters
+// @route   GET /api/admin/articles/search?query={query}&category={category}&author={author}&startDate={startDate}&endDate={endDate}&hasQuiz={hasQuiz}
+// @access  Admin
+const adminSearchArticles = asyncHandler(async (req, res) => {
+  const { query, category, author, startDate, endDate, hasQuiz } = req.query
+
+  // Build filter object
+  const filter = {}
+  if (category) filter.category = category
+  if (author) filter.author = author
+  if (startDate && endDate) {
+    filter.dateTime = {
+      $gte: new Date(startDate).toISOString(),
+      $lte: new Date(endDate).toISOString(),
+    }
+  }
+  if (hasQuiz === 'true') filter.quiz = { $exists: true, $ne: [] }
+  if (hasQuiz === 'false') filter.quiz = { $exists: true, $eq: [] }
+
+  // Load TF-IDF model
+  const tfidfModel = await loadTfidfModel()
+  const tfidfVectorizer = new TfidfVectorizer()
+  tfidfVectorizer.setVocabulary(tfidfModel.vocabulary)
+
+  // Get filtered articles
+  const articles = await Article.find(filter)
+
+  if (query) {
+    // Transform query
+    const queryVector = tfidfVectorizer.transform([query])
+
+    // Calculate similarity
+    const similarities = articles.map(article => {
+      const articleVector = tfidfVectorizer.transform([
+        `${article.title} ${article.mainText}`,
+      ])
+      return {
+        article,
+        similarity: 1 - cosineDistances(queryVector[0], articleVector[0]),
+      }
+    })
+
+    // Sort by similarity
+    similarities.sort((a, b) => b.similarity - a.similarity)
+
+    // Return all results, sorted by relevance
+    const results = similarities.map(item => item.article)
+    res.json(results)
+  } else {
+    // If no query provided, return all filtered articles
+    res.json(articles)
+  }
+})
+
+// @desc    Get article details for admin
+// @route   GET /api/admin/articles/:articleId
+// @access  Admin
+const getAdminArticleDetails = asyncHandler(async (req, res) => {
+  const { articleId } = req.params
+
+  if (!mongoose.Types.ObjectId.isValid(articleId)) {
+    res.status(400)
+    throw new Error('Invalid article ID')
+  }
+
+  const article = await Article.findById(articleId)
+    .populate('quiz', 'question options answer explanation') // Populate quiz details
+    .populate('userQuizStatus.userId', 'name email') // Populate user details for quiz status
+    .lean() // Use lean() for better performance as we don't need Mongoose document methods
+
+  if (!article) {
+    res.status(404)
+    throw new Error('Article not found')
+  }
+
+  const enrichedArticle = {
+    ...article,
+    totalQuizAttempts: article.quizAttemptCnt,
+    totalRelatedArticles: article.relatedArticles.length,
+  }
+
+  res.json(enrichedArticle)
+})
 module.exports = {
   allArticles,
   getArticle,
@@ -551,4 +770,8 @@ module.exports = {
   getQuizTitan,
   getArticleIds,
   getAvgRQMOnArticle,
+  updateArticle,
+  searchArticles,
+  adminSearchArticles,
+  getAdminArticleDetails,
 }
