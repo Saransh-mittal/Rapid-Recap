@@ -18,9 +18,10 @@ import {
 } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { useSwipeable } from 'react-swipeable'
+import Circles from '../../../assets/Circles'
 
 // Lazy load the circle image
-const circleImg = React.lazy(() => import('/images/circle.webp'))
+import circleImg from '/images/circle.webp'
 
 const CircleModal = ({
   isOpen,
@@ -252,7 +253,7 @@ const CircleModal = ({
             </div>
           )}
           {currentCircle && (
-            <p style={{ textAlign: 'left', color: currentCircle.textColor }}>
+            <div style={{ textAlign: 'left', color: currentCircle.textColor }}>
               {currentCircle.CircleInfo.split('.').map((point, index) => {
                 const lines = point.trim().split('\n')
                 return lines.map(
@@ -262,7 +263,6 @@ const CircleModal = ({
                         style={{ flexDirection: 'row !important' }}
                         key={lineIndex * index + index}
                       >
-                        <p style={{ padding: '0', margin: '0.2rem' }}></p>
                         <span
                           key={index + '-' + lineIndex}
                           style={{
@@ -281,7 +281,7 @@ const CircleModal = ({
                 )
               })}
               <br />
-            </p>
+            </div>
           )}
         </ModalBody>
         <style>

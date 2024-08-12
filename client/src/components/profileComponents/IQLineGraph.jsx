@@ -149,7 +149,7 @@ const GraphHeader = React.memo(({ hoveredData, loginedUserProfile, user }) => (
 
 // GraphBody Component
 const GraphBody = React.memo(
-  ({ chartData, responsiveChartWidth, handleHover }) => (
+  ({ chartData, responsiveChartWidth, handleHover, graphwidth }) => (
     <Flex
       height="150px"
       marginTop="1rem"
@@ -158,7 +158,7 @@ const GraphBody = React.memo(
     >
       <SVGIQLineGraph
         data={chartData}
-        width={responsiveChartWidth}
+        width={graphwidth ? graphwidth : responsiveChartWidth}
         height={150}
         onHover={handleHover}
       />
@@ -173,6 +173,7 @@ const IQLineGraph = ({
   viewingHistory = false,
   isNavIQ = false,
   iOpenedFromNav = false,
+  graphwidth,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -297,6 +298,7 @@ const IQLineGraph = ({
         user={user}
       />
       <GraphBody
+        graphwidth={graphwidth}
         chartData={chartData}
         responsiveChartWidth={responsiveChartWidth}
         handleHover={handleHover}
