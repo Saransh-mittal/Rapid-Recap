@@ -19,7 +19,7 @@ const { formatDate } = require('../utils/miscellaneous.utils')
 const Quiz = require('../model/quizSchema')
 const NewsAPI = require('newsapi')
 const asyncHandler = require('express-async-handler')
-const { TfidfVectorizer } = require('natural')
+const { TfIdf } = require('natural')
 const cosineDistances = require('compute-cosine-distance')
 const {
   startSession,
@@ -691,26 +691,27 @@ const adminSearchArticles = asyncHandler(async (req, res) => {
   if (hasQuiz === 'true') filter.quiz = { $exists: true, $ne: [] }
   if (hasQuiz === 'false') filter.quiz = { $exists: true, $eq: [] }
 
-  // Load TF-IDF model
-  const tfidfModel = await loadTfidfModel()
-  const tfidfVectorizer = new TfidfVectorizer()
-  tfidfVectorizer.setVocabulary(tfidfModel.vocabulary)
-
   // Get filtered articles
   const articles = await Article.find(filter)
 
   if (query) {
-    // Transform query
-    const queryVector = tfidfVectorizer.transform([query])
+    const tfidf = new TfIdf()
 
-    // Calculate similarity
-    const similarities = articles.map(article => {
-      const articleVector = tfidfVectorizer.transform([
-        `${article.title} ${article.mainText}`,
-      ])
-      return {
-        article,
-        similarity: 1 - cosineDistances(queryVector[0], articleVector[0]),
+    // Add the query as a document
+    tfidf.addDocument(query)
+
+    // Add articles to the TfIdf model
+    articles.forEach(article => {
+      tfidf.addDocument(`${article.title} ${article.mainText}`)
+    })
+
+    // Calculate similarities
+    const similarities = []
+    tfidf.documents.forEach((doc, i) => {
+      if (i > 0) {
+        // Skip the first document which is the query itself
+        const similarity = 1 - cosineDistances(tfidf.documents[0], doc)
+        similarities.push({ article: articles[i - 1], similarity })
       }
     })
 
@@ -719,6 +720,7 @@ const adminSearchArticles = asyncHandler(async (req, res) => {
 
     // Return all results, sorted by relevance
     const results = similarities.map(item => item.article)
+    console.log(results.length)
     res.json(results)
   } else {
     // If no query provided, return all filtered articles

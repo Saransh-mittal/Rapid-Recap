@@ -8,6 +8,9 @@ const axios = require('axios')
 const script_prepare_article_data = require('../scripts/script_prepare_article_data')
 const { averageReadTime, shuffleArray } = require('./miscellaneous.utils')
 const { Recommendation } = require('../model/recommendationSchema')
+const path = require('path')
+const { exec } = require('child_process')
+const fs = require('fs').promises
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
   // Use natural language processing to tokenize sentences
@@ -683,6 +686,12 @@ const getTopThreeRecommendedArticles = async userId => {
 }
 
 const loadTfidfModel = async () => {
+  const scriptPath = path.join(
+    __dirname,
+    '..',
+    'scripts',
+    'load_tfidf_model.py',
+  )
   const modelPath = path.join(
     __dirname,
     '..',
@@ -690,8 +699,21 @@ const loadTfidfModel = async () => {
     'tfidf_models',
     'tfv.pkl',
   )
-  const rawData = await fs.readFile(modelPath)
-  return JSON.parse(rawData)
+
+  return new Promise((resolve, reject) => {
+    exec(
+      `py ${scriptPath} ${modelPath}`,
+      { maxBuffer: 1024 * 1024 * 10 },
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error: ${error}`)
+          reject(`Error: ${stderr}`)
+        } else {
+          resolve(JSON.parse(stdout))
+        }
+      },
+    )
+  })
 }
 module.exports = {
   hindiConverter,
