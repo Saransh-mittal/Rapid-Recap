@@ -121,13 +121,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   const renderSkeletons = useMemo(() => {
     return Array.from({ length: 9 }).map((_, index) => (
-      <Box key={index} className="timeline-item" mt={'5rem'}>
-        <Box className="timeline-item-content">
-          <Box className="containers">
-            <Skeleton className="cardWrapper" />
-          </Box>
-        </Box>
-      </Box>
+      <Skeleton key={index} w="xs" height="200px" my={'20px'} />
     ))
   }, [])
 
@@ -142,51 +136,50 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   return (
     <Flex
-      className="timeline"
       flexDirection={flexDirectionOfTimeline}
       gap="2%"
       position="relative"
       overflow="hidden"
       px={{ base: 3, lg: 1 }}
     >
-      <Suspense fallback={<Skeleton height="100vh" width="15%" />}>
-        <Flex
-          zIndex={999}
-          transform={!isFixed ? 'translateY(0)' : 'translateY(-68%)'}
-          transition="transform 0.3s ease-in-out"
-          padding="1rem"
-          width={{ base: '100%', lg: '15%' }}
-          height={{ base: 'auto', lg: '100vh' }}
-          position="fixed"
-          backgroundColor="rgba(15, 13, 21, 0.4)"
-          borderBottom="1px solid rgba(255, 255, 255, 0.1)"
-          boxShadow="0 2px 4px rgba(0, 0, 0, 0.1)"
-          style={{
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            borderImage:
-              'linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1',
-          }}
-          overflow="auto"
-          sx={{
-            '::-webkit-scrollbar': {
-              width: '4px',
-              height: '10px',
-            },
-            '::-webkit-scrollbar-track': {
-              background: 'transparent',
-            },
-            '::-webkit-scrollbar-thumb': {
-              background: '#0f0d15',
-              borderRadius: '10px',
-            },
-            '::-webkit-scrollbar-thumb:hover': {
-              background: '#555',
-            },
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#0f0d15 transparent',
-          }}
-        >
+      <Flex
+        zIndex={999}
+        transform={!isFixed ? 'translateY(0)' : 'translateY(-68%)'}
+        transition="transform 0.3s ease-in-out"
+        padding="1rem"
+        width={{ base: '100%', lg: '15%' }}
+        height={{ base: 'auto', lg: '100vh' }}
+        position="fixed"
+        backgroundColor="rgba(15, 13, 21, 0.4)"
+        borderBottom="1px solid rgba(255, 255, 255, 0.1)"
+        boxShadow="0 2px 4px rgba(0, 0, 0, 0.1)"
+        style={{
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderImage:
+            'linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1',
+        }}
+        overflow="auto"
+        sx={{
+          '::-webkit-scrollbar': {
+            width: '4px',
+            height: '10px',
+          },
+          '::-webkit-scrollbar-track': {
+            background: 'transparent',
+          },
+          '::-webkit-scrollbar-thumb': {
+            background: '#0f0d15',
+            borderRadius: '10px',
+          },
+          '::-webkit-scrollbar-thumb:hover': {
+            background: '#555',
+          },
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#0f0d15 transparent',
+        }}
+      >
+        <Suspense fallback={<Skeleton height="100vh" width="15%" />}>
           <Categories
             trackCategoryClick={trackCategoryClick}
             activeCategoryIndex={activeCategoryIndex}
@@ -196,18 +189,27 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
             categoryRefs={categoryRefs}
             notLoggedIn={notLoggedIn}
           />
-        </Flex>
-      </Suspense>
-      <Box className="timeline-container" {...(!swipeDisable && swipeHandlers)}>
-        <Flex wrap="wrap" justify="space-between">
+        </Suspense>
+      </Flex>
+
+      <Flex
+        mt={{ base: '2rem', md: '4.5rem', lg: '0' }}
+        ml={'auto'}
+        mr={{ base: '0', lg: '1%' }}
+        width={{ base: '100%', lg: '82%' }}
+        {...(!swipeDisable && swipeHandlers)}
+        justifyContent={'center'}
+        alignItems="center"
+      >
+        <Flex
+          wrap="wrap"
+          justifyContent={{ base: 'center', md: 'space-between' }}
+          alignItems={'center'}
+        >
           {data.map((item, id) => (
-            <Suspense
-              fallback={<Skeleton key={id} mt="5rem" className="item" />}
-              key={id}
-            >
+            <Suspense fallback={<Skeleton key={id} mt="5rem" />} key={id}>
               <Flex
                 mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
-                className="item"
                 key={id}
               >
                 <TimelineItem newsNumber={id} data={item} />
@@ -249,7 +251,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
             No more news to show
           </Flex>
         )}
-      </Box>
+      </Flex>
     </Flex>
   )
 }

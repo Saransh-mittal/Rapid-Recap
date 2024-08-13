@@ -1,140 +1,227 @@
-import { Box, Flex, Slide } from '@chakra-ui/react'
-import { useRef, useEffect, useMemo, useCallback, Suspense } from 'react'
-import { useNavigate } from 'react-router-dom'
-import rrImage from '/images/rr.webp'
-import useSound from '../../customHooks/useSound'
+import React, { useRef, useState } from 'react'
+import {
+  Box,
+  Image,
+  Text,
+  Flex,
+  Badge,
+  VStack,
+  HStack,
+  Circle,
+  Heading,
+} from '@chakra-ui/react'
+import { motion, useAnimation, useSpring, useTransform } from 'framer-motion'
+import { Calendar, Clock, ArrowRight } from 'lucide-react'
 
-const Card = ({ newsNumber, data }) => {
-  const navigate = useNavigate()
-  const { playClick } = useSound()
+const MotionBox = motion(Box)
+const MotionImage = motion(Image)
+const MotionText = motion(Text)
+const MotionBadge = motion(Badge)
+const MotionCircle = motion(Circle)
+const MotionHeading = motion(Heading)
 
-  // Memoize the new article object
-  const newArticle = useMemo(
-    () => ({
-      ...data,
-      imgURL: data?.imgURL[0],
-    }),
-    [data],
-  )
+const Card = ({ title, image, category, date, readTime }) => {
+  const cardRef = useRef(null)
+  const [hovered, setHovered] = useState(false)
+  const controls = useAnimation()
 
-  const cardWrapper = useRef(null)
-  const card = useRef(null)
-  const project_meta = useRef(null)
+  // Increase stiffness for faster response, and decrease damping for more fluid motion
+  const x = useSpring(0, { stiffness: 150, damping: 30 })
+  const y = useSpring(0, { stiffness: 150, damping: 30 })
 
-  // Mouse movement handler
-  const mousemove = useCallback(e => {
-    if (card.current && project_meta.current) {
-      card.current.style.transition = 'none'
-      project_meta.current.style.transition = 'none'
+  // Increase the rotation range for a more pronounced effect
+  const rotateX = useTransform(y, [-25, 25], [3, -3])
+  const rotateY = useTransform(x, [-25, 25], [-3, 3])
 
-      const x = e.nativeEvent.offsetX
-      const y = e.nativeEvent.offsetY
-      const { width, height } = cardWrapper.current.getBoundingClientRect()
-      const halfWidth = width / 2
-      const halfHeight = height / 2
+  const handleMouseMove = event => {
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect()
+      const centerX = rect.left + rect.width / 2
+      const centerY = rect.top + rect.height / 2
 
-      const rotationY = ((x - halfWidth) / halfWidth) * 10
-      const rotationX = ((y - halfHeight) / halfHeight) * 10
-
-      card.current.style.transform = `rotateY(${rotationY}deg) rotateX(${rotationX}deg)`
-      project_meta.current.style.transform = `rotateY(${rotationY}deg) rotateX(${rotationX}deg)`
+      x.set(event.clientX - centerX)
+      y.set(event.clientY - centerY)
     }
-  }, [])
+  }
 
-  // Mouse leave handler
-  const mouseleave = useCallback(() => {
-    if (card.current && project_meta.current) {
-      card.current.style.transition = 'transform 0.5s ease-in-out'
-      card.current.style.transform = `rotateY(0) rotateX(0)`
-      project_meta.current.style.transition = 'transform 0.5s ease-in-out'
-      project_meta.current.style.transform = `rotateY(0) rotateX(0)`
-    }
-  }, [])
+  const handleMouseLeave = () => {
+    x.set(0)
+    y.set(0)
+  }
 
-  // Click handler for card
-  const handleCardClick = useCallback(() => {
-    playClick()
-    navigate(`/article/${newArticle._id}`)
-  }, [playClick, navigate, newArticle._id])
+  const cardVariants = {
+    hover: {
+      scale: 1.05,
+      transition: { type: 'spring', stiffness: 300, damping: 20 },
+    },
+    tap: {
+      scale: 0.95,
+      transition: { type: 'spring', stiffness: 500, damping: 30 },
+    },
+  }
+
+  const imageVariants = {
+    hover: {
+      scale: 1.1,
+      transition: { type: 'spring', stiffness: 300, damping: 20 },
+    },
+  }
+
+  const arrowVariants = {
+    hover: {
+      x: [0, 10, 0],
+      transition: { repeat: Infinity, duration: 1.5, ease: 'easeInOut' },
+    },
+  }
 
   return (
-    <div className="containers">
-      <Flex
-        className="cardWrapper"
-        ref={cardWrapper}
-        onClick={handleCardClick}
-        _hover={{ cursor: 'pointer' }}
-        onMouseMove={mousemove}
-        onMouseLeave={mouseleave}
+    <MotionBox
+      ref={cardRef}
+      w="xs"
+      borderRadius="2xl"
+      overflow="hidden"
+      bg="linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(147,51,234,0.1) 100%)"
+      // bgGradient="linear(to-b, transparent, rgba(0,0,0,0.8))"
+      color="white"
+      cursor="pointer"
+      boxShadow="xl"
+      position="relative"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      variants={cardVariants}
+      whileHover="hover"
+      whileTap="tap"
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d',
+        perspective: 1000,
+        transition: 'transform 0.1s ease-out',
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onHoverStart={() => {
+        setHovered(true)
+        controls.start('hover')
+      }}
+      onHoverEnd={() => {
+        setHovered(false)
+        controls.stop()
+        handleMouseLeave()
+      }}
+    >
+      <Box
+        overflow="hidden"
+        height="200px"
+        style={{ transform: 'translateZ(20px)' }}
       >
-        <div className="project-meta" ref={project_meta}>
-          <div className="projects">
-            <span className="block-reveal__text">{data?.title}</span>
-          </div>
-          <div className="divider"></div>
-          <div className="project-nav">
-            <Flex gap={3}>
-              <span className="block-reveal__text numb">
-                {newsNumber}
-                <br /> <span className="arr">→</span>
-              </span>
-              <Flex flexDirection="column" gap={1}>
-                <span
-                  style={{
-                    fontSize: '0.85rem',
-                    textTransform: 'uppercase',
-                    color: '#9CAFAA',
-                    fontWeight: 'bold',
-                    textAlign: 'left',
-                  }}
-                >
-                  {data?.category}
-                </span>
-                <span
-                  style={{
-                    fontSize: '0.85rem',
-                    textTransform: 'uppercase',
-                    color: '#9CAFAA',
-                    fontWeight: 'bold',
-                    textAlign: 'left',
-                  }}
-                >
-                  {data.avgReadTime} min read
-                </span>
-              </Flex>
-            </Flex>
-          </div>
-        </div>
-        <Slide direction="left" in={true} unmountOnExit>
-          <div className="cards" ref={card}>
-            <Box
-              className="img-box"
-              background="linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%)"
+        <MotionImage
+          src={image}
+          alt={title}
+          h="100%"
+          w="100%"
+          objectFit="cover"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          variants={imageVariants}
+        />
+      </Box>
+
+      <VStack
+        align="start"
+        p={6}
+        spacing={4}
+        style={{ transform: 'translateZ(50px)' }}
+      >
+        <HStack spacing={2}>
+          <MotionBadge
+            colorScheme="purple"
+            fontWeight="bold"
+            fontSize="xs"
+            textTransform="uppercase"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              delay: 0.3,
+              type: 'spring',
+              stiffness: 300,
+              damping: 20,
+            }}
+          >
+            {category}
+          </MotionBadge>
+          <MotionBadge
+            colorScheme="blue"
+            variant="outline"
+            fontSize="xs"
+            display="flex"
+            alignItems="center"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              delay: 0.4,
+              type: 'spring',
+              stiffness: 300,
+              damping: 20,
+            }}
+          >
+            <Calendar size={12} style={{ marginRight: '4px' }} />
+            {date}
+          </MotionBadge>
+        </HStack>
+
+        <MotionHeading
+          as="h3"
+          fontSize="lg"
+          fontWeight="bold"
+          lineHeight="shorter"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: 0.5,
+            type: 'spring',
+            stiffness: 300,
+            damping: 20,
+          }}
+          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+        >
+          {title}
+        </MotionHeading>
+
+        <Flex justify="space-between" w="100%" alignItems="center">
+          <HStack spacing={2}>
+            <Clock size={14} />
+            <MotionText
+              fontSize="sm"
+              fontWeight="medium"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{
+                delay: 0.6,
+                type: 'spring',
+                stiffness: 300,
+                damping: 20,
+              }}
             >
-              <Suspense fallback={<img src={rrImage} alt="" loading="lazy" />}>
-                <img
-                  src={newArticle.imgURL ? newArticle.imgURL : rrImage}
-                  alt="Article Image"
-                  onError={e => {
-                    e.target.onerror = null
-                    e.target.src = rrImage
-                  }}
-                  loading="lazy"
-                />
-              </Suspense>
-            </Box>
-            <div className="contents text-white">
-              <h2>Click here to know More</h2>
-              <p>
-                {data?.mainText[0].length > 135
-                  ? `${data?.mainText[0].substring(0, 135)}...`
-                  : data?.mainText[0]}
-              </p>
-            </div>
-          </div>
-        </Slide>
-      </Flex>
-    </div>
+              {readTime} min read
+            </MotionText>
+          </HStack>
+          <MotionCircle
+            size="40px"
+            bg="blue.500"
+            color="white"
+            variants={arrowVariants}
+            animate={controls}
+            whileHover={{ bg: 'blue.600' }}
+            transition={{ duration: 0.2 }}
+          >
+            <ArrowRight size={20} />
+          </MotionCircle>
+        </Flex>
+      </VStack>
+    </MotionBox>
   )
 }
 
