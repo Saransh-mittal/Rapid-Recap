@@ -19,7 +19,7 @@ const { formatDate } = require('../utils/miscellaneous.utils')
 const Quiz = require('../model/quizSchema')
 const NewsAPI = require('newsapi')
 const asyncHandler = require('express-async-handler')
-const { TfidfVectorizer } = require('natural')
+const { TfIdf } = require('natural')
 const cosineDistances = require('compute-cosine-distance')
 const {
   startSession,
@@ -27,6 +27,7 @@ const {
   abortSession,
   endSession,
 } = require('../db/session')
+const { default: mongoose } = require('mongoose')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general' } = req.query
@@ -552,11 +553,6 @@ const updateArticle = asyncHandler(async (req, res) => {
   const { id } = req.params
   const updatedData = req.body
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.status(400)
-    throw new Error('Invalid article ID')
-  }
-
   // Find the article by ID
   const article = await Article.findById(id)
 
@@ -566,7 +562,8 @@ const updateArticle = asyncHandler(async (req, res) => {
   }
 
   // Start a transaction
-  const session = await startSession()
+  const session = await mongoose.startSession()
+  session.startTransaction()
 
   try {
     // Update main article fields
@@ -577,21 +574,35 @@ const updateArticle = asyncHandler(async (req, res) => {
     })
 
     // Update quiz
-    if (updatedData.quiz) {
-      article.quiz = []
-      for (let quizData of updatedData.quiz) {
-        let quiz
-        if (mongoose.Types.ObjectId.isValid(quizData._id)) {
-          quiz = await Quiz.findByIdAndUpdate(quizData._id, quizData, {
-            new: true,
-            session,
-          })
-        } else {
-          quiz = new Quiz(quizData)
-          await quiz.save({ session })
-        }
-        article.quiz.push(quiz._id)
+    if (updatedData.quiz && updatedData.quiz.length > 0) {
+      const quizData = updatedData.quiz[0] // Get the first (and only) quiz object
+      let quiz
+
+      if (article.quiz && article.quiz.length > 0) {
+        // Update existing quiz
+        quiz = await Quiz.findByIdAndUpdate(
+          article.quiz[0],
+          {
+            overAllDifficulty: quizData.overAllDifficulty,
+            para1: quizData.para1,
+            para2: quizData.para2,
+            para3: quizData.para3,
+          },
+          { new: true, session },
+        )
+      } else {
+        // Create new quiz
+        quiz = new Quiz(quizData)
+        await quiz.save({ session })
       }
+
+      article.quiz = [quiz._id]
+    } else if (updatedData.quiz && updatedData.quiz.length === 0) {
+      // Remove quiz if empty array is sent
+      if (article.quiz && article.quiz.length > 0) {
+        await Quiz.findByIdAndDelete(article.quiz[0], { session })
+      }
+      article.quiz = []
     }
 
     // Update user quiz status
@@ -606,7 +617,7 @@ const updateArticle = asyncHandler(async (req, res) => {
     await article.save({ session })
 
     // Commit the transaction
-    await commitSession()
+    await session.commitTransaction()
 
     // Fetch the updated article with populated fields
     const updatedArticle = await Article.findById(id)
@@ -620,11 +631,11 @@ const updateArticle = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     // If an error occurred, abort the transaction
-    await abortSession(session)
+    await session.abortTransaction()
     throw error
   } finally {
     // End the session
-    endSession()
+    session.endSession()
   }
 })
 
@@ -692,7 +703,7 @@ const adminSearchArticles = asyncHandler(async (req, res) => {
   if (hasQuiz === 'false') filter.quiz = { $exists: true, $eq: [] }
 
   let articles
-  if (query) {
+  if (query && query !== '') {
     // Use text search if query is provided
     articles = await Article.find(
       { $text: { $search: query }, ...filter },
@@ -737,13 +748,11 @@ const adminSearchArticles = asyncHandler(async (req, res) => {
 const getAdminArticleDetails = asyncHandler(async (req, res) => {
   const { articleId } = req.params
 
-  if (!mongoose.Types.ObjectId.isValid(articleId)) {
-    res.status(400)
-    throw new Error('Invalid article ID')
-  }
-
   const article = await Article.findById(articleId)
-    .populate('quiz', 'question options answer explanation') // Populate quiz details
+    .populate({
+      path: 'quiz',
+      select: 'para1 para2 para3 overAllDifficulty',
+    }) // Populate quiz details
     .populate('userQuizStatus.userId', 'name email') // Populate user details for quiz status
     .lean() // Use lean() for better performance as we don't need Mongoose document methods
 

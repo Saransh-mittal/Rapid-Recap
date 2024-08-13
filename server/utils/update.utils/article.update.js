@@ -1,5 +1,6 @@
-const Article = require("../../model/articleSchema");
-const { progressBar } = require("../progress.utils");
+const Article = require('../../model/articleSchema')
+
+const { progressBar } = require('../progress.utils')
 
 // const removeDuplicatesAndCreateIndexes = async () => {
 //   try {
@@ -88,21 +89,76 @@ const { progressBar } = require("../progress.utils");
 // // Execute the function to update average read times
 // updateAverageReadTime();
 
-const changeDomesticAndOthersToGeneralCategory = async () => {
-  try {
-    const articles = await Article.find({
-      category: { $in: ["domestic", "other"] },
-    });
+// const changeDomesticAndOthersToGeneralCategory = async () => {
+//   try {
+//     const articles = await Article.find({
+//       category: { $in: ["domestic", "other"] },
+//     });
 
-    const updateProgress = progressBar(articles.length);
-    for (const article of articles) {
-      article.category = "general";
-      await article.save();
-      updateProgress();
+//     const updateProgress = progressBar(articles.length);
+//     for (const article of articles) {
+//       article.category = "general";
+//       await article.save();
+//       updateProgress();
+//     }
+//   } catch (error) {
+//     console.error("Error:", error);
+//   }
+// };
+
+// changeDomesticAndOthersToGeneralCategory();
+
+const createIndexes = async () => {
+  try {
+    // Create the text index
+    console.log('Creating text index...')
+    // Get existing indexes
+    const indexes = await Article.collection.indexes()
+    const textIndexes = indexes.filter(index => index.key._fts === 'text')
+
+    if (textIndexes.length > 0) {
+      console.log('Text index already exists:')
+      console.log(JSON.stringify(textIndexes, null, 2))
+
+      // Check if the existing index covers all the fields we want
+      const desiredFields = ['title', 'hindiTitle', 'mainText', 'hindiMainText']
+      const existingFields = Object.keys(textIndexes[0].weights)
+      const missingFields = desiredFields.filter(
+        field => !existingFields.includes(field),
+      )
+
+      if (missingFields.length === 0) {
+        console.log('Existing text index covers all desired fields.')
+      } else {
+        console.log('Existing text index does not cover all desired fields.')
+        console.log('Missing fields:', missingFields)
+        console.log(
+          'To update the index, you need to drop the existing one and create a new one.',
+        )
+        console.log(
+          'Caution: This operation can be resource-intensive on large collections.',
+        )
+      }
+    } else {
+      // Create the text index if it doesn't exist
+      await Article.collection.createIndex(
+        {
+          title: 'text',
+          hindiTitle: 'text',
+          mainText: 'text',
+          hindiMainText: 'text',
+        },
+        {
+          name: 'ArticleTextIndex',
+          default_language: 'english',
+          language_override: 'language',
+        },
+      )
+      console.log('Text index created successfully')
     }
   } catch (error) {
-    console.error("Error:", error);
+    console.log(error)
   }
-};
+}
 
-changeDomesticAndOthersToGeneralCategory();
+createIndexes()
