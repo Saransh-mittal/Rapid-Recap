@@ -691,38 +691,71 @@ const adminSearchArticles = asyncHandler(async (req, res) => {
   if (hasQuiz === 'true') filter.quiz = { $exists: true, $ne: [] }
   if (hasQuiz === 'false') filter.quiz = { $exists: true, $eq: [] }
 
-  // Load TF-IDF model
-  const tfidfModel = await loadTfidfModel()
-  const tfidfVectorizer = new TfidfVectorizer()
-  tfidfVectorizer.setVocabulary(tfidfModel.vocabulary)
-
-  // Get filtered articles
-  const articles = await Article.find(filter)
-
   if (query) {
-    // Transform query
-    const queryVector = tfidfVectorizer.transform([query])
+    // Use Python script to calculate query vector
+    const pythonProcess = spawn('python', [
+      path.join(__dirname, '..', 'scripts', 'calculate_query_vector.py'),
+      query,
+    ])
 
-    // Calculate similarity
-    const similarities = articles.map(article => {
-      const articleVector = tfidfVectorizer.transform([
-        `${article.title} ${article.mainText}`,
-      ])
-      return {
-        article,
-        similarity: 1 - cosineDistances(queryVector[0], articleVector[0]),
-      }
+    let queryVector
+    pythonProcess.stdout.on('data', data => {
+      queryVector = JSON.parse(data.toString())
     })
 
-    // Sort by similarity
-    similarities.sort((a, b) => b.similarity - a.similarity)
+    await new Promise(resolve => {
+      pythonProcess.on('close', resolve)
+    })
 
-    // Return all results, sorted by relevance
-    const results = similarities.map(item => item.article)
-    res.json(results)
+    // Aggregate pipeline to calculate cosine similarity
+    const pipeline = [
+      { $match: filter },
+      {
+        $addFields: {
+          similarity: {
+            $reduce: {
+              input: { $zip: { inputs: ['$tfidfVector', queryVector] } },
+              initialValue: 0,
+              in: {
+                $add: [
+                  '$$value',
+                  {
+                    $multiply: [
+                      { $arrayElemAt: ['$$this', 0] },
+                      { $arrayElemAt: ['$$this', 1] },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      { $sort: { similarity: -1 } },
+      { $limit: 50 }, // Limit to top 50 results for performance
+    ]
+
+    const articles = await Article.aggregate(pipeline)
+
+    // Fetch related articles for the top result
+    if (articles.length > 0) {
+      const topArticle = articles[0]
+      const relatedArticles = await Article.find({
+        _id: { $in: topArticle.relatedArticles },
+      })
+
+      // Add related articles to the response
+      res.json({
+        searchResults: articles,
+        relatedArticles: relatedArticles,
+      })
+    } else {
+      res.json({ searchResults: [], relatedArticles: [] })
+    }
   } else {
     // If no query provided, return all filtered articles
-    res.json(articles)
+    const articles = await Article.find(filter)
+    res.json({ searchResults: articles, relatedArticles: [] })
   }
 })
 

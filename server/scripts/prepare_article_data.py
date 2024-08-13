@@ -69,19 +69,23 @@ def update_similar_articles(mongo_uri, articles_df, tfv_matrix):
 
     cosine_similarities = cosine_similarity(tfv_matrix)
     bulk_operations = []
-    
+
     for idx, article in articles_df.iterrows():
+        tfidf_vector = tfv_matrix[idx].toarray()[0].tolist()
         similar_indices = cosine_similarities[idx].argsort()[:-11:-1]
         similar_articles = articles_df.iloc[similar_indices]['_id'].tolist()
         similar_articles = [str(article_id) for article_id in similar_articles if article_id != article['_id']]
-        
+
         bulk_operations.append(
             pymongo.UpdateOne(
                 {"_id": article['_id']},
-                {"$set": {"relatedArticles": similar_articles}}
+                {"$set": {
+                    "tfidfVector": tfidf_vector,
+                    "relatedArticles": similar_articles[:10]
+                }}
             )
         )
-    
+
     if bulk_operations:
         articles_collection.bulk_write(bulk_operations)
 
@@ -94,11 +98,11 @@ if __name__ == "__main__":
 
     # Set start date to April 1, 2024
     start_date = datetime(2024, 4, 1, tzinfo=pytz.UTC)
-    
+
     print(f"Fetching articles from {start_date} onwards...")
 
     articles_df = get_articles_after_date(mongo_uri, start_date)
-    
+
     print(f"Number of articles fetched: {len(articles_df)}")
 
     articles_df = prepare_article_data(articles_df)
