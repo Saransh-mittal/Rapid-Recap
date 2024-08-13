@@ -691,72 +691,44 @@ const adminSearchArticles = asyncHandler(async (req, res) => {
   if (hasQuiz === 'true') filter.quiz = { $exists: true, $ne: [] }
   if (hasQuiz === 'false') filter.quiz = { $exists: true, $eq: [] }
 
+  let articles
   if (query) {
-    // Use Python script to calculate query vector
-    const pythonProcess = spawn('python', [
-      path.join(__dirname, '..', 'scripts', 'calculate_query_vector.py'),
-      query,
-    ])
-
-    let queryVector
-    pythonProcess.stdout.on('data', data => {
-      queryVector = JSON.parse(data.toString())
-    })
-
-    await new Promise(resolve => {
-      pythonProcess.on('close', resolve)
-    })
-
-    // Aggregate pipeline to calculate cosine similarity
-    const pipeline = [
-      { $match: filter },
-      {
-        $addFields: {
-          similarity: {
-            $reduce: {
-              input: { $zip: { inputs: ['$tfidfVector', queryVector] } },
-              initialValue: 0,
-              in: {
-                $add: [
-                  '$$value',
-                  {
-                    $multiply: [
-                      { $arrayElemAt: ['$$this', 0] },
-                      { $arrayElemAt: ['$$this', 1] },
-                    ],
-                  },
-                ],
-              },
-            },
-          },
-        },
-      },
-      { $sort: { similarity: -1 } },
-      { $limit: 50 }, // Limit to top 50 results for performance
-    ]
-
-    const articles = await Article.aggregate(pipeline)
-
-    // Fetch related articles for the top result
-    if (articles.length > 0) {
-      const topArticle = articles[0]
-      const relatedArticles = await Article.find({
-        _id: { $in: topArticle.relatedArticles },
-      })
-
-      // Add related articles to the response
-      res.json({
-        searchResults: articles,
-        relatedArticles: relatedArticles,
-      })
-    } else {
-      res.json({ searchResults: [], relatedArticles: [] })
-    }
+    // Use text search if query is provided
+    articles = await Article.find(
+      { $text: { $search: query }, ...filter },
+      { score: { $meta: 'textScore' } },
+    )
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(50)
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt',
+      )
   } else {
     // If no query provided, return all filtered articles
-    const articles = await Article.find(filter)
-    res.json({ searchResults: articles, relatedArticles: [] })
+    articles = await Article.find(filter)
+      .limit(50)
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt',
+      )
   }
+
+  // Fetch related articles for the top result
+  let relatedArticles = []
+  if (articles.length > 0) {
+    const topArticle = articles[0]
+    relatedArticles = await Article.find({
+      _id: { $in: topArticle.relatedArticles },
+    })
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt',
+      )
+      .limit(10)
+  }
+
+  res.json({
+    searchResults: articles,
+    relatedArticles: relatedArticles,
+  })
 })
 
 // @desc    Get article details for admin

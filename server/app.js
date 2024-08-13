@@ -51,7 +51,7 @@ webpush.setVapidDetails(
 //require("./utils/deletion.utils/quizGivenByUserDeletion");
 //require("./utils/deletion.utils/removeBotUsers.del");
 //require("./utils/deletion.utils/removeQuizAttemptForNullUser.del");
-//require("./utils/deletion.utils/removeArticle.del");
+// require('./utils/deletion.utils/removeArticle.del')
 // require("./utils/deletion.utils/useLessArticle.del");
 // ---------------------------
 
@@ -90,7 +90,7 @@ webpush.setVapidDetails(
 // require("./scripts/updateUserCurrentSeason");
 // require("./scripts/quizAttemptAndDailyIQUpdateSeason");
 // require("./scripts/collectionToCSV");
-require('./scripts/script_prepare_article_data')()
+// require('./scripts/script_prepare_article_data')()
 // require("./scripts/usersEnabledNotifs");
 // require("./scripts/generateCryptoKey");
 // require("./scripts/chatStatus");

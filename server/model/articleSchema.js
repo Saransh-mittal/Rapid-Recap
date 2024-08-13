@@ -80,10 +80,6 @@ const articleSchema = new mongoose.Schema(
     avgReadTime: {
       type: Number,
     },
-    tfidfVector: {
-      type: [Number],
-      default: [],
-    },
     quizAttemptCnt: {
       type: Number,
       default: 0,
