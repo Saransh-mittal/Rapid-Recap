@@ -3,14 +3,28 @@ import './EmailVerify.css'
 import axios from 'axios'
 import { Otptimer } from 'otp-timer-ts'
 import Loading from '../miscellaneous/Loading'
-import { Box, Flex } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  Flex,
+  HStack,
+  Input,
+  Text,
+  VStack,
+} from '@chakra-ui/react'
 import { useToast } from '@chakra-ui/react'
 import throttle from 'lodash.throttle'
 import { useDispatch, useSelector } from 'react-redux'
 import { setModal } from '../../redux/uiSlice'
 import { setVerifyEmail } from '../../redux/authSlice'
 import useSound from '../../customHooks/useSound'
-const EmailVerify = ({ email, setEmailVerified }) => {
+
+const EmailVerify = ({
+  email,
+  setEmailVerified,
+  onClose,
+  onResetPasswordOpen,
+}) => {
   const toast = useToast()
   const dispatch = useDispatch()
   const { forgotPassword } = useSelector(state => state.auth)
@@ -63,19 +77,17 @@ const EmailVerify = ({ email, setEmailVerified }) => {
       )
 
       if (response.status === 201) {
-        setEmailVerified && setEmailVerified(true)
-        toast({
-          title: 'Email Verified',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-          position: 'top',
-        })
-        //alert("Email Verified");
         if (forgotPassword) {
           dispatch(setVerifyEmail(false))
+          onResetPasswordOpen()
+          toast({
+            title: 'Email Verified Now You Can Reset Password',
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
         } else {
-          dispatch(setModal(false))
           toast({
             title: 'Email Verified',
             status: 'success',
@@ -84,6 +96,7 @@ const EmailVerify = ({ email, setEmailVerified }) => {
             position: 'top',
           })
         }
+        onClose()
       } else {
         throw new Error('Email Verification Failed')
       }
@@ -97,12 +110,10 @@ const EmailVerify = ({ email, setEmailVerified }) => {
         isClosable: true,
         position: 'top',
       })
-      //alert("Email Verification Failed");
       console.log(error.response.data.error)
     } finally {
       setLoad(false)
     }
-    //console.log(otpValue);
   }
 
   const showEmail = () => {
@@ -114,7 +125,6 @@ const EmailVerify = ({ email, setEmailVerified }) => {
   }
 
   const resendOTP = async e => {
-    //e.preventDefault();
     setLoad(true)
     try {
       const response = await axios.post(`/api/user/resendOTP`, {
@@ -170,70 +180,68 @@ const EmailVerify = ({ email, setEmailVerified }) => {
           name === 'i1' ? null : refs[`i${parseInt(name[1], 10) - 1}`]
         prevInput && prevInput.current.focus()
       }
+    } else if (e.key === 'Enter') {
+      submitOTPThrottled()
     }
   }
 
   const submitOTPThrottled = useCallback(throttle(submitOTP, 1000), [otp])
+
   useEffect(() => {
     return () => submitOTPThrottled.cancel()
-  }, [])
-  return (
-    <div className="otp-form">
-      <form name="otp-form">
-        <div className="title">
-          <h3>OTP VERIFICATION</h3>
-          <p className="info">An otp has been sent to {showEmail()}</p>
-          <p className="msg">Please enter OTP to verify</p>
-        </div>
-        <div className="otp-input-fields">
-          {Object.keys(otp).map((key, index) => (
-            <input
-              key={index}
-              onChange={handleChange}
-              onPaste={handlePaste}
-              name={key}
-              value={otp[key]}
-              type="number"
-              className={`otp__digit otp__field__${index + 1}`}
-              ref={refs[key]}
-              onKeyDown={handleKeyDown}
-              maxLength={1}
-            />
-          ))}
-        </div>
-        <Flex
-          w={'100%'}
-          justifyContent={'center'}
-          flexDirection={'column'}
-          textAlign={'center'}
-        >
-          <button
-            onClick={() => {
-              playClick()
-              submitOTPThrottled()
-            }}
-            className="btn btn-primary my-3"
-            disabled={load}
-          >
-            Verify
-          </button>
-          <p className="resend mb-2">Didn't receive code?</p>
-          <Box>
-            <Otptimer
-              buttonText="Resend OTP"
-              buttonContainerClass="btn btn-danger"
-              minutes={0}
-              seconds={60}
-              onResend={resendOTP}
-              textStyle={{ color: 'white' }}
-              timerStyle={{ color: 'white' }}
-            />
-          </Box>
-        </Flex>
-      </form>
+  }, [submitOTPThrottled])
 
-      <div className="mt-3">{load && <Loading />}</div>
-    </div>
+  return (
+    <VStack spacing={4} align="stretch" color={'white'}>
+      <Text fontSize="2xl" fontWeight="bold" textAlign="center">
+        OTP VERIFICATION
+      </Text>
+      <Text textAlign="center">An OTP has been sent to {showEmail()}</Text>
+      <Text textAlign="center">Please enter OTP to verify</Text>
+      <HStack justifyContent="center">
+        {Object.keys(otp).map((key, index) => (
+          <Input
+            key={index}
+            onChange={handleChange}
+            onPaste={handlePaste}
+            name={key}
+            value={otp[key]}
+            type="number"
+            maxLength={1}
+            ref={refs[key]}
+            onKeyDown={handleKeyDown}
+            width="40px"
+            height="40px"
+            textAlign="center"
+            p={0}
+          />
+        ))}
+      </HStack>
+      <Button
+        onClick={() => {
+          playClick()
+          submitOTPThrottled()
+        }}
+        isLoading={load}
+        loadingText="Verifying"
+        colorScheme="blue"
+      >
+        Verify
+      </Button>
+      <Text textAlign="center">Didn't receive code?</Text>
+      <Box textAlign="center">
+        <Otptimer
+          buttonText="Resend OTP"
+          buttonContainerClass="btn btn-danger"
+          minutes={0}
+          seconds={60}
+          onResend={resendOTP}
+          textStyle={{ color: 'white' }}
+          timerStyle={{ color: 'white' }}
+        />
+      </Box>
+      {load && <Loading />}
+    </VStack>
   )
 }
 

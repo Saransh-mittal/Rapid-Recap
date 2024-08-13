@@ -34,8 +34,9 @@ import FillEyeVisible from '../assets/svg/FillEyeVisible'
 import { setForgotPassword, setUser, setVerifyEmail } from '../redux/authSlice'
 import { setModal } from '../redux/uiSlice'
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
+import Modal from './Modal'
 
-const Modal = lazy(() => import('./Modal'))
+// const Modal = lazy(() => import('./Modal'))
 const ResetPassword = lazy(() =>
   import('../components/authComponents/ResetPassword'),
 )
@@ -67,6 +68,18 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     isOpen: isRegisterOpen,
     onOpen: onRegisterOpen,
     onClose: onRegisterClose,
+  } = useDisclosure()
+
+  const {
+    isOpen: isEmailVerifyOpen,
+    onOpen: onEmailVerifyOpen,
+    onClose: onEmailVerifyClose,
+  } = useDisclosure()
+
+  const {
+    isOpen: isResetPasswordOpen,
+    onOpen: onResetPasswordOpen,
+    onClose: onResetPasswordClose,
   } = useDisclosure()
 
   const inGameNameHandler = e => {
@@ -135,8 +148,9 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         })
 
         if (responseOfResendOTP.status === 201) {
-          dispatchRedux(setVerifyEmail(true))
-          dispatchRedux(setModal(true))
+          // dispatchRedux(setVerifyEmail(true))
+          // dispatchRedux(setModal(true))
+          onEmailVerifyOpen()
           toast({
             title: 'Email not verified',
             description: 'Please verify your email before continuing',
@@ -198,6 +212,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           data.emailOrInGameName.slice(i)
         dispatchRedux(setForgotPassword(true))
         dispatchRedux(setVerifyEmail(true))
+        onEmailVerifyOpen()
         toast({
           title: 'OTP sent to your email',
           description: starredEmail,
@@ -267,16 +282,59 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           <ModalCloseButton color="white" />
           <ModalBody w={'65%'} p={'20px'}>
             <Suspense fallback={<Spinner />}>
-              {modal && forgotPassword && !verifyEmail && (
+              {/* {modal && forgotPassword && !verifyEmail && (
                 <Modal onClose={() => dispatchRedux(setModal(false))}>
                   <ResetPassword email={data.emailOrInGameName} />
                 </Modal>
-              )}
-              {modal && verifyEmail && (
-                <Modal onClose={() => dispatchRedux(setModal(false))}>
-                  <EmailVerify email={data.emailOrInGameName} />
-                </Modal>
-              )}
+              )} */}
+              <ChakraModal
+                isOpen={isResetPasswordOpen}
+                onClose={onResetPasswordClose}
+              >
+                <ModalOverlay />
+                <ModalContent
+                  sx={{
+                    borderRadius: 'xl',
+                    backgroundColor: '#0f0d15',
+                    backgroundImage:
+                      'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+                    padding: '20px',
+                    color: 'white',
+                  }}
+                >
+                  <ModalCloseButton color={'white'} />
+                  <ModalBody>
+                    <ResetPassword
+                      email={data.emailOrInGameName}
+                      onClose={onResetPasswordClose}
+                    />
+                  </ModalBody>
+                </ModalContent>
+              </ChakraModal>
+              <ChakraModal
+                isOpen={isEmailVerifyOpen}
+                onClose={onEmailVerifyClose}
+              >
+                <ModalOverlay />
+                <ModalContent
+                  sx={{
+                    borderRadius: 'xl',
+                    backgroundColor: '#0f0d15',
+                    backgroundImage:
+                      'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+                    padding: '20px',
+                  }}
+                >
+                  <ModalCloseButton color={'white'} />
+                  <ModalBody>
+                    <EmailVerify
+                      email={data.emailOrInGameName}
+                      onClose={onEmailVerifyClose}
+                      onResetPasswordOpen={onResetPasswordOpen}
+                    />
+                  </ModalBody>
+                </ModalContent>
+              </ChakraModal>
               {!enterInGameName ? (
                 <>
                   <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>
