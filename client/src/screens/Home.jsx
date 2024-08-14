@@ -41,6 +41,7 @@ const Home = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(true)
   const [hasMoreItems, setHasMoreItems] = useState(true)
   const [prevCategory, setPrevCategory] = useState(stateCategory)
+  const [isLoading, setIsLoading] = useState(false)
 
   const USER_IQ = user?.IQ_score ?? null
   const notLoggedIn = !isAuthenticated
@@ -49,7 +50,7 @@ const Home = () => {
     if (loginCheckStatus === 'pending' || !hasMoreItems) return
 
     setLoad(true)
-
+    setIsLoading(true)
     try {
       const response =
         (category === 'all' || !category) && !notLoggedIn
@@ -82,6 +83,7 @@ const Home = () => {
       })
     } finally {
       setLoad(false)
+      setIsLoading(false)
     }
   }, [
     page,
@@ -94,20 +96,25 @@ const Home = () => {
     toast,
   ])
 
-  const handleScroll = useCallback(async () => {
-    if (
-      !notLoggedIn &&
-      window.innerHeight + document.documentElement.scrollTop + 1000 >
-        document.documentElement.scrollHeight &&
-      hasMoreItems
-    ) {
+  const handleScroll = useCallback(() => {
+    if (notLoggedIn || !hasMoreItems || isLoading) return
+
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+    const scrollHeight = document.documentElement.scrollHeight
+    const clientHeight = document.documentElement.clientHeight
+
+    const scrollThreshold = 500 // pixels from bottom to trigger load
+    const bottomReached =
+      scrollHeight - (scrollTop + clientHeight) <= scrollThreshold
+
+    if (bottomReached) {
       setLoad(true)
-      setPage(prevPage => prevPage + 1)
+      fetchData()
     }
-  }, [hasMoreItems, notLoggedIn])
+  }, [hasMoreItems, notLoggedIn, isLoading, fetchData])
 
   const debouncedHandleScroll = useMemo(
-    () => debounce(handleScroll, 300),
+    () => debounce(handleScroll, 200),
     [handleScroll],
   )
 
