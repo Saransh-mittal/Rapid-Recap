@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react'
 import { motion, useAnimation, useSpring, useTransform } from 'framer-motion'
 import { Calendar, Clock, ArrowRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -20,9 +21,9 @@ const MotionBadge = motion(Badge)
 const MotionCircle = motion(Circle)
 const MotionHeading = motion(Heading)
 
-const Card = ({ title, image, category, date, readTime }) => {
+const Card = ({ title, image, category, date, readTime, id }) => {
   const cardRef = useRef(null)
-  const [hovered, setHovered] = useState(false)
+  const navigate = useNavigate()
   const controls = useAnimation()
 
   // Increase stiffness for faster response, and decrease damping for more fluid motion
@@ -77,11 +78,12 @@ const Card = ({ title, image, category, date, readTime }) => {
   return (
     <MotionBox
       ref={cardRef}
-      w="xs"
+      w={'xs'}
+      h={{ base: '26rem', md: 'md' }}
       borderRadius="2xl"
       overflow="hidden"
       bg="linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(147,51,234,0.1) 100%)"
-      // bgGradient="linear(to-b, transparent, rgba(0,0,0,0.8))"
+      onClick={() => navigate(`/article/${id}`)}
       color="white"
       cursor="pointer"
       boxShadow="xl"
@@ -102,11 +104,9 @@ const Card = ({ title, image, category, date, readTime }) => {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onHoverStart={() => {
-        setHovered(true)
         controls.start('hover')
       }}
       onHoverEnd={() => {
-        setHovered(false)
         controls.stop()
         handleMouseLeave()
       }}
@@ -126,6 +126,7 @@ const Card = ({ title, image, category, date, readTime }) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
           variants={imageVariants}
+          onError={e => (e.target.src = '/images/rrlogo_HD.webp')}
         />
       </Box>
 
@@ -174,7 +175,7 @@ const Card = ({ title, image, category, date, readTime }) => {
 
         <MotionHeading
           as="h3"
-          fontSize="lg"
+          fontSize="md"
           fontWeight="bold"
           lineHeight="shorter"
           initial={{ opacity: 0, y: 20 }}
@@ -189,38 +190,44 @@ const Card = ({ title, image, category, date, readTime }) => {
         >
           {title}
         </MotionHeading>
-
-        <Flex justify="space-between" w="100%" alignItems="center">
-          <HStack spacing={2}>
-            <Clock size={14} />
-            <MotionText
-              fontSize="sm"
-              fontWeight="medium"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{
-                delay: 0.6,
-                type: 'spring',
-                stiffness: 300,
-                damping: 20,
-              }}
-            >
-              {readTime} min read
-            </MotionText>
-          </HStack>
-          <MotionCircle
-            size="40px"
-            bg="blue.500"
-            color="white"
-            variants={arrowVariants}
-            animate={controls}
-            whileHover={{ bg: 'blue.600' }}
-            transition={{ duration: 0.2 }}
-          >
-            <ArrowRight size={20} />
-          </MotionCircle>
-        </Flex>
       </VStack>
+      <Flex
+        justify="space-between"
+        w="100%"
+        alignItems="center"
+        position={'absolute'}
+        px={6}
+        bottom={3}
+      >
+        <HStack spacing={2}>
+          <Clock size={14} />
+          <MotionText
+            fontSize="sm"
+            fontWeight="medium"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{
+              delay: 0.6,
+              type: 'spring',
+              stiffness: 300,
+              damping: 20,
+            }}
+          >
+            {readTime} min read
+          </MotionText>
+        </HStack>
+        <MotionCircle
+          size="40px"
+          bg="blue.500"
+          color="white"
+          variants={arrowVariants}
+          animate={controls}
+          whileHover={{ bg: 'blue.600' }}
+          transition={{ duration: 0.2 }}
+        >
+          <ArrowRight size={20} />
+        </MotionCircle>
+      </Flex>
     </MotionBox>
   )
 }
