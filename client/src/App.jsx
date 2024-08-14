@@ -162,13 +162,13 @@ const App = () => {
       </Helmet>
       <FixedBackground />
       <Navbar />
+      {shouldShowNotification && <NotificationSubscription />}
       <Box
         position="relative"
         minHeight="100vh"
         zIndex={1}
         overflowX={'hidden'}
       >
-        {shouldShowNotification && <NotificationSubscription />}
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route
