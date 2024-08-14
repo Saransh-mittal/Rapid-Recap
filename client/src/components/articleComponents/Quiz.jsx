@@ -319,8 +319,7 @@ const Quiz = ({
 
     return (
       <Flex
-        p={'15px'}
-        px={'5px'}
+        p={4}
         mt={'25px'}
         display={'flex'}
         flexDirection={'column'}

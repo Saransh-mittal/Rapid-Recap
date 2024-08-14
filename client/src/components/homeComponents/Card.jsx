@@ -13,6 +13,7 @@ import {
 import { motion, useAnimation, useSpring, useTransform } from 'framer-motion'
 import { Calendar, Clock, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import useSound from '../../customHooks/useSound'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -25,6 +26,7 @@ const Card = ({ title, image, category, date, readTime, id }) => {
   const cardRef = useRef(null)
   const navigate = useNavigate()
   const controls = useAnimation()
+  const { playClick } = useSound()
 
   // Increase stiffness for faster response, and decrease damping for more fluid motion
   const x = useSpring(0, { stiffness: 150, damping: 30 })
@@ -83,7 +85,10 @@ const Card = ({ title, image, category, date, readTime, id }) => {
       borderRadius="2xl"
       overflow="hidden"
       bg="linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(147,51,234,0.1) 100%)"
-      onClick={() => navigate(`/article/${id}`)}
+      onClick={() => {
+        playClick()
+        navigate(`/article/${id}`)
+      }}
       color="white"
       cursor="pointer"
       boxShadow="xl"
