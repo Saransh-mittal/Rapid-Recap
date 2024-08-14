@@ -9,6 +9,7 @@ import {
   Text,
   useDisclosure,
   Box,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 
 // Lazy load components
@@ -22,6 +23,12 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
   const [lineGraph, setLineGraph] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const responsiveChartWidth = useBreakpointValue({
+    base: 275,
+    md: 300,
+    lg: 400,
+    xl: 500,
+  })
 
   useEffect(() => {
     onOpen() // Open modal when component mounts
@@ -57,7 +64,6 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
             backgroundImage="linear-gradient(135deg, #2d2a47 0%, #0e0c16 100%)"
             maxW={{ base: '100vw', md: '60vw' }}
             py={8}
-            px={{ base: 2, md: 8 }}
             borderRadius="lg"
             boxShadow="0 10px 30px rgba(0, 0, 0, 0.3)"
             color="white"
@@ -68,14 +74,18 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
               <Heading title="IQ Score History" />
             </Suspense>
 
-            <ModalBody>
+            <ModalBody px={0}>
               {loading ? (
                 <Text>Loading IQ score history...</Text>
               ) : error ? (
                 <Text color="red.500">{error}</Text>
               ) : (
                 <Suspense fallback={<Text>Loading chart...</Text>}>
-                  <IQLineGraph lineGraph={lineGraph} iOpenedFromNav={true} />
+                  <IQLineGraph
+                    lineGraph={lineGraph}
+                    iOpenedFromNav={true}
+                    graphwidth={responsiveChartWidth}
+                  />
                 </Suspense>
               )}
             </ModalBody>

@@ -98,7 +98,7 @@ const QuizInterface = ({
           >
             {currentQuestion.question}
           </Text>
-          <VStack spacing={4} align="stretch">
+          <VStack spacing={2} align="stretch">
             {Object.entries(currentQuestion.options).map(([key, value]) => (
               <Suspense
                 fallback={

@@ -86,7 +86,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                         bg={'orange.300'}
                         color={'white'}
                         display={{ base: 'none', md: 'block' }}
-                        px={0}
+                        px={1}
                       >
                         Serial No.
                       </Th>
@@ -94,22 +94,22 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                         textAlign={'center'}
                         bg={'green.300'}
                         color={'white'}
-                        px={0}
+                        px={1}
                       >
                         Percentile
                       </Th>
-                      <Th textAlign={'center'} bg={'red.300'} px={0}>
+                      <Th textAlign={'center'} bg={'red.300'} px={1}>
                         Article
                       </Th>
                       <Th
                         textAlign={'center'}
                         bg={'blue.300'}
                         display={{ base: 'none', md: 'block' }}
-                        px={0}
+                        px={1}
                       >
                         RQM Score
                       </Th>
-                      <Th textAlign={'center'} bg={'orange.300'} px={0}>
+                      <Th textAlign={'center'} bg={'orange.300'} px={1}>
                         Article Diff
                       </Th>
                     </Tr>
@@ -152,15 +152,15 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                                 justifyContent={'center'}
                                 alignItems={'center'}
                                 bgGradient="linear(to-b, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-                                p={2}
+                                py={2}
                                 gap={'35px'}
                                 borderRadius="md"
                               >
                                 {index + 1}
                               </Flex>
                             </Td>
-                            <Td>{userPercentile?.toFixed(2)}%</Td>
-                            <Td textAlign="center">
+                            <Td px={1}>{userPercentile?.toFixed(2)}%</Td>
+                            <Td textAlign="center" px={1}>
                               {`${title?.substring(0, 15)}...`}
                             </Td>
                             <Td
@@ -180,6 +180,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                                     : 'Hard'
                                 ]
                               }
+                              px={1}
                             >
                               {articleDifficulty}
                             </Td>

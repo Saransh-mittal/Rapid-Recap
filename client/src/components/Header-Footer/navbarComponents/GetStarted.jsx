@@ -23,14 +23,12 @@ const GetStarted = ({ display = 'flex', innerText, hamburgerOnClose }) => {
         {innerText}
       </Button>
       <Suspense fallback={<Spinner />}>
-        {isOpen && (
-          <Signin
-            isOpen={isOpen}
-            onOpen={onOpen}
-            onClose={onClose}
-            hamburgerOnClose={hamburgerOnClose}
-          />
-        )}
+        <Signin
+          isOpen={isOpen}
+          onOpen={onOpen}
+          onClose={onClose}
+          hamburgerOnClose={hamburgerOnClose}
+        />
       </Suspense>
     </>
   )

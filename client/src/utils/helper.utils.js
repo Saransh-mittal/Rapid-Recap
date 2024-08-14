@@ -36,3 +36,33 @@ export const getArticleId = () => {
   }
   return null
 }
+
+export function formatDate(datetime) {
+  // Extract the date part
+  const datePattern = /^\d{4}-\d{2}-\d{2}/
+  const match = datetime.match(datePattern)
+  if (!match) return null
+
+  // Parse the extracted date part
+  const [year, month, day] = match[0].split('-')
+
+  // Define month abbreviations
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
+
+  // Format the date into 'dd mmm yyyy'
+  const formattedDate = `${day} ${months[parseInt(month, 10) - 1]} ${year}`
+  return formattedDate
+}

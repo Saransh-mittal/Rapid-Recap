@@ -41,7 +41,6 @@ const Home = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(true)
   const [hasMoreItems, setHasMoreItems] = useState(true)
   const [prevCategory, setPrevCategory] = useState(stateCategory)
-  const [isLoading, setIsLoading] = useState(false)
 
   const USER_IQ = user?.IQ_score ?? null
   const notLoggedIn = !isAuthenticated
@@ -50,13 +49,13 @@ const Home = () => {
     if (loginCheckStatus === 'pending' || !hasMoreItems) return
 
     setLoad(true)
-    setIsLoading(true)
+
     try {
       const response =
         (category === 'all' || !category) && !notLoggedIn
-          ? await axios.get(`/api/recommendation?page=${page}&pageSize=9`)
+          ? await axios.get(`/api/recommendation?page=${page}&pageSize=18`)
           : await axios.get(
-              `/api/articles?page=${page}&pageSize=9&category=${
+              `/api/articles?page=${page}&pageSize=18&category=${
                 notLoggedIn && (category === 'all' || !category)
                   ? 'top'
                   : category
@@ -83,7 +82,6 @@ const Home = () => {
       })
     } finally {
       setLoad(false)
-      setIsLoading(false)
     }
   }, [
     page,
@@ -96,25 +94,20 @@ const Home = () => {
     toast,
   ])
 
-  const handleScroll = useCallback(() => {
-    if (notLoggedIn || !hasMoreItems || isLoading) return
-
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-    const scrollHeight = document.documentElement.scrollHeight
-    const clientHeight = document.documentElement.clientHeight
-
-    const scrollThreshold = 500 // pixels from bottom to trigger load
-    const bottomReached =
-      scrollHeight - (scrollTop + clientHeight) <= scrollThreshold
-
-    if (bottomReached) {
+  const handleScroll = useCallback(async () => {
+    if (
+      !notLoggedIn &&
+      window.innerHeight + document.documentElement.scrollTop + 1000 >
+        document.documentElement.scrollHeight &&
+      hasMoreItems
+    ) {
       setLoad(true)
-      fetchData()
+      setPage(prevPage => prevPage + 1)
     }
-  }, [hasMoreItems, notLoggedIn, isLoading, fetchData])
+  }, [hasMoreItems, notLoggedIn])
 
   const debouncedHandleScroll = useMemo(
-    () => debounce(handleScroll, 200),
+    () => debounce(handleScroll, 300),
     [handleScroll],
   )
 

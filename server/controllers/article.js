@@ -573,8 +573,8 @@ const updateArticle = asyncHandler(async (req, res) => {
       }
     })
 
-    // Update quiz
     if (updatedData.quiz && updatedData.quiz.length > 0) {
+      console.log(updatedData.quiz)
       const quizData = updatedData.quiz[0] // Get the first (and only) quiz object
       let quiz
 
@@ -590,29 +590,16 @@ const updateArticle = asyncHandler(async (req, res) => {
           },
           { new: true, session },
         )
-      } else {
-        // Create new quiz
-        quiz = new Quiz(quizData)
-        await quiz.save({ session })
       }
-
-      article.quiz = [quiz._id]
-    } else if (updatedData.quiz && updatedData.quiz.length === 0) {
-      // Remove quiz if empty array is sent
-      if (article.quiz && article.quiz.length > 0) {
-        await Quiz.findByIdAndDelete(article.quiz[0], { session })
-      }
-      article.quiz = []
     }
-
-    // Update user quiz status
-    if (updatedData.userQuizStatus) {
-      article.userQuizStatus = updatedData.userQuizStatus.map(status => ({
-        userId: status.userId._id || status.userId,
-        status: status.status,
-      }))
-    }
-
+    // update the article\
+    article.title = updatedData.title
+    article.author = updatedData.author
+    article.totalQuizAttempts = updatedData.totalQuizAttempts
+    article.mainText = updatedData.mainText
+    article.userQuizStatus = updatedData.userQuizStatus
+    article.relatedArticles = updatedData.relatedArticles
+    article.avgReadTime = updatedData.avgReadTime
     // Save the updated article
     await article.save({ session })
 
@@ -763,7 +750,7 @@ const getAdminArticleDetails = asyncHandler(async (req, res) => {
 
   const enrichedArticle = {
     ...article,
-    totalQuizAttempts: article.quizAttemptCnt,
+    quizAttemptCnt: article.quizAttemptCnt,
     totalRelatedArticles: article.relatedArticles.length,
   }
 

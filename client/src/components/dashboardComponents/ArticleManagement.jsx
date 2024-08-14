@@ -178,14 +178,13 @@ const ArticleManagement = ({ isOpen, onClose }) => {
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        size="xl"
+        size="2xl"
         scrollBehavior="inside"
       >
         <ModalOverlay />
         <ModalContent
           bg="#1a1527"
           backgroundImage="linear-gradient(135deg, #2d2a47 0%, #0e0c16 100%)"
-          maxW={{ base: '100vw', md: '35vw' }}
           p={8}
           borderRadius="lg"
           boxShadow="0 10px 30px rgba(0, 0, 0, 0.3)"
@@ -360,15 +359,13 @@ const ArticleManagement = ({ isOpen, onClose }) => {
                 <FormControl>
                   <FormLabel>Total Quiz Attempts</FormLabel>
                   <Input
-                    value={selectedArticle.totalQuizAttempts || 0}
-                    isReadOnly
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Total Related Articles</FormLabel>
-                  <Input
-                    value={selectedArticle.totalRelatedArticles || 0}
-                    isReadOnly
+                    value={selectedArticle.quizAttemptCnt}
+                    onChange={e =>
+                      setSelectedArticle({
+                        ...selectedArticle,
+                        quizAttemptCnt: e.target.value,
+                      })
+                    }
                   />
                 </FormControl>
 
@@ -540,8 +537,6 @@ const ArticleManagement = ({ isOpen, onClose }) => {
                     <Text>No quiz available for this article.</Text>
                   )}
                 </Box>
-
-                {/* ... (User Quiz Status section remains the same) */}
               </VStack>
             )}
           </ModalBody>

@@ -105,7 +105,18 @@ const ArticleHeader = ({
               w={'100%'}
             >
               <AuthorInfo author={author} selectedLanguage={selectedLanguage} />
-              {isLargerThan768 && (
+              <Flex mt={'-2'}>
+                {isLargerThan768 && (
+                  <BookmarkIcon
+                    bookmark={bookmark}
+                    onBookmarkClick={handleBookmarkClick}
+                    playClick={playClick}
+                  />
+                )}
+              </Flex>
+            </Flex>
+            <Flex mt={'-2'}>
+              {!isLargerThan768 && (
                 <BookmarkIcon
                   bookmark={bookmark}
                   onBookmarkClick={handleBookmarkClick}
@@ -113,13 +124,6 @@ const ArticleHeader = ({
                 />
               )}
             </Flex>
-            {!isLargerThan768 && (
-              <BookmarkIcon
-                bookmark={bookmark}
-                onBookmarkClick={handleBookmarkClick}
-                playClick={playClick}
-              />
-            )}
             {!isLargerThan768 && (
               <Flex alignItems={'center'} h={'100%'}>
                 <LanguageToggle

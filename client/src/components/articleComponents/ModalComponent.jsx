@@ -171,7 +171,6 @@ const ModalComponent = ({
                         }
                         onClick={handleClick}
                         isDisabled={showInstruction ? false : !isAnswered}
-                        mt={5}
                         size="lg"
                         width={{ base: '100%', lg: '50%' }}
                         bg={

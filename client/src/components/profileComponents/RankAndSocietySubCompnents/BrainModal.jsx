@@ -21,12 +21,11 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion } from 'framer-motion'
 import { useSwipeable } from 'react-swipeable'
-
+import Brains from '../../../assets/Brains'
 // Lazy load components and data
 const NameLightning = React.lazy(() =>
   import('../../miscellaneous/NameLightning'),
 )
-const Brains = React.lazy(() => import('../../../assets/Brains'))
 
 const BrainModal = ({
   isOpen,
@@ -57,7 +56,7 @@ const BrainModal = ({
     return () => {
       clearInterval(intervalId)
     }
-  }, [isOpen, currentUserSociety])
+  }, [isOpen, currentUserSociety, Brains])
 
   useEffect(() => {
     Brains.forEach(brain => {
@@ -80,11 +79,13 @@ const BrainModal = ({
 
   const currentSocietyIndex = useMemo(
     () =>
+      currentUserSociety &&
+      Brains.length > 0 &&
       Brains.findIndex(
         brain =>
           brain.society.toLowerCase() === currentUserSociety.toLowerCase(),
       ),
-    [currentUserSociety],
+    [currentUserSociety, Brains],
   )
 
   return (
