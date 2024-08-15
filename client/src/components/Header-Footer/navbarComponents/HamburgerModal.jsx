@@ -55,7 +55,7 @@ const HamburgerModal = ({
   setIsDrawerOpen,
   onOpenWiseWeb,
 }) => {
-  const { user } = useSelector(state => state.auth)
+  const { user, isAdmin, isAuthenticated } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
 
   const { notification, openChat } = ChatState()
@@ -85,43 +85,54 @@ const HamburgerModal = ({
   const handleUserSearchClick = useCallback(() => {
     onOpenUserSearch()
   }, [onOpenUserSearch])
-
+  const showDashboard = isAdmin && isAuthenticated && user
   const memoizedNavItems = useMemo(() => {
-    return navItems.map((item, index) => (
-      <ListItem
-        className={`nav-item `}
-        key={index}
-        onClick={onClose}
-        display={'flex'}
-        justifyContent={'center'}
-        alignItems={'center'}
-        gap={'0.25rem'}
-      >
-        <Tooltip
-          label="You need to sign in to access this page"
-          isDisabled={!(notLogined && item.label === 'Leaderboard')}
-          placement="bottom"
-          hasArrow
+    return navItems.map((item, index) => {
+      if (item.label === 'Dashboard' && !showDashboard) return null
+      return (
+        <ListItem
+          className={`nav-item `}
+          key={index}
+          onClick={onClose}
+          display={'flex'}
+          justifyContent={'center'}
+          alignItems={'center'}
+          gap={'0.25rem'}
         >
-          <NavLink
-            to={item.to}
-            className={`nav-link ${
-              notLogined && item.label === 'Leaderboard' ? 'locked' : ''
-            }`}
-            onClick={e =>
-              notLogined && item.label === 'Leaderboard'
-                ? e.preventDefault()
-                : null
-            }
-            ref={ref => (navLinkRefs.current[index] = ref)}
+          <Tooltip
+            label="You need to sign in to access this page"
+            isDisabled={!(notLogined && item.label === 'Leaderboard')}
+            placement="bottom"
+            hasArrow
           >
-            {item.label}
-          </NavLink>
-        </Tooltip>
-        {notLogined && item.label === 'Leaderboard' && <LockIcon />}
-      </ListItem>
-    ))
-  }, [navItems, notLogined, onClose, navLinkRefs])
+            <NavLink
+              to={item.to}
+              className={`nav-link ${
+                notLogined && item.label === 'Leaderboard' ? 'locked' : ''
+              }`}
+              onClick={e =>
+                notLogined && item.label === 'Leaderboard'
+                  ? e.preventDefault()
+                  : null
+              }
+              ref={ref => (navLinkRefs.current[index] = ref)}
+            >
+              {item.label}
+            </NavLink>
+          </Tooltip>
+          {notLogined && item.label === 'Leaderboard' && <LockIcon />}
+        </ListItem>
+      )
+    })
+  }, [
+    navItems,
+    notLogined,
+    onClose,
+    navLinkRefs,
+    isAdmin,
+    isAuthenticated,
+    user,
+  ])
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="full">
