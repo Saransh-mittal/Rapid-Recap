@@ -4,7 +4,6 @@ const articleSchema = new mongoose.Schema(
   {
     url: {
       type: String,
-      required: true,
     },
     dateTime: {
       type: String,
@@ -95,6 +94,8 @@ articleSchema.index(
     hindiTitle: 'text',
     mainText: 'text',
     hindiMainText: 'text',
+    author: 'text',
+    category: 'text',
   },
   {
     name: 'ArticleTextIndex',

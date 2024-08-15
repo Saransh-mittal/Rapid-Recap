@@ -10,6 +10,8 @@ const {
   updateArticle,
   adminSearchArticles,
   getAdminArticleDetails,
+  addAdminArticleDetails,
+  deleteAdminArticleDetails,
 } = require('../controllers/article')
 const router = express.Router()
 
@@ -47,6 +49,13 @@ router.get(
   Authenticate,
   adminMiddleware,
   getAdminArticleDetails,
+)
+router.post('/articles', Authenticate, adminMiddleware, addAdminArticleDetails)
+router.delete(
+  '/articles/:id',
+  Authenticate,
+  adminMiddleware,
+  deleteAdminArticleDetails,
 )
 
 module.exports = router

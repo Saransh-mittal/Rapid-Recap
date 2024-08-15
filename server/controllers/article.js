@@ -574,7 +574,6 @@ const updateArticle = asyncHandler(async (req, res) => {
     })
 
     if (updatedData.quiz && updatedData.quiz.length > 0) {
-      console.log(updatedData.quiz)
       const quizData = updatedData.quiz[0] // Get the first (and only) quiz object
       let quiz
 
@@ -626,55 +625,12 @@ const updateArticle = asyncHandler(async (req, res) => {
   }
 })
 
-// @desc    Search  article
-// @route   GET /api/articles/search?query={query}
-// @access  Protected
-const searchArticles = asyncHandler(async (req, res) => {
-  const { query } = req.query
-
-  if (!query) {
-    return res.status(400).json({ message: 'Search query is required' })
-  }
-
-  // Load TF-IDF model
-  const tfidfModel = await loadTfidfModel()
-  const tfidfVectorizer = new TfidfVectorizer()
-  tfidfVectorizer.setVocabulary(tfidfModel.vocabulary)
-
-  // Transform query
-  const queryVector = tfidfVectorizer.transform([query])
-
-  // Get all articles
-  const articles = await Article.find(
-    {},
-    'title mainText category author dateTime',
-  )
-
-  // Calculate similarity
-  const similarities = articles.map(article => {
-    const articleVector = tfidfVectorizer.transform([
-      `${article.title} ${article.mainText}`,
-    ])
-    return {
-      article,
-      similarity: 1 - cosineDistances(queryVector[0], articleVector[0]),
-    }
-  })
-
-  // Sort by similarity
-  similarities.sort((a, b) => b.similarity - a.similarity)
-
-  // Return top 10 results
-  const results = similarities.slice(0, 10).map(item => item.article)
-
-  res.json(results)
-})
-
 // @desc    Admin search articles with filters
 // @route   GET /api/admin/articles/search?query={query}&category={category}&author={author}&startDate={startDate}&endDate={endDate}&hasQuiz={hasQuiz}
 // @access  Admin
 const adminSearchArticles = asyncHandler(async (req, res) => {
-  const { query, category, author, startDate, endDate, hasQuiz } = req.query
+  const { query, category, author, startDate, endDate, hasQuiz, _id } =
+    req.query
 
   // Build filter object
   const filter = {}
@@ -686,11 +642,15 @@ const adminSearchArticles = asyncHandler(async (req, res) => {
       $lte: new Date(endDate).toISOString(),
     }
   }
+  if (_id) filter._id = _id
   if (hasQuiz === 'true') filter.quiz = { $exists: true, $ne: [] }
   if (hasQuiz === 'false') filter.quiz = { $exists: true, $eq: [] }
 
   let articles
-  if (query && query !== '') {
+
+  if (filter._id !== '' && filter._id !== undefined) {
+    articles = await Article.find({ _id: filter._id })
+  } else if (query && query !== '') {
     // Use text search if query is provided
     articles = await Article.find(
       { $text: { $search: query }, ...filter },
@@ -756,6 +716,53 @@ const getAdminArticleDetails = asyncHandler(async (req, res) => {
 
   res.json(enrichedArticle)
 })
+
+// @desc    Add article details for admin
+// @route   POST /api/admin/articles
+// @access  Admin
+const addAdminArticleDetails = asyncHandler(async (req, res) => {
+  const newArticle = req.body
+
+  const article = await Article.create({ ...newArticle })
+
+  if (!article) {
+    res.status(404)
+    throw new Error('Article not found')
+  }
+
+  res.json(article)
+})
+
+// @desc    Delete article details for admin
+// @route   DELETE /api/admin/articles/:id
+// @access  Admin
+const deleteAdminArticleDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params
+
+  // Find the article
+  const article = await Article.findById(id)
+
+  if (!article) {
+    return res.status(404).json({ message: 'Article not found' })
+  }
+
+  // Delete associated quizzes
+  if (article.quiz && article.quiz.length > 0) {
+    await Quiz.deleteMany({ _id: { $in: article.quiz } })
+  }
+
+  // Delete the article
+  await Article.findByIdAndDelete(id)
+
+  // Remove this article from relatedArticles of other articles
+  await Article.updateMany(
+    { relatedArticles: id },
+    { $pull: { relatedArticles: id } },
+  )
+
+  res.status(200).json({ message: 'Article deleted successfully' })
+})
+
 module.exports = {
   allArticles,
   getArticle,
@@ -772,7 +779,8 @@ module.exports = {
   getArticleIds,
   getAvgRQMOnArticle,
   updateArticle,
-  searchArticles,
   adminSearchArticles,
   getAdminArticleDetails,
+  addAdminArticleDetails,
+  deleteAdminArticleDetails,
 }

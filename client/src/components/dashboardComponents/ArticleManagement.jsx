@@ -31,6 +31,17 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
+  NumberInputField,
+  NumberInput,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from '@chakra-ui/react'
 import {
   SearchIcon,
@@ -41,6 +52,7 @@ import {
 } from '@chakra-ui/icons'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { categories } from '../../assets/Categories'
 
 const ArticleManagement = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -51,6 +63,7 @@ const ArticleManagement = ({ isOpen, onClose }) => {
     startDate: '',
     endDate: '',
     hasQuiz: '',
+    _id: '',
   })
   const navigate = useNavigate()
   const [selectedArticle, setSelectedArticle] = useState(null)
@@ -60,6 +73,25 @@ const ArticleManagement = ({ isOpen, onClose }) => {
     onClose: onEditClose,
   } = useDisclosure()
   const toast = useToast()
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false)
+  const cancelRef = React.useRef()
+
+  const [newArticle, setNewArticle] = useState({
+    dateTime: '',
+    author: 'Rapid Recap Team',
+    title: '',
+    mainText: '',
+    imgURL: [],
+    category: 'General',
+    avgReadTime: 0,
+    url: '',
+  })
+
+  const {
+    isOpen: isAddOpen,
+    onOpen: onAddOpen,
+    onClose: onAddClose,
+  } = useDisclosure()
 
   useEffect(() => {
     fetchArticles()
@@ -92,7 +124,7 @@ const ArticleManagement = ({ isOpen, onClose }) => {
     try {
       const response = await axios.get(`/api/admin/articles/${id}`)
       const { data: articleData } = response
-      console.log('Article details:', articleData)
+
       setSelectedArticle(articleData)
       onEditOpen()
     } catch (error) {
@@ -112,7 +144,7 @@ const ArticleManagement = ({ isOpen, onClose }) => {
         `/api/admin/articles/${selectedArticle._id}`,
         updatedData,
       )
-      console.log('Article updated:', response.data)
+
       onEditClose()
       fetchArticles()
       toast({
@@ -173,6 +205,65 @@ const ArticleManagement = ({ isOpen, onClose }) => {
     setSelectedArticle({ ...selectedArticle, quiz: updatedQuiz })
   }
 
+  const handleAddArticle = async () => {
+    try {
+      const response = await axios.post('/api/admin/articles', newArticle)
+      onAddClose()
+      fetchArticles()
+      toast({
+        title: 'Article added successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+      setNewArticle({
+        dateTime: '',
+        author: 'Rapid Recap Team',
+        title: '',
+        mainText: '',
+        imgURL: [],
+        category: 'General',
+        avgReadTime: 0,
+        url: '',
+      })
+    } catch (error) {
+      console.error('Error adding article:', error)
+      toast({
+        title: 'Error adding article',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const handleNewArticleChange = (field, value) => {
+    setNewArticle({ ...newArticle, [field]: value })
+  }
+
+  const handleDeleteArticle = async () => {
+    try {
+      await axios.delete(`/api/admin/articles/${selectedArticle._id}`)
+      setIsDeleteAlertOpen(false)
+      onEditClose()
+      fetchArticles()
+      toast({
+        title: 'Article deleted successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+    } catch (error) {
+      console.error('Error deleting article:', error)
+      toast({
+        title: 'Error deleting article',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
   return (
     <>
       <Modal
@@ -195,7 +286,9 @@ const ArticleManagement = ({ isOpen, onClose }) => {
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align="stretch">
-              <Button colorScheme="blue">Add a new article</Button>
+              <Button colorScheme="blue" onClick={onAddOpen}>
+                Add a new article
+              </Button>
 
               <HStack>
                 <Input
@@ -218,17 +311,23 @@ const ArticleManagement = ({ isOpen, onClose }) => {
                     setFilters({ ...filters, category: e.target.value })
                   }
                 >
-                  {/* Add category options */}
+                  {categories.map(category => (
+                    <option
+                      key={category}
+                      value={category}
+                      style={{ background: '#1a1527' }}
+                    >
+                      {category}
+                    </option>
+                  ))}
                 </Select>
-                <Select
+                <Input
                   placeholder="Author"
                   value={filters.author}
                   onChange={e =>
                     setFilters({ ...filters, author: e.target.value })
                   }
-                >
-                  {/* Add author options */}
-                </Select>
+                />
                 <Input
                   placeholder="Start Date"
                   type="date"
@@ -252,9 +351,20 @@ const ArticleManagement = ({ isOpen, onClose }) => {
                     setFilters({ ...filters, hasQuiz: e.target.value })
                   }
                 >
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
+                  <option value="true" style={{ background: '#1a1527' }}>
+                    Yes
+                  </option>
+                  <option value="false" style={{ background: '#1a1527' }}>
+                    No
+                  </option>
                 </Select>
+                <Input
+                  placeholder="Article ID"
+                  value={filters._id}
+                  onChange={e =>
+                    setFilters({ ...filters, _id: e.target.value })
+                  }
+                />
               </HStack>
 
               {articles &&
@@ -330,6 +440,29 @@ const ArticleManagement = ({ isOpen, onClose }) => {
                       })
                     }
                   />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Category</FormLabel>
+                  <Select
+                    placeholder="Category"
+                    value={selectedArticle.category}
+                    onChange={e =>
+                      setSelectedArticle({
+                        ...selectedArticle,
+                        category: e.target.value,
+                      })
+                    }
+                  >
+                    {categories.map(category => (
+                      <option
+                        key={category}
+                        value={category}
+                        style={{ background: '#1a1527' }}
+                      >
+                        {category}
+                      </option>
+                    ))}
+                  </Select>
                 </FormControl>
                 <FormControl>
                   <FormLabel>Author</FormLabel>
@@ -548,7 +681,164 @@ const ArticleManagement = ({ isOpen, onClose }) => {
             >
               Save Changes
             </Button>
+            <Button
+              colorScheme="red"
+              mr={3}
+              onClick={() => setIsDeleteAlertOpen(true)}
+            >
+              Delete Article
+            </Button>
             <Button variant="ghost" onClick={onEditClose}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <AlertDialog
+        isOpen={isDeleteAlertOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={() => setIsDeleteAlertOpen(false)}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent
+            bg="#1a1527"
+            color="white"
+            borderRadius="lg"
+            boxShadow="0 10px 30px rgba(0, 0, 0, 0.3)"
+          >
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Article
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure you want to delete this article? This action cannot
+              be undone.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button
+                ref={cancelRef}
+                onClick={() => setIsDeleteAlertOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button colorScheme="red" onClick={handleDeleteArticle} ml={3}>
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+      <Modal
+        isOpen={isAddOpen}
+        onClose={onAddClose}
+        size="xl"
+        scrollBehavior="inside"
+      >
+        <ModalOverlay />
+        <ModalContent
+          bg="#1a1527"
+          backgroundImage="linear-gradient(135deg, #2d2a47 0%, #0e0c16 100%)"
+          p={8}
+          borderRadius="lg"
+          boxShadow="0 10px 30px rgba(0, 0, 0, 0.3)"
+          color="white"
+          fontFamily="'Roboto', sans-serif"
+        >
+          <ModalHeader>Add New Article</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={6} align="stretch">
+              <FormControl>
+                <FormLabel>Date and Time</FormLabel>
+                <Input
+                  type="datetime-local"
+                  value={newArticle.dateTime}
+                  onChange={e =>
+                    handleNewArticleChange('dateTime', e.target.value)
+                  }
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Author</FormLabel>
+                <Input
+                  value={newArticle.author}
+                  onChange={e =>
+                    handleNewArticleChange('author', e.target.value)
+                  }
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Title</FormLabel>
+                <Input
+                  value={newArticle.title}
+                  onChange={e =>
+                    handleNewArticleChange('title', e.target.value)
+                  }
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Main Text</FormLabel>
+                <Textarea
+                  value={newArticle.mainText}
+                  onChange={e =>
+                    handleNewArticleChange('mainText', e.target.value)
+                  }
+                  minHeight="200px"
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Image URL</FormLabel>
+                <Input
+                  value={newArticle.imgURL.join(', ')}
+                  onChange={e =>
+                    handleNewArticleChange('imgURL', e.target.value.split(', '))
+                  }
+                  placeholder="Enter comma-separated URLs"
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Category</FormLabel>
+                <Select
+                  value={newArticle.category}
+                  onChange={e =>
+                    handleNewArticleChange('category', e.target.value)
+                  }
+                >
+                  {categories.map(category => (
+                    <option
+                      key={category}
+                      value={category}
+                      style={{ background: '#1a1527' }}
+                    >
+                      {category}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Average Read Time (minutes)</FormLabel>
+                <NumberInput
+                  value={newArticle.avgReadTime}
+                  onChange={value =>
+                    handleNewArticleChange('avgReadTime', Number(value))
+                  }
+                  min={0}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleAddArticle}>
+              Add Article
+            </Button>
+            <Button variant="ghost" onClick={onAddClose}>
               Cancel
             </Button>
           </ModalFooter>

@@ -110,52 +110,43 @@ const { progressBar } = require('../progress.utils')
 
 const createIndexes = async () => {
   try {
-    // Create the text index
-    console.log('Creating text index...')
-    // Get existing indexes
+    // Get all indexes on the collection
     const indexes = await Article.collection.indexes()
-    const textIndexes = indexes.filter(index => index.key._fts === 'text')
 
-    if (textIndexes.length > 0) {
-      console.log('Text index already exists:')
-      console.log(JSON.stringify(textIndexes, null, 2))
-
-      // Check if the existing index covers all the fields we want
-      const desiredFields = ['title', 'hindiTitle', 'mainText', 'hindiMainText']
-      const existingFields = Object.keys(textIndexes[0].weights)
-      const missingFields = desiredFields.filter(
-        field => !existingFields.includes(field),
-      )
-
-      if (missingFields.length === 0) {
-        console.log('Existing text index covers all desired fields.')
-      } else {
-        console.log('Existing text index does not cover all desired fields.')
-        console.log('Missing fields:', missingFields)
-        console.log(
-          'To update the index, you need to drop the existing one and create a new one.',
-        )
-        console.log(
-          'Caution: This operation can be resource-intensive on large collections.',
-        )
+    // Find and drop the existing text index
+    for (let index of indexes) {
+      if (index.key['_fts'] === 'text') {
+        await Article.collection.dropIndex(index.name)
+        console.log(`Dropped existing text index: ${index.name}`)
+        break
       }
-    } else {
-      // Create the text index if it doesn't exist
-      await Article.collection.createIndex(
-        {
-          title: 'text',
-          hindiTitle: 'text',
-          mainText: 'text',
-          hindiMainText: 'text',
-        },
-        {
-          name: 'ArticleTextIndex',
-          default_language: 'english',
-          language_override: 'language',
-        },
-      )
-      console.log('Text index created successfully')
     }
+
+    // Create the new index
+    await Article.collection.createIndex(
+      {
+        title: 'text',
+        hindiTitle: 'text',
+        mainText: 'text',
+        hindiMainText: 'text',
+        author: 'text',
+        category: 'text',
+      },
+      {
+        name: 'ArticleTextIndex',
+        default_language: 'english',
+        language_override: 'language',
+        weights: {
+          title: 10,
+          hindiTitle: 10,
+          mainText: 5,
+          hindiMainText: 5,
+          author: 1,
+          category: 1,
+        },
+      },
+    )
+    console.log('ArticleTextIndex created successfully')
   } catch (error) {
     console.log(error)
   }
