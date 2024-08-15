@@ -182,8 +182,8 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
           zIndex={999}
           transform={!isFixed ? 'translateY(0)' : 'translateY(-68%)'}
           transition="transform 0.3s ease-in-out"
-          p="1rem"
-          pb={isSearchBarVisible ? '2rem' : '0.5rem'}
+          p={'1rem'}
+          pb={isSearchBarVisible ? '2rem' : '1rem'}
           width={{ base: '100%', lg: '15%' }}
           height={{ base: 'auto', lg: '100vh' }}
           position="fixed"
@@ -216,31 +216,41 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
             scrollbarColor: '#0f0d15 transparent',
           }}
         >
-          <Suspense fallback={<Skeleton height="100vh" width="15%" />}>
-            <Categories
-              trackCategoryClick={trackCategoryClick}
-              activeCategoryIndex={activeCategoryIndex}
-              activeCategory={category}
-              handleActiveCategory={handleActiveCategory}
-              categories={categories}
-              categoryRefs={categoryRefs}
-              notLoggedIn={notLoggedIn}
-            />
-          </Suspense>
+          <Flex
+            w={'100%'}
+            overflow={'auto'}
+            sx={{
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              scrollbarWidth: 'none',
+            }}
+          >
+            <Suspense fallback={<Skeleton height="100vh" width="15%" />}>
+              <Categories
+                trackCategoryClick={trackCategoryClick}
+                activeCategoryIndex={activeCategoryIndex}
+                activeCategory={category}
+                handleActiveCategory={handleActiveCategory}
+                categories={categories}
+                categoryRefs={categoryRefs}
+                notLoggedIn={notLoggedIn}
+              />
+            </Suspense>
+          </Flex>
           <Flex
             width={{ base: '100%', lg: '82%' }}
             justifyContent={'center'}
             alignItems={'center'}
-            mt={'2rem'}
             right={0}
+            bottom={2}
+            position={'absolute'}
             mr={{ base: '0', lg: '1%' }}
             px={{ base: 3, lg: 1 }}
             zIndex={999}
             display={{ base: 'flex', lg: 'none' }}
-            position={'absolute'}
-            bottom={2}
             transform={
-              isSearchBarVisible ? 'translateY(0)' : 'translateY(-100%)'
+              isSearchBarVisible ? 'translateY(0)' : 'translateY(100%)'
             }
             transition="opacity 0.2s ease-in-out, transform 0.2s ease-in-out"
             opacity={isSearchBarVisible ? 1 : 0}
@@ -248,6 +258,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
             <ArticleSearchBar />
           </Flex>
         </Flex>
+
         <Flex flexDirection={'column'} position={'relative'}>
           <Flex
             width={{ base: '100%', lg: '82%' }}

@@ -29,6 +29,7 @@ const articleSlice = createSlice({
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload
     },
+
     clearSearch: state => {
       state.searchResults = []
       state.isSearching = false

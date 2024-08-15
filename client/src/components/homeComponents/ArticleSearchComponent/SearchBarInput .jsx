@@ -11,7 +11,7 @@ const SearchBarInput = React.memo(
           borderRadius: '9999px',
           color: 'white',
           fontSize: '16px',
-          padding: '12px 45px 12px 15px',
+          padding: '5px 45px 5px 15px',
           width: '100%',
         }}
         placeholder="Search articles..."

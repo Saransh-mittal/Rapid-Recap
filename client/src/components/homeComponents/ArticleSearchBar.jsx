@@ -38,6 +38,7 @@ const ArticleSearchBar = () => {
   const handleInputChange = useCallback(
     e => {
       const newSearchTerm = e.target.value
+
       dispatch(setSearchTerm(newSearchTerm))
       if (newSearchTerm === '') {
         dispatch(clearSearch())
@@ -46,8 +47,12 @@ const ArticleSearchBar = () => {
     [dispatch],
   )
 
-  const handleFocus = useCallback(() => setBgColor('rgba(26, 21, 39, 1)'), [])
-  const handleBlur = useCallback(() => setBgColor('rgba(26, 21, 39, 0.7)'), [])
+  const handleFocus = useCallback(() => {
+    setBgColor('rgba(26, 21, 39, 1)')
+  }, [])
+  const handleBlur = useCallback(() => {
+    setBgColor('rgba(26, 21, 39, 0.7)')
+  }, [])
 
   const memoizedSearchBarInput = useMemo(
     () => (
@@ -71,7 +76,6 @@ const ArticleSearchBar = () => {
       style={{
         display: 'flex',
         width: '100%',
-
         backgroundColor: bgColor,
         borderRadius: '9999px',
         alignItems: 'center',
