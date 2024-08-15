@@ -14,15 +14,13 @@ const recommendedArticles = `<div style="margin-top:40px;">
             <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 3</p>
           </div>
         </div>
-      </div>`;
+      </div>`
 const MailTemplates = {
   OTP: {
-    from: "rapidrecap2k23@gmail.com",
-    subject: "OTP for verification",
+    from: 'rapidrecap2k23@gmail.com',
+    subject: 'OTP for verification',
     text: `Your OTP for verification`,
-    html: (
-      code
-    ) => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+    html: code => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
   <div style="text-align: center; border-bottom: 1px solid #e0e0e0; padding-bottom: 20px; margin-bottom: 20px;">
     <a href="#" style="font-size: 1.8em; color: #00466a; text-decoration: none; font-weight: bold;">Rapid Recap</a>
   </div>
@@ -41,8 +39,8 @@ const MailTemplates = {
 `,
   },
   NotifySubscribe: {
-    from: "rapidrecap2k23@gmail.com",
-    subject: "📢 Stay Updated with Rapid Recap Notifications! 📰",
+    from: 'rapidrecap2k23@gmail.com',
+    subject: '📢 Stay Updated with Rapid Recap Notifications! 📰',
     html: ({
       name,
     }) => `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f4f4f4; padding:30px;">
@@ -60,7 +58,7 @@ const MailTemplates = {
       <div style="text-align:center; margin:30px 0;">
         <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Subscribe Now</a>
       </div>
-      
+
       <div style="margin-top:40px;">
         <h4 style="color:#333; text-align:center;">Articles Recommended for you:</h4>
         <div style="display:flex; justify-content:space-between; margin-top:20px;">
@@ -103,8 +101,8 @@ const MailTemplates = {
 `,
   },
   AppUpdates: {
-    from: "rapidrecap2k23@gmail.com",
-    subject: "Application Update",
+    from: 'rapidrecap2k23@gmail.com',
+    subject: 'Application Update',
     html: ({ title, mainText, name, img, articlesForMail }) => `
 <html lang="en">
 <head>
@@ -176,19 +174,19 @@ const MailTemplates = {
       ${
         img
           ? `<div style="text-align: center; margin: 20px 0;"><img src="${img}" alt="Image" style="max-width:100%; height:auto; border-radius:10px;"></div>`
-          : ""
+          : ''
       }
       <p style="font-size:1em; color:#666; margin-top:20px;">${mainText.replace(
         /\n\n/g,
-        "<br><br>"
+        '<br><br>',
       )}</p>
       <div style="text-align:center; margin:30px 0;">
         <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">View</a>
       </div>
-      
+
       <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
         <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-        
+
         <table class="article-table" cellpadding="0" cellspacing="0">
           <tr>
             ${
@@ -210,13 +208,13 @@ const MailTemplates = {
                         </td>
                         ${
                           index % 2 === 1 && index < articlesForMail.length - 1
-                            ? "</tr><tr>"
-                            : ""
+                            ? '</tr><tr>'
+                            : ''
                         }
-                    `
+                    `,
                     )
-                    .join("")
-                : ""
+                    .join('')
+                : ''
             }
           </tr>
         </table>
@@ -237,7 +235,7 @@ const MailTemplates = {
   },
 
   StreakJustBroken: {
-    from: "rapidrecap2k23@gmail.com",
+    from: 'rapidrecap2k23@gmail.com',
     subject: "Let's Get Back on Track! 🔄",
     html: ({ name, articlesForMail }) => `<html lang="en">
   <head>
@@ -310,10 +308,10 @@ const MailTemplates = {
           <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
         </div>
         <p style="font-size:1em; color:#666; margin-top:20px;">Daily quizzes are a great way to stay sharp and engaged. Log in now and resume your streak by taking today's quiz. Remember, consistency is key to progress!</p>
-        
+
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
           <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-          
+
           <table class="article-table" cellpadding="0" cellspacing="0">
             <tr>
               ${
@@ -336,13 +334,13 @@ const MailTemplates = {
                           ${
                             index % 2 === 1 &&
                             index < articlesForMail.length - 1
-                              ? "</tr><tr>"
-                              : ""
+                              ? '</tr><tr>'
+                              : ''
                           }
-                      `
+                      `,
                       )
-                      .join("")
-                  : ""
+                      .join('')
+                  : ''
               }
             </tr>
           </table>
@@ -373,8 +371,8 @@ const MailTemplates = {
   },
 
   StreakSevenPeriodic: {
-    from: "rapidrecap2k23@gmail.com",
-    subject: "🚀 Restart Your Rapid Recap Quiz Streak Today! 🌟",
+    from: 'rapidrecap2k23@gmail.com',
+    subject: '🚀 Restart Your Rapid Recap Quiz Streak Today! 🌟',
     html: ({ name, streak_days, articlesForMail }) => `<html lang="en">
   <head>
     <meta charset="UTF-8">
@@ -448,10 +446,10 @@ const MailTemplates = {
         <div style="text-align:center; margin:30px 0;">
           <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
         </div>
-        
+
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
           <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-          
+
           <table class="article-table" cellpadding="0" cellspacing="0">
             <tr>
               ${
@@ -474,13 +472,13 @@ const MailTemplates = {
                           ${
                             index % 2 === 1 &&
                             index < articlesForMail.length - 1
-                              ? "</tr><tr>"
-                              : ""
+                              ? '</tr><tr>'
+                              : ''
                           }
-                      `
+                      `,
                       )
-                      .join("")
-                  : ""
+                      .join('')
+                  : ''
               }
             </tr>
           </table>
@@ -511,8 +509,8 @@ const MailTemplates = {
   },
 
   preQuinBoost: {
-    from: "rapidrecap2k23@gmail.com",
-    subject: "Almost There! One More Quiz to Unlock Your Power-Up! 🚀",
+    from: 'rapidrecap2k23@gmail.com',
+    subject: 'Almost There! One More Quiz to Unlock Your Power-Up! 🚀',
     html: ({ name, noOfQuiz, QuinQuizNumber, articlesForMail }) =>
       `<html lang="en">
     <head>
@@ -586,10 +584,10 @@ const MailTemplates = {
           <div style="text-align:center; margin:30px 0;">
             <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Complete Your Next Quiz</a>
           </div>
-          
+
           <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
             <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-            
+
             <table class="article-table" cellpadding="0" cellspacing="0">
               <tr>
                 ${
@@ -612,13 +610,13 @@ const MailTemplates = {
                             ${
                               index % 2 === 1 &&
                               index < articlesForMail.length - 1
-                                ? "</tr><tr>"
-                                : ""
+                                ? '</tr><tr>'
+                                : ''
                             }
-                        `
+                        `,
                         )
-                        .join("")
-                    : ""
+                        .join('')
+                    : ''
                 }
               </tr>
             </table>
@@ -649,8 +647,8 @@ const MailTemplates = {
   },
 
   onQuinBoost: {
-    from: "rapidrecap2k23@gmail.com",
-    subject: "Congrats! Your Quin Boost is Now Active! 🌟",
+    from: 'rapidrecap2k23@gmail.com',
+    subject: 'Congrats! Your Quin Boost is Now Active! 🌟',
     html1: ({
       name,
       noOfQuiz,
@@ -728,10 +726,10 @@ const MailTemplates = {
         <div style="text-align:center; margin:30px 0;">
           <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Take Your ${QuinQuizNumber}th Quiz Now</a>
         </div>
-        
+
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
           <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-          
+
           <table class="article-table" cellpadding="0" cellspacing="0">
             <tr>
               ${
@@ -754,13 +752,13 @@ const MailTemplates = {
                           ${
                             index % 2 === 1 &&
                             index < articlesForMail.length - 1
-                              ? "</tr><tr>"
-                              : ""
+                              ? '</tr><tr>'
+                              : ''
                           }
-                      `
+                      `,
                       )
-                      .join("")
-                  : ""
+                      .join('')
+                  : ''
               }
             </tr>
           </table>
@@ -860,10 +858,10 @@ const MailTemplates = {
       <div style="text-align:center; margin:30px 0;">
         <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Take Your ${QuinQuizNumber}th Quiz Now</a>
       </div>
-      
+
       <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
         <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-        
+
         <table class="article-table" cellpadding="0" cellspacing="0">
           <tr>
             ${
@@ -885,13 +883,13 @@ const MailTemplates = {
                         </td>
                         ${
                           index % 2 === 1 && index < articlesForMail.length - 1
-                            ? "</tr><tr>"
-                            : ""
+                            ? '</tr><tr>'
+                            : ''
                         }
-                    `
+                    `,
                     )
-                    .join("")
-                : ""
+                    .join('')
+                : ''
             }
           </tr>
         </table>
@@ -922,8 +920,8 @@ const MailTemplates = {
   },
 
   postQuinBoost: {
-    from: "rapidrecap2k23@gmail.com",
-    subject: "Well Done! Quin Boost Utilized! 🎉 Keep Going for More Boosts!",
+    from: 'rapidrecap2k23@gmail.com',
+    subject: 'Well Done! Quin Boost Utilized! 🎉 Keep Going for More Boosts!',
     html: ({ name, noOfQuiz, articlesForMail }) =>
       `<html lang="en">
     <head>
@@ -997,10 +995,10 @@ const MailTemplates = {
           <div style="text-align:center; margin:30px 0;">
             <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Continue Learning</a>
           </div>
-          
+
           <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
             <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-            
+
             <table class="article-table" cellpadding="0" cellspacing="0">
               <tr>
                 ${
@@ -1023,13 +1021,13 @@ const MailTemplates = {
                             ${
                               index % 2 === 1 &&
                               index < articlesForMail.length - 1
-                                ? "</tr><tr>"
-                                : ""
+                                ? '</tr><tr>'
+                                : ''
                             }
-                        `
+                        `,
                         )
-                        .join("")
-                    : ""
+                        .join('')
+                    : ''
                 }
               </tr>
             </table>
@@ -1060,7 +1058,7 @@ const MailTemplates = {
   },
 
   noLoginFor2Days: {
-    from: "rapidrecap2k23@gmail.com",
+    from: 'rapidrecap2k23@gmail.com',
     subject: `🌟 We Miss You at Rapid Recap! 📚 Resume Your Quiz Journey Today 🚀`,
     html: ({ name, articlesForMail }) => `<html lang="en">
   <head>
@@ -1135,10 +1133,10 @@ const MailTemplates = {
         <div style="text-align:center; margin:30px 0;">
           <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
         </div>
-        
+
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
           <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-          
+
           <table class="article-table" cellpadding="0" cellspacing="0">
             <tr>
               ${
@@ -1161,13 +1159,13 @@ const MailTemplates = {
                           ${
                             index % 2 === 1 &&
                             index < articlesForMail.length - 1
-                              ? "</tr><tr>"
-                              : ""
+                              ? '</tr><tr>'
+                              : ''
                           }
-                      `
+                      `,
                       )
-                      .join("")
-                  : ""
+                      .join('')
+                  : ''
               }
             </tr>
           </table>
@@ -1198,7 +1196,7 @@ const MailTemplates = {
   },
 
   noLoginForSevenPeriodic: {
-    from: "rapidrecap2k23@gmail.com",
+    from: 'rapidrecap2k23@gmail.com',
     subject: `🌟 We Miss You at Rapid Recap! 📚 Restart Your Learning Journey Today 🚀`,
     html: ({ name, inactive_days, articlesForMail }) => `<html lang="en">
   <head>
@@ -1273,10 +1271,10 @@ const MailTemplates = {
         <div style="text-align:center; margin:30px 0;">
           <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Get Back on Track</a>
         </div>
-        
+
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
           <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-          
+
           <table class="article-table" cellpadding="0" cellspacing="0">
             <tr>
               ${
@@ -1299,13 +1297,13 @@ const MailTemplates = {
                           ${
                             index % 2 === 1 &&
                             index < articlesForMail.length - 1
-                              ? "</tr><tr>"
-                              : ""
+                              ? '</tr><tr>'
+                              : ''
                           }
-                      `
+                      `,
                       )
-                      .join("")
-                  : ""
+                      .join('')
+                  : ''
               }
             </tr>
           </table>
@@ -1336,7 +1334,7 @@ const MailTemplates = {
   },
 
   streakMaintainReminder1: {
-    from: "rapidrecap2k23@gmail.com",
+    from: 'rapidrecap2k23@gmail.com',
     subject: `Keep Your Streak Alive! 🌟`,
     html: ({ name, articlesForMail }) => `<html lang="en">
   <head>
@@ -1409,10 +1407,10 @@ const MailTemplates = {
         <div style="text-align:center; margin:30px 0;">
           <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
         </div>
-        
+
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
           <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-          
+
           <table class="article-table" cellpadding="0" cellspacing="0">
             <tr>
               ${
@@ -1435,13 +1433,13 @@ const MailTemplates = {
                           ${
                             index % 2 === 1 &&
                             index < articlesForMail.length - 1
-                              ? "</tr><tr>"
-                              : ""
+                              ? '</tr><tr>'
+                              : ''
                           }
-                      `
+                      `,
                       )
-                      .join("")
-                  : ""
+                      .join('')
+                  : ''
               }
             </tr>
           </table>
@@ -1473,12 +1471,12 @@ const MailTemplates = {
       return {
         title: `Keep Your Streak Alive! 🌟`,
         body: `Hey ${name}, don't miss today's quiz! Keep your Rapid Recap streak going strong. 📚✨ Tap to log in now and stay on track!`,
-      };
+      }
     },
   },
 
   streakMaintainReminder2: {
-    from: "rapidrecap2k23@gmail.com",
+    from: 'rapidrecap2k23@gmail.com',
     subject: `Last Chance to Maintain Your Streak! ⏰`,
     html: ({ name, articlesForMail }) => `<html lang="en">
   <head>
@@ -1554,7 +1552,7 @@ const MailTemplates = {
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
           <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-          
+
           <table class="article-table" cellpadding="0" cellspacing="0">
             <tr>
               ${
@@ -1577,13 +1575,13 @@ const MailTemplates = {
                           ${
                             index % 2 === 1 &&
                             index < articlesForMail.length - 1
-                              ? "</tr><tr>"
-                              : ""
+                              ? '</tr><tr>'
+                              : ''
                           }
-                      `
+                      `,
                       )
-                      .join("")
-                  : ""
+                      .join('')
+                  : ''
               }
             </tr>
           </table>
@@ -1615,12 +1613,12 @@ const MailTemplates = {
       return {
         title: `Last Chance to Keep Your Streak! ⏰`,
         body: `Hey ${name}, the day is almost over! Don't miss out on today's quiz and keep your Rapid Recap streak alive. 🌟📚 Tap to log in now!`,
-      };
+      }
     },
   },
 
   streakMaintainReminder3: {
-    from: "rapidrecap2k23@gmail.com",
+    from: 'rapidrecap2k23@gmail.com',
     subject: `Final Call to Keep Your Streak Alive! 🚨`,
     html: ({ name, articlesForMail }) => `<html lang="en">
   <head>
@@ -1697,7 +1695,7 @@ const MailTemplates = {
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
           <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
-          
+
           <table class="article-table" cellpadding="0" cellspacing="0">
             <tr>
               ${
@@ -1720,13 +1718,13 @@ const MailTemplates = {
                           ${
                             index % 2 === 1 &&
                             index < articlesForMail.length - 1
-                              ? "</tr><tr>"
-                              : ""
+                              ? '</tr><tr>'
+                              : ''
                           }
-                      `
+                      `,
                       )
-                      .join("")
-                  : ""
+                      .join('')
+                  : ''
               }
             </tr>
           </table>
@@ -1758,9 +1756,134 @@ const MailTemplates = {
       return {
         title: `Final Call to Keep Your Streak Alive! 🚨`,
         body: `Hey ${name}, don't let your hard-earned streak end! Complete today's quiz now. 🌟📚 Tap to log in!`,
-      };
+      }
     },
   },
-};
+  FestivalGreetings: {
+    from: 'rapidrecap2k2023@gmail.com',
+    subject: 'Festival Wishes and Updates',
+    html: ({ title, mainText, name, img, articlesForMail }) => `
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival Greetings</title>
+    <style type="text/css">
+      @media screen and (max-width: 600px) {
+        .article-table {
+          width: 100% !important;
+        }
+        .td-article-card {
+          width: 100% !important;
+          display: block !important;
+        }
+        .article-card {
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+          width: 100% !important;
+          display: block !important;
+          margin-bottom: 20px !important;
+        }
+      }
+      .article-table {
+        width: 100%;
+        table-layout: fixed;
+      }
+      .td-article-card {
+        background-color: transparent !important;
+      }
+      .article-card {
+        height: 265px;
+        width: 220px;
+        margin: 20px;
+        box-sizing: border-box;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        vertical-align: top;
+      }
+      .article-image {
+        width: 100%;
+        max-width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin: 15px auto;
+      }
+      .article-title {
+        font-size: 1em;
+        color: #333;
+        margin-top: 10px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f0f0f0; padding:30px; margin:0;">
+    <div style="max-width:600px; margin:0 auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.1);">
+      <div style="padding:20px 0;">
+        <p style="font-size:1.2em; color:#333;">Dear ${name},</p>
+        <h4 style="color:#ff7f50;">${title}</h4>
+        ${
+          img
+            ? `<div style="text-align: center; margin: 20px 0;"><img src="${img}" alt="Festival Image" style="max-width:100%; height:auto; border-radius:10px;"></div>`
+            : ''
+        }
+        <p style="font-size:1em; color:#666; margin-top:20px;">${mainText.replace(
+          /\n\n/g,
+          '<br><br>',
+        )}</p>
 
-module.exports = MailTemplates;
+        <div style="margin-top:40px; background-color:#FFD700; padding:20px; border-radius:10px;">
+          <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
+
+          <table class="article-table" cellpadding="0" cellspacing="0">
+            <tr>
+              ${
+                articlesForMail.length > 0
+                  ? articlesForMail
+                      .map(
+                        (article, index) => `
+                          <td class="td-article-card">
+                          <a href=${article.link}>
+                          <div class="article-card">
+                            <img src="${
+                              article.articleData.imgURL[0]
+                            }" alt="Article Image" class="article-image">
+                            <p class="article-title">${
+                              article.articleData.title
+                            }</p>
+                            </div>
+                            </a>
+                          </td>
+                          ${
+                            index % 2 === 1 &&
+                            index < articlesForMail.length - 1
+                              ? '</tr><tr>'
+                              : ''
+                          }
+                      `,
+                      )
+                      .join('')
+                  : ''
+              }
+            </tr>
+          </table>
+        </div>
+
+        <p style="font-size:1em; color:#666; margin-top:40px;">Best regards,<br/>The Rapid Recap Team</p>
+      </div>
+      <hr style="border:none; border-top:1px solid #e0e0e0; margin:20px 0;" />
+    <div style="font-size:0.9em; color:#999; line-height:1.4; text-align:center;">
+      <p style="margin:0;">Rapid Recap Inc</p>
+      <p style="margin:0;">Jaipur, India</p>
+    </div>
+    <p style="font-size:0.9em; color:#666; margin-top:20px; text-align:center;"><strong>P.S.:</strong> Don't forget to stay updated with our latest news and articles by subscribing to browser notifications! If you have any questions or need assistance with subscribing to notifications, feel free to reach out to our support team at <a href="mailto:rapidrecap2k2023@gmail.com" style="color:#00466a; text-decoration:none;">rapidrecap2k2023@gmail.com</a>. We're here to help!</p>
+  </div>
+  </body>
+  </html>
+  `,
+  },
+}
+
+module.exports = MailTemplates
