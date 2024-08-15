@@ -1,9 +1,11 @@
+import { Input } from '@chakra-ui/react'
 import React from 'react'
 
 const SearchBarInput = React.memo(
   ({ searchTerm, handleInputChange, handleKeyDown, handleClearSearch }) => (
     <div style={{ position: 'relative', flexGrow: 1 }}>
-      <input
+      <Input
+        padding={{ base: '5px 45px 5px 15px', lg: '12px 45px 12px 15px' }}
         style={{
           fontFamily: 'condensed',
           backgroundColor: 'transparent',
@@ -11,7 +13,7 @@ const SearchBarInput = React.memo(
           borderRadius: '9999px',
           color: 'white',
           fontSize: '16px',
-          padding: '5px 45px 5px 15px',
+
           width: '100%',
         }}
         placeholder="Search articles..."

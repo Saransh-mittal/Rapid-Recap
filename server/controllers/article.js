@@ -563,12 +563,15 @@ const searchArticles = asyncHandler(async (req, res) => {
       { $text: { $search: query }, ...filter },
       { score: { $meta: 'textScore' } },
     )
-      .sort({ dateTime: -1, score: { $meta: 'textScore' } }) // Sort by dateTime desc, then by relevance
+      // .sort({ score: { $meta: 'textScore' }, dateTime: -1 }) // Sort by dateTime desc, then by relevance
+      .sort({ score: { $meta: 'textScore' } }) // Sort by relevance
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
       .select(
         'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt _id',
       )
+
+    articles.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
 
     const totalPages = Math.ceil(totalArticles / limitNumber)
 

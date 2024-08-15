@@ -7,6 +7,7 @@ import {
 } from '../../redux/articleSlice'
 import SearchBarInput from './ArticleSearchComponent/SearchBarInput '
 import SearchBarButton from './ArticleSearchComponent/SearchBarButton'
+import { Flex } from '@chakra-ui/react'
 
 const ArticleSearchBar = () => {
   const [bgColor, setBgColor] = useState('rgba(26, 21, 39, 0.7)')
@@ -72,10 +73,9 @@ const ArticleSearchBar = () => {
   )
 
   return (
-    <div
+    <Flex
+      width={{ base: '100%', lg: '50%' }}
       style={{
-        display: 'flex',
-        width: '100%',
         backgroundColor: bgColor,
         borderRadius: '9999px',
         alignItems: 'center',
@@ -86,7 +86,7 @@ const ArticleSearchBar = () => {
     >
       {memoizedSearchBarInput}
       {memoizedSearchBarButton}
-    </div>
+    </Flex>
   )
 }
 

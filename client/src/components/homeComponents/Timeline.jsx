@@ -281,7 +281,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
           </Flex>
           <Flex
             px={{ base: 3, lg: 1 }}
-            mt={{ base: '2rem', md: '4.5rem', lg: '0' }}
+            mt={{ base: '2rem', md: '4.5rem', lg: '1rem' }}
             ml={'auto'}
             mr={{ base: '0', lg: '1%' }}
             width={{ base: '100%', lg: '82%' }}
