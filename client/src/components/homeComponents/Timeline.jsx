@@ -311,11 +311,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
               {(load || searchLoading) && renderSkeletons}
             </Flex>
           </Flex>
-          {isSearching && searchResults.length === 0 && (
-            <Flex justifyContent="center" mt="4rem">
-              <Box>No results found. Try a different search term.</Box>
-            </Flex>
-          )}
+
           <Flex
             width={{ base: '100%', lg: '82%' }}
             justifyContent={'center'}
@@ -336,14 +332,34 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
               </Flex>
             )}
 
-            {isSearching && searchResults.length % 10 === 0 && (
-              <Flex justifyContent="center" mt="2rem">
-                <Button onClick={handleLoadMore}>Load More</Button>
-              </Flex>
-            )}
+            {isSearching &&
+              searchResults.length % 10 === 0 &&
+              searchResults.length !== 0 && (
+                <Flex justifyContent="center" mt="2rem">
+                  <Button onClick={handleLoadMore}>Load More</Button>
+                </Flex>
+              )}
           </Flex>
         </Flex>
       </Flex>
+      {/* <Flex
+        width={{ base: '100%', lg: '82%' }}
+        // w={'100%'}
+        justifyContent={'center'}
+        alignItems={'center'}
+        right={0}
+        ml={'auto'}
+        px={{ base: 3, lg: 1 }}
+        zIndex={999}
+        gap={'2rem'}
+        mb={'2rem'}
+      >
+        {isSearching && searchResults.length === 0 && (
+          <Flex justifyContent="center">
+            <Box>No results found. Try a different search term.</Box>
+          </Flex>
+        )}
+      </Flex> */}
       {notLoggedIn && (
         <Suspense fallback={<Skeleton height="6rem" width="100%" />}>
           <Flex
