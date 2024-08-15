@@ -10,7 +10,7 @@ const BookmarkIcon = React.memo(({ bookmark, onBookmarkClick, playClick }) => (
       onBookmarkClick()
     }}
     cursor="pointer"
-    h={'100%'}
+    h={'fit-content'}
     mt={3}
   >
     {bookmark ? (

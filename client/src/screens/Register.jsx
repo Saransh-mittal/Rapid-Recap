@@ -175,8 +175,12 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
   return (
     <ChakraModal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={() => {
+        onClose()
+        signinOnOpen()
+      }}
       size={{ base: 'full', md: 'xl' }}
+      scrollBehavior={'inside'}
     >
       <Helmet>
         <title>Register - Rapid Recap</title>

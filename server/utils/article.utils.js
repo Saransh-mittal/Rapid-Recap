@@ -685,36 +685,6 @@ const getTopThreeRecommendedArticles = async userId => {
   }
 }
 
-const loadTfidfModel = async () => {
-  const scriptPath = path.join(
-    __dirname,
-    '..',
-    'scripts',
-    'load_tfidf_model.py',
-  )
-  const modelPath = path.join(
-    __dirname,
-    '..',
-    'model',
-    'tfidf_models',
-    'tfv.pkl',
-  )
-
-  return new Promise((resolve, reject) => {
-    exec(
-      `py ${scriptPath} ${modelPath}`,
-      { maxBuffer: 1024 * 1024 * 10 },
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error: ${error}`)
-          reject(`Error: ${stderr}`)
-        } else {
-          resolve(JSON.parse(stdout))
-        }
-      },
-    )
-  })
-}
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
@@ -726,5 +696,4 @@ module.exports = {
   getTopArticle,
   getSecondTopArticle,
   getTopThreeRecommendedArticles,
-  loadTfidfModel,
 }

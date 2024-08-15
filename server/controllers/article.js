@@ -27,6 +27,7 @@ const {
   abortSession,
   endSession,
 } = require('../db/session')
+const { default: mongoose } = require('mongoose')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general' } = req.query
@@ -552,11 +553,6 @@ const updateArticle = asyncHandler(async (req, res) => {
   const { id } = req.params
   const updatedData = req.body
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.status(400)
-    throw new Error('Invalid article ID')
-  }
-
   // Find the article by ID
   const article = await Article.findById(id)
 
@@ -566,7 +562,8 @@ const updateArticle = asyncHandler(async (req, res) => {
   }
 
   // Start a transaction
-  const session = await startSession()
+  const session = await mongoose.startSession()
+  session.startTransaction()
 
   try {
     // Update main article fields
@@ -576,37 +573,37 @@ const updateArticle = asyncHandler(async (req, res) => {
       }
     })
 
-    // Update quiz
-    if (updatedData.quiz) {
-      article.quiz = []
-      for (let quizData of updatedData.quiz) {
-        let quiz
-        if (mongoose.Types.ObjectId.isValid(quizData._id)) {
-          quiz = await Quiz.findByIdAndUpdate(quizData._id, quizData, {
-            new: true,
-            session,
-          })
-        } else {
-          quiz = new Quiz(quizData)
-          await quiz.save({ session })
-        }
-        article.quiz.push(quiz._id)
+    if (updatedData.quiz && updatedData.quiz.length > 0) {
+      const quizData = updatedData.quiz[0] // Get the first (and only) quiz object
+      let quiz
+
+      if (article.quiz && article.quiz.length > 0) {
+        // Update existing quiz
+        quiz = await Quiz.findByIdAndUpdate(
+          article.quiz[0],
+          {
+            overAllDifficulty: quizData.overAllDifficulty,
+            para1: quizData.para1,
+            para2: quizData.para2,
+            para3: quizData.para3,
+          },
+          { new: true, session },
+        )
       }
     }
-
-    // Update user quiz status
-    if (updatedData.userQuizStatus) {
-      article.userQuizStatus = updatedData.userQuizStatus.map(status => ({
-        userId: status.userId._id || status.userId,
-        status: status.status,
-      }))
-    }
-
+    // update the article\
+    article.title = updatedData.title
+    article.author = updatedData.author
+    article.totalQuizAttempts = updatedData.totalQuizAttempts
+    article.mainText = updatedData.mainText
+    article.userQuizStatus = updatedData.userQuizStatus
+    article.relatedArticles = updatedData.relatedArticles
+    article.avgReadTime = updatedData.avgReadTime
     // Save the updated article
     await article.save({ session })
 
     // Commit the transaction
-    await commitSession()
+    await session.commitTransaction()
 
     // Fetch the updated article with populated fields
     const updatedArticle = await Article.findById(id)
@@ -620,63 +617,20 @@ const updateArticle = asyncHandler(async (req, res) => {
     })
   } catch (error) {
     // If an error occurred, abort the transaction
-    await abortSession(session)
+    await session.abortTransaction()
     throw error
   } finally {
     // End the session
-    endSession()
+    session.endSession()
   }
-})
-
-// @desc    Search  article
-// @route   GET /api/articles/search?query={query}
-// @access  Protected
-const searchArticles = asyncHandler(async (req, res) => {
-  const { query } = req.query
-
-  if (!query) {
-    return res.status(400).json({ message: 'Search query is required' })
-  }
-
-  // Load TF-IDF model
-  const tfidfModel = await loadTfidfModel()
-  const tfidfVectorizer = new TfidfVectorizer()
-  tfidfVectorizer.setVocabulary(tfidfModel.vocabulary)
-
-  // Transform query
-  const queryVector = tfidfVectorizer.transform([query])
-
-  // Get all articles
-  const articles = await Article.find(
-    {},
-    'title mainText category author dateTime',
-  )
-
-  // Calculate similarity
-  const similarities = articles.map(article => {
-    const articleVector = tfidfVectorizer.transform([
-      `${article.title} ${article.mainText}`,
-    ])
-    return {
-      article,
-      similarity: 1 - cosineDistances(queryVector[0], articleVector[0]),
-    }
-  })
-
-  // Sort by similarity
-  similarities.sort((a, b) => b.similarity - a.similarity)
-
-  // Return top 10 results
-  const results = similarities.slice(0, 10).map(item => item.article)
-
-  res.json(results)
 })
 
 // @desc    Admin search articles with filters
 // @route   GET /api/admin/articles/search?query={query}&category={category}&author={author}&startDate={startDate}&endDate={endDate}&hasQuiz={hasQuiz}
 // @access  Admin
 const adminSearchArticles = asyncHandler(async (req, res) => {
-  const { query, category, author, startDate, endDate, hasQuiz } = req.query
+  const { query, category, author, startDate, endDate, hasQuiz, _id } =
+    req.query
 
   // Build filter object
   const filter = {}
@@ -688,44 +642,51 @@ const adminSearchArticles = asyncHandler(async (req, res) => {
       $lte: new Date(endDate).toISOString(),
     }
   }
+  if (_id) filter._id = _id
   if (hasQuiz === 'true') filter.quiz = { $exists: true, $ne: [] }
   if (hasQuiz === 'false') filter.quiz = { $exists: true, $eq: [] }
 
-  // Get filtered articles
-  const articles = await Article.find(filter)
+  let articles
 
-  if (query) {
-    const tfidf = new TfIdf()
-
-    // Add the query as a document
-    tfidf.addDocument(query)
-
-    // Add articles to the TfIdf model
-    articles.forEach(article => {
-      tfidf.addDocument(`${article.title} ${article.mainText}`)
-    })
-
-    // Calculate similarities
-    const similarities = []
-    tfidf.documents.forEach((doc, i) => {
-      if (i > 0) {
-        // Skip the first document which is the query itself
-        const similarity = 1 - cosineDistances(tfidf.documents[0], doc)
-        similarities.push({ article: articles[i - 1], similarity })
-      }
-    })
-
-    // Sort by similarity
-    similarities.sort((a, b) => b.similarity - a.similarity)
-
-    // Return all results, sorted by relevance
-    const results = similarities.map(item => item.article)
-    console.log(results.length)
-    res.json(results)
+  if (filter._id !== '' && filter._id !== undefined) {
+    articles = await Article.find({ _id: filter._id })
+  } else if (query && query !== '') {
+    // Use text search if query is provided
+    articles = await Article.find(
+      { $text: { $search: query }, ...filter },
+      { score: { $meta: 'textScore' } },
+    )
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(50)
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt',
+      )
   } else {
     // If no query provided, return all filtered articles
-    res.json(articles)
+    articles = await Article.find(filter)
+      .limit(50)
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt',
+      )
   }
+
+  // Fetch related articles for the top result
+  let relatedArticles = []
+  if (articles.length > 0) {
+    const topArticle = articles[0]
+    relatedArticles = await Article.find({
+      _id: { $in: topArticle.relatedArticles },
+    })
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt',
+      )
+      .limit(10)
+  }
+
+  res.json({
+    searchResults: articles,
+    relatedArticles: relatedArticles,
+  })
 })
 
 // @desc    Get article details for admin
@@ -734,13 +695,11 @@ const adminSearchArticles = asyncHandler(async (req, res) => {
 const getAdminArticleDetails = asyncHandler(async (req, res) => {
   const { articleId } = req.params
 
-  if (!mongoose.Types.ObjectId.isValid(articleId)) {
-    res.status(400)
-    throw new Error('Invalid article ID')
-  }
-
   const article = await Article.findById(articleId)
-    .populate('quiz', 'question options answer explanation') // Populate quiz details
+    .populate({
+      path: 'quiz',
+      select: 'para1 para2 para3 overAllDifficulty',
+    }) // Populate quiz details
     .populate('userQuizStatus.userId', 'name email') // Populate user details for quiz status
     .lean() // Use lean() for better performance as we don't need Mongoose document methods
 
@@ -751,12 +710,59 @@ const getAdminArticleDetails = asyncHandler(async (req, res) => {
 
   const enrichedArticle = {
     ...article,
-    totalQuizAttempts: article.quizAttemptCnt,
+    quizAttemptCnt: article.quizAttemptCnt,
     totalRelatedArticles: article.relatedArticles.length,
   }
 
   res.json(enrichedArticle)
 })
+
+// @desc    Add article details for admin
+// @route   POST /api/admin/articles
+// @access  Admin
+const addAdminArticleDetails = asyncHandler(async (req, res) => {
+  const newArticle = req.body
+
+  const article = await Article.create({ ...newArticle })
+
+  if (!article) {
+    res.status(404)
+    throw new Error('Article not found')
+  }
+
+  res.json(article)
+})
+
+// @desc    Delete article details for admin
+// @route   DELETE /api/admin/articles/:id
+// @access  Admin
+const deleteAdminArticleDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params
+
+  // Find the article
+  const article = await Article.findById(id)
+
+  if (!article) {
+    return res.status(404).json({ message: 'Article not found' })
+  }
+
+  // Delete associated quizzes
+  if (article.quiz && article.quiz.length > 0) {
+    await Quiz.deleteMany({ _id: { $in: article.quiz } })
+  }
+
+  // Delete the article
+  await Article.findByIdAndDelete(id)
+
+  // Remove this article from relatedArticles of other articles
+  await Article.updateMany(
+    { relatedArticles: id },
+    { $pull: { relatedArticles: id } },
+  )
+
+  res.status(200).json({ message: 'Article deleted successfully' })
+})
+
 module.exports = {
   allArticles,
   getArticle,
@@ -773,7 +779,8 @@ module.exports = {
   getArticleIds,
   getAvgRQMOnArticle,
   updateArticle,
-  searchArticles,
   adminSearchArticles,
   getAdminArticleDetails,
+  addAdminArticleDetails,
+  deleteAdminArticleDetails,
 }

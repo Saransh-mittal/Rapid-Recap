@@ -53,9 +53,9 @@ const Home = () => {
     try {
       const response =
         (category === 'all' || !category) && !notLoggedIn
-          ? await axios.get(`/api/recommendation?page=${page}&pageSize=9`)
+          ? await axios.get(`/api/recommendation?page=${page}&pageSize=18`)
           : await axios.get(
-              `/api/articles?page=${page}&pageSize=9&category=${
+              `/api/articles?page=${page}&pageSize=18&category=${
                 notLoggedIn && (category === 'all' || !category)
                   ? 'top'
                   : category

@@ -20,9 +20,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setCategory, setItemsState } from '../../redux/contentSlice'
 import { setPageRedux } from '../../redux/uiSlice'
 import { useSwipeable } from 'react-swipeable'
+import Card from './Card'
+import rrImage from '/images/rrlogo_HD.webp'
+import { formatDate } from '../../utils/helper.utils'
 
 // Lazy load components
-const TimelineItem = React.lazy(() => import('./TimelineItem'))
 const Categories = React.lazy(() => import('./Categories'))
 const GetStarted = React.lazy(() =>
   import('../Header-Footer/navbarComponents/GetStarted'),
@@ -120,14 +122,13 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   }, [location, category, handleActiveCategory])
 
   const renderSkeletons = useMemo(() => {
-    return Array.from({ length: 9 }).map((_, index) => (
-      <Box key={index} className="timeline-item" mt={'5rem'}>
-        <Box className="timeline-item-content">
-          <Box className="containers">
-            <Skeleton className="cardWrapper" />
-          </Box>
-        </Box>
-      </Box>
+    return Array.from({ length: 27 }).map((_, index) => (
+      <Flex
+        mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
+        key={index}
+      >
+        <Skeleton w="xs" h={{ base: '26rem', md: 'md' }} borderRadius="2xl" />
+      </Flex>
     ))
   }, [])
 
@@ -141,15 +142,13 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   }, [])
 
   return (
-    <Flex
-      className="timeline"
-      flexDirection={flexDirectionOfTimeline}
-      gap="2%"
-      position="relative"
-      overflow="hidden"
-      px={{ base: 3, lg: 1 }}
-    >
-      <Suspense fallback={<Skeleton height="100vh" width="15%" />}>
+    <Flex flexDirection={'column'}>
+      <Flex
+        flexDirection={flexDirectionOfTimeline}
+        gap="2%"
+        position="relative"
+        overflow="hidden"
+      >
         <Flex
           zIndex={999}
           transform={!isFixed ? 'translateY(0)' : 'translateY(-68%)'}
@@ -187,53 +186,62 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
             scrollbarColor: '#0f0d15 transparent',
           }}
         >
-          <Categories
-            trackCategoryClick={trackCategoryClick}
-            activeCategoryIndex={activeCategoryIndex}
-            activeCategory={category}
-            handleActiveCategory={handleActiveCategory}
-            categories={categories}
-            categoryRefs={categoryRefs}
-            notLoggedIn={notLoggedIn}
-          />
+          <Suspense fallback={<Skeleton height="100vh" width="15%" />}>
+            <Categories
+              trackCategoryClick={trackCategoryClick}
+              activeCategoryIndex={activeCategoryIndex}
+              activeCategory={category}
+              handleActiveCategory={handleActiveCategory}
+              categories={categories}
+              categoryRefs={categoryRefs}
+              notLoggedIn={notLoggedIn}
+            />
+          </Suspense>
         </Flex>
-      </Suspense>
-      <Box className="timeline-container" {...(!swipeDisable && swipeHandlers)}>
-        <Flex wrap="wrap" justify="space-between">
-          {data.map((item, id) => (
-            <Suspense
-              fallback={<Skeleton key={id} mt="5rem" className="item" />}
-              key={id}
-            >
+
+        <Flex
+          px={{ base: 3, lg: 1 }}
+          mt={{ base: '2rem', md: '4.5rem', lg: '0' }}
+          ml={'auto'}
+          mr={{ base: '0', lg: '1%' }}
+          width={{ base: '100%', lg: '82%' }}
+          {...(!swipeDisable && swipeHandlers)}
+          justifyContent={'center'}
+          alignItems="center"
+        >
+          <Flex
+            wrap="wrap"
+            justifyContent={{ base: 'center', md: 'space-between' }}
+            alignItems={'center'}
+          >
+            {data.map((item, id) => (
               <Flex
                 mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
-                className="item"
                 key={id}
               >
-                <TimelineItem newsNumber={id} data={item} />
+                {/* <TimelineItem newsNumber={id} data={item} /> */}
+                <Suspense fallback={<Skeleton key={id} mt="5rem" />} key={id}>
+                  <Card
+                    title={item?.title}
+                    image={
+                      Array.isArray(item?.imgURL) && item?.imgURL.length > 0
+                        ? item.imgURL[0]
+                        : rrImage
+                    }
+                    category={item?.category}
+                    date={formatDate(item?.dateTime)}
+                    readTime={item.avgReadTime}
+                    id={item._id}
+                  />
+                </Suspense>
               </Flex>
-            </Suspense>
-          ))}
-          {load && renderSkeletons}
+            ))}
+            {load && renderSkeletons}
+          </Flex>
         </Flex>
-        {notLoggedIn && (
-          <Suspense fallback={<Skeleton height="6rem" width="100%" />}>
-            <Flex
-              marginTop="2rem"
-              height="6rem"
-              width="100%"
-              color="white"
-              justifyContent="center"
-              alignItems="center"
-              borderRadius="8px"
-              padding="1rem"
-              textAlign="center"
-            >
-              <GetStarted innerText="Login To Continue further" />
-            </Flex>
-          </Suspense>
-        )}
-        {!hasMoreItems && (
+      </Flex>
+      {notLoggedIn && (
+        <Suspense fallback={<Skeleton height="6rem" width="100%" />}>
           <Flex
             marginTop="2rem"
             height="6rem"
@@ -243,13 +251,28 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
             alignItems="center"
             borderRadius="8px"
             padding="1rem"
-            paddingTop="4rem"
             textAlign="center"
           >
-            No more news to show
+            <GetStarted innerText="Login To Continue further" />
           </Flex>
-        )}
-      </Box>
+        </Suspense>
+      )}
+      {!hasMoreItems && (
+        <Flex
+          marginTop="2rem"
+          height="6rem"
+          width="100%"
+          color="white"
+          justifyContent="center"
+          alignItems="center"
+          borderRadius="8px"
+          padding="1rem"
+          paddingTop="4rem"
+          textAlign="center"
+        >
+          No more news to show
+        </Flex>
+      )}
     </Flex>
   )
 }

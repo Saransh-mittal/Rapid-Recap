@@ -161,7 +161,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'sm' }}>
       <ModalOverlay />
       <ModalContent
         bg="#1e1a2e"
@@ -179,7 +179,6 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
         </ModalHeader>
         <ModalCloseButton color="white" />
         <ModalBody
-          maxH="60vh"
           overflowY="auto"
           w={'100%'}
           // hide scrollbar
@@ -200,7 +199,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
               <Spinner />
             </Flex>
           ) : (
-            <VStack spacing={2} align="stretch">
+            <VStack spacing={2} align="stretch" h={'sm'}>
               {chats.map(chat => (
                 <Flex
                   key={chat._id}
@@ -242,8 +241,33 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
           )}
         </ModalBody>
         <Divider my={2} />
-        <Box p={4} w={'75%'}>
-          <Text mb={2}>Share on social media:</Text>
+        <ModalFooter>
+          <Button
+            colorScheme="green"
+            mr={3}
+            onClick={() => {
+              playClick()
+              handleShare()
+            }}
+            isDisabled={selectedChats.length === 0}
+          >
+            Send
+          </Button>
+          <Button
+            variant="solid"
+            colorScheme="red"
+            onClick={() => {
+              playClick()
+              onClose()
+            }}
+          >
+            Cancel
+          </Button>
+        </ModalFooter>
+        <Box p={4} w={'75%'} borderTop="1px solid #3a3454">
+          <Text mb={2} textAlign={'center'}>
+            Share on social media:
+          </Text>
           <Flex justifyContent="space-around">
             {socialPlatforms.map(platform => (
               <Button
@@ -268,29 +292,6 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
             </Button>
           </Flex>
         </Box>
-        <ModalFooter borderTop="1px solid #3a3454">
-          <Button
-            colorScheme="green"
-            mr={3}
-            onClick={() => {
-              playClick()
-              handleShare()
-            }}
-            isDisabled={selectedChats.length === 0}
-          >
-            Send
-          </Button>
-          <Button
-            variant="solid"
-            colorScheme="red"
-            onClick={() => {
-              playClick()
-              onClose()
-            }}
-          >
-            Cancel
-          </Button>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   )

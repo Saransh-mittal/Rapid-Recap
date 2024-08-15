@@ -40,7 +40,7 @@ const InstructionModalBody = ({
   return (
     <Box
       color={textColor}
-      p={6}
+      p={4}
       display={'flex'}
       flexDirection={'column'}
       justifyContent={'center'}

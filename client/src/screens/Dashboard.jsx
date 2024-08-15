@@ -477,6 +477,7 @@ const Dashboard = () => {
       <Suspense fallback={<Spinner />}>
         <ArticleManagement
           isOpen={isArticleManagementOpen}
+          onOpen={onArticleManagementOpen}
           onClose={onArticleManagementClose}
         />
       </Suspense>

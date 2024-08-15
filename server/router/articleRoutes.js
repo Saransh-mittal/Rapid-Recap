@@ -15,7 +15,6 @@ const {
   getQuizTitan,
   getArticleIds,
   getAvgRQMOnArticle,
-  searchArticles,
 } = require('../controllers/article')
 const { Authenticate } = require('../middleware/authenticate')
 
@@ -33,6 +32,5 @@ router.route('/extractNews').get(extractNews)
 router.route('/testNewsApi').get(testNewsApi)
 router.route('/getArticleIds').get(getArticleIds)
 router.route('/getAvgRQMOnArticle').get(getAvgRQMOnArticle)
-router.route('/search').get(Authenticate, searchArticles)
 
 module.exports = router
