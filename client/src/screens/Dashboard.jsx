@@ -1,11 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  lazy,
-  Suspense,
-} from 'react'
+import React, { useEffect, useState, useCallback, lazy, Suspense } from 'react'
 import axios from 'axios'
 import {
   Box,
@@ -30,6 +23,10 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 
+const ArticleManagement = lazy(() =>
+  import('../components/dashboardComponents/ArticleManagement'),
+)
+
 const DataTable = lazy(() => import('../components/miscellaneous/DataTable'))
 const NotificationStatus = lazy(() =>
   import('../components/miscellaneous/NotificationStatus'),
@@ -53,7 +50,27 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const isScreenSmallerThen650px = useMediaQuery('(max-width: 650px)')[0]
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const {
+    isOpen: isNotificationStatusOpen,
+    onOpen: onNotificationStatusOpen,
+    onClose: onNotificationStatusClose,
+  } = useDisclosure()
+
+  const {
+    isOpen: isArticleManagementOpen,
+    onOpen: onArticleManagementOpen,
+    onClose: onArticleManagementClose,
+  } = useDisclosure()
   const [isLoadingStatus, setIsLoadingStatus] = useState(true)
+
+  const renderModalButton = useCallback(
+    (label, onClickHandler) => (
+      <Button onClick={onClickHandler} backgroundColor="blue.500" color="white">
+        {label}
+      </Button>
+    ),
+    [],
+  )
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -144,6 +161,10 @@ const Dashboard = () => {
     onOpen()
   }, [onOpen])
 
+  // const handleModalClick = useCallback(() => {
+  //   onModalOpen()
+  // }, [onModalOpen])
+
   const handleTableChange = useCallback(table => {
     setSelectedTables(prevSelectedTables => {
       if (prevSelectedTables.includes(table)) {
@@ -153,6 +174,21 @@ const Dashboard = () => {
       }
     })
   }, [])
+
+  const renderTableButton = useCallback(
+    (label, table) => (
+      <Button
+        onClick={() => handleTableChange(table)}
+        backgroundColor={
+          selectedTables.includes(table) ? 'blue.500' : 'gray.200'
+        }
+        color={selectedTables.includes(table) ? 'white' : 'black'}
+      >
+        {label}
+      </Button>
+    ),
+    [selectedTables, handleTableChange],
+  )
 
   const handleDateChange = useCallback(
     setter => event => {
@@ -227,24 +263,38 @@ const Dashboard = () => {
     return columns
   }, [selectedTables])
 
-  const renderButton = useCallback(
-    (label, table) => (
-      <Button
-        onClick={
-          table === 'notificationStatus'
-            ? handleNotificationStatusClick
-            : () => handleTableChange(table)
-        }
-        backgroundColor={
-          selectedTables.includes(table) ? 'blue.500' : 'gray.200'
-        }
-        color={selectedTables.includes(table) ? 'white' : 'black'}
-      >
-        {label}
-      </Button>
-    ),
-    [selectedTables, handleNotificationStatusClick, handleTableChange],
-  )
+  // const renderButton = useCallback(
+  //   (label, table) => (
+  //     <Button
+  //       onClick={
+  //         table === 'notificationStatus'
+  //           ? handleNotificationStatusClick
+  //           : table === 'articleManagement'
+  //           ? handleModalClick
+  //           : () => handleTableChange(table)
+  //       }
+  //       backgroundColor={
+  //         selectedTables.includes(table) || table === 'articleManagement'
+  //           ? 'blue.500'
+  //           : 'gray.200'
+  //       }
+  //       color={
+  //         selectedTables.includes(table) || table === 'articleManagement'
+  //           ? 'white'
+  //           : 'black'
+  //       }
+  //     >
+  //       {label}
+  //     </Button>
+  //   ),
+  //   [
+  //     selectedTables,
+  //     handleNotificationStatusClick,
+  //     handleTableChange,
+  //     handleModalClick,
+  //     onArticleModalOpen,
+  //   ],
+  // )
 
   const { data: mergedData, totals } = mergeData()
 
@@ -310,17 +360,25 @@ const Dashboard = () => {
           )}
           {isScreenSmallerThen650px ? (
             <VStack spacing={4} align="center" marginTop={4}>
-              {renderButton('Show Quiz Attempts', 'quizAttempts')}
-              {renderButton('Show Last Login Times', 'lastLogin')}
-              {renderButton('Show Time Spent', 'timeSpent')}
-              {renderButton('Show Notification Status', 'notificationStatus')}
+              {renderTableButton('Show Quiz Attempts', 'quizAttempts')}
+              {renderTableButton('Show Last Login Times', 'lastLogin')}
+              {renderTableButton('Show Time Spent', 'timeSpent')}
+              {renderModalButton(
+                'Show Notification Status',
+                onNotificationStatusOpen,
+              )}
+              {renderModalButton('Manage Articles', onArticleManagementOpen)}
             </VStack>
           ) : (
             <HStack spacing={4} align="flex-start" marginTop={4}>
-              {renderButton('Show Quiz Attempts', 'quizAttempts')}
-              {renderButton('Show Last Login Times', 'lastLogin')}
-              {renderButton('Show Time Spent', 'timeSpent')}
-              {renderButton('Show Notification Status', 'notificationStatus')}
+              {renderTableButton('Show Quiz Attempts', 'quizAttempts')}
+              {renderTableButton('Show Last Login Times', 'lastLogin')}
+              {renderTableButton('Show Time Spent', 'timeSpent')}
+              {renderModalButton(
+                'Show Notification Status',
+                onNotificationStatusOpen,
+              )}
+              {renderModalButton('Manage Articles', onArticleManagementOpen)}
             </HStack>
           )}
         </Flex>
@@ -409,10 +467,18 @@ const Dashboard = () => {
       )}
       <Suspense fallback={<Spinner />}>
         <NotificationStatus
-          isOpen={isOpen}
-          onClose={onClose}
+          isOpen={isNotificationStatusOpen}
+          onClose={onNotificationStatusClose}
           data={notificationStatus}
           isLoading={isLoadingStatus}
+        />
+      </Suspense>
+
+      <Suspense fallback={<Spinner />}>
+        <ArticleManagement
+          isOpen={isArticleManagementOpen}
+          onOpen={onArticleManagementOpen}
+          onClose={onArticleManagementClose}
         />
       </Suspense>
     </Box>

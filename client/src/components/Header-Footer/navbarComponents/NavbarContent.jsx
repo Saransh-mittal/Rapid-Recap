@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useCallback, useMemo } from 'react'
 import { Flex, Image, ListItem, Text, UnorderedList } from '@chakra-ui/react'
 import { NavLink } from 'react-router-dom'
 import useSound from '../../../customHooks/useSound'
+import { useSelector } from 'react-redux'
 
 const newBadge = lazy(() => import('/images/newBadge.webp'))
 
@@ -13,6 +14,9 @@ const NavbarContent = ({
   notLogined,
 }) => {
   const { playClick } = useSound()
+  const { isAdmin } = useSelector(state => state.auth)
+
+  // console.log('isAdmin:', isAdmin)
 
   const handleClick = useCallback(() => {
     playClick()
@@ -20,54 +24,57 @@ const NavbarContent = ({
   }, [playClick, setIsHamburgerOpen])
 
   const memoizedNavItems = useMemo(() => {
-    return navItems.map((item, index) => (
-      <ListItem
-        className={`nav-item `}
-        key={index}
-        onClick={handleClick}
-        display={'flex'}
-        justifyContent={'center'}
-        alignItems={'center'}
-        gap={'0.25rem'}
-        position={'relative'}
-      >
-        <NavLink
-          to={item.to}
-          className={`nav-link`}
-          onClick={playClick}
-          ref={ref => (navLinkRefs.current[index] = ref)}
+    return navItems.map((item, index) => {
+      if (item.label === 'Dashboard' && !isAdmin) return null
+      return (
+        <ListItem
+          className={`nav-item `}
+          key={index}
+          onClick={handleClick}
+          display={'flex'}
+          justifyContent={'center'}
+          alignItems={'center'}
+          gap={'0.25rem'}
+          position={'relative'}
         >
-          {item.label}
-          {item.label === 'Season' && (
-            <Suspense fallback={<div>Loading...</div>}>
-              <>
-                <Image
-                  position="absolute"
-                  src={newBadge}
-                  bg={'transparent'}
-                  height={'1.5rem'}
-                  w={'3rem'}
-                  right={'-2.2rem'}
-                  top={'-1.2rem'}
-                />
-                <Text
-                  position="absolute"
-                  right={'-1.9rem'}
-                  top={'-1.05rem'}
-                  fontSize="0.75rem"
-                  fontWeight={'bold'}
-                  color="white"
-                  bg="transparent"
-                  padding="0.1rem 0.3rem"
-                >
-                  New
-                </Text>
-              </>
-            </Suspense>
-          )}
-        </NavLink>
-      </ListItem>
-    ))
+          <NavLink
+            to={item.to}
+            className={`nav-link`}
+            onClick={playClick}
+            ref={ref => (navLinkRefs.current[index] = ref)}
+          >
+            {item.label}
+            {item.label === 'Season' && (
+              <Suspense fallback={<div>Loading...</div>}>
+                <>
+                  <Image
+                    position="absolute"
+                    src={newBadge}
+                    bg={'transparent'}
+                    height={'1.5rem'}
+                    w={'3rem'}
+                    right={'-2.2rem'}
+                    top={'-1.2rem'}
+                  />
+                  <Text
+                    position="absolute"
+                    right={'-1.9rem'}
+                    top={'-1.05rem'}
+                    fontSize="0.75rem"
+                    fontWeight={'bold'}
+                    color="white"
+                    bg="transparent"
+                    padding="0.1rem 0.3rem"
+                  >
+                    New
+                  </Text>
+                </>
+              </Suspense>
+            )}
+          </NavLink>
+        </ListItem>
+      )
+    })
   }, [navItems, playClick, navLinkRefs, handleClick])
 
   return (

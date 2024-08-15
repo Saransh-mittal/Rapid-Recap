@@ -20,7 +20,7 @@ import {
 } from '@chakra-ui/react'
 import { CloseIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
-import { logout } from '../../redux/authSlice'
+import { logout, verifyAdminStatus } from '../../redux/authSlice'
 import {
   fetchAppUpdates,
   fetchDailyStreak,
@@ -100,6 +100,7 @@ const Navbar = () => {
       { to: '/home', label: 'Home' },
       { to: '/contact', label: 'Contact Us' },
       { to: '/leaderboard', label: 'Leaderboard' },
+      { to: '/dashboard', label: 'Dashboard' },
     ],
     [],
   )
@@ -150,6 +151,8 @@ const Navbar = () => {
     if (!friendRequestsLoading) {
       dispatchRedux(fetchUnreadFriendRequestsCount())
     }
+
+    dispatchRedux(verifyAdminStatus())
   }, [dispatchRedux, user])
 
   const handleLogout = useCallback(async () => {

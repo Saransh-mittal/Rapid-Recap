@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { setUser } from './redux/authSlice.js'
 import FixedBackground from './components/miscellaneous/FixedBackground.jsx'
+import AppRoutes from './routes/AppRoutes.jsx'
 
 const Home = lazy(() => import('./screens/Home'))
 const Article = lazy(() => import('./screens/Article.jsx'))
@@ -169,95 +170,11 @@ const App = () => {
         zIndex={1}
         overflowX={'hidden'}
       >
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route
-              path="/"
-              element={isToken() ? <Navigate to="/home" /> : <GetStarted />}
-            />
-            <Route path="/get-started" element={<GetStarted />} />
-            <Route exact path="/contact/feedback" element={<ContactLayout />} />
-            <Route path="/home/:category" element={<Home />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/chats" element={<ChatPage />} />
-            <Route exact path="/article/:id" element={<Article />} />
-            <Route path="/profile/:inGameName" element={<Profile />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route exact path="/contact" element={<ContactLayout />} />
-            <Route exact path="/leaderboard" element={<LeaderBoard />} />
-            <Route
-              path="/dashboard"
-              element={
-                <AdminRoute>
-                  <Dashboard />
-                </AdminRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+        {shouldShowNotification && <NotificationSubscription />}
+        <AppRoutes isToken={isToken()} />
       </Box>
       {shouldShowFooter && <Footer />}
     </>
   )
 }
-
-const AdminRoute = ({ children }) => {
-  const token = localStorage.getItem('token')
-  const role = localStorage.getItem('role')
-  const navigate = useNavigate()
-  const toast = useToast()
-  const { isOpen, onOpen, onClose } = useDisclosure()
-
-  const handleClose = () => {
-    onClose()
-    navigate('/')
-  }
-
-  useEffect(() => {
-    if (!token) {
-      toast({
-        title: 'Unauthorized',
-        description: 'You need to be logged in to access this page.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-    } else if (role !== 'admin') {
-      toast({
-        title: 'Unauthorized',
-        description: 'You are not authorized to access this page.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-      navigate('/')
-    }
-  }, [token, role, navigate, toast])
-
-  if (!token) {
-    return <Signin isOpen={true} onOpen={onOpen} onClose={handleClose} />
-  }
-
-  return children
-}
-
-const ContactLayout = () => {
-  const location = useLocation()
-  const isFeedbackRoute = location.pathname === '/contact/feedback'
-  const navigate = useNavigate()
-
-  return (
-    <>
-      <Contact />
-      <FeedbackModal
-        isOpen={isFeedbackRoute}
-        onClose={() => navigate('/contact')}
-      />
-    </>
-  )
-}
-
 export default App

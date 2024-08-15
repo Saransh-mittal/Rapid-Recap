@@ -51,7 +51,7 @@ webpush.setVapidDetails(
 //require("./utils/deletion.utils/quizGivenByUserDeletion");
 //require("./utils/deletion.utils/removeBotUsers.del");
 //require("./utils/deletion.utils/removeQuizAttemptForNullUser.del");
-//require("./utils/deletion.utils/removeArticle.del");
+// require('./utils/deletion.utils/removeArticle.del')
 // require("./utils/deletion.utils/useLessArticle.del");
 // ---------------------------
 
@@ -72,7 +72,7 @@ webpush.setVapidDetails(
 //require("./utils/update.utils/avg_RQM.update");
 //require("./utils/update.utils/userExperienceLevel.update");
 // require("./utils/update.utils/season.update");
-// require("./utils/update.utils/article.update");
+// require('./utils/update.utils/article.update')
 // require("./utils/update.utils/quizAttemptIndex.update");
 // require("./utils/update.utils/timeSpentIndexes");
 // ---------------------------

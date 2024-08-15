@@ -8,6 +8,9 @@ const axios = require('axios')
 const script_prepare_article_data = require('../scripts/script_prepare_article_data')
 const { averageReadTime, shuffleArray } = require('./miscellaneous.utils')
 const { Recommendation } = require('../model/recommendationSchema')
+const path = require('path')
+const { exec } = require('child_process')
+const fs = require('fs').promises
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
   // Use natural language processing to tokenize sentences
@@ -681,6 +684,7 @@ const getTopThreeRecommendedArticles = async userId => {
     throw new Error('Failed to fetch recommended articles')
   }
 }
+
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,

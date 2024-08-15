@@ -7,19 +7,26 @@ import {
   Input,
   InputGroup,
   InputRightElement,
+  Box,
+  Text,
+  VStack,
+  HStack,
+  FormControl,
+  FormLabel,
+  Spinner,
+  Flex,
 } from '@chakra-ui/react'
 import { useDispatch } from 'react-redux'
-import { setModal } from '../../redux/uiSlice'
 import { setForgotPassword } from '../../redux/authSlice'
 import useSound from '../../customHooks/useSound'
 
-const ResetPassword = ({ email }) => {
+const ResetPassword = ({ email, onClose }) => {
   const toast = useToast()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const { playClick } = useSound()
   const dispatch = useDispatch()
-  const [load, setLoad] = useState(false) //for loading spinner
+  const [load, setLoad] = useState(false)
   const [show, setShow] = useState({
     new_p: false,
     confirm_p: false,
@@ -28,7 +35,15 @@ const ResetPassword = ({ email }) => {
   const handleResetPassword = async () => {
     setLoad(true)
     if (newPassword !== confirmPassword) {
-      alert('Passwords do not match')
+      toast({
+        title: 'Error',
+        description: 'Passwords do not match',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+      setLoad(false)
       return
     }
 
@@ -48,20 +63,17 @@ const ResetPassword = ({ email }) => {
         })
 
         dispatch(setForgotPassword(false))
-        dispatch(setModal(false))
+        onClose()
       }
     } catch (error) {
-      console.log(error)
       toast({
         title: 'Error',
-        description: error.response.data.error,
+        description: error.response?.data?.error || 'Something went wrong',
         status: 'error',
         duration: 5000,
         isClosable: true,
         position: 'top',
       })
-      //alert(error.response.data.error);
-      console.log(error.response.data.error)
     } finally {
       setLoad(false)
     }
@@ -76,97 +88,107 @@ const ResetPassword = ({ email }) => {
     return () => handleResetPasswordThrottled.cancel()
   }, [handleResetPasswordThrottled])
 
+  // Handle pressing Enter key
+  const handleKeyDown = e => {
+    if (e.key === 'Enter') {
+      playClick()
+      handleResetPasswordThrottled()
+    }
+  }
+
   return (
-    <>
-      <div className="h-100 d-flex flex-column justify-content-center align-items-center text-white">
-        <h2>Reset Password</h2>
-        <div className="d-flex flex-column gap-3 mt-3">
-          <div className="d-grid">
-            <div className="row">
-              <div className="col-6 d-flex">
-                <label className="ms-auto me-4 text-white">New Password:</label>
-              </div>
-              <div className="col-6 d-flex">
-                <InputGroup size="md">
-                  <Input
-                    pr="4.5rem"
-                    type={show.new_p ? 'text' : 'password'}
-                    placeholder="Enter password"
-                    minLength={8}
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                  />
-                  <InputRightElement width="4.5rem">
-                    <Button
-                      h="1.75rem"
-                      size="sm"
-                      name="new_p"
-                      onClick={e => {
-                        playClick()
-                        setShow({
-                          ...show,
-                          [e.target.name]: !show[e.target.name],
-                        })
-                      }}
-                    >
-                      {show.new_p ? 'Hide' : 'Show'}
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
-              </div>
-            </div>
-          </div>
-          <div className="d-grid">
-            <div className="row">
-              <div className="col-6 d-flex">
-                <label className="ms-auto me-4 text-white">
-                  Confirm Password:
-                </label>
-              </div>
-              <div className="col-6 d-flex">
-                <InputGroup size="md">
-                  <Input
-                    pr="4.5rem"
-                    type={show.confirm_p ? 'text' : 'password'}
-                    placeholder="Enter password"
-                    minLength={8}
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                  />
-                  <InputRightElement width="4.5rem">
-                    <Button
-                      h="1.75rem"
-                      size="sm"
-                      name="confirm_p"
-                      onClick={e => {
-                        playClick()
-                        setShow({
-                          ...show,
-                          [e.target.name]: !show[e.target.name],
-                        })
-                      }}
-                    >
-                      {show.confirm_p ? 'Hide' : 'Show'}
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
-              </div>
-            </div>
-          </div>
-        </div>
+    <Flex
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      color="white"
+    >
+      <Text fontSize="2xl" fontWeight="bold">
+        Reset Password
+      </Text>
+      <VStack spacing={5} mt={5} w="100%" maxW="md">
+        <FormControl id="newPassword">
+          <HStack justify="space-between">
+            <FormLabel>New Password:</FormLabel>
+          </HStack>
+          <InputGroup size="md">
+            <Input
+              pr="4.5rem"
+              type={show.new_p ? 'text' : 'password'}
+              placeholder="Enter password"
+              minLength={8}
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              onKeyDown={handleKeyDown} // Add this line to handle Enter key
+            />
+            <InputRightElement width="4.5rem">
+              <Button
+                h="1.75rem"
+                size="sm"
+                name="new_p"
+                onClick={e => {
+                  playClick()
+                  setShow({
+                    ...show,
+                    [e.target.name]: !show[e.target.name],
+                  })
+                }}
+              >
+                {show.new_p ? 'Hide' : 'Show'}
+              </Button>
+            </InputRightElement>
+          </InputGroup>
+        </FormControl>
+
+        <FormControl id="confirmPassword">
+          <HStack justify="space-between">
+            <FormLabel>Confirm Password:</FormLabel>
+          </HStack>
+          <InputGroup size="md">
+            <Input
+              pr="4.5rem"
+              type={show.confirm_p ? 'text' : 'password'}
+              placeholder="Enter password"
+              minLength={8}
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              onKeyDown={handleKeyDown} // Add this line to handle Enter key
+            />
+            <InputRightElement width="4.5rem">
+              <Button
+                h="1.75rem"
+                size="sm"
+                name="confirm_p"
+                onClick={e => {
+                  playClick()
+                  setShow({
+                    ...show,
+                    [e.target.name]: !show[e.target.name],
+                  })
+                }}
+              >
+                {show.confirm_p ? 'Hide' : 'Show'}
+              </Button>
+            </InputRightElement>
+          </InputGroup>
+        </FormControl>
+
         <Button
           colorScheme="messenger"
-          className="mt-5 rounded-2"
+          mt={5}
+          w="full"
           onClick={() => {
             playClick()
             handleResetPasswordThrottled()
           }}
           isLoading={load}
+          loadingText="Resetting Password"
+          spinner={<Spinner size="sm" />}
         >
           Reset Password
         </Button>
-      </div>
-    </>
+      </VStack>
+    </Flex>
   )
 }
 
