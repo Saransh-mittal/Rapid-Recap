@@ -23,6 +23,13 @@ import { useSwipeable } from 'react-swipeable'
 import Card from './Card'
 import rrImage from '/images/rrlogo_HD.webp'
 import { formatDate } from '../../utils/helper.utils'
+import ArticleSearchBar from './ArticleSearchBar'
+import Button from '../miscellaneous/ButtonComponent'
+import {
+  clearSearch,
+  searchArticles,
+  setSearchTerm,
+} from '../../redux/articleSlice'
 
 // Lazy load components
 const Categories = React.lazy(() => import('./Categories'))
@@ -34,12 +41,16 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated } = useSelector(state => state.auth)
+  const { searchResults, isSearching, searchLoading, searchTerm } = useSelector(
+    state => state.articles,
+  )
   const dispatchRedux = useDispatch()
   const { category } = useSelector(state => state.content)
 
   const [swipeDisable, setSwipeDisable] = useState(false)
   const [isFixed, setIsFixed] = useState(false)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
+  const [isSearchBarVisible, setIsSearchBarVisible] = useState(true)
 
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
   const flexDirectionOfTimeline = useBreakpointValue({
@@ -50,6 +61,17 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const categoryRefs = useRef([])
 
   const notLoggedIn = !isAuthenticated
+
+  const handleLoadMore = () => {
+    if (isSearching) {
+      const nextPage = Math.floor(searchResults.length / 10) + 1
+      dispatchRedux(
+        searchArticles({ query: searchTerm, page: nextPage, limit: 10 }),
+      )
+    }
+  }
+
+  const displayedData = isSearching ? searchResults : data
 
   const activeCategoryIndex = useMemo(() => {
     return categories?.findIndex(
@@ -63,6 +85,8 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
       setHasMoreItems(true)
       dispatchRedux(setCategory(category.toLowerCase()))
       dispatchRedux(setPageRedux(0))
+      dispatchRedux(clearSearch())
+      dispatchRedux(setSearchTerm(''))
       dispatchRedux(setItemsState([]))
       if (shouldNavigateOrNot) {
         navigate(`/home/${category.toLowerCase()}`)
@@ -93,6 +117,11 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
       if (isSmallerThan992) {
         const notFix = prevScrollPos > currentScrollPos || currentScrollPos < 10
         setIsFixed(!notFix)
+      }
+      if (currentScrollPos > prevScrollPos && currentScrollPos > 100) {
+        setIsSearchBarVisible(false)
+      } else {
+        setIsSearchBarVisible(true)
       }
       setPrevScrollPos(currentScrollPos)
     }
@@ -153,7 +182,8 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
           zIndex={999}
           transform={!isFixed ? 'translateY(0)' : 'translateY(-68%)'}
           transition="transform 0.3s ease-in-out"
-          padding="1rem"
+          p={'1rem'}
+          pb={isSearchBarVisible ? '2rem' : '1rem'}
           width={{ base: '100%', lg: '15%' }}
           height={{ base: 'auto', lg: '100vh' }}
           position="fixed"
@@ -186,60 +216,161 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
             scrollbarColor: '#0f0d15 transparent',
           }}
         >
-          <Suspense fallback={<Skeleton height="100vh" width="15%" />}>
-            <Categories
-              trackCategoryClick={trackCategoryClick}
-              activeCategoryIndex={activeCategoryIndex}
-              activeCategory={category}
-              handleActiveCategory={handleActiveCategory}
-              categories={categories}
-              categoryRefs={categoryRefs}
-              notLoggedIn={notLoggedIn}
-            />
-          </Suspense>
+          <Flex
+            w={'100%'}
+            overflow={'auto'}
+            sx={{
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              scrollbarWidth: 'none',
+            }}
+          >
+            <Suspense fallback={<Skeleton height="100vh" width="15%" />}>
+              <Categories
+                trackCategoryClick={trackCategoryClick}
+                activeCategoryIndex={activeCategoryIndex}
+                activeCategory={category}
+                handleActiveCategory={handleActiveCategory}
+                categories={categories}
+                categoryRefs={categoryRefs}
+                notLoggedIn={notLoggedIn}
+              />
+            </Suspense>
+          </Flex>
+          <Flex
+            width={{ base: '100%', lg: '82%' }}
+            justifyContent={'center'}
+            alignItems={'center'}
+            right={0}
+            bottom={2}
+            position={'absolute'}
+            mr={{ base: '0', lg: '1%' }}
+            px={{ base: 3, lg: 1 }}
+            zIndex={999}
+            display={{ base: 'flex', lg: 'none' }}
+            transform={
+              isSearchBarVisible ? 'translateY(0)' : 'translateY(100%)'
+            }
+            transition="opacity 0.2s ease-in-out, transform 0.2s ease-in-out"
+            opacity={isSearchBarVisible ? 1 : 0}
+          >
+            <ArticleSearchBar />
+          </Flex>
         </Flex>
 
-        <Flex
-          px={{ base: 3, lg: 1 }}
-          mt={{ base: '2rem', md: '4.5rem', lg: '0' }}
-          ml={'auto'}
-          mr={{ base: '0', lg: '1%' }}
-          width={{ base: '100%', lg: '82%' }}
-          {...(!swipeDisable && swipeHandlers)}
-          justifyContent={'center'}
-          alignItems="center"
-        >
+        <Flex flexDirection={'column'} position={'relative'}>
           <Flex
-            wrap="wrap"
-            justifyContent={{ base: 'center', md: 'space-between' }}
+            width={{ base: '100%', lg: '82%' }}
+            justifyContent={'center'}
             alignItems={'center'}
+            position={'fixed'}
+            mt={'2rem'}
+            right={0}
+            mr={{ base: '0', lg: '1%' }}
+            px={{ base: 3, lg: 1 }}
+            zIndex={999}
+            opacity={isSearchBarVisible ? 1 : 0}
+            transform={
+              isSearchBarVisible ? 'translateY(0)' : 'translateY(-100%)'
+            }
+            transition="opacity 0.2s ease-in-out, transform 0.2s ease-in-out"
+            display={{ base: 'none', lg: 'flex' }}
           >
-            {data.map((item, id) => (
-              <Flex
-                mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
-                key={id}
-              >
-                {/* <TimelineItem newsNumber={id} data={item} /> */}
-                <Suspense fallback={<Skeleton key={id} mt="5rem" />} key={id}>
-                  <Card
-                    title={item?.title}
-                    image={
-                      Array.isArray(item?.imgURL) && item?.imgURL.length > 0
-                        ? item.imgURL[0]
-                        : rrImage
-                    }
-                    category={item?.category}
-                    date={formatDate(item?.dateTime)}
-                    readTime={item.avgReadTime}
-                    id={item._id}
-                  />
-                </Suspense>
+            <ArticleSearchBar />
+          </Flex>
+          <Flex
+            px={{ base: 3, lg: 1 }}
+            mt={{ base: '2rem', md: '4.5rem', lg: '1rem' }}
+            ml={'auto'}
+            mr={{ base: '0', lg: '1%' }}
+            width={{ base: '100%', lg: '82%' }}
+            {...(!swipeDisable && swipeHandlers)}
+            justifyContent={'center'}
+            alignItems="center"
+          >
+            <Flex
+              wrap="wrap"
+              // justifyContent={{ base: 'center', md: 'space-between' }}
+              justifyContent={'center'}
+              gap={{ base: '1rem', md: '4rem', lg: '2rem', xl: '1rem' }}
+              alignItems={'center'}
+              mt={'2rem'}
+            >
+              {displayedData.map((item, id) => (
+                <Flex
+                  mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
+                  key={id}
+                >
+                  {/* <TimelineItem newsNumber={id} data={item} /> */}
+                  <Suspense fallback={<Skeleton key={id} mt="5rem" />} key={id}>
+                    <Card
+                      title={item?.title}
+                      image={
+                        Array.isArray(item?.imgURL) && item?.imgURL.length > 0
+                          ? item.imgURL[0]
+                          : rrImage
+                      }
+                      category={item?.category}
+                      date={formatDate(item?.dateTime)}
+                      readTime={item.avgReadTime}
+                      id={item._id}
+                    />
+                  </Suspense>
+                </Flex>
+              ))}
+              {(load || searchLoading) && renderSkeletons}
+            </Flex>
+          </Flex>
+
+          <Flex
+            width={{ base: '100%', lg: '82%' }}
+            justifyContent={'center'}
+            alignItems={'center'}
+            mt={'2rem'}
+            right={0}
+            ml={'auto'}
+            px={{ base: 3, lg: 1 }}
+            zIndex={999}
+            gap={'2rem'}
+            mb={'2rem'}
+          >
+            {isSearching && searchResults.length > 0 && (
+              <Flex justifyContent="center" mt="2rem">
+                <Button onClick={() => dispatchRedux(clearSearch())}>
+                  Clear Search Results
+                </Button>
               </Flex>
-            ))}
-            {load && renderSkeletons}
+            )}
+
+            {isSearching &&
+              searchResults.length % 10 === 0 &&
+              searchResults.length !== 0 && (
+                <Flex justifyContent="center" mt="2rem">
+                  <Button onClick={handleLoadMore}>Load More</Button>
+                </Flex>
+              )}
           </Flex>
         </Flex>
       </Flex>
+      {/* <Flex
+        width={{ base: '100%', lg: '82%' }}
+        // w={'100%'}
+        justifyContent={'center'}
+        alignItems={'center'}
+        right={0}
+        ml={'auto'}
+        px={{ base: 3, lg: 1 }}
+        zIndex={999}
+        gap={'2rem'}
+        mb={'2rem'}
+      >
+        {isSearching && searchResults.length === 0 && (
+          <Flex justifyContent="center">
+            <Box>No results found. Try a different search term.</Box>
+          </Flex>
+        )}
+      </Flex> */}
       {notLoggedIn && (
         <Suspense fallback={<Skeleton height="6rem" width="100%" />}>
           <Flex

@@ -536,6 +536,58 @@ const extractNews = async (req, res) => {
   }
 }
 
+// @desc    Search articles with pagination
+// @route   GET /api/articles/search
+// @access  Protected
+const searchArticles = asyncHandler(async (req, res) => {
+  const { query, page = 1, limit = 10, category } = req.query
+  const pageNumber = parseInt(page)
+  const limitNumber = parseInt(limit)
+
+  if (!query) {
+    return res.status(400).json({ message: 'Search query is required' })
+  }
+
+  const filter = {}
+  if (category) {
+    filter.category = category
+  }
+
+  try {
+    const totalArticles = await Article.countDocuments({
+      $text: { $search: query },
+      ...filter,
+    })
+
+    const articles = await Article.find(
+      { $text: { $search: query }, ...filter },
+      { score: { $meta: 'textScore' } },
+    )
+      // .sort({ score: { $meta: 'textScore' }, dateTime: -1 }) // Sort by dateTime desc, then by relevance
+      .sort({ score: { $meta: 'textScore' } }) // Sort by relevance
+      .skip((pageNumber - 1) * limitNumber)
+      .limit(limitNumber)
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt _id',
+      )
+
+    articles.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+
+    const totalPages = Math.ceil(totalArticles / limitNumber)
+
+    res.json({
+      articles,
+      currentPage: pageNumber,
+      totalPages,
+      totalArticles,
+      hasMore: pageNumber < totalPages,
+    })
+  } catch (error) {
+    console.error('Error in searchArticles:', error)
+    res.status(500).json({ message: 'Server error while searching articles' })
+  }
+})
+
 module.exports = {
   allArticles,
   getArticle,
@@ -551,4 +603,5 @@ module.exports = {
   getQuizTitan,
   getArticleIds,
   getAvgRQMOnArticle,
+  searchArticles,
 }
