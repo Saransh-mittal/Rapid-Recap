@@ -14,7 +14,7 @@ const NavbarContent = ({
   notLogined,
 }) => {
   const { playClick } = useSound()
-  const { isAdmin } = useSelector(state => state.auth)
+  const { isAdmin, isAuthenticated, user } = useSelector(state => state.auth)
 
   // console.log('isAdmin:', isAdmin)
 
@@ -22,10 +22,10 @@ const NavbarContent = ({
     playClick()
     if (setIsHamburgerOpen) setIsHamburgerOpen(false)
   }, [playClick, setIsHamburgerOpen])
-
+  const showDashboard = isAdmin && isAuthenticated && user
   const memoizedNavItems = useMemo(() => {
     return navItems.map((item, index) => {
-      if (item.label === 'Dashboard' && !isAdmin) return null
+      if (item.label === 'Dashboard' && !showDashboard) return null
       return (
         <ListItem
           className={`nav-item `}
@@ -75,7 +75,15 @@ const NavbarContent = ({
         </ListItem>
       )
     })
-  }, [navItems, playClick, navLinkRefs, handleClick])
+  }, [
+    navItems,
+    playClick,
+    navLinkRefs,
+    handleClick,
+    isAdmin,
+    isAuthenticated,
+    user,
+  ])
 
   return (
     <>

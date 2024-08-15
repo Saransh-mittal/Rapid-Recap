@@ -42,6 +42,7 @@ export const authSlice = createSlice({
     },
     logout: state => {
       state.user = null
+      state.isAdmin = false
       state.isAuthenticated = false
     },
     setForgotPassword: (state, action) => {

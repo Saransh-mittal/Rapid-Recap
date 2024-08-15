@@ -170,7 +170,6 @@ const App = () => {
         zIndex={1}
         overflowX={'hidden'}
       >
-        {shouldShowNotification && <NotificationSubscription />}
         <AppRoutes isToken={isToken()} />
       </Box>
       {shouldShowFooter && <Footer />}

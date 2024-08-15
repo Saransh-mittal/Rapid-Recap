@@ -31,7 +31,12 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import useSound from '../customHooks/useSound'
 import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
 import FillEyeVisible from '../assets/svg/FillEyeVisible'
-import { setForgotPassword, setUser, setVerifyEmail } from '../redux/authSlice'
+import {
+  setForgotPassword,
+  setUser,
+  setVerifyEmail,
+  verifyAdminStatus,
+} from '../redux/authSlice'
 import { setModal } from '../redux/uiSlice'
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 import Modal from './Modal'
@@ -121,6 +126,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
       localStorage.setItem('role', response.data.user.role)
       hamburgerOnClose && hamburgerOnClose()
       dispatchRedux(setUser(response.data.user))
+      dispatchRedux(verifyAdminStatus())
       dailyStreakCheckerAndUpdater(dispatchRedux)
       toast({
         title: 'Login Successful',
@@ -167,6 +173,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('role', response.data.user.role)
         dispatchRedux(setUser(response.data.user))
+        dispatchRedux(verifyAdminStatus())
         hamburgerOnClose && hamburgerOnClose()
         dailyStreakCheckerAndUpdater(dispatchRedux)
 
