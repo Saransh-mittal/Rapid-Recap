@@ -12,12 +12,22 @@ const {
   fetchNews,
   processNews,
   extractNewsUtilityFunc,
+  loadTfidfModel,
 } = require('../utils/article.utils')
 const { sendNotification } = require('../services/notificationService')
 const { formatDate } = require('../utils/miscellaneous.utils')
 const Quiz = require('../model/quizSchema')
 const NewsAPI = require('newsapi')
 const asyncHandler = require('express-async-handler')
+const { TfIdf } = require('natural')
+const cosineDistances = require('compute-cosine-distance')
+const {
+  startSession,
+  commitSession,
+  abortSession,
+  endSession,
+} = require('../db/session')
+const { default: mongoose } = require('mongoose')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general' } = req.query
@@ -536,6 +546,275 @@ const extractNews = async (req, res) => {
   }
 }
 
+// @desc    Search articles with pagination
+// @route   GET /api/articles/search
+// @access  Protected
+const searchArticles = asyncHandler(async (req, res) => {
+  const { query, page = 1, limit = 10, category } = req.query
+  const pageNumber = parseInt(page)
+  const limitNumber = parseInt(limit)
+
+  if (!query) {
+    return res.status(400).json({ message: 'Search query is required' })
+  }
+
+  const filter = {}
+  if (category) {
+    filter.category = category
+  }
+
+  try {
+    const totalArticles = await Article.countDocuments({
+      $text: { $search: query },
+      ...filter,
+    })
+
+    const articles = await Article.find(
+      { $text: { $search: query }, ...filter },
+      { score: { $meta: 'textScore' } },
+    )
+      // .sort({ score: { $meta: 'textScore' }, dateTime: -1 }) // Sort by dateTime desc, then by relevance
+      .sort({ score: { $meta: 'textScore' } }) // Sort by relevance
+      .skip((pageNumber - 1) * limitNumber)
+      .limit(limitNumber)
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt _id',
+      )
+
+    articles.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+
+    const totalPages = Math.ceil(totalArticles / limitNumber)
+
+    res.json({
+      articles,
+      currentPage: pageNumber,
+      totalPages,
+      totalArticles,
+      hasMore: pageNumber < totalPages,
+    })
+  } catch (error) {
+    console.error('Error in searchArticles:', error)
+    res.status(500).json({ message: 'Server error while searching articles' })
+  }
+})
+
+// @desc    Update an article
+// @route   PUT /api/admin/articles/:id
+// @access  Admin
+const updateArticle = asyncHandler(async (req, res) => {
+  const { id } = req.params
+  const updatedData = req.body
+
+  // Find the article by ID
+  const article = await Article.findById(id)
+
+  if (!article) {
+    res.status(404)
+    throw new Error('Article not found')
+  }
+
+  // Start a transaction
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    // Update main article fields
+    Object.keys(updatedData).forEach(key => {
+      if (key !== 'quiz' && key !== 'userQuizStatus') {
+        article[key] = updatedData[key]
+      }
+    })
+
+    if (updatedData.quiz && updatedData.quiz.length > 0) {
+      const quizData = updatedData.quiz[0] // Get the first (and only) quiz object
+      let quiz
+
+      if (article.quiz && article.quiz.length > 0) {
+        // Update existing quiz
+        quiz = await Quiz.findByIdAndUpdate(
+          article.quiz[0],
+          {
+            overAllDifficulty: quizData.overAllDifficulty,
+            para1: quizData.para1,
+            para2: quizData.para2,
+            para3: quizData.para3,
+          },
+          { new: true, session },
+        )
+      }
+    }
+    // update the article\
+    article.title = updatedData.title
+    article.author = updatedData.author
+    article.totalQuizAttempts = updatedData.totalQuizAttempts
+    article.mainText = updatedData.mainText
+    article.userQuizStatus = updatedData.userQuizStatus
+    article.relatedArticles = updatedData.relatedArticles
+    article.avgReadTime = updatedData.avgReadTime
+    // Save the updated article
+    await article.save({ session })
+
+    // Commit the transaction
+    await session.commitTransaction()
+
+    // Fetch the updated article with populated fields
+    const updatedArticle = await Article.findById(id)
+      .populate('quiz')
+      .populate('relatedArticles', 'title author category dateTime')
+      .populate('userQuizStatus.userId', 'name email')
+
+    res.status(200).json({
+      message: 'Article updated successfully',
+      article: updatedArticle,
+    })
+  } catch (error) {
+    // If an error occurred, abort the transaction
+    await session.abortTransaction()
+    throw error
+  } finally {
+    // End the session
+    session.endSession()
+  }
+})
+
+// @desc    Admin search articles with filters
+// @route   GET /api/admin/articles/search?query={query}&category={category}&author={author}&startDate={startDate}&endDate={endDate}&hasQuiz={hasQuiz}
+// @access  Admin
+const adminSearchArticles = asyncHandler(async (req, res) => {
+  const { query, category, author, startDate, endDate, hasQuiz, _id } =
+    req.query
+
+  // Build filter object
+  const filter = {}
+  if (category) filter.category = category
+  if (author) filter.author = author
+  if (startDate && endDate) {
+    filter.dateTime = {
+      $gte: new Date(startDate).toISOString(),
+      $lte: new Date(endDate).toISOString(),
+    }
+  }
+  if (_id) filter._id = _id
+  if (hasQuiz === 'true') filter.quiz = { $exists: true, $ne: [] }
+  if (hasQuiz === 'false') filter.quiz = { $exists: true, $eq: [] }
+
+  let articles
+
+  if (filter._id !== '' && filter._id !== undefined) {
+    articles = await Article.find({ _id: filter._id })
+  } else if (query && query !== '') {
+    // Use text search if query is provided
+    articles = await Article.find(
+      { $text: { $search: query }, ...filter },
+      { score: { $meta: 'textScore' } },
+    )
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(50)
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt',
+      )
+  } else {
+    // If no query provided, return all filtered articles
+    articles = await Article.find(filter)
+      .limit(50)
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt',
+      )
+  }
+
+  // Fetch related articles for the top result
+  let relatedArticles = []
+  if (articles.length > 0) {
+    const topArticle = articles[0]
+    relatedArticles = await Article.find({
+      _id: { $in: topArticle.relatedArticles },
+    })
+      .select(
+        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt',
+      )
+      .limit(10)
+  }
+
+  res.json({
+    searchResults: articles,
+    relatedArticles: relatedArticles,
+  })
+})
+
+// @desc    Get article details for admin
+// @route   GET /api/admin/articles/:articleId
+// @access  Admin
+const getAdminArticleDetails = asyncHandler(async (req, res) => {
+  const { articleId } = req.params
+
+  const article = await Article.findById(articleId)
+    .populate({
+      path: 'quiz',
+      select: 'para1 para2 para3 overAllDifficulty',
+    }) // Populate quiz details
+    .populate('userQuizStatus.userId', 'name email') // Populate user details for quiz status
+    .lean() // Use lean() for better performance as we don't need Mongoose document methods
+
+  if (!article) {
+    res.status(404)
+    throw new Error('Article not found')
+  }
+
+  const enrichedArticle = {
+    ...article,
+    quizAttemptCnt: article.quizAttemptCnt,
+    totalRelatedArticles: article.relatedArticles.length,
+  }
+
+  res.json(enrichedArticle)
+})
+
+// @desc    Add article details for admin
+// @route   POST /api/admin/articles
+// @access  Admin
+const addAdminArticleDetails = asyncHandler(async (req, res) => {
+  const newArticle = req.body
+
+  const article = await Article.create({ ...newArticle })
+
+  if (!article) {
+    res.status(404)
+    throw new Error('Article not found')
+  }
+
+  res.json(article)
+})
+
+// @desc    Delete article details for admin
+// @route   DELETE /api/admin/articles/:id
+// @access  Admin
+const deleteAdminArticleDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params
+
+  // Find the article
+  const article = await Article.findById(id)
+
+  if (!article) {
+    return res.status(404).json({ message: 'Article not found' })
+  }
+
+  // Delete associated quizzes
+  if (article.quiz && article.quiz.length > 0) {
+    await Quiz.deleteMany({ _id: { $in: article.quiz } })
+  }
+
+  // Delete the article
+  await Article.findByIdAndDelete(id)
+
+  // Remove this article from relatedArticles of other articles
+  await Article.updateMany(
+    { relatedArticles: id },
+    { $pull: { relatedArticles: id } },
+  )
+
+  res.status(200).json({ message: 'Article deleted successfully' })
+})
+
 module.exports = {
   allArticles,
   getArticle,
@@ -551,4 +830,10 @@ module.exports = {
   getQuizTitan,
   getArticleIds,
   getAvgRQMOnArticle,
+  updateArticle,
+  adminSearchArticles,
+  getAdminArticleDetails,
+  addAdminArticleDetails,
+  deleteAdminArticleDetails,
+  searchArticles,
 }

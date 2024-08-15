@@ -1,5 +1,6 @@
-const Article = require("../../model/articleSchema");
-const { progressBar } = require("../progress.utils");
+const Article = require('../../model/articleSchema')
+
+const { progressBar } = require('../progress.utils')
 
 // const removeDuplicatesAndCreateIndexes = async () => {
 //   try {
@@ -88,21 +89,67 @@ const { progressBar } = require("../progress.utils");
 // // Execute the function to update average read times
 // updateAverageReadTime();
 
-const changeDomesticAndOthersToGeneralCategory = async () => {
+// const changeDomesticAndOthersToGeneralCategory = async () => {
+//   try {
+//     const articles = await Article.find({
+//       category: { $in: ["domestic", "other"] },
+//     });
+
+//     const updateProgress = progressBar(articles.length);
+//     for (const article of articles) {
+//       article.category = "general";
+//       await article.save();
+//       updateProgress();
+//     }
+//   } catch (error) {
+//     console.error("Error:", error);
+//   }
+// };
+
+// changeDomesticAndOthersToGeneralCategory();
+
+const createIndexes = async () => {
   try {
-    const articles = await Article.find({
-      category: { $in: ["domestic", "other"] },
-    });
+    // Get all indexes on the collection
+    const indexes = await Article.collection.indexes()
 
-    const updateProgress = progressBar(articles.length);
-    for (const article of articles) {
-      article.category = "general";
-      await article.save();
-      updateProgress();
+    // Find and drop the existing text index
+    for (let index of indexes) {
+      if (index.key['_fts'] === 'text') {
+        await Article.collection.dropIndex(index.name)
+        console.log(`Dropped existing text index: ${index.name}`)
+        break
+      }
     }
-  } catch (error) {
-    console.error("Error:", error);
-  }
-};
 
-changeDomesticAndOthersToGeneralCategory();
+    // Create the new index
+    await Article.collection.createIndex(
+      {
+        title: 'text',
+        hindiTitle: 'text',
+        mainText: 'text',
+        hindiMainText: 'text',
+        author: 'text',
+        category: 'text',
+      },
+      {
+        name: 'ArticleTextIndex',
+        default_language: 'english',
+        language_override: 'language',
+        weights: {
+          title: 10,
+          hindiTitle: 10,
+          mainText: 5,
+          hindiMainText: 5,
+          author: 1,
+          category: 1,
+        },
+      },
+    )
+    console.log('ArticleTextIndex created successfully')
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+createIndexes()
