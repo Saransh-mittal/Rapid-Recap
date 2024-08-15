@@ -30,6 +30,7 @@ const Home = () => {
   const { items: stateItems, category: stateCategory } = useSelector(
     state => state.content,
   )
+  const { isSearching } = useSelector(state => state.articles)
   const dispatchRedux = useDispatch()
   const navigate = useNavigate()
   const { category } = useParams()
@@ -95,6 +96,7 @@ const Home = () => {
   ])
 
   const handleScroll = useCallback(async () => {
+    if (isSearching) return
     if (
       !notLoggedIn &&
       window.innerHeight + document.documentElement.scrollTop + 1000 >
@@ -104,7 +106,7 @@ const Home = () => {
       setLoad(true)
       setPage(prevPage => prevPage + 1)
     }
-  }, [hasMoreItems, notLoggedIn])
+  }, [hasMoreItems, notLoggedIn, isSearching])
 
   const debouncedHandleScroll = useMemo(
     () => debounce(handleScroll, 300),

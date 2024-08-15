@@ -25,6 +25,11 @@ import rrImage from '/images/rrlogo_HD.webp'
 import { formatDate } from '../../utils/helper.utils'
 import ArticleSearchBar from './ArticleSearchBar'
 import Button from '../miscellaneous/ButtonComponent'
+import {
+  clearSearch,
+  searchArticles,
+  setSearchTerm,
+} from '../../redux/articleSlice'
 
 // Lazy load components
 const Categories = React.lazy(() => import('./Categories'))
@@ -36,7 +41,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated } = useSelector(state => state.auth)
-  const { searchResults, isSearching } = useSelector(state => state.articles)
+  const { searchResults, isSearching, searchLoading, searchTerm } = useSelector(
+    state => state.articles,
+  )
   const dispatchRedux = useDispatch()
   const { category } = useSelector(state => state.content)
 
@@ -78,6 +85,8 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
       setHasMoreItems(true)
       dispatchRedux(setCategory(category.toLowerCase()))
       dispatchRedux(setPageRedux(0))
+      dispatchRedux(clearSearch())
+      dispatchRedux(setSearchTerm(''))
       dispatchRedux(setItemsState([]))
       if (shouldNavigateOrNot) {
         navigate(`/home/${category.toLowerCase()}`)
@@ -174,7 +183,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
           transform={!isFixed ? 'translateY(0)' : 'translateY(-68%)'}
           transition="transform 0.3s ease-in-out"
           p="1rem"
-          pb={isSearchBarVisible ? '2rem' : '1rem'}
+          pb={isSearchBarVisible ? '2rem' : '0.5rem'}
           width={{ base: '100%', lg: '15%' }}
           height={{ base: 'auto', lg: '100vh' }}
           position="fixed"
@@ -271,7 +280,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
           >
             <Flex
               wrap="wrap"
-              justifyContent={{ base: 'center', md: 'space-between' }}
+              // justifyContent={{ base: 'center', md: 'space-between' }}
+              justifyContent={'center'}
+              gap={{ base: '1rem', md: '4rem', lg: '2rem', xl: '1rem' }}
               alignItems={'center'}
               mt={'2rem'}
             >
@@ -297,7 +308,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
                   </Suspense>
                 </Flex>
               ))}
-              {load && renderSkeletons}
+              {(load || searchLoading) && renderSkeletons}
             </Flex>
           </Flex>
           {isSearching && searchResults.length === 0 && (
@@ -305,20 +316,32 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
               <Box>No results found. Try a different search term.</Box>
             </Flex>
           )}
+          <Flex
+            width={{ base: '100%', lg: '82%' }}
+            justifyContent={'center'}
+            alignItems={'center'}
+            mt={'2rem'}
+            right={0}
+            ml={'auto'}
+            px={{ base: 3, lg: 1 }}
+            zIndex={999}
+            gap={'2rem'}
+            mb={'2rem'}
+          >
+            {isSearching && searchResults.length > 0 && (
+              <Flex justifyContent="center" mt="2rem">
+                <Button onClick={() => dispatchRedux(clearSearch())}>
+                  Clear Search Results
+                </Button>
+              </Flex>
+            )}
 
-          {isSearching && searchResults.length > 0 && (
-            <Flex justifyContent="center" mt="2rem">
-              <Button onClick={() => dispatchRedux(clearSearch())}>
-                Clear Search Results
-              </Button>
-            </Flex>
-          )}
-
-          {isSearching && searchResults.length % 10 === 0 && (
-            <Flex justifyContent="center" mt="2rem">
-              <Button onClick={handleLoadMore}>Load More</Button>
-            </Flex>
-          )}
+            {isSearching && searchResults.length % 10 === 0 && (
+              <Flex justifyContent="center" mt="2rem">
+                <Button onClick={handleLoadMore}>Load More</Button>
+              </Flex>
+            )}
+          </Flex>
         </Flex>
       </Flex>
       {notLoggedIn && (

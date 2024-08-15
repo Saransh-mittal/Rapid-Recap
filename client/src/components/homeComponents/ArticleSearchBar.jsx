@@ -4,15 +4,19 @@ import {
   InputGroup,
   InputRightElement,
   Box,
-  Button,
+  Flex,
 } from '@chakra-ui/react'
-import SearchIcon from '../../assets/svg/SearchIcon'
-import { useDispatch } from 'react-redux'
-import { searchArticles, clearSearch } from '../../redux/articleSlice' // We'll create this slice later
+import { SearchIcon, CloseIcon } from '@chakra-ui/icons'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  searchArticles,
+  clearSearch,
+  setSearchTerm,
+} from '../../redux/articleSlice'
 
 const ArticleSearchBar = () => {
   const [bgColor, setBgColor] = useState('rgba(26, 21, 39, 0.7)')
-  const [searchTerm, setSearchTerm] = useState('')
+  const { searchTerm } = useSelector(state => state.articles)
   const dispatch = useDispatch()
 
   const handleSearch = () => {
@@ -22,7 +26,7 @@ const ArticleSearchBar = () => {
   }
 
   const handleClearSearch = () => {
-    setSearchTerm('')
+    dispatch(setSearchTerm(''))
     dispatch(clearSearch())
   }
 
@@ -33,42 +37,58 @@ const ArticleSearchBar = () => {
   }
 
   return (
-    <InputGroup
-      width={{ base: '80%', lg: '50%' }}
+    <Flex
+      width={{ base: '100%', lg: '50%' }}
       bg={bgColor}
       borderRadius="full"
       onFocus={() => setBgColor('rgba(26, 21, 39, 1)')}
       onBlur={() => setBgColor('rgba(26, 21, 39, 0.7)')}
+      align="center"
     >
-      <Input
-        placeholder="Search articles..."
-        bg="whiteAlpha.100"
-        border="none"
+      <InputGroup>
+        <Input
+          fontFamily={'condensed'}
+          placeholder="Search articles..."
+          bg="transparent"
+          border="none"
+          borderRadius="full"
+          color="white"
+          _placeholder={{ color: 'whiteAlpha.500' }}
+          _focus={{
+            boxShadow: 'none',
+          }}
+          transition="all 0.3s ease"
+          fontSize="16px"
+          padding="12px 45px 12px 15px"
+          value={searchTerm}
+          onChange={e => dispatch(setSearchTerm(e.target.value))}
+          onKeyDown={handleKeyDown}
+        />
+        <InputRightElement>
+          {searchTerm && (
+            <Box
+              as="button"
+              onClick={handleClearSearch}
+              mr={2}
+              _hover={{ opacity: 0.8 }}
+            >
+              <CloseIcon color="white" boxSize={3} />
+            </Box>
+          )}
+        </InputRightElement>
+      </InputGroup>
+      <Flex
+        as="button"
+        onClick={handleSearch}
+        bg="whiteAlpha.200"
         borderRadius="full"
-        color="white"
-        _placeholder={{ color: 'whiteAlpha.500' }}
-        _focus={{
-          bg: 'whiteAlpha.200',
-          boxShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
-        }}
-        transition="all 0.3s ease"
-        fontSize="16px"
-        padding="12px 45px 12px 15px"
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
-        onKeyDown={handleKeyDown}
-      />
-      <InputRightElement width="4.5rem">
-        {searchTerm && (
-          <Button h="1.75rem" size="sm" onClick={handleClearSearch} mr={2}>
-            Clear
-          </Button>
-        )}
-        <Box as="button" onClick={handleSearch}>
-          <SearchIcon width="20px" height="20px" />
-        </Box>
-      </InputRightElement>
-    </InputGroup>
+        p={2}
+        ml={2}
+        _hover={{ bg: 'whiteAlpha.300' }}
+      >
+        <SearchIcon color="white" boxSize={5} />
+      </Flex>
+    </Flex>
   )
 }
 

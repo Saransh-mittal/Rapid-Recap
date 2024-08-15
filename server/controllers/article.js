@@ -563,7 +563,7 @@ const searchArticles = asyncHandler(async (req, res) => {
       { $text: { $search: query }, ...filter },
       { score: { $meta: 'textScore' } },
     )
-      .sort({ score: { $meta: 'textScore' } })
+      .sort({ dateTime: -1, score: { $meta: 'textScore' } }) // Sort by dateTime desc, then by relevance
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
       .select(

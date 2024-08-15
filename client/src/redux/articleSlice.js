@@ -22,8 +22,13 @@ const articleSlice = createSlice({
     isSearching: false,
     error: null,
     hasMore: true,
+    searchLoading: false,
+    searchTerm: '',
   },
   reducers: {
+    setSearchTerm: (state, action) => {
+      state.searchTerm = action.payload
+    },
     clearSearch: state => {
       state.searchResults = []
       state.isSearching = false
@@ -33,10 +38,12 @@ const articleSlice = createSlice({
   extraReducers: builder => {
     builder
       .addCase(searchArticles.pending, state => {
+        state.searchLoading = true
         state.isSearching = true
         state.error = null
       })
       .addCase(searchArticles.fulfilled, (state, action) => {
+        state.searchLoading = false
         state.isSearching = true
         if (action.payload.currentPage === 1) {
           state.searchResults = action.payload.articles
@@ -50,12 +57,13 @@ const articleSlice = createSlice({
         state.error = null
       })
       .addCase(searchArticles.rejected, (state, action) => {
+        state.searchLoading = false
         state.isSearching = false
         state.error = action.payload
       })
   },
 })
 
-export const { clearSearch } = articleSlice.actions
+export const { clearSearch, setSearchTerm } = articleSlice.actions
 
 export default articleSlice.reducer
