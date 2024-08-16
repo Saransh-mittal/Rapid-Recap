@@ -12,21 +12,12 @@ const {
   fetchNews,
   processNews,
   extractNewsUtilityFunc,
-  loadTfidfModel,
 } = require('../utils/article.utils')
 const { sendNotification } = require('../services/notificationService')
 const { formatDate } = require('../utils/miscellaneous.utils')
 const Quiz = require('../model/quizSchema')
 const NewsAPI = require('newsapi')
 const asyncHandler = require('express-async-handler')
-const { TfIdf } = require('natural')
-const cosineDistances = require('compute-cosine-distance')
-const {
-  startSession,
-  commitSession,
-  abortSession,
-  endSession,
-} = require('../db/session')
 const { default: mongoose } = require('mongoose')
 
 const allArticles = async (req, res) => {

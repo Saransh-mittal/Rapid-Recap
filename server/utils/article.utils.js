@@ -401,7 +401,7 @@ const processExtractedNews = async (news, category) => {
 }
 
 const extractNewsUtilityFunc = async (country = '') => {
-  const newsapi = new NewsAPI('fb29cd0efb7e4ed292134d083f457869')
+  // const newsapi = new NewsAPI('fb29cd0efb7e4ed292134d083f457869')
   let apiKeys = [
     '9921240e42464f3589886811e71a3977',
     '88905479ff7c4564ae48aef8b23d56d0',
@@ -415,7 +415,7 @@ const extractNewsUtilityFunc = async (country = '') => {
     '819c3bf3fab848a89741017dd5e67091',
   ]
   apiKeys = shuffleArray(apiKeys)
-  const newsAPICategories = ['general']
+  // const newsAPICategories = ['general']
   const newsDataIoCategories = [
     'business',
     'crime',
@@ -440,22 +440,22 @@ const extractNewsUtilityFunc = async (country = '') => {
 
   let result = []
   let notificationCategories = [
-    ...newsAPICategories,
+    // ...newsAPICategories,
     ...newsDataIoCategories,
   ].join(', ')
   let articlesSavedPerCategory = {}
 
   try {
-    await processCategories(
-      newsapi,
-      newsAPICategories,
-      apiKeys,
-      requestsPerKey,
-      keyTracker,
-      result,
-      articlesSavedPerCategory,
-      country,
-    )
+    // await processCategories(
+    //   newsapi,
+    //   newsAPICategories,
+    //   apiKeys,
+    //   requestsPerKey,
+    //   keyTracker,
+    //   result,
+    //   articlesSavedPerCategory,
+    //   country,
+    // )
     await processDataIoCategories(
       newsDataIoCategories,
       apiKeys,

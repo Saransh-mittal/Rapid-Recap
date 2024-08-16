@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useCallback, useMemo, Suspense } from 'react'
 import {
   Box,
@@ -20,7 +21,6 @@ const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
 const QuizExpired = React.lazy(() => import('./QuizExpired'))
 const TakeQuizButton = React.lazy(() => import('./TakeQuizButton'))
 const TotalUserAttempted = React.lazy(() => import('./TotalUserAttempted'))
-const Signin = React.lazy(() => import('../../screens/Signin'))
 
 const Sidebar = ({
   givenQuiz,

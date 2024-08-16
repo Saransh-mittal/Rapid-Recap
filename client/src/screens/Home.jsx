@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // /pages/Home.jsx
 
 import React, {
@@ -7,6 +8,7 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  useRef,
 } from 'react'
 import axios from 'axios'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -16,6 +18,7 @@ import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
 import { setPageRedux } from '../redux/uiSlice'
 import { setCategory, setItemsState } from '../redux/contentSlice'
+import throttle from 'lodash.throttle'
 
 const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
 const UpgradeModal = lazy(() =>
@@ -42,58 +45,81 @@ const Home = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(true)
   const [hasMoreItems, setHasMoreItems] = useState(true)
   const [prevCategory, setPrevCategory] = useState(stateCategory)
+  const currentCategoryRef = useRef(category)
+  const cancelTokenSourceRef = useRef(null)
 
   const USER_IQ = user?.IQ_score ?? null
   const notLoggedIn = !isAuthenticated
 
-  const fetchData = useCallback(async () => {
-    if (loginCheckStatus === 'pending' || !hasMoreItems) return
+  const fetchData = useCallback(
+    async (pageNum, cat) => {
+      if (loginCheckStatus === 'pending' || !hasMoreItems) return
 
-    setLoad(true)
-
-    try {
-      const response =
-        (category === 'all' || !category) && !notLoggedIn
-          ? await axios.get(`/api/recommendation?page=${page}&pageSize=18`)
-          : await axios.get(
-              `/api/articles?page=${page}&pageSize=18&category=${
-                notLoggedIn && (category === 'all' || !category)
-                  ? 'top'
-                  : category
-              }`,
-            )
-
-      const newItems = response.data
-      if (newItems.length === 0) {
-        setHasMoreItems(false)
-      } else {
-        dispatchRedux(setPageRedux(page - 1))
-        dispatchRedux(setItemsState([...items, ...newItems]))
-        setItems(prev => [...prev, ...newItems])
+      if (cancelTokenSourceRef.current) {
+        cancelTokenSourceRef.current.cancel(
+          'Operation canceled due to new request.',
+        )
       }
-    } catch (error) {
-      console.error(error.message)
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch news',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-    } finally {
-      setLoad(false)
-    }
-  }, [
-    page,
-    category,
-    hasMoreItems,
-    loginCheckStatus,
-    notLoggedIn,
-    items,
-    dispatchRedux,
-    toast,
-  ])
+
+      cancelTokenSourceRef.current = axios.CancelToken.source()
+
+      try {
+        const response =
+          (cat === 'all' || !cat) && !notLoggedIn
+            ? await axios.get(
+                `/api/recommendation?page=${pageNum}&pageSize=18`,
+                {
+                  cancelToken: cancelTokenSourceRef.current.token,
+                },
+              )
+            : await axios.get(
+                `/api/articles?page=${pageNum}&pageSize=18&category=${
+                  notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
+                }`,
+                { cancelToken: cancelTokenSourceRef.current.token },
+              )
+
+        if (cat !== currentCategoryRef.current) {
+          return
+        }
+
+        const newItems = response.data
+        if (newItems.length === 0) {
+          setHasMoreItems(false)
+        } else {
+          if (pageNum === 1) {
+            setItems(newItems)
+            dispatchRedux(setItemsState(newItems))
+          } else {
+            let updatedItems
+            setItems(prevItems => {
+              updatedItems = [...prevItems, ...newItems]
+              return updatedItems
+            })
+            dispatchRedux(setItemsState(updatedItems))
+          }
+          dispatchRedux(setPageRedux(pageNum))
+        }
+      } catch (error) {
+        if (axios.isCancel(error)) {
+          console.log('Request canceled', error.message)
+        } else {
+          console.error(error.message)
+          toast({
+            title: 'Error',
+            description: 'Failed to fetch news',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
+        }
+      } finally {
+        setLoad(false)
+      }
+    },
+    [loginCheckStatus, hasMoreItems, notLoggedIn, dispatchRedux, toast],
+  )
 
   const handleScroll = useCallback(async () => {
     if (isSearching) return
@@ -101,26 +127,37 @@ const Home = () => {
       !notLoggedIn &&
       window.innerHeight + document.documentElement.scrollTop + 1000 >
         document.documentElement.scrollHeight &&
-      hasMoreItems
+      hasMoreItems &&
+      !load
     ) {
       setLoad(true)
       setPage(prevPage => prevPage + 1)
     }
-  }, [hasMoreItems, notLoggedIn, isSearching])
+  }, [hasMoreItems, notLoggedIn, isSearching, load])
 
   const debouncedHandleScroll = useMemo(
     () => debounce(handleScroll, 300),
     [handleScroll],
   )
 
+  const throttledHandleScroll = useMemo(
+    () => throttle(handleScroll, 300),
+    [handleScroll],
+  )
+
+  const combinedScrollHandler = useCallback(() => {
+    throttledHandleScroll()
+    debouncedHandleScroll()
+  }, [throttledHandleScroll, debouncedHandleScroll])
+
   useEffect(() => {
     if (!category || category === '') {
       navigate('/home/all')
     }
-    window.addEventListener('scroll', debouncedHandleScroll)
+    window.addEventListener('scroll', combinedScrollHandler)
 
-    return () => window.removeEventListener('scroll', debouncedHandleScroll)
-  }, [category, isAuthenticated, debouncedHandleScroll])
+    return () => window.removeEventListener('scroll', combinedScrollHandler)
+  }, [category, isAuthenticated, combinedScrollHandler])
 
   useEffect(() => {
     if (category !== prevCategory) {
@@ -132,11 +169,13 @@ const Home = () => {
           category !== '' && category ? category.toLocaleLowerCase() : category,
         ),
       )
+      currentCategoryRef.current = category
+      fetchData(1, category)
       dispatchRedux(setPageRedux(0))
       dispatchRedux(setItemsState([]))
       setPrevCategory(category)
     } else if (items.length < page * 9) {
-      fetchData()
+      fetchData(page, category)
     } else {
       setLoad(false)
     }

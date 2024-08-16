@@ -1,4 +1,4 @@
-const VERSION = 'v5' // Increment this version number
+const VERSION = 'v6' // Increment this version number
 const RapidRecapLogo = './images/rrlogo.webp'
 const RapidRecapBadge = './images/rrlogo_badge.png'
 
@@ -36,7 +36,6 @@ self.addEventListener('push', event => {
     data: { url: data.url },
     badge: RapidRecapBadge,
     vibrate: [200, 100, 200],
-    tag: data.tag || 'default',
     renotify: true,
   }
 

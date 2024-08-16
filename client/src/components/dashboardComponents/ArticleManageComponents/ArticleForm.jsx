@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable react/display-name */
 import React, { useCallback, useMemo } from 'react'
 import {
   Modal,
@@ -69,15 +71,19 @@ const ArticleForm = React.memo(
 
     const memoizedCategoryOptions = useMemo(
       () =>
-        categories.map(category => (
-          <option
-            key={category}
-            value={category}
-            style={{ background: '#1a1527' }}
-          >
-            {category}
-          </option>
-        )),
+        categories.map(
+          category =>
+            category !==
+            'all' &&  (
+              <option
+                key={category}
+                value={category}
+                style={{ background: '#1a1527' }}
+              >
+                {category}
+              </option>,
+            ),
+        ),
       [],
     )
 
