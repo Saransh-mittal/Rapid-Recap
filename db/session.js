@@ -1,32 +1,39 @@
 // db/session.js
 
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
-let session;
+let session
 
 const startSession = async () => {
-  session = await mongoose.startSession();
-  session.startTransaction();
-  return session;
-};
+  session = await mongoose.startSession()
+  session.startTransaction()
+  return session
+}
 
 const commitSession = async () => {
   if (session) {
-    await session.commitTransaction();
-    session.endSession();
+    await session.commitTransaction()
+    session.endSession()
   }
-};
+}
 
-const abortSession = async (session) => {
+const abortSession = async session => {
   if (session && session.inTransaction()) {
-    await session.abortTransaction();
-    session.endSession();
+    await session.abortTransaction()
+    session.endSession()
   }
-};
+}
+
+const endSession = async () => {
+  if (session) {
+    session.endSession()
+  }
+}
 
 module.exports = {
   startSession,
   commitSession,
   abortSession,
   getSession: () => session,
-};
+  endSession,
+}

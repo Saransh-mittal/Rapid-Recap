@@ -71,7 +71,7 @@ def update_similar_articles(mongo_uri, articles_df, tfv_matrix):
     bulk_operations = []
 
     for idx, article in articles_df.iterrows():
-        similar_indices = cosine_similarities[idx].argsort()[:-11:-1]
+        similar_indices = cosine_similarities[idx].argsort()[:-30:-1]
         similar_articles = articles_df.iloc[similar_indices]['_id'].tolist()
         similar_articles = [str(article_id) for article_id in similar_articles if article_id != article['_id']]
 

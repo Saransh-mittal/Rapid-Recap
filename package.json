@@ -9,11 +9,12 @@
     "server": "node app.js",
     "client": "npm start --prefix client",
     "clientinstall": "npm install --prefix client",
-    "setup-pyenv": "py -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
-    "start-prod": "/opt/venv/bin/activate && node app.js",
-    "start": "npm run start-prod",
-    "start-dev": "venv\\Scripts\\activate && nodemon app.js",
-    "dev": "concurrently \"npm run setup-pyenv\" \"npm run start-dev\""
+    "dev-mac": "concurrently \"npm run setup-pyenv-mac\" \"npm run start-dev-mac\"",
+    "dev-win": "concurrently \"npm run setup-pyenv-win\" \"npm run start-dev-win\"",
+    "setup-pyenv-win": "py -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
+    "setup-pyenv-mac": "python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
+    "start-dev-win": "venv\\Scripts\\activate && nodemon app.js",
+    "start-dev-mac": "source venv/bin/activate && nodemon app.js"
   },
   "author": "",
   "license": "ISC",
