@@ -14,7 +14,9 @@
     "setup-pyenv-win": "py -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
     "setup-pyenv-mac": "python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
     "start-dev-win": "venv\\Scripts\\activate && nodemon app.js",
-    "start-dev-mac": "source venv/bin/activate && nodemon app.js"
+    "start-dev-mac": "source venv/bin/activate && nodemon app.js",
+    "start": "npm run start-prod",
+    "start-prod": "/opt/venv/bin/activate && node app.js"
   },
   "author": "",
   "license": "ISC",
