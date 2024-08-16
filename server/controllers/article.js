@@ -806,6 +806,36 @@ const deleteAdminArticleDetails = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Article deleted successfully' })
 })
 
+const getRelatedArticles = asyncHandler(async (req, res) => {
+  const { articleId } = req.params
+  const page = parseInt(req.query.page, 10) || 1
+  const limit = parseInt(req.query.limit, 10) || 10
+
+  const article = await Article.findById(articleId)
+  if (!article) {
+    res.status(404)
+    throw new Error('Article not found')
+  }
+
+  const totalArticles = article.relatedArticles.length
+  const totalPages = Math.ceil(totalArticles / limit)
+  const skip = (page - 1) * limit
+
+  const relatedArticles = await Article.find({
+    _id: { $in: article.relatedArticles },
+  })
+    .select('title author dateTime category imgURL avgReadTime')
+    .skip(skip)
+    .limit(limit)
+
+  res.json({
+    relatedArticles,
+    currentPage: page,
+    totalPages,
+    totalArticles,
+  })
+})
+
 module.exports = {
   allArticles,
   getArticle,
@@ -827,4 +857,5 @@ module.exports = {
   addAdminArticleDetails,
   deleteAdminArticleDetails,
   searchArticles,
+  getRelatedArticles,
 }
