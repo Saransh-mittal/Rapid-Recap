@@ -112,8 +112,8 @@ const TotalUserAttempted = ({
     >
       <Box className="sidebar" w="100%">
         <Box mb={{ base: '4', md: '6' }}>
-          <Text as="h3" fontSize={{ base: 'lg', md: 'xl' }} color="white">
-            Quiz Statistics
+          <Text fontSize={{ base: '1.2rem', md: '1.7rem' }} color="white">
+            Quiz Statistics:
           </Text>
           <Box
             as="canvas"
