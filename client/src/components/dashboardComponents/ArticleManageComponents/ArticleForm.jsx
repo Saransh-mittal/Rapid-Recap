@@ -73,15 +73,14 @@ const ArticleForm = React.memo(
       () =>
         categories.map(
           category =>
-            category !==
-            'all' &&  (
+            category !== 'all' && (
               <option
                 key={category}
                 value={category}
                 style={{ background: '#1a1527' }}
               >
                 {category}
-              </option>,
+              </option>
             ),
         ),
       [],
