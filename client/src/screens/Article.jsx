@@ -57,7 +57,7 @@ const Article = () => {
   const [alt_image, setAlt_image] = useState(null)
   const [article, setArticle] = useState(null)
   const [imgURL, setImgURL] = useState('')
-  const [latestNews, setLatestNews] = useState([])
+
   const [load, setLoad] = useState(true)
   const [articleLoading, setArticleLoading] = useState(true)
   const [showQuiz, setShowQuiz] = useState(false)
@@ -141,7 +141,6 @@ const Article = () => {
     try {
       const response = await axios.get(`/api/articles/article/${id}`)
       const articleData = response.data.newArticle
-      setLatestNews(articleData.relatedArticles)
       setArticle(articleData)
       setTotalUsersGivenQuiz(articleData.quizAttemptCnt)
 
@@ -532,7 +531,6 @@ const Article = () => {
                 showQuiz={showQuiz}
                 onOpen={onOpen}
                 totalUsersGivenQuiz={totalUsersGivenQuiz}
-                latestNews={latestNews}
                 articleHeight={articleHeight}
                 article={article}
                 id={id}
