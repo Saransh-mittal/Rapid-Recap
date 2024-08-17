@@ -29,6 +29,7 @@ const ProfileDropDownMenu = ({
   setIsDrawerOpen,
   notifyCont,
   onOpenWiseWeb,
+  display,
 }) => {
   const listStyle = useMemo(
     () => ({
@@ -74,7 +75,7 @@ const ProfileDropDownMenu = ({
   }, [playClick])
 
   return (
-    <Flex className={className} position={'relative'}>
+    <Flex className={className} position={'relative'} display={display}>
       <motion.nav
         initial={false}
         animate={isOpen ? 'open' : 'closed'}
