@@ -267,6 +267,12 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     }
   }
 
+  useEffect(() => {
+    if (!isEmailVerifyOpen && forgotPassword) {
+      onResetPasswordOpen()
+    }
+  }, [isEmailVerifyOpen])
+
   return (
     <>
       <ChakraModal
@@ -289,59 +295,6 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           <ModalCloseButton color="white" />
           <ModalBody w={'65%'} p={'20px'}>
             <Suspense fallback={<Spinner />}>
-              {/* {modal && forgotPassword && !verifyEmail && (
-                <Modal onClose={() => dispatchRedux(setModal(false))}>
-                  <ResetPassword email={data.emailOrInGameName} />
-                </Modal>
-              )} */}
-              <ChakraModal
-                isOpen={isResetPasswordOpen}
-                onClose={onResetPasswordClose}
-              >
-                <ModalOverlay />
-                <ModalContent
-                  sx={{
-                    borderRadius: 'xl',
-                    backgroundColor: '#0f0d15',
-                    backgroundImage:
-                      'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-                    padding: '20px',
-                    color: 'white',
-                  }}
-                >
-                  <ModalCloseButton color={'white'} />
-                  <ModalBody>
-                    <ResetPassword
-                      email={data.emailOrInGameName}
-                      onClose={onResetPasswordClose}
-                    />
-                  </ModalBody>
-                </ModalContent>
-              </ChakraModal>
-              <ChakraModal
-                isOpen={isEmailVerifyOpen}
-                onClose={onEmailVerifyClose}
-              >
-                <ModalOverlay />
-                <ModalContent
-                  sx={{
-                    borderRadius: 'xl',
-                    backgroundColor: '#0f0d15',
-                    backgroundImage:
-                      'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-                    padding: '20px',
-                  }}
-                >
-                  <ModalCloseButton color={'white'} />
-                  <ModalBody>
-                    <EmailVerify
-                      email={data.emailOrInGameName}
-                      onClose={onEmailVerifyClose}
-                      onResetPasswordOpen={onResetPasswordOpen}
-                    />
-                  </ModalBody>
-                </ModalContent>
-              </ChakraModal>
               {!enterInGameName ? (
                 <>
                   <form onSubmit={handleSubmit} onKeyDown={handleKeyPress}>
@@ -518,6 +471,20 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           isOpen={isRegisterOpen}
           onClose={onRegisterClose}
           signinOnOpen={onOpen}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <ResetPassword
+          email={data.emailOrInGameName}
+          onClose={onResetPasswordClose}
+          isOpen={isResetPasswordOpen}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <EmailVerify
+          email={data.emailOrInGameName}
+          onClose={onEmailVerifyClose}
+          isOpen={isEmailVerifyOpen}
         />
       </Suspense>
     </>
