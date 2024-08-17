@@ -67,7 +67,7 @@ async function generateSitemap() {
       dateTime: { $lt: newArticleThreshold },
     })
       .sort({ dateTime: -1 })
-      .limit(MAX_ARTICLES - newArticles.length)
+      .limit(MAX_ARTICLES - newArticles.length - latestArticles.length)
       .select('_id dateTime title')
     // // Fetch article IDs
     // const articles = await Article.find()
