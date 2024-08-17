@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react'
+import React, { useMemo, useCallback, Suspense } from 'react'
 import {
   Flex,
   Text,
@@ -6,6 +6,7 @@ import {
   useDisclosure,
   useMediaQuery,
   useToast,
+  Spinner,
 } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
 import LanguageToggle from './articleHeaderComponents/LanguageToggle'
@@ -15,6 +16,12 @@ import BookmarkIcon from './articleHeaderComponents/BookmarkIcon'
 import ShareButton from './ShareButton'
 import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
 import useSound from '../../customHooks/useSound'
+import { EditIcon } from '@chakra-ui/icons'
+import axios from 'axios'
+
+const ArticleForm = React.lazy(() =>
+  import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
+)
 
 const ArticleHeader = ({
   title,
@@ -31,13 +38,62 @@ const ArticleHeader = ({
   openModal,
   onSigninOpen,
 }) => {
-  const { isAuthenticated } = useSelector(state => state.auth)
+  const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
   const { isBoosted } = useSelector(state => state.app)
   const notLoggedIn = !isAuthenticated
   const { playClick } = useSound()
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()
+  const {
+    isOpen: isOpenArticleForm,
+    onOpen: onOpenArticleForm,
+    onClose: onCloseArticleForm,
+  } = useDisclosure()
+  const [selectedArticle, setSelectedArticle] = React.useState({})
+
+  const handleEditArticle = useCallback(async () => {
+    try {
+      const response = await axios.get(`/api/admin/articles/${article._id}`)
+      setSelectedArticle(response.data)
+      onOpenArticleForm()
+    } catch (error) {
+      console.error('Error fetching article details:', error)
+      toast({
+        title: 'Error fetching article details',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }, [onCloseArticleForm, toast, article])
+
+  const handleUpdateArticle = useCallback(
+    async updatedData => {
+      try {
+        await axios.put(
+          `/api/admin/articles/${selectedArticle._id}`,
+          updatedData,
+        )
+        onCloseArticleForm()
+        toast({
+          title: 'Article updated successfully',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+      } catch (error) {
+        console.error('Error updating article:', error)
+        toast({
+          title: 'Error updating article',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    },
+    [selectedArticle, onOpenArticleForm, toast, article],
+  )
 
   const toggleLanguage = useCallback(() => {
     if (notLoggedIn) {
@@ -104,12 +160,27 @@ const ArticleHeader = ({
               justifyContent={'flex-start'}
               w={'100%'}
             >
-              <address>
-                <AuthorInfo
-                  author={author}
-                  selectedLanguage={selectedLanguage}
-                />
-              </address>
+              <AuthorInfo author={author} selectedLanguage={selectedLanguage} />
+              {isAdmin && (
+                <>
+                  <EditIcon
+                    h={'25px'}
+                    w={'25px'}
+                    cursor={'pointer'}
+                    onClick={handleEditArticle}
+                  />
+                  <Suspense fallback={<Spinner />}>
+                    <ArticleForm
+                      isOpen={isOpenArticleForm}
+                      onClose={onCloseArticleForm}
+                      onSubmit={handleUpdateArticle}
+                      article={selectedArticle}
+                      setArticle={setSelectedArticle}
+                    />
+                  </Suspense>
+                </>
+              )}
+
               <Flex mt={'-2'}>
                 {isLargerThan768 && (
                   <BookmarkIcon

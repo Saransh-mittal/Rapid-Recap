@@ -37,12 +37,12 @@ const ArticleForm = React.memo(
   }) => {
     const handleClose = useCallback(() => {
       onClose()
-      onManageArticleOpen()
+      onManageArticleOpen && onManageArticleOpen()
     }, [onClose, onManageArticleOpen])
 
     const handleSubmit = useCallback(() => {
       onSubmit(article)
-      onManageArticleOpen()
+      onManageArticleOpen && onManageArticleOpen()
     }, [article, onSubmit, onManageArticleOpen])
 
     const handleInputChange = useCallback(
@@ -142,7 +142,7 @@ const ArticleForm = React.memo(
               <FormControl>
                 <FormLabel>Image URL</FormLabel>
                 <Input
-                  value={article?.imgURL.join(', ')}
+                  value={article?.imgURL?.join(', ')}
                   onChange={handleImageURLChange}
                   placeholder="Enter comma-separated URLs"
                 />
@@ -177,7 +177,7 @@ const ArticleForm = React.memo(
             </VStack>
           </ModalBody>
           <ModalFooter>
-            {article?._id && (
+            {article?._id && onDeleteAlertOpen && (
               <Button colorScheme="red" mr={3} onClick={onDeleteAlertOpen}>
                 Delete Article
               </Button>
