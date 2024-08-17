@@ -1,6 +1,7 @@
 import React, { useCallback, memo } from 'react'
 import { Box, HStack, VStack, Text, IconButton } from '@chakra-ui/react'
 import { ViewIcon, EditIcon } from '@chakra-ui/icons'
+import slugify from 'slugify'
 
 const ArticleItem = memo(({ article, onView, onEdit }) => (
   <Box p={4} borderWidth="1px" borderRadius="md">
@@ -29,8 +30,8 @@ const ArticleItem = memo(({ article, onView, onEdit }) => (
 
 const ArticleList = memo(({ articles, navigate, handleEditArticle }) => {
   const handleViewArticle = useCallback(
-    id => {
-      navigate(`/article/${id}`)
+    (id, title) => {
+      navigate(`/article/${id}/${slugify(title)}`)
     },
     [navigate],
   )
@@ -43,7 +44,7 @@ const ArticleList = memo(({ articles, navigate, handleEditArticle }) => {
           <ArticleItem
             key={article._id}
             article={article}
-            onView={() => handleViewArticle(article._id)}
+            onView={() => handleViewArticle(article._id, article.title)}
             onEdit={() => handleEditArticle(article._id)}
           />
         ))}

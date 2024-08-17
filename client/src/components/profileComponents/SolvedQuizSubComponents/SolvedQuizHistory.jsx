@@ -21,6 +21,7 @@ import {
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useSound from '../../../customHooks/useSound'
+import slugify from 'slugify'
 
 const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
   const navigate = useNavigate()
@@ -133,7 +134,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                             height={'80px'}
                             key={_id}
                             onClick={() => {
-                              navigate(`/article/${article}`)
+                              navigate(`/article/${article}/${slugify(title)}`)
                             }}
                             _hover={{
                               backgroundImage:

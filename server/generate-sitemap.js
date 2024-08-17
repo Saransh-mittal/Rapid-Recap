@@ -3,6 +3,11 @@ const path = require('path')
 const Article = require('./model/articleSchema')
 const User = require('./model/userSchema')
 const xml = require('xmlbuilder')
+const {
+  formatDateTimeAccordindToDB,
+  toISOString,
+} = require('./utils/miscellaneous.utils')
+const slugify = require('slugify')
 
 const BASE_URL = 'https://www.rapidrecap.co.in'
 const MAX_URLS_PER_SITEMAP = 50000
@@ -15,37 +20,80 @@ async function generateSitemap() {
   try {
     const staticRoutes = [
       { url: '/', priority: 1.0, changefreq: 'daily' },
-      { url: '/home', priority: 0.9, changefreq: 'daily' },
-      { url: '/home/top', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/general', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/world', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/entertainment', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/sports', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/technology', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/health', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/politics', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/business', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/science', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/environment', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/crime', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/education', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/food', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/lifestyle', priority: 0.8, changefreq: 'daily' },
-      { url: '/home/tourism', priority: 0.8, changefreq: 'daily' },
+      { url: '/home', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/top', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/general', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/world', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/entertainment', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/sports', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/technology', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/health', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/politics', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/business', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/science', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/environment', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/crime', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/education', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/food', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/lifestyle', priority: 0.8, changefreq: 'hourly' },
+      { url: '/home/tourism', priority: 0.8, changefreq: 'hourly' },
       { url: '/leaderboard', priority: 0.8, changefreq: 'daily' },
       { url: '/contact', priority: 0.5, changefreq: 'monthly' },
     ]
 
-    // Fetch article IDs
-    const articles = await Article.find()
+    const latestArticlesThreshold = formatDateTimeAccordindToDB(
+      undefined,
+      false,
+      2,
+    )
+    const newArticleThreshold = formatDateTimeAccordindToDB(undefined, false, 7)
+
+    // Fetch Latest Articles
+    const latestArticles = await Article.find({
+      dateTime: { $gte: latestArticlesThreshold },
+    })
       .sort({ dateTime: -1 })
-      .limit(MAX_ARTICLES)
-      .select('_id')
-    const articleRoutes = articles.map(article => ({
-      url: `/article/${article._id}`,
-      priority: 0.7,
-      changefreq: 'weekly',
-    }))
+      .select('_id dateTime title')
+
+    // Fetch new articles
+    const newArticles = await Article.find({
+      dateTime: { $gte: newArticleThreshold, $lt: latestArticlesThreshold },
+    })
+      .sort({ dateTime: -1 })
+      .select('_id dateTime title')
+
+    // Fetch older articles
+    const olderArticles = await Article.find({
+      dateTime: { $lt: newArticleThreshold },
+    })
+      .sort({ dateTime: -1 })
+      .limit(MAX_ARTICLES - newArticles.length)
+      .select('_id dateTime title')
+    // // Fetch article IDs
+    // const articles = await Article.find()
+    //   .sort({ dateTime: -1 })
+    //   .limit(MAX_ARTICLES)
+    //   .select('_id')
+    const articleRoutes = [
+      ...latestArticles.map(article => ({
+        url: `/article/${article._id}/${slugify(article.title)}`,
+        priority: 1, // Highest priority for new articles
+        changefreq: 'hourly',
+        lastmod: toISOString(article.dateTime),
+      })),
+      ...newArticles.map(article => ({
+        url: `/article/${article._id}/${slugify(article.title)}`,
+        priority: 0.9, // Highest priority for new articles
+        changefreq: 'hourly',
+        lastmod: toISOString(article.dateTime),
+      })),
+      ...olderArticles.map(article => ({
+        url: `/article/${article._id}/${slugify(article.title)}`,
+        priority: 0.7,
+        changefreq: 'daily',
+        lastmod: toISOString(article.dateTime),
+      })),
+    ]
 
     // Fetch user inGameNames
     const users = await User.find()
@@ -54,7 +102,7 @@ async function generateSitemap() {
       .select('inGameName')
     const profileRoutes = users.map(user => ({
       url: `/profile/${user.inGameName}`,
-      priority: 0.8,
+      priority: 0.6,
       changefreq: 'daily',
     }))
 
@@ -78,6 +126,7 @@ async function generateSitemap() {
     const sitemap = root.end({ pretty: true })
 
     // Write sitemap to file
+
     const outputPath = path.join(__dirname, './client/dist', 'sitemap.xml')
     await fs.writeFile(outputPath, sitemap)
 

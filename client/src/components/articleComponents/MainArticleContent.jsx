@@ -52,19 +52,24 @@ const MainArticleContent = ({
           fontSize={fontSize}
           lineHeight="1.8"
         >
-          <Flex justifyContent="center" mt={[2, 3, 5]}>
-            <Image
-              src={imgURL}
-              alt="Article Image"
-              borderRadius="md"
-              mb={[3, 4, 5]}
-              width={{ base: '100%', sm: '100%', md: '80%', lg: '98%' }}
-              height="auto"
-              objectFit="contain"
-              onError={handleImageError}
-            />
-          </Flex>
-
+          <figure>
+            <Flex justifyContent="center" mt={[2, 3, 5]}>
+              <Image
+                src={imgURL}
+                alt="Article Image"
+                borderRadius="md"
+                mb={[3, 4, 5]}
+                width={{ base: '100%', sm: '100%', md: '80%', lg: '98%' }}
+                height="auto"
+                objectFit="contain"
+                onError={handleImageError}
+                loading="lazy"
+              />
+            </Flex>
+            <figcaption>
+              about : {mainText[selectedLanguage]?.[0]?.substring(0, 160)}
+            </figcaption>
+          </figure>
           {mainText[selectedLanguage].length === 3 ? (
             <>
               <Text

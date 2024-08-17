@@ -416,23 +416,42 @@ const Article = () => {
             overflow={'hidden'}
           >
             <Helmet>
-              <title>{title[selectedLanguage]}</title>
+              <title>{`${title[selectedLanguage]} | Rapid Recap`}</title>
               <meta
                 name="description"
-                content={mainText[selectedLanguage]?.[0]}
+                content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
               />
-              <meta property="og:title" content={title[selectedLanguage]} />
+              <meta
+                name="keywords"
+                content={`${article?.category}, news, current events, ${title[
+                  selectedLanguage
+                ]
+                  .toLowerCase()
+                  .split(' ')
+                  .join(', ')}`}
+              />
+              <meta
+                property="og:title"
+                content={`${title[selectedLanguage]} | Rapid Recap`}
+              />
               <meta
                 property="og:description"
-                content={mainText[selectedLanguage]?.[0]}
+                content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
               />
               <meta property="og:image" content={imgURL} />
               <meta property="og:type" content="article" />
+              <meta
+                property="og:url"
+                content={`https://www.rapidrecap.co.in/articles/${id}`}
+              />
               <meta name="twitter:card" content="summary_large_image" />
-              <meta name="twitter:title" content={title[selectedLanguage]} />
+              <meta
+                name="twitter:title"
+                content={`${title[selectedLanguage]} | Rapid Recap`}
+              />
               <meta
                 name="twitter:description"
-                content={mainText[selectedLanguage]?.[0]}
+                content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
               />
               <meta name="twitter:image" content={imgURL} />
               <link
@@ -441,103 +460,112 @@ const Article = () => {
               />
               <script type="application/ld+json">
                 {`
-                {
-                  "@context": "https://schema.org",
-                  "@type": "NewsArticle",
-                  "mainEntityOfPage": {
-                    "@type": "WebPage",
-                    "@id": "https://www.rapidrecap.co.in/articles/${id}"
-                  },
-                  "headline": "${title[selectedLanguage]}",
-                  "image": ["${imgURL}"],
-                  "datePublished": "${new Date().toISOString()}",
-                  "dateModified": "${new Date().toISOString()}",
-                  "author": {
-                    "@type": "Person",
-                    "name": "${author[selectedLanguage]}"
-                  },
-                  "publisher": {
-                    "@type": "Organization",
-                    "name": "Rapid Recap",
-                    "logo": {
-                      "@type": "ImageObject",
-                      "url": "https://www.rapidrecap.co.in/images/rrlogo.png"
-                    }
-                  },
-                  "description": "${mainText[selectedLanguage]?.[0]}"
-                }
-              `}
+    {
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://www.rapidrecap.co.in/articles/${id}"
+      },
+      "headline": "${title[selectedLanguage]}",
+      "image": ["${imgURL}"],
+      "datePublished": "${article?.dateTime}",
+      "dateModified": "${article?.dateTime}",
+      "author": {
+        "@type": "Person",
+        "name": "${author[selectedLanguage]}"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Rapid Recap",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.rapidrecap.co.in/images/rrlogo.png"
+        }
+      },
+      "description": "${mainText[selectedLanguage]?.[0]?.substring(0, 160)}"
+    }
+    `}
               </script>
             </Helmet>
-            <Flex
-              justifyContent={'center'}
-              mt={5}
-              px={{ base: '20px', md: '50px' }}
-              w={'100%'}
-            >
-              <ArticleHeader
-                title={title}
-                author={author}
-                selectedLanguage={selectedLanguage}
-                bookmark={bookmark}
-                handleLanguageChange={handleLanguageChange}
-                avgTimeRead={avgTimeRead}
-                dateTime={dateTime}
-                bookmarkStatus={bookmarkStatus}
-                article={article}
-                isQuinBoostAvailable={isQuinBoostAvailable}
-                quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
-                openModal={openModal}
-                onSigninOpen={onSigninOpen}
-              />
-            </Flex>
-            <Grid
-              templateColumns={isLargerThan821 ? 'minmax(0, 9fr) 5fr' : '1fr'}
-              gap={10}
-              minH={'85vh'}
-              px={{ base: '20px', md: '50px' }}
-              marginTop={0}
-              className="article-all-content"
-            >
-              <MainArticleContent
-                translateLoading={translateLoading}
-                selectedLanguage={selectedLanguage}
-                title={title}
-                author={author}
-                mainText={mainText}
-                imgURL={imgURL}
-                alt_image={alt_image}
-                textRef={textRef}
-                articleRef={articleRef}
-                textHeight={textHeight}
-                handleLanguageChange={handleLanguageChange}
-                dateTime={dateTime}
-                avgTimeRead={avgTimeRead}
-                bookmark={bookmark}
-                bookmarkStatus={bookmarkStatus}
-                articleLoading={articleLoading}
-              />
+            <article>
+              <Flex
+                justifyContent={'center'}
+                mt={5}
+                px={{ base: '20px', md: '50px' }}
+                w={'100%'}
+              >
+                <header
+                  style={{
+                    height: '100%',
+                    width: '100%',
+                  }}
+                >
+                  <ArticleHeader
+                    title={title}
+                    author={author}
+                    selectedLanguage={selectedLanguage}
+                    bookmark={bookmark}
+                    handleLanguageChange={handleLanguageChange}
+                    avgTimeRead={avgTimeRead}
+                    dateTime={dateTime}
+                    bookmarkStatus={bookmarkStatus}
+                    article={article}
+                    isQuinBoostAvailable={isQuinBoostAvailable}
+                    quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
+                    openModal={openModal}
+                    onSigninOpen={onSigninOpen}
+                  />
+                </header>
+              </Flex>
+              <Grid
+                templateColumns={isLargerThan821 ? 'minmax(0, 9fr) 5fr' : '1fr'}
+                gap={10}
+                minH={'85vh'}
+                px={{ base: '20px', md: '50px' }}
+                marginTop={0}
+                className="article-all-content"
+              >
+                <MainArticleContent
+                  translateLoading={translateLoading}
+                  selectedLanguage={selectedLanguage}
+                  title={title}
+                  author={author}
+                  mainText={mainText}
+                  imgURL={imgURL}
+                  alt_image={alt_image}
+                  textRef={textRef}
+                  articleRef={articleRef}
+                  textHeight={textHeight}
+                  handleLanguageChange={handleLanguageChange}
+                  dateTime={dateTime}
+                  avgTimeRead={avgTimeRead}
+                  bookmark={bookmark}
+                  bookmarkStatus={bookmarkStatus}
+                  articleLoading={articleLoading}
+                />
 
-              <Sidebar
-                givenQuiz={givenQuiz}
-                percentile={percentile}
-                RQM_score={RQM_score}
-                onGoingQuiz={onGoingQuiz}
-                quizExpired={quizExpired}
-                isQuinBoostAvailable={isQuinBoostAvailable}
-                trackGenerateQuizClick={trackGenerateQuizClick}
-                setShowQuizLangModal={setShowQuizLangModal}
-                setShowQuiz={setShowQuiz}
-                showQuiz={showQuiz}
-                onOpen={onOpen}
-                totalUsersGivenQuiz={totalUsersGivenQuiz}
-                articleHeight={articleHeight}
-                article={article}
-                id={id}
-                isQuizGivenLoading={isQuizGivenLoading}
-                onSigninOpen={onSigninOpen}
-              />
-            </Grid>
+                <Sidebar
+                  givenQuiz={givenQuiz}
+                  percentile={percentile}
+                  RQM_score={RQM_score}
+                  onGoingQuiz={onGoingQuiz}
+                  quizExpired={quizExpired}
+                  isQuinBoostAvailable={isQuinBoostAvailable}
+                  trackGenerateQuizClick={trackGenerateQuizClick}
+                  setShowQuizLangModal={setShowQuizLangModal}
+                  setShowQuiz={setShowQuiz}
+                  showQuiz={showQuiz}
+                  onOpen={onOpen}
+                  totalUsersGivenQuiz={totalUsersGivenQuiz}
+                  articleHeight={articleHeight}
+                  article={article}
+                  id={id}
+                  isQuizGivenLoading={isQuizGivenLoading}
+                  onSigninOpen={onSigninOpen}
+                />
+              </Grid>
+            </article>
           </Flex>
         )}
         <QuinBoostModal

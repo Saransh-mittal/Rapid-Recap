@@ -27,6 +27,7 @@ import LanguageToggle from './articleHeaderComponents/LanguageToggle'
 import RelatedArticlesToggle from './RelatedArticlesToggle'
 import axios from 'axios'
 import { formatDate } from '../../utils/helper.utils'
+import slugify from 'slugify'
 
 const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
 const QuizExpired = React.lazy(() => import('./QuizExpired'))
@@ -113,7 +114,7 @@ const Sidebar = ({
         return
       }
       playClick()
-      window.location.href = `/article/${item._id}`
+      window.location.href = `/article/${item._id}/${slugify(item.title)}`
     },
     [notLoggedIn, playClick, toast],
   )

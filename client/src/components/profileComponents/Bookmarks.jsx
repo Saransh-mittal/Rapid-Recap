@@ -22,6 +22,7 @@ import {
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import useSound from '../../customHooks/useSound'
+import slugify from 'slugify'
 
 const ArticleCard = React.lazy(() => import('../miscellaneous/ArticleCard'))
 
@@ -53,8 +54,8 @@ const Bookmarks = ({ isOpen, onClose }) => {
   }, [isOpen, fetchBookmarks])
 
   const handleBookmarkClick = useCallback(
-    id => {
-      navigate(`/article/${id}`)
+    (id, title) => {
+      navigate(`/article/${id}/${slugify(title)}`)
     },
     [navigate],
   )
@@ -108,7 +109,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
             <ArticleCard
               key={bookmark._id}
               article={bookmark}
-              onClick={() => handleBookmarkClick(bookmark._id)}
+              onClick={() => handleBookmarkClick(bookmark._id, bookmark.title)}
               onRemove={handleRemoveBookmark}
               viewMode={viewMode}
               isMobileListView={isMobileListView}

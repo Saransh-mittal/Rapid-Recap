@@ -14,6 +14,7 @@ import { motion, useAnimation, useSpring, useTransform } from 'framer-motion'
 import { Calendar, Clock, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useSound from '../../customHooks/useSound'
+import slugify from 'slugify'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -87,7 +88,7 @@ const Card = ({ title, image, category, date, readTime, id }) => {
       bg="linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(147,51,234,0.1) 100%)"
       onClick={() => {
         playClick()
-        navigate(`/article/${id}`)
+        navigate(`/article/${id}/${slugify(title)}`)
       }}
       color="white"
       cursor="pointer"

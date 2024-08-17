@@ -24,7 +24,7 @@ const AppRoutes = ({ isToken }) => (
       <Route path="/home/:category" element={<Home />} />
       <Route path="/home" element={<Home />} />
       <Route path="/chats" element={<ChatPage />} />
-      <Route path="/article/:id" element={<Article />} />
+      <Route path="/article/:id/:slug" element={<Article />} />
       <Route path="/profile/:inGameName" element={<Profile />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/contact" element={<ContactLayout />} />

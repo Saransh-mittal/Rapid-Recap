@@ -104,7 +104,12 @@ const ArticleHeader = ({
               justifyContent={'flex-start'}
               w={'100%'}
             >
-              <AuthorInfo author={author} selectedLanguage={selectedLanguage} />
+              <address>
+                <AuthorInfo
+                  author={author}
+                  selectedLanguage={selectedLanguage}
+                />
+              </address>
               <Flex mt={'-2'}>
                 {isLargerThan768 && (
                   <BookmarkIcon
@@ -140,7 +145,7 @@ const ArticleHeader = ({
             alignItems={'center'}
             gap={2}
             w={'100%'}
-            justifyContent={{ base: 'space-between', xl: 'flex-end' }}
+            justifyContent={{ base: 'space-between', md: 'flex-end' }}
             position={'relative'}
           >
             <BoostSection
@@ -173,7 +178,8 @@ const ArticleHeader = ({
               w={{ base: '100%', lg: 'auto' }}
             >
               <Text fontSize={['sm', 'md', 'lg']}>
-                {avgTimeRead} min read • {dateTime}
+                {' '}
+                {avgTimeRead} min read • <time>{dateTime}</time>
               </Text>
             </Flex>
           )}
@@ -185,7 +191,7 @@ const ArticleHeader = ({
               w={{ base: '100%', lg: 'auto' }}
             >
               <Text fontSize={['sm', 'md', 'lg']} mb={0}>
-                {avgTimeRead} min read • {dateTime}
+                {avgTimeRead} min read • <time>{dateTime}</time>
               </Text>
             </Flex>
           )}

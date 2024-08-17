@@ -1,154 +1,174 @@
-const { redis } = require("../redis");
-const CryptoJS = require("crypto-js");
+const { redis } = require('../redis')
+const CryptoJS = require('crypto-js')
+const moment = require('moment')
 
 function binarySearch(arr, target) {
-  let left = 0;
-  let right = arr.length - 1;
+  let left = 0
+  let right = arr.length - 1
 
   while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
+    const mid = Math.floor((left + right) / 2)
     if (arr[mid] === target) {
-      return mid;
+      return mid
     } else if (arr[mid] < target) {
-      left = mid + 1;
+      left = mid + 1
     } else {
-      right = mid - 1;
+      right = mid - 1
     }
   }
 
-  return -1; // Target not found
+  return -1 // Target not found
 }
 
 function binarySearchForLeftRange(arr, lowerbound) {
-  if (arr[arr.length - 1] < lowerbound) return -1;
-  let left = 0;
-  let right = arr.length - 1;
+  if (arr[arr.length - 1] < lowerbound) return -1
+  let left = 0
+  let right = arr.length - 1
 
   while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
+    const mid = Math.floor((left + right) / 2)
     if (arr[mid] >= lowerbound) {
-      right = mid - 1;
+      right = mid - 1
     } else {
-      left = mid + 1;
+      left = mid + 1
     }
   }
 
-  return left; // Target not found
+  return left // Target not found
 }
 
 function binarySearchForRightRange(arr, upperbound) {
-  if (arr[0] > upperbound) return -1;
-  let left = 0;
-  let right = arr.length - 1;
+  if (arr[0] > upperbound) return -1
+  let left = 0
+  let right = arr.length - 1
 
   while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
+    const mid = Math.floor((left + right) / 2)
     if (arr[mid] <= upperbound) {
-      left = mid + 1;
+      left = mid + 1
     } else {
-      right = mid - 1;
+      right = mid - 1
     }
   }
 
-  return right; // Target not found
+  return right // Target not found
 }
 
 function isValidEmail(email) {
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailPattern.test(email);
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailPattern.test(email)
 }
 
 function formatDate(datetime) {
   // Extract the date part
-  const datePattern = /^\d{4}-\d{2}-\d{2}/;
-  const match = datetime.match(datePattern);
-  if (!match) return null;
+  const datePattern = /^\d{4}-\d{2}-\d{2}/
+  const match = datetime.match(datePattern)
+  if (!match) return null
 
   // Parse the extracted date part
-  const [year, month, day] = match[0].split("-");
+  const [year, month, day] = match[0].split('-')
 
   // Define month abbreviations
   const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
 
   // Format the date into 'dd mmm yyyy'
-  const formattedDate = `${day} ${months[parseInt(month, 10) - 1]} ${year}`;
-  return formattedDate;
+  const formattedDate = `${day} ${months[parseInt(month, 10) - 1]} ${year}`
+  return formattedDate
 }
 
 function averageReadTime(text) {
   // Remove the article if it has no text
-  if (!text || text.length === 0 || text === "") {
-    return null;
+  if (!text || text.length === 0 || text === '') {
+    return null
   }
 
   // Calculate reading time in minutes
-  const wordsPerMinute = 100;
-  const plainText = text.replace(/<[^>]+>/g, ""); // Remove HTML tags
-  const wordCount = plainText.split(/\s+/).length;
-  const readingTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
-  return readingTimeMinutes;
+  const wordsPerMinute = 100
+  const plainText = text.replace(/<[^>]+>/g, '') // Remove HTML tags
+  const wordCount = plainText.split(/\s+/).length
+  const readingTimeMinutes = Math.ceil(wordCount / wordsPerMinute)
+  return readingTimeMinutes
 }
 
-const shuffleArray = (array) => {
+const shuffleArray = array => {
   for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[array[i], array[j]] = [array[j], array[i]]
   }
-  return array;
-};
+  return array
+}
 
-const checkUserOnlineStatus = async (userId) => {
-  const lastHeartbeat = await redis.get(`user:${userId}:lastHeartbeat`);
-  const isOnline = !!lastHeartbeat;
+const checkUserOnlineStatus = async userId => {
+  const lastHeartbeat = await redis.get(`user:${userId}:lastHeartbeat`)
+  const isOnline = !!lastHeartbeat
 
-  return isOnline;
-};
+  return isOnline
+}
 
 async function checkUserBatch(userIds) {
-  const pipeline = redis.pipeline();
-  userIds.forEach((id) => pipeline.get(`user:${id}:lastHeartbeat`));
-  const results = await pipeline.exec();
+  const pipeline = redis.pipeline()
+  userIds.forEach(id => pipeline.get(`user:${id}:lastHeartbeat`))
+  const results = await pipeline.exec()
 
-  const offlineUsers = [];
+  const offlineUsers = []
 
   results.forEach(([err, lastHeartbeat], index) => {
     if (err) {
-      console.error(
-        `Error checking heartbeat for user ${userIds[index]}:`,
-        err
-      );
-      return;
+      console.error(`Error checking heartbeat for user ${userIds[index]}:`, err)
+      return
     }
     if (!lastHeartbeat) {
-      offlineUsers.push(userIds[index]);
+      offlineUsers.push(userIds[index])
     }
-  });
+  })
 
-  return offlineUsers;
+  return offlineUsers
 }
 
-const isEncrypted = (str) => {
+const isEncrypted = str => {
   try {
     return CryptoJS.AES.decrypt(str, process.env.ENCRYPTION_KEY).toString(
-      CryptoJS.enc.Utf8
-    );
+      CryptoJS.enc.Utf8,
+    )
   } catch (e) {
-    return false;
+    return false
   }
-};
+}
+
+// Function to format date, with an option to include time, adjust days, and accept a date instance
+function formatDateTimeAccordindToDB(
+  dateInstance = new Date(),
+  includeTime = true,
+  daysBack = 0,
+) {
+  const date = moment(dateInstance).subtract(daysBack, 'days') // Use the provided date or current date
+
+  if (includeTime) {
+    return date.format('YYYY-MM-DD HH:mm:ss')
+  } else {
+    return date.format('YYYY-MM-DD')
+  }
+}
+function toISOString(formattedDateTime) {
+  // Parse the formatted date-time string using Moment.js
+  const date = moment(formattedDateTime, 'YYYY-MM-DD HH:mm:ss')
+
+  // Return the ISO string
+  return date.toISOString()
+}
 
 module.exports = {
   binarySearch,
@@ -161,4 +181,6 @@ module.exports = {
   checkUserOnlineStatus,
   checkUserBatch,
   isEncrypted,
-};
+  formatDateTimeAccordindToDB,
+  toISOString,
+}

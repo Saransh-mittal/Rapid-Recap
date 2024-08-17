@@ -11,6 +11,7 @@ import ArticleCard from '../../../miscellaneous/ArticleCard'
 import MessageReactions from './MessageReactions'
 import { useNavigate } from 'react-router-dom'
 import { safelyAccessProperty } from '../../../../utils/helper.utils'
+import slugify from 'slugify'
 
 const SystemMessage = ({ content, id }) => (
   <Box
@@ -89,7 +90,11 @@ const ArticleMessage = React.memo(
           <ArticleCard
             article={message.article}
             onClick={() => {
-              navigate(`/article/${message.article._id}`)
+              navigate(
+                `/article/${message.article._id}/${slugify(
+                  message.article.title,
+                )}`,
+              )
             }}
             viewMode="grid"
             width={'100%'}
