@@ -1,36 +1,36 @@
-const { spawn } = require("child_process");
-const fs = require("fs").promises;
-const mongoose = require("mongoose");
-const User = require("../model/userSchema");
-const Article = require("../model/articleSchema");
-const QuizAttempt = require("../model/quizAttemptSchema");
-const TimeSpent = require("../model/timeSpentSchema");
+const { spawn } = require('child_process')
+const fs = require('fs').promises
+const mongoose = require('mongoose')
+const User = require('../model/userSchema')
+const Article = require('../model/articleSchema')
+const QuizAttempt = require('../model/quizAttemptSchema')
+const TimeSpent = require('../model/timeSpentSchema')
 const {
   Recommendation,
   NotifiedArticles,
-} = require("../model/recommendationSchema");
-const { Parser } = require("json2csv");
-const path = require("path");
+} = require('../model/recommendationSchema')
+const { Parser } = require('json2csv')
+const path = require('path')
 
 async function ensureDirectoryExistence(filePath) {
-  const dirname = path.dirname(filePath);
+  const dirname = path.dirname(filePath)
   try {
-    await fs.access(dirname);
+    await fs.access(dirname)
   } catch (err) {
-    await fs.mkdir(dirname, { recursive: true });
+    await fs.mkdir(dirname, { recursive: true })
   }
 }
 
 function convertToCSV(data) {
-  const json2csvParser = new Parser();
-  return json2csvParser.parse(data);
+  const json2csvParser = new Parser()
+  return json2csvParser.parse(data)
 }
 
 async function exportDataToCSV() {
   const articlesPromise = Article.aggregate([
     {
       $match: {
-        dateTime: { $gte: "2024-04-01T00:00:00" },
+        dateTime: { $gte: '2024-04-01T00:00:00' },
       },
     },
     {
@@ -43,11 +43,11 @@ async function exportDataToCSV() {
         dateTime: 1,
       },
     },
-  ]);
+  ])
 
   const quizAttemptsPromise = QuizAttempt.find(
     {
-      createdAt: { $gte: "2024-04-01T00:00:00" },
+      createdAt: { $gte: '2024-04-01T00:00:00' },
     },
     {
       _id: 1,
@@ -56,186 +56,255 @@ async function exportDataToCSV() {
       RQM_score: 1,
       userPercentile: 1,
       createdAt: 1,
-    }
-  ).lean();
+    },
+  ).lean()
 
-  const timeSpentPromise = TimeSpent.find({}).lean();
+  const timeSpentPromise = TimeSpent.find({}).lean()
 
   const [articles, quizAttempts, timeSpent] = await Promise.all([
     articlesPromise,
     quizAttemptsPromise,
     timeSpentPromise,
-  ]);
+  ])
 
   const filePaths = [
-    path.join(__dirname, "..", "data", "csv", "articles.csv"),
-    path.join(__dirname, "..", "data", "csv", "quiz_attempts.csv"),
-    path.join(__dirname, "..", "data", "csv", "time_spent.csv"),
-  ];
+    path.join(__dirname, '..', 'data', 'csv', 'articles.csv'),
+    path.join(__dirname, '..', 'data', 'csv', 'quiz_attempts.csv'),
+    path.join(__dirname, '..', 'data', 'csv', 'time_spent.csv'),
+  ]
 
   await Promise.all(
-    filePaths.map((filePath) => ensureDirectoryExistence(filePath))
-  );
+    filePaths.map(filePath => ensureDirectoryExistence(filePath)),
+  )
 
   await Promise.all([
     fs.writeFile(filePaths[0], convertToCSV(articles)),
     fs.writeFile(filePaths[1], convertToCSV(quizAttempts)),
     fs.writeFile(filePaths[2], convertToCSV(timeSpent)),
-  ]);
+  ])
 
-  console.log("CSV files created successfully");
+  console.log('CSV files created successfully')
 }
 
 async function runPythonScript(pythonScriptPath, userId) {
   return new Promise((resolve, reject) => {
-    const pythonProcess = spawn("python", [pythonScriptPath, userId]);
+    const pythonProcess = spawn('python', [pythonScriptPath, userId])
 
-    pythonProcess.stdout.on("data", (data) => {
-      console.log(`Python script output: ${data}`);
-    });
+    pythonProcess.stdout.on('data', data => {
+      console.log(`Python script output: ${data}`)
+    })
 
-    pythonProcess.stderr.on("data", (data) => {
-      console.error(`Python script error: ${data}`);
-    });
+    pythonProcess.stderr.on('data', data => {
+      console.error(`Python script error: ${data}`)
+    })
 
-    pythonProcess.on("close", (code) => {
+    pythonProcess.on('close', code => {
       if (code === 0) {
-        resolve();
+        resolve()
       } else {
         console.error(
-          `Python script failed for user ${userId} with code ${code}`
-        );
-        reject(new Error(`Python script exited with code ${code}`));
+          `Python script failed for user ${userId} with code ${code}`,
+        )
+        reject(new Error(`Python script exited with code ${code}`))
       }
-    });
-  });
+    })
+  })
 }
 
 async function generateRecommendations(userId) {
   const pythonScriptPath = path.join(
     __dirname,
-    "..",
-    "scripts",
-    "recommender.py"
-  );
-  await runPythonScript(pythonScriptPath, userId);
+    '..',
+    'scripts',
+    'recommender.py',
+  )
+  await runPythonScript(pythonScriptPath, userId)
 }
 
 async function updateRecommendations(userId) {
   try {
     const userRecommendations = await Recommendation.findOne({
       user_id: userId,
-    });
+    })
 
     if (userRecommendations && userRecommendations.isUpdating) {
-      return; // Another process is already updating
+      return // Another process is already updating
     }
 
     await Recommendation.findOneAndUpdate(
       { user_id: userId },
       { $set: { isUpdating: true } },
-      { upsert: true }
-    );
+      { upsert: true },
+    )
 
-    await generateRecommendations(userId);
+    await generateRecommendations(userId)
   } catch (error) {
-    console.error("Error in updateRecommendations:", error);
+    console.error('Error in updateRecommendations:', error)
     await Recommendation.findOneAndUpdate(
       { user_id: userId },
-      { $set: { isUpdating: false } }
-    );
+      { $set: { isUpdating: false } },
+    )
   }
 }
 
 async function getRecommendations(userId, page = 1, pageSize = 18) {
   try {
-    let userRecommendations = await Recommendation.findOne({ user_id: userId });
+    let userRecommendations = await Recommendation.findOne({ user_id: userId })
 
-    const now = new Date();
-    const updateThreshold = new Date(now.getTime() - 4 * 60 * 60 * 1000); // 4 hours ago
+    const now = new Date()
+    const updateThreshold = new Date(now.getTime() - 4 * 60 * 60 * 1000) // 4 hours ago
 
     if (
       !userRecommendations ||
       userRecommendations.lastUpdated < updateThreshold
     ) {
-      updateRecommendations(userId); // Trigger an update in the background
+      updateRecommendations(userId) // Trigger an update in the background
     }
 
     if (
       !userRecommendations ||
       userRecommendations.recommendations.length < pageSize
     ) {
-      await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 10 seconds
-      userRecommendations = await Recommendation.findOne({ user_id: userId });
+      await new Promise(resolve => setTimeout(resolve, 5000)) // Wait for 10 seconds
+      userRecommendations = await Recommendation.findOne({ user_id: userId })
     }
 
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+    const startIndex = (page - 1) * pageSize
+    const endIndex = startIndex + pageSize
 
     const recommendationsToServe = userRecommendations.recommendations
-      .filter((rec) => !rec.served)
-      .slice(startIndex, endIndex);
+      .filter(rec => !rec.served)
+      .slice(startIndex, endIndex)
 
     await Recommendation.updateOne(
       { user_id: userId },
-      { $set: { "recommendations.$[elem].served": true } },
+      { $set: { 'recommendations.$[elem].served': true } },
       {
         arrayFilters: [
-          { "elem._id": { $in: recommendationsToServe.map((rec) => rec._id) } },
+          { 'elem._id': { $in: recommendationsToServe.map(rec => rec._id) } },
         ],
-      }
-    );
+      },
+    )
 
-    return recommendationsToServe;
+    return recommendationsToServe
   } catch (error) {
-    console.error("Error in getRecommendations:", error);
-    throw error;
+    console.error('Error in getRecommendations:', error)
+    throw error
+  }
+}
+
+async function getArticlePageRecommendations(
+  userId,
+  articleId,
+  page = 1,
+  pageSize = 18,
+) {
+  try {
+    let userRecommendations = await Recommendation.findOne({ user_id: userId })
+
+    const now = new Date()
+    const updateThreshold = new Date(now.getTime() - 4 * 60 * 60 * 1000) // 4 hours ago
+
+    if (
+      !userRecommendations ||
+      userRecommendations.lastUpdated < updateThreshold
+    ) {
+      updateRecommendations(userId) // Trigger an update in the background
+    }
+
+    if (
+      !userRecommendations ||
+      userRecommendations.recommendations.length < pageSize
+    ) {
+      await new Promise(resolve => setTimeout(resolve, 5000)) // Wait for 5 seconds
+      userRecommendations = await Recommendation.findOne({ user_id: userId })
+    }
+
+    const startIndex = (page - 1) * pageSize
+    const endIndex = startIndex + pageSize
+
+    const recommendationsToServe = userRecommendations.recommendations
+      .filter(rec => !rec.served && rec._id.toString() !== articleId)
+      .slice(startIndex, endIndex)
+
+    await Recommendation.updateOne(
+      { user_id: userId },
+      { $set: { 'recommendations.$[elem].served': true } },
+      {
+        arrayFilters: [
+          { 'elem._id': { $in: recommendationsToServe.map(rec => rec._id) } },
+        ],
+      },
+    )
+
+    const articles = []
+
+    for (let recommendation of recommendationsToServe) {
+      // Check if a quiz attempt exists for the user and article
+      const quizAttempt = await QuizAttempt.findOne({
+        user: userId,
+        article: recommendation._id,
+      })
+
+      // If no quiz attempt exists, add the article to the articles array
+      if (!quizAttempt) {
+        const article = await Article.findById(recommendation._id)
+        if (article) {
+          articles.push(article)
+        }
+      }
+    }
+
+    return articles
+  } catch (error) {
+    console.error('Error in getRecommendations:', error)
+    throw error
   }
 }
 
 async function getRecommendationsForNotification(userId, topN = 20) {
   try {
-    let userRecommendations = await Recommendation.findOne({ user_id: userId });
+    let userRecommendations = await Recommendation.findOne({ user_id: userId })
 
     if (!userRecommendations) {
-      await updateRecommendations(userId);
-      userRecommendations = await Recommendation.findOne({ user_id: userId });
+      await updateRecommendations(userId)
+      userRecommendations = await Recommendation.findOne({ user_id: userId })
     }
 
     if (
       !userRecommendations ||
       userRecommendations.recommendations.length === 0
     ) {
-      return null;
+      return null
     }
 
     // Get the list of already notified article IDs for this user
-    let notifiedArticles = await NotifiedArticles.findOne({ user_id: userId });
+    let notifiedArticles = await NotifiedArticles.findOne({ user_id: userId })
     if (!notifiedArticles) {
       notifiedArticles = new NotifiedArticles({
         user_id: userId,
         notified_articles: [],
-      });
-      await notifiedArticles.save();
+      })
+      await notifiedArticles.save()
     }
     const notifiedArticleIds = new Set(
-      notifiedArticles.notified_articles.map((na) => na.article_id.toString())
-    );
+      notifiedArticles.notified_articles.map(na => na.article_id.toString()),
+    )
 
     // Filter not notified recommendations and take the top N
     const topNotNotifiedRecommendations = userRecommendations.recommendations
-      .filter((rec) => !notifiedArticleIds.has(rec._id.toString()))
-      .slice(0, topN);
+      .filter(rec => !notifiedArticleIds.has(rec._id.toString()))
+      .slice(0, topN)
 
     if (topNotNotifiedRecommendations.length === 0) {
-      return null;
+      return null
     }
 
     // Select a random recommendation from the top N
     const randomIndex = Math.floor(
-      Math.random() * topNotNotifiedRecommendations.length
-    );
-    const selectedRecommendation = topNotNotifiedRecommendations[randomIndex];
+      Math.random() * topNotNotifiedRecommendations.length,
+    )
+    const selectedRecommendation = topNotNotifiedRecommendations[randomIndex]
 
     // Add the selected article to the notified articles list
     await NotifiedArticles.updateOne(
@@ -244,17 +313,17 @@ async function getRecommendationsForNotification(userId, topN = 20) {
         $push: {
           notified_articles: { article_id: selectedRecommendation._id },
         },
-      }
-    );
+      },
+    )
     await Recommendation.updateOne(
-      { user_id: userId, "recommendations._id": selectedRecommendation._id },
-      { $set: { "recommendations.$.notified": true } }
-    );
+      { user_id: userId, 'recommendations._id': selectedRecommendation._id },
+      { $set: { 'recommendations.$.notified': true } },
+    )
 
-    return selectedRecommendation;
+    return selectedRecommendation
   } catch (error) {
-    console.error("Error in getRecommendationsForNotification:", error);
-    throw error;
+    console.error('Error in getRecommendationsForNotification:', error)
+    throw error
   }
 }
 
@@ -264,4 +333,5 @@ module.exports = {
   exportDataToCSV,
   generateRecommendations,
   getRecommendationsForNotification,
-};
+  getArticlePageRecommendations,
+}

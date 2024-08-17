@@ -36,7 +36,6 @@ self.addEventListener('push', event => {
     data: { url: data.url },
     badge: RapidRecapBadge,
     vibrate: [200, 100, 200],
-    renotify: true,
   }
 
   event.waitUntil(
