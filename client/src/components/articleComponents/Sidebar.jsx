@@ -138,7 +138,7 @@ const Sidebar = ({
     try {
       setLoading(true)
       const response = await axios.get(
-        `/api/recommendation?page=${page}&pageSize=5`,
+        `/api/recommendation/articlePageRecommendations/${id}?page=${page}&pageSize=5`,
       )
       setRecommendedArticles(prevArticles => [
         ...prevArticles,
