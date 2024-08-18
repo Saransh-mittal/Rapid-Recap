@@ -61,10 +61,10 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
           <ModalOverlay bg="rgba(15, 13, 21, 0.8)" />
           <ModalContent
             bg="#1a1527"
-            backgroundImage="linear-gradient(135deg, #2d2a47 0%, #0e0c16 100%)"
             maxW={{ base: '100vw', md: '60vw' }}
             py={8}
             borderRadius="lg"
+            backgroundImage="linear-gradient(135deg, #2d2a47 0%, #0e0c16 100%)"
             boxShadow="0 10px 30px rgba(0, 0, 0, 0.3)"
             color="white"
             fontFamily="'Roboto', sans-serif"

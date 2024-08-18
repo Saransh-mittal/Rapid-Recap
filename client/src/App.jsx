@@ -8,7 +8,7 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import ReactGA from 'react-ga4'
-import { useEffect, lazy, Suspense } from 'react'
+import { useEffect, lazy, Suspense, useState } from 'react'
 import { Helmet } from 'react-helmet'
 import { Box, useDisclosure, useToast } from '@chakra-ui/react'
 import NotificationSubscription from './components/Notifications/NotificationSubscription.jsx'
@@ -21,6 +21,7 @@ import axios from 'axios'
 import { setUser } from './redux/authSlice.js'
 import FixedBackground from './components/miscellaneous/FixedBackground.jsx'
 import AppRoutes from './routes/AppRoutes.jsx'
+import GuestLoginModal from './components/authComponents/GuestLoginModal.jsx'
 
 const Home = lazy(() => import('./screens/Home'))
 const Article = lazy(() => import('./screens/Article.jsx'))
@@ -40,6 +41,11 @@ const App = () => {
 
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
+  const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
+
+  const handleClose = () => {
+    setIsGuestLoggedin(false)
+  }
 
   const isLoggedIn = () => {
     return isAuthenticated && user
@@ -164,6 +170,7 @@ const App = () => {
       <FixedBackground />
       <Navbar />
       {shouldShowNotification && <NotificationSubscription />}
+      <GuestLoginModal isOpen={isGuestLoggedin || true} onClose={handleClose} />
       <Box
         position="relative"
         minHeight="100vh"

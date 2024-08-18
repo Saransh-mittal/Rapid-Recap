@@ -1,6 +1,7 @@
 import * as React from 'react'
 const UserFriendsSVG = props => (
   <svg
+    fill="white"
     width="640px"
     height="640px"
     viewBox="0 -64 640 640"

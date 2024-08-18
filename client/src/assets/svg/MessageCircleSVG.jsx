@@ -1,7 +1,7 @@
 import * as React from 'react'
 const MessageCircleSVG = props => (
   <svg
-    fill="#a49eb9"
+    fill="white"
     width="18px"
     height="18px"
     viewBox="-3 -2 24 24"
