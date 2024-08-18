@@ -137,16 +137,27 @@ const OutsideNavbarContent = ({
 
   if (notLogined) {
     return (
-      <Suspense
-        fallback={
-          <Skeleton width={'150px'} height={'40px'} borderRadius={'15px'} />
-        }
-      >
-        <GetStarted
-          display={{ base: 'none', lg: 'flex' }}
-          innerText="Get Started"
+      <>
+        <Suspense
+          fallback={
+            <Skeleton width={'150px'} height={'40px'} borderRadius={'15px'} />
+          }
+        >
+          <GetStarted
+            display={{ base: 'none', lg: 'flex' }}
+            innerText="Get Started"
+          />
+        </Suspense>
+        <HamburgerMenuButton
+          isHamburgerOpen={isHamburgerOpen}
+          setIsHamburgerOpen={setIsHamburgerOpen}
+          playClick={playClick}
+          unreadFriendRequests={unreadFriendRequests}
+          notification={notification}
+          notifyCont={notifyCont}
+          renderNotificationBadge={renderNotificationBadge}
         />
-      </Suspense>
+      </>
     )
   }
 
