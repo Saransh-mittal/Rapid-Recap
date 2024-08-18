@@ -22,10 +22,16 @@ const sendRequest = asyncHandler(async (req, res) => {
 
     const sender = await User.findByIdAndUpdate(fromId, {
       $push: { sentRequests: newRequest._id },
-    }).select('name pic')
+    }).select('name pic role')
     const receiver = await User.findByIdAndUpdate(toId, {
       $push: { receivedRequests: newRequest._id },
-    }).select('inGameName')
+    }).select('inGameName role')
+
+    if (receiver.role === 'guest' || sender.role === 'guest') {
+      return res
+        .status(400)
+        .json({ message: 'Guest users cannot send or receive friend requests' })
+    }
 
     await sendNotification({
       title: `Friend request from ${sender.name}`,
@@ -56,10 +62,17 @@ const acceptRequest = asyncHandler(async (req, res) => {
 
     const sender = await User.findByIdAndUpdate(request.from._id, {
       $push: { friends: request.to._id },
-    }).select('inGameName _id')
+    }).select('inGameName _id role')
     const receiver = await User.findByIdAndUpdate(request.to._id, {
       $push: { friends: request.from._id },
-    }).select('inGameName pic _id name')
+    }).select('inGameName pic _id name role')
+
+    if (receiver.role === 'guest' || sender.role === 'guest') {
+      return res
+        .status(400)
+        .json({ message: 'Guest users cannot accept friend requests' })
+    }
+
     let chat = await Chat.findOne({
       users: { $all: [sender._id, receiver._id] },
     })
@@ -136,7 +149,14 @@ const getRequests = asyncHandler(async (req, res) => {
         select: 'name inGameName IQ_score pic',
       },
     })
-
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    if (user.role === 'guest') {
+      return res
+        .status(400)
+        .json({ message: 'Guest users cannot send or receive friend requests' })
+    }
     const formattedRequests = user.receivedRequests.map(request => ({
       _id: request._id,
       from: {

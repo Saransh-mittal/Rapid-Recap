@@ -37,6 +37,10 @@ const {
   // mailForQuinBoost,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
+const {
+  exportGuestData,
+  enhancedGuestLogin,
+} = require('../controllers/guestController')
 
 router.route('/register').post(registerUser)
 router.route('/login').post(loginUser)
@@ -72,4 +76,8 @@ router.route('/removeBookmark').get(Authenticate, removeBookmark)
 router.route('/lineGraph').get(Authenticate, NavLineGraph)
 router.route('/getUserIds').get(getUserIds)
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
+
+// Guest routes
+router.route('/guestLogin').post(enhancedGuestLogin)
+router.route('/exportGuestData').post(Authenticate, exportGuestData)
 module.exports = router

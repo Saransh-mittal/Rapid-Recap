@@ -3,7 +3,11 @@ const Chat = require('../model/chatSchema')
 const User = require('../model/userSchema')
 const Message = require('../model/messageSchema')
 const Article = require('../model/articleSchema')
-const { formatDate, isEncrypted } = require('../utils/miscellaneous.utils')
+const {
+  formatDate,
+  isEncrypted,
+  isGuestUser,
+} = require('../utils/miscellaneous.utils')
 const { userOpenChats } = require('../sharedState')
 const { sendNotification } = require('../services/notificationService')
 
@@ -12,12 +16,14 @@ const { sendNotification } = require('../services/notificationService')
 //@access          Protected
 const accessChat = asyncHandler(async (req, res) => {
   const { userId } = req.body
-
   if (!userId) {
     console.log('UserId param not sent with request')
     return res.sendStatus(400)
   }
-
+  const isGuest = await isGuestUser(userId)
+  if (isGuest) {
+    return res.status(400).send({ message: 'Guest users cannot chat' })
+  }
   const isFriend =
     (await User.findOne({
       _id: userId,
@@ -80,6 +86,10 @@ const accessChat = asyncHandler(async (req, res) => {
 //@access          Protected
 const fetchChats = asyncHandler(async (req, res) => {
   try {
+    const isGuest = await isGuestUser(req.user._id.toString())
+    if (isGuest) {
+      return res.status(400).send({ message: 'Guest users cannot chat' })
+    }
     Chat.find({
       users: { $elemMatch: { $eq: req.user._id } },
       status: { $in: ['accepted', 'pending'] },
@@ -167,6 +177,10 @@ const createGroupChat = asyncHandler(async (req, res) => {
   users.push(req.user)
 
   try {
+    const isGuest = await isGuestUser(req.user._id.toString())
+    if (isGuest) {
+      return res.status(400).send({ message: 'Guest users cannot chat' })
+    }
     const groupChat = await Chat.create({
       chatName: req.body.name,
       users: users,
