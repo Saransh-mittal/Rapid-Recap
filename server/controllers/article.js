@@ -805,12 +805,16 @@ const deleteAdminArticleDetails = asyncHandler(async (req, res) => {
 
   res.status(200).json({ message: 'Article deleted successfully' })
 })
-
+// @desc    Get related articles
+// @route   GET /api/articles/related/:articleId
+// @access  Protected
 const getRelatedArticles = asyncHandler(async (req, res) => {
   const { articleId } = req.params
   const page = parseInt(req.query.page, 10) || 1
   const limit = parseInt(req.query.limit, 10) || 10
+  const userId = req.user._id // Assuming `req.user` contains authenticated user info
 
+  // Find the article
   const article = await Article.findById(articleId)
   if (!article) {
     res.status(404)
@@ -821,13 +825,27 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
   const totalPages = Math.ceil(totalArticles / limit)
   const skip = (page - 1) * limit
 
-  const relatedArticles = await Article.find({
+  // Find the related articles based on their IDs
+  let relatedArticles = await Article.find({
     _id: { $in: article.relatedArticles },
   })
     .select('title author dateTime category imgURL avgReadTime')
     .skip(skip)
     .limit(limit)
 
+  // Find the quiz attempts by the user for these related articles
+  const attemptedArticleIds = await QuizAttempt.find({
+    user: userId,
+    article: { $in: article.relatedArticles },
+  }).distinct('article')
+
+  // Filter out articles that have quiz attempts by the user
+  relatedArticles = relatedArticles.filter(
+    relatedArticle =>
+      !attemptedArticleIds.includes(relatedArticle._id.toString()),
+  )
+
+  // Send the response with filtered related articles
   res.json({
     relatedArticles,
     currentPage: page,
