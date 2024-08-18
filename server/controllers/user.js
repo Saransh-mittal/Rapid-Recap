@@ -856,11 +856,11 @@ const userSearch = async (req, res) => {
     }
 
     // Execute the query and retrieve the matching users
-    const users = await User.find(searchQuery).populate({
+    let users = await User.find(searchQuery).populate({
       path: 'quizAttempts',
       match: { season: 2 },
     })
-
+    users = users.filter(user => user.role !== 'guest')
     // Prioritize results with full query match
     const prioritizedUsers = users.sort((a, b) => {
       const aFullMatch =

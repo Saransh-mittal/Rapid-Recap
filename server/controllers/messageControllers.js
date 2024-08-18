@@ -5,7 +5,11 @@ const Chat = require('../model/chatSchema')
 const { sendNotification } = require('../services/notificationService')
 const { userOpenChats } = require('../sharedState')
 const Article = require('../model/articleSchema')
-const { formatDate, isEncrypted } = require('../utils/miscellaneous.utils')
+const {
+  formatDate,
+  isEncrypted,
+  isGuestUser,
+} = require('../utils/miscellaneous.utils')
 
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
@@ -17,6 +21,10 @@ const allMessages = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit
 
   try {
+    const isGuest = await isGuestUser(userId)
+    if (isGuest) {
+      return res.status(400).send({ message: 'Guest users cannot chat' })
+    }
     const messages = await Message.find({ chat: req.params.chatId })
       .sort({ createdAt: -1 })
       .skip(skip)

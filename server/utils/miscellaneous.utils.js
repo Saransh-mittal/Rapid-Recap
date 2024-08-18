@@ -1,6 +1,7 @@
 const { redis } = require('../redis')
 const CryptoJS = require('crypto-js')
 const moment = require('moment')
+const User = require('../model/userSchema')
 
 function binarySearch(arr, target) {
   let left = 0
@@ -170,6 +171,11 @@ function toISOString(formattedDateTime) {
   return date.toISOString()
 }
 
+async function isGuestUser(userId) {
+  const user = await User.findById(userId).select('role')
+  return user.role === 'guest'
+}
+
 module.exports = {
   binarySearch,
   binarySearchForLeftRange,
@@ -183,4 +189,5 @@ module.exports = {
   isEncrypted,
   formatDateTimeAccordindToDB,
   toISOString,
+  isGuestUser,
 }
