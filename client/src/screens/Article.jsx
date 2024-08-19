@@ -23,6 +23,7 @@ import { Helmet } from 'react-helmet'
 import { useSelector } from 'react-redux'
 import imageData from '../assets/AltNewsImage'
 import { quinBoostChecker } from '../utils/quiz.utils'
+import slugify from 'slugify'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
 const Quiz = lazy(() => import('../components/articleComponents/Quiz'))
@@ -442,7 +443,9 @@ const Article = () => {
               <meta property="og:type" content="article" />
               <meta
                 property="og:url"
-                content={`https://www.rapidrecap.co.in/articles/${id}`}
+                content={`https://www.rapidrecap.co.in/article/${id}/${slugify(
+                  title['english'],
+                )}`}
               />
               <meta name="twitter:card" content="summary_large_image" />
               <meta
@@ -456,7 +459,9 @@ const Article = () => {
               <meta name="twitter:image" content={imgURL} />
               <link
                 rel="canonical"
-                href={`https://www.rapidrecap.co.in/articles/${id}`}
+                href={`https://www.rapidrecap.co.in/article/${id}/${slugify(
+                  title['english'],
+                )}`}
               />
               <script type="application/ld+json">
                 {`
@@ -465,7 +470,9 @@ const Article = () => {
       "@type": "NewsArticle",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://www.rapidrecap.co.in/articles/${id}"
+        "@id": "https://www.rapidrecap.co.in/article/${id}/${slugify(
+                  title['english'],
+                )}"
       },
       "headline": "${title[selectedLanguage]}",
       "image": ["${imgURL}"],
