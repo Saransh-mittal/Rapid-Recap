@@ -1,0 +1,1 @@
+import{u as r}from"./chunk-MGVPL3OH-33950d03.js";import{af as p,j as i,ag as n}from"./index-1239c555.js";var c=p((a,t)=>{const{placement:s="bottom",...o}=a,e=r();return i.jsx(n.caption,{...o,ref:t,__css:{...e.caption,captionSide:s}})});c.displayName="TableCaption";export{c as T};
