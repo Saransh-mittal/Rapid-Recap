@@ -98,6 +98,11 @@ const fetchUsersWithQuizAttempts = async () => {
   try {
     return await User.aggregate([
       {
+        $match: {
+          role: { $ne: 'guest' }, // Exclude guest users
+        },
+      },
+      {
         $lookup: {
           from: 'quiz_attempts',
           localField: '_id',

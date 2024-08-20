@@ -1,4 +1,4 @@
-import { useBreakpointValue } from '@chakra-ui/react'
+import { background, useBreakpointValue } from '@chakra-ui/react'
 import ButtonSvg from '../../assets/svg/ButtonSvg'
 import React from 'react'
 import useSound from '../../customHooks/useSound'
@@ -12,6 +12,7 @@ const Button = React.forwardRef((props, ref) => {
     pl,
     pr,
     white,
+
     textColor = '',
     buttonW = '',
     display = 'inline-flex',

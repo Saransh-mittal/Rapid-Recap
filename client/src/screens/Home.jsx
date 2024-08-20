@@ -13,12 +13,14 @@ import React, {
 import axios from 'axios'
 import { useNavigate, useParams } from 'react-router-dom'
 import debounce from 'lodash.debounce'
-import { useToast, Box, Spinner } from '@chakra-ui/react'
+import { useToast, Box, Spinner, useDisclosure } from '@chakra-ui/react'
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
 import { setPageRedux } from '../redux/uiSlice'
 import { setCategory, setItemsState } from '../redux/contentSlice'
 import throttle from 'lodash.throttle'
+import WiseWeb from '../components/profileComponents/WiseWeb'
+import { markFriendRequestsAsRead } from '../redux/appSlice'
 
 const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
 const UpgradeModal = lazy(() =>
@@ -33,6 +35,7 @@ const Home = () => {
   const { items: stateItems, category: stateCategory } = useSelector(
     state => state.content,
   )
+  const { unreadFriendRequests } = useSelector(state => state.app)
   const { isSearching } = useSelector(state => state.articles)
   const dispatchRedux = useDispatch()
   const navigate = useNavigate()
@@ -150,6 +153,21 @@ const Home = () => {
     debouncedHandleScroll()
   }, [throttledHandleScroll, debouncedHandleScroll])
 
+  const {
+    isOpen: isOpenWiseWeb,
+    onOpen: onOpenWiseWeb,
+    onClose: onCloseWiseWeb,
+  } = useDisclosure()
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const wiseweb = params.get('wiseweb')
+
+    if (wiseweb) {
+      onOpenWiseWeb()
+    }
+  }, [location, onOpenWiseWeb])
+
   useEffect(() => {
     if (!category || category === '') {
       navigate('/home/all')
@@ -221,6 +239,12 @@ const Home = () => {
           load={load}
         />
       </Suspense>
+      <WiseWeb
+        isOpen={isOpenWiseWeb}
+        onClose={onCloseWiseWeb}
+        requestNotif={unreadFriendRequests > 0}
+        markRequestAsRead={() => dispatchRedux(markFriendRequestsAsRead())}
+      />
     </Box>
   )
 }
