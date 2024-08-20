@@ -36,7 +36,8 @@ const sendRequest = asyncHandler(async (req, res) => {
     await sendNotification({
       title: `Friend request from ${sender.name}`,
       icon: sender.pic,
-      url: `/profile/${receiver.inGameName}/?requestId=${newRequest._id}`,
+      // url: `/profile/${receiver.inGameName}/?requestId=${newRequest._id}`,
+      url: `/home?wiseweb=true`,
       userId: toId.toString(),
     })
 
@@ -103,7 +104,7 @@ const acceptRequest = asyncHandler(async (req, res) => {
     await sendNotification({
       title: `Friend request accepted by ${receiver.name}`,
       icon: receiver.pic,
-      url: `/profile/${sender.inGameName}`,
+      url: `/home?wiseweb=true`,
       userId: sender._id.toString(),
     })
 
