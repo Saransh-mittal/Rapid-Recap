@@ -127,6 +127,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
 
     try {
       // Here you would make an API call to share the article
+      onClose()
       const { data } = await axios.post('/api/chat/share', {
         articleId: articleToShare._id,
         chatIds: selectedChats,
@@ -136,18 +137,6 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
       data.forEach(message => {
         socket.emit('new message', message)
       })
-      // if (socketConnected && socket) {
-      //   socket?.emit("new message", data);
-      // }
-      toast({
-        title: 'Article Shared',
-        description: `Article shared to ${selectedChats.length} chat(s) successfully!`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
-
-      onClose()
     } catch (error) {
       toast({
         title: 'Error Occurred!',
