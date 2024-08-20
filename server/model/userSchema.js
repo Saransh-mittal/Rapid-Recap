@@ -197,7 +197,7 @@ const userSchema = new mongoose.Schema(
         date: { type: Date, default: Date.now },
       },
     ],
-    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    role: { type: String, enum: ['user', 'admin', 'guest'], default: 'user' },
     rankedInCurrentSeason: {
       type: Boolean,
       default: false,
@@ -259,6 +259,7 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    expiresAt: { type: Date },
   },
   { collection: 'Users' },
 )
