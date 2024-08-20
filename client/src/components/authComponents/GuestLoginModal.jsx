@@ -30,6 +30,7 @@ import ArrowRightSVG from '../../assets/svg/ArrowRightSVG'
 import CheckCircle from '../../assets/svg/CheckCircle'
 import UserSVG from '../../assets/svg/UserSVG'
 import Button from '../miscellaneous/ButtonComponent'
+import ButtonGradient from '../../assets/svg/ButtonGradient'
 const MotionBox = motion(Box)
 
 const GradientText = ({ children, gradient }) => (
@@ -283,6 +284,7 @@ const GuestLoginModal = ({
             </ModalBody>
 
             <ModalFooter bg="gray.800" justifyContent={'center'}>
+              {/* <ButtonGradient /> */}
               <HStack spacing={4} w={'100%'} justifyContent={'center'}>
                 <Button
                   colorScheme="blue"
