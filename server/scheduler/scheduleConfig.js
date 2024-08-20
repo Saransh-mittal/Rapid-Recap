@@ -7,6 +7,7 @@ const sendStreakBrokenMails = require('./tasks/mailsForStreakBroken')
 const sendStreakReminder = require('./tasks/mailsForStreakReminder')
 const calculateUserIQScores = require('./tasks/userIQScoreScheduler')
 const incFakeQuizAttempts = require('./tasks/incFakeQuizAttempts')
+const deleteExpiredGuestAccountsTask = require('./tasks/deleteExpiredGuestAccounts')
 
 const currentDate = moment().format('YYYY-MM-DD')
 
@@ -26,6 +27,11 @@ let schedules = [
     sendRecommendedNewsNotification,
   ),
   createSchedule('incFakeQuizAttempts', '21:00', incFakeQuizAttempts),
+  createSchedule(
+    'deleteExpiredGuestAccountsTask',
+    '21:30',
+    deleteExpiredGuestAccountsTask,
+  ),
   createSchedule(
     'recommendedNewsNotification12',
     '22:25',
