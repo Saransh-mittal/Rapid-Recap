@@ -22,6 +22,7 @@ import { setUser } from './redux/authSlice.js'
 import FixedBackground from './components/miscellaneous/FixedBackground.jsx'
 import AppRoutes from './routes/AppRoutes.jsx'
 import GuestLoginModal from './components/authComponents/GuestLoginModal.jsx'
+import ButtonGradient from './assets/svg/ButtonGradient.jsx'
 
 const Home = lazy(() => import('./screens/Home'))
 const Article = lazy(() => import('./screens/Article.jsx'))
@@ -106,6 +107,12 @@ const App = () => {
   }, [])
 
   useEffect(() => {
+    if (user?.newAccount) {
+      setIsGuestLoggedin(true)
+    }
+  }, [isAuthenticated, user])
+
+  useEffect(() => {
     const loggedIn = isLoggedIn()
     const userInGameName = getUserInGameName()
 
@@ -169,8 +176,9 @@ const App = () => {
       </Helmet>
       <FixedBackground />
       <Navbar />
+      <ButtonGradient />
       {shouldShowNotification && <NotificationSubscription />}
-      <GuestLoginModal isOpen={isGuestLoggedin || true} onClose={handleClose} />
+      <GuestLoginModal isOpen={isGuestLoggedin} onClose={handleClose} />
       <Box
         position="relative"
         minHeight="100vh"

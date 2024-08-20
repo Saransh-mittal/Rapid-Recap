@@ -7,6 +7,7 @@ const AuthorInfo = React.memo(({ author, selectedLanguage }) => (
     gap={1}
     w={{ md: '75%', lg: 'auto' }}
     alignItems={{ base: 'flex-start', md: 'center' }}
+    h={'100%'}
   >
     <Flex height="fit-content">
       <Highlight
@@ -25,7 +26,7 @@ const AuthorInfo = React.memo(({ author, selectedLanguage }) => (
 
     <Flex mt={{ base: '3px', md: 0 }}>{'  : '}</Flex>
 
-    <Flex>
+    <Flex h={'100%'} justifyContent={'center'} alignItems={'center'}>
       <Text mb={0} fontWeight={'bold'} lineHeight={'23px'}>
         {author[selectedLanguage]}
       </Text>

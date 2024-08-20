@@ -13,7 +13,7 @@ const generateRandomString = length => {
 }
 
 // Create a guest user helper function
-exports.createGuestUser = async () => {
+const createGuestUser = async () => {
   try {
     const guestInGameName = `Guest_${generateRandomString(8)}`
     const guestEmail = `guest_${generateRandomString(8)}@example.com`
@@ -101,10 +101,7 @@ exports.enhancedGuestLogin = asyncHandler(async (req, res) => {
         return res.status(200).json({
           message: 'Guest user logged in successfully',
           user: {
-            _id: existingGuestUser._id,
-            inGameName: existingGuestUser.inGameName,
-            email: existingGuestUser.email,
-            role: existingGuestUser.role,
+            ...existingGuestUser._doc,
           },
         })
       }
@@ -123,13 +120,11 @@ exports.enhancedGuestLogin = asyncHandler(async (req, res) => {
     httpOnly: true,
   })
 
-  res.status(201).json({
+  res.status(200).json({
     message: 'New guest user created and logged in successfully',
     user: {
-      _id: newGuestUser._id,
-      inGameName: newGuestUser.inGameName,
-      email: newGuestUser.email,
-      role: newGuestUser.role,
+      ...newGuestUser._doc,
+      newAccount: true,
     },
   })
 })

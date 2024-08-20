@@ -40,6 +40,7 @@ import {
 import { setModal } from '../redux/uiSlice'
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 import Modal from './Modal'
+import GuestLogin from '../components/authComponents/GuestLogin'
 
 // const Modal = lazy(() => import('./Modal'))
 const ResetPassword = lazy(() =>
@@ -248,6 +249,23 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     }
   }
 
+  const handleGuestLoginSuccess = guestUser => {
+    dispatchRedux(setUser(guestUser))
+    dispatchRedux(verifyAdminStatus())
+    hamburgerOnClose && hamburgerOnClose()
+    dailyStreakCheckerAndUpdater(dispatchRedux)
+
+    toast({
+      title: 'Guest Login Successful',
+      status: 'success',
+      duration: 5000,
+      isClosable: true,
+      position: 'top',
+    })
+
+    location.pathname === '/' && navigate('/home/all')
+  }
+
   useEffect(() => {
     document.title = 'Signin page'
   }, [])
@@ -435,6 +453,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       </GoogleOAuthProvider>
                     </Button>
                   </Flex>
+                  <GuestLogin onSuccess={handleGuestLoginSuccess} />
                 </>
               ) : (
                 <>
