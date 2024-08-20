@@ -1,10 +1,24 @@
 import axios from 'axios'
 import React from 'react'
 import { Button, useToast } from '@chakra-ui/react'
+import { setUser, verifyAdminStatus } from '../../redux/authSlice'
+import { dailyStreakCheckerAndUpdater } from '../../utils/quiz.utils'
+import { useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 
-const GuestLogin = ({ onSuccess }) => {
+const GuestLogin = ({ width, onCloseNoteMessage, hamburgerOnClose }) => {
   const toast = useToast()
+  const navigate = useNavigate()
+  const dispatchRedux = useDispatch()
 
+  const handleGuestLoginSuccess = guestUser => {
+    dispatchRedux(setUser(guestUser))
+    dispatchRedux(verifyAdminStatus())
+    hamburgerOnClose && hamburgerOnClose()
+    dailyStreakCheckerAndUpdater(dispatchRedux)
+
+    location.pathname === '/' && navigate('/home/all')
+  }
   const handleGuestLogin = async () => {
     const storedGuestId = localStorage.getItem('guestUserId')
 
@@ -17,7 +31,7 @@ const GuestLogin = ({ onSuccess }) => {
         console.log('Guest login successful:', response.data)
         // Store the guest user ID
         localStorage.setItem('guestUserId', response.data.user._id)
-
+        handleGuestLoginSuccess(response.data.user)
         // Show success toast
         toast({
           title: 'Guest Login Successful',
@@ -27,9 +41,6 @@ const GuestLogin = ({ onSuccess }) => {
           isClosable: true,
           position: 'top',
         })
-
-        // Call the onSuccess callback
-        onSuccess(response.data.user)
       } else {
         throw new Error('Guest login failed')
       }
@@ -48,12 +59,12 @@ const GuestLogin = ({ onSuccess }) => {
 
   return (
     <Button
-      onClick={handleGuestLogin}
-      colorScheme="purple"
-      variant="outline"
-      size="lg"
-      width="100%"
-      mt={4}
+      onClick={() => {
+        handleGuestLogin()
+        onCloseNoteMessage()
+      }}
+      className="get-started-button"
+      width={width || `auto`}
     >
       Continue as Guest
     </Button>

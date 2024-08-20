@@ -16,6 +16,7 @@ import {
   useDisclosure,
   Grid,
   useMediaQuery,
+  Spinner,
 } from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
@@ -575,11 +576,13 @@ const Article = () => {
           isStateBoosted={isBoosted}
         />
         {user && <TrackTime userId={user?._id} articleId={id} />}
-        <Signin
-          isOpen={isSigninOpen}
-          onOpen={onSigninOpen}
-          onClose={onSigninClose}
-        />
+        <Suspense fallback={<Spinner />}>
+          <Signin
+            isOpen={isSigninOpen}
+            onOpen={onSigninOpen}
+            onClose={onSigninClose}
+          />
+        </Suspense>
       </Flex>
     </Suspense>
   )

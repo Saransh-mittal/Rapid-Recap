@@ -6,7 +6,12 @@ import useSound from '../../../customHooks/useSound'
 // Lazy load the Signin component
 const Signin = React.lazy(() => import('../../../screens/Signin'))
 
-const GetStarted = ({ display = 'flex', innerText, hamburgerOnClose }) => {
+const GetStarted = ({
+  display = 'flex',
+  innerText,
+  hamburgerOnClose,
+  width,
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { playClick } = useSound()
 
@@ -19,6 +24,7 @@ const GetStarted = ({ display = 'flex', innerText, hamburgerOnClose }) => {
           playClick()
           onOpen()
         }}
+        width={width || `auto`}
       >
         {innerText}
       </Button>

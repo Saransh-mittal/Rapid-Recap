@@ -1,21 +1,13 @@
 // /src/App.jsx
 import './App.css'
-import {
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-} from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4'
-import { useEffect, lazy, Suspense, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet'
-import { Box, useDisclosure, useToast } from '@chakra-ui/react'
+import { Box, HStack } from '@chakra-ui/react'
 import NotificationSubscription from './components/Notifications/NotificationSubscription.jsx'
 import Navbar from './components/Header-Footer/Navbar.jsx'
-import Contact from './screens/Contact'
 import Footer from './components/Header-Footer/Footer.jsx'
-import Loading from './components/miscellaneous/Loading.jsx'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { setUser } from './redux/authSlice.js'
@@ -23,18 +15,9 @@ import FixedBackground from './components/miscellaneous/FixedBackground.jsx'
 import AppRoutes from './routes/AppRoutes.jsx'
 import GuestLoginModal from './components/authComponents/GuestLoginModal.jsx'
 import ButtonGradient from './assets/svg/ButtonGradient.jsx'
-
-const Home = lazy(() => import('./screens/Home'))
-const Article = lazy(() => import('./screens/Article.jsx'))
-const Profile = lazy(() => import('./screens/Profile.jsx'))
-const LeaderBoard = lazy(() => import('./screens/LeaderBoard.jsx'))
-const GetStarted = lazy(() => import('./screens/GetStarted.jsx'))
-const FeedbackModal = lazy(() =>
-  import('./components/getStartedComponents/modals/FeedbackModal.jsx'),
-)
-const ChatPage = lazy(() => import('./screens/ChatPage.jsx'))
-const Signin = lazy(() => import('./screens/Signin.jsx'))
-const Dashboard = lazy(() => import('./screens/Dashboard.jsx'))
+import NoteMessage from './components/miscellaneous/NoteMessage.jsx'
+import GuestLogin from './components/authComponents/GuestLogin.jsx'
+import GetStarted from './components/Header-Footer/navbarComponents/GetStarted.jsx'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -43,6 +26,7 @@ const App = () => {
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
+  const [showNote, setShowNote] = useState(true)
 
   const handleClose = () => {
     setIsGuestLoggedin(false)
@@ -175,6 +159,21 @@ const App = () => {
         />
       </Helmet>
       <FixedBackground />
+      {showNote && (
+        <NoteMessage
+          onClose={() => setShowNote(false)}
+          title="Start using Rapid Recap"
+          duration={null} // Set to null to prevent auto-closing
+        >
+          <HStack p={'10px'} gap={'5px'} justifyContent={'space-between'}>
+            <GetStarted innerText={'Signin'} width={'8.5rem'} />
+            <GuestLogin
+              width={'8.5rem'}
+              onCloseNoteMessage={() => setShowNote(false)}
+            />
+          </HStack>
+        </NoteMessage>
+      )}
       <Navbar />
       <ButtonGradient />
       {shouldShowNotification && <NotificationSubscription />}
