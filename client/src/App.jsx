@@ -47,8 +47,8 @@ const App = () => {
 
   let timeout
   useEffect(() => {
-    const token =
-      localStorage.getItem('guestUserId') || localStorage.getItem('token')
+    const token = localStorage.getItem('token')
+
     if (!token) setShowNote(true)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {

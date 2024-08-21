@@ -31,6 +31,7 @@ const GuestLogin = ({ width, onCloseNoteMessage, hamburgerOnClose }) => {
         console.log('Guest login successful:', response.data)
         // Store the guest user ID
         localStorage.setItem('guestUserId', response.data.user._id)
+        localStorage.setItem('token', response.data.token)
         handleGuestLoginSuccess(response.data.user)
         // Show success toast
         toast({

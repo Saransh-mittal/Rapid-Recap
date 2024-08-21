@@ -168,6 +168,7 @@ exports.enhancedGuestLogin = asyncHandler(async (req, res) => {
       ...newGuestUser._doc,
       newAccount: true,
     },
+    token,
   })
 })
 

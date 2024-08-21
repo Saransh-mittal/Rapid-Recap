@@ -171,6 +171,7 @@ const Navbar = () => {
         setIsDrawerOpen(false)
         setIsHamburgerOpen(false)
         localStorage.removeItem('token')
+
         dispatchRedux(logout())
         dispatchRedux(resetLoadingFlags())
         dispatchRedux(resetAllState())
