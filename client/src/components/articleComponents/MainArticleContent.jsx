@@ -66,9 +66,6 @@ const MainArticleContent = ({
                 loading="lazy"
               />
             </Flex>
-            <figcaption>
-              about : {mainText[selectedLanguage]?.[0]?.substring(0, 160)}
-            </figcaption>
           </figure>
           {mainText[selectedLanguage].length === 3 ? (
             <>

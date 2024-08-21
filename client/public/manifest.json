@@ -13,14 +13,20 @@
       "type": "image/webp"
     },
     {
-      "src": "/images/rrlogo_HD.png",
+      "src": "/images/rrlogo_HD.webp",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/webp"
     },
     {
-      "src": "/images/rrlogo_HD.png",
+      "src": "/images/rrlogo_HD.webp",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/webp"
+    },
+    {
+      "src": "/images/rrlogo_HD.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "maskable"
     }
   ]
 }

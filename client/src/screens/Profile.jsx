@@ -15,6 +15,7 @@ import {
   Container,
   keyframes,
   useDisclosure,
+  Spinner,
 } from '@chakra-ui/react'
 import { ViewIcon } from '@chakra-ui/icons'
 import { useParams } from 'react-router-dom'
@@ -26,7 +27,8 @@ import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
 import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
 import SecureProgressSVG from '../assets/svg/SecureProgressSVG.jsx'
-import Signin from './Signin.jsx'
+import Register from './Register.jsx'
+import SecureYourProgress from '../components/miscellaneous/SecureYourProgress.jsx'
 
 // Dynamic imports for code splitting
 const IQLineGraph = React.lazy(() =>
@@ -75,9 +77,9 @@ export default function Profile() {
   const userSocietyAndCircle = findSocietyAndCircle(user?.IQ_score)
   const loginedUserProfile = inGameName === user?.inGameName
   const {
-    isOpen: isOpenSigninModal,
-    onOpen: onOpenSigninModal,
-    onClose: onCloseSigninModal,
+    isOpen: isOpenRegister,
+    onOpen: onOpenRegister,
+    onClose: onCloseRegister,
   } = useDisclosure()
   const [privacyProfileData, setPrivacyProfileData] = useState({
     fullProfile: false,
@@ -462,41 +464,7 @@ export default function Profile() {
                       />
                     </Flex>
                   )}
-                {user.role === 'guest' && (
-                  <Flex
-                    py={'8px'}
-                    borderRadius="10px"
-                    flexDirection="column"
-                    w={{ md: '85%', lg: '95%', base: '100%' }}
-                    height="fit-content"
-                    justifyContent={'center'}
-                    alignItems={'center'}
-                    position={'relative'}
-                    className="season-analytics"
-                  >
-                    <ProfileButton
-                      buttonText="Secure your process"
-                      isGuest={true}
-                      hoverAnimation={hoverAnimation}
-                      onClick={onOpenSigninModal}
-                      icon={
-                        <SecureProgressSVG
-                          width={'20px'}
-                          height={'20px'}
-                          fill={'#fff'}
-                        />
-                      }
-                      top={'0.9rem'}
-                    />
-                    {isOpenSigninModal && (
-                      <Signin
-                        isOpen={isOpenSigninModal}
-                        onOpen={onOpenSigninModal}
-                        onClose={onCloseSigninModal}
-                      />
-                    )}
-                  </Flex>
-                )}
+                {user.role === 'guest' && <SecureYourProgress />}
               </>
             )}
           </Suspense>

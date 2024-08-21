@@ -12,6 +12,7 @@ import circle from '/images/circle.webp'
 import Arrow from '/images/arrow.webp'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
 import { useSelector } from 'react-redux'
+import Lock from '/images/lock.webp'
 
 // Lazy load components
 const Lightning = lazy(() => import('./RankAndSocietySubCompnents/Lightning'))
@@ -78,7 +79,9 @@ const RankAndSociety = ({
         p={5}
         justifyContent={'center'}
         alignItems={'center'}
+        mt={-5}
       >
+        <Image h="200px" w="200px" background="transparent" src={Lock} />
         <Text>No data for guest user</Text>
       </Flex>
     )

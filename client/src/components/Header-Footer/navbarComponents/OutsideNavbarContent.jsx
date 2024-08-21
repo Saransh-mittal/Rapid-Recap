@@ -6,6 +6,7 @@ import {
   Flex,
   Skeleton,
   useDisclosure,
+  useMediaQuery,
 } from '@chakra-ui/react'
 import { HamburgerIcon, SearchIcon } from '@chakra-ui/icons'
 import { useNavigate } from 'react-router-dom'
@@ -57,6 +58,7 @@ const OutsideNavbarContent = ({
   const { notification } = ChatState()
   const navigate = useNavigate()
   const isToken = localStorage.getItem('token')
+  const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
 
   const {
     isOpen: isOpenUserSearch,
@@ -72,13 +74,13 @@ const OutsideNavbarContent = ({
   const renderNotificationBadge = useMemo(
     () => (
       <Box
-        h="14px"
-        w="14px"
+        h="13px"
+        w="13px"
         bg="red"
         borderRadius="50%"
         position="absolute"
-        right="-0.5rem"
-        top="-0.7rem"
+        right="1.3rem"
+        top="0.2rem"
         zIndex={2}
       />
     ),
@@ -127,6 +129,7 @@ const OutsideNavbarContent = ({
         display={{ base: 'none', lg: 'flex' }}
       />
       {(unreadFriendRequests !== 0 || notifyCont !== 0) &&
+        !isSmallerThan992 &&
         renderNotificationBadge}
     </Suspense>
   )
@@ -156,6 +159,7 @@ const OutsideNavbarContent = ({
           notification={notification}
           notifyCont={notifyCont}
           renderNotificationBadge={renderNotificationBadge}
+          isSmallerThan992={isSmallerThan992}
         />
       </>
     )
@@ -208,6 +212,7 @@ const OutsideNavbarContent = ({
         notification={notification}
         notifyCont={notifyCont}
         renderNotificationBadge={renderNotificationBadge}
+        isSmallerThan992={isSmallerThan992}
       />
     </Flex>
   )
@@ -403,31 +408,43 @@ const MessengerComponent = ({ notification, navigate }) => (
 )
 
 const HamburgerMenuButton = ({
-  isHamburgerOpen,
   setIsHamburgerOpen,
   playClick,
   unreadFriendRequests,
   notification,
   notifyCont,
-  renderNotificationBadge,
-}) => (
-  <Flex className="menu-button" display={{ base: 'flex', lg: 'none' }}>
-    <Button
-      onClick={() => {
-        playClick()
-        setIsHamburgerOpen(true)
-      }}
-      height="35px"
-      width="10px"
-      position="relative"
-    >
-      {(unreadFriendRequests > 0 ||
-        (Array.isArray(notification) && notification.length > 0) ||
-        notifyCont !== 0) &&
-        renderNotificationBadge}
-      <HamburgerIcon height="35px" width="20px" />
-    </Button>
-  </Flex>
-)
+  isSmallerThan992,
+}) => {
+  return (
+    <Flex className="menu-button" display={{ base: 'flex', lg: 'none' }}>
+      <Button
+        onClick={() => {
+          playClick()
+          setIsHamburgerOpen(true)
+        }}
+        height="35px"
+        width="10px"
+        position="relative"
+      >
+        {(unreadFriendRequests > 0 ||
+          (Array.isArray(notification) && notification.length > 0) ||
+          notifyCont !== 0) &&
+        isSmallerThan992 ? (
+          <Box
+            h="16px"
+            w="16px"
+            bg={'red'}
+            borderRadius={'50%'}
+            position={'absolute'}
+            right={'-0.4rem'}
+            top={'-0.4rem'}
+            zIndex={2}
+          />
+        ) : null}
+        <HamburgerIcon height="35px" width="20px" />
+      </Button>
+    </Flex>
+  )
+}
 
 export default OutsideNavbarContent

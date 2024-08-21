@@ -591,6 +591,14 @@ const preQuinBoost = async userId => {
   }
 }
 
+const makeFirstLoginFalse = async userId => {
+  try {
+    await User.findByIdAndUpdate(userId, { firstLogin: false })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -605,4 +613,5 @@ module.exports = {
   streakBrokenDaysCalculator,
   noLoginDaysSpentCalculator,
   currDayStreakCalulator,
+  makeFirstLoginFalse,
 }

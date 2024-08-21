@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const crypto = require('crypto')
 const asyncHandler = require('express-async-handler')
+const { isValidEmail } = require('../utils/miscellaneous.utils')
+const { startSession, abortSession } = require('../db/session')
 
 // Generate a random string for guest inGameName and email helper function
 const generateRandomString = length => {
@@ -27,6 +29,7 @@ const createGuestUser = async () => {
       inGameName: guestInGameName,
       password: hashedPassword,
       cpassword: hashedPassword,
+      guestTempPassword: guestPassword,
       role: 'guest',
       verified: true,
       createdAt: new Date(),
@@ -46,29 +49,68 @@ const createGuestUser = async () => {
 // @route POST /api/user/exportGuestData
 // @access Private
 exports.exportGuestData = asyncHandler(async (req, res) => {
-  const { guestId, newEmail, newPassword } = req.body
+  const { name, email, pic, password, cpassword, inGameName, guestId } =
+    req.body
 
-  const guestUser = await User.findById(guestId)
-  if (!guestUser || guestUser.role !== 'guest') {
-    return res.status(404).json({ error: 'Guest user not found' })
+  if (!name || !email || !pic || !password || !cpassword || !inGameName) {
+    return res.status(422).json({ error: 'Please fill the required field' })
   }
 
-  const existingUser = await User.findOne({ email: newEmail })
-  if (existingUser) {
-    return res.status(400).json({ error: 'Email already in use' })
+  if (!isValidEmail(email)) {
+    return res.status(422).json({ error: 'Invalid Email' })
   }
 
-  const hashedPassword = await bcrypt.hash(newPassword, 12)
+  if (isValidEmail(inGameName)) {
+    return res
+      .status(422)
+      .json({ error: 'Email cannot be used as an In-Game Name' })
+  }
 
-  guestUser.email = newEmail
-  guestUser.password = hashedPassword
-  guestUser.cpassword = hashedPassword
-  guestUser.role = 'user'
-  guestUser.expiresAt = undefined
+  // InGameName cannot be greater than 16 characters
+  if (inGameName.length > 16) {
+    return res
+      .status(422)
+      .json({ error: 'In Game Name cannot be greater than 16 characters' })
+  }
 
-  await guestUser.save()
+  if (inGameName.includes(' ')) {
+    return res.status(422).json({ error: 'In Game Name cannot have spaces' })
+  }
+  const session = await startSession()
+  try {
+    const guestUser = await User.findById(guestId)
+    if (!guestUser || guestUser.role !== 'guest') {
+      return res.status(404).json({ error: 'Guest user not found' })
+    }
 
-  res.status(200).json({ message: 'Guest data exported successfully' })
+    const existingUser = await User.findOne({ email: newEmail })
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already in use' })
+    }
+
+    if (password !== cpassword) {
+      return res.status(400).json({ error: 'Passwords do not match' })
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12)
+
+    guestUser.email = email
+    guestUser.password = hashedPassword
+    guestUser.cpassword = hashedPassword
+    guestUser.name = name
+    guestUser.pic = pic
+    guestUser.inGameName = inGameName
+    guestUser.guestTempPassword = undefined
+    guestUser.role = 'user'
+    guestUser.expiresAt = undefined
+
+    await guestUser.save({ session })
+    await commitSession()
+    res.status(200).json({ message: 'Guest data exported successfully' })
+  } catch (error) {
+    await abortSession(session)
+    throw new Error(error)
+  }
 })
 
 // @desc  Enhanced guest login

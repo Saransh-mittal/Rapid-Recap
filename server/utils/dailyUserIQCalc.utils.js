@@ -27,35 +27,65 @@ const handleSocietyOrCircleUpgrade = async (
   awardableXpOrNot,
 ) => {
   try {
+    const user = await User.findById(userId)
+    if (!user) {
+      console.error(`User not found for ID: ${userId}`)
+      return
+    }
+
     const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore)
     const currSocietyCircle = findSocietyCircleByIQ(currIQScore)
 
-    if (!prevSocietyCircle || !currSocietyCircle) return
-    const user = await User.findById(userId)
-    if (
-      (prevSocietyCircle.society !== currSocietyCircle.society ||
-        prevSocietyCircle.circle !== currSocietyCircle.circle) &&
-      prevSocietyCircle.IQ_Upper <= currSocietyCircle.IQ_Lower
-    ) {
-      const upgradeMsg = currSocietyCircle.upgradeMsg
-
-      user.societyUpgradeMessage = upgradeMsg
-      user.baseUpgradeIQ = currSocietyCircle.IQ_Lower
-      await user.save()
-      if (awardableXpOrNot) {
-        await logActivity({
-          userInGameName: user.inGameName,
-          type: activityTypes.SOCIETY_OR_CIRCLE_UPGRADE.type,
-          userIQ: currIQScore,
-          previousIQ: previousIQForXp,
-        })
-      }
+    if (!prevSocietyCircle || !currSocietyCircle) {
+      console.error(
+        `Invalid society/circle data for IQ scores: ${prevIQScore} or ${currIQScore}`,
+      )
+      return
     }
-    if (user.baseUpgradeIQ && user.baseUpgradeIQ > currIQScore) {
+
+    // Check for any change in society or circle
+    const hasSocietyOrCircleChanged =
+      prevSocietyCircle.society !== currSocietyCircle.society ||
+      prevSocietyCircle.circle !== currSocietyCircle.circle
+
+    // Check if it's an upgrade (moving to a higher IQ range)
+    const isUpgrade = currSocietyCircle.IQ_Lower >= prevSocietyCircle.IQ_Lower
+
+    if (hasSocietyOrCircleChanged) {
+      if (isUpgrade) {
+        user.societyUpgradeMessage = currSocietyCircle.upgradeMsg
+        user.baseUpgradeIQ = currSocietyCircle.IQ_Lower
+
+        if (awardableXpOrNot) {
+          await logActivity({
+            userInGameName: user.inGameName,
+            type: activityTypes.SOCIETY_OR_CIRCLE_UPGRADE.type,
+            userIQ: currIQScore,
+            previousIQ: previousIQForXp,
+          })
+        }
+      } else {
+        // Handle downgrade scenario
+        user.societyUpgradeMessage = ''
+        user.baseUpgradeIQ = null
+      }
+    } else if (user.baseUpgradeIQ && currIQScore < user.baseUpgradeIQ) {
+      // User's IQ has decreased but still in the same society/circle
       user.societyUpgradeMessage = ''
       user.baseUpgradeIQ = null
-      await user.save()
     }
+
+    // Update user's society and circle
+    user.currentSociety = currSocietyCircle.society
+    user.currentCircle = currSocietyCircle.circle
+
+    await user.save()
+
+    console.log(
+      `Updated society/circle for user ${userId}: ${
+        currSocietyCircle.society
+      } - ${currSocietyCircle.circle || 'N/A'}`,
+    )
   } catch (error) {
     console.error(
       `Error in handleSocietyOrCircleUpgrade for user ${userId}: ${error.message}`,

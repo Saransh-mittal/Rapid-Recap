@@ -246,7 +246,9 @@ const IQLineGraph = ({
         h={'250px'}
         justifyContent={'center'}
         alignItems={'center'}
+        flexDirection={'column'}
       >
+        <Image h="200px" w="200px" background="transparent" src={Lock} />
         <Text>No data for guest user</Text>
       </Flex>
     )

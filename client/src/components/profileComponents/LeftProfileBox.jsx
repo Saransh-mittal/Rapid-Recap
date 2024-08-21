@@ -335,7 +335,14 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           />
         </Suspense>
       )}
-      <GuestLoginModal isOpen={isGuestLoggedin} onClose={handleClose} />
+      <GuestLoginModal
+        isOpen={isGuestLoggedin}
+        onClose={handleClose}
+        guestName={user?.inGameName}
+        guestPassword={user?.guestTempPassword ? user.guestTempPassword : null}
+        guestId={user?._id}
+        onOpen={() => setIsGuestLoggedin(true)}
+      />
     </Flex>
   )
 }
