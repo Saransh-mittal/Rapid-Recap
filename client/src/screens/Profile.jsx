@@ -382,8 +382,8 @@ export default function Profile() {
                 </>
               ) : (
                 <ProfileExperienceLevel
-                  xp={profile.experience.xp}
-                  level={profile.experience.level}
+                  xp={profile?.experience?.xp}
+                  level={profile?.experience?.level}
                 />
               )}
             </Suspense>
@@ -557,13 +557,13 @@ export default function Profile() {
               ) : (
                 <>
                   <IQLineGraph
-                    lineGraph={profile.lineGraph}
-                    privateLineGraph={privacyProfileData.lineGraph}
+                    lineGraph={profile?.lineGraph}
+                    privateLineGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                   />
                   <IQBarGraph
-                    barGraph={profile.barGraph}
-                    privateBarGraph={privacyProfileData.lineGraph}
+                    barGraph={profile?.barGraph}
+                    privateBarGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                   />
                 </>
@@ -613,9 +613,9 @@ export default function Profile() {
                     }
                   >
                     <SolvedQuizzes
-                      privateSolvedQuiz={privacyProfileData.solvedQuizzes}
+                      privateSolvedQuiz={privacyProfileData?.solvedQuizzes}
                       loginedUserProfile={loginedUserProfile}
-                      solvedQuizzes={profile.solvedQuizzes}
+                      solvedQuizzes={profile?.solvedQuizzes}
                       inGameName={inGameName}
                     />
                   </Flex>
@@ -627,7 +627,7 @@ export default function Profile() {
                     className="rank-and-society"
                   >
                     <RankAndSociety
-                      privateSociety={privacyProfileData.society}
+                      privateSociety={privacyProfileData?.society}
                       loginedUserProfile={loginedUserProfile}
                       USER_IQ={profile?.barGraph?.USER_IQ}
                     />
