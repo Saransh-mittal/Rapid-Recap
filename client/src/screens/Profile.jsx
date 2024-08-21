@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  Suspense,
-} from 'react'
+import React, { useEffect, useState, useCallback, Suspense } from 'react'
 import {
   Box,
   Flex,
@@ -25,7 +19,9 @@ import { setOtherUserProfiles, setUserProfile } from '../redux/contentSlice.js'
 import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
 import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
+
 import SecureYourProgress from '../components/miscellaneous/SecureYourProgress.jsx'
+import NoteMessage from '../components/miscellaneous/NoteMessage.jsx'
 
 // Dynamic imports for code splitting
 const IQLineGraph = React.lazy(() =>
@@ -66,6 +62,7 @@ export default function Profile() {
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
   const dispatchRedux = useDispatch()
+  const [showNote, setShowNote] = useState(false)
 
   // State hooks
   const [profile, setProfile] = useState(userProfile)
@@ -73,6 +70,7 @@ export default function Profile() {
   const [showHideModal, setShowHideModal] = useState(false)
   const userSocietyAndCircle = findSocietyAndCircle(user?.IQ_score)
   const loginedUserProfile = inGameName === user?.inGameName
+
   const [privacyProfileData, setPrivacyProfileData] = useState({
     fullProfile: false,
     lineGraph: false,
@@ -385,8 +383,8 @@ export default function Profile() {
                 </>
               ) : (
                 <ProfileExperienceLevel
-                  xp={profile.experience.xp}
-                  level={profile.experience.level}
+                  xp={profile?.experience?.xp}
+                  level={profile?.experience?.level}
                 />
               )}
             </Suspense>
@@ -538,6 +536,7 @@ export default function Profile() {
           >
             <Flex
               w={'100%'}
+              zIndex={1001}
               marginTop={'10px'}
               marginInline={'1%'}
               padding={{ xl: isLoading ? 0 : '20px', base: '0' }}
@@ -566,16 +565,18 @@ export default function Profile() {
               ) : (
                 <>
                   <IQLineGraph
-                    lineGraph={profile.lineGraph}
-                    privateLineGraph={privacyProfileData.lineGraph}
+                    lineGraph={profile?.lineGraph}
+                    privateLineGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
+                    setShowNote={setShowNote}
                   />
                   <IQBarGraph
-                    barGraph={profile.barGraph}
-                    privateBarGraph={privacyProfileData.lineGraph}
+                    barGraph={profile?.barGraph}
+                    privateBarGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
+                    setShowNote={setShowNote}
                   />
                 </>
               )}
@@ -624,9 +625,9 @@ export default function Profile() {
                     }
                   >
                     <SolvedQuizzes
-                      privateSolvedQuiz={privacyProfileData.solvedQuizzes}
+                      privateSolvedQuiz={privacyProfileData?.solvedQuizzes}
                       loginedUserProfile={loginedUserProfile}
-                      solvedQuizzes={profile.solvedQuizzes}
+                      solvedQuizzes={profile?.solvedQuizzes}
                       inGameName={inGameName}
                     />
                   </Flex>
@@ -638,10 +639,11 @@ export default function Profile() {
                     className="rank-and-society"
                   >
                     <RankAndSociety
-                      privateSociety={privacyProfileData.society}
+                      privateSociety={privacyProfileData?.society}
                       loginedUserProfile={loginedUserProfile}
                       USER_IQ={profile?.barGraph?.USER_IQ}
                       isGuest={user?.role === 'guest'}
+                      setShowNote={setShowNote}
                     />
                   </Flex>
                 </>
@@ -650,6 +652,15 @@ export default function Profile() {
           </Suspense>
         </Flex>
       </Flex>
+      {showNote && (
+        <NoteMessage
+          onClose={() => setShowNote(false)}
+          title="Register to Save Your Progress"
+          duration={10000} // Set to null to prevent auto-closing
+        >
+          <SecureYourProgress />
+        </NoteMessage>
+      )}
     </Box>
   )
 }

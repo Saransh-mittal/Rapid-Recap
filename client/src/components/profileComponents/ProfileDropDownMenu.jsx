@@ -1,9 +1,12 @@
-import { Avatar, Flex, Box } from '@chakra-ui/react'
+import { Avatar, Flex, Box, Icon } from '@chakra-ui/react'
+import { BsLock } from 'react-icons/bs'
 import React, { useState, useMemo, useCallback, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import { NavLink } from 'react-router-dom'
+import NoteMessage from '../miscellaneous/NoteMessage'
+import SecureYourProgress from '../miscellaneous/SecureYourProgress'
 
 const Inbox = React.lazy(() =>
   import('../Header-Footer/navbarComponents/Inbox'),
@@ -62,6 +65,7 @@ const ProfileDropDownMenu = ({
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
+  const [showNote, setShowNote] = useState(false)
 
   const [isOpen, setIsOpen] = useState(false)
 
@@ -173,25 +177,46 @@ const ProfileDropDownMenu = ({
               variants={itemVariants}
               padding={0}
             >
-              <Flex
-                onClick={onOpenWiseWeb}
-                width={'100%'}
-                justifyContent={'center'}
-              >
-                <UserFriendsSVG fill={'white'} width={'20px'} height={'20px'} />
-                {unreadFriendRequests !== 0 && (
-                  <Box
-                    h="8px"
-                    w="8px"
-                    bg={'red'}
-                    borderRadius={'50%'}
-                    position={'absolute'}
-                    right={'22%'}
-                    top={'40%'}
-                    zIndex={2}
+              {user?.role === 'guest' ? (
+                <Flex
+                  width={'100%'}
+                  alignItems={'center'}
+                  opacity={0.5}
+                  justifyContent={'center'}
+                  onClick={() => setShowNote(true)}
+                >
+                  <UserFriendsSVG
+                    fill={'white'}
+                    width={'20px'}
+                    height={'20px'}
                   />
-                )}
-              </Flex>
+                  <Icon as={BsLock} color={'white'} ml={2} />
+                </Flex>
+              ) : (
+                <Flex
+                  onClick={onOpenWiseWeb}
+                  width={'100%'}
+                  justifyContent={'center'}
+                >
+                  <UserFriendsSVG
+                    fill={'white'}
+                    width={'20px'}
+                    height={'20px'}
+                  />
+                  {unreadFriendRequests !== 0 && (
+                    <Box
+                      h="8px"
+                      w="8px"
+                      bg={'red'}
+                      borderRadius={'50%'}
+                      position={'absolute'}
+                      right={'22%'}
+                      top={'40%'}
+                      zIndex={2}
+                    />
+                  )}
+                </Flex>
+              )}
             </motion.li>
             <NavLink
               to={`${toProfile}/${user?.inGameName}`}
@@ -220,6 +245,15 @@ const ProfileDropDownMenu = ({
           </Suspense>
         </motion.ul>
       </motion.nav>
+      {showNote && (
+        <NoteMessage
+          onClose={() => setShowNote(false)}
+          title="Register to Save Your Progress"
+          duration={10000} // Set to null to prevent auto-closing
+        >
+          <SecureYourProgress />
+        </NoteMessage>
+      )}
     </Flex>
   )
 }

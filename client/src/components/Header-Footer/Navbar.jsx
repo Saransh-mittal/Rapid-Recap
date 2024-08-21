@@ -17,6 +17,12 @@ import {
   useMediaQuery,
   useDisclosure,
   Spinner,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from '@chakra-ui/react'
 import { CloseIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
@@ -60,6 +66,9 @@ const Navbar = () => {
   const toast = useToast()
   const { playClick } = useSound()
   const navLinkRefs = useRef([])
+  const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] =
+    useState(false)
+  const cancelRef = React.useRef()
 
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -188,6 +197,17 @@ const Navbar = () => {
       console.error(error.message)
     }
   }, [dispatchRedux, navigate, toast])
+  const handleGuestLogout = () => {
+    if (user?.role === 'guest') {
+      setIsLogoutConfirmationOpen(true)
+    } else {
+      handleLogout()
+    }
+  }
+  const handleConfirmGuestLogout = () => {
+    setIsLogoutConfirmationOpen(false)
+    handleLogout()
+  }
 
   useEffect(() => {
     const checkIfHomePage = () => {
@@ -270,7 +290,10 @@ const Navbar = () => {
               <XPLevelModal setShowXPLevelModal={setShowXPLevelModal} />
             )}
             {showIQScoreModal && (
-              <IQScoreModal setShowIQScoreModal={setShowIQScoreModal} />
+              <IQScoreModal
+                setShowIQScoreModal={setShowIQScoreModal}
+                isGuest={user?.role === 'guest'}
+              />
             )}
 
             {isHamburgerOpen ? (
@@ -321,7 +344,7 @@ const Navbar = () => {
                 getBackgroundColor={getBackgroundColor}
                 notLogined={!isAuthenticated}
                 isHamburgerOpen={isHamburgerOpen}
-                handleLogout={handleLogout}
+                handleLogout={handleGuestLogout}
                 navLinkRefs={navLinkRefs}
                 setIsHamburgerOpen={setIsHamburgerOpen}
                 level={user?.level}
@@ -368,11 +391,45 @@ const Navbar = () => {
           notLogined={!isAuthenticated}
           navLinkRefs={navLinkRefs}
           notifyCont={notifyCont}
-          handleLogout={handleLogout}
+          handleLogout={handleGuestLogout}
           setIsDrawerOpen={setIsDrawerOpen}
           onOpenWiseWeb={onOpenWiseWeb}
         />
       </Suspense>
+      <AlertDialog
+        isOpen={isLogoutConfirmationOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={() => setIsLogoutConfirmationOpen(false)}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Confirm Logout
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              As a guest user, your progress and account may be lost if you log
+              out. Are you sure you want to proceed?
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button
+                ref={cancelRef}
+                onClick={() => setIsLogoutConfirmationOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={handleConfirmGuestLogout}
+                ml={3}
+              >
+                Confirm Logout
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </>
   )
 }

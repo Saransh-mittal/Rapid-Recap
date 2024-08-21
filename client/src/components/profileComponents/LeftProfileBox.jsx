@@ -228,22 +228,23 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                 {profileData?.name}
               </Heading>
               <Flex>
-                {user?.role === 'guest' && (
-                  <Button
-                    w={'20px'}
-                    height={'20px'}
-                    bg={'transparent'}
-                    color={'white'}
-                    _hover={{
-                      bg: 'transparent',
-                      color: 'white',
-                    }}
-                    // onClick={}
-                    onClick={() => setIsGuestLoggedin(true)}
-                  >
-                    <QuestionOutlineIcon w={'auto'} height={'18px'} />
-                  </Button>
-                )}
+                {user?.role === 'guest' &&
+                  window.location.pathname.split('/').pop() ===
+                    user?.inGameName && (
+                    <Button
+                      w={'20px'}
+                      height={'20px'}
+                      bg={'transparent'}
+                      color={'white'}
+                      _hover={{
+                        bg: 'transparent',
+                        color: 'white',
+                      }}
+                      onClick={() => setIsGuestLoggedin(true)}
+                    >
+                      <QuestionOutlineIcon w={'auto'} height={'18px'} />
+                    </Button>
+                  )}
               </Flex>
             </Flex>
             <Suspense fallback={<Spinner />}>
@@ -258,42 +259,43 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           </Heading>
 
           <Heading as="h6" fontSize={'12px'}>
-            Rank : {leftProfileView.rank}
+            Rank : {user?.role === 'guest' ? 'NA' : leftProfileView.rank}
           </Heading>
         </Box>
-        {window.location.pathname.split('/').pop() !== user?.inGameName && (
-          <Flex marginLeft={'1.5rem'} paddingTop={'10px'}>
-            {loading ? (
-              <Spinner />
-            ) : !user ? null : isFriend ? (
-              <Badge
-                colorScheme="green"
-                variant="solid"
-                borderRadius="full"
-                px={2}
-                height={'fit-content'}
-                py={1}
-              >
-                Friend
-              </Badge>
-            ) : (
-              <Flex
-                h={'fit-content'}
-                cursor={
-                  canSendRequest && !requestSent ? 'pointer' : 'not-allowed'
-                }
-                onClick={handleRequestClick}
-                disabled={!canSendRequest || requestSent}
-              >
-                <UserPlusSVG
-                  height={'20px'}
-                  width={'20px'}
-                  fill={!canSendRequest || requestSent ? 'grey' : 'white'}
-                />
-              </Flex>
-            )}
-          </Flex>
-        )}
+        {window.location.pathname.split('/').pop() !== user?.inGameName &&
+          user?.role !== 'guest' && (
+            <Flex marginLeft={'1.5rem'} paddingTop={'10px'}>
+              {loading ? (
+                <Spinner />
+              ) : !user ? null : isFriend ? (
+                <Badge
+                  colorScheme="green"
+                  variant="solid"
+                  borderRadius="full"
+                  px={2}
+                  height={'fit-content'}
+                  py={1}
+                >
+                  Friend
+                </Badge>
+              ) : (
+                <Flex
+                  h={'fit-content'}
+                  cursor={
+                    canSendRequest && !requestSent ? 'pointer' : 'not-allowed'
+                  }
+                  onClick={handleRequestClick}
+                  disabled={!canSendRequest || requestSent}
+                >
+                  <UserPlusSVG
+                    height={'20px'}
+                    width={'20px'}
+                    fill={!canSendRequest || requestSent ? 'grey' : 'white'}
+                  />
+                </Flex>
+              )}
+            </Flex>
+          )}
       </Flex>
 
       <Box marginTop={'10px'} w={{ base: '100%', lg: '100%' }}>

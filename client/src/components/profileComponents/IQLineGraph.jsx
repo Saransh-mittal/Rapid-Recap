@@ -15,6 +15,7 @@ import {
   Tag,
   useToast,
   useBreakpointValue,
+  Button,
 } from '@chakra-ui/react'
 import moment from 'moment'
 import axios from 'axios'
@@ -22,6 +23,8 @@ import Lock from '/images/lock.webp'
 import { useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import SVGIQLineGraph from '../../assets/svg/SVGIQLineGraph'
+import NoteMessage from '../miscellaneous/NoteMessage'
+import SecureYourProgress from '../miscellaneous/SecureYourProgress'
 
 // Lazy load the ExpectedIQModal component
 const ExpectedIQModal = lazy(() =>
@@ -175,6 +178,7 @@ const IQLineGraph = ({
   iOpenedFromNav = false,
   graphwidth,
   isGuest,
+  setShowNote,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -247,8 +251,17 @@ const IQLineGraph = ({
         justifyContent={'center'}
         alignItems={'center'}
         flexDirection={'column'}
+        zIndex={1001}
       >
-        <Image h="200px" w="200px" background="transparent" src={Lock} />
+        <Image
+          h="200px"
+          w="200px"
+          background="transparent"
+          src={Lock}
+          onClick={() => setShowNote(true)}
+          _hover={{ cursor: 'pointer' }}
+        />
+
         <Text>No data for guest user</Text>
       </Flex>
     )

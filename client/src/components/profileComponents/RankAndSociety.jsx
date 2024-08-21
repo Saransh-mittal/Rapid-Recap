@@ -27,6 +27,7 @@ const RankAndSociety = ({
   loginedUserProfile,
   isDisabled = false,
   isGuest,
+  setShowNote,
 }) => {
   const { user } = useSelector(state => state.auth)
   const [isLoading, setIsLoading] = useState(true)
@@ -81,7 +82,16 @@ const RankAndSociety = ({
         alignItems={'center'}
         mt={-5}
       >
-        <Image h="200px" w="200px" background="transparent" src={Lock} />
+        <Image
+          h="200px"
+          w="200px"
+          background="transparent"
+          src={Lock}
+          onClick={() => {
+            setShowNote(true)
+          }}
+          _hover={{ cursor: 'pointer' }}
+        />
         <Text>No data for guest user</Text>
       </Flex>
     )

@@ -288,6 +288,7 @@ const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => (
     }
   >
     <IQScore
+      user={user}
       score={user?.IQ_score}
       _hover={{ cursor: 'pointer' }}
       className="xp-level"

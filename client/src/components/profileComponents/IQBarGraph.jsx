@@ -107,6 +107,7 @@ const IQBarGraph = ({
   loginedUserProfile,
   viewingHistory = false,
   isGuest,
+  setShowNote,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -204,7 +205,14 @@ const IQBarGraph = ({
         alignItems={'center'}
         flexDirection={'column'}
       >
-        <Image h="200px" w="200px" background="transparent" src={Lock} />
+        <Image
+          h="200px"
+          w="200px"
+          background="transparent"
+          src={Lock}
+          onClick={() => setShowNote(true)}
+          _hover={{ cursor: 'pointer' }}
+        />
         <Text>No data for guest user</Text>
       </Flex>
     )

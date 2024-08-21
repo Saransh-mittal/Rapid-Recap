@@ -321,9 +321,17 @@ export default function Register({
                     aria-label="Toggle Password Visibility"
                     icon={
                       data.showPassword ? (
-                        <FillEyeInvisible width="20px" height="20px" />
+                        <FillEyeInvisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       ) : (
-                        <FillEyeVisible width="20px" height="20px" />
+                        <FillEyeVisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       )
                     }
                     onClick={() => togglePasswordVisibility('showPassword')}
@@ -348,9 +356,17 @@ export default function Register({
                     aria-label="Toggle Confirm Password Visibility"
                     icon={
                       data.showCPassword ? (
-                        <FillEyeInvisible width="20px" height="20px" />
+                        <FillEyeInvisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       ) : (
-                        <FillEyeVisible width="20px" height="20px" />
+                        <FillEyeVisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       )
                     }
                     onClick={() => togglePasswordVisibility('showCPassword')}
