@@ -23,22 +23,27 @@ import {
   Divider,
 } from '@chakra-ui/react'
 import { Helmet } from 'react-helmet-async'
-import { useDispatch, useSelector } from 'react-redux'
+
 import useSound from '../customHooks/useSound'
 import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
 import FillEyeVisible from '../assets/svg/FillEyeVisible'
-import rrlogo from '/images/rrlogo.webp'
 
 const EmailVerify = lazy(() =>
   import('../components/authComponents/EmailVerify'),
 )
 
-export default function Register({ isOpen, onClose, signinOnOpen }) {
+export default function Register({
+  isOpen,
+  onClose,
+  signinOnOpen,
+  exportData = false,
+  guestId = null,
+  onOpenGuest,
+}) {
   const [emailVerified, setEmailVerified] = useState(false)
   const toast = useToast()
   const { playClick } = useSound()
-  const dispatch = useDispatch()
-  const { modal } = useSelector(state => state.ui)
+
   const {
     isOpen: isEmailVerifyOpen,
     onOpen: onEmailVerifyOpen,
@@ -80,7 +85,14 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
     e.preventDefault()
     try {
       const pic = await submitImage(data)
-      const response = await axios.post(`/api/user/register`, { ...data, pic })
+      const response =
+        exportData && guestId
+          ? await axios.post(`/api/user/exportGuestData`, {
+              ...data,
+              pic,
+              guestId,
+            })
+          : await axios.post(`/api/user/register`, { ...data, pic })
       if (response.status === 201) {
         onEmailVerifyOpen()
         toast({
@@ -119,7 +131,7 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
   useEffect(() => {
     if (emailVerified) {
       onClose()
-      signinOnOpen()
+      signinOnOpen && signinOnOpen()
     }
   }, [emailVerified, onClose, signinOnOpen])
 
@@ -173,223 +185,215 @@ export default function Register({ isOpen, onClose, signinOnOpen }) {
   }
 
   return (
-    <ChakraModal
-      isOpen={isOpen}
-      onClose={() => {
-        onClose()
-        signinOnOpen()
-      }}
-      size={{ base: 'full', md: 'xl' }}
-      scrollBehavior={'inside'}
-    >
-      <Helmet>
-        <title>Register - Rapid Recap</title>
-        <meta
-          name="description"
-          content="Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
-        />
-        <meta
-          name="keywords"
-          content="Register, Rapid Recap, news, articles, quizzes, IQ score, leaderboard"
-        />
-        <meta property="og:title" content="Register - Rapid Recap" />
-        <meta
-          property="og:description"
-          content="Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
-        />
-      </Helmet>
-      <ModalOverlay
-        bg="blackAlpha.300"
-        backdropFilter="blur(10px) hue-rotate(90deg)"
-      />
-      <ModalContent
-        sx={{
-          backgroundColor: '#0f0d15',
-          backgroundImage:
-            'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-          padding: '20px',
-          borderRadius: '15px',
-          boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.3)',
-          overflowY: 'auto',
+    <>
+      <ChakraModal
+        isOpen={isOpen}
+        onClose={() => {
+          onClose()
+          signinOnOpen && signinOnOpen()
+          onOpenGuest && onOpenGuest()
         }}
+        size={{ base: 'full', md: 'xl' }}
+        scrollBehavior={'inside'}
       >
-        <ModalHeader
-          color="white"
-          display="flex"
-          alignItems="center"
-          fontSize={'1.75rem'}
+        <Helmet>
+          <title>Register - Rapid Recap</title>
+          <meta
+            name="description"
+            content="Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
+          />
+          <meta
+            name="keywords"
+            content="Register, Rapid Recap, news, articles, quizzes, IQ score, leaderboard"
+          />
+          <meta property="og:title" content="Register - Rapid Recap" />
+          <meta
+            property="og:description"
+            content="Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
+          />
+        </Helmet>
+        <ModalOverlay
+          bg="blackAlpha.300"
+          backdropFilter="blur(10px) hue-rotate(90deg)"
+        />
+        <ModalContent
+          sx={{
+            backgroundColor: '#0f0d15',
+            backgroundImage:
+              'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
+            padding: '20px',
+            borderRadius: '15px',
+            boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.3)',
+          }}
         >
-          REGISTER
-        </ModalHeader>
-        <ModalCloseButton color="white" />
-        <ModalBody overflowY="auto">
-          <Suspense fallback={<Spinner size="lg" color="white" />}>
-            <ChakraModal
-              isOpen={isEmailVerifyOpen}
-              onClose={onEmailVerifyClose}
-            >
-              <ModalOverlay />
-              <ModalContent
-                sx={{
-                  borderRadius: 'xl',
-                  backgroundColor: '#0f0d15',
-                  backgroundImage:
-                    'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-                  padding: '20px',
-                }}
-              >
-                <ModalCloseButton color={'white'} />
-                <ModalBody>
-                  <EmailVerify
-                    email={data.email}
-                    setEmailVerified={setEmailVerified}
+          <ModalHeader
+            color="white"
+            display="flex"
+            alignItems="center"
+            fontSize={'1.75rem'}
+          >
+            REGISTER
+          </ModalHeader>
+          <ModalCloseButton color="white" />
+          <ModalBody h={'fit-content'}>
+            <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>
+              <Flex direction="column" align="center" mb="4">
+                {imageLoading ? (
+                  <Spinner size="lg" color="white" />
+                ) : (
+                  <Image
+                    src={picDisplay}
+                    alt="Profile Picture"
+                    w="100px"
+                    h="100px"
+                    borderRadius="50%"
+                    border="2px solid #2D3748"
+                    mb="4"
                   />
-                </ModalBody>
-              </ModalContent>
-            </ChakraModal>
-          </Suspense>
-          <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>
-            <Flex direction="column" align="center" mb="4">
-              {imageLoading ? (
-                <Spinner size="lg" color="white" />
-              ) : (
-                <Image
-                  src={picDisplay}
-                  alt="Profile Picture"
-                  w="100px"
-                  h="100px"
-                  borderRadius="50%"
-                  border="2px solid #2D3748"
-                  mb="4"
+                )}
+                <label
+                  htmlFor="profile-pic"
+                  style={{
+                    color: 'white',
+                    fontWeight: 'bold',
+                    marginBottom: '10px',
+                  }}
+                >
+                  Upload Profile Picture
+                </label>
+                <Input
+                  id="profile-pic"
+                  type="file"
+                  name="pic"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ display: 'none' }}
                 />
-              )}
-              <label
-                htmlFor="profile-pic"
-                style={{
-                  color: 'white',
-                  fontWeight: 'bold',
-                  marginBottom: '10px',
-                }}
-              >
-                Upload Profile Picture
-              </label>
+                <Button
+                  as="span"
+                  colorScheme="blue"
+                  size="sm"
+                  onClick={() => document.getElementById('profile-pic').click()}
+                >
+                  Choose File
+                </Button>
+              </Flex>
               <Input
-                id="profile-pic"
-                type="file"
-                name="pic"
-                accept="image/*"
-                onChange={handleImageChange}
-                style={{ display: 'none' }}
+                placeholder="Enter Name"
+                name="name"
+                value={data.name}
+                onChange={inputHandler}
+                mb="4"
+                color="white"
+                required
               />
+              <Input
+                placeholder="Enter In-Game Name"
+                name="inGameName"
+                value={data.inGameName}
+                onChange={inputHandler}
+                mb="4"
+                color="white"
+                required
+              />
+              <Input
+                type="email"
+                placeholder="Enter Email"
+                name="email"
+                value={data.email}
+                onChange={inputHandler}
+                mb="4"
+                color="white"
+                required
+              />
+              <InputGroup mb="4">
+                <Input
+                  type={data.showPassword ? 'text' : 'password'}
+                  placeholder="Enter Password"
+                  name="password"
+                  value={data.password}
+                  onChange={inputHandler}
+                  color="white"
+                  required
+                />
+                <InputRightElement>
+                  <IconButton
+                    aria-label="Toggle Password Visibility"
+                    icon={
+                      data.showPassword ? (
+                        <FillEyeInvisible />
+                      ) : (
+                        <FillEyeVisible />
+                      )
+                    }
+                    onClick={() => togglePasswordVisibility('showPassword')}
+                    variant="unstyled"
+                    color="white"
+                    _hover={{ color: 'gray.400' }}
+                  />
+                </InputRightElement>
+              </InputGroup>
+              <InputGroup mb="4">
+                <Input
+                  type={data.showCPassword ? 'text' : 'password'}
+                  placeholder="Confirm Password"
+                  name="cpassword"
+                  value={data.cpassword}
+                  onChange={inputHandler}
+                  color="white"
+                  required
+                />
+                <InputRightElement>
+                  <IconButton
+                    aria-label="Toggle Confirm Password Visibility"
+                    icon={
+                      data.showCPassword ? (
+                        <FillEyeInvisible />
+                      ) : (
+                        <FillEyeVisible />
+                      )
+                    }
+                    onClick={() => togglePasswordVisibility('showCPassword')}
+                    variant="unstyled"
+                    color="white"
+                    _hover={{ color: 'gray.400' }}
+                  />
+                </InputRightElement>
+              </InputGroup>
+              <Divider mb="4" />
               <Button
-                as="span"
                 colorScheme="blue"
-                size="sm"
-                onClick={() => document.getElementById('profile-pic').click()}
+                size="lg"
+                width="100%"
+                type="submit"
+                isLoading={load}
               >
-                Choose File
+                Register
               </Button>
-            </Flex>
-            <Input
-              placeholder="Enter Name"
-              name="name"
-              value={data.name}
-              onChange={inputHandler}
-              mb="4"
-              color="white"
-              required
-            />
-            <Input
-              placeholder="Enter In-Game Name"
-              name="inGameName"
-              value={data.inGameName}
-              onChange={inputHandler}
-              mb="4"
-              color="white"
-              required
-            />
-            <Input
-              type="email"
-              placeholder="Enter Email"
-              name="email"
-              value={data.email}
-              onChange={inputHandler}
-              mb="4"
-              color="white"
-              required
-            />
-            <InputGroup mb="4">
-              <Input
-                type={data.showPassword ? 'text' : 'password'}
-                placeholder="Enter Password"
-                name="password"
-                value={data.password}
-                onChange={inputHandler}
-                color="white"
-                required
-              />
-              <InputRightElement>
-                <IconButton
-                  aria-label="Toggle Password Visibility"
-                  icon={
-                    data.showPassword ? (
-                      <FillEyeInvisible />
-                    ) : (
-                      <FillEyeVisible />
-                    )
-                  }
-                  onClick={() => togglePasswordVisibility('showPassword')}
-                  variant="unstyled"
-                  color="white"
-                  _hover={{ color: 'gray.400' }}
-                />
-              </InputRightElement>
-            </InputGroup>
-            <InputGroup mb="4">
-              <Input
-                type={data.showCPassword ? 'text' : 'password'}
-                placeholder="Confirm Password"
-                name="cpassword"
-                value={data.cpassword}
-                onChange={inputHandler}
-                color="white"
-                required
-              />
-              <InputRightElement>
-                <IconButton
-                  aria-label="Toggle Confirm Password Visibility"
-                  icon={
-                    data.showCPassword ? (
-                      <FillEyeInvisible />
-                    ) : (
-                      <FillEyeVisible />
-                    )
-                  }
-                  onClick={() => togglePasswordVisibility('showCPassword')}
-                  variant="unstyled"
-                  color="white"
-                  _hover={{ color: 'gray.400' }}
-                />
-              </InputRightElement>
-            </InputGroup>
-            <Divider mb="4" />
+            </form>
+          </ModalBody>
+          <ModalFooter>
             <Button
-              colorScheme="blue"
-              size="lg"
-              width="100%"
-              type="submit"
-              isLoading={load}
+              variant="ghost"
+              colorScheme="whiteAlpha"
+              onClick={() => {
+                onClose()
+                signinOnOpen && signinOnOpen()
+                onOpenGuest && onOpenGuest()
+              }}
             >
-              Register
+              Close
             </Button>
-          </form>
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="ghost" colorScheme="whiteAlpha" onClick={onClose}>
-            Close
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </ChakraModal>
+          </ModalFooter>
+        </ModalContent>
+      </ChakraModal>
+      <Suspense fallback={<Spinner />}>
+        <EmailVerify
+          email={data.email}
+          onClose={onEmailVerifyClose}
+          isOpen={isEmailVerifyOpen}
+        />
+      </Suspense>
+    </>
   )
 }

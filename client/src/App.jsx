@@ -47,7 +47,8 @@ const App = () => {
 
   let timeout
   useEffect(() => {
-    const token = localStorage.getItem('guestUserId')
+    const token =
+      localStorage.getItem('guestUserId') || localStorage.getItem('token')
     if (!token) setShowNote(true)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
@@ -185,6 +186,8 @@ const App = () => {
         onClose={handleClose}
         guestName={user?.inGameName}
         guestPassword={user?.guestTempPassword}
+        guestId={user?._id}
+        onOpen={() => setIsGuestLoggedin(true)}
       />
       <Box
         position="relative"

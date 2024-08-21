@@ -19,14 +19,13 @@ import {
 import { useToast } from '@chakra-ui/react'
 import throttle from 'lodash.throttle'
 import { useDispatch, useSelector } from 'react-redux'
-import { setModal } from '../../redux/uiSlice'
-import { setVerifyEmail } from '../../redux/authSlice'
 import useSound from '../../customHooks/useSound'
+import { setUser } from '../../redux/authSlice'
 
-const EmailVerify = ({ email, setEmailVerified, isOpen, onClose }) => {
+const EmailVerify = ({ email, isOpen, onClose }) => {
   const toast = useToast()
   const dispatch = useDispatch()
-  const { forgotPassword } = useSelector(state => state.auth)
+  const { forgotPassword, user } = useSelector(state => state.auth)
   const [load, setLoad] = useState(false) //for loading spinner
   const { playClick } = useSound()
   const [otp, setOtp] = useState({
@@ -85,6 +84,9 @@ const EmailVerify = ({ email, setEmailVerified, isOpen, onClose }) => {
             position: 'top',
           })
         } else {
+          if (user && user.role === 'guest') {
+            dispatch(setUser(response.data.user))
+          }
           toast({
             title: 'Email Verified',
             status: 'success',

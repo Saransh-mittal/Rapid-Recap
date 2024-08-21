@@ -23,6 +23,8 @@ import { setUser } from '../../redux/authSlice'
 import UserPlusSVG from '../../assets/svg/UserPlusSVG'
 import useSound from '../../customHooks/useSound'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
+import { QuestionOutlineIcon } from '@chakra-ui/icons'
+import GuestLoginModal from '../authComponents/GuestLoginModal'
 
 // Lazy loading for components that are not needed immediately
 const EditProfileModal = React.lazy(() => import('./EditProfileModal'))
@@ -39,6 +41,11 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const [canSendRequest, setCanSendRequest] = useState(true)
   const [requestSent, setRequestSent] = useState(false)
   const [isFriend, setIsFriend] = useState(false)
+  const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
+
+  const handleClose = () => {
+    setIsGuestLoggedin(false)
+  }
 
   const profileData = useMemo(
     () => ({
@@ -204,14 +211,34 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             position="relative"
             marginBottom={'15px'}
           >
-            <Heading
-              as="h4"
-              size={'sm'}
-              marginY={'2px'}
-              color={selectedDatafromCurrIQ?.textColor}
-            >
-              {profileData?.name}
-            </Heading>
+            <Flex alignItems={'center'}>
+              <Heading
+                as="h4"
+                size={'sm'}
+                marginY={'2px'}
+                color={selectedDatafromCurrIQ?.textColor}
+              >
+                {profileData?.name}
+              </Heading>
+              <Flex>
+                {user?.role === 'guest' && (
+                  <Button
+                    w={'20px'}
+                    height={'20px'}
+                    bg={'transparent'}
+                    color={'white'}
+                    _hover={{
+                      bg: 'transparent',
+                      color: 'white',
+                    }}
+                    // onClick={}
+                    onClick={() => setIsGuestLoggedin(true)}
+                  >
+                    <QuestionOutlineIcon w={'auto'} height={'18px'} />
+                  </Button>
+                )}
+              </Flex>
+            </Flex>
             <Suspense fallback={<Spinner />}>
               <NameLightning
                 boxShadow={selectedDatafromMaxIQ?.boxShadow}
@@ -298,6 +325,14 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           />
         </Suspense>
       )}
+      <GuestLoginModal
+        isOpen={isGuestLoggedin}
+        onClose={handleClose}
+        guestName={user?.inGameName}
+        guestPassword={user?.guestTempPassword ? user.guestTempPassword : null}
+        guestId={user?._id}
+        onOpen={() => setIsGuestLoggedin(true)}
+      />
     </Flex>
   )
 }
