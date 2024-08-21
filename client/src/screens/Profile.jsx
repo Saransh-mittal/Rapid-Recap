@@ -15,7 +15,6 @@ import {
   Container,
   keyframes,
   useDisclosure,
-  Spinner,
 } from '@chakra-ui/react'
 import { ViewIcon } from '@chakra-ui/icons'
 import { useParams } from 'react-router-dom'
@@ -26,8 +25,6 @@ import { setOtherUserProfiles, setUserProfile } from '../redux/contentSlice.js'
 import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
 import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
-import SecureProgressSVG from '../assets/svg/SecureProgressSVG.jsx'
-import Register from './Register.jsx'
 import SecureYourProgress from '../components/miscellaneous/SecureYourProgress.jsx'
 
 // Dynamic imports for code splitting
@@ -76,11 +73,6 @@ export default function Profile() {
   const [showHideModal, setShowHideModal] = useState(false)
   const userSocietyAndCircle = findSocietyAndCircle(user?.IQ_score)
   const loginedUserProfile = inGameName === user?.inGameName
-  const {
-    isOpen: isOpenRegister,
-    onOpen: onOpenRegister,
-    onClose: onCloseRegister,
-  } = useDisclosure()
   const [privacyProfileData, setPrivacyProfileData] = useState({
     fullProfile: false,
     lineGraph: false,
@@ -296,7 +288,10 @@ export default function Profile() {
           >
             <Suspense fallback={<SkeletonCircle size="10" />}>
               {showHideModal && (
-                <ToggleProfileVisibilty setShowHideModal={setShowHideModal} />
+                <ToggleProfileVisibilty
+                  setShowHideModal={setShowHideModal}
+                  isGuest={user?.role == 'guest'}
+                />
               )}
               {inGameName === user?.inGameName && (
                 <Tooltip label="Toggle Profile Visibility">
