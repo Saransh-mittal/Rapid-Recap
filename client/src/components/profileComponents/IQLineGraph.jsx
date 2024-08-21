@@ -174,6 +174,7 @@ const IQLineGraph = ({
   isNavIQ = false,
   iOpenedFromNav = false,
   graphwidth,
+  isGuest,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -237,6 +238,21 @@ const IQLineGraph = ({
     setHoveredData(chartData[chartData.length - 2])
     setIsLoading(false)
   }, [chartData])
+
+  if (isGuest) {
+    return (
+      <Flex
+        w={'100%'}
+        h={'250px'}
+        justifyContent={'center'}
+        alignItems={'center'}
+        flexDirection={'column'}
+      >
+        <Image h="200px" w="200px" background="transparent" src={Lock} />
+        <Text>No data for guest user</Text>
+      </Flex>
+    )
+  }
 
   if (privateLineGraph) {
     return (

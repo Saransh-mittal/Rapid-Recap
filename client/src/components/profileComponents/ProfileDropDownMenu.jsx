@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import { useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import { NavLink } from 'react-router-dom'
+import NoteMessage from '../miscellaneous/NoteMessage'
+import SecureYourProgress from '../miscellaneous/SecureYourProgress'
 
 const Inbox = React.lazy(() =>
   import('../Header-Footer/navbarComponents/Inbox'),
@@ -63,6 +65,7 @@ const ProfileDropDownMenu = ({
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
+  const [showNote, setShowNote] = useState(false)
 
   const [isOpen, setIsOpen] = useState(false)
 
@@ -179,8 +182,8 @@ const ProfileDropDownMenu = ({
                   width={'100%'}
                   alignItems={'center'}
                   opacity={0.5}
-                  pointerEvents={'none'}
                   justifyContent={'center'}
+                  onClick={() => setShowNote(true)}
                 >
                   <UserFriendsSVG
                     fill={'white'}
@@ -242,6 +245,15 @@ const ProfileDropDownMenu = ({
           </Suspense>
         </motion.ul>
       </motion.nav>
+      {showNote && (
+        <NoteMessage
+          onClose={() => setShowNote(false)}
+          title="Register to Save Your Progress"
+          duration={10000} // Set to null to prevent auto-closing
+        >
+          <SecureYourProgress />
+        </NoteMessage>
+      )}
     </Flex>
   )
 }

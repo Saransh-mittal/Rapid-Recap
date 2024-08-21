@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  Suspense,
-} from 'react'
+import React, { useEffect, useState, useCallback, Suspense } from 'react'
 import {
   Box,
   Flex,
@@ -25,6 +19,8 @@ import { setOtherUserProfiles, setUserProfile } from '../redux/contentSlice.js'
 import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
 import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
+
+import SecureYourProgress from '../components/miscellaneous/SecureYourProgress.jsx'
 
 // Dynamic imports for code splitting
 const IQLineGraph = React.lazy(() =>
@@ -408,50 +404,56 @@ export default function Profile() {
                 />
               </>
             ) : (
-              (!privacyProfileData.seasonAnalytics ||
-                inGameName == user?.inGameName) && (
-                <Flex
-                  py={'8px'}
-                  borderRadius="10px"
-                  flexDirection="column"
-                  w={{ md: '85%', lg: '95%', base: '100%' }}
-                  height="fit-content"
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  position={'relative'}
-                  className="season-analytics"
-                >
-                  <ProfileButton
-                    buttonText="Season Analytics"
-                    inGameName={inGameName}
-                    stateUserInGameName={user?.inGameName}
-                    Private={user?.profilePrivacy.seasonAnalytics}
-                    hoverAnimation={hoverAnimation}
-                    onClick={onOpenSeasonSelector}
-                    icon={
-                      <HistogramSVG
-                        width={'20px'}
-                        height={'20px'}
-                        fill={'#fff'}
+              <>
+                {(!privacyProfileData.seasonAnalytics ||
+                  inGameName == user?.inGameName) &&
+                  user.role !== 'guest' && (
+                    <Flex
+                      py={'8px'}
+                      borderRadius="10px"
+                      flexDirection="column"
+                      w={{ md: '85%', lg: '95%', base: '100%' }}
+                      height="fit-content"
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      position={'relative'}
+                      className="season-analytics"
+                    >
+                      <ProfileButton
+                        buttonText="Season Analytics"
+                        inGameName={inGameName}
+                        stateUserInGameName={user?.inGameName}
+                        Private={user?.profilePrivacy.seasonAnalytics}
+                        hoverAnimation={hoverAnimation}
+                        onClick={onOpenSeasonSelector}
+                        icon={
+                          <HistogramSVG
+                            width={'20px'}
+                            height={'20px'}
+                            fill={'#fff'}
+                          />
+                        }
+                        top={'0.9rem'}
                       />
-                    }
-                    top={'0.9rem'}
-                  />
 
-                  <SeasonSelectorModal
-                    privateSeasonAnalytics={privacyProfileData.seasonAnalytics}
-                    currSeason={profile?.currentSeason}
-                    isOpen={isOpenSeasonSelector}
-                    onClose={onCloseSeasonSelector}
-                    isLoading={isLoading}
-                    profile={profile}
-                    privacyProfileData={privacyProfileData}
-                    loginedUserProfile={loginedUserProfile}
-                    inGameName={inGameName}
-                    seasons={profile?.seasons}
-                  />
-                </Flex>
-              )
+                      <SeasonSelectorModal
+                        privateSeasonAnalytics={
+                          privacyProfileData.seasonAnalytics
+                        }
+                        currSeason={profile?.currentSeason}
+                        isOpen={isOpenSeasonSelector}
+                        onClose={onCloseSeasonSelector}
+                        isLoading={isLoading}
+                        profile={profile}
+                        privacyProfileData={privacyProfileData}
+                        loginedUserProfile={loginedUserProfile}
+                        inGameName={inGameName}
+                        seasons={profile?.seasons}
+                      />
+                    </Flex>
+                  )}
+                {user.role === 'guest' && <SecureYourProgress />}
+              </>
             )}
           </Suspense>
           <Suspense
@@ -560,11 +562,13 @@ export default function Profile() {
                     lineGraph={profile?.lineGraph}
                     privateLineGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
+                    isGuest={user?.role === 'guest'}
                   />
                   <IQBarGraph
                     barGraph={profile?.barGraph}
                     privateBarGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
+                    isGuest={user?.role === 'guest'}
                   />
                 </>
               )}
@@ -630,6 +634,7 @@ export default function Profile() {
                       privateSociety={privacyProfileData?.society}
                       loginedUserProfile={loginedUserProfile}
                       USER_IQ={profile?.barGraph?.USER_IQ}
+                      isGuest={user?.role === 'guest'}
                     />
                   </Flex>
                 </>

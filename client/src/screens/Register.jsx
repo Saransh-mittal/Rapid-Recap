@@ -194,7 +194,7 @@ export default function Register({
           onOpenGuest && onOpenGuest()
         }}
         size={{ base: 'full', md: 'xl' }}
-        scrollBehavior={'inside'}
+        // scrollBehavior={'inside'}
       >
         <Helmet>
           <title>Register - Rapid Recap</title>
@@ -321,9 +321,17 @@ export default function Register({
                     aria-label="Toggle Password Visibility"
                     icon={
                       data.showPassword ? (
-                        <FillEyeInvisible />
+                        <FillEyeInvisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       ) : (
-                        <FillEyeVisible />
+                        <FillEyeVisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       )
                     }
                     onClick={() => togglePasswordVisibility('showPassword')}
@@ -348,9 +356,17 @@ export default function Register({
                     aria-label="Toggle Confirm Password Visibility"
                     icon={
                       data.showCPassword ? (
-                        <FillEyeInvisible />
+                        <FillEyeInvisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       ) : (
-                        <FillEyeVisible />
+                        <FillEyeVisible
+                          width="20px"
+                          height="20px"
+                          fill="white"
+                        />
                       )
                     }
                     onClick={() => togglePasswordVisibility('showCPassword')}

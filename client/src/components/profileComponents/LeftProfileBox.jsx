@@ -193,7 +193,14 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   }, [canSendRequest, requestSent, sendFriendRequest])
 
   return (
-    <Flex className="left-profile-box" flexDirection={'column'} w={'100%'}>
+    <Flex
+      className="left-profile-box"
+      flexDirection={'column'}
+      w={'100%'}
+      justifyContent={'center'}
+      alignItems={'center'}
+      p={'5px'}
+    >
       <Flex w={'100%'}>
         <Image
           src={profileData?.pic}
@@ -291,14 +298,17 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           )}
       </Flex>
 
-      <Box marginTop={'10px'} w={{ lg: '300px', base: '100%' }}>
-        <Text align={'justify'}>{profileData?.bio}</Text>
+      <Box marginTop={'10px'} w={{ base: '100%', lg: '100%' }}>
+        <Flex mb={2}>
+          <Text align={'justify'}>{profileData?.bio}</Text>
+        </Flex>
+
         {window.location.pathname.split('/').pop() === user?.inGameName ? (
           <Flex w={'100%'} justifyContent={'center'}>
             <Button
               size="md"
               height="35px"
-              width="90%"
+              width="100%"
               border="5px"
               borderColor="green.200"
               backgroundColor="#F2D8D8"
