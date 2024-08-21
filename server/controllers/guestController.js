@@ -27,6 +27,7 @@ const createGuestUser = async () => {
       inGameName: guestInGameName,
       password: hashedPassword,
       cpassword: hashedPassword,
+      guestTempPassword: guestPassword,
       role: 'guest',
       verified: true,
       createdAt: new Date(),

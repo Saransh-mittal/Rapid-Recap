@@ -30,7 +30,7 @@ import ArrowRightSVG from '../../assets/svg/ArrowRightSVG'
 import CheckCircle from '../../assets/svg/CheckCircle'
 import UserSVG from '../../assets/svg/UserSVG'
 import Button from '../miscellaneous/ButtonComponent'
-import ButtonGradient from '../../assets/svg/ButtonGradient'
+
 const MotionBox = motion(Box)
 
 const GradientText = ({ children, gradient }) => (

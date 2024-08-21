@@ -15,6 +15,7 @@ const {
   dailyStreakCalculator,
   longestStreakCalculator,
   currDayStreakCalulator,
+  makeFirstLoginFalse,
 } = require('../utils/user.utils')
 const dailyUserIQCalc = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
@@ -192,6 +193,7 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   try {
+    makeFirstLoginFalse(req.user._id)
     res.clearCookie('jwtoken', { path: '/' })
     res.status(201).send('User Logout')
   } catch (error) {

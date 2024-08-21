@@ -26,7 +26,7 @@ const App = () => {
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
-  const [showNote, setShowNote] = useState(true)
+  const [showNote, setShowNote] = useState(false)
 
   const handleClose = () => {
     setIsGuestLoggedin(false)
@@ -37,6 +37,7 @@ const App = () => {
   }
   const isToken = () => {
     const token = localStorage.getItem('token')
+
     return token
   }
 
@@ -46,6 +47,8 @@ const App = () => {
 
   let timeout
   useEffect(() => {
+    const token = localStorage.getItem('guestUserId')
+    if (!token) setShowNote(true)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('/sw.js').then(
@@ -177,7 +180,12 @@ const App = () => {
       <Navbar />
       <ButtonGradient />
       {shouldShowNotification && <NotificationSubscription />}
-      <GuestLoginModal isOpen={isGuestLoggedin} onClose={handleClose} />
+      <GuestLoginModal
+        isOpen={isGuestLoggedin}
+        onClose={handleClose}
+        guestName={user?.inGameName}
+        guestPassword={user?.guestTempPassword}
+      />
       <Box
         position="relative"
         minHeight="100vh"

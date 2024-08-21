@@ -40,7 +40,7 @@ const GetStarted = React.lazy(() =>
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isAuthenticated } = useSelector(state => state.auth)
+  const { isAuthenticated, user } = useSelector(state => state.auth)
   const { searchResults, isSearching, searchLoading, searchTerm } = useSelector(
     state => state.articles,
   )
@@ -353,24 +353,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
           </Flex>
         </Flex>
       </Flex>
-      {/* <Flex
-        width={{ base: '100%', lg: '82%' }}
-        // w={'100%'}
-        justifyContent={'center'}
-        alignItems={'center'}
-        right={0}
-        ml={'auto'}
-        px={{ base: 3, lg: 1 }}
-        zIndex={999}
-        gap={'2rem'}
-        mb={'2rem'}
-      >
-        {isSearching && searchResults.length === 0 && (
-          <Flex justifyContent="center">
-            <Box>No results found. Try a different search term.</Box>
-          </Flex>
-        )}
-      </Flex> */}
       {notLoggedIn && (
         <Suspense fallback={<Skeleton height="6rem" width="100%" />}>
           <Flex
@@ -388,7 +370,23 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
           </Flex>
         </Suspense>
       )}
-      {!hasMoreItems && (
+      {!hasMoreItems && (user?.newAccount || user?.firstLogin) && (
+        <Flex
+          marginTop="2rem"
+          height="6rem"
+          width="100%"
+          color="white"
+          justifyContent="center"
+          alignItems="center"
+          borderRadius="8px"
+          padding="1rem"
+          paddingTop="4rem"
+          textAlign="center"
+        >
+          Please Revisit this page after some time to view recommended news
+        </Flex>
+      )}
+      {!hasMoreItems && !user?.newAccount && (
         <Flex
           marginTop="2rem"
           height="6rem"
