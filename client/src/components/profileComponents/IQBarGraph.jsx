@@ -106,6 +106,7 @@ const IQBarGraph = ({
   privateBarGraph,
   loginedUserProfile,
   viewingHistory = false,
+  isGuest,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -193,6 +194,19 @@ const IQBarGraph = ({
       setIsLoading(false)
     }
   }, [playClick, toast])
+
+  if (isGuest) {
+    return (
+      <Flex
+        w={'100%'}
+        h={'250px'}
+        justifyContent={'center'}
+        alignItems={'center'}
+      >
+        <Text>No data for guest user</Text>
+      </Flex>
+    )
+  }
 
   if (privateBarGraph) {
     return <HiddenGraphMessage />

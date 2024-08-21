@@ -25,6 +25,7 @@ const RankAndSociety = ({
   privateSociety,
   loginedUserProfile,
   isDisabled = false,
+  isGuest,
 }) => {
   const { user } = useSelector(state => state.auth)
   const [isLoading, setIsLoading] = useState(true)
@@ -65,6 +66,23 @@ const RankAndSociety = ({
   const handleCloseCircleModal = useCallback(() => {
     setIsCircleModalOpen(false)
   }, [])
+
+  if (isGuest) {
+    return (
+      <Flex
+        margin="10px"
+        w="100%"
+        h={'100%'}
+        flexDirection="column"
+        position="relative"
+        p={5}
+        justifyContent={'center'}
+        alignItems={'center'}
+      >
+        <Text>No data for guest user</Text>
+      </Flex>
+    )
+  }
 
   return (
     <Flex
