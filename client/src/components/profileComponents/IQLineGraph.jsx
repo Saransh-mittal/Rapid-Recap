@@ -15,6 +15,7 @@ import {
   Tag,
   useToast,
   useBreakpointValue,
+  Button,
 } from '@chakra-ui/react'
 import moment from 'moment'
 import axios from 'axios'
@@ -175,6 +176,7 @@ const IQLineGraph = ({
   iOpenedFromNav = false,
   graphwidth,
   isGuest,
+  setShowNote,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -247,8 +249,22 @@ const IQLineGraph = ({
         justifyContent={'center'}
         alignItems={'center'}
         flexDirection={'column'}
+        zIndex={1001}
+        backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
+        boxShadow={{
+          xl: 'none',
+          base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+        }}
       >
-        <Image h="200px" w="200px" background="transparent" src={Lock} />
+        <Image
+          h="200px"
+          w="200px"
+          background="transparent"
+          src={Lock}
+          onClick={() => setShowNote(true)}
+          _hover={{ cursor: 'pointer' }}
+        />
+
         <Text>No data for guest user</Text>
       </Flex>
     )

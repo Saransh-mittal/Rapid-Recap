@@ -18,6 +18,7 @@ import ButtonGradient from './assets/svg/ButtonGradient.jsx'
 import NoteMessage from './components/miscellaneous/NoteMessage.jsx'
 import GuestLogin from './components/authComponents/GuestLogin.jsx'
 import GetStarted from './components/Header-Footer/navbarComponents/GetStarted.jsx'
+import SecureYourProgress from './components/miscellaneous/SecureYourProgress.jsx'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -98,6 +99,9 @@ const App = () => {
     if (user?.newAccount) {
       setIsGuestLoggedin(true)
     }
+    if (user?.role === 'guest') {
+      setShowNote(true)
+    }
   }, [isAuthenticated, user])
 
   useEffect(() => {
@@ -163,21 +167,31 @@ const App = () => {
         />
       </Helmet>
       <FixedBackground />
-      {showNote && (
-        <NoteMessage
-          onClose={() => setShowNote(false)}
-          title="Start using Rapid Recap"
-          duration={null} // Set to null to prevent auto-closing
-        >
-          <HStack p={'10px'} gap={'5px'} justifyContent={'space-between'}>
-            <GetStarted innerText={'Signin'} width={'8.5rem'} />
-            <GuestLogin
-              width={'8.5rem'}
-              onCloseNoteMessage={() => setShowNote(false)}
-            />
-          </HStack>
-        </NoteMessage>
-      )}
+      {showNote && !isGuestLoggedin ? (
+        isToken() ? (
+          <NoteMessage
+            onClose={() => setShowNote(false)}
+            title="Register to Safegaure your progress"
+            duration={5000} // Set to null to prevent auto-closing
+          >
+            <SecureYourProgress />
+          </NoteMessage>
+        ) : (
+          <NoteMessage
+            onClose={() => setShowNote(false)}
+            title="Start using Rapid Recap"
+            duration={null} // Set to null to prevent auto-closing
+          >
+            <HStack p={'10px'} gap={'5px'} justifyContent={'space-between'}>
+              <GetStarted innerText={'Signin'} width={'8.5rem'} />
+              <GuestLogin
+                width={'8.5rem'}
+                onCloseNoteMessage={() => setShowNote(false)}
+              />
+            </HStack>
+          </NoteMessage>
+        )
+      ) : null}
       <Navbar />
       <ButtonGradient />
       {shouldShowNotification && <NotificationSubscription />}

@@ -20,7 +20,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setUser } from '../../../redux/authSlice'
 import useSound from '../../../customHooks/useSound'
 
-const ToggleProfileVisibility = ({ setShowHideModal }) => {
+const ToggleProfileVisibility = ({ setShowHideModal, isGuest }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const [load, setLoad] = useState(false)
@@ -35,12 +35,15 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
     solvedQuizzes: user.profilePrivacy
       ? user?.profilePrivacy.solvedQuizzes
       : false,
-    // dailyActivity: user.profilePrivacy
-    //   ? user?.profilePrivacy.dailyActivity
-    //   : false,
     society: user.profilePrivacy ? user?.profilePrivacy.society : false,
     seasonAnalytics: user.profilePrivacy
       ? user?.profilePrivacy.seasonAnalytics
+      : false,
+  })
+  const [Guesthide, setGuestHide] = useState({
+    fullProfile: user.profilePrivacy ? user.profilePrivacy.fullProfile : false,
+    solvedQuizzes: user.profilePrivacy
+      ? user?.profilePrivacy.solvedQuizzes
       : false,
   })
   useEffect(() => {
@@ -48,7 +51,7 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
   }, [])
 
   const handleToggleVisibility = key => {
-    if (key === 'fullProfile') {
+    if (key === 'fullProfile' && !isGuest) {
       // If fullProfile is toggled, set every other option accordingly
       const isFullProfileVisible = !hide[key]
       setHide(prevHide => ({
@@ -57,12 +60,25 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
         lineGraph: isFullProfileVisible,
         barGraph: isFullProfileVisible,
         solvedQuizzes: isFullProfileVisible,
-        // dailyActivity: isFullProfileVisible,
         society: isFullProfileVisible,
       }))
-    } else {
+    } else if (key === 'fullProfile' && isGuest) {
+      // If fullProfile is toggled, set every other option accordingly
+      const isFullProfileVisible = !Guesthide[key]
+      setGuestHide(prevHide => ({
+        ...prevHide,
+        fullProfile: isFullProfileVisible,
+        solvedQuizzes: isFullProfileVisible,
+      }))
+    } else if (key !== 'fullProfile' && !isGuest) {
       // If any other option is toggled, just toggle that option
       setHide(prevHide => ({
+        ...prevHide,
+        [key]: !prevHide[key],
+      }))
+    } else if (key !== 'fullProfile' && isGuest) {
+      // If any other option is toggled, just toggle that option
+      setGuestHide(prevHide => ({
         ...prevHide,
         [key]: !prevHide[key],
       }))
@@ -150,24 +166,49 @@ const ToggleProfileVisibility = ({ setShowHideModal }) => {
                 gap={6}
                 margin={2}
               >
-                {Object.entries(hide).map(([key, value]) => (
-                  <React.Fragment key={key}>
-                    <GridItem colSpan={1}>{key}</GridItem>
-                    <GridItem colSpan={1}>
-                      {value ? (
-                        <ViewOffIcon
-                          _hover={{ cursor: 'pointer' }}
-                          onClick={() => handleToggleVisibility(key)}
-                        />
-                      ) : (
-                        <ViewIcon
-                          _hover={{ cursor: 'pointer' }}
-                          onClick={() => handleToggleVisibility(key)}
-                        />
-                      )}
-                    </GridItem>
-                  </React.Fragment>
-                ))}
+                {!isGuest ? (
+                  <>
+                    {Object.entries(hide).map(([key, value]) => (
+                      <React.Fragment key={key}>
+                        <GridItem colSpan={1}>{key}</GridItem>
+                        <GridItem colSpan={1}>
+                          {value ? (
+                            <ViewOffIcon
+                              _hover={{ cursor: 'pointer' }}
+                              onClick={() => handleToggleVisibility(key)}
+                            />
+                          ) : (
+                            <ViewIcon
+                              _hover={{ cursor: 'pointer' }}
+                              onClick={() => handleToggleVisibility(key)}
+                            />
+                          )}
+                        </GridItem>
+                      </React.Fragment>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {Object.entries(Guesthide).map(([key, value]) => (
+                      <React.Fragment key={key}>
+                        <GridItem colSpan={1}>{key}</GridItem>
+                        <GridItem colSpan={1}>
+                          {value ? (
+                            <ViewOffIcon
+                              _hover={{ cursor: 'pointer' }}
+                              onClick={() => handleToggleVisibility(key)}
+                            />
+                          ) : (
+                            <ViewIcon
+                              _hover={{ cursor: 'pointer' }}
+                              onClick={() => handleToggleVisibility(key)}
+                            />
+                          )}
+                        </GridItem>
+                      </React.Fragment>
+                    ))}
+                  </>
+                )}
               </Grid>
             </Box>
           </ModalBody>

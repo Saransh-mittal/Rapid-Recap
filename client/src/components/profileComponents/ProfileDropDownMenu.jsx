@@ -248,7 +248,7 @@ const ProfileDropDownMenu = ({
       {showNote && (
         <NoteMessage
           onClose={() => setShowNote(false)}
-          title="Register to Save Your Progress"
+          title="Register to make friends and build Wise Web"
           duration={10000} // Set to null to prevent auto-closing
         >
           <SecureYourProgress />

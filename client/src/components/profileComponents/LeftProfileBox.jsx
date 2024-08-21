@@ -259,7 +259,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           </Heading>
 
           <Heading as="h6" fontSize={'12px'}>
-            Rank : {leftProfileView.rank}
+            Rank : {user?.role === 'guest' ? 'NA' : leftProfileView.rank}
           </Heading>
         </Box>
         {window.location.pathname.split('/').pop() !== user?.inGameName &&

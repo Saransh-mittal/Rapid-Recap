@@ -2,7 +2,7 @@ import React from 'react'
 import { Box, Image, Text } from '@chakra-ui/react'
 import { findSocietyAndCircle } from '../../../utils/helper.utils'
 
-const IQScore = ({ score, _hover, className, onClick }) => {
+const IQScore = ({ user, score, _hover, className, onClick }) => {
   const society = findSocietyAndCircle(score).image
   return (
     <Box
@@ -26,9 +26,11 @@ const IQScore = ({ score, _hover, className, onClick }) => {
       _hover={{ ..._hover, bg: 'rgba(255, 255, 255, 0.2)' }}
     >
       <Text fontSize="1.1rem" fontWeight="bold" color="white" m={0} p={0}>
-        IQ: {score}
+        IQ: {user?.role === 'guest' ? 'NA' : score}
       </Text>
-      <Image src={society} alt={'Society'} h={'25px'} w={'25px'} />
+      {user?.role !== 'guest' && (
+        <Image src={society} alt={'Society'} h={'25px'} w={'25px'} />
+      )}
     </Box>
   )
 }

@@ -18,7 +18,7 @@ const IQLineGraph = React.lazy(() =>
 )
 const Heading = React.lazy(() => import('../../miscellaneous/HeadingComponent'))
 
-const IQScoreModal = ({ setShowIQScoreModal }) => {
+const IQScoreModal = ({ setShowIQScoreModal, isGuest }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [lineGraph, setLineGraph] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -81,11 +81,15 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
                 <Text color="red.500">{error}</Text>
               ) : (
                 <Suspense fallback={<Text>Loading chart...</Text>}>
-                  <IQLineGraph
-                    lineGraph={lineGraph}
-                    iOpenedFromNav={true}
-                    graphwidth={responsiveChartWidth}
-                  />
+                  {!isGuest ? (
+                    <IQLineGraph
+                      lineGraph={lineGraph}
+                      iOpenedFromNav={true}
+                      graphwidth={responsiveChartWidth}
+                    />
+                  ) : (
+                    <Text>No IQ-Graph for Guest Account</Text>
+                  )}
                 </Suspense>
               )}
             </ModalBody>

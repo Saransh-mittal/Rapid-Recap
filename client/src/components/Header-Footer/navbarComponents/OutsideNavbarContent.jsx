@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Flex,
+  Icon,
   Skeleton,
   useDisclosure,
   useMediaQuery,
@@ -20,6 +21,9 @@ import { motion } from 'framer-motion'
 import ImageShimmerLoader from '../../miscellaneous/shimmerLoaders/ImageShimmerLoader'
 import SVGShimmerLoader from '../../miscellaneous/shimmerLoaders/SVGShimmerLoader'
 import IconShimmerLoader from '../../miscellaneous/shimmerLoaders/IconShimmerLoader'
+import { BsLock } from 'react-icons/bs'
+import NoteMessage from '../../miscellaneous/NoteMessage'
+import SecureYourProgress from '../../miscellaneous/SecureYourProgress'
 
 const StreakFire = React.lazy(() => import('./StreakFire'))
 const ProfileDropDownMenu = React.lazy(() =>
@@ -200,6 +204,7 @@ const OutsideNavbarContent = ({
             notification={notification}
             navigate={navigate}
             renderNotificationBadge={renderNotificationBadge}
+            isGuest={user?.role === 'guest'}
           />
           {renderProfileDropdown()}
         </>
@@ -288,6 +293,7 @@ const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => (
     }
   >
     <IQScore
+      user={user}
       score={user?.IQ_score}
       _hover={{ cursor: 'pointer' }}
       className="xp-level"
@@ -380,32 +386,53 @@ const SearchComponent = ({
   </Box>
 )
 
-const MessengerComponent = ({ notification, navigate }) => (
-  <Box
-    _hover={{ cursor: 'pointer' }}
-    display={{ base: 'none', lg: 'flex' }}
-    onClick={() => navigate('/chats')}
-    position="relative"
-    mx={1}
-  >
-    {Array.isArray(notification) && notification.length > 0 && (
-      <Badge
-        bg={'red'}
-        position={'absolute'}
-        color={'white'}
-        borderRadius={'50%'}
-        h={'18px'}
-        w={'18px'}
-        textAlign={'center'}
-        right="-0.5rem"
-        top="-0.7rem"
-      >
-        {notification.length}
-      </Badge>
-    )}
-    <FaMessenger width="23px" height="23px" />
-  </Box>
-)
+const MessengerComponent = ({ notification, navigate, isGuest }) => {
+  const [showNote, setShowNote] = React.useState(false)
+  return (
+    <Box
+      _hover={{ cursor: 'pointer' }}
+      display={{ base: 'none', lg: 'flex' }}
+      onClick={() => {
+        isGuest ? setShowNote(true) : navigate('/chats')
+      }}
+      position="relative"
+      mx={1}
+    >
+      {Array.isArray(notification) && notification.length > 0 && (
+        <Badge
+          bg={'red'}
+          position={'absolute'}
+          color={'white'}
+          borderRadius={'50%'}
+          h={'18px'}
+          w={'18px'}
+          textAlign={'center'}
+          right="-0.5rem"
+          top="-0.7rem"
+        >
+          {notification.length}
+        </Badge>
+      )}
+      {isGuest ? (
+        <>
+          <FaMessenger width="23px" height="23px" fill="grey" />
+          <Icon as={BsLock} position={'absolute'} top={'14%'} left={'17%'} />
+        </>
+      ) : (
+        <FaMessenger width="23px" height="23px" />
+      )}
+      {showNote && (
+        <NoteMessage
+          onClose={() => setShowNote(false)}
+          title="Register to do chat and grow Wise Web"
+          duration={10000} // Set to null to prevent auto-closing
+        >
+          <SecureYourProgress />
+        </NoteMessage>
+      )}
+    </Box>
+  )
+}
 
 const HamburgerMenuButton = ({
   setIsHamburgerOpen,

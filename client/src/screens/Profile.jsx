@@ -21,6 +21,7 @@ import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
 
 import SecureYourProgress from '../components/miscellaneous/SecureYourProgress.jsx'
+import NoteMessage from '../components/miscellaneous/NoteMessage.jsx'
 
 // Dynamic imports for code splitting
 const IQLineGraph = React.lazy(() =>
@@ -61,6 +62,7 @@ export default function Profile() {
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
   const dispatchRedux = useDispatch()
+  const [showNote, setShowNote] = useState(false)
 
   // State hooks
   const [profile, setProfile] = useState(userProfile)
@@ -284,7 +286,10 @@ export default function Profile() {
           >
             <Suspense fallback={<SkeletonCircle size="10" />}>
               {showHideModal && (
-                <ToggleProfileVisibilty setShowHideModal={setShowHideModal} />
+                <ToggleProfileVisibilty
+                  setShowHideModal={setShowHideModal}
+                  isGuest={user?.role == 'guest'}
+                />
               )}
               {inGameName === user?.inGameName && (
                 <Tooltip label="Toggle Profile Visibility">
@@ -531,6 +536,7 @@ export default function Profile() {
           >
             <Flex
               w={'100%'}
+              zIndex={1001}
               marginTop={'10px'}
               marginInline={'1%'}
               padding={{ xl: isLoading ? 0 : '20px', base: '0' }}
@@ -563,12 +569,14 @@ export default function Profile() {
                     privateLineGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
+                    setShowNote={setShowNote}
                   />
                   <IQBarGraph
                     barGraph={profile?.barGraph}
                     privateBarGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
+                    setShowNote={setShowNote}
                   />
                 </>
               )}
@@ -635,6 +643,7 @@ export default function Profile() {
                       loginedUserProfile={loginedUserProfile}
                       USER_IQ={profile?.barGraph?.USER_IQ}
                       isGuest={user?.role === 'guest'}
+                      setShowNote={setShowNote}
                     />
                   </Flex>
                 </>
@@ -643,6 +652,15 @@ export default function Profile() {
           </Suspense>
         </Flex>
       </Flex>
+      {showNote && (
+        <NoteMessage
+          onClose={() => setShowNote(false)}
+          title="Register to View"
+          duration={10000} // Set to null to prevent auto-closing
+        >
+          <SecureYourProgress />
+        </NoteMessage>
+      )}
     </Box>
   )
 }

@@ -1,4 +1,12 @@
-import { Flex, keyframes, Spinner, useDisclosure } from '@chakra-ui/react'
+import {
+  Flex,
+  keyframes,
+  Spinner,
+  useDisclosure,
+  Box,
+  Text,
+  Heading,
+} from '@chakra-ui/react'
 import React, { Suspense } from 'react'
 import ProfileButton from '../profileComponents/ProfileButton'
 import SecureProgressSVG from '../../assets/svg/SecureProgressSVG'
@@ -17,7 +25,24 @@ const SecureYourProgress = () => {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
-  `
+    `
+
+  const getTimeLeftBeforeExpiration = () => {
+    const expirationDate = new Date(user.expiresAt)
+    const currentDate = new Date()
+    const timeLeft = expirationDate - currentDate
+    const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24))
+    const hoursLeft = Math.floor(
+      (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+    )
+    const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60))
+    const secondsLeft = Math.floor((timeLeft % (1000 * 60)) / 1000)
+    return { daysLeft, hoursLeft, minutesLeft, secondsLeft }
+  }
+
+  const { daysLeft, hoursLeft, minutesLeft, secondsLeft } =
+    getTimeLeftBeforeExpiration()
+
   return (
     <Flex
       py={'8px'}
@@ -30,18 +55,32 @@ const SecureYourProgress = () => {
       position={'relative'}
       className="season-analytics"
     >
-      <ProfileButton
-        buttonText="Secure your process"
-        isGuest={true}
-        hoverAnimation={hoverAnimation}
-        onClick={() => {
-          onOpenRegister()
-        }}
-        icon={
-          <SecureProgressSVG width={'20px'} height={'20px'} fill={'#fff'} />
-        }
-        top={'0.9rem'}
-      />
+      <Box
+        bg="gray.800"
+        color="gray.100"
+        borderRadius="md"
+        p={6}
+        boxShadow="lg"
+        w="100%"
+      >
+        <Heading size="md" mb={4}>
+          Secure Your Progress
+        </Heading>
+        <Text fontSize="sm" mb={6}>
+          Your account expires in {daysLeft} days and {hoursLeft} hours
+        </Text>
+        <ProfileButton
+          buttonText="Secure your process"
+          isGuest={true}
+          hoverAnimation={hoverAnimation}
+          onClick={() => {
+            onOpenRegister()
+          }}
+          icon={
+            <SecureProgressSVG width={'20px'} height={'20px'} fill={'#fff'} />
+          }
+        />
+      </Box>
       <Suspense fallback={<Spinner />}>
         <Register
           isOpen={isOpenRegister}

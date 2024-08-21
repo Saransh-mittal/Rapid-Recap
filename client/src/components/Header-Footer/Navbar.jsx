@@ -291,7 +291,10 @@ const Navbar = () => {
               <XPLevelModal setShowXPLevelModal={setShowXPLevelModal} />
             )}
             {showIQScoreModal && (
-              <IQScoreModal setShowIQScoreModal={setShowIQScoreModal} />
+              <IQScoreModal
+                setShowIQScoreModal={setShowIQScoreModal}
+                isGuest={user?.role === 'guest'}
+              />
             )}
 
             {isHamburgerOpen ? (
