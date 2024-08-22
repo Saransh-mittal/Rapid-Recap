@@ -275,35 +275,51 @@ const PendingLoginContent = () => (
   </Flex>
 )
 
-const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => (
-  <Suspense
-    fallback={
-      <Skeleton
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        borderRadius="full"
-        p="0.5rem"
-        transition="all 0.3s"
-        title="Your Information Quotient (IQ) Score"
-        width={'105px'}
-        h={'40px'}
-        gap={1}
-      />
-    }
-  >
-    <IQScore
-      user={user}
-      score={user?.IQ_score}
-      _hover={{ cursor: 'pointer' }}
-      className="xp-level"
-      onClick={() => {
-        playClick()
-        setShowIQScoreModal(true)
-      }}
-    />
-  </Suspense>
-)
+const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
+  const [showNote, setShowNote] = React.useState(false)
+  return (
+    <>
+      <Suspense
+        fallback={
+          <Skeleton
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            borderRadius="full"
+            p="0.5rem"
+            transition="all 0.3s"
+            title="Your Information Quotient (IQ) Score"
+            width={'105px'}
+            h={'40px'}
+            gap={1}
+          />
+        }
+      >
+        <IQScore
+          user={user}
+          score={user?.IQ_score}
+          _hover={{ cursor: 'pointer' }}
+          className="xp-level"
+          onClick={() => {
+            playClick()
+            user?.role !== 'guest'
+              ? setShowIQScoreModal(true)
+              : setShowNote(true)
+          }}
+        />
+      </Suspense>
+      {showNote && (
+        <NoteMessage
+          onClose={() => setShowNote(false)}
+          title="Register to see your IQ score and grow Wise Web"
+          duration={10000} // Set to null to prevent auto-closing
+        >
+          <SecureYourProgress />
+        </NoteMessage>
+      )}
+    </>
+  )
+}
 
 const XPLevelComponent = ({ level, setShowXPLevelModal, playClick }) => (
   <Suspense

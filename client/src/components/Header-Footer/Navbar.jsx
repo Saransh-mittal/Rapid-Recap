@@ -171,6 +171,7 @@ const Navbar = () => {
         setIsDrawerOpen(false)
         setIsHamburgerOpen(false)
         localStorage.removeItem('token')
+        localStorage.removeItem('role')
 
         dispatchRedux(logout())
         dispatchRedux(resetLoadingFlags())
@@ -403,9 +404,18 @@ const Navbar = () => {
         onClose={() => setIsLogoutConfirmationOpen(false)}
       >
         <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Confirm Logout
+          <AlertDialogContent
+            bg="#1a1527"
+            backgroundImage="linear-gradient(135deg, #2d2a47 0%, #0e0c16 100%)"
+            boxShadow="0 10px 30px rgba(0, 0, 0, 0.3)"
+            color={'white'}
+          >
+            <AlertDialogHeader
+              fontSize="lg"
+              fontWeight="bold"
+              color={'gray.400'}
+            >
+              Confirm Logout!!!
             </AlertDialogHeader>
 
             <AlertDialogBody>

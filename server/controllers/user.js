@@ -257,7 +257,7 @@ const verifyUser = async (req, res) => {
     res.status(201).json({ message: 'Email verified successfully', user })
   } catch (error) {
     console.log(error)
-    return res.status(422).json({ error: error })
+    return res.status(422).json({ error: error.message })
   }
 }
 

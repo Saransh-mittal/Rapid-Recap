@@ -26,6 +26,7 @@ import {
   useDisclosure,
   Flex,
   Spinner,
+  Text,
 } from '@chakra-ui/react'
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import useSound from '../customHooks/useSound'
@@ -295,10 +296,17 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
             backgroundImage:
               'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
           }}
+          borderRadius={'xl'}
         >
-          <ModalHeader color="white">Sign In</ModalHeader>
+          <ModalHeader
+            color="white"
+            fontSize={'3xl'}
+            textTransform={'uppercase'}
+          >
+            Sign-In
+          </ModalHeader>
           <ModalCloseButton color="white" />
-          <ModalBody w={'65%'} p={'20px'}>
+          <ModalBody w={'70%'} py={'20px'}>
             <Suspense fallback={<Spinner />}>
               {!enterInGameName ? (
                 <>
@@ -392,7 +400,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                     </Button>
                   </Flex>
                   <Flex w={'100%'} justifyContent={'center'}>
-                    <Button mt={4} p={0}>
+                    <Button my={4} p={0}>
                       <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
                         <GoogleLogin
                           onSuccess={async credentialResponse => {
@@ -440,7 +448,14 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       </GoogleOAuthProvider>
                     </Button>
                   </Flex>
-                  <GuestLogin hamburgerOnClose={hamburgerOnClose} />
+                  <Flex w={'100%'} justifyContent={'center'} mb={4}>
+                    <Text color={'gray.400'} fontWeight={'bold'}>
+                      OR
+                    </Text>
+                  </Flex>
+                  <Flex w={'100%'} justifyContent={'center'}>
+                    <GuestLogin hamburgerOnClose={hamburgerOnClose} />
+                  </Flex>
                 </>
               ) : (
                 <>

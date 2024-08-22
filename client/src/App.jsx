@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Suspense, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet'
-import { Box, HStack, Spinner } from '@chakra-ui/react'
+import { Box, VStack, Spinner } from '@chakra-ui/react'
 import NotificationSubscription from './components/Notifications/NotificationSubscription.jsx'
 import Navbar from './components/Header-Footer/Navbar.jsx'
 import Footer from './components/Header-Footer/Footer.jsx'
@@ -185,14 +185,16 @@ const App = () => {
           <NoteMessage
             onClose={() => setShowNote(false)}
             title="Start using Rapid Recap"
+            width="250px"
+            duration={10000}
           >
-            <HStack p={'10px'} gap={'5px'} justifyContent={'space-between'}>
-              <GetStarted innerText={'Signin'} width={'8.5rem'} />
+            <VStack p={'10px'} gap={'1rem'} justifyContent={'space-between'}>
+              <GetStarted innerText={'Signin'} width={'80%'} />
               <GuestLogin
-                width={'8.5rem'}
                 onCloseNoteMessage={() => setShowNote(false)}
+                width={'80%'}
               />
-            </HStack>
+            </VStack>
           </NoteMessage>
         )
       ) : null}

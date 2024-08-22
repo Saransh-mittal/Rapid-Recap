@@ -356,13 +356,19 @@ const GuestLoginModal = ({
                       onClose()
                     }}
                   >
-                    Secure Your Progress
-                    <Flex right={0} top={'21%'} position={'absolute'}>
-                      <ArrowRightSVG
-                        height={'20px'}
-                        width={'20px'}
-                        fill={'white'}
-                      />
+                    <Flex>
+                      <Flex>
+                        <Text fontSize={{ base: '2xs', md: 'xs' }}>
+                          Secure Your Progress
+                        </Text>
+                      </Flex>
+                      <Flex alignItems={'center'}>
+                        <ArrowRightSVG
+                          height={'15px'}
+                          width={'15px'}
+                          fill={'white'}
+                        />
+                      </Flex>
                     </Flex>
                   </Button>
                   <Button
@@ -371,9 +377,13 @@ const GuestLoginModal = ({
                     transition="all 0.2s"
                     onClick={() => navigate(`/profile/${guestName}`)}
                   >
-                    View Profile
+                    <Text fontSize={{ base: '2xs', md: 'xs' }}>
+                      View Profile
+                    </Text>
                   </Button>
-                  <Button onClick={onClose}>Close</Button>
+                  <Button onClick={onClose}>
+                    <Text fontSize={{ base: '2xs', md: 'xs' }}>Close</Text>
+                  </Button>
                 </HStack>
               </ModalFooter>
             </ModalContent>

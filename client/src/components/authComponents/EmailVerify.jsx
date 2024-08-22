@@ -101,13 +101,13 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
     } catch (error) {
       toast({
         title: 'Email Verification Failed',
-        description: error.response.data.error,
+        description: error?.response?.data?.error,
         status: 'error',
         duration: 9000,
         isClosable: true,
         position: 'top',
       })
-      console.log(error.response.data.error)
+      console.log(error)
     } finally {
       setLoad(false)
     }

@@ -5,6 +5,9 @@ const crypto = require('crypto')
 const asyncHandler = require('express-async-handler')
 const { isValidEmail } = require('../utils/miscellaneous.utils')
 const { startSession, abortSession, commitSession } = require('../db/session')
+const VerificationToken = require('../model/verificationToken')
+const { mailTransporter, generateOtp } = require('../utils/mail.utils')
+const MailTemplates = require('../data/MailTemplates')
 
 // Generate a random string for guest inGameName and email helper function
 const generateRandomString = length => {
@@ -92,11 +95,9 @@ exports.exportGuestData = asyncHandler(async (req, res) => {
       return res.status(400).json({ error: 'Passwords do not match' })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12)
-
     guestUser.email = email
-    guestUser.password = hashedPassword
-    guestUser.cpassword = hashedPassword
+    guestUser.password = password
+    guestUser.cpassword = password
     guestUser.name = name
     guestUser.pic = pic
     guestUser.inGameName = inGameName
@@ -104,10 +105,28 @@ exports.exportGuestData = asyncHandler(async (req, res) => {
     guestUser.role = 'user'
     guestUser.expiresAt = undefined
     guestUser.verified = false
+    guestUser.firstLogin = true
 
+    const OTP = generateOtp()
+    const verificationToken = new VerificationToken({
+      owner: guestUser._id,
+      token: OTP,
+    })
+
+    await verificationToken.save({ session })
+    guestUser.resetOtpCnt()
+    guestUser.setOtpCntResetTime()
     await guestUser.save({ session })
+    const transporter = await mailTransporter()
+    await transporter.sendMail({
+      from: MailTemplates.OTP.from,
+      to: guestUser.email,
+      subject: MailTemplates.OTP.subject,
+      text: MailTemplates.OTP.text,
+      html: MailTemplates.OTP.html(OTP),
+    })
     await commitSession()
-    res.status(200).json({ message: 'Guest data exported successfully' })
+    res.status(201).json({ message: 'Guest data exported successfully' })
   } catch (error) {
     await abortSession(session)
     throw new Error(error)

@@ -3,12 +3,13 @@ import React from 'react'
 import ProfileButton from '../profileComponents/ProfileButton'
 import SecureProgressSVG from '../../assets/svg/SecureProgressSVG'
 
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 import { setExportData, setIsRegisterOpen } from '../../redux/appSlice'
 
 const SecureYourProgress = () => {
   const { user } = useSelector(state => state.auth)
+  const dispatch = useDispatch()
 
   const hoverAnimation = keyframes`
     0% { transform: scale(1); }

@@ -95,7 +95,7 @@ export default function Register({
       if (response.status === 201) {
         localStorage.removeItem('token')
         exportData && localStorage.removeItem('guestUserId')
-
+        navigate('/')
         dispatchRedux(logout())
         dispatchRedux(resetLoadingFlags())
         dispatchRedux(resetAllState())
@@ -229,6 +229,7 @@ export default function Register({
           onOpenGuest && onOpenGuest()
         }}
         size={{ base: 'full', md: 'xl' }}
+        closeOnOverlayClick={false}
         // scrollBehavior={'inside'}
       >
         <Helmet>
@@ -269,7 +270,7 @@ export default function Register({
           >
             REGISTER
           </ModalHeader>
-          <ModalCloseButton color="white" />
+          <ModalCloseButton color="white" disabled={load} />
           <ModalBody h={'fit-content'}>
             <form onSubmit={handleSubmitThrottled} onKeyDown={handleKeyPress}>
               <Flex direction="column" align="center" mb="4">

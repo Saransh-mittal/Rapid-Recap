@@ -4,8 +4,15 @@ import Button from '../miscellaneous/ButtonComponent'
 import ButtonGradient from '../../assets/svg/ButtonGradient'
 import { LockIcon } from '@chakra-ui/icons'
 import ShareSVG from '../../assets/svg/ShareSVG'
+import { useSelector } from 'react-redux'
 
-const ShareButton = ({ onClick, isDisabled, onOpenSignin }) => {
+const ShareButton = ({
+  onClick,
+  isDisabled,
+  onOpenSignin,
+  setShowNote,
+  user,
+}) => {
   return (
     <Flex position={'relative'}>
       {isDisabled && (
@@ -18,7 +25,7 @@ const ShareButton = ({ onClick, isDisabled, onOpenSignin }) => {
             color="white"
             boxSize={6}
             zIndex={2}
-            onClick={onOpenSignin}
+            onClick={user?.role !== 'guest' ? onOpenSignin() : null}
             cursor={'pointer'}
           />
         </Tooltip>
@@ -30,7 +37,13 @@ const ShareButton = ({ onClick, isDisabled, onOpenSignin }) => {
             : { userSelect: 'text' }
         }
       >
-        <Button onClick={onClick} buttonW="7rem" textColor={'white'}>
+        <Button
+          onClick={() => {
+            user?.role !== 'guest' ? onClick() : setShowNote(true)
+          }}
+          buttonW="7rem"
+          textColor={'white'}
+        >
           Share
           <Icon as={ShareSVG} />
         </Button>

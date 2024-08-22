@@ -5,15 +5,19 @@ import { setUser, verifyAdminStatus } from '../../redux/authSlice'
 import { dailyStreakCheckerAndUpdater } from '../../utils/quiz.utils'
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import Loading from '../miscellaneous/Loading'
+import { setIsSigninOpen } from '../../redux/appSlice'
 
-const GuestLogin = ({ width, onCloseNoteMessage, hamburgerOnClose }) => {
+const GuestLogin = ({ width, onCloseNoteMessage }) => {
   const toast = useToast()
   const navigate = useNavigate()
   const dispatchRedux = useDispatch()
+  const [loading, setLoading] = React.useState(false)
 
   const handleGuestLoginSuccess = guestUser => {
     dispatchRedux(setUser(guestUser))
     dispatchRedux(verifyAdminStatus())
+    dispatchRedux(setIsSigninOpen(false))
     // hamburgerOnClose && hamburgerOnClose()
     dailyStreakCheckerAndUpdater(dispatchRedux)
 
@@ -21,14 +25,13 @@ const GuestLogin = ({ width, onCloseNoteMessage, hamburgerOnClose }) => {
   }
   const handleGuestLogin = async () => {
     const storedGuestId = localStorage.getItem('guestUserId')
-
+    setLoading(true)
     try {
       const response = await axios.post('/api/user/guestLogin', {
         storedGuestId,
       })
-      console.log('Guest login response:', response)
+
       if (response.status === 200) {
-        console.log('Guest login successful:', response.data)
         // Store the guest user ID
         localStorage.setItem('guestUserId', response.data.user._id)
         localStorage.setItem('token', response.data.token)
@@ -55,20 +58,24 @@ const GuestLogin = ({ width, onCloseNoteMessage, hamburgerOnClose }) => {
         isClosable: true,
         position: 'top',
       })
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <Button
-      onClick={() => {
-        handleGuestLogin()
-        onCloseNoteMessage()
-      }}
-      className="get-started-button"
-      width={width || `auto`}
-    >
-      Continue as Guest
-    </Button>
+    <>
+      {loading && <Loading />}
+      <Button
+        onClick={() => {
+          handleGuestLogin()
+        }}
+        className="get-started-button"
+        width={width || `auto`}
+      >
+        Continue as Guest
+      </Button>
+    </>
   )
 }
 

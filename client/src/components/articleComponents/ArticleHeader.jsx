@@ -8,7 +8,7 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import LanguageToggle from './articleHeaderComponents/LanguageToggle'
 import AuthorInfo from './articleHeaderComponents/AuthorInfo'
 import BoostSection from './articleHeaderComponents/BoostSection'
@@ -19,6 +19,8 @@ import useSound from '../../customHooks/useSound'
 import { EditIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import { setIsSigninOpen } from '../../redux/appSlice'
+import NoteMessage from '../miscellaneous/NoteMessage'
+import SecureYourProgress from '../miscellaneous/SecureYourProgress'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -39,12 +41,15 @@ const ArticleHeader = ({
   openModal,
 }) => {
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
+  const dispatchRedux = useDispatch()
   const { isBoosted } = useSelector(state => state.app)
   const notLoggedIn = !isAuthenticated
   const { playClick } = useSound()
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()
+  const { user } = useSelector(state => state.auth)
+  const [showNote, setShowNote] = React.useState(false)
   const {
     isOpen: isOpenArticleForm,
     onOpen: onOpenArticleForm,
@@ -231,8 +236,10 @@ const ArticleHeader = ({
 
             <ShareButton
               onClick={handleShare}
-              isDisabled={notLoggedIn}
+              isDisabled={notLoggedIn || user?.role === 'guest'}
               onOpenSignin={() => dispatchRedux(setIsSigninOpen(true))}
+              setShowNote={setShowNote}
+              user={user}
             />
             {isLargerThan768 && (
               <LanguageToggle
@@ -275,6 +282,15 @@ const ArticleHeader = ({
           notLoggedIn={notLoggedIn}
         />
       </Flex>
+      {showNote && (
+        <NoteMessage
+          onClose={() => setShowNote(false)}
+          title="Register to see your IQ score and grow Wise Web"
+          duration={10000} // Set to null to prevent auto-closing
+        >
+          <SecureYourProgress />
+        </NoteMessage>
+      )}
     </Skeleton>
   )
 }
