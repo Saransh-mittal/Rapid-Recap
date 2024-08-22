@@ -193,15 +193,19 @@ exports.enhancedGuestLogin = asyncHandler(async (req, res) => {
 })
 
 // Delete expired guest accounts helper function
-exports.deleteExpiredGuestAccounts = asyncHandler(async () => {
-  const expiredGuests = await User.find({
-    role: 'guest',
-    expiresAt: { $lt: new Date() },
-  })
+exports.deleteExpiredGuestAccounts = async () => {
+  try {
+    const expiredGuests = await User.find({
+      role: 'guest',
+      expiresAt: { $lt: new Date() },
+    })
 
-  for (const guest of expiredGuests) {
-    await User.findByIdAndDelete(guest._id)
+    for (const guest of expiredGuests) {
+      await User.findByIdAndDelete(guest._id)
+    }
+
+    console.log(`Deleted ${expiredGuests.length} expired guest accounts`)
+  } catch (error) {
+    throw new Error(error)
   }
-
-  console.log(`Deleted ${expiredGuests.length} expired guest accounts`)
-})
+}
