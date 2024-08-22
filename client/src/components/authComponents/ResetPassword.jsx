@@ -16,6 +16,7 @@ import {
   useToast,
   InputGroup,
   InputRightElement,
+  Flex,
 } from '@chakra-ui/react'
 import useSound from '../../customHooks/useSound'
 
@@ -131,14 +132,17 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Button
-              type="submit"
-              colorScheme="blue"
-              isLoading={isLoading}
-              loadingText="Resetting"
-            >
-              Reset Password
-            </Button>
+            <Flex w={'100%'} justifyContent={'center'} alignItems={'center'}>
+              <Button
+                w={'100%'}
+                type="submit"
+                colorScheme="blue"
+                isLoading={isLoading}
+                loadingText="Resetting"
+              >
+                Reset Password
+              </Button>
+            </Flex>
           </ModalFooter>
         </form>
       </ModalContent>
