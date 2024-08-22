@@ -15,6 +15,7 @@ const NoteMessage = ({
   children,
   onClose,
   duration = 7000, // Default duration, set to null for permanent display
+  width = '320px',
 }) => {
   const { isOpen, onClose: closeDisclosure } = useDisclosure({
     defaultIsOpen: true,
@@ -45,7 +46,7 @@ const NoteMessage = ({
             position="fixed"
             top="20px"
             right="20px"
-            width="320px"
+            width={width}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
