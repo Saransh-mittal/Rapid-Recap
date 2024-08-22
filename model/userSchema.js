@@ -259,6 +259,13 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    guestTempPassword: {
+      type: String,
+    },
+    firstLogin: {
+      type: Boolean,
+      default: true,
+    },
     expiresAt: { type: Date },
   },
   { collection: 'Users' },

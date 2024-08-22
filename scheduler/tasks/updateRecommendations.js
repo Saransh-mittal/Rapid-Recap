@@ -16,6 +16,15 @@ async function updateDailyRecommendations() {
     for (const user of activeUsers) {
       await updateRecommendations(user._id.toString())
     }
+    const usersInRecommendations = await Recommendation.find({}).select(
+      'user_id',
+    )
+    for (const user of usersInRecommendations) {
+      const userFound = await User.findById(user.user_id)
+      if (!userFound) {
+        await Recommendation.findOneAndDelete({ user_id: user.user_id })
+      }
+    }
     console.log('Daily recommendation updates completed')
   } catch (error) {
     console.error('Error in daily recommendation updates:', error)

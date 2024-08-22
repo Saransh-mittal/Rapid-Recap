@@ -1,1 +1,0 @@
-import{a5 as a}from"./index-f9ce7f7e.js";var e=a({d:"M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z",displayName:"ChevronLeftIcon"}),r=a({d:"M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z",displayName:"ChevronRightIcon"});export{e as C,r as a};

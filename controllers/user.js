@@ -15,6 +15,7 @@ const {
   dailyStreakCalculator,
   longestStreakCalculator,
   currDayStreakCalulator,
+  makeFirstLoginFalse,
 } = require('../utils/user.utils')
 const dailyUserIQCalc = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
@@ -171,6 +172,12 @@ const loginUser = async (req, res) => {
     }
     //console.log(findUser);
     if (!findUser) return res.status(422).json({ error: 'Invalid Credentials' })
+    if (findUser.role === 'guest') {
+      if (findUser.expiresAt && findUser.expiresAt <= new Date()) {
+        await User.findByIdAndDelete(findUser._id)
+        return res.status(422).json({ error: 'Guest account expired' })
+      }
+    }
 
     const isMatch = await bcrypt.compare(password, findUser.password)
     if (!isMatch) return res.status(401).json({ error: 'Invalid Credentials' })
@@ -192,6 +199,7 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   try {
+    makeFirstLoginFalse(req.user._id)
     res.clearCookie('jwtoken', { path: '/' })
     res.status(201).send('User Logout')
   } catch (error) {
@@ -246,10 +254,10 @@ const verifyUser = async (req, res) => {
       })
       //console.log("Email sent");
     }
-    res.status(201).json({ message: 'Email verified successfully' })
+    res.status(201).json({ message: 'Email verified successfully', user })
   } catch (error) {
     console.log(error)
-    return res.status(422).json({ error: error })
+    return res.status(422).json({ error: error.message })
   }
 }
 
@@ -317,6 +325,7 @@ const forgotPassword = async (req, res) => {
 
     user.password = newPassword
     user.cpassword = newPassword
+    user.guestTempPassword = undefined
 
     await user.save()
     res.status(201).json({ message: 'Password changed successfully' })
@@ -856,11 +865,11 @@ const userSearch = async (req, res) => {
     }
 
     // Execute the query and retrieve the matching users
-    const users = await User.find(searchQuery).populate({
+    let users = await User.find(searchQuery).populate({
       path: 'quizAttempts',
       match: { season: 2 },
     })
-
+    users = users.filter(user => user.role !== 'guest')
     // Prioritize results with full query match
     const prioritizedUsers = users.sort((a, b) => {
       const aFullMatch =
