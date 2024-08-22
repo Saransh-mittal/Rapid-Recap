@@ -1,8 +1,7 @@
 // /pages/GetStarted.jsx
-import React, { useState } from 'react'
+import React from 'react'
 import { Flex, Spinner } from '@chakra-ui/react'
 import { Suspense, useMemo, useCallback } from 'react'
-import NoteMessage from '../components/miscellaneous/NoteMessage'
 
 const HeroSection = React.lazy(() =>
   import('../components/getStartedComponents/heroSection'),

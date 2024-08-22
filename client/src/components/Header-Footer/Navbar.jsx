@@ -36,6 +36,7 @@ import {
   resetLoadingFlags,
 } from '../../redux/appSlice'
 import useSound from '../../customHooks/useSound'
+import Loading from '../miscellaneous/Loading'
 
 // Lazy load components
 const NotificationDrawer = React.lazy(() =>
@@ -80,6 +81,7 @@ const Navbar = () => {
   const [showDailyStreakModal, setShowDailyStreakModal] = useState(false)
   const [showXPLevelModal, setShowXPLevelModal] = useState(false)
   const [showIQScoreModal, setShowIQScoreModal] = useState(false)
+  const [logoutLoader, setLogoutLoader] = useState(false)
 
   const dispatchRedux = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
@@ -165,6 +167,7 @@ const Navbar = () => {
   }, [dispatchRedux, user])
 
   const handleLogout = useCallback(async () => {
+    setLogoutLoader(true)
     try {
       const response = await axios.post('/api/user/logout')
       if (response.status === 201) {
@@ -197,6 +200,8 @@ const Navbar = () => {
         position: 'top',
       })
       console.error(error.message)
+    } finally {
+      setLogoutLoader(false)
     }
   }, [dispatchRedux, navigate, toast])
   const handleGuestLogout = () => {
@@ -254,6 +259,7 @@ const Navbar = () => {
 
   return (
     <>
+      {logoutLoader && <Loading />}
       <Box overflow={isHamburgerOpen ? 'hidden' : 'visible'} width="100vw">
         <Box
           className={`navbar navbar-expand-lg`}

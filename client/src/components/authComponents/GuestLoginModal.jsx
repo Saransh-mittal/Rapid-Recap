@@ -375,7 +375,10 @@ const GuestLoginModal = ({
                     colorScheme="green"
                     _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
                     transition="all 0.2s"
-                    onClick={() => navigate(`/profile/${guestName}`)}
+                    onClick={() => {
+                      onClose()
+                      navigate(`/profile/${guestName}`)
+                    }}
                   >
                     <Text fontSize={{ base: '2xs', md: 'xs' }}>
                       View Profile

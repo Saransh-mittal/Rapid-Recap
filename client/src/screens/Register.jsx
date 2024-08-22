@@ -32,6 +32,7 @@ import { logout } from '../redux/authSlice'
 import {
   resetAllState,
   resetLoadingFlags,
+  setExportData,
   setIsSigninOpen,
 } from '../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
@@ -225,7 +226,7 @@ export default function Register({
         isOpen={isOpen}
         onClose={() => {
           onClose()
-          dispatchRedux(setIsSigninOpen(true))
+          !exportData && dispatchRedux(setIsSigninOpen(true))
           onOpenGuest && onOpenGuest()
         }}
         size={{ base: 'full', md: 'xl' }}
@@ -430,7 +431,7 @@ export default function Register({
               colorScheme="whiteAlpha"
               onClick={() => {
                 onClose()
-                dispatchRedux(setIsSigninOpen(true))
+                !exportData && dispatchRedux(setIsSigninOpen(true))
                 onOpenGuest && onOpenGuest()
               }}
             >

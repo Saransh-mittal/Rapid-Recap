@@ -9,9 +9,10 @@ import {
   Container,
   keyframes,
   useDisclosure,
+  useToast,
 } from '@chakra-ui/react'
 import { ViewIcon } from '@chakra-ui/icons'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { Helmet } from 'react-helmet'
@@ -59,10 +60,12 @@ const Bookmarks = React.lazy(() =>
 
 export default function Profile() {
   const { inGameName } = useParams()
-  const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
   const dispatchRedux = useDispatch()
   const [showNote, setShowNote] = useState(false)
+  const navigate = useNavigate()
+  const toast = useToast()
 
   // State hooks
   const [profile, setProfile] = useState(userProfile)
@@ -114,6 +117,17 @@ export default function Profile() {
       }
     } catch (error) {
       console.log(error)
+      if (error.response?.status === 404) {
+        toast({
+          title: 'User not found',
+          description: 'The user you are looking for does not exist',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+        navigate('/')
+      }
     } finally {
       setIsLoading(false)
     }

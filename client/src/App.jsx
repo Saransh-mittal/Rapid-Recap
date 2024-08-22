@@ -1,11 +1,11 @@
 // /src/App.jsx
 import './App.css'
 import React from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Suspense, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet'
-import { Box, VStack, Spinner } from '@chakra-ui/react'
+import { Box, VStack, Spinner, Flex } from '@chakra-ui/react'
 import NotificationSubscription from './components/Notifications/NotificationSubscription.jsx'
 import Navbar from './components/Header-Footer/Navbar.jsx'
 import Footer from './components/Header-Footer/Footer.jsx'
@@ -22,6 +22,7 @@ import GetStarted from './components/Header-Footer/navbarComponents/GetStarted.j
 import SecureYourProgress from './components/miscellaneous/SecureYourProgress.jsx'
 const Signin = React.lazy(() => import('./screens/Signin.jsx'))
 import { setIsRegisterOpen, setIsSigninOpen } from './redux/appSlice.js'
+import Button from './components/miscellaneous/ButtonComponent.jsx'
 const Register = React.lazy(() => import('./screens/Register.jsx'))
 
 const App = () => {
@@ -32,10 +33,14 @@ const App = () => {
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { isRegisterOpen, isSigninOpen } = useSelector(state => state.app)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
+  const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
   const [showNote, setShowNote] = useState(false)
+  const navigate = useNavigate()
 
   const handleClose = () => {
+    setShowNote(true)
     setIsGuestLoggedin(false)
+    setGuestModalJustClosed(true)
   }
 
   const isLoggedIn = () => {
@@ -174,19 +179,44 @@ const App = () => {
       <FixedBackground />
       {showNote && !isGuestLoggedin ? (
         isToken() ? (
-          <NoteMessage
-            onClose={() => setShowNote(false)}
-            title="Register to Safegaure your progress"
-            duration={5000} // Set to null to prevent auto-closing
-          >
-            <SecureYourProgress />
-          </NoteMessage>
+          guestModalJustClosed ? (
+            <NoteMessage
+              onClose={() => setShowNote(false)}
+              title="You can view your credentials of guest account in profile"
+              duration={10000} // Set to null to prevent auto-closing
+            >
+              <Flex
+                width={'100%'}
+                justifyContent="center"
+                alignItems="center"
+                p={'10px'}
+              >
+                <Button
+                  onClick={() => {
+                    navigate(`/profile/${user?.inGameName}`)
+                    setShowNote(false)
+                  }}
+                  buttonW={'150px'}
+                >
+                  View Profile
+                </Button>
+              </Flex>
+            </NoteMessage>
+          ) : (
+            <NoteMessage
+              onClose={() => setShowNote(false)}
+              title="Register to Safegaure your progress"
+              duration={5000} // Set to null to prevent auto-closing
+            >
+              <SecureYourProgress />
+            </NoteMessage>
+          )
         ) : (
           <NoteMessage
             onClose={() => setShowNote(false)}
             title="Start using Rapid Recap"
             width="250px"
-            duration={10000}
+            duration={15000}
           >
             <VStack p={'10px'} gap={'1rem'} justifyContent={'space-between'}>
               <GetStarted innerText={'Signin'} width={'80%'} />

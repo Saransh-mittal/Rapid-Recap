@@ -25,7 +25,7 @@ const ShareButton = ({
             color="white"
             boxSize={6}
             zIndex={2}
-            onClick={user?.role !== 'guest' ? onOpenSignin() : null}
+            onClick={user?.role !== 'guest' ? onOpenSignin : null}
             cursor={'pointer'}
           />
         </Tooltip>

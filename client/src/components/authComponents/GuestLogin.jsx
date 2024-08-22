@@ -69,6 +69,7 @@ const GuestLogin = ({ width, onCloseNoteMessage }) => {
       <Button
         onClick={() => {
           handleGuestLogin()
+          onCloseNoteMessage && onCloseNoteMessage()
         }}
         className="get-started-button"
         width={width || `auto`}
