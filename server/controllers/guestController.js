@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs')
 const crypto = require('crypto')
 const asyncHandler = require('express-async-handler')
 const { isValidEmail } = require('../utils/miscellaneous.utils')
-const { startSession, abortSession } = require('../db/session')
+const { startSession, abortSession, commitSession } = require('../db/session')
 
 // Generate a random string for guest inGameName and email helper function
 const generateRandomString = length => {
@@ -83,7 +83,7 @@ exports.exportGuestData = asyncHandler(async (req, res) => {
       return res.status(404).json({ error: 'Guest user not found' })
     }
 
-    const existingUser = await User.findOne({ email: newEmail })
+    const existingUser = await User.findOne({ email })
     if (existingUser) {
       return res.status(400).json({ error: 'Email already in use' })
     }
@@ -103,6 +103,7 @@ exports.exportGuestData = asyncHandler(async (req, res) => {
     guestUser.guestTempPassword = undefined
     guestUser.role = 'user'
     guestUser.expiresAt = undefined
+    guestUser.verified = false
 
     await guestUser.save({ session })
     await commitSession()

@@ -34,13 +34,13 @@ import FillEyeVisible from '../assets/svg/FillEyeVisible'
 import {
   setForgotPassword,
   setUser,
-  setVerifyEmail,
   verifyAdminStatus,
 } from '../redux/authSlice'
-import { setModal } from '../redux/uiSlice'
+
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 
 import GuestLogin from '../components/authComponents/GuestLogin'
+import { setIsRegisterOpen, setIsSigninOpen } from '../redux/appSlice'
 
 // const Modal = lazy(() => import('./Modal'))
 const ResetPassword = lazy(() =>
@@ -49,12 +49,11 @@ const ResetPassword = lazy(() =>
 const EmailVerify = lazy(() =>
   import('../components/authComponents/EmailVerify'),
 )
-const Register = lazy(() => import('./Register'))
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   const toast = useToast()
   const { playClick } = useSound()
-  const { modal } = useSelector(state => state.ui)
+
   const { forgotPassword, verifyEmail } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
   const [data, setData] = useState({
@@ -62,6 +61,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     password: '',
     showPassword: false,
   })
+
   const emailOrInGameNameRef = useRef()
   const [enterInGameName, setEnterInGameName] = useState(false)
   const [inGameName, setInGameName] = useState('')
@@ -70,11 +70,6 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     forgotLoad: false,
   })
   const navigate = useNavigate()
-  const {
-    isOpen: isRegisterOpen,
-    onOpen: onRegisterOpen,
-    onClose: onRegisterClose,
-  } = useDisclosure()
 
   const {
     isOpen: isEmailVerifyOpen,
@@ -125,7 +120,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     if (response.status === 201) {
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('role', response.data.user.role)
-      hamburgerOnClose && hamburgerOnClose()
+      dispatchRedux(setIsSigninOpen(false))
       dispatchRedux(setUser(response.data.user))
       dispatchRedux(verifyAdminStatus())
       dailyStreakCheckerAndUpdater(dispatchRedux)
@@ -155,8 +150,6 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         })
 
         if (responseOfResendOTP.status === 201) {
-          // dispatchRedux(setVerifyEmail(true))
-          // dispatchRedux(setModal(true))
           onEmailVerifyOpen()
           toast({
             title: 'Email not verified',
@@ -173,9 +166,10 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
       ) {
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('role', response.data.user.role)
+        dispatchRedux(setIsSigninOpen(false))
         dispatchRedux(setUser(response.data.user))
         dispatchRedux(verifyAdminStatus())
-        hamburgerOnClose && hamburgerOnClose()
+
         dailyStreakCheckerAndUpdater(dispatchRedux)
 
         toast({
@@ -219,7 +213,6 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           data.emailOrInGameName.slice(2, i).replace(/./g, '*') +
           data.emailOrInGameName.slice(i)
         dispatchRedux(setForgotPassword(true))
-        dispatchRedux(setVerifyEmail(true))
         onEmailVerifyOpen()
         toast({
           title: 'OTP sent to your email',
@@ -230,7 +223,6 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
           position: 'top',
         })
       }
-      dispatchRedux(setModal(true))
     } catch (error) {
       emailOrInGameNameRef.current.focus()
       toast({
@@ -269,10 +261,22 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   }
 
   useEffect(() => {
-    if (!isEmailVerifyOpen && forgotPassword) {
+    if (
+      !isEmailVerifyOpen &&
+      forgotPassword &&
+      verifyEmail &&
+      !isResetPasswordOpen
+    ) {
+      console.log('Opening Reset Password')
       onResetPasswordOpen()
     }
-  }, [isEmailVerifyOpen])
+  }, [
+    isEmailVerifyOpen,
+    forgotPassword,
+    verifyEmail,
+    onResetPasswordOpen,
+    isResetPasswordOpen,
+  ])
 
   return (
     <>
@@ -373,7 +377,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       colorScheme="green"
                       onClick={() => {
                         onClose()
-                        onRegisterOpen()
+                        dispatchRedux(setIsRegisterOpen(true))
                       }}
                     >
                       Create an account
@@ -469,18 +473,16 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         </ModalContent>
       </ChakraModal>
       <Suspense fallback={<Spinner />}>
-        <Register
-          isOpen={isRegisterOpen}
-          onClose={onRegisterClose}
-          signinOnOpen={onOpen}
-        />
-      </Suspense>
-      <Suspense fallback={<Spinner />}>
-        <ResetPassword
-          email={data.emailOrInGameName}
-          onClose={onResetPasswordClose}
-          isOpen={isResetPasswordOpen}
-        />
+        {isResetPasswordOpen && forgotPassword && (
+          <ResetPassword
+            email={data.emailOrInGameName}
+            onClose={() => {
+              onResetPasswordClose()
+              dispatchRedux(setForgotPassword(false))
+            }}
+            isOpen={isResetPasswordOpen}
+          />
+        )}
       </Suspense>
       <Suspense fallback={<Spinner />}>
         <EmailVerify

@@ -21,12 +21,13 @@ import {
 } from '@chakra-ui/react'
 import { LockIcon } from '@chakra-ui/icons'
 import Alt_img from '/images/rr.webp'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import RelatedArticlesToggle from './RelatedArticlesToggle'
 import axios from 'axios'
 import { formatDate } from '../../utils/helper.utils'
 import slugify from 'slugify'
+import { setIsSigninOpen } from '../../redux/appSlice'
 
 const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
 const QuizExpired = React.lazy(() => import('./QuizExpired'))
@@ -51,7 +52,6 @@ const Sidebar = ({
   article,
   id,
   isQuizGivenLoading,
-  onSigninOpen,
 }) => {
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
@@ -63,6 +63,7 @@ const Sidebar = ({
   const [pageRelated, setPageRelated] = useState(1)
   const [loading, setLoading] = useState(false)
   const [latestNews, setLatestNews] = useState([])
+  const dispatchRedux = useDispatch()
 
   const isLoaded = useMemo(() => {
     return (
@@ -294,7 +295,7 @@ const Sidebar = ({
                     color="white"
                     boxSize={8}
                     zIndex={2}
-                    onClick={onSigninOpen}
+                    onClick={() => dispatchRedux(setIsSigninOpen(true))}
                     cursor={'pointer'}
                   />
                 </Tooltip>
@@ -353,7 +354,7 @@ const Sidebar = ({
                 color="white"
                 boxSize={8}
                 zIndex={2}
-                onClick={onSigninOpen}
+                onClick={() => dispatchRedux(setIsSigninOpen(true))}
                 cursor={'pointer'}
               />
             </Tooltip>

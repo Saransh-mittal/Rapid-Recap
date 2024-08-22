@@ -35,8 +35,8 @@ import CheckCircle from '../../assets/svg/CheckCircle'
 import UserSVG from '../../assets/svg/UserSVG'
 import Button from '../miscellaneous/ButtonComponent'
 import { useNavigate } from 'react-router-dom'
-
-const Register = React.lazy(() => import('../../screens/Register'))
+import { setExportData, setIsRegisterOpen } from '../../redux/appSlice'
+import { useDispatch } from 'react-redux'
 
 const MotionBox = motion(Box)
 
@@ -57,11 +57,7 @@ const GuestLoginModal = ({
   const [copied, setCopied] = useState({ username: false, password: false })
   const [showPassword, setShowPassword] = useState(false)
   const toast = useToast()
-  const {
-    onOpen: onOpenRegister,
-    onClose: onCloseRegister,
-    isOpen: isOpenRegister,
-  } = useDisclosure()
+  const dispatchRedux = useDispatch()
   const navigate = useNavigate()
 
   const bgGradient = useColorModeValue(
@@ -355,7 +351,8 @@ const GuestLoginModal = ({
                     transition="all 0.2s"
                     buttonW={'175px'}
                     onClick={() => {
-                      onOpenRegister()
+                      dispatchRedux(setIsRegisterOpen(true))
+                      dispatchRedux(setExportData(guestId))
                       onClose()
                     }}
                   >
@@ -383,15 +380,6 @@ const GuestLoginModal = ({
           </Modal>
         )}
       </AnimatePresence>
-      <Suspense fallback={<Spinner />}>
-        <Register
-          isOpen={isOpenRegister}
-          onClose={onCloseRegister}
-          exportData={true}
-          guestId={guestId}
-          onOpenGuest={onOpen}
-        />
-      </Suspense>
     </>
   )
 }

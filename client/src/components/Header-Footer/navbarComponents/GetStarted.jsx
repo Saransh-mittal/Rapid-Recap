@@ -2,9 +2,8 @@ import React, { Suspense } from 'react'
 import { Button, Spinner, useDisclosure } from '@chakra-ui/react'
 import './GetStarted.css'
 import useSound from '../../../customHooks/useSound'
-
-// Lazy load the Signin component
-const Signin = React.lazy(() => import('../../../screens/Signin'))
+import { useDispatch } from 'react-redux'
+import { setIsSigninOpen } from '../../../redux/appSlice'
 
 const GetStarted = ({
   display = 'flex',
@@ -12,9 +11,8 @@ const GetStarted = ({
   hamburgerOnClose,
   width,
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure()
   const { playClick } = useSound()
-
+  const dispatch = useDispatch()
   return (
     <>
       <Button
@@ -22,20 +20,13 @@ const GetStarted = ({
         className="get-started-button"
         onClick={() => {
           playClick()
-          onOpen()
+          hamburgerOnClose && hamburgerOnClose()
+          dispatch(setIsSigninOpen(true))
         }}
         width={width || `auto`}
       >
         {innerText}
       </Button>
-      <Suspense fallback={<Spinner />}>
-        <Signin
-          isOpen={isOpen}
-          onOpen={onOpen}
-          onClose={onClose}
-          hamburgerOnClose={hamburgerOnClose}
-        />
-      </Suspense>
     </>
   )
 }

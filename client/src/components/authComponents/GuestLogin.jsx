@@ -14,7 +14,7 @@ const GuestLogin = ({ width, onCloseNoteMessage, hamburgerOnClose }) => {
   const handleGuestLoginSuccess = guestUser => {
     dispatchRedux(setUser(guestUser))
     dispatchRedux(verifyAdminStatus())
-    hamburgerOnClose && hamburgerOnClose()
+    // hamburgerOnClose && hamburgerOnClose()
     dailyStreakCheckerAndUpdater(dispatchRedux)
 
     location.pathname === '/' && navigate('/home/all')

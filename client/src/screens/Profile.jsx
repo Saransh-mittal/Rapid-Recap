@@ -412,7 +412,7 @@ export default function Profile() {
               <>
                 {(!privacyProfileData.seasonAnalytics ||
                   inGameName == user?.inGameName) &&
-                  user.role !== 'guest' && (
+                  user?.role !== 'guest' && (
                     <Flex
                       py={'8px'}
                       borderRadius="10px"
@@ -457,7 +457,7 @@ export default function Profile() {
                       />
                     </Flex>
                   )}
-                {user.role === 'guest' && <SecureYourProgress />}
+                {user?.role === 'guest' && <SecureYourProgress />}
               </>
             )}
           </Suspense>

@@ -20,7 +20,7 @@ import { useToast } from '@chakra-ui/react'
 import throttle from 'lodash.throttle'
 import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
-import { setUser } from '../../redux/authSlice'
+import { setVerifyEmail } from '../../redux/authSlice'
 
 const EmailVerify = ({ email, isOpen, onClose }) => {
   const toast = useToast()
@@ -84,9 +84,6 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
             position: 'top',
           })
         } else {
-          if (user && user.role === 'guest') {
-            dispatch(setUser(response.data.user))
-          }
           toast({
             title: 'Email Verified',
             status: 'success',
@@ -96,6 +93,7 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
           })
         }
         onClose()
+        dispatch(setVerifyEmail(true))
       } else {
         throw new Error('Email Verification Failed')
       }

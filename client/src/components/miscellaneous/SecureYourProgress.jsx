@@ -1,25 +1,14 @@
-import {
-  Flex,
-  keyframes,
-  Spinner,
-  useDisclosure,
-  Box,
-  Text,
-  Heading,
-} from '@chakra-ui/react'
-import React, { Suspense } from 'react'
+import { Flex, keyframes, Box, Text, Heading } from '@chakra-ui/react'
+import React from 'react'
 import ProfileButton from '../profileComponents/ProfileButton'
 import SecureProgressSVG from '../../assets/svg/SecureProgressSVG'
-import Register from '../../screens/Register'
+
 import { useSelector } from 'react-redux'
+
+import { setExportData, setIsRegisterOpen } from '../../redux/appSlice'
 
 const SecureYourProgress = () => {
   const { user } = useSelector(state => state.auth)
-  const {
-    isOpen: isOpenRegister,
-    onOpen: onOpenRegister,
-    onClose: onCloseRegister,
-  } = useDisclosure()
 
   const hoverAnimation = keyframes`
     0% { transform: scale(1); }
@@ -74,21 +63,14 @@ const SecureYourProgress = () => {
           isGuest={true}
           hoverAnimation={hoverAnimation}
           onClick={() => {
-            onOpenRegister()
+            dispatch(setIsRegisterOpen(true))
+            dispatch(setExportData(user?._id))
           }}
           icon={
             <SecureProgressSVG width={'20px'} height={'20px'} fill={'#fff'} />
           }
         />
       </Box>
-      <Suspense fallback={<Spinner />}>
-        <Register
-          isOpen={isOpenRegister}
-          onClose={onCloseRegister}
-          exportData={true}
-          guestId={user?._id}
-        />
-      </Suspense>
     </Flex>
   )
 }

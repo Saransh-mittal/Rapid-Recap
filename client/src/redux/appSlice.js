@@ -45,6 +45,10 @@ const initialState = {
   streakLoading: false,
   friendRequestsLoading: false,
   markingRequestsAsRead: false,
+  isSigninOpen: false,
+  isRegisterOpen: false,
+  showNote: false,
+  exportData: null,
 }
 
 export const appSlice = createSlice({
@@ -73,6 +77,18 @@ export const appSlice = createSlice({
       state.streakLoading = false
       state.friendRequestsLoading = false
       state.markingRequestsAsRead = false
+    },
+    setShowNote: (state, action) => {
+      state.showNote = action.payload
+    },
+    setIsSigninOpen: (state, action) => {
+      state.isSigninOpen = action.payload
+    },
+    setIsRegisterOpen: (state, action) => {
+      state.isRegisterOpen = action.payload
+    },
+    setExportData: (state, action) => {
+      state.exportData = action.payload
     },
   },
   extraReducers: builder => {
@@ -131,6 +147,10 @@ export const {
   resetLoadingFlags,
   setUpdates,
   resetAllState,
+  setIsRegisterOpen,
+  setIsSigninOpen,
+  setShowNote,
+  setExportData,
 } = appSlice.actions
 
 export default appSlice.reducer

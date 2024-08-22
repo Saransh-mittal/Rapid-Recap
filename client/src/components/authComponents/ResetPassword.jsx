@@ -1,215 +1,148 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import axios from 'axios'
-import throttle from 'lodash.throttle'
 import {
-  Modal as ChakraModal,
-  useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
   Button,
-  Input,
-  InputGroup,
-  InputRightElement,
-  Text,
-  VStack,
-  HStack,
   FormControl,
   FormLabel,
-  Spinner,
-  Flex,
-  ModalCloseButton,
-  ModalBody,
-  ModalContent,
-  ModalOverlay,
+  Input,
+  VStack,
+  useToast,
+  InputGroup,
+  InputRightElement,
 } from '@chakra-ui/react'
-import { useDispatch } from 'react-redux'
-import { setForgotPassword } from '../../redux/authSlice'
 import useSound from '../../customHooks/useSound'
 
-const ResetPassword = ({ email, onClose, isOpen }) => {
-  const toast = useToast()
+const ResetPassword = ({ email, isOpen, onClose }) => {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const toast = useToast()
   const { playClick } = useSound()
-  const dispatch = useDispatch()
-  const [load, setLoad] = useState(false)
-  const [show, setShow] = useState({
-    new_p: false,
-    confirm_p: false,
-  })
 
-  const handleResetPassword = async () => {
-    setLoad(true)
+  const handleResetPassword = useCallback(async () => {
+    if (!email) {
+      toast({
+        title: 'Error',
+        description: 'Email is missing',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
+
     if (newPassword !== confirmPassword) {
       toast({
         title: 'Error',
         description: 'Passwords do not match',
         status: 'error',
-        duration: 5000,
+        duration: 3000,
         isClosable: true,
-        position: 'top',
       })
-      setLoad(false)
       return
     }
 
+    setIsLoading(true)
     try {
-      const response = await axios.post(`/api/user/forgotPassword`, {
+      const response = await axios.post('/api/user/forgotPassword', {
         email,
         newPassword,
       })
 
       if (response.status === 201) {
         toast({
-          title: 'Password Reset Successfully',
+          title: 'Success',
+          description: 'Password reset successfully',
           status: 'success',
-          duration: 5000,
+          duration: 3000,
           isClosable: true,
-          position: 'top',
         })
-
-        dispatch(setForgotPassword(false))
         onClose()
       }
     } catch (error) {
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Something went wrong',
+        description: error.response?.data?.error || 'Failed to reset password',
         status: 'error',
-        duration: 5000,
+        duration: 3000,
         isClosable: true,
-        position: 'top',
       })
     } finally {
-      setLoad(false)
+      setIsLoading(false)
     }
-  }
+  }, [email, newPassword, confirmPassword, toast, onClose])
 
-  const handleResetPasswordThrottled = useCallback(
-    throttle(handleResetPassword, 1000),
-    [newPassword, confirmPassword],
-  )
-
-  useEffect(() => {
-    return () => handleResetPasswordThrottled.cancel()
-  }, [handleResetPasswordThrottled])
-
-  // Handle pressing Enter key
-  const handleKeyDown = e => {
-    if (e.key === 'Enter') {
-      playClick()
-      handleResetPasswordThrottled()
-    }
+  const handleSubmit = e => {
+    e.preventDefault()
+    playClick()
+    handleResetPassword()
   }
 
   return (
-    <ChakraModal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent
-        sx={{
-          borderRadius: 'xl',
-          backgroundColor: '#0f0d15',
-          backgroundImage:
-            'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-          padding: '20px',
-          color: 'white',
-        }}
+        bg="#0f0d15"
+        backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+        color="white"
       >
-        <ModalCloseButton color={'white'} />
-        <ModalBody>
-          <Flex
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            color="white"
-          >
-            <Text fontSize="2xl" fontWeight="bold">
-              Reset Password
-            </Text>
-            <VStack spacing={5} mt={5} w="100%" maxW="md">
-              <FormControl id="newPassword">
-                <HStack justify="space-between">
-                  <FormLabel>New Password:</FormLabel>
-                </HStack>
-                <InputGroup size="md">
+        <ModalHeader>Reset Password</ModalHeader>
+        <ModalCloseButton />
+        <form onSubmit={handleSubmit}>
+          <ModalBody>
+            <VStack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel>New Password</FormLabel>
+                <InputGroup>
                   <Input
-                    pr="4.5rem"
-                    type={show.new_p ? 'text' : 'password'}
-                    placeholder="Enter password"
-                    minLength={8}
+                    type={showPassword ? 'text' : 'password'}
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
-                    onKeyDown={handleKeyDown} // Add this line to handle Enter key
+                    placeholder="Enter new password"
                   />
                   <InputRightElement width="4.5rem">
                     <Button
                       h="1.75rem"
                       size="sm"
-                      name="new_p"
-                      onClick={e => {
-                        playClick()
-                        setShow({
-                          ...show,
-                          [e.target.name]: !show[e.target.name],
-                        })
-                      }}
+                      onClick={() => setShowPassword(!showPassword)}
                     >
-                      {show.new_p ? 'Hide' : 'Show'}
+                      {showPassword ? 'Hide' : 'Show'}
                     </Button>
                   </InputRightElement>
                 </InputGroup>
               </FormControl>
-
-              <FormControl id="confirmPassword">
-                <HStack justify="space-between">
-                  <FormLabel>Confirm Password:</FormLabel>
-                </HStack>
-                <InputGroup size="md">
-                  <Input
-                    pr="4.5rem"
-                    type={show.confirm_p ? 'text' : 'password'}
-                    placeholder="Enter password"
-                    minLength={8}
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    onKeyDown={handleKeyDown} // Add this line to handle Enter key
-                  />
-                  <InputRightElement width="4.5rem">
-                    <Button
-                      h="1.75rem"
-                      size="sm"
-                      name="confirm_p"
-                      onClick={e => {
-                        playClick()
-                        setShow({
-                          ...show,
-                          [e.target.name]: !show[e.target.name],
-                        })
-                      }}
-                    >
-                      {show.confirm_p ? 'Hide' : 'Show'}
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
+              <FormControl isRequired>
+                <FormLabel>Confirm Password</FormLabel>
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                />
               </FormControl>
-
-              <Button
-                colorScheme="messenger"
-                mt={5}
-                w="full"
-                onClick={() => {
-                  playClick()
-                  handleResetPasswordThrottled()
-                }}
-                isLoading={load}
-                loadingText="Resetting Password"
-                spinner={<Spinner size="sm" />}
-              >
-                Reset Password
-              </Button>
             </VStack>
-          </Flex>
-        </ModalBody>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              type="submit"
+              colorScheme="blue"
+              isLoading={isLoading}
+              loadingText="Resetting"
+            >
+              Reset Password
+            </Button>
+          </ModalFooter>
+        </form>
       </ModalContent>
-    </ChakraModal>
+    </Modal>
   )
 }
 

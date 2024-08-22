@@ -27,6 +27,14 @@ import { Helmet } from 'react-helmet-async'
 import useSound from '../customHooks/useSound'
 import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
 import FillEyeVisible from '../assets/svg/FillEyeVisible'
+import { useDispatch, useSelector } from 'react-redux'
+import { logout } from '../redux/authSlice'
+import {
+  resetAllState,
+  resetLoadingFlags,
+  setIsSigninOpen,
+} from '../redux/appSlice'
+import { useNavigate } from 'react-router-dom'
 
 const EmailVerify = lazy(() =>
   import('../components/authComponents/EmailVerify'),
@@ -35,14 +43,16 @@ const EmailVerify = lazy(() =>
 export default function Register({
   isOpen,
   onClose,
-  signinOnOpen,
-  exportData = false,
-  guestId = null,
+
   onOpenGuest,
 }) {
-  const [emailVerified, setEmailVerified] = useState(false)
+  const { verifyEmail } = useSelector(state => state.auth)
+  const { exportData } = useSelector(state => state.app)
+
   const toast = useToast()
   const { playClick } = useSound()
+  const dispatchRedux = useDispatch()
+  const navigate = useNavigate()
 
   const {
     isOpen: isEmailVerifyOpen,
@@ -79,20 +89,45 @@ export default function Register({
     }))
   }
 
+  const handleLogout = useCallback(async () => {
+    try {
+      const response = await axios.post('/api/user/logout')
+      if (response.status === 201) {
+        localStorage.removeItem('token')
+        exportData && localStorage.removeItem('guestUserId')
+
+        dispatchRedux(logout())
+        dispatchRedux(resetLoadingFlags())
+        dispatchRedux(resetAllState())
+      } else {
+        throw new Error('Logout Failed')
+      }
+    } catch (error) {
+      toast({
+        title: 'Logout Failed',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+      console.error(error)
+    }
+  }, [dispatchRedux, navigate, toast, exportData, onOpenGuest])
+
   const handleSubmit = async e => {
     playClick()
     setLoad(true)
     e.preventDefault()
     try {
       const pic = await submitImage(data)
-      const response =
-        exportData && guestId
-          ? await axios.post(`/api/user/exportGuestData`, {
-              ...data,
-              pic,
-              guestId,
-            })
-          : await axios.post(`/api/user/register`, { ...data, pic })
+      const response = exportData
+        ? await axios.post(`/api/user/exportGuestData`, {
+            ...data,
+            pic,
+            guestId: exportData,
+          })
+        : await axios.post(`/api/user/register`, { ...data, pic })
+      exportData && (await handleLogout())
       if (response.status === 201) {
         onEmailVerifyOpen()
         toast({
@@ -129,11 +164,11 @@ export default function Register({
   }, [handleSubmitThrottled])
 
   useEffect(() => {
-    if (emailVerified) {
+    if (verifyEmail && isOpen) {
       onClose()
-      signinOnOpen && signinOnOpen()
+      dispatchRedux(setIsSigninOpen(true))
     }
-  }, [emailVerified, onClose, signinOnOpen])
+  }, [verifyEmail, onClose])
 
   const handleKeyPress = e => {
     if (e.key === 'Enter') {
@@ -190,7 +225,7 @@ export default function Register({
         isOpen={isOpen}
         onClose={() => {
           onClose()
-          signinOnOpen && signinOnOpen()
+          dispatchRedux(setIsSigninOpen(true))
           onOpenGuest && onOpenGuest()
         }}
         size={{ base: 'full', md: 'xl' }}
@@ -394,7 +429,7 @@ export default function Register({
               colorScheme="whiteAlpha"
               onClick={() => {
                 onClose()
-                signinOnOpen && signinOnOpen()
+                dispatchRedux(setIsSigninOpen(true))
                 onOpenGuest && onOpenGuest()
               }}
             >

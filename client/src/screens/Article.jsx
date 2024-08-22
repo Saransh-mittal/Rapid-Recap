@@ -7,7 +7,6 @@ import React, {
   useRef,
   useState,
   useCallback,
-  useMemo,
 } from 'react'
 import axios from 'axios'
 import {
@@ -16,7 +15,6 @@ import {
   useDisclosure,
   Grid,
   useMediaQuery,
-  Spinner,
 } from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
@@ -47,8 +45,6 @@ const ArticleHeader = lazy(() =>
 const TrackTime = lazy(() =>
   import('../components/articleComponents/TrackTime'),
 )
-const Signin = lazy(() => import('./Signin'))
-
 const Article = () => {
   const toast = useToast()
   const { isAuthenticated, user } = useSelector(state => state.auth)
@@ -91,11 +87,6 @@ const Article = () => {
   const [bookmark, setBookmark] = useState(false)
   const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(null)
   const quizFetchTimer = useRef(null)
-  const {
-    isOpen: isSigninOpen,
-    onOpen: onSigninOpen,
-    onClose: onSigninClose,
-  } = useDisclosure()
 
   const notLoggedIn = !isAuthenticated
 
@@ -522,7 +513,6 @@ const Article = () => {
                     isQuinBoostAvailable={isQuinBoostAvailable}
                     quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
                     openModal={openModal}
-                    onSigninOpen={onSigninOpen}
                   />
                 </header>
               </Flex>
@@ -570,7 +560,6 @@ const Article = () => {
                   article={article}
                   id={id}
                   isQuizGivenLoading={isQuizGivenLoading}
-                  onSigninOpen={onSigninOpen}
                 />
               </Grid>
             </article>
@@ -583,13 +572,6 @@ const Article = () => {
           isStateBoosted={isBoosted}
         />
         {user && <TrackTime userId={user?._id} articleId={id} />}
-        <Suspense fallback={<Spinner />}>
-          <Signin
-            isOpen={isSigninOpen}
-            onOpen={onSigninOpen}
-            onClose={onSigninClose}
-          />
-        </Suspense>
       </Flex>
     </Suspense>
   )

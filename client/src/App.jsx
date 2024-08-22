@@ -1,10 +1,11 @@
 // /src/App.jsx
 import './App.css'
+import React from 'react'
 import { useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet'
-import { Box, HStack } from '@chakra-ui/react'
+import { Box, HStack, Spinner } from '@chakra-ui/react'
 import NotificationSubscription from './components/Notifications/NotificationSubscription.jsx'
 import Navbar from './components/Header-Footer/Navbar.jsx'
 import Footer from './components/Header-Footer/Footer.jsx'
@@ -19,6 +20,9 @@ import NoteMessage from './components/miscellaneous/NoteMessage.jsx'
 import GuestLogin from './components/authComponents/GuestLogin.jsx'
 import GetStarted from './components/Header-Footer/navbarComponents/GetStarted.jsx'
 import SecureYourProgress from './components/miscellaneous/SecureYourProgress.jsx'
+const Signin = React.lazy(() => import('./screens/Signin.jsx'))
+import { setIsRegisterOpen, setIsSigninOpen } from './redux/appSlice.js'
+const Register = React.lazy(() => import('./screens/Register.jsx'))
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -26,6 +30,7 @@ const App = () => {
 
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { isRegisterOpen, isSigninOpen } = useSelector(state => state.app)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [showNote, setShowNote] = useState(false)
 
@@ -180,7 +185,6 @@ const App = () => {
           <NoteMessage
             onClose={() => setShowNote(false)}
             title="Start using Rapid Recap"
-            duration={null} // Set to null to prevent auto-closing
           >
             <HStack p={'10px'} gap={'5px'} justifyContent={'space-between'}>
               <GetStarted innerText={'Signin'} width={'8.5rem'} />
@@ -203,6 +207,21 @@ const App = () => {
         guestId={user?._id}
         onOpen={() => setIsGuestLoggedin(true)}
       />
+
+      <Suspense fallback={<Spinner />}>
+        <Signin
+          isOpen={isSigninOpen}
+          onOpen={() => dispatch(setIsSigninOpen(true))}
+          onClose={() => dispatch(setIsSigninOpen(false))}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <Register
+          isOpen={isRegisterOpen}
+          onOpen={() => dispatch(setIsRegisterOpen(true))}
+          onClose={() => dispatch(setIsRegisterOpen(false))}
+        />
+      </Suspense>
       <Box
         position="relative"
         minHeight="100vh"

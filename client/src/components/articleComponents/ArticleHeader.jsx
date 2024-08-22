@@ -18,6 +18,7 @@ import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
 import useSound from '../../customHooks/useSound'
 import { EditIcon } from '@chakra-ui/icons'
 import axios from 'axios'
+import { setIsSigninOpen } from '../../redux/appSlice'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -36,7 +37,6 @@ const ArticleHeader = ({
   isQuinBoostAvailable,
   quizLeftToGetQuizBoost,
   openModal,
-  onSigninOpen,
 }) => {
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
   const { isBoosted } = useSelector(state => state.app)
@@ -206,7 +206,7 @@ const ArticleHeader = ({
                   isEnglish={selectedLanguage === 'english'}
                   onToggle={toggleLanguage}
                   isDisabled={notLoggedIn}
-                  onSigninOpen={onSigninOpen}
+                  onSigninOpen={() => dispatchRedux(setIsSigninOpen(true))}
                 />
               </Flex>
             )}
@@ -232,14 +232,14 @@ const ArticleHeader = ({
             <ShareButton
               onClick={handleShare}
               isDisabled={notLoggedIn}
-              onOpenSignin={onSigninOpen}
+              onOpenSignin={() => dispatchRedux(setIsSigninOpen(true))}
             />
             {isLargerThan768 && (
               <LanguageToggle
                 isEnglish={selectedLanguage === 'english'}
                 onToggle={toggleLanguage}
                 isDisabled={notLoggedIn}
-                onSigninOpen={onSigninOpen}
+                onSigninOpen={() => dispatchRedux(setIsSigninOpen(true))}
               />
             )}
           </Flex>
