@@ -18,7 +18,7 @@ const SecureYourProgress = () => {
     `
 
   const getTimeLeftBeforeExpiration = () => {
-    const expirationDate = new Date(user.expiresAt)
+    const expirationDate = new Date(user?.expiresAt)
     const currentDate = new Date()
     const timeLeft = expirationDate - currentDate
     const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24))

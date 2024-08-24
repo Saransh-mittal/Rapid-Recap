@@ -10,13 +10,15 @@ import {
   HStack,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 import {
   removeNoteMessageWithId,
   setShowingSummaryForNoteMessages,
 } from '../../redux/appSlice'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
+import ButtonFactory from './ButtonFactory'
+import { useNavigate } from 'react-router-dom'
 
 const MotionBox = motion(Box)
 
@@ -30,13 +32,16 @@ const NoteMessage = ({
   actions = [],
 }) => {
   const dispatch = useDispatch()
-
+  const navigate = useNavigate()
+  const { user } = useSelector(state => state.auth)
   const handleMessageAction = createHandleMessageAction(dispatch, {
     setShowingSummaryForNoteMessages,
+    removeNoteMessageWithId,
+    navigateToProfile: id => navigate(`/profile/${id}`),
   })
 
   const handleAction = actionType => {
-    handleMessageAction(actionType)
+    handleMessageAction(actionType, messageId, user?.inGameName)
     actionType !== 'VIEW_ALL' && handleClose()
   }
   const { isOpen, onClose: closeDisclosure } = useDisclosure({
@@ -103,16 +108,17 @@ const NoteMessage = ({
             <VStack align="stretch" p={4} spacing={3}>
               <Text>{content}</Text>
               {actions.length > 0 && (
-                <HStack spacing={2} justify="flex-end">
+                <HStack spacing={4} justify="center">
                   {actions.map((action, index) => (
-                    <Button
+                    <ButtonFactory
                       key={index}
-                      size="sm"
-                      colorScheme={action.colorScheme || 'blue'}
+                      actionType={action.actionType}
                       onClick={() => handleAction(action.actionType)}
+                      size="sm"
+                      innerText={action.text}
                     >
-                      {action.text}
-                    </Button>
+                      {!action.actionType === 'SIGN_IN' && action.text}
+                    </ButtonFactory>
                   ))}
                 </HStack>
               )}

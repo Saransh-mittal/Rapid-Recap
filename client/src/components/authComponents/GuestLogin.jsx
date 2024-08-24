@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import Loading from '../miscellaneous/Loading'
 import { setIsSigninOpen } from '../../redux/appSlice'
 
-const GuestLogin = ({ width, onCloseNoteMessage }) => {
+const GuestLogin = ({ width }) => {
   const toast = useToast()
   const navigate = useNavigate()
   const dispatchRedux = useDispatch()
@@ -69,7 +69,6 @@ const GuestLogin = ({ width, onCloseNoteMessage }) => {
       <Button
         onClick={() => {
           handleGuestLogin()
-          onCloseNoteMessage && onCloseNoteMessage()
         }}
         className="get-started-button"
         width={width || `auto`}

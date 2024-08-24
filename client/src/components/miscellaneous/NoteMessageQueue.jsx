@@ -19,7 +19,7 @@ const NoteMessageQueue = () => {
     return null
   }
 
-  if (noteMessageQueue.length > 2 && !showingSummaryForNoteMessages) {
+  if (noteMessageQueue.length > 1 && !showingSummaryForNoteMessages) {
     const actions = [
       {
         text: 'View All',

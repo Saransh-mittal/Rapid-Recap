@@ -97,7 +97,7 @@ export const appSlice = createSlice({
       state.noteMessageQueue.push({
         ...action.payload,
         id: uuidv4(), // Generate a unique ID for each message
-        content: action.payload.content.toString(),
+        content: action.payload?.content?.toString(),
         actions: action.payload.actions || [],
       })
     },

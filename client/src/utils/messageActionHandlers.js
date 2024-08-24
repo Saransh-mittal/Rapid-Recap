@@ -15,16 +15,21 @@ const messageActionHandlers = {
   DISMISS: (dispatch, actions, messageId) => {
     dispatch(actions.removeNoteMessageWithId(messageId))
   },
+  VIEW_PROFILE: (actions, profileId) => {
+    actions.navigateToProfile(profileId)
+  },
   // Add more action handlers as needed
 }
 
 export const createHandleMessageAction = (dispatch, actions) => {
-  return (actionType, messageId) => {
+  return (actionType, messageId, profileId) => {
     if (messageActionHandlers[actionType]) {
       if (actionType === 'VIEW_ALL') {
         messageActionHandlers[actionType](() =>
           dispatch(actions.setShowingSummaryForNoteMessages(true)),
         )
+      } else if (actionType === 'VIEW_PROFILE') {
+        messageActionHandlers[actionType](actions, profileId)
       } else if (actionType === 'DISMISS') {
         messageActionHandlers[actionType](dispatch, actions, messageId)
       } else {
@@ -32,11 +37,6 @@ export const createHandleMessageAction = (dispatch, actions) => {
       }
     } else {
       console.log('Unknown action type:', actionType)
-    }
-
-    // Automatically dismiss the message after handling any action except VIEW_ALL and DISMISS
-    if (actionType !== 'VIEW_ALL' && actionType !== 'DISMISS' && messageId) {
-      dispatch(actions.removeNoteMessageWithId(messageId))
     }
   }
 }

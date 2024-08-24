@@ -10,12 +10,13 @@ import {
   Divider,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   removeNoteMessageWithId,
   setShowingSummaryForNoteMessages,
 } from '../../redux/appSlice'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
+import { useNavigate } from 'react-router-dom'
 
 const MotionBox = motion(Box)
 
@@ -24,10 +25,12 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   const { isOpen, onClose: closeDisclosure } = useDisclosure({
     defaultIsOpen: true,
   })
+  const navigate = useNavigate()
+  const { user } = useSelector(state => state.auth)
 
   const handleMessageAction = createHandleMessageAction(dispatch, {
-    removeNoteMessageWithId,
     setShowingSummaryForNoteMessages,
+    navigateToProfile: id => navigate(`/profile/${id}`),
   })
 
   const handleDismiss = id => {
@@ -40,7 +43,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   }
 
   const handleAction = (actionType, messageId) => {
-    handleMessageAction(actionType, messageId)
+    handleMessageAction(actionType, messageId, user?.inGameName)
   }
 
   return (
