@@ -1107,6 +1107,9 @@ const longestStreakCalculatorOfAllUsers = async (req, res) => {
   }
 }
 
+// @desc  Get user streak on every refresh of the page
+// @route GET /api/user/streakChecker
+// @access Private
 const streakChecker = async (req, res) => {
   const userId = req.user._id
   try {

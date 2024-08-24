@@ -1,0 +1,65 @@
+{
+  "notifications": {
+    "day_1_to_5": [
+      {
+        "time": "09:00 AM",
+        "subject": "Secure Your Progress Today!",
+        "body": "Your guest account is ticking! Secure your progress now to keep your achievements and enjoy full access to all features. Don’t miss out! 🔒"
+      },
+      {
+        "time": "07:00 PM",
+        "subject": "Don’t Lose Your Progress!",
+        "body": "Your journey doesn’t have to end here. Secure your guest account today and carry all your progress forward. You’re just a click away! 🌟"
+      }
+    ],
+    "day_6": [
+      {
+        "time": "09:00 AM",
+        "subject": "2 Days Left – Secure Your Progress Now!",
+        "body": "Time is running out! You have 2 days left to secure your progress and enjoy all the benefits of a full account. Act now! ⏳"
+      },
+      {
+        "time": "12:00 PM",
+        "subject": "Keep Your Progress Safe!",
+        "body": "Don’t let your hard work go to waste. Secure your progress today and unlock the full potential of our app. Just click ‘Secure Your Progress’ in your profile. 💪"
+      },
+      {
+        "time": "03:00 PM",
+        "subject": "Just 48 Hours Left!",
+        "body": "You’re almost out of time! Only 48 hours left to secure your guest account and keep all your progress. Don’t wait—secure it now! 🚀"
+      },
+      {
+        "time": "07:00 PM",
+        "subject": "Last Chance to Secure Your Progress!",
+        "body": "Your guest account expires soon. Secure it now to continue enjoying all your progress and unlock full access to our features! 🔓"
+      }
+    ],
+    "day_7": [
+      {
+        "time": "08:00 AM",
+        "subject": "Today’s the Day – Secure Your Progress!",
+        "body": "This is your last chance! Secure your progress today to keep everything you’ve achieved. Don’t miss out—click ‘Secure Your Progress’ now! 🏆"
+      },
+      {
+        "time": "11:00 AM",
+        "subject": "Time is Running Out!",
+        "body": "Only a few hours left before your guest account expires. Secure your progress now and ensure nothing is lost! ⏰"
+      },
+      {
+        "time": "02:00 PM",
+        "subject": "Secure Your Progress Before It’s Too Late!",
+        "body": "Your guest account is about to expire. Secure your progress to keep all your achievements and unlock full access. Act fast! ⚡️"
+      },
+      {
+        "time": "05:00 PM",
+        "subject": "Don’t Lose Your Progress!",
+        "body": "The clock is ticking. Secure your progress before your guest account expires. Keep everything you’ve worked for! ⏱️"
+      },
+      {
+        "time": "08:00 PM",
+        "subject": "Last Call – Secure Your Progress Now!",
+        "body": "This is it—your final chance to secure your progress before your guest account expires. Don’t lose out, secure it now! 🚨"
+      }
+    ]
+  }
+}
