@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react'
 import { Route, Routes, Navigate } from 'react-router-dom'
 import Loading from '../components/miscellaneous/Loading'
 import AdminRoute from './AdminRoute'
+import LanguageSwitcher from '../LanguageSwitcher'
 
 const Home = lazy(() => import('../screens/Home'))
 const Article = lazy(() => import('../screens/Article'))

@@ -23,6 +23,7 @@ import { findSocietyAndCircle } from '../utils/helper.utils.js'
 
 import SecureYourProgress from '../components/miscellaneous/SecureYourProgress.jsx'
 import NoteMessage from '../components/miscellaneous/NoteMessage.jsx'
+import { useTranslation } from 'react-i18next'
 
 // Dynamic imports for code splitting
 const IQLineGraph = React.lazy(() =>
@@ -59,6 +60,7 @@ const Bookmarks = React.lazy(() =>
 )
 
 export default function Profile() {
+  const { t } = useTranslation('LeaderBoard')
   const { inGameName } = useParams()
   const { user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
@@ -92,11 +94,6 @@ export default function Profile() {
     isOpen: isOpenBookmarks,
     onOpen: onOpenBookmarks,
     onClose: onCloseBookmarks,
-  } = useDisclosure()
-  const {
-    isOpen: isOpenWiseWeb,
-    onOpen: onOpenWiseWeb,
-    onClose: onCloseWiseWeb,
   } = useDisclosure()
 
   const fetchProfile = useCallback(async () => {
@@ -164,15 +161,6 @@ export default function Profile() {
     }
   }, [inGameName, user, otherUserProfiles])
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const requestId = params.get('requestId')
-
-    if (requestId) {
-      onOpenWiseWeb()
-    }
-  }, [location, onOpenWiseWeb])
-
   const hoverAnimation = keyframes`
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -182,7 +170,9 @@ export default function Profile() {
   return (
     <Box marginTop={'4.5rem'} w={'100%'}>
       <Helmet>
-        <title>{`${profile?.inGameName}'s Rapid Recap Profile | IQ Score: ${profile?.USER_IQ}`}</title>
+        <title>
+          {t('title', { name: profile?.inGameName, score: profile?.USER_IQ })}
+        </title>
         <meta
           name="description"
           content={`Explore ${

@@ -1,0 +1,15 @@
+{
+  "title": "LEADERBOARD",
+  "tag": "SEASON 2",
+  "toastErrorTitle": "Error",
+  "toastErrorDescription": "Failed to fetch leaderboard",
+  "helmet": {
+    "title": "Rapid Recap Leaderboard - Season 2 | Top Information Quotient Scores",
+    "metaDescription": "Explore the Rapid Recap Leaderboard for Season 2. See top Information Quotient (IQ) scores, quiz submissions, and rankings across different societies. Join the intellectual elite!",
+    "metaKeywords": "Rapid Recap, Leaderboard, Information Quotient, IQ Score, Quiz, News, Societies, Intellectual Circles",
+    "metaOgTitle": "Rapid Recap Leaderboard - Season 2",
+    "metaOgDescription": "Discover top performers in Rapid Recap's Season 2 Leaderboard. Compare IQ scores, quiz submissions, and society rankings.",
+    "metaOgUrl": "https://rapidrecap.com/leaderboard",
+    "metaOgType": "website"
+  }
+}

@@ -49,11 +49,11 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
 
   const profileData = useMemo(
     () => ({
-      name: leftProfileView.name,
+      name: leftProfileView?.name,
       pic:
-        leftProfileView.pic ||
+        leftProfileView?.pic ||
         'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
-      bio: leftProfileView.bio,
+      bio: leftProfileView?.bio,
       inGameName: user?.inGameName,
       lastInGameNameChange: user?.lastInGameNameChange,
     }),
@@ -124,7 +124,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     try {
       const response = await axios.post('/api/friends/can-send-request', {
         fromId: user?._id,
-        toId: leftProfileView._id,
+        toId: leftProfileView?._id,
       })
       if (
         response.status === 200 &&
@@ -148,14 +148,14 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     } finally {
       setLoading(false)
     }
-  }, [leftProfileView._id, toast, user])
+  }, [leftProfileView?._id, toast, user])
 
   const sendFriendRequest = useCallback(async () => {
     setLoading(true)
     try {
       const response = await axios.post('/api/friends/send-request', {
         fromId: user?._id,
-        toId: leftProfileView._id,
+        toId: leftProfileView?._id,
       })
       if (response.status === 200) {
         setRequestSent(true)
@@ -180,7 +180,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     } finally {
       setLoading(false)
     }
-  }, [toast, user?._id, leftProfileView._id])
+  }, [toast, user?._id, leftProfileView?._id])
 
   useEffect(() => {
     checkCanSendRequest()
@@ -255,11 +255,11 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             </Suspense>
           </Flex>
           <Heading as="h6" fontSize={'12px'}>
-            {leftProfileView.inGameName}
+            {leftProfileView?.inGameName}
           </Heading>
 
           <Heading as="h6" fontSize={'12px'}>
-            Rank : {user?.role === 'guest' ? 'NA' : leftProfileView.rank}
+            Rank : {user?.role === 'guest' ? 'NA' : leftProfileView?.rank}
           </Heading>
         </Box>
         {window.location.pathname.split('/').pop() !== user?.inGameName &&
