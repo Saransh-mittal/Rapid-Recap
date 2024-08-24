@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
+import { v4 as uuidv4 } from 'uuid'
 
 // Async thunks for fetching data
 export const fetchAppUpdates = createAsyncThunk(
@@ -49,6 +50,8 @@ const initialState = {
   isRegisterOpen: false,
   showNote: false,
   exportData: null,
+  noteMessageQueue: [],
+  showingSummaryForNoteMessages: false,
 }
 
 export const appSlice = createSlice({
@@ -89,6 +92,26 @@ export const appSlice = createSlice({
     },
     setExportData: (state, action) => {
       state.exportData = action.payload
+    },
+    addNoteMessage: (state, action) => {
+      state.noteMessageQueue.push({
+        ...action.payload,
+        id: uuidv4(), // Generate a unique ID for each message
+        content: action.payload.content.toString(),
+        actions: action.payload.actions || [],
+      })
+    },
+
+    removeNoteMessageWithId: (state, action) => {
+      state.noteMessageQueue = state.noteMessageQueue.filter(
+        message => message.id !== action.payload,
+      )
+    },
+    clearNoteMessageQueue: state => {
+      state.noteMessageQueue = []
+    },
+    setShowingSummaryForNoteMessages: (state, action) => {
+      state.showingSummaryForNoteMessages = action.payload
     },
   },
   extraReducers: builder => {
@@ -151,6 +174,10 @@ export const {
   setIsSigninOpen,
   setShowNote,
   setExportData,
+  addNoteMessage,
+  clearNoteMessageQueue,
+  setShowingSummaryForNoteMessages,
+  removeNoteMessageWithId,
 } = appSlice.actions
 
 export default appSlice.reducer

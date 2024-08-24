@@ -1,11 +1,11 @@
 // /src/App.jsx
 import './App.css'
-import React from 'react'
+import React, { act } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Suspense, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet'
-import { Box, VStack, Spinner, Flex } from '@chakra-ui/react'
+import { Box, VStack, Spinner, Flex, Text } from '@chakra-ui/react'
 import NotificationSubscription from './components/Notifications/NotificationSubscription.jsx'
 import Navbar from './components/Header-Footer/Navbar.jsx'
 import Footer from './components/Header-Footer/Footer.jsx'
@@ -21,8 +21,14 @@ import GuestLogin from './components/authComponents/GuestLogin.jsx'
 import GetStarted from './components/Header-Footer/navbarComponents/GetStarted.jsx'
 import SecureYourProgress from './components/miscellaneous/SecureYourProgress.jsx'
 const Signin = React.lazy(() => import('./screens/Signin.jsx'))
-import { setIsRegisterOpen, setIsSigninOpen } from './redux/appSlice.js'
+import {
+  addNoteMessage,
+  setIsRegisterOpen,
+  setIsSigninOpen,
+} from './redux/appSlice.js'
 import Button from './components/miscellaneous/ButtonComponent.jsx'
+import NoteMessageQueue from './components/miscellaneous/NoteMessageQueue.jsx'
+
 const Register = React.lazy(() => import('./screens/Register.jsx'))
 
 const App = () => {
@@ -177,7 +183,7 @@ const App = () => {
         />
       </Helmet>
       <FixedBackground />
-      {showNote && !isGuestLoggedin ? (
+      {/* {showNote && !isGuestLoggedin ? (
         isToken() ? (
           guestModalJustClosed ? (
             <NoteMessage
@@ -227,8 +233,11 @@ const App = () => {
             </VStack>
           </NoteMessage>
         )
-      ) : null}
+      ) : null} */}
+      <NoteMessageQueue />
+
       <Navbar />
+      <NoteMessageTestComponent />
       <ButtonGradient />
       {shouldShowNotification && <NotificationSubscription />}
       <GuestLoginModal
@@ -264,6 +273,115 @@ const App = () => {
       </Box>
       {shouldShowFooter && <Footer />}
     </>
+  )
+}
+
+const NoteMessageTestComponent = () => {
+  const dispatch = useDispatch()
+
+  const addSimpleMessage = () => {
+    dispatch(
+      addNoteMessage({
+        title: 'Simple Message',
+        content: 'This is a simple test message.',
+        duration: 5000,
+        width: '300px',
+      }),
+    )
+  }
+
+  const addMessageWithTwoActions = () => {
+    dispatch(
+      addNoteMessage({
+        title: 'Message with Two Actions',
+        content: 'This message includes two action buttons.',
+        duration: null,
+        width: '350px',
+        actions: [
+          {
+            text: 'Confirm',
+            actionType: 'CONFIRM',
+            colorScheme: 'green',
+          },
+          {
+            text: 'Cancel',
+            actionType: 'CANCEL',
+            colorScheme: 'red',
+          },
+        ],
+      }),
+    )
+  }
+
+  const addMessageWithThreeActions = () => {
+    dispatch(
+      addNoteMessage({
+        title: 'Message with Three Actions',
+        content: 'This message includes three action buttons.',
+        duration: 15000,
+        width: '400px',
+        actions: [
+          {
+            text: 'Option 1',
+            actionType: 'OPTION1',
+            colorScheme: 'blue',
+          },
+          {
+            text: 'Option 2',
+            actionType: 'OPTION2',
+            colorScheme: 'purple',
+          },
+          {
+            text: 'Cancel',
+            actionType: 'CANCEL',
+            colorScheme: 'gray',
+          },
+        ],
+      }),
+    )
+  }
+
+  const addMultipleMessages = () => {
+    for (let i = 1; i <= 5; i++) {
+      dispatch(
+        addNoteMessage({
+          title: `Message ${i}`,
+          content: `This is test message number ${i}.`,
+          duration: 5000 + i * 1000,
+          width: '300px',
+          actions: [
+            {
+              text: 'Option 1',
+              actionType: 'OPTION1',
+              colorScheme: 'blue',
+            },
+            {
+              text: 'Option 2',
+              actionType: 'OPTION2',
+              colorScheme: 'purple',
+            },
+            {
+              text: 'Cancel',
+              actionType: 'CANCEL',
+              colorScheme: 'gray',
+            },
+          ],
+        }),
+      )
+    }
+  }
+
+  return (
+    <VStack spacing={4} align="stretch" p={4} mt={'10rem'}>
+      <Button onClick={addSimpleMessage}>Add Simple Message</Button>
+      <Button onClick={addMessageWithTwoActions}>
+        Add Message with Two Actions
+      </Button>
+      <Button onClick={addMessageWithThreeActions}>
+        Add Message with Three Actions
+      </Button>
+      <Button onClick={addMultipleMessages}>Add Multiple Messages</Button>
+    </VStack>
   )
 }
 export default App
