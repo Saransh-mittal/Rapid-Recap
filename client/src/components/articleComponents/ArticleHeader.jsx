@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, Suspense } from 'react'
+import React, { useCallback, Suspense } from 'react'
 import {
   Flex,
   Text,
@@ -19,8 +19,6 @@ import useSound from '../../customHooks/useSound'
 import { EditIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import { setIsSigninOpen } from '../../redux/appSlice'
-import NoteMessage from '../miscellaneous/NoteMessage'
-import SecureYourProgress from '../miscellaneous/SecureYourProgress'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -49,7 +47,7 @@ const ArticleHeader = ({
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()
   const { user } = useSelector(state => state.auth)
-  const [showNote, setShowNote] = React.useState(false)
+
   const {
     isOpen: isOpenArticleForm,
     onOpen: onOpenArticleForm,
@@ -238,7 +236,6 @@ const ArticleHeader = ({
               onClick={handleShare}
               isDisabled={notLoggedIn || user?.role === 'guest'}
               onOpenSignin={() => dispatchRedux(setIsSigninOpen(true))}
-              setShowNote={setShowNote}
               user={user}
             />
             {isLargerThan768 && (
@@ -282,15 +279,6 @@ const ArticleHeader = ({
           notLoggedIn={notLoggedIn}
         />
       </Flex>
-      {showNote && (
-        <NoteMessage
-          onClose={() => setShowNote(false)}
-          title="Register to see your IQ score and grow Wise Web"
-          duration={10000} // Set to null to prevent auto-closing
-        >
-          <SecureYourProgress />
-        </NoteMessage>
-      )}
     </Skeleton>
   )
 }

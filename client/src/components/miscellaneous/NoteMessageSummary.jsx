@@ -17,6 +17,7 @@ import {
 } from '../../redux/appSlice'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useNavigate } from 'react-router-dom'
+import ButtonFactory from './ButtonFactory'
 
 const MotionBox = motion(Box)
 
@@ -30,6 +31,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
 
   const handleMessageAction = createHandleMessageAction(dispatch, {
     setShowingSummaryForNoteMessages,
+    removeNoteMessageWithId,
     navigateToProfile: id => navigate(`/profile/${id}`),
   })
 
@@ -96,16 +98,15 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                   <HStack mt={2} spacing={2}>
                     {message.actions &&
                       message.actions.map((action, actionIndex) => (
-                        <Button
+                        <ButtonFactory
                           key={actionIndex}
+                          actionType={action.actionType}
+                          onClick={() => handleAction(action.actionType)}
                           size="sm"
-                          colorScheme={action.colorScheme || 'blue'}
-                          onClick={() =>
-                            handleAction(action.actionType, message.id)
-                          }
+                          innerText={action.text}
                         >
-                          {action.text}
-                        </Button>
+                          {!action.actionType === 'SIGN_IN' && action.text}
+                        </ButtonFactory>
                       ))}
                     <Button size="sm" onClick={() => handleDismiss(message.id)}>
                       Dismiss

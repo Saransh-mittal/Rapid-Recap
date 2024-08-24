@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import Loading from '../miscellaneous/Loading'
 import { setIsSigninOpen } from '../../redux/appSlice'
 
-const GuestLogin = ({ width }) => {
+const GuestLogin = ({ width, onClick }) => {
   const toast = useToast()
   const navigate = useNavigate()
   const dispatchRedux = useDispatch()
@@ -68,6 +68,7 @@ const GuestLogin = ({ width }) => {
       {loading && <Loading />}
       <Button
         onClick={() => {
+          onClick && onClick()
           handleGuestLogin()
         }}
         className="get-started-button"

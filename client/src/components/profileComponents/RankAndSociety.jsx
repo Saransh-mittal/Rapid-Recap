@@ -11,8 +11,9 @@ import { motion } from 'framer-motion'
 import circle from '/images/circle.webp'
 import Arrow from '/images/arrow.webp'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import Lock from '/images/lock.webp'
+import { addNoteMessage } from '../../redux/appSlice'
 
 // Lazy load components
 const Lightning = lazy(() => import('./RankAndSocietySubCompnents/Lightning'))
@@ -27,7 +28,6 @@ const RankAndSociety = ({
   loginedUserProfile,
   isDisabled = false,
   isGuest,
-  setShowNote,
 }) => {
   const { user } = useSelector(state => state.auth)
   const [isLoading, setIsLoading] = useState(true)
@@ -35,6 +35,7 @@ const RankAndSociety = ({
   const [isCircleModalOpen, setIsCircleModalOpen] = useState(false)
   const [showBrainModal, setShowBrainModal] = useState(false)
   const [showCircleModal, setShowCircleModal] = useState(false)
+  const dispatch = useDispatch()
 
   // Memoize the circleAndSociety calculation
   const circleAndSociety = useMemo(() => {
@@ -88,7 +89,18 @@ const RankAndSociety = ({
           background="transparent"
           src={Lock}
           onClick={() => {
-            setShowNote(true)
+            dispatch(
+              addNoteMessage({
+                title: 'Register to view your society and circle',
+                duration: 10000,
+                width: '250px',
+                actions: [
+                  {
+                    actionType: 'SECURE_YOUR_PROGRESS',
+                  },
+                ],
+              }),
+            )
           }}
           _hover={{ cursor: 'pointer' }}
         />

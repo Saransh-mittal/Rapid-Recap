@@ -17,11 +17,12 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import axios from 'axios'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 import Lock from '/images/lock.webp'
 import useSound from '../../customHooks/useSound'
 import SVGBarGraph from '../../assets/svg/SVGBarGraph'
+import { addNoteMessage } from '../../redux/appSlice'
 
 // Lazy load ExpectedIQModal component
 const ExpectedIQModal = lazy(() =>
@@ -107,7 +108,6 @@ const IQBarGraph = ({
   loginedUserProfile,
   viewingHistory = false,
   isGuest,
-  setShowNote,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -118,6 +118,7 @@ const IQBarGraph = ({
     filteredLabels: [],
     percentileData: [],
   })
+  const dispatch = useDispatch()
   const responsiveChartWidth = useBreakpointValue({
     base: 350,
     md: 300,
@@ -215,7 +216,20 @@ const IQBarGraph = ({
           w="200px"
           background="transparent"
           src={Lock}
-          onClick={() => setShowNote(true)}
+          onClick={() =>
+            dispatch(
+              addNoteMessage({
+                title: 'Register to view your standings',
+                duration: 10000,
+                width: '250px',
+                actions: [
+                  {
+                    actionType: 'SECURE_YOUR_PROGRESS',
+                  },
+                ],
+              }),
+            )
+          }
           _hover={{ cursor: 'pointer' }}
         />
         <Text>No data for guest user</Text>

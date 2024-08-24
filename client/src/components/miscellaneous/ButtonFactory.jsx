@@ -8,9 +8,11 @@ import SecureYourProgress from './SecureYourProgress'
 const ButtonFactory = ({ actionType, onClick, innerText, ...props }) => {
   switch (actionType) {
     case 'SIGN_IN':
-      return <GetStarted width={'150px'} innerText={innerText} />
+      return (
+        <GetStarted width={'150px'} innerText={innerText} onClick={onClick} />
+      )
     case 'GUEST':
-      return <GuestLogin width={'150px'} />
+      return <GuestLogin width={'150px'} onClick={onClick} />
     case 'VIEW_PROFILE':
       return (
         <Button onClick={onClick} {...props}>
@@ -18,7 +20,7 @@ const ButtonFactory = ({ actionType, onClick, innerText, ...props }) => {
         </Button>
       )
     case 'SECURE_YOUR_PROGRESS':
-      return <SecureYourProgress />
+      return <SecureYourProgress padding={0} />
     case 'CONFIRM':
       return (
         <ChakraButton colorScheme="green" onClick={onClick} {...props}>

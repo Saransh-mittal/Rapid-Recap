@@ -161,7 +161,7 @@ const App = () => {
   }, [dispatch])
 
   useEffect(() => {
-    if (isToken() && guestModalJustClosed && user?.role === 'guest') {
+    if (guestModalJustClosed && user?.role === 'guest') {
       dispatch(
         addNoteMessage({
           title: 'You can view your credentials of guest account in profile',
@@ -175,7 +175,15 @@ const App = () => {
           ],
         }),
       )
-    } else if (isToken() && user?.role === 'guest') {
+    }
+  }, [guestModalJustClosed])
+  useEffect(() => {
+    if (
+      user?.role === 'guest' &&
+      !guestModalJustClosed &&
+      !isGuestLoggedin &&
+      !user?.newAccount
+    ) {
       dispatch(
         addNoteMessage({
           title: 'Register to Safegaurd your progress',
@@ -189,7 +197,7 @@ const App = () => {
         }),
       )
     }
-  }, [isGuestLoggedin, guestModalJustClosed])
+  }, [user])
 
   const shouldShowFooter =
     !location.pathname.includes('home') &&
@@ -226,7 +234,7 @@ const App = () => {
       <NoteMessageQueue />
 
       <Navbar />
-      {/* <NoteMessageTestComponent /> */}
+
       <ButtonGradient />
       {shouldShowNotification && <NotificationSubscription />}
       <GuestLoginModal
@@ -265,110 +273,4 @@ const App = () => {
   )
 }
 
-// const NoteMessageTestComponent = () => {
-//   const dispatch = useDispatch()
-
-//   const addSimpleMessage = () => {
-//     dispatch(
-//       addNoteMessage({
-//         title: 'Simple Message',
-//         content: 'This is a simple test message.',
-//         duration: 5000,
-//         width: '300px',
-//       }),
-//     )
-//   }
-
-//   const addMessageWithTwoActions = () => {
-//     dispatch(
-//       addNoteMessage({
-//         title: 'Message with Two Actions',
-//         content: 'This message includes two action buttons.',
-//         duration: null,
-//         width: '350px',
-//         actions: [
-//           {
-//             text: 'Confirm',
-//             actionType: 'CONFIRM',
-//             colorScheme: 'green',
-//           },
-//           {
-//             text: 'Cancel',
-//             actionType: 'CANCEL',
-//             colorScheme: 'red',
-//           },
-//         ],
-//       }),
-//     )
-//   }
-
-//   const addMessageWithThreeActions = () => {
-//     dispatch(
-//       addNoteMessage({
-//         title: 'Message with Three Actions',
-//         content: 'This message includes three action buttons.',
-//         duration: 15000,
-//         width: '300px',
-//         actions: [
-//           {
-//             text: 'Sign-In',
-//             actionType: 'SIGN_IN',
-//           },
-//           {
-//             text: 'Sign-In As Guest',
-//             actionType: 'GUEST',
-//           },
-//           // {
-//           //   text: 'Cancel',
-//           //   actionType: 'CANCEL',
-//           //   colorScheme: 'gray',
-//           // },
-//         ],
-//       }),
-//     )
-//   }
-
-//   const addMultipleMessages = () => {
-//     for (let i = 1; i <= 5; i++) {
-//       dispatch(
-//         addNoteMessage({
-//           title: `Message ${i}`,
-//           content: `This is test message number ${i}.`,
-//           duration: 5000 + i * 1000,
-//           width: '300px',
-//           actions: [
-//             {
-//               text: 'Sign-In',
-//               actionType: 'LOGIN',
-//               colorScheme: 'blue',
-//             },
-//             {
-//               text: 'Option 2',
-//               actionType: 'OPTION2',
-//               colorScheme: 'purple',
-//             },
-//             {
-//               text: 'Cancel',
-//               actionType: 'CANCEL',
-//               colorScheme: 'gray',
-//             },
-//           ],
-//         }),
-//       )
-//     }
-//   }
-
-//   return (
-//     <VStack spacing={4} align="stretch" p={4} mt={'10rem'}>
-//       <Button onClick={addSimpleMessage}>Add Simple Message</Button>
-//       <Button onClick={addMessageWithTwoActions}>
-//         Add Message with Two Actions
-//       </Button>
-//       <Button onClick={addMessageWithThreeActions}>
-//         Add Message with Three Actions
-//       </Button>
-//       <Button onClick={addMultipleMessages}>Add Multiple Messages</Button>
-//     </VStack>
-//   )
-// }
 export default App

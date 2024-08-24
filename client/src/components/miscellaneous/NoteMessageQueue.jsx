@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import NoteMessage from './NoteMessage'
 import NoteMessageSummary from './NoteMessageSummary'
@@ -35,6 +35,7 @@ const NoteMessageQueue = () => {
         onClose={() => {
           dispatch(clearNoteMessageQueue())
         }}
+        duration={null}
       />
     )
   }

@@ -18,6 +18,8 @@ const messageActionHandlers = {
   VIEW_PROFILE: (actions, profileId) => {
     actions.navigateToProfile(profileId)
   },
+  SIGN_IN: () => {},
+  GUEST: () => {},
   // Add more action handlers as needed
 }
 
