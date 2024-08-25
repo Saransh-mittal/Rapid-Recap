@@ -27,8 +27,8 @@ const XPLevelModal = ({ setShowXPLevelModal }) => {
     setShowXPLevelModal(false)
   }, [onClose, setShowXPLevelModal])
 
-  const userXP = useMemo(() => user.xp, [user.xp])
-  const userLevel = useMemo(() => user.level, [user.level])
+  const userXP = useMemo(() => user.xp, [user])
+  const userLevel = useMemo(() => user.level, [user])
 
   return (
     <>

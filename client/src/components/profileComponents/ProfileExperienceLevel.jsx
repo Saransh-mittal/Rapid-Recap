@@ -1,6 +1,30 @@
-import { Box, Flex, Text, Container } from '@chakra-ui/react'
-import Heading from '../miscellaneous/HeadingComponent'
-import React, { useMemo, useCallback, Suspense } from 'react'
+import React, { useMemo, useCallback } from 'react'
+import { Box, Flex, Text, Container, VStack, HStack } from '@chakra-ui/react'
+import styled, { keyframes } from 'styled-components'
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`
+
+const AnimatedWater = styled(Box)`
+  position: absolute;
+  z-index: 1;
+  width: 200%;
+  height: 200%;
+  left: -50%;
+  top: ${props => `${100 - props.percent}%`};
+  border-radius: 40%;
+  background-color: #4299e1;
+  opacity: 0.7;
+  animation: ${spin} 10s linear infinite;
+  transition: all 1s ease;
+  box-shadow: 0 0 20px #63b3ed;
+`
+
+const GlowingText = styled(Text)`
+  text-shadow: 0 0 10px currentColor;
+`
 
 const ProgressBubble = ({ xp, level }) => {
   const calculateProgress = useCallback((transitionXp, requiredXP) => {
@@ -31,164 +55,109 @@ const ProgressBubble = ({ xp, level }) => {
     [xpBaseAtNextLevel, xpBaseAtCurrLevel, requiredXP, calculateProgress],
   )
 
-  const getClass = useCallback(() => {
-    if (percent < colorInc * 1) return 'red'
-    else if (percent < colorInc * 2) return 'orange'
-    else return 'green'
+  const getColor = useCallback(() => {
+    if (percent < colorInc * 1) return 'red.400'
+    if (percent < colorInc * 2) return 'orange.300'
+    return 'green.300'
   }, [percent, colorInc])
 
   return (
-    <Container padding={0}>
-      <Flex flexDirection="column" width="100%" h={'100%'} m={0}>
-        <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
-          Experience
-        </Text>
-        <Box
-          display="flex"
-          flexDirection="row"
-          justifyContent={'space-between'}
-          alignItems="center"
-          mt={4}
-        >
-          <Flex
-            justify="space-between"
-            align="left"
-            width="120px"
-            flexDirection="column"
-          >
-            <Box>
-              <Text
-                textAlign="center"
-                fontSize="16px"
-                fontWeight="bold"
-                color="blue.600"
-                textShadow="0 0 10px blue.500"
-                mb={2}
-              >
-                Next Level: {level + 1}
-              </Text>
-            </Box>
-            <Box className={getClass()} position="relative" mb={4}>
+    <Container
+      maxW="container.sm"
+      p={6}
+      style={{
+        backgroundColor: 'rgba(15, 13, 21, 0.8)',
+        boxShadow:
+          '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+      }}
+    >
+      <VStack spacing={8} align="stretch">
+        <HStack justify="space-between" align="center">
+          <VStack align="start" spacing={1}>
+            <Text fontSize="sm" color="gray.400" fontWeight="medium">
+              Experience Progress
+            </Text>
+            <GlowingText fontSize="3xl" fontWeight="bold" color={getColor()}>
+              Level {level}
+            </GlowingText>
+          </VStack>
+          <Box position="relative" width="120px" height="120px">
+            <Box
+              position="relative"
+              borderRadius="50%"
+              w="120px"
+              h="120px"
+              border="5px solid"
+              borderColor={getColor()}
+              boxShadow={`0 0 20px ${getColor()}`}
+              transition="all 1s ease"
+            >
               <Box
-                className="progress"
-                position="relative"
+                position="absolute"
+                overflow="hidden"
+                zIndex="2"
                 borderRadius="50%"
-                w="120px"
-                h="120px"
-                border="5px solid"
-                borderColor={
-                  getClass() === 'green'
-                    ? 'green.400'
-                    : getClass() === 'orange'
-                    ? 'orange.400'
-                    : 'red.400'
-                }
-                boxShadow={`0 0 20px ${
-                  getClass() === 'green'
-                    ? 'green.400'
-                    : getClass() === 'orange'
-                    ? 'orange.400'
-                    : 'red.400'
-                }`}
+                w="110px"
+                h="110px"
+                border="5px solid rgba(255, 255, 255, 0.1)"
                 transition="all 1s ease"
               >
-                <Box
-                  className="inner"
+                <Flex
                   position="absolute"
-                  overflow="hidden"
-                  zIndex="2"
-                  borderRadius="50%"
-                  w="110px"
-                  h="110px"
-                  border="5px solid white"
-                  transition="all 1s ease"
+                  top="0"
+                  left="0"
+                  w="100%"
+                  h="100%"
+                  alignItems="center"
+                  justifyContent="center"
+                  fontWeight="bold"
+                  fontSize="24px"
+                  color={getColor()}
+                  zIndex="3"
                 >
-                  <Box
-                    className="percent"
-                    position="absolute"
-                    top="0"
-                    left="0"
-                    w="100%"
-                    h="100%"
-                    fontWeight="bold"
-                    textAlign="center"
-                    lineHeight="110px"
-                    fontSize="40px"
-                    color="blue.600"
-                    textShadow="0 0 10px blue.500"
-                    transition="all 1s ease"
-                  >
-                    <span>{percent}</span>%
-                  </Box>
-                  <Box
-                    className="water"
-                    position="absolute"
-                    zIndex="1"
-                    w="200%"
-                    h="200%"
-                    left="-50%"
-                    top={`${100 - percent}%`}
-                    borderRadius="40%"
-                    bg="blue.400"
-                    opacity="0.5"
-                    animation="spin 10s linear infinite"
-                    transition="all 1s ease"
-                    boxShadow="0 0 20px blue.300"
-                  ></Box>
-                </Box>
+                  {percent}%
+                </Flex>
+                <AnimatedWater percent={percent} />
               </Box>
             </Box>
-            <Box textAlign="left">
-              <Text
-                textAlign="center"
-                fontSize="16px"
-                fontWeight="bold"
-                color="blue.600"
-                textShadow="0 0 10px blue.500"
-              >
-                Current Level: {level}
-              </Text>
-            </Box>
-          </Flex>
-          <Flex textAlign={'center'}>
-            <Box>
-              <Heading
-                tag={`Required Level Up xP :`}
-                marginBottom="0"
-                textTransform="uppercase"
-              >
-                <span
-                  style={{
-                    color: 'blue',
-                    fontSize: '1.15rem',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {requiredXP}
-                </span>
-              </Heading>
-              <Heading
-                tag={`Current XP :`}
-                marginBottom="0"
-                textTransform="uppercase"
-              >
-                <span
-                  style={{
-                    color: 'blue',
-                    fontSize: '1.15rem',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {xp}
-                </span>
-              </Heading>
-            </Box>
-          </Flex>
-        </Box>
-      </Flex>
+          </Box>
+        </HStack>
+        <VStack
+          spacing={4}
+          align="stretch"
+          bg="rgba(255, 255, 255, 0.05)"
+          p={4}
+          borderRadius="md"
+          boxShadow="sm"
+        >
+          <HStack justify="space-between">
+            <Text fontWeight="medium" color="gray.300">
+              Current XP:
+            </Text>
+            <GlowingText fontWeight="bold" color={getColor()}>
+              {xp}
+            </GlowingText>
+          </HStack>
+          <HStack justify="space-between">
+            <Text fontWeight="medium" color="gray.300">
+              XP to Next Level:
+            </Text>
+            <GlowingText fontWeight="bold" color={getColor()}>
+              {requiredXP}
+            </GlowingText>
+          </HStack>
+          <HStack justify="space-between">
+            <Text fontWeight="medium" color="gray.300">
+              Next Level:
+            </Text>
+            <GlowingText fontWeight="bold" color={getColor()}>
+              {level + 1}
+            </GlowingText>
+          </HStack>
+        </VStack>
+      </VStack>
     </Container>
   )
 }
 
-// use react.useMemo
 export default React.memo(ProgressBubble)
