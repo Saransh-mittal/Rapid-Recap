@@ -1,0 +1,22 @@
+{
+  "signin_title": "Sign-In",
+  "submit_button": "Submit",
+  "create_account_button": "Create an account",
+  "forgot_password_button": "Forgot Password?",
+  "login_success": "Login Successful",
+  "login_failed": "Login Failed",
+  "enter_in_game_name": "Enter In-Game-Name",
+  "email_or_in_game_name_placeholder": "Email / In-Game-Name",
+  "enter_password": "Enter Password",
+  "enter_in_game_name_message": "Please enter your In-Game-Name to continue",
+  "email_not_verified": "Email not verified",
+  "verify_email_message": "Please verify your email before continuing",
+  "otp_sent": "OTP sent to your email",
+  "or_text": "OR",
+  "close_button": "Close",
+  "meta_title": "Signin - Rapid Recap",
+  "meta_description": "Sign in to Rapid Recap and stay updated with the latest news, quizzes, and your Information Quotient (IQ) score.",
+  "meta_keywords": "Sign in, Rapid Recap, news, quizzes, IQ score",
+  "meta_og_title": "Signin - Rapid Recap",
+  "meta_og_description": "Sign in to Rapid Recap and stay updated with the latest news, quizzes, and your Information Quotient (IQ) score."
+}

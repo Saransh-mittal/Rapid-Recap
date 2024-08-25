@@ -39,6 +39,7 @@ const ArticleHeader = ({
   isQuinBoostAvailable,
   quizLeftToGetQuizBoost,
   openModal,
+  i18n,
 }) => {
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
@@ -111,7 +112,7 @@ const ArticleHeader = ({
       })
       return
     }
-    const newLanguage = selectedLanguage === 'english' ? 'hindi' : 'english'
+    const newLanguage = i18n.language === 'en' ? 'hindi' : 'english'
     handleLanguageChange({ target: { value: newLanguage } })
   }, [selectedLanguage, handleLanguageChange, notLoggedIn, toast])
 

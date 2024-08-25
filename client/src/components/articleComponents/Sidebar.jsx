@@ -42,12 +42,10 @@ const Sidebar = ({
   quizExpired,
   isQuinBoostAvailable,
   trackGenerateQuizClick,
-  setShowQuizLangModal,
   setShowQuiz,
   showQuiz,
   onOpen,
   totalUsersGivenQuiz,
-
   articleHeight,
   article,
   id,
@@ -86,7 +84,7 @@ const Sidebar = ({
       return
     }
     trackGenerateQuizClick()
-    setShowQuizLangModal(true)
+    // setShowQuizLangModal(true)
     setShowQuiz(!showQuiz)
     onOpen()
   }, [
@@ -94,7 +92,6 @@ const Sidebar = ({
     playClick,
     toast,
     trackGenerateQuizClick,
-    setShowQuizLangModal,
     setShowQuiz,
     showQuiz,
     onOpen,
@@ -282,6 +279,7 @@ const Sidebar = ({
                   <TakeQuizButton
                     isQuinBoostAvailable={isQuinBoostAvailable}
                     onClick={handleQuizButtonClick}
+                    setShowQuiz={setShowQuiz}
                   />
                 )}
               </Box>

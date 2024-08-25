@@ -36,17 +36,14 @@ import {
   setIsSigninOpen,
 } from '../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 const EmailVerify = lazy(() =>
   import('../components/authComponents/EmailVerify'),
 )
 
-export default function Register({
-  isOpen,
-  onClose,
-
-  onOpenGuest,
-}) {
+export default function Register({ isOpen, onClose, onOpenGuest }) {
+  const { t } = useTranslation('Register')
   const { verifyEmail } = useSelector(state => state.auth)
   const { exportData } = useSelector(state => state.app)
 
@@ -132,18 +129,18 @@ export default function Register({
       if (response.status === 201) {
         onEmailVerifyOpen()
         toast({
-          title: 'Registered Successfully',
+          title: t('register_success'),
           status: 'success',
           duration: 5000,
           isClosable: true,
           position: 'top',
         })
       } else {
-        throw new Error('Registration Failed')
+        throw new Error(t('logout_failed'))
       }
     } catch (error) {
       toast({
-        title: 'Registration Failed',
+        title: t('logout_failed'),
         description: error.response?.data?.error || error.message,
         status: 'error',
         duration: 5000,
@@ -190,7 +187,7 @@ export default function Register({
       )
       return response.data.url
     } catch (error) {
-      console.error('Image upload failed:', error)
+      console.error(t('image_upload_failed'), error)
     }
   }
 
@@ -234,20 +231,11 @@ export default function Register({
         // scrollBehavior={'inside'}
       >
         <Helmet>
-          <title>Register - Rapid Recap</title>
-          <meta
-            name="description"
-            content="Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
-          />
-          <meta
-            name="keywords"
-            content="Register, Rapid Recap, news, articles, quizzes, IQ score, leaderboard"
-          />
-          <meta property="og:title" content="Register - Rapid Recap" />
-          <meta
-            property="og:description"
-            content="Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
-          />
+          <title>{t('register_title')}</title>
+          <meta name="description" content={t('meta_description')} />
+          <meta name="keywords" content={t('meta_keywords')} />
+          <meta property="og:title" content={t('meta_og_title')} />
+          <meta property="og:description" content={t('meta_og_description')} />
         </Helmet>
         <ModalOverlay
           bg="blackAlpha.300"
@@ -269,7 +257,7 @@ export default function Register({
             alignItems="center"
             fontSize={'1.75rem'}
           >
-            REGISTER
+            {t('register_title')}
           </ModalHeader>
           <ModalCloseButton color="white" disabled={load} />
           <ModalBody h={'fit-content'}>
@@ -296,7 +284,7 @@ export default function Register({
                     marginBottom: '10px',
                   }}
                 >
-                  Upload Profile Picture
+                  {t('upload_profile_picture')}
                 </label>
                 <Input
                   id="profile-pic"
@@ -312,11 +300,11 @@ export default function Register({
                   size="sm"
                   onClick={() => document.getElementById('profile-pic').click()}
                 >
-                  Choose File
+                  {t('choose_file')}
                 </Button>
               </Flex>
               <Input
-                placeholder="Enter Name"
+                placeholder={t('enter_name')}
                 name="name"
                 value={data.name}
                 onChange={inputHandler}
@@ -325,7 +313,7 @@ export default function Register({
                 required
               />
               <Input
-                placeholder="Enter In-Game Name"
+                placeholder={t('enter_in_game_name')}
                 name="inGameName"
                 value={data.inGameName}
                 onChange={inputHandler}
@@ -335,7 +323,7 @@ export default function Register({
               />
               <Input
                 type="email"
-                placeholder="Enter Email"
+                placeholder={t('enter_email')}
                 name="email"
                 value={data.email}
                 onChange={inputHandler}
@@ -346,7 +334,7 @@ export default function Register({
               <InputGroup mb="4">
                 <Input
                   type={data.showPassword ? 'text' : 'password'}
-                  placeholder="Enter Password"
+                  placeholder={t('enter_password')}
                   name="password"
                   value={data.password}
                   onChange={inputHandler}
@@ -381,7 +369,7 @@ export default function Register({
               <InputGroup mb="4">
                 <Input
                   type={data.showCPassword ? 'text' : 'password'}
-                  placeholder="Confirm Password"
+                  placeholder={t('confirm_password')}
                   name="cpassword"
                   value={data.cpassword}
                   onChange={inputHandler}
@@ -421,7 +409,7 @@ export default function Register({
                 type="submit"
                 isLoading={load}
               >
-                Register
+                {t('register_button')}
               </Button>
             </form>
           </ModalBody>
@@ -435,7 +423,7 @@ export default function Register({
                 onOpenGuest && onOpenGuest()
               }}
             >
-              Close
+              {t('close_button')}
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -42,6 +42,7 @@ import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 
 import GuestLogin from '../components/authComponents/GuestLogin'
 import { setIsRegisterOpen, setIsSigninOpen } from '../redux/appSlice'
+import { useTranslation } from 'react-i18next'
 
 // const Modal = lazy(() => import('./Modal'))
 const ResetPassword = lazy(() =>
@@ -52,6 +53,7 @@ const EmailVerify = lazy(() =>
 )
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
+  const { t } = useTranslation('Signin')
   const toast = useToast()
   const { playClick } = useSound()
 
@@ -105,7 +107,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
     } catch (error) {
       console.error(error.response.data.error)
       toast({
-        title: 'Login Failed',
+        title: t('login_failed'),
         description: error.response.data.error,
         status: 'error',
         duration: 5000,
@@ -126,7 +128,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
       dispatchRedux(verifyAdminStatus())
       dailyStreakCheckerAndUpdater(dispatchRedux)
       toast({
-        title: 'Login Successful',
+        title: t('login_success'),
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -153,8 +155,8 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         if (responseOfResendOTP.status === 201) {
           onEmailVerifyOpen()
           toast({
-            title: 'Email not verified',
-            description: 'Please verify your email before continuing',
+            title: t('email_not_verified'),
+            description: t('verify_email_message'),
             status: 'warning',
             duration: 5000,
             isClosable: true,
@@ -182,7 +184,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         })
         location.pathname === '/' && navigate('/home/all')
       } else {
-        throw new Error('Login Failed')
+        throw new Error(t('login_failed'))
       }
     } catch (error) {
       toast({
@@ -216,7 +218,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
         dispatchRedux(setForgotPassword(true))
         onEmailVerifyOpen()
         toast({
-          title: 'OTP sent to your email',
+          title: t('otp_sent'),
           description: starredEmail,
           status: 'success',
           duration: 5000,
@@ -303,7 +305,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
             fontSize={'3xl'}
             textTransform={'uppercase'}
           >
-            Sign-In
+            {t('signin_title')}
           </ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody w={'70%'} py={'20px'}>
@@ -318,7 +320,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                         name="emailOrInGameName"
                         value={data.emailOrInGameName}
                         type="text"
-                        placeholder="Email / In-Game-Name"
+                        placeholder={t('email_or_in_game_name_placeholder')}
                         color="white"
                       />
                     </InputGroup>
@@ -328,7 +330,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                         name="password"
                         value={data.password}
                         type={data.showPassword ? 'text' : 'password'}
-                        placeholder="Password"
+                        placeholder={t('enter_password')}
                         color="white"
                       />
                       <InputRightElement width="4.5rem">
@@ -371,7 +373,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       w={'100%'}
                       mt={4}
                     >
-                      Submit
+                      {t('submit_button')}
                     </Button>
                   </form>
                   <Flex
@@ -388,7 +390,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                         dispatchRedux(setIsRegisterOpen(true))
                       }}
                     >
-                      Create an account
+                      {t('create_account_button')}
                     </Button>
                     <Button
                       isLoading={load.forgotLoad}
@@ -396,7 +398,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       colorScheme="red"
                       onClick={handleForgotPasswordThrottled}
                     >
-                      Forgot Password?
+                      {t('forgot_password_button')}
                     </Button>
                   </Flex>
                   <Flex w={'100%'} justifyContent={'center'}>
@@ -415,9 +417,8 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                               )
                               if (response.data.EnterInGameName) {
                                 toast({
-                                  title: 'Enter In-Game-Name',
-                                  description:
-                                    'Please enter your In-Game-Name to continue',
+                                  title: t('enter_in_game_name'),
+                                  description: t('enter_in_game_name_message'),
                                   status: 'info',
                                   duration: 5000,
                                   isClosable: true,
@@ -432,7 +433,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                               if (error.response.data.EnterInGameName)
                                 setEnterInGameName(true)
                               toast({
-                                title: 'Login Failed',
+                                title: t('login_failed'),
                                 description: error.response.data.error,
                                 status: 'error',
                                 duration: 5000,
@@ -442,7 +443,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                             }
                           }}
                           onError={() => {
-                            console.log('Login Failed')
+                            console.log(t('login_failed'))
                           }}
                         />
                       </GoogleOAuthProvider>
@@ -450,7 +451,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                   </Flex>
                   <Flex w={'100%'} justifyContent={'center'} mb={4}>
                     <Text color={'gray.400'} fontWeight={'bold'}>
-                      OR
+                      {t('or_text')}
                     </Text>
                   </Flex>
                   <Flex w={'100%'} justifyContent={'center'}>
@@ -465,7 +466,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       name="inGameName"
                       value={inGameName}
                       type="text"
-                      placeholder="Enter In-Game-Name"
+                      placeholder={t('enter_in_game_name')}
                       color="white"
                     />
                   </InputGroup>
@@ -479,7 +480,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                     w={'100%'}
                     mt={4}
                   >
-                    Submit
+                    {t('submit_button')}
                   </Button>
                 </>
               )}

@@ -23,6 +23,7 @@ import { useSelector } from 'react-redux'
 import imageData from '../assets/AltNewsImage'
 import { quinBoostChecker } from '../utils/quiz.utils'
 import slugify from 'slugify'
+import i18n from 'i18next'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
 const Quiz = lazy(() => import('../components/articleComponents/Quiz'))
@@ -77,9 +78,7 @@ const Article = () => {
   const [author, setAuthor] = useState({ english: '', hindi: '' })
   const [mainText, setMainText] = useState({ english: [], hindi: [] })
   const [translateLoading, setTranslateLoading] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState('english')
-  const [showQuizLangModal, setShowQuizLangModal] = useState(false)
-  const [selectLanForQuiz, setSelectLanForQuiz] = useState('english')
+  const [selectedLanguage, setSelectedLanguage] = useState('hindi')
   const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false)
   const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5)
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
@@ -96,7 +95,7 @@ const Article = () => {
   const fetchQuiz = useCallback(async () => {
     try {
       const endpoint =
-        selectedLanguage === 'english'
+        i18n.language === 'en'
           ? `/api/articles/genQuiz/${id}`
           : `/api/articles/genHindiQuiz/${id}`
       await axios.put(endpoint)
@@ -104,7 +103,7 @@ const Article = () => {
     } catch (error) {
       console.log(error.message)
     }
-  }, [id, selectedLanguage])
+  }, [id, i18n.language])
 
   const bookmarkStatus = useCallback(
     async ({ view, update }) => {
@@ -251,7 +250,8 @@ const Article = () => {
     async event => {
       setTranslateLoading(true)
       try {
-        if (event.target.value === 'hindi') {
+        // if (event.target.value === 'hindi') {
+        if (i18n.language === 'hi') {
           if (article.hindiTitle) {
             setTitle(prevTitle => ({ ...prevTitle, hindi: article.hindiTitle }))
             setAuthor(prevAuthor => ({
@@ -366,19 +366,20 @@ const Article = () => {
   return (
     <Suspense fallback={<Loading />}>
       <Flex w={'100vw'}>
-        {showQuizLangModal && (
+        {/* {showQuizLangModal && (
           <SelectQuizLangModal
             setSelectLanForQuiz={setSelectLanForQuiz}
             setShowQuizLangModal={setShowQuizLangModal}
           />
-        )}
+        )} */}
         {showExpectedIQ && expectedIQ && (
           <ExpectedIQModal
             expectedIQ={expectedIQ}
             setShowExpectedIQ={setShowExpectedIQ}
           />
         )}
-        {showQuiz && !givenQuiz && !showQuizLangModal && (
+        {showQuiz && !givenQuiz && (
+          // && !showQuizLangModal
           <Quiz
             setTotalUsersGivenQuiz={setTotalUsersGivenQuiz}
             setIsQuinBoostAvailable={setIsQuinBoostAvailable}
@@ -395,7 +396,7 @@ const Article = () => {
               setGivenQuiz(true)
               user.IQ_score === 0 && getExpectedIQ()
             }}
-            language={selectLanForQuiz}
+            language={i18n.language === 'en' ? 'english' : 'hindi'}
           />
         )}
         {load ? (
@@ -513,6 +514,7 @@ const Article = () => {
                     isQuinBoostAvailable={isQuinBoostAvailable}
                     quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
                     openModal={openModal}
+                    i18n={i18n}
                   />
                 </header>
               </Flex>
@@ -551,7 +553,6 @@ const Article = () => {
                   quizExpired={quizExpired}
                   isQuinBoostAvailable={isQuinBoostAvailable}
                   trackGenerateQuizClick={trackGenerateQuizClick}
-                  setShowQuizLangModal={setShowQuizLangModal}
                   setShowQuiz={setShowQuiz}
                   showQuiz={showQuiz}
                   onOpen={onOpen}

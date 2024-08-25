@@ -60,7 +60,7 @@ const Bookmarks = React.lazy(() =>
 )
 
 export default function Profile() {
-  const { t } = useTranslation('LeaderBoard')
+  const { t } = useTranslation('Profile')
   const { inGameName } = useParams()
   const { user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
