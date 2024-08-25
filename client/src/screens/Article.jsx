@@ -78,7 +78,9 @@ const Article = () => {
   const [author, setAuthor] = useState({ english: '', hindi: '' })
   const [mainText, setMainText] = useState({ english: [], hindi: [] })
   const [translateLoading, setTranslateLoading] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState('hindi')
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    i18n.language === 'en' ? 'english' : 'hindi',
+  )
   const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false)
   const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5)
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
