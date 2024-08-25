@@ -21,6 +21,9 @@ const {
 } = require('../db/session.js')
 const { getTopThreeRecommendedArticles } = require('../utils/article.utils.js')
 
+// @desc Save the quiz attempt
+// @route POST /api/quiz/saveAttempt
+// @access Private
 const saveAttempt = async (req, res) => {
   const { articleId, userResponses, quizData, timeTaken, quizId } = req.body
   const userId = req.user._id
@@ -158,10 +161,10 @@ const saveAttempt = async (req, res) => {
     const expiry = new Date()
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)
-    if (user.streakExpiry < today) {
-      user.streak = 0
-      await user.save({ session })
-    }
+    // if (user.streakExpiry < today) {
+    //   user.streak = 0
+    //   await user.save({ session })
+    // }
     expiry.setUTCDate(expiry.getUTCDate() + 1) // Set date to one day from now
     expiry.setUTCHours(0, 0, 0, 0)
     user.streakExpiry = expiry

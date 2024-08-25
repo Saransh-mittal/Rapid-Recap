@@ -21,7 +21,8 @@ async function getQuizAttemptsByUsers(startDate, endDate) {
     {
       $group: {
         _id: '$user',
-        quizAttempts: { $sum: 1 }, // Count the number of quiz attempts
+        quizAttempts: { $sum: 1 },
+        attemptIds: { $push: '$_id' }, // Collect quiz attempt IDs
       },
     },
   ])
@@ -32,14 +33,28 @@ async function getQuizAttemptsByUsers(startDate, endDate) {
     select: 'name email inGameName',
   })
 
-  // Exclude users with dummy emails
-  populatedQuizAttemptsByUsers = populatedQuizAttemptsByUsers.filter(
-    user => !/^dummy\d+@mail.com$/.test(user._id.email),
-  )
+  // Filter out deleted users and delete their quiz attempts
+  const validUsers = []
+  const deletedUserAttempts = []
 
-  return populatedQuizAttemptsByUsers
+  for (const userAttempt of populatedQuizAttemptsByUsers) {
+    if (userAttempt._id && !/^dummy\d+@mail.com$/.test(userAttempt._id.email)) {
+      validUsers.push(userAttempt)
+    } else {
+      deletedUserAttempts.push(...userAttempt.attemptIds)
+    }
+  }
+
+  // Delete quiz attempts for deleted users
+  if (deletedUserAttempts.length > 0) {
+    await QuizAttempt.deleteMany({ _id: { $in: deletedUserAttempts } })
+    console.log(
+      `Deleted ${deletedUserAttempts.length} quiz attempts for deleted users.`,
+    )
+  }
+
+  return validUsers
 }
-
 // Main function to view users' quiz attempts for different date ranges or all time
 async function usersGivingQuizStats({ startDate = null, endDate = null }) {
   if (!startDate && !endDate) {

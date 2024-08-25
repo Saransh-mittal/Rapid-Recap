@@ -8,6 +8,7 @@ const sendStreakReminder = require('./tasks/mailsForStreakReminder')
 const calculateUserIQScores = require('./tasks/userIQScoreScheduler')
 const incFakeQuizAttempts = require('./tasks/incFakeQuizAttempts')
 const deleteExpiredGuestAccountsTask = require('./tasks/deleteExpiredGuestAccounts')
+const sendGuestAccountExpiryNotifs = require('./tasks/guestAccountExpiryNotifs')
 
 const currentDate = moment().format('YYYY-MM-DD')
 
@@ -103,6 +104,51 @@ let schedules = [
   ),
   createSchedule('streakReminder2', '19:00', () => sendStreakReminder(1)),
   createSchedule('streakReminder3', '22:00', () => sendStreakReminder(2)),
+  createSchedule(
+    'guestAccountExpiryNotifs1',
+    '08:00',
+    sendGuestAccountExpiryNotifs,
+  ),
+  createSchedule(
+    'guestAccountExpiryNotifs2',
+    '09:00',
+    sendGuestAccountExpiryNotifs,
+  ),
+  createSchedule(
+    'guestAccountExpiryNotifs3',
+    '11:00',
+    sendGuestAccountExpiryNotifs,
+  ),
+  createSchedule(
+    'guestAccountExpiryNotifs4',
+    '12:00',
+    sendGuestAccountExpiryNotifs,
+  ),
+  createSchedule(
+    'guestAccountExpiryNotifs5',
+    '14:00',
+    sendGuestAccountExpiryNotifs,
+  ),
+  createSchedule(
+    'guestAccountExpiryNotifs6',
+    '15:00',
+    sendGuestAccountExpiryNotifs,
+  ),
+  createSchedule(
+    'guestAccountExpiryNotifs7',
+    '17:00',
+    sendGuestAccountExpiryNotifs,
+  ),
+  createSchedule(
+    'guestAccountExpiryNotifs8',
+    '19:00',
+    sendGuestAccountExpiryNotifs,
+  ),
+  createSchedule(
+    'guestAccountExpiryNotifs9',
+    '20:00',
+    sendGuestAccountExpiryNotifs,
+  ),
 ]
 
 // Sort schedules by time
