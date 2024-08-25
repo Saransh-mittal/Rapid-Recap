@@ -79,7 +79,7 @@ const Navbar = () => {
   const [notifyCont, setNotifyCnt] = useState(0)
   const [selectedNotification, setSelectedNotification] = useState(null)
   const [showDailyStreakModal, setShowDailyStreakModal] = useState(false)
-  const [showXPLevelModal, setShowXPLevelModal] = useState(false)
+
   const [showIQScoreModal, setShowIQScoreModal] = useState(false)
   const [logoutLoader, setLogoutLoader] = useState(false)
 
@@ -294,9 +294,7 @@ const Navbar = () => {
                 getBackgroundColor={getBackgroundColor}
               />
             )}
-            {showXPLevelModal && (
-              <XPLevelModal setShowXPLevelModal={setShowXPLevelModal} />
-            )}
+
             {showIQScoreModal && (
               <IQScoreModal
                 setShowIQScoreModal={setShowIQScoreModal}
@@ -345,7 +343,6 @@ const Navbar = () => {
                 setIsDrawerOpen={setIsDrawerOpen}
                 notifyCont={notifyCont}
                 setShowDailyStreakModal={setShowDailyStreakModal}
-                setShowXPLevelModal={setShowXPLevelModal}
                 setShowIQScoreModal={setShowIQScoreModal}
                 streak={streak}
                 isBoosted={isBoosted}

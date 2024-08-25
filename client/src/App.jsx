@@ -22,9 +22,11 @@ import {
   addNoteMessage,
   setIsRegisterOpen,
   setIsSigninOpen,
+  setShowXpLevelModal,
 } from './redux/appSlice.js'
 
 import NoteMessageQueue from './components/miscellaneous/NoteMessageQueue.jsx'
+import XPLevelModal from './components/Header-Footer/navbarComponents/XPLevelModal.jsx'
 
 const Register = React.lazy(() => import('./screens/Register.jsx'))
 
@@ -34,7 +36,9 @@ const App = () => {
 
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
-  const { isRegisterOpen, isSigninOpen } = useSelector(state => state.app)
+  const { isRegisterOpen, isSigninOpen, showXpLevelModal } = useSelector(
+    state => state.app,
+  )
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
 
@@ -234,7 +238,13 @@ const App = () => {
       <NoteMessageQueue />
 
       <Navbar />
-
+      {showXpLevelModal && (
+        <XPLevelModal
+          setShowXPLevelModal={show => {
+            dispatch(setShowXpLevelModal(show))
+          }}
+        />
+      )}
       <ButtonGradient />
       {shouldShowNotification && <NotificationSubscription />}
       <GuestLoginModal

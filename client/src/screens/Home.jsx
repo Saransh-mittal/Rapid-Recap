@@ -192,7 +192,7 @@ const Home = () => {
       dispatchRedux(setPageRedux(0))
       dispatchRedux(setItemsState([]))
       setPrevCategory(category)
-    } else if (items.length < page * 9) {
+    } else if (items?.length < page * 9) {
       fetchData(page, category)
     } else {
       setLoad(false)
@@ -202,7 +202,7 @@ const Home = () => {
     page,
     prevCategory,
     fetchData,
-    items.length,
+    items,
     dispatchRedux,
     loginCheckStatus,
   ])

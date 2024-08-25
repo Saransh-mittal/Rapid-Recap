@@ -24,7 +24,7 @@ import IconShimmerLoader from '../../miscellaneous/shimmerLoaders/IconShimmerLoa
 import { BsLock } from 'react-icons/bs'
 import NoteMessage from '../../miscellaneous/NoteMessage'
 import SecureYourProgress from '../../miscellaneous/SecureYourProgress'
-import { addNoteMessage } from '../../../redux/appSlice'
+import { addNoteMessage, setShowXpLevelModal } from '../../../redux/appSlice'
 
 const StreakFire = React.lazy(() => import('./StreakFire'))
 const ProfileDropDownMenu = React.lazy(() =>
@@ -43,7 +43,7 @@ const OutsideNavbarContent = ({
   setIsDrawerOpen,
   notifyCont,
   setShowDailyStreakModal,
-  setShowXPLevelModal,
+
   setShowIQScoreModal,
   streak,
   isBoosted,
@@ -183,11 +183,7 @@ const OutsideNavbarContent = ({
             setShowIQScoreModal={setShowIQScoreModal}
             playClick={playClick}
           />
-          <XPLevelComponent
-            level={level}
-            setShowXPLevelModal={setShowXPLevelModal}
-            playClick={playClick}
-          />
+          <XPLevelComponent level={level} playClick={playClick} />
           <StreakFireComponent
             streak={streak}
             isBoosted={isBoosted}
@@ -325,23 +321,26 @@ const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
   )
 }
 
-const XPLevelComponent = ({ level, setShowXPLevelModal, playClick }) => (
-  <Suspense
-    fallback={
-      <ImageShimmerLoader imageUrl={levelImage} width={40} height={40} />
-    }
-  >
-    <XPLevel
-      level={level}
-      _hover={{ cursor: 'pointer' }}
-      className="xp-level"
-      onClick={() => {
-        playClick()
-        setShowXPLevelModal(true)
-      }}
-    />
-  </Suspense>
-)
+const XPLevelComponent = ({ level, playClick }) => {
+  const dispatch = useDispatch()
+  return (
+    <Suspense
+      fallback={
+        <ImageShimmerLoader imageUrl={levelImage} width={40} height={40} />
+      }
+    >
+      <XPLevel
+        level={level}
+        _hover={{ cursor: 'pointer' }}
+        className="xp-level"
+        onClick={() => {
+          playClick()
+          dispatch(setShowXpLevelModal(true))
+        }}
+      />
+    </Suspense>
+  )
+}
 
 const StreakFireComponent = ({
   streak,

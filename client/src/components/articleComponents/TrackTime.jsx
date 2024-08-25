@@ -1,111 +1,146 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { addNoteMessage } from '../../redux/appSlice'
+import { setUser } from '../../redux/authSlice'
 
 const TrackTime = ({ userId, articleId }) => {
-  const [startTime, setStartTime] = useState(Date.now())
-  const [isTracking, setIsTracking] = useState(true)
-  const timeoutRef = useRef(null)
-  const lastActivityRef = useRef(Date.now())
+  const dispatch = useDispatch()
+  const startTimeRef = useRef(Date.now())
+  const accumulatedTimeRef = useRef(0)
+  const lastSentTimeRef = useRef(0)
+  const isTrackingRef = useRef(true)
+  const sendingPromiseRef = useRef(null)
+  const { user } = useSelector(state => state.auth)
 
   const getInactiveTime = useCallback(() => {
-    return window.matchMedia('(min-width: 1024px)').matches
-      ? 3 * 60 * 1000 // 3 mins for large screens
-      : window.matchMedia('(min-width: 768px)').matches
-      ? 2 * 60 * 1000 // 2 mins for medium screens
-      : 60 * 1000 // 1 min for small screens
+    if (window.matchMedia('(min-width: 1024px)').matches) return 3 * 60 * 1000
+    if (window.matchMedia('(min-width: 768px)').matches) return 2 * 60 * 1000
+    return 60 * 1000
   }, [])
 
-  const handleUnload = useCallback(() => {
-    const endTime = Date.now()
-    const timeSpent = endTime - startTime
+  const sendTimeSpent = useCallback(
+    async (forceSend = false) => {
+      const now = Date.now()
+      const timeSpent = now - startTimeRef.current
+      accumulatedTimeRef.current += timeSpent
 
-    const payload = JSON.stringify({
-      userId,
-      articleId,
-      timeSpent,
-    })
+      // Only send if we've accumulated at least 5 seconds or force sending
+      if (forceSend || accumulatedTimeRef.current >= 5000) {
+        // If there's an ongoing send, wait for it to complete
+        if (sendingPromiseRef.current) {
+          await sendingPromiseRef.current
+        }
 
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon('/api/timeSpent', payload)
-    } else {
-      fetch('/api/timeSpent', {
-        method: 'POST',
-        body: payload,
-        keepalive: true,
-      })
-    }
-  }, [userId, articleId, startTime])
+        const payload = {
+          userId,
+          articleId,
+          timeSpent: accumulatedTimeRef.current,
+          timestamp: now,
+        }
+
+        sendingPromiseRef.current = await fetch('/api/timeSpent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true,
+        })
+
+        try {
+          const response = sendingPromiseRef.current
+
+          const jsonData = await response.json()
+          if (response.ok) {
+            if (jsonData.xpAwardedForTimeSpentMoreThan10Min) {
+              dispatch(setUser({ ...user, xp: user.xp + 10 }))
+              dispatch(
+                addNoteMessage({
+                  messageType: 'xpAward',
+                  xpAwarded: 10,
+                  quizName:
+                    'XP Awarded For Reading Articles More Than 10 Minutes',
+                  actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+                  duration: 15000,
+                  width: '300px',
+                }),
+              )
+            }
+            lastSentTimeRef.current = now
+            accumulatedTimeRef.current = 0
+            startTimeRef.current = now
+          } else {
+            console.error('Failed to send time spent:', await response.text())
+          }
+        } catch (error) {
+          console.error('Error sending time spent:', error)
+        } finally {
+          sendingPromiseRef.current = null
+        }
+      } else {
+        startTimeRef.current = now
+      }
+    },
+    [userId, articleId],
+  )
 
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden) {
-      handleUnload()
-      setIsTracking(false)
+      isTrackingRef.current = false
+      sendTimeSpent(true)
     } else {
-      setStartTime(Date.now())
-      setIsTracking(true)
-      resetTimer()
+      isTrackingRef.current = true
+      startTimeRef.current = Date.now()
     }
-  }, [handleUnload])
+  }, [sendTimeSpent])
 
-  const resetTimer = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
-
-    if (isTracking) {
-      timeoutRef.current = setTimeout(() => {
-        handleUnload()
-        setIsTracking(false)
-      }, getInactiveTime())
-    }
-  }, [isTracking, handleUnload, getInactiveTime])
-
-  const handleUserActivity = useCallback(() => {
-    const now = Date.now()
-    if (now - lastActivityRef.current > 1000) {
-      lastActivityRef.current = now
-      if (!isTracking) {
-        setStartTime(now)
-        setIsTracking(true)
-      }
-      resetTimer()
-    }
-  }, [isTracking, resetTimer])
+  const handleUnload = useCallback(() => {
+    sendTimeSpent(true)
+  }, [sendTimeSpent])
 
   useEffect(() => {
-    const events = [
-      'touchstart',
-      'touchmove',
-      'scroll',
-      'mousemove',
-      'mousedown',
-      'keypress',
-    ]
+    const inactiveTime = getInactiveTime()
+    let inactivityTimeout
 
-    events.forEach(event =>
-      window.addEventListener(event, handleUserActivity, { passive: true }),
-    )
+    const resetInactivityTimeout = () => {
+      clearTimeout(inactivityTimeout)
+      inactivityTimeout = setTimeout(() => {
+        isTrackingRef.current = false
+        sendTimeSpent(true)
+      }, inactiveTime)
+    }
+
+    const activityEvents = [
+      'mousemove',
+      'keydown',
+      'scroll',
+      'click',
+      'touchstart',
+    ]
+    activityEvents.forEach(event => {
+      window.addEventListener(event, resetInactivityTimeout, { passive: true })
+    })
+
+    const intervalId = setInterval(() => {
+      if (isTrackingRef.current) {
+        sendTimeSpent()
+      }
+    }, 30000)
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('beforeunload', handleUnload)
-    window.addEventListener('pagehide', handleUnload)
 
-    resetTimer()
+    resetInactivityTimeout()
 
     return () => {
-      events.forEach(event =>
-        window.removeEventListener(event, handleUserActivity),
-      )
-
+      clearInterval(intervalId)
+      clearTimeout(inactivityTimeout)
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, resetInactivityTimeout)
+      })
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('beforeunload', handleUnload)
-      window.removeEventListener('pagehide', handleUnload)
-
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-      handleUnload()
+      sendTimeSpent(true)
     }
-  }, [handleUserActivity, handleVisibilityChange, handleUnload, resetTimer])
+  }, [getInactiveTime, handleVisibilityChange, handleUnload, sendTimeSpent])
 
   return null
 }

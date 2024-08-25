@@ -52,6 +52,7 @@ const initialState = {
   exportData: null,
   noteMessageQueue: [],
   showingSummaryForNoteMessages: false,
+  showXpLevelModal: false,
 }
 
 export const appSlice = createSlice({
@@ -63,6 +64,9 @@ export const appSlice = createSlice({
     },
     setUpdates: (state, action) => {
       state.updates = action.payload
+    },
+    setShowXpLevelModal: (state, action) => {
+      state.showXpLevelModal = action.payload
     },
     resetLoadingFlags: state => {
       state.updatesLoading = false
@@ -99,6 +103,7 @@ export const appSlice = createSlice({
         id: uuidv4(), // Generate a unique ID for each message
         content: action.payload?.content?.toString(),
         actions: action.payload.actions || [],
+        messageType: action.payload.messageType || 'default',
       })
     },
 
@@ -178,6 +183,7 @@ export const {
   clearNoteMessageQueue,
   setShowingSummaryForNoteMessages,
   removeNoteMessageWithId,
+  setShowXpLevelModal,
 } = appSlice.actions
 
 export default appSlice.reducer

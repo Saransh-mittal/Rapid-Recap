@@ -1,12 +1,14 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import NoteMessage from './NoteMessage'
+
 import NoteMessageSummary from './NoteMessageSummary'
 import {
   clearNoteMessageQueue,
   setShowingSummaryForNoteMessages,
 } from '../../redux/appSlice'
 import { v4 as uuidv4 } from 'uuid'
+import XPAwardNoteMessage from './noteMessages/XPAwardNoteMessage'
 
 const NoteMessageQueue = () => {
   const dispatch = useDispatch()
@@ -53,16 +55,31 @@ const NoteMessageQueue = () => {
     )
   }
 
-  return (
-    <NoteMessage
-      messageId={noteMessageQueue[0].id}
-      title={noteMessageQueue[0].title}
-      content={noteMessageQueue[0].content}
-      duration={noteMessageQueue[0].duration}
-      width={noteMessageQueue[0].width}
-      actions={noteMessageQueue[0].actions}
-    />
-  )
+  const message = noteMessageQueue[0]
+
+  switch (message.messageType) {
+    case 'xpAward':
+      return (
+        <XPAwardNoteMessage
+          messageId={message.id}
+          xpAwarded={message.xpAwarded}
+          quizName={message.quizName}
+          duration={message.duration}
+          width={message.width}
+        />
+      )
+    default:
+      return (
+        <NoteMessage
+          messageId={message.id}
+          title={message.title}
+          content={message.content}
+          duration={message.duration}
+          width={message.width}
+          actions={message.actions}
+        />
+      )
+  }
 }
 
 export default NoteMessageQueue

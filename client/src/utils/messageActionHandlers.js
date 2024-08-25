@@ -20,6 +20,9 @@ const messageActionHandlers = {
   },
   SIGN_IN: () => {},
   GUEST: () => {},
+  VIEW_EXPERIENCE: setShowXpLevelModal => {
+    setShowXpLevelModal(true)
+  },
   // Add more action handlers as needed
 }
 
@@ -34,6 +37,10 @@ export const createHandleMessageAction = (dispatch, actions) => {
         messageActionHandlers[actionType](actions, profileId)
       } else if (actionType === 'DISMISS') {
         messageActionHandlers[actionType](dispatch, actions, messageId)
+      } else if (actionType === 'VIEW_EXPERIENCE') {
+        messageActionHandlers[actionType](() =>
+          dispatch(actions.setShowXpLevelModal(true)),
+        )
       } else {
         messageActionHandlers[actionType]()
       }

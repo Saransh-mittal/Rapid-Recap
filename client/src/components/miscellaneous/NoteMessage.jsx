@@ -5,16 +5,15 @@ import {
   CloseButton,
   useDisclosure,
   Text,
-  Button,
   VStack,
   HStack,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
-
 import {
   removeNoteMessageWithId,
   setShowingSummaryForNoteMessages,
+  setShowXpLevelModal,
 } from '../../redux/appSlice'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import ButtonFactory from './ButtonFactory'
@@ -30,6 +29,7 @@ const NoteMessage = ({
   duration = 7000,
   width = '320px',
   actions = [],
+  customContent,
 }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -37,6 +37,7 @@ const NoteMessage = ({
   const handleMessageAction = createHandleMessageAction(dispatch, {
     setShowingSummaryForNoteMessages,
     removeNoteMessageWithId,
+    setShowXpLevelModal,
     navigateToProfile: id => navigate(`/profile/${id}`),
   })
 
@@ -64,7 +65,7 @@ const NoteMessage = ({
     setTimeout(() => {
       onClose && onClose()
       dispatch(removeNoteMessageWithId(messageId))
-    }, 500) // Delay to allow for exit animation
+    }, 500)
   }
 
   return (
@@ -106,7 +107,7 @@ const NoteMessage = ({
               <CloseButton size="sm" onClick={handleClose} />
             </Box>
             <VStack align="stretch" p={4} spacing={3}>
-              <Text>{content}</Text>
+              {customContent ? customContent : <Text>{content}</Text>}
               {actions.length > 0 && (
                 <HStack spacing={4} justify="center">
                   {actions.map((action, index) => (

@@ -19,6 +19,12 @@ const ButtonFactory = ({ actionType, onClick, innerText, ...props }) => {
           View Profile
         </Button>
       )
+    case 'VIEW_EXPERIENCE':
+      return (
+        <Button onClick={onClick} {...props}>
+          View Experience
+        </Button>
+      )
     case 'SECURE_YOUR_PROGRESS':
       return <SecureYourProgress padding={0} />
     case 'CONFIRM':

@@ -19,6 +19,8 @@ import {
   dailyStreakCheckerAndUpdater,
   quinBoostChecker,
 } from '../../utils/quiz.utils'
+import { addNoteMessage } from '../../redux/appSlice'
+import { setUser } from '../../redux/authSlice'
 
 // Lazy load components
 const ConfirmationModal = lazy(() =>
@@ -59,7 +61,8 @@ const Quiz = ({
   )
   const totalQuestions = quizData ? quizData.questions.length : 0
   const toast = useToast()
-  const { isBoosted, status } = useSelector(state => state.app)
+  const { isBoosted } = useSelector(state => state.app)
+  const { user } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -158,10 +161,9 @@ const Quiz = ({
   }, [])
 
   const handleClose = async () => {
-    console.log('close')
     try {
       setTotalUsersGivenQuiz(prev => prev + 1)
-      await quinBoostChecker({
+      quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       })
@@ -178,6 +180,16 @@ const Quiz = ({
       } else {
         ofShowQuiz()
         onClose()
+        dispatchRedux(setUser({ ...user, xp: user.xp + 5 }))
+        dispatchRedux(
+          addNoteMessage({
+            messageType: 'xpAward',
+            xpAwarded: 5,
+            quizName: 'XP Awarded For Quiz',
+            actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+            width: '250px',
+          }),
+        )
       }
     } catch (error) {
       console.log(error)
@@ -186,16 +198,26 @@ const Quiz = ({
 
   const handleConfirmClose = useCallback(async () => {
     try {
-      await quinBoostChecker({
+      quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       })
 
-      await handleSubmitQuiz({
+      handleSubmitQuiz({
         timeTaken,
         userAnswers,
         setSubmitted,
       })
+      dispatchRedux(setUser({ ...user, xp: user.xp + 5 }))
+      dispatchRedux(
+        addNoteMessage({
+          messageType: 'xpAward',
+          xpAwarded: 5,
+          quizName: 'XP Awarded For Quiz',
+          actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+          width: '250px',
+        }),
+      )
       setShowConfirmationModal(false)
     } catch (error) {
       toast({

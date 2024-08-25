@@ -14,10 +14,13 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   removeNoteMessageWithId,
   setShowingSummaryForNoteMessages,
+  setShowXpLevelModal,
 } from '../../redux/appSlice'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useNavigate } from 'react-router-dom'
 import ButtonFactory from './ButtonFactory'
+
+import TrophySVG from '../../assets/svg/TrophySVG'
 
 const MotionBox = motion(Box)
 
@@ -32,6 +35,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   const handleMessageAction = createHandleMessageAction(dispatch, {
     setShowingSummaryForNoteMessages,
     removeNoteMessageWithId,
+    setShowXpLevelModal,
     navigateToProfile: id => navigate(`/profile/${id}`),
   })
 
@@ -46,6 +50,28 @@ const NoteMessageSummary = ({ messages, onClose }) => {
 
   const handleAction = (actionType, messageId) => {
     handleMessageAction(actionType, messageId, user?.inGameName)
+  }
+
+  const renderMessageContent = message => {
+    switch (message.messageType) {
+      case 'xpAward':
+        return (
+          <HStack spacing={3}>
+            <TrophySVG height={'40px'} width={'40px'} />
+            <VStack align="start" spacing={0}>
+              <Text fontWeight="bold">{message.quizName}</Text>
+              <Text color="green.400">{message.xpAwarded} XP earned</Text>
+            </VStack>
+          </HStack>
+        )
+      default:
+        return (
+          <>
+            <Text fontWeight="bold">{message.title}</Text>
+            <Text>{message.content}</Text>
+          </>
+        )
+    }
   }
 
   return (
@@ -93,15 +119,16 @@ const NoteMessageSummary = ({ messages, onClose }) => {
             >
               {messages.map((message, index) => (
                 <Box key={index} bg="gray.700" p={3} borderRadius="md">
-                  <Text fontWeight="bold">{message.title}</Text>
-                  <Text>{message.content}</Text>
+                  {renderMessageContent(message)}
                   <HStack mt={2} spacing={2}>
                     {message.actions &&
                       message.actions.map((action, actionIndex) => (
                         <ButtonFactory
                           key={actionIndex}
                           actionType={action.actionType}
-                          onClick={() => handleAction(action.actionType)}
+                          onClick={() =>
+                            handleAction(action.actionType, message.id)
+                          }
                           size="sm"
                           innerText={action.text}
                         >
