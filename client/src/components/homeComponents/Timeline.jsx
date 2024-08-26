@@ -31,6 +31,7 @@ import {
   setSearchTerm,
 } from '../../redux/articleSlice'
 import i18n from 'i18next'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components
 const Categories = React.lazy(() => import('./Categories'))
@@ -58,7 +59,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
     base: 'column',
     lg: 'row',
   })
-
+  const { t, i18n } = useTranslation()
   const categoryRefs = useRef([])
 
   const notLoggedIn = !isAuthenticated
@@ -136,10 +137,12 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
     const pathCategory = location.pathname.split('/')[2] || 'all'
     if (
       pathCategory &&
-      pathCategory.toLocaleLowerCase() !== category?.toLocaleLowerCase()
+      pathCategory?.toLocaleLowerCase() !== category?.toLocaleLowerCase()
     ) {
-      const idx = categories.findIndex(
-        cat => cat.toLocaleLowerCase() === pathCategory.toLocaleLowerCase(),
+      const idx = categories?.findIndex(
+        cat =>
+          cat &&
+          cat?.key?.toLocaleLowerCase() === pathCategory?.toLocaleLowerCase(),
       )
       if (idx !== -1) {
         handleActiveCategory({
@@ -313,7 +316,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
                           ? item.imgURL[0]
                           : rrImage
                       }
-                      category={item?.category}
+                      category={t(`categories:categories.${item?.category}`)}
                       date={formatDate(item?.dateTime)}
                       readTime={item.avgReadTime}
                       id={item._id}

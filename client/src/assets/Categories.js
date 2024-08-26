@@ -28,18 +28,18 @@ export const getCategories = () => {
 export const categories = getCategories()
 
 export const findCategoryIndex = categoryKeyOrLabel => {
-  return categories.findIndex(
+  return categories?.findIndex(
     cat =>
-      cat.key.toLowerCase() === categoryKeyOrLabel.toLowerCase() ||
-      cat.label.toLowerCase() === categoryKeyOrLabel.toLowerCase(),
+      cat?.key?.toLowerCase() === categoryKeyOrLabel?.toLowerCase() ||
+      cat?.label?.toLowerCase() === categoryKeyOrLabel?.toLowerCase(),
   )
 }
 
 export const getCategoryKey = categoryKeyOrLabel => {
-  const category = categories.find(
+  const category = categories?.find(
     cat =>
-      cat.key.toLowerCase() === categoryKeyOrLabel.toLowerCase() ||
-      cat.label.toLowerCase() === categoryKeyOrLabel.toLowerCase(),
+      cat?.key?.toLowerCase() === categoryKeyOrLabel?.toLowerCase() ||
+      cat?.label?.toLowerCase() === categoryKeyOrLabel?.toLowerCase(),
   )
-  return category ? category.key : 'all'
+  return category ? category?.key : 'all'
 }
