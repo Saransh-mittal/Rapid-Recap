@@ -30,6 +30,7 @@ import {
   searchArticles,
   setSearchTerm,
 } from '../../redux/articleSlice'
+import i18n from 'i18next'
 
 // Lazy load components
 const Categories = React.lazy(() => import('./Categories'))
@@ -75,8 +76,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   const activeCategoryIndex = useMemo(() => {
     return categories?.findIndex(
-      cat =>
-        cat.toLocaleLowerCase() === (category || 'all').toLocaleLowerCase(),
+      cat => cat.key.toLowerCase() === (category || 'all').toLowerCase(),
     )
   }, [category])
 
@@ -305,7 +305,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
                   {/* <TimelineItem newsNumber={id} data={item} /> */}
                   <Suspense fallback={<Skeleton key={id} mt="5rem" />} key={id}>
                     <Card
-                      title={item?.title}
+                      title={
+                        i18n.language === 'en' ? item?.title : item?.hindiTitle
+                      }
                       image={
                         Array.isArray(item?.imgURL) && item?.imgURL.length > 0
                           ? item.imgURL[0]

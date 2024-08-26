@@ -50,6 +50,7 @@ const Sidebar = ({
   article,
   id,
   isQuizGivenLoading,
+  i18n,
 }) => {
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
@@ -84,7 +85,6 @@ const Sidebar = ({
       return
     }
     trackGenerateQuizClick()
-    // setShowQuizLangModal(true)
     setShowQuiz(!showQuiz)
     onOpen()
   }, [
@@ -111,7 +111,10 @@ const Sidebar = ({
         return
       }
       playClick()
-      window.location.href = `/article/${item._id}/${slugify(item.title)}`
+      window.location.href =
+        i18n.language === 'en'
+          ? `/article/${item._id}/${slugify(item.title)}`
+          : `/article/${item._id}/${slugify(item.hindiTitle)}`
     },
     [notLoggedIn, playClick, toast],
   )
@@ -120,7 +123,7 @@ const Sidebar = ({
     try {
       setLoading(true)
       const { data } = await axios.get(
-        `/api/articles/related/${id}?page=${pageRelated}&limit=5`,
+        `/api/articles/related/${id}?page=${pageRelated}&limit=5&lang=${i18n.language}`,
       )
 
       setLatestNews(prevArticles => [...prevArticles, ...data.relatedArticles])
@@ -135,7 +138,7 @@ const Sidebar = ({
     try {
       setLoading(true)
       const response = await axios.get(
-        `/api/recommendation/articlePageRecommendations/${id}?page=${page}&pageSize=5`,
+        `/api/recommendation/articlePageRecommendations/${id}?page=${page}&pageSize=5&lang=${i18n.language}`,
       )
       setRecommendedArticles(prevArticles => [
         ...prevArticles,
@@ -226,7 +229,7 @@ const Sidebar = ({
           />
           <Flex flexDirection="column" w="100%">
             <Text mt={2} color="#e0e0e0">
-              {item.title}
+              {i18n.language === 'en' ? item.title : item.hindiTitle}
             </Text>
           </Flex>
         </Flex>
@@ -277,9 +280,8 @@ const Sidebar = ({
                   <Spinner />
                 ) : (
                   <TakeQuizButton
-                    isQuinBoostAvailable={isQuinBoostAvailable}
                     onClick={handleQuizButtonClick}
-                    setShowQuiz={setShowQuiz}
+                    isQuinBoostAvailable={isQuinBoostAvailable}
                   />
                 )}
               </Box>

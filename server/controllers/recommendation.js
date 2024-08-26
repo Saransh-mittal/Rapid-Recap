@@ -6,6 +6,7 @@ const {
 } = require('../services/recommendationService')
 
 const asyncHandler = require('express-async-handler')
+const { hindiConverter } = require('../utils/article.utils')
 
 // @desc    Get user recommendations
 // @route   GET /api/recommendation
@@ -15,6 +16,7 @@ const userRecommendations = asyncHandler(async (req, res) => {
 
   const page = parseInt(req.query.page) || 1
   const pageSize = parseInt(req.query.pageSize) || 18
+  const { lang } = req.query
 
   const recommendations = await getRecommendations(userId, page, pageSize)
   const articles = await Promise.all(
@@ -22,6 +24,28 @@ const userRecommendations = asyncHandler(async (req, res) => {
       return await Article.findById(recommendation._id)
     }),
   )
+  if (lang === 'hi')
+    for (let article of articles) {
+      if (
+        !article.hindiTitle ||
+        !article.hindiMainText ||
+        !article.hindiAuthor
+      ) {
+        const response = await hindiConverter(article)
+        if (!article.hindiMainText) {
+          article.hindiMainText = []
+          await article.save()
+        }
+        article.hindiTitle = response.hindiTitle
+
+        for (let key in response.hindiMainText) {
+          if (!response.hindiMainText[key]) continue
+          article.hindiMainText.push(response.hindiMainText[key])
+        }
+        article.hindiAuthor = response.hindiAuthor
+        await article.save()
+      }
+    }
 
   res.status(201).json(articles)
 })
@@ -34,12 +58,14 @@ const articlePageRecommendations = asyncHandler(async (req, res) => {
   const { articleId } = req.params
   const page = parseInt(req.query.page) || 1
   const pageSize = parseInt(req.query.pageSize) || 18
+  const { lang } = req.query
 
   const articles = await getArticlePageRecommendations(
     userId,
     articleId,
     page,
     pageSize,
+    lang,
   )
 
   res.status(200).json(articles)

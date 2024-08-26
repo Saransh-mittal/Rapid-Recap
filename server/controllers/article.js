@@ -82,11 +82,32 @@ const getArticleIds = asyncHandler(async (req, res) => {
 
 const getArticle = async (req, res) => {
   const { id } = req.params
+  const { lang } = req.query
   try {
     const article = await Article.findById(id)
     if (!article) {
       throw new Error('Article not found')
     }
+
+    if (
+      lang === 'hi' &&
+      (!article.hindiTitle || !article.hindiMainText || !article.hindiAuthor)
+    ) {
+      const response = await hindiConverter(article)
+      if (!article.hindiMainText) {
+        article.hindiMainText = []
+        await article.save()
+      }
+      article.hindiTitle = response.hindiTitle
+
+      for (let key in response.hindiMainText) {
+        if (!response.hindiMainText[key]) continue
+        article.hindiMainText.push(response.hindiMainText[key])
+      }
+      article.hindiAuthor = response.hindiAuthor
+      await article.save()
+    }
+
     const paragraphs = await breakArticleIntoParagraphs(article.mainText)
     const relatedArticles = []
     for (let relatedArticleID of article.relatedArticles) {
@@ -122,23 +143,6 @@ const getArticle = async (req, res) => {
       _id: article._id,
     }
     let quizExpired = false
-    // if (article.quiz) {
-    //   const quizId = article.quiz;
-    //   const fullQuiz = await Quiz.findById(quizId);
-    //   if (!fullQuiz) {
-    //     article.quiz = null;
-    //     await article.save();
-    //     throw new Error("Quiz not found, Please try again.");
-    //   }
-    //   if (fullQuiz.createdAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()) {
-    //     if (fullQuiz.isActive) {
-    //       await updatePercentilesOnQuizDeactivation({ id: article._id });
-    //       fullQuiz.isActive = false;
-    //       await fullQuiz.save();
-    //     }
-    //     quizExpired = true;
-    //   }
-    // }
     res.status(201).send({ quizExpired, newArticle })
   } catch (error) {
     res.status(400).json({ error: error || 'Something went wrong' })
@@ -810,6 +814,7 @@ const deleteAdminArticleDetails = asyncHandler(async (req, res) => {
 // @access  Protected
 const getRelatedArticles = asyncHandler(async (req, res) => {
   const { articleId } = req.params
+  const { lang } = req.query
   const page = parseInt(req.query.page, 10) || 1
   const limit = parseInt(req.query.limit, 10) || 10
   const userId = req.user._id // Assuming `req.user` contains authenticated user info
@@ -829,7 +834,9 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
   let relatedArticles = await Article.find({
     _id: { $in: article.relatedArticles },
   })
-    .select('title author dateTime category imgURL avgReadTime')
+    .select(
+      'title author dateTime category imgURL avgReadTime hindiTitle mainText hindiMainText hindiAuthor',
+    )
     .skip(skip)
     .limit(limit)
 
@@ -844,7 +851,28 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
     relatedArticle =>
       !attemptedArticleIds.includes(relatedArticle._id.toString()),
   )
+  if (lang === 'hi')
+    for (let relatedArticle of relatedArticles) {
+      if (
+        !relatedArticle.hindiTitle ||
+        !relatedArticle.hindiMainText ||
+        !relatedArticle.hindiAuthor
+      ) {
+        const response = await hindiConverter(relatedArticle)
+        if (!relatedArticle.hindiMainText) {
+          relatedArticle.hindiMainText = []
+          await relatedArticle.save()
+        }
+        relatedArticle.hindiTitle = response.hindiTitle
 
+        for (let key in response.hindiMainText) {
+          if (!response.hindiMainText[key]) continue
+          relatedArticle.hindiMainText.push(response.hindiMainText[key])
+        }
+        relatedArticle.hindiAuthor = response.hindiAuthor
+        await relatedArticle.save()
+      }
+    }
   // Send the response with filtered related articles
   res.json({
     relatedArticles,

@@ -27,9 +27,6 @@ import i18n from 'i18next'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
 const Quiz = lazy(() => import('../components/articleComponents/Quiz'))
-const SelectQuizLangModal = lazy(() =>
-  import('../components/articleComponents/SelectQuizLangModal'),
-)
 const ExpectedIQModal = lazy(() =>
   import('../components/articleComponents/ExpectedIQModal'),
 )
@@ -133,7 +130,9 @@ const Article = () => {
 
   const fetchArticle = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/articles/article/${id}`)
+      const response = await axios.get(
+        `/api/articles/article/${id}?lang=${i18n.language}`,
+      )
       const articleData = response.data.newArticle
       setArticle(articleData)
       setTotalUsersGivenQuiz(articleData.quizAttemptCnt)
@@ -508,7 +507,6 @@ const Article = () => {
                     author={author}
                     selectedLanguage={selectedLanguage}
                     bookmark={bookmark}
-                    handleLanguageChange={handleLanguageChange}
                     avgTimeRead={avgTimeRead}
                     dateTime={dateTime}
                     bookmarkStatus={bookmarkStatus}
@@ -516,7 +514,6 @@ const Article = () => {
                     isQuinBoostAvailable={isQuinBoostAvailable}
                     quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
                     openModal={openModal}
-                    i18n={i18n}
                   />
                 </header>
               </Flex>
@@ -563,6 +560,7 @@ const Article = () => {
                   article={article}
                   id={id}
                   isQuizGivenLoading={isQuizGivenLoading}
+                  i18n={i18n}
                 />
               </Grid>
             </article>

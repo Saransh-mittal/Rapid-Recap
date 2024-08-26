@@ -9,7 +9,6 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
-import LanguageToggle from './articleHeaderComponents/LanguageToggle'
 import AuthorInfo from './articleHeaderComponents/AuthorInfo'
 import BoostSection from './articleHeaderComponents/BoostSection'
 import BookmarkIcon from './articleHeaderComponents/BookmarkIcon'
@@ -31,7 +30,6 @@ const ArticleHeader = ({
   author,
   selectedLanguage,
   bookmark,
-  handleLanguageChange,
   avgTimeRead,
   dateTime,
   bookmarkStatus,
@@ -39,7 +37,6 @@ const ArticleHeader = ({
   isQuinBoostAvailable,
   quizLeftToGetQuizBoost,
   openModal,
-  i18n,
 }) => {
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
@@ -100,21 +97,6 @@ const ArticleHeader = ({
     },
     [selectedArticle, onOpenArticleForm, toast, article],
   )
-
-  const toggleLanguage = useCallback(() => {
-    if (notLoggedIn) {
-      toast({
-        title: 'Login Required',
-        description: 'Please log in to change the language.',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
-    }
-    const newLanguage = i18n.language === 'en' ? 'hindi' : 'english'
-    handleLanguageChange({ target: { value: newLanguage } })
-  }, [selectedLanguage, handleLanguageChange, notLoggedIn, toast])
 
   const handleBookmarkClick = useCallback(() => {
     bookmarkStatus({ view: false, update: true })
@@ -206,16 +188,6 @@ const ArticleHeader = ({
                 />
               )}
             </Flex>
-            {!isLargerThan768 && (
-              <Flex alignItems={'center'} h={'100%'}>
-                <LanguageToggle
-                  isEnglish={selectedLanguage === 'english'}
-                  onToggle={toggleLanguage}
-                  isDisabled={notLoggedIn}
-                  onSigninOpen={() => dispatchRedux(setIsSigninOpen(true))}
-                />
-              </Flex>
-            )}
           </Flex>
 
           <Flex
@@ -242,14 +214,6 @@ const ArticleHeader = ({
               setShowNote={setShowNote}
               user={user}
             />
-            {isLargerThan768 && (
-              <LanguageToggle
-                isEnglish={selectedLanguage === 'english'}
-                onToggle={toggleLanguage}
-                isDisabled={notLoggedIn}
-                onSigninOpen={() => dispatchRedux(setIsSigninOpen(true))}
-              />
-            )}
           </Flex>
           {!isLargerThan768 && (
             <Flex

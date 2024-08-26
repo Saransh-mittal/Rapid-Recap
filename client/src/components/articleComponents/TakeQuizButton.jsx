@@ -3,12 +3,7 @@ import React from 'react'
 import Bubbles from '../miscellaneous/bubbles'
 import { useSelector } from 'react-redux'
 
-const TakeQuizButton = ({
-  onClick,
-  css,
-  isQuinBoostAvailable,
-  setShowQuiz,
-}) => {
+const TakeQuizButton = ({ onClick, isQuinBoostAvailable }) => {
   const { isBoosted } = useSelector(state => state.app)
 
   const buttonStyle = {

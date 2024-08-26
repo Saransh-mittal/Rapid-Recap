@@ -19,6 +19,7 @@ import { setCategory, setItemsState } from '../redux/contentSlice'
 import throttle from 'lodash.throttle'
 import WiseWeb from '../components/profileComponents/WiseWeb'
 import { markFriendRequestsAsRead } from '../redux/appSlice'
+import i18n from 'i18next'
 
 const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
 const UpgradeModal = lazy(() =>
@@ -69,7 +70,7 @@ const Home = () => {
         const response =
           (cat === 'all' || !cat) && !notLoggedIn
             ? await axios.get(
-                `/api/recommendation?page=${pageNum}&pageSize=18`,
+                `/api/recommendation?page=${pageNum}&pageSize=18&lang=${i18n.language}`,
                 {
                   cancelToken: cancelTokenSourceRef.current.token,
                 },

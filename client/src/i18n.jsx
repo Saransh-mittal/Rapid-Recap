@@ -5,6 +5,7 @@ import HttpBackend from 'i18next-http-backend'
 
 const namespaces = {
   screens: ['Contact', 'Home', 'LeaderBoard', 'Profile', 'Register', 'Signin'],
+  categories: ['categories'],
   articleComponents: [],
   authComponents: [],
   homeComponents: [],
@@ -35,6 +36,8 @@ i18n
             return `/locales/${lng}/components/homeComponents/${namespace}.json`
           case 'leaderBoardComponents':
             return `/locales/${lng}/components/leaderBoardComponents/${namespace}.json`
+          case 'categories':
+            return `/locales/${lng}/categories/${namespace}.json`
           default:
             return `/locales/${lng}/${namespace}.json` // fallback
         }
