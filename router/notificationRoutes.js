@@ -1,14 +1,17 @@
-const express = require("express");
+const express = require('express')
 const {
   notificationNews,
   notificationNewMessageChats,
-} = require("../controllers/notification");
-const { Authenticate } = require("../middleware/authenticate");
-const router = express.Router();
+  getNoteMessages,
+} = require('../controllers/notification')
+const { Authenticate } = require('../middleware/authenticate')
+const router = express.Router()
 
-router.route("/news").get(notificationNews);
+router.route('/news').get(notificationNews)
 router
-  .route("/new-message-chats")
-  .get(Authenticate, notificationNewMessageChats);
+  .route('/new-message-chats')
+  .get(Authenticate, notificationNewMessageChats)
 
-module.exports = router;
+router.route('/noteMessages').get(Authenticate, getNoteMessages)
+
+module.exports = router

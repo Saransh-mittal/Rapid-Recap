@@ -1,0 +1,15 @@
+import{j as t,M as n,f as a,g as r,h as c,T as e,i as d,k as m,J as o}from"./index-235a35bd.js";import{m as f,d as x}from"./styled-components.browser.esm-3f439feb.js";const h=f`
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+`,g=x(e)`
+  animation: ${h} 2s infinite;
+`,b=({isOpen:s,onClose:i,quizLeftToGetQuizBoost:u,isStateBoosted:l})=>t.jsxs(t.Fragment,{children:[t.jsx("style",{children:`
+          @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+        `}),t.jsxs(n,{isOpen:s,onClose:i,size:"2xl",children:[t.jsx(a,{}),t.jsxs(r,{style:{backgroundColor:"#0f0d15",color:"white",borderRadius:"10px"},children:[t.jsxs(c,{textAlign:"center",p:0,bg:"transparent",borderBottom:"none",children:[t.jsxs(g,{fontSize:"4xl",fontFamily:"fantasy",color:"gold",letterSpacing:"wide",children:["Quin ",t.jsx("span",{style:{color:"crimson"},children:"Boost!"})]}),t.jsx(e,{fontSize:"sm",color:"gray.500",mt:"-3",fontStyle:"italic",children:"Level up your skills!"})]}),t.jsx(d,{}),t.jsx(m,{children:l?t.jsxs(o,{children:[t.jsxs(o,{mt:"1rem",children:[t.jsxs(e,{fontSize:{base:"xl",md:"lg"},color:"#874CCC",textAlign:"left",mb:"4",fontFamily:"Montserrat, sans-serif",children:[t.jsx("span",{style:{fontWeight:"bold",fontStyle:"italic"},children:"Quin Boost Active!"})," ","Enjoy the 1.5x RQM Score Boost!"]}),t.jsxs(e,{fontSize:{base:"md",md:"md"},color:"#CDEAD5",textAlign:"left",style:{fontStyle:"italic",fontWeight:"bold"},children:["➤"," Keep Quizzing to Maintain Your Boost! Stay sharp to keep the boost active!"," ",t.jsx("span",{role:"img","aria-label":"thumbs-up",children:"👍"})]})]}),t.jsxs(e,{fontSize:{base:"md",md:"md"},color:"#F5DAD2",textAlign:"left",mt:"1rem",style:{fontStyle:"italic",fontWeight:"bold"},children:["➤"," Once Quin Boost is activated, a special badge appears on your next quiz, signaling its activation! 🏅"]}),t.jsx(e,{fontSize:{base:"sm",md:"sm"},color:"gray.600",textAlign:"center",mt:"2rem",style:{fontStyle:"italic",fontWeight:"bold"},children:"Note: Quin Boost is exclusive to your sixth quiz. Enjoy the 1.5x RQM Score boost, but remember, it's a one-time offer! Make it count! 🎉"})]}):t.jsxs(o,{mt:"1rem",children:[t.jsx(e,{fontSize:{base:"xl",md:"lg"},color:"purple.600",textAlign:"left",mb:"4",fontFamily:"Montserrat, sans-serif",fontWeight:"bold",fontStyle:"italic",children:"Quin Boost Inactive!"}),t.jsxs(e,{fontSize:{base:"md",md:"md"},color:"cyan.400",textAlign:"left",fontFamily:"serif",fontStyle:"italic",fontWeight:"bold",children:["➤"," Supercharge Your RQM Score! 6th Quiz RQM scores get a 1.5x boost!"," ",t.jsx("span",{role:"img","aria-label":"rocket",children:"🚀"})]}),t.jsxs(e,{fontSize:{base:"md",md:"md"},color:"#C3FF93",textAlign:"left",fontWeight:"bold",fontFamily:"sans-serif",children:["➤"," Keep Track of Your Progress! See the countdown image on each quiz page to know how close you are!"]})]})})]})]})]});export{b as default};
