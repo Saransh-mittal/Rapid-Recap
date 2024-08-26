@@ -59,7 +59,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
           <HStack spacing={3}>
             <TrophySVG height={'40px'} width={'40px'} />
             <VStack align="start" spacing={0}>
-              <Text fontWeight="bold">{message.quizName}</Text>
+              <Text fontWeight="bold">{message.title}</Text>
               <Text color="green.400">{message.xpAwarded} XP earned</Text>
             </VStack>
           </HStack>

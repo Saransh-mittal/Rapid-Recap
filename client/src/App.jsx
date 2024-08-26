@@ -20,6 +20,7 @@ import ButtonGradient from './assets/svg/ButtonGradient.jsx'
 const Signin = React.lazy(() => import('./screens/Signin.jsx'))
 import {
   addNoteMessage,
+  fetchUnreadNoteMessages,
   setIsRegisterOpen,
   setIsSigninOpen,
   setShowXpLevelModal,
@@ -132,6 +133,21 @@ const App = () => {
       setIsGuestLoggedin(true)
     }
   }, [isAuthenticated, user])
+
+  useEffect(() => {
+    let timer
+    const delay = Math.floor(Math.random() * 120000) + 60000
+
+    if (isAuthenticated) {
+      timer = setTimeout(() => {
+        dispatch(fetchUnreadNoteMessages())
+      }, delay) // 2 minutes delay
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [isAuthenticated])
 
   useEffect(() => {
     const loggedIn = isLoggedIn()

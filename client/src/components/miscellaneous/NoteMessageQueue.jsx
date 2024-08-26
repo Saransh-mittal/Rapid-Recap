@@ -63,7 +63,7 @@ const NoteMessageQueue = () => {
         <XPAwardNoteMessage
           messageId={message.id}
           xpAwarded={message.xpAwarded}
-          quizName={message.quizName}
+          title={message.title}
           duration={message.duration}
           width={message.width}
         />

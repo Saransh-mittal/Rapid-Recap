@@ -4,7 +4,6 @@ import {
   Heading,
   CloseButton,
   useDisclosure,
-  Text,
   VStack,
   HStack,
 } from '@chakra-ui/react'
@@ -45,6 +44,7 @@ const NoteMessage = ({
     handleMessageAction(actionType, messageId, user?.inGameName)
     actionType !== 'VIEW_ALL' && handleClose()
   }
+
   const { isOpen, onClose: closeDisclosure } = useDisclosure({
     defaultIsOpen: true,
   })
@@ -61,7 +61,6 @@ const NoteMessage = ({
 
   const handleClose = () => {
     closeDisclosure()
-
     setTimeout(() => {
       onClose && onClose()
       dispatch(removeNoteMessageWithId(messageId))
@@ -76,49 +75,55 @@ const NoteMessage = ({
           top="20px"
           right="20px"
           width={width}
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
           transition={{ type: 'spring', stiffness: 100, damping: 15 }}
           zIndex={1001}
         >
           <Box
             bg="gray.800"
             color="gray.100"
-            borderRadius="md"
+            borderRadius="lg"
             overflow="hidden"
-            boxShadow="lg"
+            boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
             borderWidth="1px"
             borderColor="gray.700"
           >
             <Box
               bg="gray.700"
-              px={5}
-              py={3}
+              px={4}
+              py={2}
               display="flex"
               justifyContent="space-between"
               alignItems="center"
-              borderBottomWidth="1px"
-              borderColor="gray.600"
             >
-              <Heading as="h3" size="sm" textTransform={'uppercase'}>
+              <Heading
+                as="h3"
+                size="xs"
+                textTransform="uppercase"
+                letterSpacing="wide"
+                color="white"
+              >
                 {title}
               </Heading>
-              <CloseButton size="sm" onClick={handleClose} />
+              <CloseButton size="sm" onClick={handleClose} color="white" />
             </Box>
-            <VStack align="stretch" p={4} spacing={3}>
-              {customContent ? customContent : <Text>{content}</Text>}
+            <VStack align="stretch" p={3} spacing={2}>
+              {customContent ? customContent : content}
               {actions.length > 0 && (
-                <HStack spacing={4} justify="center">
+                <HStack spacing={2} justify="center" pt={2}>
                   {actions.map((action, index) => (
                     <ButtonFactory
                       key={index}
                       actionType={action.actionType}
                       onClick={() => handleAction(action.actionType)}
                       size="sm"
+                      variant="outline"
+                      colorScheme="blue"
                       innerText={action.text}
                     >
-                      {!action.actionType === 'SIGN_IN' && action.text}
+                      {action.text}
                     </ButtonFactory>
                   ))}
                 </HStack>

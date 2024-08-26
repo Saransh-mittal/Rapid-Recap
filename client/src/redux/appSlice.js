@@ -35,6 +35,14 @@ export const markFriendRequestsAsRead = createAsyncThunk(
   },
 )
 
+export const fetchUnreadNoteMessages = createAsyncThunk(
+  'app/fetchUnreadNoteMessages',
+  async () => {
+    const response = await axios.get('/api/notify/noteMessages')
+    return response.data
+  },
+)
+
 const initialState = {
   updates: [],
   streak: 0,
@@ -166,6 +174,17 @@ export const appSlice = createSlice({
       .addCase(markFriendRequestsAsRead.rejected, state => {
         state.markingRequestsAsRead = false
         // Optionally handle error state here
+      })
+      .addCase(fetchUnreadNoteMessages.fulfilled, (state, action) => {
+        action.payload.forEach(message => {
+          state.noteMessageQueue.push({
+            ...message,
+            id: message._id,
+            content: message?.content?.toString(),
+            actions: message?.actions || [],
+            messageType: message?.messageType || 'default',
+          })
+        })
       })
   },
 })

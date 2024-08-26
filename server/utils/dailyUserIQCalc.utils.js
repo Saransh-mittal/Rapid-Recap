@@ -7,8 +7,9 @@ const { updatePercentilesOnQuizDeactivation } = require('./quiz.utils')
 const rankUpdate = require('./update.utils/rank.update')
 const CircleAndSocietyData = require('../data/CircleAndSocietyData')
 const { logActivity } = require('./activity.utils')
-const { activityTypes } = require('../data/activityTypes')
+const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const configService = require('../configService')
+const NoteMessage = require('../model/noteMessageSchema')
 
 const findSocietyCircleByIQ = IQScore => {
   return CircleAndSocietyData.find(data => {
@@ -47,6 +48,11 @@ const handleSocietyOrCircleUpgrade = async (
     const hasSocietyOrCircleChanged =
       prevSocietyCircle.society !== currSocietyCircle.society ||
       prevSocietyCircle.circle !== currSocietyCircle.circle
+    const changedSocietyOrCircle = hasSocietyOrCircleChanged
+      ? prevSocietyCircle.society !== currSocietyCircle.society
+        ? 'society'
+        : 'circle'
+      : 'same'
 
     // Check if it's an upgrade (moving to a higher IQ range)
     const isUpgrade = currSocietyCircle.IQ_Lower >= prevSocietyCircle.IQ_Lower
@@ -63,6 +69,23 @@ const handleSocietyOrCircleUpgrade = async (
             userIQ: currIQScore,
             previousIQ: previousIQForXp,
           })
+          const noteMessage = new NoteMessage({
+            userId: user._id,
+            title: 'Society/Circle Upgrade',
+            content: `Congratulations! You have been upgraded to the ${
+              changedSocietyOrCircle === 'society'
+                ? currSocietyCircle.society
+                : currSocietyCircle.circle
+            } ${changedSocietyOrCircle}.`,
+            messageType: 'xpAward',
+            xpAwarded: getXpForActivity({
+              activityType: type,
+              userIQ: currIQScore || user.IQ_score,
+              previousIQ: previousIQForXp || user.prevIQScore,
+            }),
+            actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+          })
+          await noteMessage.save()
         }
       } else {
         // Handle downgrade scenario

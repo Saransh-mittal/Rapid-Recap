@@ -38,7 +38,6 @@ const XPLevelModal = ({ setShowXPLevelModal }) => {
           <ModalContent
             bg="#1a1527"
             backgroundImage="linear-gradient(135deg, #2d2a47 0%, #0e0c16 100%)"
-            maxW={{ base: '100vw', md: '35vw' }}
             p={8}
             borderRadius="lg"
             boxShadow="0 10px 30px rgba(0, 0, 0, 0.3)"

@@ -185,7 +185,7 @@ const Quiz = ({
           addNoteMessage({
             messageType: 'xpAward',
             xpAwarded: 5,
-            quizName: 'XP Awarded For Quiz',
+            title: 'XP Awarded For Quiz',
             actions: [{ actionType: 'VIEW_EXPERIENCE' }],
             width: '250px',
           }),
@@ -213,7 +213,7 @@ const Quiz = ({
         addNoteMessage({
           messageType: 'xpAward',
           xpAwarded: 5,
-          quizName: 'XP Awarded For Quiz',
+          title: 'XP Awarded For Quiz',
           actions: [{ actionType: 'VIEW_EXPERIENCE' }],
           width: '250px',
         }),

@@ -8,6 +8,9 @@ const noteMessageSchema = new mongoose.Schema({
   content: {
     type: String,
   },
+  title: {
+    type: String,
+  },
   actions: [
     {
       actionType: { type: String },
@@ -19,10 +22,18 @@ const noteMessageSchema = new mongoose.Schema({
     enum: ['default', 'xpAward', 'inbox'],
     default: 'default',
   },
+  xpAwarded: {
+    type: Number,
+    default: 0,
+  },
+  read: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 300,
+    expires: 24 * 60 * 60, // set expiry time to 1 day
   },
 })
 

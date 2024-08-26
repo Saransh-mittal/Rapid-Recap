@@ -56,8 +56,7 @@ const TrackTime = ({ userId, articleId }) => {
                 addNoteMessage({
                   messageType: 'xpAward',
                   xpAwarded: 10,
-                  quizName:
-                    'XP Awarded For Reading Articles More Than 10 Minutes',
+                  title: 'XP Awarded For Reading Articles More Than 10 Minutes',
                   actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                   duration: 15000,
                   width: '300px',

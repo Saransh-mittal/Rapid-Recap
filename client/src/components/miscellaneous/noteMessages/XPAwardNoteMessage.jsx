@@ -1,38 +1,60 @@
 import React from 'react'
-import { Text, VStack, HStack } from '@chakra-ui/react'
-
+import { Text, HStack, VStack, Box, Flex } from '@chakra-ui/react'
 import NoteMessage from '../NoteMessage'
 import TrophySVG from '../../../assets/svg/TrophySVG'
 
 const XPAwardNoteMessage = ({
   messageId,
   xpAwarded,
-  quizName,
+  title,
   onClose,
   duration,
   width = '320px',
 }) => {
   const customContent = (
-    <VStack spacing={3} align="center">
-      <TrophySVG height={'50px'} width={'50px'} />
-      <Text fontSize="2xl" fontWeight="bold">
-        Congratulations!
-      </Text>
-      <Text>You've completed the quiz:</Text>
-      <Text fontWeight="bold">{quizName}</Text>
-      <HStack>
-        <Text>You've earned:</Text>
-        <Text fontSize="xl" fontWeight="bold" color="green.400">
-          {xpAwarded} XP
+    <Flex direction="column" align="center" w="100%">
+      <Box
+        bg="yellow.400"
+        borderRadius="full"
+        p={2}
+        mb={3}
+        boxShadow="0 0 15px rgba(255, 255, 0, 0.3)"
+      >
+        <TrophySVG height="40px" width="40px" />
+      </Box>
+      <VStack spacing={1} align="center" w="100%">
+        <Text fontSize="md" fontWeight="medium" color="gray.300">
+          Quiz Completed
         </Text>
-      </HStack>
-    </VStack>
+        <Text
+          fontSize="lg"
+          fontWeight="bold"
+          color="white"
+          noOfLines={2}
+          textAlign="center"
+        >
+          {title}
+        </Text>
+        <Box
+          mt={2}
+          bg="green.500"
+          px={4}
+          py={1}
+          borderRadius="full"
+          boxShadow="0 0 10px rgba(72, 187, 120, 0.5)"
+        >
+          <Text fontSize="xl" fontWeight="bold" color="white">
+            +{xpAwarded} XP
+          </Text>
+        </Box>
+      </VStack>
+    </Flex>
   )
 
   return (
     <NoteMessage
       messageId={messageId}
-      title="Quiz Completed"
+      title="Achievement Unlocked"
       customContent={customContent}
       onClose={onClose}
       duration={duration}
