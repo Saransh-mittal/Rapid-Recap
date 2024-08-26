@@ -64,6 +64,7 @@ const getNoteMessages = asyncHandler(async (req, res) => {
   const noteMessages = await NoteMessage.find({ userId, read: false }).sort({
     createdAt: -1,
   })
+  await NoteMessage.updateMany({ userId, read: false }, { read: true })
   res.json(noteMessages)
 })
 

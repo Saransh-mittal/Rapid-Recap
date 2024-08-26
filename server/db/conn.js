@@ -91,8 +91,8 @@ mongoose
 //   userId: user._id,
 //   title: 'Application Update',
 //   content: title,
-//   messageType: 'inbox',
-//   actions: [{ actionType: 'VIEW_INBOX' }],
+//   messageType: 'default',
+//   actions: [{ actionType: 'INBOX' }],
 // })
 // await noteMessageForApplicationUpdate.save()
 

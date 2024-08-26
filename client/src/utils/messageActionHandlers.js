@@ -23,6 +23,9 @@ const messageActionHandlers = {
   VIEW_EXPERIENCE: setShowXpLevelModal => {
     setShowXpLevelModal(true)
   },
+  INBOX: setIsNotifDrawerOpen => {
+    setIsNotifDrawerOpen(true)
+  },
   // Add more action handlers as needed
 }
 
@@ -40,6 +43,10 @@ export const createHandleMessageAction = (dispatch, actions) => {
       } else if (actionType === 'VIEW_EXPERIENCE') {
         messageActionHandlers[actionType](() =>
           dispatch(actions.setShowXpLevelModal(true)),
+        )
+      } else if (actionType === 'INBOX') {
+        messageActionHandlers[actionType](() =>
+          dispatch(actions.setIsNotifDrawerOpen(true)),
         )
       } else {
         messageActionHandlers[actionType]()

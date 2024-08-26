@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   removeNoteMessageWithId,
+  setIsNotifDrawerOpen,
   setShowingSummaryForNoteMessages,
   setShowXpLevelModal,
 } from '../../redux/appSlice'
@@ -36,6 +37,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
     setShowingSummaryForNoteMessages,
     removeNoteMessageWithId,
     setShowXpLevelModal,
+    setIsNotifDrawerOpen,
     navigateToProfile: id => navigate(`/profile/${id}`),
   })
 

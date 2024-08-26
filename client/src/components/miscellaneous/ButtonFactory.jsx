@@ -56,6 +56,12 @@ const ButtonFactory = ({ actionType, onClick, innerText, ...props }) => {
           View Experience
         </ElegantButton>
       )
+    case 'INBOX':
+      return (
+        <ElegantButton onClick={onClick} {...props}>
+          Inbox
+        </ElegantButton>
+      )
     case 'SECURE_YOUR_PROGRESS':
       return <SecureYourProgress padding={0} />
     case 'CONFIRM':

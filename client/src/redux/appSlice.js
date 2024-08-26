@@ -61,6 +61,8 @@ const initialState = {
   noteMessageQueue: [],
   showingSummaryForNoteMessages: false,
   showXpLevelModal: false,
+  isNotifDrawerOpen: false,
+  isNotifModalOpen: false,
 }
 
 export const appSlice = createSlice({
@@ -72,6 +74,12 @@ export const appSlice = createSlice({
     },
     setUpdates: (state, action) => {
       state.updates = action.payload
+    },
+    setIsNotifDrawerOpen: (state, action) => {
+      state.isNotifDrawerOpen = action.payload
+    },
+    setIsNotifModalOpen: (state, action) => {
+      state.isNotifModalOpen = action.payload
     },
     setShowXpLevelModal: (state, action) => {
       state.showXpLevelModal = action.payload
@@ -203,6 +211,8 @@ export const {
   setShowingSummaryForNoteMessages,
   removeNoteMessageWithId,
   setShowXpLevelModal,
+  setIsNotifDrawerOpen,
+  setIsNotifModalOpen,
 } = appSlice.actions
 
 export default appSlice.reducer
