@@ -1,1 +1,0 @@
-import{j as s,S as e}from"./index-235a35bd.js";import{d as r,b as o,e as t}from"./chunk-MGVPL3OH-edebf98c.js";const i=()=>s.jsx(r,{marginTop:"20px",className:"Entries",children:s.jsx(o,{children:s.jsx(t,{colSpan:6,textAlign:"center",children:s.jsx(e,{thickness:"4px",speed:"0.65s",emptyColor:"gray.200",color:"blue.500",size:"xl"})})})});export{i as default};

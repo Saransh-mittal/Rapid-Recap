@@ -24,7 +24,7 @@ const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general' } = req.query
   //console.log(page, pageSize, category);
   try {
-    const article = await Article.find({
+    const articles = await Article.find({
       category: { $regex: new RegExp('^' + category, 'i') },
     })
       .sort({
@@ -34,10 +34,30 @@ const allArticles = async (req, res) => {
       .skip((page - 1) * pageSize)
       .limit(pageSize)
 
-    if (!article) {
+    if (!articles) {
       throw new Error('No articles found')
     }
-    res.send(article)
+    const processedArticles = []
+    for (let article of articles) {
+      const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+      const newArticle = {
+        category: article.category,
+        title: article.title,
+        quizAttemptCnt: article.quizAttemptCnt,
+        mainText: paragraphs,
+        author: article.author,
+        imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
+        hindiTitle: article?.hindiTitle,
+        hindiMainText: article?.hindiMainText,
+        hindiAuthor: article?.hindiAuthor,
+        avgReadTime: article?.avgReadTime,
+        date: formatDate(article.dateTime),
+        dateTime: article.dateTime,
+        _id: article._id,
+      }
+      processedArticles.push(newArticle)
+    }
+    res.send(processedArticles)
   } catch (error) {
     res.status(400).json({ error: error || 'Something went wrong' })
     console.log(error)
