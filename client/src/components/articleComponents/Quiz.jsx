@@ -370,9 +370,19 @@ const Quiz = ({
               submitLoad={submitLoad}
               onViewReport={() => {
                 playClick()
-                setShowQuizSummary(true)
+                setShowSubmittedInterface(true)
               }}
             />
+            {showSubmittedInterface && (
+              <SubmittedQuizInterface
+                submitLoad={submitLoad}
+                result={result}
+                onViewReport={() => {
+                  playClick()
+                  setShowQuizSummary(true)
+                }}
+              />
+            )}
           </Suspense>
         ) : (
           <Suspense fallback={<Spinner />}>
@@ -408,6 +418,7 @@ const Quiz = ({
     quizData,
     handleAnswer,
     userAnswers,
+    showSubmittedInterface,
   ])
 
   return (

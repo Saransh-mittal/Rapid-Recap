@@ -237,6 +237,7 @@ const Home = () => {
           hasMoreItems={hasMoreItems}
           data={items}
           load={load}
+          setLoad={setLoad}
         />
       </Suspense>
       <WiseWeb

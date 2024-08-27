@@ -49,15 +49,23 @@ const Article = () => {
   const toast = useToast()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { isBoosted } = useSelector(state => state.app)
+  const { articleData } = useSelector(state => state.articles)
+
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { id } = useParams()
 
   const [alt_image, setAlt_image] = useState(null)
-  const [article, setArticle] = useState(null)
-  const [imgURL, setImgURL] = useState('')
+  const [article, setArticle] = useState(articleData)
+  const [imgURL, setImgURL] = useState(
+    Array.isArray(articleData?.imgURL)
+      ? articleData?.imgURL[0]
+      : articleData?.imgURL,
+  )
 
   const [load, setLoad] = useState(true)
-  const [articleLoading, setArticleLoading] = useState(true)
+  const [articleLoading, setArticleLoading] = useState(
+    articleData ? false : true,
+  )
   const [showQuiz, setShowQuiz] = useState(false)
   const [textHeight, setTextHeight] = useState(0)
   const [articleHeight, setArticleHeight] = useState(0)
@@ -70,12 +78,23 @@ const Article = () => {
   const [quizExpired, setQuizExpired] = useState(null)
   const [showExpectedIQ, setShowExpectedIQ] = useState(false)
   const [expectedIQ, setExpectedIQ] = useState(null)
-  const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(null)
-  const [title, setTitle] = useState({ english: '', hindi: '' })
-  const [dateTime, setDateTime] = useState('')
-  const [avgTimeRead, setAvgTimeRead] = useState(0)
-  const [author, setAuthor] = useState({ english: '', hindi: '' })
-  const [mainText, setMainText] = useState({ english: [], hindi: [] })
+  const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(
+    articleData?.quizAttemptCnt,
+  )
+  const [title, setTitle] = useState({
+    english: articleData?.title || '',
+    hindi: articleData?.hindiTitle || '',
+  })
+  const [dateTime, setDateTime] = useState(articleData?.date)
+  const [avgTimeRead, setAvgTimeRead] = useState(articleData?.avgReadTime)
+  const [author, setAuthor] = useState({
+    english: articleData?.author,
+    hindi: articleData?.hindiAuthor,
+  })
+  const [mainText, setMainText] = useState({
+    english: articleData?.mainText,
+    hindi: articleData?.hindiMainText,
+  })
   const [translateLoading, setTranslateLoading] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState('english')
   const [showQuizLangModal, setShowQuizLangModal] = useState(false)
@@ -419,9 +438,9 @@ const Article = () => {
                 content={`${article?.category}, news, current events, ${title[
                   selectedLanguage
                 ]
-                  .toLowerCase()
-                  .split(' ')
-                  .join(', ')}`}
+                  ?.toLowerCase()
+                  ?.split(' ')
+                  ?.join(', ')}`}
               />
               <meta
                 property="og:title"

@@ -7,7 +7,6 @@ import React, {
   Suspense,
 } from 'react'
 import {
-  Box,
   Flex,
   Skeleton,
   useBreakpointValue,
@@ -37,7 +36,7 @@ const GetStarted = React.lazy(() =>
   import('../Header-Footer/navbarComponents/GetStarted'),
 )
 
-const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
+const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated, user } = useSelector(state => state.auth)
@@ -82,6 +81,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   const handleActiveCategory = useCallback(
     ({ category, shouldNavigateOrNot = true }) => {
+      setLoad(true)
       setHasMoreItems(true)
       dispatchRedux(setCategory(category.toLowerCase()))
       dispatchRedux(setPageRedux(0))
@@ -297,7 +297,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
               alignItems={'center'}
               mt={'2rem'}
             >
-              {displayedData.map((item, id) => (
+              {displayedData?.map((item, id) => (
                 <Flex
                   mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
                   key={id}
@@ -306,15 +306,12 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
                   <Suspense fallback={<Skeleton key={id} mt="5rem" />} key={id}>
                     <Card
                       title={item?.title}
-                      image={
-                        Array.isArray(item?.imgURL) && item?.imgURL.length > 0
-                          ? item.imgURL[0]
-                          : rrImage
-                      }
+                      image={item.imgURL || rrImage}
                       category={item?.category}
                       date={formatDate(item?.dateTime)}
                       readTime={item.avgReadTime}
                       id={item._id}
+                      articleData={item}
                     />
                   </Suspense>
                 </Flex>

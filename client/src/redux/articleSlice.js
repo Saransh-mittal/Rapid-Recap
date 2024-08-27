@@ -18,6 +18,7 @@ export const searchArticles = createAsyncThunk(
 const articleSlice = createSlice({
   name: 'articles',
   initialState: {
+    articleData: null,
     searchResults: [],
     isSearching: false,
     error: null,
@@ -29,7 +30,9 @@ const articleSlice = createSlice({
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload
     },
-
+    setArticleData: (state, action) => {
+      state.articleData = action.payload
+    },
     clearSearch: state => {
       state.searchResults = []
       state.isSearching = false
@@ -65,6 +68,7 @@ const articleSlice = createSlice({
   },
 })
 
-export const { clearSearch, setSearchTerm } = articleSlice.actions
+export const { clearSearch, setSearchTerm, setArticleData } =
+  articleSlice.actions
 
 export default articleSlice.reducer
