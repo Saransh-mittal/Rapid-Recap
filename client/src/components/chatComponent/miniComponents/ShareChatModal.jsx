@@ -39,8 +39,15 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const { playClick } = useSound()
 
   useEffect(() => {
-    if (isOpen) fetchChats()
-  }, [notLoggedIn, articleToShare, isOpen])
+    if (isOpen) {
+      const cachedChats = localStorage.getItem(`cachedChats_${user._id}`)
+      if (cachedChats) {
+        setChats(JSON.parse(cachedChats))
+        setLoading(false)
+      }
+      fetchChats()
+    }
+  }, [notLoggedIn, articleToShare, isOpen, user?._id])
 
   const fetchChats = async () => {
     if (notLoggedIn || notLoggedIn === undefined) return
@@ -48,6 +55,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
       const { data } = await axios.get('/api/chat')
       setChats(data)
       setLoading(false)
+      localStorage.setItem(`cachedChats_${user._id}`, JSON.stringify(data))
     } catch (error) {
       toast({
         title: 'Error Occurred!',
