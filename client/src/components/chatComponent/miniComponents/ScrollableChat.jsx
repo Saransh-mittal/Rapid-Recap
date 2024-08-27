@@ -148,7 +148,7 @@ const ScrollableChat = ({
 
   const handleCopy = useCallback(() => {
     playClick()
-    const message = messages.find(m => m._id === contextMenu.messageId)
+    const message = messages?.find(m => m._id === contextMenu.messageId)
     if (message) {
       navigator.clipboard.writeText(message.content)
     }
@@ -174,7 +174,7 @@ const ScrollableChat = ({
 
           const newMessages = await loadMoreMessages(page + 1)
 
-          if (newMessages.length === 0) {
+          if (newMessages?.length === 0) {
             setHasMore(false)
           } else {
             setPage(prevPage => prevPage + 1)
@@ -285,16 +285,16 @@ const ScrollableChat = ({
             onCopy={handleCopy}
             onReact={handleReact}
             isSender={
-              messages.find(m => m._id === contextMenu.messageId)?.sender
+              messages?.find(m => m._id === contextMenu.messageId)?.sender
                 ._id === user._id
             }
             messageTime={
-              messages.find(m => m._id === contextMenu.messageId)?.createdAt
+              messages?.find(m => m._id === contextMenu.messageId)?.createdAt
             }
             isMessageDeleted={
-              messages.find(m => m._id === contextMenu.messageId)?.isDeleted ||
+              messages?.find(m => m._id === contextMenu.messageId)?.isDeleted ||
               isMessageDeletedForUser(
-                messages.find(m => m._id === contextMenu.messageId),
+                messages?.find(m => m._id === contextMenu.messageId),
                 user._id.toString(),
               )
             }

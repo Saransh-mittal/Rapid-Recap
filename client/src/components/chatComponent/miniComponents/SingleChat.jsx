@@ -35,7 +35,9 @@ const DeleteMessageModal = React.lazy(() =>
 const BookmarksModal = React.lazy(() =>
   import('./singleChatsComponents/BookmarksModal'),
 )
-
+const MessageRequestComponent = React.lazy(() =>
+  import('./singleChatsComponents/MessageRequestComponent'),
+)
 import axios from 'axios'
 import { getSender } from '../config/ChatLogics'
 import useMessageHandlers from '../../../customHooks/useMessageHandlers'
@@ -270,10 +272,16 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, [selectedChat?.status, setFetchAgain, fetchAgain, handleClose])
 
   useEffect(() => {
+    // console.log(selectedChat)
+    // console.log(selectedChatCompare.current)
     const shouldFetchMessages = () => {
       if (!selectedChat) return false
-      if (messages.length === 0 && !messagesFetched) return true
-      if (messages.length > 0) {
+      if (
+        (!messages && !messagesFetched) ||
+        selectedChatCompare?.current?._id !== selectedChat?._id
+      )
+        return true
+      if (messages?.length > 0) {
         const firstMessage = messages[0]
         const isTemporaryMessage =
           typeof firstMessage._id === 'string' && firstMessage._id.length > 24
@@ -295,14 +303,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       })
       setMessagesFetched(false)
     }
-  }, [
-    selectedChat,
-    messages,
-    messagesFetched,
-    fetchMessages,
-    socket,
-    user?._id,
-  ])
+  }, [selectedChat, messages, messagesFetched, socket, user?._id])
 
   return (
     <>

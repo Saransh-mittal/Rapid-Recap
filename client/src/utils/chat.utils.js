@@ -78,15 +78,15 @@ export const optimisticSendMessage = (user, selectedChat, newMessage) => {
 }
 
 export const updateMessagesAfterSend = (messages, tempId, data) => {
-  return messages.find(msg => msg._id === data._id)
+  return messages?.find(msg => msg._id === data._id)
     ? messages
-    : messages.map(msg =>
+    : messages?.map(msg =>
         msg._id === tempId ? { ...data, status: 'sent' } : msg,
       )
 }
 
 export const updateMessagesAfterDelete = (messages, messageId, type, user) => {
-  return messages.map(msg =>
+  return messages?.map(msg =>
     msg._id === messageId
       ? type === 'everyone'
         ? { ...msg, isDeleted: true }
@@ -118,13 +118,14 @@ export const handleSocketEvents = (socket, events) => {
 // src/utils/chatUtils.js
 export const groupMessagesByDate = messages => {
   const groups = {}
-  messages.forEach(message => {
-    const date = formatDate(message.createdAt)
-    if (!groups[date]) {
-      groups[date] = []
-    }
-    groups[date].push(message)
-  })
+  messages &&
+    messages?.forEach(message => {
+      const date = formatDate(message.createdAt)
+      if (!groups[date]) {
+        groups[date] = []
+      }
+      groups[date].push(message)
+    })
 
   return groups
 }
@@ -179,7 +180,7 @@ export const checkScrollPosition = ({
 
         const newMessages = await loadMoreMessages(page + 1)
 
-        if (newMessages.length === 0) {
+        if (newMessages?.length === 0) {
           setHasMore(false)
         } else {
           setPage(prevPage => prevPage + 1)
