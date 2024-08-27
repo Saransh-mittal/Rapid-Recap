@@ -14,9 +14,11 @@ const Heading = ({
   tagFontSize,
   tagFontWeight,
   headingWeight = '',
+  marginTop = '0',
 }) => {
   return (
     <Flex
+      marginTop={marginTop}
       maxWidth="50rem"
       marginX="auto"
       marginBottom={marginBottom}
