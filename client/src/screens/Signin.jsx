@@ -40,9 +40,8 @@ import {
 
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 
-import GuestLogin from '../components/authComponents/GuestLogin'
 import { setIsRegisterOpen, setIsSigninOpen } from '../redux/appSlice'
-
+const GuestLogin = lazy(() => import('../components/authComponents/GuestLogin'))
 // const Modal = lazy(() => import('./Modal'))
 const ResetPassword = lazy(() =>
   import('../components/authComponents/ResetPassword'),
@@ -453,9 +452,11 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       OR
                     </Text>
                   </Flex>
-                  <Flex w={'100%'} justifyContent={'center'}>
-                    <GuestLogin hamburgerOnClose={hamburgerOnClose} />
-                  </Flex>
+                  <Suspense fallback={<Spinner />}>
+                    <Flex w={'100%'} justifyContent={'center'}>
+                      <GuestLogin hamburgerOnClose={hamburgerOnClose} />
+                    </Flex>
+                  </Suspense>
                 </>
               ) : (
                 <>

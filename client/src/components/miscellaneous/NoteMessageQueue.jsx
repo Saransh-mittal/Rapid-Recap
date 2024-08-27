@@ -1,14 +1,17 @@
-import React from 'react'
+import React, { useMemo, useCallback, lazy, Suspense } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import NoteMessage from './NoteMessage'
-
-import NoteMessageSummary from './NoteMessageSummary'
 import {
   clearNoteMessageQueue,
   setShowingSummaryForNoteMessages,
 } from '../../redux/appSlice'
 import { v4 as uuidv4 } from 'uuid'
-import XPAwardNoteMessage from './noteMessages/XPAwardNoteMessage'
+
+// Lazy load components
+const NoteMessage = lazy(() => import('./NoteMessage'))
+const NoteMessageSummary = lazy(() => import('./NoteMessageSummary'))
+const XPAwardNoteMessage = lazy(() =>
+  import('./noteMessages/XPAwardNoteMessage'),
+)
 
 const NoteMessageQueue = () => {
   const dispatch = useDispatch()
@@ -17,41 +20,55 @@ const NoteMessageQueue = () => {
     state => state.app.showingSummaryForNoteMessages,
   )
 
-  if (noteMessageQueue.length === 0) {
-    return null
-  }
-
-  if (noteMessageQueue.length > 1 && !showingSummaryForNoteMessages) {
-    const actions = [
+  // Memoize actions array to avoid recreating on each render
+  const actions = useMemo(
+    () => [
       {
         text: 'View All',
         actionType: 'VIEW_ALL',
         colorScheme: 'blue',
       },
-    ]
+    ],
+    [],
+  )
+
+  // Memoize onClose handler to avoid unnecessary re-renders
+  const handleClose = useCallback(() => {
+    dispatch(clearNoteMessageQueue())
+  }, [dispatch])
+
+  const handleSummaryClose = useCallback(() => {
+    dispatch(setShowingSummaryForNoteMessages(false))
+    dispatch(clearNoteMessageQueue())
+  }, [dispatch])
+
+  if (noteMessageQueue.length === 0) {
+    return null
+  }
+
+  if (noteMessageQueue.length > 1 && !showingSummaryForNoteMessages) {
     return (
-      <NoteMessage
-        messageId={uuidv4()}
-        title={`You have ${noteMessageQueue.length} new messages.`}
-        actions={actions}
-        onClose={() => {
-          dispatch(clearNoteMessageQueue())
-        }}
-        duration={null}
-      />
+      <Suspense fallback={null}>
+        <NoteMessage
+          messageId={uuidv4()}
+          title={`You have ${noteMessageQueue.length} new messages.`}
+          actions={actions}
+          onClose={handleClose}
+          duration={null}
+        />
+      </Suspense>
     )
   }
 
   if (showingSummaryForNoteMessages) {
     return (
-      <NoteMessageSummary
-        key="summary-note-message"
-        messages={noteMessageQueue}
-        onClose={() => {
-          dispatch(setShowingSummaryForNoteMessages(false))
-          dispatch(clearNoteMessageQueue())
-        }}
-      />
+      <Suspense fallback={null}>
+        <NoteMessageSummary
+          key="summary-note-message"
+          messages={noteMessageQueue}
+          onClose={handleSummaryClose}
+        />
+      </Suspense>
     )
   }
 
@@ -60,24 +77,29 @@ const NoteMessageQueue = () => {
   switch (message.messageType) {
     case 'xpAward':
       return (
-        <XPAwardNoteMessage
-          messageId={message.id}
-          xpAwarded={message.xpAwarded}
-          title={message.title}
-          duration={message.duration}
-          width={message.width}
-        />
+        <Suspense fallback={null}>
+          <XPAwardNoteMessage
+            messageId={message.id}
+            xpAwarded={message.xpAwarded}
+            title={message.title}
+            duration={message.duration}
+            width={message.width}
+            isMilestone={message.isMilestone}
+          />
+        </Suspense>
       )
     default:
       return (
-        <NoteMessage
-          messageId={message.id}
-          title={message.title}
-          content={message.content}
-          duration={message.duration}
-          width={message.width}
-          actions={message.actions}
-        />
+        <Suspense fallback={null}>
+          <NoteMessage
+            messageId={message.id}
+            title={message.title}
+            content={message.content}
+            duration={message.duration}
+            width={message.width}
+            actions={message.actions}
+          />
+        </Suspense>
       )
   }
 }

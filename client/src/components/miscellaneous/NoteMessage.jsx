@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useCallback, lazy, Suspense } from 'react'
 import {
   Box,
   Heading,
@@ -15,9 +15,11 @@ import {
   setShowingSummaryForNoteMessages,
   setShowXpLevelModal,
 } from '../../redux/appSlice'
-import { createHandleMessageAction } from '../../utils/messageActionHandlers'
-import ButtonFactory from './ButtonFactory'
 import { useNavigate } from 'react-router-dom'
+import { createHandleMessageAction } from '../../utils/messageActionHandlers'
+
+// Lazy load utilities and components
+const ButtonFactory = lazy(() => import('./ButtonFactory'))
 
 const MotionBox = motion(Box)
 
@@ -34,18 +36,28 @@ const NoteMessage = ({
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
-  const handleMessageAction = createHandleMessageAction(dispatch, {
-    setShowingSummaryForNoteMessages,
-    removeNoteMessageWithId,
-    setShowXpLevelModal,
-    setIsNotifDrawerOpen,
-    navigateToProfile: id => navigate(`/profile/${id}`),
-  })
 
-  const handleAction = actionType => {
-    handleMessageAction(actionType, messageId, user?.inGameName)
-    actionType !== 'VIEW_ALL' && handleClose()
-  }
+  // Memoize handleMessageAction to prevent unnecessary re-renders
+  const handleMessageAction = useMemo(
+    () =>
+      createHandleMessageAction(dispatch, {
+        setShowingSummaryForNoteMessages,
+        removeNoteMessageWithId,
+        setShowXpLevelModal,
+        setIsNotifDrawerOpen,
+        navigateToProfile: id => navigate(`/profile/${id}`),
+      }),
+    [dispatch, navigate],
+  )
+
+  // Memoize handleAction to avoid recreating the function on every render
+  const handleAction = useCallback(
+    actionType => {
+      handleMessageAction(actionType, messageId, user?.inGameName)
+      actionType !== 'VIEW_ALL' && handleClose()
+    },
+    [handleMessageAction, messageId, user?.inGameName],
+  )
 
   const { isOpen, onClose: closeDisclosure } = useDisclosure({
     defaultIsOpen: true,
@@ -61,13 +73,13 @@ const NoteMessage = ({
     }
   }, [duration])
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     closeDisclosure()
     setTimeout(() => {
       onClose && onClose()
       dispatch(removeNoteMessageWithId(messageId))
     }, 500)
-  }
+  }, [closeDisclosure, onClose, dispatch, messageId])
 
   return (
     <AnimatePresence>
@@ -115,19 +127,21 @@ const NoteMessage = ({
               {customContent ? customContent : content}
               {actions.length > 0 && (
                 <HStack spacing={2} justify="center" pt={2}>
-                  {actions.map((action, index) => (
-                    <ButtonFactory
-                      key={index}
-                      actionType={action.actionType}
-                      onClick={() => handleAction(action.actionType)}
-                      size="sm"
-                      variant="outline"
-                      colorScheme="blue"
-                      innerText={action.text}
-                    >
-                      {action.text}
-                    </ButtonFactory>
-                  ))}
+                  <Suspense fallback={null}>
+                    {actions.map((action, index) => (
+                      <ButtonFactory
+                        key={index}
+                        actionType={action.actionType}
+                        onClick={() => handleAction(action.actionType)}
+                        size="sm"
+                        variant="outline"
+                        colorScheme="blue"
+                        innerText={action.text}
+                      >
+                        {action.text}
+                      </ButtonFactory>
+                    ))}
+                  </Suspense>
                 </HStack>
               )}
             </VStack>

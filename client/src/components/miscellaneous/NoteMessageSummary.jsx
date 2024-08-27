@@ -1,4 +1,11 @@
-import React from 'react'
+import React, {
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+  useState,
+  useEffect,
+} from 'react'
 import {
   Box,
   VStack,
@@ -19,9 +26,14 @@ import {
 } from '../../redux/appSlice'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useNavigate } from 'react-router-dom'
-import ButtonFactory from './ButtonFactory'
+// import useSound from 'use-sound'
+// import achievementSound from '../../assets/sounds/achievement.mp3'
+// import milestoneSound from '../../assets/sounds/milestone.mp3'
+import Confetti from 'react-confetti'
 
-import TrophySVG from '../../assets/svg/TrophySVG'
+// Lazy load components and assets
+const ButtonFactory = lazy(() => import('./ButtonFactory'))
+const TrophySVG = lazy(() => import('../../assets/svg/TrophySVG'))
 
 const MotionBox = motion(Box)
 
@@ -32,39 +44,86 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   })
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
+  const [showConfetti, setShowConfetti] = useState(false)
+  // const [playAchievement] = useSound(achievementSound, { volume: 0.5 })
+  // const [playMilestone] = useSound(milestoneSound, { volume: 0.5 })
 
-  const handleMessageAction = createHandleMessageAction(dispatch, {
-    setShowingSummaryForNoteMessages,
-    removeNoteMessageWithId,
-    setShowXpLevelModal,
-    setIsNotifDrawerOpen,
-    navigateToProfile: id => navigate(`/profile/${id}`),
-  })
+  // Memoize handleMessageAction to prevent unnecessary re-renders
+  const handleMessageAction = useMemo(
+    () =>
+      createHandleMessageAction(dispatch, {
+        setShowingSummaryForNoteMessages,
+        removeNoteMessageWithId,
+        setShowXpLevelModal,
+        setIsNotifDrawerOpen,
+        navigateToProfile: id => navigate(`/profile/${id}`),
+      }),
+    [dispatch, navigate],
+  )
 
-  const handleDismiss = id => {
-    handleMessageAction('DISMISS', id)
-  }
+  // Memoize handleDismiss and handleAction to avoid recreating the functions on every render
+  const handleDismiss = useCallback(
+    id => {
+      handleMessageAction('DISMISS', id)
+    },
+    [handleMessageAction],
+  )
 
-  const handleClose = () => {
+  const handleAction = useCallback(
+    (actionType, messageId) => {
+      handleMessageAction(actionType, messageId, user?.inGameName)
+    },
+    [handleMessageAction, user?.inGameName],
+  )
+
+  const handleClose = useCallback(() => {
     closeDisclosure()
     setTimeout(onClose, 500) // Delay to allow for exit animation
-  }
+  }, [closeDisclosure, onClose])
 
-  const handleAction = (actionType, messageId) => {
-    handleMessageAction(actionType, messageId, user?.inGameName)
-  }
+  useEffect(() => {
+    const hasMilestone = messages.some(message => message.isMilestone)
+    if (hasMilestone) {
+      setShowConfetti(true)
+      // playMilestone()
+      setTimeout(() => setShowConfetti(false), 5000) // Run confetti for 5 seconds
+    } else if (messages.some(message => message.messageType === 'xpAward')) {
+      // playAchievement()
+    }
+  }, [
+    messages,
+    // playMilestone,
+    // playAchievement
+  ])
 
-  const renderMessageContent = message => {
+  const renderMessageContent = useCallback(message => {
     switch (message.messageType) {
       case 'xpAward':
         return (
-          <HStack spacing={3}>
-            <TrophySVG height={'40px'} width={'40px'} />
-            <VStack align="start" spacing={0}>
-              <Text fontWeight="bold">{message.title}</Text>
-              <Text color="green.400">{message.xpAwarded} XP earned</Text>
-            </VStack>
-          </HStack>
+          <Suspense fallback={null}>
+            <HStack spacing={3}>
+              <Box
+                bg={message.isMilestone ? 'yellow.500' : 'yellow.400'}
+                borderRadius="full"
+                p={2}
+                boxShadow={
+                  message.isMilestone
+                    ? '0 0 20px rgba(255, 255, 0, 0.5)'
+                    : '0 0 15px rgba(255, 255, 0, 0.3)'
+                }
+              >
+                <TrophySVG height={'40px'} width={'40px'} />
+              </Box>
+              <VStack align="start" spacing={0}>
+                <Text fontWeight="bold">
+                  {message.isMilestone ? 'Milestone Achieved!' : message.title}
+                </Text>
+                <Text color={message.isMilestone ? 'purple.400' : 'green.400'}>
+                  {message.xpAwarded} XP earned
+                </Text>
+              </VStack>
+            </HStack>
+          </Suspense>
         )
       default:
         return (
@@ -74,7 +133,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
           </>
         )
     }
-  }
+  }, [])
 
   return (
     <AnimatePresence>
@@ -90,6 +149,15 @@ const NoteMessageSummary = ({ messages, onClose }) => {
           transition={{ type: 'spring', stiffness: 100, damping: 15 }}
           zIndex={1001}
         >
+          {showConfetti && (
+            <Confetti
+              width={window.innerWidth}
+              height={window.innerHeight}
+              recycle={false}
+              numberOfPieces={200}
+              gravity={0.2}
+            />
+          )}
           <Box
             bg="gray.800"
             color="gray.100"
@@ -123,20 +191,22 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                 <Box key={index} bg="gray.700" p={3} borderRadius="md">
                   {renderMessageContent(message)}
                   <HStack mt={2} spacing={2}>
-                    {message.actions &&
-                      message.actions.map((action, actionIndex) => (
-                        <ButtonFactory
-                          key={actionIndex}
-                          actionType={action.actionType}
-                          onClick={() =>
-                            handleAction(action.actionType, message.id)
-                          }
-                          size="sm"
-                          innerText={action.text}
-                        >
-                          {!action.actionType === 'SIGN_IN' && action.text}
-                        </ButtonFactory>
-                      ))}
+                    <Suspense fallback={null}>
+                      {message.actions &&
+                        message.actions.map((action, actionIndex) => (
+                          <ButtonFactory
+                            key={actionIndex}
+                            actionType={action.actionType}
+                            onClick={() =>
+                              handleAction(action.actionType, message.id)
+                            }
+                            size="sm"
+                            innerText={action.text}
+                          >
+                            {!action.actionType === 'SIGN_IN' && action.text}
+                          </ButtonFactory>
+                        ))}
+                    </Suspense>
                     <Button size="sm" onClick={() => handleDismiss(message.id)}>
                       Dismiss
                     </Button>

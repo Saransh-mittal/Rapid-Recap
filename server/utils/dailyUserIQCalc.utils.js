@@ -83,6 +83,7 @@ const handleSocietyOrCircleUpgrade = async (
               userIQ: currIQScore || user.IQ_score,
               previousIQ: previousIQForXp || user.prevIQScore,
             }),
+            isMilestone: true,
             actions: [{ actionType: 'VIEW_EXPERIENCE' }],
           })
           await noteMessage.save()
