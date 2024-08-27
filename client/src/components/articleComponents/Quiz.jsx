@@ -19,7 +19,7 @@ import {
   dailyStreakCheckerAndUpdater,
   quinBoostChecker,
 } from '../../utils/quiz.utils'
-import { addNoteMessage } from '../../redux/appSlice'
+import { addNoteMessage, fetchUnreadNoteMessages } from '../../redux/appSlice'
 import { setUser } from '../../redux/authSlice'
 
 // Lazy load components
@@ -168,6 +168,8 @@ const Quiz = ({
         setQuizLeftToGetQuizBoost,
       })
       dailyStreakCheckerAndUpdater(dispatchRedux)
+      setTimeout(() => dispatchRedux(fetchUnreadNoteMessages()), 7000)
+
       if (
         !submitted &&
         currentQuestionIndex < totalQuestions &&
@@ -180,7 +182,15 @@ const Quiz = ({
       } else {
         ofShowQuiz()
         onClose()
-        dispatchRedux(setUser({ ...user, xp: user.xp + 5 }))
+        dispatchRedux(
+          setUser({
+            ...user,
+            xp: user.xp + 5,
+            todaysQuizCnt: user.todaysQuizCnt + 1,
+            revivalPeriodEnd:
+              user.todaysQuizCnt + 1 === 6 ? null : user.revivalPeriodEnd,
+          }),
+        )
         dispatchRedux(
           addNoteMessage({
             messageType: 'xpAward',
@@ -190,6 +200,24 @@ const Quiz = ({
             width: '250px',
           }),
         )
+        user.revivalPeriodEnd &&
+          user.todaysQuizCnt + 1 < 6 &&
+          setTimeout(
+            () =>
+              dispatchRedux(
+                addNoteMessage({
+                  messageType: 'streak',
+                  streakStatus: 'revival',
+                  streakCount: user?.streakBeforeBreak,
+                  remainingTime:
+                    user.revivalPeriodEnd.getTime() - new Date().getTime(),
+                  remainingQuizzes: 6 - user.todaysQuizCnt + 1,
+                  title: 'Revive your streak!',
+                  width: '300px',
+                }),
+              ),
+            14000,
+          )
       }
     } catch (error) {
       console.log(error)

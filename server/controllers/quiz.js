@@ -20,6 +20,7 @@ const {
   abortSession,
 } = require('../db/session.js')
 const { getTopThreeRecommendedArticles } = require('../utils/article.utils.js')
+const NoteMessage = require('../model/noteMessageSchema.js')
 
 // @desc Save the quiz attempt
 // @route POST /api/quiz/saveAttempt
@@ -128,6 +129,20 @@ const saveAttempt = async (req, res) => {
         // console.log(article._id);
         qBoost.article = article._id
         await qBoost.save({ session })
+        if (user.revivalPeriodEnd) {
+          user.streak = user.streakBeforeBreak
+          user.streakBeforeBreak = 0
+          user.revivalPeriodEnd = null
+          await user.save({ session })
+        }
+        const noteMessage = new NoteMessage({
+          userId: user._id,
+          title: 'Congratulations! Your Strek is Revived!',
+          messageType: 'streak',
+          streakStatus: 'revived',
+          streakCount: user.streak + 1,
+        })
+        await noteMessage.save({ session })
       }
     }
     const articleDifficulty = quiz.overAllDifficulty
@@ -178,6 +193,7 @@ const saveAttempt = async (req, res) => {
     else user.hardQuizCount++
 
     user.rankedInCurrentSeason = true
+    user.todaysQuizCnt++
     await user.save({ session })
     await commitSession()
     await logActivity({

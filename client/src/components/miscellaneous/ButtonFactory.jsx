@@ -89,11 +89,7 @@ const ButtonFactory = ({ actionType, onClick, innerText, ...props }) => {
         </ChakraButton>
       )
     default:
-      return (
-        <ChakraButton onClick={onClick} {...props}>
-          Default
-        </ChakraButton>
-      )
+      return null
   }
 }
 

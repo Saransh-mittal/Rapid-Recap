@@ -153,6 +153,24 @@ export const appSlice = createSlice({
       })
       .addCase(fetchDailyStreak.fulfilled, (state, action) => {
         state.streak = action.payload.streak
+        action.payload?.pastStreak &&
+          state.noteMessageQueue.push({
+            messageType: 'streak',
+            streakStatus: 'broken',
+            streakCount: action.payload.pastStreak,
+            title: 'Oh no! Your streak has ended',
+            width: '300px',
+          })
+        action.payload?.isRevivalPeriod &&
+          state.noteMessageQueue.push({
+            messageType: 'streak',
+            streakStatus: 'revival',
+            streakCount: action.payload?.streakBeforeBreak,
+            remainingTime: action.payload?.remainingTimeBeforeRevival, // 1 hour in seconds
+            remainingQuizzes: 6 - action.payload?.todaysQuizAttemptsCount,
+            title: 'Revive your streak!',
+            width: '300px',
+          })
         state.longestStreak = action.payload.longestStreak
         state.isBoosted = action.payload.isBoosted
         state.streakLoading = false

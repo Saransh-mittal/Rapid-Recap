@@ -148,6 +148,18 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    todaysQuizCnt: {
+      type: Number,
+      default: 0,
+    },
+    streakBeforeBreak: {
+      type: Number,
+      default: 0,
+    },
+    revivalPeriodEnd: {
+      type: Date,
+      default: null,
+    },
     avgRQM: {
       type: Number,
       default: 0,
