@@ -20,6 +20,7 @@ const {
   abortSession,
 } = require('../db/session.js')
 const { getTopThreeRecommendedArticles } = require('../utils/article.utils.js')
+const NoteMessage = require('../model/noteMessageSchema.js')
 
 // @desc Save the quiz attempt
 // @route POST /api/quiz/saveAttempt
@@ -117,6 +118,7 @@ const saveAttempt = async (req, res) => {
       RQM_score = Math.ceil(RQM_score * 1.5)
       boosted = true
     }
+    let quinBoostUtilized = false
     if (!user.todayBoost && user.quinBoosts.length > 0) {
       const quinBoost = user.quinBoosts[user.quinBoosts.length - 1]
       if (quinBoost.boosted) {
@@ -128,6 +130,13 @@ const saveAttempt = async (req, res) => {
         // console.log(article._id);
         qBoost.article = article._id
         await qBoost.save({ session })
+        if (user.revivalPeriodEnd) {
+          user.streak = user.streakBeforeBreak
+          user.streakBeforeBreak = 0
+          user.revivalPeriodEnd = null
+          await user.save({ session })
+        }
+        quinBoostUtilized = true
       }
     }
     const articleDifficulty = quiz.overAllDifficulty
@@ -178,12 +187,19 @@ const saveAttempt = async (req, res) => {
     else user.hardQuizCount++
 
     user.rankedInCurrentSeason = true
+    user.todaysQuizCnt++
     await user.save({ session })
     await commitSession()
-    await logActivity({
+    const xpAwarded = await logActivity({
       userInGameName: user.inGameName,
       type: activityTypes.RANDOM_QUIZ.type,
+      consecutiveQuizCount: todayAttemptsCount,
     })
+    if (quinBoostUtilized)
+      await logActivity({
+        userInGameName: user.inGameName,
+        type: activityTypes.QUINBOOST_UTILIZED.type,
+      })
     const quizzesToday = await currDayStreakCalulator(user._id)
     const articlesForMail = await getTopThreeRecommendedArticles(
       user._id.toString(),
@@ -282,6 +298,8 @@ const saveAttempt = async (req, res) => {
       timeTaken,
       score: scoreString,
       pastRQMs,
+      xpAwarded,
+      quinBoostUtilized,
     })
   } catch (error) {
     await abortSession(session)

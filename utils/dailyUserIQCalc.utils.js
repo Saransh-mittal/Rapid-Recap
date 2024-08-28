@@ -83,6 +83,7 @@ const handleSocietyOrCircleUpgrade = async (
               userIQ: currIQScore || user.IQ_score,
               previousIQ: previousIQForXp || user.prevIQScore,
             }),
+            xpSource: 'Society/Circle Upgrade',
             isMilestone: true,
             actions: [{ actionType: 'VIEW_EXPERIENCE' }],
           })

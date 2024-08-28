@@ -103,6 +103,7 @@ const acceptRequest = asyncHandler(async (req, res) => {
       xpAwarded: getXpForActivity({
         activityType: 'Wise Web expansion',
       }),
+      xpSource: 'Wise Web expansion',
       actions: [{ actionType: 'VIEW_EXPERIENCE' }],
     })
     await noteMessageForSender.save()
@@ -119,6 +120,7 @@ const acceptRequest = asyncHandler(async (req, res) => {
       xpAwarded: getXpForActivity({
         activityType: 'Wise Web expansion',
       }),
+      xpSource: 'Wise Web expansion',
       actions: [{ actionType: 'VIEW_EXPERIENCE' }],
     })
     await noteMessageForReceiver.save()

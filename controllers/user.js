@@ -16,6 +16,7 @@ const {
   longestStreakCalculator,
   currDayStreakCalulator,
   makeFirstLoginFalse,
+  getTheRevivalEndDay,
 } = require('../utils/user.utils')
 const dailyUserIQCalc = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
@@ -436,6 +437,9 @@ const calculateUserIQScores = async (req, res) => {
   }
 }
 
+// @desc  Get leaderboard for the current season
+// @route GET /api/user/leaderboard
+// @access Public
 const leaderBoard = async (req, res) => {
   const currUserId = req.user ? req.user._id : null
   const { society, page = 1, limit = 10 } = req.query
@@ -547,6 +551,16 @@ const leaderBoard = async (req, res) => {
       })
 
     const [users, currUser] = await Promise.all([usersPromise, currUserPromise])
+
+    // Update ranks for users on the current page
+    const bulkOps = users.map((user, index) => ({
+      updateOne: {
+        filter: { _id: user._id },
+        update: { $set: { rank: skipNumber + index + 1 } },
+      },
+    }))
+
+    await User.bulkWrite(bulkOps)
 
     const result = users.map(user => {
       const {
@@ -1119,14 +1133,48 @@ const streakChecker = async (req, res) => {
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0) // Set time to start of the day
     const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
-
+    const pastStreak = user.streak
+    let isRevivalPeriod = false
+    let streakBeforeBreak = 0
+    let remainingTimeBeforeRevival = null
+    if (user.revivalPeriodEnd && today > user.revivalPeriodEnd) {
+      // Revival period ended without success
+      user.revivalPeriodEnd = null
+    }
+    if (user.streakExpiry.getTime() < tomorrow.getTime()) {
+      user.todaysQuizCnt = 0
+    }
     if (today.getTime() > user.streakExpiry.getTime()) {
+      if (user.streak >= 5 && user.revivalPeriodEnd === null) {
+        user.streakBeforeBreak = user.streak
+        streakBeforeBreak = user.streak
+        user.revivalPeriodEnd = getTheRevivalEndDay(
+          user.streak,
+          user.streakExpiry,
+        )
+        isRevivalPeriod = true
+        remainingTimeBeforeRevival =
+          user.revivalPeriodEnd.getTime() - today.getTime()
+      }
       // Reset streak
       user.streak = 0
       user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000)
       user.todayBoost = false
       await user.save()
-      return res.status(200).json({ streak: 0 })
+      return res.status(200).json({
+        streak: 0,
+        pastStreak,
+        isRevivalPeriod,
+        streakBeforeBreak,
+        remainingTimeBeforeRevival,
+        todaysQuizAttemptsCount: 0,
+      })
+    }
+
+    if (user.revivalPeriodEnd) {
+      remainingTimeBeforeRevival =
+        user.revivalPeriodEnd.getTime() - new Date().getTime()
+      isRevivalPeriod = true
     }
     const isBoosted =
       user.streak > 0 &&
@@ -1142,6 +1190,10 @@ const streakChecker = async (req, res) => {
       streak: user.streak,
       longestStreak: user.longestStreak,
       isBoosted,
+      isRevivalPeriod,
+      streakBeforeBreak,
+      remainingTimeBeforeRevival,
+      todaysQuizAttemptsCount: user.todaysQuizCnt,
     })
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' })

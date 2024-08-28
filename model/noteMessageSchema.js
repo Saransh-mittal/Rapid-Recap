@@ -15,6 +15,12 @@ const noteMessageSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  milestoneName: {
+    type: String,
+  },
+  xpSource: {
+    type: String,
+  },
   actions: [
     {
       actionType: { type: String },
@@ -23,8 +29,17 @@ const noteMessageSchema = new mongoose.Schema({
   ],
   messageType: {
     type: String,
-    enum: ['default', 'xpAward', 'inbox'],
+    enum: ['default', 'xpAward', 'inbox', 'streak'],
     default: 'default',
+  },
+  streakStatus: {
+    type: String,
+    enum: ['broken', 'revival', 'revived', 'default'],
+    default: 'default',
+  },
+  streakCount: {
+    type: Number,
+    default: 0,
   },
   xpAwarded: {
     type: Number,
@@ -37,7 +52,7 @@ const noteMessageSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 24 * 60 * 60, // set expiry time to 1 day
+    expires: 7 * 24 * 60 * 60, // set expiry time to 7 days
   },
 })
 
