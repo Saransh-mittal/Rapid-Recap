@@ -5,6 +5,7 @@ import ButtonGradient from '../../assets/svg/ButtonGradient'
 import { LockIcon } from '@chakra-ui/icons'
 import ShareSVG from '../../assets/svg/ShareSVG'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 const ShareButton = ({
   onClick,
@@ -13,10 +14,11 @@ const ShareButton = ({
   setShowNote,
   user,
 }) => {
+  const { t } = useTranslation('ShareButton')
   return (
     <Flex position={'relative'}>
       {isDisabled && (
-        <Tooltip label="Please log in to share" placement="top">
+        <Tooltip label={t('loginToShare')} placement="top">
           <LockIcon
             position="absolute"
             top="50%"
@@ -44,7 +46,7 @@ const ShareButton = ({
           buttonW="7rem"
           textColor={'white'}
         >
-          Share
+          {t('share')}
           <Icon as={ShareSVG} />
         </Button>
         <ButtonGradient />

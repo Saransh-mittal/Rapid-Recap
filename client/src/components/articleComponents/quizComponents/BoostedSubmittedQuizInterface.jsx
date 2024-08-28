@@ -1,8 +1,9 @@
-import React from "react";
-import { Text, SlideFade, Heading, Image, Flex } from "@chakra-ui/react";
-import rocket from "/images/rocket.webp";
-import Button from "../../miscellaneous/ButtonComponent";
-import ButtonGradient from "../../../assets/svg/ButtonGradient";
+import React from 'react'
+import { Text, SlideFade, Heading, Image, Flex } from '@chakra-ui/react'
+import rocket from '/images/rocket.webp'
+import Button from '../../miscellaneous/ButtonComponent'
+import ButtonGradient from '../../../assets/svg/ButtonGradient'
+import { useTranslation } from 'react-i18next'
 
 const BoostedSubmittedQuizInterface = ({
   score,
@@ -11,16 +12,17 @@ const BoostedSubmittedQuizInterface = ({
   onViewReport,
 }) => {
   // Added onViewReport prop
+  const { t } = useTranslation('BoostedSubmittedQuizInterface')
   const rocketStyle = {
-    position: "relative",
-    bottom: "-500%",
-    animation: "animate-rocket 2s ease forwards, animate 0.2s ease infinite",
-  };
+    position: 'relative',
+    bottom: '-500%',
+    animation: 'animate-rocket 2s ease forwards, animate 0.2s ease infinite',
+  }
   const scoreStyle = {
-    position: "relative",
-    bottom: "-500%",
-    animation: "animate-rocket 2s ease forwards",
-  };
+    position: 'relative',
+    bottom: '-500%',
+    animation: 'animate-rocket 2s ease forwards',
+  }
 
   return (
     <SlideFade
@@ -30,28 +32,28 @@ const BoostedSubmittedQuizInterface = ({
       style={{ zIndex: 10 }}
     >
       <Flex
-        position={"relative"}
-        flexDirection={"column"}
-        w={"100%"}
-        height={"100%"}
-        justifyContent={"center"}
-        alignItems={"center"}
-        color={"white"}
+        position={'relative'}
+        flexDirection={'column'}
+        w={'100%'}
+        height={'100%'}
+        justifyContent={'center'}
+        alignItems={'center'}
+        color={'white'}
         css={`
           @property --angle {
-            syntax: "<angle>";
+            syntax: '<angle>';
             initial-value: 90deg;
             inherits: true;
           }
 
           @property --gradX {
-            syntax: "<percentage>";
+            syntax: '<percentage>';
             initial-value: 50%;
             inherits: true;
           }
 
           @property --gradY {
-            syntax: "<percentage>";
+            syntax: '<percentage>';
             initial-value: 0%;
             inherits: true;
           }
@@ -94,147 +96,143 @@ const BoostedSubmittedQuizInterface = ({
           textAlign="center"
           marginBottom="1rem"
         >
-          Quiz completed. Thank you for participating!
+          {t('quizCompletedMessage')}
         </Heading>
 
-        <Flex flexDirection={"row-reverse"}>
+        <Flex flexDirection={'row-reverse'}>
           <Flex
-            justifyContent={"center"}
-            alignItems={"center"}
-            w={"100%"}
-            height={"120px"}
-            backgroundColor={"transparent"}
+            justifyContent={'center'}
+            alignItems={'center'}
+            w={'100%'}
+            height={'120px'}
+            backgroundColor={'transparent'}
             marginTop="20"
           >
-            <Flex flexDirection={"column"} style={scoreStyle}>
+            <Flex flexDirection={'column'} style={scoreStyle}>
               <Heading
-                as={"h4"}
+                as={'h4'}
                 fontSize="4xl"
                 textAlign="center"
                 fontFamily={`"Honk", system-ui`}
                 p={0}
               >
-                Rapid Quiz Mastery score
+                {t('rapidQuizMasteryScore')}
               </Heading>
-              <Flex w={"100%"}>
+              <Flex w={'100%'}>
                 <Flex
-                  w={"100%"}
-                  justifyContent={"center"}
-                  flexDirection={"column"}
+                  w={'100%'}
+                  justifyContent={'center'}
+                  flexDirection={'column'}
                   fontSize="3vw"
                   margin="max(1rem, 3vw)"
                   border="0.35rem solid"
                   paddingX="2vw"
-                  paddingTop={"1vw"}
+                  paddingTop={'1vw'}
                   borderRadius="1rem"
                   style={{
                     borderImage:
-                      "conic-gradient(from var(--angle), var(--c2), var(--c1) 0.1turn, var(--c1) 0.15turn, var(--c2) 0.25turn) 30",
+                      'conic-gradient(from var(--angle), var(--c2), var(--c1) 0.1turn, var(--c1) 0.15turn, var(--c2) 0.25turn) 30',
                   }}
                   animation="borderRotate var(--d) linear infinite forwards"
                 >
                   {submitLoad ? (
-                    <Heading>Calculating...</Heading>
+                    <Heading>{t('calculating')}</Heading>
                   ) : (
                     <Heading>{score}</Heading>
                   )}
                   <Text
-                    fontSize={"1rem"}
-                    color={"yellow"}
+                    fontSize={'1rem'}
+                    color={'yellow'}
                     backgroundColor="rgba(255,255,255,0.1)"
                     textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
-                    padding={"2px"}
-                    marginTop={"auto"}
-                    marginBottom={"0.5rem"}
+                    padding={'2px'}
+                    marginTop={'auto'}
+                    marginBottom={'0.5rem'}
                   >
-                    {score !== 0
-                      ? "1.5x Boosted"
-                      : `"Don't give up! Keep going!"`}
+                    {score !== 0 ? t('boostedText') : t('dontGiveUp')}
                   </Text>
                 </Flex>
               </Flex>
             </Flex>
           </Flex>
           <Flex
-            justifyContent={"center"}
-            alignItems={"center"}
-            width={"120px"}
-            height={"120px"}
-            borderRadius={"50%"}
-            backgroundColor={"transparent"}
+            justifyContent={'center'}
+            alignItems={'center'}
+            width={'120px'}
+            height={'120px'}
+            borderRadius={'50%'}
+            backgroundColor={'transparent'}
           >
             <Flex
               style={rocketStyle}
               _before={{
                 content: `""`,
-                position: "absolute",
-                left: "50%",
-                bottom: "-100px",
-                transform: "translateX(-50%)",
-                width: "10px",
-                height: "100px",
-                background: "linear-gradient(#00d0ff,transparent)",
+                position: 'absolute',
+                left: '50%',
+                bottom: '-100px',
+                transform: 'translateX(-50%)',
+                width: '10px',
+                height: '100px',
+                background: 'linear-gradient(#00d0ff,transparent)',
               }}
               _after={{
                 content: `""`,
-                position: "absolute",
-                left: "50%",
-                bottom: "-100px",
-                transform: "translateX(-50%)",
-                width: "10px",
-                height: "100px",
-                background: "linear-gradient(#00d0ff,transparent)",
-                filter: "blur(20px)",
+                position: 'absolute',
+                left: '50%',
+                bottom: '-100px',
+                transform: 'translateX(-50%)',
+                width: '10px',
+                height: '100px',
+                background: 'linear-gradient(#00d0ff,transparent)',
+                filter: 'blur(20px)',
               }}
             >
-              <Image src={rocket} h={"50px"} w={"35px"} background={"none"} />
+              <Image src={rocket} h={'50px'} w={'35px'} background={'none'} />
             </Flex>
           </Flex>
         </Flex>
         {score === 0 ? (
           <Text
-            w={"75%"}
-            textAlign={"left"}
-            color={"#FFFFFF"}
+            w={'75%'}
+            textAlign={'left'}
+            color={'#FFFFFF'}
             p={0}
             m={0}
-            fontWeight={"bold"}
-            fontStyle={"italic"}
-            fontSize={"1rem"}
-            borderLeft={"5px solid #CCCCCC"}
-            paddingLeft={"10px"}
-            marginTop={"4rem"}
+            fontWeight={'bold'}
+            fontStyle={'italic'}
+            fontSize={'1rem'}
+            borderLeft={'5px solid #CCCCCC'}
+            paddingLeft={'10px'}
+            marginTop={'4rem'}
           >
-            "Don't worry! You still have boosts remaining, so keep practicing
-            improvement is just around the corner!"
+            {t('noWorryMessage')}
           </Text>
         ) : (
           <Text
-            w={"75%"}
-            textAlign={"left"}
-            color={"#FFFFFF"}
+            w={'75%'}
+            textAlign={'left'}
+            color={'#FFFFFF'}
             p={0}
             m={0}
-            fontWeight={"bold"}
-            fontStyle={"italic"}
-            fontSize={"1rem"}
-            borderLeft={"5px solid #CCCCCC"}
-            paddingLeft={"10px"}
-            marginTop={"4rem"}
+            fontWeight={'bold'}
+            fontStyle={'italic'}
+            fontSize={'1rem'}
+            borderLeft={'5px solid #CCCCCC'}
+            paddingLeft={'10px'}
+            marginTop={'4rem'}
           >
-            "Congratulations on your progress! Keep up the great work and make
-            the most of your boosts for even better scores before they expire!"
+            {t('congratulationMessage')}
           </Text>
         )}
         <Flex mt={4}>
           <ButtonGradient />
           <Button colorScheme="blue" onClick={onViewReport}>
-            View Report
+            {t('viewReport')}
           </Button>
         </Flex>
       </Flex>
     </SlideFade>
-  );
-};
+  )
+}
 
-export default BoostedSubmittedQuizInterface;
+export default BoostedSubmittedQuizInterface

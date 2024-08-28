@@ -6,7 +6,30 @@ import HttpBackend from 'i18next-http-backend'
 const namespaces = {
   screens: ['Contact', 'Home', 'LeaderBoard', 'Profile', 'Register', 'Signin'],
   categories: ['categories'],
-  articleComponents: [],
+  articleComponents: [
+    'ArticleHeader',
+    'AuthorInfo',
+    'BoostSection',
+    'BoostedSubmittedQuizInterface',
+    'ConfirmationModal',
+    'ExpectedIQModal',
+    'GivenQuiz',
+    'GivenQuizInterface',
+    'InstructionModal',
+    'ModalComponent',
+    'QuinBoost',
+    'QuinBoostModal',
+    'Quiz',
+    'QuizExpired',
+    'QuizGivenSummary',
+    'QuizInterface',
+    'RelatedArticlesToggle',
+    'ShareButton',
+    'Sidebar',
+    'SubmittedQuizInterface',
+    'TakeQuizButton',
+    'TotalUserAttempted',
+  ],
   authComponents: [],
   homeComponents: [],
   leaderBoardComponents: [],
@@ -24,7 +47,7 @@ i18n
         const category = Object.keys(namespaces).find(key =>
           namespaces[key].includes(namespace),
         )
-        console.log(lng, namespace, category)
+
         switch (category) {
           case 'screens':
             return `/locales/${lng}/screens/${namespace}.json`

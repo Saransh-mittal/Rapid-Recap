@@ -1,0 +1,9 @@
+{
+  "fetchErrorTitle": "लेख विवरण लाने में त्रुटि",
+  "updateSuccessTitle": "लेख सफलतापूर्वक अपडेट किया गया",
+  "updateErrorTitle": "लेख अपडेट करने में त्रुटि",
+  "loginRequiredTitle": "लॉगिन आवश्यक",
+  "loginRequiredDescription": "कृपया इस लेख को साझा करने के लिए लॉगिन करें।",
+  "timeToRead": "मिनट पढ़ें",
+  "noteMessageTitle": "अपना IQ स्कोर देखने और वाइज़ वेब को बढ़ाने के लिए रजिस्टर करें"
+}

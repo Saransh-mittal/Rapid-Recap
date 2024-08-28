@@ -28,6 +28,7 @@ import axios from 'axios'
 import { formatDate } from '../../utils/helper.utils'
 import slugify from 'slugify'
 import { setIsSigninOpen } from '../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
 
 const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
 const QuizExpired = React.lazy(() => import('./QuizExpired'))
@@ -52,6 +53,7 @@ const Sidebar = ({
   isQuizGivenLoading,
   i18n,
 }) => {
+  const { t } = useTranslation('Sidebar')
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
   const { playClick } = useSound()
@@ -76,8 +78,8 @@ const Sidebar = ({
     playClick()
     if (notLoggedIn) {
       toast({
-        title: 'Login Required',
-        description: 'Please log in to share this article.',
+        title: t('loginRequired'),
+        description: t('loginToShare'),
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -102,8 +104,8 @@ const Sidebar = ({
       if (notLoggedIn) {
         e.preventDefault()
         toast({
-          title: 'Login Required',
-          description: 'Please log in to share this article.',
+          title: t('loginRequired'),
+          description: t('loginToShare'),
           status: 'warning',
           duration: 3000,
           isClosable: true,
@@ -208,7 +210,7 @@ const Sidebar = ({
             color="#9CAFAA"
             letterSpacing="1px"
           >
-            {item.avgReadTime || 'N/A'} MIN READ
+            {item.avgReadTime || 'N/A'} {t('minRead')}
           </Text>
         </Flex>
         <Flex mr={3} mb={2} alignItems={'center'}>
@@ -219,7 +221,7 @@ const Sidebar = ({
             mt={2}
             float="left"
             src={item.imgURL || Alt_img}
-            alt="Article img"
+            alt={t('articleImageAlt')}
             onError={e => {
               e.target.onerror = null
               e.target.src = Alt_img
@@ -260,7 +262,7 @@ const Sidebar = ({
               height={'100px'}
               color={'red'}
             >
-              Quiz is Already going on in some other tab or device
+              {t('quizAlreadyOngoing')}
             </Heading>
           ) : quizExpired ? (
             <QuizExpired />
@@ -286,7 +288,7 @@ const Sidebar = ({
                 )}
               </Box>
               {notLoggedIn && (
-                <Tooltip label="Please log in to give quiz" placement="top">
+                <Tooltip label={t('loginToGiveQuiz')} placement="top">
                   <LockIcon
                     position="absolute"
                     top="50%"
@@ -340,12 +342,12 @@ const Sidebar = ({
                 }
                 mt={4}
               >
-                Load More
+                {t('loadMore')}
               </Button>
             </Flex>
           )}
           {notLoggedIn && (
-            <Tooltip label="Please log in to navigate" placement="top">
+            <Tooltip label={t('loginToNavigate')} placement="top">
               <LockIcon
                 position="absolute"
                 top="50%"

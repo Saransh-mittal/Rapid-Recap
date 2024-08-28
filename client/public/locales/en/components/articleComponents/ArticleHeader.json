@@ -1,0 +1,9 @@
+{
+  "fetchErrorTitle": "Error fetching article details",
+  "updateSuccessTitle": "Article updated successfully",
+  "updateErrorTitle": "Error updating article",
+  "loginRequiredTitle": "Login Required",
+  "loginRequiredDescription": "Please log in to share this article.",
+  "timeToRead": "min read",
+  "noteMessageTitle": "Register to see your IQ score and grow Wise Web"
+}

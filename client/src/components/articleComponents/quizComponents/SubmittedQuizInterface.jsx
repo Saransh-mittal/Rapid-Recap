@@ -33,6 +33,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components and assets
 const Line = lazy(() =>
@@ -86,30 +87,30 @@ const theme = extendTheme({
   },
 })
 
-const getReviewText = (field, value) => {
+const getReviewText = (field, value, t) => {
   const reviews = {
     score: {
-      0: 'Needs improvement',
-      20: 'Below average',
-      40: 'Average',
-      60: 'Good job',
-      80: 'Great work',
-      100: 'Excellent',
+      0: t('needsImprovement'),
+      20: t('belowAverage'),
+      40: t('average'),
+      60: t('goodJob'),
+      80: t('greatWork'),
+      100: t('excellent'),
     },
     timeTaken: {
-      slow: 'Too slow',
-      average: 'Decent speed',
-      fast: 'Very quick',
+      slow: t('tooSlow'),
+      average: t('decentSpeed'),
+      fast: t('veryQuick'),
     },
     difficulty: {
-      Easy: 'Keep practicing!',
-      Medium: 'Well done!',
-      Hard: 'Impressive!',
+      Easy: t('keepPracticing'),
+      Medium: t('wellDone'),
+      Hard: t('impressive'),
     },
     rqmscore: {
-      low: 'Try harder',
-      medium: 'Good effort',
-      high: 'Outstanding',
+      low: t('keepGoing'),
+      medium: t('tryHarder'),
+      high: t('outstanding'),
     },
   }
 
@@ -132,7 +133,7 @@ const getReviewText = (field, value) => {
   }
 
   if (field === 'difficulty') {
-    return reviews.difficulty[value] || 'Keep going!'
+    return reviews.difficulty[value] || ''
   }
 
   if (field === 'rqmscore') {
@@ -147,9 +148,11 @@ const SubmittedQuizInterface = ({
   result,
   onViewReport,
 }) => {
+  const { t } = useTranslation('SubmittedQuizInterface')
   const [scoreArr, setScoreArr] = useState([0, 1])
   const [quizData, setQuizData] = useState([])
   const [labels, setLabels] = useState([])
+  const quizNum = t('quiz')
 
   useEffect(() => {
     if (result?.score && result?.score.includes('/')) {
@@ -163,9 +166,9 @@ const SubmittedQuizInterface = ({
       setLabels(() => {
         const labels = Array.from(
           { length: result.pastRQMs.length - 1 },
-          (_, i) => `Quiz ${i + 1}`,
+          (_, i) => `${quizNum} ${i + 1}`,
         )
-        labels.push('Current Quiz')
+        labels.push(t('currentQuiz'))
         return labels
       })
     }
@@ -176,7 +179,7 @@ const SubmittedQuizInterface = ({
       labels: labels,
       datasets: [
         {
-          label: 'RQM Score',
+          label: t('rqmScore'),
           data: quizData,
           fill: false,
           backgroundColor: 'rgba(138, 43, 226, 0.6)',
@@ -232,7 +235,7 @@ const SubmittedQuizInterface = ({
   }, [onViewReport])
 
   return (
-    <ChakraProvider theme={theme}>
+    <ChakraProvider>
       <Box
         className="SubmittedQuizInterface"
         w={'100%'}
@@ -242,9 +245,7 @@ const SubmittedQuizInterface = ({
         display="flex"
         flexDirection="column"
         justifyContent="space-between"
-        bg="rgba(26, 21, 39, 0.9)"
         borderRadius="xl"
-        boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -254,12 +255,12 @@ const SubmittedQuizInterface = ({
             transition={{ duration: 0.5 }}
           >
             <Text fontSize="2xl" fontWeight="bold" mb={6} color="purple.200">
-              Quiz Completed Successfully!
+              {t('quizCompleted')}
             </Text>
 
             {submitLoad ? (
               <Text color="gray.100" fontSize="xl" textAlign="center" mb={4}>
-                Calculating...
+                {t('calculating')}
               </Text>
             ) : (
               <>
@@ -278,7 +279,7 @@ const SubmittedQuizInterface = ({
                         borderBottom={{ base: '1px solid white', md: 'none' }}
                       >
                         <StatLabel textAlign={'center'} mt={5}>
-                          Score
+                          {t('score')}
                         </StatLabel>
                         <StatNumber textAlign={'center'}>
                           {result?.score}
@@ -287,18 +288,19 @@ const SubmittedQuizInterface = ({
                           {getReviewText(
                             'score',
                             (scoreArr[0] / scoreArr[1]) * 100,
+                            t,
                           )}
                         </StatHelpText>
                       </Stat>
                       <Stat>
                         <StatLabel textAlign={'center'} mt={5}>
-                          Time Taken
+                          {t('timeTaken')}
                         </StatLabel>
                         <StatNumber textAlign={'center'}>
-                          {result?.timeTaken} Sec
+                          {result?.timeTaken} {t('seconds')}
                         </StatNumber>
                         <StatHelpText textAlign={'center'}>
-                          {getReviewText('timeTaken', result?.timeTaken)}
+                          {getReviewText('timeTaken', result?.timeTaken, t)}
                         </StatHelpText>
                       </Stat>
                     </Flex>
@@ -317,28 +319,33 @@ const SubmittedQuizInterface = ({
                         borderBottom={{ base: '1px solid white', md: 'none' }}
                       >
                         <StatLabel textAlign={'center'} mt={5}>
-                          Article Difficulty
+                          {t('articleDifficulty')}
                         </StatLabel>
                         <StatNumber textAlign={'center'}>
-                          {result?.articleDifficulty}
+                          {result?.articleDifficulty === 'easy'
+                            ? t('easy')
+                            : result?.articleDifficulty === 'medium'
+                            ? t('medium')
+                            : t('hard')}
                         </StatNumber>
                         <StatHelpText textAlign={'center'}>
                           {getReviewText(
                             'difficulty',
                             result?.articleDifficulty,
+                            t,
                           )}
                         </StatHelpText>
                       </Stat>
 
                       <Stat>
                         <StatLabel textAlign={'center'} mt={5}>
-                          RQM Score
+                          {t('rqmScore')}
                         </StatLabel>
                         <StatNumber textAlign={'center'}>
                           {result?.RQM_score}
                         </StatNumber>
                         <StatHelpText textAlign={'center'}>
-                          {getReviewText('rqmscore', result?.RQM_score)}
+                          {getReviewText('rqmscore', result?.RQM_score, t)}
                         </StatHelpText>
                       </Stat>
                     </Flex>
@@ -347,7 +354,7 @@ const SubmittedQuizInterface = ({
 
                 <Box mb={8} mt={{ base: 10, md: 4 }}>
                   <Text color="gray.300" fontSize="lg" mb={2}>
-                    RQM Score Level
+                    {t('rqmScoreLevel')}
                   </Text>
                   <Progress
                     value={result?.RQM_score}
@@ -364,7 +371,7 @@ const SubmittedQuizInterface = ({
                       color="gray.400"
                       fontSize="xs"
                     >
-                      Rookie
+                      {t('rookie')}
                     </Flex>
                     <Flex
                       w={'100%'}
@@ -372,7 +379,7 @@ const SubmittedQuizInterface = ({
                       color="gray.400"
                       fontSize="xs"
                     >
-                      Amateur
+                      {t('amateur')}
                     </Flex>
                     <Flex
                       w={'100%'}
@@ -380,7 +387,7 @@ const SubmittedQuizInterface = ({
                       color="gray.400"
                       fontSize="xs"
                     >
-                      Advanced
+                      {t('advanced')}
                     </Flex>
                     <Flex
                       w={'100%'}
@@ -388,7 +395,7 @@ const SubmittedQuizInterface = ({
                       color="gray.400"
                       fontSize="xs"
                     >
-                      Expert
+                      {t('expert')}
                     </Flex>
                     <Flex
                       w={'100%'}
@@ -396,7 +403,7 @@ const SubmittedQuizInterface = ({
                       color="gray.400"
                       fontSize="xs"
                     >
-                      Maestro
+                      {t('maestro')}
                     </Flex>
                   </Flex>
                 </Box>
@@ -410,10 +417,12 @@ const SubmittedQuizInterface = ({
                       mb={4}
                       textAlign={'center'}
                     >
-                      Today's RQM Score Update
+                      {t('todaysRqmUpdate')}
                     </Text>
                     <Suspense
-                      fallback={<Text color="gray.300">Loading Chart...</Text>}
+                      fallback={
+                        <Text color="gray.300">{t('loadingChart')}</Text>
+                      }
                     >
                       <Box
                         display={'flex'}
@@ -448,7 +457,7 @@ const SubmittedQuizInterface = ({
                         bg: 'purple.600',
                       }}
                     >
-                      View Quiz Summary
+                      {t('viewQuizSummary')}
                     </Button>
                   </Suspense>
                 </motion.div>

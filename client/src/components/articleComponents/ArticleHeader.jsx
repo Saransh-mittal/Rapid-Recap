@@ -20,6 +20,7 @@ import axios from 'axios'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import NoteMessage from '../miscellaneous/NoteMessage'
 import SecureYourProgress from '../miscellaneous/SecureYourProgress'
+import { useTranslation } from 'react-i18next'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -38,6 +39,7 @@ const ArticleHeader = ({
   quizLeftToGetQuizBoost,
   openModal,
 }) => {
+  const { t } = useTranslation('ArticleHeader')
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
   const { isBoosted } = useSelector(state => state.app)
@@ -61,9 +63,9 @@ const ArticleHeader = ({
       setSelectedArticle(response.data)
       onOpenArticleForm()
     } catch (error) {
-      console.error('Error fetching article details:', error)
+      console.error(t('fetchErrorTitle'), error)
       toast({
-        title: 'Error fetching article details',
+        title: t('fetchErrorTitle'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -80,15 +82,15 @@ const ArticleHeader = ({
         )
         onCloseArticleForm()
         toast({
-          title: 'Article updated successfully',
+          title: t('updateSuccessTitle'),
           status: 'success',
           duration: 3000,
           isClosable: true,
         })
       } catch (error) {
-        console.error('Error updating article:', error)
+        console.error(t('updateErrorTitle'), error)
         toast({
-          title: 'Error updating article',
+          title: t('updateErrorTitle'),
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -105,8 +107,8 @@ const ArticleHeader = ({
   const handleShare = useCallback(() => {
     if (notLoggedIn) {
       toast({
-        title: 'Login Required',
-        description: 'Please log in to share this article.',
+        title: t('loginRequiredTitle'),
+        description: t('loginRequiredDescription'),
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -222,7 +224,7 @@ const ArticleHeader = ({
             >
               <Text fontSize={['sm', 'md', 'lg']}>
                 {' '}
-                {avgTimeRead} min read • <time>{dateTime}</time>
+                {avgTimeRead} {t('timeToRead')} • <time>{dateTime}</time>
               </Text>
             </Flex>
           )}
@@ -234,7 +236,7 @@ const ArticleHeader = ({
               w={{ base: '100%', lg: 'auto' }}
             >
               <Text fontSize={['sm', 'md', 'lg']} mb={0}>
-                {avgTimeRead} min read • <time>{dateTime}</time>
+                {avgTimeRead} {t('timeToRead')} • <time>{dateTime}</time>
               </Text>
             </Flex>
           )}
@@ -250,7 +252,7 @@ const ArticleHeader = ({
       {showNote && (
         <NoteMessage
           onClose={() => setShowNote(false)}
-          title="Register to see your IQ score and grow Wise Web"
+          title={t('noteMessageTitle')}
           duration={10000} // Set to null to prevent auto-closing
         >
           <SecureYourProgress />

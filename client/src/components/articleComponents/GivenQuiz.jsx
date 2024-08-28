@@ -11,11 +11,13 @@ import {
 import QuizReport from './quizComponents/QuizReport'
 import medalIcon from '../../assets/medal.webp'
 import useSound from '../../customHooks/useSound'
+import { useTranslation } from 'react-i18next'
 
 const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [showQuizSummary, setShowQuizSummary] = useState(false)
   const { playClick } = useSound()
+  const { t } = useTranslation('GivenQuiz')
 
   return (
     <Box
@@ -29,14 +31,14 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
     >
       <Flex direction="column" align="center">
         <Heading as="h2" size="xl" textAlign="center" mb={3} color="#FDE2F3">
-          Quiz Performance
+          {t('quizPerformance')}
         </Heading>
         <Heading as="h3" fontSize="xl" mt={2} mb={2} color="#E5BEEC">
-          Current Percentile: {percentile?.toFixed(2)}%
+          {t('currentPercentile')} {percentile?.toFixed(2)}%
         </Heading>
         <Flex align="center" mb={4}>
           <Tooltip
-            label="This is the Rapid Quiz Mastery (RQM) score. It is calculated based on the number of correct answers, time taken to complete the quiz and the difficulty level of the overall quiz. The higher the RQM-Score, the better the performance."
+            label={t('tooltipLabel')}
             aria-label="RQM Score Info"
             hasArrow
             bg="#1a1527"
@@ -53,7 +55,7 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
             />
           </Tooltip>
           <Heading as="h3" fontSize="xl" color="#E5BEEC">
-            RQM-Score: {RQM_score}
+            {t('rqmScore')} {RQM_score}
           </Heading>
         </Flex>
         <Button
@@ -74,7 +76,7 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
           }}
           transition="all 0.3s ease"
         >
-          View Report
+          {t('viewReportButton')}
         </Button>
         {showQuizSummary && (
           <QuizReport

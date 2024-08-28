@@ -98,7 +98,6 @@ const Article = () => {
           ? `/api/articles/genQuiz/${id}`
           : `/api/articles/genHindiQuiz/${id}`
       await axios.put(endpoint)
-      console.log('Quiz generated')
     } catch (error) {
       console.log(error.message)
     }

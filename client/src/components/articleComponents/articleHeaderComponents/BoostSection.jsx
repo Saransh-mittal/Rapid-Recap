@@ -3,6 +3,7 @@ import { Flex, Text, Image, Badge } from '@chakra-ui/react'
 import QuinBoost from '../quizComponents/QuinBoost'
 import Button from '../../miscellaneous/ButtonComponent'
 import starBoost from '/GIFs/starBoost.gif'
+import { useTranslation } from 'react-i18next'
 
 const BoostSection = React.memo(
   ({
@@ -14,12 +15,13 @@ const BoostSection = React.memo(
     toast,
     isBoosted,
   }) => {
+    const { t } = useTranslation('BoostSection')
     const handleBoostClick = () => {
       playClick()
       if (notLoggedIn) {
         toast({
-          title: 'Login Required',
-          description: 'Please log in to share this article.',
+          title: t('loginRequiredTitle'),
+          description: t('loginRequiredDescription'),
           status: 'warning',
           duration: 3000,
           isClosable: true,
@@ -44,7 +46,7 @@ const BoostSection = React.memo(
                 fontSize={'0.8rem'}
                 fontWeight={'bold'}
               >
-                Quin Boost
+                {t('quinBoostLabel')}
               </Text>
               <Flex position="relative">
                 <Button
@@ -52,7 +54,7 @@ const BoostSection = React.memo(
                   textColor={'white'}
                   onClick={handleBoostClick}
                 >
-                  {quizLeftToGetQuizBoost} Quiz Left
+                  {quizLeftToGetQuizBoost} {t('quizLeftMessage')}
                 </Button>
               </Flex>
             </Flex>
@@ -72,7 +74,7 @@ const BoostSection = React.memo(
               w={['40px', '50px', '60px']}
             />
             <Badge fontSize={['sm', 'md', 'lg']} color="yellow" bg="none">
-              Enjoy!! 1.5x multiplier
+              {t('enjoyMultiplier')}
             </Badge>
           </Flex>
         )}

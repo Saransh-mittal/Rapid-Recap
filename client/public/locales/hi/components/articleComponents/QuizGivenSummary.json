@@ -1,0 +1,10 @@
+{
+  "next": "अगला",
+  "previous": "पिछला",
+  "totalTimeTaken": "कुल समय लिया गया: {{timeTaken}} सेकंड",
+  "explanation": "व्याख्या :",
+  "correct": "सही",
+  "wrong": "गलत",
+  "notAnswered": "उत्तर नहीं दिया गया",
+  "errorFetchingQuiz": "क्विज़ सारांश प्राप्त करने में त्रुटि"
+}

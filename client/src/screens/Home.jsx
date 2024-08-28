@@ -78,7 +78,7 @@ const Home = () => {
             : await axios.get(
                 `/api/articles?page=${pageNum}&pageSize=18&category=${
                   notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
-                }`,
+                }&lang=${i18n.language}`,
                 { cancelToken: cancelTokenSourceRef.current.token },
               )
 
@@ -229,6 +229,7 @@ const Home = () => {
           hasMoreItems={hasMoreItems}
           data={items}
           load={load}
+          setLoad={setLoad}
         />
       </Suspense>
       <WiseWeb

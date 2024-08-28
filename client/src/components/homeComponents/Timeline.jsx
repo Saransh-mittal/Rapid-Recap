@@ -39,7 +39,7 @@ const GetStarted = React.lazy(() =>
   import('../Header-Footer/navbarComponents/GetStarted'),
 )
 
-const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
+const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated, user } = useSelector(state => state.auth)
@@ -83,6 +83,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems }) => {
 
   const handleActiveCategory = useCallback(
     ({ category, shouldNavigateOrNot = true }) => {
+      setLoad(true)
       setHasMoreItems(true)
       dispatchRedux(setCategory(category.toLowerCase()))
       dispatchRedux(setPageRedux(0))

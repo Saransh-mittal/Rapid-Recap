@@ -19,6 +19,7 @@ import {
   dailyStreakCheckerAndUpdater,
   quinBoostChecker,
 } from '../../utils/quiz.utils'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components
 const ConfirmationModal = lazy(() =>
@@ -51,6 +52,7 @@ const Quiz = ({
   setQuizLeftToGetQuizBoost,
   setTotalUsersGivenQuiz,
 }) => {
+  const { t } = useTranslation('Quiz')
   const articleId = article._id
   const { quizData, load, quizId, setLoad } = useFetchQuiz(
     articleId,
@@ -127,10 +129,8 @@ const Quiz = ({
     } catch (error) {
       console.log(error)
       toast({
-        title: 'Quiz failed!',
-        description:
-          error.response?.data?.error ||
-          'Please try again (Close the quiz and try refreshing the page)',
+        title: t('QuizFailed'),
+        description: error.response?.data?.error || t('RetryError'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -200,9 +200,7 @@ const Quiz = ({
     } catch (error) {
       toast({
         title: 'Error',
-        description:
-          error.response?.data?.error ||
-          'Quiz closing failed! Please try again.',
+        description: error.response?.data?.error || t('QuizClosingError'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -421,7 +419,7 @@ const Quiz = ({
             isOpen={showConfirmationModal}
             onClose={() => setShowConfirmationModal(false)}
             onConfirm={handleConfirmClose}
-            message="Clicking on Confirm will result in submission of the quiz with 0 score. Are you sure you want to submit the quiz?"
+            message={t('ConfirmCloseMessage')}
           />
         </Suspense>
       )}

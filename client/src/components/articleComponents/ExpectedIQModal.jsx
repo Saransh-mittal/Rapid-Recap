@@ -13,6 +13,7 @@ import {
 } from '@chakra-ui/react'
 import React, { useEffect } from 'react'
 import useSound from '../../customHooks/useSound'
+import { useTranslation } from 'react-i18next'
 
 const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ, isLoading }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -20,6 +21,7 @@ const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ, isLoading }) => {
     onOpen()
   }, [])
   const { playClick } = useSound()
+  const { t } = useTranslation('ExpectedIQModal')
   return (
     <>
       <Modal
@@ -46,17 +48,15 @@ const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ, isLoading }) => {
           //boxShadow="0 0 10px rgba(0, 0, 0, 0.5)" // Added boxShadow to make it standout
         >
           <ModalHeader as="h3" size="lg" color="white" textAlign="center">
-            Your Expected Information Quotient (IQ)
+            {t('modalTitle')}
           </ModalHeader>
           <ModalCloseButton color={'white'} />
           <ModalBody pb={6}>
             <Text color="white" fontSize="20px" textAlign="center" mt={4}>
-              Your Expected IQ is based on your performance in past quizzes,
-              including this one. It predicts your IQ after 10 quizzes with
-              similar results.
+              {t('modalBody')}
             </Text>
             <Text color="white" fontSize="30px" textAlign="center" mt={4}>
-              Expected Information Quotient (IQ):{' '}
+              {t('expectedIQ')}{' '}
               {isLoading ? (
                 <Spinner />
               ) : (
@@ -80,7 +80,7 @@ const ExpectedIQModal = ({ expectedIQ, setShowExpectedIQ, isLoading }) => {
                 setShowExpectedIQ(false)
               }}
             >
-              Close
+              {t('closeButton')}
             </Button>
           </ModalFooter>
         </ModalContent>

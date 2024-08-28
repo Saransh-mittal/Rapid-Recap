@@ -21,10 +21,10 @@ const asyncHandler = require('express-async-handler')
 const { default: mongoose } = require('mongoose')
 
 const allArticles = async (req, res) => {
-  const { page = 1, pageSize = 9, category = 'general' } = req.query
+  const { page = 1, pageSize = 9, category = 'general', lang } = req.query
   //console.log(page, pageSize, category);
   try {
-    const article = await Article.find({
+    const articles = await Article.find({
       category: { $regex: new RegExp('^' + category, 'i') },
     })
       .sort({
@@ -34,10 +34,32 @@ const allArticles = async (req, res) => {
       .skip((page - 1) * pageSize)
       .limit(pageSize)
 
-    if (!article) {
+    if (!articles) {
       throw new Error('No articles found')
     }
-    res.send(article)
+    if (lang === 'hi')
+      for (let article of articles) {
+        if (
+          !article.hindiTitle ||
+          !article.hindiMainText ||
+          !article.hindiAuthor
+        ) {
+          const response = await hindiConverter(article)
+          if (!article.hindiMainText) {
+            article.hindiMainText = []
+            await article.save()
+          }
+          article.hindiTitle = response.hindiTitle
+
+          for (let key in response.hindiMainText) {
+            if (!response.hindiMainText[key]) continue
+            article.hindiMainText.push(response.hindiMainText[key])
+          }
+          article.hindiAuthor = response.hindiAuthor
+          await article.save()
+        }
+      }
+    res.send(articles)
   } catch (error) {
     res.status(400).json({ error: error || 'Something went wrong' })
     console.log(error)
