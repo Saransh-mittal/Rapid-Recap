@@ -180,16 +180,39 @@ const Quiz = ({
       } else {
         ofShowQuiz()
         onClose()
-        dispatchRedux(setUser({ ...user, xp: user.xp + 5 }))
         dispatchRedux(
-          addNoteMessage({
-            messageType: 'xpAward',
-            xpAwarded: result?.xpAwarded || 5,
-            title: 'XP Awarded For Quiz',
-            actions: [{ actionType: 'VIEW_EXPERIENCE' }],
-            width: '250px',
+          setUser({
+            ...user,
+            xp:
+              user.xp +
+              (result?.xpAwarded || 5) +
+              (result?.quinBoostUtilized ? 10 : 0),
           }),
         )
+
+        result?.quinBoostUtilized
+          ? dispatchRedux(
+              addNoteMessage({
+                messageType: 'xpAward',
+                xpAwarded: result?.xpAwarded || 10,
+                title: 'XP Awarded For Quiz + Quin Boost',
+                actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+                width: '250px',
+                milestoneName: 'QUIN_BOOST',
+                duration: 10000,
+                xpSource: 'QUIZ',
+              }),
+            )
+          : dispatchRedux(
+              addNoteMessage({
+                messageType: 'xpAward',
+                xpAwarded: result?.xpAwarded || 5,
+                title: 'XP Awarded For Quiz',
+                actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+                width: '250px',
+                xpSource: 'QUIZ',
+              }),
+            )
       }
     } catch (error) {
       console.log(error)
@@ -208,16 +231,40 @@ const Quiz = ({
         userAnswers,
         setSubmitted,
       })
-      dispatchRedux(setUser({ ...user, xp: user.xp + 5 }))
       dispatchRedux(
-        addNoteMessage({
-          messageType: 'xpAward',
-          xpAwarded: result?.xpAwarded || 5,
-          title: 'XP Awarded For Quiz',
-          actions: [{ actionType: 'VIEW_EXPERIENCE' }],
-          width: '250px',
+        setUser({
+          ...user,
+          xp:
+            user.xp +
+            (result?.xpAwarded || 5) +
+            (result?.quinBoostUtilized ? 10 : 0),
         }),
       )
+
+      result?.quinBoostUtilized
+        ? dispatchRedux(
+            addNoteMessage({
+              messageType: 'xpAward',
+              xpAwarded: result?.xpAwarded || 10,
+              title: 'XP Awarded For Quiz + Quin Boost',
+              actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+              width: '250px',
+              milestoneName: 'QUIN_BOOST',
+              duration: 10000,
+              xpSource: 'QUIZ',
+            }),
+          )
+        : dispatchRedux(
+            addNoteMessage({
+              messageType: 'xpAward',
+              xpAwarded: result?.xpAwarded || 5,
+              title: 'XP Awarded For Quiz',
+              actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+              width: '250px',
+              xpSource: 'QUIZ',
+            }),
+          )
+
       setShowConfirmationModal(false)
     } catch (error) {
       toast({

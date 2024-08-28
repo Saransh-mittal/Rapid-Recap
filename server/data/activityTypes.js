@@ -6,6 +6,7 @@ const activityTypes = {
     baseXp: 5,
     getXp: consecutiveCount => Math.min(5 + consecutiveCount, 10), // Cap at 10 XP
   },
+  QUINBOOST_UTILIZED: { type: 'Quinboost utilized', xp: 10 },
   TIME_SPENT: { type: 'User spent (min.) 10 min on website in a day', xp: 10 },
   WISE_WEB_EXPANSION: { type: 'Wise Web expansion', xp: 10 },
   RC_PURCHASE: { type: 'RC purchase (first purchase)', xp: 50 },

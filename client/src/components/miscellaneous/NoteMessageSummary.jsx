@@ -26,9 +26,6 @@ import {
 } from '../../redux/appSlice'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useNavigate } from 'react-router-dom'
-// import useSound from 'use-sound'
-// import achievementSound from '../../assets/sounds/achievement.mp3'
-// import milestoneSound from '../../assets/sounds/milestone.mp3'
 import Confetti from 'react-confetti'
 
 // Lazy load components and assets
@@ -45,8 +42,6 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const [showConfetti, setShowConfetti] = useState(false)
-  // const [playAchievement] = useSound(achievementSound, { volume: 0.5 })
-  // const [playMilestone] = useSound(milestoneSound, { volume: 0.5 })
 
   // Memoize handleMessageAction to prevent unnecessary re-renders
   const handleMessageAction = useMemo(
@@ -82,19 +77,14 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   }, [closeDisclosure, onClose])
 
   useEffect(() => {
-    const hasMilestone = messages.some(message => message.isMilestone)
+    const hasMilestone = messages.some(
+      message => message.isMilestone || message.milestoneName,
+    )
     if (hasMilestone) {
       setShowConfetti(true)
-      // playMilestone()
       setTimeout(() => setShowConfetti(false), 5000) // Run confetti for 5 seconds
-    } else if (messages.some(message => message.messageType === 'xpAward')) {
-      // playAchievement()
     }
-  }, [
-    messages,
-    // playMilestone,
-    // playAchievement
-  ])
+  }, [messages])
 
   const renderMessageContent = useCallback(message => {
     switch (message.messageType) {
@@ -103,11 +93,15 @@ const NoteMessageSummary = ({ messages, onClose }) => {
           <Suspense fallback={null}>
             <HStack spacing={3}>
               <Box
-                bg={message.isMilestone ? 'yellow.500' : 'yellow.400'}
+                bg={
+                  message.isMilestone || message.milestoneName
+                    ? 'yellow.500'
+                    : 'yellow.400'
+                }
                 borderRadius="full"
                 p={2}
                 boxShadow={
-                  message.isMilestone
+                  message.isMilestone || message.milestoneName
                     ? '0 0 20px rgba(255, 255, 0, 0.5)'
                     : '0 0 15px rgba(255, 255, 0, 0.3)'
                 }
@@ -116,11 +110,29 @@ const NoteMessageSummary = ({ messages, onClose }) => {
               </Box>
               <VStack align="start" spacing={0}>
                 <Text fontWeight="bold">
-                  {message.isMilestone ? 'Milestone Achieved!' : message.title}
+                  {message.isMilestone || message.milestoneName
+                    ? 'Milestone Achieved!'
+                    : message.title}
                 </Text>
-                <Text color={message.isMilestone ? 'purple.400' : 'green.400'}>
+                <Text
+                  color={
+                    message.isMilestone || message.milestoneName
+                      ? 'purple.400'
+                      : 'green.400'
+                  }
+                >
                   {message.xpAwarded} XP earned
                 </Text>
+                {message.xpSource && (
+                  <Text color="gray.400" fontSize="sm">
+                    {message.xpSource}
+                  </Text>
+                )}
+                {message.milestoneName && (
+                  <Text color="blue.300" fontSize="sm">
+                    {message.milestoneName} Milestone
+                  </Text>
+                )}
               </VStack>
             </HStack>
           </Suspense>

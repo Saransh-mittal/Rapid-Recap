@@ -117,6 +117,7 @@ const saveAttempt = async (req, res) => {
       RQM_score = Math.ceil(RQM_score * 1.5)
       boosted = true
     }
+    let quinBoostUtilized = false
     if (!user.todayBoost && user.quinBoosts.length > 0) {
       const quinBoost = user.quinBoosts[user.quinBoosts.length - 1]
       if (quinBoost.boosted) {
@@ -128,6 +129,7 @@ const saveAttempt = async (req, res) => {
         // console.log(article._id);
         qBoost.article = article._id
         await qBoost.save({ session })
+        quinBoostUtilized = true
       }
     }
     const articleDifficulty = quiz.overAllDifficulty
@@ -185,6 +187,11 @@ const saveAttempt = async (req, res) => {
       type: activityTypes.RANDOM_QUIZ.type,
       consecutiveQuizCount: todayAttemptsCount,
     })
+    if (quinBoostUtilized)
+      await logActivity({
+        userInGameName: user.inGameName,
+        type: activityTypes.QUINBOOST_UTILIZED.type,
+      })
     const quizzesToday = await currDayStreakCalulator(user._id)
     const articlesForMail = await getTopThreeRecommendedArticles(
       user._id.toString(),
@@ -284,6 +291,7 @@ const saveAttempt = async (req, res) => {
       score: scoreString,
       pastRQMs,
       xpAwarded,
+      quinBoostUtilized,
     })
   } catch (error) {
     await abortSession(session)

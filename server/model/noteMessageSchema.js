@@ -15,6 +15,12 @@ const noteMessageSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  milestoneName: {
+    type: String,
+  },
+  xpSource: {
+    type: String,
+  },
   actions: [
     {
       actionType: { type: String },
