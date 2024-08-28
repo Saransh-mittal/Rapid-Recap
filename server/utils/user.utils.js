@@ -612,9 +612,7 @@ const getTheRevivalEndDay = (streak, streakExpireAt) => {
     }
     i++
   }
-
   const revivalEndDay = new Date(streakExpireAt + i * 24 * 60 * 60 * 1000)
-
   return revivalEndDay
 }
 

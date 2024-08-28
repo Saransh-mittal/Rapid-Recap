@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { Text, VStack, Box, Flex, Progress } from '@chakra-ui/react'
 import NoteMessage from '../NoteMessage'
+import { formatRemainingTime } from '../../../utils/helper.utils'
 
 const FireSVG = lazy(() => import('../../../assets/svg/FireSVG'))
 const UnlinkSVG = lazy(() => import('../../../assets/svg/UnlinkSVG'))
@@ -104,7 +105,7 @@ const StreakNoteMessage = ({
                 fontWeight="bold"
                 color={`${getColorScheme()}.300`}
               >
-                {Math.ceil(remainingTime / 60)} minutes left
+                {formatRemainingTime(remainingTime)} to revive
               </Text>
               {remainingQuizzes > 0 && (
                 <Text fontSize="sm" color="gray.400">

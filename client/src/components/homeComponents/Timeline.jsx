@@ -291,7 +291,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
           >
             <Flex
               wrap="wrap"
-              // justifyContent={{ base: 'center', md: 'space-between' }}
               justifyContent={'center'}
               gap={{ base: '1rem', md: '4rem', lg: '2rem', xl: '1rem' }}
               alignItems={'center'}
@@ -302,7 +301,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
                   mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
                   key={id}
                 >
-                  {/* <TimelineItem newsNumber={id} data={item} /> */}
                   <Suspense fallback={<Skeleton key={id} mt="5rem" />} key={id}>
                     <Card
                       title={item?.title}

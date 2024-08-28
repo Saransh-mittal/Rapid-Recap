@@ -118,6 +118,7 @@ const saveAttempt = async (req, res) => {
       RQM_score = Math.ceil(RQM_score * 1.5)
       boosted = true
     }
+    let quinBoostUtilized = false
     if (!user.todayBoost && user.quinBoosts.length > 0) {
       const quinBoost = user.quinBoosts[user.quinBoosts.length - 1]
       if (quinBoost.boosted) {
@@ -135,14 +136,7 @@ const saveAttempt = async (req, res) => {
           user.revivalPeriodEnd = null
           await user.save({ session })
         }
-        const noteMessage = new NoteMessage({
-          userId: user._id,
-          title: 'Congratulations! Your Strek is Revived!',
-          messageType: 'streak',
-          streakStatus: 'revived',
-          streakCount: user.streak + 1,
-        })
-        await noteMessage.save({ session })
+        quinBoostUtilized = true
       }
     }
     const articleDifficulty = quiz.overAllDifficulty
@@ -196,10 +190,16 @@ const saveAttempt = async (req, res) => {
     user.todaysQuizCnt++
     await user.save({ session })
     await commitSession()
-    await logActivity({
+    const xpAwarded = await logActivity({
       userInGameName: user.inGameName,
       type: activityTypes.RANDOM_QUIZ.type,
+      consecutiveQuizCount: todayAttemptsCount,
     })
+    if (quinBoostUtilized)
+      await logActivity({
+        userInGameName: user.inGameName,
+        type: activityTypes.QUINBOOST_UTILIZED.type,
+      })
     const quizzesToday = await currDayStreakCalulator(user._id)
     const articlesForMail = await getTopThreeRecommendedArticles(
       user._id.toString(),
@@ -298,6 +298,8 @@ const saveAttempt = async (req, res) => {
       timeTaken,
       score: scoreString,
       pastRQMs,
+      xpAwarded,
+      quinBoostUtilized,
     })
   } catch (error) {
     await abortSession(session)

@@ -61,9 +61,11 @@ const BoostSection = React.memo(
         {isBoosted && (
           <Flex
             alignItems="center"
-            gap={2}
+            gap={1}
             cursor="pointer"
             onClick={openModal}
+            wordBreak={'break-word'}
+            ml={'-0.9rem'}
           >
             <Image
               src={starBoost}
@@ -71,7 +73,12 @@ const BoostSection = React.memo(
               h={['40px', '50px', '60px']}
               w={['40px', '50px', '60px']}
             />
-            <Badge fontSize={['sm', 'md', 'lg']} color="yellow" bg="none">
+            <Badge
+              fontSize={['sm', 'md', 'lg']}
+              color="yellow"
+              bg="none"
+              wordBreak={'break-word'}
+            >
               Enjoy!! 1.5x multiplier
             </Badge>
           </Flex>

@@ -168,7 +168,6 @@ const Quiz = ({
         setQuizLeftToGetQuizBoost,
       })
       dailyStreakCheckerAndUpdater(dispatchRedux)
-      setTimeout(() => dispatchRedux(fetchUnreadNoteMessages()), 7000)
 
       if (
         !submitted &&
@@ -185,21 +184,56 @@ const Quiz = ({
         dispatchRedux(
           setUser({
             ...user,
-            xp: user.xp + 5,
+            xp:
+              user.xp +
+              (result?.xpAwarded || 5) +
+              (result?.quinBoostUtilized ? 10 : 0),
             todaysQuizCnt: user.todaysQuizCnt + 1,
             revivalPeriodEnd:
               user.todaysQuizCnt + 1 === 6 ? null : user.revivalPeriodEnd,
+            streak:
+              result?.quinBoostUtilized && user.revivalPeriodEnd
+                ? user.streakBeforeBreak + 1
+                : user.streak + 1,
           }),
         )
-        dispatchRedux(
-          addNoteMessage({
-            messageType: 'xpAward',
-            xpAwarded: 5,
-            title: 'XP Awarded For Quiz',
-            actions: [{ actionType: 'VIEW_EXPERIENCE' }],
-            width: '250px',
-          }),
-        )
+
+        result?.quinBoostUtilized
+          ? dispatchRedux(
+              addNoteMessage({
+                messageType: 'xpAward',
+                xpAwarded: result?.xpAwarded || 10,
+                title: 'XP Awarded For Quiz + Quin Boost',
+                actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+                width: '250px',
+                milestoneName: 'QUIN_BOOST',
+                duration: 10000,
+                xpSource: 'QUIZ',
+              }),
+            )
+          : dispatchRedux(
+              addNoteMessage({
+                messageType: 'xpAward',
+                xpAwarded: result?.xpAwarded || 5,
+                title: 'XP Awarded For Quiz',
+                actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+                width: '250px',
+                xpSource: 'QUIZ',
+              }),
+            )
+
+        result?.quinBoostUtilized &&
+          user.revivalPeriodEnd &&
+          dispatchRedux(
+            addNoteMessage({
+              messageType: 'streak',
+              xpAwarded: result?.xpAwarded || 10,
+              title: 'Congratulations! Your Strek is Revived!',
+              width: '250px',
+              streakStatus: 'revived',
+              streakCount: user.streakBeforeBreak + 1,
+            }),
+          )
         user.revivalPeriodEnd &&
           user.todaysQuizCnt + 1 < 6 &&
           setTimeout(
@@ -236,16 +270,43 @@ const Quiz = ({
         userAnswers,
         setSubmitted,
       })
-      dispatchRedux(setUser({ ...user, xp: user.xp + 5 }))
       dispatchRedux(
-        addNoteMessage({
-          messageType: 'xpAward',
-          xpAwarded: 5,
-          title: 'XP Awarded For Quiz',
-          actions: [{ actionType: 'VIEW_EXPERIENCE' }],
-          width: '250px',
+        setUser({
+          ...user,
+          xp:
+            user.xp +
+            (result?.xpAwarded || 5) +
+            (result?.quinBoostUtilized ? 10 : 0),
+          todaysQuizCnt: user.todaysQuizCnt + 1,
+          revivalPeriodEnd:
+            user.todaysQuizCnt + 1 === 6 ? null : user.revivalPeriodEnd,
         }),
       )
+
+      result?.quinBoostUtilized
+        ? dispatchRedux(
+            addNoteMessage({
+              messageType: 'xpAward',
+              xpAwarded: result?.xpAwarded || 10,
+              title: 'XP Awarded For Quiz + Quin Boost',
+              actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+              width: '250px',
+              milestoneName: 'QUIN_BOOST',
+              duration: 10000,
+              xpSource: 'QUIZ',
+            }),
+          )
+        : dispatchRedux(
+            addNoteMessage({
+              messageType: 'xpAward',
+              xpAwarded: result?.xpAwarded || 5,
+              title: 'XP Awarded For Quiz',
+              actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+              width: '250px',
+              xpSource: 'QUIZ',
+            }),
+          )
+
       setShowConfirmationModal(false)
     } catch (error) {
       toast({
@@ -326,11 +387,11 @@ const Quiz = ({
       return (
         <Box position={'relative'}>
           {showGetSetGo && (
-            <Suspense fallback={<Spinner />}>
+            <Suspense fallback={null}>
               <GetSetGoAnimation onComplete={handleAnimationComplete} />
             </Suspense>
           )}
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <InstructionModal
               isQuinBoostAvailable={isQuinBoostAvailable}
               language={language}
@@ -342,7 +403,7 @@ const Quiz = ({
 
     if (showQuizSummary) {
       return (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <QuizGivenSummary
             isOpen={isOpen}
             onClose={() => setShowQuizSummary(false)}
@@ -354,7 +415,7 @@ const Quiz = ({
 
     if (showSubmittedInterface) {
       return (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <SubmittedQuizInterface
             submitLoad={submitLoad}
             result={result}
@@ -380,7 +441,7 @@ const Quiz = ({
         position={'relative'}
       >
         {!submitted ? (
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <QuizInterface
               load={load}
               currentQuestionIndex={currentQuestionIndex}
@@ -391,7 +452,7 @@ const Quiz = ({
             />
           </Suspense>
         ) : isBoosted || isQuinBoostAvailable ? (
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <BoostedSubmittedQuizInterface
               isOpen={isOpen}
               score={result?.RQM_score}
@@ -413,7 +474,7 @@ const Quiz = ({
             )}
           </Suspense>
         ) : (
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <SubmittedQuizInterface
               submitLoad={submitLoad}
               result={result}
@@ -451,7 +512,7 @@ const Quiz = ({
 
   return (
     <>
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={null}>
         <ModalComponent
           setSubmitted={setSubmitted}
           timer={timer}
@@ -476,7 +537,7 @@ const Quiz = ({
         />
       </Suspense>
       {!showInstruction && showConfirmationModal && (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <ConfirmationModal
             bg={'black'}
             isOpen={showConfirmationModal}

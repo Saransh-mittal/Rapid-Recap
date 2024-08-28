@@ -15,6 +15,7 @@ import {
   useDisclosure,
   HStack,
   Divider,
+  Progress,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
@@ -26,14 +27,16 @@ import {
 } from '../../redux/appSlice'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useNavigate } from 'react-router-dom'
-// import useSound from 'use-sound'
-// import achievementSound from '../../assets/sounds/achievement.mp3'
-// import milestoneSound from '../../assets/sounds/milestone.mp3'
 import Confetti from 'react-confetti'
+import { formatRemainingTime } from '../../utils/helper.utils'
 
 // Lazy load components and assets
 const ButtonFactory = lazy(() => import('./ButtonFactory'))
 const TrophySVG = lazy(() => import('../../assets/svg/TrophySVG'))
+const FireSVG = lazy(() => import('../../assets/svg/FireSVG'))
+const UnlinkSVG = lazy(() => import('../../assets/svg/UnlinkSVG'))
+const RevivalSVG = lazy(() => import('../../assets/svg/RevivalSVG'))
+const CheckCircle = lazy(() => import('../../assets/svg/CheckCircle'))
 
 const MotionBox = motion(Box)
 
@@ -45,8 +48,6 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const [showConfetti, setShowConfetti] = useState(false)
-  // const [playAchievement] = useSound(achievementSound, { volume: 0.5 })
-  // const [playMilestone] = useSound(milestoneSound, { volume: 0.5 })
 
   // Memoize handleMessageAction to prevent unnecessary re-renders
   const handleMessageAction = useMemo(
@@ -82,19 +83,44 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   }, [closeDisclosure, onClose])
 
   useEffect(() => {
-    const hasMilestone = messages.some(message => message.isMilestone)
+    const hasMilestone = messages.some(
+      message =>
+        (message.messageType === 'xpAward' &&
+          (message.isMilestone || message.milestoneName)) ||
+        (message.messageType === 'streak' &&
+          message.streakStatus === 'revived'),
+    )
     if (hasMilestone) {
       setShowConfetti(true)
-      // playMilestone()
       setTimeout(() => setShowConfetti(false), 5000) // Run confetti for 5 seconds
-    } else if (messages.some(message => message.messageType === 'xpAward')) {
-      // playAchievement()
     }
-  }, [
-    messages,
-    // playMilestone,
-    // playAchievement
-  ])
+  }, [messages])
+
+  const getStreakIcon = streakStatus => {
+    switch (streakStatus) {
+      case 'broken':
+        return <UnlinkSVG height="40px" width="40px" />
+      case 'revival':
+        return <RevivalSVG height="40px" width="40px" />
+      case 'revived':
+        return <CheckCircle height="40px" width="40px" />
+      default:
+        return <FireSVG height="40px" width="40px" />
+    }
+  }
+
+  const getStreakColorScheme = streakStatus => {
+    switch (streakStatus) {
+      case 'broken':
+        return 'red'
+      case 'revival':
+        return 'yellow'
+      case 'revived':
+        return 'green'
+      default:
+        return 'orange'
+    }
+  }
 
   const renderMessageContent = useCallback(message => {
     switch (message.messageType) {
@@ -103,11 +129,15 @@ const NoteMessageSummary = ({ messages, onClose }) => {
           <Suspense fallback={null}>
             <HStack spacing={3}>
               <Box
-                bg={message.isMilestone ? 'yellow.500' : 'yellow.400'}
+                bg={
+                  message.isMilestone || message.milestoneName
+                    ? 'yellow.500'
+                    : 'yellow.400'
+                }
                 borderRadius="full"
                 p={2}
                 boxShadow={
-                  message.isMilestone
+                  message.isMilestone || message.milestoneName
                     ? '0 0 20px rgba(255, 255, 0, 0.5)'
                     : '0 0 15px rgba(255, 255, 0, 0.3)'
                 }
@@ -116,11 +146,80 @@ const NoteMessageSummary = ({ messages, onClose }) => {
               </Box>
               <VStack align="start" spacing={0}>
                 <Text fontWeight="bold">
-                  {message.isMilestone ? 'Milestone Achieved!' : message.title}
+                  {message.isMilestone || message.milestoneName
+                    ? 'Milestone Achieved!'
+                    : message.title}
                 </Text>
-                <Text color={message.isMilestone ? 'purple.400' : 'green.400'}>
+                <Text
+                  color={
+                    message.isMilestone || message.milestoneName
+                      ? 'purple.400'
+                      : 'green.400'
+                  }
+                >
                   {message.xpAwarded} XP earned
                 </Text>
+                {message.xpSource && (
+                  <Text color="gray.400" fontSize="sm">
+                    {message.xpSource}
+                  </Text>
+                )}
+                {message.milestoneName && (
+                  <Text color="blue.300" fontSize="sm">
+                    {message.milestoneName} Milestone
+                  </Text>
+                )}
+              </VStack>
+            </HStack>
+          </Suspense>
+        )
+      case 'streak':
+        return (
+          <Suspense fallback={null}>
+            <HStack spacing={3}>
+              <Box
+                bg={`${getStreakColorScheme(message.streakStatus)}.400`}
+                borderRadius="full"
+                p={2}
+                boxShadow={`0 0 15px ${getStreakColorScheme(
+                  message.streakStatus,
+                )}.300`}
+              >
+                {getStreakIcon(message.streakStatus)}
+              </Box>
+              <VStack align="start" spacing={0}>
+                <Text fontWeight="bold">{message.title}</Text>
+                <Text
+                  color={`${getStreakColorScheme(message.streakStatus)}.400`}
+                >
+                  {message.streakStatus === 'broken'
+                    ? `${message.streakCount}-day streak ended`
+                    : `${message.streakCount}-day streak`}
+                </Text>
+                {message.streakStatus === 'revival' &&
+                  message.remainingTime && (
+                    <>
+                      {message.remainingQuizzes > 0 && (
+                        <Text fontSize="sm" color="gray.400">
+                          Complete {message.remainingQuizzes} more{' '}
+                          {message.remainingQuizzes === 1 ? 'quiz' : 'quizzes'}{' '}
+                          to revive your streak!
+                        </Text>
+                      )}
+                      <Text fontSize="sm" color="gray.400">
+                        {formatRemainingTime(message.remainingTime)} to revive
+                      </Text>
+                      <Box w="100%" mt={1}>
+                        <Progress
+                          value={(message.remainingTime / (24 * 60 * 60)) * 100}
+                          size="xs"
+                          colorScheme={getStreakColorScheme(
+                            message.streakStatus,
+                          )}
+                        />
+                      </Box>
+                    </>
+                  )}
               </VStack>
             </HStack>
           </Suspense>
@@ -190,7 +289,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
               {messages.map((message, index) => (
                 <Box key={index} bg="gray.700" p={3} borderRadius="md">
                   {renderMessageContent(message)}
-                  <HStack mt={2} spacing={2}>
+                  <HStack mt={2} spacing={2} justify={'center'}>
                     <Suspense fallback={null}>
                       {message.actions &&
                         message.actions.map((action, actionIndex) => (

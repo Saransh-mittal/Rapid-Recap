@@ -169,7 +169,10 @@ export const appSlice = createSlice({
             remainingTime: action.payload?.remainingTimeBeforeRevival, // 1 hour in seconds
             remainingQuizzes: 6 - action.payload?.todaysQuizAttemptsCount,
             title: 'Revive your streak!',
+            content:
+              'You need to utilize a quin boost in the revival period to revive your streak.',
             width: '300px',
+            duration: 12000,
           })
         state.longestStreak = action.payload.longestStreak
         state.isBoosted = action.payload.isBoosted

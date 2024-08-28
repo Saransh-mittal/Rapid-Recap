@@ -16,6 +16,7 @@ const {
   longestStreakCalculator,
   currDayStreakCalulator,
   makeFirstLoginFalse,
+  getTheRevivalEndDay,
 } = require('../utils/user.utils')
 const dailyUserIQCalc = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
@@ -436,6 +437,9 @@ const calculateUserIQScores = async (req, res) => {
   }
 }
 
+// @desc  Get leaderboard for the current season
+// @route GET /api/user/leaderboard
+// @access Public
 const leaderBoard = async (req, res) => {
   const currUserId = req.user ? req.user._id : null
   const { society, page = 1, limit = 10 } = req.query
@@ -547,6 +551,16 @@ const leaderBoard = async (req, res) => {
       })
 
     const [users, currUser] = await Promise.all([usersPromise, currUserPromise])
+
+    // Update ranks for users on the current page
+    const bulkOps = users.map((user, index) => ({
+      updateOne: {
+        filter: { _id: user._id },
+        update: { $set: { rank: skipNumber + index + 1 } },
+      },
+    }))
+
+    await User.bulkWrite(bulkOps)
 
     const result = users.map(user => {
       const {
@@ -1156,9 +1170,10 @@ const streakChecker = async (req, res) => {
         todaysQuizAttemptsCount: 0,
       })
     }
+
     if (user.revivalPeriodEnd) {
       remainingTimeBeforeRevival =
-        user.revivalPeriodEnd.getTime() - today.getTime()
+        user.revivalPeriodEnd.getTime() - new Date().getTime()
       isRevivalPeriod = true
     }
     const isBoosted =
