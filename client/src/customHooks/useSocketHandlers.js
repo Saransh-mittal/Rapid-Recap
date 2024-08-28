@@ -42,7 +42,7 @@ const useSocketHandlers = (
       },
       onMessageDeleted: deletedMessageInfo => {
         const { messageId, deleteType, chatId } = deletedMessageInfo
-        const updatedMessages = messages.map(msg =>
+        const updatedMessages = messages?.map(msg =>
           msg._id === messageId
             ? deleteType === 'everyone'
               ? { ...msg, isDeleted: true }
@@ -54,21 +54,21 @@ const useSocketHandlers = (
       },
       onMessageStatusUpdated: ({ messageId, status }) => {
         setMessages(prevMessages =>
-          prevMessages.map(msg =>
+          prevMessages?.map(msg =>
             msg._id === messageId ? { ...msg, status } : msg,
           ),
         )
       },
       onReactionAdded: updatedMessage => {
         setMessages(
-          messages.map(msg =>
+          messages?.map(msg =>
             msg._id === updatedMessage._id ? updatedMessage : msg,
           ),
         )
       },
       onReactionRemoved: updatedMessage => {
         setMessages(
-          messages.map(msg =>
+          messages?.map(msg =>
             msg._id === updatedMessage._id ? updatedMessage : msg,
           ),
         )

@@ -28,7 +28,7 @@ const useMessageHandlers = ({
   onOpen,
   onClose,
 }) => {
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(null)
   const [loading, setLoading] = useState(false)
   const [newMessage, setNewMessage] = useState('')
   const [isLoadingBookmarks, setIsLoadingBookmarks] = useState(false)
@@ -48,9 +48,13 @@ const useMessageHandlers = ({
         setMessages(cachedMessages)
       }
       const data = await fetchMessagesApi(selectedChat._id)
+      if (data.length === 0) {
+        setMessagesFetched(true)
+        return
+      }
       setMessages(prevMessages => {
         if (
-          prevMessages.length > 0 &&
+          prevMessages?.length > 0 &&
           prevMessages[0].chat.toString() === selectedChat._id.toString()
         )
           return [...data, ...prevMessages]
@@ -78,6 +82,7 @@ const useMessageHandlers = ({
         isClosable: true,
         position: 'bottom',
       })
+      console.error('Error fetching messages:', error)
     } finally {
       setLoading(false)
     }
@@ -91,7 +96,7 @@ const useMessageHandlers = ({
       }
       setMessages(prevMessages => {
         const newMessageIds = new Set(data.map(msg => msg._id))
-        const uniquePrevMessages = prevMessages.filter(
+        const uniquePrevMessages = prevMessages?.filter(
           msg => !newMessageIds.has(msg._id),
         )
         return [...data, ...uniquePrevMessages]
@@ -139,7 +144,7 @@ const useMessageHandlers = ({
           updateMessagesAfterSend(prevMessages, optimisticMessage._id, data),
         )
         updateLatestMessage(selectedChat._id, data)
-        if (messages.length === 0 && selectedChat.chatCreatedBy === user._id) {
+        if (messages?.length === 0 && selectedChat.chatCreatedBy === user._id) {
           socket?.emit('chat request', {
             chatId: selectedChat._id,
             recipientId: selectedChat.users.find(u => u._id !== user._id)._id,
@@ -147,7 +152,7 @@ const useMessageHandlers = ({
         }
       } catch (error) {
         setMessages(prevMessages =>
-          prevMessages.filter(msg => msg._id !== optimisticMessage._id),
+          prevMessages?.filter(msg => msg._id !== optimisticMessage._id),
         )
         toast({
           title: 'Error Occurred!',
@@ -176,7 +181,7 @@ const useMessageHandlers = ({
     try {
       await permanentDeleteMessageApi(messageId)
       setMessages(prevMessages =>
-        prevMessages.filter(msg => msg._id !== messageId),
+        prevMessages?.filter(msg => msg._id !== messageId),
       )
       toast({
         title: 'Message deleted',
@@ -246,7 +251,7 @@ const useMessageHandlers = ({
   }
 
   const handleAddReaction = async (messageId, emoji) => {
-    const messageToUpdate = messages.find(msg => msg._id === messageId)
+    const messageToUpdate = messages?.find(msg => msg._id === messageId)
     if (!messageToUpdate) return
 
     const tempReaction = {
@@ -261,15 +266,15 @@ const useMessageHandlers = ({
     }
 
     setMessages(prevMessages =>
-      prevMessages.map(msg => (msg._id === messageId ? updatedMessage : msg)),
+      prevMessages?.map(msg => (msg._id === messageId ? updatedMessage : msg)),
     )
     try {
       const data = await addReactionApi(messageId, emoji)
-      setMessages(messages.map(msg => (msg._id === messageId ? data : msg)))
+      setMessages(messages?.map(msg => (msg._id === messageId ? data : msg)))
       socket?.emit('new reaction', data)
     } catch (error) {
       setMessages(prevMessages =>
-        prevMessages.map(msg =>
+        prevMessages?.map(msg =>
           msg._id === messageId ? messageToUpdate : msg,
         ),
       )
@@ -288,7 +293,7 @@ const useMessageHandlers = ({
   const handleRemoveReaction = async messageId => {
     try {
       const data = await removeReactionApi(messageId)
-      setMessages(messages.map(msg => (msg._id === messageId ? data : msg)))
+      setMessages(messages?.map(msg => (msg._id === messageId ? data : msg)))
       socket?.emit('remove reaction', data)
     } catch (error) {
       toast({

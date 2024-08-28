@@ -1,5 +1,6 @@
 const Chat = require('../model/chatSchema')
 const Message = require('../model/messageSchema')
+const NoteMessage = require('../model/noteMessageSchema')
 const { sendNotification } = require('../services/notificationService')
 const asyncHandler = require('express-async-handler')
 
@@ -55,4 +56,20 @@ const notificationNewMessageChats = asyncHandler(async (req, res) => {
   }
 })
 
-module.exports = { notificationNews, notificationNewMessageChats }
+// @desc  get all the noteMessages for the user
+// @route GET /api/notify/noteMessages
+// @access Private
+const getNoteMessages = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const noteMessages = await NoteMessage.find({ userId, read: false }).sort({
+    createdAt: -1,
+  })
+  await NoteMessage.updateMany({ userId, read: false }, { read: true })
+  res.json(noteMessages)
+})
+
+module.exports = {
+  notificationNews,
+  notificationNewMessageChats,
+  getNoteMessages,
+}

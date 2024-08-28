@@ -20,6 +20,8 @@ import {
   quinBoostChecker,
 } from '../../utils/quiz.utils'
 import { useTranslation } from 'react-i18next'
+import { addNoteMessage } from '../../redux/appSlice'
+import { setUser } from '../../redux/authSlice'
 
 // Lazy load components
 const ConfirmationModal = lazy(() =>
@@ -61,7 +63,8 @@ const Quiz = ({
   )
   const totalQuestions = quizData ? quizData.questions.length : 0
   const toast = useToast()
-  const { isBoosted, status } = useSelector(state => state.app)
+  const { isBoosted } = useSelector(state => state.app)
+  const { user } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -158,10 +161,9 @@ const Quiz = ({
   }, [])
 
   const handleClose = async () => {
-    console.log('close')
     try {
       setTotalUsersGivenQuiz(prev => prev + 1)
-      await quinBoostChecker({
+      quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       })
@@ -178,6 +180,39 @@ const Quiz = ({
       } else {
         ofShowQuiz()
         onClose()
+        dispatchRedux(
+          setUser({
+            ...user,
+            xp:
+              user.xp +
+              (result?.xpAwarded || 5) +
+              (result?.quinBoostUtilized ? 10 : 0),
+          }),
+        )
+
+        result?.quinBoostUtilized
+          ? dispatchRedux(
+              addNoteMessage({
+                messageType: 'xpAward',
+                xpAwarded: result?.xpAwarded || 10,
+                title: 'XP Awarded For Quiz + Quin Boost',
+                actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+                width: '250px',
+                milestoneName: 'QUIN_BOOST',
+                duration: 10000,
+                xpSource: 'QUIZ',
+              }),
+            )
+          : dispatchRedux(
+              addNoteMessage({
+                messageType: 'xpAward',
+                xpAwarded: result?.xpAwarded || 5,
+                title: 'XP Awarded For Quiz',
+                actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+                width: '250px',
+                xpSource: 'QUIZ',
+              }),
+            )
       }
     } catch (error) {
       console.log(error)
@@ -186,16 +221,50 @@ const Quiz = ({
 
   const handleConfirmClose = useCallback(async () => {
     try {
-      await quinBoostChecker({
+      quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       })
 
-      await handleSubmitQuiz({
+      handleSubmitQuiz({
         timeTaken,
         userAnswers,
         setSubmitted,
       })
+      dispatchRedux(
+        setUser({
+          ...user,
+          xp:
+            user.xp +
+            (result?.xpAwarded || 5) +
+            (result?.quinBoostUtilized ? 10 : 0),
+        }),
+      )
+
+      result?.quinBoostUtilized
+        ? dispatchRedux(
+            addNoteMessage({
+              messageType: 'xpAward',
+              xpAwarded: result?.xpAwarded || 10,
+              title: 'XP Awarded For Quiz + Quin Boost',
+              actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+              width: '250px',
+              milestoneName: 'QUIN_BOOST',
+              duration: 10000,
+              xpSource: 'QUIZ',
+            }),
+          )
+        : dispatchRedux(
+            addNoteMessage({
+              messageType: 'xpAward',
+              xpAwarded: result?.xpAwarded || 5,
+              title: 'XP Awarded For Quiz',
+              actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+              width: '250px',
+              xpSource: 'QUIZ',
+            }),
+          )
+
       setShowConfirmationModal(false)
     } catch (error) {
       toast({
@@ -274,11 +343,11 @@ const Quiz = ({
       return (
         <Box position={'relative'}>
           {showGetSetGo && (
-            <Suspense fallback={<Spinner />}>
+            <Suspense fallback={null}>
               <GetSetGoAnimation onComplete={handleAnimationComplete} />
             </Suspense>
           )}
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <InstructionModal
               isQuinBoostAvailable={isQuinBoostAvailable}
               language={language}
@@ -290,7 +359,7 @@ const Quiz = ({
 
     if (showQuizSummary) {
       return (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <QuizGivenSummary
             isOpen={isOpen}
             onClose={() => setShowQuizSummary(false)}
@@ -302,7 +371,7 @@ const Quiz = ({
 
     if (showSubmittedInterface) {
       return (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <SubmittedQuizInterface
             submitLoad={submitLoad}
             result={result}
@@ -328,7 +397,7 @@ const Quiz = ({
         position={'relative'}
       >
         {!submitted ? (
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <QuizInterface
               load={load}
               currentQuestionIndex={currentQuestionIndex}
@@ -339,19 +408,29 @@ const Quiz = ({
             />
           </Suspense>
         ) : isBoosted || isQuinBoostAvailable ? (
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <BoostedSubmittedQuizInterface
               isOpen={isOpen}
               score={result?.RQM_score}
               submitLoad={submitLoad}
               onViewReport={() => {
                 playClick()
-                setShowQuizSummary(true)
+                setShowSubmittedInterface(true)
               }}
             />
+            {showSubmittedInterface && (
+              <SubmittedQuizInterface
+                submitLoad={submitLoad}
+                result={result}
+                onViewReport={() => {
+                  playClick()
+                  setShowQuizSummary(true)
+                }}
+              />
+            )}
           </Suspense>
         ) : (
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <SubmittedQuizInterface
               submitLoad={submitLoad}
               result={result}
@@ -384,11 +463,12 @@ const Quiz = ({
     quizData,
     handleAnswer,
     userAnswers,
+    showSubmittedInterface,
   ])
 
   return (
     <>
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={null}>
         <ModalComponent
           setSubmitted={setSubmitted}
           timer={timer}
@@ -413,7 +493,7 @@ const Quiz = ({
         />
       </Suspense>
       {!showInstruction && showConfirmationModal && (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <ConfirmationModal
             bg={'black'}
             isOpen={showConfirmationModal}

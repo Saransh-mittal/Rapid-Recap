@@ -117,18 +117,11 @@ const QuizGivenSummary = ({
               alignItems={'center'}
             >
               <Flex flexDirection={'column'}>
-                <Suspense fallback={<Loading />}>
+                <Suspense fallback={null}>
                   <Heading
                     title={t('totalTimeTaken', { timeTaken })}
-                    tag={
-                      !currentQuestion.userAnswer
-                        ? t('notAnswered')
-                        : currentQuestion.isCorrect
-                        ? t('correct')
-                        : t('notAnswered')
-                    }
                     tagMarginBottom={0}
-                    marginBottom="0"
+                    marginBottom="1rem"
                     tagColor={
                       !currentQuestion.userAnswer
                         ? 'blue'
@@ -136,6 +129,7 @@ const QuizGivenSummary = ({
                         ? 'green'
                         : 'red'
                     }
+                    marginTop="1rem"
                     tagFontSize="xl"
                     tagFontWeight="bold"
                   />
@@ -161,7 +155,7 @@ const QuizGivenSummary = ({
               px={'15px'}
               py={0}
             >
-              <Suspense fallback={<Loading />}>
+              <Suspense fallback={null}>
                 <GivenQuizInterface
                   quizGivenSummary={quizGivenSummary}
                   currentQuestionIndex={currentQuestionIndex}
@@ -195,7 +189,7 @@ const QuizGivenSummary = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Suspense fallback={<Loading />}>
+                    <Suspense fallback={null}>
                       <Button
                         borderRadius={'full'}
                         color={'white'}
@@ -231,7 +225,7 @@ const QuizGivenSummary = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Suspense fallback={<Loading />}>
+                    <Suspense fallback={null}>
                       <Button
                         w={'100%'}
                         borderRadius={'full'}

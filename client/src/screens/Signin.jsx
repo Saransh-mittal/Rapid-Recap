@@ -40,8 +40,8 @@ import {
 
 import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 
-import GuestLogin from '../components/authComponents/GuestLogin'
 import { setIsRegisterOpen, setIsSigninOpen } from '../redux/appSlice'
+const GuestLogin = lazy(() => import('../components/authComponents/GuestLogin'))
 import { useTranslation } from 'react-i18next'
 
 // const Modal = lazy(() => import('./Modal'))
@@ -455,12 +455,14 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       {t('or_text')}
                     </Text>
                   </Flex>
-                  <Flex w={'100%'} justifyContent={'center'}>
-                    <GuestLogin
-                      hamburgerOnClose={hamburgerOnClose}
-                      t={GuestLoginTranslate}
-                    />
-                  </Flex>
+                  <Suspense fallback={<Spinner />}>
+                    <Flex w={'100%'} justifyContent={'center'}>
+                      <GuestLogin
+                        hamburgerOnClose={hamburgerOnClose}
+                        t={GuestLoginTranslate}
+                      />
+                    </Flex>
+                  </Suspense>
                 </>
               ) : (
                 <>

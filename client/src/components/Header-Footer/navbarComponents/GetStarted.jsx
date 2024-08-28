@@ -10,6 +10,7 @@ const GetStarted = ({
   innerText,
   hamburgerOnClose,
   width,
+  onClick,
 }) => {
   const { playClick } = useSound()
   const dispatch = useDispatch()
@@ -19,6 +20,7 @@ const GetStarted = ({
         display={display}
         className="get-started-button"
         onClick={() => {
+          onClick && onClick()
           playClick()
           hamburgerOnClose && hamburgerOnClose()
           dispatch(setIsSigninOpen(true))

@@ -7,6 +7,8 @@ const {
 
 const asyncHandler = require('express-async-handler')
 const { hindiConverter } = require('../utils/article.utils')
+const { breakArticleIntoParagraphs } = require('../utils/article.utils')
+const { formatDate } = require('../utils/miscellaneous.utils')
 
 // @desc    Get user recommendations
 // @route   GET /api/recommendation
@@ -47,7 +49,27 @@ const userRecommendations = asyncHandler(async (req, res) => {
       }
     }
 
-  res.status(201).json(articles)
+  const processedArticles = []
+  for (let article of articles) {
+    const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+    const newArticle = {
+      category: article.category,
+      title: article.title,
+      quizAttemptCnt: article.quizAttemptCnt,
+      mainText: paragraphs,
+      author: article.author,
+      imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
+      hindiTitle: article?.hindiTitle,
+      hindiMainText: article?.hindiMainText,
+      hindiAuthor: article?.hindiAuthor,
+      avgReadTime: article?.avgReadTime,
+      date: formatDate(article.dateTime),
+      dateTime: article.dateTime,
+      _id: article._id,
+    }
+    processedArticles.push(newArticle)
+  }
+  res.send(processedArticles)
 })
 
 // @desc    Get article page recommendations

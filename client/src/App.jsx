@@ -1,30 +1,52 @@
-// /src/App.jsx
 import './App.css'
-import React from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import React, {
+  Suspense,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react'
+import { useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4'
-import { Suspense, useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet'
-import { Box, VStack, Spinner, Flex } from '@chakra-ui/react'
-import NotificationSubscription from './components/Notifications/NotificationSubscription.jsx'
-import Navbar from './components/Header-Footer/Navbar.jsx'
-import Footer from './components/Header-Footer/Footer.jsx'
+import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
-import { setUser } from './redux/authSlice.js'
-import FixedBackground from './components/miscellaneous/FixedBackground.jsx'
-import AppRoutes from './routes/AppRoutes.jsx'
-import GuestLoginModal from './components/authComponents/GuestLoginModal.jsx'
-import ButtonGradient from './assets/svg/ButtonGradient.jsx'
-import NoteMessage from './components/miscellaneous/NoteMessage.jsx'
-import GuestLogin from './components/authComponents/GuestLogin.jsx'
-import GetStarted from './components/Header-Footer/navbarComponents/GetStarted.jsx'
-import SecureYourProgress from './components/miscellaneous/SecureYourProgress.jsx'
+
+// Lazy load components and screens
+const NotificationSubscription = React.lazy(() =>
+  import('./components/Notifications/NotificationSubscription.jsx'),
+)
+const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
+const Footer = React.lazy(() => import('./components/Header-Footer/Footer.jsx'))
+const FixedBackground = React.lazy(() =>
+  import('./components/miscellaneous/FixedBackground.jsx'),
+)
+const AppRoutes = React.lazy(() => import('./routes/AppRoutes.jsx'))
+const GuestLoginModal = React.lazy(() =>
+  import('./components/authComponents/GuestLoginModal.jsx'),
+)
+const ButtonGradient = React.lazy(() =>
+  import('./assets/svg/ButtonGradient.jsx'),
+)
 const Signin = React.lazy(() => import('./screens/Signin.jsx'))
-import { setIsRegisterOpen, setIsSigninOpen } from './redux/appSlice.js'
-import Button from './components/miscellaneous/ButtonComponent.jsx'
 import { useTranslation } from 'react-i18next'
 const Register = React.lazy(() => import('./screens/Register.jsx'))
+const NoteMessageQueue = React.lazy(() =>
+  import('./components/miscellaneous/NoteMessageQueue.jsx'),
+)
+const XPLevelModal = React.lazy(() =>
+  import('./components/Header-Footer/navbarComponents/XPLevelModal.jsx'),
+)
+
+import {
+  addNoteMessage,
+  fetchUnreadNoteMessages,
+  setIsRegisterOpen,
+  setIsSigninOpen,
+  setShowXpLevelModal,
+} from './redux/appSlice.js'
+import { setUser } from './redux/authSlice.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -32,54 +54,62 @@ const App = () => {
 
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
-  const { isRegisterOpen, isSigninOpen } = useSelector(state => state.app)
+  const { isRegisterOpen, isSigninOpen, showXpLevelModal } = useSelector(
+    state => state.app,
+  )
+
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
-  const [showNote, setShowNote] = useState(false)
-  const navigate = useNavigate()
   const { t: GuestLogintranslation } = useTranslation('GuestLogin')
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
 
-  const handleClose = () => {
-    setShowNote(true)
+  const handleClose = useCallback(() => {
     setIsGuestLoggedin(false)
     setGuestModalJustClosed(true)
-  }
+  }, [])
 
-  const isLoggedIn = () => {
-    return isAuthenticated && user
-  }
-  const isToken = () => {
-    const token = localStorage.getItem('token')
+  const isLoggedIn = useMemo(
+    () => isAuthenticated && user,
+    [isAuthenticated, user],
+  )
+  const isToken = useCallback(() => localStorage.getItem('token'), [])
+  const getUserInGameName = useMemo(
+    () => (isLoggedIn ? user?.inGameName : null),
+    [isLoggedIn, user],
+  )
 
-    return token
-  }
-
-  const getUserInGameName = () => {
-    return isLoggedIn() ? user?.inGameName : null
-  }
-
-  let timeout
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = isToken()
 
-    if (!token) setShowNote(true)
+    if (!token) {
+      dispatch(
+        addNoteMessage({
+          title: 'Start using Rapid Recap',
+          duration: 15000,
+          width: '350px',
+          actions: [
+            { text: 'Sign-In', actionType: 'SIGN_IN' },
+            { text: 'Sign-In As Guest', actionType: 'GUEST' },
+          ],
+        }),
+      )
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('/sw.js').then(
-          function (registration) {
+          registration => {
             console.log(
               'ServiceWorker registration successful with scope: ',
               registration.scope,
             )
             registration.update()
           },
-          function (err) {
-            console.log('ServiceWorker registration failed: ', err)
-          },
+          err => console.log('ServiceWorker registration failed: ', err),
         )
       })
     }
+
     const refreshAtMidnightUTC = () => {
       const now = new Date()
       const midnightUTC = new Date(
@@ -91,9 +121,8 @@ const App = () => {
         0,
         0,
       )
-
       const timeUntilMidnight = midnightUTC - now
-      timeout =
+      const timeout =
         timeUntilMidnight > 0 ? timeUntilMidnight : 86400000 + timeUntilMidnight
 
       setTimeout(() => {
@@ -102,35 +131,36 @@ const App = () => {
     }
 
     refreshAtMidnightUTC()
-
-    return () => {
-      clearTimeout(timeout)
-    }
-  }, [])
+  }, [dispatch, isToken])
 
   useEffect(() => {
     if (user?.newAccount) {
       setIsGuestLoggedin(true)
     }
-    if (user?.role === 'guest') {
-      setShowNote(true)
-    }
   }, [isAuthenticated, user])
 
   useEffect(() => {
-    const loggedIn = isLoggedIn()
-    const userInGameName = getUserInGameName()
+    if (isAuthenticated) {
+      const delay = Math.floor(Math.random() * 120000) + 60000
+      const timer = setTimeout(() => {
+        dispatch(fetchUnreadNoteMessages())
+      }, delay)
 
+      return () => clearTimeout(timer)
+    }
+  }, [isAuthenticated, dispatch])
+
+  useEffect(() => {
     ReactGA.set({
-      'User Logged In': loggedIn ? 'Logged In' : 'Logged Out',
-      'User InGameName': userInGameName ? userInGameName : 'anonymous',
+      'User Logged In': isLoggedIn ? 'Logged In' : 'Logged Out',
+      'User InGameName': getUserInGameName ? getUserInGameName : 'anonymous',
     })
     ReactGA.send({
       hitType: 'pageview',
       page: location.pathname + location.search,
       title: document.title,
     })
-  }, [location, user, isAuthenticated])
+  }, [location, getUserInGameName, isLoggedIn])
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -148,15 +178,56 @@ const App = () => {
     fetchInitialData()
   }, [dispatch])
 
-  const shouldShowFooter =
-    !location.pathname.includes('home') &&
-    (location.pathname === '/' || location.pathname === '/get-started')
+  useEffect(() => {
+    if (guestModalJustClosed && user?.role === 'guest') {
+      dispatch(
+        addNoteMessage({
+          title: 'You can view your credentials of guest account in profile',
+          duration: 10000,
+          width: '300px',
+          actions: [{ text: 'View Profile', actionType: 'VIEW_PROFILE' }],
+        }),
+      )
+    }
+  }, [guestModalJustClosed, user, dispatch])
 
-  const isSupported = () =>
-    'Notification' in window &&
-    'serviceWorker' in navigator &&
-    'PushManager' in window
-  const shouldShowNotification = isAuthenticated && isSupported()
+  useEffect(() => {
+    if (
+      user?.role === 'guest' &&
+      !guestModalJustClosed &&
+      !isGuestLoggedin &&
+      !user?.newAccount
+    ) {
+      dispatch(
+        addNoteMessage({
+          title: 'Register to Safeguard your progress',
+          duration: 5000,
+          width: '300px',
+          actions: [{ actionType: 'SECURE_YOUR_PROGRESS' }],
+        }),
+      )
+    }
+  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
+
+  const shouldShowFooter = useMemo(
+    () =>
+      !location.pathname.includes('home') &&
+      (location.pathname === '/' || location.pathname === '/get-started'),
+    [location.pathname],
+  )
+
+  const isSupported = useMemo(
+    () =>
+      'Notification' in window &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window,
+    [],
+  )
+
+  const shouldShowNotification = useMemo(
+    () => isAuthenticated && isSupported,
+    [isAuthenticated, isSupported],
+  )
 
   return (
     <>
@@ -179,96 +250,83 @@ const App = () => {
           content="Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap."
         />
       </Helmet>
-      <FixedBackground />
-      {showNote && !isGuestLoggedin ? (
-        isToken() ? (
-          guestModalJustClosed ? (
-            <NoteMessage
-              onClose={() => setShowNote(false)}
-              title="You can view your credentials of guest account in profile"
-              duration={10000} // Set to null to prevent auto-closing
-            >
-              <Flex
-                width={'100%'}
-                justifyContent="center"
-                alignItems="center"
-                p={'10px'}
-              >
-                <Button
-                  onClick={() => {
-                    navigate(`/profile/${user?.inGameName}`)
-                    setShowNote(false)
-                  }}
-                  buttonW={'150px'}
-                >
-                  View Profile
-                </Button>
-              </Flex>
-            </NoteMessage>
-          ) : (
-            <NoteMessage
-              onClose={() => setShowNote(false)}
-              title="Register to Safegaure your progress"
-              duration={5000} // Set to null to prevent auto-closing
-            >
-              <SecureYourProgress />
-            </NoteMessage>
-          )
-        ) : (
-          <NoteMessage
-            onClose={() => setShowNote(false)}
-            title="Start using Rapid Recap"
-            width="250px"
-            duration={15000}
-          >
-            <VStack p={'10px'} gap={'1rem'} justifyContent={'space-between'}>
-              <GetStarted innerText={'Signin'} width={'80%'} />
-              <GuestLogin
-                onCloseNoteMessage={() => setShowNote(false)}
-                width={'80%'}
-                t={GuestLogintranslation}
-              />
-            </VStack>
-          </NoteMessage>
-        )
-      ) : null}
-      <Navbar />
-      <ButtonGradient />
-      {shouldShowNotification && <NotificationSubscription />}
-      <GuestLoginModal
-        isOpen={isGuestLoggedin}
-        onClose={handleClose}
-        guestName={user?.inGameName}
-        guestPassword={user?.guestTempPassword}
-        guestId={user?._id}
-        onOpen={() => setIsGuestLoggedin(true)}
-        t={GuestLoginModaltranslation}
-      />
 
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={null}>
+        <FixedBackground />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <NoteMessageQueue />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <Navbar />
+      </Suspense>
+
+      {showXpLevelModal && (
+        <Suspense fallback={null}>
+          <XPLevelModal
+            setShowXPLevelModal={show => dispatch(setShowXpLevelModal(show))}
+          />
+        </Suspense>
+      )}
+
+      <Suspense fallback={null}>
+        <ButtonGradient />
+      </Suspense>
+
+      {shouldShowNotification && (
+        <Suspense fallback={null}>
+          <NotificationSubscription />
+        </Suspense>
+      )}
+
+      <Suspense fallback={null}>
+        <GuestLoginModal
+          isOpen={isGuestLoggedin}
+          onClose={handleClose}
+          guestName={user?.inGameName}
+          guestPassword={user?.guestTempPassword}
+          guestId={user?._id}
+          onOpen={() => setIsGuestLoggedin(true)}
+          t={GuestLoginModaltranslation}
+        />
+      </Suspense>
+
+      <Suspense fallback={null}>
         <Signin
           isOpen={isSigninOpen}
           onOpen={() => dispatch(setIsSigninOpen(true))}
           onClose={() => dispatch(setIsSigninOpen(false))}
         />
       </Suspense>
-      <Suspense fallback={<Spinner />}>
+
+      <Suspense fallback={null}>
         <Register
           isOpen={isRegisterOpen}
           onOpen={() => dispatch(setIsRegisterOpen(true))}
           onClose={() => dispatch(setIsRegisterOpen(false))}
         />
       </Suspense>
+
       <Box
         position="relative"
         minHeight="100vh"
         zIndex={1}
         overflowX={'hidden'}
       >
-        <AppRoutes isToken={isToken()} />
+        <Suspense fallback={null}>
+          <AppRoutes isToken={isToken()} />
+        </Suspense>
       </Box>
-      {shouldShowFooter && <Footer />}
+
+      {shouldShowFooter && (
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
+      )}
     </>
   )
 }
+
 export default App

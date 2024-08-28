@@ -5,7 +5,6 @@ import { useToast } from '@chakra-ui/react'
 import useSound from './useSound'
 
 const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
-  // console.log(userAnswers);
   const [submitLoad, setSubmitLoad] = useState(false)
 
   const toast = useToast()
@@ -16,16 +15,6 @@ const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
     setSubmitLoad(true)
     setSubmitted(true)
     try {
-      // const userResponses = showConfirmationModal
-      //   ? Array.from({ length: quizData.length }, () => "")
-      //   : [...userAnswers];
-      // if (
-      //   !showConfirmationModal &&
-      //   userResponses.length === currentQuestionIndex
-      // ) {
-      //   userResponses.push("");
-      // }
-
       const userResponses = [...userAnswers]
 
       const response = await axios.post(`/api/quiz/attempt`, {
@@ -35,6 +24,7 @@ const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
         timeTaken: timeTaken === 0 ? 1 : timeTaken,
         quizId,
       })
+
       toast({
         title: 'Quiz Submitted Successfully!',
         description: 'You can now view your score.',

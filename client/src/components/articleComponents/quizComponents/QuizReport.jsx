@@ -50,7 +50,7 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
   const renderModalBody = useCallback(() => {
     if (showQuizSummary) {
       return (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <QuizGivenSummary
             timeTakenInitial={timeTaken}
             quizGivenSummaryInitial={quizGivenSummary}
@@ -77,7 +77,7 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
     }
 
     return (
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={null}>
         <SubmittedQuizInterface
           submitLoad={false}
           result={result}

@@ -4,16 +4,12 @@ import Button from '../miscellaneous/ButtonComponent'
 import ButtonGradient from '../../assets/svg/ButtonGradient'
 import { LockIcon } from '@chakra-ui/icons'
 import ShareSVG from '../../assets/svg/ShareSVG'
-import { useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
+import { addNoteMessage } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 
-const ShareButton = ({
-  onClick,
-  isDisabled,
-  onOpenSignin,
-  setShowNote,
-  user,
-}) => {
+const ShareButton = ({ onClick, isDisabled, onOpenSignin, user }) => {
+  const dispatch = useDispatch()
   const { t } = useTranslation('ShareButton')
   return (
     <Flex position={'relative'}>
@@ -27,7 +23,24 @@ const ShareButton = ({
             color="white"
             boxSize={6}
             zIndex={2}
-            onClick={user?.role !== 'guest' ? onOpenSignin : null}
+            onClick={
+              user?.role !== 'guest'
+                ? onOpenSignin
+                : () =>
+                    dispatch(
+                      addNoteMessage({
+                        title:
+                          'Register to see your IQ score and grow Wise Web',
+                        duration: 10000,
+                        width: '250px',
+                        actions: [
+                          {
+                            actionType: 'SECURE_YOUR_PROGRESS',
+                          },
+                        ],
+                      }),
+                    )
+            }
             cursor={'pointer'}
           />
         </Tooltip>
@@ -41,7 +54,21 @@ const ShareButton = ({
       >
         <Button
           onClick={() => {
-            user?.role !== 'guest' ? onClick() : setShowNote(true)
+            console.log('Share button clicked')
+            user?.role !== 'guest'
+              ? onClick()
+              : dispatch(
+                  addNoteMessage({
+                    title: 'Register to see your IQ score and grow Wise Web',
+                    duration: 10000,
+                    width: '250px',
+                    actions: [
+                      {
+                        actionType: 'SECURE_YOUR_PROGRESS',
+                      },
+                    ],
+                  }),
+                )
           }}
           buttonW="7rem"
           textColor={'white'}

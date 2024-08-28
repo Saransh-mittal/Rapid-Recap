@@ -3,7 +3,7 @@ const FriendRequest = require('../model/friendRequestSchema')
 const User = require('../model/userSchema')
 const Chat = require('../model/chatSchema')
 const { sendNotification } = require('../services/notificationService')
-const { activityTypes } = require('../data/activityTypes')
+const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const { logActivity } = require('../utils/activity.utils')
 
 //@description     Send friend request
@@ -95,12 +95,35 @@ const acceptRequest = asyncHandler(async (req, res) => {
       type: activityTypes.WISE_WEB_EXPANSION.type,
       date: currentDate,
     })
+    const noteMessageForSender = new NoteMessage({
+      userId: sender._id,
+      title: 'Friend request accepted',
+      content: `You are now friends with ${receiver.name}`,
+      messageType: 'xpAward',
+      xpAwarded: getXpForActivity({
+        activityType: 'Wise Web expansion',
+      }),
+      xpSource: 'Wise Web expansion',
+      actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+    })
+    await noteMessageForSender.save()
     logActivity({
       userInGameName: receiver.inGameName,
       type: activityTypes.WISE_WEB_EXPANSION.type,
       date: currentDate,
     })
-
+    const noteMessageForReceiver = new NoteMessage({
+      userId: receiver._id,
+      title: 'Friend request accepted',
+      content: `You are now friends with ${sender.name}`,
+      messageType: 'xpAward',
+      xpAwarded: getXpForActivity({
+        activityType: 'Wise Web expansion',
+      }),
+      xpSource: 'Wise Web expansion',
+      actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+    })
+    await noteMessageForReceiver.save()
     await sendNotification({
       title: `Friend request accepted by ${receiver.name}`,
       icon: receiver.pic,

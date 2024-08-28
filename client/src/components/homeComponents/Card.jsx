@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import {
   Box,
   Image,
@@ -15,6 +15,8 @@ import { Calendar, Clock, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useSound from '../../customHooks/useSound'
 import slugify from 'slugify'
+import { useDispatch } from 'react-redux'
+import { setArticleData } from '../../redux/articleSlice'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -23,11 +25,12 @@ const MotionBadge = motion(Badge)
 const MotionCircle = motion(Circle)
 const MotionHeading = motion(Heading)
 
-const Card = ({ title, image, category, date, readTime, id }) => {
+const Card = ({ title, image, category, date, readTime, id, articleData }) => {
   const cardRef = useRef(null)
   const navigate = useNavigate()
   const controls = useAnimation()
   const { playClick } = useSound()
+  const dispatch = useDispatch()
 
   // Increase stiffness for faster response, and decrease damping for more fluid motion
   const x = useSpring(0, { stiffness: 150, damping: 30 })
@@ -88,6 +91,7 @@ const Card = ({ title, image, category, date, readTime, id }) => {
       bg="linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(147,51,234,0.1) 100%)"
       onClick={() => {
         playClick()
+        dispatch(setArticleData(articleData))
         navigate(`/article/${id}/${slugify(title)}`)
       }}
       color="white"

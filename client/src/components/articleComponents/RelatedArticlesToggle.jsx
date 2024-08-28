@@ -29,7 +29,7 @@ const RelatedArticlesToggle = React.memo(({ showRelated, onToggle }) => {
         fontSize={{ base: '0.8rem', lg: '1.2rem' }}
         textTransform={'uppercase'}
       >
-        {t('relatedArticles')}
+        {t('remmondedArticles')}
       </Box>
       <Box
         px={2}
@@ -42,7 +42,7 @@ const RelatedArticlesToggle = React.memo(({ showRelated, onToggle }) => {
         fontSize={{ base: '0.8rem', lg: '1.2rem' }}
         textTransform={'uppercase'}
       >
-        {t('remmondedArticles')}
+        {t('relatedArticles')}
       </Box>
     </Box>
   )

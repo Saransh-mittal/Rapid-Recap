@@ -102,7 +102,7 @@ const ModalComponent = ({
             marginBottom={load ? '10px' : '0'}
           >
             {!submitted && timer && (
-              <Suspense fallback={<Spinner />}>
+              <Suspense fallback={null}>
                 <Countdown
                   timer={timer}
                   submitted={submitted}
@@ -160,7 +160,7 @@ const ModalComponent = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Suspense fallback={<Spinner />}>
+                    <Suspense fallback={null}>
                       <Button
                         borderRadius={'full'}
                         color={'white'}

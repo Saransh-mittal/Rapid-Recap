@@ -67,7 +67,7 @@ const MainArticleContent = ({
               />
             </Flex>
           </figure>
-          {mainText[selectedLanguage].length === 3 ? (
+          {mainText[selectedLanguage]?.length === 3 ? (
             <>
               <Text
                 align="justify"
@@ -115,7 +115,7 @@ const MainArticleContent = ({
                 mb={[2, 3, 4]}
                 fontSize={fontSize}
               >
-                {mainText[selectedLanguage][0]}
+                {mainText[selectedLanguage]?.[0]}
               </Text>
               <Flex position="relative" width="100%">
                 <Text
@@ -124,7 +124,7 @@ const MainArticleContent = ({
                   fontSize={fontSize}
                   style={{ userSelect: 'text' }}
                 >
-                  {mainText[selectedLanguage][1]}
+                  {mainText[selectedLanguage]?.[1]}
                 </Text>
               </Flex>
             </>

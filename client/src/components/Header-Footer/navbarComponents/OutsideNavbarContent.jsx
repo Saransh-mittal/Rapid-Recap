@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react'
 import { HamburgerIcon, SearchIcon } from '@chakra-ui/icons'
 import { useNavigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../../customHooks/useSound'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import FaMessenger from '../../../assets/svg/FaMessenger'
@@ -24,6 +24,7 @@ import IconShimmerLoader from '../../miscellaneous/shimmerLoaders/IconShimmerLoa
 import { BsLock } from 'react-icons/bs'
 import NoteMessage from '../../miscellaneous/NoteMessage'
 import SecureYourProgress from '../../miscellaneous/SecureYourProgress'
+import { addNoteMessage, setShowXpLevelModal } from '../../../redux/appSlice'
 
 const StreakFire = React.lazy(() => import('./StreakFire'))
 const ProfileDropDownMenu = React.lazy(() =>
@@ -42,7 +43,7 @@ const OutsideNavbarContent = ({
   setIsDrawerOpen,
   notifyCont,
   setShowDailyStreakModal,
-  setShowXPLevelModal,
+
   setShowIQScoreModal,
   streak,
   isBoosted,
@@ -182,11 +183,7 @@ const OutsideNavbarContent = ({
             setShowIQScoreModal={setShowIQScoreModal}
             playClick={playClick}
           />
-          <XPLevelComponent
-            level={level}
-            setShowXPLevelModal={setShowXPLevelModal}
-            playClick={playClick}
-          />
+          <XPLevelComponent level={level} playClick={playClick} />
           <StreakFireComponent
             streak={streak}
             isBoosted={isBoosted}
@@ -201,6 +198,7 @@ const OutsideNavbarContent = ({
             onCloseUserSearch={onCloseUserSearch}
           />
           <MessengerComponent
+            playClick={playClick}
             notification={notification}
             navigate={navigate}
             renderNotificationBadge={renderNotificationBadge}
@@ -276,7 +274,7 @@ const PendingLoginContent = () => (
 )
 
 const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
-  const [showNote, setShowNote] = React.useState(false)
+  const dispatch = useDispatch()
   return (
     <>
       <Suspense
@@ -304,40 +302,45 @@ const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
             playClick()
             user?.role !== 'guest'
               ? setShowIQScoreModal(true)
-              : setShowNote(true)
+              : dispatch(
+                  addNoteMessage({
+                    title: 'Register to see your IQ score and grow Wise Web',
+                    duration: 10000,
+                    width: '250px',
+                    actions: [
+                      {
+                        actionType: 'SECURE_YOUR_PROGRESS',
+                      },
+                    ],
+                  }),
+                )
           }}
         />
       </Suspense>
-      {showNote && (
-        <NoteMessage
-          onClose={() => setShowNote(false)}
-          title="Register to see your IQ score and grow Wise Web"
-          duration={10000} // Set to null to prevent auto-closing
-        >
-          <SecureYourProgress />
-        </NoteMessage>
-      )}
     </>
   )
 }
 
-const XPLevelComponent = ({ level, setShowXPLevelModal, playClick }) => (
-  <Suspense
-    fallback={
-      <ImageShimmerLoader imageUrl={levelImage} width={40} height={40} />
-    }
-  >
-    <XPLevel
-      level={level}
-      _hover={{ cursor: 'pointer' }}
-      className="xp-level"
-      onClick={() => {
-        playClick()
-        setShowXPLevelModal(true)
-      }}
-    />
-  </Suspense>
-)
+const XPLevelComponent = ({ level, playClick }) => {
+  const dispatch = useDispatch()
+  return (
+    <Suspense
+      fallback={
+        <ImageShimmerLoader imageUrl={levelImage} width={40} height={40} />
+      }
+    >
+      <XPLevel
+        level={level}
+        _hover={{ cursor: 'pointer' }}
+        className="xp-level"
+        onClick={() => {
+          playClick()
+          dispatch(setShowXpLevelModal(true))
+        }}
+      />
+    </Suspense>
+  )
+}
 
 const StreakFireComponent = ({
   streak,
@@ -402,14 +405,28 @@ const SearchComponent = ({
   </Box>
 )
 
-const MessengerComponent = ({ notification, navigate, isGuest }) => {
-  const [showNote, setShowNote] = React.useState(false)
+const MessengerComponent = ({ notification, navigate, isGuest, playClick }) => {
+  const dispatch = useDispatch()
   return (
     <Box
       _hover={{ cursor: 'pointer' }}
       display={{ base: 'none', lg: 'flex' }}
       onClick={() => {
-        isGuest ? setShowNote(true) : navigate('/chats')
+        playClick()
+        isGuest
+          ? dispatch(
+              addNoteMessage({
+                title: 'Register to do chat and grow Wise Web',
+                duration: 10000,
+                width: '250px',
+                actions: [
+                  {
+                    actionType: 'SECURE_YOUR_PROGRESS',
+                  },
+                ],
+              }),
+            )
+          : navigate('/chats')
       }}
       position="relative"
       mx={1}
@@ -436,15 +453,6 @@ const MessengerComponent = ({ notification, navigate, isGuest }) => {
         </>
       ) : (
         <FaMessenger width="23px" height="23px" />
-      )}
-      {showNote && (
-        <NoteMessage
-          onClose={() => setShowNote(false)}
-          title="Register to do chat and grow Wise Web"
-          duration={10000} // Set to null to prevent auto-closing
-        >
-          <SecureYourProgress />
-        </NoteMessage>
       )}
     </Box>
   )

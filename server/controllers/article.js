@@ -59,7 +59,27 @@ const allArticles = async (req, res) => {
           await article.save()
         }
       }
-    res.send(articles)
+    const processedArticles = []
+    for (let article of articles) {
+      const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+      const newArticle = {
+        category: article.category,
+        title: article.title,
+        quizAttemptCnt: article.quizAttemptCnt,
+        mainText: paragraphs,
+        author: article.author,
+        imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
+        hindiTitle: article?.hindiTitle,
+        hindiMainText: article?.hindiMainText,
+        hindiAuthor: article?.hindiAuthor,
+        avgReadTime: article?.avgReadTime,
+        date: formatDate(article.dateTime),
+        dateTime: article.dateTime,
+        _id: article._id,
+      }
+      processedArticles.push(newArticle)
+    }
+    res.send(processedArticles)
   } catch (error) {
     res.status(400).json({ error: error || 'Something went wrong' })
     console.log(error)

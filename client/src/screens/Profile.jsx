@@ -65,7 +65,7 @@ export default function Profile() {
   const { user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
   const dispatchRedux = useDispatch()
-  const [showNote, setShowNote] = useState(false)
+
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -573,14 +573,12 @@ export default function Profile() {
                     privateLineGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
-                    setShowNote={setShowNote}
                   />
                   <IQBarGraph
                     barGraph={profile?.barGraph}
                     privateBarGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
-                    setShowNote={setShowNote}
                   />
                 </>
               )}
@@ -647,7 +645,6 @@ export default function Profile() {
                       loginedUserProfile={loginedUserProfile}
                       USER_IQ={profile?.barGraph?.USER_IQ}
                       isGuest={user?.role === 'guest'}
-                      setShowNote={setShowNote}
                     />
                   </Flex>
                 </>
@@ -656,15 +653,6 @@ export default function Profile() {
           </Suspense>
         </Flex>
       </Flex>
-      {showNote && (
-        <NoteMessage
-          onClose={() => setShowNote(false)}
-          title="Register to View"
-          duration={10000} // Set to null to prevent auto-closing
-        >
-          <SecureYourProgress />
-        </NoteMessage>
-      )}
     </Box>
   )
 }

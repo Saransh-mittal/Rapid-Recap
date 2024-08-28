@@ -1,22 +1,64 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useCallback, lazy, Suspense } from 'react'
 import {
   Box,
   Heading,
   CloseButton,
   useDisclosure,
-  Portal,
+  VStack,
+  HStack,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  removeNoteMessageWithId,
+  setIsNotifDrawerOpen,
+  setShowingSummaryForNoteMessages,
+  setShowXpLevelModal,
+} from '../../redux/appSlice'
+import { useNavigate } from 'react-router-dom'
+import { createHandleMessageAction } from '../../utils/messageActionHandlers'
+
+// Lazy load utilities and components
+const ButtonFactory = lazy(() => import('./ButtonFactory'))
 
 const MotionBox = motion(Box)
 
 const NoteMessage = ({
-  title = 'Elegant Update',
-  children,
+  messageId,
+  title,
+  content,
   onClose,
-  duration = 7000, // Default duration, set to null for permanent display
+  duration = 7000,
   width = '320px',
+  actions = [],
+  customContent,
 }) => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { user } = useSelector(state => state.auth)
+
+  // Memoize handleMessageAction to prevent unnecessary re-renders
+  const handleMessageAction = useMemo(
+    () =>
+      createHandleMessageAction(dispatch, {
+        setShowingSummaryForNoteMessages,
+        removeNoteMessageWithId,
+        setShowXpLevelModal,
+        setIsNotifDrawerOpen,
+        navigateToProfile: id => navigate(`/profile/${id}`),
+      }),
+    [dispatch, navigate],
+  )
+
+  // Memoize handleAction to avoid recreating the function on every render
+  const handleAction = useCallback(
+    actionType => {
+      handleMessageAction(actionType, messageId, user?.inGameName)
+      actionType !== 'VIEW_ALL' && handleClose()
+    },
+    [handleMessageAction, messageId, user?.inGameName],
+  )
+
   const { isOpen, onClose: closeDisclosure } = useDisclosure({
     defaultIsOpen: true,
   })
@@ -31,58 +73,82 @@ const NoteMessage = ({
     }
   }, [duration])
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     closeDisclosure()
-    if (onClose) {
-      setTimeout(onClose, 500) // Delay to allow for exit animation
-    }
-  }
+    setTimeout(() => {
+      onClose && onClose()
+      dispatch(removeNoteMessageWithId(messageId))
+    }, 500)
+  }, [closeDisclosure, onClose, dispatch, messageId])
 
   return (
-    <Portal>
-      <AnimatePresence>
-        {isOpen && (
-          <MotionBox
-            position="fixed"
-            top="20px"
-            right="20px"
-            width={width}
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-            zIndex={1001}
+    <AnimatePresence>
+      {isOpen && (
+        <MotionBox
+          position="fixed"
+          top="20px"
+          right="20px"
+          width={width}
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+          zIndex={1001}
+        >
+          <Box
+            bg="gray.800"
+            color="gray.100"
+            borderRadius="lg"
+            overflow="hidden"
+            boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
+            borderWidth="1px"
+            borderColor="gray.700"
           >
             <Box
-              bg="gray.800"
-              color="gray.100"
-              borderRadius="md"
-              overflow="hidden"
-              boxShadow="lg"
-              borderWidth="1px"
-              borderColor="gray.700"
+              bg="gray.700"
+              px={4}
+              py={2}
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
             >
-              <Box
-                bg="gray.700"
-                px={5}
-                py={3}
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                borderBottomWidth="1px"
-                borderColor="gray.600"
+              <Heading
+                as="h3"
+                size="xs"
+                textTransform="uppercase"
+                letterSpacing="wide"
+                color="white"
               >
-                <Heading as="h3" size="sm" textTransform={'uppercase'}>
-                  {title}
-                </Heading>
-                <CloseButton size="sm" onClick={handleClose} />
-              </Box>
-              {children}
+                {title}
+              </Heading>
+              <CloseButton size="sm" onClick={handleClose} color="white" />
             </Box>
-          </MotionBox>
-        )}
-      </AnimatePresence>
-    </Portal>
+            <VStack align="stretch" p={3} spacing={2}>
+              {customContent ? customContent : content}
+              {actions.length > 0 && (
+                <HStack spacing={2} justify="center" pt={2}>
+                  <Suspense fallback={null}>
+                    {actions.map((action, index) => (
+                      <ButtonFactory
+                        key={index}
+                        actionType={action.actionType}
+                        onClick={() => handleAction(action.actionType)}
+                        size="sm"
+                        variant="outline"
+                        colorScheme="blue"
+                        innerText={action.text}
+                      >
+                        {action.text}
+                      </ButtonFactory>
+                    ))}
+                  </Suspense>
+                </HStack>
+              )}
+            </VStack>
+          </Box>
+        </MotionBox>
+      )}
+    </AnimatePresence>
   )
 }
 

@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
-const DB = process.env.DATABASE;
+const mongoose = require('mongoose')
+const NoteMessage = require('../model/noteMessageSchema')
+const DB = process.env.DATABASE
 // const Article = require("../model/articleSchema");
 // const articlesData = require("../../articleEntertainment.json");
 // const updates = require("./updates/updates(23.07.2024).json");
@@ -15,11 +16,11 @@ const DB = process.env.DATABASE;
 mongoose
   .connect(DB)
   .then(() => {
-    console.log(`connection successful`);
+    console.log(`connection successful`)
   })
-  .catch((err) => {
-    console.log(`connection unsuccessful`);
-  });
+  .catch(err => {
+    console.log(`connection unsuccessful`)
+  })
 
 // async function saveArticlesToDB() {
 //   try {
@@ -85,6 +86,16 @@ mongoose
 //         //   read,
 //         // });
 //         // await newUpdate.save();
+
+// const noteMessageForApplicationUpdate = new NoteMessage({
+//   userId: user._id,
+//   title: 'Application Update',
+//   content: title,
+//   messageType: 'default',
+//   actions: [{ actionType: 'INBOX' }],
+// })
+// await noteMessageForApplicationUpdate.save()
+
 //         // console.log("Update saved:", title);
 //         const transporter = await mailTransporter();
 //         await transporter.sendMail({

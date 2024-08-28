@@ -1,8 +1,9 @@
 const fs = require('fs').promises
 const path = require('path')
 const moment = require('moment-timezone')
-const User = require('../models/User') // Adjust the path as necessary
+
 const { sendNotification } = require('../../services/notificationService')
+const User = require('../../model/userSchema')
 
 async function loadNotificationConfig() {
   const configPath = path.join(

@@ -2,11 +2,12 @@ import { Avatar, Flex, Box, Icon } from '@chakra-ui/react'
 import { BsLock } from 'react-icons/bs'
 import React, { useState, useMemo, useCallback, Suspense } from 'react'
 import { motion } from 'framer-motion'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import { NavLink } from 'react-router-dom'
 import NoteMessage from '../miscellaneous/NoteMessage'
 import SecureYourProgress from '../miscellaneous/SecureYourProgress'
+import { addNoteMessage } from '../../redux/appSlice'
 
 const Inbox = React.lazy(() =>
   import('../Header-Footer/navbarComponents/Inbox'),
@@ -65,7 +66,7 @@ const ProfileDropDownMenu = ({
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
-  const [showNote, setShowNote] = useState(false)
+  const dispatch = useDispatch()
 
   const [isOpen, setIsOpen] = useState(false)
 
@@ -183,7 +184,20 @@ const ProfileDropDownMenu = ({
                   alignItems={'center'}
                   opacity={0.5}
                   justifyContent={'center'}
-                  onClick={() => setShowNote(true)}
+                  onClick={() =>
+                    dispatch(
+                      addNoteMessage({
+                        title: 'Register to make friends and build Wise Web',
+                        duration: 10000,
+                        width: '250px',
+                        actions: [
+                          {
+                            actionType: 'SECURE_YOUR_PROGRESS',
+                          },
+                        ],
+                      }),
+                    )
+                  }
                 >
                   <UserFriendsSVG
                     fill={'white'}
@@ -245,15 +259,6 @@ const ProfileDropDownMenu = ({
           </Suspense>
         </motion.ul>
       </motion.nav>
-      {showNote && (
-        <NoteMessage
-          onClose={() => setShowNote(false)}
-          title="Register to make friends and build Wise Web"
-          duration={10000} // Set to null to prevent auto-closing
-        >
-          <SecureYourProgress />
-        </NoteMessage>
-      )}
     </Flex>
   )
 }

@@ -15,14 +15,14 @@ import {
   Tag,
   useToast,
   useBreakpointValue,
-  Button,
 } from '@chakra-ui/react'
 import moment from 'moment'
 import axios from 'axios'
 import Lock from '/images/lock.webp'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import SVGIQLineGraph from '../../assets/svg/SVGIQLineGraph'
+import { addNoteMessage } from '../../redux/appSlice'
 
 // Lazy load the ExpectedIQModal component
 const ExpectedIQModal = lazy(() =>
@@ -176,7 +176,6 @@ const IQLineGraph = ({
   iOpenedFromNav = false,
   graphwidth,
   isGuest,
-  setShowNote,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -189,6 +188,7 @@ const IQLineGraph = ({
     xl: 300,
     '2xl': 500,
   })
+  const dispatch = useDispatch()
   const [hoveredData, setHoveredData] = useState(null)
   const [expectedIQ, setExpectedIQ] = useState(0)
   const [showExpectedIQ, setShowExpectedIQ] = useState(false)
@@ -261,7 +261,20 @@ const IQLineGraph = ({
           w="200px"
           background="transparent"
           src={Lock}
-          onClick={() => setShowNote(true)}
+          onClick={() =>
+            dispatch(
+              addNoteMessage({
+                title: 'Register to view your standings',
+                duration: 10000,
+                width: '250px',
+                actions: [
+                  {
+                    actionType: 'SECURE_YOUR_PROGRESS',
+                  },
+                ],
+              }),
+            )
+          }
           _hover={{ cursor: 'pointer' }}
         />
 

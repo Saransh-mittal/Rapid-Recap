@@ -63,9 +63,11 @@ const BoostSection = React.memo(
         {isBoosted && (
           <Flex
             alignItems="center"
-            gap={2}
+            gap={1}
             cursor="pointer"
             onClick={openModal}
+            wordBreak={'break-word'}
+            ml={'-0.9rem'}
           >
             <Image
               src={starBoost}

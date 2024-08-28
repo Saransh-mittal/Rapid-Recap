@@ -9,8 +9,7 @@ import Loading from '../miscellaneous/Loading'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 
-const GuestLogin = ({ width, onCloseNoteMessage, t }) => {
-  // const { t } = useTranslation('GuestLogin')
+const GuestLogin = ({ width, onClick, t }) => {
   const toast = useToast()
   const navigate = useNavigate()
   const dispatchRedux = useDispatch()
@@ -72,8 +71,8 @@ const GuestLogin = ({ width, onCloseNoteMessage, t }) => {
       {loading && <Loading />}
       <Button
         onClick={() => {
+          onClick && onClick()
           handleGuestLogin()
-          onCloseNoteMessage && onCloseNoteMessage()
         }}
         className="get-started-button"
         width={width || `auto`}

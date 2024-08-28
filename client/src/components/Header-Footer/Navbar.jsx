@@ -34,6 +34,8 @@ import {
   markFriendRequestsAsRead,
   resetAllState,
   resetLoadingFlags,
+  setIsNotifDrawerOpen,
+  setIsNotifModalOpen,
 } from '../../redux/appSlice'
 import useSound from '../../customHooks/useSound'
 import Loading from '../miscellaneous/Loading'
@@ -57,7 +59,7 @@ const NavBrand = React.lazy(() => import('./navbarComponents/NavBrand'))
 const HamburgerModal = React.lazy(() =>
   import('./navbarComponents/HamburgerModal'),
 )
-const XPLevelModal = React.lazy(() => import('./navbarComponents/XPLevelModal'))
+
 const IQScoreModal = React.lazy(() => import('./navbarComponents/IQScoreModal'))
 const WiseWeb = React.lazy(() => import('../profileComponents/WiseWeb'))
 
@@ -73,14 +75,13 @@ const Navbar = () => {
   const cancelRef = React.useRef()
 
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false)
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+
   const [visible, setVisible] = useState(true)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
   const [notifyCont, setNotifyCnt] = useState(0)
   const [selectedNotification, setSelectedNotification] = useState(null)
   const [showDailyStreakModal, setShowDailyStreakModal] = useState(false)
-  const [showXPLevelModal, setShowXPLevelModal] = useState(false)
+
   const [showIQScoreModal, setShowIQScoreModal] = useState(false)
   const [logoutLoader, setLogoutLoader] = useState(false)
 
@@ -94,6 +95,8 @@ const Navbar = () => {
     streakLoading,
     friendRequestsLoading,
     isBoosted,
+    isNotifDrawerOpen,
+    isNotifModalOpen,
   } = useSelector(state => state.app)
 
   const {
@@ -172,7 +175,8 @@ const Navbar = () => {
     try {
       const response = await axios.post('/api/user/logout')
       if (response.status === 201) {
-        setIsDrawerOpen(false)
+        dispatchRedux(setIsNotifDrawerOpen(false))
+
         setIsHamburgerOpen(false)
         localStorage.removeItem('token')
         localStorage.removeItem('role')
@@ -295,9 +299,7 @@ const Navbar = () => {
                 getBackgroundColor={getBackgroundColor}
               />
             )}
-            {showXPLevelModal && (
-              <XPLevelModal setShowXPLevelModal={setShowXPLevelModal} />
-            )}
+
             {showIQScoreModal && (
               <IQScoreModal
                 setShowIQScoreModal={setShowIQScoreModal}
@@ -343,10 +345,11 @@ const Navbar = () => {
               />
 
               <OutsideNavbarContent
-                setIsDrawerOpen={setIsDrawerOpen}
+                setIsDrawerOpen={val =>
+                  dispatchRedux(setIsNotifDrawerOpen(val))
+                }
                 notifyCont={notifyCont}
                 setShowDailyStreakModal={setShowDailyStreakModal}
-                setShowXPLevelModal={setShowXPLevelModal}
                 setShowIQScoreModal={setShowIQScoreModal}
                 streak={streak}
                 isBoosted={isBoosted}
@@ -361,19 +364,22 @@ const Navbar = () => {
                 onOpenWiseWeb={onOpenWiseWeb}
               />
             </Flex>
-
-            {isModalOpen && (
+            {isNotifModalOpen && (
               <NotificationModal
                 selectedNotification={selectedNotification}
-                setIsModalOpen={setIsModalOpen}
-                setIsDrawerOpen={setIsDrawerOpen}
+                setIsModalOpen={val => dispatchRedux(setIsNotifModalOpen(val))}
+                setIsDrawerOpen={val =>
+                  dispatchRedux(setIsNotifDrawerOpen(val))
+                }
               />
             )}
-            {isDrawerOpen && (
+            {isNotifDrawerOpen && (
               <NotificationDrawer
                 setIsHamburgerOpen={setIsHamburgerOpen}
-                setIsDrawerOpen={setIsDrawerOpen}
-                setIsModalOpen={setIsModalOpen}
+                setIsDrawerOpen={val =>
+                  dispatchRedux(setIsNotifDrawerOpen(val))
+                }
+                setIsModalOpen={val => dispatchRedux(setIsNotifModalOpen(val))}
                 setSelectedNotification={setSelectedNotification}
               />
             )}
@@ -401,7 +407,7 @@ const Navbar = () => {
           navLinkRefs={navLinkRefs}
           notifyCont={notifyCont}
           handleLogout={handleGuestLogout}
-          setIsDrawerOpen={setIsDrawerOpen}
+          setIsDrawerOpen={val => dispatchRedux(setIsNotifDrawerOpen(val))}
           onOpenWiseWeb={onOpenWiseWeb}
         />
       </Suspense>

@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 
 import { setExportData, setIsRegisterOpen } from '../../redux/appSlice'
 
-const SecureYourProgress = () => {
+const SecureYourProgress = ({ padding = 6 }) => {
   const { user } = useSelector(state => state.auth)
   const dispatch = useDispatch()
 
@@ -18,7 +18,7 @@ const SecureYourProgress = () => {
     `
 
   const getTimeLeftBeforeExpiration = () => {
-    const expirationDate = new Date(user.expiresAt)
+    const expirationDate = new Date(user?.expiresAt)
     const currentDate = new Date()
     const timeLeft = expirationDate - currentDate
     const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24))
@@ -49,8 +49,8 @@ const SecureYourProgress = () => {
         bg="gray.800"
         color="gray.100"
         borderRadius="md"
-        p={6}
         boxShadow="lg"
+        p={padding}
         w="100%"
       >
         <Heading size="md" mb={4}>
