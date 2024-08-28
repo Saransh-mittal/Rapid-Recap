@@ -1114,13 +1114,7 @@ const streakChecker = async (req, res) => {
   const userId = req.user._id
   try {
     const user = await User.findById(userId)
-    const todaysQuizAttemptsCount = await QuizAttempt.countDocuments({
-      user: userId,
-      createdAt: { $gte: new Date().setUTCHours(0, 0, 0, 0) },
-    })
-    if (todaysQuizAttemptsCount === 0) {
-      user.todaysQuizCnt = 0
-    }
+
     // Check if the latest attempt is from yesterday
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0) // Set time to start of the day
@@ -1132,6 +1126,9 @@ const streakChecker = async (req, res) => {
     if (user.revivalPeriodEnd && today > user.revivalPeriodEnd) {
       // Revival period ended without success
       user.revivalPeriodEnd = null
+    }
+    if (user.streakExpiry.getTime() < tomorrow.getTime()) {
+      user.todaysQuizCnt = 0
     }
     if (today.getTime() > user.streakExpiry.getTime()) {
       if (user.streak >= 5 && user.revivalPeriodEnd === null) {
@@ -1156,7 +1153,7 @@ const streakChecker = async (req, res) => {
         isRevivalPeriod,
         streakBeforeBreak,
         remainingTimeBeforeRevival,
-        todaysQuizAttemptsCount,
+        todaysQuizAttemptsCount: 0,
       })
     }
     if (user.revivalPeriodEnd) {
@@ -1181,7 +1178,7 @@ const streakChecker = async (req, res) => {
       isRevivalPeriod,
       streakBeforeBreak,
       remainingTimeBeforeRevival,
-      todaysQuizAttemptsCount,
+      todaysQuizAttemptsCount: user.todaysQuizCnt,
     })
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' })
