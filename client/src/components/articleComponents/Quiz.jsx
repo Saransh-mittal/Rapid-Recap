@@ -298,11 +298,11 @@ const Quiz = ({
       return (
         <Box position={'relative'}>
           {showGetSetGo && (
-            <Suspense fallback={<Spinner />}>
+            <Suspense fallback={null}>
               <GetSetGoAnimation onComplete={handleAnimationComplete} />
             </Suspense>
           )}
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <InstructionModal
               isQuinBoostAvailable={isQuinBoostAvailable}
               language={language}
@@ -314,7 +314,7 @@ const Quiz = ({
 
     if (showQuizSummary) {
       return (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <QuizGivenSummary
             isOpen={isOpen}
             onClose={() => setShowQuizSummary(false)}
@@ -326,7 +326,7 @@ const Quiz = ({
 
     if (showSubmittedInterface) {
       return (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <SubmittedQuizInterface
             submitLoad={submitLoad}
             result={result}
@@ -352,7 +352,7 @@ const Quiz = ({
         position={'relative'}
       >
         {!submitted ? (
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <QuizInterface
               load={load}
               currentQuestionIndex={currentQuestionIndex}
@@ -363,7 +363,7 @@ const Quiz = ({
             />
           </Suspense>
         ) : isBoosted || isQuinBoostAvailable ? (
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <BoostedSubmittedQuizInterface
               isOpen={isOpen}
               score={result?.RQM_score}
@@ -385,7 +385,7 @@ const Quiz = ({
             )}
           </Suspense>
         ) : (
-          <Suspense fallback={<Spinner />}>
+          <Suspense fallback={null}>
             <SubmittedQuizInterface
               submitLoad={submitLoad}
               result={result}
@@ -423,7 +423,7 @@ const Quiz = ({
 
   return (
     <>
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={null}>
         <ModalComponent
           setSubmitted={setSubmitted}
           timer={timer}
@@ -448,7 +448,7 @@ const Quiz = ({
         />
       </Suspense>
       {!showInstruction && showConfirmationModal && (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <ConfirmationModal
             bg={'black'}
             isOpen={showConfirmationModal}

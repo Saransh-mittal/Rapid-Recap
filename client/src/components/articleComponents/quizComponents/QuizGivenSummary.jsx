@@ -115,7 +115,7 @@ const QuizGivenSummary = ({
               alignItems={'center'}
             >
               <Flex flexDirection={'column'}>
-                <Suspense fallback={<Loading />}>
+                <Suspense fallback={null}>
                   <Heading
                     title={`Time Taken: ${timeTaken} sec`}
                     tagMarginBottom={0}
@@ -153,7 +153,7 @@ const QuizGivenSummary = ({
               px={'15px'}
               py={0}
             >
-              <Suspense fallback={<Loading />}>
+              <Suspense fallback={null}>
                 <GivenQuizInterface
                   quizGivenSummary={quizGivenSummary}
                   currentQuestionIndex={currentQuestionIndex}
@@ -187,7 +187,7 @@ const QuizGivenSummary = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Suspense fallback={<Loading />}>
+                    <Suspense fallback={null}>
                       <Button
                         borderRadius={'full'}
                         color={'white'}
@@ -223,7 +223,7 @@ const QuizGivenSummary = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Suspense fallback={<Loading />}>
+                    <Suspense fallback={null}>
                       <Button
                         w={'100%'}
                         borderRadius={'full'}
