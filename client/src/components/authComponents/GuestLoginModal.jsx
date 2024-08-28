@@ -1,4 +1,5 @@
-import React, { Suspense, useState } from 'react'
+// GuestLoginModal.jsx
+import React, { useState } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -21,11 +22,10 @@ import {
   ModalCloseButton,
   InputGroup,
   InputRightElement,
-  useDisclosure,
-  Spinner,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CopyIcon, ViewIcon, ViewOffIcon } from '@chakra-ui/icons'
+import { useTranslation } from 'react-i18next' // Import useTranslation hook
 import MessageCircleSVG from '../../assets/svg/MessageCircleSVG'
 import UserFriendsSVG from '../../assets/svg/UserFriendsSVG'
 import BrainSVG from '../../assets/svg/BrainSVG'
@@ -53,6 +53,7 @@ const GuestLoginModal = ({
   guestPassword = null,
   guestId,
   onOpen,
+  t,
 }) => {
   const [copied, setCopied] = useState({ username: false, password: false })
   const [showPassword, setShowPassword] = useState(false)
@@ -70,7 +71,7 @@ const GuestLoginModal = ({
     navigator.clipboard.writeText(text)
     setCopied({ ...copied, [type]: true })
     toast({
-      title: 'Copied to clipboard',
+      title: t('copiedToClipboard'),
       status: 'success',
       duration: 2000,
       isClosable: true,
@@ -82,12 +83,12 @@ const GuestLoginModal = ({
 
   const limitations = [
     {
-      text: 'No access to WiseWeb feature (making friends and chatting)',
+      text: t('noWiseWebAccess'),
       icon: MessageCircleSVG,
     },
-    { text: 'IQ score will not be generated', icon: BrainSVG },
-    { text: 'No circle or society assignment', icon: UserFriendsSVG },
-    { text: 'No enrollment in seasons', icon: CalendarSVG },
+    { text: t('noIQScore'), icon: BrainSVG },
+    { text: t('noCircleAssignment'), icon: UserFriendsSVG },
+    { text: t('noSeasonsEnrollment'), icon: CalendarSVG },
   ]
 
   return (
@@ -121,9 +122,9 @@ const GuestLoginModal = ({
                     <UserSVG height="25px" width="25px" fill={'white'} />
                   </Box>
                   <Heading size="lg">
-                    Welcome to{' '}
+                    {t('welcomeTo')}{' '}
                     <GradientText gradient="linear(to-r, blue.400, teal.300)">
-                      Rapid Recap!
+                      {t('rapidRecap')}
                     </GradientText>
                   </Heading>
                 </Flex>
@@ -143,17 +144,12 @@ const GuestLoginModal = ({
                     boxShadow="lg"
                   >
                     <Text fontSize="xl" fontWeight="medium" mb={4}>
-                      Your{' '}
-                      <GradientText gradient="linear(to-r, purple.400, pink.300)">
-                        guest profile
-                      </GradientText>{' '}
-                      has been generated successfully. Here are your login
-                      details:
+                      {t('guestProfileGenerated')}
                     </Text>
                     <Flex gap={4} flexDirection={{ base: 'column', md: 'row' }}>
                       {[
-                        { label: 'Username', value: guestName },
-                        { label: 'Password', value: guestPassword },
+                        { label: t('username'), value: guestName },
+                        { label: t('password'), value: guestPassword },
                       ].map(({ label, value }) => (
                         <Box
                           key={label}
@@ -180,14 +176,14 @@ const GuestLoginModal = ({
                             {label}
                           </Text>
                           <Flex justify="space-between" align="center">
-                            {label === 'Password' ? (
+                            {label === t('password') ? (
                               value === null ? (
                                 <Text
                                   fontWeight="extrabold"
                                   fontSize="lg"
                                   color="yellow.300"
                                 >
-                                  Password has been changed
+                                  {t('passwordChanged')}
                                 </Text>
                               ) : (
                                 <InputGroup size="md">
@@ -246,10 +242,12 @@ const GuestLoginModal = ({
                               }
                               _hover={{ bg: 'whiteAlpha.200' }}
                               isDisabled={
-                                label === 'Password' && value === null
+                                label === t('password') && value === null
                               }
                             >
-                              {copied[label.toLowerCase()] ? 'Copied' : 'Copy'}
+                              {copied[label.toLowerCase()]
+                                ? t('copied')
+                                : t('copy')}
                             </ChakraButton>
                           </Flex>
                         </Box>
@@ -269,7 +267,7 @@ const GuestLoginModal = ({
                   >
                     <Flex align="center" gap={3}>
                       <Text fontSize="sm" fontStyle="italic">
-                        Your guest access is valid for{' '}
+                        {t('guestAccessValid')}
                         <Badge
                           colorScheme="green"
                           fontSize="0.9em"
@@ -278,22 +276,16 @@ const GuestLoginModal = ({
                           borderRadius="full"
                           fontWeight="extrabold"
                         >
-                          7 days
+                          7 {t('days')}
                         </Badge>
-                        . During this period, you can transfer or export your
-                        data and progress to a new, unregistered email address.{' '}
-                        <Text as="span" fontWeight="bold">
-                          Please note
-                        </Text>{' '}
-                        that after the 7-day window, your guest ID will expire,
-                        and any unsaved progress will be lost.
+                        {t('guestAccessNotice')}
                       </Text>
                     </Flex>
                   </MotionBox>
                   <Box>
                     <Heading size="md" mb={4}>
                       <GradientText gradient="linear(to-r, red.400, orange.300)">
-                        Guest Account Limitations
+                        {t('guestLimitations')}
                       </GradientText>
                     </Heading>
                     <Grid
@@ -328,7 +320,6 @@ const GuestLoginModal = ({
                               <Icon
                                 as={limitation.icon}
                                 boxSize={5}
-                                // bg={'white'}
                                 color="white"
                               />
                             </Box>
@@ -359,7 +350,7 @@ const GuestLoginModal = ({
                     <Flex>
                       <Flex>
                         <Text fontSize={{ base: '2xs', md: 'xs' }}>
-                          Secure Your Progress
+                          {t('secureProgress')}
                         </Text>
                       </Flex>
                       <Flex alignItems={'center'}>
@@ -381,11 +372,13 @@ const GuestLoginModal = ({
                     }}
                   >
                     <Text fontSize={{ base: '2xs', md: 'xs' }}>
-                      View Profile
+                      {t('viewProfile')}
                     </Text>
                   </Button>
                   <Button onClick={onClose}>
-                    <Text fontSize={{ base: '2xs', md: 'xs' }}>Close</Text>
+                    <Text fontSize={{ base: '2xs', md: 'xs' }}>
+                      {t('close')}
+                    </Text>
                   </Button>
                 </HStack>
               </ModalFooter>

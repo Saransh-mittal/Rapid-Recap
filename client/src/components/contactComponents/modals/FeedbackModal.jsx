@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Modal,
   ModalOverlay,
@@ -31,6 +32,7 @@ import { useSelector } from 'react-redux'
 import useSound from '../../../customHooks/useSound'
 
 const FeedbackModal = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('FeedbackModal')
   const toast = useToast()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { playClick } = useSound()
@@ -76,7 +78,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
         throw new Error('Failed to submit feedback')
       }
       toast({
-        title: 'Feedback submitted successfully',
+        title: t('Feedback submitted successfully'),
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -86,7 +88,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
     } catch (error) {
       console.error('Error submitting feedback:', error)
       toast({
-        title: 'Failed to submit feedback',
+        title: t('Failed to submit feedback'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -96,10 +98,10 @@ const FeedbackModal = ({ isOpen, onClose }) => {
   }
 
   const sliderMarks = [
-    { value: 1, label: 'Poor' },
-    { value: 2, label: 'Average' },
-    { value: 3, label: 'Good' },
-    { value: 4, label: 'Excellent' },
+    { value: 1, label: t('Poor') },
+    { value: 2, label: t('Average') },
+    { value: 3, label: t('Good') },
+    { value: 4, label: t('Excellent') },
   ]
 
   return (
@@ -137,7 +139,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
             }}
             textAlign={'center'}
           >
-            Feedback
+            {t('Feedback')}
           </Heading>
         </ModalHeader>
         <ModalCloseButton />
@@ -147,7 +149,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
               <Box mb={4} p={'2rem'}>
                 <FormControl id="email" isRequired mt={4}>
                   <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                    Email
+                    {t('Email')}
                   </FormLabel>
                   <Input
                     type="email"
@@ -167,7 +169,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 ml={'1rem'}
                 mt={'2rem'}
               >
-                1. How would you rate your overall experience with Rapid Recap?
+                {t(
+                  'How would you rate your overall experience with Rapid Recap?',
+                )}
               </FormLabel>
               <SliderWithMarks
                 name="experience"
@@ -187,7 +191,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 color="cyan.300"
                 ml={'1rem'}
               >
-                2. How often do you use Rapid Recap?
+                {t('How often do you use Rapid Recap?')}
               </FormLabel>
               <SliderWithMarks
                 name="usageFrequency"
@@ -196,10 +200,10 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 max={4}
                 step={1}
                 marks={[
-                  { value: 1, label: 'Rarely' },
-                  { value: 2, label: 'Monthly' },
-                  { value: 3, label: 'Weekly' },
-                  { value: 4, label: 'Daily' },
+                  { value: 1, label: t('Rarely') },
+                  { value: 2, label: t('Monthly') },
+                  { value: 3, label: t('Weekly') },
+                  { value: 4, label: t('Daily') },
                 ]}
                 formState={formState}
                 handleSliderChange={handleSliderChange(setFormState)}
@@ -212,8 +216,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 color="cyan.300"
                 ml={'1rem'}
               >
-                3. How satisfied are you with the difficulty level of the
-                quizzes?
+                {t(
+                  'How satisfied are you with the difficulty level of the quizzes?',
+                )}
               </FormLabel>
               <SliderWithMarks
                 name="difficultySatisfaction"
@@ -222,11 +227,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 max={5}
                 step={1}
                 marks={[
-                  { value: 1, label: 'Very Dissatisfied' },
-                  { value: 2, label: 'Dissatisfied' },
-                  { value: 3, label: 'Neutral' },
-                  { value: 4, label: 'Satisfied' },
-                  { value: 5, label: 'Very Satisfied' },
+                  { value: 1, label: t('Very Dissatisfied') },
+                  { value: 2, label: t('Dissatisfied') },
+                  { value: 3, label: t('Neutral') },
+                  { value: 4, label: t('Satisfied') },
+                  { value: 5, label: t('Very Satisfied') },
                 ]}
                 formState={formState}
                 handleSliderChange={handleSliderChange(setFormState)}
@@ -239,8 +244,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 color="cyan.300"
                 ml={'1rem'}
               >
-                4. Do you feel the IQ score accurately reflects your knowledge
-                and understanding of the articles/news?
+                {t(
+                  'Do you feel the IQ score accurately reflects your knowledge and understanding of the articles/news?',
+                )}
               </FormLabel>
               <SliderWithMarks
                 name="iqAccuracy"
@@ -249,11 +255,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 max={5}
                 step={1}
                 marks={[
-                  { value: 1, label: 'Strongly Disagree' },
-                  { value: 2, label: 'Disagree' },
-                  { value: 3, label: 'Neutral' },
-                  { value: 4, label: 'Agree' },
-                  { value: 5, label: 'Strongly Agree' },
+                  { value: 1, label: t('Strongly Disagree') },
+                  { value: 2, label: t('Disagree') },
+                  { value: 3, label: t('Neutral') },
+                  { value: 4, label: t('Agree') },
+                  { value: 5, label: t('Strongly Agree') },
                 ]}
                 formState={formState}
                 handleSliderChange={handleSliderChange(setFormState)}
@@ -268,8 +274,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                     ml={'1rem'}
                     mt={'3rem'}
                   >
-                    5. What features do you like the most about the scoring
-                    system and leaderboard?
+                    {t(
+                      'What features do you like the most about the scoring system and leaderboard?',
+                    )}
                   </FormLabel>
                   <Textarea />
                 </FormControl>
@@ -282,7 +289,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 ml={'1rem'}
                 mt={'3rem'}
               >
-                6. How would you rate the user interface and design of the app?
+                {t(
+                  'How would you rate the user interface and design of the app?',
+                )}
               </FormLabel>
               <SliderWithMarks
                 name="uiDesignRating"
@@ -302,8 +311,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 ml={'1rem'}
                 mt={'3rem'}
               >
-                7. Is the IQ graph on your profile helpful in tracking your
-                progress?
+                {t(
+                  'Is the IQ graph on your profile helpful in tracking your progress?',
+                )}
               </FormLabel>
               <SliderWithMarks
                 name="iqGraphHelpfulness"
@@ -312,11 +322,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 max={5}
                 step={1}
                 marks={[
-                  { value: 1, label: 'Very Unhelpful' },
-                  { value: 2, label: 'Unhelpful' },
-                  { value: 3, label: 'Neutral' },
-                  { value: 4, label: 'Helpful' },
-                  { value: 5, label: 'Very Helpful' },
+                  { value: 1, label: t('Very Unhelpful') },
+                  { value: 2, label: t('Unhelpful') },
+                  { value: 3, label: t('Neutral') },
+                  { value: 4, label: t('Helpful') },
+                  { value: 5, label: t('Very Helpful') },
                 ]}
                 formState={formState}
                 handleSliderChange={handleSliderChange(setFormState)}
@@ -329,8 +339,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 ml={'1rem'}
                 mt={'3rem'}
               >
-                8. Do you find the IQ bar graph showing the top percentage of
-                the population useful?
+                {t(
+                  'Do you find the IQ bar graph showing the top percentage of the population useful?',
+                )}
               </FormLabel>
               <SliderWithMarks
                 name="iqBarGraphUsefulness"
@@ -339,11 +350,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 max={5}
                 step={1}
                 marks={[
-                  { value: 1, label: 'Very Not Useful' },
-                  { value: 2, label: 'Not Useful' },
-                  { value: 3, label: 'Neutral' },
-                  { value: 4, label: 'Useful' },
-                  { value: 5, label: 'Very Useful' },
+                  { value: 1, label: t('Very Not Useful') },
+                  { value: 2, label: t('Not Useful') },
+                  { value: 3, label: t('Neutral') },
+                  { value: 4, label: t('Useful') },
+                  { value: 5, label: t('Very Useful') },
                 ]}
                 formState={formState}
                 handleSliderChange={handleSliderChange(setFormState)}
@@ -352,7 +363,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
               <Box mb={4} ml={'1rem'} mt={'3rem'}>
                 <FormControl id="mostUsedFeature">
                   <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                    9. Which feature do you use the most?
+                    {t('Which feature do you use the most?')}
                   </FormLabel>
                   <Input type="text" />
                 </FormControl>
@@ -361,8 +372,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
               <Box mb={4} ml={'1rem'} mt={'3rem'}>
                 <FormControl id="missingFeatures">
                   <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                    10. Are there any features you find missing or would like to
-                    see added?
+                    {t(
+                      'Are there any features you find missing or would like to see added?',
+                    )}
                   </FormLabel>
                   <Textarea />
                 </FormControl>
@@ -375,8 +387,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 ml={'1rem'}
                 mt={'3rem'}
               >
-                11. Do you find the concept of societies (Explorers, Strivers,
-                Elites, Mavericks) motivating?
+                {t(
+                  'Do you find the concept of societies (Explorers, Strivers, Elites, Mavericks) motivating?',
+                )}
               </FormLabel>
               <SliderWithMarks
                 name="societyMotivation"
@@ -385,11 +398,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 max={5}
                 step={1}
                 marks={[
-                  { value: 1, label: 'Very Not Motivating' },
-                  { value: 2, label: 'Not Motivating' },
-                  { value: 3, label: 'Neutral' },
-                  { value: 4, label: 'Motivating' },
-                  { value: 5, label: 'Very Motivating' },
+                  { value: 1, label: t('Very Not Motivating') },
+                  { value: 2, label: t('Not Motivating') },
+                  { value: 3, label: t('Neutral') },
+                  { value: 4, label: t('Motivating') },
+                  { value: 5, label: t('Very Motivating') },
                 ]}
                 formState={formState}
                 handleSliderChange={handleSliderChange(setFormState)}
@@ -402,8 +415,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 ml={'1rem'}
                 mt={'3rem'}
               >
-                12. How often do you encounter technical issues (e.g., app
-                crashes, slow loading times)?
+                {t(
+                  'How often do you encounter technical issues (e.g., app crashes, slow loading times)?',
+                )}
               </FormLabel>
               <SliderWithMarks
                 name="technicalIssuesFrequency"
@@ -412,11 +426,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 max={5}
                 step={1}
                 marks={[
-                  { value: 1, label: 'Never' },
-                  { value: 2, label: 'Rarely' },
-                  { value: 3, label: 'Sometimes' },
-                  { value: 4, label: 'Often' },
-                  { value: 5, label: 'Always' },
+                  { value: 1, label: t('Never') },
+                  { value: 2, label: t('Rarely') },
+                  { value: 3, label: t('Sometimes') },
+                  { value: 4, label: t('Often') },
+                  { value: 5, label: t('Always') },
                 ]}
                 formState={formState}
                 handleSliderChange={handleSliderChange(setFormState)}
@@ -430,8 +444,9 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                     fontWeight="medium"
                     color="cyan.300"
                   >
-                    13. Have you ever faced issues with quiz scoring or
-                    leaderboard updates? If yes, please describe.
+                    {t(
+                      'Have you ever faced issues with quiz scoring or leaderboard updates? If yes, please describe.',
+                    )}
                   </FormLabel>
                   <RadioGroup
                     defaultValue="no"
@@ -439,8 +454,8 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                     value={quizIssueAnswer}
                   >
                     <Stack direction="row">
-                      <Radio value="yes">Yes</Radio>
-                      <Radio value="no">No</Radio>
+                      <Radio value="yes">{t('Yes')}</Radio>
+                      <Radio value="no">{t('No')}</Radio>
                     </Stack>
                   </RadioGroup>
                 </FormControl>
@@ -452,12 +467,12 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                         fontWeight="medium"
                         color="cyan.300"
                       >
-                        In-Game Name
+                        {t('In-Game Name')}
                       </FormLabel>
                       <Input type="text" />
                     </FormControl>
                     <FormControl id="quizIssues" mt={4} isRequired>
-                      <Textarea placeholder="Describe the issues..." />
+                      <Textarea placeholder={t('Describe the issues...')} />
                     </FormControl>
                   </>
                 )}
@@ -466,7 +481,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
               <Box mb={4} ml={'1rem'} mt={'3rem'}>
                 <FormControl id="improvements">
                   <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                    14. What improvements would you suggest for Rapid Recap?
+                    {t('What improvements would you suggest for Rapid Recap?')}
                   </FormLabel>
                   <Textarea />
                 </FormControl>
@@ -479,7 +494,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 ml={'1rem'}
                 mt={'3rem'}
               >
-                15. Would you recommend Rapid Recap to a friend or colleague?
+                {t('Would you recommend Rapid Recap to a friend or colleague?')}
               </FormLabel>
               <SliderWithMarks
                 name="recommendationLikelihood"
@@ -488,11 +503,11 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 max={5}
                 step={1}
                 marks={[
-                  { value: 1, label: 'Definitely Not' },
-                  { value: 2, label: 'Probably Not' },
-                  { value: 3, label: 'Not Sure' },
-                  { value: 4, label: 'Probably' },
-                  { value: 5, label: 'Definitely' },
+                  { value: 1, label: t('Definitely Not') },
+                  { value: 2, label: t('Probably Not') },
+                  { value: 3, label: t('Not Sure') },
+                  { value: 4, label: t('Probably') },
+                  { value: 5, label: t('Definitely') },
                 ]}
                 formState={formState}
                 handleSliderChange={handleSliderChange(setFormState)}
@@ -501,14 +516,14 @@ const FeedbackModal = ({ isOpen, onClose }) => {
               <Box mb={4} ml={'1rem'} mt={'3rem'}>
                 <FormControl id="additionalComments">
                   <FormLabel fontSize="lg" fontWeight="medium" color="cyan.300">
-                    16. Any additional comments or feedback?
+                    {t('Any additional comments or feedback?')}
                   </FormLabel>
                   <Textarea />
                 </FormControl>
               </Box>
               <Flex justifyContent={'center'} alignItems={'center'}>
                 <Button my={'2rem'} colorScheme="teal" type="submit">
-                  Submit
+                  {t('Submit')}
                 </Button>
               </Flex>
             </form>

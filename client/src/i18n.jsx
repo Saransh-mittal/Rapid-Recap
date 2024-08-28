@@ -30,7 +30,13 @@ const namespaces = {
     'TakeQuizButton',
     'TotalUserAttempted',
   ],
-  authComponents: [],
+  authComponents: [
+    'EmailVerify',
+    'GuestLogin',
+    'GuestLoginModal',
+    'ResetPassword',
+  ],
+  contactComponents: ['FeedbackModal', 'formState', 'valueToLabelMap'],
   homeComponents: [],
   leaderBoardComponents: [],
 }
@@ -55,6 +61,8 @@ i18n
             return `/locales/${lng}/components/articleComponents/${namespace}.json`
           case 'authComponents':
             return `/locales/${lng}/components/authComponents/${namespace}.json`
+          case 'contactComponents':
+            return `/locales/${lng}/components/contactComponents/${namespace}.json`
           case 'homeComponents':
             return `/locales/${lng}/components/homeComponents/${namespace}.json`
           case 'leaderBoardComponents':

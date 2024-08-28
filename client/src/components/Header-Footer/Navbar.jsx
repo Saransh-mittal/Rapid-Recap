@@ -37,6 +37,7 @@ import {
 } from '../../redux/appSlice'
 import useSound from '../../customHooks/useSound'
 import Loading from '../miscellaneous/Loading'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components
 const NotificationDrawer = React.lazy(() =>

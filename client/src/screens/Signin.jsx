@@ -54,6 +54,7 @@ const EmailVerify = lazy(() =>
 
 export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   const { t } = useTranslation('Signin')
+  const { t: GuestLoginTranslate } = useTranslation('GuestLogin')
   const toast = useToast()
   const { playClick } = useSound()
 
@@ -455,7 +456,10 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                     </Text>
                   </Flex>
                   <Flex w={'100%'} justifyContent={'center'}>
-                    <GuestLogin hamburgerOnClose={hamburgerOnClose} />
+                    <GuestLogin
+                      hamburgerOnClose={hamburgerOnClose}
+                      t={GuestLoginTranslate}
+                    />
                   </Flex>
                 </>
               ) : (

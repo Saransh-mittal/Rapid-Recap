@@ -1,3 +1,4 @@
+// ResetPassword.jsx
 import React, { useState, useCallback } from 'react'
 import axios from 'axios'
 import {
@@ -18,9 +19,11 @@ import {
   InputRightElement,
   Flex,
 } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next' // Import useTranslation hook
 import useSound from '../../customHooks/useSound'
 
 const ResetPassword = ({ email, isOpen, onClose }) => {
+  const { t } = useTranslation('ResetPassword') // Initialize useTranslation
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -31,8 +34,8 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
   const handleResetPassword = useCallback(async () => {
     if (!email) {
       toast({
-        title: 'Error',
-        description: 'Email is missing',
+        title: t('error'),
+        description: t('emailMissing'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -42,8 +45,8 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
 
     if (newPassword !== confirmPassword) {
       toast({
-        title: 'Error',
-        description: 'Passwords do not match',
+        title: t('error'),
+        description: t('passwordMismatch'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -60,8 +63,8 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
 
       if (response.status === 201) {
         toast({
-          title: 'Success',
-          description: 'Password reset successfully',
+          title: t('success'),
+          description: t('passwordResetSuccess'),
           status: 'success',
           duration: 3000,
           isClosable: true,
@@ -70,8 +73,8 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.error || 'Failed to reset password',
+        title: t('error'),
+        description: error.response?.data?.error || t('passwordResetFailed'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -79,7 +82,7 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
     } finally {
       setIsLoading(false)
     }
-  }, [email, newPassword, confirmPassword, toast, onClose])
+  }, [email, newPassword, confirmPassword, toast, onClose, t])
 
   const handleSubmit = e => {
     e.preventDefault()
@@ -95,19 +98,19 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
         backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
         color="white"
       >
-        <ModalHeader>Reset Password</ModalHeader>
+        <ModalHeader>{t('resetPassword')}</ModalHeader>
         <ModalCloseButton />
         <form onSubmit={handleSubmit}>
           <ModalBody>
             <VStack spacing={4}>
               <FormControl isRequired>
-                <FormLabel>New Password</FormLabel>
+                <FormLabel>{t('newPassword')}</FormLabel>
                 <InputGroup>
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
-                    placeholder="Enter new password"
+                    placeholder={t('enterNewPassword')}
                   />
                   <InputRightElement width="4.5rem">
                     <Button
@@ -115,18 +118,18 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
                       size="sm"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? 'Hide' : 'Show'}
+                      {showPassword ? t('hide') : t('show')}
                     </Button>
                   </InputRightElement>
                 </InputGroup>
               </FormControl>
               <FormControl isRequired>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel>{t('confirmPassword')}</FormLabel>
                 <Input
                   type="password"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
+                  placeholder={t('confirmNewPassword')}
                 />
               </FormControl>
             </VStack>
@@ -138,9 +141,9 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
                 type="submit"
                 colorScheme="blue"
                 isLoading={isLoading}
-                loadingText="Resetting"
+                loadingText={t('resetting')}
               >
-                Reset Password
+                {t('resetPassword')}
               </Button>
             </Flex>
           </ModalFooter>

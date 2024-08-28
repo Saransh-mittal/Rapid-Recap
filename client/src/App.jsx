@@ -23,6 +23,7 @@ import SecureYourProgress from './components/miscellaneous/SecureYourProgress.js
 const Signin = React.lazy(() => import('./screens/Signin.jsx'))
 import { setIsRegisterOpen, setIsSigninOpen } from './redux/appSlice.js'
 import Button from './components/miscellaneous/ButtonComponent.jsx'
+import { useTranslation } from 'react-i18next'
 const Register = React.lazy(() => import('./screens/Register.jsx'))
 
 const App = () => {
@@ -36,6 +37,8 @@ const App = () => {
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
   const [showNote, setShowNote] = useState(false)
   const navigate = useNavigate()
+  const { t: GuestLogintranslation } = useTranslation('GuestLogin')
+  const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
 
   const handleClose = () => {
     setShowNote(true)
@@ -223,6 +226,7 @@ const App = () => {
               <GuestLogin
                 onCloseNoteMessage={() => setShowNote(false)}
                 width={'80%'}
+                t={GuestLogintranslation}
               />
             </VStack>
           </NoteMessage>
@@ -238,6 +242,7 @@ const App = () => {
         guestPassword={user?.guestTempPassword}
         guestId={user?._id}
         onOpen={() => setIsGuestLoggedin(true)}
+        t={GuestLoginModaltranslation}
       />
 
       <Suspense fallback={<Spinner />}>

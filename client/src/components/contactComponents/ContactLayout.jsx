@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import Contact from '../screens/Contact'
-import FeedbackModal from './getStartedComponents/modals/FeedbackModal'
+import Contact from '../../screens/Contact'
+import FeedbackModal from './modals/FeedbackModal'
 
 const ContactLayout = () => {
   const location = useLocation()
