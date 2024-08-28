@@ -184,7 +184,7 @@ const Quiz = ({
         dispatchRedux(
           addNoteMessage({
             messageType: 'xpAward',
-            xpAwarded: 5,
+            xpAwarded: result?.xpAwarded || 5,
             title: 'XP Awarded For Quiz',
             actions: [{ actionType: 'VIEW_EXPERIENCE' }],
             width: '250px',
@@ -212,7 +212,7 @@ const Quiz = ({
       dispatchRedux(
         addNoteMessage({
           messageType: 'xpAward',
-          xpAwarded: 5,
+          xpAwarded: result?.xpAwarded || 5,
           title: 'XP Awarded For Quiz',
           actions: [{ actionType: 'VIEW_EXPERIENCE' }],
           width: '250px',

@@ -180,9 +180,10 @@ const saveAttempt = async (req, res) => {
     user.rankedInCurrentSeason = true
     await user.save({ session })
     await commitSession()
-    await logActivity({
+    const xpAwarded = await logActivity({
       userInGameName: user.inGameName,
       type: activityTypes.RANDOM_QUIZ.type,
+      consecutiveQuizCount: todayAttemptsCount,
     })
     const quizzesToday = await currDayStreakCalulator(user._id)
     const articlesForMail = await getTopThreeRecommendedArticles(
@@ -282,6 +283,7 @@ const saveAttempt = async (req, res) => {
       timeTaken,
       score: scoreString,
       pastRQMs,
+      xpAwarded,
     })
   } catch (error) {
     await abortSession(session)
