@@ -1,0 +1,15 @@
+{
+  "Chats": "चैट्स",
+  "requests": "अनुरोध",
+  "searchUsersToChat": "चैट करने के लिए उपयोगकर्ताओं की खोज करें",
+  "searchUser": "उपयोगकर्ता खोजें",
+  "new": "नया",
+  "noMessages": "कोई संदेश नहीं",
+  "messageDeleted": "संदेश हटाया गया",
+  "messageDeletedForYou": "यह संदेश आपके लिए हटाया गया था",
+  "sharedArticle": "एक लेख साझा किया",
+  "scoreCard": "स्कोरकार्ड",
+  "you": "आप",
+  "errorTitle": "त्रुटि हुई",
+  "errorDescription": "चैट्स लोड करने में विफल"
+}

@@ -42,8 +42,10 @@ import axios from 'axios'
 import { getSender } from '../config/ChatLogics'
 import useMessageHandlers from '../../../customHooks/useMessageHandlers'
 import useSocketHandlers from '../../../customHooks/useSocketHandlers'
+import { useTranslation } from 'react-i18next'
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
+  const { t } = useTranslation('SingleChat')
   const { isOpen, onOpen, onClose } = useDisclosure()
   const navigate = useNavigate()
   const toast = useToast()
@@ -212,7 +214,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       setSelectedChat({ ...selectedChat, status: 'accepted' })
       setFetchAgain(!fetchAgain)
       toast({
-        title: 'Chat request accepted',
+        title: t('chatRequestAccepted'),
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -220,8 +222,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       })
     } catch (error) {
       toast({
-        title: 'Error Occurred!',
-        description: 'Failed to accept chat request',
+        title: t('errorOccurred'),
+        description: t('failedToAcceptChatRequest'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -244,7 +246,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         action: 'reject',
       })
       toast({
-        title: 'Chat request rejected',
+        title: t('chatRequestRejected'),
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -254,8 +256,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       handleClose()
     } catch (error) {
       toast({
-        title: 'Error Occurred!',
-        description: 'Failed to reject chat request',
+        title: t('errorOccurred'),
+        description: t('failedToRejectChatRequest'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -388,7 +390,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             <Flex justifyContent={'center'}>
               <Image
                 src={rrlogoOutlined}
-                alt="App Logo"
+                alt={t('rrlogoAlt')}
                 mb={4}
                 w={'10rem'}
                 h={'auto'}
@@ -402,12 +404,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 mb={0}
                 w={'75%'}
               >
-                Give Feedback About the Application and Chatting Experience
-                through contact us.
+                {t('giveFeedback')}
               </Text>
             </Flex>
             <Text fontSize="lg" letterSpacing="1px" mb={0}>
-              Get Started by Selecting a Chat or searching user....
+              {t('selectChatToStart')}
             </Text>
           </Box>
         </Flex>

@@ -39,6 +39,7 @@ const GetStarted = React.lazy(() =>
 )
 
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
+  const { t: formatDateTranslate } = useTranslation('formatDate')
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated, user } = useSelector(state => state.auth)
@@ -58,7 +59,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
     base: 'column',
     lg: 'row',
   })
-  const { t, i18n } = useTranslation()
   const categoryRefs = useRef([])
 
   const notLoggedIn = !isAuthenticated
@@ -311,7 +311,11 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
                       }
                       image={item.imgURL || rrImage}
                       category={item?.category}
-                      date={formatDate(item?.dateTime)}
+                      date={formatDate(
+                        item?.dateTime,
+                        formatDateTranslate,
+                        i18n.language,
+                      )}
                       readTime={item.avgReadTime}
                       id={item._id}
                       articleData={item}

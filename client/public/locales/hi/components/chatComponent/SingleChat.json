@@ -1,0 +1,11 @@
+{
+  "chatRequestAccepted": "चैट अनुरोध स्वीकृत।",
+  "errorOccurred": "एक त्रुटि हुई!",
+  "failedToAcceptChatRequest": "चैट अनुरोध को स्वीकृत करने में विफल रहा।",
+  "chatRequestRejected": "चैट अनुरोध अस्वीकृत।",
+  "failedToRejectChatRequest": "चैट अनुरोध को अस्वीकृत करने में विफल रहा।",
+  "rrlogoAlt": "आरआर लोगो",
+  "clickToStartChat": "चैटिंग शुरू करने के लिए क्लिक करें।",
+  "giveFeedback": "आवेदन और चैटिंग अनुभव के बारे में प्रतिक्रिया देने के लिए हमसे संपर्क करें।",
+  "selectChatToStart": "एक चैट का चयन करके शुरू करें या उपयोगकर्ता को खोजें...."
+}

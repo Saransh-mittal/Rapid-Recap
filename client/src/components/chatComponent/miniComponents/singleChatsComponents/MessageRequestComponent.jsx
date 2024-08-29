@@ -1,9 +1,12 @@
 import React from 'react'
 import { Box, Text, Button, VStack, HStack } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 import useSound from '../../../../customHooks/useSound'
 
 const MessageRequestComponent = ({ senderName, onAccept, onReject }) => {
+  const { t } = useTranslation('MessageRequestComponent')
   const { playClick } = useSound()
+
   return (
     <Box
       bg="rgba(255, 255, 255, 0.1)"
@@ -17,12 +20,9 @@ const MessageRequestComponent = ({ senderName, onAccept, onReject }) => {
     >
       <VStack spacing={4}>
         <Text fontSize="lg" fontWeight="bold">
-          Accept message request from {senderName}?
+          {t('acceptRequest', { senderName })}
         </Text>
-        <Text fontSize="sm">
-          If you accept this request, you will be able to see the messages and
-          activities from this user.
-        </Text>
+        <Text fontSize="sm">{t('requestDescription')}</Text>
         <HStack spacing={4} width="100%">
           <Button
             colorScheme="red"
@@ -32,7 +32,7 @@ const MessageRequestComponent = ({ senderName, onAccept, onReject }) => {
             }}
             flexGrow={1}
           >
-            Reject
+            {t('reject')}
           </Button>
           <Button
             colorScheme="green"
@@ -42,7 +42,7 @@ const MessageRequestComponent = ({ senderName, onAccept, onReject }) => {
             }}
             flexGrow={1}
           >
-            Accept
+            {t('accept')}
           </Button>
         </HStack>
       </VStack>

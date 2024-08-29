@@ -10,18 +10,19 @@ import {
   Button,
 } from '@chakra-ui/react'
 import useSound from '../../../../customHooks/useSound'
+import { useTranslation } from 'react-i18next'
 
 const DeleteMessageModal = ({ isOpen, onClose, confirmDelete }) => {
+  const { t } = useTranslation('DeleteMessageModal')
   const { playClick } = useSound()
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Delete Message</ModalHeader>
+        <ModalHeader>{t('deleteMessage')}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
-          Are you sure you want to delete this message for everyone?
-        </ModalBody>
+        <ModalBody>{t('confirmDeleteMessage')}</ModalBody>
         <ModalFooter>
           <Button
             colorScheme="red"
@@ -31,7 +32,7 @@ const DeleteMessageModal = ({ isOpen, onClose, confirmDelete }) => {
               confirmDelete()
             }}
           >
-            Delete for Everyone
+            {t('deleteForEveryone')}
           </Button>
           <Button
             variant="ghost"
@@ -40,7 +41,7 @@ const DeleteMessageModal = ({ isOpen, onClose, confirmDelete }) => {
               onClose()
             }}
           >
-            Cancel
+            {t('cancel')}
           </Button>
         </ModalFooter>
       </ModalContent>

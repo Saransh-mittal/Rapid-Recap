@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback, lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Modal,
   ModalOverlay,
@@ -20,7 +21,6 @@ import {
   filterReactionsByEmoji,
 } from '../../../../utils/chat.utils'
 
-// Lazy load Emoji component
 const Emoji = lazy(() =>
   import('emoji-picker-react').then(module => ({ default: module.Emoji })),
 )
@@ -32,13 +32,13 @@ const ReactionModal = ({
   handleRemoveReaction,
   user,
 }) => {
-  // Memoize distinct emojis
+  const { t } = useTranslation('ReactionModal')
+
   const distinctEmojis = useMemo(
     () => getDistinctEmojis(selectedReactions?.reactions || []),
     [selectedReactions],
   )
 
-  // Memoize the renderReactions function to avoid re-creating it on every render
   const renderReactions = useCallback(
     reactions => {
       return reactions.length > 0 ? (
@@ -65,26 +65,26 @@ const ReactionModal = ({
             />
             <Flex flexDirection="column">
               <Text fontWeight="bold" m={0}>
-                {reaction.user._id === user._id ? 'YOU' : reaction.user.name}
+                {reaction.user._id === user._id ? t('you') : reaction.user.name}
               </Text>
               {reaction.user._id === user._id && (
                 <Text color="#9CAFAA" m={0}>
-                  Tap to remove
+                  {t('tapToRemove')}
                 </Text>
               )}
             </Flex>
             <Flex marginLeft="auto" alignItems="center">
-              <Suspense fallback={<Text>Loading...</Text>}>
+              <Suspense fallback={<Text>{t('loading')}</Text>}>
                 <Emoji unified={reaction.emoji} size="25" />
               </Suspense>
             </Flex>
           </Flex>
         ))
       ) : (
-        <Text>No reactions in this category</Text>
+        <Text>{t('noReactions')}</Text>
       )
     },
-    [handleRemoveReaction, onClose, selectedReactions, user._id],
+    [handleRemoveReaction, onClose, selectedReactions, user._id, t],
   )
 
   return (
@@ -102,17 +102,17 @@ const ReactionModal = ({
           borderTopRightRadius="10px"
           w="100%"
         >
-          Reaction Details
+          {t('reactionDetails')}
         </ModalHeader>
         <ModalCloseButton color="white" />
         <ModalBody maxH="60vh" overflowY="auto" w="100%" mt="1.5rem">
           {selectedReactions && (
             <Tabs isFitted variant="solid-rounded">
               <TabList mb="1em">
-                <Tab>All</Tab>
+                <Tab>{t('all')}</Tab>
                 {distinctEmojis.map((emoji, index) => (
                   <Tab key={index}>
-                    <Suspense fallback={<Text>Loading...</Text>}>
+                    <Suspense fallback={<Text>{t('loading')}</Text>}>
                       <Emoji unified={emoji} size="20" />
                     </Suspense>
                   </Tab>

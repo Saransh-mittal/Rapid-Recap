@@ -5,6 +5,7 @@ import HttpBackend from 'i18next-http-backend'
 
 const namespaces = {
   screens: ['Contact', 'Home', 'LeaderBoard', 'Profile', 'Register', 'Signin'],
+  utils: ['formatDate'],
   categories: ['categories'],
   articleComponents: [
     'ArticleHeader',
@@ -36,9 +37,22 @@ const namespaces = {
     'GuestLoginModal',
     'ResetPassword',
   ],
-  contactComponents: ['FeedbackModal', 'formState', 'valueToLabelMap'],
-  homeComponents: [],
-  leaderBoardComponents: [],
+  contactComponents: ['FeedbackModal'],
+  chatComponent: [
+    'userChats',
+    'ChatSideDrawer',
+    'UserListItem',
+    'MessageReactions',
+    'ReactionModal',
+    'BookmarksModal',
+    'ChatHeader',
+    'DeleteMessageModal',
+    'MessageRequestComponent',
+    'ContextMenu',
+    'ShareChatModal',
+    'SingleChat',
+    'MessageInput',
+  ],
 }
 
 i18n
@@ -57,16 +71,16 @@ i18n
         switch (category) {
           case 'screens':
             return `/locales/${lng}/screens/${namespace}.json`
+          case 'utils':
+            return `/locales/${lng}/utils/${namespace}.json`
           case 'articleComponents':
             return `/locales/${lng}/components/articleComponents/${namespace}.json`
           case 'authComponents':
             return `/locales/${lng}/components/authComponents/${namespace}.json`
           case 'contactComponents':
             return `/locales/${lng}/components/contactComponents/${namespace}.json`
-          case 'homeComponents':
-            return `/locales/${lng}/components/homeComponents/${namespace}.json`
-          case 'leaderBoardComponents':
-            return `/locales/${lng}/components/leaderBoardComponents/${namespace}.json`
+          case 'chatComponent':
+            return `/locales/${lng}/components/chatComponent/${namespace}.json`
           case 'categories':
             return `/locales/${lng}/categories/${namespace}.json`
           default:

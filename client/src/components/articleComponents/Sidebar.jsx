@@ -29,6 +29,7 @@ import { formatDate } from '../../utils/helper.utils'
 import slugify from 'slugify'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 
 const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
 const QuizExpired = React.lazy(() => import('./QuizExpired'))
@@ -54,6 +55,7 @@ const Sidebar = ({
   i18n,
 }) => {
   const { t } = useTranslation('Sidebar')
+  const { t: formatDateTranslate } = useTranslation('formatDate')
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
   const { playClick } = useSound()
@@ -200,7 +202,7 @@ const Sidebar = ({
             letterSpacing="1px"
           >
             {/* {item.date}, */}
-            {formatDate(item?.dateTime)}
+            {formatDate(item?.dateTime, formatDateTranslate, i18n.language)}
           </Text>
           <Text
             fontSize="0.8rem"

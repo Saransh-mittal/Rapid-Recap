@@ -25,6 +25,7 @@ import useSound from '../../customHooks/useSound'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
 import { QuestionOutlineIcon } from '@chakra-ui/icons'
 import GuestLoginModal from '../authComponents/GuestLoginModal'
+import { useTranslation } from 'react-i18next'
 
 // Lazy loading for components that are not needed immediately
 const EditProfileModal = React.lazy(() => import('./EditProfileModal'))
@@ -42,6 +43,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const [requestSent, setRequestSent] = useState(false)
   const [isFriend, setIsFriend] = useState(false)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
+  const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
 
   const handleClose = () => {
     setIsGuestLoggedin(false)
@@ -344,6 +346,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         guestPassword={user?.guestTempPassword ? user.guestTempPassword : null}
         guestId={user?._id}
         onOpen={() => setIsGuestLoggedin(true)}
+        t={GuestLoginModaltranslation}
       />
     </Flex>
   )

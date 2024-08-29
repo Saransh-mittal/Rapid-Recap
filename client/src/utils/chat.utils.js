@@ -2,6 +2,7 @@
 
 import axios from 'axios'
 import debounce from 'lodash.debounce'
+import { useTranslation } from 'react-i18next'
 
 // API Requests
 export const fetchMessagesApi = async chatId => {
@@ -116,11 +117,11 @@ export const handleSocketEvents = (socket, events) => {
 }
 
 // src/utils/chatUtils.js
-export const groupMessagesByDate = messages => {
+export const groupMessagesByDate = (messages, t, lng) => {
   const groups = {}
   messages &&
     messages?.forEach(message => {
-      const date = formatDate(message.createdAt)
+      const date = formatDate(message.createdAt, t, lng)
       if (!groups[date]) {
         groups[date] = []
       }
@@ -130,16 +131,23 @@ export const groupMessagesByDate = messages => {
   return groups
 }
 
-export const formatDate = date => {
+export const formatDate = (date, t, lng) => {
   const messageDate = new Date(date)
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
 
   if (messageDate.toDateString() === today.toDateString()) {
-    return 'Today'
+    return t('today')
   } else if (messageDate.toDateString() === yesterday.toDateString()) {
-    return 'Yesterday'
+    return t('yesterday')
+  } else if (lng === 'hi') {
+    const day = messageDate.getDate()
+    const month = t(`months.${messageDate.getMonth()}`)
+    const year = messageDate.getFullYear()
+    const weekday = t(`weekdays.${messageDate.getDay()}`)
+
+    return `${weekday}, ${day} ${month}, ${year}`
   } else {
     return messageDate.toLocaleDateString('en-US', {
       weekday: 'long',
