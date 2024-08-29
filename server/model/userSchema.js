@@ -278,6 +278,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    loginStreak: {
+      type: Number,
+      default: 0,
+    },
     expiresAt: { type: Date },
   },
   { collection: 'Users' },

@@ -138,14 +138,14 @@ const App = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const delay = Math.floor(Math.random() * 120000) + 60000
+      const delay = Math.floor(Math.random() * 120000) + 30000
       const timer = setTimeout(() => {
         dispatch(fetchUnreadNoteMessages())
       }, delay)
 
       return () => clearTimeout(timer)
     }
-  }, [isAuthenticated, dispatch])
+  }, [isAuthenticated])
 
   useEffect(() => {
     ReactGA.set({

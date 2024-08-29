@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
 const Activity = require('../model/activitySchema')
 const User = require('../model/userSchema')
-const { getXpForActivity } = require('../data/activityTypes')
+const { getXpForActivity, activityTypes } = require('../data/activityTypes')
+const NoteMessage = require('../model/noteMessageSchema')
 
 const MAX_RETRIES = 10
 const BASE_RETRY_DELAY_MS = 500
@@ -23,7 +24,27 @@ const logActivity = async ({
         session,
       )
       if (!user) throw new Error('User not found')
+      const isXpAlreadyAwarded = await Activity.find({
+        userId: user._id,
+        type,
+        timestamp: date,
+      })
 
+      if (isXpAlreadyAwarded.length > 0) {
+        return 0
+      }
+
+      if (type === '5-day login streak') {
+        const newNoteMessage = new NoteMessage({
+          userId: user._id,
+          title: '5-day login streak',
+          isMilestone: true,
+          milestoneContent: `Congratulations! You have logged in for ${user.loginStreak} days in a row!`,
+          messageType: 'xpAward',
+          xpAwarded: activityTypes.FIVE_DAY_LOGIN_STREAK.xp,
+        })
+        await newNoteMessage.save({ session })
+      }
       const xpAwarded = getXpForActivity({
         activityType: type,
         userIQ: userIQ || user.IQ_score,

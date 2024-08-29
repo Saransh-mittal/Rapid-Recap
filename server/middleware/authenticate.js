@@ -1,5 +1,8 @@
 const jwt = require('jsonwebtoken')
 const User = require('../model/userSchema')
+const { logActivity } = require('../utils/activity.utils')
+const { activityTypes } = require('../data/activityTypes')
+
 const Authenticate = async (req, res, next) => {
   try {
     const token = req.cookies.jwtoken
@@ -15,6 +18,21 @@ const Authenticate = async (req, res, next) => {
       )
       const today = new Date()
       today.setUTCHours(0, 0, 0, 0)
+      if (today.getTime() === user.lastLogin.getTime() + 24 * 60 * 60 * 1000)
+        user.loginStreak++
+      else if (
+        user.lastLogin.getTime() + 24 * 60 * 60 * 1000 < today.getTime() ||
+        !user.lastLogin
+      )
+        user.loginStreak = 1
+      if (user.loginStreak % 5 === 0) {
+        logActivity({
+          userInGameName: user.inGameName,
+          type: activityTypes.FIVE_DAY_LOGIN_STREAK.type,
+          date: today,
+        })
+      }
+
       user.lastLogin = today
       await user.save()
       //console.log(req.user);
