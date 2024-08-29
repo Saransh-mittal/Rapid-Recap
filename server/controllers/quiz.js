@@ -114,16 +114,12 @@ const saveAttempt = async (req, res) => {
       })
       .session(session)
     let boosted = false
-    if (user.todayBoost) {
-      RQM_score = Math.ceil(RQM_score * 1.5)
-      boosted = true
-    }
     let quinBoostUtilized = false
-    if (!user.todayBoost && user.quinBoosts.length > 0) {
+
+    if (user.quinBoosts.length > 0) {
       const quinBoost = user.quinBoosts[user.quinBoosts.length - 1]
       if (quinBoost.boosted) {
-        RQM_score = Math.ceil(RQM_score * 1.5)
-        boosted = true
+        RQM_score = Math.ceil(RQM_score * (user.todayBoost ? 1.75 : 1.5))
         quinBoost.boosted = false
         const qBoost = await QuinBoost.findById(quinBoost.quinBoost)
         // console.log(qBoost);
@@ -138,6 +134,9 @@ const saveAttempt = async (req, res) => {
         }
         quinBoostUtilized = true
       }
+    } else if (user.todayBoost) {
+      RQM_score = Math.ceil(RQM_score * 1.5)
+      boosted = true
     }
     const articleDifficulty = quiz.overAllDifficulty
     const newQuizAttempt = new QuizAttempt({
@@ -154,8 +153,13 @@ const saveAttempt = async (req, res) => {
       RQM_score,
       articleDifficulty,
       timeTaken,
-      boost: boosted ? 1.5 : 1,
-      isBoosted: boosted,
+      boost:
+        quinBoostUtilized && user.todayBoost
+          ? 1.75
+          : boosted || quinBoostUtilized
+          ? 1.5
+          : 1,
+      isBoosted: boosted || quinBoostUtilized,
       season: parseInt(configService.getCurrentSeason(), 10),
     })
     await newQuizAttempt.save({ session })

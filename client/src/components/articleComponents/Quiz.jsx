@@ -167,7 +167,6 @@ const Quiz = ({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       })
-      dailyStreakCheckerAndUpdater(dispatchRedux)
 
       if (
         !submitted &&
@@ -207,7 +206,8 @@ const Quiz = ({
                 actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                 width: '250px',
                 milestoneName: 'QUIN_BOOST',
-                duration: 10000,
+                isMilestone: true,
+                duration: null,
                 xpSource: 'QUIZ',
               }),
             )
@@ -253,6 +253,7 @@ const Quiz = ({
             14000,
           )
       }
+      setTimeout(() => dailyStreakCheckerAndUpdater(dispatchRedux), 14000)
     } catch (error) {
       console.log(error)
     }
@@ -292,7 +293,8 @@ const Quiz = ({
               actions: [{ actionType: 'VIEW_EXPERIENCE' }],
               width: '250px',
               milestoneName: 'QUIN_BOOST',
-              duration: 10000,
+              isMilestone: true,
+              duration: null,
               xpSource: 'QUIZ',
             }),
           )
@@ -457,6 +459,8 @@ const Quiz = ({
               isOpen={isOpen}
               score={result?.RQM_score}
               submitLoad={submitLoad}
+              isBoosted={isBoosted}
+              isQuinBoostAvailable={isQuinBoostAvailable}
               onViewReport={() => {
                 playClick()
                 setShowSubmittedInterface(true)

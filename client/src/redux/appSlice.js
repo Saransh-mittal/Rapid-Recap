@@ -161,6 +161,17 @@ export const appSlice = createSlice({
             title: 'Oh no! Your streak has ended',
             width: '300px',
           })
+        action.payload?.seven_day_streak &&
+          state.noteMessageQueue.push({
+            messageType: 'xpAward',
+            title: 'Congratulations on Your 7-Day Streak!',
+            isMilestone: true,
+            milestoneContent:
+              'Enjoy a 1.5x score multiplier on all quizzes today!',
+            width: '300px',
+            xpAwared: action.payload?.xpAwarded,
+            duration: null,
+          })
         action.payload?.isRevivalPeriod &&
           state.noteMessageQueue.push({
             messageType: 'streak',

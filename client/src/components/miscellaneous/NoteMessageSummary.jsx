@@ -125,6 +125,11 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   const renderMessageContent = useCallback(message => {
     switch (message.messageType) {
       case 'xpAward':
+        const milestoneInfo = message.milestoneName
+          ? getMilestoneInfo(message.milestoneName)
+          : null
+        const totalXp = message.xpAwarded + (milestoneInfo?.xpReward || 0)
+
         return (
           <Suspense fallback={null}>
             <HStack spacing={3}>
@@ -157,7 +162,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                       : 'green.400'
                   }
                 >
-                  {message.xpAwarded} XP earned
+                  {totalXp} XP earned
                 </Text>
                 {message.xpSource && (
                   <Text color="gray.400" fontSize="sm">
@@ -165,10 +170,24 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                   </Text>
                 )}
                 {message.milestoneName && (
-                  <Text color="blue.300" fontSize="sm">
-                    {message.milestoneName} Milestone
-                  </Text>
+                  <>
+                    <Text color="blue.300" fontSize="sm">
+                      {message.milestoneName} Milestone
+                    </Text>
+                    {milestoneInfo && (
+                      <Text color="gray.400" fontSize="xs">
+                        {milestoneInfo.description}
+                      </Text>
+                    )}
+                  </>
                 )}
+                {message.isMilestone &&
+                  !message.milestoneName &&
+                  message.milestoneContent && (
+                    <Text color="gray.400" fontSize="xs">
+                      {message.milestoneContent}
+                    </Text>
+                  )}
               </VStack>
             </HStack>
           </Suspense>

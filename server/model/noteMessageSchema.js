@@ -15,6 +15,9 @@ const noteMessageSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  milestoneContent: {
+    type: String,
+  },
   milestoneName: {
     type: String,
   },

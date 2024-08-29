@@ -86,6 +86,7 @@ const NoteMessageQueue = () => {
             xpSource={message.xpSource}
             milestoneName={message.milestoneName}
             isMilestone={message.isMilestone}
+            milestoneContent={message.milestoneContent}
           />
         </Suspense>
       )

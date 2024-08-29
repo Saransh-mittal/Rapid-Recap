@@ -72,7 +72,7 @@ const handleSocietyOrCircleUpgrade = async (
           const noteMessage = new NoteMessage({
             userId: user._id,
             title: 'Society/Circle Upgrade',
-            content: `Congratulations! You have been upgraded to the ${
+            milestoneContent: `Congratulations! You have been upgraded to the ${
               changedSocietyOrCircle === 'society'
                 ? currSocietyCircle.society
                 : currSocietyCircle.circle

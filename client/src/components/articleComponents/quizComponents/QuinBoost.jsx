@@ -3,7 +3,7 @@ import React from 'react'
 import Bubbles from '../../miscellaneous/bubbles'
 import { motion } from 'framer-motion'
 
-const QuinBoost = () => {
+const QuinBoost = ({ isBoosted }) => {
   return (
     <Flex marginTop={'5px'} alignItems="center">
       <Bubbles />
@@ -30,7 +30,7 @@ const QuinBoost = () => {
         animate={{ y: [0, -5, 0] }}
         transition={{ duration: 1, repeat: Infinity }}
       >
-        1.5x
+        {isBoosted ? '1.75x' : '1.5x'}
       </motion.div>
     </Flex>
   )

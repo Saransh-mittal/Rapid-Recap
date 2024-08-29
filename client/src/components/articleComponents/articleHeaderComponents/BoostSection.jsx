@@ -1,5 +1,5 @@
 import React from 'react'
-import { Flex, Text, Image, Badge } from '@chakra-ui/react'
+import { Flex, Text, Image, Badge, Box } from '@chakra-ui/react'
 import QuinBoost from '../quizComponents/QuinBoost'
 import Button from '../../miscellaneous/ButtonComponent'
 import starBoost from '/GIFs/starBoost.gif'
@@ -31,9 +31,9 @@ const BoostSection = React.memo(
     }
 
     return (
-      <Flex mb={4}>
+      <Flex mb={4} flexDirection="column">
         {isQuinBoostAvailable ? (
-          <QuinBoost />
+          <QuinBoost isBoosted={isBoosted} />
         ) : (
           !isBoosted && (
             <Flex flexDirection={'column'}>
@@ -63,24 +63,40 @@ const BoostSection = React.memo(
             alignItems="center"
             gap={1}
             cursor="pointer"
-            onClick={openModal}
             wordBreak={'break-word'}
             ml={'-0.9rem'}
+            flexDirection="column"
           >
-            <Image
-              src={starBoost}
-              bg="none"
-              h={['40px', '50px', '60px']}
-              w={['40px', '50px', '60px']}
-            />
-            <Badge
-              fontSize={['sm', 'md', 'lg']}
-              color="yellow"
-              bg="none"
-              wordBreak={'break-word'}
+            <Flex alignItems="center">
+              <Image
+                src={starBoost}
+                bg="none"
+                h={['40px', '50px', '60px']}
+                w={['40px', '50px', '60px']}
+              />
+              <Badge
+                fontSize={['sm', 'md', 'lg']}
+                color="yellow"
+                bg="none"
+                wordBreak={'break-word'}
+              >
+                Enjoy!! 1.5x multiplier
+              </Badge>
+            </Flex>
+
+            <Box
+              mt={-5}
+              px={2}
+              py={1}
+              borderRadius="full"
+              bg="rgba(145, 127, 179, 0.3)"
+              color="white"
+              fontSize="xs"
+              fontWeight="bold"
+              boxShadow="0 2px 4px rgba(0,0,0,0.1)"
             >
-              Enjoy!! 1.5x multiplier
-            </Badge>
+              {quizLeftToGetQuizBoost} Quiz Left For Quin Boost
+            </Box>
           </Flex>
         )}
       </Flex>
