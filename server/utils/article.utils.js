@@ -8,6 +8,7 @@ const axios = require('axios')
 const script_prepare_article_data = require('../scripts/script_prepare_article_data')
 const { averageReadTime, shuffleArray } = require('./miscellaneous.utils')
 const { Recommendation } = require('../model/recommendationSchema')
+const newsClassifierService = require('../ml/services/newsClassifierService')
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
   // Use natural language processing to tokenize sentences
@@ -219,7 +220,10 @@ fill these in the category key (only string). Also if total characters are more 
       ) {
         continue
       }
-
+      const predictedCategory = await newsClassifierService.classifyNews(
+        res.mainText,
+      )
+      res.category = predictedCategory
       processedOutput.push(res)
 
       const newArticle = new Article(res)
@@ -383,6 +387,16 @@ const processExtractedNews = async (news, category) => {
 
       const avgReadTime = averageReadTime(res.mainText)
       res.avgReadTime = avgReadTime
+      try {
+        const predictedCategory = await newsClassifierService.classifyNews(
+          res.mainText,
+        )
+        res.category = predictedCategory || res.category
+      } catch (error) {
+        console.error(
+          `Error classifying news item titled "${res.title}": ${error.message}`,
+        )
+      }
 
       const newArticle = new Article(res)
       await newArticle.save()

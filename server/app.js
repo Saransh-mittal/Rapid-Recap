@@ -93,6 +93,7 @@ webpush.setVapidDetails(
 // require('./scripts/script_prepare_article_data')()
 // require("./scripts/usersEnabledNotifs");
 // require("./scripts/generateCryptoKey");
+// require('./scripts/testArticleCat')
 // require("./scripts/chatStatus");
 // -------------------
 
