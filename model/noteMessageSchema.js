@@ -11,6 +11,10 @@ const noteMessageSchema = new mongoose.Schema({
   title: {
     type: String,
   },
+  duration: {
+    type: Number,
+    default: null,
+  },
   isMilestone: {
     type: Boolean,
     default: false,
