@@ -1,1 +1,0 @@
-import{ae as u}from"./index-f180fc86.js";var l=Object.freeze(["base","sm","md","lg","xl","2xl"]);function c(n,e){return Array.isArray(n)?n.map(r=>r===null?null:e(r)):u(n)?Object.keys(n).reduce((r,t)=>(r[t]=e(n[t]),r),{}):n!=null?e(n):null}function f(n,e=l){const r={};return n.forEach((t,a)=>{const s=e[a];t!=null&&(r[s]=t)}),r}export{f as a,l as b,c as m};

@@ -34,6 +34,9 @@ const {
 } = require('../services/recommendationService.js')
 const Article = require('../model/articleSchema.js')
 const asyncHandler = require('express-async-handler')
+const { logActivity } = require('../utils/activity.utils.js')
+const { activityTypes } = require('../data/activityTypes.js')
+const Activity = require('../model/activitySchema.js')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -1137,7 +1140,11 @@ const streakChecker = async (req, res) => {
     let isRevivalPeriod = false
     let streakBeforeBreak = 0
     let remainingTimeBeforeRevival = null
-    if (user.revivalPeriodEnd && today > user.revivalPeriodEnd) {
+
+    if (
+      user.revivalPeriodEnd &&
+      new Date().getTime() > user.revivalPeriodEnd.getTime()
+    ) {
       // Revival period ended without success
       user.revivalPeriodEnd = null
     }
@@ -1181,6 +1188,26 @@ const streakChecker = async (req, res) => {
       user.streak % 7 === 0 &&
       user.streakExpiry.getTime() === tomorrow.getTime()
     user.todayBoost = isBoosted
+    let xpAwarded = 0
+    let seven_day_streak = false
+    const checkIfAlreadyAwarded = await Activity.find({
+      userId: user._id,
+      type: activityTypes.SEVEN_DAY_STREAK.type,
+      timestamp: { $gte: today },
+    })
+
+    if (
+      isBoosted &&
+      user.todaysQuizCnt === 1 &&
+      checkIfAlreadyAwarded.length === 0
+    ) {
+      xpAwarded = await logActivity({
+        userInGameName: user.inGameName,
+        type: activityTypes.SEVEN_DAY_STREAK.type,
+        date: today,
+      })
+      seven_day_streak = true
+    }
     if (user.streak > user.longestStreak) {
       user.longestStreak = user.streak
     }
@@ -1194,6 +1221,8 @@ const streakChecker = async (req, res) => {
       streakBeforeBreak,
       remainingTimeBeforeRevival,
       todaysQuizAttemptsCount: user.todaysQuizCnt,
+      seven_day_streak,
+      xpAwarded,
     })
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' })
@@ -1210,12 +1239,6 @@ const quinBoostChecker = async (req, res) => {
     })
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
-    }
-    if (user.todayBoost) {
-      return res.status(200).json({
-        quizLeftToGetQuizBoost: null,
-        isQuinBoostAvailable: false,
-      })
     }
 
     const today = new Date()
