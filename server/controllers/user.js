@@ -16,6 +16,7 @@ const {
   longestStreakCalculator,
   currDayStreakCalulator,
   makeFirstLoginFalse,
+  getTheRevivalEndDay,
 } = require('../utils/user.utils')
 const dailyUserIQCalc = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
@@ -33,6 +34,9 @@ const {
 } = require('../services/recommendationService.js')
 const Article = require('../model/articleSchema.js')
 const asyncHandler = require('express-async-handler')
+const { logActivity } = require('../utils/activity.utils.js')
+const { activityTypes } = require('../data/activityTypes.js')
+const Activity = require('../model/activitySchema.js')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -771,7 +775,7 @@ const expectedIQScore = async (req, res) => {
           (a, b) => b.RQM_score - a.RQM_score,
         )
         const userAttempt = sortedQuizAttempts.find(
-          attempt => attempt.user.toString() === userId,
+          attempt => attempt.user && attempt?.user?.toString() === userId,
         )
         if (!userAttempt) {
           throw new Error('User has not attempted the quiz for the article.')
@@ -1132,20 +1136,78 @@ const streakChecker = async (req, res) => {
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0) // Set time to start of the day
     const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
+    const pastStreak = user.streak
+    let isRevivalPeriod = false
+    let streakBeforeBreak = 0
+    let remainingTimeBeforeRevival = null
 
+    if (
+      user.revivalPeriodEnd &&
+      new Date().getTime() > user.revivalPeriodEnd.getTime()
+    ) {
+      // Revival period ended without success
+      user.revivalPeriodEnd = null
+    }
+    if (user.streakExpiry.getTime() < tomorrow.getTime()) {
+      user.todaysQuizCnt = 0
+    }
     if (today.getTime() > user.streakExpiry.getTime()) {
+      if (user.streak >= 5 && user.revivalPeriodEnd === null) {
+        user.streakBeforeBreak = user.streak
+        streakBeforeBreak = user.streak
+        user.revivalPeriodEnd = getTheRevivalEndDay(
+          user.streak,
+          user.streakExpiry,
+        )
+        isRevivalPeriod = true
+        remainingTimeBeforeRevival =
+          user.revivalPeriodEnd.getTime() - today.getTime()
+      }
       // Reset streak
       user.streak = 0
       user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000)
       user.todayBoost = false
       await user.save()
-      return res.status(200).json({ streak: 0 })
+      return res.status(200).json({
+        streak: 0,
+        pastStreak,
+        isRevivalPeriod,
+        streakBeforeBreak,
+        remainingTimeBeforeRevival,
+        todaysQuizAttemptsCount: 0,
+      })
+    }
+
+    if (user.revivalPeriodEnd) {
+      remainingTimeBeforeRevival =
+        user.revivalPeriodEnd.getTime() - new Date().getTime()
+      isRevivalPeriod = true
     }
     const isBoosted =
       user.streak > 0 &&
       user.streak % 7 === 0 &&
       user.streakExpiry.getTime() === tomorrow.getTime()
     user.todayBoost = isBoosted
+    let xpAwarded = 0
+    let seven_day_streak = false
+    const checkIfAlreadyAwarded = await Activity.find({
+      userId: user._id,
+      type: activityTypes.SEVEN_DAY_STREAK.type,
+      timestamp: { $gte: today },
+    })
+
+    if (
+      isBoosted &&
+      user.todaysQuizCnt === 1 &&
+      checkIfAlreadyAwarded.length === 0
+    ) {
+      xpAwarded = await logActivity({
+        userInGameName: user.inGameName,
+        type: activityTypes.SEVEN_DAY_STREAK.type,
+        date: today,
+      })
+      seven_day_streak = true
+    }
     if (user.streak > user.longestStreak) {
       user.longestStreak = user.streak
     }
@@ -1155,6 +1217,12 @@ const streakChecker = async (req, res) => {
       streak: user.streak,
       longestStreak: user.longestStreak,
       isBoosted,
+      isRevivalPeriod,
+      streakBeforeBreak,
+      remainingTimeBeforeRevival,
+      todaysQuizAttemptsCount: user.todaysQuizCnt,
+      seven_day_streak,
+      xpAwarded,
     })
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' })
@@ -1171,12 +1239,6 @@ const quinBoostChecker = async (req, res) => {
     })
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
-    }
-    if (user.todayBoost) {
-      return res.status(200).json({
-        quizLeftToGetQuizBoost: null,
-        isQuinBoostAvailable: false,
-      })
     }
 
     const today = new Date()

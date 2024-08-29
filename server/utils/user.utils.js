@@ -599,6 +599,23 @@ const makeFirstLoginFalse = async userId => {
   }
 }
 
+const getTheRevivalEndDay = (streak, streakExpireAt) => {
+  let i = 0
+  if (streak < 5) return null
+  while (1) {
+    const lowerBound = (((i - 1) * (i + 2)) / 2 + 1) * 7
+    const upperBound = ((i * (i + 3)) / 2 + 1) * 7 - 1
+
+    if (streak >= lowerBound && streak <= upperBound) {
+      i++
+      break
+    }
+    i++
+  }
+  const revivalEndDay = new Date(streakExpireAt + i * 24 * 60 * 60 * 1000)
+  return revivalEndDay
+}
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -614,4 +631,5 @@ module.exports = {
   noLoginDaysSpentCalculator,
   currDayStreakCalulator,
   makeFirstLoginFalse,
+  getTheRevivalEndDay,
 }

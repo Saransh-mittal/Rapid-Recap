@@ -167,7 +167,7 @@ const Quiz = ({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
       })
-      dailyStreakCheckerAndUpdater(dispatchRedux)
+
       if (
         !submitted &&
         currentQuestionIndex < totalQuestions &&
@@ -187,6 +187,13 @@ const Quiz = ({
               user.xp +
               (result?.xpAwarded || 5) +
               (result?.quinBoostUtilized ? 10 : 0),
+            todaysQuizCnt: user.todaysQuizCnt + 1,
+            revivalPeriodEnd:
+              user.todaysQuizCnt + 1 === 6 ? null : user.revivalPeriodEnd,
+            streak:
+              result?.quinBoostUtilized && user.revivalPeriodEnd
+                ? user.streakBeforeBreak + 1
+                : user.streak + 1,
           }),
         )
 
@@ -199,7 +206,8 @@ const Quiz = ({
                 actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                 width: '250px',
                 milestoneName: 'QUIN_BOOST',
-                duration: 10000,
+                isMilestone: true,
+                duration: null,
                 xpSource: 'QUIZ',
               }),
             )
@@ -213,7 +221,39 @@ const Quiz = ({
                 xpSource: 'QUIZ',
               }),
             )
+
+        result?.quinBoostUtilized &&
+          user.revivalPeriodEnd &&
+          dispatchRedux(
+            addNoteMessage({
+              messageType: 'streak',
+              xpAwarded: result?.xpAwarded || 10,
+              title: 'Congratulations! Your Strek is Revived!',
+              width: '250px',
+              streakStatus: 'revived',
+              streakCount: user.streakBeforeBreak + 1,
+            }),
+          )
+        user.revivalPeriodEnd &&
+          user.todaysQuizCnt + 1 < 6 &&
+          setTimeout(
+            () =>
+              dispatchRedux(
+                addNoteMessage({
+                  messageType: 'streak',
+                  streakStatus: 'revival',
+                  streakCount: user?.streakBeforeBreak,
+                  remainingTime:
+                    user.revivalPeriodEnd.getTime() - new Date().getTime(),
+                  remainingQuizzes: 6 - user.todaysQuizCnt + 1,
+                  title: 'Revive your streak!',
+                  width: '300px',
+                }),
+              ),
+            14000,
+          )
       }
+      setTimeout(() => dailyStreakCheckerAndUpdater(dispatchRedux), 14000)
     } catch (error) {
       console.log(error)
     }
@@ -238,6 +278,9 @@ const Quiz = ({
             user.xp +
             (result?.xpAwarded || 5) +
             (result?.quinBoostUtilized ? 10 : 0),
+          todaysQuizCnt: user.todaysQuizCnt + 1,
+          revivalPeriodEnd:
+            user.todaysQuizCnt + 1 === 6 ? null : user.revivalPeriodEnd,
         }),
       )
 
@@ -250,7 +293,8 @@ const Quiz = ({
               actions: [{ actionType: 'VIEW_EXPERIENCE' }],
               width: '250px',
               milestoneName: 'QUIN_BOOST',
-              duration: 10000,
+              isMilestone: true,
+              duration: null,
               xpSource: 'QUIZ',
             }),
           )
@@ -413,6 +457,8 @@ const Quiz = ({
               isOpen={isOpen}
               score={result?.RQM_score}
               submitLoad={submitLoad}
+              isBoosted={isBoosted}
+              isQuinBoostAvailable={isQuinBoostAvailable}
               onViewReport={() => {
                 playClick()
                 setShowSubmittedInterface(true)

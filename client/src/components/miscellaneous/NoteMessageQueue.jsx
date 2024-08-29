@@ -12,7 +12,7 @@ const NoteMessageSummary = lazy(() => import('./NoteMessageSummary'))
 const XPAwardNoteMessage = lazy(() =>
   import('./noteMessages/XPAwardNoteMessage'),
 )
-
+const StreakNoteMessage = lazy(() => import('./noteMessages/StreakNoteMessage'))
 const NoteMessageQueue = () => {
   const dispatch = useDispatch()
   const noteMessageQueue = useSelector(state => state.app.noteMessageQueue)
@@ -86,6 +86,22 @@ const NoteMessageQueue = () => {
             xpSource={message.xpSource}
             milestoneName={message.milestoneName}
             isMilestone={message.isMilestone}
+            milestoneContent={message.milestoneContent}
+          />
+        </Suspense>
+      )
+    case 'streak':
+      return (
+        <Suspense fallback={null}>
+          <StreakNoteMessage
+            messageId={message.id}
+            streakStatus={message.streakStatus}
+            streakCount={message.streakCount}
+            remainingTime={message.remainingTime}
+            remainingQuizzes={message.remainingQuizzes}
+            title={message.title}
+            duration={message.duration}
+            width={message.width}
           />
         </Suspense>
       )

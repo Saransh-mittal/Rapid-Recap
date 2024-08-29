@@ -382,6 +382,11 @@ const Article = () => {
     )
   }, [article?.category])
 
+  useEffect(() => {
+    // scroll to the top of the page
+    window.scrollTo(0, 0)
+  }, [])
+
   return (
     <Suspense fallback={<Loading />}>
       <Flex w={'100vw'}>
@@ -424,6 +429,7 @@ const Article = () => {
           flexDirection={'column'}
           w={'100vw'}
           overflow={'hidden'}
+          minH={'100vh'}
         >
           <Helmet>
             <title>{`${title[selectedLanguage]} | Rapid Recap`}</title>

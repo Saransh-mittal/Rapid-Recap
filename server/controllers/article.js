@@ -19,6 +19,7 @@ const Quiz = require('../model/quizSchema')
 const NewsAPI = require('newsapi')
 const asyncHandler = require('express-async-handler')
 const { default: mongoose } = require('mongoose')
+const cache = require('memory-cache')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general', lang } = req.query
@@ -122,10 +123,27 @@ const getArticleIds = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc  Get article details
+// @route GET /api/articles/article/:id
+// @access Public
 const getArticle = async (req, res) => {
   const { id } = req.params
   const { lang } = req.query
   try {
+    const cacheKey = `article_${id}`
+    const cachedArticle = cache.get(cacheKey)
+
+    if (
+      cachedArticle &&
+      !(
+        lang === 'hi' &&
+        (!cachedArticle.hindiTitle ||
+          !cachedArticle.hindiMainText ||
+          !cachedArticle.hindiAuthor)
+      )
+    ) {
+      return res.json({ quizExpired: false, newArticle: cachedArticle })
+    }
     const article = await Article.findById(id)
     if (!article) {
       throw new Error('Article not found')
@@ -184,8 +202,9 @@ const getArticle = async (req, res) => {
       date: formatDate(article.dateTime),
       _id: article._id,
     }
-    let quizExpired = false
-    res.status(201).send({ quizExpired, newArticle })
+
+    cache.put(cacheKey, newArticle, 3600000 * 24) // Cache for 24 hour
+    res.status(201).send({ quizExpired: false, newArticle })
   } catch (error) {
     res.status(400).json({ error: error || 'Something went wrong' })
     console.log(error)

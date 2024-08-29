@@ -13,6 +13,7 @@ const XPAwardNoteMessage = ({
   xpSource,
   milestoneName,
   isMilestone,
+  milestoneContent,
   title,
   onClose,
   duration,
@@ -117,6 +118,17 @@ const XPAwardNoteMessage = ({
               </Box>
             </>
           )}
+          {isMilestone && !milestoneName && milestoneContent && (
+            <>
+              <Divider my={2} />
+              <Text fontSize="md" fontWeight="medium" color="blue.300">
+                Milestone Content
+              </Text>
+              <Text fontSize="sm" color="gray.400" textAlign="center">
+                {milestoneContent}
+              </Text>
+            </>
+          )}
           {isMilestone && milestoneName && (
             <Box mt={3} bg="blue.500" px={4} py={1} borderRadius="full">
               <Text fontSize="2xl" fontWeight="bold" color="white">
@@ -136,6 +148,7 @@ const XPAwardNoteMessage = ({
       xpSource,
       milestoneInfo,
       totalXp,
+      milestoneContent,
     ],
   )
 

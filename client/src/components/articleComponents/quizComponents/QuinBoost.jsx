@@ -4,7 +4,7 @@ import Bubbles from '../../miscellaneous/bubbles'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
-const QuinBoost = () => {
+const QuinBoost = ({ isBoosted }) => {
   const { t } = useTranslation('QuinBoost')
   return (
     <Flex marginTop={'5px'} alignItems="center">
@@ -32,7 +32,7 @@ const QuinBoost = () => {
         animate={{ y: [0, -5, 0] }}
         transition={{ duration: 1, repeat: Infinity }}
       >
-        {t('Multiplier')}
+        {isBoosted ? '1.75x' : '1.5x'}
       </motion.div>
     </Flex>
   )

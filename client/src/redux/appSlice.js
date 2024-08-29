@@ -153,6 +153,38 @@ export const appSlice = createSlice({
       })
       .addCase(fetchDailyStreak.fulfilled, (state, action) => {
         state.streak = action.payload.streak
+        action.payload?.pastStreak &&
+          state.noteMessageQueue.push({
+            messageType: 'streak',
+            streakStatus: 'broken',
+            streakCount: action.payload.pastStreak,
+            title: 'Oh no! Your streak has ended',
+            width: '300px',
+          })
+        action.payload?.seven_day_streak &&
+          state.noteMessageQueue.push({
+            messageType: 'xpAward',
+            title: 'Congratulations on Your 7-Day Streak!',
+            isMilestone: true,
+            milestoneContent:
+              'Enjoy a 1.5x score multiplier on all quizzes today!',
+            width: '300px',
+            xpAwared: action.payload?.xpAwarded,
+            duration: null,
+          })
+        action.payload?.isRevivalPeriod &&
+          state.noteMessageQueue.push({
+            messageType: 'streak',
+            streakStatus: 'revival',
+            streakCount: action.payload?.streakBeforeBreak,
+            remainingTime: action.payload?.remainingTimeBeforeRevival, // 1 hour in seconds
+            remainingQuizzes: 6 - action.payload?.todaysQuizAttemptsCount,
+            title: 'Revive your streak!',
+            content:
+              'You need to utilize a quin boost in the revival period to revive your streak.',
+            width: '300px',
+            duration: 12000,
+          })
         state.longestStreak = action.payload.longestStreak
         state.isBoosted = action.payload.isBoosted
         state.streakLoading = false

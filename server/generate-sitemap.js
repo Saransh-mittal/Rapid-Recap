@@ -118,7 +118,10 @@ async function generateSitemap() {
     finalRoutes.forEach(route => {
       const url = root.ele('url')
       url.ele('loc', `${BASE_URL}${route.url}`)
-      url.ele('lastmod', new Date().toISOString())
+      url.ele(
+        'lastmod',
+        route.lastmod ? route.lastmod : new Date().toISOString(),
+      )
       url.ele('changefreq', route.changefreq)
       url.ele('priority', route.priority)
     })

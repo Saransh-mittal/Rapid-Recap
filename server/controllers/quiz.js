@@ -20,6 +20,7 @@ const {
   abortSession,
 } = require('../db/session.js')
 const { getTopThreeRecommendedArticles } = require('../utils/article.utils.js')
+const NoteMessage = require('../model/noteMessageSchema.js')
 
 // @desc Save the quiz attempt
 // @route POST /api/quiz/saveAttempt
@@ -113,24 +114,29 @@ const saveAttempt = async (req, res) => {
       })
       .session(session)
     let boosted = false
-    if (user.todayBoost) {
-      RQM_score = Math.ceil(RQM_score * 1.5)
-      boosted = true
-    }
     let quinBoostUtilized = false
-    if (!user.todayBoost && user.quinBoosts.length > 0) {
+
+    if (user.quinBoosts.length > 0) {
       const quinBoost = user.quinBoosts[user.quinBoosts.length - 1]
       if (quinBoost.boosted) {
-        RQM_score = Math.ceil(RQM_score * 1.5)
-        boosted = true
+        RQM_score = Math.ceil(RQM_score * (user.todayBoost ? 1.75 : 1.5))
         quinBoost.boosted = false
         const qBoost = await QuinBoost.findById(quinBoost.quinBoost)
         // console.log(qBoost);
         // console.log(article._id);
         qBoost.article = article._id
         await qBoost.save({ session })
+        if (user.revivalPeriodEnd) {
+          user.streak = user.streakBeforeBreak
+          user.streakBeforeBreak = 0
+          user.revivalPeriodEnd = null
+          await user.save({ session })
+        }
         quinBoostUtilized = true
       }
+    } else if (user.todayBoost) {
+      RQM_score = Math.ceil(RQM_score * 1.5)
+      boosted = true
     }
     const articleDifficulty = quiz.overAllDifficulty
     const newQuizAttempt = new QuizAttempt({
@@ -147,8 +153,13 @@ const saveAttempt = async (req, res) => {
       RQM_score,
       articleDifficulty,
       timeTaken,
-      boost: boosted ? 1.5 : 1,
-      isBoosted: boosted,
+      boost:
+        quinBoostUtilized && user.todayBoost
+          ? 1.75
+          : boosted || quinBoostUtilized
+          ? 1.5
+          : 1,
+      isBoosted: boosted || quinBoostUtilized,
       season: parseInt(configService.getCurrentSeason(), 10),
     })
     await newQuizAttempt.save({ session })
@@ -180,6 +191,7 @@ const saveAttempt = async (req, res) => {
     else user.hardQuizCount++
 
     user.rankedInCurrentSeason = true
+    user.todaysQuizCnt++
     await user.save({ session })
     await commitSession()
     const xpAwarded = await logActivity({

@@ -8,7 +8,7 @@ const User = require('../../model/userSchema')
 async function loadNotificationConfig() {
   const configPath = path.join(
     __dirname,
-    '../../data/guestAccountNotification.json',
+    '../../data/guestAccountNotifications.json',
   )
   const configData = await fs.readFile(configPath, 'utf8')
   return JSON.parse(configData)

@@ -3,13 +3,14 @@ import { Text, SlideFade, Heading, Image, Flex } from '@chakra-ui/react'
 import rocket from '/images/rocket.webp'
 import Button from '../../miscellaneous/ButtonComponent'
 import ButtonGradient from '../../../assets/svg/ButtonGradient'
-import { useTranslation } from 'react-i18next'
 
 const BoostedSubmittedQuizInterface = ({
   score,
   isOpen,
   submitLoad,
   onViewReport,
+  isBoosted,
+  isQuinBoostAvailable,
 }) => {
   // Added onViewReport prop
   const { t } = useTranslation('BoostedSubmittedQuizInterface')
@@ -149,7 +150,11 @@ const BoostedSubmittedQuizInterface = ({
                     marginTop={'auto'}
                     marginBottom={'0.5rem'}
                   >
-                    {score !== 0 ? t('boostedText') : t('dontGiveUp')}
+                    {score !== 0
+                      ? isBoosted && isQuinBoostAvailable
+                        ? '1.75x Boosted'
+                        : '1.5x Boosted'
+                      : `"Don't give up! Keep going!"`}
                   </Text>
                 </Flex>
               </Flex>
