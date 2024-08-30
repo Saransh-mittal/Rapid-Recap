@@ -1,0 +1,1 @@
+import{j as t,P as i}from"./index-9c05d4fe.js";const a=()=>t.jsx(i.div,{style:{position:"absolute",width:"7rem",height:"7rem",background:"radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%)",borderRadius:"50%",pointerEvents:"none"},animate:{opacity:[0,1,0],scale:[1,1.5,1]},transition:{duration:1.5,repeat:1/0}});export{a as default};

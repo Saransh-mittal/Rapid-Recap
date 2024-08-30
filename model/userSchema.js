@@ -282,6 +282,15 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    soundSettings: {
+      type: Object,
+      default: {
+        NoteMessage: true,
+        Milestone: true,
+        Click: true,
+        Quiz: true,
+      },
+    },
     expiresAt: { type: Date },
   },
   { collection: 'Users' },

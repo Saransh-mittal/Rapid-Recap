@@ -287,6 +287,7 @@ const processExtractedNews = async (news, category) => {
     You are a text checker and analyzer.
     1. Remove any irrelevant content or lines from the mainText that are not related to the article or title. This includes sections like "Also read," "Loading...," "Share to Facebook," "Share to Twitter," "Share to LinkedIn," "All rights reserved" "terms of use" "HT" "Any other news websites name or nav items related to those websites" and unanswered questions.
     2. Do not summarize the content if the mainText is 2500 characters or less.
+    4. If Article is incomplete then either complete it to your knowledge or remove it.
     3. If the mainText exceeds 2500 characters, summarize it to more than 800 characters but less than 2500 characters, keeping the most important information.
     4. Ensure that the returned JSON object includes all original fields.
   `
@@ -387,17 +388,15 @@ const processExtractedNews = async (news, category) => {
 
       const avgReadTime = averageReadTime(res.mainText)
       res.avgReadTime = avgReadTime
-      if (res.category !== 'top') {
-        try {
-          const predictedCategory = await newsClassifierService.classifyNews(
-            res.mainText,
-          )
-          res.category = predictedCategory || res.category
-        } catch (error) {
-          console.error(
-            `Error classifying news item titled "${res.title}": ${error.message}`,
-          )
-        }
+      try {
+        const predictedCategory = await newsClassifierService.classifyNews(
+          res.mainText,
+        )
+        res.category = predictedCategory || res.category
+      } catch (error) {
+        console.error(
+          `Error classifying news item titled "${res.title}": ${error.message}`,
+        )
       }
 
       const newArticle = new Article(res)
