@@ -387,15 +387,17 @@ const processExtractedNews = async (news, category) => {
 
       const avgReadTime = averageReadTime(res.mainText)
       res.avgReadTime = avgReadTime
-      try {
-        const predictedCategory = await newsClassifierService.classifyNews(
-          res.mainText,
-        )
-        res.category = predictedCategory || res.category
-      } catch (error) {
-        console.error(
-          `Error classifying news item titled "${res.title}": ${error.message}`,
-        )
+      if (res.category !== 'top') {
+        try {
+          const predictedCategory = await newsClassifierService.classifyNews(
+            res.mainText,
+          )
+          res.category = predictedCategory || res.category
+        } catch (error) {
+          console.error(
+            `Error classifying news item titled "${res.title}": ${error.message}`,
+          )
+        }
       }
 
       const newArticle = new Article(res)
