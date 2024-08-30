@@ -44,6 +44,7 @@ import {
   setIsRegisterOpen,
   setIsSigninOpen,
   setShowXpLevelModal,
+  setSoundSettings,
 } from './redux/appSlice.js'
 import { setUser } from './redux/authSlice.js'
 
@@ -137,14 +138,17 @@ const App = () => {
   }, [isAuthenticated, user])
 
   useEffect(() => {
+    let timer
     if (isAuthenticated) {
       const delay = Math.floor(Math.random() * 120000) + 30000
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         dispatch(fetchUnreadNoteMessages())
       }, delay)
-
-      return () => clearTimeout(timer)
     }
+    if (isAuthenticated && user?.soundSettings) {
+      dispatch(setSoundSettings(user.soundSettings))
+    }
+    return () => clearTimeout(timer)
   }, [isAuthenticated])
 
   useEffect(() => {

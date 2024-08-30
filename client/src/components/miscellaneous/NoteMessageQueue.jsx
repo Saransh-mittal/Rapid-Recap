@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, lazy, Suspense } from 'react'
+import React, { useMemo, useCallback, lazy, Suspense, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   clearNoteMessageQueue,
@@ -13,12 +13,15 @@ const XPAwardNoteMessage = lazy(() =>
   import('./noteMessages/XPAwardNoteMessage'),
 )
 const StreakNoteMessage = lazy(() => import('./noteMessages/StreakNoteMessage'))
+import { SOUND_TYPES } from '../../models/soundSettings'
+import useSound from '../../customHooks/useSound'
 const NoteMessageQueue = () => {
   const dispatch = useDispatch()
   const noteMessageQueue = useSelector(state => state.app.noteMessageQueue)
   const showingSummaryForNoteMessages = useSelector(
     state => state.app.showingSummaryForNoteMessages,
   )
+  const { playNoteMessageSound, playMilestoneSound } = useSound()
 
   // Memoize actions array to avoid recreating on each render
   const actions = useMemo(
@@ -32,6 +35,25 @@ const NoteMessageQueue = () => {
     [],
   )
 
+  useEffect(() => {
+    if (noteMessageQueue.length > 0) {
+      const latestMessage = noteMessageQueue[noteMessageQueue.length - 1]
+      switch (latestMessage.messageType) {
+        case 'xpAward':
+          latestMessage.isMilestone
+            ? playMilestoneSound()
+            : playNoteMessageSound()
+          break
+        case 'streak':
+          latestMessage.isMilestone
+            ? playMilestoneSound()
+            : playNoteMessageSound()
+          break
+        default:
+          playNoteMessageSound()
+      }
+    }
+  }, [noteMessageQueue])
   // Memoize onClose handler to avoid unnecessary re-renders
   const handleClose = useCallback(() => {
     dispatch(clearNoteMessageQueue())

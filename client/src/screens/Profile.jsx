@@ -11,7 +11,7 @@ import {
   useDisclosure,
   useToast,
 } from '@chakra-ui/react'
-import { ViewIcon } from '@chakra-ui/icons'
+import { SettingsIcon, ViewIcon } from '@chakra-ui/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
@@ -22,7 +22,7 @@ import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
 
 import SecureYourProgress from '../components/miscellaneous/SecureYourProgress.jsx'
-import NoteMessage from '../components/miscellaneous/NoteMessage.jsx'
+import SoundSettings from '../components/profileComponents/SoundSettings.jsx'
 
 // Dynamic imports for code splitting
 const IQLineGraph = React.lazy(() =>
@@ -97,6 +97,11 @@ export default function Profile() {
     isOpen: isOpenWiseWeb,
     onOpen: onOpenWiseWeb,
     onClose: onCloseWiseWeb,
+  } = useDisclosure()
+  const {
+    isOpen: isOpenSoundSettings,
+    onOpen: onOpenSoundSettings,
+    onClose: onCloseSoundSettings,
   } = useDisclosure()
 
   const fetchProfile = useCallback(async () => {
@@ -494,33 +499,60 @@ export default function Profile() {
               </>
             ) : (
               inGameName == user?.inGameName && (
-                <Flex
-                  borderRadius="10px"
-                  flexDirection="column"
-                  w={{ md: '85%', lg: '95%', base: '100%' }}
-                  height="fit-content"
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  position={'relative'}
-                >
-                  <ProfileButton
-                    buttonText="Bookmarks"
-                    inGameName={inGameName}
-                    stateUserInGameName={user?.inGameName}
-                    Private={true}
-                    hoverAnimation={hoverAnimation}
-                    onClick={onOpenBookmarks}
-                    icon={<BookmarkSVG width={'20px'} height={'20px'} />}
-                  />
+                <>
+                  <Flex
+                    borderRadius="10px"
+                    flexDirection="column"
+                    w={{ md: '85%', lg: '95%', base: '100%' }}
+                    height="fit-content"
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                    position={'relative'}
+                  >
+                    <ProfileButton
+                      buttonText="Sound Settings"
+                      inGameName={inGameName}
+                      stateUserInGameName={user?.inGameName}
+                      Private={true}
+                      hoverAnimation={hoverAnimation}
+                      onClick={onOpenSoundSettings}
+                      icon={<SettingsIcon width={'20px'} height={'20px'} />}
+                    />
 
-                  <Bookmarks
-                    isOpen={isOpenBookmarks}
-                    onClose={onCloseBookmarks}
-                    isLoading={isLoading}
-                    profile={profile}
-                    inGameName={inGameName}
-                  />
-                </Flex>
+                    <SoundSettings
+                      isOpen={isOpenSoundSettings}
+                      onClose={onCloseSoundSettings}
+                    />
+                  </Flex>
+                  <Flex
+                    borderRadius="10px"
+                    flexDirection="column"
+                    w={{ md: '85%', lg: '95%', base: '100%' }}
+                    height="fit-content"
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                    position={'relative'}
+                    py={'8px'}
+                  >
+                    <ProfileButton
+                      buttonText="Bookmarks"
+                      inGameName={inGameName}
+                      stateUserInGameName={user?.inGameName}
+                      Private={true}
+                      hoverAnimation={hoverAnimation}
+                      onClick={onOpenBookmarks}
+                      icon={<BookmarkSVG width={'20px'} height={'20px'} />}
+                    />
+
+                    <Bookmarks
+                      isOpen={isOpenBookmarks}
+                      onClose={onCloseBookmarks}
+                      isLoading={isLoading}
+                      profile={profile}
+                      inGameName={inGameName}
+                    />
+                  </Flex>
+                </>
               )
             )}
           </Suspense>
