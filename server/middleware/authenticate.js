@@ -18,14 +18,32 @@ const Authenticate = async (req, res, next) => {
       )
       const today = new Date()
       today.setUTCHours(0, 0, 0, 0)
-      if (today.getTime() === user.lastLogin.getTime() + 24 * 60 * 60 * 1000)
-        user.loginStreak++
-      else if (
-        user.lastLogin.getTime() + 24 * 60 * 60 * 1000 < today.getTime() ||
-        !user.lastLogin
-      )
+      // Initialize loginStreak if it doesn't exist
+      if (typeof user.loginStreak !== 'number') {
+        user.loginStreak = 0
+      }
+
+      if (user.lastLogin) {
+        const lastLoginDate = new Date(user.lastLogin)
+        lastLoginDate.setUTCHours(0, 0, 0, 0)
+
+        const timeDiff = today.getTime() - lastLoginDate.getTime()
+        const dayDiff = Math.floor(timeDiff / (24 * 60 * 60 * 1000))
+
+        if (dayDiff === 1) {
+          // Consecutive day login
+          user.loginStreak++
+        } else if (dayDiff > 1) {
+          // Missed a day, reset streak
+          user.loginStreak = 1
+        }
+        // If dayDiff === 0, it's the same day, don't change the streak
+      } else {
+        // First time login
         user.loginStreak = 1
-      if (user.loginStreak % 5 === 0) {
+      }
+
+      if (user.loginStreak % 5 === 0 && user.loginStreak > 0) {
         logActivity({
           userInGameName: user.inGameName,
           type: activityTypes.FIVE_DAY_LOGIN_STREAK.type,

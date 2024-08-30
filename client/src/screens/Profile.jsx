@@ -21,12 +21,15 @@ import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
 import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
 
-import SecureYourProgress from '../components/miscellaneous/SecureYourProgress.jsx'
-import SoundSettings from '../components/profileComponents/SoundSettings.jsx'
-
 // Dynamic imports for code splitting
 const IQLineGraph = React.lazy(() =>
   import('../components/profileComponents/IQLineGraph'),
+)
+const SecureYourProgress = React.lazy(() =>
+  import('../components/miscellaneous/SecureYourProgress.jsx'),
+)
+const SoundSettings = React.lazy(() =>
+  import('../components/profileComponents/SoundSettings.jsx'),
 )
 const IQBarGraph = React.lazy(() =>
   import('../components/profileComponents/IQBarGraph'),
@@ -476,7 +479,12 @@ export default function Profile() {
                       />
                     </Flex>
                   )}
-                {user?.role === 'guest' && <SecureYourProgress />}
+                {user?.role === 'guest' && (
+                  <Suspense fallback={null}>
+                    {' '}
+                    <SecureYourProgress />
+                  </Suspense>
+                )}
               </>
             )}
           </Suspense>
@@ -500,30 +508,32 @@ export default function Profile() {
             ) : (
               inGameName == user?.inGameName && (
                 <>
-                  <Flex
-                    borderRadius="10px"
-                    flexDirection="column"
-                    w={{ md: '85%', lg: '95%', base: '100%' }}
-                    height="fit-content"
-                    justifyContent={'center'}
-                    alignItems={'center'}
-                    position={'relative'}
-                  >
-                    <ProfileButton
-                      buttonText="Sound Settings"
-                      inGameName={inGameName}
-                      stateUserInGameName={user?.inGameName}
-                      Private={true}
-                      hoverAnimation={hoverAnimation}
-                      onClick={onOpenSoundSettings}
-                      icon={<SettingsIcon width={'20px'} height={'20px'} />}
-                    />
+                  <Suspense fallback={null}>
+                    <Flex
+                      borderRadius="10px"
+                      flexDirection="column"
+                      w={{ md: '85%', lg: '95%', base: '100%' }}
+                      height="fit-content"
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      position={'relative'}
+                    >
+                      <ProfileButton
+                        buttonText="Sound Settings"
+                        inGameName={inGameName}
+                        stateUserInGameName={user?.inGameName}
+                        Private={true}
+                        hoverAnimation={hoverAnimation}
+                        onClick={onOpenSoundSettings}
+                        icon={<SettingsIcon width={'20px'} height={'20px'} />}
+                      />
 
-                    <SoundSettings
-                      isOpen={isOpenSoundSettings}
-                      onClose={onCloseSoundSettings}
-                    />
-                  </Flex>
+                      <SoundSettings
+                        isOpen={isOpenSoundSettings}
+                        onClose={onCloseSoundSettings}
+                      />
+                    </Flex>
+                  </Suspense>
                   <Flex
                     borderRadius="10px"
                     flexDirection="column"
