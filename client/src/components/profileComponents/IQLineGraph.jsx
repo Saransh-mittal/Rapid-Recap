@@ -15,6 +15,7 @@ import {
   Tag,
   useToast,
   useBreakpointValue,
+  Badge,
 } from '@chakra-ui/react'
 import moment from 'moment'
 import axios from 'axios'
@@ -102,21 +103,9 @@ const GraphHeader = React.memo(({ hoveredData, loginedUserProfile, user }) => (
   <Flex justifyContent="space-between" position="relative">
     {loginedUserProfile && (
       <Tooltip label="Visibility to others">
-        <Tag
-          backgroundColor="#0f0d15"
-          m={0}
-          position="absolute"
-          top={0}
-          right={0}
-          color="#9CAFAA"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          w="60px"
-          height="30px"
-        >
+        <Badge m={0} position="absolute" top={0} right={0} colorScheme="green">
           {user.profilePrivacy.lineGraph ? 'HIDDEN' : 'VISIBLE'}
-        </Tag>
+        </Badge>
       </Tooltip>
     )}
     <Flex justifyContent="space-between" w="100%" marginTop="2rem">

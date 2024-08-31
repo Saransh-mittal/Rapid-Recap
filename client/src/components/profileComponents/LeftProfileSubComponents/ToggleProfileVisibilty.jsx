@@ -101,13 +101,13 @@ const ToggleProfileVisibility = ({ setShowHideModal, isGuest }) => {
           isClosable: true,
           position: 'top',
         })
-        const updatedUser = user
-        updatedUser.profilePrivacy = hide
-        dispatchRedux(setUser(updatedUser))
+
+        dispatchRedux(setUser({ ...user, profilePrivacy: hide }))
         setShowHideModal(false)
         onClose()
       }
     } catch (error) {
+      console.log(error)
       toast({
         title: 'Error',
         description: 'Error in saving profile visibility',

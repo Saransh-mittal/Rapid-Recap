@@ -1159,9 +1159,13 @@ const streakChecker = async (req, res) => {
           user.streak,
           user.streakExpiry,
         )
-        isRevivalPeriod = true
         remainingTimeBeforeRevival =
           user.revivalPeriodEnd.getTime() - today.getTime()
+        isRevivalPeriod = remainingTimeBeforeRevival <= 0 ? false : true
+        if (remainingTimeBeforeRevival < 0) {
+          user.revivalPeriodEnd = null
+          user.streakBeforeBreak = 0
+        }
       }
       // Reset streak
       user.streak = 0
@@ -1461,6 +1465,20 @@ const NavLineGraph = async (req, res) => {
   }
 }
 
+// @desc  Controls the sound effects of application for the user
+// @route POST /api/user/soundController
+// @access Private
+const soundController = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const { sound } = req.body
+
+  const user = await User.findById(userId)
+  user.soundSettings = sound
+  await user.save()
+
+  res.status(200).json({ message: 'Sound settings updated successfully' })
+})
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1495,4 +1513,5 @@ module.exports = {
   removeBookmark,
   NavLineGraph,
   getUserIds,
+  soundController,
 }

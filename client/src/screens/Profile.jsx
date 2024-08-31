@@ -11,7 +11,7 @@ import {
   useDisclosure,
   useToast,
 } from '@chakra-ui/react'
-import { ViewIcon } from '@chakra-ui/icons'
+import { SettingsIcon, ViewIcon } from '@chakra-ui/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
@@ -20,14 +20,17 @@ import { setOtherUserProfiles, setUserProfile } from '../redux/contentSlice.js'
 import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
 import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
-
-import SecureYourProgress from '../components/miscellaneous/SecureYourProgress.jsx'
-import NoteMessage from '../components/miscellaneous/NoteMessage.jsx'
 import { useTranslation } from 'react-i18next'
 
 // Dynamic imports for code splitting
 const IQLineGraph = React.lazy(() =>
   import('../components/profileComponents/IQLineGraph'),
+)
+const SecureYourProgress = React.lazy(() =>
+  import('../components/miscellaneous/SecureYourProgress.jsx'),
+)
+const SoundSettings = React.lazy(() =>
+  import('../components/profileComponents/SoundSettings.jsx'),
 )
 const IQBarGraph = React.lazy(() =>
   import('../components/profileComponents/IQBarGraph'),
@@ -94,6 +97,11 @@ export default function Profile() {
     isOpen: isOpenBookmarks,
     onOpen: onOpenBookmarks,
     onClose: onCloseBookmarks,
+  } = useDisclosure()
+  const {
+    isOpen: isOpenSoundSettings,
+    onOpen: onOpenSoundSettings,
+    onClose: onCloseSoundSettings,
   } = useDisclosure()
 
   const fetchProfile = useCallback(async () => {
@@ -461,7 +469,12 @@ export default function Profile() {
                       />
                     </Flex>
                   )}
-                {user?.role === 'guest' && <SecureYourProgress />}
+                {user?.role === 'guest' && (
+                  <Suspense fallback={null}>
+                    {' '}
+                    <SecureYourProgress />
+                  </Suspense>
+                )}
               </>
             )}
           </Suspense>
@@ -484,33 +497,62 @@ export default function Profile() {
               </>
             ) : (
               inGameName == user?.inGameName && (
-                <Flex
-                  borderRadius="10px"
-                  flexDirection="column"
-                  w={{ md: '85%', lg: '95%', base: '100%' }}
-                  height="fit-content"
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  position={'relative'}
-                >
-                  <ProfileButton
-                    buttonText="Bookmarks"
-                    inGameName={inGameName}
-                    stateUserInGameName={user?.inGameName}
-                    Private={true}
-                    hoverAnimation={hoverAnimation}
-                    onClick={onOpenBookmarks}
-                    icon={<BookmarkSVG width={'20px'} height={'20px'} />}
-                  />
+                <>
+                  <Suspense fallback={null}>
+                    <Flex
+                      borderRadius="10px"
+                      flexDirection="column"
+                      w={{ md: '85%', lg: '95%', base: '100%' }}
+                      height="fit-content"
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      position={'relative'}
+                    >
+                      <ProfileButton
+                        buttonText="Sound Settings"
+                        inGameName={inGameName}
+                        stateUserInGameName={user?.inGameName}
+                        Private={true}
+                        hoverAnimation={hoverAnimation}
+                        onClick={onOpenSoundSettings}
+                        icon={<SettingsIcon width={'20px'} height={'20px'} />}
+                      />
 
-                  <Bookmarks
-                    isOpen={isOpenBookmarks}
-                    onClose={onCloseBookmarks}
-                    isLoading={isLoading}
-                    profile={profile}
-                    inGameName={inGameName}
-                  />
-                </Flex>
+                      <SoundSettings
+                        isOpen={isOpenSoundSettings}
+                        onClose={onCloseSoundSettings}
+                      />
+                    </Flex>
+                  </Suspense>
+                  <Flex
+                    borderRadius="10px"
+                    flexDirection="column"
+                    w={{ md: '85%', lg: '95%', base: '100%' }}
+                    height="fit-content"
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                    position={'relative'}
+                    py={'8px'}
+                  >
+                    <ProfileButton
+                      buttonText="Bookmarks"
+                      inGameName={inGameName}
+                      stateUserInGameName={user?.inGameName}
+                      Private={true}
+                      hoverAnimation={hoverAnimation}
+                      onClick={onOpenBookmarks}
+                      icon={<BookmarkSVG width={'20px'} height={'20px'} />}
+                    />
+
+                    <Bookmarks
+                      isOpen={isOpenBookmarks}
+                      onClose={onCloseBookmarks}
+                      isLoading={isLoading}
+                      profile={profile}
+                      inGameName={inGameName}
+                    />
+                  </Flex>
+                </>
               )
             )}
           </Suspense>
@@ -610,24 +652,11 @@ export default function Profile() {
                     backgroundColor="rgba(15, 13, 21, 0.8)"
                     boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
                     className="solved-quizzes"
-                    _hover={
-                      !privacyProfileData.solvedQuizzes
-                        ? {
-                            transform: 'scale(1.01)',
-                          }
-                        : null
-                    }
-                    _active={
-                      !privacyProfileData.solvedQuizzes
-                        ? {
-                            transform: 'scale(0.9)',
-                            borderColor: '#bec3c9',
-                          }
-                        : null
-                    }
                   >
                     <SolvedQuizzes
-                      privateSolvedQuiz={privacyProfileData?.solvedQuizzes}
+                      privateSolvedQuiz={
+                        privacyProfileData?.solvedQuizzes && !loginedUserProfile
+                      }
                       loginedUserProfile={loginedUserProfile}
                       solvedQuizzes={profile?.solvedQuizzes}
                       inGameName={inGameName}

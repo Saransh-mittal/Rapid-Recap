@@ -1,4 +1,4 @@
-import { Button, Tag, Tooltip } from '@chakra-ui/react'
+import { Badge, Button, Tag, Tooltip } from '@chakra-ui/react'
 import React from 'react'
 import useSound from '../../customHooks/useSound'
 const ProfileButton = ({
@@ -11,30 +11,25 @@ const ProfileButton = ({
   icon,
   top,
   isGuest = false,
+  notShowVisibility = false,
 }) => {
   const { playClick } = useSound()
   return (
     <>
-      {inGameName == stateUserInGameName && !isGuest && (
+      {inGameName == stateUserInGameName && !isGuest && !notShowVisibility && (
         <Tooltip label="Visibility to others">
-          <Tag
-            backgroundColor="rgba(15, 13, 21, 0.8)"
+          <Badge
+            colorScheme="green"
             m={0}
             position={'absolute'}
             top={top}
             right={'1.2rem'}
-            color={'#9CAFAA'}
-            display={'flex'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            w={'60px'}
-            height={'28px'}
             zIndex={1}
             borderRadius="5px"
             backdropFilter="blur(5px)"
           >
             {Private ? 'HIDDEN' : 'VISIBLE'}
-          </Tag>
+          </Badge>
         </Tooltip>
       )}
 

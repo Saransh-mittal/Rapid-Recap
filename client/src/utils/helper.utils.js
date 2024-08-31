@@ -81,3 +81,7 @@ export const formatRemainingTime = milliseconds => {
 
   return timeString.trim()
 }
+
+export const formatSoundType = type => {
+  return type.replace(/([A-Z])/g, ' $1').trim()
+}

@@ -43,7 +43,7 @@ const Home = () => {
   const toast = useToast()
 
   const [items, setItems] = useState(stateItems)
-  const [page, setPage] = useState(statePage + 1)
+  const [page, setPage] = useState(1) // Always start from page 1
   const [load, setLoad] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(true)
   const [hasMoreItems, setHasMoreItems] = useState(true)
@@ -94,12 +94,11 @@ const Home = () => {
             setItems(newItems)
             dispatchRedux(setItemsState(newItems))
           } else {
-            let updatedItems
             setItems(prevItems => {
-              updatedItems = [...prevItems, ...newItems]
+              const updatedItems = [...prevItems, ...newItems]
+              dispatchRedux(setItemsState(updatedItems))
               return updatedItems
             })
-            dispatchRedux(setItemsState(updatedItems))
           }
           dispatchRedux(setPageRedux(pageNum))
         }
@@ -123,7 +122,7 @@ const Home = () => {
     [loginCheckStatus, hasMoreItems, notLoggedIn, dispatchRedux, toast, t],
   )
 
-  const handleScroll = useCallback(async () => {
+  const handleScroll = useCallback(() => {
     if (isSearching) return
     if (
       !notLoggedIn &&
@@ -174,7 +173,7 @@ const Home = () => {
     window.addEventListener('scroll', combinedScrollHandler)
 
     return () => window.removeEventListener('scroll', combinedScrollHandler)
-  }, [category, isAuthenticated, combinedScrollHandler])
+  }, [category, isAuthenticated, combinedScrollHandler, navigate])
 
   useEffect(() => {
     if (category !== prevCategory) {
@@ -191,20 +190,12 @@ const Home = () => {
       dispatchRedux(setPageRedux(0))
       dispatchRedux(setItemsState([]))
       setPrevCategory(category)
-    } else if (items?.length < page * 9) {
-      fetchData(page, category)
+      // Reset scroll position when category changes
+      window.scrollTo(0, 0)
     } else {
-      setLoad(false)
+      fetchData(page, category)
     }
-  }, [
-    category,
-    page,
-    prevCategory,
-    fetchData,
-    items,
-    dispatchRedux,
-    loginCheckStatus,
-  ])
+  }, [category, page, prevCategory, fetchData, dispatchRedux, loginCheckStatus])
 
   return (
     <Box marginTop={'4rem'} w={'100%'}>

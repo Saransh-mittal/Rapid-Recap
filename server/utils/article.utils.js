@@ -6,8 +6,15 @@ const { decode } = require('html-entities')
 const NewsAPI = require('newsapi')
 const axios = require('axios')
 const script_prepare_article_data = require('../scripts/script_prepare_article_data')
-const { averageReadTime, shuffleArray } = require('./miscellaneous.utils')
+const {
+  averageReadTime,
+  shuffleArray,
+  formatDate,
+} = require('./miscellaneous.utils')
 const { Recommendation } = require('../model/recommendationSchema')
+const newsClassifierService = require('../ml/services/newsClassifierService')
+const cache = require('memory-cache')
+
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
   // Use natural language processing to tokenize sentences
@@ -219,7 +226,10 @@ fill these in the category key (only string). Also if total characters are more 
       ) {
         continue
       }
-
+      const predictedCategory = await newsClassifierService.classifyNews(
+        res.mainText,
+      )
+      res.category = predictedCategory
       processedOutput.push(res)
 
       const newArticle = new Article(res)
@@ -283,6 +293,7 @@ const processExtractedNews = async (news, category) => {
     You are a text checker and analyzer.
     1. Remove any irrelevant content or lines from the mainText that are not related to the article or title. This includes sections like "Also read," "Loading...," "Share to Facebook," "Share to Twitter," "Share to LinkedIn," "All rights reserved" "terms of use" "HT" "Any other news websites name or nav items related to those websites" and unanswered questions.
     2. Do not summarize the content if the mainText is 2500 characters or less.
+    4. If Article is incomplete then either complete it to your knowledge or remove it.
     3. If the mainText exceeds 2500 characters, summarize it to more than 800 characters but less than 2500 characters, keeping the most important information.
     4. Ensure that the returned JSON object includes all original fields.
   `
@@ -383,6 +394,16 @@ const processExtractedNews = async (news, category) => {
 
       const avgReadTime = averageReadTime(res.mainText)
       res.avgReadTime = avgReadTime
+      try {
+        const predictedCategory = await newsClassifierService.classifyNews(
+          res.mainText,
+        )
+        res.category = predictedCategory || res.category
+      } catch (error) {
+        console.error(
+          `Error classifying news item titled "${res.title}": ${error.message}`,
+        )
+      }
 
       const newArticle = new Article(res)
       await newArticle.save()
@@ -462,6 +483,22 @@ const extractNewsUtilityFunc = async (country = '') => {
       articlesSavedPerCategory,
       country,
     )
+    for (const [category, count] of Object.entries(articlesSavedPerCategory)) {
+      if (count > 0) {
+        try {
+          const cacheKeys = cache.keys()
+          const articleCacheKeys = cacheKeys.filter(key =>
+            key.startsWith(`articles_${category}_`),
+          )
+          articleCacheKeys.forEach(key => cache.del(key))
+        } catch (error) {
+          console.error(
+            `Error updating cache for category ${category}: ${error.message}`,
+          )
+        }
+      }
+    }
+
     script_prepare_article_data()
     return { result, articlesSavedPerCategory, notificationCategories }
   } catch (error) {

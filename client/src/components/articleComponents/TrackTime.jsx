@@ -60,6 +60,7 @@ const TrackTime = ({ userId, articleId }) => {
                   actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                   duration: 15000,
                   width: '300px',
+                  xpSource: '10 Min Article Read',
                 }),
               )
             }

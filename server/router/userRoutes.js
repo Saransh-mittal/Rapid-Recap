@@ -34,6 +34,7 @@ const {
   removeBookmark,
   NavLineGraph,
   getUserIds,
+  soundController,
   // mailForQuinBoost,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
@@ -75,6 +76,7 @@ router.route('/getBookmarks').get(Authenticate, getBookmarks)
 router.route('/removeBookmark').get(Authenticate, removeBookmark)
 router.route('/lineGraph').get(Authenticate, NavLineGraph)
 router.route('/getUserIds').get(getUserIds)
+router.route('/soundController').post(Authenticate, soundController)
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
 
 // Guest routes

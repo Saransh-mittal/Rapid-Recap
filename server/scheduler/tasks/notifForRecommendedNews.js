@@ -30,9 +30,6 @@ async function sendRecommendedNewsNotification() {
               ? article.imgURL[0]
               : null
           await sendNotification({ userId: user._id, title, url, image })
-          console.log(
-            `Notification sent for recommended article to user ${user._id}`,
-          )
         }
       }
     }

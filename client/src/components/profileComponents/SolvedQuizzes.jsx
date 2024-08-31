@@ -1,82 +1,91 @@
+import React, { useState, lazy, Suspense, useCallback, useMemo } from 'react'
 import {
   Box,
   Flex,
-  Progress,
-  Spinner,
-  Stack,
-  Tag,
   Text,
-  Tooltip,
+  Progress,
+  VStack,
+  HStack,
+  Spinner,
+  Badge,
   useToast,
+  Tooltip,
 } from '@chakra-ui/react'
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-  lazy,
-  Suspense,
-} from 'react'
+import { motion } from 'framer-motion'
+import ProfileButton from './ProfileButton'
 import axios from 'axios'
 import { useSelector } from 'react-redux'
+import StarIcon from '../../assets/svg/StarIcon'
+import LightbulbIcon from '../../assets/svg/LightbulbIcon'
+import SkullIcon from '../../assets/svg/SkullIcon'
+import ClockSVG from '../../assets/svg/ClockSVG'
+
+const MotionBox = motion(Box)
 
 // Lazy load the SolvedQuizHistory component
 const SolvedQuizHistory = lazy(() =>
   import('./SolvedQuizSubComponents/SolvedQuizHistory'),
 )
 
+const DifficultyBar = ({ difficulty, count, beats, color, icon: Icon }) => (
+  <HStack spacing={4} w="full" align="center">
+    <Box color={color}>
+      <Icon />
+    </Box>
+    <Box flex={1}>
+      <Flex justify="space-between" mb={1}>
+        <Text fontSize="sm" fontWeight="medium" color="gray.200">
+          {difficulty}
+        </Text>
+        <Text fontSize="sm" color="gray.400">
+          {count} Solved
+        </Text>
+      </Flex>
+      <Progress
+        value={beats}
+        size="xs"
+        colorScheme={color}
+        borderRadius="full"
+      />
+      <Text fontSize="xs" color="gray.400" textAlign="right" mt={1}>
+        Beats {beats}%
+      </Text>
+    </Box>
+  </HStack>
+)
+
 const SolvedQuizzes = ({
   solvedQuizzes,
-  inGameName,
   privateSolvedQuiz,
-  loginedUserProfile,
   isDisabled = false,
+  loginedUserProfile,
+  inGameName,
 }) => {
   const { user } = useSelector(state => state.auth)
-
-  const toast = useToast()
-  const [isLoading, setIsLoading] = useState(true)
-  const [history, setHistory] = useState([])
   const [showHistory, setShowHistory] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [history, setHistory] = useState([])
 
   // Memoize solved quizzes data
-  const { solvedQuizzesCount, easySolved, mediumSolved, hardSolved } =
-    useMemo(() => {
-      return {
-        solvedQuizzesCount: solvedQuizzes.solvedQuizzesCount || 0,
-        easySolved: solvedQuizzes.easy || {
-          easyQuizzesCount: 0,
-          easyBeatsPercentage: 0,
-        },
-        mediumSolved: solvedQuizzes.medium || {
-          mediumQuizzesCount: 0,
-          medBeatsPercentage: 0,
-        },
-        hardSolved: solvedQuizzes.hard || {
-          hardQuizzesCount: 0,
-          hardBeatsPercentage: 0,
-        },
-      }
-    }, [solvedQuizzes])
-
-  const fetchSolvedQuizzes = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      //const response = await axios.get("/api/user/solvedQuizzesCount");
-      setIsLoading(false)
-    } catch (error) {
-      toast({
-        title: 'An error occurred.',
-        description: 'Unable to get Solved Quiz Data. Please try again later.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-      console.error(error)
-      setIsLoading(false)
+  const { solvedQuizzesCount, easy, medium, hard } = useMemo(() => {
+    return {
+      solvedQuizzesCount: solvedQuizzes.solvedQuizzesCount || 0,
+      easy: solvedQuizzes.easy || {
+        easyQuizzesCount: 0,
+        easyBeatsPercentage: 0,
+      },
+      medium: solvedQuizzes.medium || {
+        mediumQuizzesCount: 0,
+        medBeatsPercentage: 0,
+      },
+      hard: solvedQuizzes.hard || {
+        hardQuizzesCount: 0,
+        hardBeatsPercentage: 0,
+      },
     }
-  }, [toast])
+  }, [solvedQuizzes])
+
+  const toast = useToast()
 
   const getHistory = useCallback(async () => {
     setIsLoading(true)
@@ -102,264 +111,120 @@ const SolvedQuizzes = ({
     }
   }, [inGameName, toast])
 
-  useEffect(() => {
-    fetchSolvedQuizzes()
-  }, [fetchSolvedQuizzes])
+  if (privateSolvedQuiz) {
+    return (
+      <Flex
+        h={'100%'}
+        w={'100%'}
+        justifyContent={'center'}
+        alignItems={'center'}
+      >
+        <Text
+          backgroundColor="#0f0d15"
+          m={0}
+          top={0}
+          right={10}
+          color={'#9CAFAA'}
+          display={'flex'}
+          justifyContent={'center'}
+          alignItems={'center'}
+          w={'60px'}
+          height={'30px'}
+        >
+          Hidden
+        </Text>
+      </Flex>
+    )
+  }
 
   return (
-    <Flex
-      margin="10px"
-      borderRadius="10px"
-      w={'100%'}
-      flexDirection={'column'}
-      gap={6}
-      mt={4}
-      mr={10}
-      onClick={!privateSolvedQuiz && !isDisabled ? getHistory : null}
-    >
+    <Box borderRadius="lg" p={4} boxShadow="xl" w={'100%'}>
+      <Flex justify="space-between" align="center" mb={4}>
+        <Text fontSize="lg" fontWeight="bold" color="gray.100">
+          Solved Quizzes
+        </Text>
+        <Tooltip label="Visibility to others">
+          {loginedUserProfile && (
+            <Badge colorScheme="green">
+              {user.profilePrivacy.solvedQuizzes ? 'HIDDEN' : 'VISIBLE'}
+            </Badge>
+          )}
+        </Tooltip>
+      </Flex>
+      {isLoading ? (
+        <Flex justify="center" align="center" h="150px">
+          <Spinner size="xl" color="blue.500" />
+        </Flex>
+      ) : (
+        <MotionBox
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <HStack align="stretch" spacing={4}>
+            <Flex direction="column" align="flex-start">
+              <Text color="gray.400" fontSize="sm">
+                Total Solved Quizzes
+              </Text>
+              <Text
+                fontSize="4xl"
+                fontWeight="bold"
+                color="blue.400"
+                lineHeight="1"
+              >
+                {solvedQuizzesCount}
+              </Text>
+              <Text color="gray.500" fontSize="xs">
+                Keep it up!
+              </Text>
+            </Flex>
+            <VStack spacing={4} align="stretch" flex={1}>
+              <DifficultyBar
+                difficulty="Easy"
+                count={easy.easyQuizzesCount || 0}
+                beats={Math.round(easy.easyBeatsPercentage || 0)}
+                color="green"
+                icon={LightbulbIcon}
+              />
+              <DifficultyBar
+                difficulty="Medium"
+                count={medium.mediumQuizzesCount || 0}
+                beats={Math.round(medium.medBeatsPercentage || 0)}
+                color="yellow"
+                icon={StarIcon}
+              />
+              <DifficultyBar
+                difficulty="Hard"
+                count={hard.hardQuizzesCount || 0}
+                beats={Math.round(hard.hardBeatsPercentage || 0)}
+                color="red"
+                icon={SkullIcon}
+              />
+            </VStack>
+          </HStack>
+          <ProfileButton
+            icon={<ClockSVG width={'20px'} height={'20px'} stroke={'#fff'} />}
+            variant="outline"
+            colorScheme="blue"
+            size="sm"
+            w="full"
+            mt={4}
+            onClick={getHistory}
+            isDisabled={isDisabled}
+            buttonText={'View History'}
+            notShowVisibility={true}
+          />
+        </MotionBox>
+      )}
       {showHistory && (
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={null}>
           <SolvedQuizHistory
             solvedHistory={history}
             setShowHistory={setShowHistory}
           />
         </Suspense>
       )}
-      {privateSolvedQuiz ? (
-        <Flex
-          h={'100%'}
-          w={'100%'}
-          justifyContent={'center'}
-          alignItems={'center'}
-        >
-          <Text
-            backgroundColor="#0f0d15"
-            m={0}
-            top={0}
-            right={10}
-            color={'#9CAFAA'}
-            display={'flex'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            w={'60px'}
-            height={'30px'}
-          >
-            Hidden
-          </Text>
-        </Flex>
-      ) : isLoading ? (
-        <Flex
-          w={'100%'}
-          h={'100%'}
-          justifyContent={'center'}
-          alignItems={'center'}
-        >
-          <Spinner />
-        </Flex>
-      ) : (
-        <>
-          <Box
-            flexDirection={'column'}
-            width={'100%'}
-            marginStart={'15px'}
-            position={'relative'}
-          >
-            <Text textAlign={'left'} color={'#9CAFAA'} p={0} m={0}>
-              Solved Quizzes
-            </Text>
-            {loginedUserProfile && (
-              <Tooltip label="Visibility to others">
-                <Tag
-                  backgroundColor="#0f0d15"
-                  m={0}
-                  position={'absolute'}
-                  top={0}
-                  right={0}
-                  color={'#9CAFAA'}
-                  display={'flex'}
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  w={'60px'}
-                  height={'30px'}
-                >
-                  {user.profilePrivacy.solvedQuizzes ? 'HIDDEN' : 'VISIBLE'}
-                </Tag>
-              </Tooltip>
-            )}
-          </Box>
-          <Flex width={'100%'}>
-            <Flex w={'80%'} justifyContent={'center'} alignItems={'center'}>
-              <Flex
-                borderWidth={'5px'}
-                borderRadius={'50%'}
-                borderColor={'#FFE7E7'}
-                w={'100px'}
-                h={'100px'}
-              >
-                <Flex
-                  width={'100%'}
-                  justifyContent={'center'}
-                  flexDirection={'column'}
-                  alignItems={'center'}
-                >
-                  <Text
-                    m={0}
-                    p={0}
-                    fontSize={'1.5rem'}
-                    marginTop={'2px'}
-                    fontWeight={'semibold'}
-                    color={'#B47B84'}
-                  >
-                    {solvedQuizzesCount}
-                  </Text>
-                  <Text
-                    marginBottom={0}
-                    marginTop={'1px'}
-                    color={'#B47B84'}
-                    fontWeight={'light'}
-                    fontSize={'0.9rem'}
-                  >
-                    Solved
-                  </Text>
-                </Flex>
-              </Flex>
-            </Flex>
-            <Flex
-              w={'100%'}
-              paddingLeft={1}
-              justifyContent={'center'}
-              alignItems={'center'}
-            >
-              <Stack spacing={5} w={'100%'}>
-                <Box>
-                  <Flex justifyContent={'space-between'} marginBottom={'5px'}>
-                    <Text
-                      marginBottom={0}
-                      marginTop={'1px'}
-                      color={'#FFE7E7'}
-                      fontWeight={'light'}
-                      fontSize={'0.8rem'}
-                      textAlign={'left'}
-                    >
-                      Easy
-                    </Text>
-                    <Text
-                      marginBottom={0}
-                      marginTop={'1px'}
-                      color={'#FFE7E7'}
-                      fontWeight={'light'}
-                      fontSize={'0.8rem'}
-                      textAlign={'left'}
-                    >
-                      {easySolved.easyQuizzesCount} Solved
-                    </Text>
-                    <Text
-                      marginBottom={0}
-                      marginTop={'1px'}
-                      color={'#FFE7E7'}
-                      fontWeight={'light'}
-                      fontSize={'0.8rem'}
-                      textAlign={'left'}
-                    >
-                      Beats {Math.round(easySolved.easyBeatsPercentage)}%
-                    </Text>
-                  </Flex>
-                  <Progress
-                    backgroundColor={'#AAD9BB'}
-                    colorScheme="teal"
-                    size="sm"
-                    value={Math.round(easySolved.easyBeatsPercentage)}
-                    borderRadius={'5px'}
-                  />
-                </Box>
-                <Box>
-                  <Flex justifyContent={'space-between'} marginBottom={'5px'}>
-                    <Text
-                      textAlign={'left'}
-                      marginBottom={0}
-                      marginTop={'1px'}
-                      color={'#FFE7E7'}
-                      fontWeight={'light'}
-                      fontSize={'0.8rem'}
-                    >
-                      Medium
-                    </Text>
-                    <Text
-                      marginBottom={0}
-                      marginTop={'1px'}
-                      color={'#FFE7E7'}
-                      fontWeight={'light'}
-                      fontSize={'0.8rem'}
-                      textAlign={'left'}
-                    >
-                      {mediumSolved.mediumQuizzesCount} Solved
-                    </Text>
-                    <Text
-                      marginBottom={0}
-                      marginTop={'1px'}
-                      color={'#FFE7E7'}
-                      fontWeight={'light'}
-                      fontSize={'0.8rem'}
-                      textAlign={'left'}
-                    >
-                      Beats {Math.round(mediumSolved.medBeatsPercentage)}%
-                    </Text>
-                  </Flex>
-                  <Progress
-                    colorScheme="yellow"
-                    size="sm"
-                    value={Math.round(mediumSolved.medBeatsPercentage)}
-                    borderRadius={'5px'}
-                    backgroundColor={'#FFCF81'}
-                  />
-                </Box>
-                <Box>
-                  <Flex justifyContent={'space-between'} marginBottom={'5px'}>
-                    <Text
-                      textAlign={'left'}
-                      marginBottom={0}
-                      marginTop={'1px'}
-                      color={'#FFE7E7'}
-                      fontWeight={'light'}
-                      fontSize={'0.8rem'}
-                    >
-                      Hard
-                    </Text>
-                    <Text
-                      marginBottom={0}
-                      marginTop={'1px'}
-                      color={'#FFE7E7'}
-                      fontWeight={'light'}
-                      fontSize={'0.8rem'}
-                      textAlign={'left'}
-                    >
-                      {hardSolved.hardQuizzesCount} Solved
-                    </Text>
-                    <Text
-                      marginBottom={0}
-                      marginTop={'1px'}
-                      color={'#FFE7E7'}
-                      fontWeight={'light'}
-                      fontSize={'0.8rem'}
-                      textAlign={'left'}
-                    >
-                      Beats {Math.round(hardSolved.hardBeatsPercentage)}%
-                    </Text>
-                  </Flex>
-                  <Progress
-                    backgroundColor={'#D37676'}
-                    colorScheme="red"
-                    size="sm"
-                    value={Math.round(hardSolved.hardBeatsPercentage)}
-                    borderRadius={'5px'}
-                  />
-                </Box>
-              </Stack>
-            </Flex>
-          </Flex>
-        </>
-      )}
-    </Flex>
+    </Box>
   )
 }
 

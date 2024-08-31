@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
+import { DEFAULT_SOUND_SETTINGS } from '../models/soundSettings'
 
 // Async thunks for fetching data
 export const fetchAppUpdates = createAsyncThunk(
@@ -63,6 +64,7 @@ const initialState = {
   showXpLevelModal: false,
   isNotifDrawerOpen: false,
   isNotifModalOpen: false,
+  soundSettings: DEFAULT_SOUND_SETTINGS,
 }
 
 export const appSlice = createSlice({
@@ -74,6 +76,10 @@ export const appSlice = createSlice({
     },
     setUpdates: (state, action) => {
       state.updates = action.payload
+    },
+    toggleSound: (state, action) => {
+      const soundType = action.payload
+      state.soundSettings[soundType] = !state.soundSettings[soundType]
     },
     setIsNotifDrawerOpen: (state, action) => {
       state.isNotifDrawerOpen = action.payload
@@ -122,7 +128,9 @@ export const appSlice = createSlice({
         messageType: action.payload.messageType || 'default',
       })
     },
-
+    setSoundSettings: (state, action) => {
+      state.soundSettings = action.payload
+    },
     removeNoteMessageWithId: (state, action) => {
       state.noteMessageQueue = state.noteMessageQueue.filter(
         message => message.id !== action.payload,
@@ -245,6 +253,8 @@ export const {
   setShowXpLevelModal,
   setIsNotifDrawerOpen,
   setIsNotifModalOpen,
+  toggleSound,
+  setSoundSettings,
 } = appSlice.actions
 
 export default appSlice.reducer

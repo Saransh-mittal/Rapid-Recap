@@ -33,6 +33,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import {
+  DIFF_COLOR,
+  ICONS_ARTICLE_DIFFICULTY,
+} from '../../../models/articleDifficulty'
 import { useTranslation } from 'react-i18next'
 
 // Lazy load components and assets
@@ -234,6 +238,13 @@ const SubmittedQuizInterface = ({
     onViewReport()
   }, [onViewReport])
 
+  const DifficultyIcon = result?.articleDifficulty
+    ? ICONS_ARTICLE_DIFFICULTY[result?.articleDifficulty]
+    : null
+  const diffColor = result?.articleDifficulty
+    ? DIFF_COLOR[result?.articleDifficulty]
+    : null
+
   return (
     <ChakraProvider>
       <Box
@@ -321,12 +332,32 @@ const SubmittedQuizInterface = ({
                         <StatLabel textAlign={'center'} mt={5}>
                           {t('articleDifficulty')}
                         </StatLabel>
-                        <StatNumber textAlign={'center'}>
-                          {result?.articleDifficulty === 'easy'
-                            ? t('easy')
-                            : result?.articleDifficulty === 'medium'
-                            ? t('medium')
-                            : t('hard')}
+                        <StatNumber
+                          textAlign={'center'}
+                          display={'flex'}
+                          w={'100%'}
+                        >
+                          <Flex
+                            color={diffColor}
+                            w={'100%'}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                            position={'relative'}
+                          >
+                            {result?.articleDifficulty === 'easy'
+                              ? t('easy')
+                              : result?.articleDifficulty === 'medium'
+                              ? t('medium')
+                              : t('hard')}
+                          </Flex>
+                          <Box
+                            color={diffColor}
+                            position={'absolute'}
+                            right={'20%'}
+                            top={'48%'}
+                          >
+                            <DifficultyIcon />
+                          </Box>
                         </StatNumber>
                         <StatHelpText textAlign={'center'}>
                           {getReviewText(

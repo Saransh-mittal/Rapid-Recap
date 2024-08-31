@@ -109,6 +109,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
         handleActiveCategory({ category: categories[newIndex].key })
       }
     },
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true,
+    delta: 100, // Increase this value to require a longer swipe
   })
 
   useEffect(() => {
@@ -228,7 +231,14 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
               scrollbarWidth: 'none',
             }}
           >
-            <Suspense fallback={<Skeleton height="100vh" width="15%" />}>
+            <Suspense
+              fallback={
+                <Skeleton
+                  width={{ base: '100%', lg: '15%' }}
+                  height={{ base: 'auto', lg: '100vh' }}
+                />
+              }
+            >
               <Categories
                 trackCategoryClick={trackCategoryClick}
                 activeCategoryIndex={activeCategoryIndex}

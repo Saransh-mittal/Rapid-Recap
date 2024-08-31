@@ -7,6 +7,7 @@ import React, {
   useMemo,
 } from 'react'
 import {
+  Badge,
   Flex,
   Image,
   Spinner,
@@ -291,21 +292,15 @@ const IQBarGraph = ({
         )}
         {loginedUserProfile && (
           <Tooltip label="Visibility to others">
-            <Tag
-              backgroundColor="#0f0d15"
+            <Badge
               m={0}
               position="absolute"
               top={0}
               right={0}
-              color="#9CAFAA"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              w="60px"
-              height="30px"
+              colorScheme="green"
             >
               {user.profilePrivacy.barGraph ? 'HIDDEN' : 'VISIBLE'}
-            </Tag>
+            </Badge>
           </Tooltip>
         )}
       </Flex>

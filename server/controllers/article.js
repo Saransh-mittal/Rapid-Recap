@@ -23,7 +23,13 @@ const cache = require('memory-cache')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general', lang } = req.query
-  //console.log(page, pageSize, category);
+  const cacheKey = `articles_${category}_${lang}_${page}_${pageSize}`
+  const cachedArticles = cache.get(cacheKey)
+
+  if (cachedArticles) {
+    return res.send(cachedArticles)
+  }
+
   try {
     const articles = await Article.find({
       category: { $regex: new RegExp('^' + category, 'i') },
@@ -35,7 +41,7 @@ const allArticles = async (req, res) => {
       .skip((page - 1) * pageSize)
       .limit(pageSize)
 
-    if (!articles) {
+    if (!articles || articles.length === 0) {
       throw new Error('No articles found')
     }
     if (lang === 'hi')
@@ -60,30 +66,35 @@ const allArticles = async (req, res) => {
           await article.save()
         }
       }
-    const processedArticles = []
-    for (let article of articles) {
-      const paragraphs = await breakArticleIntoParagraphs(article.mainText)
-      const newArticle = {
-        category: article.category,
-        title: article.title,
-        quizAttemptCnt: article.quizAttemptCnt,
-        mainText: paragraphs,
-        author: article.author,
-        imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
-        hindiTitle: article?.hindiTitle,
-        hindiMainText: article?.hindiMainText,
-        hindiAuthor: article?.hindiAuthor,
-        avgReadTime: article?.avgReadTime,
-        date: formatDate(article.dateTime),
-        dateTime: article.dateTime,
-        _id: article._id,
-      }
-      processedArticles.push(newArticle)
-    }
+
+    const processedArticles = await Promise.all(
+      articles.map(async article => {
+        const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+        return {
+          category: article.category,
+          title: article.title,
+          quizAttemptCnt: article.quizAttemptCnt,
+          mainText: paragraphs,
+          author: article.author,
+          imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
+          hindiTitle: article?.hindiTitle,
+          hindiMainText: article?.hindiMainText,
+          hindiAuthor: article?.hindiAuthor,
+          avgReadTime: article?.avgReadTime,
+          date: formatDate(article.dateTime),
+          dateTime: article.dateTime,
+          _id: article._id,
+        }
+      }),
+    )
+
+    // Cache the processed articles for 1 hour (3600000 milliseconds)
+    cache.put(cacheKey, processedArticles, 3600000)
+
     res.send(processedArticles)
   } catch (error) {
-    res.status(400).json({ error: error || 'Something went wrong' })
-    console.log(error)
+    res.status(400).json({ error: error.message || 'Something went wrong' })
+    console.error(error)
   }
 }
 

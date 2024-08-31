@@ -126,7 +126,7 @@ const Article = () => {
     async ({ view, update }) => {
       if (notLoggedIn) return
       try {
-        setBookmark(true)
+        update && setBookmark(true)
         const response = await axios.get(
           `/api/user/bookmark?articleId=${id}&view=${view}&update=${update}`,
         )
