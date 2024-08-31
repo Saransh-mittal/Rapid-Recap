@@ -27,7 +27,6 @@ const allArticles = async (req, res) => {
   const cachedArticles = cache.get(cacheKey)
 
   if (cachedArticles) {
-    console.log('Serving articles from cache :', cacheKey)
     return res.send(cachedArticles)
   }
 
