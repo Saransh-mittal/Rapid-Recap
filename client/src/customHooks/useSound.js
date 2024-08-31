@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect } from 'react'
-import { useSound } from 'use-sound'
+import { useSound as useCustomSound } from 'use-sound'
 import { SOUND_FILES, SOUND_TYPES } from '../models/soundSettings'
 import { useSelector } from 'react-redux'
 
@@ -7,12 +7,14 @@ import { useSelector } from 'react-redux'
 let sharedAudioContext
 
 // Custom hook for playing sound
-const useCustomSound = () => {
+const useSound = () => {
   const audioRef = useRef(null)
 
   // Use the use-sound hook for predefined sound types
-  const [playNoteMessage] = useSound(SOUND_FILES[SOUND_TYPES.NOTE_MESSAGE])
-  const [playMilestone] = useSound(SOUND_FILES[SOUND_TYPES.MILESTONE])
+  const [playNoteMessage] = useCustomSound(
+    SOUND_FILES[SOUND_TYPES.NOTE_MESSAGE],
+  )
+  const [playMilestone] = useCustomSound(SOUND_FILES[SOUND_TYPES.MILESTONE])
   const { soundSettings } = useSelector(state => state.app)
 
   useEffect(() => {
@@ -123,11 +125,11 @@ const useCustomSound = () => {
   const play10SecSound = useCallback(() => playSound(880, 0.2), [playSound])
 
   return {
-    playNoteMessageSound: soundSettings['noteMessage']
+    playNoteMessageSound: soundSettings['NoteMessage']
       ? playNoteMessage
       : () => {},
 
-    playMilestoneSound: soundSettings['milestone'] ? playMilestone : () => {},
+    playMilestoneSound: soundSettings['Milestone'] ? playMilestone : () => {},
     playClick: soundSettings['Click'] ? playClick : () => {},
     play30SecSound: soundSettings['Quiz'] ? play30SecSound : () => {},
     play20SecSound: soundSettings['Quiz'] ? play20SecSound : () => {},
@@ -137,4 +139,4 @@ const useCustomSound = () => {
   }
 }
 
-export default useCustomSound
+export default useSound
