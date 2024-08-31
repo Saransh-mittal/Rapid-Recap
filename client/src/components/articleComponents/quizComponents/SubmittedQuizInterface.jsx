@@ -264,7 +264,13 @@ const SubmittedQuizInterface = ({
             exit={{ y: -20, opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Text fontSize="2xl" fontWeight="bold" mb={6} color="purple.200">
+            <Text
+              fontSize="2xl"
+              fontWeight="bold"
+              mb={6}
+              color="purple.200"
+              mt={7}
+            >
               Quiz Completed Successfully!
             </Text>
 
@@ -344,14 +350,14 @@ const SubmittedQuizInterface = ({
                           >
                             {result?.articleDifficulty}
                           </Flex>
-                          <Box
+                          <Flex
                             color={diffColor}
-                            position={'absolute'}
-                            right={'20%'}
-                            top={'48%'}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                            ml={{ base: -8, md: -6 }}
                           >
                             <DifficultyIcon />
-                          </Box>
+                          </Flex>
                         </StatNumber>
                         <StatHelpText textAlign={'center'}>
                           {getReviewText(
