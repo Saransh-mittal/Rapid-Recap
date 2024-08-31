@@ -288,52 +288,6 @@ const extractNewsFromLink = async (query, apiKey) => {
   }
 }
 
-const updateCacheForCategory = async category => {
-  const cacheKeys = cache.keys()
-  const relevantKeys = cacheKeys.filter(key =>
-    key.startsWith(`articles_${category}_`),
-  )
-
-  for (const key of relevantKeys) {
-    const [_, __, page, pageSize] = key.split('_')
-    const articles = await Article.find({
-      category: { $regex: new RegExp('^' + category, 'i') },
-    })
-      .sort({
-        dateTime: -1,
-        'sentiments.compound': -1,
-      })
-      .skip((page - 1) * pageSize)
-      .limit(pageSize)
-
-    if (articles && articles.length > 0) {
-      const processedArticles = await Promise.all(
-        articles.map(async article => {
-          const paragraphs = await breakArticleIntoParagraphs(article.mainText)
-          return {
-            category: article.category,
-            title: article.title,
-            quizAttemptCnt: article.quizAttemptCnt,
-            mainText: paragraphs,
-            author: article.author,
-            imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
-            hindiTitle: article?.hindiTitle,
-            hindiMainText: article?.hindiMainText,
-            hindiAuthor: article?.hindiAuthor,
-            avgReadTime: article?.avgReadTime,
-            date: formatDate(article.dateTime),
-            dateTime: article.dateTime,
-            _id: article._id,
-          }
-        }),
-      )
-      cache.put(key, processedArticles, 3600000)
-    } else {
-      cache.del(key)
-    }
-  }
-}
-
 const processExtractedNews = async (news, category) => {
   const initialInstructions = `
     You are a text checker and analyzer.
@@ -532,7 +486,11 @@ const extractNewsUtilityFunc = async (country = '') => {
     for (const [category, count] of Object.entries(articlesSavedPerCategory)) {
       if (count > 0) {
         try {
-          await updateCacheForCategory(category)
+          const cacheKeys = cache.keys()
+          const articleCacheKeys = cacheKeys.filter(key =>
+            key.startsWith(`articles_${category}_`),
+          )
+          articleCacheKeys.forEach(key => cache.del(key))
         } catch (error) {
           console.error(
             `Error updating cache for category ${category}: ${error.message}`,
@@ -772,5 +730,4 @@ module.exports = {
   getTopArticle,
   getSecondTopArticle,
   getTopThreeRecommendedArticles,
-  updateCacheForCategory,
 }
