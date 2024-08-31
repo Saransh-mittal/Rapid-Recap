@@ -14,12 +14,12 @@ const Authenticate = async (req, res, next) => {
       // If the token is valid, attach the user data to the request object
       req.user = decoded
       const user = await User.findById(req.user._id).select(
-        '_id name email role pic inGameName lastLogin',
+        '_id name email role pic inGameName lastLogin loginStreak',
       )
       const today = new Date()
       today.setUTCHours(0, 0, 0, 0)
       // Initialize loginStreak if it doesn't exist
-      if (typeof user.loginStreak !== 'number') {
+      if (user.loginStreak === undefined) {
         user.loginStreak = 0
       }
 
