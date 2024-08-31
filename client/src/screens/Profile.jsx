@@ -662,21 +662,6 @@ export default function Profile() {
                     backgroundColor="rgba(15, 13, 21, 0.8)"
                     boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
                     className="solved-quizzes"
-                    _hover={
-                      !privacyProfileData.solvedQuizzes
-                        ? {
-                            transform: 'scale(1.01)',
-                          }
-                        : null
-                    }
-                    _active={
-                      !privacyProfileData.solvedQuizzes
-                        ? {
-                            transform: 'scale(0.9)',
-                            borderColor: '#bec3c9',
-                          }
-                        : null
-                    }
                   >
                     <SolvedQuizzes
                       privateSolvedQuiz={privacyProfileData?.solvedQuizzes}
