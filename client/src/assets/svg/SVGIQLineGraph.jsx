@@ -5,20 +5,19 @@ const SVGIQLineGraph = ({ data, width, height, onHover }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null)
 
   const chartData = useMemo(() => {
-    if (!data || data.length === 0) return { points: [], xScale: 0, yScale: 0 }
+    if (!data || data?.length === 0) return { points: [], xScale: 0, yScale: 0 }
 
     const margin = { top: 20, right: 20, bottom: 30, left: 40 }
-    const chartWidth = width - margin.left - margin.right
-    const chartHeight = height - margin.top - margin.bottom
+    const chartWidth = width - margin?.left - margin?.right
+    const chartHeight = height - margin?.top - margin?.bottom
 
     const xScale = chartWidth / (data.length - 1)
-    const yMin = Math.min(...data.map(d => d.IQScore)) - 20
-    const yMax = Math.max(...data.map(d => d.IQScore)) + 10
+    const yMin = Math.min(...data.map(d => d?.IQScore)) - 20
+    const yMax = Math.max(...data.map(d => d?.IQScore)) + 10
     const yScale = chartHeight / (yMax - yMin)
-
-    const points = data.map((d, i) => ({
-      x: i * xScale + margin.left,
-      y: chartHeight - (d.IQScore - yMin) * yScale + margin.top,
+    const points = data?.map((d, i) => ({
+      x: i * xScale + margin?.left,
+      y: chartHeight - (d?.IQScore - yMin) * yScale + margin?.top,
       ...d,
     }))
 
@@ -36,13 +35,13 @@ const SVGIQLineGraph = ({ data, width, height, onHover }) => {
 
   const handleInteraction = useCallback(
     event => {
-      const svgRect = event.currentTarget.getBoundingClientRect()
-      const x = event.clientX || event.touches[0].clientX
-      const relativeX = x - svgRect.left
-      const closestIndex = Math.round(
-        (relativeX - chartData.margin.left) / chartData.xScale,
+      const svgRect = event?.currentTarget?.getBoundingClientRect()
+      const x = event?.clientX || event?.touches[0]?.clientX
+      const relativeX = x - svgRect?.left
+      const closestIndex = Math?.round(
+        (relativeX - chartData?.margin?.left) / chartData?.xScale,
       )
-      if (closestIndex >= 0 && closestIndex < chartData.points.length) {
+      if (closestIndex >= 0 && closestIndex < chartData?.points?.length) {
         setHoveredIndex(closestIndex)
         onHover(closestIndex)
       }
@@ -51,11 +50,11 @@ const SVGIQLineGraph = ({ data, width, height, onHover }) => {
   )
 
   const handleMouseLeave = useCallback(() => {
-    setHoveredIndex(chartData.points.length - 1)
-    onHover(chartData.points.length - 1)
+    setHoveredIndex(chartData?.points?.length - 1)
+    onHover(chartData?.points?.length - 1)
   }, [chartData, onHover])
 
-  const linePoints = chartData.points.map(p => `${p.x},${p.y}`).join(' ')
+  const linePoints = chartData?.points?.map(p => `${p?.x},${p?.y}`)?.join(' ')
   return (
     <Box width={width} height={height}>
       <svg
@@ -74,11 +73,11 @@ const SVGIQLineGraph = ({ data, width, height, onHover }) => {
           </linearGradient>
         </defs>
         <path
-          d={`M${chartData.points[0].x},${
-            chartData.chartHeight + chartData.margin.top
-          } ${linePoints} L${chartData.points[chartData.points.length - 1].x},${
-            chartData.chartHeight + chartData.margin.top
-          }`}
+          d={`M${chartData?.points[0]?.x},${
+            chartData?.chartHeight + chartData?.margin?.top
+          } ${linePoints} L${
+            chartData?.points[chartData?.points?.length - 1]?.x
+          },${chartData?.chartHeight + chartData?.margin?.top}`}
           fill="url(#lineGradient)"
         />
         <polyline
@@ -87,21 +86,21 @@ const SVGIQLineGraph = ({ data, width, height, onHover }) => {
           strokeWidth="2"
           points={linePoints}
         />
-        {chartData.points.map((point, index) => (
+        {chartData?.points?.map((point, index) => (
           <circle
             key={index}
-            cx={point.x}
-            cy={point.y}
+            cx={point?.x}
+            cy={point?.y}
             r={index === hoveredIndex ? 4 : 0}
             fill={index === hoveredIndex ? '#ff9800' : '#FFF6F6'}
           />
         ))}
         {hoveredIndex !== null && (
           <line
-            x1={chartData.points[hoveredIndex].x}
-            y1={chartData.margin.top}
-            x2={chartData.points[hoveredIndex].x}
-            y2={height - chartData.margin.bottom}
+            x1={chartData?.points[hoveredIndex]?.x}
+            y1={chartData?.margin?.top}
+            x2={chartData?.points[hoveredIndex]?.x}
+            y2={height - chartData?.margin?.bottom}
             stroke="#B3A492"
             strokeWidth="1"
             strokeDasharray="5,5"

@@ -11,11 +11,12 @@ const ProfileButton = ({
   icon,
   top,
   isGuest = false,
+  notShowVisibility = false,
 }) => {
   const { playClick } = useSound()
   return (
     <>
-      {inGameName == stateUserInGameName && !isGuest && (
+      {inGameName == stateUserInGameName && !isGuest && !notShowVisibility && (
         <Tooltip label="Visibility to others">
           <Tag
             backgroundColor="rgba(15, 13, 21, 0.8)"

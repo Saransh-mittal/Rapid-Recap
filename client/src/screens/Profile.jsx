@@ -664,7 +664,9 @@ export default function Profile() {
                     className="solved-quizzes"
                   >
                     <SolvedQuizzes
-                      privateSolvedQuiz={privacyProfileData?.solvedQuizzes}
+                      privateSolvedQuiz={
+                        privacyProfileData?.solvedQuizzes && !loginedUserProfile
+                      }
                       loginedUserProfile={loginedUserProfile}
                       solvedQuizzes={profile?.solvedQuizzes}
                       inGameName={inGameName}

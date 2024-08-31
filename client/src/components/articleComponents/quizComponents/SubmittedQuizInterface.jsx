@@ -33,6 +33,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import {
+  DIFF_COLOR,
+  ICONS_ARTICLE_DIFFICULTY,
+} from '../../../models/articleDifficulty'
 
 // Lazy load components and assets
 const Line = lazy(() =>
@@ -231,6 +235,13 @@ const SubmittedQuizInterface = ({
     onViewReport()
   }, [onViewReport])
 
+  const DifficultyIcon = result?.articleDifficulty
+    ? ICONS_ARTICLE_DIFFICULTY[result?.articleDifficulty]
+    : null
+  const diffColor = result?.articleDifficulty
+    ? DIFF_COLOR[result?.articleDifficulty]
+    : null
+
   return (
     <ChakraProvider theme={theme}>
       <Box
@@ -319,8 +330,28 @@ const SubmittedQuizInterface = ({
                         <StatLabel textAlign={'center'} mt={5}>
                           Article Difficulty
                         </StatLabel>
-                        <StatNumber textAlign={'center'}>
-                          {result?.articleDifficulty}
+                        <StatNumber
+                          textAlign={'center'}
+                          display={'flex'}
+                          w={'100%'}
+                        >
+                          <Flex
+                            color={diffColor}
+                            w={'100%'}
+                            justifyContent={'center'}
+                            alignItems={'center'}
+                            position={'relative'}
+                          >
+                            {result?.articleDifficulty}
+                          </Flex>
+                          <Box
+                            color={diffColor}
+                            position={'absolute'}
+                            right={'20%'}
+                            top={'48%'}
+                          >
+                            <DifficultyIcon />
+                          </Box>
                         </StatNumber>
                         <StatHelpText textAlign={'center'}>
                           {getReviewText(

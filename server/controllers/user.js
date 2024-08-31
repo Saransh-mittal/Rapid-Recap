@@ -1159,9 +1159,13 @@ const streakChecker = async (req, res) => {
           user.streak,
           user.streakExpiry,
         )
-        isRevivalPeriod = true
         remainingTimeBeforeRevival =
           user.revivalPeriodEnd.getTime() - today.getTime()
+        isRevivalPeriod = remainingTimeBeforeRevival <= 0 ? false : true
+        if (remainingTimeBeforeRevival < 0) {
+          user.revivalPeriodEnd = null
+          user.streakBeforeBreak = 0
+        }
       }
       // Reset streak
       user.streak = 0
