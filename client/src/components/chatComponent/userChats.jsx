@@ -36,7 +36,6 @@ import Button from '../miscellaneous/ButtonComponent'
 import { Search2Icon } from '@chakra-ui/icons'
 import useSound from '../../customHooks/useSound'
 import ChatLoading from './ChatLoading'
-import { t } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
 const ChatSideDrawer = lazy(() => import('./ChatSideDrawer'))
@@ -367,13 +366,47 @@ const UserChats = ({ fetchAgain }) => {
             </>
           )}
         </Flex>
-        <Button
-          onClick={() => setShowRequestsTab(!showRequestsTab)}
-          white={showRequestsTab ? true : false}
-          textColor={'white'}
-        >
-          {showRequestsTab ? t('Chats') : t('requests')}
-        </Button>
+        <Flex position="relative">
+          <Box
+            as="button"
+            display="flex"
+            alignItems="center"
+            bg="rgba(255, 255, 255, 0.1)"
+            borderRadius="full"
+            p="2px"
+            cursor="pointer"
+            onClick={() => setShowRequestsTab(!showRequestsTab)}
+            position="relative"
+            border="1px solid"
+            borderColor="whiteAlpha.300"
+            _hover={{ borderColor: 'whiteAlpha.500' }}
+          >
+            <Box
+              px={2}
+              py={1}
+              borderRadius="full"
+              bg={!showRequestsTab ? 'white' : 'transparent'}
+              color={!showRequestsTab ? 'purple.800' : 'white'}
+              fontWeight="bold"
+              transition="all 0.3s"
+              fontSize={['sm', 'md']}
+            >
+              {t('Chats')}
+            </Box>
+            <Box
+              px={2}
+              py={1}
+              borderRadius="full"
+              bg={showRequestsTab ? 'white' : 'transparent'}
+              color={showRequestsTab ? 'purple.800' : 'white'}
+              fontWeight="bold"
+              transition="all 0.3s"
+              fontSize={['sm', 'md']}
+            >
+              {t('requests')}
+            </Box>
+          </Box>
+        </Flex>
       </Box>
       <Box
         display="flex"

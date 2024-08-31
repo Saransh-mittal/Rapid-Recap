@@ -36,14 +36,22 @@ const ElegantButton = ({ onClick, children }) => (
   </ChakraButton>
 )
 
-const ButtonFactory = ({ actionType, onClick, innerText, ...props }) => {
+const ButtonFactory = ({
+  actionType,
+  onClick,
+  innerText,
+  GuestLoginTranslate,
+  ...props
+}) => {
   switch (actionType) {
     case 'SIGN_IN':
       return (
         <GetStarted width={'150px'} innerText={innerText} onClick={onClick} />
       )
     case 'GUEST':
-      return <GuestLogin width={'150px'} onClick={onClick} />
+      return (
+        <GuestLogin width={'150px'} onClick={onClick} t={GuestLoginTranslate} />
+      )
     case 'VIEW_PROFILE':
       return (
         <ElegantButton onClick={onClick} {...props}>

@@ -152,8 +152,8 @@ const BoostedSubmittedQuizInterface = ({
                   >
                     {score !== 0
                       ? isBoosted && isQuinBoostAvailable
-                        ? '1.75x Boosted'
-                        : '1.5x Boosted'
+                        ? `1.75x ${t(`boostedText`)}`
+                        : `1.5x ${t(`boostedText`)}`
                       : `"Don't give up! Keep going!"`}
                   </Text>
                 </Flex>

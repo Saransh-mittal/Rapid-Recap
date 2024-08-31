@@ -31,6 +31,7 @@ import parse from 'html-react-parser'
 import useSound from '../../../customHooks/useSound'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUpdates } from '../../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
 
 const NotificationDrawer = ({
   setIsDrawerOpen,
@@ -38,6 +39,7 @@ const NotificationDrawer = ({
   setSelectedNotification,
   setIsHamburgerOpen,
 }) => {
+  const { t } = useTranslation('NotificationDrawer')
   const { playClick } = useSound()
   const dispatch = useDispatch()
   const { updates } = useSelector(state => state.app)
@@ -70,8 +72,8 @@ const NotificationDrawer = ({
         dispatch(setUpdates(updatedNotifications))
       } catch (error) {
         toast({
-          title: 'Error',
-          description: 'Failed to mark as read',
+          title: t('error'),
+          description: t('markAsReadError'),
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -128,8 +130,8 @@ const NotificationDrawer = ({
       if (response.status === 200) {
         dispatch(setUpdates([]))
         toast({
-          title: 'Success',
-          description: 'All notifications removed successfully',
+          title: t('success'),
+          description: t('removeAllSuccess'),
           status: 'success',
           duration: 3000,
           isClosable: true,
@@ -137,8 +139,8 @@ const NotificationDrawer = ({
         })
       } else {
         toast({
-          title: 'Error',
-          description: 'Failed to remove all notifications',
+          title: t('error'),
+          description: t('removeAllError'),
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -147,8 +149,8 @@ const NotificationDrawer = ({
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to remove all notifications',
+        title: t('error'),
+        description: t('removeAllError'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -187,7 +189,7 @@ const NotificationDrawer = ({
         >
           <DrawerCloseButton />
           <DrawerHeader size="10px">
-            <span>Inbox</span>
+            <span>{t('inbox')}</span>
           </DrawerHeader>
           <DrawerHeader size="10px">
             {notificationData.length > 0 && (
@@ -198,7 +200,7 @@ const NotificationDrawer = ({
                 _hover={{ color: 'red', borderColor: 'red' }}
                 onClick={handleRemoveAllClick}
               >
-                Remove all Notifications
+                {t('removeAllNotifications')}
               </Button>
             )}
           </DrawerHeader>
@@ -246,7 +248,7 @@ const NotificationDrawer = ({
                       >
                         <Image
                           src={Rapid_recap}
-                          alt="Notification Image"
+                          alt={t('notificationImage')}
                           width="40px "
                           height="40px"
                           borderRadius="50%"
@@ -323,16 +325,16 @@ const NotificationDrawer = ({
         >
           <ModalHeader>
             {isDeleteModalOpen ? (
-              <b>Confirm Remove Notification</b>
+              <b>{t('confirmRemove')}</b>
             ) : (
-              <b>Confirm Remove All Notifications</b>
+              <b>{t('confirmRemoveAll')}</b>
             )}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {isDeleteModalOpen
-              ? 'Are you sure you want to delete this notification?'
-              : 'Are you sure you want to remove all notifications from inbox?'}
+              ? t('deleteConfirmation')
+              : t('removeAllConfirmation')}
           </ModalBody>
           <ModalFooter>
             <Button
@@ -340,7 +342,7 @@ const NotificationDrawer = ({
               mr={3}
               onClick={isDeleteModalOpen ? trashUpdate : removeAllNotifications}
             >
-              Confirm Delete
+              {t('confirmDelete')}
             </Button>
             <Button
               onClick={() => {
@@ -350,7 +352,7 @@ const NotificationDrawer = ({
                   : setRemoveAllModalOpen(false)
               }}
             >
-              Cancel
+              {t('cancel')}
             </Button>
           </ModalFooter>
         </ModalContent>

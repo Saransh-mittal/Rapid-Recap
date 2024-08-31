@@ -64,6 +64,7 @@ const IQScoreModal = React.lazy(() => import('./navbarComponents/IQScoreModal'))
 const WiseWeb = React.lazy(() => import('../profileComponents/WiseWeb'))
 
 const Navbar = () => {
+  const { t } = useTranslation('Navbar')
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
   const location = useLocation()
   const navigate = useNavigate()
@@ -112,9 +113,9 @@ const Navbar = () => {
 
   const navItems = useMemo(
     () => [
-      { to: '/home', label: 'Home' },
-      { to: '/contact', label: 'Contact Us' },
-      { to: '/leaderboard', label: 'Leaderboard' },
+      { to: '/home', label: t('home') },
+      { to: '/contact', label: t('contact') },
+      { to: '/leaderboard', label: t('leaderboard') },
       { to: '/dashboard', label: 'Dashboard' },
     ],
     [],

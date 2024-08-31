@@ -87,7 +87,7 @@ const BoostSection = React.memo(
             </Flex>
 
             <Box
-              mt={-5}
+              mt={-4}
               px={2}
               py={1}
               borderRadius="full"
@@ -97,7 +97,7 @@ const BoostSection = React.memo(
               fontWeight="bold"
               boxShadow="0 2px 4px rgba(0,0,0,0.1)"
             >
-              {quizLeftToGetQuizBoost} Quiz Left For Quin Boost
+              {quizLeftToGetQuizBoost} {t('quizLeftText')}
             </Box>
           </Flex>
         )}

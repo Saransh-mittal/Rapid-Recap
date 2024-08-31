@@ -9,6 +9,7 @@ import {
 } from '@chakra-ui/react'
 import { RepeatClockIcon, CheckIcon } from '@chakra-ui/icons'
 import { lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // Lazy-loaded components
 const Heading = lazy(() => import('../miscellaneous/HeadingComponent'))
@@ -25,51 +26,16 @@ import roadmap5 from '../../assets/roadmap/bookmark.webp'
 import tournament from '../../assets/roadmap/tournament.webp'
 import grid from '../../assets/grid.webp'
 
-const roadmapData = [
-  {
-    id: '0',
-    title: 'Personalized Feed and Notifications',
-    text: "Enjoy a tailored news and quiz experience with Rapid Recap's personalization feature, plus timely notifications to keep you updated and engaged with relevant content.",
-    date: 'June 2024',
-    status: 'done',
-    imageUrl: roadmap2,
-    colorful: true,
-  },
-  {
-    id: '1',
-    title: 'Bookmark feature',
-    text: "Rapid Recap's new Bookmark feature lets you save, manage, and quickly access your favorite articles. Personalize your feed and track your reading progress easily. Stay informed effortlessly!",
-    date: 'July 2024',
-    status: 'done',
-    imageUrl: roadmap5,
-  },
-  {
-    id: '2',
-    title: 'Wise Web',
-    text: 'Wise Web is a dynamic feature that lets you connect, share, and grow with others in a vibrant digital community. It’s where knowledge flows and collective wisdom thrives, weaving a network of meaningful connections.',
-    date: 'August 2024',
-    status: 'done',
-    imageUrl: roadmap4,
-  },
-
-  {
-    id: '3',
-    title: 'Tournament Mode',
-    text: `
-I come around every weekend,
-Where knowledge is the key to ascend.
-With five chances to prove you're wise,
-And on Monday, you'll see who gets the prize.
-What am I?
-    `,
-    date: 'August 2024',
-    status: 'progress',
-    imageUrl: tournament,
-  },
-]
+const imageMap = {
+  0: roadmap2,
+  1: roadmap5,
+  2: roadmap4,
+  3: tournament,
+}
 
 const RoadmapItem = React.memo(({ item, isScreenGreaterThan820, index }) => {
-  const status = item.status === 'done' ? 'Done' : 'In Progress'
+  const { t } = useTranslation('commingSoonSection')
+  const status = t(`statusLabels.${item.status}`)
   const translateY = index % 2 !== 0 ? '6rem' : '0'
 
   return (
@@ -124,7 +90,7 @@ const RoadmapItem = React.memo(({ item, isScreenGreaterThan820, index }) => {
             </Flex>
             <Flex w={'100%'} justifyContent={'center'} alignItems={'center'}>
               <Image
-                src={item.imageUrl}
+                src={imageMap[item.id]}
                 alt={item.title}
                 width={'80%'}
                 height="80%"
@@ -151,8 +117,16 @@ const RoadmapItem = React.memo(({ item, isScreenGreaterThan820, index }) => {
 const ComingSoonSection = () => {
   const [isScreenGreaterThan820] = useMediaQuery('(min-width: 820px)')
   const parallaxRef = useRef(null)
+  const { t } = useTranslation('commingSoonSection')
 
-  const memoizedRoadmap = useMemo(() => roadmapData, [])
+  const memoizedRoadmap = useMemo(() => {
+    return Object.entries(t('items', { returnObjects: true })).map(
+      ([id, item]) => ({
+        ...item,
+        id,
+      }),
+    )
+  }, [t])
 
   const renderRoadmapItems = useCallback(() => {
     return memoizedRoadmap.map((item, index) => (
@@ -177,10 +151,7 @@ const ComingSoonSection = () => {
         >
           <Box className="overflow-hidden" id="roadmap">
             <Box maxW="container" pb={{ md: 10 }}>
-              <Heading
-                tag="Discover What's New and What's Coming Soon"
-                title="Feature Highlights"
-              />
+              <Heading tag={t('tag')} title={t('title')} />
               <Flex
                 position="relative"
                 gap={{ base: 6, md: 4 }}
