@@ -6,9 +6,15 @@ const { decode } = require('html-entities')
 const NewsAPI = require('newsapi')
 const axios = require('axios')
 const script_prepare_article_data = require('../scripts/script_prepare_article_data')
-const { averageReadTime, shuffleArray } = require('./miscellaneous.utils')
+const {
+  averageReadTime,
+  shuffleArray,
+  formatDate,
+} = require('./miscellaneous.utils')
 const { Recommendation } = require('../model/recommendationSchema')
 const newsClassifierService = require('../ml/services/newsClassifierService')
+const cache = require('memory-cache')
+
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
   // Use natural language processing to tokenize sentences
@@ -477,6 +483,22 @@ const extractNewsUtilityFunc = async (country = '') => {
       articlesSavedPerCategory,
       country,
     )
+    for (const [category, count] of Object.entries(articlesSavedPerCategory)) {
+      if (count > 0) {
+        try {
+          const cacheKeys = cache.keys()
+          const articleCacheKeys = cacheKeys.filter(key =>
+            key.startsWith(`articles_${category}_`),
+          )
+          articleCacheKeys.forEach(key => cache.del(key))
+        } catch (error) {
+          console.error(
+            `Error updating cache for category ${category}: ${error.message}`,
+          )
+        }
+      }
+    }
+
     script_prepare_article_data()
     return { result, articlesSavedPerCategory, notificationCategories }
   } catch (error) {

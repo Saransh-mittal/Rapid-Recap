@@ -11,6 +11,7 @@ const {
 } = require('../model/recommendationSchema')
 const { Parser } = require('json2csv')
 const path = require('path')
+const cache = require('memory-cache')
 
 async function ensureDirectoryExistence(filePath) {
   const dirname = path.dirname(filePath)
@@ -138,6 +139,19 @@ async function updateRecommendations(userId) {
     )
 
     await generateRecommendations(userId)
+    // Clear all cached recommendations for this user
+    const cacheKeys = cache.keys()
+    const userCacheKeys = cacheKeys.filter(
+      key =>
+        key.startsWith(`user_recommendations_${userId}_`) ||
+        key.startsWith(`article_page_recommendations_${userId}_`),
+    )
+    userCacheKeys.forEach(key => cache.del(key))
+
+    await Recommendation.findOneAndUpdate(
+      { user_id: userId },
+      { $set: { isUpdating: false, lastUpdated: new Date() } },
+    )
   } catch (error) {
     console.error('Error in updateRecommendations:', error)
     await Recommendation.findOneAndUpdate(
