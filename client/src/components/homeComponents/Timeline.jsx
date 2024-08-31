@@ -109,6 +109,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
         handleActiveCategory({ category: categories[newIndex] })
       }
     },
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true,
+    delta: 100, // Increase this value to require a longer swipe
   })
 
   useEffect(() => {
