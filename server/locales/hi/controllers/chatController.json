@@ -1,0 +1,7 @@
+{
+  "invalidAction": "अमान्य क्रिया",
+  "chatRequestNotFound": "चैट अनुरोध नहीं मिला या पहले से ही संभाला गया है",
+  "chatRequestAccepted": "चैट अनुरोध {{name}} द्वारा स्वीकार किया गया",
+  "chatRequestRejected": "चैट अनुरोध {{name}} द्वारा अस्वीकार किया गया",
+  "chatRequestUpdateNotification": "{{name}} ने आपके चैट अनुरोध को {{action}} कर दिया है"
+}

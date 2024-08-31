@@ -1,0 +1,7 @@
+{
+  "invalidAction": "Invalid action",
+  "chatRequestNotFound": "Chat request not found or already handled",
+  "chatRequestAccepted": "Chat request accepted by {{name}}",
+  "chatRequestRejected": "Chat request rejected by {{name}}",
+  "chatRequestUpdateNotification": "{{name}} has {{action}}ed your chat request"
+}

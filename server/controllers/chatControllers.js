@@ -363,7 +363,7 @@ const handleChatRequest = asyncHandler(async (req, res) => {
 
   if (action !== 'accept' && action !== 'reject') {
     res.status(400)
-    throw new Error('Invalid action')
+    throw new Error(req.t('chatComponent:invalidAction'))
   }
 
   try {
@@ -375,20 +375,30 @@ const handleChatRequest = asyncHandler(async (req, res) => {
 
     if (!updatedChat) {
       res.status(404)
-      throw new Error('Chat request not found or already handled')
+      throw new Error(req.t('chatComponent:chatRequestNotFound'))
     }
+
     const { name } = await User.findById(req.user._id).select('name')
+
     // Create a system message for the chat
     const systemMessage = await Message.create({
       sender: req.user._id,
-      content: `Chat request ${action}ed by ${name}`,
+      content: req.t(
+        `chatComponent:chatRequest${
+          action === 'accept' ? 'Accepted' : 'Rejected'
+        }`,
+        { name },
+      ),
       chat: chatId,
       type: 'system',
     })
 
     await sendNotification({
-      title: 'Chat Request Update',
-      body: `${req.user.name} has ${action}ed your chat request`,
+      title: req.t('chatComponent:chatRequestUpdateNotificationTitle'),
+      body: req.t('chatComponent:chatRequestUpdateNotification', {
+        name: req.user.name,
+        action,
+      }),
       icon: req.user.pic,
       url: `/chats?chatId=${chatId}`,
       userId: updatedChat.requestedBy,
@@ -400,6 +410,7 @@ const handleChatRequest = asyncHandler(async (req, res) => {
     throw new Error(error.message)
   }
 })
+
 // @desc    Make Chat Seen Request
 // @route   POST /api/chat/request/seen
 // @access  Protected

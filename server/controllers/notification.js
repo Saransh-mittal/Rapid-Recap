@@ -12,7 +12,7 @@ const notificationNews = async (req, res) => {
       image:
         'https://www.techspot.com/images2/news/bigimage/2024/07/2024-07-05-image-10.jpg',
       url: 'https://www.rapidrecap.co.in/',
-      userId: '65b1ebbc90ba2e3794e9696d',
+      userId: '660167b035a59cd25a6b1d3c',
     })
     res.status(200).json({ message: 'Notif sent successfully' })
   } catch (error) {

@@ -1,0 +1,45 @@
+const i18n = require('i18next')
+const Backend = require('i18next-fs-backend')
+const middleware = require('i18next-http-middleware')
+const path = require('path')
+
+const namespaces = {
+  controllers: ['chatController'],
+}
+
+i18n
+  .use(Backend)
+  .use(middleware.LanguageDetector)
+  .init({
+    backend: {
+      loadPath: (lngs, ns) => {
+        const lng = Array.isArray(lngs) ? lngs[0] : lngs
+        const namespace = Array.isArray(ns) ? ns[0] : ns
+        const category = Object.keys(namespaces).find(key =>
+          namespaces[key].includes(namespace),
+        )
+
+        switch (category) {
+          case 'controllers':
+            return path.join(
+              __dirname,
+              `./locales/${lng}/controllers/${namespace}.json`,
+            )
+          default:
+            return path.join(__dirname, `./locales/${lng}/${namespace}.json`) // fallback
+        }
+      },
+    },
+    fallbackLng: 'en',
+    supportedLngs: ['en', 'hi'],
+    ns: Object.values(namespaces).flat(),
+    defaultNS: 'Contact',
+    detection: {
+      order: ['querystring', 'cookie', 'header'],
+      lookupQuerystring: 'lng',
+      lookupCookie: 'i18next',
+      caches: ['cookie'],
+    },
+  })
+
+module.exports = i18n
