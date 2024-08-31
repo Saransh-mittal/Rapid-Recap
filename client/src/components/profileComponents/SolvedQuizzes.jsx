@@ -9,6 +9,7 @@ import {
   Spinner,
   Badge,
   useToast,
+  Tooltip,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import ProfileButton from './ProfileButton'
@@ -142,11 +143,13 @@ const SolvedQuizzes = ({
         <Text fontSize="lg" fontWeight="bold" color="gray.100">
           Solved Quizzes
         </Text>
-        {loginedUserProfile && (
-          <Badge colorScheme="green">
-            {user.profilePrivacy.solvedQuizzes ? 'HIDDEN' : 'VISIBLE'}
-          </Badge>
-        )}
+        <Tooltip label="Visibility to others">
+          {loginedUserProfile && (
+            <Badge colorScheme="green">
+              {user.profilePrivacy.solvedQuizzes ? 'HIDDEN' : 'VISIBLE'}
+            </Badge>
+          )}
+        </Tooltip>
       </Flex>
       {isLoading ? (
         <Flex justify="center" align="center" h="150px">

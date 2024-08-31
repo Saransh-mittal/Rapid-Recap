@@ -6,7 +6,15 @@ import React, {
   lazy,
   Suspense,
 } from 'react'
-import { Flex, Image, Tooltip, Text, Tag, Spinner } from '@chakra-ui/react'
+import {
+  Flex,
+  Image,
+  Tooltip,
+  Text,
+  Tag,
+  Spinner,
+  Badge,
+} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import circle from '/images/circle.webp'
 import Arrow from '/images/arrow.webp'
@@ -152,21 +160,15 @@ const RankAndSociety = ({
             </Text>
             {loginedUserProfile && (
               <Tooltip label="Visibility to others">
-                <Tag
-                  backgroundColor="#0f0d15"
+                <Badge
+                  colorScheme="green"
                   m={0}
                   position={'absolute'}
                   top={0}
                   right={2}
-                  color={'#9CAFAA'}
-                  display={'flex'}
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  w={'60px'}
-                  height={'30px'}
                 >
                   {user.profilePrivacy.society ? 'HIDDEN' : 'VISIBLE'}
-                </Tag>
+                </Badge>
               </Tooltip>
             )}
           </Flex>
