@@ -67,6 +67,17 @@ const namespaces = {
     'Navbar',
     'NavBrand',
   ],
+  homeComponents: ['SearchBarInput', 'Timeline', 'UpgradeModal', 'Card'],
+  leaderBoardComponents: ['LeaderBoardTable', 'SearchBar'],
+  miscellaneous: [
+    'UserSearchDrawer',
+    'SecureYourProgress',
+    'NoteMessageSummary',
+    'ButtonFactory',
+    'milestones',
+    'StreakNoteMessage',
+    'XPAwardNoteMessage',
+  ],
 }
 
 i18n
@@ -99,6 +110,12 @@ i18n
             return `/locales/${lng}/components/getStartedComponents/${namespace}.json`
           case 'headerFooter':
             return `/locales/${lng}/components/headerFooter/${namespace}.json`
+          case 'homeComponents':
+            return `/locales/${lng}/components/homeComponents/${namespace}.json`
+          case 'leaderBoardComponents':
+            return `/locales/${lng}/components/leaderBoardComponents/${namespace}.json`
+          case 'miscellaneous':
+            return `/locales/${lng}/components/miscellaneous/${namespace}.json`
           case 'categories':
             return `/locales/${lng}/categories/${namespace}.json`
           default:

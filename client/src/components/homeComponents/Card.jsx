@@ -17,6 +17,7 @@ import useSound from '../../customHooks/useSound'
 import slugify from 'slugify'
 import { useDispatch } from 'react-redux'
 import { setArticleData } from '../../redux/articleSlice'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -26,6 +27,7 @@ const MotionCircle = motion(Circle)
 const MotionHeading = motion(Heading)
 
 const Card = ({ title, image, category, date, readTime, id, articleData }) => {
+  const { t } = useTranslation('Card')
   const cardRef = useRef(null)
   const navigate = useNavigate()
   const controls = useAnimation()
@@ -223,7 +225,7 @@ const Card = ({ title, image, category, date, readTime, id, articleData }) => {
               damping: 20,
             }}
           >
-            {readTime} min read
+            {readTime} {t('minRead')}
           </MotionText>
         </HStack>
         <MotionCircle

@@ -29,7 +29,6 @@ import {
   searchArticles,
   setSearchTerm,
 } from '../../redux/articleSlice'
-import i18n from 'i18next'
 import { useTranslation } from 'react-i18next'
 
 // Lazy load components
@@ -39,7 +38,7 @@ const GetStarted = React.lazy(() =>
 )
 
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
-  const { t: formatDateTranslate } = useTranslation('formatDate')
+  const { t, i18n } = useTranslation(['Timeline', 'formatDate'])
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated, user } = useSelector(state => state.auth)
@@ -93,21 +92,21 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
         navigate(`/home/${category.toLowerCase()}`)
       }
     },
-    [dispatchRedux, navigate],
+    [dispatchRedux, navigate, setLoad, setHasMoreItems],
   )
 
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => {
       if (!swipeDisable) {
         const newIndex = (activeCategoryIndex + 1) % categories.length
-        handleActiveCategory({ category: categories[newIndex] })
+        handleActiveCategory({ category: categories[newIndex].key })
       }
     },
     onSwipedRight: () => {
       if (!swipeDisable) {
         const newIndex =
           (activeCategoryIndex - 1 + categories.length) % categories.length
-        handleActiveCategory({ category: categories[newIndex] })
+        handleActiveCategory({ category: categories[newIndex].key })
       }
     },
   })
@@ -310,12 +309,8 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
                         i18n.language === 'en' ? item?.title : item?.hindiTitle
                       }
                       image={item.imgURL || rrImage}
-                      category={item?.category}
-                      date={formatDate(
-                        item?.dateTime,
-                        formatDateTranslate,
-                        i18n.language,
-                      )}
+                      category={t(`categories.${item?.category.toLowerCase()}`)}
+                      date={formatDate(item?.dateTime, t, i18n.language)}
                       readTime={item.avgReadTime}
                       id={item._id}
                       articleData={item}
@@ -342,7 +337,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
             {isSearching && searchResults.length > 0 && (
               <Flex justifyContent="center" mt="2rem">
                 <Button onClick={() => dispatchRedux(clearSearch())}>
-                  Clear Search Results
+                  {t('buttons.clearSearch')}
                 </Button>
               </Flex>
             )}
@@ -351,7 +346,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
               searchResults.length % 10 === 0 &&
               searchResults.length !== 0 && (
                 <Flex justifyContent="center" mt="2rem">
-                  <Button onClick={handleLoadMore}>Load More</Button>
+                  <Button onClick={handleLoadMore}>
+                    {t('buttons.loadMore')}
+                  </Button>
                 </Flex>
               )}
           </Flex>
@@ -370,7 +367,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
             padding="1rem"
             textAlign="center"
           >
-            <GetStarted innerText="Login To Continue further" />
+            <GetStarted innerText={t('messages.loginToContinue')} />
           </Flex>
         </Suspense>
       )}
@@ -387,7 +384,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
           paddingTop="4rem"
           textAlign="center"
         >
-          Please Revisit this page after some time to view recommended news
+          {t('messages.revisitLater')}
         </Flex>
       )}
       {!hasMoreItems && !user?.newAccount && (
@@ -403,7 +400,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
           paddingTop="4rem"
           textAlign="center"
         >
-          No more news to show
+          {t('messages.noMoreNews')}
         </Flex>
       )}
     </Flex>

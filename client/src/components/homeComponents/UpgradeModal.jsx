@@ -12,6 +12,7 @@ import {
   Text,
   Box,
 } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
 import { motion } from 'framer-motion'
 import Lightning from '../profileComponents/RankAndSocietySubCompnents/Lightning'
@@ -23,21 +24,18 @@ import Circle from '/images/circle.webp'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUser } from '../../redux/authSlice'
 import useSound from '../../customHooks/useSound'
-// const AnimatedText = motion(Text);
 
 const UpgradeModal = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('UpgradeModal')
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
 
   const USER_IQ = user.IQ_score
-  // console.log(USER_IQ);
-  // const USER_IQ = 111;
+
   const findSocietyAndCircle = USER_IQ => {
     let SocietyOrCircle = null
-    // Iterate through CircleAndSocietyData to find the appropriate entry
     CircleAndSocietyData.forEach(entry => {
-      // Check if USER_IQ falls within the IQ range of the entry
       if (
         USER_IQ >= entry.IQ_Lower &&
         (entry.IQ_Upper === null || USER_IQ < entry.IQ_Upper)
@@ -45,15 +43,11 @@ const UpgradeModal = ({ isOpen, onClose }) => {
         SocietyOrCircle = entry
       }
     })
-
     return SocietyOrCircle
   }
 
-  // Determine the society and circle for the current USER_IQ
   const upgradedSocietyOrCircle = findSocietyAndCircle(USER_IQ)
-  // console.log(upgradedSocietyOrCircle);
   const prevSocietyOrCircle = findSocietyAndCircle(user.prevIQScore)
-  // console.log(prevSocietyOrCircle);
 
   const isCircleUpdgraded =
     upgradedSocietyOrCircle.society === prevSocietyOrCircle.society
@@ -69,16 +63,6 @@ const UpgradeModal = ({ isOpen, onClose }) => {
     }
   }
 
-  // useEffect(() => {
-  //   if (USER_IQ <= state.prevIQScore) {
-  //     handleUpgradeMessageClose();
-  //   } else if (
-  //     prevSocietyOrCircle.society === upgradedSocietyOrCircle.society &&
-  //     prevSocietyOrCircle.circle === upgradedSocietyOrCircle.circle
-  //   ) {
-  //     handleUpgradeMessageClose();
-  //   }
-  // }, []);
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'xl' }}>
       <ModalOverlay />
@@ -97,7 +81,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                 textShadow: '0px 0px 8px rgba(255, 255, 255, 0.8)',
               }}
             >
-              Congratulations, {user.name}!
+              {t('congratulations', { userName: user.name })}
             </span>
           </ModalHeader>
         </Box>
@@ -114,7 +98,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                   fontStyle="italic"
                   fontFamily="sans-serif"
                 >
-                  Society Upgrade
+                  {t('societyUpgrade')}
                 </Text>
               </Flex>
               <Flex align="center" justify="center" mt={4}>
@@ -150,7 +134,6 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                           background: 'transparent',
                         }}
                       />
-                      {/* <Lightning /> */}
                     </Flex>
                     <Text
                       textAlign="center"
@@ -160,9 +143,9 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       textShadow="2px 2px 4px rgba(0,0,0,0.4)"
                       paddingLeft={{ base: '5.5%', md: '9.5%', xl: '0.5%' }}
                     >
-                      {/* {prevSocietyOrCircle.society} */}
-                      {prevSocietyOrCircle?.society?.split(' ')[0]}
-                      <span> Society</span>
+                      {t('society', {
+                        society: prevSocietyOrCircle?.society?.split(' ')[0],
+                      })}
                     </Text>
                   </Flex>
                   <Flex
@@ -176,18 +159,14 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       alt="Arrow"
                       boxSize="50px"
                       background={'transparent'}
-                      // mx={4}
                     />
                   </Flex>
-
                   <Flex
                     justifyContent="center"
                     alignItems="center"
                     w="100%"
                     position="relative"
                     flexDirection="column"
-                    // mt={9}
-                    // mt={-4}
                   >
                     <Flex
                       justifyContent="center"
@@ -222,8 +201,9 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       textShadow="2px 2px 4px rgba(0,0,0,0.4)"
                       paddingLeft={{ base: '5.5%', md: '9.5%', xl: '0.5%' }}
                     >
-                      {upgradedSocietyOrCircle.society.split(' ')[0]}
-                      <p>Society</p>
+                      {t('society', {
+                        society: upgradedSocietyOrCircle.society.split(' ')[0],
+                      })}
                     </Text>
                   </Flex>
                 </Flex>
@@ -241,7 +221,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                   fontStyle="italic"
                   fontFamily="sans-serif"
                 >
-                  Circle Upgrade
+                  {t('circleUpgrade')}
                 </Text>
               </Flex>
               <Flex align="center" justify="center" mt={4}>
@@ -264,39 +244,24 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                     />
                     <CircleLightning />
                     <Flex
-                      flexDirection="column"
+                      flexDirection={'column'}
                       align="center"
                       justify="center"
-                      position="absolute"
-                      top="54%"
-                      left="50%"
-                      transform="translate(-50%, -50%)"
+                      position={'absolute'}
+                      top={'50%'}
+                      transform={'translateY(-50%)'}
                     >
                       <Text
-                        align="center"
-                        justify="center"
-                        // mt={-4}
-                        color={upgradedSocietyOrCircle.textColor}
-                        textShadow="0px 2px 4px rgba(0, 0, 0, 0.5)"
-                        fontSize="md"
+                        textAlign="center"
+                        fontSize="2xl"
                         fontWeight="bold"
-                        letterSpacing="wide"
-                        fontFamily="heading"
-                      >
-                        {upgradedSocietyOrCircle?.circle?.split(' ')[0]}
-                      </Text>
-                      <Text
-                        align="center"
-                        justify="center"
-                        mt={-4}
                         color={upgradedSocietyOrCircle.textColor}
-                        textShadow="0px 2px 4px rgba(0, 0, 0, 0.5)"
-                        fontSize="md"
-                        fontWeight="bold"
-                        letterSpacing="wide"
-                        fontFamily="heading"
+                        textShadow="2px 2px 4px rgba(0,0,0,0.4)"
+                        mt={8}
                       >
-                        {upgradedSocietyOrCircle?.circle?.split(' ')[1]}
+                        {t('circle', {
+                          circle: upgradedSocietyOrCircle.circle,
+                        })}
                       </Text>
                     </Flex>
                   </Flex>
@@ -304,42 +269,46 @@ const UpgradeModal = ({ isOpen, onClose }) => {
               </Flex>
             </>
           )}
-
-          <Text
-            // mt={4}
-            fontSize="md"
-            color="#ffcab0"
-            lineHeight="1.6"
-            textAlign="center"
-            // fontStyle="italic"
+          <Flex
+            align="center"
+            justify="center"
+            mt={5}
+            flexDirection="column"
+            p={2}
           >
-            {user.societyUpgradeMessage}
-          </Text>
-          <Text
-            // mt={4}
-            m={0}
-            fontSize="13px"
-            color="gray.500"
-            textAlign="center"
-            fontStyle="italic"
-          >
-            Your journey to mastery continues...
-          </Text>
+            <Text
+              textAlign="center"
+              fontSize="lg"
+              color="white"
+              textShadow="1px 1px 2px rgba(0,0,0,0.2)"
+            >
+              {t('upgradeMessage', {
+                upgradeMessage: user.societyUpgradeMessage,
+              })}
+            </Text>
+            <Text
+              textAlign="center"
+              fontSize="md"
+              color="gray.400"
+              textShadow="1px 1px 2px rgba(0,0,0,0.2)"
+              mt={2}
+            >
+              {t('journeyContinues')}
+            </Text>
+          </Flex>
         </ModalBody>
         <ModalFooter>
-          <Button
-            colorScheme="blue"
-            // mr={3}
-            mt={-3}
-            onClick={handleUpgradeMessageClose}
-            bgGradient="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-            boxShadow="0px 0px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
-            color="#9896f1"
-            transition="all 0.3s ease-in-out"
-            animation="slowBlinking 3s infinite alternate ease-in-out"
-          >
-            Continue Your Journey..
-          </Button>
+          <Flex align="center" justify="center" width="100%">
+            <Button
+              colorScheme="purple"
+              onClick={handleUpgradeMessageClose}
+              className="blinking-button"
+              mt={3}
+              _hover={{ bg: 'purple.600' }}
+            >
+              {t('continueJourney')}
+            </Button>
+          </Flex>
         </ModalFooter>
       </ModalContent>
     </Modal>

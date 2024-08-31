@@ -10,6 +10,7 @@ import {
   Tr,
   Skeleton,
 } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components
 const LeaderBoardRow = React.lazy(() => import('./LeaderBoardRow'))
@@ -31,6 +32,8 @@ const LeaderBoardTable = ({
   PAGE_LIMIT,
   hasMore,
 }) => {
+  const { t } = useTranslation('LeaderBoardTable')
+
   // Memoize the data to avoid re-calculation
   const data = useMemo(
     () => (searchResults.length > 0 ? searchResults : leaders),
@@ -57,32 +60,32 @@ const LeaderBoardTable = ({
     <TableContainer width={'100%'} className="mainBoard" overflowX="auto">
       <Table variant={'unstyled'}>
         <TableCaption color={'white'} placement="top">
-          "Where Champions Stand Out!"
+          {t('tableCaption')}
         </TableCaption>
         <Thead>
           <Tr boxShadow={'dark-lg'} letterSpacing={'2px'}>
             <Th textAlign={'center'} bg={'green.300'} color={'white'}>
-              Rank
+              {t('rank')}
             </Th>
             {!isBaseScreen && (
               <Th textAlign={'center'} bg={'red.300'}>
-                Name
+                {t('name')}
               </Th>
             )}
             <Th textAlign={'center'} bg={'blue.300'} px={'0.5rem'}>
-              In Game Name
+              {t('inGameName')}
             </Th>
             <Th textAlign={'center'} bg={'orange.300'}>
-              IQ Scores
+              {t('iqScores')}
             </Th>
             {!isLgScreen && (
               <Th textAlign={'center'} bg={'teal.300'}>
-                Quiz Submissions
+                {t('quizSubmissions')}
               </Th>
             )}
             {!isMdScreen && (
               <Th textAlign={'center'} bg={'pink.300'}>
-                Avg. RQM Scores
+                {t('avgRQMScore')}
               </Th>
             )}
           </Tr>
