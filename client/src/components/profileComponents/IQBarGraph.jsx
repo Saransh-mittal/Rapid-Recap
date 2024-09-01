@@ -294,10 +294,11 @@ const IQBarGraph = ({
           <Tooltip label="Visibility to others">
             <Badge
               m={0}
-              position="absolute"
               top={0}
               right={0}
               colorScheme="green"
+              height={'fit-content'}
+              ml={'auto'}
             >
               {user.profilePrivacy.barGraph ? 'HIDDEN' : 'VISIBLE'}
             </Badge>
