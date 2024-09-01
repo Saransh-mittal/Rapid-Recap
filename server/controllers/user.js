@@ -37,6 +37,7 @@ const asyncHandler = require('express-async-handler')
 const { logActivity } = require('../utils/activity.utils.js')
 const { activityTypes } = require('../data/activityTypes.js')
 const Activity = require('../model/activitySchema.js')
+const { hindiConverter } = require('../utils/article.utils.js')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -1398,15 +1399,39 @@ const bookmark = async (req, res) => {
 
 const getBookmarks = async (req, res) => {
   const userId = req.user._id
+  const { lang } = req.query
   try {
     const user = await User.findById(userId).select('bookmarks').populate({
       path: 'bookmarks',
-      select: '_id title category dateTime imgURL',
+      select: '_id title category dateTime imgURL ',
     })
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }
+    const Bookmarks = user.bookmarks
+    if (lang === 'hi')
+      for (let bookmark of Bookmarks) {
+        if (
+          !bookmark.hindiTitle ||
+          !bookmark.hindiMainText ||
+          !bookmark.hindiAuthor
+        ) {
+          const response = await hindiConverter(bookmark)
+          if (!bookmark.hindiMainText) {
+            bookmark.hindiMainText = []
+            await bookmark.save()
+          }
+          bookmark.hindiTitle = response.hindiTitle
+
+          for (let key in response.hindiMainText) {
+            if (!response.hindiMainText[key]) continue
+            bookmark.hindiMainText.push(response.hindiMainText[key])
+          }
+          bookmark.hindiAuthor = response.hindiAuthor
+          await bookmark.save()
+        }
+      }
 
     const bookmarks = user.bookmarks.map(bookmark => {
       return {
@@ -1415,6 +1440,8 @@ const getBookmarks = async (req, res) => {
         category: bookmark.category,
         date: formatDate(bookmark.dateTime),
         image: bookmark.imgURL[0],
+        hindiTitle: bookmark.hindiTitle,
+        dateTime: bookmark.dateTime,
         dateTimestamp: new Date(bookmark.dateTime).getTime(),
       }
     })

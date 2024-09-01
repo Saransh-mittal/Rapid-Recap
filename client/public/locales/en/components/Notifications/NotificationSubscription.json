@@ -1,0 +1,8 @@
+{
+  "enableNotifications": "Enable Notifications for Rapid Recap",
+  "browserSupport": "Browser Supports Notifications",
+  "browserEnabled": "Browser Notifications Enabled",
+  "sitePermission": "Site Permission Granted",
+  "backendSubscribed": "Subscribed to Backend",
+  "checking": "(Checking...)"
+}

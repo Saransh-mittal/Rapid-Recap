@@ -1,0 +1,23 @@
+{
+  "StreakNoteMessage": {
+    "broken": "आपकी {{streakCount}}-दिन की स्ट्रीक समाप्त हो गई है",
+    "current": "वर्तमान स्ट्रीक: {{streakCount}} दिन",
+    "timeRemaining": "अपनी स्ट्रीक को पुनर्जीवित करने का समय शेष:",
+    "toRevive": "पुनर्जीवित करने के लिए",
+    "completeQuizzes": "अपनी स्ट्रीक को पुनर्जीवित करने के लिए {{remainingQuizzes}} और {{quizText}} पूरा करें!",
+    "actions": {
+      "startNew": "नई स्ट्रीक शुरू करें",
+      "takeQuiz": "क्विज़ लें",
+      "viewStreak": "स्ट्रीक देखें"
+    },
+    "title": "स्ट्रीक {{status}}",
+    "status": {
+      "broken": "टूटा",
+      "revival": "पुनर्जीवन",
+      "revived": "पुनर्जीवित",
+      "active": "सक्रिय"
+    }
+  },
+  "quiz": "क्विज़",
+  "quizzes": "क्विज़"
+}

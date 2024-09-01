@@ -1,0 +1,11 @@
+{
+  "circleDetails": "Circle Details",
+  "previousPage": "Previous Page",
+  "nextPage": "Next Page",
+  "youAreHere": "You are here!",
+  "loading": "Loading...",
+  "circleImage": "Circle Image",
+  "circle": "Circle",
+  "iqRange": "IQ Range: {{lower}} - {{upper}}",
+  "above": "Above"
+}

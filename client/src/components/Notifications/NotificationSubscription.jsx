@@ -14,8 +14,10 @@ import {
 } from '@chakra-ui/react'
 import CheckCircle from '../../assets/svg/CheckCircle'
 import AlertCircle from '../../assets/svg/AlertCircle'
+import { useTranslation } from 'react-i18next'
 
 const NotificationSubscription = () => {
+  const { t } = useTranslation('NotificationSubscription') // Use the translation hook
   const [subscription, setSubscription] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showInstructions, setShowInstructions] = useState(false)
@@ -319,26 +321,26 @@ const NotificationSubscription = () => {
         />
         <AlertIcon boxSize="40px" mr={0} />
         <AlertTitle mt={4} mb={3} fontSize="lg">
-          Enable Notifications for Rapid Recap
+          {t('enableNotifications')}
         </AlertTitle>
         <AlertDescription maxWidth="sm">
           <VStack spacing={3} align="stretch">
             <List spacing={3} p={0}>
               <StepStatus
                 step={steps.browserSupport}
-                label="Browser Supports Notifications"
+                label={t('browserSupport')}
               />
               <StepStatus
                 step={steps.browserEnabled}
-                label="Browser Notifications Enabled"
+                label={t('browserEnabled')}
               />
               <StepStatus
                 step={steps.sitePermission}
-                label="Site Permission Granted"
+                label={t('sitePermission')}
               />
               <StepStatus
                 step={steps.backendSubscribed}
-                label="Subscribed to Backend"
+                label={t('backendSubscribed')}
               />
             </List>
           </VStack>

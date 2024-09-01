@@ -22,7 +22,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion } from 'framer-motion'
 import { useSwipeable } from 'react-swipeable'
 import Brains from '../../../assets/Brains'
-// Lazy load components and data
+import { useTranslation } from 'react-i18next'
+
 const NameLightning = React.lazy(() =>
   import('../../miscellaneous/NameLightning'),
 )
@@ -35,58 +36,78 @@ const BrainModal = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const { t: BrainsTranslate } = useTranslation('Brains')
 
-  // Preload images and start auto-navigation
+  const brainData = useMemo(() => Brains(BrainsTranslate), [BrainsTranslate])
+
+  const currentBrain = useMemo(
+    () =>
+      brainData && brainData.length > 0 ? brainData[currentPage - 1] : null,
+    [brainData, currentPage],
+  )
+
+  const currentSocietyIndex = useMemo(
+    () =>
+      currentUserSociety && brainData && brainData.length > 0
+        ? brainData.findIndex(
+            brain =>
+              brain.society.toLowerCase() === currentUserSociety.toLowerCase(),
+          )
+        : -1,
+    [currentUserSociety, brainData],
+  )
+
   useEffect(() => {
-    if (!isOpen || !currentUserSociety || Brains.length === 0) return
-    const societyIndex = Brains.findIndex(
-      brain => brain.society.toLowerCase() === currentUserSociety.toLowerCase(),
-    )
+    if (!isOpen || !currentUserSociety || !brainData || brainData.length === 0)
+      return
+
+    const societyIndex = currentSocietyIndex
+    if (societyIndex === -1) return
+
+    setCurrentPage(1) // Reset to the first page when modal opens
 
     const intervalId = setInterval(() => {
       setCurrentPage(prevPage => {
-        if (prevPage === societyIndex + 1) {
+        if (prevPage >= societyIndex + 1) {
           clearInterval(intervalId)
-          return prevPage
+          return societyIndex + 1
         } else {
           return prevPage + 1
         }
       })
     }, 200)
-    return () => {
-      clearInterval(intervalId)
-    }
-  }, [isOpen, currentUserSociety, Brains])
+
+    return () => clearInterval(intervalId)
+  }, [isOpen, currentUserSociety, brainData, currentSocietyIndex])
 
   useEffect(() => {
-    Brains.forEach(brain => {
-      const img = new Image()
-      img.src = brain.image
+    if (!brainData) return
+    brainData.forEach(brain => {
+      if (brain && brain.image) {
+        const img = new Image()
+        img.src = brain.image
+      }
     })
-  }, [])
+  }, [brainData])
 
   const handlePreviousPage = useCallback(() => {
-    setCurrentPage(prevPage => (prevPage === 1 ? Brains.length : prevPage - 1))
-  }, [])
+    setCurrentPage(prevPage =>
+      prevPage === 1 ? (brainData ? brainData.length : 1) : prevPage - 1,
+    )
+  }, [brainData])
 
   const handleNextPage = useCallback(() => {
-    setCurrentPage(prevPage => (prevPage === Brains.length ? 1 : prevPage + 1))
-  }, [])
+    setCurrentPage(prevPage =>
+      prevPage === (brainData ? brainData.length : 1) ? 1 : prevPage + 1,
+    )
+  }, [brainData])
 
-  if (!isOpen || !Brains[currentPage - 1]) return null
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: handleNextPage,
+    onSwipedRight: handlePreviousPage,
+  })
 
-  const currentBrain = useMemo(() => Brains[currentPage - 1], [currentPage])
-
-  const currentSocietyIndex = useMemo(
-    () =>
-      currentUserSociety &&
-      Brains.length > 0 &&
-      Brains.findIndex(
-        brain =>
-          brain.society.toLowerCase() === currentUserSociety.toLowerCase(),
-      ),
-    [currentUserSociety, Brains],
-  )
+  if (!isOpen) return null
 
   return (
     <Modal
@@ -104,10 +125,7 @@ const BrainModal = ({
           color: 'white',
           borderRadius: '10px',
         }}
-        {...useSwipeable({
-          onSwipedLeft: handleNextPage,
-          onSwipedRight: handlePreviousPage,
-        })}
+        {...swipeHandlers}
       >
         <ModalHeader
           style={{
@@ -138,7 +156,7 @@ const BrainModal = ({
               icon={<ChevronLeftIcon />}
               aria-label="Previous Page"
               onClick={handlePreviousPage}
-              isDisabled={currentPage === 1}
+              isDisabled={!brainData || brainData.length <= 1}
               _hover={{
                 bgGradient: 'linear(to-r, #7928CA, #FF0080)',
                 color: 'white',
@@ -150,7 +168,7 @@ const BrainModal = ({
               icon={<ChevronRightIcon />}
               aria-label="Next Page"
               onClick={handleNextPage}
-              isDisabled={currentPage === 5}
+              isDisabled={!brainData || brainData.length <= 1}
               _hover={{
                 bgGradient: 'linear(to-r, #7928CA, #FF0080)',
                 color: 'white',
@@ -164,98 +182,98 @@ const BrainModal = ({
               textAlign="center"
               color="yellow"
               fontWeight="bold"
-              marginTop={'-10%'}
+              marginBottom="10px"
               fontSize="24px"
             >
               <span style={{ fontSize: '36px', marginRight: '5px' }}>📍</span>
               You are here!
             </Text>
           )}
-          <Box textAlign="center">
-            <Flex
-              justifyContent={'center'}
-              alignItems={'center'}
-              w={'30%'}
-              position="relative"
-              mx={'auto'}
-            >
-              <Heading
-                as="h4"
-                size={'sm'}
-                color={currentBrain.textColor}
-                marginTop={'5px'}
+          {currentBrain && (
+            <Box textAlign="center">
+              <Flex
+                justifyContent={'center'}
+                alignItems={'center'}
+                w={'30%'}
+                position="relative"
+                mx={'auto'}
               >
-                {currentBrain.society} Society
-              </Heading>
-              <Suspense fallback={<div>Loading...</div>}>
-                <NameLightning
-                  boxShadow={currentBrain.boxShadow}
-                  MAX_IQ={currentBrain.IQ_Lower}
-                />
-              </Suspense>
-            </Flex>
+                <Heading
+                  as="h4"
+                  size={'sm'}
+                  color={currentBrain.textColor}
+                  marginTop={'5px'}
+                >
+                  {currentBrain.society} Society
+                </Heading>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <NameLightning
+                    boxShadow={currentBrain.boxShadow}
+                    MAX_IQ={currentBrain.IQ_Lower}
+                  />
+                </Suspense>
+              </Flex>
 
-            <Text mb={2} color={currentBrain.textColor} mt={4}>
-              IQ Range: {currentBrain.IQ_Lower} -{' '}
-              {currentBrain.IQ_Upper || 'Above'}
-            </Text>
-            <motion.img
-              src={currentBrain.image}
-              alt={currentBrain.society}
-              style={{
-                width: '140px',
-                height: '140px',
-                background: 'transparent',
-                display: 'block',
-                margin: '0 auto',
-                filter: 'drop-shadow(0 0 0.75rem #fff)',
-                transition: 'opacity 0.3s ease',
-                opacity: imageLoaded ? 1 : 0,
-              }}
-              onLoad={() => setImageLoaded(true)}
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-            />
-            <div style={{ textAlign: 'left', color: currentBrain.textColor }}>
-              {currentBrain.BrainInfo.split('.').map((point, index) => {
-                const lines = point.trim().split('\n')
-                return lines.map(
-                  (line, lineIndex) =>
-                    line.trim() && (
-                      <div
-                        style={{ flexDirection: 'row !important' }}
-                        key={lineIndex}
-                      >
-                        <p style={{ padding: '0', margin: '0.2rem' }}></p>
-
-                        <span
-                          key={index + '-' + lineIndex}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '5px',
-                            borderRadius: '5px',
-                            fontStyle: 'italic',
-                          }}
+              <Text mb={2} color={currentBrain.textColor} mt={4}>
+                IQ Range: {currentBrain.IQ_Lower} -{' '}
+                {currentBrain.IQ_Upper || 'Above'}
+              </Text>
+              <motion.img
+                src={currentBrain.image}
+                alt={currentBrain.society}
+                style={{
+                  width: '140px',
+                  height: '140px',
+                  background: 'transparent',
+                  display: 'block',
+                  margin: '0 auto',
+                  filter: 'drop-shadow(0 0 0.75rem #fff)',
+                  transition: 'opacity 0.3s ease',
+                  opacity: imageLoaded ? 1 : 0,
+                }}
+                onLoad={() => setImageLoaded(true)}
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                }}
+              />
+              <div style={{ textAlign: 'left', color: currentBrain.textColor }}>
+                {currentBrain.BrainInfo.split('।').map((point, index) => {
+                  const lines = point.trim().split('\n')
+                  return lines.map(
+                    (line, lineIndex) =>
+                      line.trim() && (
+                        <div
+                          style={{ flexDirection: 'row !important' }}
+                          key={`${index}-${lineIndex}`}
                         >
-                          ➤ {line}
-                          {lineIndex === lines.length - 1 ? '.' : <br />}
-                        </span>
-                      </div>
-                    ),
-                )
-              })}
-              <br />
-            </div>
-          </Box>
+                          <p style={{ padding: '0', margin: '0.2rem' }}></p>
+                          <span
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              padding: '5px',
+                              borderRadius: '5px',
+                              fontStyle: 'italic',
+                            }}
+                          >
+                            ➤ {line}
+                            {lineIndex === lines.length - 1 ? '.' : <br />}
+                          </span>
+                        </div>
+                      ),
+                  )
+                })}
+                <br />
+              </div>
+            </Box>
+          )}
         </ModalBody>
       </ModalContent>
     </Modal>
   )
 }
 
-export default React.memo(BrainModal)
+export default BrainModal

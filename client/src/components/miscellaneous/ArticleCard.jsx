@@ -9,6 +9,8 @@ import {
   Flex,
 } from '@chakra-ui/react'
 import { CloseIcon } from '@chakra-ui/icons'
+import { useTranslation } from 'react-i18next'
+import { formatDate } from '../../utils/helper.utils'
 
 const ArticleCard = ({
   article,
@@ -21,7 +23,9 @@ const ArticleCard = ({
   cancelHoverEffect,
   showShareButton = false,
   isMobileListView = false,
+  lang,
 }) => {
+  const { t: TimelineTranslate } = useTranslation('Timeline')
   const CardContent = () => (
     <Flex flexDirection={'column'} mr={isMobileListView ? 8 : 0}>
       <Heading
@@ -29,7 +33,7 @@ const ArticleCard = ({
         mb="10px"
         color="#ffffff"
       >
-        {article.title}
+        {lang === 'en' ? article.title : article.hindiTitle}
       </Heading>
       <Flex>
         <Text
@@ -42,12 +46,13 @@ const ArticleCard = ({
           fontSize="14px"
           mb="8px"
         >
-          {article.category}
+          {TimelineTranslate(`categories.${article?.category.toLowerCase()}`)}
         </Text>
       </Flex>
 
       <Text color="#a199b0" fontSize="14px">
-        {article.date || new Date(article.createdAt).toLocaleDateString()}
+        {/* {article.date || new Date(article.createdAt).toLocaleDateString()} */}
+        {formatDate(article?.dateTime, TimelineTranslate, lang)}
       </Text>
     </Flex>
   )

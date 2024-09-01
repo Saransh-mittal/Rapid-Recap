@@ -17,11 +17,13 @@ import {
   SkeletonCircle,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load the SearchBar component
 const SearchBar = React.lazy(() => import('../leaderBoardComponents/SearchBar'))
 
 const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
+  const { t } = useTranslation('UserSearchDrawer')
   const [searchResults, setSearchResults] = useState([])
   const [searchLoad, setSearchLoad] = useState(false)
   const toast = useToast()
@@ -178,7 +180,9 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
       <DrawerOverlay />
       <DrawerContent bgColor="#0f0d15" bgImage={bg}>
         <DrawerCloseButton color={textColor} />
-        <DrawerHeader color={textColor}>Search Users</DrawerHeader>
+        <DrawerHeader color={textColor}>
+          {t('UserSearchDrawer.searchUsers')}
+        </DrawerHeader>
 
         <DrawerBody>
           <Suspense fallback={SkeletonLoader}>

@@ -18,6 +18,7 @@ import {
 } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { useSwipeable } from 'react-swipeable'
+import { useTranslation } from 'react-i18next' // Import the useTranslation hook
 import Circles from '../../../assets/Circles'
 
 // Lazy load the circle image
@@ -29,6 +30,7 @@ const CircleModal = ({
   currentUserCircle,
   setShowCircleModal,
 }) => {
+  const { t } = useTranslation('CircleModal') // Initialize translation
   const [currentPage, setCurrentPage] = useState(1)
   const [glowAnimation, setGlowAnimation] = useState(false)
 
@@ -123,7 +125,7 @@ const CircleModal = ({
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
           }}
         >
-          Circle Details
+          {t('circleDetails')} {/* Translated Text */}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
@@ -134,7 +136,7 @@ const CircleModal = ({
           >
             <IconButton
               icon={<ChevronLeftIcon />}
-              aria-label="Previous Page"
+              aria-label={t('previousPage')}
               onClick={handlePreviousPage}
               isDisabled={currentPage === 1}
               opacity={currentPage === 1 ? 0.5 : 1}
@@ -147,7 +149,7 @@ const CircleModal = ({
             />
             <IconButton
               icon={<ChevronRightIcon />}
-              aria-label="Next Page"
+              aria-label={t('nextPage')}
               onClick={handleNextPage}
               isDisabled={currentPage === 7}
               opacity={currentPage === 7 ? 0.5 : 1}
@@ -174,7 +176,7 @@ const CircleModal = ({
               marginBottom={0}
             >
               <span style={{ fontSize: '36px', marginRight: '5px' }}>📍</span>
-              You are here!
+              {t('youAreHere')} {/* Translated Text */}
             </Text>
           )}
           {currentCircle && (
@@ -189,7 +191,7 @@ const CircleModal = ({
                 fallback={
                   <img
                     src={circleImg}
-                    alt="Loading..."
+                    alt={t('loading')}
                     style={{
                       width: '340px',
                       height: '340px',
@@ -200,7 +202,7 @@ const CircleModal = ({
               >
                 <img
                   src={circleImg}
-                  alt={'circle img'}
+                  alt={t('circleImage')}
                   style={{
                     width: '340px',
                     height: '340px',
@@ -237,7 +239,7 @@ const CircleModal = ({
                   mb={2}
                   fontSize="lg"
                 >
-                  Circle
+                  {t('circle')}
                 </Text>
                 <Text
                   mt={-2}
@@ -246,8 +248,10 @@ const CircleModal = ({
                   color={currentCircle.textColor}
                   fontSize="1rem"
                 >
-                  IQ Range: {currentCircle.IQ_Lower} -{' '}
-                  {currentCircle.IQ_Upper || 'Above'}
+                  {t('iqRange', {
+                    lower: currentCircle.IQ_Lower,
+                    upper: currentCircle.IQ_Upper || t('above'),
+                  })}
                 </Text>
               </div>
             </div>

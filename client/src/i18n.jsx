@@ -77,7 +77,32 @@ const namespaces = {
     'milestones',
     'StreakNoteMessage',
     'XPAwardNoteMessage',
+    'DifficultyLegend',
   ],
+  Notifications: ['NotificationSubscription'],
+  streakComponents: ['DailyStreakModal'],
+  profileComponents: [
+    'Bookmarks',
+    'EditProfileModal',
+    'IQBarGraph',
+    'IQLineGraph',
+    'LeftProfileBox',
+    'ProfileButton',
+    'ProfileDropDownMenu',
+    'ProfileExperienceLevel',
+    'RankAndSociety',
+    'SeasonModal',
+    'SeasonSelectorModal',
+    'SolvedQuizzes',
+    'SoundSettings',
+    'ToggleProfileVisibility',
+    'BrainModal',
+    'CircleModal',
+    'SolvedQuizHistory',
+    'FriendItem',
+    'FriendRequestItem',
+  ],
+  assets: ['Circles', 'Brains'],
 }
 
 i18n
@@ -116,6 +141,14 @@ i18n
             return `/locales/${lng}/components/leaderBoardComponents/${namespace}.json`
           case 'miscellaneous':
             return `/locales/${lng}/components/miscellaneous/${namespace}.json`
+          case 'Notifications':
+            return `/locales/${lng}/components/Notifications/${namespace}.json`
+          case 'streakComponents':
+            return `/locales/${lng}/components/streakComponents/${namespace}.json`
+          case 'profileComponents':
+            return `/locales/${lng}/components/profileComponents/${namespace}.json`
+          case 'assets':
+            return `/locales/${lng}/assets/${namespace}.json`
           case 'categories':
             return `/locales/${lng}/categories/${namespace}.json`
           default:

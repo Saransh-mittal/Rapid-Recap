@@ -1,0 +1,12 @@
+{
+  "milestoneAchieved": "Milestone Achieved!",
+  "xpSourceCompleted": "{{xpSource}} Completed",
+  "xpAwarded": "+{{xpAwarded}} XP",
+  "milestoneBonus": "{{milestoneName}} Milestone Bonus",
+  "milestoneXP": "+{{xp}} XP",
+  "milestoneContent": "Milestone Content",
+  "totalXP": "Total: +{{xp}} XP",
+  "majorAchievementUnlocked": "Major Achievement Unlocked!",
+  "achievementUnlocked": "Achievement Unlocked",
+  "viewExperience": "View Experience"
+}
