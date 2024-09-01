@@ -831,47 +831,60 @@ const expectedIQScore = async (req, res) => {
 }
 
 const solvedQuizHistory = async (req, res) => {
-  //const userId = req.user._id;
   const { inGameName } = req.query
-  const { page = 1, pageSize = 50 } = req.query
+  const page = parseInt(req.query.page) || 1
+  const pageSize = 14
+
   try {
     const user = await User.findOne({ inGameName })
     if (!user) {
       throw new Error('User not found')
     }
+
+    const totalAttempts = await QuizAttempt.countDocuments({ user: user._id })
+    const totalPages = Math.ceil(totalAttempts / pageSize)
+
     const quizAttempts = await QuizAttempt.find({ user: user._id })
       .populate({
         path: 'article',
       })
-      .sort({ createdAt: -1 }) // Sort by createdAt field in descending order (latest first)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * pageSize)
       .limit(pageSize)
-    const history = []
-    quizAttempts.forEach(attempt => {
-      const { article, RQM_score, userPercentile, articleDifficulty } = attempt
-      if (
-        !article ||
-        isNaN(RQM_score) ||
-        isNaN(userPercentile) ||
-        isNaN(articleDifficulty)
-      )
-        return
-      const { title } = article
-      let diff = ''
-      if (articleDifficulty < 0.5) diff = 'Easy'
-      else if (articleDifficulty < 0.7) diff = 'Medium'
-      else diff = 'Hard'
 
-      history.push({
-        newsArticle: article,
-        _id: attempt._id,
-        article: article._id,
-        title,
-        RQM_score,
-        userPercentile,
-        articleDifficulty: diff,
+    const history = quizAttempts
+      .map(attempt => {
+        const { article, RQM_score, userPercentile, articleDifficulty } =
+          attempt
+        if (
+          !article ||
+          isNaN(RQM_score) ||
+          isNaN(userPercentile) ||
+          isNaN(articleDifficulty)
+        )
+          return null
+
+        const { title } = article
+        let diff =
+          articleDifficulty < 0.5
+            ? 'Easy'
+            : articleDifficulty < 0.7
+            ? 'Medium'
+            : 'Hard'
+
+        return {
+          newsArticle: article,
+          _id: attempt._id,
+          article: article._id,
+          title,
+          RQM_score,
+          userPercentile,
+          articleDifficulty: diff,
+        }
       })
-    })
-    res.status(200).json({ history })
+      .filter(Boolean)
+
+    res.status(200).json({ history, currentPage: page, totalPages })
   } catch (error) {
     console.error('Error in fetching solved quiz history:', error)
     res.status(500).json({ error: 'Internal Server Error' })
