@@ -1,13 +1,11 @@
 import { Avatar, Flex, Box, Icon } from '@chakra-ui/react'
-import { BsLock } from 'react-icons/bs'
 import React, { useState, useMemo, useCallback, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import { NavLink } from 'react-router-dom'
-import NoteMessage from '../miscellaneous/NoteMessage'
-import SecureYourProgress from '../miscellaneous/SecureYourProgress'
 import { addNoteMessage } from '../../redux/appSlice'
+import { LockIcon } from '@chakra-ui/icons'
 
 const Inbox = React.lazy(() =>
   import('../Header-Footer/navbarComponents/Inbox'),
@@ -204,7 +202,7 @@ const ProfileDropDownMenu = ({
                     width={'20px'}
                     height={'20px'}
                   />
-                  <Icon as={BsLock} color={'white'} ml={2} />
+                  <Icon as={LockIcon} color={'white'} ml={2} />
                 </Flex>
               ) : (
                 <Flex

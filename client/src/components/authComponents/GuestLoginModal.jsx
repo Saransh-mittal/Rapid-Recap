@@ -21,8 +21,6 @@ import {
   ModalCloseButton,
   InputGroup,
   InputRightElement,
-  useDisclosure,
-  Spinner,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CopyIcon, ViewIcon, ViewOffIcon } from '@chakra-ui/icons'
@@ -33,11 +31,10 @@ import CalendarSVG from '../../assets/svg/CalenderSVG'
 import ArrowRightSVG from '../../assets/svg/ArrowRightSVG'
 import CheckCircle from '../../assets/svg/CheckCircle'
 import UserSVG from '../../assets/svg/UserSVG'
-import Button from '../miscellaneous/ButtonComponent'
 import { useNavigate } from 'react-router-dom'
 import { setExportData, setIsRegisterOpen } from '../../redux/appSlice'
 import { useDispatch } from 'react-redux'
-
+const Button = React.lazy(() => import('../miscellaneous/ButtonComponent'))
 const MotionBox = motion(Box)
 
 const GradientText = ({ children, gradient }) => (
@@ -345,48 +342,56 @@ const GuestLoginModal = ({
 
               <ModalFooter bg="gray.800" justifyContent={'center'}>
                 <HStack spacing={4} w={'100%'} justifyContent={'center'}>
-                  <Button
-                    colorScheme="blue"
-                    _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
-                    transition="all 0.2s"
-                    buttonW={'175px'}
-                    onClick={() => {
-                      dispatchRedux(setIsRegisterOpen(true))
-                      dispatchRedux(setExportData(guestId))
-                      onClose()
-                    }}
-                  >
-                    <Flex>
+                  <Suspense fallback={null}>
+                    <Button
+                      colorScheme="blue"
+                      _hover={{
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'md',
+                      }}
+                      transition="all 0.2s"
+                      buttonW={'175px'}
+                      onClick={() => {
+                        dispatchRedux(setIsRegisterOpen(true))
+                        dispatchRedux(setExportData(guestId))
+                        onClose()
+                      }}
+                    >
                       <Flex>
-                        <Text fontSize={{ base: '2xs', md: 'xs' }}>
-                          Secure Your Progress
-                        </Text>
+                        <Flex>
+                          <Text fontSize={{ base: '2xs', md: 'xs' }}>
+                            Secure Your Progress
+                          </Text>
+                        </Flex>
+                        <Flex alignItems={'center'}>
+                          <ArrowRightSVG
+                            height={'15px'}
+                            width={'15px'}
+                            fill={'white'}
+                          />
+                        </Flex>
                       </Flex>
-                      <Flex alignItems={'center'}>
-                        <ArrowRightSVG
-                          height={'15px'}
-                          width={'15px'}
-                          fill={'white'}
-                        />
-                      </Flex>
-                    </Flex>
-                  </Button>
-                  <Button
-                    colorScheme="green"
-                    _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
-                    transition="all 0.2s"
-                    onClick={() => {
-                      onClose()
-                      navigate(`/profile/${guestName}`)
-                    }}
-                  >
-                    <Text fontSize={{ base: '2xs', md: 'xs' }}>
-                      View Profile
-                    </Text>
-                  </Button>
-                  <Button onClick={onClose}>
-                    <Text fontSize={{ base: '2xs', md: 'xs' }}>Close</Text>
-                  </Button>
+                    </Button>
+                    <Button
+                      colorScheme="green"
+                      _hover={{
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'md',
+                      }}
+                      transition="all 0.2s"
+                      onClick={() => {
+                        onClose()
+                        navigate(`/profile/${guestName}`)
+                      }}
+                    >
+                      <Text fontSize={{ base: '2xs', md: 'xs' }}>
+                        View Profile
+                      </Text>
+                    </Button>
+                    <Button onClick={onClose}>
+                      <Text fontSize={{ base: '2xs', md: 'xs' }}>Close</Text>
+                    </Button>
+                  </Suspense>
                 </HStack>
               </ModalFooter>
             </ModalContent>

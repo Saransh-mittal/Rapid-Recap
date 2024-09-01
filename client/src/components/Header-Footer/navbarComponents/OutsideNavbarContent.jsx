@@ -9,7 +9,7 @@ import {
   useDisclosure,
   useMediaQuery,
 } from '@chakra-ui/react'
-import { HamburgerIcon, SearchIcon } from '@chakra-ui/icons'
+import { HamburgerIcon, LockIcon, SearchIcon } from '@chakra-ui/icons'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../../customHooks/useSound'
@@ -21,9 +21,6 @@ import { motion } from 'framer-motion'
 import ImageShimmerLoader from '../../miscellaneous/shimmerLoaders/ImageShimmerLoader'
 import SVGShimmerLoader from '../../miscellaneous/shimmerLoaders/SVGShimmerLoader'
 import IconShimmerLoader from '../../miscellaneous/shimmerLoaders/IconShimmerLoader'
-import { BsLock } from 'react-icons/bs'
-import NoteMessage from '../../miscellaneous/NoteMessage'
-import SecureYourProgress from '../../miscellaneous/SecureYourProgress'
 import { addNoteMessage, setShowXpLevelModal } from '../../../redux/appSlice'
 
 const StreakFire = React.lazy(() => import('./StreakFire'))
@@ -449,7 +446,7 @@ const MessengerComponent = ({ notification, navigate, isGuest, playClick }) => {
       {isGuest ? (
         <>
           <FaMessenger width="23px" height="23px" fill="grey" />
-          <Icon as={BsLock} position={'absolute'} top={'14%'} left={'17%'} />
+          <Icon as={LockIcon} position={'absolute'} top={'14%'} left={'17%'} />
         </>
       ) : (
         <FaMessenger width="23px" height="23px" />

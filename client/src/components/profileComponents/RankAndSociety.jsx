@@ -6,28 +6,20 @@ import React, {
   lazy,
   Suspense,
 } from 'react'
-import {
-  Flex,
-  Image,
-  Tooltip,
-  Text,
-  Tag,
-  Spinner,
-  Badge,
-} from '@chakra-ui/react'
-import { motion } from 'framer-motion'
-import circle from '/images/circle.webp'
-import Arrow from '/images/arrow.webp'
+import { Flex, Image, Tooltip, Text, Spinner, Badge } from '@chakra-ui/react'
+
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
 import { useDispatch, useSelector } from 'react-redux'
 import Lock from '/images/lock.webp'
 import { addNoteMessage } from '../../redux/appSlice'
 
 // Lazy load components
-const Lightning = lazy(() => import('./RankAndSocietySubCompnents/Lightning'))
 const BrainModal = lazy(() => import('./RankAndSocietySubCompnents/BrainModal'))
 const CircleModal = lazy(() =>
   import('./RankAndSocietySubCompnents/CircleModal'),
+)
+const EnhancedSocietyCircle = lazy(() =>
+  import('./RankAndSocietySubCompnents/EnhancedSocietyCircle'),
 )
 
 const RankAndSociety = ({
@@ -47,12 +39,15 @@ const RankAndSociety = ({
 
   // Memoize the circleAndSociety calculation
   const circleAndSociety = useMemo(() => {
-    const userCircleAndSociety = CircleAndSocietyData.filter(
+    const userCircleAndSociety = CircleAndSocietyData.find(
       data =>
         data.IQ_Lower <= USER_IQ &&
         (data.IQ_Upper ? data.IQ_Upper > USER_IQ : true),
     )
-    return userCircleAndSociety[0] || {}
+    return (
+      userCircleAndSociety ||
+      CircleAndSocietyData[CircleAndSocietyData.length - 1]
+    )
   }, [USER_IQ])
 
   useEffect(() => {
@@ -61,18 +56,22 @@ const RankAndSociety = ({
 
   // Memoized event handlers
   const handleBrainClick = useCallback(() => {
-    setShowBrainModal(true)
-    setIsModalOpen(true)
-  }, [])
+    if (!isDisabled) {
+      setShowBrainModal(true)
+      setIsModalOpen(true)
+    }
+  }, [isDisabled])
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false)
   }, [])
 
   const handleCircleClick = useCallback(() => {
-    setShowCircleModal(true)
-    setIsCircleModalOpen(true)
-  }, [])
+    if (!isDisabled) {
+      setShowCircleModal(true)
+      setIsCircleModalOpen(true)
+    }
+  }, [isDisabled])
 
   const handleCloseCircleModal = useCallback(() => {
     setIsCircleModalOpen(false)
@@ -124,9 +123,9 @@ const RankAndSociety = ({
       h={'100%'}
       flexDirection="column"
       position="relative"
-      p={5}
       justifyContent={'center'}
       alignItems={'center'}
+      px={5}
     >
       {privateSociety ? (
         <Flex
@@ -154,228 +153,28 @@ const RankAndSociety = ({
         <Spinner />
       ) : (
         <>
-          <Flex flexDirection="column" width="100%" h={'100%'} m={0}>
-            <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
-              Society and Circle
-            </Text>
+          <Flex
+            flexDirection="column"
+            h={'fit-content'}
+            ml={'auto'}
+            mt={-6}
+            mb={3}
+          >
             {loginedUserProfile && (
               <Tooltip label="Visibility to others">
-                <Badge
-                  colorScheme="green"
-                  m={0}
-                  position={'absolute'}
-                  top={0}
-                  right={2}
-                >
+                <Badge colorScheme="green" m={0}>
                   {user.profilePrivacy.society ? 'HIDDEN' : 'VISIBLE'}
                 </Badge>
               </Tooltip>
             )}
           </Flex>
-          <Flex
-            mt={5}
-            flexDirection="column"
-            w="100%"
-            m={0}
-            justifyContent={'center'}
-            alignItems={'center'}
-          >
-            <Flex width="100%" justifyContent={'center'} alignItems={'center'}>
-              <motion.button
-                whileHover={!isDisabled && { scale: 1.1 }}
-                whileTap={!isDisabled && { scale: 0.9 }}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  width: '100%',
-                  height: '100%',
-                  cursor: isDisabled ? 'default' : 'pointer',
-                }}
-              >
-                <Flex
-                  justifyContent="center"
-                  alignItems="center"
-                  w="100%"
-                  position="relative"
-                  flexDirection="column"
-                  onClick={!isDisabled ? handleBrainClick : null}
-                  style={{ cursor: isDisabled ? 'default' : 'pointer' }}
-                  h={'100%'}
-                >
-                  <Flex
-                    justifyContent={'center'}
-                    alignItems={'center'}
-                    w={'100%'}
-                    height={'100%'}
-                  >
-                    <motion.img
-                      src={circleAndSociety.image}
-                      alt="Brain"
-                      style={{
-                        width: '6.5rem',
-                        height: '6.5rem',
-                        background: 'transparent',
-                      }}
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        repeatType: 'reverse',
-                      }}
-                    />
-                    <Suspense fallback={<Spinner />}>
-                      <Lightning />
-                    </Suspense>
-                  </Flex>
-
-                  <Text
-                    textAlign="center"
-                    fontSize="lg"
-                    fontWeight="bold"
-                    color="#436850"
-                    textShadow="2px 2px 4px rgba(0,0,0,0.4)"
-                    m={0}
-                    p={0}
-                  >
-                    {circleAndSociety.society}
-                  </Text>
-                </Flex>
-              </motion.button>
-              <Flex
-                width="80%"
-                alignItems="center"
-                justifyContent="center"
-                h={'100%'}
-              >
-                <Image
-                  w="4rem"
-                  h="4rem"
-                  background="transparent"
-                  mt={-10}
-                  src={Arrow}
-                />
-              </Flex>
-              <motion.button
-                whileHover={!isDisabled && { scale: 1.1 }}
-                whileTap={!isDisabled && { scale: 0.9 }}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  width: '100%',
-                  height: '100%',
-                  cursor: isDisabled ? 'default' : 'pointer',
-                }}
-              >
-                <Flex
-                  flexDirection={'column'}
-                  w="100%"
-                  h={'100%'}
-                  position="relative"
-                  onClick={!isDisabled ? handleCircleClick : null}
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  cursor={isDisabled ? 'default' : 'pointer'}
-                >
-                  <img
-                    src={circle}
-                    alt="Circle"
-                    style={{
-                      width: '8.5rem',
-                      height: '8.5rem',
-                      background: 'transparent',
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '4.5rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
-                  >
-                    {circleAndSociety.IQ_Upper != null &&
-                    circleAndSociety.IQ_Lower != 150 ? (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#9CAFAA',
-                            fontSize: '0.8rem',
-                            margin: 0,
-                          }}
-                        >
-                          {circleAndSociety.IQ_Lower}
-                        </span>
-                        <span
-                          style={{
-                            color: '#9CAFAA',
-                            fontSize: '0.8rem',
-                            margin: 0,
-                          }}
-                        >
-                          to
-                        </span>
-                        <span
-                          style={{
-                            color: '#9CAFAA',
-                            fontSize: '0.8rem',
-                            margin: 0,
-                            width: '60px',
-                          }}
-                        >
-                          {circleAndSociety.IQ_Upper} IQ
-                        </span>
-                      </div>
-                    ) : (
-                      <>
-                        <span
-                          style={{
-                            position: 'absolute',
-                            color: '#9CAFAA',
-                            fontSize: '0.8rem',
-                            top: '-1rem',
-                          }}
-                        >
-                          {circleAndSociety.IQ_Lower}+
-                        </span>
-                        <span
-                          style={{
-                            color: '#9CAFAA',
-                            fontSize: '0.8rem',
-                            margin: 0,
-                          }}
-                        >
-                          IQ
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <Text
-                    textAlign="center"
-                    fontSize="lg"
-                    fontWeight="bold"
-                    color="#436850"
-                    textShadow="2px 2px 4px rgba(0,0,0,0.4)"
-                    m={0}
-                    p={0}
-                  >
-                    {circleAndSociety.circle}
-                  </Text>
-                </Flex>
-              </motion.button>
-            </Flex>
-          </Flex>
+          <Suspense fallback={<Spinner />}>
+            <EnhancedSocietyCircle
+              societyData={circleAndSociety}
+              handleBrainClick={handleBrainClick}
+              handleCircleClick={handleCircleClick}
+            />
+          </Suspense>
         </>
       )}
       {/* Modals */}
