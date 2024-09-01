@@ -64,6 +64,8 @@ const Bookmarks = React.lazy(() =>
 
 export default function Profile() {
   const { t } = useTranslation('Profile')
+  const { t: IQBarTranslate } = useTranslation('IQBarGraph')
+  const { t: IQLineTranslate } = useTranslation('IQLineGraph')
   const { inGameName } = useParams()
   const { user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
@@ -437,7 +439,7 @@ export default function Profile() {
                       className="season-analytics"
                     >
                       <ProfileButton
-                        buttonText="Season Analytics"
+                        buttonText={t('seasonAnalytics')}
                         inGameName={inGameName}
                         stateUserInGameName={user?.inGameName}
                         Private={user?.profilePrivacy.seasonAnalytics}
@@ -484,6 +486,7 @@ export default function Profile() {
                 w={{ md: '85%', lg: '95%', base: '100%' }}
                 borderRadius="10px"
                 height="50px"
+                marginTop="12px"
               />
             }
           >
@@ -493,12 +496,36 @@ export default function Profile() {
                   w={{ md: '85%', lg: '95%', base: '100%' }}
                   borderRadius="10px"
                   height="50px"
+                  marginTop="12px"
+                />
+                <Skeleton
+                  w={{ md: '85%', lg: '95%', base: '100%' }}
+                  borderRadius="10px"
+                  height="50px"
+                  marginTop="12px"
                 />
               </>
             ) : (
               inGameName == user?.inGameName && (
                 <>
-                  <Suspense fallback={null}>
+                  <Suspense
+                    fallback={
+                      <>
+                        <Skeleton
+                          w={{ md: '85%', lg: '95%', base: '100%' }}
+                          borderRadius="10px"
+                          height="50px"
+                          marginTop="12px"
+                        />
+                        <Skeleton
+                          w={{ md: '85%', lg: '95%', base: '100%' }}
+                          borderRadius="10px"
+                          height="50px"
+                          marginTop="12px"
+                        />
+                      </>
+                    }
+                  >
                     <Flex
                       borderRadius="10px"
                       flexDirection="column"
@@ -509,7 +536,7 @@ export default function Profile() {
                       position={'relative'}
                     >
                       <ProfileButton
-                        buttonText="Sound Settings"
+                        buttonText={t('soundSettings')}
                         inGameName={inGameName}
                         stateUserInGameName={user?.inGameName}
                         Private={true}
@@ -523,35 +550,36 @@ export default function Profile() {
                         onClose={onCloseSoundSettings}
                       />
                     </Flex>
-                  </Suspense>
-                  <Flex
-                    borderRadius="10px"
-                    flexDirection="column"
-                    w={{ md: '85%', lg: '95%', base: '100%' }}
-                    height="fit-content"
-                    justifyContent={'center'}
-                    alignItems={'center'}
-                    position={'relative'}
-                    py={'8px'}
-                  >
-                    <ProfileButton
-                      buttonText="Bookmarks"
-                      inGameName={inGameName}
-                      stateUserInGameName={user?.inGameName}
-                      Private={true}
-                      hoverAnimation={hoverAnimation}
-                      onClick={onOpenBookmarks}
-                      icon={<BookmarkSVG width={'20px'} height={'20px'} />}
-                    />
 
-                    <Bookmarks
-                      isOpen={isOpenBookmarks}
-                      onClose={onCloseBookmarks}
-                      isLoading={isLoading}
-                      profile={profile}
-                      inGameName={inGameName}
-                    />
-                  </Flex>
+                    <Flex
+                      borderRadius="10px"
+                      flexDirection="column"
+                      w={{ md: '85%', lg: '95%', base: '100%' }}
+                      height="fit-content"
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      position={'relative'}
+                      py={'8px'}
+                    >
+                      <ProfileButton
+                        buttonText={t('bookmarks')}
+                        inGameName={inGameName}
+                        stateUserInGameName={user?.inGameName}
+                        Private={true}
+                        hoverAnimation={hoverAnimation}
+                        onClick={onOpenBookmarks}
+                        icon={<BookmarkSVG width={'20px'} height={'20px'} />}
+                      />
+
+                      <Bookmarks
+                        isOpen={isOpenBookmarks}
+                        onClose={onCloseBookmarks}
+                        isLoading={isLoading}
+                        profile={profile}
+                        inGameName={inGameName}
+                      />
+                    </Flex>
+                  </Suspense>
                 </>
               )
             )}
@@ -615,12 +643,14 @@ export default function Profile() {
                     privateLineGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
+                    t={IQLineTranslate}
                   />
                   <IQBarGraph
                     barGraph={profile?.barGraph}
                     privateBarGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
+                    t={IQBarTranslate}
                   />
                 </>
               )}

@@ -1,7 +1,7 @@
 {
-  "societyDetails": "Society Details",
+  "societyDetails": "Society",
   "youAreHere": "You are here!",
-  "iqRange": "IQ Range: {{lower}} - {{upper}}",
+  "iqRange": "IQ Range:",
   "loading": "Loading...",
   "previousPage": "Previous Page",
   "nextPage": "Next Page",

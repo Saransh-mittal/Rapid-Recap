@@ -32,6 +32,7 @@ const EditProfileModal = React.lazy(() => import('./EditProfileModal'))
 const NameLightning = React.lazy(() => import('../miscellaneous/NameLightning'))
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
+  const { t } = useTranslation('LeftProfileBox')
   const toast = useToast()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const { playClick } = useSound()
@@ -95,8 +96,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
 
         if (response.status === 200) {
           toast({
-            title: 'Success',
-            description: 'Profile Updated Successfully',
+            title: t('toast.successTitle'),
+            description: t('toast.successDescription'),
             status: 'success',
             duration: 9000,
             isClosable: true,
@@ -105,10 +106,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         }
       } catch (e) {
         toast({
-          title: 'Error',
-          description:
-            e?.response.data.error ||
-            'Error updating profile please try again!!',
+          title: t('toast.errorTitle'),
+          description: e?.response.data.error || t('toast.errorDescription'),
           status: 'error',
           duration: 9000,
           isClosable: true,
@@ -117,7 +116,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         console.error(e)
       }
     },
-    [dispatch, navigate, toast, user],
+    [dispatch, navigate, toast, user, t],
   )
 
   const checkCanSendRequest = useCallback(async () => {
@@ -140,8 +139,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Error checking friend request status',
+        title: t('toast.requestErrorTitle'),
+        description: t('toast.requestErrorDescription'),
         status: 'error',
         duration: 9000,
         isClosable: true,
@@ -150,7 +149,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     } finally {
       setLoading(false)
     }
-  }, [leftProfileView?._id, toast, user])
+  }, [leftProfileView?._id, toast, user, t])
 
   const sendFriendRequest = useCallback(async () => {
     setLoading(true)
@@ -162,8 +161,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       if (response.status === 200) {
         setRequestSent(true)
         toast({
-          title: 'Success',
-          description: 'Friend request sent successfully',
+          title: t('toast.requestSuccessTitle'),
+          description: t('toast.requestSuccessDescription'),
           status: 'success',
           duration: 9000,
           isClosable: true,
@@ -172,8 +171,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Error sending friend request',
+        title: t('toast.requestSendErrorTitle'),
+        description: t('toast.requestSendErrorDescription'),
         status: 'error',
         duration: 9000,
         isClosable: true,
@@ -182,7 +181,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     } finally {
       setLoading(false)
     }
-  }, [toast, user?._id, leftProfileView?._id])
+  }, [toast, user?._id, leftProfileView?._id, t])
 
   useEffect(() => {
     checkCanSendRequest()
@@ -206,7 +205,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       <Flex w={'100%'}>
         <Image
           src={profileData?.pic}
-          alt="Profile"
+          alt={t('alt.profileImage')}
           borderRadius="10%"
           width="80px"
           height="80px"
@@ -261,7 +260,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           </Heading>
 
           <Heading as="h6" fontSize={'12px'}>
-            Rank : {user?.role === 'guest' ? 'NA' : leftProfileView?.rank}
+            {t('rank')}{' '}
+            {user?.role === 'guest' ? t('na') : leftProfileView?.rank}
           </Heading>
         </Box>
         {window.location.pathname.split('/').pop() !== user?.inGameName &&
@@ -278,7 +278,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                   height={'fit-content'}
                   py={1}
                 >
-                  Friend
+                  {t('friend')}
                 </Badge>
               ) : (
                 <Flex
@@ -323,7 +323,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
               }}
               onClick={handleEditClick}
             >
-              Edit Profile
+              {t('editProfile')}
             </Button>
           </Flex>
         ) : null}

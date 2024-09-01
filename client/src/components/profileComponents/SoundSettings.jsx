@@ -19,12 +19,14 @@ import {
   Switch,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next' // Added i18n import
 import { formatSoundType } from '../../utils/helper.utils'
 import { InfoOutlineIcon } from '@chakra-ui/icons'
 
 const MotionBox = motion(Box)
 
 const SoundSettings = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('SoundSettings') // Added i18n namespace
   const dispatch = useDispatch()
   const toast = useToast()
   const soundSettings = useSelector(state => state.app.soundSettings)
@@ -34,23 +36,21 @@ const SoundSettings = ({ isOpen, onClose }) => {
   const handleInfoClick = soundType => {
     setSelectedSoundType(soundType)
   }
+
   const descriptions = {
-    [SOUND_TYPES.NOTE_MESSAGE]: 'In-app Notifications',
-    [SOUND_TYPES.MILESTONE]: 'Sounds for Milestones',
-    [SOUND_TYPES.CLICK]: 'Click Sounds',
-    [SOUND_TYPES.QUIZ_SOUNDS]: 'Quiz sound effects',
+    [SOUND_TYPES.NOTE_MESSAGE]: t('inAppNotifications'),
+    [SOUND_TYPES.MILESTONE]: t('milestoneSounds'),
+    [SOUND_TYPES.CLICK]: t('clickSounds'),
+    [SOUND_TYPES.QUIZ_SOUNDS]: t('quizSoundEffects'),
   }
 
   const detailedDescriptions = {
-    [SOUND_TYPES.NOTE_MESSAGE]:
-      'Sound notifications for in-app messages that appear from the top right, including both regular updates and milestone achievements.',
-    [SOUND_TYPES.MILESTONE]:
-      'Special sound effects that play when you achieve significant milestones or accomplishments in the app.',
-    [SOUND_TYPES.CLICK]:
-      'Audible feedback for clicks and button interactions throughout the application.',
-    [SOUND_TYPES.QUIZ_SOUNDS]:
-      'Sound effects specifically designed to enhance your quiz-taking experience.',
+    [SOUND_TYPES.NOTE_MESSAGE]: t('detailedInAppNotifications'),
+    [SOUND_TYPES.MILESTONE]: t('detailedMilestoneSounds'),
+    [SOUND_TYPES.CLICK]: t('detailedClickSounds'),
+    [SOUND_TYPES.QUIZ_SOUNDS]: t('detailedQuizSoundEffects'),
   }
+
   const handleToggle = async soundType => {
     const newSettings = {
       ...soundSettings,
@@ -62,10 +62,11 @@ const SoundSettings = ({ isOpen, onClose }) => {
       setIsLoading(true)
       await axios.post('/api/user/soundController', { sound: newSettings })
       toast({
-        title: 'Settings updated',
-        description: `${soundType} sounds ${
-          newSettings[soundType] ? 'enabled' : 'disabled'
-        }`,
+        title: t('settingsUpdated'),
+        description: t('soundToggle', {
+          soundType: descriptions[soundType],
+          status: newSettings[soundType] ? t('enabled') : t('disabled'),
+        }),
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -73,8 +74,8 @@ const SoundSettings = ({ isOpen, onClose }) => {
     } catch (error) {
       console.error('Failed to update sound settings:', error)
       toast({
-        title: 'Update failed',
-        description: 'Failed to save sound settings. Please try again.',
+        title: t('updateFailed'),
+        description: t('updateFailedDescription'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -97,7 +98,7 @@ const SoundSettings = ({ isOpen, onClose }) => {
           border="1px solid rgba(255, 255, 255, 0.18)"
         >
           <ModalHeader color="white" fontSize="2xl">
-            Sound Settings
+            {t('soundSettings')}
           </ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody w={'100%'}>
@@ -154,7 +155,7 @@ const SoundSettings = ({ isOpen, onClose }) => {
               _hover={{ bg: 'teal.800' }}
               isLoading={isLoading}
             >
-              Close
+              {t('close')}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -174,7 +175,7 @@ const SoundSettings = ({ isOpen, onClose }) => {
             color={'white'}
           >
             <ModalHeader>
-              {formatSoundType(selectedSoundType)} Sound
+              {formatSoundType(selectedSoundType)} {t('sound')}
             </ModalHeader>
             <ModalCloseButton />
             <ModalBody>{detailedDescriptions[selectedSoundType]}</ModalBody>
@@ -183,7 +184,7 @@ const SoundSettings = ({ isOpen, onClose }) => {
                 colorScheme="teal"
                 onClick={() => setSelectedSoundType(null)}
               >
-                Close
+                {t('close')}
               </Button>
             </ModalFooter>
           </ModalContent>

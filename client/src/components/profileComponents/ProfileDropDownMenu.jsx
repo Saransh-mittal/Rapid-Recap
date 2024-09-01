@@ -1,13 +1,12 @@
 import { Avatar, Flex, Box, Icon } from '@chakra-ui/react'
-import { BsLock } from 'react-icons/bs'
 import React, { useState, useMemo, useCallback, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import { NavLink } from 'react-router-dom'
-import NoteMessage from '../miscellaneous/NoteMessage'
-import SecureYourProgress from '../miscellaneous/SecureYourProgress'
 import { addNoteMessage } from '../../redux/appSlice'
+import { LockIcon } from '@chakra-ui/icons'
+import { useTranslation } from 'react-i18next'
 
 const Inbox = React.lazy(() =>
   import('../Header-Footer/navbarComponents/Inbox'),
@@ -35,6 +34,8 @@ const ProfileDropDownMenu = ({
   onOpenWiseWeb,
   display,
 }) => {
+  const { t } = useTranslation(['ProfileDropDownMenu'])
+
   const listStyle = useMemo(
     () => ({
       position: 'relative',
@@ -157,7 +158,7 @@ const ProfileDropDownMenu = ({
             top: '3rem',
           }}
         >
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>{t('loading')}</div>}>
             <motion.li
               whileHover={listHoverStyle}
               style={listStyle}
@@ -187,7 +188,7 @@ const ProfileDropDownMenu = ({
                   onClick={() =>
                     dispatch(
                       addNoteMessage({
-                        title: 'Register to make friends and build Wise Web',
+                        title: t('register_message.title'),
                         duration: 10000,
                         width: '250px',
                         actions: [
@@ -204,7 +205,7 @@ const ProfileDropDownMenu = ({
                     width={'20px'}
                     height={'20px'}
                   />
-                  <Icon as={BsLock} color={'white'} ml={2} />
+                  <Icon as={LockIcon} color={'white'} ml={2} />
                 </Flex>
               ) : (
                 <Flex
@@ -242,7 +243,7 @@ const ProfileDropDownMenu = ({
                 style={listStyle}
                 variants={itemVariants}
               >
-                View Profile
+                {t('view_profile')}
               </motion.li>
             </NavLink>
             <motion.li
@@ -254,7 +255,7 @@ const ProfileDropDownMenu = ({
                 handleLogout()
               }}
             >
-              Logout
+              {t('logout')}
             </motion.li>
           </Suspense>
         </motion.ul>

@@ -25,10 +25,12 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import useSound from '../../customHooks/useSound'
 
 const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
+  const { t } = useTranslation('EditProfileModal') // Hook for translation
   const { playClick } = useSound()
   const [formData, setFormData] = useState(profileData)
   const [imageLoading, setImageLoading] = useState(false)
@@ -87,8 +89,8 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
         onClose()
       } catch (error) {
         toast({
-          title: 'Update Failed',
-          description: error.response?.data?.error || 'Something went wrong!',
+          title: t('updateFailed'),
+          description: error.response?.data?.error || t('somethingWentWrong'),
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -106,6 +108,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
       onSubmit,
       profileData,
       toast,
+      t,
     ],
   )
 
@@ -145,7 +148,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
         reader.readAsDataURL(img)
       } catch (error) {
         toast({
-          title: 'Image upload Failed',
+          title: t('imageUploadFailed'),
           description: error.message,
           status: 'error',
           duration: 5000,
@@ -156,7 +159,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
         setImageLoading(false)
       }
     },
-    [playClick, toast],
+    [playClick, toast, t],
   )
 
   const modalContentStyle = useMemo(
@@ -172,13 +175,13 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent style={modalContentStyle}>
-          <ModalHeader fontSize="3xl">Edit Profile</ModalHeader>
+          <ModalHeader fontSize="3xl">{t('editProfile')}</ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody width={'80%'}>
             <Box display="flex" justifyContent="center" mb={4}>
               <Image
                 src={picDisplay}
-                alt="Profile Picture"
+                alt={t('profilePicture')}
                 boxSize="150px"
                 borderRadius="full"
                 mb={4}
@@ -192,7 +195,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
                   color="white"
                   fontWeight="bold"
                 >
-                  Upload Profile Picture
+                  {t('uploadProfilePicture')}
                 </FormLabel>
               </Box>
               <Input
@@ -209,7 +212,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
                 <Flex w={'100%'} justifyContent={'center'}>
                   <label htmlFor="profile-pic">
                     <Button as="span" colorScheme="blue" size="sm">
-                      Choose File
+                      {t('chooseFile')}
                     </Button>
                   </label>
                 </Flex>
@@ -217,7 +220,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
             </FormControl>
 
             <FormControl mb={4}>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>{t('name')}</FormLabel>
               <Input
                 type="text"
                 name="name"
@@ -226,7 +229,7 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
               />
             </FormControl>
             <FormControl mb={4}>
-              <FormLabel>InGameName</FormLabel>
+              <FormLabel>{t('inGameName')}</FormLabel>
               <Input
                 type="text"
                 name="inGameName"
@@ -236,13 +239,12 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
               />
               {isInGameNameDisabled && (
                 <Text fontSize="sm" color="red.500" mt={1}>
-                  You can change your in-game name again in {remainingDays}{' '}
-                  day(s).
+                  {t('inGameNameChangeMessage', { remainingDays })}
                 </Text>
               )}
             </FormControl>
             <FormControl mb={4}>
-              <FormLabel>Bio</FormLabel>
+              <FormLabel>{t('bio')}</FormLabel>
               <Textarea
                 name="bio"
                 value={formData.bio}
@@ -257,9 +259,9 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
               onClick={handleSubmit}
               isLoading={load}
             >
-              Save Changes
+              {t('saveChanges')}
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={onClose}>{t('cancel')}</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

@@ -101,8 +101,9 @@ const namespaces = {
     'SolvedQuizHistory',
     'FriendItem',
     'FriendRequestItem',
+    'EnhancedSocietyCircle',
   ],
-  assets: ['Circles', 'Brains'],
+  assets: ['Circles', 'Brains', 'CircleAndSocietyData'],
 }
 
 i18n

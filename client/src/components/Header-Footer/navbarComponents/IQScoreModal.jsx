@@ -22,6 +22,7 @@ const Heading = React.lazy(() => import('../../miscellaneous/HeadingComponent'))
 const IQScoreModal = ({ setShowIQScoreModal, isGuest }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { t } = useTranslation('IQScoreModal') // Use the translation hook
+  const { t: IQLineTranslate } = useTranslation('IQLineGraph')
   const [lineGraph, setLineGraph] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -87,6 +88,7 @@ const IQScoreModal = ({ setShowIQScoreModal, isGuest }) => {
                     lineGraph={lineGraph}
                     iOpenedFromNav={true}
                     graphwidth={responsiveChartWidth}
+                    t={IQLineTranslate}
                   />
                 </Suspense>
               )}

@@ -20,12 +20,14 @@ import {
   useDisclosure,
   useMediaQuery,
 } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 import useSound from '../../../customHooks/useSound'
 import slugify from 'slugify'
 import { ICONS_ARTICLE_DIFFICULTY } from '../../../models/articleDifficulty'
 import DifficultyLegend from '../../miscellaneous/DIfficultyLegend'
 
 const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
+  const { t } = useTranslation('SolvedQuizHistory') // Added i18n namespace
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { playClick } = useSound()
@@ -61,7 +63,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
         border="1px solid rgba(255, 255, 255, 0.18)"
       >
         <ModalHeader as="h3" size="lg" color="white" textAlign="center">
-          Latest 50 Solved Quiz History
+          {t('header')}
         </ModalHeader>
         <ModalCloseButton color={'white'} />
         <ModalBody w={'100%'}>
@@ -85,10 +87,10 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                       color={'white'}
                       px={1}
                     >
-                      PER
+                      {t('percentage')}
                     </Th>
                     <Th textAlign={'center'} bg={'red.300'} px={1}>
-                      Article
+                      {t('article')}
                     </Th>
                     <Th
                       textAlign={'center'}
@@ -96,10 +98,10 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
                       display={{ base: 'none', md: 'table-cell' }}
                       px={1}
                     >
-                      RQM
+                      {t('rqm')}
                     </Th>
                     <Th textAlign={'center'} bg={'orange.300'} px={1}>
-                      Diff
+                      {t('difficulty')}
                     </Th>
                   </Tr>
                 </Thead>
@@ -168,7 +170,7 @@ const SolvedQuizHistory = ({ solvedHistory, setShowHistory }) => {
               setShowHistory(false)
             }}
           >
-            Close
+            {t('close')}
           </Button>
         </ModalFooter>
       </ModalContent>

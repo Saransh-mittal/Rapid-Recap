@@ -24,6 +24,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import SVGIQLineGraph from '../../assets/svg/SVGIQLineGraph'
 import { addNoteMessage } from '../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load the ExpectedIQModal component
 const ExpectedIQModal = lazy(() =>
@@ -58,84 +59,95 @@ const NoDataMessage = React.memo(
     expectedIQ,
     isLoading,
     setShowExpectedIQ,
-  }) => (
-    <Flex
-      w="100%"
-      justifyContent="center"
-      alignItems="center"
-      flexDirection="column"
-      position="relative"
-      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-      boxShadow={{
-        xl: 'none',
-        base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-      }}
-    >
-      <Text m={0}>
-        {viewingHistory
-          ? `No Data Available`
-          : `Give 10 Quizzes to get the IQ score and enter the ranking`}
-      </Text>
+  }) => {
+    const { t } = useTranslation('IQLineGraph')
+    return (
+      <Flex
+        w="100%"
+        justifyContent="center"
+        alignItems="center"
+        flexDirection="column"
+        position="relative"
+        backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
+        boxShadow={{
+          xl: 'none',
+          base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+        }}
+      >
+        <Text m={0}>
+          {viewingHistory ? t('noDataAvailable') : t('giveQuizzes')}
+        </Text>
 
-      <Image
-        h="200px"
-        w="200px"
-        background="transparent"
-        src={Lock}
-        onClick={getExpectedIQ}
-      />
+        <Image
+          h="200px"
+          w="200px"
+          background="transparent"
+          src={Lock}
+          onClick={getExpectedIQ}
+        />
 
-      {showExpectedIQ && (
-        <Suspense fallback={<Spinner />}>
-          <ExpectedIQModal
-            expectedIQ={expectedIQ}
-            setShowExpectedIQ={setShowExpectedIQ}
-            isLoading={isLoading}
-          />
-        </Suspense>
-      )}
-    </Flex>
-  ),
+        {showExpectedIQ && (
+          <Suspense fallback={<Spinner />}>
+            <ExpectedIQModal
+              expectedIQ={expectedIQ}
+              setShowExpectedIQ={setShowExpectedIQ}
+              isLoading={isLoading}
+            />
+          </Suspense>
+        )}
+      </Flex>
+    )
+  },
 )
 
 // GraphHeader Component
-const GraphHeader = React.memo(({ hoveredData, loginedUserProfile, user }) => (
-  <Flex justifyContent="space-between" position="relative">
-    {loginedUserProfile && (
-      <Tooltip label="Visibility to others">
-        <Badge m={0} position="absolute" top={0} right={0} colorScheme="green">
-          {user.profilePrivacy.lineGraph ? 'HIDDEN' : 'VISIBLE'}
-        </Badge>
-      </Tooltip>
-    )}
-    <Flex justifyContent="space-between" w="100%" marginTop="2rem">
-      <Flex flexDirection="column">
-        <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
-          IQ Score
-        </Text>
-        <Text textAlign="left" fontSize="1.5rem">
-          {hoveredData?.IQScore}
-        </Text>
+const GraphHeader = React.memo(
+  ({ hoveredData, loginedUserProfile, user, t }) => {
+    return (
+      <Flex justifyContent="space-between" position="relative">
+        {loginedUserProfile && (
+          <Tooltip label={t('visibilityToOthers')}>
+            <Badge
+              m={0}
+              position="absolute"
+              top={0}
+              right={0}
+              colorScheme="green"
+            >
+              {user.profilePrivacy.lineGraph ? t('hidden') : t('visible')}
+            </Badge>
+          </Tooltip>
+        )}
+        <Flex justifyContent="space-between" w="100%" marginTop="2rem">
+          <Flex flexDirection="column">
+            <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
+              {t('iqScore')}
+            </Text>
+            <Text textAlign="left" fontSize="1.5rem">
+              {hoveredData?.IQScore}
+            </Text>
+          </Flex>
+          <Flex flexDirection="column">
+            <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
+              {t('date')}
+            </Text>
+            <Text textAlign="left">
+              {hoveredData?.date
+                ? moment(hoveredData.date).format('MMM DD, YYYY')
+                : ''}
+            </Text>
+          </Flex>
+          <Flex flexDirection="column">
+            <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
+              {t('dailyRank')}
+            </Text>
+            <Text textAlign="left">{hoveredData?.dailyRank}</Text>
+          </Flex>
+        </Flex>
       </Flex>
-      <Flex flexDirection="column">
-        <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
-          Date
-        </Text>
-        <Text textAlign="left">
-          {hoveredData?.date
-            ? moment(hoveredData.date).format('MMM DD, YYYY')
-            : ''}
-        </Text>
-      </Flex>
-      <Flex flexDirection="column">
-        <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
-          Daily Rank
-        </Text>
-        <Text textAlign="left">{hoveredData?.dailyRank}</Text>
-      </Flex>
-    </Flex>
-  </Flex>
-))
+    )
+  },
+)
 
 // GraphBody Component
 const GraphBody = React.memo(
@@ -165,6 +177,7 @@ const IQLineGraph = ({
   iOpenedFromNav = false,
   graphwidth,
   isGuest,
+  t,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -212,8 +225,8 @@ const IQLineGraph = ({
       }
     } catch (error) {
       toast({
-        title: 'An error occurred.',
-        description: 'Unable to fetch expected IQ. Please try again later.',
+        title: t('errorOccurred'),
+        description: t('unableToFetch'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -223,7 +236,7 @@ const IQLineGraph = ({
     } finally {
       setIsLoading(false)
     }
-  }, [playClick, toast])
+  }, [playClick, toast, t])
 
   useEffect(() => {
     setHoveredData(chartData[chartData.length - 2])
@@ -253,7 +266,7 @@ const IQLineGraph = ({
           onClick={() =>
             dispatch(
               addNoteMessage({
-                title: 'Register to view your standings',
+                title: t('registerToView'),
                 duration: 10000,
                 width: '250px',
                 actions: [
@@ -267,78 +280,54 @@ const IQLineGraph = ({
           _hover={{ cursor: 'pointer' }}
         />
 
-        <Text>No data for guest user</Text>
+        <Text>{t('noDataForGuest')}</Text>
       </Flex>
     )
   }
 
   if (privateLineGraph) {
     return (
-      <Flex h="100%" w="100%" justifyContent="center" alignItems="center">
-        <Text
-          backgroundColor="#0f0d15"
-          m={0}
-          top={0}
-          right={10}
-          color="#9CAFAA"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          w="60px"
-          height="30px"
-        >
-          Hidden
-        </Text>
+      <Flex h="300px">
+        {isLoading ? (
+          <LoadingSpinner />
+        ) : (
+          <NoDataMessage
+            viewingHistory={viewingHistory}
+            getExpectedIQ={getExpectedIQ}
+            showExpectedIQ={showExpectedIQ}
+            expectedIQ={expectedIQ}
+            isLoading={isLoading}
+            setShowExpectedIQ={setShowExpectedIQ}
+          />
+        )}
       </Flex>
-    )
-  }
-
-  if (isLoading) {
-    return <LoadingSpinner />
-  }
-
-  if (chartData.length <= 10) {
-    return (
-      <NoDataMessage
-        viewingHistory={viewingHistory}
-        getExpectedIQ={getExpectedIQ}
-        showExpectedIQ={showExpectedIQ}
-        expectedIQ={expectedIQ}
-        isLoading={isLoading}
-        setShowExpectedIQ={setShowExpectedIQ}
-      />
     )
   }
 
   return (
     <Flex
       w="100%"
+      justifyContent="space-between"
       flexDirection="column"
-      borderRight={{ xl: iOpenedFromNav ? '0' : '1px' }}
-      padding={{ base: '20px', xl: '0' }}
-      paddingX={{ base: '20px', xl: '30px' }}
-      flex={1}
-      paddingRight="30px"
-      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
       boxShadow={{
         xl: 'none',
         base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
       }}
-      className="iq-line-graph"
     >
       <GraphHeader
         hoveredData={hoveredData}
         loginedUserProfile={loginedUserProfile}
         user={user}
+        t={t}
       />
       <GraphBody
-        graphwidth={graphwidth}
         chartData={chartData}
         responsiveChartWidth={responsiveChartWidth}
         handleHover={handleHover}
+        graphwidth={graphwidth}
       />
     </Flex>
   )
 }
 
-export default React.memo(IQLineGraph)
+export default IQLineGraph

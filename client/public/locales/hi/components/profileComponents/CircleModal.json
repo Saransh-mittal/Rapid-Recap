@@ -5,7 +5,7 @@
   "youAreHere": "आप यहाँ हैं!",
   "loading": "लोड हो रहा है...",
   "circleImage": "वृत्त छवि",
-  "circle": "वृत्त",
-  "iqRange": "आईक्यू सीमा: {{lower}} - {{upper}}",
+  "circle": "सर्कल",
+  "iqRange": "आईक्यू सीमा:",
   "above": "ऊपर"
 }

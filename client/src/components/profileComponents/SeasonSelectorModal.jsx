@@ -13,6 +13,7 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components
 const Button = React.lazy(() => import('../miscellaneous/ButtonComponent'))
@@ -29,6 +30,7 @@ const SeasonSelectorModal = ({
   inGameName,
   seasons,
 }) => {
+  const { t } = useTranslation('SeasonSelectorModal') // Add translation hook and namespace
   const {
     onOpen: onOpenSeasonModal,
     onClose: onCloseSeasonModal,
@@ -52,8 +54,8 @@ const SeasonSelectorModal = ({
         onCloseSeasonModal()
         setSelectedSeason(null)
         toast({
-          title: 'Error',
-          description: 'Failed to fetch season history.',
+          title: t('errorTitle'), // Use translation key
+          description: t('errorDescription'), // Use translation key
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -63,7 +65,7 @@ const SeasonSelectorModal = ({
         setIsLoading(false)
       }
     },
-    [inGameName, onCloseSeasonModal, toast],
+    [inGameName, onCloseSeasonModal, toast, t],
   )
 
   const handleSeasonClick = useCallback(
@@ -95,11 +97,11 @@ const SeasonSelectorModal = ({
           white={selectedSeason === i + 1}
           onClick={() => handleSeasonClick(i + 1)}
         >
-          Season {i + 1}
+          {t('season')} {i + 1} {/* Use translation key */}
         </Button>
       </Suspense>
     ))
-  }, [currSeason, handleSeasonClick, selectedSeason])
+  }, [currSeason, handleSeasonClick, selectedSeason, t])
 
   return (
     <>
@@ -120,7 +122,7 @@ const SeasonSelectorModal = ({
         >
           <DrawerCloseButton />
           <DrawerHeader textAlign={'center'} mt={{ base: '0', lg: '2rem' }}>
-            Select Season
+            {t('selectSeason')} {/* Use translation key */}
           </DrawerHeader>
 
           <DrawerBody>

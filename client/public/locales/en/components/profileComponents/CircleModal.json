@@ -6,6 +6,6 @@
   "loading": "Loading...",
   "circleImage": "Circle Image",
   "circle": "Circle",
-  "iqRange": "IQ Range: {{lower}} - {{upper}}",
+  "iqRange": "IQ Range:",
   "above": "Above"
 }

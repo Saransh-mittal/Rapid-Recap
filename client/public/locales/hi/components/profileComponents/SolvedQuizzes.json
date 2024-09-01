@@ -1,0 +1,16 @@
+{
+  "errorOccurred": "एक त्रुटि हुई।",
+  "errorMessage": "सॉल्व्ड क्विज़ हिस्ट्री प्राप्त नहीं कर सके। कृपया बाद में पुनः प्रयास करें।",
+  "hidden": "छुपा हुआ",
+  "solvedQuizzes": "सॉल्व्ड क्विज़",
+  "visibilityToOthers": "दूसरों के लिए दृश्यता",
+  "totalSolvedQuizzes": "कुल सॉल्व्ड क्विज़",
+  "keepItUp": "ऐसे ही जारी रखें!",
+  "easy": "आसान",
+  "medium": "मध्यम",
+  "hard": "कठिन",
+  "solved": "{{count}} हल किए गए",
+  "beatsPercentage": "{{beats}}% से अधिक",
+  "visible": "दिखाई देने वाला",
+  "viewHistory": "इतिहास देखें"
+}

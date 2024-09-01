@@ -1,7 +1,7 @@
 {
-  "societyDetails": "समाज विवरण",
+  "societyDetails": "समाज",
   "youAreHere": "आप यहाँ हैं!",
-  "iqRange": "आईक्यू रेंज: {{lower}} - {{upper}}",
+  "iqRange": "आईक्यू रेंज:",
   "loading": "लोड हो रहा है...",
   "previousPage": "पिछला पृष्ठ",
   "nextPage": "अगला पृष्ठ",

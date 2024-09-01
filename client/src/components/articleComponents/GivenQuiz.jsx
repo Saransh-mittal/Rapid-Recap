@@ -33,8 +33,15 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
         <Heading as="h2" size="xl" textAlign="center" mb={3} color="#FDE2F3">
           {t('quizPerformance')}
         </Heading>
-        <Heading as="h3" fontSize="xl" mt={2} mb={2} color="#E5BEEC">
-          {t('currentPercentile')} {percentile?.toFixed(2)}%
+        <Heading
+          as="h3"
+          fontSize="xl"
+          mt={2}
+          mb={2}
+          color="#E5BEEC"
+          align={'center'}
+        >
+          Current Percentile: {percentile?.toFixed(2)}%
         </Heading>
         <Flex align="center" mb={4}>
           <Tooltip

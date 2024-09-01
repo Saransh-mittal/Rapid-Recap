@@ -1,6 +1,8 @@
-import { Badge, Button, Tag, Tooltip } from '@chakra-ui/react'
+import { Badge, Button, Tooltip } from '@chakra-ui/react'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import useSound from '../../customHooks/useSound'
+
 const ProfileButton = ({
   buttonText,
   inGameName,
@@ -14,10 +16,12 @@ const ProfileButton = ({
   notShowVisibility = false,
 }) => {
   const { playClick } = useSound()
+  const { t } = useTranslation('ProfileButton')
+
   return (
     <>
       {inGameName == stateUserInGameName && !isGuest && !notShowVisibility && (
-        <Tooltip label="Visibility to others">
+        <Tooltip label={t('visibilityTooltip')}>
           <Badge
             colorScheme="green"
             m={0}
@@ -28,7 +32,7 @@ const ProfileButton = ({
             borderRadius="5px"
             backdropFilter="blur(5px)"
           >
-            {Private ? 'HIDDEN' : 'VISIBLE'}
+            {Private ? t('hidden') : t('visible')}
           </Badge>
         </Tooltip>
       )}
@@ -43,7 +47,6 @@ const ProfileButton = ({
           bg: '#0f0d15',
           transform: 'scale(0.98)',
         }}
-        // height={'50px'}
         leftIcon={icon}
         onClick={() => {
           playClick()
@@ -51,12 +54,10 @@ const ProfileButton = ({
         }}
         borderColor="#2c2541"
         borderWidth="2px"
-        // boxShadow="0 0 15px rgba(44, 37, 65, 0.5)"
-        backgroundColor="rgba(15, 13, 21, 0.8)" // Adjust the alpha value (0.8) for transparency
+        backgroundColor="rgba(15, 13, 21, 0.8)"
         boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
         transition="all 0.3s ease-in-out"
         textTransform="uppercase"
-        // py={6}
         position="relative"
         overflow="hidden"
         _before={{
@@ -79,7 +80,7 @@ const ProfileButton = ({
           },
         }}
       >
-        {buttonText}
+        {t(buttonText)}
       </Button>
     </>
   )
