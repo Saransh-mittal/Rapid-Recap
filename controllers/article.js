@@ -441,6 +441,22 @@ const hindiTranslation = async (req, res) => {
     }
     article.hindiAuthor = response.hindiAuthor
     await article.save()
+
+    // update the cache memory :
+    const cacheKey = `article_${articleId}`
+    const cachedArticle = cache.get(cacheKey)
+    if (cachedArticle) {
+      cache.put(
+        cacheKey,
+        {
+          ...cachedArticle,
+          hindiAuthor: article.hindiAuthor,
+          hindiMainText: article.hindiMainText,
+          hindiTitle: article.hindiTitle,
+        },
+        3600000 * 24,
+      )
+    }
     res.status(200).json({ status: 'ok', article })
   } catch (error) {
     res.status(500).json({ error: error || 'Something went wrong' })
