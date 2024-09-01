@@ -4,6 +4,7 @@ import TagLine from './TaglineComponent'
 const Heading = ({
   className,
   title,
+  color,
   text,
   tag,
   marginBottom = '8',
@@ -38,7 +39,9 @@ const Heading = ({
       )}
       {title && (
         <Flex fontWeight={headingWeight}>
-          <Text fontSize="3xl">{title}</Text>
+          <Text fontSize="3xl" color={color}>
+            {title}
+          </Text>
         </Flex>
       )}
       {text && (

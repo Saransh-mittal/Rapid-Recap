@@ -1,13 +1,6 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  Suspense,
-} from 'react'
+import React, { useEffect, useState, useCallback, Suspense } from 'react'
 import {
   Modal,
-  ModalOverlay,
   ModalContent,
   ModalHeader,
   ModalBody,
@@ -15,7 +8,6 @@ import {
   Flex,
   Skeleton,
   useMediaQuery,
-  Text,
 } from '@chakra-ui/react'
 import Heading from '../miscellaneous/HeadingComponent'
 
@@ -144,18 +136,21 @@ const SeasonModal = ({
       scrollBehavior="inside"
     >
       <ModalContent
-        backgroundColor="#0f0d15"
-        color="white"
-        borderRadius="10px"
+        bg="rgba(15, 13, 21, 0.8)"
+        borderRadius="xl"
+        boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
+        border="1px solid rgba(255, 255, 255, 0.18)"
         pb={{ base: '10rem', lg: '0' }}
       >
         <ModalHeader textTransform={'uppercase'}>
           <Heading
+            color={'white'}
             title={season ? `Season ${season}` : 'Season Modal'}
             tag={'History'}
+            marginBottom={'0'}
           />
         </ModalHeader>
-        {isLargerThan992px && <ModalCloseButton />}
+        {isLargerThan992px && <ModalCloseButton color={'white'} />}
         <ModalBody
           mb={'2rem'}
           overflowX={'hidden'}
