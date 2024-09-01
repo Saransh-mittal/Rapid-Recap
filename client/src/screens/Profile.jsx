@@ -494,6 +494,7 @@ export default function Profile() {
                 w={{ md: '85%', lg: '95%', base: '100%' }}
                 borderRadius="10px"
                 height="50px"
+                marginTop="12px"
               />
             }
           >
@@ -503,12 +504,36 @@ export default function Profile() {
                   w={{ md: '85%', lg: '95%', base: '100%' }}
                   borderRadius="10px"
                   height="50px"
+                  marginTop="12px"
+                />
+                <Skeleton
+                  w={{ md: '85%', lg: '95%', base: '100%' }}
+                  borderRadius="10px"
+                  height="50px"
+                  marginTop="12px"
                 />
               </>
             ) : (
               inGameName == user?.inGameName && (
                 <>
-                  <Suspense fallback={null}>
+                  <Suspense
+                    fallback={
+                      <>
+                        <Skeleton
+                          w={{ md: '85%', lg: '95%', base: '100%' }}
+                          borderRadius="10px"
+                          height="50px"
+                          marginTop="12px"
+                        />
+                        <Skeleton
+                          w={{ md: '85%', lg: '95%', base: '100%' }}
+                          borderRadius="10px"
+                          height="50px"
+                          marginTop="12px"
+                        />
+                      </>
+                    }
+                  >
                     <Flex
                       borderRadius="10px"
                       flexDirection="column"
@@ -533,35 +558,36 @@ export default function Profile() {
                         onClose={onCloseSoundSettings}
                       />
                     </Flex>
-                  </Suspense>
-                  <Flex
-                    borderRadius="10px"
-                    flexDirection="column"
-                    w={{ md: '85%', lg: '95%', base: '100%' }}
-                    height="fit-content"
-                    justifyContent={'center'}
-                    alignItems={'center'}
-                    position={'relative'}
-                    py={'8px'}
-                  >
-                    <ProfileButton
-                      buttonText="Bookmarks"
-                      inGameName={inGameName}
-                      stateUserInGameName={user?.inGameName}
-                      Private={true}
-                      hoverAnimation={hoverAnimation}
-                      onClick={onOpenBookmarks}
-                      icon={<BookmarkSVG width={'20px'} height={'20px'} />}
-                    />
 
-                    <Bookmarks
-                      isOpen={isOpenBookmarks}
-                      onClose={onCloseBookmarks}
-                      isLoading={isLoading}
-                      profile={profile}
-                      inGameName={inGameName}
-                    />
-                  </Flex>
+                    <Flex
+                      borderRadius="10px"
+                      flexDirection="column"
+                      w={{ md: '85%', lg: '95%', base: '100%' }}
+                      height="fit-content"
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      position={'relative'}
+                      py={'8px'}
+                    >
+                      <ProfileButton
+                        buttonText="Bookmarks"
+                        inGameName={inGameName}
+                        stateUserInGameName={user?.inGameName}
+                        Private={true}
+                        hoverAnimation={hoverAnimation}
+                        onClick={onOpenBookmarks}
+                        icon={<BookmarkSVG width={'20px'} height={'20px'} />}
+                      />
+
+                      <Bookmarks
+                        isOpen={isOpenBookmarks}
+                        onClose={onCloseBookmarks}
+                        isLoading={isLoading}
+                        profile={profile}
+                        inGameName={inGameName}
+                      />
+                    </Flex>
+                  </Suspense>
                 </>
               )
             )}
