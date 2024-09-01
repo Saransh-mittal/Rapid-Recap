@@ -10,6 +10,7 @@ const { logActivity } = require('./activity.utils')
 const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const configService = require('../configService')
 const NoteMessage = require('../model/noteMessageSchema')
+const cache = require('memory-cache')
 
 const findSocietyCircleByIQ = IQScore => {
   return CircleAndSocietyData.find(data => {
@@ -328,6 +329,15 @@ const dailyUserIQCalc = async () => {
 
     await rankUpdate()
     console.log('\nRank updated.\n')
+
+    console.log('\nClearing leaderboard cache...\n')
+    const cacheKeys = cache.keys()
+    cacheKeys.forEach(key => {
+      if (key.startsWith('leaderboard_')) {
+        cache.del(key)
+      }
+    })
+    console.log('\nLeaderboard cache cleared.\n')
   } catch (error) {
     console.error(`Error in dailyUserIQCalc: ${error.message}`)
     console.error(`Stack trace: ${error.stack}`)

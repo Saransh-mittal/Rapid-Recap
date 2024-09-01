@@ -37,6 +37,7 @@ const asyncHandler = require('express-async-handler')
 const { logActivity } = require('../utils/activity.utils.js')
 const { activityTypes } = require('../data/activityTypes.js')
 const Activity = require('../model/activitySchema.js')
+const cache = require('memory-cache')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -446,7 +447,15 @@ const calculateUserIQScores = async (req, res) => {
 const leaderBoard = async (req, res) => {
   const currUserId = req.user ? req.user._id : null
   const { society, page = 1, limit = 10 } = req.query
+  const cacheKey = `leaderboard_${society}_${page}_${limit}`
 
+  // Try to get the cached result
+  const cachedResult = cache.get(cacheKey)
+
+  if (cachedResult) {
+    // If cached result exists, return it
+    return res.status(200).json(cachedResult)
+  }
   const societyConditions = {
     titans: { IQ_score: { $gte: 150 } },
     mavericks: { IQ_score: { $gte: 130, $lt: 150 } },
@@ -599,12 +608,17 @@ const leaderBoard = async (req, res) => {
       quizSubmissions: currUser?.quizAttempts.length,
     }
 
-    res.status(200).json({
+    const responseData = {
       users: result,
       currUser: currUserData,
       totalPages,
       currentPage: pageNumber,
-    })
+    }
+
+    // Cache the result for 1 hour (3600000 milliseconds)
+    cache.put(cacheKey, responseData, 3600000)
+
+    res.status(200).json(responseData)
   } catch (error) {
     res.status(500).json({ error: 'Error fetching the Leaderboard' })
     console.error(error)
