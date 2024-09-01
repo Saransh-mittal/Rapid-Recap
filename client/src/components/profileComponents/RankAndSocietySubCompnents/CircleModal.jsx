@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  Suspense,
-} from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -15,13 +9,12 @@ import {
   Flex,
   IconButton,
   Text,
+  Box,
 } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { useSwipeable } from 'react-swipeable'
+import { motion } from 'framer-motion'
 import Circles from '../../../assets/Circles'
-
-// Lazy load the circle image
-import circleImg from '/images/circle.webp'
 
 const CircleModal = ({
   isOpen,
@@ -32,10 +25,8 @@ const CircleModal = ({
   const [currentPage, setCurrentPage] = useState(1)
   const [glowAnimation, setGlowAnimation] = useState(false)
 
-  // Memoize the current circle to avoid recalculations
   const currentCircle = useMemo(() => Circles[currentPage - 1], [currentPage])
 
-  // Determine the initial page based on the current user's circle
   useEffect(() => {
     if (!isOpen || !currentUserCircle || Circles.length === 0) return
 
@@ -54,12 +45,9 @@ const CircleModal = ({
       })
     }, 200)
 
-    return () => {
-      clearInterval(intervalId)
-    }
+    return () => clearInterval(intervalId)
   }, [isOpen, currentUserCircle])
 
-  // Handle glow animation
   useEffect(() => {
     if (isOpen) {
       setGlowAnimation(true)
@@ -75,14 +63,13 @@ const CircleModal = ({
     }
   }, [glowAnimation])
 
-  // Memoize page navigation handlers
   const handlePreviousPage = useCallback(() => {
-    setCurrentPage(prevPage => (prevPage === 1 ? 7 : prevPage - 1))
+    setCurrentPage(prevPage => (prevPage === 1 ? Circles.length : prevPage - 1))
     setGlowAnimation(true)
   }, [])
 
   const handleNextPage = useCallback(() => {
-    setCurrentPage(prevPage => (prevPage === 7 ? 1 : prevPage + 1))
+    setCurrentPage(prevPage => (prevPage === Circles.length ? 1 : prevPage + 1))
     setGlowAnimation(true)
   }, [])
 
@@ -97,35 +84,32 @@ const CircleModal = ({
     >
       <ModalOverlay />
       <ModalContent
-        style={{
-          backgroundColor: '#0f0d15',
-          color: 'white',
-          borderRadius: '10px',
-        }}
+        bg="rgba(15, 13, 21, 0.8)"
+        borderRadius="xl"
+        border="1px solid rgba(255, 255, 255, 0.18)"
+        boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
         {...useSwipeable({
           onSwipedLeft: handleNextPage,
           onSwipedRight: handlePreviousPage,
         })}
       >
         <ModalHeader
-          style={{
-            textAlign: 'center',
-            fontSize: '36px',
-            fontWeight: 'bold',
-            color: 'transparent',
-            fontFamily: "'Poppins', sans-serif",
-            backgroundImage: 'linear-gradient(45deg, #ff7e5f, #feb47b)',
-            backgroundClip: 'text',
-            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-            backgroundColor: '#0f0d15',
-            padding: '10px',
-            borderRadius: '10px',
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-          }}
+          textAlign="center"
+          fontSize="36px"
+          fontWeight="bold"
+          color="transparent"
+          fontFamily="'Poppins', sans-serif"
+          backgroundImage="linear-gradient(45deg, #ff7e5f, #feb47b)"
+          backgroundClip="text"
+          textShadow="2px 2px 4px rgba(0, 0, 0, 0.3)"
+          backgroundColor="#0f0d15"
+          padding="10px"
+          borderRadius="10px"
+          boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
         >
           Circle Details
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton color="white" />
         <ModalBody>
           <Flex
             justifyContent="space-between"
@@ -136,8 +120,6 @@ const CircleModal = ({
               icon={<ChevronLeftIcon />}
               aria-label="Previous Page"
               onClick={handlePreviousPage}
-              isDisabled={currentPage === 1}
-              opacity={currentPage === 1 ? 0.5 : 1}
               _hover={{
                 bgGradient: 'linear(to-r, #7928CA, #FF0080)',
                 color: 'white',
@@ -149,8 +131,6 @@ const CircleModal = ({
               icon={<ChevronRightIcon />}
               aria-label="Next Page"
               onClick={handleNextPage}
-              isDisabled={currentPage === 7}
-              opacity={currentPage === 7 ? 0.5 : 1}
               _hover={{
                 bgGradient: 'linear(to-r, #7928CA, #FF0080)',
                 color: 'white',
@@ -169,119 +149,121 @@ const CircleModal = ({
               textAlign="center"
               color="yellow"
               fontWeight="bold"
-              marginTop={'-10%'}
               fontSize="24px"
-              marginBottom={0}
+              marginBottom={4}
             >
               <span style={{ fontSize: '36px', marginRight: '5px' }}>📍</span>
               You are here!
             </Text>
           )}
           {currentCircle && (
-            <div
-              style={{
-                position: 'relative',
-                textAlign: 'center',
-                animation: glowAnimation ? 'glow 1.5s 2 alternate' : 'none',
-              }}
+            <Flex
+              position="relative"
+              textAlign="center"
+              animation={glowAnimation ? 'glow 1.5s 2 alternate' : 'none'}
+              alignItems={'center'}
+              justifyContent={'center'}
+              w={'100%'}
             >
-              <Suspense
-                fallback={
-                  <img
-                    src={circleImg}
-                    alt="Loading..."
-                    style={{
-                      width: '340px',
-                      height: '340px',
-                      margin: '0 auto',
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <svg width="200" height="200" viewBox="0 0 120 120">
+                  <defs>
+                    <linearGradient
+                      id="circleGradient"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor={currentCircle.textColor}
+                        stopOpacity="0.2"
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={currentCircle.textColor}
+                        stopOpacity="0.8"
+                      />
+                    </linearGradient>
+                  </defs>
+                  <motion.circle
+                    cx="60"
+                    cy="60"
+                    r="55"
+                    fill="transparent"
+                    stroke="url(#circleGradient)"
+                    strokeWidth="3"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: 'reverse',
                     }}
                   />
-                }
-              >
-                <img
-                  src={circleImg}
-                  alt={'circle img'}
-                  style={{
-                    width: '340px',
-                    height: '340px',
-                    background: 'transparent',
-                    display: 'block',
-                    margin: '0 auto',
-                    position: 'relative',
-                    zIndex: '1',
-                  }}
-                />
-              </Suspense>
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  zIndex: '2',
-                }}
-              >
-                <Text
-                  fontSize="lg"
-                  fontWeight="bold"
-                  ml={1}
-                  color={currentCircle.textColor}
-                  mb={0}
-                >
-                  {currentCircle.circle}
-                </Text>
-                <Text
-                  color={currentCircle.textColor}
-                  fontWeight="bold"
-                  ml={1}
-                  mb={2}
-                  fontSize="lg"
-                >
-                  Circle
-                </Text>
-                <Text
-                  mt={-2}
-                  ml={1}
-                  mb={2}
-                  color={currentCircle.textColor}
-                  fontSize="1rem"
-                >
-                  IQ Range: {currentCircle.IQ_Lower} -{' '}
-                  {currentCircle.IQ_Upper || 'Above'}
-                </Text>
-              </div>
-            </div>
+                  <circle cx="60" cy="60" r="50" fill="rgba(25, 25, 35, 0.7)" />
+                  <text
+                    x="60"
+                    y="40"
+                    textAnchor="middle"
+                    fill={currentCircle.textColor}
+                    fontSize="14"
+                    fontWeight="bold"
+                  >
+                    {currentCircle.circle}
+                  </text>
+                  <text
+                    x="60"
+                    y="60"
+                    textAnchor="middle"
+                    fill={currentCircle.textColor}
+                    fontSize="12"
+                  >
+                    Circle
+                  </text>
+                  <text
+                    x="60"
+                    y="80"
+                    textAnchor="middle"
+                    fill="#9CAFAA"
+                    fontSize="9"
+                  >
+                    IQ Range: {currentCircle.IQ_Lower} -{' '}
+                    {currentCircle.IQ_Upper || 'Above'}
+                  </text>
+                </svg>
+              </motion.div>
+            </Flex>
           )}
           {currentCircle && (
-            <div style={{ textAlign: 'left', color: currentCircle.textColor }}>
+            <Box mt={4} textAlign="left" color={currentCircle.textColor}>
               {currentCircle.CircleInfo.split('.').map((point, index) => {
                 const lines = point.trim().split('\n')
                 return lines.map(
                   (line, lineIndex) =>
                     line.trim() && (
-                      <div
-                        style={{ flexDirection: 'row !important' }}
+                      <Flex
                         key={lineIndex * index + index}
+                        alignItems="center"
+                        mb={2}
                       >
-                        <span
-                          key={index + '-' + lineIndex}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '5px',
-                            borderRadius: '5px',
-                            fontStyle: 'italic',
-                          }}
-                        >
-                          ➤ {line}
-                          {lineIndex === lines.length - 1 ? '.' : <br />}
-                        </span>
-                      </div>
+                        <Text as="span" mr={2}>
+                          ➤
+                        </Text>
+                        <Text fontStyle="italic">
+                          {line}
+                          {lineIndex === lines.length - 1 ? '.' : ''}
+                        </Text>
+                      </Flex>
                     ),
                 )
               })}
-              <br />
-            </div>
+            </Box>
           )}
         </ModalBody>
         <style>

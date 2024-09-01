@@ -121,12 +121,12 @@ const EnhancedSocietyCircle = ({
                       >
                         <stop
                           offset="0%"
-                          stopColor={isTitans ? 'gold' : societyData.textColor}
+                          stopColor={societyData.textColor}
                           stopOpacity="0.2"
                         />
                         <stop
                           offset="100%"
-                          stopColor={isTitans ? 'gold' : societyData.textColor}
+                          stopColor={societyData.textColor}
                           stopOpacity="0.8"
                         />
                       </linearGradient>
