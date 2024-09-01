@@ -201,7 +201,7 @@ const OutsideNavbarContent = ({
             renderNotificationBadge={renderNotificationBadge}
             isGuest={user?.role === 'guest'}
           />
-          {renderProfileDropdown()}
+          {!isSmallerThan992 && renderProfileDropdown()}
         </>
       )}
       <HamburgerMenuButton
