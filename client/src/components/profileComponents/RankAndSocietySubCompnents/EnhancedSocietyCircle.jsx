@@ -65,7 +65,6 @@ const EnhancedSocietyCircle = ({
             </motion.div>
             <Box
               mt={2}
-              p={2}
               borderRadius="md"
               bg={isTitans ? 'rgba(255, 215, 0, 0.1)' : 'transparent'}
             >
@@ -84,7 +83,13 @@ const EnhancedSocietyCircle = ({
         </Tooltip>
         {societyData.circle && (
           <>
-            <Flex direction="column" align="center" justify="center" flex={1}>
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              flex={1}
+              mb={'2rem'}
+            >
               <motion.div
                 animate={{ x: [0, 10, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
