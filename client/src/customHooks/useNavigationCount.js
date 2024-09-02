@@ -25,6 +25,6 @@ export const useNavigationCount = () => {
   }, [count])
 
   const isLastRoute = count < 1
-  console.log(count)
+
   return { count, isLastRoute }
 }
