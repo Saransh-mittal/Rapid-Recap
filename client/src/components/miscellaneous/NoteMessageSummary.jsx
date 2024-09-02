@@ -29,6 +29,7 @@ import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useNavigate } from 'react-router-dom'
 import Confetti from 'react-confetti'
 import { formatRemainingTime } from '../../utils/helper.utils'
+import { getMilestoneInfo } from './noteMessages/milestones'
 
 // Lazy load components and assets
 const ButtonFactory = lazy(() => import('./ButtonFactory'))
