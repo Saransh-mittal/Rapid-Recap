@@ -1,17 +1,9 @@
-import React, {
-  useEffect,
-  useState,
-  lazy,
-  Suspense,
-  useCallback,
-  useMemo,
-} from 'react'
+import React, { useEffect, useState, lazy, Suspense, useCallback } from 'react'
 import {
   Badge,
   Flex,
   Image,
   Spinner,
-  Tag,
   Text,
   Tooltip,
   useBreakpointValue,

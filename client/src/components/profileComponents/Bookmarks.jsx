@@ -140,8 +140,10 @@ const Bookmarks = ({ isOpen, onClose }) => {
     >
       <ModalOverlay />
       <ModalContent
-        bg="#0f0d15"
-        bgGradient="linear(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
+        bg="rgba(15, 13, 21, 0.8)"
+        borderRadius="xl"
+        boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
+        border="1px solid rgba(255, 255, 255, 0.18)"
       >
         <ModalHeader color="#ffffff">{t('yourBookmarks')}</ModalHeader>
         <ModalCloseButton color="#ffffff" />

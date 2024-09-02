@@ -56,7 +56,7 @@ const HamburgerModal = ({
   setIsDrawerOpen,
   onOpenWiseWeb,
 }) => {
-  const { t } = useTranslation('HambugerModal')
+  const { t } = useTranslation('HamburgerModal')
   const { user, isAdmin, isAuthenticated } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
 

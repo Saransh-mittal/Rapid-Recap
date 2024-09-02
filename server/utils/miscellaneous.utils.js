@@ -176,6 +176,21 @@ async function isGuestUser(userId) {
   return user.role === 'guest'
 }
 
+function formatRemainingTime(milliseconds) {
+  const days = Math.floor(milliseconds / (24 * 60 * 60 * 1000))
+  const hours = Math.floor(
+    (milliseconds % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000),
+  )
+  const minutes = Math.floor((milliseconds % (60 * 60 * 1000)) / (60 * 1000))
+
+  let timeString = ''
+  if (days > 0) timeString += `${days} day `
+  if (hours > 0) timeString += `${hours} hrs `
+  if (minutes > 0) timeString += `${minutes} min`
+
+  return timeString.trim()
+}
+
 module.exports = {
   binarySearch,
   binarySearchForLeftRange,
@@ -190,4 +205,5 @@ module.exports = {
   formatDateTimeAccordindToDB,
   toISOString,
   isGuestUser,
+  formatRemainingTime,
 }

@@ -399,7 +399,7 @@ const Navbar = () => {
         </Box>
       </Box>
 
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={null}>
         <HamburgerModal
           isOpen={isHamburgerOpen}
           onClose={() => setIsHamburgerOpen(false)}

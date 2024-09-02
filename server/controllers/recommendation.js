@@ -40,7 +40,7 @@ const userRecommendations = asyncHandler(async (req, res) => {
         !article.hindiMainText ||
         !article.hindiAuthor
       ) {
-        const response = await hindiConverter(article)
+        const response = await hindiConverter(article._id)
         if (!article.hindiMainText) {
           article.hindiMainText = []
         }

@@ -236,12 +236,17 @@ const MailTemplates = {
 
   StreakJustBroken: {
     from: 'rapidrecap2k23@gmail.com',
-    subject: "Let's Get Back on Track! 🔄",
-    html: ({ name, articlesForMail }) => `<html lang="en">
+    subject:
+      'Your Streak Can Still Be Revived! Activate And Utilize QuinBoost Today',
+    html: ({
+      name,
+      articlesForMail,
+      remainingTimeBeforeRevival,
+    }) => `<html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Let's Get Back on Track!</title>
+    <title>Your Streak Can Still Be Revived!</title>
     <style type="text/css">
       @media screen and (max-width: 600px) {
         .article-table {
@@ -302,12 +307,15 @@ const MailTemplates = {
         </a>
       </div>
       <div style="padding:20px 0;">
-        <p style="font-size:1.2em; color:#333;">Hello ${name} 👋,</p>
-        <p style="font-size:1em; color:#666; margin-top:20px;">We noticed that your Rapid Recap streak of daily quizzes was broken, but don't worry – setbacks happen! Let's get you back on track and continue your journey towards mastering knowledge.</p>
+        <p style="font-size:1.2em; color:#333;">Dear ${name},</p>
+        <p style="font-size:1em; color:#666; margin-top:20px;">We noticed that your impressive streak has come to a pause, but don't worry—there’s still a chance to bring it back!</p>
+        <p style="font-size:1em; color:#666; margin-top:20px;">You are now in the Revival Period, which lasts for ${remainingTimeBeforeRevival} days. During this time, you have the opportunity to revive your streak and continue your journey toward greater achievements.</p>
+        <h4 style="color:#333; text-align:center; margin-top:30px;">How to Revive Your Streak:</h4>
+        <p style="font-size:1em; color:#666; margin-top:10px;">To revive your streak, simply activate and then utilize QuinBoost. All you need to do is complete 6 quizzes in a single day during the Revival Period. Once you do, your streak will be fully restored, and you can continue progressing without missing a beat.</p>
+        <p style="font-size:1em; color:#666; margin-top:20px;">Remember, this is a limited-time opportunity. The clock is ticking, so be sure to take advantage of QuinBoost before your Revival Period ends.</p>
         <div style="text-align:center; margin:30px 0;">
-          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Log in now</a>
+          <a href="https://www.rapidrecap.co.in" style="display:inline-block; background-color:#00466a; color:#fff; text-decoration:none; padding:15px 30px; border-radius:5px; font-size:1em;">Activate QuinBoost Now</a>
         </div>
-        <p style="font-size:1em; color:#666; margin-top:20px;">Daily quizzes are a great way to stay sharp and engaged. Log in now and resume your streak by taking today's quiz. Remember, consistency is key to progress!</p>
 
         <div style="margin-top:40px; background-color:#A0937D; padding:20px; border-radius:10px;">
           <h4 style="color:#fff; text-align:center;">Articles Recommended for you:</h4>
@@ -346,7 +354,8 @@ const MailTemplates = {
           </table>
         </div>
 
-        <p style="font-size:1em; color:#666; margin-top:40px;">Best regards,<br/>The Rapid Recap Team</p>
+        <p style="font-size:1em; color:#666; margin-top:40px;">We’re rooting for you and can’t wait to see you back on track!</p>
+        <p style="font-size:1em; color:#666; margin-top:20px;">If you have any questions or need assistance, feel free to reach out to our support team.</p>
       </div>
       <hr style="border:none; border-top:1px solid #e0e0e0; margin:20px 0;" />
       <div style="font-size:0.9em; color:#999; line-height:1.4; text-align:center;">

@@ -51,7 +51,7 @@ const allArticles = async (req, res) => {
           !article.hindiMainText ||
           !article.hindiAuthor
         ) {
-          const response = await hindiConverter(article)
+          const response = await hindiConverter(article._id)
           if (!article.hindiMainText) {
             article.hindiMainText = []
           }
@@ -162,7 +162,7 @@ const getArticle = async (req, res) => {
       lang === 'hi' &&
       (!article.hindiTitle || !article.hindiMainText || !article.hindiAuthor)
     ) {
-      const response = await hindiConverter(article)
+      const response = await hindiConverter(article._id)
       if (!article.hindiMainText) {
         article.hindiMainText = []
       }
@@ -475,7 +475,7 @@ const hindiTranslation = async (req, res) => {
     if (!article) {
       throw new Error('Article not found')
     }
-    const response = await hindiConverter(article)
+    const response = await hindiConverter(article._id)
     if (!article.hindiMainText) {
       article.hindiMainText = []
     }
@@ -940,7 +940,7 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
         !relatedArticle.hindiMainText ||
         !relatedArticle.hindiAuthor
       ) {
-        const response = await hindiConverter(relatedArticle)
+        const response = await hindiConverter(relatedArticle._id)
         if (!relatedArticle.hindiMainText) {
           relatedArticle.hindiMainText = []
         }

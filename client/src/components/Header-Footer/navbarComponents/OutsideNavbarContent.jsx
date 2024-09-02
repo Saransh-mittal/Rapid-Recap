@@ -177,11 +177,12 @@ const OutsideNavbarContent = ({
       {user && !isEmptyObject(user) && (
         <>
           <IQScoreComponent
+            t={t}
             user={user}
             setShowIQScoreModal={setShowIQScoreModal}
             playClick={playClick}
           />
-          <XPLevelComponent level={level} playClick={playClick} />
+          <XPLevelComponent level={level} playClick={playClick} t={t} />
           <StreakFireComponent
             streak={streak}
             isBoosted={isBoosted}
@@ -202,7 +203,7 @@ const OutsideNavbarContent = ({
             renderNotificationBadge={renderNotificationBadge}
             isGuest={user?.role === 'guest'}
           />
-          {renderProfileDropdown()}
+          {!isSmallerThan992 && renderProfileDropdown()}
         </>
       )}
       <HamburgerMenuButton
@@ -271,8 +272,7 @@ const PendingLoginContent = () => (
   </Flex>
 )
 
-const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
-  const { t } = useTranslation('HeaderFooter')
+const IQScoreComponent = ({ user, setShowIQScoreModal, playClick, t }) => {
   const dispatch = useDispatch()
   return (
     <>
@@ -320,8 +320,7 @@ const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
   )
 }
 
-const XPLevelComponent = ({ level, playClick }) => {
-  const { t } = useTranslation('HeaderFooter')
+const XPLevelComponent = ({ level, playClick, t }) => {
   const dispatch = useDispatch()
   return (
     <Suspense

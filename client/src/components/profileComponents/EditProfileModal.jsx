@@ -159,23 +159,22 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
         setImageLoading(false)
       }
     },
-    [playClick, toast, t],
-  )
-
-  const modalContentStyle = useMemo(
-    () => ({
-      backgroundColor: '#0f0d15',
-      color: 'white',
-    }),
-    [],
+    [playClick, toast],
   )
 
   return (
     <Suspense fallback={<Spinner />}>
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
-        <ModalContent style={modalContentStyle}>
-          <ModalHeader fontSize="3xl">{t('editProfile')}</ModalHeader>
+        <ModalContent
+          bg="rgba(15, 13, 21, 0.8)"
+          borderRadius="xl"
+          boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
+          border="1px solid rgba(255, 255, 255, 0.18)"
+          color={'white'}
+        >
+          <ModalHeader fontSize="3xl" color={'white'}>
+            {t('editProfile')}</ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody width={'80%'}>
             <Box display="flex" justifyContent="center" mb={4}>

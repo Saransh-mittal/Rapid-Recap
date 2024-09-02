@@ -115,12 +115,13 @@ const SeasonSelectorModal = ({
       >
         <DrawerOverlay />
         <DrawerContent
-          backgroundColor="#0f0d15"
-          color="white"
-          borderRadius="10px"
+          bg="rgba(15, 13, 21, 0.8)"
+          borderRadius="xl"
+          boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
+          border="1px solid rgba(255, 255, 255, 0.18)"
           width={{ base: '100vw !important', lg: '15rem !important' }}
         >
-          <DrawerCloseButton />
+          <DrawerCloseButton color={'white'} />
           <DrawerHeader textAlign={'center'} mt={{ base: '0', lg: '2rem' }}>
             {t('selectSeason')} {/* Use translation key */}
           </DrawerHeader>

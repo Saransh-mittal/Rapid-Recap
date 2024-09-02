@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useCallback, useMemo } from 'react'
+import React, { useState, lazy, Suspense, useMemo } from 'react'
 import {
   Box,
   Flex,
@@ -8,12 +8,10 @@ import {
   HStack,
   Spinner,
   Badge,
-  useToast,
   Tooltip,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import ProfileButton from './ProfileButton'
-import axios from 'axios'
 import { useSelector } from 'react-redux'
 import StarIcon from '../../assets/svg/StarIcon'
 import LightbulbIcon from '../../assets/svg/LightbulbIcon'
@@ -68,7 +66,6 @@ const SolvedQuizzes = ({
   const { user } = useSelector(state => state.auth)
   const [showHistory, setShowHistory] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [history, setHistory] = useState([])
 
   // Memoize solved quizzes data
   const { solvedQuizzesCount, easy, medium, hard } = useMemo(() => {
@@ -88,31 +85,6 @@ const SolvedQuizzes = ({
       },
     }
   }, [solvedQuizzes])
-
-  const toast = useToast()
-
-  const getHistory = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const response = await axios.get(
-        `/api/user/solvedQuizzesHistory?inGameName=${inGameName}`,
-      )
-      setHistory(response.data)
-      setShowHistory(true)
-    } catch (error) {
-      toast({
-        title: t('errorOccurred'), // Use translation key
-        description: t('errorMessage'), // Use translation key
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-      console.error(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [inGameName, toast, t])
 
   if (privateSolvedQuiz) {
     return (
@@ -215,7 +187,7 @@ const SolvedQuizzes = ({
             size="sm"
             w="full"
             mt={4}
-            onClick={getHistory}
+            onClick={() => setShowHistory(true)}
             isDisabled={isDisabled}
             buttonText={t('viewHistory')}
             notShowVisibility={true}
@@ -225,8 +197,8 @@ const SolvedQuizzes = ({
       {showHistory && (
         <Suspense fallback={null}>
           <SolvedQuizHistory
-            solvedHistory={history}
             setShowHistory={setShowHistory}
+            inGameName={inGameName}
           />
         </Suspense>
       )}
