@@ -30,6 +30,7 @@ import { useNavigate } from 'react-router-dom'
 import Confetti from 'react-confetti'
 import { formatRemainingTime } from '../../utils/helper.utils'
 import { useTranslation } from 'react-i18next' // Import useTranslation
+import { getMilestoneInfo } from './noteMessages/milestones'
 
 // Lazy load components and assets
 const ButtonFactory = lazy(() => import('./ButtonFactory'))

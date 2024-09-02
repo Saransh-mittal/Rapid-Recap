@@ -12,6 +12,7 @@ import { Helmet } from 'react-helmet'
 import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components and screens
 const NotificationSubscription = React.lazy(() =>
@@ -30,7 +31,6 @@ const ButtonGradient = React.lazy(() =>
   import('./assets/svg/ButtonGradient.jsx'),
 )
 const Signin = React.lazy(() => import('./screens/Signin.jsx'))
-import { useTranslation } from 'react-i18next'
 const Register = React.lazy(() => import('./screens/Register.jsx'))
 const NoteMessageQueue = React.lazy(() =>
   import('./components/miscellaneous/NoteMessageQueue.jsx'),
@@ -52,6 +52,7 @@ import { setUser } from './redux/authSlice.js'
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
   const location = useLocation()
+  const { t } = useTranslation('App') // Initialize translation function
 
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
@@ -85,12 +86,12 @@ const App = () => {
     if (!token) {
       dispatch(
         addNoteMessage({
-          title: 'Start using Rapid Recap',
+          title: t('Start using Rapid Recap'), // Added translation
           duration: 15000,
           width: '350px',
           actions: [
-            { text: 'Sign-In', actionType: 'SIGN_IN' },
-            { text: 'Sign-In As Guest', actionType: 'GUEST' },
+            { text: t('Sign-In'), actionType: 'SIGN_IN' }, // Added translation
+            { text: t('Sign-In As Guest'), actionType: 'GUEST' }, // Added translation
           ],
         }),
       )
@@ -132,7 +133,7 @@ const App = () => {
     }
 
     refreshAtMidnightUTC()
-  }, [dispatch, isToken])
+  }, [dispatch, isToken, t])
 
   useEffect(() => {
     if (user?.newAccount) {
@@ -156,15 +157,15 @@ const App = () => {
 
   useEffect(() => {
     ReactGA.set({
-      'User Logged In': isLoggedIn ? 'Logged In' : 'Logged Out',
-      'User InGameName': getUserInGameName ? getUserInGameName : 'anonymous',
+      'User Logged In': isLoggedIn ? t('Logged In') : t('Logged Out'), // Added translation
+      'User InGameName': getUserInGameName ? getUserInGameName : t('anonymous'), // Added translation
     })
     ReactGA.send({
       hitType: 'pageview',
       page: location.pathname + location.search,
       title: document.title,
     })
-  }, [location, getUserInGameName, isLoggedIn])
+  }, [location, getUserInGameName, isLoggedIn, t])
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -186,14 +187,14 @@ const App = () => {
     if (guestModalJustClosed && user?.role === 'guest') {
       dispatch(
         addNoteMessage({
-          title: 'You can view your credentials of guest account in profile',
+          title: t('You can view your credentials of guest account in profile'), // Added translation
           duration: 10000,
           width: '300px',
-          actions: [{ text: 'View Profile', actionType: 'VIEW_PROFILE' }],
+          actions: [{ text: t('View Profile'), actionType: 'VIEW_PROFILE' }], // Added translation
         }),
       )
     }
-  }, [guestModalJustClosed, user, dispatch])
+  }, [guestModalJustClosed, user, dispatch, t])
 
   useEffect(() => {
     if (
@@ -204,14 +205,14 @@ const App = () => {
     ) {
       dispatch(
         addNoteMessage({
-          title: 'Register to Safeguard your progress',
+          title: t('Register to Safeguard your progress'), // Added translation
           duration: 5000,
           width: '300px',
           actions: [{ actionType: 'SECURE_YOUR_PROGRESS' }],
         }),
       )
     }
-  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
+  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch, t])
 
   const shouldShowFooter = useMemo(
     () =>
@@ -236,22 +237,28 @@ const App = () => {
   return (
     <>
       <Helmet>
-        <title>Rapid Recap - Stay Informed, Stay Ahead</title>
+        <title>{t('Rapid Recap - Stay Informed, Stay Ahead')}</title>
         <meta
           name="description"
-          content="Rapid Recap is your go-to source for the latest news and articles. Test your knowledge with quizzes and track your Information Quotient (IQ) score."
+          content={t(
+            'Rapid Recap is your go-to source for the latest news and articles. Test your knowledge with quizzes and track your Information Quotient (IQ) score.',
+          )}
         />
         <meta
           name="keywords"
-          content="Rapid Recap, news, articles, quizzes, IQ score, leaderboard"
+          content={t(
+            'Rapid Recap, news, articles, quizzes, IQ score, leaderboard',
+          )}
         />
         <meta
           property="og:title"
-          content="Rapid Recap - Stay Informed, Stay Ahead"
+          content={t('Rapid Recap - Stay Informed, Stay Ahead')}
         />
         <meta
           property="og:description"
-          content="Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap."
+          content={t(
+            'Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.',
+          )}
         />
       </Helmet>
 
@@ -286,47 +293,31 @@ const App = () => {
       )}
 
       <Suspense fallback={null}>
-        <GuestLoginModal
-          isOpen={isGuestLoggedin}
-          onClose={handleClose}
-          guestName={user?.inGameName}
-          guestPassword={user?.guestTempPassword}
-          guestId={user?._id}
-          onOpen={() => setIsGuestLoggedin(true)}
-          t={GuestLoginModaltranslation}
-        />
+        <AppRoutes />
       </Suspense>
 
-      <Suspense fallback={null}>
-        <Signin
-          isOpen={isSigninOpen}
-          onOpen={() => dispatch(setIsSigninOpen(true))}
-          onClose={() => dispatch(setIsSigninOpen(false))}
-        />
-      </Suspense>
+      <Suspense fallback={null}>{shouldShowFooter && <Footer />}</Suspense>
 
-      <Suspense fallback={null}>
-        <Register
-          isOpen={isRegisterOpen}
-          onOpen={() => dispatch(setIsRegisterOpen(true))}
-          onClose={() => dispatch(setIsRegisterOpen(false))}
-        />
-      </Suspense>
-
-      <Box
-        position="relative"
-        minHeight="100vh"
-        zIndex={1}
-        overflowX={'hidden'}
-      >
+      {isRegisterOpen && (
         <Suspense fallback={null}>
-          <AppRoutes isToken={isToken()} />
+          <Register setIsOpen={show => dispatch(setIsRegisterOpen(show))} />
         </Suspense>
-      </Box>
+      )}
 
-      {shouldShowFooter && (
+      {isSigninOpen && (
         <Suspense fallback={null}>
-          <Footer />
+          <Signin setIsOpen={show => dispatch(setIsSigninOpen(show))} />
+        </Suspense>
+      )}
+
+      {isGuestLoggedin && (
+        <Suspense fallback={null}>
+          <GuestLoginModal
+            isOpen={isGuestLoggedin}
+            handleClose={handleClose}
+            translation={GuestLoginModaltranslation}
+            title={GuestLogintranslation('GuestLoginModal')}
+          />
         </Suspense>
       )}
     </>

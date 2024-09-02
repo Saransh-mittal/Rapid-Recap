@@ -1420,7 +1420,6 @@ const getBookmarks = async (req, res) => {
           const response = await hindiConverter(bookmark)
           if (!bookmark.hindiMainText) {
             bookmark.hindiMainText = []
-            await bookmark.save()
           }
           bookmark.hindiTitle = response.hindiTitle
 
@@ -1429,7 +1428,6 @@ const getBookmarks = async (req, res) => {
             bookmark.hindiMainText.push(response.hindiMainText[key])
           }
           bookmark.hindiAuthor = response.hindiAuthor
-          await bookmark.save()
         }
       }
 

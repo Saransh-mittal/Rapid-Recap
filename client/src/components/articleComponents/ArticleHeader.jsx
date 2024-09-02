@@ -19,6 +19,8 @@ import { EditIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
+import { formatDateLangTranslate } from '../../utils/helper.utils'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -47,6 +49,8 @@ const ArticleHeader = ({
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()
   const { user } = useSelector(state => state.auth)
+  const locale = i18n.language === 'hi' ? 'hi-IN' : 'en-US' // assuming 'i18n.language' returns the current language
+  const formattedDate = formatDateLangTranslate(new Date(dateTime), locale)
 
   const {
     isOpen: isOpenArticleForm,
@@ -221,7 +225,7 @@ const ArticleHeader = ({
             >
               <Text fontSize={['sm', 'md', 'lg']}>
                 {' '}
-                {avgTimeRead} {t('timeToRead')} • <time>{dateTime}</time>
+                {avgTimeRead} {t('timeToRead')} • <time>{formattedDate}</time>
               </Text>
             </Flex>
           )}
@@ -233,7 +237,7 @@ const ArticleHeader = ({
               w={{ base: '100%', lg: 'auto' }}
             >
               <Text fontSize={['sm', 'md', 'lg']} mb={0}>
-                {avgTimeRead} {t('timeToRead')} • <time>{dateTime}</time>
+                {avgTimeRead} {t('timeToRead')} • <time>{formattedDate}</time>
               </Text>
             </Flex>
           )}

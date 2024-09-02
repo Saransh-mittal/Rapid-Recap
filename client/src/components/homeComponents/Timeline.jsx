@@ -164,7 +164,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
         <Skeleton w="xs" h={{ base: '26rem', md: 'md' }} borderRadius="2xl" />
       </Flex>
     ))
-  }, [])
+  }, [load])
 
   const trackCategoryClick = useCallback(category => {
     ReactGA.send({
@@ -320,7 +320,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
                       }
                       image={item.imgURL || rrImage}
                       category={t(`categories.${item?.category.toLowerCase()}`)}
-                      date={formatDate(item?.dateTime, t, i18n.language)}
+                      date={formatDate(item?.dateTime, i18n.language)}
                       readTime={item.avgReadTime}
                       id={item._id}
                       articleData={item}

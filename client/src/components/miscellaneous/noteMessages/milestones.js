@@ -1,4 +1,4 @@
-import i18n from './i18n' // Adjust the path as needed
+import i18n from 'i18next' // Adjust the path as needed
 
 export const MILESTONES = {
   QUIN_BOOST: {

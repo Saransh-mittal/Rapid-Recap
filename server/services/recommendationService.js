@@ -280,7 +280,6 @@ async function getArticlePageRecommendations(
           const response = await hindiConverter(article)
           if (!article.hindiMainText) {
             article.hindiMainText = []
-            await article.save()
           }
           article.hindiTitle = response.hindiTitle
 
@@ -289,7 +288,6 @@ async function getArticlePageRecommendations(
             article.hindiMainText.push(response.hindiMainText[key])
           }
           article.hindiAuthor = response.hindiAuthor
-          await article.save()
         }
       }
 

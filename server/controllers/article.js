@@ -54,7 +54,6 @@ const allArticles = async (req, res) => {
           const response = await hindiConverter(article)
           if (!article.hindiMainText) {
             article.hindiMainText = []
-            await article.save()
           }
           article.hindiTitle = response.hindiTitle
 
@@ -63,7 +62,6 @@ const allArticles = async (req, res) => {
             article.hindiMainText.push(response.hindiMainText[key])
           }
           article.hindiAuthor = response.hindiAuthor
-          await article.save()
         }
       }
 
@@ -167,7 +165,6 @@ const getArticle = async (req, res) => {
       const response = await hindiConverter(article)
       if (!article.hindiMainText) {
         article.hindiMainText = []
-        await article.save()
       }
       article.hindiTitle = response.hindiTitle
 
@@ -176,7 +173,6 @@ const getArticle = async (req, res) => {
         article.hindiMainText.push(response.hindiMainText[key])
       }
       article.hindiAuthor = response.hindiAuthor
-      await article.save()
     }
 
     const paragraphs = await breakArticleIntoParagraphs(article.mainText)
@@ -482,7 +478,6 @@ const hindiTranslation = async (req, res) => {
     const response = await hindiConverter(article)
     if (!article.hindiMainText) {
       article.hindiMainText = []
-      await article.save()
     }
     article.hindiTitle = response.hindiTitle
 
@@ -491,7 +486,6 @@ const hindiTranslation = async (req, res) => {
       article.hindiMainText.push(response.hindiMainText[key])
     }
     article.hindiAuthor = response.hindiAuthor
-    await article.save()
 
     // update the cache memory :
     const cacheKey = `article_${articleId}`
@@ -949,7 +943,6 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
         const response = await hindiConverter(relatedArticle)
         if (!relatedArticle.hindiMainText) {
           relatedArticle.hindiMainText = []
-          await relatedArticle.save()
         }
         relatedArticle.hindiTitle = response.hindiTitle
 
@@ -958,7 +951,6 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
           relatedArticle.hindiMainText.push(response.hindiMainText[key])
         }
         relatedArticle.hindiAuthor = response.hindiAuthor
-        await relatedArticle.save()
       }
     }
   // Send the response with filtered related articles

@@ -102,6 +102,8 @@ const Home = () => {
           }
           dispatchRedux(setPageRedux(pageNum))
         }
+
+        setLoad(false)
       } catch (error) {
         if (axios.isCancel(error)) {
           console.log('Request canceled', error.message)
@@ -115,8 +117,6 @@ const Home = () => {
             position: 'top',
           })
         }
-      } finally {
-        setLoad(false)
       }
     },
     [loginCheckStatus, hasMoreItems, notLoggedIn, dispatchRedux, toast, t],

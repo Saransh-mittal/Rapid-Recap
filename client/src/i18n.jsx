@@ -104,6 +104,7 @@ const namespaces = {
     'EnhancedSocietyCircle',
   ],
   assets: ['Circles', 'Brains', 'CircleAndSocietyData'],
+  main: ['App'],
 }
 
 i18n
@@ -152,6 +153,8 @@ i18n
             return `/locales/${lng}/assets/${namespace}.json`
           case 'categories':
             return `/locales/${lng}/categories/${namespace}.json`
+          case 'main':
+            return `/locales/${lng}/main/${namespace}.json`
           default:
             return `/locales/${lng}/${namespace}.json` // fallback
         }

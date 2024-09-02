@@ -146,13 +146,13 @@ const SolvedQuizzes = ({
         <Text fontSize="lg" fontWeight="bold" color="gray.100">
           {t('solvedQuizzes')}
         </Text>
-        <Tooltip label={t('visibilityToOthers')}>
-          {loginedUserProfile && (
+        {loginedUserProfile && (
+          <Tooltip label={t('visibilityToOthers')}>
             <Badge colorScheme="green">
               {user.profilePrivacy.solvedQuizzes ? t('hidden') : t('visible')}
             </Badge>
-          )}
-        </Tooltip>
+          </Tooltip>
+        )}
       </Flex>
       {isLoading ? (
         <Flex justify="center" align="center" h="150px">
