@@ -13,14 +13,16 @@ const MailTemplates = require('../data/MailTemplates')
 const { logActivity } = require('../utils/activity.utils')
 const { activityTypes } = require('../data/activityTypes')
 const configService = require('../configService')
-const { fetchTodaysPastRQMs } = require('../utils/quiz.utils')
+const {
+  fetchTodaysPastRQMs,
+  sendMailsForQuizRemainingToReviveStreak,
+} = require('../utils/quiz.utils')
 const {
   startSession,
   commitSession,
   abortSession,
 } = require('../db/session.js')
 const { getTopThreeRecommendedArticles } = require('../utils/article.utils.js')
-const NoteMessage = require('../model/noteMessageSchema.js')
 
 // @desc Save the quiz attempt
 // @route POST /api/quiz/saveAttempt
@@ -208,6 +210,11 @@ const saveAttempt = async (req, res) => {
     const articlesForMail = await getTopThreeRecommendedArticles(
       user._id.toString(),
     )
+    quizzesToday < 6 &&
+      sendMailsForQuizRemainingToReviveStreak(
+        user._id.toString(),
+        6 - quizzesToday,
+      )
     if (quizzesToday % 7 === 4) {
       cancelScheduledEmails(user._id.toString())
       scheduleEmail({

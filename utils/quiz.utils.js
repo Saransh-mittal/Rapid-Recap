@@ -5,6 +5,8 @@ const Article = require('../model/articleSchema')
 const moment = require('moment')
 const fakeQuizAttemptMinMax = require('../data/fakeAttemptMinMax.json')
 const configService = require('../configService')
+const User = require('../model/userSchema')
+const { cancelScheduledNotif } = require('./notif.utils')
 const genQuiz = async ({ fullQuiz, title }) => {
   const selectedQuestions = new Set() // Using a Set to ensure uniqueness
 
@@ -543,6 +545,72 @@ const fakeQuizAttemptCnt = async () => {
   }
 }
 
+const sendMailsForQuizRemainingToReviveStreak = async (
+  userId,
+  quizzes_left,
+) => {
+  try {
+    const user = await User.findById(userId)
+
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0) // Set time to start of the day
+    let remainingTimeBeforeRevival = null
+
+    if (user.streak >= 5 && user.revivalPeriodEnd) {
+      user.revivalPeriodEnd = getTheRevivalEndDay(
+        user.streak,
+        user.streakExpiry,
+      )
+      remainingTimeBeforeRevival =
+        user.revivalPeriodEnd.getTime() - today.getTime()
+      if (remainingTimeBeforeRevival < 0) {
+        user.revivalPeriodEnd = null
+        user.streakBeforeBreak = 0
+      } else {
+        cancelScheduledNotif(userId)
+        if (
+          remainingTimeBeforeRevival <= 24 * 60 * 60 * 1000 &&
+          quizzes_left === 1
+        ) {
+          await scheduleNotif({
+            userId,
+            title: `Keep Going, ${user.name}! 🌟`,
+            body: `🚨 This is it, One quiz stands between you and your streak. Today is your last shot—complete that final quiz now and unleash QuinBoost to reclaim your streak! Time is running out! ⚡🔥`,
+            image:
+              'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
+            delayMinutes: 20,
+          })
+        } else if (quizzes_left === 1) {
+          await scheduleNotif({
+            userId,
+            title: `Keep Going, ${user.name}! 🌟`,
+            body: `🔥 Just one quiz left! Today’s your last chance to revive your streak—complete your final quiz now to activate and utilize QuinBoost to get back on track. Don’t let this slip away! 🚀`,
+            image:
+              'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
+            delayMinutes: 30,
+          })
+        } else
+          await scheduleNotif({
+            userId,
+            title: `Keep Going, ${user.name}! 🌟`,
+            body: `You're just ${quizzes_left} quizzes away from activating QuinBoost and ${
+              quizzes_left + 1
+            } quizzes from fully reviving your streak! Don’t give up now—finish strong and get your streak back on track! 🚀`,
+            image:
+              'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
+            delayMinutes: 60,
+          })
+      }
+      await user.save()
+    }
+  } catch (error) {
+    console.error(
+      'Error sending mails for quiz remaining to revive streak:',
+      error,
+    )
+  }
+}
+
 module.exports = {
   genQuiz,
   generateQuestionsForQuiz,
@@ -551,4 +619,5 @@ module.exports = {
   findQuizByLanguage,
   fetchTodaysPastRQMs,
   fakeQuizAttemptCnt,
+  sendMailsForQuizRemainingToReviveStreak,
 }
