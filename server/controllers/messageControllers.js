@@ -44,8 +44,26 @@ const allMessages = asyncHandler(async (req, res) => {
         messageObject.content = message.decryptContent()
       return messageObject
     })
+    let resultMessages = decryptedMessages.reverse()
 
-    res.json(decryptedMessages.reverse())
+    for (let message of resultMessages) {
+      if (message.type === 'article_card') {
+        const article = await Article.findById(message.article._id).select(
+          ' _id title category dateTime imgURL hindiTitle',
+        )
+        if (article) {
+          message.article = {
+            _id: article._id.toString(),
+            title: article.title,
+            category: article.category,
+            date: formatDate(article.dateTime),
+            image: article.imgURL[0],
+            hindiTitle: article.hindiTitle,
+          }
+        }
+      }
+    }
+    res.json(resultMessages)
   } catch (error) {
     res.status(400)
     throw new Error(error.message)
@@ -68,9 +86,7 @@ const sendMessage = asyncHandler(async (req, res) => {
   }
   let article
   if (type === 'article_card') {
-    article = await Article.findById(articleId).select(
-      '_id title category dateTime imgURL',
-    )
+    article = await Article.findById(articleId).select('_id')
     if (!article) {
       res.status(404)
       throw new Error('Article not found')
@@ -91,10 +107,6 @@ const sendMessage = asyncHandler(async (req, res) => {
           sent: true,
           article: {
             _id: article._id,
-            title: article.title,
-            category: article.category,
-            date: formatDate(article.dateTime),
-            image: article.imgURL[0],
           },
         }
 
