@@ -65,6 +65,7 @@ const initialState = {
   isNotifDrawerOpen: false,
   isNotifModalOpen: false,
   soundSettings: DEFAULT_SOUND_SETTINGS,
+  navigationCount: 0,
 }
 
 export const appSlice = createSlice({
@@ -73,6 +74,9 @@ export const appSlice = createSlice({
   reducers: {
     updateUnreadFriendRequests: (state, action) => {
       state.unreadFriendRequests = action.payload
+    },
+    setNavigationCount: (state, action) => {
+      state.navigationCount = action.payload
     },
     setUpdates: (state, action) => {
       state.updates = action.payload
@@ -255,6 +259,7 @@ export const {
   setIsNotifModalOpen,
   toggleSound,
   setSoundSettings,
+  setNavigationCount,
 } = appSlice.actions
 
 export default appSlice.reducer
