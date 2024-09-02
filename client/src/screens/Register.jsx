@@ -28,11 +28,11 @@ import useSound from '../customHooks/useSound'
 import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
 import FillEyeVisible from '../assets/svg/FillEyeVisible'
 import { useDispatch, useSelector } from 'react-redux'
-import { logout } from '../redux/authSlice'
+import { logoutAuth } from '../redux/authSlice'
 import {
+  logoutApp,
   resetAllState,
   resetLoadingFlags,
-  setExportData,
   setIsSigninOpen,
 } from '../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
@@ -97,7 +97,9 @@ export default function Register({
         localStorage.removeItem('token')
         exportData && localStorage.removeItem('guestUserId')
         navigate('/')
-        dispatchRedux(logout())
+        dispatchRedux(logoutApp())
+        dispatchRedux(logoutAuth())
+
         dispatchRedux(resetLoadingFlags())
         dispatchRedux(resetAllState())
       } else {

@@ -146,6 +146,7 @@ export const appSlice = createSlice({
     setShowingSummaryForNoteMessages: (state, action) => {
       state.showingSummaryForNoteMessages = action.payload
     },
+    logout: () => initialState,
   },
   extraReducers: builder => {
     builder
@@ -260,6 +261,7 @@ export const {
   toggleSound,
   setSoundSettings,
   setNavigationCount,
+  logout: logoutApp,
 } = appSlice.actions
 
 export default appSlice.reducer
