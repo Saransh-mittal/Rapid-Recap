@@ -114,13 +114,13 @@ const SolvedQuizzes = ({
         <Text fontSize="lg" fontWeight="bold" color="gray.100">
           Solved Quizzes
         </Text>
-        <Tooltip label="Visibility to others">
-          {loginedUserProfile && (
+        {loginedUserProfile && (
+          <Tooltip label="Visibility to others">
             <Badge colorScheme="green">
               {user.profilePrivacy.solvedQuizzes ? 'HIDDEN' : 'VISIBLE'}
             </Badge>
-          )}
-        </Tooltip>
+          </Tooltip>
+        )}
       </Flex>
       {isLoading ? (
         <Flex justify="center" align="center" h="150px">
