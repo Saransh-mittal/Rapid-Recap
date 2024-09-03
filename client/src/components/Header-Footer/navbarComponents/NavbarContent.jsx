@@ -22,10 +22,10 @@ const NavbarContent = ({
     playClick()
     if (setIsHamburgerOpen) setIsHamburgerOpen(false)
   }, [playClick, setIsHamburgerOpen])
-  const showDashboard = isAdmin && isAuthenticated && user
+
   const memoizedNavItems = useMemo(() => {
     return navItems.map((item, index) => {
-      if (item.label === 'Dashboard' && !showDashboard) return null
+      if (item.label === 'Dashboard') return null
       return (
         <ListItem
           className={`nav-item `}

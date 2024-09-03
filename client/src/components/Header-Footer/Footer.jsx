@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react'
 import { Box, Flex, Link, Text } from '@chakra-ui/react'
+import { NavLink } from 'react-router-dom'
 
 // Lazy loading the SVG components
 const InstagramSVG = lazy(() => import('../../assets/svg/InstagramSVG'))
@@ -41,6 +42,16 @@ const Footer = React.memo(() => {
               <LinkedinSVG width="25px" height="25px" fill="#fff" />
             </Suspense>
           </Link>
+        </Box>
+        <Box>
+          <NavLink
+            to="/contact"
+            color="#f9f9f9"
+            aria-label="Contact Us"
+            title="Contact Us"
+          >
+            Contact Us
+          </NavLink>
         </Box>
       </Flex>
       <Text textAlign="center" color="#f9f9f9">

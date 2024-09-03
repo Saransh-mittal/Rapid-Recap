@@ -137,7 +137,25 @@ const OutsideNavbarContent = ({
   )
 
   if (loginCheckStatus === 'pending' && isToken) {
-    return <PendingLoginContent />
+    return (
+      <Flex
+        gap={{ base: 1, lg: 3 }}
+        alignItems="center"
+        display={isHamburgerOpen ? 'none' : 'flex'}
+      >
+        <PendingLoginContent isSmallerThan992={isSmallerThan992} />
+        <HamburgerMenuButton
+          isHamburgerOpen={isHamburgerOpen}
+          setIsHamburgerOpen={setIsHamburgerOpen}
+          playClick={playClick}
+          unreadFriendRequests={unreadFriendRequests}
+          notification={notification}
+          notifyCont={notifyCont}
+          renderNotificationBadge={renderNotificationBadge}
+          isSmallerThan992={isSmallerThan992}
+        />
+      </Flex>
+    )
   }
 
   if (notLogined) {
@@ -188,19 +206,23 @@ const OutsideNavbarContent = ({
             setShowDailyStreakModal={setShowDailyStreakModal}
             playClick={playClick}
           />
-          <SearchComponent
-            onOpenUserSearch={onOpenUserSearch}
-            playClick={playClick}
-            isOpenUserSearch={isOpenUserSearch}
-            onCloseUserSearch={onCloseUserSearch}
-          />
-          <MessengerComponent
-            playClick={playClick}
-            notification={notification}
-            navigate={navigate}
-            renderNotificationBadge={renderNotificationBadge}
-            isGuest={user?.role === 'guest'}
-          />
+          {!isSmallerThan992 && (
+            <>
+              <SearchComponent
+                onOpenUserSearch={onOpenUserSearch}
+                playClick={playClick}
+                isOpenUserSearch={isOpenUserSearch}
+                onCloseUserSearch={onCloseUserSearch}
+              />
+              <MessengerComponent
+                playClick={playClick}
+                notification={notification}
+                navigate={navigate}
+                renderNotificationBadge={renderNotificationBadge}
+                isGuest={user?.role === 'guest'}
+              />
+            </>
+          )}
           {!isSmallerThan992 && renderProfileDropdown()}
         </>
       )}
@@ -218,7 +240,7 @@ const OutsideNavbarContent = ({
   )
 }
 
-const PendingLoginContent = () => (
+const PendingLoginContent = ({ isSmallerThan992 }) => (
   <Flex gap={{ base: 1, lg: 3 }} alignItems="center">
     <Skeleton
       display="flex"
@@ -238,35 +260,39 @@ const PendingLoginContent = () => (
       width="1.6em"
       height="1.6em"
     />
-    <IconShimmerLoader icon={<SearchIcon color="grey" />} />
-    <IconShimmerLoader
-      icon={<FaMessenger fill="grey" width="23px" height="23px" />}
-    />
-    <motion.button
-      whileTap={{ scale: 0.97 }}
-      style={{
-        border: 'none',
-        borderRadius: '50%',
-        cursor: 'pointer',
-        display: 'flex',
-        gap: '0.5rem',
-        alignItems: 'center',
-      }}
-    >
-      <Skeleton h={'35px'} w={'35px'} rounded={'50%'} />
-      <motion.div
-        variants={{
-          open: { rotate: 180 },
-          closed: { rotate: 0 },
-        }}
-        transition={{ duration: 0.2 }}
-        style={{ originY: 0.55 }}
-      >
-        <svg width="15" height="15" viewBox="0 0 20 20">
-          <path d="M0 7 L 20 7 L 10 16" fill="white" />
-        </svg>
-      </motion.div>
-    </motion.button>
+    {!isSmallerThan992 && (
+      <>
+        <IconShimmerLoader icon={<SearchIcon color="grey" />} />
+        <IconShimmerLoader
+          icon={<FaMessenger fill="grey" width="23px" height="23px" />}
+        />
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          style={{
+            border: 'none',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            display: 'flex',
+            gap: '0.5rem',
+            alignItems: 'center',
+          }}
+        >
+          <Skeleton h={'35px'} w={'35px'} rounded={'50%'} />
+          <motion.div
+            variants={{
+              open: { rotate: 180 },
+              closed: { rotate: 0 },
+            }}
+            transition={{ duration: 0.2 }}
+            style={{ originY: 0.55 }}
+          >
+            <svg width="15" height="15" viewBox="0 0 20 20">
+              <path d="M0 7 L 20 7 L 10 16" fill="white" />
+            </svg>
+          </motion.div>
+        </motion.button>
+      </>
+    )}
   </Flex>
 )
 

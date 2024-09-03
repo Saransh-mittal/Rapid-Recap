@@ -17,11 +17,11 @@ const Inbox = ({
   // Memoize the onClick handler to prevent unnecessary re-renders
   const handleClick = useCallback(() => {
     playClick()
-    onClick()
+    onClick && onClick()
   }, [playClick, onClick])
 
   return (
-    <Flex className={className} display={display}>
+    <Flex className={className} display={display} h={h} w={w}>
       <Button
         display={display}
         background={'transparent'}
@@ -30,7 +30,10 @@ const Inbox = ({
         color={'white'}
         _hover={{ background: 'transparent' }}
         onClick={handleClick} // Use memoized handler
-        h={'fit-content'}
+        h={h}
+        w={w}
+        minW={w}
+        maxW={w}
       >
         <EmailIcon width={w} height={h} />
         {notifyCont > 0 && (
