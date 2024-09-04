@@ -6,6 +6,10 @@ import {
   useMediaQuery,
   useToast,
   Spinner,
+  VStack,
+  Box,
+  Text,
+  useColorModeValue,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
@@ -86,33 +90,6 @@ const LeaderBoard = () => {
     [hasMore, PAGE_LIMIT, toast],
   )
 
-  const handleLoginAlert = useCallback(() => {
-    if (!isAuthenticated) {
-      navigate('/signin')
-      toast({
-        title: 'Please Sign In First',
-        status: 'warning',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-    }
-  }, [isAuthenticated, navigate, toast])
-
-  const handleSocietyButtonClick = useCallback(
-    society => {
-      setPage(1)
-      if (activeSociety === society) {
-        setActiveSociety(null)
-        fetchLeaderBoard()
-      } else {
-        setActiveSociety(society)
-        fetchLeaderBoard(society)
-      }
-    },
-    [activeSociety, fetchLeaderBoard],
-  )
-
   const handleScroll = useCallback(async () => {
     if (
       window.innerHeight + document.documentElement.scrollTop + 500 >
@@ -179,65 +156,68 @@ const LeaderBoard = () => {
         <Flex
           margin={'20px'}
           justifyContent={'center'}
-          w={'100%'}
+          w={{ base: '100%', md: '75%' }}
           flexDirection={'column'}
         >
-          <Flex alignItems={'center'} justifyContent={'center'}>
-            <ChakraHeading>
-              <Flex alignItems={'center'} w={'100%'} justifyContent={'center'}>
-                <Image
-                  src={medalIcon}
-                  alt="Rating"
-                  width={'35px'}
-                  height={'35px'}
-                  bg={'none'}
-                  mt={'2.5rem'}
-                />
-                <Heading
-                  title={'LEADERBOARD'}
-                  tag={'SEASON 2'}
-                  tagFontSize={'1.05rem'}
-                />
-                <Image
-                  src={medalIcon}
-                  alt="Rating"
-                  width={'35px'}
-                  height={'35px'}
-                  bg={'none'}
-                  mt={'2.5rem'}
-                />
-              </Flex>
-            </ChakraHeading>
-          </Flex>
-
-          <React.Suspense fallback={<Spinner />}>
-            <Flex
-              alignItems="center"
-              justifyContent="center"
-              marginBottom="20px"
-              marginTop={'20px'}
-            >
-              <SearchBar
-                setSearchResults={setSearchResults}
-                setSearchLoad={setSearchLoad}
+          <VStack spacing={8} align="stretch">
+            <Flex justifyContent="center" alignItems="center">
+              <Image
+                src={medalIcon}
+                alt="Rating"
+                width={'35px'}
+                height={'35px'}
+                bg={'none'}
+              />
+              <ChakraHeading
+                size="2xl"
+                bgGradient="linear(to-r, yellow.400, yellow.600)"
+                bgClip="text"
+                fontFamily="serif"
+              >
+                LEADERBOARD
+              </ChakraHeading>
+              <Image
+                src={medalIcon}
+                alt="Rating"
+                width={'35px'}
+                height={'35px'}
+                bg={'none'}
               />
             </Flex>
 
-            <LeaderBoardTable
-              hasMore={hasMore}
-              PAGE_LIMIT={PAGE_LIMIT}
-              loadNextPage={loadNextPage}
-              leaders={leaders}
-              searchResults={searchResults}
-              searchLoad={searchLoad}
-              isBaseScreen={isBaseScreen}
-              isLgScreen={isLgScreen}
-              isMdScreen={isMdScreen}
-              currUserChar={user}
-              navigate={navigate}
-              setLoadNextPage={setLoadNextPage}
-            />
-          </React.Suspense>
+            <Text fontSize="lg" color="gray.500" textAlign="center">
+              Season 2
+            </Text>
+
+            <React.Suspense fallback={<Spinner />}>
+              <Flex
+                alignItems="center"
+                justifyContent="center"
+                marginBottom="20px"
+                marginTop={'20px'}
+              >
+                <SearchBar
+                  setSearchResults={setSearchResults}
+                  setSearchLoad={setSearchLoad}
+                />
+              </Flex>
+
+              <LeaderBoardTable
+                hasMore={hasMore}
+                PAGE_LIMIT={PAGE_LIMIT}
+                loadNextPage={loadNextPage}
+                leaders={leaders}
+                searchResults={searchResults}
+                searchLoad={searchLoad}
+                isBaseScreen={isBaseScreen}
+                isLgScreen={isLgScreen}
+                isMdScreen={isMdScreen}
+                currUserChar={user}
+                navigate={navigate}
+                setLoadNextPage={setLoadNextPage}
+              />
+            </React.Suspense>
+          </VStack>
         </Flex>
       </Flex>
     </>
