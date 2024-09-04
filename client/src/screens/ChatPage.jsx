@@ -45,6 +45,7 @@ const ChatPage = () => {
 
   const handleClose = useCallback(() => {
     closeChat()
+    console.log(isLastRoute)
     if (isLastRoute) navigate('/home')
     else navigate(-1)
   }, [closeChat, isLastRoute, navigate])

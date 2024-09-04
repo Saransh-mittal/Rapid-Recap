@@ -1,4 +1,4 @@
-import { Input, useToast } from '@chakra-ui/react'
+import { Input, useColorModeValue, useToast } from '@chakra-ui/react'
 import debounce from 'lodash.debounce'
 import axios from 'axios'
 import { useState } from 'react'
@@ -50,6 +50,11 @@ const SearchBar = ({ setSearchResults, setSearchLoad, w = '50%' }) => {
       placeholder={t('searchUser')}
       value={searchQuery}
       onChange={handleSearch}
+      bg="whiteAlpha.200"
+      border="none"
+      _focus={{
+        boxShadow: `0 0 0 1px ${useColorModeValue('purple.500', 'purple.300')}`,
+      }}
       color={'white'}
     />
   )

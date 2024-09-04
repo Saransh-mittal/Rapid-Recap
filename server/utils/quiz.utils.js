@@ -280,7 +280,8 @@ const generateQuestionsForHindiQuiz = async ({
                                 7. Nothing should be outside of the article provided(important)
                                 8. Every question should be unique.
                                 9. Give each question a difficulty level between 0 to 1 (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)). **This field is mandatory**..
-                                10.Assess the overall difficulty level of the article by considering factors
+                                10. If the question requires remembering numerical data, specific dates, or names(except author names and small names.), assign a higher difficulty level between 0.5 to 0.99 . Give These things higher priority while assigning difficulty.
+                                11.Assess the overall difficulty level of the article by considering factors
                                   such as vocabulary complexity, sentence structure, conceptual difficulty,
                                   depth of analysis, background knowledge required, clarity and coherence,
                                   density of information, language style, length of the article, and reader
@@ -289,7 +290,7 @@ const generateQuestionsForHindiQuiz = async ({
                                   high difficulty. Aggregate these assessments to derive an overall difficulty level
                                   that reflects the article's complexity and suitability for readers of varying
                                   proficiency levels (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)). **This field is mandatory**..
-                                10. Return response in following JSON object format:
+                                12. Return response in following JSON object format:
                                   {
                                     title: "Title of the article",
                                     para1 :

@@ -1,18 +1,20 @@
 import React, { useMemo, useCallback, Suspense } from 'react'
 import {
   Table,
-  TableCaption,
-  TableContainer,
   Tbody,
   Td,
   Th,
   Thead,
   Tr,
-  Skeleton,
+  Box,
+  VStack,
+  Flex,
+  Image,
+  Text,
+  useColorModeValue,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-
-// Lazy load components
 const LeaderBoardRow = React.lazy(() => import('./LeaderBoardRow'))
 const LoadingState = React.lazy(() => import('./LoadingState'))
 const VerticalDotsSeparator = React.lazy(() =>
@@ -33,14 +35,11 @@ const LeaderBoardTable = ({
   hasMore,
 }) => {
   const { t } = useTranslation('LeaderBoardTable')
-
-  // Memoize the data to avoid re-calculation
   const data = useMemo(
     () => (searchResults.length > 0 ? searchResults : leaders),
     [searchResults, leaders],
   )
 
-  // Memoize the uniqueData
   const uniqueData = useMemo(() => {
     const seenUserIds = new Set()
     return data.filter(user => {
@@ -53,40 +52,55 @@ const LeaderBoardTable = ({
     })
   }, [data])
 
-  // Memoize the navigate function
   const handleNavigate = useCallback(route => navigate(route), [navigate])
 
+  const textColor = useColorModeValue('gray.100', 'gray.50')
+  const accentColor = useColorModeValue('purple.500', 'purple.300')
+
+  const isMobile = useBreakpointValue({ base: true, md: false })
+  const isTablet = useBreakpointValue({ base: false, md: true, lg: false })
+  const isDesktop = useBreakpointValue({ base: false, lg: true })
+
   return (
-    <TableContainer width={'100%'} className="mainBoard" overflowX="auto">
-      <Table variant={'unstyled'}>
-        <TableCaption color={'white'} placement="top">
-          {t('tableCaption')}
-        </TableCaption>
+    <Box overflowX="hidden">
+      <Table variant="unstyled">
         <Thead>
-          <Tr boxShadow={'dark-lg'} letterSpacing={'2px'}>
-            <Th textAlign={'center'} bg={'green.300'} color={'white'}>
+          <Tr>
+            <Th
+              textAlign="center"
+              color={accentColor}
+              paddingX={{ base: '0', md: '24px' }}
+            >
               {t('rank')}
             </Th>
-            {!isBaseScreen && (
-              <Th textAlign={'center'} bg={'red.300'}>
-                {t('name')}
+            <Th
+              textAlign="center"
+              color={accentColor}
+              paddingX={{ base: '0', md: '24px' }}
+            >
+              {t('Player')}
+            </Th>
+            {isTablet && (
+              <Th textAlign="center" color={accentColor}>
+                {t('Experience')}
               </Th>
             )}
-            <Th textAlign={'center'} bg={'blue.300'} px={'0.5rem'}>
-              {t('inGameName')}
-            </Th>
-            <Th textAlign={'center'} bg={'orange.300'}>
+            <Th
+              textAlign="center"
+              color={accentColor}
+              paddingX={{ base: '0', md: '24px' }}
+            >
               {t('iqScores')}
             </Th>
-            {!isLgScreen && (
-              <Th textAlign={'center'} bg={'teal.300'}>
-                {t('quizSubmissions')}
-              </Th>
-            )}
-            {!isMdScreen && (
-              <Th textAlign={'center'} bg={'pink.300'}>
-                {t('avgRQMScore')}
-              </Th>
+            {isDesktop && (
+              <>
+                <Th textAlign="center" color={accentColor}>
+                  {t('quizSubmissions')}
+                </Th>
+                <Th textAlign="center" color={accentColor}>
+                  {t('avgRQMScore')}
+                </Th>
+              </>
             )}
           </Tr>
         </Thead>
@@ -94,7 +108,7 @@ const LeaderBoardTable = ({
           {searchLoad ? (
             <LoadingState />
           ) : (
-            <Tbody marginTop={'20px'} className="Entries">
+            <Tbody>
               {uniqueData.length > 0 &&
                 uniqueData.map((user, index) => (
                   <LeaderBoardRow
@@ -102,16 +116,18 @@ const LeaderBoardTable = ({
                     user={user}
                     index={index}
                     currUserChar={currUserChar}
-                    isBaseScreen={isBaseScreen}
-                    isLgScreen={isLgScreen}
-                    isMdScreen={isMdScreen}
+                    isMobile={isMobile}
+                    isTablet={isTablet}
+                    isDesktop={isDesktop}
                     navigate={handleNavigate}
+                    textColor={textColor}
+                    accentColor={accentColor}
                   />
                 ))}
               {currUserChar?.rank > 500 && (
                 <>
                   <Tr>
-                    <Td colSpan={6}>
+                    <Td colSpan={isDesktop ? 6 : 4}>
                       <VerticalDotsSeparator />
                     </Td>
                   </Tr>
@@ -120,10 +136,12 @@ const LeaderBoardTable = ({
                     user={currUserChar}
                     index={50}
                     currUserChar={currUserChar}
-                    isBaseScreen={isBaseScreen}
+                    isMobile={isMobile}
+                    isTablet={isTablet}
+                    isDesktop={isDesktop}
                     navigate={handleNavigate}
-                    isLgScreen={isLgScreen}
-                    isMdScreen={isMdScreen}
+                    textColor={textColor}
+                    accentColor={accentColor}
                   />
                 </>
               )}
@@ -131,8 +149,8 @@ const LeaderBoardTable = ({
                 hasMore &&
                 Array.from({ length: PAGE_LIMIT }).map((_, index) => (
                   <Tr key={index}>
-                    <Td colSpan={6}>
-                      <Skeleton height="50px" borderRadius={'10px'} />
+                    <Td colSpan={isDesktop ? 6 : 4}>
+                      <Box height="50px" borderRadius={'10px'} bg="gray.800" />
                     </Td>
                   </Tr>
                 ))}
@@ -140,7 +158,7 @@ const LeaderBoardTable = ({
           )}
         </Suspense>
       </Table>
-    </TableContainer>
+    </Box>
   )
 }
 

@@ -40,10 +40,8 @@ export const authSlice = createSlice({
       state.isAuthenticated = !!action.payload
       state.loginCheckStatus = 'fulfilled'
     },
-    logout: state => {
-      state.user = null
-      state.isAdmin = false
-      state.isAuthenticated = false
+    logout: () => {
+      return initialState
     },
     setForgotPassword: (state, action) => {
       state.forgotPassword = action.payload
@@ -69,7 +67,7 @@ export const authSlice = createSlice({
 
 export const {
   setUser,
-  logout,
+  logout: logoutAuth,
   setForgotPassword,
   setVerifyEmail,
   setIsAdmin,

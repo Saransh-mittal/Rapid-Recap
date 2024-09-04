@@ -183,7 +183,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     const params = new URLSearchParams(location.search)
     const chatId = params.get('chatId')
     if (chatId) {
-      navigate(`/chats`)
+      navigate(-1)
     }
     setHasMore(true)
     setMessagesFetched(false)

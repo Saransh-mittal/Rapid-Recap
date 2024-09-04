@@ -71,7 +71,7 @@ const namespaces = {
     'LogoutButton',
   ],
   homeComponents: ['SearchBarInput', 'Timeline', 'UpgradeModal', 'Card'],
-  leaderBoardComponents: ['LeaderBoardTable', 'SearchBar'],
+  leaderBoardComponents: ['LeaderBoardTable', 'SearchBar', 'LeaderBoardRow'],
   miscellaneous: [
     'UserSearchDrawer',
     'SecureYourProgress',

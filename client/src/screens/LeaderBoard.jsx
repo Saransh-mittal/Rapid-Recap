@@ -6,6 +6,10 @@ import {
   useMediaQuery,
   useToast,
   Spinner,
+  VStack,
+  Box,
+  Text,
+  useColorModeValue,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
@@ -111,7 +115,7 @@ const LeaderBoard = () => {
     return () => {
       window.removeEventListener('scroll', debouncedHandleScroll)
     }
-  }, [isAuthenticated, debouncedHandleScroll, t])
+  }, [isAuthenticated, debouncedHandleScroll])
 
   useEffect(() => {
     if (page > 1) {
@@ -143,65 +147,68 @@ const LeaderBoard = () => {
         <Flex
           margin={'20px'}
           justifyContent={'center'}
-          w={'100%'}
+          w={{ base: '100%', md: '75%' }}
           flexDirection={'column'}
         >
-          <Flex alignItems={'center'} justifyContent={'center'}>
-            <ChakraHeading>
-              <Flex alignItems={'center'} w={'100%'} justifyContent={'center'}>
-                <Image
-                  src={medalIcon}
-                  alt="Rating"
-                  width={'35px'}
-                  height={'35px'}
-                  bg={'none'}
-                  mt={'2.5rem'}
-                />
-                <Heading
-                  title={t('title')}
-                  tag={t('tag')}
-                  tagFontSize={'1.05rem'}
-                />
-                <Image
-                  src={medalIcon}
-                  alt="Rating"
-                  width={'35px'}
-                  height={'35px'}
-                  bg={'none'}
-                  mt={'2.5rem'}
-                />
-              </Flex>
-            </ChakraHeading>
-          </Flex>
-
-          <React.Suspense fallback={<Spinner />}>
-            <Flex
-              alignItems="center"
-              justifyContent="center"
-              marginBottom="20px"
-              marginTop={'20px'}
-            >
-              <SearchBar
-                setSearchResults={setSearchResults}
-                setSearchLoad={setSearchLoad}
+          <VStack spacing={8} align="stretch">
+            <Flex justifyContent="center" alignItems="center">
+              <Image
+                src={medalIcon}
+                alt="Rating"
+                width={'35px'}
+                height={'35px'}
+                bg={'none'}
+              />
+              <ChakraHeading
+                size="2xl"
+                bgGradient="linear(to-r, yellow.400, yellow.600)"
+                bgClip="text"
+                fontFamily="serif"
+              >
+                {t('title')}
+              </ChakraHeading>
+              <Image
+                src={medalIcon}
+                alt="Rating"
+                width={'35px'}
+                height={'35px'}
+                bg={'none'}
               />
             </Flex>
 
-            <LeaderBoardTable
-              hasMore={hasMore}
-              PAGE_LIMIT={PAGE_LIMIT}
-              loadNextPage={loadNextPage}
-              leaders={leaders}
-              searchResults={searchResults}
-              searchLoad={searchLoad}
-              isBaseScreen={isBaseScreen}
-              isLgScreen={isLgScreen}
-              isMdScreen={isMdScreen}
-              currUserChar={user}
-              navigate={navigate}
-              setLoadNextPage={setLoadNextPage}
-            />
-          </React.Suspense>
+            <Text fontSize="lg" color="gray.500" textAlign="center">
+              {t('tag')}
+            </Text>
+
+            <React.Suspense fallback={<Spinner />}>
+              <Flex
+                alignItems="center"
+                justifyContent="center"
+                marginBottom="20px"
+                marginTop={'20px'}
+              >
+                <SearchBar
+                  setSearchResults={setSearchResults}
+                  setSearchLoad={setSearchLoad}
+                />
+              </Flex>
+
+              <LeaderBoardTable
+                hasMore={hasMore}
+                PAGE_LIMIT={PAGE_LIMIT}
+                loadNextPage={loadNextPage}
+                leaders={leaders}
+                searchResults={searchResults}
+                searchLoad={searchLoad}
+                isBaseScreen={isBaseScreen}
+                isLgScreen={isLgScreen}
+                isMdScreen={isMdScreen}
+                currUserChar={user}
+                navigate={navigate}
+                setLoadNextPage={setLoadNextPage}
+              />
+            </React.Suspense>
+          </VStack>
         </Flex>
       </Flex>
     </>

@@ -26,11 +26,12 @@ import {
 } from '@chakra-ui/react'
 import { CloseIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
-import { logout, verifyAdminStatus } from '../../redux/authSlice'
+import { logoutAuth, verifyAdminStatus } from '../../redux/authSlice'
 import {
   fetchAppUpdates,
   fetchDailyStreak,
   fetchUnreadFriendRequestsCount,
+  logoutApp,
   markFriendRequestsAsRead,
   resetAllState,
   resetLoadingFlags,
@@ -184,7 +185,8 @@ const Navbar = () => {
         localStorage.removeItem('token')
         localStorage.removeItem('role')
 
-        dispatchRedux(logout())
+        dispatchRedux(logoutAuth())
+        dispatchRedux(logoutApp())
         dispatchRedux(resetLoadingFlags())
         dispatchRedux(resetAllState())
         toast({

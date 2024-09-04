@@ -31,7 +31,7 @@ const Home = () => {
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
     state => state.auth,
   )
-  const { page: statePage } = useSelector(state => state.ui)
+
   const { items: stateItems, category: stateCategory } = useSelector(
     state => state.content,
   )
@@ -102,7 +102,6 @@ const Home = () => {
           }
           dispatchRedux(setPageRedux(pageNum))
         }
-
         setLoad(false)
       } catch (error) {
         if (axios.isCancel(error)) {

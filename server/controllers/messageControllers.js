@@ -50,23 +50,37 @@ const allMessages = asyncHandler(async (req, res) => {
 
     let resultMessages = decryptedMessages.reverse()
 
+    // Extract all article IDs from messages with type 'article_card'
+    const articleIds = resultMessages
+      .filter(message => message.type === 'article_card')
+      .map(message => message.article._id)
+
+    // Fetch all articles in one go
+    const articles = await Article.find({ _id: { $in: articleIds } })
+      .select(' _id title category dateTime imgURL hindiTitle')
+      .lean()
+
+    // Create a mapping of article ID to article data
+    const articleMap = articles.reduce((acc, article) => {
+      acc[article._id.toString()] = {
+        _id: article._id.toString(),
+        title: article.title,
+        category: article.category,
+        date: formatDate(article.dateTime),
+        image: article.imgURL[0],
+        hindiTitle: article.hindiTitle,
+      }
+      return acc
+    }, {})
+
+    // Update messages with the corresponding article data
     for (let message of resultMessages) {
       if (message.type === 'article_card') {
-        const article = await Article.findById(message.article._id).select(
-          ' _id title category dateTime imgURL hindiTitle',
-        )
-        if (article) {
-          message.article = {
-            _id: article._id.toString(),
-            title: article.title,
-            category: article.category,
-            date: formatDate(article.dateTime),
-            image: article.imgURL[0],
-            hindiTitle: article.hindiTitle,
-          }
-        }
+        message.article =
+          articleMap[message.article._id.toString()] || message.article
       }
     }
+
     res.json(resultMessages)
   } catch (error) {
     res.status(400)

@@ -1,26 +1,30 @@
-import { useState, useEffect } from "react";
-import { useNavigationType } from "react-router-dom";
+import { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigationType } from 'react-router-dom'
+import { setNavigationCount } from '../redux/appSlice'
 
 export const useNavigationCount = () => {
+  const { navigationCount } = useSelector(state => state.app)
+  const dispatch = useDispatch()
   const [count, setCount] = useState(() => {
-    const saved = localStorage.getItem("navigationCount");
-    return saved ? parseInt(saved, 10) : 0;
-  });
-  const navigationType = useNavigationType();
+    const saved = navigationCount
+    return saved ? parseInt(saved, 10) : 0
+  })
+  const navigationType = useNavigationType()
 
   useEffect(() => {
-    if (navigationType === "PUSH") {
-      setCount((prevCount) => prevCount + 1);
-    } else if (navigationType === "POP") {
-      setCount((prevCount) => Math.max(0, prevCount - 1));
+    if (navigationType === 'PUSH') {
+      setCount(prevCount => prevCount + 1)
+    } else if (navigationType === 'POP') {
+      setCount(prevCount => Math.max(0, prevCount - 1))
     }
-  }, [navigationType, location.pathname]);
+  }, [navigationType, location.pathname])
 
   useEffect(() => {
-    localStorage.setItem("navigationCount", count.toString());
-  }, [count]);
+    dispatch(setNavigationCount(count))
+  }, [count])
 
-  const isLastRoute = count < 1;
+  const isLastRoute = count < 1
 
-  return { count, isLastRoute };
-};
+  return { count, isLastRoute }
+}
