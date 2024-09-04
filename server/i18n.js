@@ -4,7 +4,15 @@ const middleware = require('i18next-http-middleware')
 const path = require('path')
 
 const namespaces = {
-  controllers: ['chatController'],
+  controllers: [
+    'chatController',
+    'friendsController',
+    'messageControllers',
+    'notification',
+    'subscription',
+  ],
+  utils: ['activity.utils', 'dailyUserIQCalc.utils', 'mail.utils'],
+  data: ['CircleAndSocietyData', 'MailTemplates'],
 }
 
 i18n
@@ -25,6 +33,16 @@ i18n
               __dirname,
               `./locales/${lng}/controllers/${namespace}.json`,
             )
+          case 'utils':
+            return path.join(
+              __dirname,
+              `./locales/${lng}/utils/${namespace}.json`,
+            )
+          case 'data':
+            return path.join(
+              __dirname,
+              `./locales/${lng}/data/${namespace}.json`,
+            )
           default:
             return path.join(__dirname, `./locales/${lng}/${namespace}.json`) // fallback
         }
@@ -33,7 +51,7 @@ i18n
     fallbackLng: 'en',
     supportedLngs: ['en', 'hi'],
     ns: Object.values(namespaces).flat(),
-    defaultNS: 'Contact',
+    defaultNS: 'activity.utils',
     detection: {
       order: ['querystring', 'cookie', 'header'],
       lookupQuerystring: 'lng',

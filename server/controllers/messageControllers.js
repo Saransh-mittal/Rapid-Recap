@@ -10,7 +10,7 @@ const {
   isEncrypted,
   isGuestUser,
 } = require('../utils/miscellaneous.utils')
-
+const i18n = require('../i18n')
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
 //@access          Protected
@@ -21,10 +21,14 @@ const allMessages = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit
 
   try {
+    const user = await User.findById(userId)
+    i18n.changeLanguage(user.userLanguage)
+
     const isGuest = await isGuestUser(userId)
     if (isGuest) {
-      return res.status(400).send({ message: 'Guest users cannot chat' })
+      return res.status(400).send({ message: i18n.t('guestCannotChat') })
     }
+
     const messages = await Message.find({ chat: req.params.chatId })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -37,13 +41,13 @@ const allMessages = asyncHandler(async (req, res) => {
       message => !message.permanentDeleteFor.includes(userId),
     )
 
-    // Decrypt the content of each message
     const decryptedMessages = filteredMessages.map(message => {
       const messageObject = message.toObject()
       if (isEncrypted(messageObject.content))
         messageObject.content = message.decryptContent()
       return messageObject
     })
+
     let resultMessages = decryptedMessages.reverse()
 
     for (let message of resultMessages) {
@@ -75,44 +79,38 @@ const allMessages = asyncHandler(async (req, res) => {
 //@access          Protected
 const sendMessage = asyncHandler(async (req, res) => {
   const { content, chatId, type, articleId } = req.body
-  // console.log(chatId);
+  const user = await User.findById(req.user._id)
+  i18n.changeLanguage(user.userLanguage)
+
   if (
     !chatId ||
     ((!type || type === '' || type === 'text') && !content) ||
     (type === 'article_card' && !articleId)
   ) {
     console.log('Invalid data passed into request')
-    return res.sendStatus(400)
+    return res.status(400).send({ message: i18n.t('invalidData') })
   }
+
   let article
   if (type === 'article_card') {
     article = await Article.findById(articleId).select('_id')
     if (!article) {
-      res.status(404)
-      throw new Error('Article not found')
+      res.status(404).send({ message: i18n.t('articleNotFound') })
+      return
     }
   }
-  var newMessage =
-    !type || type === '' || type === 'text'
-      ? {
-          sender: req.user._id,
-          content: content,
-          chat: chatId,
-          sent: true,
-        }
-      : {
-          sender: req.user._id,
-          type: type,
-          chat: chatId,
-          sent: true,
-          article: {
-            _id: article._id,
-          },
-        }
+
+  var newMessage = {
+    sender: req.user._id,
+    chat: chatId,
+    sent: true,
+    ...(type === 'text' ? { content: content } : {}),
+    ...(type === 'article_card' ? { article: { _id: article._id } } : {}),
+    type: type || 'text',
+  }
 
   try {
     var message = await Message.create(newMessage)
-
     message = await message.populate('sender', 'name pic')
     message = await message.populate('chat')
     message = await User.populate(message, {
@@ -120,17 +118,20 @@ const sendMessage = asyncHandler(async (req, res) => {
       select: 'name pic email',
     })
 
-    await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message })
+    await Chat.findByIdAndUpdate(chatId, { latestMessage: message })
+
     const chatUsers = message.chat.users
     const decryptedMessage = message.toObject()
     decryptedMessage.content = message.decryptContent()
+
     for (let user of chatUsers) {
       if (user._id.toString() !== req.user._id.toString()) {
         const userChats = userOpenChats.get(user._id.toString())
-        // Only send notification if the user doesn't have this chat open
         if (!userChats || !userChats.has(chatId)) {
           await sendNotification({
-            title: ` New message from ${message.sender.name}`,
+            title: i18n.t('newMessageFrom', {
+              name: message.sender.name,
+            }),
             body: decryptedMessage.content,
             icon: message.sender.pic,
             url: `/chats?chatId=${chatId}`,
@@ -146,7 +147,7 @@ const sendMessage = asyncHandler(async (req, res) => {
   } catch (error) {
     console.log(error)
     res.status(400)
-    throw new Error(error)
+    throw new Error(error.message)
   }
 })
 
@@ -183,51 +184,50 @@ const updateMessageReadBy = asyncHandler(async (req, res) => {
 const deleteMessage = asyncHandler(async (req, res) => {
   const { messageId } = req.params
   const { deleteType } = req.body
+  const user = await User.findById(req.user._id)
+  i18n.changeLanguage(user.userLanguage)
 
   try {
     const message = await Message.findById(messageId)
 
     if (!message) {
-      res.status(404)
-      throw new Error('Message not found')
+      res.status(404).send({ message: i18n.t('notFound') })
+      return
     }
 
     if (
       message.sender.toString() !== req.user._id.toString() &&
       deleteType === 'everyone'
     ) {
-      res.status(403)
-      throw new Error('You can only delete your own messages for everyone')
+      res.status(403).send({ message: i18n.t('deleteForEveryone') })
+      return
     }
 
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
     if (deleteType === 'everyone' && message.createdAt < oneHourAgo) {
-      res.status(400)
-      throw new Error(
-        'You can only delete messages for everyone within 1 hour of sending',
-      )
+      res.status(400).send({ message: i18n.t('deleteTimeLimit') })
+      return
     }
 
     if (deleteType === 'everyone') {
       message.isDeleted = true
-      message.content = 'This message was deleted'
+      message.content = i18n.t('deletedMessage')
       await message.save()
 
-      // Send a special notification to all recipients
       const chat = await Chat.findById(message.chat).populate('users')
       for (let user of chat.users) {
         if (user._id.toString() !== req.user._id.toString()) {
           await sendNotification({
-            title: 'Message Deleted',
-            body: 'A message was deleted from this chat',
+            title: i18n.t('messageDeleted'),
+            body: i18n.t('deletedFromChat'),
             icon: req.user.pic,
             url: `/chats?chatId=${message.chat}`,
             userId: user._id,
-            messageId: message._id.toString(), // Include the messageId
+            messageId: message._id.toString(),
           })
         }
       }
-      // check the next latest message of chat and update it.
+
       const nextLatestMessage = await Message.findOne({
         chat: message.chat,
         isDeleted: false,
@@ -241,11 +241,11 @@ const deleteMessage = asyncHandler(async (req, res) => {
       message.deletedFor.push(req.user._id)
       await message.save()
     } else {
-      res.status(400)
-      throw new Error('Invalid delete type')
+      res.status(400).send({ message: i18n.t('invalidDeleteType') })
+      return
     }
 
-    res.json({ message: 'Message deleted successfully' })
+    res.json({ message: i18n.t('deleteSuccess') })
   } catch (error) {
     res.status(400)
     throw new Error(error.message)

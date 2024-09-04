@@ -53,6 +53,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
 
   // Initialize translation
   const { t } = useTranslation('NoteMessageSummary')
+  const { t: GuestLoginTranslate } = useTranslation('GuestLogin')
 
   // Memoize handleMessageAction to prevent unnecessary re-renders
   const handleMessageAction = useMemo(
@@ -342,6 +343,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                             }
                             size="sm"
                             innerText={action.text}
+                            GuestLoginTranslate={GuestLoginTranslate}
                           >
                             {!(action.actionType === 'SIGN_IN') && action.text}
                           </ButtonFactory>

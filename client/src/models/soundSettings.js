@@ -1,4 +1,4 @@
-// src/models/soundSettings.js
+// src/models/Settings.js
 
 import noteMessageSound from '../assets/sounds/note-message.mp3'
 import milestoneSound from '../assets/sounds/milestone.mp3'

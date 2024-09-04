@@ -52,7 +52,7 @@ const ArticleCard = ({
 
       <Text color="#a199b0" fontSize="14px">
         {/* {article.date || new Date(article.createdAt).toLocaleDateString()} */}
-        {formatDate(article?.dateTime, TimelineTranslate, lang)}
+        {formatDate(article?.dateTime, lang)}
       </Text>
     </Flex>
   )

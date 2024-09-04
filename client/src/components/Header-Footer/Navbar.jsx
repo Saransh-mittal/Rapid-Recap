@@ -118,7 +118,7 @@ const Navbar = () => {
       { to: '/leaderboard', label: t('leaderboard') },
       { to: '/dashboard', label: 'Dashboard' },
     ],
-    [],
+    [t],
   )
 
   const calculateRequiredXp = useCallback((xp, xpBaseAtNextLevel) => {

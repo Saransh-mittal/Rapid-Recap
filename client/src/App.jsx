@@ -59,7 +59,6 @@ const App = () => {
   const { isRegisterOpen, isSigninOpen, showXpLevelModal } = useSelector(
     state => state.app,
   )
-
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
   const { t: GuestLogintranslation } = useTranslation('GuestLogin')
@@ -293,31 +292,47 @@ const App = () => {
       )}
 
       <Suspense fallback={null}>
-        <AppRoutes />
+        <GuestLoginModal
+          isOpen={isGuestLoggedin}
+          onClose={handleClose}
+          guestName={user?.inGameName}
+          guestPassword={user?.guestTempPassword}
+          guestId={user?._id}
+          onOpen={() => setIsGuestLoggedin(true)}
+          t={GuestLoginModaltranslation}
+        />
       </Suspense>
 
-      <Suspense fallback={null}>{shouldShowFooter && <Footer />}</Suspense>
+      <Suspense fallback={null}>
+        <Signin
+          isOpen={isSigninOpen}
+          onOpen={() => dispatch(setIsSigninOpen(true))}
+          onClose={() => dispatch(setIsSigninOpen(false))}
+        />
+      </Suspense>
 
-      {isRegisterOpen && (
+      <Suspense fallback={null}>
+        <Register
+          isOpen={isRegisterOpen}
+          onOpen={() => dispatch(setIsRegisterOpen(true))}
+          onClose={() => dispatch(setIsRegisterOpen(false))}
+        />
+      </Suspense>
+
+      <Box
+        position="relative"
+        minHeight="100vh"
+        zIndex={1}
+        overflowX={'hidden'}
+      >
         <Suspense fallback={null}>
-          <Register setIsOpen={show => dispatch(setIsRegisterOpen(show))} />
+          <AppRoutes isToken={isToken()} />
         </Suspense>
-      )}
+      </Box>
 
-      {isSigninOpen && (
+      {shouldShowFooter && (
         <Suspense fallback={null}>
-          <Signin setIsOpen={show => dispatch(setIsSigninOpen(show))} />
-        </Suspense>
-      )}
-
-      {isGuestLoggedin && (
-        <Suspense fallback={null}>
-          <GuestLoginModal
-            isOpen={isGuestLoggedin}
-            handleClose={handleClose}
-            translation={GuestLoginModaltranslation}
-            title={GuestLogintranslation('GuestLoginModal')}
-          />
+          <Footer />
         </Suspense>
       )}
     </>

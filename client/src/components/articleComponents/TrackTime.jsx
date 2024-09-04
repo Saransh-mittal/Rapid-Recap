@@ -11,6 +11,7 @@ const TrackTime = ({ userId, articleId }) => {
   const isTrackingRef = useRef(true)
   const sendingPromiseRef = useRef(null)
   const { user } = useSelector(state => state.auth)
+  const { t } = useTranslation('TrackTime')
 
   const getInactiveTime = useCallback(() => {
     if (window.matchMedia('(min-width: 1024px)').matches) return 3 * 60 * 1000
@@ -56,11 +57,13 @@ const TrackTime = ({ userId, articleId }) => {
                 addNoteMessage({
                   messageType: 'xpAward',
                   xpAwarded: 10,
-                  title: 'XP Awarded For Reading Articles More Than 10 Minutes',
+                  title: t(
+                    'XP Awarded For Reading Articles More Than 10 Minutes',
+                  ),
                   actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                   duration: 15000,
                   width: '300px',
-                  xpSource: '10 Min Article Read',
+                  xpSource: t('10 Min Article Read'),
                 }),
               )
             }

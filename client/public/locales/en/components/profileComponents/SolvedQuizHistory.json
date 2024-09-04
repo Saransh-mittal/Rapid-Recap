@@ -4,5 +4,9 @@
   "article": "Article",
   "rqm": "RQM",
   "difficulty": "Diff",
-  "close": "Close"
+  "close": "Close",
+  "Previous": "Previous",
+  "of": "of",
+  "Next": "Next",
+  "Page": "Page"
 }

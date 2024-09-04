@@ -1,3 +1,5 @@
+// src/components/Settings.jsx
+
 import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toggleSound, setSoundSettings } from '../../redux/appSlice'
@@ -17,16 +19,23 @@ import {
   Text,
   useToast,
   Switch,
+  Divider,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { useTranslation } from 'react-i18next' // Added i18n import
+import { useTranslation } from 'react-i18next'
 import { formatSoundType } from '../../utils/helper.utils'
 import { InfoOutlineIcon } from '@chakra-ui/icons'
+import LanguageSwitcher from '../../LanguageSwitcher'
 
 const MotionBox = motion(Box)
 
-const SoundSettings = ({ isOpen, onClose }) => {
-  const { t } = useTranslation('SoundSettings') // Added i18n namespace
+const Settings = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('Settings')
   const dispatch = useDispatch()
   const toast = useToast()
   const soundSettings = useSelector(state => state.app.soundSettings)
@@ -80,7 +89,6 @@ const SoundSettings = ({ isOpen, onClose }) => {
         duration: 3000,
         isClosable: true,
       })
-      // Revert the local state
       dispatch(setSoundSettings({ ...soundSettings }))
     } finally {
       setIsLoading(false)
@@ -98,54 +106,106 @@ const SoundSettings = ({ isOpen, onClose }) => {
           border="1px solid rgba(255, 255, 255, 0.18)"
         >
           <ModalHeader color="white" fontSize="2xl">
-            {t('soundSettings')}
+            {t('Settings')}
           </ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody w={'100%'}>
-            <VStack align="stretch" spacing={6}>
-              {Object.entries(SOUND_TYPES).map(([key, soundType]) => (
-                <MotionBox
-                  key={soundType}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+            <Accordion allowToggle allowMultiple>
+              <AccordionItem border="none">
+                <AccordionButton
+                  _expanded={{ bg: 'whiteAlpha.200' }}
+                  p={4}
+                  borderRadius="md"
                 >
                   <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    bg="whiteAlpha.100"
-                    p={4}
-                    borderRadius="md"
-                    _hover={{ bg: 'whiteAlpha.200' }}
-                    transition="background 0.2s"
+                    flex="1"
+                    textAlign="left"
+                    color="white"
+                    fontSize="xl"
+                    fontWeight="bold"
                   >
-                    <Box display="flex" alignItems="center">
-                      <Text color="white" fontWeight="medium" fontSize={'lg'}>
-                        {descriptions[soundType]}
-                      </Text>
-                      <InfoOutlineIcon
-                        color="teal.300"
-                        ml={2}
-                        cursor="pointer"
-                        onClick={() => handleInfoClick(soundType)}
-                      />
-                    </Box>
-                    <MotionBox
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Switch
-                        isChecked={soundSettings[soundType]}
-                        onChange={() => handleToggle(soundType)}
-                        colorScheme="teal"
-                        size="lg"
-                      />
-                    </MotionBox>
+                    {t('soundSettings')}
                   </Box>
-                </MotionBox>
-              ))}
-            </VStack>
+                  <AccordionIcon color="white" />
+                </AccordionButton>
+                <AccordionPanel pb={4}>
+                  <VStack align="stretch" spacing={4}>
+                    {Object.entries(SOUND_TYPES).map(([key, soundType]) => (
+                      <MotionBox
+                        key={soundType}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Box
+                          display="flex"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          bg="whiteAlpha.100"
+                          p={4}
+                          borderRadius="md"
+                          _hover={{ bg: 'whiteAlpha.200' }}
+                          transition="background 0.2s"
+                        >
+                          <Box display="flex" alignItems="center">
+                            <Text
+                              color="white"
+                              fontWeight="medium"
+                              fontSize={'lg'}
+                            >
+                              {descriptions[soundType]}
+                            </Text>
+                            <InfoOutlineIcon
+                              color="teal.300"
+                              ml={2}
+                              cursor="pointer"
+                              onClick={() => handleInfoClick(soundType)}
+                            />
+                          </Box>
+                          <MotionBox
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <Switch
+                              isChecked={soundSettings[soundType]}
+                              onChange={() => handleToggle(soundType)}
+                              colorScheme="teal"
+                              size="lg"
+                            />
+                          </MotionBox>
+                        </Box>
+                      </MotionBox>
+                    ))}
+                  </VStack>
+                </AccordionPanel>
+              </AccordionItem>
+
+              <Divider my={4} borderColor="whiteAlpha.400" />
+
+              <AccordionItem border="none">
+                <AccordionButton
+                  _expanded={{ bg: 'whiteAlpha.200' }}
+                  p={4}
+                  borderRadius="md"
+                >
+                  <Box
+                    flex="1"
+                    textAlign="left"
+                    color="white"
+                    fontSize="xl"
+                    fontWeight="bold"
+                  >
+                    {t('languageSettings')}
+                  </Box>
+                  <AccordionIcon color="white" />
+                </AccordionButton>
+                <AccordionPanel pb={4}>
+                  <VStack align="stretch" spacing={4}>
+                    <LanguageSwitcher />
+                  </VStack>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
           </ModalBody>
           <ModalFooter>
             <Button
@@ -160,7 +220,7 @@ const SoundSettings = ({ isOpen, onClose }) => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      {/* Detailed Info Modal */}
+
       {selectedSoundType && (
         <Modal
           isOpen={!!selectedSoundType}
@@ -194,4 +254,4 @@ const SoundSettings = ({ isOpen, onClose }) => {
   )
 }
 
-export default SoundSettings
+export default Settings

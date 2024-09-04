@@ -27,11 +27,13 @@ import useSound from '../../customHooks/useSound'
 
 const UpgradeModal = ({ isOpen, onClose }) => {
   const { t } = useTranslation('UpgradeModal')
+  const { t: tBrains } = useTranslation('Brains')
+  const { t: tCircles } = useTranslation('Circles')
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
 
-  const USER_IQ = user.IQ_score
+  const USER_IQ = user?.IQ_score
 
   const findSocietyAndCircle = USER_IQ => {
     let SocietyOrCircle = null
@@ -143,9 +145,10 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       textShadow="2px 2px 4px rgba(0,0,0,0.4)"
                       paddingLeft={{ base: '5.5%', md: '9.5%', xl: '0.5%' }}
                     >
-                      {t('society', {
+                      {/* {t('society', {
                         society: prevSocietyOrCircle?.society?.split(' ')[0],
-                      })}
+                      })} */}
+                      {tBrains(`${prevSocietyOrCircle.society}.society`)}
                     </Text>
                   </Flex>
                   <Flex
@@ -201,9 +204,10 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       textShadow="2px 2px 4px rgba(0,0,0,0.4)"
                       paddingLeft={{ base: '5.5%', md: '9.5%', xl: '0.5%' }}
                     >
-                      {t('society', {
+                      {/* {t('society', {
                         society: upgradedSocietyOrCircle.society.split(' ')[0],
-                      })}
+                      })} */}
+                      {tBrains(`${prevSocietyOrCircle.society}.society`)}
                     </Text>
                   </Flex>
                 </Flex>
@@ -259,9 +263,10 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                         textShadow="2px 2px 4px rgba(0,0,0,0.4)"
                         mt={8}
                       >
-                        {t('circle', {
+                        {/* {t('circle', {
                           circle: upgradedSocietyOrCircle.circle,
-                        })}
+                        })} */}
+                        {tCircles(`${upgradedSocietyOrCircle.circle}.title`)}
                       </Text>
                     </Flex>
                   </Flex>

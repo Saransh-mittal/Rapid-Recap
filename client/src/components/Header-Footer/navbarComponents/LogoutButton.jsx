@@ -1,71 +1,74 @@
-import React, { useEffect } from "react";
-import "./LogoutButton.css"; // Ensure you have the necessary CSS
+import React, { useEffect } from 'react'
+import './LogoutButton.css' // Ensure you have the necessary CSS
+import { useTranslation } from 'react-i18next'
 
 const LogoutButton = ({ handleLogout }) => {
-  useEffect(() => {
-    const buttons = document.querySelectorAll(".logoutButton");
+  const { t } = useTranslation('LogoutButton')
 
-    buttons.forEach((button) => {
-      button.state = "default";
+  useEffect(() => {
+    const buttons = document.querySelectorAll('.logoutButton')
+
+    buttons.forEach(button => {
+      button.state = 'default'
 
       const updateButtonState = (button, state) => {
         if (logoutButtonStates[state]) {
-          button.state = state;
+          button.state = state
           for (let key in logoutButtonStates[state]) {
-            button.style.setProperty(key, logoutButtonStates[state][key]);
+            button.style.setProperty(key, logoutButtonStates[state][key])
           }
         }
-      };
+      }
 
       const handleMouseEnter = () => {
-        if (button.state === "default") {
-          updateButtonState(button, "hover");
+        if (button.state === 'default') {
+          updateButtonState(button, 'hover')
         }
-      };
+      }
 
       const handleMouseLeave = () => {
-        if (button.state === "hover") {
-          updateButtonState(button, "default");
+        if (button.state === 'hover') {
+          updateButtonState(button, 'default')
         }
-      };
+      }
 
       const handleClick = () => {
-        if (button.state === "default" || button.state === "hover") {
-          button.classList.add("clicked");
-          updateButtonState(button, "walking1");
+        if (button.state === 'default' || button.state === 'hover') {
+          button.classList.add('clicked')
+          updateButtonState(button, 'walking1')
           setTimeout(() => {
-            button.classList.add("door-slammed");
-            updateButtonState(button, "walking2");
+            button.classList.add('door-slammed')
+            updateButtonState(button, 'walking2')
             setTimeout(() => {
-              button.classList.add("falling");
-              updateButtonState(button, "falling1");
+              button.classList.add('falling')
+              updateButtonState(button, 'falling1')
               setTimeout(() => {
-                updateButtonState(button, "falling2");
+                updateButtonState(button, 'falling2')
                 setTimeout(() => {
-                  updateButtonState(button, "falling3");
+                  updateButtonState(button, 'falling3')
                   setTimeout(() => {
                     setTimeout(() => {
-                      handleLogout();
-                    }, 0);
-                  }, 1000);
-                }, logoutButtonStates["falling2"]["--walking-duration"]);
-              }, logoutButtonStates["falling1"]["--walking-duration"]);
-            }, logoutButtonStates["walking2"]["--figure-duration"]);
-          }, logoutButtonStates["walking1"]["--figure-duration"]);
+                      handleLogout()
+                    }, 0)
+                  }, 1000)
+                }, logoutButtonStates['falling2']['--walking-duration'])
+              }, logoutButtonStates['falling1']['--walking-duration'])
+            }, logoutButtonStates['walking2']['--figure-duration'])
+          }, logoutButtonStates['walking1']['--figure-duration'])
         }
-      };
+      }
 
-      button.addEventListener("mouseenter", handleMouseEnter);
-      button.addEventListener("mouseleave", handleMouseLeave);
-      button.addEventListener("click", handleClick);
+      button.addEventListener('mouseenter', handleMouseEnter)
+      button.addEventListener('mouseleave', handleMouseLeave)
+      button.addEventListener('click', handleClick)
 
       return () => {
-        button.removeEventListener("mouseenter", handleMouseEnter);
-        button.removeEventListener("mouseleave", handleMouseLeave);
-        button.removeEventListener("click", handleClick);
-      };
-    });
-  }, []);
+        button.removeEventListener('mouseenter', handleMouseEnter)
+        button.removeEventListener('mouseleave', handleMouseLeave)
+        button.removeEventListener('click', handleClick)
+      }
+    })
+  }, [])
 
   return (
     <>
@@ -113,125 +116,125 @@ const LogoutButton = ({ handleLogout }) => {
           <path d="M93.4 86.3H58.6c-1.9 0-3.4-1.5-3.4-3.4V17.1c0-1.9 1.5-3.4 3.4-3.4h34.8c1.9 0 3.4 1.5 3.4 3.4v65.8c0 1.9-1.5 3.4-3.4 3.4z" />
           <circle cx="66" cy="50" r="3.7" />
         </svg>
-        <span className="button-text">Log Out</span>
+        <span className="button-text">{t('LogOut')}</span>
       </button>
     </>
-  );
-};
+  )
+}
 
 const logoutButtonStates = {
   default: {
-    "--figure-duration": "0ms",
-    "--walking-duration": "0ms",
-    "--figure-x": "0px",
-    "--figure-y": "0px",
-    "--figure-s": 1,
-    "--door-slammed-scale": 0,
-    "--shadow-scale": 1,
-    "--shadow-x": "50%",
-    "--shadow-y": "100%",
-    "--shadow-r": "9.8%",
-    "--arm-rotation": "0deg",
-    "--wrist-rotation": "0deg",
-    "--falling-shadow-scale": 1,
-    "--opacity": 1,
+    '--figure-duration': '0ms',
+    '--walking-duration': '0ms',
+    '--figure-x': '0px',
+    '--figure-y': '0px',
+    '--figure-s': 1,
+    '--door-slammed-scale': 0,
+    '--shadow-scale': 1,
+    '--shadow-x': '50%',
+    '--shadow-y': '100%',
+    '--shadow-r': '9.8%',
+    '--arm-rotation': '0deg',
+    '--wrist-rotation': '0deg',
+    '--falling-shadow-scale': 1,
+    '--opacity': 1,
   },
   hover: {
-    "--figure-duration": "0ms",
-    "--walking-duration": "0ms",
-    "--figure-x": "0px",
-    "--figure-y": "0px",
-    "--figure-s": 1,
-    "--door-slammed-scale": 0,
-    "--shadow-scale": 1,
-    "--shadow-x": "50%",
-    "--shadow-y": "100%",
-    "--shadow-r": "9.8%",
-    "--arm-rotation": "0deg",
-    "--wrist-rotation": "0deg",
-    "--falling-shadow-scale": 1,
-    "--opacity": 1,
+    '--figure-duration': '0ms',
+    '--walking-duration': '0ms',
+    '--figure-x': '0px',
+    '--figure-y': '0px',
+    '--figure-s': 1,
+    '--door-slammed-scale': 0,
+    '--shadow-scale': 1,
+    '--shadow-x': '50%',
+    '--shadow-y': '100%',
+    '--shadow-r': '9.8%',
+    '--arm-rotation': '0deg',
+    '--wrist-rotation': '0deg',
+    '--falling-shadow-scale': 1,
+    '--opacity': 1,
   },
   walking1: {
-    "--figure-duration": "800ms",
-    "--walking-duration": "300ms",
-    "--figure-x": "2px",
-    "--figure-y": "0px",
-    "--figure-s": 1,
-    "--door-slammed-scale": 0,
-    "--shadow-scale": 1,
-    "--shadow-x": "50%",
-    "--shadow-y": "100%",
-    "--shadow-r": "9.8%",
-    "--arm-rotation": "0deg",
-    "--wrist-rotation": "0deg",
-    "--falling-shadow-scale": 1,
-    "--opacity": 1,
+    '--figure-duration': '800ms',
+    '--walking-duration': '300ms',
+    '--figure-x': '2px',
+    '--figure-y': '0px',
+    '--figure-s': 1,
+    '--door-slammed-scale': 0,
+    '--shadow-scale': 1,
+    '--shadow-x': '50%',
+    '--shadow-y': '100%',
+    '--shadow-r': '9.8%',
+    '--arm-rotation': '0deg',
+    '--wrist-rotation': '0deg',
+    '--falling-shadow-scale': 1,
+    '--opacity': 1,
   },
   walking2: {
-    "--figure-duration": "800ms",
-    "--walking-duration": "300ms",
-    "--figure-x": "3px",
-    "--figure-y": "0px",
-    "--figure-s": 1,
-    "--door-slammed-scale": 1,
-    "--shadow-scale": 1,
-    "--shadow-x": "50%",
-    "--shadow-y": "100%",
-    "--shadow-r": "9.8%",
-    "--arm-rotation": "0deg",
-    "--wrist-rotation": "0deg",
-    "--falling-shadow-scale": 1,
-    "--opacity": 1,
+    '--figure-duration': '800ms',
+    '--walking-duration': '300ms',
+    '--figure-x': '3px',
+    '--figure-y': '0px',
+    '--figure-s': 1,
+    '--door-slammed-scale': 1,
+    '--shadow-scale': 1,
+    '--shadow-x': '50%',
+    '--shadow-y': '100%',
+    '--shadow-r': '9.8%',
+    '--arm-rotation': '0deg',
+    '--wrist-rotation': '0deg',
+    '--falling-shadow-scale': 1,
+    '--opacity': 1,
   },
   falling1: {
-    "--figure-duration": "2000ms",
-    "--walking-duration": "2000ms",
-    "--figure-x": "3px",
-    "--figure-y": "60px",
-    "--figure-s": 0.9,
-    "--door-slammed-scale": 1,
-    "--shadow-scale": 0.6,
-    "--shadow-x": "40%",
-    "--shadow-y": "60%",
-    "--shadow-r": "14.6%",
-    "--arm-rotation": "10deg",
-    "--wrist-rotation": "20deg",
-    "--falling-shadow-scale": 0.5,
-    "--opacity": 0,
+    '--figure-duration': '2000ms',
+    '--walking-duration': '2000ms',
+    '--figure-x': '3px',
+    '--figure-y': '60px',
+    '--figure-s': 0.9,
+    '--door-slammed-scale': 1,
+    '--shadow-scale': 0.6,
+    '--shadow-x': '40%',
+    '--shadow-y': '60%',
+    '--shadow-r': '14.6%',
+    '--arm-rotation': '10deg',
+    '--wrist-rotation': '20deg',
+    '--falling-shadow-scale': 0.5,
+    '--opacity': 0,
   },
   falling2: {
-    "--figure-duration": "1000ms",
-    "--walking-duration": "1000ms",
-    "--figure-x": "3px",
-    "--figure-y": "150px",
-    "--figure-s": 0.7,
-    "--door-slammed-scale": 1,
-    "--shadow-scale": 0.4,
-    "--shadow-x": "35%",
-    "--shadow-y": "35%",
-    "--shadow-r": "19.5%",
-    "--arm-rotation": "20deg",
-    "--wrist-rotation": "30deg",
-    "--falling-shadow-scale": 0.4,
-    "--opacity": 0,
+    '--figure-duration': '1000ms',
+    '--walking-duration': '1000ms',
+    '--figure-x': '3px',
+    '--figure-y': '150px',
+    '--figure-s': 0.7,
+    '--door-slammed-scale': 1,
+    '--shadow-scale': 0.4,
+    '--shadow-x': '35%',
+    '--shadow-y': '35%',
+    '--shadow-r': '19.5%',
+    '--arm-rotation': '20deg',
+    '--wrist-rotation': '30deg',
+    '--falling-shadow-scale': 0.4,
+    '--opacity': 0,
   },
   falling3: {
-    "--figure-duration": "500ms",
-    "--walking-duration": "500ms",
-    "--figure-x": "3px",
-    "--figure-y": "300px",
-    "--figure-s": 0.5,
-    "--door-slammed-scale": 1,
-    "--shadow-scale": 0.2,
-    "--shadow-x": "30%",
-    "--shadow-y": "20%",
-    "--shadow-r": "24.4%",
-    "--arm-rotation": "30deg",
-    "--wrist-rotation": "40deg",
-    "--falling-shadow-scale": 0.3,
-    "--opacity": 0,
+    '--figure-duration': '500ms',
+    '--walking-duration': '500ms',
+    '--figure-x': '3px',
+    '--figure-y': '300px',
+    '--figure-s': 0.5,
+    '--door-slammed-scale': 1,
+    '--shadow-scale': 0.2,
+    '--shadow-x': '30%',
+    '--shadow-y': '20%',
+    '--shadow-r': '24.4%',
+    '--arm-rotation': '30deg',
+    '--wrist-rotation': '40deg',
+    '--falling-shadow-scale': 0.3,
+    '--opacity': 0,
   },
-};
+}
 
-export default LogoutButton;
+export default LogoutButton

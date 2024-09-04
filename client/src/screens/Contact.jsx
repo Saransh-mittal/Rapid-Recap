@@ -22,7 +22,6 @@ import {
 } from '@chakra-ui/react'
 import { Helmet } from 'react-helmet'
 import { useTranslation } from 'react-i18next'
-import LanguageSwitcher from '../LanguageSwitcher'
 
 // Lazy load heavy or less frequently used components
 const ButtonGradient = lazy(() => import('../assets/svg/ButtonGradient'))
@@ -79,7 +78,6 @@ const Contact = () => {
         justifyContent={'center'}
         alignItems={'center'}
       >
-        <LanguageSwitcher />
         <Flex
           my={5}
           flexDirection={{ base: 'column', lg: 'row' }}

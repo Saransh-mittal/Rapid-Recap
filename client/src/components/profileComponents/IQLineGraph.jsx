@@ -25,6 +25,8 @@ import useSound from '../../customHooks/useSound'
 import SVGIQLineGraph from '../../assets/svg/SVGIQLineGraph'
 import { addNoteMessage } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
+import { formatDate } from '../../utils/helper.utils'
+import i18n from 'i18next'
 
 // Lazy load the ExpectedIQModal component
 const ExpectedIQModal = lazy(() =>
@@ -133,7 +135,7 @@ const GraphHeader = React.memo(
             </Text>
             <Text textAlign="left">
               {hoveredData?.date
-                ? moment(hoveredData.date).format('MMM DD, YYYY')
+                ? formatDate(hoveredData.date, i18n.language)
                 : ''}
             </Text>
           </Flex>

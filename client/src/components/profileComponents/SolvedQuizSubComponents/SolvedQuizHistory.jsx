@@ -231,17 +231,17 @@ const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
               isDisabled={currentPage === 1}
               size="sm"
             >
-              Previous
+              {t('Previous')}
             </Button>
             <Text color="white">
-              Page {currentPage} of {totalPages}
+              {t('Page')} {currentPage} {t('of')} {totalPages}
             </Text>
             <Button
               onClick={() => handlePageChange(currentPage + 1)}
               isDisabled={currentPage === totalPages}
               size="sm"
             >
-              Next
+              {t('Next')}
             </Button>
           </HStack>
         </ModalFooter>

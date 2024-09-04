@@ -415,7 +415,7 @@ const MessengerComponent = ({ notification, navigate, isGuest, playClick }) => {
         isGuest
           ? dispatch(
               addNoteMessage({
-                title: 'Register to do chat and grow Wise Web',
+                title: t('Register to do chat and grow Wise Web'),
                 duration: 10000,
                 width: '250px',
                 actions: [

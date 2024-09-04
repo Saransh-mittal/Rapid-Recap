@@ -202,7 +202,7 @@ const Quiz = ({
               addNoteMessage({
                 messageType: 'xpAward',
                 xpAwarded: result?.xpAwarded || 10,
-                title: 'XP Awarded For Quiz + Quin Boost',
+                title: t('XP Awarded For Quiz + Quin Boost'),
                 actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                 width: '250px',
                 milestoneName: 'QUIN_BOOST',
@@ -215,7 +215,7 @@ const Quiz = ({
               addNoteMessage({
                 messageType: 'xpAward',
                 xpAwarded: result?.xpAwarded || 5,
-                title: 'XP Awarded For Quiz',
+                title: t('XP Awarded For Quiz'),
                 actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                 width: '250px',
                 xpSource: 'QUIZ',
@@ -228,7 +228,7 @@ const Quiz = ({
             addNoteMessage({
               messageType: 'streak',
               xpAwarded: result?.xpAwarded || 10,
-              title: 'Congratulations! Your Strek is Revived!',
+              title: t('Congratulations! Your Strek is Revived!'),
               width: '250px',
               streakStatus: 'revived',
               streakCount: user.streakBeforeBreak + 1,
@@ -246,7 +246,7 @@ const Quiz = ({
                   remainingTime:
                     user.revivalPeriodEnd.getTime() - new Date().getTime(),
                   remainingQuizzes: 6 - user.todaysQuizCnt + 1,
-                  title: 'Revive your streak!',
+                  title: t('Revive your streak!'),
                   width: '300px',
                 }),
               ),
@@ -289,7 +289,7 @@ const Quiz = ({
             addNoteMessage({
               messageType: 'xpAward',
               xpAwarded: result?.xpAwarded || 10,
-              title: 'XP Awarded For Quiz + Quin Boost',
+              title: t('XP Awarded For Quiz + Quin Boost'),
               actions: [{ actionType: 'VIEW_EXPERIENCE' }],
               width: '250px',
               milestoneName: 'QUIN_BOOST',
@@ -302,7 +302,7 @@ const Quiz = ({
             addNoteMessage({
               messageType: 'xpAward',
               xpAwarded: result?.xpAwarded || 5,
-              title: 'XP Awarded For Quiz',
+              title: t('XP Awarded For Quiz'),
               actions: [{ actionType: 'VIEW_EXPERIENCE' }],
               width: '250px',
               xpSource: 'QUIZ',

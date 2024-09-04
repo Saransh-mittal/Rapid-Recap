@@ -1,7 +1,8 @@
 {
-  "invalidAction": "अमान्य क्रिया",
-  "chatRequestNotFound": "चैट अनुरोध नहीं मिला या पहले से ही संभाला गया है",
-  "chatRequestAccepted": "चैट अनुरोध {{name}} द्वारा स्वीकार किया गया",
-  "chatRequestRejected": "चैट अनुरोध {{name}} द्वारा अस्वीकार किया गया",
-  "chatRequestUpdateNotification": "{{name}} ने आपके चैट अनुरोध को {{action}} कर दिया है"
+  "guestCannotChat": "अतिथि उपयोगकर्ता चैट नहीं कर सकते",
+  "fillAllFields": "कृपया सभी फील्ड भरें",
+  "minTwoUsers": "ग्रुप चैट बनाने के लिए 2 से अधिक उपयोगकर्ताओं की आवश्यकता है",
+  "chatNotFound": "चैट नहीं मिली",
+  "invalidAction": "अवैध कार्रवाई",
+  "requestHandled": "चैट अनुरोध को संभाला गया"
 }

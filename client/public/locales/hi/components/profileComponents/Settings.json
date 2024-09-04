@@ -1,5 +1,5 @@
 {
-  "soundSettings": "ध्वनि सेटिंग्स",
+  "Settings": "सेटिंग्स",
   "inAppNotifications": "ऐप में सूचनाएँ",
   "milestoneSounds": "मील के पत्थर के लिए ध्वनि",
   "clickSounds": "क्लिक ध्वनि",
@@ -15,5 +15,8 @@
   "updateFailed": "अपडेट विफल हुआ",
   "updateFailedDescription": "ध्वनि सेटिंग्स सहेजने में विफल हुआ। कृपया पुनः प्रयास करें।",
   "close": "बंद करें",
-  "sound": "ध्वनि"
+  "sound": "ध्वनि",
+  "soundSettings": "ध्वनि सेटिंग्स",
+  "languageSettings": "भाषा सेटिंग्स",
+  "selectLanguage": "ऐप्लिकेशन भाषा चुनें:"
 }

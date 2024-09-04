@@ -41,7 +41,7 @@ const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
           color="#E5BEEC"
           align={'center'}
         >
-          Current Percentile: {percentile?.toFixed(2)}%
+          {t('currentPercentile')} {percentile?.toFixed(2)}%
         </Heading>
         <Flex align="center" mb={4}>
           <Tooltip

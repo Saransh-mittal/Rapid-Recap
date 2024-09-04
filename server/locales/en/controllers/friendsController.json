@@ -1,0 +1,12 @@
+{
+  "cannotSendToSelf": "You can't send a friend request to yourself",
+  "guestCannotSend": "Guest users cannot send or receive friend requests",
+  "requestFrom": "Friend request from {{name}}",
+  "requestSent": "Friend request sent",
+  "requestNotFound": "Request not found",
+  "guestCannotAccept": "Guest users cannot accept friend requests",
+  "requestAccepted": "Friend request accepted",
+  "nowFriendsWith": "You are now friends with {{name}}",
+  "requestAcceptedBy": "Friend request accepted by {{name}}",
+  "requestRejected": "Friend request rejected"
+}

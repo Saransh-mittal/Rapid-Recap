@@ -291,6 +291,11 @@ const userSchema = new mongoose.Schema(
         Quiz: true,
       },
     },
+    userLanguage: {
+      type: String,
+      default: 'en',
+      enum: ['en', 'hi'],
+    },
     expiresAt: { type: Date },
   },
   { collection: 'Users' },

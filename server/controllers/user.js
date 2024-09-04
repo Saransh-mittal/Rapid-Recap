@@ -1554,6 +1554,23 @@ const soundController = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Sound settings updated successfully' })
 })
 
+// @desc  Update user language
+// @route PUT /api/user/language
+// @access Private
+const updateUserLanguage = async (req, res) => {
+  try {
+    const userId = req.user._id // Assuming you have middleware to extract user ID from the token
+    const { language } = req.body
+
+    // Update the user's language in the database
+    await User.findByIdAndUpdate(userId, { userLanguage: language })
+
+    res.status(200).json({ message: 'Language updated successfully' })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update language', error })
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1589,4 +1606,5 @@ module.exports = {
   NavLineGraph,
   getUserIds,
   soundController,
+  updateUserLanguage,
 }

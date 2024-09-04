@@ -29,8 +29,9 @@ const ShareButton = ({ onClick, isDisabled, onOpenSignin, user }) => {
                 : () =>
                     dispatch(
                       addNoteMessage({
-                        title:
+                        title: t(
                           'Register to see your IQ score and grow Wise Web',
+                        ),
                         duration: 10000,
                         width: '250px',
                         actions: [
@@ -59,7 +60,7 @@ const ShareButton = ({ onClick, isDisabled, onOpenSignin, user }) => {
               ? onClick()
               : dispatch(
                   addNoteMessage({
-                    title: 'Register to see your IQ score and grow Wise Web',
+                    title: t('Register to see your IQ score and grow Wise Web'),
                     duration: 10000,
                     width: '250px',
                     actions: [

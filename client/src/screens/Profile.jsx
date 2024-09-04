@@ -29,8 +29,8 @@ const IQLineGraph = React.lazy(() =>
 const SecureYourProgress = React.lazy(() =>
   import('../components/miscellaneous/SecureYourProgress.jsx'),
 )
-const SoundSettings = React.lazy(() =>
-  import('../components/profileComponents/SoundSettings.jsx'),
+const Settings = React.lazy(() =>
+  import('../components/profileComponents/Settings.jsx'),
 )
 const IQBarGraph = React.lazy(() =>
   import('../components/profileComponents/IQBarGraph'),
@@ -101,9 +101,9 @@ export default function Profile() {
     onClose: onCloseBookmarks,
   } = useDisclosure()
   const {
-    isOpen: isOpenSoundSettings,
-    onOpen: onOpenSoundSettings,
-    onClose: onCloseSoundSettings,
+    isOpen: isOpenSettings,
+    onOpen: onOpenSettings,
+    onClose: onCloseSettings,
   } = useDisclosure()
 
   const fetchProfile = useCallback(async () => {
@@ -536,18 +536,18 @@ export default function Profile() {
                       position={'relative'}
                     >
                       <ProfileButton
-                        buttonText={t('soundSettings')}
+                        buttonText={t('Settings')}
                         inGameName={inGameName}
                         stateUserInGameName={user?.inGameName}
                         Private={true}
                         hoverAnimation={hoverAnimation}
-                        onClick={onOpenSoundSettings}
+                        onClick={onOpenSettings}
                         icon={<SettingsIcon width={'20px'} height={'20px'} />}
                       />
 
-                      <SoundSettings
-                        isOpen={isOpenSoundSettings}
-                        onClose={onCloseSoundSettings}
+                      <Settings
+                        isOpen={isOpenSettings}
+                        onClose={onCloseSettings}
                       />
                     </Flex>
 
@@ -610,7 +610,6 @@ export default function Profile() {
           >
             <Flex
               w={'100%'}
-              zIndex={1001}
               marginTop={'10px'}
               marginInline={'1%'}
               padding={{ xl: isLoading ? 0 : '20px', base: '0' }}

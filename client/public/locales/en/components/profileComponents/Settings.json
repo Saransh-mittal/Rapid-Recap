@@ -1,5 +1,5 @@
 {
-  "soundSettings": "Sound Settings",
+  "Settings": "Settings",
   "inAppNotifications": "In-app Notifications",
   "milestoneSounds": "Sounds for Milestones",
   "clickSounds": "Click Sounds",
@@ -15,5 +15,9 @@
   "updateFailed": "Update failed",
   "updateFailedDescription": "Failed to save sound settings. Please try again.",
   "close": "Close",
-  "sound": "Sound"
+  "sound": "Sound",
+  "soundSettings": "Sound Settings",
+  "languageSettings": "Language Settings",
+  "selectLanguage": "Select Application Language:"
+
 }
