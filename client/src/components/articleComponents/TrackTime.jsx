@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../../redux/appSlice'
 import { setUser } from '../../redux/authSlice'
+import { useTranslation } from 'react-i18next'
 
 const TrackTime = ({ userId, articleId }) => {
   const dispatch = useDispatch()

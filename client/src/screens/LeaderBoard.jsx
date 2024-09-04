@@ -164,6 +164,7 @@ const LeaderBoard = () => {
                 bgGradient="linear(to-r, yellow.400, yellow.600)"
                 bgClip="text"
                 fontFamily="serif"
+                padding={'10px'}
               >
                 {t('title')}
               </ChakraHeading>
