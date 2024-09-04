@@ -48,6 +48,7 @@ import {
   setSoundSettings,
 } from './redux/appSlice.js'
 import { setUser } from './redux/authSlice.js'
+import i18n from 'i18next'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -150,6 +151,9 @@ const App = () => {
     }
     if (isAuthenticated && user?.soundSettings) {
       dispatch(setSoundSettings(user.soundSettings))
+    }
+    if (isAuthenticated && user?.userLanguage) {
+      i18n.changeLanguage(user?.userLanguage ? user.userLanguage : 'en')
     }
     return () => clearTimeout(timer)
   }, [isAuthenticated])

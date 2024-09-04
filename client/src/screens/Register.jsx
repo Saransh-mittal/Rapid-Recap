@@ -37,6 +37,7 @@ import {
 } from '../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 
 const EmailVerify = lazy(() =>
   import('../components/authComponents/EmailVerify'),
@@ -93,6 +94,7 @@ export default function Register({ isOpen, onClose, onOpenGuest }) {
       if (response.status === 201) {
         localStorage.removeItem('token')
         exportData && localStorage.removeItem('guestUserId')
+        await i18n.changeLanguage('en')
         navigate('/')
         dispatchRedux(logout())
         dispatchRedux(resetLoadingFlags())
