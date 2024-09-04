@@ -1,0 +1,1 @@
+import{r as l,a9 as d,j as o,X as f}from"./index-61a5fc29.js";function x(r){const{viewBox:e="0 0 24 24",d:s,displayName:n,defaultProps:c={}}=r,t=l.Children.toArray(r.path),a=d((i,p)=>o.jsx(f,{ref:p,viewBox:e,...c,...i,children:t.length?t:o.jsx("path",{fill:"currentColor",d:s})}));return a.displayName=n,a}export{x as c};
