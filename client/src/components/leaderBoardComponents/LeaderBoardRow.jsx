@@ -1,19 +1,20 @@
 import React, { lazy, Suspense, useCallback } from 'react'
-import { Box, Flex, Heading, Image, Td, Tr } from '@chakra-ui/react'
+import { Box, Flex, Td, Tr, VStack, Image, Text } from '@chakra-ui/react'
 import { findSocietyAndCircle } from '../../utils/helper.utils'
 
 const NameLightning = lazy(() => import('../miscellaneous/NameLightning'))
-const XPLevel = lazy(() => import('../Header-Footer/navbarComponents/XPLevel'))
 
 const LeaderBoardRow = React.memo(
   ({
     user,
     index,
     currUserChar,
-    isBaseScreen,
-    isLgScreen,
-    isMdScreen,
+    isMobile,
+    isTablet,
+    isDesktop,
     navigate,
+    textColor,
+    accentColor,
   }) => {
     const urlInGameName = user?.inGameName?.replace(/\./g, '%2E')
 
@@ -23,7 +24,6 @@ const LeaderBoardRow = React.memo(
 
     return (
       <Tr
-        height={'80px'}
         key={user._id}
         className={
           currUserChar?.inGameName === user.inGameName
@@ -32,111 +32,88 @@ const LeaderBoardRow = React.memo(
         }
         onClick={handleNavigate}
         cursor={'pointer'}
+        _hover={{ bg: 'whiteAlpha.100' }}
+        transition="background 0.2s"
       >
-        <Td textAlign={'center'}>
-          <Flex
-            justifyContent={'center'}
-            alignItems={'center'}
-            bgGradient="linear(to-b, rgba(26, 21, 39, 0.7), rgba(14, 12, 22, 0.7) 88%, rgba(14, 12, 22, 0.7) 99%)"
-            border={'1px solid rgba(255, 255, 255, 0.1)'}
-            p={2}
-            gap={'25px'}
-            borderRadius="xl"
+        <Td textAlign="center" paddingX={{ base: '0', md: '24px' }}>
+          <Box
+            as="span"
+            fontWeight="bold"
+            fontSize={{ base: 'lg', md: 'xl' }}
+            color={index < 3 ? 'yellow.400' : textColor}
           >
-            {user.rank ? user.rank : index + 1}
-            {!isBaseScreen && (
+            {index + 1}
+          </Box>
+        </Td>
+        <Td>
+          <Flex alignItems="center">
+            <Image src={user.pic} boxSize="40px" borderRadius="full" mr={3} />
+            <VStack align="start" spacing={0}>
               <Flex
-                border={'5px solid gold'}
-                style={{ transform: 'rotate(45deg)' }}
-                w="45px"
-                h="45px"
-                justifyContent={'center'}
-                alignItems={'center'}
-                bg={'blue.200'}
-                position={'relative'}
-                overflow={'hidden'}
+                w={'fit-content'}
+                position="relative"
+                paddingX={'5px'}
+                paddingY={'2px'}
               >
-                <Box
-                  position={'absolute'}
-                  h="50px"
-                  w="50px"
-                  style={{ transform: 'rotate(-45deg)' }}
+                <Text
+                  fontWeight="bold"
+                  color={
+                    user.rankedInCurrentSeason
+                      ? findSocietyAndCircle(user.IQ_score)?.textColor
+                      : 'gray.400'
+                  }
+                  fontSize={{ base: 'sm', md: 'md' }}
                 >
-                  <Image
-                    h={'100%'}
-                    w={'100%'}
-                    src={user.pic}
-                    alt="User profile picture"
-                    objectFit={'cover'}
-                  />
-                </Box>
+                  {user.name}
+                  {user.rankedInCurrentSeason && (
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <NameLightning
+                        boxShadow={
+                          findSocietyAndCircle(user.maxIQScore)?.boxShadow
+                        }
+                        MAX_IQ={user.maxIQScore}
+                      />
+                    </Suspense>
+                  )}
+                </Text>
               </Flex>
-            )}
-            <Flex marginLeft={'-0.5rem'}>
-              <Suspense fallback={<div>Loading...</div>}>
-                <XPLevel level={user.level} className={'xp-level'} />
-              </Suspense>
-            </Flex>
+              <Text
+                fontSize={{ base: 'xs', md: 'sm' }}
+                color="gray.400"
+                paddingLeft={'5px'}
+              >
+                @{user.inGameName}
+              </Text>
+              <Text
+                fontSize={{ base: 'xs', md: 'sm' }}
+                color={accentColor}
+                fontWeight="bold"
+                paddingLeft={'5px'}
+              >
+                Experience Level: {user.level}
+              </Text>
+            </VStack>
           </Flex>
         </Td>
-        {!isBaseScreen && (
-          <Td>
-            <Flex
-              justifyContent={'center'}
-              alignItems={'center'}
-              w={'100%'}
-              position="relative"
-            >
-              <Heading
-                as="h6"
-                size={'xs'}
-                color={
-                  user.rankedInCurrentSeason
-                    ? findSocietyAndCircle(user.IQ_score)?.textColor
-                    : 'gray.400'
-                }
-                marginTop={'5px'}
-              >
-                {user.name}
-              </Heading>
-              {user.rankedInCurrentSeason && (
-                <Suspense fallback={<div>Loading...</div>}>
-                  <NameLightning
-                    boxShadow={findSocietyAndCircle(user.maxIQScore)?.boxShadow}
-                    MAX_IQ={user.maxIQScore}
-                  />
-                </Suspense>
-              )}
-            </Flex>
+        {isTablet && (
+          <Td textAlign="center" color={accentColor}>
+            {user.level}
           </Td>
         )}
         <Td
           textAlign="center"
-          color={user.rankedInCurrentSeason ? 'white' : 'gray.400'}
-        >
-          {user.inGameName}
-        </Td>
-        <Td
-          textAlign="center"
-          color={user.rankedInCurrentSeason ? 'white' : 'gray.400'}
+          fontWeight="bold"
+          color="cyan.300"
+          fontSize={{ base: 'sm', md: 'md' }}
+          paddingX={{ base: '0', md: '24px' }}
         >
           {user.IQ_score}
         </Td>
-        {!isLgScreen && (
-          <Td
-            textAlign="center"
-            color={user.rankedInCurrentSeason ? 'white' : 'gray.400'}
-          >
-            {user.quizSubmissions}
-          </Td>
-        )}
-        {!isMdScreen && (
-          <Td
-            textAlign="center"
-            color={user.rankedInCurrentSeason ? 'white' : 'gray.400'}
-          >
-            {user.RQM_avg}
-          </Td>
+        {isDesktop && (
+          <>
+            <Td textAlign="center">{user.quizSubmissions}</Td>
+            <Td textAlign="center">{user.RQM_avg}</Td>
+          </>
         )}
       </Tr>
     )
