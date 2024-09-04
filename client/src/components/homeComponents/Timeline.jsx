@@ -318,6 +318,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
                       title={
                         i18n.language === 'en' ? item?.title : item?.hindiTitle
                       }
+                      urlTitle={item?.title}
                       image={item.imgURL || rrImage}
                       category={t(`categories.${item?.category.toLowerCase()}`)}
                       date={formatDate(item?.dateTime, i18n.language)}

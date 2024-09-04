@@ -26,7 +26,16 @@ const MotionBadge = motion(Badge)
 const MotionCircle = motion(Circle)
 const MotionHeading = motion(Heading)
 
-const Card = ({ title, image, category, date, readTime, id, articleData }) => {
+const Card = ({
+  title,
+  image,
+  category,
+  date,
+  readTime,
+  id,
+  articleData,
+  urlTitle,
+}) => {
   const { t } = useTranslation('Card')
   const cardRef = useRef(null)
   const navigate = useNavigate()
@@ -94,7 +103,7 @@ const Card = ({ title, image, category, date, readTime, id, articleData }) => {
       onClick={() => {
         playClick()
         dispatch(setArticleData(articleData))
-        navigate(`/article/${id}/${slugify(title)}`)
+        navigate(`/article/${id}/${slugify(urlTitle)}`)
       }}
       color="white"
       cursor="pointer"
