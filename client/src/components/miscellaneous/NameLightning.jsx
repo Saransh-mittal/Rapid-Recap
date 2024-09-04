@@ -41,6 +41,7 @@ const NameLightning = ({ boxShadow, MAX_IQ }) => {
             width={'120%'} // Use responsive width
             height={'auto'} // Maintain aspect ratio
             style={{
+              top: '-62%',
               maxHeight: '200%', // Ensure it doesn't overflow the container
               maxWidth: '160%', // Ensure it doesn't overflow the container
             }}
