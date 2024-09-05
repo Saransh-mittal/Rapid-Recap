@@ -293,8 +293,8 @@ const userSchema = new mongoose.Schema(
     },
     userLanguage: {
       type: String,
-      default: 'en',
-      enum: ['en', 'hi'],
+      default: '',
+      enum: ['', 'en', 'hi'],
     },
     expiresAt: { type: Date },
   },

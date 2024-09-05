@@ -1,4 +1,6 @@
 import CircleAndSocietyData from '../assets/CircleAndSocietyData'
+import axios from 'axios'
+import i18n from 'i18next'
 
 export const findSocietyAndCircle = IQ => {
   for (let i = 0; i < CircleAndSocietyData.length; i++) {
@@ -81,4 +83,19 @@ export const formatRemainingTime = milliseconds => {
 
 export const formatSoundType = type => {
   return type.replace(/([A-Z])/g, ' $1').trim()
+}
+
+export const changeLanguage = async (lng, setLoading, setCurrentLanguage) => {
+  try {
+    setLoading && setLoading(true) // Start loading
+    await i18n.changeLanguage(lng)
+    setCurrentLanguage && setCurrentLanguage(lng) // Update the local state
+
+    // Send request to the server to update user language
+    await axios.post('/api/user/language', { language: lng })
+
+    setLoading && setLoading(false) // End loading
+  } catch (error) {
+    console.error('Error changing language:', error)
+  }
 }
