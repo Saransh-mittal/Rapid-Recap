@@ -25,11 +25,9 @@ const LanguageSwitcher = () => {
 
     setLoading(false) // End loading
   }
-
   useEffect(() => {
-    // Sync the local state with the Redux store or i18next's language
-    setCurrentLanguage(user.userLanguage)
-  }, [user.userLanguage])
+    setCurrentLanguage(i18n.language)
+  }, [i18n.language])
 
   return (
     <MotionBox

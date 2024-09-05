@@ -60,7 +60,7 @@ const HiddenGraphMessage = React.memo(() => (
 
 // NoDataMessage Component
 const NoDataMessage = React.memo(
-  ({ getExpectedIQ, expectedIQ, setShowExpectedIQ, showExpectedIQ }) => {
+  ({ getExpectedIQ, expectedIQ, setShowExpectedIQ, showExpectedIQ, t }) => {
     return (
       <Flex
         w="100%"
@@ -99,7 +99,6 @@ const IQBarGraph = ({
   barGraph,
   privateBarGraph,
   loginedUserProfile,
-  viewingHistory = false,
   isGuest,
   t,
 }) => {
