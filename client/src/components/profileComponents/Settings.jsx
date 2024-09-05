@@ -1,5 +1,3 @@
-// src/components/Settings.jsx
-
 import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toggleSound, setSoundSettings } from '../../redux/appSlice'
@@ -31,6 +29,7 @@ import { useTranslation } from 'react-i18next'
 import { formatSoundType } from '../../utils/helper.utils'
 import { InfoOutlineIcon } from '@chakra-ui/icons'
 import LanguageSwitcher from '../../LanguageSwitcher'
+import NotificationSubscription from './NotificationSubscription'
 
 const MotionBox = motion(Box)
 
@@ -202,6 +201,32 @@ const Settings = ({ isOpen, onClose }) => {
                 <AccordionPanel pb={4}>
                   <VStack align="stretch" spacing={4}>
                     <LanguageSwitcher />
+                  </VStack>
+                </AccordionPanel>
+              </AccordionItem>
+
+              <Divider my={4} borderColor="whiteAlpha.400" />
+
+              <AccordionItem border="none">
+                <AccordionButton
+                  _expanded={{ bg: 'whiteAlpha.200' }}
+                  p={4}
+                  borderRadius="md"
+                >
+                  <Box
+                    flex="1"
+                    textAlign="left"
+                    color="white"
+                    fontSize="xl"
+                    fontWeight="bold"
+                  >
+                    {t('notificationSettings')}
+                  </Box>
+                  <AccordionIcon color="white" />
+                </AccordionButton>
+                <AccordionPanel pb={4}>
+                  <VStack align="stretch" spacing={4}>
+                    <NotificationSubscription />
                   </VStack>
                 </AccordionPanel>
               </AccordionItem>

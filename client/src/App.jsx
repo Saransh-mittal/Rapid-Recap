@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next'
 
 // Lazy load components and screens
 const NotificationSubscription = React.lazy(() =>
-  import('./components/Notifications/NotificationSubscription.jsx'),
+  import('./components/profileComponents/NotificationSubscription.jsx'),
 )
 const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
 const Footer = React.lazy(() => import('./components/Header-Footer/Footer.jsx'))
@@ -50,6 +50,10 @@ import {
 import { setUser } from './redux/authSlice.js'
 import i18n from 'i18next'
 import { changeLanguage } from './utils/helper.utils.js'
+import {
+  checkNotificationStatus,
+  isSubscribedChecker,
+} from './redux/notificationSlice.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -146,6 +150,8 @@ const App = () => {
     let timer
 
     if (isAuthenticated) {
+      dispatch(isSubscribedChecker())
+      dispatch(checkNotificationStatus())
       const delay = Math.floor(Math.random() * 120000) + 30000
       timer = setTimeout(() => {
         dispatch(fetchUnreadNoteMessages())
@@ -167,6 +173,7 @@ const App = () => {
         }),
       )
     }
+
     return () => clearTimeout(timer)
   }, [isAuthenticated])
 
@@ -236,19 +243,6 @@ const App = () => {
     [location.pathname],
   )
 
-  const isSupported = useMemo(
-    () =>
-      'Notification' in window &&
-      'serviceWorker' in navigator &&
-      'PushManager' in window,
-    [],
-  )
-
-  const shouldShowNotification = useMemo(
-    () => isAuthenticated && isSupported,
-    [isAuthenticated, isSupported],
-  )
-
   return (
     <>
       <Helmet>
@@ -300,13 +294,6 @@ const App = () => {
       <Suspense fallback={null}>
         <ButtonGradient />
       </Suspense>
-
-      {shouldShowNotification && (
-        <Suspense fallback={null}>
-          <NotificationSubscription />
-        </Suspense>
-      )}
-
       <Suspense fallback={null}>
         <GuestLoginModal
           isOpen={isGuestLoggedin}

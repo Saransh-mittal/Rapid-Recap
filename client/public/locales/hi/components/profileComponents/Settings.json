@@ -18,5 +18,15 @@
   "sound": "ध्वनि",
   "soundSettings": "ध्वनि सेटिंग्स",
   "languageSettings": "भाषा सेटिंग्स",
-  "selectLanguage": "ऐप्लिकेशन भाषा चुनें:"
+  "selectLanguage": "ऐप्लिकेशन भाषा चुनें:",
+  "notificationsSubscribed": "सूचनाएँ सब्सक्राइब की गई हैं",
+  "notificationsNotSubscribed": "सूचनाएँ सब्सक्राइब नहीं की गई हैं",
+  "notificationsNotSupported": "सूचनाएँ समर्थित नहीं हैं",
+  "browserNotSupported": "ब्राउज़र समर्थित नहीं है",
+  "reEnableTooltip": "यदि काम नहीं कर रहा है तो आप सूचनाएँ पुनः सक्षम करने का प्रयास कर सकते हैं।",
+  "enableTooltip": "कृपया सूचनाएँ सक्षम करें ताकि ऐप में सूचनाएँ प्राप्त कर सकें।",
+  "notificationSettings": "सूचना सेटिंग्स",
+  "notSupported": "समर्थित नहीं है",
+  "reEnableNotifications": "सूचनाएँ पुनः सक्षम करें",
+  "enableNotifications": "सूचनाएँ सक्षम करें"
 }

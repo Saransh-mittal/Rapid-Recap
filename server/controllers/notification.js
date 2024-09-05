@@ -17,7 +17,7 @@ const notificationNews = async (req, res) => {
       image:
         'https://www.techspot.com/images2/news/bigimage/2024/07/2024-07-05-image-10.jpg',
       url: 'https://www.rapidrecap.co.in/',
-      userId: '660167b035a59cd25a6b1d3c',
+      userId: '6613f495ce72abb1ce9abde3',
     })
     res.status(200).json({ message: i18n.t('notifSentSuccess') })
   } catch (error) {

@@ -18,6 +18,15 @@
   "sound": "Sound",
   "soundSettings": "Sound Settings",
   "languageSettings": "Language Settings",
-  "selectLanguage": "Select Application Language:"
-
+  "selectLanguage": "Select Application Language:",
+  "notificationsSubscribed": "Notifications Subscribed",
+  "notificationsNotSubscribed": "Notifications Not Subscribed",
+  "notificationsNotSupported": "Notifications Not Supported",
+  "browserNotSupported": "Browser Not Supported",
+  "reEnableTooltip": "You can try to re-enable notifications to receive in-app notifications if not working.",
+  "enableTooltip": "Please enable notifications to receive in-app notifications.",
+  "notificationSettings": "Notification Settings",
+  "notSupported": "Not Supported",
+  "reEnableNotifications": "Re-enable Notifications",
+  "enableNotifications": "Enable Notifications"
 }

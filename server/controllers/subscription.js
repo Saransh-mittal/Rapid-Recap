@@ -1,20 +1,17 @@
 const Subscription = require('../model/subscriptionSchema')
 const { sendNotification } = require('../services/notificationService')
-const i18n = require('../i18n')
-const User = require('../model/userSchema')
 
 const subscribe = async (req, res) => {
   const userId = req.user._id
 
   try {
-    const user = await User.findById(userId)
-    i18n.changeLanguage(user.userLanguage)
-
     const { endpoint, keys } = req.body
 
+    // Check if subscription already exists
     let subscription = await Subscription.findOne({ userId, endpoint })
 
     if (subscription) {
+      // Update existing subscription
       subscription.endpoint = endpoint
       subscription.keys = keys
     } else {
@@ -26,26 +23,23 @@ const subscribe = async (req, res) => {
     }
 
     await subscription.save()
-    res.status(201).json({ message: i18n.t('savedSuccess') })
+    res.status(201).json({ message: 'Subscription saved successfully' })
   } catch (error) {
     console.error('Subscription save error:', error)
-    res.status(500).json({ error: i18n.t('saveFailed') })
+    res.status(500).json({ error: 'Failed to save subscription' })
   }
 }
 
 const sendNotify = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
-    i18n.changeLanguage(user.userLanguage)
-
-    const title = i18n.t('newContentAlert')
-    const body = i18n.t('exploreArticles')
+    const title = '📢 New Content Alert! 📰'
+    const body =
+      'Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!'
     const url = 'http://localhost:5173/'
-
     sendNotification({ title, body, url })
-    res.status(200).json({ message: i18n.t('notifSentSuccess') })
+    res.status(200).json({ message: 'Notifications sent successfully' })
   } catch (error) {
-    res.status(500).json({ message: i18n.t('notifSendFailed') })
+    res.status(500).json({ message: 'Failed to send notifications' })
     console.error(error)
   }
 }
@@ -53,39 +47,37 @@ const sendNotify = async (req, res) => {
 const checkSubscription = async (req, res) => {
   try {
     const userId = req.user._id
-    const user = await User.findById(userId)
-    i18n.changeLanguage(user.userLanguage)
-
-    const { endpoint } = req.body
+    const { endpoint } = req.body // Assuming the client sends the current endpoint
     if (!endpoint) {
-      return res.status(400).json({ error: i18n.t('endpointRequired') })
+      return res.status(400).json({ error: 'Endpoint is required' })
     }
 
     const subscription = await Subscription.findOne({ userId, endpoint })
     if (subscription) {
       res.json({ isSubscribed: true })
     } else {
+      // Check if user has any subscription, but with a different endpoint
       const anySubscription = await Subscription.findOne({ userId })
       if (anySubscription) {
+        // User has a subscription, but for a different endpoint
         res.json({ isSubscribed: false, hasOtherSubscription: true })
       } else {
+        // User has no subscription at all
         res.json({ isSubscribed: false, hasOtherSubscription: false })
       }
     }
   } catch (error) {
     console.error('Subscription check error:', error)
-    res.status(500).json({ error: i18n.t('checkFailed') })
+    res.status(500).json({ error: 'Failed to check subscription' })
   }
 }
 
 const deleteSubscription = async (req, res) => {
   try {
     const { endpoint } = req.body
-    const user = await User.findById(req.user._id)
-    i18n.changeLanguage(user.userLanguage)
 
     if (!endpoint) {
-      return res.status(400).json({ error: i18n.t('endpointRequired') })
+      return res.status(400).json({ error: 'Endpoint is required' })
     }
 
     const deletedSubscription = await Subscription.findOneAndDelete({
@@ -93,16 +85,15 @@ const deleteSubscription = async (req, res) => {
     })
 
     if (!deletedSubscription) {
-      return res.status(404).json({ error: i18n.t('notFound') })
+      return res.status(404).json({ error: 'Subscription not found' })
     }
 
-    res.status(200).json({ message: i18n.t('deleteSuccess') })
+    res.status(200).json({ message: 'Subscription deleted successfully' })
   } catch (error) {
     console.error('Error deleting subscription:', error)
-    res.status(500).json({ error: i18n.t('deleteFailed') })
+    res.status(500).json({ error: 'Internal server error' })
   }
 }
-
 module.exports = {
   subscribe,
   sendNotify,
