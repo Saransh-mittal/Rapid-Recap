@@ -4,6 +4,7 @@ import appReducer from './appSlice'
 import uiReducer from './uiSlice'
 import contentReducer from './contentSlice'
 import articleReducer from './articleSlice'
+import notificationReducer from './notificationSlice'
 
 export const store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
     ui: uiReducer,
     content: contentReducer,
     articles: articleReducer,
+    notifications: notificationReducer,
   },
 })

@@ -22,8 +22,13 @@ const cookieParser = require('cookie-parser')
 const { initializeSocket } = require('./socket')
 const compression = require('compression')
 const helmet = require('helmet')
+const i18nMiddleware = require('i18next-http-middleware')
+const i18n = require('./i18n')
 
 const app = express()
+
+app.use(i18nMiddleware.handle(i18n))
+
 app.use(
   compression({
     level: 6,

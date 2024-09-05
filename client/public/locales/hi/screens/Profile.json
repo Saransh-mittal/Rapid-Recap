@@ -1,0 +1,14 @@
+{
+  "title": "{{name}} का Rapid Recap प्रोफ़ाइल | IQ स्कोर: {{score}}",
+  "metaDescription": "{{name}} का Rapid Recap प्रोफ़ाइल देखें। IQ स्कोर: {{score}}, {{quizzes}} क्विज़ हल किए गए। {{society}} {{circle}} के सदस्य। उनकी प्रगति और उपलब्धियों को देखें!",
+  "metaOgTitle": "{{name}} का Rapid Recap प्रोफ़ाइल",
+  "metaOgDescription": "{{name}} का प्रोफ़ाइल देखें। IQ स्कोर: {{score}}, हल किए गए क्विज़: {{quizzes}}। उनकी प्रगति {{society}} {{circle}} में देखें।",
+  "metaTwitterDescription": "{{name}} का Rapid Recap प्रोफ़ाइल देखें। IQ स्कोर: {{score}}, {{quizzes}} क्विज़ हल किए गए। उनकी प्रगति देखें!",
+  "userNotFound": "उपयोगकर्ता नहीं मिला",
+  "userNotFoundDescription": "जिस उपयोगकर्ता की आप तलाश कर रहे हैं वह मौजूद नहीं है",
+  "toggleProfileVisibility": "प्रोफ़ाइल दृश्यता टॉगल करें",
+  "seasonAnalytics": "सीज़न विश्लेषण",
+  "bookmarks": "बुकमार्क",
+  "secureYourProgress": "अपनी प्रगति सुरक्षित करें",
+  "Settings": "सेटिंग्स"
+}

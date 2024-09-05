@@ -1,0 +1,6 @@
+{
+  "acceptRequest": "Accept message request from {{senderName}}?",
+  "requestDescription": "If you accept this request, you will be able to see the messages and activities from this user.",
+  "accept": "Accept",
+  "reject": "Reject"
+}

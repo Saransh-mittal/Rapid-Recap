@@ -2,8 +2,9 @@ import React from 'react'
 import GetStarted from '../Header-Footer/navbarComponents/GetStarted'
 import { Button as ChakraButton } from '@chakra-ui/react'
 import GuestLogin from '../authComponents/GuestLogin'
-import Button from './ButtonComponent'
 import SecureYourProgress from './SecureYourProgress'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from '../../LanguageSwitcher'
 
 const ElegantButton = ({ onClick, children }) => (
   <ChakraButton
@@ -36,30 +37,46 @@ const ElegantButton = ({ onClick, children }) => (
   </ChakraButton>
 )
 
-const ButtonFactory = ({ actionType, onClick, innerText, ...props }) => {
+const ButtonFactory = ({
+  actionType,
+  onClick,
+  innerText,
+  GuestLoginTranslate,
+  ...props
+}) => {
+  const { t } = useTranslation('ButtonFactory')
+
   switch (actionType) {
     case 'SIGN_IN':
       return (
-        <GetStarted width={'150px'} innerText={innerText} onClick={onClick} />
+        <GetStarted
+          width={'150px'}
+          innerText={innerText || t('SIGN_IN')}
+          onClick={onClick}
+        />
       )
+    case 'LANGUAGE':
+      return <LanguageSwitcher />
     case 'GUEST':
-      return <GuestLogin width={'150px'} onClick={onClick} />
+      return (
+        <GuestLogin width={'150px'} onClick={onClick} t={GuestLoginTranslate} />
+      )
     case 'VIEW_PROFILE':
       return (
         <ElegantButton onClick={onClick} {...props}>
-          View Profile
+          {t('VIEW_PROFILE')}
         </ElegantButton>
       )
     case 'VIEW_EXPERIENCE':
       return (
         <ElegantButton onClick={onClick} {...props}>
-          View Experience
+          {t('VIEW_EXPERIENCE')}
         </ElegantButton>
       )
     case 'INBOX':
       return (
         <ElegantButton onClick={onClick} {...props}>
-          Inbox
+          {t('INBOX')}
         </ElegantButton>
       )
     case 'SECURE_YOUR_PROGRESS':
@@ -67,25 +84,25 @@ const ButtonFactory = ({ actionType, onClick, innerText, ...props }) => {
     case 'CONFIRM':
       return (
         <ChakraButton colorScheme="green" onClick={onClick} {...props}>
-          Confirm
+          {t('CONFIRM')}
         </ChakraButton>
       )
     case 'CANCEL':
       return (
         <ChakraButton colorScheme="red" onClick={onClick} {...props}>
-          Cancel
+          {t('CANCEL')}
         </ChakraButton>
       )
     case 'VIEW_ALL':
       return (
         <ChakraButton colorScheme="blue" onClick={onClick} {...props}>
-          View All
+          {t('VIEW_ALL')}
         </ChakraButton>
       )
     case 'DISMISS':
       return (
         <ChakraButton colorScheme="gray" onClick={onClick} {...props}>
-          Dismiss
+          {t('DISMISS')}
         </ChakraButton>
       )
     default:

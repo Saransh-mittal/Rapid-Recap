@@ -1,0 +1,14 @@
+{
+  "guestMessage": {
+    "title": "Register to view your society and circle",
+    "text": "No data for guest user"
+  },
+  "privateSociety": {
+    "hidden": "Hidden"
+  },
+  "tooltip": {
+    "visibility": "Visibility to others",
+    "hidden": "HIDDEN",
+    "visible": "VISIBLE"
+  }
+}

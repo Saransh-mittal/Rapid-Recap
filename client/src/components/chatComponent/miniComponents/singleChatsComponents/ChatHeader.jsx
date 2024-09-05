@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, lazy, Suspense } from 'react'
 import { Flex, IconButton, Image, Text } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
+import { useTranslation } from 'react-i18next'
 import { getSenderFull } from '../../config/ChatLogics'
 import greaterThan from '/images/greaterThan.webp'
 
@@ -15,6 +16,8 @@ const ChatHeader = ({
   handleClose,
   setFetchAgain,
 }) => {
+  const { t } = useTranslation('ChatHeader')
+
   const senderDetails = useMemo(
     () => getSenderFull(user, selectedChat.users),
     [user, selectedChat.users],
@@ -46,6 +49,7 @@ const ChatHeader = ({
         onClick={handleClose}
         bg="rgba(255, 255, 255, 0.7)"
         _hover={{ bg: 'rgba(255, 255, 255, 0.9)' }}
+        aria-label={t('backButton')}
       />
 
       {messages &&
@@ -107,7 +111,7 @@ const ChatHeader = ({
         ) : (
           <>
             {selectedChat.chatName.toUpperCase()}
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div>{t('loading')}</div>}>
               <UpdateGroupChatModal
                 fetchMessages={fetchMessages}
                 fetchAgain={fetchAgain}
@@ -124,7 +128,7 @@ const ChatHeader = ({
           bottom={'-1rem'}
           left={'47%'}
         >
-          is typing...
+          {t('typing')}
         </Text>
       )}
     </Flex>

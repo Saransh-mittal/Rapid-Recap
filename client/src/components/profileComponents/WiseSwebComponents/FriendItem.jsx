@@ -19,6 +19,7 @@ import {
   Badge,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next' // Import useTranslation hook
 import UnlinkSVG from '../../../assets/svg/UnlinkSVG'
 import UserSVG from '../../../assets/svg/UserSVG'
 import MessageCircleSVG from '../../../assets/svg/MessageCircleSVG'
@@ -26,6 +27,7 @@ import PopoverOption from './PopoverOption'
 
 const FriendItem = React.memo(
   ({ friend, index, openPopoverId, setOpenPopoverId, onSeverTies }) => {
+    const { t } = useTranslation('FriendItem') // Hook for translation
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const cancelRef = useRef()
     const navigate = useNavigate()
@@ -177,7 +179,7 @@ const FriendItem = React.memo(
             <PopoverBody p={2} width="100%">
               <PopoverOption
                 icon={MessageCircleSVG}
-                text="Commune"
+                text={t('commune')}
                 onClick={handleCommune}
               />
               <Box
@@ -188,7 +190,7 @@ const FriendItem = React.memo(
               />
               <PopoverOption
                 icon={UserSVG}
-                text="Glimpse Wisdom"
+                text={t('glimpseWisdom')}
                 onClick={handleGlimpseWisdom}
               />
               <Box
@@ -199,7 +201,7 @@ const FriendItem = React.memo(
               />
               <PopoverOption
                 icon={UnlinkSVG}
-                text="Sever Ties"
+                text={t('severTies')}
                 onClick={handleSeverTies}
                 isRed={true}
               />
@@ -214,20 +216,19 @@ const FriendItem = React.memo(
           <AlertDialogOverlay>
             <AlertDialogContent bg="#2a2438" color="white">
               <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                Sever Ties with {friend.name}
+                {t('severTiesWith', { name: friend.name })}
               </AlertDialogHeader>
 
               <AlertDialogBody>
-                Are you sure? This action cannot be undone. You will no longer
-                be friends with {friend.name}.
+                {t('severTiesConfirmation', { name: friend.name })}
               </AlertDialogBody>
 
               <AlertDialogFooter>
                 <Button ref={cancelRef} onClick={() => setIsConfirmOpen(false)}>
-                  Cancel
+                  {t('cancel')}
                 </Button>
                 <Button colorScheme="red" onClick={onConfirmSeverTies} ml={3}>
-                  Sever Ties
+                  {t('severTies')}
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>

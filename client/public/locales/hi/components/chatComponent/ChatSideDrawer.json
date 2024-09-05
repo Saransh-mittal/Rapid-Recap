@@ -1,0 +1,6 @@
+{
+  "searchUsers": "उपयोगकर्ताओं की खोज करें",
+  "searchPlaceholder": "नाम या ईमेल से खोजें...",
+  "noUserFound": "कोई उपयोगकर्ता नहीं मिला",
+  "errorFetchingChat": "चैट लाने में त्रुटि"
+}

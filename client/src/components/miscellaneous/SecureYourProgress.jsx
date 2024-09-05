@@ -4,10 +4,12 @@ import ProfileButton from '../profileComponents/ProfileButton'
 import SecureProgressSVG from '../../assets/svg/SecureProgressSVG'
 
 import { useDispatch, useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 import { setExportData, setIsRegisterOpen } from '../../redux/appSlice'
 
 const SecureYourProgress = ({ padding = 6 }) => {
+  const { t } = useTranslation('SecureYourProgress')
   const { user } = useSelector(state => state.auth)
   const dispatch = useDispatch()
 
@@ -54,13 +56,16 @@ const SecureYourProgress = ({ padding = 6 }) => {
         w="100%"
       >
         <Heading size="md" mb={4}>
-          Secure Your Progress
+          {t('SecureYourProgress.heading')}
         </Heading>
         <Text fontSize="sm" mb={6}>
-          Your account expires in {daysLeft} days and {hoursLeft} hours
+          {t('SecureYourProgress.expiryMessage', {
+            days: daysLeft,
+            hours: hoursLeft,
+          })}
         </Text>
         <ProfileButton
-          buttonText="Secure your process"
+          buttonText={t('SecureYourProgress.buttonText')}
           isGuest={true}
           hoverAnimation={hoverAnimation}
           onClick={() => {

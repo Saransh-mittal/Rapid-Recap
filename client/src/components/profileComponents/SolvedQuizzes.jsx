@@ -17,6 +17,7 @@ import StarIcon from '../../assets/svg/StarIcon'
 import LightbulbIcon from '../../assets/svg/LightbulbIcon'
 import SkullIcon from '../../assets/svg/SkullIcon'
 import ClockSVG from '../../assets/svg/ClockSVG'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
@@ -25,32 +26,34 @@ const SolvedQuizHistory = lazy(() =>
   import('./SolvedQuizSubComponents/SolvedQuizHistory'),
 )
 
-const DifficultyBar = ({ difficulty, count, beats, color, icon: Icon }) => (
-  <HStack spacing={4} w="full" align="center">
-    <Box color={color}>
-      <Icon />
-    </Box>
-    <Box flex={1}>
-      <Flex justify="space-between" mb={1}>
-        <Text fontSize="sm" fontWeight="medium" color="gray.200">
-          {difficulty}
+const DifficultyBar = ({ difficulty, count, beats, color, icon: Icon, t }) => {
+  return (
+    <HStack spacing={4} w="full" align="center">
+      <Box color={color}>
+        <Icon />
+      </Box>
+      <Box flex={1}>
+        <Flex justify="space-between" mb={1}>
+          <Text fontSize="sm" fontWeight="medium" color="gray.200">
+            {t(difficulty)}
+          </Text>
+          <Text fontSize="sm" color="gray.400">
+            {t('solved', { count })}
+          </Text>
+        </Flex>
+        <Progress
+          value={beats}
+          size="xs"
+          colorScheme={color}
+          borderRadius="full"
+        />
+        <Text fontSize="xs" color="gray.400" textAlign="right" mt={1}>
+          {t('beatsPercentage', { beats })}
         </Text>
-        <Text fontSize="sm" color="gray.400">
-          {count} Solved
-        </Text>
-      </Flex>
-      <Progress
-        value={beats}
-        size="xs"
-        colorScheme={color}
-        borderRadius="full"
-      />
-      <Text fontSize="xs" color="gray.400" textAlign="right" mt={1}>
-        Beats {beats}%
-      </Text>
-    </Box>
-  </HStack>
-)
+      </Box>
+    </HStack>
+  )
+}
 
 const SolvedQuizzes = ({
   solvedQuizzes,
@@ -59,6 +62,7 @@ const SolvedQuizzes = ({
   loginedUserProfile,
   inGameName,
 }) => {
+  const { t } = useTranslation('SolvedQuizzes')
   const { user } = useSelector(state => state.auth)
   const [showHistory, setShowHistory] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -102,7 +106,7 @@ const SolvedQuizzes = ({
           w={'60px'}
           height={'30px'}
         >
-          Hidden
+          {t('hidden')}
         </Text>
       </Flex>
     )
@@ -112,12 +116,12 @@ const SolvedQuizzes = ({
     <Box borderRadius="lg" p={4} boxShadow="xl" w={'100%'}>
       <Flex justify="space-between" align="center" mb={4}>
         <Text fontSize="lg" fontWeight="bold" color="gray.100">
-          Solved Quizzes
+          {t('solvedQuizzes')}
         </Text>
         {loginedUserProfile && (
-          <Tooltip label="Visibility to others">
+          <Tooltip label={t('visibilityToOthers')}>
             <Badge colorScheme="green">
-              {user.profilePrivacy.solvedQuizzes ? 'HIDDEN' : 'VISIBLE'}
+              {user.profilePrivacy.solvedQuizzes ? t('hidden') : t('visible')}
             </Badge>
           </Tooltip>
         )}
@@ -135,7 +139,7 @@ const SolvedQuizzes = ({
           <HStack align="stretch" spacing={4}>
             <Flex direction="column" align="flex-start">
               <Text color="gray.400" fontSize="sm">
-                Total Solved Quizzes
+                {t('totalSolvedQuizzes')}
               </Text>
               <Text
                 fontSize="4xl"
@@ -146,30 +150,33 @@ const SolvedQuizzes = ({
                 {solvedQuizzesCount}
               </Text>
               <Text color="gray.500" fontSize="xs">
-                Keep it up!
+                {t('keepItUp')}
               </Text>
             </Flex>
             <VStack spacing={4} align="stretch" flex={1}>
               <DifficultyBar
-                difficulty="Easy"
+                difficulty="easy"
                 count={easy.easyQuizzesCount || 0}
                 beats={Math.round(easy.easyBeatsPercentage || 0)}
                 color="green"
                 icon={LightbulbIcon}
+                t={t}
               />
               <DifficultyBar
-                difficulty="Medium"
+                difficulty="medium"
                 count={medium.mediumQuizzesCount || 0}
                 beats={Math.round(medium.medBeatsPercentage || 0)}
                 color="yellow"
                 icon={StarIcon}
+                t={t}
               />
               <DifficultyBar
-                difficulty="Hard"
+                difficulty="hard"
                 count={hard.hardQuizzesCount || 0}
                 beats={Math.round(hard.hardBeatsPercentage || 0)}
                 color="red"
                 icon={SkullIcon}
+                t={t}
               />
             </VStack>
           </HStack>
@@ -182,7 +189,7 @@ const SolvedQuizzes = ({
             mt={4}
             onClick={() => setShowHistory(true)}
             isDisabled={isDisabled}
-            buttonText={'View History'}
+            buttonText={t('viewHistory')}
             notShowVisibility={true}
           />
         </MotionBox>
@@ -190,7 +197,6 @@ const SolvedQuizzes = ({
       {showHistory && (
         <Suspense fallback={null}>
           <SolvedQuizHistory
-            // solvedHistory={history}
             setShowHistory={setShowHistory}
             inGameName={inGameName}
           />

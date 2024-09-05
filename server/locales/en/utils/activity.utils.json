@@ -1,0 +1,6 @@
+{
+  "5_day_login_streak": {
+    "title": "5-day login streak",
+    "content": "Congratulations! You have logged in for {{days}} days in a row!"
+  }
+}

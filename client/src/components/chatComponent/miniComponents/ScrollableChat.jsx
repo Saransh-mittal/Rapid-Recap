@@ -24,6 +24,8 @@ const GroupedMessages = lazy(() =>
 
 import { groupMessagesByDate, formatTime } from '../../../utils/chat.utils'
 import { isMessageDeletedForUser } from '../config/ChatLogics'
+import i18n from 'i18next'
+import { useTranslation } from 'react-i18next'
 
 const ScrollableChat = ({
   messages,
@@ -44,6 +46,7 @@ const ScrollableChat = ({
   const isScrolling = useRef(false)
   const scrollTimeout = useRef(null)
   const { playClick } = useSound()
+  const { t: formatDateTranslate } = useTranslation('formatDate')
 
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,
@@ -58,7 +61,7 @@ const ScrollableChat = ({
   const [selectedReactions, setSelectedReactions] = useState(null)
 
   const groupedMessages = useMemo(
-    () => groupMessagesByDate(messages),
+    () => groupMessagesByDate(messages, formatDateTranslate, i18n.language),
     [messages],
   )
   const isScreenSmallerThan600px = useMediaQuery('(max-width: 600px)')[0]

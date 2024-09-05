@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Input } from '@chakra-ui/input'
 import { Box } from '@chakra-ui/layout'
 import {
@@ -20,6 +21,7 @@ import debounce from 'lodash.debounce'
 const UserListItem = lazy(() => import('./userAvatar/UserListItem'))
 
 const ChatSideDrawer = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('ChatSideDrawer')
   const [search, setSearch] = useState('')
   const [searchResult, setSearchResult] = useState([])
   const [loading, setLoading] = useState(false)
@@ -72,7 +74,7 @@ const ChatSideDrawer = ({ isOpen, onClose }) => {
 
         if (responseData.length === 0)
           toast({
-            title: 'No user found',
+            title: t('noUserFound'),
             status: 'info',
             duration: 3000,
             isClosable: true,
@@ -81,13 +83,11 @@ const ChatSideDrawer = ({ isOpen, onClose }) => {
         setLoading(false)
       })
     },
-    [debouncedSearch, toast],
+    [debouncedSearch, toast, t],
   )
 
   const accessChat = useCallback(
     async userId => {
-      console.log(userId)
-
       try {
         setLoadingChat(true)
         const { data } = await axios.post(`/api/chat`, { userId })
@@ -98,7 +98,7 @@ const ChatSideDrawer = ({ isOpen, onClose }) => {
         onClose()
       } catch (error) {
         toast({
-          title: 'Error fetching the chat',
+          title: t('errorFetchingChat'),
           description: error.message,
           status: 'error',
           duration: 5000,
@@ -107,7 +107,7 @@ const ChatSideDrawer = ({ isOpen, onClose }) => {
         })
       }
     },
-    [chats, onClose, setChats, setSelectedChat, toast],
+    [chats, onClose, setChats, setSelectedChat, toast, t],
   )
 
   return (
@@ -125,7 +125,7 @@ const ChatSideDrawer = ({ isOpen, onClose }) => {
           color={'white'}
         >
           <DrawerCloseButton />
-          <DrawerHeader>Search Users</DrawerHeader>
+          <DrawerHeader>{t('searchUsers')}</DrawerHeader>
           <DrawerBody
             css={{
               '&::-webkit-scrollbar': {
@@ -135,7 +135,7 @@ const ChatSideDrawer = ({ isOpen, onClose }) => {
           >
             <Box display="flex" pb={2} gap={2}>
               <Input
-                placeholder="Search by name or email..."
+                placeholder={t('searchPlaceholder')}
                 mr={2}
                 value={search}
                 onChange={handleSearch}

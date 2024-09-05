@@ -7,8 +7,10 @@ import {
   useColorModeValue,
   Button,
 } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next' // Import useTranslation hook
 
 const FriendRequestItem = ({ request, onAccept, onReject }) => {
+  const { t } = useTranslation('FriendRequestItem') // Hook for translation
   const bgColor = useColorModeValue('#2a2438', '#2a2438')
   const textColor = useColorModeValue('white', 'white')
   const subTextColor = useColorModeValue('#a0a0a0', '#a0a0a0')
@@ -47,15 +49,15 @@ const FriendRequestItem = ({ request, onAccept, onReject }) => {
             </Text>
           </Flex>
           <Text fontSize="xs" color={iqColor} mb={0}>
-            IQ: {request.from.IQ_score}
+            {t('iqScore', { score: request.from.IQ_score })}
           </Text>
         </Box>
         <Flex alignItems={'center'} gap={2}>
           <Button colorScheme="green" size="xs" mr={1} onClick={handleAccept}>
-            Accept
+            {t('accept')}
           </Button>
           <Button colorScheme="red" size="xs" onClick={handleReject}>
-            Reject
+            {t('reject')}
           </Button>
         </Flex>
       </Flex>

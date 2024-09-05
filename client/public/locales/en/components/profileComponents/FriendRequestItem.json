@@ -1,0 +1,5 @@
+{
+  "accept": "Accept",
+  "reject": "Reject",
+  "iqScore": "IQ: {{score}}"
+}

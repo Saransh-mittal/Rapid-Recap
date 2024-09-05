@@ -6,6 +6,7 @@ import React, {
   useMemo,
   forwardRef,
   Suspense,
+  useTransition,
 } from 'react'
 import {
   Modal,
@@ -31,6 +32,7 @@ import {
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { ChatState } from '../../contextAPI/ChatProvider'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load SVGs and other components
 const UserPlusSVG = React.lazy(() => import('../../assets/svg/UserPlusSVG'))
@@ -46,7 +48,7 @@ const FriendRequestItem = React.lazy(() =>
 
 const FriendList = forwardRef(
   (
-    { items, startIndex = 0, openPopoverId, setOpenPopoverId, onSeverTies },
+    { items, startIndex = 0, openPopoverId, setOpenPopoverId, onSeverTies, t },
     ref,
   ) => {
     const onlineFriends = items
@@ -93,7 +95,7 @@ const FriendList = forwardRef(
               mb={2}
               textAlign={'center'}
             >
-              Online Friends
+              {t('online_friends')}
             </Text>
             <Suspense
               fallback={<LoadingSkeleton count={onlineFriends.length} />}
@@ -121,7 +123,7 @@ const FriendList = forwardRef(
               mb={2}
               textAlign={'center'}
             >
-              LeaderBoard
+              {t('leaderboard')}
             </Text>
             <Suspense
               fallback={<LoadingSkeleton count={offlineFriends.length} />}
@@ -165,6 +167,7 @@ const WiseWeb = ({
   markRequestAsRead,
   setIsHamburgerOpen,
 }) => {
+  const { t } = useTranslation('WiseWeb')
   const [friends, setFriends] = useState([])
   const [requests, setRequests] = useState([])
   const [openPopoverId, setOpenPopoverId] = useState(null)
@@ -208,8 +211,8 @@ const WiseWeb = ({
         await axios.post('/api/friends/sever-ties', { friendId })
         fetchFriends()
         toast({
-          title: 'Ties Severed',
-          description: 'You have successfully unfriended the friend.',
+          title: t('ties_severed'),
+          description: t('unfriended_message'),
           status: 'success',
           duration: 3000,
           isClosable: true,
@@ -217,8 +220,8 @@ const WiseWeb = ({
       } catch (error) {
         console.error('Error severing ties:', error)
         toast({
-          title: 'Error',
-          description: 'Failed to sever ties. Please try again.',
+          title: t('error_severing_ties'),
+          description: t('sever_ties_error_message'),
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -382,9 +385,10 @@ const WiseWeb = ({
           setOpenPopoverId={setOpenPopoverId}
           ref={friendListRef}
           onSeverTies={handleSeverTies}
+          t={t}
         />
       ) : (
-        <Text>No friends found.</Text>
+        <Text>{t('no_friends')}</Text>
       ),
     [friends, openPopoverId, isLoadingFriends, handleSeverTies],
   )
@@ -409,7 +413,7 @@ const WiseWeb = ({
           ))}
         </VStack>
       ) : (
-        <Text>No friend requests found.</Text>
+        <Text>{t('no_friend_requests')}</Text>
       ),
     [requests, isLoadingRequests, handleAcceptRequest, handleRejectRequest],
   )
@@ -434,7 +438,7 @@ const WiseWeb = ({
         maxW="400px"
         css={{ '&::-webkit-scrollbar': { display: 'none' } }}
       >
-        <ModalHeader>Wise Web</ModalHeader>
+        <ModalHeader>{t('wise_web')}</ModalHeader>
         <ModalCloseButton />
         <ModalBody
           maxH="75vh"
@@ -469,7 +473,7 @@ const WiseWeb = ({
                     fill={'#a49eb9'}
                     style={{ marginRight: '8px' }}
                   />
-                  Friends
+                  {t('friends')}
                 </Tab>
               </Suspense>
               <Suspense fallback={<Skeleton height="20px" width="60px" />}>
@@ -492,7 +496,7 @@ const WiseWeb = ({
                     fill={'#a49eb9'}
                     style={{ marginRight: '8px' }}
                   />
-                  Requests
+                  {t('requests')}
                 </Tab>
               </Suspense>
             </TabList>
@@ -504,7 +508,7 @@ const WiseWeb = ({
                   mb={4}
                   color={headerColor}
                 >
-                  Your Friends
+                  {t('your_friends')}
                 </Text>
                 {memoizedFriendList}
               </TabPanel>
@@ -515,7 +519,7 @@ const WiseWeb = ({
                   mb={4}
                   color={headerColor}
                 >
-                  Friend Requests
+                  {t('friend_requests')}
                 </Text>
                 {memoizedRequestList}
               </TabPanel>

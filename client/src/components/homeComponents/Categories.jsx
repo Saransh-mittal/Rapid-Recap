@@ -1,7 +1,9 @@
 import { Box, Flex } from '@chakra-ui/react'
 import React, { useEffect, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import ButtonGradient from '../../assets/svg/ButtonGradient'
 import Button from '../miscellaneous/ButtonComponent'
+import { findCategoryIndex, getCategoryKey } from '../../assets/Categories'
 
 const Categories = ({
   activeCategory,
@@ -11,19 +13,20 @@ const Categories = ({
   trackCategoryClick,
   notLoggedIn,
 }) => {
+  const { t } = useTranslation('categories')
+
   // Scroll into view when the active category changes
   useEffect(() => {
     if (activeCategory) {
-      const activeCategoryRef = categoryRefs.current.find(
-        ref =>
-          ref &&
-          ref.textContent.trim().toLowerCase() === activeCategory.toLowerCase(),
-      )
-      if (activeCategoryRef) {
-        activeCategoryRef.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        })
+      const activeCategoryIndex = findCategoryIndex(activeCategory)
+      if (activeCategoryIndex !== -1) {
+        const activeCategoryRef = categoryRefs.current[activeCategoryIndex]
+        if (activeCategoryRef) {
+          activeCategoryRef.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          })
+        }
       }
     }
   }, [activeCategory, categoryRefs])
@@ -38,21 +41,22 @@ const Categories = ({
           return null
         }
 
+        const isActive = getCategoryKey(activeCategory) === category.key
+
         return (
           <Button
             ref={el => (categoryRefs.current[idx] = el)}
-            key={idx}
-            white={
-              category.toLocaleLowerCase() ===
-              activeCategory?.toLocaleLowerCase()
-            }
+            key={category.key}
+            white={isActive}
             onClick={() => {
-              trackCategoryClick(category)
-              handleActiveCategory({ category })
+              trackCategoryClick(category.key)
+              handleActiveCategory({ category: category.key })
             }}
-            display={notLoggedIn && category === 'all' ? 'none' : 'inline-flex'}
+            display={
+              notLoggedIn && category.key === 'all' ? 'none' : 'inline-flex'
+            }
           >
-            {category}
+            {t(`categories.${category.key}`)}
           </Button>
         )
       }),
@@ -63,6 +67,7 @@ const Categories = ({
       trackCategoryClick,
       handleActiveCategory,
       notLoggedIn,
+      t,
     ],
   )
 

@@ -19,7 +19,8 @@ import {
   dailyStreakCheckerAndUpdater,
   quinBoostChecker,
 } from '../../utils/quiz.utils'
-import { addNoteMessage, fetchUnreadNoteMessages } from '../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
+import { addNoteMessage } from '../../redux/appSlice'
 import { setUser } from '../../redux/authSlice'
 
 // Lazy load components
@@ -53,6 +54,7 @@ const Quiz = ({
   setQuizLeftToGetQuizBoost,
   setTotalUsersGivenQuiz,
 }) => {
+  const { t } = useTranslation('Quiz')
   const articleId = article._id
   const { quizData, load, quizId, setLoad } = useFetchQuiz(
     articleId,
@@ -130,10 +132,8 @@ const Quiz = ({
     } catch (error) {
       console.log(error)
       toast({
-        title: 'Quiz failed!',
-        description:
-          error.response?.data?.error ||
-          'Please try again (Close the quiz and try refreshing the page)',
+        title: t('QuizFailed'),
+        description: error.response?.data?.error || t('RetryError'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -202,7 +202,7 @@ const Quiz = ({
               addNoteMessage({
                 messageType: 'xpAward',
                 xpAwarded: result?.xpAwarded || 10,
-                title: 'XP Awarded For Quiz + Quin Boost',
+                title: t('XP Awarded For Quiz + Quin Boost'),
                 actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                 width: '250px',
                 milestoneName: 'QUIN_BOOST',
@@ -215,7 +215,7 @@ const Quiz = ({
               addNoteMessage({
                 messageType: 'xpAward',
                 xpAwarded: result?.xpAwarded || 5,
-                title: 'XP Awarded For Quiz',
+                title: t('XP Awarded For Quiz'),
                 actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                 width: '250px',
                 xpSource: 'QUIZ',
@@ -228,7 +228,7 @@ const Quiz = ({
             addNoteMessage({
               messageType: 'streak',
               xpAwarded: result?.xpAwarded || 10,
-              title: 'Congratulations! Your Strek is Revived!',
+              title: t('Congratulations! Your Strek is Revived!'),
               width: '250px',
               streakStatus: 'revived',
               streakCount: user.streakBeforeBreak + 1,
@@ -246,7 +246,7 @@ const Quiz = ({
                   remainingTime:
                     user.revivalPeriodEnd.getTime() - new Date().getTime(),
                   remainingQuizzes: 6 - user.todaysQuizCnt + 1,
-                  title: 'Revive your streak!',
+                  title: t('Revive your streak!'),
                   width: '300px',
                 }),
               ),
@@ -289,7 +289,7 @@ const Quiz = ({
             addNoteMessage({
               messageType: 'xpAward',
               xpAwarded: result?.xpAwarded || 10,
-              title: 'XP Awarded For Quiz + Quin Boost',
+              title: t('XP Awarded For Quiz + Quin Boost'),
               actions: [{ actionType: 'VIEW_EXPERIENCE' }],
               width: '250px',
               milestoneName: 'QUIN_BOOST',
@@ -302,7 +302,7 @@ const Quiz = ({
             addNoteMessage({
               messageType: 'xpAward',
               xpAwarded: result?.xpAwarded || 5,
-              title: 'XP Awarded For Quiz',
+              title: t('XP Awarded For Quiz'),
               actions: [{ actionType: 'VIEW_EXPERIENCE' }],
               width: '250px',
               xpSource: 'QUIZ',
@@ -313,9 +313,7 @@ const Quiz = ({
     } catch (error) {
       toast({
         title: 'Error',
-        description:
-          error.response?.data?.error ||
-          'Quiz closing failed! Please try again.',
+        description: error.response?.data?.error || t('QuizClosingError'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -547,7 +545,7 @@ const Quiz = ({
             isOpen={showConfirmationModal}
             onClose={() => setShowConfirmationModal(false)}
             onConfirm={handleConfirmClose}
-            message="Clicking on Confirm will result in submission of the quiz with 0 score. Are you sure you want to submit the quiz?"
+            message={t('ConfirmCloseMessage')}
           />
         </Suspense>
       )}

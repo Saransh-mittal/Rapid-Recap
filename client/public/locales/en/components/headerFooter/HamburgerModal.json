@@ -1,0 +1,11 @@
+{
+  "modalHeader": "Menu",
+  "dashboard": "Dashboard",
+  "leaderboard": "Leaderboard",
+  "leaderboardLocked": "You need to sign in to access this page",
+  "profile": {
+    "title": "Profile"
+  },
+  "getStarted": "Get Started",
+  "logout": "Logout"
+}

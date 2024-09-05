@@ -24,6 +24,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSwipeable } from 'react-swipeable'
 import Brains from '../../../assets/Brains'
 
+import { useTranslation } from 'react-i18next'
+import i18n, { use } from 'i18next'
+
 const NameLightning = React.lazy(() =>
   import('../../miscellaneous/NameLightning'),
 )
@@ -36,6 +39,9 @@ const BrainModal = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [imageLoaded, setImageLoaded] = useState(false)
+
+  const { t: BrainsTranslate } = useTranslation('Brains')
+  const { t } = useTranslation('BrainModal')
 
   useEffect(() => {
     if (!isOpen || !currentUserSociety || Brains.length === 0) return
@@ -115,7 +121,8 @@ const BrainModal = ({
           bgClip="text"
           p={6}
         >
-          {currentBrain.society} Society
+          {BrainsTranslate(`${currentBrain.society}.society`)}{' '}
+          {t('societyDetails')}
         </ModalHeader>
         <ModalCloseButton color={'white'} />
         <Flex justifyContent="space-between" alignItems="center" w={'75%'}>
@@ -148,7 +155,12 @@ const BrainModal = ({
             transition="all 0.2s"
           />
         </Flex>
-        <ModalBody w={'100%'} p={0} px={4}>
+        <ModalBody
+          w={'100%'}
+          p={0}
+          px={4}
+          css={{ '&::-webkit-scrollbar': { display: 'none' } }}
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={currentPage}
@@ -168,7 +180,7 @@ const BrainModal = ({
                     <span style={{ fontSize: '36px', marginRight: '5px' }}>
                       📍
                     </span>
-                    You are here!
+                    {t('youAreHere')}
                   </Text>
                 )}
                 <Flex
@@ -183,7 +195,8 @@ const BrainModal = ({
                     color={currentBrain.textColor}
                     textShadow={`0 0 10px ${currentBrain.textColor}66`}
                   >
-                    {currentBrain.society} Society
+                    {BrainsTranslate(`${currentBrain.society}.society`)}{' '}
+                    {t('societyDetails')}
                   </Heading>
                   <Box position="absolute" right="0">
                     <Suspense
@@ -204,7 +217,7 @@ const BrainModal = ({
                   </Box>
                 </Flex>
                 <Text fontSize="lg" color={currentBrain.textColor}>
-                  IQ Range: {currentBrain.IQ_Lower} -{' '}
+                  {t('iqRange')} {currentBrain.IQ_Lower} -{' '}
                   {currentBrain.IQ_Upper || 'Above'}
                 </Text>
                 <motion.img
@@ -241,14 +254,40 @@ const BrainModal = ({
                     fontStyle="italic"
                     lineHeight="tall"
                   >
-                    {currentBrain.BrainInfo.split('.').map((point, index) =>
-                      index ===
-                      currentBrain.BrainInfo.split('.').length - 1 ? null : (
-                        <Text key={index} mb={2}>
-                          ➤ {point.trim()}.
-                        </Text>
-                      ),
-                    )}
+                    {BrainsTranslate(`${currentBrain.society}.BrainInfo`)
+                      .split(i18n.language === 'en' ? '.' : '।')
+                      .map((point, index) => {
+                        const lines = point.trim().split('\n')
+                        return lines.map(
+                          (line, lineIndex) =>
+                            line.trim() && (
+                              <div
+                                style={{ flexDirection: 'row !important' }}
+                                key={`${index}-${lineIndex}`}
+                              >
+                                <p
+                                  style={{ padding: '0', margin: '0.2rem' }}
+                                ></p>
+                                <span
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '5px',
+                                    borderRadius: '5px',
+                                    fontStyle: 'italic',
+                                  }}
+                                >
+                                  ➤ {line}
+                                  {lineIndex === lines.length - 1 ? (
+                                    '.'
+                                  ) : (
+                                    <br />
+                                  )}
+                                </span>
+                              </div>
+                            ),
+                        )
+                      })}
                   </Box>
                 </Box>
               </VStack>

@@ -14,6 +14,7 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components and assets
 const Countdown = lazy(() => import('./Countdown'))
@@ -41,13 +42,14 @@ const ModalComponent = ({
   showGetSetGo,
 }) => {
   const textColor = 'white'
+  const { t } = useTranslation('ModalComponent')
 
   // Memoize the button text based on the state
   const buttonText = useMemo(() => {
-    if (showInstruction) return 'Start Quiz'
+    if (showInstruction) return t('StartQuiz')
     if (currentQuestionIndex < totalQuestions - 1 && !submitted)
-      return 'Next Question'
-    return 'Finish Quiz'
+      return t('NextQuestion')
+    return t('FinishQuiz')
   }, [showInstruction, currentQuestionIndex, totalQuestions, submitted])
 
   const buttonAction = useCallback(() => {
@@ -137,7 +139,7 @@ const ModalComponent = ({
                 color={textColor}
                 textAlign={'center'}
               >
-                Quiz is generating. Wait for the start button....
+                {t('QuizIsGenerating')}
               </Text>
             )}
             <Skeleton

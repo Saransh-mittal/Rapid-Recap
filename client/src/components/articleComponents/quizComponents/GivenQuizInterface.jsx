@@ -10,6 +10,7 @@ import {
   Flex,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const OptionButton = React.memo(
   ({ optionKey, optionText, isCorrect, isUserAnswer, isDisabled }) => (
@@ -52,6 +53,7 @@ const OptionButton = React.memo(
 )
 
 const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
+  const { t } = useTranslation('GivenQuizInterface')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -77,7 +79,7 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
     return (
       <Center height="100vh">
         <Text fontSize="xl" color="gray.100">
-          No quiz data available.
+          {t('noQuizData')}
         </Text>
       </Center>
     )
@@ -112,7 +114,10 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
             color="purple.200"
             textAlign="center"
           >
-            Question {currentQuestionIndex + 1} of {quizGivenSummary.length}
+            {t('questionLabel', {
+              currentQuestionIndex: currentQuestionIndex + 1,
+              totalQuestions: quizGivenSummary.length,
+            })}
           </Text>
 
           <Flex width="100%" justifyContent="center" alignItems="center" mb={8}>

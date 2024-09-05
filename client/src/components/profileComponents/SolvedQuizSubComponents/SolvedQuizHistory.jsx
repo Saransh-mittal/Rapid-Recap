@@ -24,13 +24,16 @@ import {
   Center,
   Spinner,
 } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 import useSound from '../../../customHooks/useSound'
 import slugify from 'slugify'
 import { ICONS_ARTICLE_DIFFICULTY } from '../../../models/articleDifficulty'
 import DifficultyLegend from '../../miscellaneous/DIfficultyLegend'
 import axios from 'axios'
+import i18n from 'i18next'
 
 const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
+  const { t } = useTranslation('SolvedQuizHistory') // Added i18n namespace
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { playClick } = useSound()
@@ -55,7 +58,7 @@ const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
     setIsLoading(true)
     try {
       const response = await axios.get(
-        `/api/user/solvedQuizzesHistory?inGameName=${inGameName}&page=${page}`,
+        `/api/user/solvedQuizzesHistory?inGameName=${inGameName}&page=${page}&lang=${i18n.language}`,
       )
       setHistory(response.data.history)
       setCurrentPage(response.data.currentPage)
@@ -92,7 +95,7 @@ const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
         border="1px solid rgba(255, 255, 255, 0.18)"
       >
         <ModalHeader as="h3" size="lg" color="white" textAlign="center">
-          Solved Quiz History
+          {t('header')}
         </ModalHeader>
         <ModalCloseButton color={'white'} />
         <ModalBody
@@ -126,10 +129,10 @@ const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
                       color={'white'}
                       px={1}
                     >
-                      PER
+                      {t('percentage')}
                     </Th>
                     <Th textAlign={'center'} bg={'red.300'} px={1}>
-                      Article
+                      {t('article')}
                     </Th>
                     <Th
                       textAlign={'center'}
@@ -137,10 +140,10 @@ const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
                       display={{ base: 'none', md: 'table-cell' }}
                       px={1}
                     >
-                      RQM
+                      {t('rqm')}
                     </Th>
                     <Th textAlign={'center'} bg={'orange.300'} px={1}>
-                      Diff
+                      {t('difficulty')}
                     </Th>
                   </Tr>
                 </Thead>
@@ -166,6 +169,7 @@ const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
                         RQM_score,
                         articleDifficulty,
                         title,
+                        hindiTitle,
                         article,
                         _id,
                         userPercentile,
@@ -187,7 +191,11 @@ const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
                             {userPercentile?.toFixed(0)}%
                           </Td>
                           <Td textAlign="justify" px={1} fontSize="sm">
-                            {`${title?.substring(0, wordBreak ? 75 : 25)}...`}
+                            {`${
+                              i18n.language === 'en'
+                                ? title?.substring(0, wordBreak ? 75 : 25)
+                                : hindiTitle?.substring(0, wordBreak ? 75 : 25)
+                            }...`}
                           </Td>
                           <Td
                             textAlign="center"
@@ -223,17 +231,17 @@ const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
               isDisabled={currentPage === 1}
               size="sm"
             >
-              Previous
+              {t('Previous')}
             </Button>
             <Text color="white">
-              Page {currentPage} of {totalPages}
+              {t('Page')} {currentPage} {t('of')} {totalPages}
             </Text>
             <Button
               onClick={() => handlePageChange(currentPage + 1)}
               isDisabled={currentPage === totalPages}
               size="sm"
             >
-              Next
+              {t('Next')}
             </Button>
           </HStack>
         </ModalFooter>

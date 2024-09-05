@@ -1,0 +1,12 @@
+{
+  "cannotSendToSelf": "आप खुद को मित्र अनुरोध नहीं भेज सकते",
+  "guestCannotSend": "अतिथि उपयोगकर्ता मित्र अनुरोध नहीं भेज सकते या प्राप्त नहीं कर सकते",
+  "requestFrom": "{{name}} से मित्र अनुरोध",
+  "requestSent": "मित्र अनुरोध भेजा गया",
+  "requestNotFound": "अनुरोध नहीं मिला",
+  "guestCannotAccept": "अतिथि उपयोगकर्ता मित्र अनुरोध स्वीकार नहीं कर सकते",
+  "requestAccepted": "मित्र अनुरोध स्वीकार किया गया",
+  "nowFriendsWith": "अब आप {{name}} के मित्र हैं",
+  "requestAcceptedBy": "{{name}} द्वारा मित्र अनुरोध स्वीकार किया गया",
+  "requestRejected": "मित्र अनुरोध अस्वीकार किया गया"
+}

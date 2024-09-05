@@ -19,18 +19,20 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import useSound from '../../../customHooks/useSound'
 import { CopyIcon } from '@chakra-ui/icons'
+
 const socialPlatforms = [
   { name: 'whatsapp', logo: '/images/whatsapp-logo.png', color: '#25D366' },
-  // { name: 'instagram', logo: '/images/instagram-logo.png', color: '#E4405F' },
   { name: 'twitter', logo: '/images/twitter-logo.png', color: '#1DA1F2' },
   { name: 'facebook', logo: '/images/facebook-logo.png', color: '#1877F2' },
   { name: 'linkedin', logo: '/images/linkedin-logo.png', color: '#0A66C2' },
 ]
 
 const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
+  const { t } = useTranslation('ShareChatModal')
   const [chats, setChats] = useState([])
   const [selectedChats, setSelectedChats] = useState([])
   const [loading, setLoading] = useState(true)
@@ -58,8 +60,8 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
       localStorage.setItem(`cachedChats_${user._id}`, JSON.stringify(data))
     } catch (error) {
       toast({
-        title: 'Error Occurred!',
-        description: 'Failed to Load the chats',
+        title: t('errorOccurred'),
+        description: t('failedToLoadChats'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -72,18 +74,15 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const handleSocialShare = platform => {
     playClick()
     let url = ''
-    const articleUrl = `https://www.rapidrecap.co.in/article/${articleToShare._id}` // Replace with your actual article URL
+    const articleUrl = `https://www.rapidrecap.co.in/article/${articleToShare._id}`
     const text = encodeURIComponent(
-      `Check out this article: ${articleToShare.title}`,
+      `${t('checkOutArticle')}: ${articleToShare.title}`,
     )
 
     switch (platform) {
       case 'whatsapp':
         url = `https://api.whatsapp.com/send?text=${text} ${articleUrl}`
         break
-      // case 'instagram':
-      //   url = `https://www.instagram.com/sharer.php?u=${articleUrl}`
-      //   break
       case 'twitter':
         url = `https://twitter.com/intent/tweet?text=${text}&url=${articleUrl}`
         break
@@ -113,8 +112,8 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
     const articleUrl = `https://www.rapidrecap.co.in/article/${articleToShare._id}`
     navigator.clipboard.writeText(articleUrl)
     toast({
-      title: 'Link Copied',
-      description: 'Article URL copied to clipboard',
+      title: t('linkCopied'),
+      description: t('articleUrlCopied'),
       status: 'success',
       duration: 3000,
       isClosable: true,
@@ -124,8 +123,8 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const handleShare = async () => {
     if (selectedChats.length === 0) {
       toast({
-        title: 'No chats selected',
-        description: 'Please select at least one chat to share the article.',
+        title: t('noChatsSelected'),
+        description: t('selectAtLeastOneChat'),
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -134,7 +133,6 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
     }
 
     try {
-      // Here you would make an API call to share the article
       onClose()
       const { data } = await axios.post('/api/chat/share', {
         articleId: articleToShare._id,
@@ -147,8 +145,8 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
       })
     } catch (error) {
       toast({
-        title: 'Error Occurred!',
-        description: 'Failed to share the article',
+        title: t('errorOccurred'),
+        description: t('failedToShareArticle'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -172,13 +170,12 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
           borderTopRightRadius="10px"
           w={'100%'}
         >
-          Share to Chat
+          {t('shareToChat')}
         </ModalHeader>
         <ModalCloseButton color="white" />
         <ModalBody
           overflowY="auto"
           w={'100%'}
-          // hide scrollbar
           sx={{
             '&::-webkit-scrollbar': {
               display: 'none',
@@ -248,7 +245,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
             }}
             isDisabled={selectedChats.length === 0}
           >
-            Send
+            {t('send')}
           </Button>
           <Button
             variant="solid"
@@ -258,19 +255,19 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
               onClose()
             }}
           >
-            Cancel
+            {t('cancel')}
           </Button>
         </ModalFooter>
         <Box p={4} w={'75%'} borderTop="1px solid #3a3454">
           <Text mb={2} textAlign={'center'}>
-            Share on social media:
+            {t('shareOnSocialMedia')}
           </Text>
           <Flex justifyContent="space-around">
             {socialPlatforms.map(platform => (
               <Button
                 key={platform.name}
                 onClick={() => handleSocialShare(platform.name)}
-                aria-label={`Share on ${platform.name}`}
+                aria-label={t(`shareOn${platform.name}`)}
                 bg="transparent"
                 _hover={{ bg: platform.color, opacity: 0.8 }}
                 p={2}
@@ -285,7 +282,7 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
               colorScheme="blue"
               leftIcon={<CopyIcon />}
             >
-              Copy Article URL
+              {t('copyArticleUrl')}
             </Button>
           </Flex>
         </Box>

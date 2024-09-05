@@ -1,4 +1,4 @@
-import { Avatar, Flex, Box, Icon, Text } from '@chakra-ui/react'
+import { Avatar, Flex, Box, Icon, Text, Spinner } from '@chakra-ui/react'
 import React, { useState, useMemo, useCallback, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
@@ -8,6 +8,7 @@ import { addNoteMessage } from '../../redux/appSlice'
 import { LockIcon, QuestionIcon } from '@chakra-ui/icons'
 import UserSVG from '../../assets/svg/UserSVG'
 import LogoutSVG from '../../assets/svg/LogoutSVG'
+import { useTranslation } from 'react-i18next'
 
 const Inbox = React.lazy(() =>
   import('../Header-Footer/navbarComponents/Inbox'),
@@ -35,6 +36,7 @@ const ProfileDropDownMenu = ({
   onOpenWiseWeb,
   display,
 }) => {
+  const { t } = useTranslation(['ProfileDropDownMenu'])
   const listStyle = useMemo(
     () => ({
       position: 'relative',
@@ -159,7 +161,7 @@ const ProfileDropDownMenu = ({
             right: '-1rem',
           }}
         >
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<Spinner />}>
             <NavLink
               to={`${toProfile}/${user?.inGameName}`}
               ref={refProfile}
@@ -178,7 +180,7 @@ const ProfileDropDownMenu = ({
                 >
                   <UserSVG fill={'white'} width={'16px'} height={'16px'} />
                   <Text padding={0} margin={0}>
-                    View Profile
+                    {t('view_profile')}
                   </Text>
                 </Flex>
               </motion.li>
@@ -217,7 +219,7 @@ const ProfileDropDownMenu = ({
                   onClick={() =>
                     dispatch(
                       addNoteMessage({
-                        title: 'Register to make friends and build Wise Web',
+                        title: t('register_message.title'),
                         duration: 10000,
                         width: '250px',
                         actions: [
@@ -339,7 +341,7 @@ const ProfileDropDownMenu = ({
               >
                 <LogoutSVG fill={'white'} width={'16px'} height={'16px'} />
                 <Text padding={0} margin={0}>
-                  Logout
+                  {t('logout')}
                 </Text>
               </Flex>
             </motion.li>

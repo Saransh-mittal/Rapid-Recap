@@ -36,10 +36,12 @@ import Button from '../miscellaneous/ButtonComponent'
 import { Search2Icon } from '@chakra-ui/icons'
 import useSound from '../../customHooks/useSound'
 import ChatLoading from './ChatLoading'
+import { useTranslation } from 'react-i18next'
 
 const ChatSideDrawer = lazy(() => import('./ChatSideDrawer'))
 
 const UserChats = ({ fetchAgain }) => {
+  const { t } = useTranslation('userChats')
   const { playClick } = useSound()
   const { user: loggedInUser } = useSelector(state => state.auth)
   const [loggedUser, setLoggedUser] = useState()
@@ -88,8 +90,8 @@ const UserChats = ({ fetchAgain }) => {
     } catch (error) {
       console.log(error)
       toast({
-        title: 'Error Occurred!',
-        description: 'Failed to Load the chats',
+        title: t('errorTitle'),
+        description: t('errorDescription'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -125,17 +127,17 @@ const UserChats = ({ fetchAgain }) => {
 
   const getLatestMessageContent = useCallback(
     chat => {
-      if (!chat.latestMessage) return 'No messages yet'
+      if (!chat.latestMessage) return t('noMessagesYet')
 
       if (chat.latestMessage.isDeleted) {
-        return 'This message was deleted'
+        return t('messageDeleted')
       }
 
       if (
         chat?.latestMessage?.deletedFor &&
         chat?.latestMessage?.deletedFor.includes(loggedUser?._id)
       ) {
-        return 'This message was deleted for you'
+        return t('messageDeletedForYou')
       }
 
       return chat.latestMessage.content
@@ -143,8 +145,8 @@ const UserChats = ({ fetchAgain }) => {
           ? chat.latestMessage.content.substring(0, 51) + '...'
           : chat.latestMessage.content
         : chat.latestMessage.type === 'article_card'
-        ? 'Shared an Article'
-        : 'Score Card'
+        ? t('sharedArticle')
+        : t('scoreCard')
     },
     [loggedUser?._id],
   )
@@ -236,7 +238,7 @@ const UserChats = ({ fetchAgain }) => {
                 </Text>
                 {chat.new && (
                   <Badge colorScheme="green" h={'fit-content'} mt={1}>
-                    New
+                    {t('new')}
                   </Badge>
                 )}
               </Flex>
@@ -264,7 +266,7 @@ const UserChats = ({ fetchAgain }) => {
                 fontWeight={readByLoggedUser ? 'normal' : 'bold'}
               >
                 {isSenderLoggedUser(loggedUser, chat.latestMessage.sender)
-                  ? 'YOU'
+                  ? t('you')
                   : chat.latestMessage.sender.name}{' '}
                 {': '}
                 {getLatestMessageContent(chat)}
@@ -341,7 +343,7 @@ const UserChats = ({ fetchAgain }) => {
             <>
               <ButtonGradient />
               <Tooltip
-                label="Search Users to chat"
+                label={t('searchUsersToChat')}
                 hasArrow
                 placement="bottom-end"
                 color={'white'}
@@ -353,7 +355,7 @@ const UserChats = ({ fetchAgain }) => {
                   >
                     <Search2Icon fontSize={{ base: '1.3rem', md: '1rem' }} />
                     <Text display={{ base: 'none', md: 'flex' }} px={2} m={0}>
-                      Search User
+                      {t('searchUser')}
                     </Text>
                   </Flex>
                 </Button>
@@ -364,13 +366,47 @@ const UserChats = ({ fetchAgain }) => {
             </>
           )}
         </Flex>
-        <Button
-          onClick={() => setShowRequestsTab(!showRequestsTab)}
-          white={showRequestsTab ? true : false}
-          textColor={'white'}
-        >
-          {showRequestsTab ? 'Chats' : 'Requests'}
-        </Button>
+        <Flex position="relative">
+          <Box
+            as="button"
+            display="flex"
+            alignItems="center"
+            bg="rgba(255, 255, 255, 0.1)"
+            borderRadius="full"
+            p="2px"
+            cursor="pointer"
+            onClick={() => setShowRequestsTab(!showRequestsTab)}
+            position="relative"
+            border="1px solid"
+            borderColor="whiteAlpha.300"
+            _hover={{ borderColor: 'whiteAlpha.500' }}
+          >
+            <Box
+              px={2}
+              py={1}
+              borderRadius="full"
+              bg={!showRequestsTab ? 'white' : 'transparent'}
+              color={!showRequestsTab ? 'purple.800' : 'white'}
+              fontWeight="bold"
+              transition="all 0.3s"
+              fontSize={['sm', 'md']}
+            >
+              {t('Chats')}
+            </Box>
+            <Box
+              px={2}
+              py={1}
+              borderRadius="full"
+              bg={showRequestsTab ? 'white' : 'transparent'}
+              color={showRequestsTab ? 'purple.800' : 'white'}
+              fontWeight="bold"
+              transition="all 0.3s"
+              fontSize={['sm', 'md']}
+            >
+              {t('requests')}
+            </Box>
+          </Box>
+        </Flex>
       </Box>
       <Box
         display="flex"
@@ -382,7 +418,7 @@ const UserChats = ({ fetchAgain }) => {
         overflowY="hidden"
       >
         <Heading size={'md'} pl={'5px'} color={'white'}>
-          {showRequestsTab ? 'Requests' : 'Chats'}
+          {showRequestsTab ? t('requests') : t('Chats')}
         </Heading>
         {showRequestsTab ? (
           <Stack

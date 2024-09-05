@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useCallback } from 'react'
 import { Box, Flex, Td, Tr, VStack, Image, Text } from '@chakra-ui/react'
 import { findSocietyAndCircle } from '../../utils/helper.utils'
+import { useTranslation } from 'react-i18next'
 
 const NameLightning = lazy(() => import('../miscellaneous/NameLightning'))
 
@@ -16,6 +17,7 @@ const LeaderBoardRow = React.memo(
     textColor,
     accentColor,
   }) => {
+    const { t } = useTranslation('LeaderBoardRow')
     const urlInGameName = user?.inGameName?.replace(/\./g, '%2E')
 
     const handleNavigate = useCallback(() => {
@@ -90,7 +92,7 @@ const LeaderBoardRow = React.memo(
                 fontWeight="bold"
                 paddingLeft={'5px'}
               >
-                Experience Level: {user.level}
+                {t('xpLevel')} {user.level}
               </Text>
             </VStack>
           </Flex>

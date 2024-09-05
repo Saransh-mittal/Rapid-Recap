@@ -11,6 +11,7 @@ import {
   Box,
   useBreakpointValue,
 } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components
 const IQLineGraph = React.lazy(() =>
@@ -20,6 +21,8 @@ const Heading = React.lazy(() => import('../../miscellaneous/HeadingComponent'))
 
 const IQScoreModal = ({ setShowIQScoreModal, isGuest }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const { t } = useTranslation('IQScoreModal') // Use the translation hook
+  const { t: IQLineTranslate } = useTranslation('IQLineGraph')
   const [lineGraph, setLineGraph] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -42,11 +45,11 @@ const IQScoreModal = ({ setShowIQScoreModal, isGuest }) => {
       setLineGraph(response.data.lineGraph)
     } catch (err) {
       console.error('Error fetching line graph data:', err)
-      setError('Failed to load IQ score history')
+      setError(t('fetchError')) // Use translation for the error message
     } finally {
       setLoading(false) // Set loading to false regardless of the result
     }
-  }, [])
+  }, [t])
 
   // Memoized function to handle modal close
   const handleClose = useCallback(() => {
@@ -70,21 +73,22 @@ const IQScoreModal = ({ setShowIQScoreModal, isGuest }) => {
             fontFamily="'Roboto', sans-serif"
           >
             <ModalCloseButton color={'white'} onClick={handleClose} />
-            <Suspense fallback={<div>Loading...</div>}>
-              <Heading title="IQ Score History" />
+            <Suspense fallback={<div>{t('loading')}</div>}>
+              <Heading title={t('iqScoreHistoryTitle')} />
             </Suspense>
 
             <ModalBody px={0}>
               {loading ? (
-                <Text>Loading IQ score history...</Text>
+                <Text>{t('loadingHistory')}</Text>
               ) : error ? (
                 <Text color="red.500">{error}</Text>
               ) : (
-                <Suspense fallback={<Text>Loading chart...</Text>}>
+                <Suspense fallback={<Text>{t('loadingChart')}</Text>}>
                   <IQLineGraph
                     lineGraph={lineGraph}
                     iOpenedFromNav={true}
                     graphwidth={responsiveChartWidth}
+                    t={IQLineTranslate}
                   />
                 </Suspense>
               )}

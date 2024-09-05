@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useRef,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { useNavigate, useParams } from 'react-router-dom'
 import debounce from 'lodash.debounce'
@@ -18,6 +19,7 @@ import { setCategory, setItemsState } from '../redux/contentSlice'
 import throttle from 'lodash.throttle'
 import WiseWeb from '../components/profileComponents/WiseWeb'
 import { markFriendRequestsAsRead } from '../redux/appSlice'
+import i18n from 'i18next'
 
 const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
 const UpgradeModal = lazy(() =>
@@ -25,6 +27,7 @@ const UpgradeModal = lazy(() =>
 )
 
 const Home = () => {
+  const { t } = useTranslation('Home') // Use Home namespace for translations
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
     state => state.auth,
   )
@@ -67,7 +70,7 @@ const Home = () => {
         const response =
           (cat === 'all' || !cat) && !notLoggedIn
             ? await axios.get(
-                `/api/recommendation?page=${pageNum}&pageSize=18`,
+                `/api/recommendation?page=${pageNum}&pageSize=18&lang=${i18n.language}`,
                 {
                   cancelToken: cancelTokenSourceRef.current.token,
                 },
@@ -75,7 +78,7 @@ const Home = () => {
             : await axios.get(
                 `/api/articles?page=${pageNum}&pageSize=18&category=${
                   notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
-                }`,
+                }&lang=${i18n.language}`,
                 { cancelToken: cancelTokenSourceRef.current.token },
               )
 
@@ -106,8 +109,7 @@ const Home = () => {
         } else {
           console.error(error.message)
           toast({
-            title: 'Error',
-            description: 'Failed to fetch news',
+            title: t('fetch_error'), // Use translation for error message
             status: 'error',
             duration: 5000,
             isClosable: true,
@@ -116,7 +118,7 @@ const Home = () => {
         }
       }
     },
-    [loginCheckStatus, hasMoreItems, notLoggedIn, dispatchRedux, toast],
+    [loginCheckStatus, hasMoreItems, notLoggedIn, dispatchRedux, toast, t],
   )
 
   const handleScroll = useCallback(() => {
@@ -197,26 +199,19 @@ const Home = () => {
   return (
     <Box marginTop={'4rem'} w={'100%'}>
       <Helmet>
-        <title>Home - Rapid Recap</title>
-        <meta
-          name="description"
-          content="Explore the latest news and articles on Rapid Recap. Stay informed and test your knowledge with our engaging quizzes."
-        />
-        <meta
-          name="keywords"
-          content="Rapid Recap, news, articles, quizzes, Information Quotient, IQ score"
-        />
-        <meta property="og:title" content="Home - Rapid Recap" />
-        <meta
-          property="og:description"
-          content="Explore the latest news and articles on Rapid Recap. Stay informed and test your knowledge with our engaging quizzes."
-        />
+        <title>{t('title')}</title>
+        <meta name="description" content={t('description')} />
+        <meta name="keywords" content={t('keywords')} />
+        <meta property="og:title" content={t('title')} />
+        <meta property="og:description" content={t('description')} />
       </Helmet>
       <Suspense fallback={<Spinner />}>
         {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
           <UpgradeModal
             isOpen={showUpgradeModal}
             onClose={() => setShowUpgradeModal(false)}
+            title={t('upgrade_modal_title')} // Translation for modal title
+            content={t('upgrade_modal_content')} // Translation for modal content
           />
         )}
         <Timeline

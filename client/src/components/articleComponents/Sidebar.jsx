@@ -28,6 +28,8 @@ import axios from 'axios'
 import { formatDate } from '../../utils/helper.utils'
 import slugify from 'slugify'
 import { setIsSigninOpen } from '../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 
 const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
 const QuizExpired = React.lazy(() => import('./QuizExpired'))
@@ -42,17 +44,18 @@ const Sidebar = ({
   quizExpired,
   isQuinBoostAvailable,
   trackGenerateQuizClick,
-  setShowQuizLangModal,
   setShowQuiz,
   showQuiz,
   onOpen,
   totalUsersGivenQuiz,
-
   articleHeight,
   article,
   id,
   isQuizGivenLoading,
+  i18n,
 }) => {
+  const { t } = useTranslation('Sidebar')
+  const { t: formatDateTranslate } = useTranslation('formatDate')
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
   const { playClick } = useSound()
@@ -77,8 +80,8 @@ const Sidebar = ({
     playClick()
     if (notLoggedIn) {
       toast({
-        title: 'Login Required',
-        description: 'Please log in to share this article.',
+        title: t('loginRequired'),
+        description: t('loginToShare'),
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -86,7 +89,6 @@ const Sidebar = ({
       return
     }
     trackGenerateQuizClick()
-    setShowQuizLangModal(true)
     setShowQuiz(!showQuiz)
     onOpen()
   }, [
@@ -94,7 +96,6 @@ const Sidebar = ({
     playClick,
     toast,
     trackGenerateQuizClick,
-    setShowQuizLangModal,
     setShowQuiz,
     showQuiz,
     onOpen,
@@ -105,8 +106,8 @@ const Sidebar = ({
       if (notLoggedIn) {
         e.preventDefault()
         toast({
-          title: 'Login Required',
-          description: 'Please log in to share this article.',
+          title: t('loginRequired'),
+          description: t('loginToShare'),
           status: 'warning',
           duration: 3000,
           isClosable: true,
@@ -114,7 +115,10 @@ const Sidebar = ({
         return
       }
       playClick()
-      window.location.href = `/article/${item._id}/${slugify(item.title)}`
+      window.location.href =
+        i18n.language === 'en'
+          ? `/article/${item._id}/${slugify(item.title)}`
+          : `/article/${item._id}/${slugify(item.hindiTitle)}`
     },
     [notLoggedIn, playClick, toast],
   )
@@ -123,7 +127,7 @@ const Sidebar = ({
     try {
       setLoading(true)
       const { data } = await axios.get(
-        `/api/articles/related/${id}?page=${pageRelated}&limit=5`,
+        `/api/articles/related/${id}?page=${pageRelated}&limit=5&lang=${i18n.language}`,
       )
 
       setLatestNews(prevArticles => [...prevArticles, ...data.relatedArticles])
@@ -138,7 +142,7 @@ const Sidebar = ({
     try {
       setLoading(true)
       const response = await axios.get(
-        `/api/recommendation/articlePageRecommendations/${id}?page=${page}&pageSize=5`,
+        `/api/recommendation/articlePageRecommendations/${id}?page=${page}&pageSize=5&lang=${i18n.language}`,
       )
       setRecommendedArticles(prevArticles => [
         ...prevArticles,
@@ -198,7 +202,7 @@ const Sidebar = ({
             letterSpacing="1px"
           >
             {/* {item.date}, */}
-            {formatDate(item?.dateTime)}
+            {formatDate(item?.dateTime, formatDateTranslate, i18n.language)}
           </Text>
           <Text
             fontSize="0.8rem"
@@ -208,7 +212,7 @@ const Sidebar = ({
             color="#9CAFAA"
             letterSpacing="1px"
           >
-            {item.avgReadTime || 'N/A'} MIN READ
+            {item.avgReadTime || 'N/A'} {t('minRead')}
           </Text>
         </Flex>
         <Flex mr={3} mb={2} alignItems={'center'}>
@@ -219,7 +223,7 @@ const Sidebar = ({
             mt={2}
             float="left"
             src={item.imgURL || Alt_img}
-            alt="Article img"
+            alt={t('articleImageAlt')}
             onError={e => {
               e.target.onerror = null
               e.target.src = Alt_img
@@ -229,7 +233,7 @@ const Sidebar = ({
           />
           <Flex flexDirection="column" w="100%">
             <Text mt={2} color="#e0e0e0">
-              {item.title}
+              {i18n.language === 'en' ? item.title : item.hindiTitle}
             </Text>
           </Flex>
         </Flex>
@@ -260,7 +264,7 @@ const Sidebar = ({
               height={'100px'}
               color={'red'}
             >
-              Quiz is Already going on in some other tab or device
+              {t('quizAlreadyOngoing')}
             </Heading>
           ) : quizExpired ? (
             <QuizExpired />
@@ -280,13 +284,13 @@ const Sidebar = ({
                   <Spinner />
                 ) : (
                   <TakeQuizButton
-                    isQuinBoostAvailable={isQuinBoostAvailable}
                     onClick={handleQuizButtonClick}
+                    isQuinBoostAvailable={isQuinBoostAvailable}
                   />
                 )}
               </Box>
               {notLoggedIn && (
-                <Tooltip label="Please log in to give quiz" placement="top">
+                <Tooltip label={t('loginToGiveQuiz')} placement="top">
                   <LockIcon
                     position="absolute"
                     top="50%"
@@ -340,12 +344,12 @@ const Sidebar = ({
                 }
                 mt={4}
               >
-                Load More
+                {t('loadMore')}
               </Button>
             </Flex>
           )}
           {notLoggedIn && (
-            <Tooltip label="Please log in to navigate" placement="top">
+            <Tooltip label={t('loginToNavigate')} placement="top">
               <LockIcon
                 position="absolute"
                 top="50%"

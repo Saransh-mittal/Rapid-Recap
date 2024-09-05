@@ -3,6 +3,7 @@ import { Flex, Image, ListItem, Text, UnorderedList } from '@chakra-ui/react'
 import { NavLink } from 'react-router-dom'
 import useSound from '../../../customHooks/useSound'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 const newBadge = lazy(() => import('/images/newBadge.webp'))
 
@@ -17,6 +18,7 @@ const NavbarContent = ({
   const { isAdmin, isAuthenticated, user } = useSelector(state => state.auth)
 
   // console.log('isAdmin:', isAdmin)
+  const { t } = useTranslation('NavbarContent')
 
   const handleClick = useCallback(() => {
     playClick()
@@ -66,7 +68,7 @@ const NavbarContent = ({
                     bg="transparent"
                     padding="0.1rem 0.3rem"
                   >
-                    New
+                    {t('New')}
                   </Text>
                 </>
               </Suspense>

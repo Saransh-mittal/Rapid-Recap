@@ -1,0 +1,20 @@
+{
+  "inbox": "इनबॉक्स",
+  "removeAllNotifications": "सभी सूचनाएं हटाएं",
+  "noNotifications": "कोई सूचनाएं उपलब्ध नहीं हैं",
+  "deleteNotification": "सूचना हटाएं",
+  "deleteConfirmation": "क्या आप वाकई इस सूचना को हटाना चाहते हैं?",
+  "confirmDelete": "हटाने की पुष्टि करें",
+  "cancel": "रद्द करें",
+  "removeAllConfirmation": "क्या आप वाकई सभी सूचनाएं हटाना चाहते हैं?",
+  "removeAll": "सभी हटाएं",
+  "success": "सफलता",
+  "removeAllSuccess": "सभी सूचनाएं सफलतापूर्वक हटा दी गईं",
+  "removeAllError": "सभी सूचनाएं हटाने में विफल",
+  "error": "त्रुटि",
+  "deleteError": "सूचना हटाने में विफल",
+  "markAsReadError": "सूचना को पढ़ा हुआ चिह्नित करने में विफल",
+  "notificationImage": "सूचना चित्र",
+  "confirmRemove": "सूचना हटाने की पुष्टि करें",
+  "confirmRemoveAll": "सभी सूचनाएं हटाने की पुष्टि करें"
+}

@@ -1,0 +1,14 @@
+{
+  "guestCannotChat": "अतिथि उपयोगकर्ता चैट नहीं कर सकते",
+  "invalidData": "अनुरोध में अमान्य डेटा पारित किया गया",
+  "articleNotFound": "लेख नहीं मिला",
+  "newMessageFrom": "{{name}} से नया संदेश",
+  "notFound": "संदेश नहीं मिला",
+  "deleteForEveryone": "आप केवल अपने संदेशों को सभी के लिए हटा सकते हैं",
+  "deleteTimeLimit": "आप भेजने के 1 घंटे के भीतर ही सभी के लिए संदेश हटा सकते हैं",
+  "deletedMessage": "यह संदेश हटा दिया गया था",
+  "messageDeleted": "संदेश हटा दिया गया",
+  "deletedFromChat": "इस चैट से एक संदेश हटा दिया गया था",
+  "invalidDeleteType": "अवैध हटाने का प्रकार",
+  "deleteSuccess": "संदेश सफलतापूर्वक हटा दिया गया"
+}

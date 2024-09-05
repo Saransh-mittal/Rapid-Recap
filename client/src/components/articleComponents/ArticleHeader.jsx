@@ -9,7 +9,6 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
-import LanguageToggle from './articleHeaderComponents/LanguageToggle'
 import AuthorInfo from './articleHeaderComponents/AuthorInfo'
 import BoostSection from './articleHeaderComponents/BoostSection'
 import BookmarkIcon from './articleHeaderComponents/BookmarkIcon'
@@ -19,6 +18,9 @@ import useSound from '../../customHooks/useSound'
 import { EditIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import { setIsSigninOpen } from '../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
+import { formatDateLangTranslate } from '../../utils/helper.utils'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -29,7 +31,6 @@ const ArticleHeader = ({
   author,
   selectedLanguage,
   bookmark,
-  handleLanguageChange,
   avgTimeRead,
   dateTime,
   bookmarkStatus,
@@ -38,6 +39,7 @@ const ArticleHeader = ({
   quizLeftToGetQuizBoost,
   openModal,
 }) => {
+  const { t } = useTranslation('ArticleHeader')
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
   const { isBoosted } = useSelector(state => state.app)
@@ -47,6 +49,8 @@ const ArticleHeader = ({
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()
   const { user } = useSelector(state => state.auth)
+  const locale = i18n.language === 'hi' ? 'hi-IN' : 'en-US' // assuming 'i18n.language' returns the current language
+  const formattedDate = formatDateLangTranslate(new Date(dateTime), locale)
 
   const {
     isOpen: isOpenArticleForm,
@@ -61,9 +65,9 @@ const ArticleHeader = ({
       setSelectedArticle(response.data)
       onOpenArticleForm()
     } catch (error) {
-      console.error('Error fetching article details:', error)
+      console.error(t('fetchErrorTitle'), error)
       toast({
-        title: 'Error fetching article details',
+        title: t('fetchErrorTitle'),
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -80,15 +84,15 @@ const ArticleHeader = ({
         )
         onCloseArticleForm()
         toast({
-          title: 'Article updated successfully',
+          title: t('updateSuccessTitle'),
           status: 'success',
           duration: 3000,
           isClosable: true,
         })
       } catch (error) {
-        console.error('Error updating article:', error)
+        console.error(t('updateErrorTitle'), error)
         toast({
-          title: 'Error updating article',
+          title: t('updateErrorTitle'),
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -98,21 +102,6 @@ const ArticleHeader = ({
     [selectedArticle, onOpenArticleForm, toast, article],
   )
 
-  const toggleLanguage = useCallback(() => {
-    if (notLoggedIn) {
-      toast({
-        title: 'Login Required',
-        description: 'Please log in to change the language.',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
-    }
-    const newLanguage = selectedLanguage === 'english' ? 'hindi' : 'english'
-    handleLanguageChange({ target: { value: newLanguage } })
-  }, [selectedLanguage, handleLanguageChange, notLoggedIn, toast])
-
   const handleBookmarkClick = useCallback(() => {
     bookmarkStatus({ view: false, update: true })
   }, [bookmarkStatus])
@@ -120,8 +109,8 @@ const ArticleHeader = ({
   const handleShare = useCallback(() => {
     if (notLoggedIn) {
       toast({
-        title: 'Login Required',
-        description: 'Please log in to share this article.',
+        title: t('loginRequiredTitle'),
+        description: t('loginRequiredDescription'),
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -203,16 +192,6 @@ const ArticleHeader = ({
                 />
               )}
             </Flex>
-            {!isLargerThan768 && (
-              <Flex alignItems={'center'} h={'100%'}>
-                <LanguageToggle
-                  isEnglish={selectedLanguage === 'english'}
-                  onToggle={toggleLanguage}
-                  isDisabled={notLoggedIn}
-                  onSigninOpen={() => dispatchRedux(setIsSigninOpen(true))}
-                />
-              </Flex>
-            )}
           </Flex>
 
           <Flex
@@ -238,14 +217,6 @@ const ArticleHeader = ({
               onOpenSignin={() => dispatchRedux(setIsSigninOpen(true))}
               user={user}
             />
-            {isLargerThan768 && (
-              <LanguageToggle
-                isEnglish={selectedLanguage === 'english'}
-                onToggle={toggleLanguage}
-                isDisabled={notLoggedIn}
-                onSigninOpen={() => dispatchRedux(setIsSigninOpen(true))}
-              />
-            )}
           </Flex>
           {!isLargerThan768 && (
             <Flex
@@ -254,7 +225,7 @@ const ArticleHeader = ({
             >
               <Text fontSize={['sm', 'md', 'lg']}>
                 {' '}
-                {avgTimeRead} min read • <time>{dateTime}</time>
+                {avgTimeRead} {t('timeToRead')} • <time>{formattedDate}</time>
               </Text>
             </Flex>
           )}
@@ -266,7 +237,7 @@ const ArticleHeader = ({
               w={{ base: '100%', lg: 'auto' }}
             >
               <Text fontSize={['sm', 'md', 'lg']} mb={0}>
-                {avgTimeRead} min read • <time>{dateTime}</time>
+                {avgTimeRead} {t('timeToRead')} • <time>{formattedDate}</time>
               </Text>
             </Flex>
           )}

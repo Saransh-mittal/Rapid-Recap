@@ -1,0 +1,24 @@
+{
+  "OutsideNavbarContent": {
+    "getStarted": "शुरू करें",
+    "iqScore": {
+      "title": "आपका सूचना गुणांक (IQ) स्कोर",
+      "guestMessage": "अपना IQ स्कोर देखने और वाइज वेब को बढ़ाने के लिए रजिस्टर करें"
+    },
+    "xpLevel": {
+      "title": "XP स्तर"
+    },
+    "streakFire": {
+      "title": "स्ट्रीक फायर"
+    },
+    "search": {
+      "title": "खोज"
+    },
+    "messenger": {
+      "title": "मैसेंजर",
+      "guestMessage": "चैट करने और वाइज वेब को बढ़ाने के लिए रजिस्टर करें"
+    },
+    "secureProgress": "अपनी प्रगति सुरक्षित करें"
+  },
+  "Register to do chat and grow Wise Web": "चैट करने और वाइज वेब को बढ़ाने के लिए रजिस्टर करें"
+}

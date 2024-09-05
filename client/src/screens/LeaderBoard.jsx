@@ -15,6 +15,7 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import debounce from 'lodash.debounce'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 // Dynamic imports for code splitting
 const SearchBar = React.lazy(() =>
@@ -31,6 +32,7 @@ import medalIcon from '../assets/medal.webp'
 import { Helmet } from 'react-helmet'
 
 const LeaderBoard = () => {
+  const { t } = useTranslation('LeaderBoard')
   const PAGE_LIMIT = 20
   const navigate = useNavigate()
   const { isAuthenticated, user } = useSelector(state => state.auth)
@@ -75,8 +77,8 @@ const LeaderBoard = () => {
         })
       } catch (error) {
         toast({
-          title: 'Error',
-          description: 'Failed to fetch leaderboard',
+          title: t('toastErrorTitle'),
+          description: t('toastErrorDescription'),
           status: 'error',
           duration: 9000,
           isClosable: true,
@@ -87,7 +89,7 @@ const LeaderBoard = () => {
         setIsLoading(false)
       }
     },
-    [hasMore, PAGE_LIMIT, toast],
+    [hasMore, PAGE_LIMIT, toast, t],
   )
 
   const handleScroll = useCallback(async () => {
@@ -107,7 +109,7 @@ const LeaderBoard = () => {
   )
 
   useEffect(() => {
-    document.title = 'LeaderBoard Page'
+    document.title = t('helmet.title')
     fetchLeaderBoard()
     window.addEventListener('scroll', debouncedHandleScroll)
     return () => {
@@ -124,28 +126,17 @@ const LeaderBoard = () => {
   return (
     <>
       <Helmet>
-        <title>
-          Rapid Recap Leaderboard - Season 2 | Top Information Quotient Scores
-        </title>
-        <meta
-          name="description"
-          content="Explore the Rapid Recap Leaderboard for Season 2. See top Information Quotient (IQ) scores, quiz submissions, and rankings across different societies. Join the intellectual elite!"
-        />
-        <meta
-          name="keywords"
-          content="Rapid Recap, Leaderboard, Information Quotient, IQ Score, Quiz, News, Societies, Intellectual Circles"
-        />
+        <title>{t('helmet.title')}</title>
+        <meta name="description" content={t('helmet.metaDescription')} />
+        <meta name="keywords" content={t('helmet.metaKeywords')} />
         <link rel="canonical" href="https://rapidrecap.com/leaderboard" />
-        <meta
-          property="og:title"
-          content="Rapid Recap Leaderboard - Season 2"
-        />
+        <meta property="og:title" content={t('helmet.metaOgTitle')} />
         <meta
           property="og:description"
-          content="Discover top performers in Rapid Recap's Season 2 Leaderboard. Compare IQ scores, quiz submissions, and society rankings."
+          content={t('helmet.metaOgDescription')}
         />
-        <meta property="og:url" content="https://rapidrecap.com/leaderboard" />
-        <meta property="og:type" content="website" />
+        <meta property="og:url" content={t('helmet.metaOgUrl')} />
+        <meta property="og:type" content={t('helmet.metaOgType')} />
       </Helmet>
       <Flex
         minH={'85vh'}
@@ -173,8 +164,9 @@ const LeaderBoard = () => {
                 bgGradient="linear(to-r, yellow.400, yellow.600)"
                 bgClip="text"
                 fontFamily="serif"
+                padding={'10px'}
               >
-                LEADERBOARD
+                {t('title')}
               </ChakraHeading>
               <Image
                 src={medalIcon}
@@ -186,7 +178,7 @@ const LeaderBoard = () => {
             </Flex>
 
             <Text fontSize="lg" color="gray.500" textAlign="center">
-              Season 2
+              {t('tag')}
             </Text>
 
             <React.Suspense fallback={<Spinner />}>

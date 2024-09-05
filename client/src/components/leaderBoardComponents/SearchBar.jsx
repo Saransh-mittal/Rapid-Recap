@@ -2,6 +2,7 @@ import { Input, useColorModeValue, useToast } from '@chakra-ui/react'
 import debounce from 'lodash.debounce'
 import axios from 'axios'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const debouncedSearch = debounce(async (query, callback) => {
   try {
@@ -16,6 +17,7 @@ const debouncedSearch = debounce(async (query, callback) => {
 const SearchBar = ({ setSearchResults, setSearchLoad, w = '50%' }) => {
   const toast = useToast()
   const [searchQuery, setSearchQuery] = useState('')
+  const { t } = useTranslation('SearchBar')
 
   const handleSearch = async event => {
     setSearchLoad(true)
@@ -45,7 +47,7 @@ const SearchBar = ({ setSearchResults, setSearchLoad, w = '50%' }) => {
   return (
     <Input
       w={w}
-      placeholder="Search for users..."
+      placeholder={t('searchUser')}
       value={searchQuery}
       onChange={handleSearch}
       bg="whiteAlpha.200"

@@ -11,7 +11,9 @@ const LeaderBoard = lazy(() => import('../screens/LeaderBoard'))
 const GetStarted = lazy(() => import('../screens/GetStarted'))
 const ChatPage = lazy(() => import('../screens/ChatPage'))
 const Dashboard = lazy(() => import('../screens/Dashboard'))
-const ContactLayout = lazy(() => import('../components/ContactLayout'))
+const ContactLayout = lazy(() =>
+  import('../components/contactComponents/ContactLayout'),
+)
 
 const AppRoutes = ({ isToken }) => (
   <Suspense fallback={<Loading />}>

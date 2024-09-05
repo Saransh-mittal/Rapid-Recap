@@ -1,0 +1,15 @@
+{
+  "online_friends": "ऑनलाइन मित्र",
+  "leaderboard": "लीडरबोर्ड",
+  "ties_severed": "संबंध विच्छेद",
+  "unfriended_message": "आपने सफलतापूर्वक मित्रता समाप्त कर दी है।",
+  "error_severing_ties": "त्रुटि",
+  "sever_ties_error_message": "संबंध विच्छेद करने में विफल। कृपया पुनः प्रयास करें।",
+  "no_friends": "कोई मित्र नहीं मिला।",
+  "no_friend_requests": "कोई मित्र अनुरोध नहीं मिला।",
+  "your_friends": "आपके मित्र",
+  "requests": "अनुरोध",
+  "friends": "मित्र",
+  "wise_web": "वाइज वेब",
+  "friend_requests": "मित्र अनुरोध"
+}

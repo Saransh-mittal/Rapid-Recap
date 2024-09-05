@@ -13,6 +13,7 @@ const BoostedSubmittedQuizInterface = ({
   isQuinBoostAvailable,
 }) => {
   // Added onViewReport prop
+  const { t } = useTranslation('BoostedSubmittedQuizInterface')
   const rocketStyle = {
     position: 'relative',
     bottom: '-500%',
@@ -96,7 +97,7 @@ const BoostedSubmittedQuizInterface = ({
           textAlign="center"
           marginBottom="1rem"
         >
-          Quiz completed. Thank you for participating!
+          {t('quizCompletedMessage')}
         </Heading>
 
         <Flex flexDirection={'row-reverse'}>
@@ -116,7 +117,7 @@ const BoostedSubmittedQuizInterface = ({
                 fontFamily={`"Honk", system-ui`}
                 p={0}
               >
-                Rapid Quiz Mastery score
+                {t('rapidQuizMasteryScore')}
               </Heading>
               <Flex w={'100%'}>
                 <Flex
@@ -136,7 +137,7 @@ const BoostedSubmittedQuizInterface = ({
                   animation="borderRotate var(--d) linear infinite forwards"
                 >
                   {submitLoad ? (
-                    <Heading>Calculating...</Heading>
+                    <Heading>{t('calculating')}</Heading>
                   ) : (
                     <Heading>{score}</Heading>
                   )}
@@ -151,8 +152,8 @@ const BoostedSubmittedQuizInterface = ({
                   >
                     {score !== 0
                       ? isBoosted && isQuinBoostAvailable
-                        ? '1.75x Boosted'
-                        : '1.5x Boosted'
+                        ? `1.75x ${t(`boostedText`)}`
+                        : `1.5x ${t(`boostedText`)}`
                       : `"Don't give up! Keep going!"`}
                   </Text>
                 </Flex>
@@ -209,8 +210,7 @@ const BoostedSubmittedQuizInterface = ({
             paddingLeft={'10px'}
             marginTop={'4rem'}
           >
-            "Don't worry! You still have boosts remaining, so keep practicing
-            improvement is just around the corner!"
+            {t('noWorryMessage')}
           </Text>
         ) : (
           <Text
@@ -226,14 +226,13 @@ const BoostedSubmittedQuizInterface = ({
             paddingLeft={'10px'}
             marginTop={'4rem'}
           >
-            "Congratulations on your progress! Keep up the great work and make
-            the most of your boosts for even better scores before they expire!"
+            {t('congratulationMessage')}
           </Text>
         )}
         <Flex mt={4}>
           <ButtonGradient />
           <Button colorScheme="blue" onClick={onViewReport}>
-            View Report
+            {t('viewReport')}
           </Button>
         </Flex>
       </Flex>
