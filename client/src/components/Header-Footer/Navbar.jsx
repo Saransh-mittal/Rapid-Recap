@@ -115,9 +115,9 @@ const Navbar = () => {
 
   const navItems = useMemo(
     () => [
-      { to: '/home', label: 'Home' },
-      { to: '/tournament', label: 'Tournament' },
-      { to: '/leaderboard', label: 'Leaderboard' },
+      { to: '/home', label: t('home') },
+      { to: '/tournament', label: t('tournament') },
+      { to: '/leaderboard', label: t('leaderboard') },
       { to: '/dashboard', label: 'Dashboard' },
     ],
     [t],
