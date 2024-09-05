@@ -1,0 +1,14 @@
+{
+  "quizInstructions": "Quiz Instructions",
+  "quinBoostAvailable": "Quin Boost Available!",
+  "boosted": "1.5x Score Multiplier Active!",
+  "readInstructions": "Please read all instructions carefully before starting the quiz:",
+  "instructions": [
+    "Quiz will contain utmost five questions.",
+    "All questions will be from the given article only.",
+    "All questions are compulsory to attempt.",
+    "At last, you will get your score and your percentile.",
+    "You can't leave the quiz in between.",
+    "Attempting the quiz will affect your IQ score."
+  ]
+}

@@ -11,6 +11,7 @@ const {
 } = require('../model/recommendationSchema')
 const { Parser } = require('json2csv')
 const path = require('path')
+const { hindiConverter } = require('../utils/article.utils')
 const cache = require('memory-cache')
 
 async function ensureDirectoryExistence(filePath) {
@@ -161,7 +162,7 @@ async function updateRecommendations(userId) {
   }
 }
 
-async function getRecommendations(userId, page = 1, pageSize = 18) {
+async function getRecommendations(userId, page = 1, pageSize = 18, lang) {
   try {
     let userRecommendations = await Recommendation.findOne({ user_id: userId })
 
@@ -212,6 +213,7 @@ async function getArticlePageRecommendations(
   articleId,
   page = 1,
   pageSize = 18,
+  lang,
 ) {
   try {
     let userRecommendations = await Recommendation.findOne({ user_id: userId })
@@ -268,6 +270,26 @@ async function getArticlePageRecommendations(
         }
       }
     }
+    if (lang === 'hi')
+      for (let article of articles) {
+        if (
+          !article.hindiTitle ||
+          !article.hindiMainText ||
+          !article.hindiAuthor
+        ) {
+          const response = await hindiConverter(article._id)
+          if (!article.hindiMainText) {
+            article.hindiMainText = []
+          }
+          article.hindiTitle = response.hindiTitle
+
+          for (let key in response.hindiMainText) {
+            if (!response.hindiMainText[key]) continue
+            article.hindiMainText.push(response.hindiMainText[key])
+          }
+          article.hindiAuthor = response.hindiAuthor
+        }
+      }
 
     return articles
   } catch (error) {

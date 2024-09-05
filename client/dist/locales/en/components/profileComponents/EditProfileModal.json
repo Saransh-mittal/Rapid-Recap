@@ -1,0 +1,15 @@
+{
+  "editProfile": "Edit Profile",
+  "uploadProfilePicture": "Upload Profile Picture",
+  "chooseFile": "Choose File",
+  "name": "Name",
+  "inGameName": "In-Game Name",
+  "bio": "Bio",
+  "saveChanges": "Save Changes",
+  "cancel": "Cancel",
+  "updateFailed": "Update Failed",
+  "somethingWentWrong": "Something went wrong!",
+  "imageUploadFailed": "Image upload Failed",
+  "profilePicture": "Profile Picture",
+  "inGameNameChangeMessage": "You can change your in-game name again in {{remainingDays}} day(s)."
+}

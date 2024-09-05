@@ -10,6 +10,7 @@ const {
 } = require('../utils/miscellaneous.utils')
 const { userOpenChats } = require('../sharedState')
 const { sendNotification } = require('../services/notificationService')
+const i18n = require('../i18n')
 
 //@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
@@ -20,10 +21,15 @@ const accessChat = asyncHandler(async (req, res) => {
     console.log('UserId param not sent with request')
     return res.sendStatus(400)
   }
+
   const isGuest = await isGuestUser(userId)
   if (isGuest) {
-    return res.status(400).send({ message: 'Guest users cannot chat' })
+    return res.status(400).send({ message: i18n.t('guestCannotChat') })
   }
+
+  const user = await User.findById(req.user._id)
+  i18n.changeLanguage(user.userLanguage)
+
   const isFriend =
     (await User.findOne({
       _id: userId,
@@ -34,7 +40,7 @@ const accessChat = asyncHandler(async (req, res) => {
       friends: { $elemMatch: { $eq: userId } },
     }))
 
-  var isChat = await Chat.find({
+  let isChat = await Chat.find({
     isGroupChat: false,
     $and: [
       { users: { $elemMatch: { $eq: req.user._id } } },
@@ -59,7 +65,7 @@ const accessChat = asyncHandler(async (req, res) => {
     }
     res.send(isChat[0])
   } else {
-    var chatData = {
+    const chatData = {
       chatName: 'sender',
       isGroupChat: false,
       users: [req.user._id, userId],
@@ -86,10 +92,14 @@ const accessChat = asyncHandler(async (req, res) => {
 //@access          Protected
 const fetchChats = asyncHandler(async (req, res) => {
   try {
+    const user = await User.findById(req.user._id)
+    i18n.changeLanguage(user.userLanguage)
+
     const isGuest = await isGuestUser(req.user._id.toString())
     if (isGuest) {
-      return res.status(400).send({ message: 'Guest users cannot chat' })
+      return res.status(400).send({ message: i18n.t('guestCannotChat') })
     }
+
     Chat.find({
       users: { $elemMatch: { $eq: req.user._id } },
       status: { $in: ['accepted', 'pending'] },
@@ -103,6 +113,7 @@ const fetchChats = asyncHandler(async (req, res) => {
           path: 'latestMessage.sender',
           select: 'name pic email',
         })
+
         results = results.filter(
           chat =>
             chat.latestMessage ||
@@ -110,6 +121,7 @@ const fetchChats = asyncHandler(async (req, res) => {
               ? chat.chatCreatedBy.toString() === req.user._id.toString()
               : true),
         )
+
         for (let i = 0; i < results.length; i++) {
           let chat = results[i]
           const messagesCount = await Message.countDocuments({
@@ -120,11 +132,9 @@ const fetchChats = asyncHandler(async (req, res) => {
             messagesCount <= 1 &&
             today.getTime() - chat.createdAt.getTime() < 86400000
           ) {
-            // Instead of using toObject(), we'll create a new object and copy properties
             let chatObj = Object.assign({}, chat.toObject())
             chatObj.new = true
 
-            // Preserve the decryptContent method if it exists
             if (
               chat.latestMessage &&
               typeof chat.latestMessage.decryptContent === 'function'
@@ -140,7 +150,6 @@ const fetchChats = asyncHandler(async (req, res) => {
             results[i] = chatObj
           }
 
-          // Decrypt the latest message if it exists
           if (
             results[i].latestMessage &&
             results[i].latestMessage.content &&
@@ -163,15 +172,16 @@ const fetchChats = asyncHandler(async (req, res) => {
 //@access          Protected
 const createGroupChat = asyncHandler(async (req, res) => {
   if (!req.body.users || !req.body.name) {
-    return res.status(400).send({ message: 'Please Fill all the feilds' })
+    return res.status(400).send({ message: i18n.t('fillAllFields') })
   }
+
+  const user = await User.findById(req.user._id)
+  i18n.changeLanguage(user.userLanguage)
 
   var users = JSON.parse(req.body.users)
 
   if (users.length < 2) {
-    return res
-      .status(400)
-      .send('More than 2 users are required to form a group chat')
+    return res.status(400).send(i18n.t('minTwoUsers'))
   }
 
   users.push(req.user)
@@ -179,8 +189,9 @@ const createGroupChat = asyncHandler(async (req, res) => {
   try {
     const isGuest = await isGuestUser(req.user._id.toString())
     if (isGuest) {
-      return res.status(400).send({ message: 'Guest users cannot chat' })
+      return res.status(400).send({ message: i18n.t('guestCannotChat') })
     }
+
     const groupChat = await Chat.create({
       chatName: req.body.name,
       users: users,

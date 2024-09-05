@@ -1,0 +1,22 @@
+{
+  "copiedToClipboard": "Copied to clipboard",
+  "noWiseWebAccess": "No access to WiseWeb feature (making friends and chatting)",
+  "noIQScore": "IQ score will not be generated",
+  "noCircleAssignment": "No circle or society assignment",
+  "noSeasonsEnrollment": "No enrollment in seasons",
+  "welcomeTo": "Welcome to",
+  "rapidRecap": "Rapid Recap",
+  "guestProfileGenerated": "Your guest profile has been generated successfully. Here are your login details:",
+  "username": "Username",
+  "password": "Password",
+  "passwordChanged": "Password has been changed",
+  "guestAccessValid": "Your guest access is valid for",
+  "days": "days",
+  "guestAccessNotice": ". During this period, you can transfer or export your data and progress to a new, unregistered email address. Please note that after the 7-day window, your guest ID will expire, and any unsaved progress will be lost.",
+  "guestLimitations": "Guest Account Limitations",
+  "secureProgress": "Secure Your Progress",
+  "viewProfile": "View Profile",
+  "close": "Close",
+  "copied": "Copied",
+  "copy": "Copy"
+}

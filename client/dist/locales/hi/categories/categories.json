@@ -1,0 +1,21 @@
+{
+  "categories": {
+    "all": "सभी",
+    "top": "शीर्ष",
+    "general": "सामान्य",
+    "world": "दुनिया",
+    "politics": "राजनीति",
+    "business": "व्यवसाय",
+    "technology": "प्रौद्योगिकी",
+    "sports": "खेल",
+    "health": "स्वास्थ्य",
+    "science": "विज्ञान",
+    "environment": "पर्यावरण",
+    "crime": "अपराध",
+    "education": "शिक्षा",
+    "entertainment": "मनोरंजन",
+    "food": "भोजन",
+    "lifestyle": "जीवनशैली",
+    "tourism": "पर्यटन"
+  }
+}

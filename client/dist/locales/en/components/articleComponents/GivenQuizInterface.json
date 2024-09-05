@@ -1,0 +1,4 @@
+{
+  "questionLabel": "Question {{currentQuestionIndex}} of {{totalQuestions}}",
+  "noQuizData": "No quiz data available."
+}

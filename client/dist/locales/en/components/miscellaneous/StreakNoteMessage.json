@@ -1,0 +1,23 @@
+{
+  "StreakNoteMessage": {
+    "broken": "Your {{streakCount}}-day streak has ended",
+    "current": "Current streak: {{streakCount}} days",
+    "timeRemaining": "Time remaining to revive your streak:",
+    "toRevive": "to revive",
+    "completeQuizzes": "Complete {{remainingQuizzes}} more {{quizText}} to revive your streak!",
+    "actions": {
+      "startNew": "Start New Streak",
+      "takeQuiz": "Take a Quiz",
+      "viewStreak": "View Streak"
+    },
+    "title": "Streak {{status}}",
+    "status": {
+      "broken": "Broken",
+      "revival": "Revival",
+      "revived": "Revived",
+      "active": "Active"
+    }
+  },
+  "quiz": "quiz",
+  "quizzes": "quizzes"
+}

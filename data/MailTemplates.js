@@ -1,20 +1,3 @@
-const recommendedArticles = `<div style="margin-top:40px;">
-        <h4 style="color:#333; text-align:center;">Articles Recommended for you:</h4>
-        <div style="display:flex; justify-content:space-between; margin-top:20px;">
-          <div style="width:30%; background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 1</p>
-          </div>
-          <div style="width:30%; background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 2</p>
-          </div>
-          <div style="width:30%; background-color:#f9f9f9; padding:10px; border-radius:8px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.1); transition:transform 0.3s ease-in-out;">
-            <img src="https://via.placeholder.com/150" alt="Article Image" style="width:100%; height:auto; border-radius:8px; transition:transform 0.3s ease-in-out;">
-            <p style="font-size:1em; color:#333; margin-top:10px;">Article Title 3</p>
-          </div>
-        </div>
-      </div>`
 const MailTemplates = {
   OTP: {
     from: 'rapidrecap2k23@gmail.com',

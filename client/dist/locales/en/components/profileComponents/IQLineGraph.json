@@ -1,0 +1,14 @@
+{
+  "noDataAvailable": "No Data Available",
+  "give10Quizzes": "Give 10 Quizzes to get the IQ score and enter the ranking",
+  "visibilityToOthers": "Visibility to others",
+  "hidden": "HIDDEN",
+  "visible": "VISIBLE",
+  "iqScore": "IQ Score",
+  "date": "Date",
+  "dailyRank": "Daily Rank",
+  "noDataForGuest": "No data for guest user",
+  "registerToViewStandings": "Register to view your standings",
+  "unableToFetchIQ": "Unable to fetch expected IQ. Please try again later.",
+  "anErrorOccurred": "An error occurred."
+}

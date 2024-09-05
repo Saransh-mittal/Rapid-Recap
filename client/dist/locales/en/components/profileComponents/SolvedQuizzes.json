@@ -1,0 +1,16 @@
+{
+  "errorOccurred": "An error occurred.",
+  "errorMessage": "Unable to get Solved Quiz History. Please try again later.",
+  "hidden": "Hidden",
+  "solvedQuizzes": "Solved Quizzes",
+  "visibilityToOthers": "Visibility to others",
+  "totalSolvedQuizzes": "Total Solved Quizzes",
+  "keepItUp": "Keep it up!",
+  "easy": "Easy",
+  "medium": "Medium",
+  "hard": "Hard",
+  "solved": "{{count}} Solved",
+  "beatsPercentage": "Beats {{beats}}%",
+  "visible": "Visible",
+  "viewHistory": "View History"
+}

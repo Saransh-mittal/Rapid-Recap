@@ -1,0 +1,10 @@
+{
+  "congratulations": "बधाई हो, {{userName}}!",
+  "societyUpgrade": "समाज उन्नयन",
+  "circleUpgrade": "वृत्त उन्नयन",
+  "society": "{{society}} समाज",
+  "circle": "{{circle}}",
+  "upgradeMessage": "{{upgradeMessage}}",
+  "journeyContinues": "आपकी कुशलता की यात्रा जारी है...",
+  "continueJourney": "अपनी यात्रा जारी रखें.."
+}

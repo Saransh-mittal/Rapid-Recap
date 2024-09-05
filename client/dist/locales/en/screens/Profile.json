@@ -1,0 +1,14 @@
+{
+  "title": "{{name}}'s Rapid Recap Profile | IQ Score: {{score}}",
+  "metaDescription": "Explore {{name}}'s Rapid Recap profile. IQ score: {{score}}, {{quizzes}} quizzes solved. Member of {{society}} {{circle}}. View their progress and achievements!",
+  "metaOgTitle": "{{name}}'s Rapid Recap Profile",
+  "metaOgDescription": "Check out {{name}}'s profile on Rapid Recap. IQ score: {{score}}, quizzes solved: {{quizzes}}. See their progress in {{society}} {{circle}}.",
+  "metaTwitterDescription": "Explore {{name}}'s Rapid Recap profile. IQ score: {{score}}, {{quizzes}} quizzes solved. View their progress!",
+  "userNotFound": "User not found",
+  "userNotFoundDescription": "The user you are looking for does not exist",
+  "toggleProfileVisibility": "Toggle Profile Visibility",
+  "seasonAnalytics": "Season Analytics",
+  "bookmarks": "Bookmarks",
+  "secureYourProgress": "Secure Your Progress",
+  "Settings": "Settings"
+}

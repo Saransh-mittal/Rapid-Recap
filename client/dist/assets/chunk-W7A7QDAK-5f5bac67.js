@@ -1,0 +1,1 @@
+import{S as r}from"./chunk-GOJLRND4-4f59d1d0.js";import{o as i}from"./index-af549869.js";var l=({size:e="2rem",...o})=>i.jsx(r,{borderRadius:"full",boxSize:e,...o});l.displayName="SkeletonCircle";export{l as S};

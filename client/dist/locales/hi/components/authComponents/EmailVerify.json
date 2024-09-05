@@ -1,0 +1,14 @@
+{
+  "heading": "ओटीपी सत्यापन",
+  "otpSent": "एक ओटीपी भेजा गया है",
+  "enterOTP": "कृपया सत्यापित करने के लिए ओटीपी दर्ज करें",
+  "verifyButton": "सत्यापित करें",
+  "verifying": "सत्यापन हो रहा है",
+  "didntReceiveCode": "कोड नहीं मिला?",
+  "resendOTP": "ओटीपी पुनः भेजें",
+  "toastVerifySuccess": "ईमेल सत्यापित",
+  "toastResetSuccess": "ईमेल सत्यापित अब आप पासवर्ड रीसेट कर सकते हैं",
+  "toastVerifyFail": "ईमेल सत्यापन विफल",
+  "toastOTPSent": "ओटीपी भेजा गया",
+  "toastOTPFail": "ओटीपी भेजने में विफल"
+}

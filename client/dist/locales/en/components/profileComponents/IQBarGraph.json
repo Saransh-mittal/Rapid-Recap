@@ -1,0 +1,12 @@
+{
+  "giveQuizzesToUnlock": "Give 10 Quizzes to get the IQ score and Unlock the bar graph",
+  "errorOccurred": "An error occurred.",
+  "unableToFetchExpectedIQ": "Unable to fetch expected IQ. Please try again later.",
+  "registerToViewStandings": "Register to view your standings",
+  "noDataForGuest": "No data for guest user",
+  "top": "Top",
+  "users": "users",
+  "visibilityToOthers": "Visibility to others",
+  "hidden": "HIDDEN",
+  "visible": "VISIBLE"
+}

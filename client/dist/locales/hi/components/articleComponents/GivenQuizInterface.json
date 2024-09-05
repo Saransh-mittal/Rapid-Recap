@@ -1,0 +1,4 @@
+{
+  "questionLabel": "प्रश्न {{currentQuestionIndex}} का {{totalQuestions}}",
+  "noQuizData": "कोई क्विज़ डेटा उपलब्ध नहीं है।"
+}

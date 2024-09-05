@@ -1,0 +1,16 @@
+{
+  "profileVisibility": {
+    "toggleVisibility": "प्रोफ़ाइल दृश्यता टॉगल करें",
+    "fullProfile": "पूर्ण प्रोफ़ाइल",
+    "lineGraph": "रेखा ग्राफ",
+    "barGraph": "बार ग्राफ",
+    "solvedQuizzes": "हल की गई क्विज़",
+    "society": "समाज",
+    "seasonAnalytics": "सीजन विश्लेषण",
+    "savedSuccessfully": "प्रोफ़ाइल दृश्यता सफलतापूर्वक सहेजी गई",
+    "errorSaving": "प्रोफ़ाइल दृश्यता सहेजने में त्रुटि"
+  },
+  "success": "सफलता",
+  "error": "त्रुटि",
+  "save": "सहेजें"
+}

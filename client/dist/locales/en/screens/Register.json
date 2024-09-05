@@ -1,0 +1,21 @@
+{
+  "register_title": "Register",
+  "upload_profile_picture": "Upload Profile Picture",
+  "choose_file": "Choose File",
+  "enter_name": "Enter Name",
+  "enter_in_game_name": "Enter In-Game Name",
+  "enter_email": "Enter Email",
+  "enter_password": "Enter Password",
+  "confirm_password": "Confirm Password",
+  "register_button": "Register",
+  "close_button": "Close",
+  "registration_success": "Registered Successfully",
+  "registration_failed": "Registration Failed",
+  "logout_failed": "Logout Failed",
+  "image_upload_failed": "Image upload failed",
+  "meta_title": "Register - Rapid Recap",
+  "meta_description": "Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score.",
+  "meta_keywords": "Register, Rapid Recap, news, articles, quizzes, IQ score, leaderboard",
+  "meta_og_title": "Register - Rapid Recap",
+  "meta_og_description": "Join Rapid Recap today! Register now to stay updated with the latest news and articles, and participate in engaging quizzes to track your Information Quotient (IQ) score."
+}

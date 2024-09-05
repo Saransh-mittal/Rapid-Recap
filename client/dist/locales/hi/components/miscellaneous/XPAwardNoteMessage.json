@@ -1,0 +1,12 @@
+{
+  "milestoneAchieved": "मील का पत्थर प्राप्त हुआ!",
+  "xpSourceCompleted": "{{xpSource}} पूरा किया",
+  "xpAwarded": "+{{xpAwarded}} XP",
+  "milestoneBonus": "{{milestoneName}} मील का पत्थर बोनस",
+  "milestoneXP": "+{{xp}} XP",
+  "milestoneContent": "मील का पत्थर सामग्री",
+  "totalXP": "कुल: +{{xp}} XP",
+  "majorAchievementUnlocked": "प्रमुख उपलब्धि अनलॉक!",
+  "achievementUnlocked": "उपलब्धि अनलॉक",
+  "viewExperience": "अनुभव देखें"
+}

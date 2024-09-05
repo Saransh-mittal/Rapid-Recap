@@ -1,1 +1,0 @@
-const t={QUIN_BOOST:{name:"Quin Boost",description:"Successfully completed 6 quizzes and strategically applied a 1.5x score boost to maximize the score on the current quiz.",xpReward:10}},o=e=>t[e]||null;export{o as g};
