@@ -23,12 +23,10 @@ import { useSelector } from 'react-redux'
 import imageData from '../assets/AltNewsImage'
 import { quinBoostChecker } from '../utils/quiz.utils'
 import slugify from 'slugify'
+import i18n from 'i18next'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
 const Quiz = lazy(() => import('../components/articleComponents/Quiz'))
-const SelectQuizLangModal = lazy(() =>
-  import('../components/articleComponents/SelectQuizLangModal'),
-)
 const ExpectedIQModal = lazy(() =>
   import('../components/articleComponents/ExpectedIQModal'),
 )
@@ -96,9 +94,9 @@ const Article = () => {
     hindi: articleData?.hindiMainText,
   })
   const [translateLoading, setTranslateLoading] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState('english')
-  const [showQuizLangModal, setShowQuizLangModal] = useState(false)
-  const [selectLanForQuiz, setSelectLanForQuiz] = useState('english')
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    i18n.language === 'en' ? 'english' : 'hindi',
+  )
   const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false)
   const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5)
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
@@ -115,15 +113,14 @@ const Article = () => {
   const fetchQuiz = useCallback(async () => {
     try {
       const endpoint =
-        selectedLanguage === 'english'
+        i18n.language === 'en'
           ? `/api/articles/genQuiz/${id}`
           : `/api/articles/genHindiQuiz/${id}`
       await axios.put(endpoint)
-      console.log('Quiz generated')
     } catch (error) {
       console.log(error.message)
     }
-  }, [id, selectedLanguage])
+  }, [id, i18n.language])
 
   const bookmarkStatus = useCallback(
     async ({ view, update }) => {
@@ -151,7 +148,9 @@ const Article = () => {
 
   const fetchArticle = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/articles/article/${id}`)
+      const response = await axios.get(
+        `/api/articles/article/${id}?lang=${i18n.language}`,
+      )
       const articleData = response.data.newArticle
       setArticle(articleData)
       setTotalUsersGivenQuiz(articleData.quizAttemptCnt)
@@ -270,7 +269,8 @@ const Article = () => {
     async event => {
       setTranslateLoading(true)
       try {
-        if (event.target.value === 'hindi') {
+        // if (event.target.value === 'hindi') {
+        if (i18n.language === 'hi') {
           if (article.hindiTitle) {
             setTitle(prevTitle => ({ ...prevTitle, hindi: article.hindiTitle }))
             setAuthor(prevAuthor => ({
@@ -390,19 +390,20 @@ const Article = () => {
   return (
     <Suspense fallback={<Loading />}>
       <Flex w={'100vw'}>
-        {showQuizLangModal && (
+        {/* {showQuizLangModal && (
           <SelectQuizLangModal
             setSelectLanForQuiz={setSelectLanForQuiz}
             setShowQuizLangModal={setShowQuizLangModal}
           />
-        )}
+        )} */}
         {showExpectedIQ && expectedIQ && (
           <ExpectedIQModal
             expectedIQ={expectedIQ}
             setShowExpectedIQ={setShowExpectedIQ}
           />
         )}
-        {showQuiz && !givenQuiz && !showQuizLangModal && (
+        {showQuiz && !givenQuiz && (
+          // && !showQuizLangModal
           <Quiz
             setTotalUsersGivenQuiz={setTotalUsersGivenQuiz}
             setIsQuinBoostAvailable={setIsQuinBoostAvailable}
@@ -419,7 +420,7 @@ const Article = () => {
               setGivenQuiz(true)
               user.IQ_score === 0 && getExpectedIQ()
             }}
-            language={selectLanForQuiz}
+            language={i18n.language === 'en' ? 'english' : 'hindi'}
           />
         )}
         <Flex
@@ -527,7 +528,6 @@ const Article = () => {
                   author={author}
                   selectedLanguage={selectedLanguage}
                   bookmark={bookmark}
-                  handleLanguageChange={handleLanguageChange}
                   avgTimeRead={avgTimeRead}
                   dateTime={dateTime}
                   bookmarkStatus={bookmarkStatus}
@@ -573,7 +573,6 @@ const Article = () => {
                 quizExpired={quizExpired}
                 isQuinBoostAvailable={isQuinBoostAvailable}
                 trackGenerateQuizClick={trackGenerateQuizClick}
-                setShowQuizLangModal={setShowQuizLangModal}
                 setShowQuiz={setShowQuiz}
                 showQuiz={showQuiz}
                 onOpen={onOpen}
@@ -582,6 +581,7 @@ const Article = () => {
                 article={article}
                 id={id}
                 isQuizGivenLoading={isQuizGivenLoading}
+                i18n={i18n}
               />
             </Grid>
           </article>

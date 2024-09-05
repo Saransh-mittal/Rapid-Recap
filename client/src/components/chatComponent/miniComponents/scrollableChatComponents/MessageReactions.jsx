@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback, lazy, Suspense } from 'react'
 import { Flex, Box, Text, Tooltip } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 
 const Emoji = lazy(() =>
   import('emoji-picker-react').then(module => ({ default: module.Emoji })),
@@ -10,6 +11,8 @@ const MessageReactions = ({
   isSameLoggedUser,
   handleReactionClick,
 }) => {
+  const { t } = useTranslation('MessageReactions') // Use the 'MessageReactions' namespace
+
   if (!message.reactions || message.reactions.length === 0) return null
 
   const distinctReactions = useMemo(() => {
@@ -41,7 +44,7 @@ const MessageReactions = ({
       onClick={onReactionClick}
       zIndex={1}
     >
-      <Suspense fallback={<Text>Loading...</Text>}>
+      <Suspense fallback={<Text>{t('loading')}</Text>}>
         {distinctReactions.map((reaction, index) => (
           <Tooltip key={index} label={reaction.user.name} placement="bottom">
             <Box borderRadius="full" py={1} fontSize="md" cursor="pointer">

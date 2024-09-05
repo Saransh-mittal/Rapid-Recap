@@ -1,0 +1,15 @@
+{
+  "online_friends": "Online Friends",
+  "leaderboard": "LeaderBoard",
+  "ties_severed": "Ties Severed",
+  "unfriended_message": "You have successfully unfriended the friend.",
+  "error_severing_ties": "Error",
+  "sever_ties_error_message": "Failed to sever ties. Please try again.",
+  "no_friends": "No friends found.",
+  "no_friend_requests": "No friend requests found.",
+  "your_friends": "Your Friends",
+  "requests": "Requests",
+  "friends": "Friends",
+  "wise_web": "Wise Web",
+  "friend_requests": "Friend Requests"
+}

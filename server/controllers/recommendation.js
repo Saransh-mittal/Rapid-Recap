@@ -6,6 +6,7 @@ const {
 } = require('../services/recommendationService')
 
 const asyncHandler = require('express-async-handler')
+const { hindiConverter } = require('../utils/article.utils')
 const { breakArticleIntoParagraphs } = require('../utils/article.utils')
 const { formatDate } = require('../utils/miscellaneous.utils')
 const cache = require('memory-cache')
@@ -17,8 +18,9 @@ const userRecommendations = asyncHandler(async (req, res) => {
   const userId = req.user._id
   const page = parseInt(req.query.page) || 1
   const pageSize = parseInt(req.query.pageSize) || 18
+  const { lang } = req.query
 
-  const cacheKey = `user_recommendations_${userId}_${page}_${pageSize}`
+  const cacheKey = `user_recommendations_${userId}_${lang}_${page}_${pageSize}`
   const cachedRecommendations = cache.get(cacheKey)
 
   if (cachedRecommendations) {
@@ -31,6 +33,26 @@ const userRecommendations = asyncHandler(async (req, res) => {
       return await Article.findById(recommendation._id)
     }),
   )
+  if (lang === 'hi')
+    for (let article of articles) {
+      if (
+        !article.hindiTitle ||
+        !article.hindiMainText ||
+        !article.hindiAuthor
+      ) {
+        const response = await hindiConverter(article._id)
+        if (!article.hindiMainText) {
+          article.hindiMainText = []
+        }
+        article.hindiTitle = response.hindiTitle
+
+        for (let key in response.hindiMainText) {
+          if (!response.hindiMainText[key]) continue
+          article.hindiMainText.push(response.hindiMainText[key])
+        }
+        article.hindiAuthor = response.hindiAuthor
+      }
+    }
 
   const processedArticles = await Promise.all(
     articles.map(async article => {
@@ -67,8 +89,9 @@ const articlePageRecommendations = asyncHandler(async (req, res) => {
   const { articleId } = req.params
   const page = parseInt(req.query.page) || 1
   const pageSize = parseInt(req.query.pageSize) || 18
+  const { lang } = req.query
 
-  const cacheKey = `article_page_recommendations_${userId}_${articleId}_${page}_${pageSize}`
+  const cacheKey = `article_page_recommendations_${userId}_${lang}_${articleId}_${page}_${pageSize}`
   const cachedRecommendations = cache.get(cacheKey)
 
   if (cachedRecommendations) {
@@ -80,6 +103,7 @@ const articlePageRecommendations = asyncHandler(async (req, res) => {
     articleId,
     page,
     pageSize,
+    lang,
   )
 
   // Cache the articles for 1 hour (3600000 milliseconds)

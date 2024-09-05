@@ -21,6 +21,7 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { Helmet } from 'react-helmet'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load heavy or less frequently used components
 const ButtonGradient = lazy(() => import('../assets/svg/ButtonGradient'))
@@ -35,6 +36,7 @@ const InstagramSVG = lazy(() => import('../assets/svg/InstagramSVG'))
 const LinkedinSVG = lazy(() => import('../assets/svg/LinkedinSVG'))
 
 const Contact = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const buttonRef = useRef(null)
   const [isHovered, setIsHovered] = useState(false)
@@ -53,26 +55,20 @@ const Contact = () => {
   const handleMouseLeave = useCallback(() => setIsHovered(false), [])
 
   useEffect(() => {
-    document.title = 'Contact Us - Rapid Recap'
-  }, [])
+    document.title = t('contact_title')
+  }, [t])
 
   return (
     <>
       <Helmet>
-        <title>Contact Us - Rapid Recap</title>
-        <meta
-          name="description"
-          content="Contact the Rapid Recap team for any inquiries or support. We're here to help you with your questions and feedback."
-        />
+        <title>{t('contact_title')}</title>
+        <meta name="description" content={t('contact_help')} />
         <meta
           name="keywords"
           content="Contact, Rapid Recap, Support, Inquiries"
         />
-        <meta property="og:title" content="Contact Us - Rapid Recap" />
-        <meta
-          property="og:description"
-          content="Contact the Rapid Recap team for any inquiries or support. We're here to help you with your questions and feedback."
-        />
+        <meta property="og:title" content={t('contact_title')} />
+        <meta property="og:description" content={t('contact_help')} />
       </Helmet>
 
       <Flex
@@ -103,10 +99,7 @@ const Contact = () => {
             >
               <Flex direction="column" p={6} w={'100%'}>
                 <Suspense fallback={<Spinner />}>
-                  <Heading
-                    tag={'Contact our team for any query'}
-                    title={'How can we help?'}
-                  />
+                  <Heading tag={t('contact_title')} title={t('contact_help')} />
                 </Suspense>
                 <form
                   id="contactForm"
@@ -114,32 +107,32 @@ const Contact = () => {
                   method="POST"
                 >
                   <FormControl id="name" mb={3} isRequired>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{t('form_name')}</FormLabel>
                     <Input
                       type="text"
                       name="Name"
-                      placeholder="Name"
+                      placeholder={t('form_name')}
                       autoComplete="off"
                       borderColor="#6c757d"
                       color="#f9f9f9"
                     />
                   </FormControl>
                   <FormControl id="emailAddress" mb={3} isRequired>
-                    <FormLabel>Email Address</FormLabel>
+                    <FormLabel>{t('form_email')}</FormLabel>
                     <Input
                       type="email"
                       name="Email"
-                      placeholder="Email Address"
+                      placeholder={t('form_email')}
                       autoComplete="off"
                       borderColor="#6c757d"
                       color="#f9f9f9"
                     />
                   </FormControl>
                   <FormControl id="message" mb={3} isRequired>
-                    <FormLabel>Message</FormLabel>
+                    <FormLabel>{t('form_message')}</FormLabel>
                     <Textarea
                       name="Message"
-                      placeholder="Message"
+                      placeholder={t('form_message')}
                       autoComplete="off"
                       height="10rem"
                       borderColor="#6c757d"
@@ -155,7 +148,7 @@ const Contact = () => {
                     size="lg"
                     w="full"
                   >
-                    Submit
+                    {t('form_submit')}
                   </Button>
                 </form>
               </Flex>
@@ -174,7 +167,7 @@ const Contact = () => {
               p={8}
             >
               <Suspense fallback={<Spinner />}>
-                <Heading title={'Contact Information'} />
+                <Heading title={t('contact_info_title')} />
               </Suspense>
               <Text textAlign="center" mb={4} fontSize={'1.2rem'}>
                 <Suspense fallback={<Spinner />}>
@@ -185,7 +178,7 @@ const Contact = () => {
                     height={'20px'}
                   />
                 </Suspense>
-                Email:{' '}
+                {t('email_label')}{' '}
                 <Link href="mailto:rapidrecap2k23@gmail.com" color="teal.200">
                   rapidrecap2k23@gmail.com
                 </Link>
@@ -199,7 +192,7 @@ const Contact = () => {
                     height={'20px'}
                   />
                 </Suspense>
-                Instagram:{' '}
+                {t('instagram_label')}{' '}
                 <Link
                   href="https://www.instagram.com/rrapidrecap/"
                   isExternal
@@ -217,7 +210,7 @@ const Contact = () => {
                     height={'20px'}
                   />
                 </Suspense>
-                LinkedIn:{' '}
+                {t('linkedin_label')}{' '}
                 <Link
                   href="https://www.linkedin.com/company/rrapidrecap/"
                   isExternal
@@ -235,7 +228,7 @@ const Contact = () => {
                 borderRadius={'xl'}
               >
                 <Text textAlign="center" mb={4} fontSize={'2xl'}>
-                  Your feedback helps us improve. Share your thoughts!
+                  {t('feedback_prompt')}
                 </Text>
                 <Flex justifyContent="center" alignItems="center" zIndex={10}>
                   <Suspense fallback={<Spinner />}>
@@ -245,7 +238,7 @@ const Contact = () => {
                         navigate('/contact/feedback')
                       }}
                     >
-                      FeedBack
+                      {t('feedback_button')}
                     </ButtonComponent>
                   </Suspense>
                 </Flex>

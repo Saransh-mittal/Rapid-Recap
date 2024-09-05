@@ -7,8 +7,9 @@ import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import Loading from '../miscellaneous/Loading'
 import { setIsSigninOpen } from '../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
 
-const GuestLogin = ({ width, onClick }) => {
+const GuestLogin = ({ width, onClick, t }) => {
   const toast = useToast()
   const navigate = useNavigate()
   const dispatchRedux = useDispatch()
@@ -38,21 +39,23 @@ const GuestLogin = ({ width, onClick }) => {
         handleGuestLoginSuccess(response.data.user)
         // Show success toast
         toast({
-          title: 'Guest Login Successful',
-          description: `Logged in as ${response.data.user.inGameName}`,
+          title: t('toastSuccessTitle'),
+          description: t('toastSuccessDescription', {
+            inGameName: response.data.user.inGameName,
+          }),
           status: 'success',
           duration: 5000,
           isClosable: true,
           position: 'top',
         })
       } else {
-        throw new Error('Guest login failed')
+        throw new Error(t('toastFailDescription'))
       }
     } catch (error) {
       console.error('Error during guest login:', error)
       toast({
-        title: 'Guest Login Failed',
-        description: error.message || 'An error occurred during guest login',
+        title: t('toastFailDescription'),
+        description: error.message || t('toastFailDescription'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -74,7 +77,7 @@ const GuestLogin = ({ width, onClick }) => {
         className="get-started-button"
         width={width || `auto`}
       >
-        Continue as Guest
+        {t('buttonText')}
       </Button>
     </>
   )

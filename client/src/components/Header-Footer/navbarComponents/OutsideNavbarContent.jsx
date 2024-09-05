@@ -12,6 +12,7 @@ import {
 import { HamburgerIcon, LockIcon, SearchIcon } from '@chakra-ui/icons'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 import useSound from '../../../customHooks/useSound'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import FaMessenger from '../../../assets/svg/FaMessenger'
@@ -40,7 +41,6 @@ const OutsideNavbarContent = ({
   setIsDrawerOpen,
   notifyCont,
   setShowDailyStreakModal,
-
   setShowIQScoreModal,
   streak,
   isBoosted,
@@ -54,6 +54,7 @@ const OutsideNavbarContent = ({
   profileNotif,
   onOpenWiseWeb,
 }) => {
+  const { t } = useTranslation('OutsideNavbarContent')
   const { user, loginCheckStatus } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
   const { playClick } = useSound()
@@ -150,7 +151,7 @@ const OutsideNavbarContent = ({
         >
           <GetStarted
             display={{ base: 'none', lg: 'flex' }}
-            innerText="Get Started"
+            innerText={t('OutsideNavbarContent.getStarted')}
           />
         </Suspense>
         <HamburgerMenuButton
@@ -176,11 +177,12 @@ const OutsideNavbarContent = ({
       {user && !isEmptyObject(user) && (
         <>
           <IQScoreComponent
+            t={t}
             user={user}
             setShowIQScoreModal={setShowIQScoreModal}
             playClick={playClick}
           />
-          <XPLevelComponent level={level} playClick={playClick} />
+          <XPLevelComponent level={level} playClick={playClick} t={t} />
           <StreakFireComponent
             streak={streak}
             isBoosted={isBoosted}
@@ -270,7 +272,7 @@ const PendingLoginContent = () => (
   </Flex>
 )
 
-const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
+const IQScoreComponent = ({ user, setShowIQScoreModal, playClick, t }) => {
   const dispatch = useDispatch()
   return (
     <>
@@ -283,7 +285,7 @@ const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
             borderRadius="full"
             p="0.5rem"
             transition="all 0.3s"
-            title="Your Information Quotient (IQ) Score"
+            title={t('OutsideNavbarContent.iqScore.title')}
             width={'105px'}
             h={'40px'}
             gap={1}
@@ -301,7 +303,7 @@ const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
               ? setShowIQScoreModal(true)
               : dispatch(
                   addNoteMessage({
-                    title: 'Register to see your IQ score and grow Wise Web',
+                    title: t('OutsideNavbarContent.iqScore.guestMessage'),
                     duration: 10000,
                     width: '250px',
                     actions: [
@@ -318,7 +320,7 @@ const IQScoreComponent = ({ user, setShowIQScoreModal, playClick }) => {
   )
 }
 
-const XPLevelComponent = ({ level, playClick }) => {
+const XPLevelComponent = ({ level, playClick, t }) => {
   const dispatch = useDispatch()
   return (
     <Suspense
@@ -413,7 +415,7 @@ const MessengerComponent = ({ notification, navigate, isGuest, playClick }) => {
         isGuest
           ? dispatch(
               addNoteMessage({
-                title: 'Register to do chat and grow Wise Web',
+                title: t('Register to do chat and grow Wise Web'),
                 duration: 10000,
                 width: '250px',
                 actions: [

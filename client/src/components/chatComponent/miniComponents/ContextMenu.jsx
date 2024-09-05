@@ -1,25 +1,18 @@
 import React, { useRef, useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Menu,
   MenuButton,
   MenuList,
   MenuItem,
   MenuDivider,
-  Portal,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverBody,
-  SimpleGrid,
   Box,
   Flex,
   useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalCloseButton,
   ModalBody,
-  ModalHeader,
 } from '@chakra-ui/react'
 import EmojiPicker, { Emoji } from 'emoji-picker-react'
 import { AddIcon } from '@chakra-ui/icons'
@@ -46,6 +39,7 @@ const ContextMenu = ({
   messageId,
   position,
 }) => {
+  const { t } = useTranslation('ContextMenu')
   const [showReactions, setShowReactions] = useState(false)
   const menuRef = useRef(null)
   const [currentMessageId, setCurrentMessageId] = useState(messageId)
@@ -63,7 +57,7 @@ const ContextMenu = ({
 
   useEffect(() => {
     if (isOpen && messageRect && menuRef.current) {
-      const scrollableDiv = document.querySelector('.scrollable-div') // Adjust this selector based on your scroll container
+      const scrollableDiv = document.querySelector('.scrollable-div')
       const scrollTop = scrollableDiv.scrollTop
 
       menuRef.current.style.position = 'absolute'
@@ -77,6 +71,7 @@ const ContextMenu = ({
     setShowReactions(false)
     onClose()
   }
+
   const handleEmojiSelect = emojiObject => {
     handleReact(emojiObject.unified)
     onEmojiModalClose()
@@ -100,7 +95,7 @@ const ContextMenu = ({
                 color="red.500"
                 fontWeight="bold"
               >
-                Delete for Everyone
+                {t('deleteForEveryone')}
               </MenuItem>
               <MenuDivider />
             </>
@@ -112,7 +107,7 @@ const ContextMenu = ({
               color="red.500"
               fontWeight="bold"
             >
-              Delete for Me
+              {t('deleteForMe')}
             </MenuItem>
           )}
           {isMessageDeleted && (
@@ -122,7 +117,7 @@ const ContextMenu = ({
               color={'red.500'}
               fontWeight="bold"
             >
-              Delete
+              {t('deletePermanent')}
             </MenuItem>
           )}
           <MenuDivider />
@@ -132,7 +127,7 @@ const ContextMenu = ({
             color={'black'}
             fontWeight="bold"
           >
-            Copy
+            {t('copy')}
           </MenuItem>
           {!isMessageDeleted && (
             <>

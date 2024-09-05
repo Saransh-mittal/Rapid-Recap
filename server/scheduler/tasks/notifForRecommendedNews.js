@@ -21,7 +21,14 @@ async function sendRecommendedNewsNotification() {
       if (recommendation) {
         const article = await Article.findById(recommendation._id)
         if (article) {
-          const title = article.title
+          if (article.hindiTitle === undefined) {
+          }
+          const title =
+            user?.userLanguage === 'en'
+              ? article.title
+              : article.hindiTitle === undefined
+              ? article.title
+              : article.hindiTitle
           const url = `https://www.rapidrecap.co.in/article/${
             article._id
           }/${slugify(title)}`

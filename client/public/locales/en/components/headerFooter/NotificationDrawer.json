@@ -1,0 +1,20 @@
+{
+  "inbox": "Inbox",
+  "removeAllNotifications": "Remove All Notifications",
+  "noNotifications": "No notifications available",
+  "deleteNotification": "Delete Notification",
+  "deleteConfirmation": "Are you sure you want to delete this notification?",
+  "confirmDelete": "Confirm Delete",
+  "cancel": "Cancel",
+  "removeAllConfirmation": "Are you sure you want to remove all notifications?",
+  "removeAll": "Remove All",
+  "success": "Success",
+  "removeAllSuccess": "All notifications removed successfully",
+  "removeAllError": "Failed to remove all notifications",
+  "error": "Error",
+  "deleteError": "Failed to delete the notification",
+  "markAsReadError": "Failed to mark the notification as read",
+  "notificationImage": "Notification Image",
+  "confirmRemove": "Confirm Remove Notification",
+  "confirmRemoveAll": "Confirm Remove All Notifications"
+}

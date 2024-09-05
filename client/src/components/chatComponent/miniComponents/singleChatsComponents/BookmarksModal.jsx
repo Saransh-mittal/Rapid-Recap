@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -7,8 +7,9 @@ import {
   ModalCloseButton,
   ModalBody,
   Grid,
-} from "@chakra-ui/react";
-import ArticleCard from "../../../miscellaneous/ArticleCard";
+} from '@chakra-ui/react'
+import ArticleCard from '../../../miscellaneous/ArticleCard'
+import { useTranslation } from 'react-i18next'
 
 const BookmarksModal = ({
   showBookmarksModal,
@@ -17,11 +18,12 @@ const BookmarksModal = ({
   bookmarks,
   handleShareBookmark,
 }) => {
+  const { t } = useTranslation('BookmarksModal')
   return (
     <Modal
       isOpen={showBookmarksModal}
       onClose={() => setShowBookmarksModal(false)}
-      size={{ base: "full", md: "xl", lg: "3xl", xl: "4xl" }}
+      size={{ base: 'full', md: 'xl', lg: '3xl', xl: '4xl' }}
       scrollBehavior="inside"
     >
       <ModalOverlay />
@@ -29,11 +31,11 @@ const BookmarksModal = ({
         bg="#0f0d15"
         bgGradient="linear(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
       >
-        <ModalHeader color="#ffffff">Share Bookmarked Article</ModalHeader>
+        <ModalHeader color="#ffffff">{t('shareBookmarkedArticle')}</ModalHeader>
         <ModalCloseButton color="#ffffff" />
         <ModalBody
           w="100%"
-          css={{ "&::-webkit-scrollbar": { display: "none" } }}
+          css={{ '&::-webkit-scrollbar': { display: 'none' } }}
         >
           <Grid
             templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
@@ -43,7 +45,7 @@ const BookmarksModal = ({
               ? Array.from({ length: 6 }).map((_, index) => (
                   <ArticleCard key={index} isLoading={true} />
                 ))
-              : bookmarks.map((bookmark) => (
+              : bookmarks.map(bookmark => (
                   <ArticleCard
                     key={bookmark._id}
                     article={bookmark}
@@ -54,7 +56,7 @@ const BookmarksModal = ({
         </ModalBody>
       </ModalContent>
     </Modal>
-  );
-};
+  )
+}
 
-export default BookmarksModal;
+export default BookmarksModal

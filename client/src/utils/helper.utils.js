@@ -1,4 +1,6 @@
 import CircleAndSocietyData from '../assets/CircleAndSocietyData'
+import axios from 'axios'
+import i18n from 'i18next'
 
 export const findSocietyAndCircle = IQ => {
   for (let i = 0; i < CircleAndSocietyData.length; i++) {
@@ -37,34 +39,31 @@ export const getArticleId = () => {
   return null
 }
 
-export function formatDate(datetime) {
-  // Extract the date part
-  const datePattern = /^\d{4}-\d{2}-\d{2}/
-  const match = datetime.match(datePattern)
-  if (!match) return null
+export function formatDate(datetime, lang) {
+  if (!datetime) return null // Handle cases where datetime is undefined or null
 
-  // Parse the extracted date part
-  const [year, month, day] = match[0].split('-')
+  // Parse the date string and return a Date object
+  const date = new Date(datetime)
+  if (isNaN(date)) return null // Handle invalid dates
 
-  // Define month abbreviations
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ]
+  // Format the date based on the locale ('en' for English, 'hi' for Hindi)
+  const locale = lang === 'hi' ? 'hi-IN' : 'en-US'
+  return new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date)
+}
 
-  // Format the date into 'dd mmm yyyy'
-  const formattedDate = `${day} ${months[parseInt(month, 10) - 1]} ${year}`
-  return formattedDate
+export const formatDateLangTranslate = (date, locale) => {
+  if (isNaN(Date.parse(date))) {
+    return '' // or return a default value
+  }
+  return new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(date))
 }
 
 export const formatRemainingTime = milliseconds => {
@@ -84,4 +83,19 @@ export const formatRemainingTime = milliseconds => {
 
 export const formatSoundType = type => {
   return type.replace(/([A-Z])/g, ' $1').trim()
+}
+
+export const changeLanguage = async (lng, setLoading, setCurrentLanguage) => {
+  try {
+    setLoading && setLoading(true) // Start loading
+    await i18n.changeLanguage(lng)
+    setCurrentLanguage && setCurrentLanguage(lng) // Update the local state
+
+    // Send request to the server to update user language
+    await axios.post('/api/user/language', { language: lng })
+
+    setLoading && setLoading(false) // End loading
+  } catch (error) {
+    console.error('Error changing language:', error)
+  }
 }

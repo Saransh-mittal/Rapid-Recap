@@ -1,0 +1,7 @@
+{
+  "SecureYourProgress": {
+    "heading": "Secure Your Progress",
+    "expiryMessage": "Your account expires in {{days}} days and {{hours}} hours",
+    "buttonText": "Secure your progress"
+  }
+}

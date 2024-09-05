@@ -3,12 +3,15 @@ import { Box, Flex, Text, Tooltip, VStack } from '@chakra-ui/react'
 import LightbulbIcon from '../../assets/svg/LightbulbIcon'
 import StarIcon from '../../assets/svg/StarIcon'
 import SkullIcon from '../../assets/svg/SkullIcon'
+import { useTranslation } from 'react-i18next'
 
 const DifficultyLegend = () => {
+  const { t } = useTranslation('DifficultyLegend')
+
   const difficulties = [
-    { icon: LightbulbIcon, color: 'green', label: 'Easy' },
-    { icon: StarIcon, color: 'yellow', label: 'Medium' },
-    { icon: SkullIcon, color: 'red', label: 'Hard' },
+    { icon: LightbulbIcon, color: 'green', label: t('easy') },
+    { icon: StarIcon, color: 'yellow', label: t('medium') },
+    { icon: SkullIcon, color: 'red', label: t('hard') },
   ]
 
   return (
@@ -21,7 +24,7 @@ const DifficultyLegend = () => {
     >
       <VStack spacing={2}>
         <Text fontSize="sm" fontWeight="bold" color="white">
-          Difficulty Levels:
+          {t('difficultyLevels')}
         </Text>
         <Flex justifyContent="center" gap={4}>
           {difficulties.map(({ icon: Icon, color, label }) => (

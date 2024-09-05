@@ -4,11 +4,13 @@ import { NavLink } from 'react-router-dom'
 import RR from '/images/rrlogo.webp'
 import { useSelector } from 'react-redux'
 import useSound from '../../../customHooks/useSound'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load Heading component
 const Heading = React.lazy(() => import('../../miscellaneous/HeadingComponent'))
 
 const NavBrand = ({ isHamburgerOpen }) => {
+  const { t } = useTranslation('NavBrand')
   const { playClick } = useSound()
   const { isAuthenticated } = useSelector(state => state.auth)
 
@@ -36,7 +38,7 @@ const NavBrand = ({ isHamburgerOpen }) => {
           color="white"
         >
           <Suspense fallback={<div>Loading...</div>}>
-            <Heading title="Rapid Recap" marginBottom="0" />
+            <Heading title={t('rr')} marginBottom="0" />
           </Suspense>
         </Flex>
       </Flex>

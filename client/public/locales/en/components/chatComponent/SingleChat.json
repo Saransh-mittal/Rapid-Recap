@@ -1,0 +1,11 @@
+{
+  "chatRequestAccepted": "Chat request accepted.",
+  "errorOccurred": "An error occurred!",
+  "failedToAcceptChatRequest": "Failed to accept the chat request.",
+  "chatRequestRejected": "Chat request rejected.",
+  "failedToRejectChatRequest": "Failed to reject the chat request.",
+  "rrlogoAlt": "RR Logo",
+  "clickToStartChat": "Click to start chatting.",
+  "giveFeedback": "Give Feedback About the Application and Chatting Experience through contact us.",
+  "selectChatToStart": " Get Started by Selecting a Chat or searching user...."
+}

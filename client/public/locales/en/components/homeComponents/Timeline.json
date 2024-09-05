@@ -1,0 +1,30 @@
+{
+  "categories": {
+    "all": "All",
+    "top": "Top",
+    "general": "General",
+    "world": "World",
+    "politics": "Politics",
+    "business": "Business",
+    "technology": "Technology",
+    "sports": "Sports",
+    "health": "Health",
+    "science": "Science",
+    "environment": "Environment",
+    "crime": "Crime",
+    "education": "Education",
+    "entertainment": "Entertainment",
+    "food": "Food",
+    "lifestyle": "LifeStyle",
+    "tourism": "Tourism"
+  },
+  "buttons": {
+    "clearSearch": "Clear Search Results",
+    "loadMore": "Load More"
+  },
+  "messages": {
+    "loginToContinue": "Login To Continue further",
+    "revisitLater": "Please Revisit this page after some time to view recommended news",
+    "noMoreNews": "No more news to show"
+  }
+}

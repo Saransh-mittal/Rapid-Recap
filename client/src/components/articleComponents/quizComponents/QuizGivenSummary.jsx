@@ -23,6 +23,7 @@ import axios from 'axios'
 import Loading from '../../miscellaneous/Loading'
 import { motion } from 'framer-motion'
 import useSound from '../../../customHooks/useSound'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components and assets
 const GivenQuizInterface = lazy(() => import('./GivenQuizInterface'))
@@ -38,6 +39,7 @@ const QuizGivenSummary = ({
   timeTakenInitial = 0,
   quizGivenSummaryInitial = [],
 }) => {
+  const { t } = useTranslation('QuizGivenSummary')
   const toast = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false)
@@ -56,7 +58,7 @@ const QuizGivenSummary = ({
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Error fetching quiz summary',
+        description: t('errorFetchingQuiz'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -117,7 +119,7 @@ const QuizGivenSummary = ({
               <Flex flexDirection={'column'}>
                 <Suspense fallback={null}>
                   <Heading
-                    title={`Time Taken: ${timeTaken} sec`}
+                    title={t('totalTimeTaken', { timeTaken })}
                     tagMarginBottom={0}
                     marginBottom="1rem"
                     tagColor={
@@ -168,7 +170,7 @@ const QuizGivenSummary = ({
               flexDirection={'column'}
             >
               <Text textColor={'white'} marginBottom={4} marginTop={2}>
-                Explanation: {currentQuestion.explanation}
+                {t('explanation')} {currentQuestion.explanation}
               </Text>
               <Flex
                 justifyContent={'center'}
@@ -207,7 +209,7 @@ const QuizGivenSummary = ({
                           bg: 'purple.600',
                         }}
                       >
-                        Next
+                        {t('next')}
                       </Button>
                     </Suspense>
                   </motion.div>
@@ -244,7 +246,7 @@ const QuizGivenSummary = ({
                           bg: 'purple.600',
                         }}
                       >
-                        Previous
+                        {t('previous')}
                       </Button>
                     </Suspense>
                   </motion.div>

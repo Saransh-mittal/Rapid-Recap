@@ -1,0 +1,21 @@
+{
+  "toast": {
+    "successTitle": "सफलता",
+    "successDescription": "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई",
+    "errorTitle": "त्रुटि",
+    "errorDescription": "प्रोफ़ाइल अपडेट करने में त्रुटि, कृपया फिर से प्रयास करें!",
+    "requestErrorTitle": "त्रुटि",
+    "requestErrorDescription": "मित्र अनुरोध स्थिति जांचने में त्रुटि",
+    "requestSuccessTitle": "सफलता",
+    "requestSuccessDescription": "मित्र अनुरोध सफलतापूर्वक भेजा गया",
+    "requestSendErrorTitle": "त्रुटि",
+    "requestSendErrorDescription": "मित्र अनुरोध भेजने में त्रुटि"
+  },
+  "alt": {
+    "profileImage": "प्रोफ़ाइल चित्र"
+  },
+  "rank": "रैंक",
+  "na": "एन/ए",
+  "friend": "मित्र",
+  "editProfile": "प्रोफ़ाइल संपादित करें"
+}

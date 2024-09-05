@@ -1,5 +1,6 @@
 import React, { useCallback, lazy, Suspense } from 'react'
 import { Flex, FormControl, IconButton, Input, Box } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 import FilledBookmarkSVG from '../../../../assets/svg/FilledBookmarkSVG'
 import EmojiSmileSVG from '../../../../assets/svg/EmojiSmileSVG'
 
@@ -19,6 +20,8 @@ const MessageInput = ({
   setShowBookmarksModal,
   fetchBookmarks,
 }) => {
+  const { t } = useTranslation('MessageInput') // Adjust the namespace as needed
+
   // Memoized event handlers
   const toggleEmojiPicker = useCallback(() => {
     setShowEmojiPicker(prev => !prev)
@@ -72,7 +75,7 @@ const MessageInput = ({
           </Suspense>
         )}
         <Input
-          placeholder="Enter a message.."
+          placeholder={t('EnterMessage')}
           value={newMessage}
           onChange={typingHandler}
           ml={2}

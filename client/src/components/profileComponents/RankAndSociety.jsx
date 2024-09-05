@@ -7,6 +7,7 @@ import React, {
   Suspense,
 } from 'react'
 import { Flex, Image, Tooltip, Text, Spinner, Badge } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next' // Import i18next hook
 
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
 import { useDispatch, useSelector } from 'react-redux'
@@ -29,6 +30,7 @@ const RankAndSociety = ({
   isDisabled = false,
   isGuest,
 }) => {
+  const { t } = useTranslation('RankAndSociety') // Initialize translation hook
   const { user } = useSelector(state => state.auth)
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -98,7 +100,7 @@ const RankAndSociety = ({
           onClick={() => {
             dispatch(
               addNoteMessage({
-                title: 'Register to view your society and circle',
+                title: t('guestMessage.title'), // Translation key
                 duration: 10000,
                 width: '250px',
                 actions: [
@@ -111,7 +113,7 @@ const RankAndSociety = ({
           }}
           _hover={{ cursor: 'pointer' }}
         />
-        <Text>No data for guest user</Text>
+        <Text>{t('guestMessage.text')}</Text> {/* Translation key */}
       </Flex>
     )
   }
@@ -146,7 +148,7 @@ const RankAndSociety = ({
             w={'60px'}
             height={'30px'}
           >
-            Hidden
+            {t('privateSociety.hidden')}
           </Text>
         </Flex>
       ) : isLoading ? (
@@ -161,9 +163,11 @@ const RankAndSociety = ({
             mb={3}
           >
             {loginedUserProfile && (
-              <Tooltip label="Visibility to others">
+              <Tooltip label={t('tooltip.visibility')}>
                 <Badge colorScheme="green" m={0}>
-                  {user.profilePrivacy.society ? 'HIDDEN' : 'VISIBLE'}
+                  {user.profilePrivacy.society
+                    ? t('tooltip.hidden')
+                    : t('tooltip.visible')}
                 </Badge>
               </Tooltip>
             )}

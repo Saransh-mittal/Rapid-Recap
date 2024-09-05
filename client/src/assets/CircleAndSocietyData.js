@@ -5,7 +5,7 @@ import Elites_Brain from '/images/Elites_Brain.webp'
 import Titans_Brain from '/images/Titans_Brain.webp'
 const CircleAndSocietyData = [
   {
-    society: 'Titans Society',
+    society: 'Titans',
     circle: null,
     image: Titans_Brain,
     IQ_Lower: 150,
@@ -16,8 +16,8 @@ const CircleAndSocietyData = [
       'Congratulations! You have reached the pinnacle of intellectual achievement. Welcome to the Titans Society, where brilliance knows no bounds. You are a Titan!',
   },
   {
-    society: 'Mavericks Society',
-    circle: 'Visionaries Circle',
+    society: 'Mavericks',
+    circle: 'Visionaries',
     image: Mavericks_Brain,
     IQ_Lower: 140,
     IQ_Upper: 150,
@@ -27,8 +27,8 @@ const CircleAndSocietyData = [
       "Congratulations! You've surpassed all boundaries of conventional thought and soared into the realm of true visionaries. Welcome to the Visionaries Circle, where Mavericks shape the future!",
   },
   {
-    society: 'Mavericks Society',
-    circle: 'Pioneers Circle',
+    society: 'Mavericks',
+    circle: 'Pioneers',
     image: Mavericks_Brain,
     IQ_Lower: 130,
     IQ_Upper: 140,
@@ -38,8 +38,8 @@ const CircleAndSocietyData = [
       "Congratulations! You've now ascended to the second highest echelon of society, joining the esteemed Pioneer Circle. Embrace your Maverick status with pride!",
   },
   {
-    society: 'Elites Society',
-    circle: 'Scholars Circle',
+    society: 'Elites',
+    circle: 'Scholars',
     image: Elites_Brain,
     IQ_Lower: 120,
     IQ_Upper: 130,
@@ -49,8 +49,8 @@ const CircleAndSocietyData = [
       "Congratulations! You've demonstrated exceptional intellect and earned your place among the scholarly elite. Welcome to the Scholars Circle!",
   },
   {
-    society: 'Elites Society',
-    circle: 'Masters Circle',
+    society: 'Elites',
+    circle: 'Masters',
     image: Elites_Brain,
     IQ_Lower: 110,
     IQ_Upper: 120,
@@ -60,8 +60,8 @@ const CircleAndSocietyData = [
       "Congratulations! You've achieved mastery in your intellectual pursuits, earning your rightful place among the esteemed Masters Circle.",
   },
   {
-    society: 'Strivers Society',
-    circle: 'Enthusiasts Circle',
+    society: 'Strivers',
+    circle: 'Enthusiasts',
     image: Strivers_Brain,
     IQ_Lower: 104,
     IQ_Upper: 110,
@@ -71,8 +71,8 @@ const CircleAndSocietyData = [
       'Congratulations! Your enthusiasm and dedication have propelled you to the Enthusiasts Circle. Keep striving for greatness!',
   },
   {
-    society: 'Strivers Society',
-    circle: 'Achievers Circle',
+    society: 'Strivers',
+    circle: 'Achievers',
     image: Strivers_Brain,
     IQ_Lower: 97,
     IQ_Upper: 104,
@@ -82,8 +82,8 @@ const CircleAndSocietyData = [
       'Congratulations! Your hard work and determination have paid off. Welcome to the Achievers Circle!',
   },
   {
-    society: 'Strivers Society',
-    circle: 'Progressors Circle',
+    society: 'Strivers',
+    circle: 'Progressors',
     image: Strivers_Brain,
     IQ_Lower: 90,
     IQ_Upper: 97,
@@ -93,7 +93,7 @@ const CircleAndSocietyData = [
       'Congratulations! Your commitment to progress has led you to the Progressors Circle. Keep pushing boundaries!',
   },
   {
-    society: 'Explorers Society',
+    society: 'Explorers',
     circle: null,
     image: Explorers_Brain,
     IQ_Lower: 0,

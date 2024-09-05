@@ -1,0 +1,9 @@
+{
+  "yourBookmarks": "Your Bookmarks",
+  "switchToListView": "Switch to List View",
+  "switchToGridView": "Switch to Grid View",
+  "loading": "Loading...",
+  "bookmarkRemoved": "Bookmark removed",
+  "errorRemovingBookmark": "Error removing bookmark",
+  "close": "Close"
+}

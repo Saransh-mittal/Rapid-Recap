@@ -60,39 +60,39 @@ const HiddenGraphMessage = React.memo(() => (
 
 // NoDataMessage Component
 const NoDataMessage = React.memo(
-  ({ getExpectedIQ, expectedIQ, setShowExpectedIQ, showExpectedIQ }) => (
-    <Flex
-      w="100%"
-      justifyContent="center"
-      alignItems="center"
-      flexDirection="column"
-      position="relative"
-      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-      boxShadow={{
-        xl: 'none',
-        base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-      }}
-    >
-      <Text m={0}>
-        Give 10 Quizzes to get the IQ score and Unlock the bar graph
-      </Text>
-      <Image
-        h="200px"
-        w="200px"
-        src={Lock}
-        onClick={getExpectedIQ}
-        cursor="pointer"
-      />
-      {showExpectedIQ && (
-        <Suspense fallback={<Spinner />}>
-          <ExpectedIQModal
-            expectedIQ={expectedIQ}
-            setShowExpectedIQ={setShowExpectedIQ}
-          />
-        </Suspense>
-      )}
-    </Flex>
-  ),
+  ({ getExpectedIQ, expectedIQ, setShowExpectedIQ, showExpectedIQ }) => {
+    return (
+      <Flex
+        w="100%"
+        justifyContent="center"
+        alignItems="center"
+        flexDirection="column"
+        position="relative"
+        backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
+        boxShadow={{
+          xl: 'none',
+          base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+        }}
+      >
+        <Text m={0}>{t('giveQuizzesToUnlock')}</Text>
+        <Image
+          h="200px"
+          w="200px"
+          src={Lock}
+          onClick={getExpectedIQ}
+          cursor="pointer"
+        />
+        {showExpectedIQ && (
+          <Suspense fallback={<Spinner />}>
+            <ExpectedIQModal
+              expectedIQ={expectedIQ}
+              setShowExpectedIQ={setShowExpectedIQ}
+            />
+          </Suspense>
+        )}
+      </Flex>
+    )
+  },
 )
 
 const IQBarGraph = ({
@@ -101,6 +101,7 @@ const IQBarGraph = ({
   loginedUserProfile,
   viewingHistory = false,
   isGuest,
+  t,
 }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
@@ -177,8 +178,8 @@ const IQBarGraph = ({
       }
     } catch (error) {
       toast({
-        title: 'An error occurred.',
-        description: 'Unable to fetch expected IQ. Please try again later.',
+        title: t('errorOccurred'),
+        description: t('unableToFetchExpectedIQ'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -188,7 +189,7 @@ const IQBarGraph = ({
     } finally {
       setIsLoading(false)
     }
-  }, [playClick, toast])
+  }, [playClick, toast, t])
 
   if (isGuest) {
     return (
@@ -212,7 +213,7 @@ const IQBarGraph = ({
           onClick={() =>
             dispatch(
               addNoteMessage({
-                title: 'Register to view your standings',
+                title: t('registerToViewStandings'),
                 duration: 10000,
                 width: '250px',
                 actions: [
@@ -225,7 +226,7 @@ const IQBarGraph = ({
           }
           _hover={{ cursor: 'pointer' }}
         />
-        <Text>No data for guest user</Text>
+        <Text>{t('noDataForGuest')}</Text>
       </Flex>
     )
   }
@@ -245,6 +246,7 @@ const IQBarGraph = ({
         expectedIQ={expectedIQ}
         setShowExpectedIQ={setShowExpectedIQ}
         showExpectedIQ={showExpectedIQ}
+        t={t}
       />
     )
   }
@@ -268,7 +270,7 @@ const IQBarGraph = ({
       <Flex width="100%" position="relative">
         <Flex marginStart="15px" flexDirection="column">
           <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
-            Top
+            {t('top')}
           </Text>
           <Text textAlign="left" fontSize="1.5rem">
             {hoveredData.percentile}%
@@ -279,11 +281,13 @@ const IQBarGraph = ({
             <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
               {hoveredData.range}
             </Text>
-            <Text textAlign="left">{hoveredData.count} users</Text>
+            <Text textAlign="left">
+              {hoveredData.count} {t('users')}
+            </Text>
           </Flex>
         )}
         {loginedUserProfile && (
-          <Tooltip label="Visibility to others">
+          <Tooltip label={t('visibilityToOthers')}>
             <Badge
               m={0}
               top={0}
@@ -292,7 +296,7 @@ const IQBarGraph = ({
               height={'fit-content'}
               ml={'auto'}
             >
-              {user.profilePrivacy.barGraph ? 'HIDDEN' : 'VISIBLE'}
+              {user.profilePrivacy.barGraph ? t('hidden') : t('visible')}
             </Badge>
           </Tooltip>
         )}

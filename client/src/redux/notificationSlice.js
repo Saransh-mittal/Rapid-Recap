@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 
 import {
+  isSupported as notifSupported,
   sendSubscriptionToBackend,
   urlBase64ToUint8Array,
 } from '../utils/notif.utils'
@@ -11,7 +12,7 @@ export const checkNotificationStatus = createAsyncThunk(
   'notifications/checkStatus',
   async (_, { rejectWithValue }) => {
     try {
-      const isSupported = 'Notification' in window
+      const isSupported = notifSupported
       if (!isSupported) return { supported: false, isSubscribed: false }
 
       const permission = Notification.permission

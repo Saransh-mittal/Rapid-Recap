@@ -3,6 +3,7 @@ import { Flex, Image, ListItem, Text, UnorderedList } from '@chakra-ui/react'
 import { NavLink } from 'react-router-dom'
 import useSound from '../../../customHooks/useSound'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 const newBadge = lazy(() => import('/images/newBadge.webp'))
 
@@ -15,16 +16,18 @@ const NavbarContent = ({
 }) => {
   const { playClick } = useSound()
   const { isAdmin, isAuthenticated, user } = useSelector(state => state.auth)
-
-  // console.log('isAdmin:', isAdmin)
+  const { t } = useTranslation('NavbarContent')
 
   const handleClick = useCallback(() => {
     playClick()
     if (setIsHamburgerOpen) setIsHamburgerOpen(false)
   }, [playClick, setIsHamburgerOpen])
+
   const showDashboard = isAdmin && isAuthenticated && user
+
   const memoizedNavItems = useMemo(() => {
     return navItems.map((item, index) => {
+      const translatedLabel = t(item.label)
       if (item.label === 'Dashboard' && !showDashboard) return null
       return (
         <ListItem
@@ -43,7 +46,7 @@ const NavbarContent = ({
             onClick={playClick}
             ref={ref => (navLinkRefs.current[index] = ref)}
           >
-            {item.label}
+            {translatedLabel}
             {item.label === 'Season' && (
               <Suspense fallback={<div>Loading...</div>}>
                 <>
@@ -66,7 +69,7 @@ const NavbarContent = ({
                     bg="transparent"
                     padding="0.1rem 0.3rem"
                   >
-                    New
+                    {t('New')}
                   </Text>
                 </>
               </Suspense>
@@ -83,6 +86,7 @@ const NavbarContent = ({
     isAdmin,
     isAuthenticated,
     user,
+    t,
   ])
 
   return (

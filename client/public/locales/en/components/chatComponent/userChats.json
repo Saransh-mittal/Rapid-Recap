@@ -1,0 +1,15 @@
+{
+  "Chats": "Chats",
+  "requests": "Requests",
+  "searchUsersToChat": "Search Users to chat",
+  "searchUser": "Search User",
+  "new": "New",
+  "noMessages": "No messages yet",
+  "messageDeleted": "This message was deleted",
+  "messageDeletedForYou": "This message was deleted for you",
+  "sharedArticle": "Shared an article",
+  "scoreCard": "Score Card",
+  "you": "You",
+  "errorTitle": "Error Occurred",
+  "errorDescription": "Failed to load the chats"
+}

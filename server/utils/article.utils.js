@@ -31,8 +31,10 @@ const breakArticleIntoParagraphs = async mainText => {
   return paragraphs
 }
 
-const hindiConverter = async article => {
+const hindiConverter = async articleId => {
+  const article = await Article.findById(articleId)
   const { title, author, mainText } = article
+
   try {
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -119,7 +121,19 @@ const hindiConverter = async article => {
     ) {
       throw new Error('Failed to translate article')
     }
-    return response
+    if (!article.hindiMainText) {
+      article.hindiMainText = []
+      await article.save()
+    }
+    article.hindiTitle = response.hindiTitle
+
+    for (let key in response.hindiMainText) {
+      if (!response.hindiMainText[key]) continue
+      article.hindiMainText.push(response.hindiMainText[key])
+    }
+    article.hindiAuthor = response.hindiAuthor
+    await article.save()
+    return article
   } catch (error) {
     console.log(error)
   }
@@ -408,6 +422,7 @@ const processExtractedNews = async (news, category) => {
 
       const newArticle = new Article(res)
       await newArticle.save()
+      hindiConverter(newArticle._id.toString())
       processedOutput.push(newArticle)
     } catch (error) {
       console.error(

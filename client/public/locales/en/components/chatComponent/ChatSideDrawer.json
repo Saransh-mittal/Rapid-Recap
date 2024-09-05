@@ -1,0 +1,6 @@
+{
+  "searchUsers": "Search Users",
+  "searchPlaceholder": "Search by name or email...",
+  "noUserFound": "No user found",
+  "errorFetchingChat": "Error fetching the chat"
+}

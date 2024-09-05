@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { Text, VStack, Box, Flex, Progress } from '@chakra-ui/react'
 import NoteMessage from '../NoteMessage'
 import { formatRemainingTime } from '../../../utils/helper.utils'
+import { useTranslation } from 'react-i18next'
 
 const FireSVG = lazy(() => import('../../../assets/svg/FireSVG'))
 const UnlinkSVG = lazy(() => import('../../../assets/svg/UnlinkSVG'))
@@ -19,6 +20,7 @@ const StreakNoteMessage = ({
   duration,
   width = '320px',
 }) => {
+  const { t } = useTranslation('StreakNoteMessage')
   const [progress, setProgress] = useState(100)
 
   useEffect(() => {
@@ -85,13 +87,13 @@ const StreakNoteMessage = ({
           </Text>
           <Text fontSize="md" fontWeight="medium" color="gray.300">
             {streakStatus === 'broken'
-              ? `Your ${streakCount}-day streak has ended`
-              : `Current streak: ${streakCount} days`}
+              ? t('StreakNoteMessage.broken', { streakCount })
+              : t('StreakNoteMessage.current', { streakCount })}
           </Text>
           {streakStatus === 'revival' && (
             <>
               <Text fontSize="sm" color="gray.400">
-                Time remaining to revive your streak:
+                {t('StreakNoteMessage.timeRemaining')}
               </Text>
               <Box w="100%" mt={2}>
                 <Progress
@@ -105,13 +107,15 @@ const StreakNoteMessage = ({
                 fontWeight="bold"
                 color={`${getColorScheme()}.300`}
               >
-                {formatRemainingTime(remainingTime)} to revive
+                {formatRemainingTime(remainingTime)}{' '}
+                {t('StreakNoteMessage.toRevive')}
               </Text>
               {remainingQuizzes > 0 && (
                 <Text fontSize="sm" color="gray.400">
-                  Complete {remainingQuizzes} more{' '}
-                  {remainingQuizzes === 1 ? 'quiz' : 'quizzes'} to revive your
-                  streak!
+                  {t('StreakNoteMessage.completeQuizzes', {
+                    remainingQuizzes,
+                    quizText: remainingQuizzes === 1 ? t('quiz') : t('quizzes'),
+                  })}
                 </Text>
               )}
             </>
@@ -126,17 +130,33 @@ const StreakNoteMessage = ({
       remainingQuizzes,
       progress,
       title,
+      t,
     ],
   )
 
   const getActions = () => {
     switch (streakStatus) {
       case 'broken':
-        return [{ text: 'Start New Streak', actionType: 'START_NEW_STREAK' }]
+        return [
+          {
+            text: t('StreakNoteMessage.actions.startNew'),
+            actionType: 'START_NEW_STREAK',
+          },
+        ]
       case 'revival':
-        return [{ text: 'Take a Quiz', actionType: 'TAKE_QUIZ' }]
+        return [
+          {
+            text: t('StreakNoteMessage.actions.takeQuiz'),
+            actionType: 'TAKE_QUIZ',
+          },
+        ]
       case 'revived':
-        return [{ text: 'View Streak', actionType: 'VIEW_STREAK' }]
+        return [
+          {
+            text: t('StreakNoteMessage.actions.viewStreak'),
+            actionType: 'VIEW_STREAK',
+          },
+        ]
       default:
         return []
     }
@@ -145,9 +165,9 @@ const StreakNoteMessage = ({
   return (
     <NoteMessage
       messageId={messageId}
-      title={`Streak ${
-        streakStatus.charAt(0).toUpperCase() + streakStatus.slice(1)
-      }`}
+      title={t('StreakNoteMessage.title', {
+        status: t(`StreakNoteMessage.status.${streakStatus}`),
+      })}
       customContent={customContent}
       onClose={onClose}
       duration={duration}

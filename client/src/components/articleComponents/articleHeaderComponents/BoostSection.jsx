@@ -3,6 +3,7 @@ import { Flex, Text, Image, Badge, Box } from '@chakra-ui/react'
 import QuinBoost from '../quizComponents/QuinBoost'
 import Button from '../../miscellaneous/ButtonComponent'
 import starBoost from '/GIFs/starBoost.gif'
+import { useTranslation } from 'react-i18next'
 
 const BoostSection = React.memo(
   ({
@@ -14,12 +15,13 @@ const BoostSection = React.memo(
     toast,
     isBoosted,
   }) => {
+    const { t } = useTranslation('BoostSection')
     const handleBoostClick = () => {
       playClick()
       if (notLoggedIn) {
         toast({
-          title: 'Login Required',
-          description: 'Please log in to share this article.',
+          title: t('loginRequiredTitle'),
+          description: t('loginRequiredDescription'),
           status: 'warning',
           duration: 3000,
           isClosable: true,
@@ -44,7 +46,7 @@ const BoostSection = React.memo(
                 fontSize={'0.8rem'}
                 fontWeight={'bold'}
               >
-                Quin Boost
+                {t('quinBoostLabel')}
               </Text>
               <Flex position="relative">
                 <Button
@@ -52,7 +54,7 @@ const BoostSection = React.memo(
                   textColor={'white'}
                   onClick={handleBoostClick}
                 >
-                  {quizLeftToGetQuizBoost} Quiz Left
+                  {quizLeftToGetQuizBoost} {t('quizLeftMessage')}
                 </Button>
               </Flex>
             </Flex>
@@ -80,12 +82,12 @@ const BoostSection = React.memo(
                 bg="none"
                 wordBreak={'break-word'}
               >
-                Enjoy!! 1.5x multiplier
+                {t('enjoyMultiplier')}
               </Badge>
             </Flex>
 
             <Box
-              mt={-5}
+              mt={-4}
               px={2}
               py={1}
               borderRadius="full"
@@ -95,7 +97,7 @@ const BoostSection = React.memo(
               fontWeight="bold"
               boxShadow="0 2px 4px rgba(0,0,0,0.1)"
             >
-              {quizLeftToGetQuizBoost} Quiz Left For Quin Boost
+              {quizLeftToGetQuizBoost} {t('quizLeftText')}
             </Box>
           </Flex>
         )}

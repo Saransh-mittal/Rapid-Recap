@@ -1,0 +1,21 @@
+{
+  "categories": {
+    "all": "all",
+    "top": "top",
+    "general": "general",
+    "world": "world",
+    "politics": "politics",
+    "business": "business",
+    "technology": "technology",
+    "sports": "sports",
+    "health": "health",
+    "science": "science",
+    "environment": "environment",
+    "crime": "crime",
+    "education": "education",
+    "entertainment": "entertainment",
+    "food": "food",
+    "lifestyle": "lifestyle",
+    "tourism": "tourism"
+  }
+}

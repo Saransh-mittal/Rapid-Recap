@@ -38,6 +38,7 @@ const { logActivity } = require('../utils/activity.utils.js')
 const { activityTypes } = require('../data/activityTypes.js')
 const Activity = require('../model/activitySchema.js')
 const cache = require('memory-cache')
+const { hindiConverter } = require('../utils/article.utils.js')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -831,7 +832,7 @@ const expectedIQScore = async (req, res) => {
 }
 
 const solvedQuizHistory = async (req, res) => {
-  const { inGameName } = req.query
+  const { inGameName, lang } = req.query
   const page = parseInt(req.query.page) || 1
   const pageSize = 14
 
@@ -851,6 +852,27 @@ const solvedQuizHistory = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize)
+    if (lang === 'hi')
+      for (let attempt of quizAttempts) {
+        const article = attempt.article
+        if (
+          !article.hindiTitle ||
+          !article.hindiMainText ||
+          !article.hindiAuthor
+        ) {
+          const response = await hindiConverter(article._id)
+          if (!article.hindiMainText) {
+            article.hindiMainText = []
+          }
+          article.hindiTitle = response.hindiTitle
+
+          for (let key in response.hindiMainText) {
+            if (!response.hindiMainText[key]) continue
+            article.hindiMainText.push(response.hindiMainText[key])
+          }
+          article.hindiAuthor = response.hindiAuthor
+        }
+      }
 
     const history = quizAttempts
       .map(attempt => {
@@ -877,6 +899,7 @@ const solvedQuizHistory = async (req, res) => {
           _id: attempt._id,
           article: article._id,
           title,
+          hindiTitle: article.hindiTitle,
           RQM_score,
           userPercentile,
           articleDifficulty: diff,
@@ -1425,15 +1448,38 @@ const bookmark = async (req, res) => {
 
 const getBookmarks = async (req, res) => {
   const userId = req.user._id
+  const { lang } = req.query
   try {
     const user = await User.findById(userId).select('bookmarks').populate({
       path: 'bookmarks',
-      select: '_id title category dateTime imgURL',
+      select:
+        '_id title category dateTime imgURL hindiTitle hindiMainText hindiAuthor',
     })
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }
+    const Bookmarks = user.bookmarks
+    if (lang === 'hi')
+      for (let bookmark of Bookmarks) {
+        if (
+          !bookmark.hindiTitle ||
+          !bookmark.hindiMainText ||
+          !bookmark.hindiAuthor
+        ) {
+          const response = await hindiConverter(bookmark._id)
+          if (!bookmark.hindiMainText) {
+            bookmark.hindiMainText = []
+          }
+          bookmark.hindiTitle = response.hindiTitle
+
+          for (let key in response.hindiMainText) {
+            if (!response.hindiMainText[key]) continue
+            bookmark.hindiMainText.push(response.hindiMainText[key])
+          }
+          bookmark.hindiAuthor = response.hindiAuthor
+        }
+      }
 
     const bookmarks = user.bookmarks.map(bookmark => {
       return {
@@ -1442,6 +1488,8 @@ const getBookmarks = async (req, res) => {
         category: bookmark.category,
         date: formatDate(bookmark.dateTime),
         image: bookmark.imgURL[0],
+        hindiTitle: bookmark.hindiTitle,
+        dateTime: bookmark.dateTime,
         dateTimestamp: new Date(bookmark.dateTime).getTime(),
       }
     })
@@ -1506,6 +1554,23 @@ const soundController = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Sound settings updated successfully' })
 })
 
+// @desc  Update user language
+// @route PUT /api/user/language
+// @access Private
+const updateUserLanguage = async (req, res) => {
+  try {
+    const userId = req.user._id // Assuming you have middleware to extract user ID from the token
+    const { language } = req.body
+
+    // Update the user's language in the database
+    await User.findByIdAndUpdate(userId, { userLanguage: language })
+
+    res.status(200).json({ message: 'Language updated successfully' })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update language', error })
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1541,4 +1606,5 @@ module.exports = {
   NavLineGraph,
   getUserIds,
   soundController,
+  updateUserLanguage,
 }

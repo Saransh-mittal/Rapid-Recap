@@ -1,0 +1,8 @@
+{
+  "guestCannotChat": "Guest users cannot chat",
+  "fillAllFields": "Please fill all the fields",
+  "minTwoUsers": "More than 2 users are required to form a group chat",
+  "chatNotFound": "Chat not found",
+  "invalidAction": "Invalid action",
+  "requestHandled": "Chat request handled"
+}

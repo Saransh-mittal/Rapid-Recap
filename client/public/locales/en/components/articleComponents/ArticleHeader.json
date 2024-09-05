@@ -1,0 +1,8 @@
+{
+  "fetchErrorTitle": "Error fetching article details",
+  "updateSuccessTitle": "Article updated successfully",
+  "updateErrorTitle": "Error updating article",
+  "loginRequiredTitle": "Login Required",
+  "loginRequiredDescription": "Please log in to share this article.",
+  "timeToRead": "min read"
+}

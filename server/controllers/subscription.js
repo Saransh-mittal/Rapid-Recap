@@ -15,7 +15,6 @@ const subscribe = async (req, res) => {
       subscription.endpoint = endpoint
       subscription.keys = keys
     } else {
-      // Create new subscription
       subscription = new Subscription({
         userId,
         endpoint,
@@ -54,7 +53,6 @@ const checkSubscription = async (req, res) => {
     }
 
     const subscription = await Subscription.findOne({ userId, endpoint })
-
     if (subscription) {
       res.json({ isSubscribed: true })
     } else {
@@ -82,7 +80,6 @@ const deleteSubscription = async (req, res) => {
       return res.status(400).json({ error: 'Endpoint is required' })
     }
 
-    // Assuming you have a Subscription model
     const deletedSubscription = await Subscription.findOneAndDelete({
       endpoint,
     })

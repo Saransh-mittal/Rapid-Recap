@@ -1,0 +1,10 @@
+{
+  "next": "Next",
+  "previous": "Previous",
+  "totalTimeTaken": "Total Time Taken: {{timeTaken}} seconds",
+  "explanation": "Explanation:",
+  "correct": "Correct",
+  "wrong": "Wrong",
+  "notAnswered": "Not Answered",
+  "errorFetchingQuiz": "Error fetching quiz summary"
+}

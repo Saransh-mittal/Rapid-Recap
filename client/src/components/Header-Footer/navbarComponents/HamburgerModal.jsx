@@ -19,6 +19,7 @@ import {
 import { LockIcon, SearchIcon } from '@chakra-ui/icons'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import heroBG from '../../../assets/hero/hero-bg.webp'
 import FixedBackground from '../../miscellaneous/FixedBackground'
@@ -55,6 +56,7 @@ const HamburgerModal = ({
   setIsDrawerOpen,
   onOpenWiseWeb,
 }) => {
+  const { t } = useTranslation('HamburgerModal')
   const { user, isAdmin, isAuthenticated } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
 
@@ -85,13 +87,14 @@ const HamburgerModal = ({
   const handleUserSearchClick = useCallback(() => {
     onOpenUserSearch()
   }, [onOpenUserSearch])
+
   const showDashboard = isAdmin && isAuthenticated && user
   const memoizedNavItems = useMemo(() => {
     return navItems.map((item, index) => {
       if (item.label === 'Dashboard' && !showDashboard) return null
       return (
         <ListItem
-          className={`nav-item `}
+          className="nav-item"
           key={index}
           onClick={onClose}
           display={'flex'}
@@ -100,7 +103,7 @@ const HamburgerModal = ({
           gap={'0.25rem'}
         >
           <Tooltip
-            label="You need to sign in to access this page"
+            label={t('leaderboardLocked')}
             isDisabled={!(notLogined && item.label === 'Leaderboard')}
             placement="bottom"
             hasArrow
@@ -117,7 +120,7 @@ const HamburgerModal = ({
               }
               ref={ref => (navLinkRefs.current[index] = ref)}
             >
-              {item.label}
+              {t(item.label.toLowerCase())}
             </NavLink>
           </Tooltip>
           {notLogined && item.label === 'Leaderboard' && <LockIcon />}
@@ -132,6 +135,7 @@ const HamburgerModal = ({
     isAdmin,
     isAuthenticated,
     user,
+    t,
   ])
 
   return (
@@ -214,7 +218,7 @@ const HamburgerModal = ({
             >
               <Flex gap={4}>
                 <ListItem
-                  className={`nav-item `}
+                  className="nav-item"
                   display={'flex'}
                   justifyContent={'center'}
                   alignItems={'center'}
@@ -252,7 +256,7 @@ const HamburgerModal = ({
                   </Box>
                 </ListItem>
                 <ListItem
-                  className={`nav-item `}
+                  className="nav-item"
                   display={'flex'}
                   justifyContent={'center'}
                   alignItems={'center'}
@@ -270,7 +274,7 @@ const HamburgerModal = ({
                   </Suspense>
                 </ListItem>
                 <ListItem
-                  className={`nav-item `}
+                  className="nav-item"
                   display={'flex'}
                   justifyContent={'center'}
                   alignItems={'center'}
@@ -336,7 +340,7 @@ const HamburgerModal = ({
               {notLogined ? (
                 <Suspense fallback={<div>Loading...</div>}>
                   <GetStarted
-                    innerText={'Get Started'}
+                    innerText={t('getStarted')}
                     hamburgerOnClose={onClose}
                   />
                 </Suspense>

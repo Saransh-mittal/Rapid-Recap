@@ -1,0 +1,10 @@
+{
+  "streak_broken_notification_title": "Let's Get Back on Track! 🔄",
+  "streak_broken_notification_body": "Hey {{name}} 👋, your streak was broken, but you can still revive it! Your streak revival period has started — give 6 quizzes on any day during this period to activate and utilize QuinBoost and get your streak back on track. You have {{remainingTime}} left to revive your streak. Don’t miss out! 🚀📈",
+  "streak_seven_periodic_notification_title": "Restart Your Rapid Recap Quiz Streak Today!",
+  "streak_seven_periodic_notification_body": "Hey {{name}}! You've missed your quiz streak for {{streak_days}} days. Life gets busy, but we're here to help you get back on track. Tap to resume your learning journey with Rapid Recap! 🚀",
+  "no_login_two_days_notification_title": "We Miss You! Resume Your Quiz Journey 🚀",
+  "no_login_two_days_notification_body": "Hey {{name}}, it's been 2 days since we saw you on Rapid Recap. Jump back in and restart your learning journey! 🌟📚 Tap to continue.",
+  "no_login_seven_days_notification_title": "It's Been a While! Restart Your Learning Journey 🚀",
+  "no_login_seven_days_notification_body": "Hey {{name}}, it's been {{inactive_days}} days since we saw you on Rapid Recap. Dive back in and explore our latest quizzes and content! 🌟📚 Tap to continue."
+}

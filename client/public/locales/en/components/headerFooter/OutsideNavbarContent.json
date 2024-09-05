@@ -1,0 +1,24 @@
+{
+  "OutsideNavbarContent": {
+    "getStarted": "Get Started",
+    "iqScore": {
+      "title": "Your Information Quotient (IQ) Score",
+      "guestMessage": "Register to see your IQ score and grow Wise Web"
+    },
+    "xpLevel": {
+      "title": "XP Level"
+    },
+    "streakFire": {
+      "title": "Streak Fire"
+    },
+    "search": {
+      "title": "Search"
+    },
+    "messenger": {
+      "title": "Messenger",
+      "guestMessage": "Register to do chat and grow Wise Web"
+    },
+    "secureProgress": "Secure Your Progress"
+  },
+  "Register to do chat and grow Wise Web": "Register to do chat and grow Wise Web"
+}
