@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { useSelector } from 'react-redux'
-import { Box, Text, Select, Skeleton } from '@chakra-ui/react'
+import { Box, Text, Select, Skeleton, Spinner } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
 import { changeLanguage } from './utils/helper.utils'
 import i18n from 'i18next'
@@ -36,13 +36,14 @@ const LanguageSwitcher = () => {
         _hover={{ bg: 'whiteAlpha.200' }}
         transition="background 0.2s"
       >
-        <Skeleton isLoaded={!loading} width="100%">
-          <Text color="white" fontWeight="medium" fontSize={'lg'}>
-            {t('selectLanguage')}
-          </Text>
-        </Skeleton>
+        <Text color="white" fontWeight="medium" fontSize={'lg'}>
+          {t('selectLanguage')}
+        </Text>
+
         <MotionBox whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-          <Skeleton isLoaded={!loading}>
+          {loading ? (
+            <Spinner color="blue" />
+          ) : (
             <MotionSelect
               value={currentLanguage}
               onChange={e =>
@@ -53,6 +54,7 @@ const LanguageSwitcher = () => {
               borderColor="whiteAlpha.400"
               _hover={{ borderColor: 'whiteAlpha.600' }}
               transition={{ duration: 0.3 }}
+              w={'80px'}
             >
               <option
                 style={{
@@ -61,7 +63,7 @@ const LanguageSwitcher = () => {
                 }}
                 value="en"
               >
-                English
+                Eng
               </option>
               <option
                 style={{
@@ -73,7 +75,7 @@ const LanguageSwitcher = () => {
                 हिन्दी
               </option>
             </MotionSelect>
-          </Skeleton>
+          )}
         </MotionBox>
       </Box>
     </MotionBox>
