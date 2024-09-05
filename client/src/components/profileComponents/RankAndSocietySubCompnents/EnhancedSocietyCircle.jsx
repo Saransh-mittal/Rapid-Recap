@@ -8,6 +8,7 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next' // Import useTranslation hook
 import CrownSVG from '../../../assets/svg/CrownSVG'
 
 const EnhancedSocietyCircle = ({
@@ -15,6 +16,10 @@ const EnhancedSocietyCircle = ({
   handleBrainClick,
   handleCircleClick,
 }) => {
+  const { t } = useTranslation('CircleAndSocietyData')
+  const { t: EnhancedSocietyCircleTranlate } = useTranslation(
+    'EnhancedSocietyCircle',
+  )
   const dimensions = useBreakpointValue({
     base: { width: 80, height: 80 },
     md: { width: 100, height: 100 },
@@ -32,7 +37,7 @@ const EnhancedSocietyCircle = ({
       border={isTitans ? '1px solid rgba(255, 215, 0, 0.3)' : 'none'}
     >
       <Text color="#9CAFAA" fontSize="lg" mb={4} textAlign="center">
-        Society and Circle
+        {EnhancedSocietyCircleTranlate('societyAndCircle')}
       </Text>
       <Flex align="center" justify="space-between" w="100%" h="80%">
         <Tooltip label={`${societyData.society}`}>
@@ -76,7 +81,7 @@ const EnhancedSocietyCircle = ({
                   isTitans ? '0 0 5px rgba(255, 215, 0, 0.5)' : 'none'
                 }
               >
-                {societyData.society.split(' ')[0]}
+                {t(`${societyData.society}`)}
               </Text>
             </Box>
           </Flex>
@@ -169,7 +174,7 @@ const EnhancedSocietyCircle = ({
                       fontSize="16"
                       fontWeight="bold"
                     >
-                      IQ Range
+                      {EnhancedSocietyCircleTranlate('iqRange')}
                     </text>
                     <text
                       x="60"
@@ -192,7 +197,7 @@ const EnhancedSocietyCircle = ({
                   mt={2}
                   fontSize="lg"
                 >
-                  {societyData.circle.split(' ')[0]}
+                  {t(`${societyData.circle}`)}
                 </Text>
               </Flex>
             </Tooltip>

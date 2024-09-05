@@ -7,6 +7,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 // Lazy loading the components
 const ProfileExperienceLevel = lazy(() =>
@@ -17,6 +18,7 @@ const Heading = lazy(() => import('../../miscellaneous/HeadingComponent'))
 const XPLevelModal = ({ setShowXPLevelModal }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { user } = useSelector(state => state.auth)
+  const { t } = useTranslation('XPLevelModal')
 
   useEffect(() => {
     onOpen()
@@ -46,7 +48,7 @@ const XPLevelModal = ({ setShowXPLevelModal }) => {
           >
             <ModalCloseButton color={'white'} />
             <Suspense fallback={<div>Loading...</div>}>
-              <Heading title="Experience Level" />
+              <Heading title={t('Experience')} />
               <ProfileExperienceLevel xp={userXP} level={userLevel} />
             </Suspense>
           </ModalContent>

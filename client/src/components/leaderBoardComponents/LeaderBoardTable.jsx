@@ -14,7 +14,7 @@ import {
   useColorModeValue,
   useBreakpointValue,
 } from '@chakra-ui/react'
-
+import { useTranslation } from 'react-i18next'
 const LeaderBoardRow = React.lazy(() => import('./LeaderBoardRow'))
 const LoadingState = React.lazy(() => import('./LoadingState'))
 const VerticalDotsSeparator = React.lazy(() =>
@@ -34,6 +34,7 @@ const LeaderBoardTable = ({
   PAGE_LIMIT,
   hasMore,
 }) => {
+  const { t } = useTranslation('LeaderBoardTable')
   const data = useMemo(
     () => (searchResults.length > 0 ? searchResults : leaders),
     [searchResults, leaders],
@@ -70,18 +71,18 @@ const LeaderBoardTable = ({
               color={accentColor}
               paddingX={{ base: '0', md: '24px' }}
             >
-              Rank
+              {t('rank')}
             </Th>
             <Th
               textAlign="center"
               color={accentColor}
               paddingX={{ base: '0', md: '24px' }}
             >
-              Player
+              {t('Player')}
             </Th>
             {isTablet && (
               <Th textAlign="center" color={accentColor}>
-                Experience
+                {t('Experience')}
               </Th>
             )}
             <Th
@@ -89,15 +90,15 @@ const LeaderBoardTable = ({
               color={accentColor}
               paddingX={{ base: '0', md: '24px' }}
             >
-              IQ Scores
+              {t('iqScores')}
             </Th>
             {isDesktop && (
               <>
                 <Th textAlign="center" color={accentColor}>
-                  Quiz Submissions
+                  {t('quizSubmissions')}
                 </Th>
                 <Th textAlign="center" color={accentColor}>
-                  Avg. RQM Scores
+                  {t('avgRQMScore')}
                 </Th>
               </>
             )}

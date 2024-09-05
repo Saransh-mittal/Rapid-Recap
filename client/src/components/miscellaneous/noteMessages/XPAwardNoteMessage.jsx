@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { Text, VStack, Box, Flex, Divider } from '@chakra-ui/react'
 import NoteMessage from '../NoteMessage'
 import { getMilestoneInfo } from './milestones'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components and assets
 const TrophySVG = lazy(() => import('../../../assets/svg/TrophySVG'))
@@ -19,6 +20,7 @@ const XPAwardNoteMessage = ({
   duration,
   width = '320px',
 }) => {
+  const { t } = useTranslation('XPAwardNoteMessage')
   const [showConfetti, setShowConfetti] = useState(
     isMilestone || !!milestoneName,
   )
@@ -67,8 +69,8 @@ const XPAwardNoteMessage = ({
         <VStack spacing={1} align="center" w="100%">
           <Text fontSize="md" fontWeight="medium" color="gray.300">
             {isMilestone || milestoneName
-              ? 'Milestone Achieved!'
-              : `${xpSource} Completed`}
+              ? t('milestoneAchieved')
+              : t('xpSourceCompleted', { xpSource })}
           </Text>
           <Text
             fontSize="lg"
@@ -92,14 +94,14 @@ const XPAwardNoteMessage = ({
             }
           >
             <Text fontSize="xl" fontWeight="bold" color="white">
-              +{xpAwarded} XP
+              {t('xpAwarded', { xpAwarded })}
             </Text>
           </Box>
           {milestoneInfo && (
             <>
               <Divider my={2} />
               <Text fontSize="md" fontWeight="medium" color="purple.300">
-                {milestoneInfo.name} Milestone Bonus
+                {t('milestoneBonus', { milestoneName: milestoneInfo.name })}
               </Text>
               <Text fontSize="sm" color="gray.400" textAlign="center">
                 {milestoneInfo.description}
@@ -113,7 +115,7 @@ const XPAwardNoteMessage = ({
                 boxShadow="0 0 15px rgba(128, 90, 213, 0.7)"
               >
                 <Text fontSize="lg" fontWeight="bold" color="white">
-                  +{milestoneInfo.xpReward} XP
+                  {t('milestoneXP', { xp: milestoneInfo.xpReward })}
                 </Text>
               </Box>
             </>
@@ -122,7 +124,7 @@ const XPAwardNoteMessage = ({
             <>
               <Divider my={2} />
               <Text fontSize="md" fontWeight="medium" color="blue.300">
-                Milestone Content
+                {t('milestoneContent')}
               </Text>
               <Text fontSize="sm" color="gray.400" textAlign="center">
                 {milestoneContent}
@@ -132,7 +134,7 @@ const XPAwardNoteMessage = ({
           {isMilestone && milestoneName && (
             <Box mt={3} bg="blue.500" px={4} py={1} borderRadius="full">
               <Text fontSize="2xl" fontWeight="bold" color="white">
-                Total: +{totalXp} XP
+                {t('totalXP', { xp: totalXp })}
               </Text>
             </Box>
           )}
@@ -149,6 +151,7 @@ const XPAwardNoteMessage = ({
       milestoneInfo,
       totalXp,
       milestoneContent,
+      t,
     ],
   )
 
@@ -157,8 +160,8 @@ const XPAwardNoteMessage = ({
       messageId={messageId}
       title={
         isMilestone || milestoneName
-          ? 'Major Achievement Unlocked!'
-          : 'Achievement Unlocked'
+          ? t('majorAchievementUnlocked')
+          : t('achievementUnlocked')
       }
       customContent={customContent}
       onClose={onClose}
@@ -166,7 +169,7 @@ const XPAwardNoteMessage = ({
       width={width}
       actions={[
         {
-          text: 'View Experience',
+          text: t('viewExperience'),
           actionType: 'VIEW_EXPERIENCE',
         },
       ]}

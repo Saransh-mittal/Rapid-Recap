@@ -1,0 +1,8 @@
+{
+  "commune": "Commune",
+  "glimpseWisdom": "Glimpse Wisdom",
+  "severTies": "Sever Ties",
+  "severTiesWith": "Sever Ties with {{name}}",
+  "severTiesConfirmation": "Are you sure? This action cannot be undone. You will no longer be friends with {{name}}.",
+  "cancel": "Cancel"
+}

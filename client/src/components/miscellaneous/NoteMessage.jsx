@@ -17,6 +17,7 @@ import {
 } from '../../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load utilities and components
 const ButtonFactory = lazy(() => import('./ButtonFactory'))
@@ -36,6 +37,7 @@ const NoteMessage = ({
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
+  const { t: GuestLoginTranslate } = useTranslation('GuestLogin')
 
   // Memoize handleMessageAction to prevent unnecessary re-renders
   const handleMessageAction = useMemo(
@@ -137,6 +139,7 @@ const NoteMessage = ({
                         variant="outline"
                         colorScheme="blue"
                         innerText={action.text}
+                        GuestLoginTranslate={GuestLoginTranslate}
                       >
                         {action.text}
                       </ButtonFactory>

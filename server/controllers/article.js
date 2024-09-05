@@ -22,8 +22,8 @@ const { default: mongoose } = require('mongoose')
 const cache = require('memory-cache')
 
 const allArticles = async (req, res) => {
-  const { page = 1, pageSize = 9, category = 'general' } = req.query
-  const cacheKey = `articles_${category}_${page}_${pageSize}`
+  const { page = 1, pageSize = 9, category = 'general', lang } = req.query
+  const cacheKey = `articles_${category}_${lang}_${page}_${pageSize}`
   const cachedArticles = cache.get(cacheKey)
 
   if (cachedArticles) {
@@ -44,6 +44,26 @@ const allArticles = async (req, res) => {
     if (!articles || articles.length === 0) {
       throw new Error('No articles found')
     }
+    if (lang === 'hi')
+      for (let article of articles) {
+        if (
+          !article.hindiTitle ||
+          !article.hindiMainText ||
+          !article.hindiAuthor
+        ) {
+          const response = await hindiConverter(article._id)
+          if (!article.hindiMainText) {
+            article.hindiMainText = []
+          }
+          article.hindiTitle = response.hindiTitle
+
+          for (let key in response.hindiMainText) {
+            if (!response.hindiMainText[key]) continue
+            article.hindiMainText.push(response.hindiMainText[key])
+          }
+          article.hindiAuthor = response.hindiAuthor
+        }
+      }
 
     const processedArticles = await Promise.all(
       articles.map(async article => {
@@ -117,17 +137,44 @@ const getArticleIds = asyncHandler(async (req, res) => {
 // @access Public
 const getArticle = async (req, res) => {
   const { id } = req.params
+  const { lang } = req.query
   try {
     const cacheKey = `article_${id}`
     const cachedArticle = cache.get(cacheKey)
 
-    if (cachedArticle) {
+    if (
+      cachedArticle &&
+      !(
+        lang === 'hi' &&
+        (!cachedArticle.hindiTitle ||
+          !cachedArticle.hindiMainText ||
+          !cachedArticle.hindiAuthor)
+      )
+    ) {
       return res.json({ quizExpired: false, newArticle: cachedArticle })
     }
     const article = await Article.findById(id)
     if (!article) {
       throw new Error('Article not found')
     }
+
+    if (
+      lang === 'hi' &&
+      (!article.hindiTitle || !article.hindiMainText || !article.hindiAuthor)
+    ) {
+      const response = await hindiConverter(article._id)
+      if (!article.hindiMainText) {
+        article.hindiMainText = []
+      }
+      article.hindiTitle = response.hindiTitle
+
+      for (let key in response.hindiMainText) {
+        if (!response.hindiMainText[key]) continue
+        article.hindiMainText.push(response.hindiMainText[key])
+      }
+      article.hindiAuthor = response.hindiAuthor
+    }
+
     const paragraphs = await breakArticleIntoParagraphs(article.mainText)
     const relatedArticles = []
     for (let relatedArticleID of article.relatedArticles) {
@@ -428,10 +475,9 @@ const hindiTranslation = async (req, res) => {
     if (!article) {
       throw new Error('Article not found')
     }
-    const response = await hindiConverter(article)
+    const response = await hindiConverter(article._id)
     if (!article.hindiMainText) {
       article.hindiMainText = []
-      await article.save()
     }
     article.hindiTitle = response.hindiTitle
 
@@ -440,7 +486,6 @@ const hindiTranslation = async (req, res) => {
       article.hindiMainText.push(response.hindiMainText[key])
     }
     article.hindiAuthor = response.hindiAuthor
-    await article.save()
 
     // update the cache memory :
     const cacheKey = `article_${articleId}`
@@ -851,6 +896,7 @@ const deleteAdminArticleDetails = asyncHandler(async (req, res) => {
 // @access  Protected
 const getRelatedArticles = asyncHandler(async (req, res) => {
   const { articleId } = req.params
+  const { lang } = req.query
   const page = parseInt(req.query.page, 10) || 1
   const limit = parseInt(req.query.limit, 10) || 10
   const userId = req.user._id // Assuming `req.user` contains authenticated user info
@@ -870,7 +916,9 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
   let relatedArticles = await Article.find({
     _id: { $in: article.relatedArticles },
   })
-    .select('title author dateTime category imgURL avgReadTime')
+    .select(
+      'title author dateTime category imgURL avgReadTime hindiTitle mainText hindiMainText hindiAuthor',
+    )
     .skip(skip)
     .limit(limit)
 
@@ -885,7 +933,26 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
     relatedArticle =>
       !attemptedArticleIds.includes(relatedArticle._id.toString()),
   )
+  if (lang === 'hi')
+    for (let relatedArticle of relatedArticles) {
+      if (
+        !relatedArticle.hindiTitle ||
+        !relatedArticle.hindiMainText ||
+        !relatedArticle.hindiAuthor
+      ) {
+        const response = await hindiConverter(relatedArticle._id)
+        if (!relatedArticle.hindiMainText) {
+          relatedArticle.hindiMainText = []
+        }
+        relatedArticle.hindiTitle = response.hindiTitle
 
+        for (let key in response.hindiMainText) {
+          if (!response.hindiMainText[key]) continue
+          relatedArticle.hindiMainText.push(response.hindiMainText[key])
+        }
+        relatedArticle.hindiAuthor = response.hindiAuthor
+      }
+    }
   // Send the response with filtered related articles
   res.json({
     relatedArticles,

@@ -1,13 +1,22 @@
+import i18n from 'i18next' // Adjust the path as needed
+
 export const MILESTONES = {
   QUIN_BOOST: {
-    name: 'Quin Boost',
-    description:
-      'Successfully completed 6 quizzes and strategically applied a 1.5x score boost to maximize the score on the current quiz.',
+    nameKey: 'milestones.QUIN_BOOST.name',
+    descriptionKey: 'milestones.QUIN_BOOST.description',
     xpReward: 10,
   },
   // Add other milestones here as needed
 }
 
 export const getMilestoneInfo = milestoneName => {
-  return MILESTONES[milestoneName] || null
+  const milestone = MILESTONES[milestoneName] || null
+  if (milestone) {
+    return {
+      name: i18n.t(milestone.nameKey, { ns: 'milestones' }),
+      description: i18n.t(milestone.descriptionKey, { ns: 'milestones' }),
+      xpReward: milestone.xpReward,
+    }
+  }
+  return null
 }

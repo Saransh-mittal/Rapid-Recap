@@ -1,0 +1,7 @@
+{
+  "quizPerformance": "Quiz Performance",
+  "currentPercentile": "Current Percentile: ",
+  "rqmScore": "RQM-Score:",
+  "tooltipLabel": "This is the Rapid Quiz Mastery (RQM) score. It is calculated based on the number of correct answers, time taken to complete the quiz and the difficulty level of the overall quiz. The higher the RQM-Score, the better the performance.",
+  "viewReportButton": "View Report"
+}

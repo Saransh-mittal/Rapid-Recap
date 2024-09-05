@@ -29,6 +29,7 @@ import {
   searchArticles,
   setSearchTerm,
 } from '../../redux/articleSlice'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components
 const Categories = React.lazy(() => import('./Categories'))
@@ -37,6 +38,7 @@ const GetStarted = React.lazy(() =>
 )
 
 const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
+  const { t, i18n } = useTranslation(['Timeline', 'formatDate'])
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated, user } = useSelector(state => state.auth)
@@ -56,7 +58,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
     base: 'column',
     lg: 'row',
   })
-
   const categoryRefs = useRef([])
 
   const notLoggedIn = !isAuthenticated
@@ -74,8 +75,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
 
   const activeCategoryIndex = useMemo(() => {
     return categories?.findIndex(
-      cat =>
-        cat.toLocaleLowerCase() === (category || 'all').toLocaleLowerCase(),
+      cat => cat.key.toLowerCase() === (category || 'all').toLowerCase(),
     )
   }, [category])
 
@@ -92,21 +92,21 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
         navigate(`/home/${category.toLowerCase()}`)
       }
     },
-    [dispatchRedux, navigate],
+    [dispatchRedux, navigate, setLoad, setHasMoreItems],
   )
 
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => {
       if (!swipeDisable) {
         const newIndex = (activeCategoryIndex + 1) % categories.length
-        handleActiveCategory({ category: categories[newIndex] })
+        handleActiveCategory({ category: categories[newIndex].key })
       }
     },
     onSwipedRight: () => {
       if (!swipeDisable) {
         const newIndex =
           (activeCategoryIndex - 1 + categories.length) % categories.length
-        handleActiveCategory({ category: categories[newIndex] })
+        handleActiveCategory({ category: categories[newIndex].key })
       }
     },
     preventDefaultTouchmoveEvent: true,
@@ -139,10 +139,12 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
     const pathCategory = location.pathname.split('/')[2] || 'all'
     if (
       pathCategory &&
-      pathCategory.toLocaleLowerCase() !== category?.toLocaleLowerCase()
+      pathCategory?.toLocaleLowerCase() !== category?.toLocaleLowerCase()
     ) {
-      const idx = categories.findIndex(
-        cat => cat.toLocaleLowerCase() === pathCategory.toLocaleLowerCase(),
+      const idx = categories?.findIndex(
+        cat =>
+          cat &&
+          cat?.key?.toLocaleLowerCase() === pathCategory?.toLocaleLowerCase(),
       )
       if (idx !== -1) {
         handleActiveCategory({
@@ -162,7 +164,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
         <Skeleton w="xs" h={{ base: '26rem', md: 'md' }} borderRadius="2xl" />
       </Flex>
     ))
-  }, [])
+  }, [load])
 
   const trackCategoryClick = useCallback(category => {
     ReactGA.send({
@@ -313,10 +315,13 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
                 >
                   <Suspense fallback={<Skeleton key={id} mt="5rem" />} key={id}>
                     <Card
-                      title={item?.title}
+                      title={
+                        i18n.language === 'en' ? item?.title : item?.hindiTitle
+                      }
+                      urlTitle={item?.title}
                       image={item.imgURL || rrImage}
-                      category={item?.category}
-                      date={formatDate(item?.dateTime)}
+                      category={t(`categories.${item?.category.toLowerCase()}`)}
+                      date={formatDate(item?.dateTime, i18n.language)}
                       readTime={item.avgReadTime}
                       id={item._id}
                       articleData={item}
@@ -343,7 +348,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
             {isSearching && searchResults.length > 0 && (
               <Flex justifyContent="center" mt="2rem">
                 <Button onClick={() => dispatchRedux(clearSearch())}>
-                  Clear Search Results
+                  {t('buttons.clearSearch')}
                 </Button>
               </Flex>
             )}
@@ -352,7 +357,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
               searchResults.length % 10 === 0 &&
               searchResults.length !== 0 && (
                 <Flex justifyContent="center" mt="2rem">
-                  <Button onClick={handleLoadMore}>Load More</Button>
+                  <Button onClick={handleLoadMore}>
+                    {t('buttons.loadMore')}
+                  </Button>
                 </Flex>
               )}
           </Flex>
@@ -371,7 +378,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
             padding="1rem"
             textAlign="center"
           >
-            <GetStarted innerText="Login To Continue further" />
+            <GetStarted innerText={t('messages.loginToContinue')} />
           </Flex>
         </Suspense>
       )}
@@ -388,7 +395,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
           paddingTop="4rem"
           textAlign="center"
         >
-          Please Revisit this page after some time to view recommended news
+          {t('messages.revisitLater')}
         </Flex>
       )}
       {!hasMoreItems && !user?.newAccount && (
@@ -404,7 +411,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
           paddingTop="4rem"
           textAlign="center"
         >
-          No more news to show
+          {t('messages.noMoreNews')}
         </Flex>
       )}
     </Flex>

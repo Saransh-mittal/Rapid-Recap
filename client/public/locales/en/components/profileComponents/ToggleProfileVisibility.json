@@ -1,0 +1,16 @@
+{
+  "profileVisibility": {
+    "toggleVisibility": "Toggle Profile Visibility",
+    "fullProfile": "Full Profile",
+    "lineGraph": "Line Graph",
+    "barGraph": "Bar Graph",
+    "solvedQuizzes": "Solved Quizzes",
+    "society": "Society",
+    "seasonAnalytics": "Season Analytics",
+    "savedSuccessfully": "Profile visibility saved successfully",
+    "errorSaving": "Error in saving profile visibility"
+  },
+  "success": "Success",
+  "error": "Error",
+  "save": "Save"
+}

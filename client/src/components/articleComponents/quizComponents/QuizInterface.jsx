@@ -9,6 +9,7 @@ import {
   Center,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load OptionButton for code splitting
 const OptionButton = lazy(() => import('./OptionButton'))
@@ -21,6 +22,7 @@ const QuizInterface = ({
   handleAnswer,
   userAnswers,
 }) => {
+  const { t } = useTranslation('QuizInterface')
   const currentQuestion = useMemo(
     () => quizData?.questions?.[currentQuestionIndex] || null,
     [quizData, currentQuestionIndex],
@@ -45,7 +47,7 @@ const QuizInterface = ({
     return (
       <Center height="100vh">
         <Text fontSize="xl" color="gray.100">
-          No quiz data available.
+          {t('noQuizData')}
         </Text>
       </Center>
     )
@@ -80,7 +82,9 @@ const QuizInterface = ({
             color="purple.200"
             textAlign={'center'}
           >
-            Question {currentQuestionIndex + 1} of {totalQuestions}
+            {t('question')}
+            {currentQuestionIndex + 1} {t('of')}
+            {totalQuestions}
           </Text>
 
           <Progress

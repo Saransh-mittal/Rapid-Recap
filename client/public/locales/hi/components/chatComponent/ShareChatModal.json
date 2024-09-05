@@ -1,0 +1,15 @@
+{
+  "shareToChat": "चैट में साझा करें",
+  "send": "भेजें",
+  "cancel": "रद्द करें",
+  "shareOnSocialMedia": "सोशल मीडिया पर साझा करें",
+  "copyArticleUrl": "लेख URL कॉपी करें",
+  "linkCopied": "लिंक कॉपी हो गया",
+  "articleUrlCopied": "लेख का URL क्लिपबोर्ड पर कॉपी हो गया",
+  "checkOutArticle": "इस लेख को देखें",
+  "errorOccurred": "एक त्रुटि हुई",
+  "failedToLoadChats": "चैट्स लोड करने में विफल",
+  "failedToShareArticle": "लेख साझा करने में विफल",
+  "noChatsSelected": "कोई चैट चयनित नहीं है",
+  "selectAtLeastOneChat": "कृपया कम से कम एक चैट का चयन करें"
+}

@@ -12,6 +12,7 @@ import MessageReactions from './MessageReactions'
 import { useNavigate } from 'react-router-dom'
 import { safelyAccessProperty } from '../../../../utils/helper.utils'
 import slugify from 'slugify'
+import i18n from 'i18next'
 
 const SystemMessage = ({ content, id }) => (
   <Box
@@ -99,6 +100,7 @@ const ArticleMessage = React.memo(
             viewMode="grid"
             width={'100%'}
             cancelHoverEffect={true}
+            lang={i18n.language}
           />
           <div
             style={{

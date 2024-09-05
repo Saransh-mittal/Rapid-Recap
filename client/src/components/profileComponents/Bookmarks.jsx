@@ -19,14 +19,17 @@ import {
   VStack,
   useToast,
 } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import useSound from '../../customHooks/useSound'
 import slugify from 'slugify'
+import i18n from 'i18next'
 
 const ArticleCard = React.lazy(() => import('../miscellaneous/ArticleCard'))
 
 const Bookmarks = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('Bookmarks')
   const [viewMode, setViewMode] = useState('grid')
   const [isLoading, setIsLoading] = useState(true)
   const [bookmarks, setBookmarks] = useState([])
@@ -39,7 +42,9 @@ const Bookmarks = ({ isOpen, onClose }) => {
 
   const fetchBookmarks = useCallback(async () => {
     try {
-      const response = await axios.get('/api/user/getBookmarks')
+      const response = await axios.get(
+        `/api/user/getBookmarks?lang=${i18n.language}`,
+      )
       setBookmarks(response.data.bookmarks)
     } catch (error) {
       console.error(error)
@@ -68,7 +73,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
           prevBookmarks.filter(bookmark => bookmark._id !== articleId),
         )
         toast({
-          title: 'Bookmark removed',
+          title: t('bookmarkRemoved'),
           status: 'success',
           duration: 3000,
           isClosable: true,
@@ -77,14 +82,14 @@ const Bookmarks = ({ isOpen, onClose }) => {
       } catch (error) {
         console.error(error)
         toast({
-          title: 'Error removing bookmark',
+          title: t('errorRemovingBookmark'),
           status: 'error',
           duration: 3000,
           isClosable: true,
         })
       }
     },
-    [toast],
+    [toast, t],
   )
 
   useEffect(() => {
@@ -113,6 +118,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
               onRemove={handleRemoveBookmark}
               viewMode={viewMode}
               isMobileListView={isMobileListView}
+              lang={i18n.language}
             />
           )),
     [
@@ -139,7 +145,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
         boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
         border="1px solid rgba(255, 255, 255, 0.18)"
       >
-        <ModalHeader color="#ffffff">Your Bookmarks</ModalHeader>
+        <ModalHeader color="#ffffff">{t('yourBookmarks')}</ModalHeader>
         <ModalCloseButton color="#ffffff" />
         <ModalBody
           w={'100%'}
@@ -162,11 +168,11 @@ const Bookmarks = ({ isOpen, onClose }) => {
               _hover={{ bg: '#1f1b2e' }}
             >
               {viewMode === 'grid'
-                ? 'Switch to List View'
-                : 'Switch to Grid View'}
+                ? t('switchToListView')
+                : t('switchToGridView')}
             </Button>
           </Flex>
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>{t('loading')}</div>}>
             {viewMode === 'grid' ? (
               <Grid
                 templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
@@ -189,7 +195,7 @@ const Bookmarks = ({ isOpen, onClose }) => {
             color="#ffffff"
             _hover={{ bg: '#1f1b2e' }}
           >
-            Close
+            {t('close')}
           </Button>
         </ModalFooter>
       </ModalContent>

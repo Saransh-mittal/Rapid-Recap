@@ -1,0 +1,21 @@
+{
+  "toast": {
+    "successTitle": "Success",
+    "successDescription": "Profile Updated Successfully",
+    "errorTitle": "Error",
+    "errorDescription": "Error updating profile, please try again!",
+    "requestErrorTitle": "Error",
+    "requestErrorDescription": "Error checking friend request status",
+    "requestSuccessTitle": "Success",
+    "requestSuccessDescription": "Friend request sent successfully",
+    "requestSendErrorTitle": "Error",
+    "requestSendErrorDescription": "Error sending friend request"
+  },
+  "alt": {
+    "profileImage": "Profile Image"
+  },
+  "rank": "Rank",
+  "na": "N/A",
+  "friend": "Friend",
+  "editProfile": "Edit Profile"
+}

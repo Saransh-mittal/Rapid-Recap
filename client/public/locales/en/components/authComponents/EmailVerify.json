@@ -1,0 +1,14 @@
+{
+  "heading": "OTP VERIFICATION",
+  "otpSent": "An OTP has been sent to",
+  "enterOTP": "Please enter OTP to verify",
+  "verifyButton": "Verify",
+  "verifying": "Verifying",
+  "didntReceiveCode": "Didn't receive code?",
+  "resendOTP": "Resend OTP",
+  "toastVerifySuccess": "Email Verified",
+  "toastResetSuccess": "Email Verified Now You Can Reset Password",
+  "toastVerifyFail": "Email Verification Failed",
+  "toastOTPSent": "OTP sent",
+  "toastOTPFail": "OTP sending failed"
+}

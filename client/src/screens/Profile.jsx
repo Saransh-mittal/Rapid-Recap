@@ -20,6 +20,7 @@ import { setOtherUserProfiles, setUserProfile } from '../redux/contentSlice.js'
 import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
 import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
+import { useTranslation } from 'react-i18next'
 
 // Dynamic imports for code splitting
 const IQLineGraph = React.lazy(() =>
@@ -28,8 +29,8 @@ const IQLineGraph = React.lazy(() =>
 const SecureYourProgress = React.lazy(() =>
   import('../components/miscellaneous/SecureYourProgress.jsx'),
 )
-const SoundSettings = React.lazy(() =>
-  import('../components/profileComponents/SoundSettings.jsx'),
+const Settings = React.lazy(() =>
+  import('../components/profileComponents/Settings.jsx'),
 )
 const IQBarGraph = React.lazy(() =>
   import('../components/profileComponents/IQBarGraph'),
@@ -62,6 +63,9 @@ const Bookmarks = React.lazy(() =>
 )
 
 export default function Profile() {
+  const { t } = useTranslation('Profile')
+  const { t: IQBarTranslate } = useTranslation('IQBarGraph')
+  const { t: IQLineTranslate } = useTranslation('IQLineGraph')
   const { inGameName } = useParams()
   const { user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
@@ -97,14 +101,9 @@ export default function Profile() {
     onClose: onCloseBookmarks,
   } = useDisclosure()
   const {
-    isOpen: isOpenWiseWeb,
-    onOpen: onOpenWiseWeb,
-    onClose: onCloseWiseWeb,
-  } = useDisclosure()
-  const {
-    isOpen: isOpenSoundSettings,
-    onOpen: onOpenSoundSettings,
-    onClose: onCloseSoundSettings,
+    isOpen: isOpenSettings,
+    onOpen: onOpenSettings,
+    onClose: onCloseSettings,
   } = useDisclosure()
 
   const fetchProfile = useCallback(async () => {
@@ -172,15 +171,6 @@ export default function Profile() {
     }
   }, [inGameName, user, otherUserProfiles])
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const requestId = params.get('requestId')
-
-    if (requestId) {
-      onOpenWiseWeb()
-    }
-  }, [location, onOpenWiseWeb])
-
   const hoverAnimation = keyframes`
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -190,7 +180,9 @@ export default function Profile() {
   return (
     <Box marginTop={'4.5rem'} w={'100%'}>
       <Helmet>
-        <title>{`${profile?.inGameName}'s Rapid Recap Profile | IQ Score: ${profile?.USER_IQ}`}</title>
+        <title>
+          {t('title', { name: profile?.inGameName, score: profile?.USER_IQ })}
+        </title>
         <meta
           name="description"
           content={`Explore ${
@@ -447,7 +439,7 @@ export default function Profile() {
                       className="season-analytics"
                     >
                       <ProfileButton
-                        buttonText="Season Analytics"
+                        buttonText={t('seasonAnalytics')}
                         inGameName={inGameName}
                         stateUserInGameName={user?.inGameName}
                         Private={user?.profilePrivacy.seasonAnalytics}
@@ -544,18 +536,18 @@ export default function Profile() {
                       position={'relative'}
                     >
                       <ProfileButton
-                        buttonText="Sound Settings"
+                        buttonText={t('Settings')}
                         inGameName={inGameName}
                         stateUserInGameName={user?.inGameName}
                         Private={true}
                         hoverAnimation={hoverAnimation}
-                        onClick={onOpenSoundSettings}
+                        onClick={onOpenSettings}
                         icon={<SettingsIcon width={'20px'} height={'20px'} />}
                       />
 
-                      <SoundSettings
-                        isOpen={isOpenSoundSettings}
-                        onClose={onCloseSoundSettings}
+                      <Settings
+                        isOpen={isOpenSettings}
+                        onClose={onCloseSettings}
                       />
                     </Flex>
 
@@ -570,7 +562,7 @@ export default function Profile() {
                       py={'8px'}
                     >
                       <ProfileButton
-                        buttonText="Bookmarks"
+                        buttonText={t('bookmarks')}
                         inGameName={inGameName}
                         stateUserInGameName={user?.inGameName}
                         Private={true}
@@ -618,7 +610,6 @@ export default function Profile() {
           >
             <Flex
               w={'100%'}
-              zIndex={1001}
               marginTop={'10px'}
               marginInline={'1%'}
               padding={{ xl: isLoading ? 0 : '20px', base: '0' }}
@@ -651,12 +642,14 @@ export default function Profile() {
                     privateLineGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
+                    t={IQLineTranslate}
                   />
                   <IQBarGraph
                     barGraph={profile?.barGraph}
                     privateBarGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
+                    t={IQBarTranslate}
                   />
                 </>
               )}

@@ -1,0 +1,14 @@
+{
+  "guestCannotChat": "Guest users cannot chat",
+  "invalidData": "Invalid data passed into request",
+  "articleNotFound": "Article not found",
+  "newMessageFrom": "New message from {{name}}",
+  "notFound": "Message not found",
+  "deleteForEveryone": "You can only delete your own messages for everyone",
+  "deleteTimeLimit": "You can only delete messages for everyone within 1 hour of sending",
+  "deletedMessage": "This message was deleted",
+  "messageDeleted": "Message Deleted",
+  "deletedFromChat": "A message was deleted from this chat",
+  "invalidDeleteType": "Invalid delete type",
+  "deleteSuccess": "Message deleted successfully"
+}

@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
 import { DEFAULT_SOUND_SETTINGS } from '../models/soundSettings'
+import i18n from 'i18next'
 
 // Async thunks for fetching data
 export const fetchAppUpdates = createAsyncThunk(
@@ -171,16 +172,24 @@ export const appSlice = createSlice({
             messageType: 'streak',
             streakStatus: 'broken',
             streakCount: action.payload.pastStreak,
-            title: 'Oh no! Your streak has ended',
+            title:
+              i18n.language === 'en'
+                ? 'Oh no! Your streak has ended'
+                : 'ओह नहीं! आपकी स्ट्रीक समाप्त हो गई है।',
             width: '300px',
           })
         action.payload?.seven_day_streak &&
           state.noteMessageQueue.push({
             messageType: 'xpAward',
-            title: 'Congratulations on Your 7-Day Streak!',
+            title:
+              i18n.language === 'en'
+                ? 'Congratulations on Your 7-Day Streak!'
+                : 'आपकी 7-दिन की स्ट्रीक पर बधाई!',
             isMilestone: true,
             milestoneContent:
-              'Enjoy a 1.5x score multiplier on all quizzes today!',
+              i18n.language === 'en'
+                ? 'Enjoy a 1.5x score multiplier on all quizzes today!'
+                : 'आज सभी क्विज़ पर 1.5x स्कोर मल्टीप्लायर का आनंद लें!',
             width: '300px',
             xpAwared: action.payload?.xpAwarded,
             duration: null,
@@ -192,9 +201,14 @@ export const appSlice = createSlice({
             streakCount: action.payload?.streakBeforeBreak,
             remainingTime: action.payload?.remainingTimeBeforeRevival, // 1 hour in seconds
             remainingQuizzes: 6 - action.payload?.todaysQuizAttemptsCount,
-            title: 'Revive your streak!',
+            title:
+              i18n.language === 'en'
+                ? 'Revive your streak!'
+                : 'अपनी स्ट्रीक को फिर से जीवित करें!',
             content:
-              'You need to utilize a quin boost in the revival period to revive your streak.',
+              i18n.language === 'en'
+                ? 'You need to utilize a quin boost in the revival period to revive your streak.'
+                : 'आपको अपनी स्ट्रीक को फिर से जीवित करने के लिए पुनर्जीवन अवधि में एक क्विन बूस्ट का उपयोग करना होगा।',
             width: '300px',
             duration: 12000,
           })

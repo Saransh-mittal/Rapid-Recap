@@ -1,0 +1,15 @@
+{
+  "editProfile": "प्रोफ़ाइल संपादित करें",
+  "uploadProfilePicture": "प्रोफ़ाइल चित्र अपलोड करें",
+  "chooseFile": "फ़ाइल चुनें",
+  "name": "नाम",
+  "inGameName": "इन-गेम नाम",
+  "bio": "जीवनी",
+  "saveChanges": "परिवर्तन सहेजें",
+  "cancel": "रद्द करें",
+  "updateFailed": "अपडेट विफल",
+  "somethingWentWrong": "कुछ गलत हो गया!",
+  "imageUploadFailed": "छवि अपलोड विफल",
+  "profilePicture": "प्रोफ़ाइल चित्र",
+  "inGameNameChangeMessage": "आप अपना इन-गेम नाम {{remainingDays}} दिन बाद पुनः बदल सकते हैं।"
+}

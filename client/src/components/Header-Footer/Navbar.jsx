@@ -40,6 +40,8 @@ import {
 } from '../../redux/appSlice'
 import useSound from '../../customHooks/useSound'
 import Loading from '../miscellaneous/Loading'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 
 // Lazy load components
 const NotificationDrawer = React.lazy(() =>
@@ -64,6 +66,7 @@ const IQScoreModal = React.lazy(() => import('./navbarComponents/IQScoreModal'))
 const WiseWeb = React.lazy(() => import('../profileComponents/WiseWeb'))
 
 const Navbar = () => {
+  const { t } = useTranslation('Navbar')
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
   const location = useLocation()
   const navigate = useNavigate()
@@ -112,12 +115,12 @@ const Navbar = () => {
 
   const navItems = useMemo(
     () => [
-      { to: '/home', label: 'Home' },
-      { to: '/contact', label: 'Contact Us' },
-      { to: '/leaderboard', label: 'Leaderboard' },
+      { to: '/home', label: t('home') },
+      { to: '/contact', label: t('contact') },
+      { to: '/leaderboard', label: t('leaderboard') },
       { to: '/dashboard', label: 'Dashboard' },
     ],
-    [],
+    [t],
   )
 
   const calculateRequiredXp = useCallback((xp, xpBaseAtNextLevel) => {
@@ -175,6 +178,7 @@ const Navbar = () => {
     try {
       const response = await axios.post('/api/user/logout')
       if (response.status === 201) {
+        await i18n.changeLanguage('en')
         dispatchRedux(setIsNotifDrawerOpen(false))
 
         setIsHamburgerOpen(false)

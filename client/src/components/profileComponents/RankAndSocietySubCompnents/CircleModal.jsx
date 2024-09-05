@@ -15,6 +15,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { useSwipeable } from 'react-swipeable'
 import { motion } from 'framer-motion'
 import Circles from '../../../assets/Circles'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 
 const CircleModal = ({
   isOpen,
@@ -24,6 +26,9 @@ const CircleModal = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [glowAnimation, setGlowAnimation] = useState(false)
+  const { t: CirclesTranslate } = useTranslation('Circles')
+
+  const { t } = useTranslation('CircleModal')
 
   const currentCircle = useMemo(() => Circles[currentPage - 1], [currentPage])
 
@@ -107,7 +112,7 @@ const CircleModal = ({
           borderRadius="10px"
           boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
         >
-          Circle Details
+          {t('circleDetails')}
         </ModalHeader>
         <ModalCloseButton color="white" />
         <ModalBody>
@@ -153,7 +158,7 @@ const CircleModal = ({
               marginBottom={4}
             >
               <span style={{ fontSize: '36px', marginRight: '5px' }}>📍</span>
-              You are here!
+              {t('youAreHere')}
             </Text>
           )}
           {currentCircle && (
@@ -215,7 +220,7 @@ const CircleModal = ({
                     fontSize="14"
                     fontWeight="bold"
                   >
-                    {currentCircle.circle}
+                    {CirclesTranslate(`${currentCircle.circle}.title`)}
                   </text>
                   <text
                     x="60"
@@ -224,7 +229,7 @@ const CircleModal = ({
                     fill={currentCircle.textColor}
                     fontSize="12"
                   >
-                    Circle
+                    {t('circle')}
                   </text>
                   <text
                     x="60"
@@ -233,7 +238,7 @@ const CircleModal = ({
                     fill="#9CAFAA"
                     fontSize="9"
                   >
-                    IQ Range: {currentCircle.IQ_Lower} -{' '}
+                    {t('iqRange')} {currentCircle.IQ_Lower} -{' '}
                     {currentCircle.IQ_Upper || 'Above'}
                   </text>
                 </svg>
@@ -242,27 +247,34 @@ const CircleModal = ({
           )}
           {currentCircle && (
             <Box mt={4} textAlign="left" color={currentCircle.textColor}>
-              {currentCircle.CircleInfo.split('.').map((point, index) => {
-                const lines = point.trim().split('\n')
-                return lines.map(
-                  (line, lineIndex) =>
-                    line.trim() && (
-                      <Flex
-                        key={lineIndex * index + index}
-                        alignItems="center"
-                        mb={2}
-                      >
-                        <Text as="span" mr={2}>
-                          ➤
-                        </Text>
-                        <Text fontStyle="italic">
-                          {line}
-                          {lineIndex === lines.length - 1 ? '.' : ''}
-                        </Text>
-                      </Flex>
-                    ),
-                )
-              })}
+              {CirclesTranslate(`${currentCircle.circle}.CircleInfo`)
+                .split(i18n.language === 'en' ? '.' : '।')
+                .map((point, index) => {
+                  const lines = point.trim().split('\n')
+                  return lines.map(
+                    (line, lineIndex) =>
+                      line.trim() && (
+                        <div
+                          style={{ flexDirection: 'row !important' }}
+                          key={`${index}-${lineIndex}`}
+                        >
+                          <p style={{ padding: '0', margin: '0.2rem' }}></p>
+                          <span
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              padding: '5px',
+                              borderRadius: '5px',
+                              fontStyle: 'italic',
+                            }}
+                          >
+                            ➤ {line}
+                            {lineIndex === lines.length - 1 ? '.' : <br />}
+                          </span>
+                        </div>
+                      ),
+                  )
+                })}
             </Box>
           )}
         </ModalBody>

@@ -1,0 +1,11 @@
+{
+  "modalHeader": "मेनू",
+  "dashboard": "डैशबोर्ड",
+  "leaderboard": "लीडरबोर्ड",
+  "leaderboardLocked": "इस पृष्ठ तक पहुंचने के लिए आपको साइन इन करना होगा",
+  "profile": {
+    "title": "प्रोफ़ाइल"
+  },
+  "getStarted": "शुरू करें",
+  "logout": "लॉग आउट"
+}

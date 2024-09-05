@@ -1,0 +1,10 @@
+{
+  "streak_broken_notification_title": "चलो वापस ट्रैक पर आते हैं! 🔄",
+  "streak_broken_notification_body": "नमस्ते {{name}} 👋, आपका स्ट्रीक टूट गया है, लेकिन आप इसे पुनर्जीवित कर सकते हैं! आपका स्ट्रीक पुनर्जीवित अवधि शुरू हो गया है — इस अवधि के दौरान किसी भी दिन 6 क्विज़ देकर अपने स्ट्रीक को पुनर्जीवित करें। आपके पास {{remainingTime}} बचे हैं। इसे न चूकें! 🚀📈",
+  "streak_seven_periodic_notification_title": "आज ही अपना Rapid Recap Quiz Streak पुनः प्रारंभ करें!",
+  "streak_seven_periodic_notification_body": "नमस्ते {{name}}! आपने {{streak_days}} दिनों के लिए अपना क्विज़ स्ट्रीक छोड़ दिया है। जीवन व्यस्त हो सकता है, लेकिन हम आपको वापस ट्रैक पर लाने के लिए यहां हैं। Rapid Recap के साथ अपनी शिक्षा यात्रा फिर से शुरू करें! 🚀",
+  "no_login_two_days_notification_title": "हम आपको याद कर रहे हैं! अपनी क्विज़ यात्रा फिर से शुरू करें 🚀",
+  "no_login_two_days_notification_body": "नमस्ते {{name}}, 2 दिन हो गए हैं जब हमने आपको Rapid Recap पर देखा था। वापस आएं और अपनी शिक्षा यात्रा पुनः शुरू करें! 🌟📚 जारी रखने के लिए टैप करें।",
+  "no_login_seven_days_notification_title": "काफी समय हो गया! अपनी शिक्षा यात्रा पुनः प्रारंभ करें 🚀",
+  "no_login_seven_days_notification_body": "नमस्ते {{name}}, {{inactive_days}} दिन हो गए हैं जब हमने आपको Rapid Recap पर देखा था। वापस आएं और हमारे नवीनतम क्विज़ और सामग्री का अन्वेषण करें! 🌟📚 जारी रखने के लिए टैप करें।"
+}

@@ -25,12 +25,14 @@ import useSound from '../../customHooks/useSound'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
 import { QuestionOutlineIcon } from '@chakra-ui/icons'
 import GuestLoginModal from '../authComponents/GuestLoginModal'
+import { useTranslation } from 'react-i18next'
 
 // Lazy loading for components that are not needed immediately
 const EditProfileModal = React.lazy(() => import('./EditProfileModal'))
 const NameLightning = React.lazy(() => import('../miscellaneous/NameLightning'))
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
+  const { t } = useTranslation('LeftProfileBox')
   const toast = useToast()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const { playClick } = useSound()
@@ -42,6 +44,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const [requestSent, setRequestSent] = useState(false)
   const [isFriend, setIsFriend] = useState(false)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
+  const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
 
   const handleClose = () => {
     setIsGuestLoggedin(false)
@@ -49,11 +52,11 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
 
   const profileData = useMemo(
     () => ({
-      name: leftProfileView.name,
+      name: leftProfileView?.name,
       pic:
-        leftProfileView.pic ||
+        leftProfileView?.pic ||
         'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
-      bio: leftProfileView.bio,
+      bio: leftProfileView?.bio,
       inGameName: user?.inGameName,
       lastInGameNameChange: user?.lastInGameNameChange,
     }),
@@ -93,8 +96,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
 
         if (response.status === 200) {
           toast({
-            title: 'Success',
-            description: 'Profile Updated Successfully',
+            title: t('toast.successTitle'),
+            description: t('toast.successDescription'),
             status: 'success',
             duration: 9000,
             isClosable: true,
@@ -103,10 +106,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         }
       } catch (e) {
         toast({
-          title: 'Error',
-          description:
-            e?.response.data.error ||
-            'Error updating profile please try again!!',
+          title: t('toast.errorTitle'),
+          description: e?.response.data.error || t('toast.errorDescription'),
           status: 'error',
           duration: 9000,
           isClosable: true,
@@ -115,7 +116,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         console.error(e)
       }
     },
-    [dispatch, navigate, toast, user],
+    [dispatch, navigate, toast, user, t],
   )
 
   const checkCanSendRequest = useCallback(async () => {
@@ -124,7 +125,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     try {
       const response = await axios.post('/api/friends/can-send-request', {
         fromId: user?._id,
-        toId: leftProfileView._id,
+        toId: leftProfileView?._id,
       })
       if (
         response.status === 200 &&
@@ -138,8 +139,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Error checking friend request status',
+        title: t('toast.requestErrorTitle'),
+        description: t('toast.requestErrorDescription'),
         status: 'error',
         duration: 9000,
         isClosable: true,
@@ -148,20 +149,20 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     } finally {
       setLoading(false)
     }
-  }, [leftProfileView._id, toast, user])
+  }, [leftProfileView?._id, toast, user, t])
 
   const sendFriendRequest = useCallback(async () => {
     setLoading(true)
     try {
       const response = await axios.post('/api/friends/send-request', {
         fromId: user?._id,
-        toId: leftProfileView._id,
+        toId: leftProfileView?._id,
       })
       if (response.status === 200) {
         setRequestSent(true)
         toast({
-          title: 'Success',
-          description: 'Friend request sent successfully',
+          title: t('toast.requestSuccessTitle'),
+          description: t('toast.requestSuccessDescription'),
           status: 'success',
           duration: 9000,
           isClosable: true,
@@ -170,8 +171,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Error sending friend request',
+        title: t('toast.requestSendErrorTitle'),
+        description: t('toast.requestSendErrorDescription'),
         status: 'error',
         duration: 9000,
         isClosable: true,
@@ -180,7 +181,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     } finally {
       setLoading(false)
     }
-  }, [toast, user?._id, leftProfileView._id])
+  }, [toast, user?._id, leftProfileView?._id, t])
 
   useEffect(() => {
     checkCanSendRequest()
@@ -204,7 +205,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       <Flex w={'100%'}>
         <Image
           src={profileData?.pic}
-          alt="Profile"
+          alt={t('alt.profileImage')}
           borderRadius="10%"
           width="80px"
           height="80px"
@@ -255,11 +256,12 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             </Suspense>
           </Flex>
           <Heading as="h6" fontSize={'12px'}>
-            {leftProfileView.inGameName}
+            {leftProfileView?.inGameName}
           </Heading>
 
           <Heading as="h6" fontSize={'12px'}>
-            Rank : {user?.role === 'guest' ? 'NA' : leftProfileView.rank}
+            {t('rank')}{' '}
+            {user?.role === 'guest' ? t('na') : leftProfileView?.rank}
           </Heading>
         </Box>
         {window.location.pathname.split('/').pop() !== user?.inGameName &&
@@ -276,7 +278,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                   height={'fit-content'}
                   py={1}
                 >
-                  Friend
+                  {t('friend')}
                 </Badge>
               ) : (
                 <Flex
@@ -321,7 +323,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
               }}
               onClick={handleEditClick}
             >
-              Edit Profile
+              {t('editProfile')}
             </Button>
           </Flex>
         ) : null}
@@ -344,6 +346,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         guestPassword={user?.guestTempPassword ? user.guestTempPassword : null}
         guestId={user?._id}
         onOpen={() => setIsGuestLoggedin(true)}
+        t={GuestLoginModaltranslation}
       />
     </Flex>
   )

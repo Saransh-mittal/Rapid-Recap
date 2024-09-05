@@ -1,0 +1,30 @@
+{
+  "categories": {
+    "all": "सभी",
+    "top": "शीर्ष",
+    "general": "सामान्य",
+    "world": "विश्व",
+    "politics": "राजनीति",
+    "business": "व्यापार",
+    "technology": "प्रौद्योगिकी",
+    "sports": "खेल",
+    "health": "स्वास्थ्य",
+    "science": "विज्ञान",
+    "environment": "पर्यावरण",
+    "crime": "अपराध",
+    "education": "शिक्षा",
+    "entertainment": "मनोरंजन",
+    "food": "खाना",
+    "lifestyle": "जीवन शैली",
+    "tourism": "पर्यटन"
+  },
+  "buttons": {
+    "clearSearch": "खोज परिणाम साफ़ करें",
+    "loadMore": "और लोड करें"
+  },
+  "messages": {
+    "loginToContinue": "आगे जारी रखने के लिए लॉगिन करें",
+    "revisitLater": "अनुशंसित समाचार देखने के लिए कृपया कुछ समय बाद इस पृष्ठ पर फिर से आएं",
+    "noMoreNews": "दिखाने के लिए कोई और समाचार नहीं है"
+  }
+}

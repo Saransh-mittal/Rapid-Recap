@@ -10,6 +10,7 @@ import {
   useMediaQuery,
 } from '@chakra-ui/react'
 import Heading from '../miscellaneous/HeadingComponent'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load child components
 const IQLineGraph = React.lazy(() => import('./IQLineGraph'))
@@ -30,6 +31,9 @@ const SeasonModal = ({
 }) => {
   const [isLargerThan992px] = useMediaQuery('(min-width: 992px)')
   const [initialTouchY, setInitialTouchY] = useState(null)
+  const { t: IQBartranslate } = useTranslation('IQBarGraph')
+  const { t: IQLineTranslate } = useTranslation('IQLineGraph')
+  const { t: SeasonModalTranslate } = useTranslation('SeasonModal')
 
   // Memoize scrollbar style creation function
   const styleScrollbar = useCallback(() => {
@@ -145,8 +149,12 @@ const SeasonModal = ({
         <ModalHeader textTransform={'uppercase'}>
           <Heading
             color={'white'}
-            title={season ? `Season ${season}` : 'Season Modal'}
-            tag={'History'}
+            title={
+              season
+                ? `${SeasonModalTranslate('season')} ${season}`
+                : SeasonModalTranslate('seasonModal')
+            }
+            tag={SeasonModalTranslate('history')}
             marginBottom={'0'}
           />
         </ModalHeader>
@@ -164,8 +172,8 @@ const SeasonModal = ({
             <Heading
               title={
                 loginedUserProfile
-                  ? 'You were not logged-in in this season'
-                  : 'This user was not logged-in in this season'
+                  ? SeasonModalTranslate('notLoggedInUser')
+                  : SeasonModalTranslate('notLoggedInOther')
               }
             />
           ) : (
@@ -213,12 +221,14 @@ const SeasonModal = ({
                       privateLineGraph={privacyProfileData.lineGraph}
                       loginedUserProfile={loginedUserProfile}
                       viewingHistory={true}
+                      t={IQLineTranslate}
                     />
                     <IQBarGraph
                       barGraph={profile.barGraph}
                       privateBarGraph={privacyProfileData.lineGraph}
                       loginedUserProfile={loginedUserProfile}
                       viewingHistory={true}
+                      t={IQBartranslate}
                     />
                   </Suspense>
                 )}

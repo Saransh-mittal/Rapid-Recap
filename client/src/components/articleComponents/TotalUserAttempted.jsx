@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Text, Box } from '@chakra-ui/react'
 import { Chart, registerables } from 'chart.js'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next'
 Chart.register(...registerables)
 
 const TotalUserAttempted = ({
@@ -10,6 +11,7 @@ const TotalUserAttempted = ({
   RQM_score,
   articleId,
 }) => {
+  const { t } = useTranslation('TotalUserAttempted')
   const [updatedTotalUsersGivenQuiz, setUpdatedTotalUsersGivenQuiz] =
     useState(totalUsersGivenQuiz)
   const [avgRQM, setAvgRQM] = useState(0)
@@ -45,10 +47,10 @@ const TotalUserAttempted = ({
     chartRef.current = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Attempted', 'Avg. Score', 'Your Score'],
+        labels: [t('Attempted'), t('AvgScore'), t('YourScore')],
         datasets: [
           {
-            label: 'Quiz Statistics',
+            label: t('quizStatistics'),
             data: [updatedTotalUsersGivenQuiz, avgRQM, RQM_score],
             backgroundColor: [
               'rgba(253, 226, 243, 0.6)',
@@ -113,7 +115,7 @@ const TotalUserAttempted = ({
       <Box className="sidebar" w="100%">
         <Box mb={{ base: '4', md: '6' }}>
           <Text fontSize={{ base: '1.2rem', md: '1.7rem' }} color="white">
-            Quiz Statistics:
+            {t('quizStatistics')}
           </Text>
           <Box
             as="canvas"

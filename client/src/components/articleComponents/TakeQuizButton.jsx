@@ -2,8 +2,10 @@ import { Box, Button, Flex, Text } from '@chakra-ui/react'
 import React from 'react'
 import Bubbles from '../miscellaneous/bubbles'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
-const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
+const TakeQuizButton = ({ onClick, isQuinBoostAvailable }) => {
+  const { t } = useTranslation('TakeQuizButton')
   const { isBoosted } = useSelector(state => state.app)
 
   const buttonStyle = {
@@ -56,7 +58,7 @@ const TakeQuizButton = ({ onClick, css, isQuinBoostAvailable }) => {
           py={2}
           fontFamily="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
         >
-          Take Quiz
+          {t('takeQuiz')}
         </Text>
       </Button>
     </Box>

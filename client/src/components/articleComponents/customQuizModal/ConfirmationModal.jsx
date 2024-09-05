@@ -9,15 +9,17 @@ import {
   Button,
 } from '@chakra-ui/react'
 import useSound from '../../../customHooks/useSound'
+import { useTranslation } from 'react-i18next'
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, message }) => {
+  const { t } = useTranslation('ConfirmationModal')
   const { playClick } = useSound()
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent bg="#BBE2EC">
         <ModalHeader fontWeight="bold" fontSize="30px">
-          Confirmation
+          {t('confirmationTitle')}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody fontSize="17px">{message}</ModalBody>
@@ -31,7 +33,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, message }) => {
               onConfirm()
             }}
           >
-            Confirm
+            {t('confirmButton')}
           </Button>
           <Button
             variant="ghost"
@@ -40,7 +42,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, message }) => {
               onClose()
             }}
           >
-            Cancel
+            {t('cancelButton')}
           </Button>
         </ModalFooter>
       </ModalContent>

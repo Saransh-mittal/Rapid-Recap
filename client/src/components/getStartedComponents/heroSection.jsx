@@ -9,6 +9,7 @@ import {
 } from '@chakra-ui/react'
 import { motion, useAnimation, useScroll, useTransform } from 'framer-motion'
 import { lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // Lazy-loaded components
 const Section = lazy(() => import('../miscellaneous/Section'))
@@ -37,6 +38,7 @@ const MotionBox = motion(Box)
 const MotionImage = motion(Image)
 
 const EnhancedHeroSection = () => {
+  const { t } = useTranslation('heroSection')
   const parallaxRef = useRef(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
   const laptopControls = useAnimation()
@@ -106,18 +108,18 @@ const EnhancedHeroSection = () => {
         src={images.xl}
         srcSet={`${images.xl} ${sizes.xlSize}w, ${images.lg} ${sizes.lgSize}w, ${images.md} ${sizes.mdSize}w, ${images.base} ${sizes.baseSize}w`}
         sizes={sizes.sizes}
-        alt={alt}
+        alt={t(`hero.altTexts.${alt}`)}
         loading="eager"
         style={{ y }}
         whileHover="hover"
       />
     ),
-    [deviceVariants],
+    [deviceVariants, t],
   )
 
   return (
     <Suspense fallback={<Box>Loading...</Box>}>
-      <Section crosses customPaddings={`2.85rem 0 0 0`} id="hero">
+      <Section crosses customPaddings="2.85rem 0 0 0" id="hero">
         <Box
           position="relative"
           textAlign="center"
@@ -137,9 +139,9 @@ const EnhancedHeroSection = () => {
               letterSpacing={'2px'}
             >
               <ChakraHeading as="h2" size="2xl" mb="6">
-                Turn News Into Knowledge with{' '}
+                {t('hero.title')}{' '}
                 <Box as="span" display="inline-block" position="relative">
-                  Rapid Recap{' '}
+                  {t('hero.titleHighlight')}{' '}
                   <Image
                     src={curve}
                     position="absolute"
@@ -150,7 +152,7 @@ const EnhancedHeroSection = () => {
                     height={{ base: '0.5rem', lg: '0.75rem' }}
                     width="full"
                     transform="translateY(-0.5rem)"
-                    alt="Curve"
+                    alt={t('hero.altTexts.curve')}
                   />
                 </Box>
               </ChakraHeading>
@@ -164,12 +166,7 @@ const EnhancedHeroSection = () => {
                   fontWeight={'bold'}
                   mt={{ base: '0', lg: '2rem' }}
                 >
-                  Welcome to Rapid Recap, where staying informed meets friendly
-                  competition. Read the latest news and articles, then test your
-                  knowledge with interactive quizzes. Your scores contribute to
-                  your unique Information Quotient (IQ), ranking you on our
-                  leaderboard. Track your progress, compare with peers, and
-                  strive for excellence.
+                  {t('hero.description')}
                 </Text>
               </Flex>
             </Box>
@@ -202,7 +199,7 @@ const EnhancedHeroSection = () => {
                   sizes:
                     '(max-width: 768px) 175px, (max-width: 1024px) 350px, (max-width: 1280px) 400px, 525px',
                 },
-                'Article Interface',
+                'articleInterface',
               )}
 
               {renderImage(
@@ -227,7 +224,7 @@ const EnhancedHeroSection = () => {
                   sizes:
                     '(max-width: 768px) 90px, (max-width: 1024px) 170px, (max-width: 1280px) 180px, 250px',
                 },
-                'Quiz Instructions',
+                'quizInstructions',
               )}
 
               {renderImage(
@@ -252,7 +249,7 @@ const EnhancedHeroSection = () => {
                   sizes:
                     '(max-width: 768px) 110px, (max-width: 1024px) 245px, (max-width: 1280px) 275px, 400px',
                 },
-                'Quiz Interface',
+                'quizInterface',
               )}
 
               <Suspense fallback={<Box>Loading circles...</Box>}>

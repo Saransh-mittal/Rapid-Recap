@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from 'react'
 import { Box, Flex, Text, Container, VStack, HStack } from '@chakra-ui/react'
 import styled, { keyframes } from 'styled-components'
+import { useTranslation } from 'react-i18next'
 
 const spin = keyframes`
   from { transform: rotate(0deg); }
@@ -27,6 +28,8 @@ const GlowingText = styled(Text)`
 `
 
 const ProgressBubble = ({ xp, level }) => {
+  const { t } = useTranslation('ProfileExperienceLevel')
+
   const calculateProgress = useCallback((transitionXp, requiredXP) => {
     return Math.round(100 - (requiredXP / transitionXp) * 100)
   }, [])
@@ -75,10 +78,10 @@ const ProgressBubble = ({ xp, level }) => {
         <HStack justify="space-between" align="center">
           <VStack align="start" spacing={1}>
             <Text fontSize="sm" color="gray.400" fontWeight="medium">
-              Experience Progress
+              {t('experienceProgress')}
             </Text>
             <GlowingText fontSize="3xl" fontWeight="bold" color={getColor()}>
-              Level {level}
+              {t('level')} {level}
             </GlowingText>
           </VStack>
           <Box position="relative" width="120px" height="120px">
@@ -132,7 +135,7 @@ const ProgressBubble = ({ xp, level }) => {
         >
           <HStack justify="space-between">
             <Text fontWeight="medium" color="gray.300">
-              Current XP:
+              {t('currentXp')}:
             </Text>
             <GlowingText fontWeight="bold" color={getColor()}>
               {xp}
@@ -140,7 +143,7 @@ const ProgressBubble = ({ xp, level }) => {
           </HStack>
           <HStack justify="space-between">
             <Text fontWeight="medium" color="gray.300">
-              XP to Next Level:
+              {t('xpToNextLevel')}:
             </Text>
             <GlowingText fontWeight="bold" color={getColor()}>
               {requiredXP}
@@ -148,7 +151,7 @@ const ProgressBubble = ({ xp, level }) => {
           </HStack>
           <HStack justify="space-between">
             <Text fontWeight="medium" color="gray.300">
-              Next Level:
+              {t('nextLevel')}:
             </Text>
             <GlowingText fontWeight="bold" color={getColor()}>
               {level + 1}

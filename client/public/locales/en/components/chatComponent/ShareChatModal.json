@@ -1,0 +1,15 @@
+{
+  "shareToChat": "Share to Chat",
+  "send": "Send",
+  "cancel": "Cancel",
+  "shareOnSocialMedia": "Share on Social Media",
+  "copyArticleUrl": "Copy Article URL",
+  "linkCopied": "Link Copied",
+  "articleUrlCopied": "Article URL copied to clipboard",
+  "checkOutArticle": "Check out this article",
+  "errorOccurred": "An error occurred",
+  "failedToLoadChats": "Failed to load chats",
+  "failedToShareArticle": "Failed to share article",
+  "noChatsSelected": "No chats selected",
+  "selectAtLeastOneChat": "Please select at least one chat"
+}

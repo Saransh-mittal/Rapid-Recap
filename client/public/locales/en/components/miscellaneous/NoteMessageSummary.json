@@ -1,0 +1,22 @@
+{
+  "allMessages": "All Messages",
+  "dismissAll": "Dismiss All",
+  "dismiss": "Dismiss",
+  "milestoneAchieved": "Milestone Achieved!",
+  "xpEarned": "{{totalXp}} XP earned",
+  "streakEnded": "{{count}}-day streak ended",
+  "streak": "{{count}}-day streak",
+  "completeMoreQuizzes": "Complete {{count}} more {{quizCount}} to revive your streak!",
+  "timeToRevive": "{{formattedTime}} to revive",
+  "milestone": "Milestone",
+  "streakStatus": {
+    "broken": "Broken",
+    "revival": "Revival",
+    "revived": "Revived",
+    "default": "Active"
+  },
+  "quiz": "quiz",
+  "quizzes": "quizzes",
+  "milestoneContent": "{{content}}",
+  "milestoneDescription": "{{description}}"
+}

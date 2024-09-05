@@ -1,0 +1,13 @@
+{
+  "savedSuccess": "Subscription saved successfully",
+  "saveFailed": "Failed to save subscription",
+  "newContentAlert": "📢 New Content Alert! 📰",
+  "exploreArticles": "Exciting news just in! Explore our latest articles and breaking news updates to stay ahead of the curve. Tap to discover now!",
+  "notifSentSuccess": "Notifications sent successfully",
+  "notifSendFailed": "Failed to send notifications",
+  "endpointRequired": "Endpoint is required",
+  "checkFailed": "Failed to check subscription",
+  "notFound": "Subscription not found",
+  "deleteSuccess": "Subscription deleted successfully",
+  "deleteFailed": "Failed to delete subscription"
+}

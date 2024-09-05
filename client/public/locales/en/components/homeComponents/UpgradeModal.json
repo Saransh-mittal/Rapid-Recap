@@ -1,0 +1,10 @@
+{
+  "congratulations": "Congratulations, {{userName}}!",
+  "societyUpgrade": "Society Upgrade",
+  "circleUpgrade": "Circle Upgrade",
+  "society": "{{society}} Society",
+  "circle": "{{circle}}",
+  "upgradeMessage": "{{upgradeMessage}}",
+  "journeyContinues": "Your journey to mastery continues...",
+  "continueJourney": "Continue Your Journey.."
+}

@@ -21,8 +21,10 @@ import throttle from 'lodash.throttle'
 import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import { setVerifyEmail } from '../../redux/authSlice'
+import { useTranslation } from 'react-i18next'
 
 const EmailVerify = ({ email, isOpen, onClose }) => {
+  const { t } = useTranslation('EmailVerify')
   const toast = useToast()
   const dispatch = useDispatch()
   const { forgotPassword, user } = useSelector(state => state.auth)
@@ -77,7 +79,7 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
       if (response.status === 201) {
         if (forgotPassword) {
           toast({
-            title: 'Email Verified Now You Can Reset Password',
+            title: t('toastResetSuccess'),
             status: 'success',
             duration: 5000,
             isClosable: true,
@@ -85,7 +87,7 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
           })
         } else {
           toast({
-            title: 'Email Verified',
+            title: t('toastVerifySuccess'),
             status: 'success',
             duration: 5000,
             isClosable: true,
@@ -95,12 +97,12 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
         onClose()
         dispatch(setVerifyEmail(true))
       } else {
-        throw new Error('Email Verification Failed')
+        throw new Error(t('toastVerifyFailed'))
       }
       return
     } catch (error) {
       toast({
-        title: 'Email Verification Failed',
+        title: t('toastVerifyFailed'),
         description: error?.response?.data?.error,
         status: 'error',
         duration: 9000,
@@ -129,7 +131,7 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
       })
       if (response.status === 201) {
         toast({
-          title: 'OTP sent',
+          title: t('toastOTPSent'),
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -138,7 +140,7 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
       }
     } catch (error) {
       toast({
-        title: 'OTP sending failed',
+        title: t('toastOTPFail'),
         description: error.response.data.error,
         status: 'error',
         duration: 5000,
@@ -204,12 +206,13 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
         <ModalBody>
           <VStack spacing={4} align="stretch" color={'white'}>
             <Text fontSize="2xl" fontWeight="bold" textAlign="center">
-              OTP VERIFICATION
+              {t('heading')}
             </Text>
             <Text textAlign="center">
-              An OTP has been sent to {showEmail()}
+              {t('otpSent')}
+              {showEmail()}
             </Text>
-            <Text textAlign="center">Please enter OTP to verify</Text>
+            <Text textAlign="center">{t('enterOTP')}</Text>
             <HStack justifyContent="center">
               {Object.keys(otp).map((key, index) => (
                 <Input
@@ -235,15 +238,15 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
                 submitOTPThrottled()
               }}
               isLoading={load}
-              loadingText="Verifying"
+              loadingText={t('verifying')}
               colorScheme="blue"
             >
-              Verify
+              {t('verifyButton')}
             </Button>
-            <Text textAlign="center">Didn't receive code?</Text>
+            <Text textAlign="center">{t('didntReceiveCode')}</Text>
             <Box textAlign="center">
               <Otptimer
-                buttonText="Resend OTP"
+                buttonText={t('resendOTP')}
                 buttonContainerClass="btn btn-danger"
                 minutes={0}
                 seconds={60}

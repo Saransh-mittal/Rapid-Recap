@@ -6,13 +6,15 @@ import { LockIcon } from '@chakra-ui/icons'
 import ShareSVG from '../../assets/svg/ShareSVG'
 import { useDispatch } from 'react-redux'
 import { addNoteMessage } from '../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
 
 const ShareButton = ({ onClick, isDisabled, onOpenSignin, user }) => {
   const dispatch = useDispatch()
+  const { t } = useTranslation('ShareButton')
   return (
     <Flex position={'relative'}>
       {isDisabled && (
-        <Tooltip label="Please log in to share" placement="top">
+        <Tooltip label={t('loginToShare')} placement="top">
           <LockIcon
             position="absolute"
             top="50%"
@@ -27,8 +29,9 @@ const ShareButton = ({ onClick, isDisabled, onOpenSignin, user }) => {
                 : () =>
                     dispatch(
                       addNoteMessage({
-                        title:
+                        title: t(
                           'Register to see your IQ score and grow Wise Web',
+                        ),
                         duration: 10000,
                         width: '250px',
                         actions: [
@@ -57,7 +60,7 @@ const ShareButton = ({ onClick, isDisabled, onOpenSignin, user }) => {
               ? onClick()
               : dispatch(
                   addNoteMessage({
-                    title: 'Register to see your IQ score and grow Wise Web',
+                    title: t('Register to see your IQ score and grow Wise Web'),
                     duration: 10000,
                     width: '250px',
                     actions: [
@@ -71,7 +74,7 @@ const ShareButton = ({ onClick, isDisabled, onOpenSignin, user }) => {
           buttonW="7rem"
           textColor={'white'}
         >
-          Share
+          {t('share')}
           <Icon as={ShareSVG} />
         </Button>
         <ButtonGradient />

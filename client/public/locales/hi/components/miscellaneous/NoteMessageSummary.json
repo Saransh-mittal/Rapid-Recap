@@ -1,0 +1,22 @@
+{
+  "allMessages": "सभी संदेश",
+  "dismissAll": "सभी बंद करें",
+  "dismiss": "बंद करें",
+  "milestoneAchieved": "मील का पत्थर हासिल किया!",
+  "xpEarned": "{{totalXp}} XP अर्जित किया",
+  "streakEnded": "{{count}}-दिन की लगातार कोशिश समाप्त",
+  "streak": "{{count}}-दिन की लगातार कोशिश",
+  "completeMoreQuizzes": "अपनी लगातार कोशिश को पुनर्जीवित करने के लिए {{count}} और {{quizCount}} पूरा करें!",
+  "timeToRevive": "{{formattedTime}} में पुनर्जीवित करें",
+  "milestone": "मील का पत्थर",
+  "streakStatus": {
+    "broken": "टूटा हुआ",
+    "revival": "पुनर्जीवन",
+    "revived": "पुनर्जीवित",
+    "default": "सक्रिय"
+  },
+  "quiz": "क्विज़",
+  "quizzes": "क्विज़ेस",
+  "milestoneContent": "{{content}}",
+  "milestoneDescription": "{{description}}"
+}

@@ -14,11 +14,13 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load heavy SVG and utility components
 const StreakSVG = lazy(() => import('./StreakSVG'))
 
 const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
+  const { t } = useTranslation('DailyStreakModal')
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { playClick } = useSound()
   const { streak, longestStreak, isBoosted } = useSelector(state => state.app)
@@ -39,7 +41,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
             fontWeight="medium"
             mb={4}
           >
-            Welcome aboard! Let's embark on this streak journey together!
+            {t('welcome_message')}
           </Text>
           <Text
             color="white"
@@ -47,25 +49,21 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
             textAlign="center"
             lineHeight="1.5"
           >
-            Starting your streak today means unlocking daily rewards and
-            achievements!
+            {t('starting_streak')}
           </Text>
         </>
       )
     } else if (streak === 0 && longestStreak > 0) {
       return (
-        <>
-          <Text
-            color="white"
-            fontSize="20px"
-            textAlign="center"
-            fontWeight="medium"
-            mb={4}
-          >
-            You've got this! Let's get back on track and aim for a new streak
-            record!
-          </Text>
-        </>
+        <Text
+          color="white"
+          fontSize="20px"
+          textAlign="center"
+          fontWeight="medium"
+          mb={4}
+        >
+          {t('get_back_on_track')}
+        </Text>
       )
     } else if (
       streak > 0 &&
@@ -75,17 +73,15 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
       longestStreak === streak
     ) {
       return (
-        <>
-          <Text
-            color="white"
-            fontSize="20px"
-            textAlign="center"
-            fontWeight="medium"
-            mb={4}
-          >
-            Congratulations on maintaining your streak! You're on fire!
-          </Text>
-        </>
+        <Text
+          color="white"
+          fontSize="20px"
+          textAlign="center"
+          fontWeight="medium"
+          mb={4}
+        >
+          {t('maintaining_streak')}
+        </Text>
       )
     } else if (
       streak > 0 &&
@@ -94,53 +90,45 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
       longestStreak > streak
     ) {
       return (
-        <>
-          <Text
-            color="white"
-            fontSize="20px"
-            textAlign="center"
-            fontWeight="medium"
-            mb={4}
-          >
-            Keep pushing forward! You're getting closer to your longest streak!
-            You've got this!
-          </Text>
-        </>
+        <Text
+          color="white"
+          fontSize="20px"
+          textAlign="center"
+          fontWeight="medium"
+          mb={4}
+        >
+          {t('closer_to_longest_streak')}
+        </Text>
       )
     } else if (streak > 0 && streak % 7 >= 5) {
       return (
-        <>
-          <Text
-            color="white"
-            fontSize="20px"
-            textAlign="center"
-            fontWeight="medium"
-            mb={4}
-          >
-            You're about to hit a milestone! Get ready for an epic reward!
-          </Text>
-        </>
+        <Text
+          color="white"
+          fontSize="20px"
+          textAlign="center"
+          fontWeight="medium"
+          mb={4}
+        >
+          {t('milestone')}
+        </Text>
       )
     } else if (isBoosted) {
       return (
-        <>
-          <Text
-            color="white"
-            fontSize="20px"
-            textAlign="center"
-            fontWeight="medium"
-            mb={4}
-          >
-            Today is your special reward day, where your dedication pays off!
-          </Text>
-        </>
+        <Text
+          color="white"
+          fontSize="20px"
+          textAlign="center"
+          fontWeight="medium"
+          mb={4}
+        >
+          {t('special_reward')}
+        </Text>
       )
     } else {
       return null
     }
-  }, [streak, longestStreak, isBoosted])
+  }, [streak, longestStreak, isBoosted, t])
 
-  // Memoize close handler with useCallback to prevent unnecessary re-renders
   const handleClose = useCallback(() => {
     playClick()
     onClose()
@@ -176,7 +164,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                   pb={2}
                   mb={4}
                 >
-                  Your Streak Insights
+                  {t('streak_insights')}
                 </ModalHeader>
                 <ModalCloseButton color="#a595c9" />
                 <ModalBody
@@ -197,7 +185,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                         fontWeight="medium"
                         mb={4}
                       >
-                        You've maintained a streak for{' '}
+                        {t('maintained_streak')}{' '}
                         <Text
                           as="span"
                           color="#8b7daf"
@@ -207,7 +195,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                           fontWeight="semibold"
                           textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
                         >
-                          {streak} days{' '}
+                          {streak} {t('days')}{' '}
                           <Suspense fallback={<div>Loading SVG...</div>}>
                             <StreakSVG
                               streak={streak}
@@ -216,7 +204,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                             />
                           </Suspense>
                         </Text>{' '}
-                        Keep it up!
+                        {t('keep_it_up')}
                       </Text>
                       <Text
                         color="white"
@@ -225,7 +213,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                         fontWeight="medium"
                         mb={6}
                       >
-                        Your longest streak is{' '}
+                        {t('longest_streak_is')}{' '}
                         <Text
                           as="span"
                           color="green.300"
@@ -235,7 +223,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                           fontWeight="semibold"
                           textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
                         >
-                          {longestStreak} days{' '}
+                          {longestStreak} {t('days')}{' '}
                           <Suspense fallback={<div>Loading SVG...</div>}>
                             <StreakSVG
                               streak={longestStreak}
@@ -255,7 +243,7 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
                     _hover={{ bg: '#5d4b96' }}
                     onClick={handleClose}
                   >
-                    Close
+                    {t('close')}
                   </Button>
                 </ModalFooter>
               </ModalContent>

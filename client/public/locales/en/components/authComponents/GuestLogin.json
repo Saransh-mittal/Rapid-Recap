@@ -1,0 +1,7 @@
+{
+  "toastSuccessTitle": "Guest Login Successful",
+  "toastSuccessDescription": "Logged in as {{inGameName}}",
+  "toastFailTitle": "Guest Login Failed",
+  "toastFailDescription": "An error occurred during guest login",
+  "buttonText": "Continue as Guest"
+}
