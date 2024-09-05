@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next'
-import axios from 'axios'
-import i18n from 'i18next'
 import { motion } from 'framer-motion'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { Box, Text, Select, Skeleton } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
+import { changeLanguage } from './utils/helper.utils'
+import i18n from 'i18next'
 
 const MotionBox = motion(Box)
 const MotionSelect = motion(Select)
@@ -12,20 +12,11 @@ const MotionSelect = motion(Select)
 const LanguageSwitcher = () => {
   const { t } = useTranslation('Settings')
   const { user } = useSelector(state => state.auth)
-  const [currentLanguage, setCurrentLanguage] = useState(user.userLanguage)
+  const [currentLanguage, setCurrentLanguage] = useState(user?.userLanguage)
   const [loading, setLoading] = useState(false) // State to manage loading
 
-  const changeLanguage = async lng => {
-    setLoading(true) // Start loading
-    await i18n.changeLanguage(lng)
-    setCurrentLanguage(lng) // Update the local state
-
-    // Send request to the server to update user language
-    await axios.post('/api/user/language', { language: lng })
-
-    setLoading(false) // End loading
-  }
   useEffect(() => {
+    // Sync the local state with the Redux store or i18next's language
     setCurrentLanguage(i18n.language)
   }, [i18n.language])
 
@@ -54,7 +45,9 @@ const LanguageSwitcher = () => {
           <Skeleton isLoaded={!loading}>
             <MotionSelect
               value={currentLanguage}
-              onChange={e => changeLanguage(e.target.value)}
+              onChange={e =>
+                changeLanguage(e.target.value, setLoading, setCurrentLanguage)
+              }
               bg="whiteAlpha.200"
               color="white"
               borderColor="whiteAlpha.400"

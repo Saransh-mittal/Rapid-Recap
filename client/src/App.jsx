@@ -49,6 +49,7 @@ import {
 } from './redux/appSlice.js'
 import { setUser } from './redux/authSlice.js'
 import i18n from 'i18next'
+import { changeLanguage } from './utils/helper.utils.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -143,6 +144,7 @@ const App = () => {
 
   useEffect(() => {
     let timer
+
     if (isAuthenticated) {
       const delay = Math.floor(Math.random() * 120000) + 30000
       timer = setTimeout(() => {
@@ -154,6 +156,16 @@ const App = () => {
     }
     if (isAuthenticated && user?.userLanguage) {
       i18n.changeLanguage(user?.userLanguage ? user.userLanguage : 'en')
+    } else if (isAuthenticated && !user?.userLanguage) {
+      changeLanguage('en', null, null)
+      dispatch(
+        addNoteMessage({
+          title: t('Please select your language from profile'), // Added translation
+          duration: null,
+          width: '300px',
+          actions: [{ actionType: 'LANGUAGE' }], // Added translation
+        }),
+      )
     }
     return () => clearTimeout(timer)
   }, [isAuthenticated])

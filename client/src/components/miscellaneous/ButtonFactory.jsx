@@ -4,6 +4,7 @@ import { Button as ChakraButton } from '@chakra-ui/react'
 import GuestLogin from '../authComponents/GuestLogin'
 import SecureYourProgress from './SecureYourProgress'
 import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from '../../LanguageSwitcher'
 
 const ElegantButton = ({ onClick, children }) => (
   <ChakraButton
@@ -54,6 +55,8 @@ const ButtonFactory = ({
           onClick={onClick}
         />
       )
+    case 'LANGUAGE':
+      return <LanguageSwitcher />
     case 'GUEST':
       return (
         <GuestLogin width={'150px'} onClick={onClick} t={GuestLoginTranslate} />
