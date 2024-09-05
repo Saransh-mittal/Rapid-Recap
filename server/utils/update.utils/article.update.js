@@ -1,4 +1,5 @@
 const Article = require('../../model/articleSchema')
+const { hindiConverter } = require('../article.utils')
 
 const { progressBar } = require('../progress.utils')
 
@@ -108,48 +109,86 @@ const { progressBar } = require('../progress.utils')
 
 // changeDomesticAndOthersToGeneralCategory();
 
-const createIndexes = async () => {
+// const createIndexes = async () => {
+//   try {
+//     // Get all indexes on the collection
+//     const indexes = await Article.collection.indexes()
+
+//     // Find and drop the existing text index
+//     for (let index of indexes) {
+//       if (index.key['_fts'] === 'text') {
+//         await Article.collection.dropIndex(index.name)
+//         console.log(`Dropped existing text index: ${index.name}`)
+//         break
+//       }
+//     }
+
+//     // Create the new index
+//     await Article.collection.createIndex(
+//       {
+//         title: 'text',
+//         hindiTitle: 'text',
+//         mainText: 'text',
+//         hindiMainText: 'text',
+//         author: 'text',
+//         category: 'text',
+//       },
+//       {
+//         name: 'ArticleTextIndex',
+//         default_language: 'english',
+//         language_override: 'language',
+//         weights: {
+//           title: 10,
+//           hindiTitle: 10,
+//           mainText: 5,
+//           hindiMainText: 5,
+//           author: 1,
+//           category: 1,
+//         },
+//       },
+//     )
+//     console.log('ArticleTextIndex created successfully')
+//   } catch (error) {
+//     console.log(error)
+//   }
+// }
+// createIndexes()
+const last7DayArticlesHindiConverter = async () => {
   try {
-    // Get all indexes on the collection
-    const indexes = await Article.collection.indexes()
-
-    // Find and drop the existing text index
-    for (let index of indexes) {
-      if (index.key['_fts'] === 'text') {
-        await Article.collection.dropIndex(index.name)
-        console.log(`Dropped existing text index: ${index.name}`)
-        break
-      }
-    }
-
-    // Create the new index
-    await Article.collection.createIndex(
-      {
-        title: 'text',
-        hindiTitle: 'text',
-        mainText: 'text',
-        hindiMainText: 'text',
-        author: 'text',
-        category: 'text',
+    const articles = await Article.find({
+      dateTime: {
+        $gte: new Date(
+          new Date().setDate(new Date().getDate() - 7),
+        ).toISOString(),
       },
-      {
-        name: 'ArticleTextIndex',
-        default_language: 'english',
-        language_override: 'language',
-        weights: {
-          title: 10,
-          hindiTitle: 10,
-          mainText: 5,
-          hindiMainText: 5,
-          author: 1,
-          category: 1,
-        },
-      },
+    })
+    const updateProgress = progressBar(articles.length)
+    // for (let article of articles) {
+    //   if (
+    //     !article.hindiTitle ||
+    //     !article.hindiMainText ||
+    //     !article.hindiAuthor
+    //   ) {
+    //     await hindiConverter(article._id)
+    //   }
+    //   updateProgress()
+    // }
+    await Promise.all(
+      articles.map(async article => {
+        if (
+          !article.hindiTitle ||
+          !article.hindiMainText ||
+          !article.hindiAuthor
+        ) {
+          await hindiConverter(article._id)
+        }
+        updateProgress()
+      }),
     )
-    console.log('ArticleTextIndex created successfully')
+    console.log('Hindi conversion complete!')
   } catch (error) {
-    console.log(error)
+    console.error('Error:', error)
   }
 }
 
-createIndexes()
+last7DayArticlesHindiConverter()
