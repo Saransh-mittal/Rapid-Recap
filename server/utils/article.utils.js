@@ -423,6 +423,7 @@ const processExtractedNews = async (news, category) => {
       const newArticle = new Article(res)
       await newArticle.save()
       hindiConverter(newArticle._id.toString())
+      generateTournamentQuestions(newArticle._id.toString())
       processedOutput.push(newArticle)
     } catch (error) {
       console.error(

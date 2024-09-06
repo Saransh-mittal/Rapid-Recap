@@ -9,6 +9,12 @@ const calculateUserIQScores = require('./tasks/userIQScoreScheduler')
 const incFakeQuizAttempts = require('./tasks/incFakeQuizAttempts')
 const deleteExpiredGuestAccountsTask = require('./tasks/deleteExpiredGuestAccounts')
 const sendGuestAccountExpiryNotifs = require('./tasks/guestAccountExpiryNotifs')
+const {
+  startRegistration,
+  endRegistration,
+  startTournament,
+  endTournament,
+} = require('./tasks/tournamentManagement')
 
 const currentDate = moment().format('YYYY-MM-DD')
 
@@ -149,6 +155,11 @@ let schedules = [
     '20:00',
     sendGuestAccountExpiryNotifs,
   ),
+  // New tournament management schedules
+  createSchedule('startTournamentRegistration', '02:00', startRegistration),
+  createSchedule('endTournamentRegistration', '23:00', endRegistration),
+  createSchedule('startTournament', '00:00', startTournament),
+  createSchedule('endTournament', '23:59', endTournament),
 ]
 
 // Sort schedules by time
@@ -158,7 +169,14 @@ schedules.sort((a, b) => a.time.valueOf() - b.time.valueOf())
 schedules.forEach(schedule => {
   const timeUTC = schedule.time.clone().tz('UTC')
   const timeLocal = timeUTC.clone().local()
-  schedule.cronPattern = `${timeLocal.minute()} ${timeLocal.hour()} * * *`
+  const dayOfWeek = schedule.name.includes('Tournament')
+    ? schedule.name.includes('Registration')
+      ? 1 // Monday for registration
+      : schedule.name.includes('end')
+      ? 0
+      : 6 // Sunday for end, Saturday for start
+    : '*'
+  schedule.cronPattern = `${timeLocal.minute()} ${timeLocal.hour()} * * ${dayOfWeek}`
 })
 
 module.exports = schedules

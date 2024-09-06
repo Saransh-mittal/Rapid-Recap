@@ -83,6 +83,12 @@ const articleSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    tournamentQuestions: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'TOURNAMENT_QUESTION',
+      },
+    ],
   },
   { collection: 'Articles' },
 )
