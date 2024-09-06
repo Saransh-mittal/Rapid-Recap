@@ -3,6 +3,7 @@ const Tournament = require('../model/tournamentSchema')
 const TournamentRegistration = require('../model/tournamentRegistrationSchema')
 const User = require('../model/userSchema')
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
+const { logActivity } = require('../utils/activity.utils')
 
 // @desc   Register for a tournament
 // @route  POST /api/tournament/register
@@ -43,7 +44,12 @@ const registerForTournament = asyncHandler(async (req, res) => {
   // Add user to tournament participants
   tournament.participants.push(userId)
   await tournament.save()
-
+  const currentDate = new Date().toISOString().split('T')[0]
+  logActivity({
+    userInGameName: user.inGameName,
+    type: activityTypes.TOURNAMENT_REGISTRATION.type,
+    date: currentDate,
+  })
   res.status(201).json(registration)
 })
 
