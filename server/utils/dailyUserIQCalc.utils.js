@@ -11,7 +11,6 @@ const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const configService = require('../configService')
 const NoteMessage = require('../model/noteMessageSchema')
 const cache = require('memory-cache')
-const i18n = require('../i18n')
 
 const findSocietyCircleByIQ = IQScore => {
   return CircleAndSocietyData.find(data => {
@@ -36,9 +35,6 @@ const handleSocietyOrCircleUpgrade = async (
       return
     }
 
-    // Set the language for this session
-    i18n.changeLanguage(user.userLanguage)
-
     const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore)
     const currSocietyCircle = findSocietyCircleByIQ(currIQScore)
 
@@ -49,16 +45,17 @@ const handleSocietyOrCircleUpgrade = async (
       return
     }
 
+    // Check for any change in society or circle
     const hasSocietyOrCircleChanged =
       prevSocietyCircle.society !== currSocietyCircle.society ||
       prevSocietyCircle.circle !== currSocietyCircle.circle
-
     const changedSocietyOrCircle = hasSocietyOrCircleChanged
       ? prevSocietyCircle.society !== currSocietyCircle.society
         ? 'society'
         : 'circle'
       : 'same'
 
+    // Check if it's an upgrade (moving to a higher IQ range)
     const isUpgrade = currSocietyCircle.IQ_Lower >= prevSocietyCircle.IQ_Lower
 
     if (hasSocietyOrCircleChanged) {
@@ -73,17 +70,14 @@ const handleSocietyOrCircleUpgrade = async (
             userIQ: currIQScore,
             previousIQ: previousIQForXp,
           })
-
           const noteMessage = new NoteMessage({
             userId: user._id,
-            title: i18n.t('upgradeTitle'),
-            milestoneContent: i18n.t('upgradeContent', {
-              society:
-                changedSocietyOrCircle === 'society'
-                  ? currSocietyCircle.society
-                  : currSocietyCircle.circle,
-              type: changedSocietyOrCircle,
-            }),
+            title: 'Society/Circle Upgrade',
+            milestoneContent: `Congratulations! You have been upgraded to the ${
+              changedSocietyOrCircle === 'society'
+                ? currSocietyCircle.society
+                : currSocietyCircle.circle
+            } ${changedSocietyOrCircle}.`,
             messageType: 'xpAward',
             xpAwarded: getXpForActivity({
               activityType: type,
@@ -97,14 +91,17 @@ const handleSocietyOrCircleUpgrade = async (
           await noteMessage.save()
         }
       } else {
+        // Handle downgrade scenario
         user.societyUpgradeMessage = ''
         user.baseUpgradeIQ = null
       }
     } else if (user.baseUpgradeIQ && currIQScore < user.baseUpgradeIQ) {
+      // User's IQ has decreased but still in the same society/circle
       user.societyUpgradeMessage = ''
       user.baseUpgradeIQ = null
     }
 
+    // Update user's society and circle
     user.currentSociety = currSocietyCircle.society
     user.currentCircle = currSocietyCircle.circle
 
