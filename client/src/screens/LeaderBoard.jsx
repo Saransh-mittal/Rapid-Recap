@@ -43,7 +43,6 @@ const LeaderBoard = () => {
   const [searchLoad, setSearchLoad] = useState(false)
   const [leaders, setLeaders] = useState([])
   const [searchResults, setSearchResults] = useState([])
-  const [activeSociety, setActiveSociety] = useState(null)
 
   // Media query hooks
   const [isLgScreen] = useMediaQuery('(max-width: 1024px)')
@@ -116,12 +115,6 @@ const LeaderBoard = () => {
       window.removeEventListener('scroll', debouncedHandleScroll)
     }
   }, [isAuthenticated, debouncedHandleScroll])
-
-  useEffect(() => {
-    if (page > 1) {
-      fetchLeaderBoard(activeSociety, page)
-    }
-  }, [page, activeSociety, fetchLeaderBoard])
 
   return (
     <>
