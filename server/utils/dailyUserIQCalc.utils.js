@@ -107,12 +107,6 @@ const handleSocietyOrCircleUpgrade = async (
     user.currentCircle = currSocietyCircle.circle
 
     await user.save()
-
-    console.log(
-      `Updated society/circle for user ${userId}: ${
-        currSocietyCircle.society
-      } - ${currSocietyCircle.circle || 'N/A'}`,
-    )
   } catch (error) {
     console.error(
       `Error in handleSocietyOrCircleUpgrade for user ${userId}: ${error.message}`,
@@ -157,7 +151,9 @@ const fetchUsersWithQuizAttempts = async () => {
 
 const fetchUniqueArticleIds = async () => {
   try {
+    const currSeason = configService.getCurrentSeason()
     return await QuizAttempt.aggregate([
+      { $match: { season: parseInt(currSeason, 10) } },
       { $group: { _id: '$article' } },
       { $project: { _id: 0, articleId: '$_id' } },
     ])
@@ -214,73 +210,60 @@ const calculateUserScores = async users => {
   const userScores = []
   let sumOfUserScores = 0
   const currSeason = configService.getCurrentSeason()
-  const batchSize = 200 // Adjust this value based on your system's capabilities
 
-  const processBatch = async batch => {
-    const fetchQuizAttemptsPromises = batch.map(async user => {
-      try {
-        const quizAttempts = await QuizAttempt.find({
-          user: user._id,
-          season: parseInt(currSeason, 10),
-        }).populate({
-          path: 'article',
-          populate: { path: 'quiz' },
-        })
-        return { user, quizAttempts }
-      } catch (error) {
-        console.error(
-          `Error fetching quiz attempts for user ${user._id}: ${error.message}`,
-        )
-        console.error(`Stack trace: ${error.stack}`)
-        return { user, quizAttempts: [] }
-      }
-    })
-
-    const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises)
-    for (const { user, quizAttempts } of userQuizAttempts) {
-      let userScore = user.baseUserScore || 0
-
-      for (const attempt of quizAttempts) {
-        if (
-          !attempt ||
-          !attempt.article ||
-          !attempt.article.quiz ||
-          !attempt.articleDifficulty
-        ) {
-          console.error(`Invalid quiz attempt data for user ${user._id}.`)
-          continue
-        }
-
-        const quizScore = attempt.articleDifficulty * attempt.userPercentile
-        userScore += quizScore
-      }
-
-      userScore = typeof userScore === 'number' && userScore ? userScore : 0
-      try {
-        const u = await User.findById(user._id)
-        u.userScore = userScore
-        await u.save()
-      } catch (error) {
-        console.error(
-          `Error saving user score for user ${user._id}: ${error.message}`,
-        )
-        console.error(`Stack trace: ${error.stack}`)
-      }
-
-      sumOfUserScores += userScore
-      userScores.push({ user, userScore })
+  const fetchQuizAttemptsPromises = users.map(async user => {
+    try {
+      const quizAttempts = await QuizAttempt.find({
+        user: user._id,
+        season: parseInt(currSeason, 10),
+      }).populate({
+        path: 'article',
+        populate: { path: 'quiz' },
+      })
+      return { user, quizAttempts }
+    } catch (error) {
+      console.error(
+        `Error fetching quiz attempts for user ${user._id}: ${error.message}`,
+      )
+      console.error(`Stack trace: ${error.stack}`)
+      throw error
     }
-  }
+  })
 
-  // Process users in batches
-  for (let i = 0; i < users.length; i += batchSize) {
-    const batch = users.slice(i, i + batchSize)
-    await processBatch(batch)
-    console.log(
-      `Processed batch ${i / batchSize + 1} of ${Math.ceil(
-        users.length / batchSize,
-      )}`,
-    )
+  const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises)
+  for (const { user, quizAttempts } of userQuizAttempts) {
+    let userScore = user.baseUserScore || 0
+
+    for (const attempt of quizAttempts) {
+      if (
+        !attempt ||
+        !attempt.article ||
+        !attempt.article.quiz ||
+        !attempt.articleDifficulty
+      ) {
+        console.error(`Invalid quiz attempt data for user ${user._id}.`)
+        continue
+      }
+
+      const quizScore = attempt.articleDifficulty * attempt.userPercentile
+      userScore += quizScore
+    }
+
+    userScore = typeof userScore === 'number' && userScore ? userScore : 0
+    try {
+      const u = await User.findById(user._id)
+      u.userScore = userScore
+      await u.save()
+    } catch (error) {
+      console.error(
+        `Error saving user score for user ${user._id}: ${error.message}`,
+      )
+      console.error(`Stack trace: ${error.stack}`)
+      throw error
+    }
+
+    sumOfUserScores += userScore
+    userScores.push({ user, userScore })
   }
 
   return { userScores, sumOfUserScores }
