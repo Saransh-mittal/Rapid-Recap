@@ -138,7 +138,7 @@ const App = () => {
     }
 
     refreshAtMidnightUTC()
-  }, [dispatch, isToken, t])
+  }, [dispatch, isToken])
 
   useEffect(() => {
     if (user?.newAccount) {
@@ -187,7 +187,7 @@ const App = () => {
       page: location.pathname + location.search,
       title: document.title,
     })
-  }, [location, getUserInGameName, isLoggedIn, t])
+  }, [location, getUserInGameName, isLoggedIn])
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -216,7 +216,7 @@ const App = () => {
         }),
       )
     }
-  }, [guestModalJustClosed, user, dispatch, t])
+  }, [guestModalJustClosed, user])
 
   useEffect(() => {
     if (
@@ -234,7 +234,7 @@ const App = () => {
         }),
       )
     }
-  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch, t])
+  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
 
   const shouldShowFooter = useMemo(
     () =>

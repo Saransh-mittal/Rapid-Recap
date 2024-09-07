@@ -72,7 +72,7 @@ const ArticleForm = React.memo(
     const memoizedCategoryOptions = useMemo(
       () =>
         categories.map(
-          category =>
+          ({ key: category }) =>
             category !== 'all' && (
               <option
                 key={category}

@@ -207,7 +207,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       {/* {t('society', {
                         society: upgradedSocietyOrCircle.society.split(' ')[0],
                       })} */}
-                      {tBrains(`${prevSocietyOrCircle.society}.society`)}
+                      {tBrains(`${upgradedSocietyOrCircle.society}.society`)}
                     </Text>
                   </Flex>
                 </Flex>

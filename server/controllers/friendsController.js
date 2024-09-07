@@ -5,7 +5,6 @@ const Chat = require('../model/chatSchema')
 const { sendNotification } = require('../services/notificationService')
 const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const { logActivity } = require('../utils/activity.utils')
-const i18n = require('../i18n')
 
 //@description     Send friend request
 //@route           POST /api/friends/send-request
@@ -15,31 +14,34 @@ const sendRequest = asyncHandler(async (req, res) => {
 
   try {
     if (fromId === toId)
-      return res.status(400).json({ message: i18n.t('cannotSendToSelf') })
+      return res
+        .status(400)
+        .json({ message: "You can't send a friend request to yourself" })
+    const newRequest = new FriendRequest({ from: fromId, to: toId })
+    await newRequest.save()
 
     const sender = await User.findByIdAndUpdate(fromId, {
       $push: { sentRequests: newRequest._id },
     }).select('name pic role')
-
-    // Set the sender's language
-    i18n.changeLanguage(sender.userLanguage)
-
     const receiver = await User.findByIdAndUpdate(toId, {
       $push: { receivedRequests: newRequest._id },
-    }).select('inGameName role userLanguage')
+    }).select('inGameName role')
 
     if (receiver.role === 'guest' || sender.role === 'guest') {
-      return res.status(400).json({ message: i18n.t('guestCannotSend') })
+      return res
+        .status(400)
+        .json({ message: 'Guest users cannot send or receive friend requests' })
     }
 
     await sendNotification({
-      title: i18n.t('requestFrom', { name: sender.name }),
+      title: `Friend request from ${sender.name}`,
       icon: sender.pic,
+      // url: `/profile/${receiver.inGameName}/?requestId=${newRequest._id}`,
       url: `/home?wiseweb=true`,
       userId: toId.toString(),
     })
 
-    res.status(200).json({ message: i18n.t('requestSent') })
+    res.status(200).json({ message: 'Friend request sent' })
   } catch (error) {
     res.status(500).json({ error: error.message })
     throw new Error(error.message)
@@ -54,35 +56,49 @@ const acceptRequest = asyncHandler(async (req, res) => {
 
   try {
     const request = await FriendRequest.findById(requestId).populate('from to')
-    if (!request)
-      return res.status(404).json({ message: i18n.t('requestNotFound') })
+    if (!request) return res.status(404).json({ message: 'Request not found' })
+
+    request.status = 'accepted'
+    await request.save()
 
     const sender = await User.findByIdAndUpdate(request.from._id, {
       $push: { friends: request.to._id },
-    }).select('inGameName _id role userLanguage')
-
-    // Set the sender's language
-    i18n.changeLanguage(sender.userLanguage)
-
+    }).select('inGameName _id role')
     const receiver = await User.findByIdAndUpdate(request.to._id, {
       $push: { friends: request.from._id },
-    }).select('inGameName pic _id name role userLanguage')
+    }).select('inGameName pic _id name role')
 
     if (receiver.role === 'guest' || sender.role === 'guest') {
-      return res.status(400).json({ message: i18n.t('guestCannotAccept') })
+      return res
+        .status(400)
+        .json({ message: 'Guest users cannot accept friend requests' })
     }
 
+    let chat = await Chat.findOne({
+      users: { $all: [sender._id, receiver._id] },
+    })
+    // console.log(friend);
+    if (!chat) {
+      //create chat
+      chat = new Chat({
+        chatName: 'sender',
+        users: [sender._id, receiver._id],
+        status: 'accepted',
+      })
+      await chat.save()
+    }
+    chat.status = 'accepted'
+    await chat.save()
     const currentDate = new Date().toISOString().split('T')[0]
     logActivity({
       userInGameName: sender.inGameName,
       type: activityTypes.WISE_WEB_EXPANSION.type,
       date: currentDate,
     })
-
     const noteMessageForSender = new NoteMessage({
       userId: sender._id,
-      title: i18n.t('requestAccepted'),
-      content: i18n.t('nowFriendsWith', { name: receiver.name }),
+      title: 'Friend request accepted',
+      content: `You are now friends with ${receiver.name}`,
       messageType: 'xpAward',
       xpAwarded: getXpForActivity({
         activityType: 'Wise Web expansion',
@@ -91,17 +107,15 @@ const acceptRequest = asyncHandler(async (req, res) => {
       actions: [{ actionType: 'VIEW_EXPERIENCE' }],
     })
     await noteMessageForSender.save()
-
     logActivity({
       userInGameName: receiver.inGameName,
       type: activityTypes.WISE_WEB_EXPANSION.type,
       date: currentDate,
     })
-
     const noteMessageForReceiver = new NoteMessage({
       userId: receiver._id,
-      title: i18n.t('requestAccepted'),
-      content: i18n.t('nowFriendsWith', { name: sender.name }),
+      title: 'Friend request accepted',
+      content: `You are now friends with ${sender.name}`,
       messageType: 'xpAward',
       xpAwarded: getXpForActivity({
         activityType: 'Wise Web expansion',
@@ -110,15 +124,14 @@ const acceptRequest = asyncHandler(async (req, res) => {
       actions: [{ actionType: 'VIEW_EXPERIENCE' }],
     })
     await noteMessageForReceiver.save()
-
     await sendNotification({
-      title: i18n.t('requestAcceptedBy', { name: receiver.name }),
+      title: `Friend request accepted by ${receiver.name}`,
       icon: receiver.pic,
       url: `/home?wiseweb=true`,
       userId: sender._id.toString(),
     })
 
-    res.status(200).json({ message: i18n.t('requestAccepted') })
+    res.status(200).json({ message: 'Friend request accepted' })
   } catch (error) {
     res.status(500).json({ error: error.message })
     throw new Error(error.message)
@@ -133,13 +146,12 @@ const rejectRequest = asyncHandler(async (req, res) => {
 
   try {
     const request = await FriendRequest.findById(requestId)
-    if (!request)
-      return res.status(404).json({ message: i18n.t('requestNotFound') })
+    if (!request) return res.status(404).json({ message: 'Request not found' })
 
     request.status = 'rejected'
     await request.save()
 
-    res.status(200).json({ message: i18n.t('requestRejected') })
+    res.status(200).json({ message: 'Friend request rejected' })
   } catch (error) {
     res.status(500).json({ error: error.message })
     throw new Error(error.message)
