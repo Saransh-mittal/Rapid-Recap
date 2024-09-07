@@ -25,7 +25,6 @@ import {
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CopyIcon, ViewIcon, ViewOffIcon } from '@chakra-ui/icons'
-import { useTranslation } from 'react-i18next' // Import useTranslation hook
 import MessageCircleSVG from '../../assets/svg/MessageCircleSVG'
 import UserFriendsSVG from '../../assets/svg/UserFriendsSVG'
 import BrainSVG from '../../assets/svg/BrainSVG'
