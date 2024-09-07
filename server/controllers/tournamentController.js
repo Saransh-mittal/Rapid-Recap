@@ -1,9 +1,14 @@
 const asyncHandler = require('express-async-handler')
 const Tournament = require('../model/tournamentSchema')
-const TournamentRegistration = require('../model/tournamentRegistrationSchema')
+const {
+  TournamentRegistration,
+  QuizSession,
+} = require('../model/tournamentRegistrationSchema')
 const User = require('../model/userSchema')
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
 const { logActivity } = require('../utils/activity.utils')
+const { generateCategoryQuiz } = require('../utils/quiz.utils')
+const { commitSession, abortSession, startSession } = require('../db/session')
 
 // @desc   Register for a tournament
 // @route  POST /api/tournament/register
@@ -173,6 +178,162 @@ const deleteCurrentAffairsQuestion = asyncHandler(async (req, res) => {
   res.json({ message: 'Question removed' })
 })
 
+// @desc   Start quiz for user
+// @route  POST /api/tournament/quiz/start
+// @access Private
+const startQuiz = asyncHandler(async (req, res) => {
+  const { userId, tournamentId, category } = req.body
+
+  // Generate quiz questions
+  const questions = await generateCategoryQuiz(userId, tournamentId, category)
+
+  // Create a new quiz session
+  const quizSession = await QuizSession.create({
+    user: userId,
+    tournament: tournamentId,
+    category,
+    questions: questions.map(q => q._id),
+    startTime: new Date(),
+    endTime: new Date(Date.now() + 50000), // 50 seconds from now
+  })
+
+  // Remove sensitive information (like correct answer) before sending to client
+  const clientQuestions = questions.map(q => ({
+    _id: q._id,
+    question: q.question,
+    hindiQuestion: q.hindiQuestion,
+    options: q.options,
+    hindiOptions: q.hindiOptions,
+  }))
+
+  res.json({
+    message: 'Quiz started',
+    quizSession: {
+      _id: quizSession._id,
+      category: quizSession.category,
+      startTime: quizSession.startTime,
+      endTime: quizSession.endTime,
+      questions: clientQuestions,
+    },
+  })
+})
+
+// @desc   Submit quiz answers
+// @route  POST /api/tournament/quiz/submit
+// @access Private
+const submitQuiz = asyncHandler(async (req, res) => {
+  const { quizSessionId, userResponses } = req.body
+  const session = await startSession()
+
+  try {
+    const quizSession = await QuizSession.findById(quizSessionId).session(
+      session,
+    )
+    if (!quizSession) {
+      throw new Error('Quiz session not found')
+    }
+
+    if (quizSession.completed) {
+      throw new Error('Quiz already submitted')
+    }
+
+    if (new Date() > quizSession.endTime) {
+      throw new Error('Quiz time expired')
+    }
+
+    const user = await User.findById(quizSession.user).session(session)
+    const tournament = await Tournament.findById(
+      quizSession.tournament,
+    ).session(session)
+    const questions = await TournamentQuestion.find({
+      _id: { $in: quizSession.questions },
+    }).session(session)
+
+    // Calculate score and RQM
+    let score = 0
+    const timeTaken = (new Date() - quizSession.startTime) / 1000 // in seconds
+    const updatedResponses = questions.map((question, index) => {
+      const isCorrect = question.correctAnswer === userResponses[index]
+      if (isCorrect) score++
+      return {
+        questionId: question._id,
+        userAnswer: userResponses[index],
+        isCorrect,
+      }
+    })
+
+    const quizDifficulty =
+      questions.reduce(
+        (acc, question) => acc + parseFloat(question.difficulty),
+        0,
+      ) / questions.length
+    const apparentTimeTaken =
+      timeTaken <= 10
+        ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
+        : timeTaken
+    const apparentScore =
+      ((score / questions.length) * Math.log(score / questions.length + 1)) /
+      Math.log(1.3)
+    let RQM_score = Math.ceil(
+      ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000,
+    )
+
+    // Update quiz session
+    quizSession.responses = updatedResponses
+    quizSession.score = score
+    quizSession.RQM_score = RQM_score
+    quizSession.timeTaken = timeTaken
+    quizSession.completed = true
+    await quizSession.save({ session })
+
+    // Update tournament registration
+    const registration = await TournamentRegistration.findOne({
+      user: quizSession.user,
+      tournament: quizSession.tournament,
+    }).session(session)
+    registration.completedCategories.push(quizSession.category)
+    registration.totalScore += RQM_score
+    await registration.save({ session })
+
+    await user.save({ session })
+
+    // Update tournament leaderboard
+    const existingParticipant = tournament.participants.find(
+      p => p.user.toString() === quizSession.user.toString(),
+    )
+    if (existingParticipant) {
+      existingParticipant.score = registration.totalScore
+    } else {
+      tournament.participants.push({
+        user: quizSession.user,
+        score: registration.totalScore,
+      })
+    }
+    tournament.participants.sort((a, b) => b.score - a.score)
+    await tournament.save({ session })
+
+    await commitSession()
+
+    logActivity({
+      userInGameName: user.inGameName,
+      type: activityTypes.TOURNAMENT_QUIZ.type,
+      // Add any other relevant activity data
+    })
+
+    res.json({
+      message: 'Quiz submitted successfully',
+      score: `${score}/${questions.length}`,
+      RQM_score,
+      timeTaken,
+      totalTournamentScore: registration.totalScore,
+    })
+  } catch (error) {
+    await abortSession(session)
+    res.status(400)
+    throw new Error(error.message)
+  }
+})
+
 module.exports = {
   registerForTournament,
   getCurrentTournament,
@@ -180,4 +341,6 @@ module.exports = {
   getCurrentAffairsQuestions,
   updateCurrentAffairsQuestion,
   deleteCurrentAffairsQuestion,
+  startQuiz,
+  submitQuiz,
 }
