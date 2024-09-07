@@ -5,6 +5,7 @@ const { sendNotification } = require('../services/notificationService')
 const asyncHandler = require('express-async-handler')
 const i18n = require('i18next')
 const User = require('../model/userSchema')
+const { formatRemainingTime } = require('../utils/miscellaneous.utils')
 
 const notificationNews = async (req, res) => {
   const t = key => i18n.t(key, { ns: 'notification' })
@@ -14,13 +15,24 @@ const notificationNews = async (req, res) => {
     await i18n.changeLanguage(user.userLanguage)
     // console.log(t('nuclearFusionTrouble'))
 
-    await sendNotification({
-      title: t('nuclearFusionTrouble'),
-      image:
-        'https://www.techspot.com/images2/news/bigimage/2024/07/2024-07-05-image-10.jpg',
-      url: 'https://www.rapidrecap.co.in/',
-      userId: '660161af451e8641829f6113',
-    })
+    // await sendNotification({
+    //   title: t('nuclearFusionTrouble'),
+    //   image:
+    //     'https://www.techspot.com/images2/news/bigimage/2024/07/2024-07-05-image-10.jpg',
+    //   url: 'https://www.rapidrecap.co.in/',
+    //   userId: '660161af451e8641829f6113',
+    // })
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
+    const revivalPeriodEnd = new Date()
+    remainingTimeBeforeRevival = revivalPeriodEnd.getTime() - today.getTime()
+    // console.log(5_day_login_streak)
+    const Name = user.name.split(' ')[0]
+    console.log(
+      t('streak_broken_notification_body', {
+        name: Name,
+      }),
+    )
     // console.log(t('notifSentSuccess'))
     res.status(200).json({ message: t('notifSentSuccess') })
   } catch (error) {
