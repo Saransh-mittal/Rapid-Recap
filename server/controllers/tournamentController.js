@@ -10,6 +10,67 @@ const { logActivity } = require('../utils/activity.utils')
 const { generateCategoryQuiz } = require('../utils/quiz.utils')
 const { commitSession, abortSession, startSession } = require('../db/session')
 
+// @desc   Get the latest tournament
+// @route  GET /api/tournament/latest
+// @access Public
+const getLatestTournament = asyncHandler(async (req, res) => {
+  const currentDate = new Date()
+
+  const tournament = await Tournament.findOne({
+    $or: [
+      { status: 'registration', registrationEndDate: { $gte: currentDate } },
+      { status: 'upcoming', startDate: { $gte: currentDate } },
+      { status: 'ongoing', endDate: { $gte: currentDate } },
+    ],
+  }).sort({ startDate: -1 })
+
+  if (!tournament) {
+    res.status(404)
+    throw new Error('No active tournament found')
+  }
+
+  // Update tournament status if needed
+  if (
+    tournament.status === 'registration' &&
+    currentDate > tournament.registrationEndDate
+  ) {
+    tournament.status = 'upcoming'
+  } else if (
+    tournament.status === 'upcoming' &&
+    currentDate >= tournament.startDate
+  ) {
+    tournament.status = 'ongoing'
+  } else if (
+    tournament.status === 'ongoing' &&
+    currentDate > tournament.endDate
+  ) {
+    tournament.status = 'completed'
+  }
+
+  await tournament.save()
+
+  res.json(tournament)
+})
+
+// @desc   Get the previous completed tournament
+// @route  GET /api/tournament/previous
+// @access Public
+const getPreviousTournament = asyncHandler(async (req, res) => {
+  const currentDate = new Date()
+
+  const previousTournament = await Tournament.findOne({
+    status: 'completed',
+    endDate: { $lt: currentDate },
+  }).sort({ endDate: -1 })
+
+  if (!previousTournament) {
+    res.status(404)
+    throw new Error('No previous tournament found')
+  }
+
+  res.json(previousTournament)
+})
+
 // @desc   Register for a tournament
 // @route  POST /api/tournament/register
 // @access Private
@@ -343,4 +404,6 @@ module.exports = {
   deleteCurrentAffairsQuestion,
   startQuiz,
   submitQuiz,
+  getLatestTournament,
+  getPreviousTournament,
 }

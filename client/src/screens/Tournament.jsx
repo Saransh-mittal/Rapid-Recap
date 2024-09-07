@@ -9,14 +9,14 @@ import {
   Flex,
   Alert,
   AlertIcon,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
+  useToast,
+  Skeleton,
+  Center,
+  Progress,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Trophy, Star, Clock, Crown } from 'lucide-react'
+import { Trophy, Star, Clock, Crown, Calendar } from 'lucide-react'
+import axios from 'axios'
 
 import RegistrationForm from '../components/tournamentComponents/RegistrationForm'
 import LeaderboardTable from '../components/tournamentComponents/LeaderboardTable'
@@ -24,43 +24,192 @@ import LeaderboardTable from '../components/tournamentComponents/LeaderboardTabl
 const MotionBox = motion(Box)
 
 const Tournament = () => {
+  const [tournamentData, setTournamentData] = useState(null)
+  const [previousTournamentData, setPreviousTournamentData] = useState(null)
+  const [isFetching, setIsFetching] = useState(false)
   const [registrationStatus, setRegistrationStatus] = useState('not-registered')
   const [userDetails, setUserDetails] = useState(null)
-  const [isTournamentDay, setIsTournamentDay] = useState(false)
+
+  const fetchTournamentData = async () => {
+    setIsFetching(true)
+    try {
+      const [latestResponse, previousResponse] = await Promise.all([
+        axios.get('/api/tournament/latest'),
+        axios.get('/api/tournament/previous'),
+      ])
+
+      setTournamentData(latestResponse.data)
+      setPreviousTournamentData(previousResponse.data)
+
+      setIsFetching(false)
+    } catch (error) {
+      console.error(error)
+      setIsFetching(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchTournamentData()
+  }, [])
 
   const handleRegister = details => {
     setUserDetails(details)
     setRegistrationStatus('registered')
   }
 
-  useEffect(() => {
-    // Check if it's tournament day (Saturday or Sunday)
-    const today = new Date().getDay()
-    setIsTournamentDay(today === 0 || today === 6)
-  }, [])
+  const renderTournamentContent = () => {
+    if (isFetching) {
+      return (
+        <VStack spacing={4} width="100%">
+          <Skeleton height="40px" width="100%" />
+          <Skeleton height="20px" width="80%" />
+          <Skeleton height="20px" width="90%" />
+          <Skeleton height="20px" width="70%" />
+          <Skeleton height="40px" width="60%" />
+        </VStack>
+      )
+    }
 
-  const currentLeaderboardData = [
-    { rank: 1, username: 'johndoe', score: 4800 },
-    { rank: 2, username: 'janedoe', score: 4750 },
-    { rank: 3, username: 'bobsmith', score: 4700 },
-    { rank: 4, username: 'sarahlee', score: 4650 },
-    { rank: 5, username: 'mikebrown', score: 4600 },
-  ]
+    if (!tournamentData && !previousTournamentData) {
+      return (
+        <Center height="300px">
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            textAlign="center"
+          >
+            <Heading as="h2" size="xl" mb={4} color="pink.400">
+              No Tournament Data Available
+            </Heading>
+            <Text fontSize="xl" color="gray.300">
+              Stay tuned for upcoming tournaments!
+            </Text>
+          </MotionBox>
+        </Center>
+      )
+    }
 
-  const previousLeaderboardData = [
-    { rank: 1, username: 'alexgreen', score: 5000 },
-    { rank: 2, username: 'emmawhite', score: 4900 },
-    { rank: 3, username: 'chrisblue', score: 4850 },
-    { rank: 4, username: 'lilagray', score: 4800 },
-    { rank: 5, username: 'samblack', score: 4750 },
-  ]
+    const renderPreviousTournamentLeaderboard = () => (
+      <VStack spacing={4} align="stretch">
+        <Heading size="lg" mb={4} display="flex" alignItems="center">
+          <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
+          Previous Tournament Results
+        </Heading>
+        <Text fontSize="xl">
+          Tournament ended:{' '}
+          {new Date(previousTournamentData.endDate).toLocaleDateString()}
+        </Text>
+        <LeaderboardTable
+          data={previousTournamentData.participants.slice(0, 5)}
+        />
+      </VStack>
+    )
 
-  const gameInstructions = [
-    { icon: Star, text: 'Conquer epic knowledge realms!' },
-    { icon: Clock, text: '48-hour quest window awaits' },
-    { icon: Trophy, text: 'Ascend ranks, claim glory' },
-    { icon: Crown, text: 'Master the Current Affairs challenge' },
-  ]
+    if (!tournamentData || tournamentData.status === 'completed') {
+      return (
+        <>
+          {renderPreviousTournamentLeaderboard()}
+          <Alert status="info" color="black" mt={4}>
+            <AlertIcon />
+            The next tournament registration will open soon. Stay tuned!
+          </Alert>
+        </>
+      )
+    }
+
+    switch (tournamentData.status) {
+      case 'registration':
+        return (
+          <>
+            <VStack spacing={4} align="stretch">
+              <Heading size="lg" mb={4} display="flex" alignItems="center">
+                <Calendar color="#ECC94B" style={{ marginRight: '0.5rem' }} />
+                Tournament Registration Open
+              </Heading>
+              {renderTimeInfo()}
+              {registrationStatus === 'registered' ? (
+                <Alert status="success" color="black">
+                  <AlertIcon />
+                  You're registered for the tournament!
+                </Alert>
+              ) : (
+                <RegistrationForm onRegister={handleRegister} />
+              )}
+            </VStack>
+            {previousTournamentData && (
+              <Box mt={8}>{renderPreviousTournamentLeaderboard()}</Box>
+            )}
+          </>
+        )
+      case 'upcoming':
+        return (
+          <>
+            <VStack spacing={4} align="stretch">
+              <Heading size="lg" mb={4} display="flex" alignItems="center">
+                <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
+                Tournament Starting Soon
+              </Heading>
+              {renderTimeInfo()}
+              <Text fontSize="xl">
+                Get ready! The tournament will begin shortly.
+              </Text>
+              {registrationStatus === 'registered' ? (
+                <Alert status="info" color="black">
+                  <AlertIcon />
+                  You're registered and ready to participate!
+                </Alert>
+              ) : (
+                <Alert status="warning" color="black">
+                  <AlertIcon />
+                  Registration has closed. You won't be able to participate in
+                  this tournament.
+                </Alert>
+              )}
+            </VStack>
+            {previousTournamentData && (
+              <Box mt={8}>{renderPreviousTournamentLeaderboard()}</Box>
+            )}
+          </>
+        )
+      case 'ongoing':
+        return (
+          <VStack spacing={4} align="stretch">
+            <Heading size="lg" mb={4} display="flex" alignItems="center">
+              <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
+              Tournament in Progress
+            </Heading>
+            {renderTimeInfo()}
+            {registrationStatus === 'registered' ? (
+              <>
+                <Alert status="success" color="black">
+                  <AlertIcon />
+                  You're participating in the tournament!
+                </Alert>
+                <Button
+                  colorScheme="pink"
+                  size="lg"
+                  onClick={() => console.log('Enter tournament')}
+                  boxShadow="0 0 15px rgba(237, 100, 166, 0.5)"
+                  _hover={{
+                    boxShadow: '0 0 20px rgba(237, 100, 166, 0.7)',
+                  }}
+                >
+                  Enter Tournament
+                </Button>
+              </>
+            ) : (
+              <Alert status="warning" color="black">
+                <AlertIcon />
+                You are not registered for this tournament.
+              </Alert>
+            )}
+          </VStack>
+        )
+      default:
+        return null
+    }
+  }
 
   return (
     <Box color="white" mt={{ base: 4, md: 8 }} minHeight="100vh">
@@ -88,105 +237,7 @@ const Tournament = () => {
             bg="rgba(0, 0, 0, 0.1)"
             backdropFilter="blur(5px)"
           >
-            <Tabs isFitted variant="soft-rounded" colorScheme="pink">
-              <TabList mb="1em">
-                <Tab
-                  _selected={{
-                    color: 'white',
-                    bg: 'pink.500',
-                    boxShadow: '0 0 15px rgba(237, 100, 166, 0.5)',
-                  }}
-                  fontWeight="bold"
-                  transition="all 0.3s"
-                >
-                  {isTournamentDay ? 'Current Tournament' : 'Registration'}
-                </Tab>
-                <Tab
-                  _selected={{
-                    color: 'white',
-                    bg: 'pink.500',
-                    boxShadow: '0 0 15px rgba(237, 100, 166, 0.5)',
-                  }}
-                  fontWeight="bold"
-                  transition="all 0.3s"
-                >
-                  Previous Tournament
-                </Tab>
-              </TabList>
-              <TabPanels>
-                <TabPanel>
-                  {isTournamentDay ? (
-                    <>
-                      <Heading
-                        size="lg"
-                        mb={4}
-                        display="flex"
-                        alignItems="center"
-                      >
-                        <Trophy
-                          color="#ECC94B"
-                          style={{ marginRight: '0.5rem' }}
-                        />
-                        Tournament in Progress
-                      </Heading>
-                      {registrationStatus === 'registered' ? (
-                        <VStack spacing={4} align="stretch">
-                          <Alert status="success" color={'black'}>
-                            <AlertIcon />
-                            You're registered for the tournament!
-                          </Alert>
-                          <Button
-                            colorScheme="pink"
-                            size="lg"
-                            onClick={() => console.log('Enter tournament')}
-                            boxShadow="0 0 15px rgba(237, 100, 166, 0.5)"
-                            _hover={{
-                              boxShadow: '0 0 20px rgba(237, 100, 166, 0.7)',
-                            }}
-                          >
-                            Enter Tournament
-                          </Button>
-                        </VStack>
-                      ) : (
-                        <Alert status="warning" color={'black'}>
-                          <AlertIcon />
-                          You are not registered for this tournament.
-                        </Alert>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Heading size="lg" mb={4}>
-                        Registration
-                      </Heading>
-                      {registrationStatus === 'not-registered' ? (
-                        <RegistrationForm onRegister={handleRegister} />
-                      ) : (
-                        <VStack spacing={4} align="stretch">
-                          <Alert status="success">
-                            <AlertIcon />
-                            Successfully registered! The tournament will begin
-                            on Saturday.
-                          </Alert>
-                          <Text>Username: {userDetails.username}</Text>
-                          <Text>
-                            Selected Categories:{' '}
-                            {userDetails.categories.join(', ')}
-                          </Text>
-                        </VStack>
-                      )}
-                    </>
-                  )}
-                </TabPanel>
-                <TabPanel>
-                  <Heading size="lg" mb={4} display="flex" alignItems="center">
-                    <Crown color="#C0C0C0" style={{ marginRight: '0.5rem' }} />
-                    Previous Tournament Leaderboard
-                  </Heading>
-                  <LeaderboardTable data={previousLeaderboardData} />
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
+            {renderTournamentContent()}
           </MotionBox>
 
           <MotionBox
@@ -200,41 +251,34 @@ const Tournament = () => {
             bg="rgba(0, 0, 0, 0.1)"
             backdropFilter="blur(5px)"
           >
-            {isTournamentDay ? (
-              <>
-                <Heading size="lg" mb={4} display="flex" alignItems="center">
-                  <Crown color="#C0C0C0" style={{ marginRight: '0.5rem' }} />
-                  Current Leaderboard
-                </Heading>
-                <LeaderboardTable data={currentLeaderboardData} />
-              </>
-            ) : (
-              <>
-                <Heading size="lg" mb={4}>
-                  Epic Quest Guide
-                </Heading>
-                <VStack align="start" spacing={4}>
-                  {gameInstructions.map((instruction, index) => (
-                    <MotionBox
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                      display="flex"
-                      alignItems="center"
-                    >
-                      <Box as={instruction.icon} mr={2} color="pink.400" />
-                      <Text
-                        fontSize={{ base: 'md', md: 'lg' }}
-                        fontWeight="semibold"
-                      >
-                        {instruction.text}
-                      </Text>
-                    </MotionBox>
-                  ))}
-                </VStack>
-              </>
-            )}
+            <Heading size="lg" mb={4}>
+              Epic Quest Guide
+            </Heading>
+            <VStack align="start" spacing={4}>
+              {[
+                { icon: Star, text: 'Conquer epic knowledge realms!' },
+                { icon: Clock, text: '48-hour quest window awaits' },
+                { icon: Trophy, text: 'Ascend ranks, claim glory' },
+                { icon: Crown, text: 'Master the Current Affairs challenge' },
+              ].map((instruction, index) => (
+                <MotionBox
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  display="flex"
+                  alignItems="center"
+                >
+                  <Box as={instruction.icon} mr={2} color="pink.400" />
+                  <Text
+                    fontSize={{ base: 'md', md: 'lg' }}
+                    fontWeight="semibold"
+                  >
+                    {instruction.text}
+                  </Text>
+                </MotionBox>
+              ))}
+            </VStack>
           </MotionBox>
         </Flex>
       </Container>
