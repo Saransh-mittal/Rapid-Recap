@@ -52,11 +52,7 @@ i18n
     ns: Object.values(namespaces).flat(),
     defaultNS: 'activity.utils',
     interpolation: {
-      escapeValue: false, // React already does escaping, so disable it here
-      format: (value, format, lng) => {
-        if (format === 'uppercase') return value.toUpperCase()
-        return value
-      },
+      escapeValue: false, // React already does escaping
     },
     detection: {
       order: ['querystring', 'cookie', 'header'],
