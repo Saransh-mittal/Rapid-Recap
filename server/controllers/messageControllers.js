@@ -231,10 +231,11 @@ const deleteMessage = asyncHandler(async (req, res) => {
       const chat = await Chat.findById(message.chat).populate('users')
       for (let user of chat.users) {
         if (user._id.toString() !== req.user._id.toString()) {
-          const localizedI18n = i18n.cloneInstance()
+          const localizedI18n = i18n.cloneInstance({ initImmediate: false })
           await localizedI18n.changeLanguage(user.userLanguage) // Switch to recipient's language
+          const t = (key, options) =>
+            localizedI18n.t(key, { ns: 'messageControllers', ...options })
 
-          const t = key => localizedI18n.t(key, { ns: 'messageControllers' })
           await sendNotification({
             title: t('messageDeleted'),
             body: t('deletedFromChat'),

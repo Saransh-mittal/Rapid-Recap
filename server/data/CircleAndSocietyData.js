@@ -2,13 +2,15 @@ const i18n = require('i18next') // Import i18n for translations
 
 // Function to get the localized CircleAndSocietyData
 async function getCircleAndSocietyData(user) {
-  const localizedI18n = i18n.cloneInstance()
+  const localizedI18n = i18n.cloneInstance({ initImmediate: false })
 
   // Switch to user's language
   await localizedI18n.changeLanguage(user.userLanguage)
 
   // Translation function for specific namespace
-  const t = key => localizedI18n.t(key, { ns: 'CircleAndSocietyData' })
+
+  const t = (key, options) =>
+    localizedI18n.t(key, { ns: 'CircleAndSocietyData', ...options })
 
   // Define CircleAndSocietyData array
   const CircleAndSocietyData = [

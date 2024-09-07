@@ -12,7 +12,7 @@ async function sendRecommendedNewsNotification() {
     const users = await User.find({
       email: { $not: /^dummy\d+@mail\.com$/ },
       inGameName: { $exists: true },
-    }).select('_id')
+    }).select('_id hindiTitle userLanguage')
     for (const user of users) {
       const recommendation = await getRecommendationsForNotification(
         user._id,
@@ -24,11 +24,9 @@ async function sendRecommendedNewsNotification() {
           if (article.hindiTitle === undefined) {
           }
           const title =
-            user?.userLanguage === 'en'
-              ? article.title
-              : article.hindiTitle === undefined
-              ? article.title
-              : article.hindiTitle
+            user?.userLanguage === 'hi' && article.hindiTitle !== undefined
+              ? article.hindiTitle
+              : article.title
           const url = `https://www.rapidrecap.co.in/article/${
             article._id
           }/${slugify(title)}`

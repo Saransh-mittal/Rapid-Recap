@@ -99,7 +99,8 @@ const mailForStreakBroken = async () => {
         await localizedI18n.changeLanguage(user.userLanguage)
 
         // Translation function for specific namespace
-        const t = key => localizedI18n.t(key, { ns: 'mail.utils' })
+        const t = (key, options) =>
+          localizedI18n.t(key, { ns: 'mail.utils', ...options })
         await sendNotification({
           userId: user._id,
 

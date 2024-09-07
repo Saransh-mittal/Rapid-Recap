@@ -10,7 +10,7 @@ const {
 } = require('../utils/miscellaneous.utils')
 const { userOpenChats } = require('../sharedState')
 const { sendNotification } = require('../services/notificationService')
-const i18n = require('../i18n')
+const i18n = require('i18next')
 
 //@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
@@ -342,10 +342,10 @@ const shareMessage = asyncHandler(async (req, res) => {
         const recipient = await User.findById(user).select('userLanguage _id')
 
         // Create a new i18n instance scoped to this recipient
-        const localizedI18n = i18n.cloneInstance()
-        await localizedI18n.changeLanguage(recipient.userLanguage) // Switch to recipient's language
-
-        const t = key => localizedI18n.t(key, { ns: 'chatController' })
+        const localizedI18n = i18n.cloneInstance({ initImmediate: false })
+        await localizedI18n.changeLanguage(recipient.userLanguage)
+        const t = (key, options) =>
+          localizedI18n.t(key, { ns: 'chatController', ...options })
 
         const userChats = userOpenChats.get(user._id.toString())
         if (!userChats || !userChats.has(chatId)) {

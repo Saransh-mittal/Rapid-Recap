@@ -11,7 +11,7 @@ const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const configService = require('../configService')
 const NoteMessage = require('../model/noteMessageSchema')
 const cache = require('memory-cache')
-const i18n = require('../i18n')
+const i18n = require('i18next')
 
 const findSocietyCircleByIQ = (IQScore, user) => {
   const CircleAndSocietyData = getCircleAndSocietyData(user) // Fetch data by calling the function
@@ -36,6 +36,10 @@ const handleSocietyOrCircleUpgrade = async (
       console.error(`User not found for ID: ${userId}`)
       return
     }
+    const localizedI18n = i18n.cloneInstance({ initImmediate: false })
+    await localizedI18n.changeLanguage(user.userLanguage)
+    const t = (key, options) =>
+      localizedI18n.t(key, { ns: 'dailyUserIQCalc.utils', ...options })
 
     const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore, user)
     const currSocietyCircle = findSocietyCircleByIQ(currIQScore, user)
@@ -74,8 +78,8 @@ const handleSocietyOrCircleUpgrade = async (
 
           const noteMessage = new NoteMessage({
             userId: user._id,
-            title: i18n.t('upgradeTitle'),
-            milestoneContent: i18n.t('upgradeContent', {
+            title: t('upgradeTitle'),
+            milestoneContent: t('upgradeContent', {
               society:
                 changedSocietyOrCircle === 'society'
                   ? currSocietyCircle.society

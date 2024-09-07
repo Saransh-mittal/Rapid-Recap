@@ -36,7 +36,8 @@ const logActivity = async ({
       await localizedI18n.changeLanguage(user.userLanguage)
 
       // Translation function for specific namespace
-      const t = key => localizedI18n.t(key, { ns: 'activity.utils' })
+      const t = (key, options) =>
+        localizedI18n.t(key, { ns: 'activity.utils', ...options })
       if (isXpAlreadyAwarded.length > 0) {
         return 0
       }
