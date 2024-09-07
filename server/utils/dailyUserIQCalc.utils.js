@@ -13,8 +13,8 @@ const NoteMessage = require('../model/noteMessageSchema')
 const cache = require('memory-cache')
 const i18n = require('i18next')
 
-const findSocietyCircleByIQ = (IQScore, user) => {
-  const CircleAndSocietyData = getCircleAndSocietyData(user) // Fetch data by calling the function
+const findSocietyCircleByIQ = async (IQScore, user) => {
+  const CircleAndSocietyData = await getCircleAndSocietyData(user) // Fetch data by calling the function
   return CircleAndSocietyData.find(data => {
     return (
       IQScore >= data.IQ_Lower &&
@@ -41,8 +41,8 @@ const handleSocietyOrCircleUpgrade = async (
     const t = (key, options) =>
       localizedI18n.t(key, { ns: 'dailyUserIQCalc.utils', ...options })
 
-    const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore, user)
-    const currSocietyCircle = findSocietyCircleByIQ(currIQScore, user)
+    const prevSocietyCircle = await findSocietyCircleByIQ(prevIQScore, user)
+    const currSocietyCircle = await findSocietyCircleByIQ(currIQScore, user)
 
     if (!prevSocietyCircle || !currSocietyCircle) {
       console.error(
@@ -111,12 +111,6 @@ const handleSocietyOrCircleUpgrade = async (
     user.currentCircle = currSocietyCircle.circle
 
     await user.save()
-
-    console.log(
-      `Updated society/circle for user ${userId}: ${
-        currSocietyCircle.society
-      } - ${currSocietyCircle.circle || 'N/A'}`,
-    )
   } catch (error) {
     console.error(
       `Error in handleSocietyOrCircleUpgrade for user ${userId}: ${error.message}`,
@@ -161,7 +155,9 @@ const fetchUsersWithQuizAttempts = async () => {
 
 const fetchUniqueArticleIds = async () => {
   try {
+    const currSeason = configService.getCurrentSeason()
     return await QuizAttempt.aggregate([
+      { $match: { season: parseInt(currSeason, 10) } },
       { $group: { _id: '$article' } },
       { $project: { _id: 0, articleId: '$_id' } },
     ])
@@ -173,18 +169,44 @@ const fetchUniqueArticleIds = async () => {
 }
 
 const updatePercentilesForArticles = async uniqueArticleIds => {
+  const batchSize = 1000 // Adjust this value based on your system's capabilities
+  const totalBatches = Math.ceil(uniqueArticleIds.length / batchSize)
+
+  const processBatch = async (batch, batchIndex) => {
+    try {
+      await Promise.all(
+        batch.map(async doc => {
+          try {
+            await updatePercentilesOnQuizDeactivation({
+              id: doc.articleId.toString(),
+            })
+          } catch (error) {
+            console.error(
+              `Error updating percentiles for article ${doc.articleId}: ${error.message}`,
+            )
+            // Continue processing other articles in the batch
+          }
+        }),
+      )
+      console.log(`Processed batch ${batchIndex + 1} of ${totalBatches}`)
+    } catch (error) {
+      console.error(
+        `Error processing batch ${batchIndex + 1}: ${error.message}`,
+      )
+      // Continue processing other batches
+    }
+  }
+
   try {
-    await Promise.all(
-      uniqueArticleIds.map(async doc => {
-        await updatePercentilesOnQuizDeactivation({
-          id: doc.articleId.toString(),
-        })
-      }),
-    )
+    for (let i = 0; i < uniqueArticleIds.length; i += batchSize) {
+      const batch = uniqueArticleIds.slice(i, i + batchSize)
+      await processBatch(batch, i / batchSize)
+    }
+    console.log('Finished processing all article batches')
   } catch (error) {
     console.error(`Error in updatePercentilesForArticles: ${error.message}`)
     console.error(`Stack trace: ${error.stack}`)
-    throw error
+    // Don't throw the error here, so the process can continue with other tasks
   }
 }
 
