@@ -61,6 +61,12 @@ const MainArticleContent = ({
                 mb={[3, 4, 5]}
                 width={{ base: '100%', sm: '100%', md: '80%', lg: '98%' }}
                 height="auto"
+                maxHeight={{
+                  base: '300px',
+                  sm: '400px',
+                  md: '500px',
+                  lg: '600px',
+                }}
                 objectFit="contain"
                 onError={handleImageError}
                 loading="lazy"

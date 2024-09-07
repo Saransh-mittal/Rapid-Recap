@@ -24,6 +24,8 @@ import imageData from '../assets/AltNewsImage'
 import { quinBoostChecker } from '../utils/quiz.utils'
 import slugify from 'slugify'
 import i18n from 'i18next'
+import { blackListedImgUrls } from '../assets/blackListedImgUrls'
+import rrImage from '/images/rrlogo_HD.webp'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
 const Quiz = lazy(() => import('../components/articleComponents/Quiz'))
@@ -552,7 +554,10 @@ const Article = () => {
                 title={title}
                 author={author}
                 mainText={mainText}
-                imgURL={imgURL}
+                imgURL={
+                  (!blackListedImgUrls.find(url => url === imgURL) && imgURL) ||
+                  rrImage
+                }
                 alt_image={alt_image}
                 textRef={textRef}
                 articleRef={articleRef}
