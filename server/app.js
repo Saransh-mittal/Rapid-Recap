@@ -102,6 +102,9 @@ webpush.setVapidDetails(
 // require("./scripts/chatStatus");
 // -------------------
 
+// const dailyUserIQCalc = require('./utils/dailyUserIQCalc.utils')
+// dailyUserIQCalc()
+
 // const { exportDataToCSV } = require("./services/recommendationService");
 // exportDataToCSV();
 app.use(express.json())

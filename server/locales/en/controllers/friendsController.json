@@ -1,6 +1,4 @@
 {
-  "cannotSendToSelf": "You can't send a friend request to yourself",
-  "guestCannotSend": "Guest users cannot send or receive friend requests",
   "requestFrom": "Friend request from {{name}}",
   "requestSent": "Friend request sent",
   "requestNotFound": "Request not found",

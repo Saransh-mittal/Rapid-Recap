@@ -9,10 +9,9 @@ const namespaces = {
     'friendsController',
     'messageControllers',
     'notification',
-    'subscription',
   ],
   utils: ['activity.utils', 'dailyUserIQCalc.utils', 'mail.utils'],
-  data: ['CircleAndSocietyData', 'MailTemplates'],
+  data: ['CircleAndSocietyData'],
 }
 
 i18n
@@ -52,6 +51,13 @@ i18n
     supportedLngs: ['en', 'hi'],
     ns: Object.values(namespaces).flat(),
     defaultNS: 'activity.utils',
+    interpolation: {
+      escapeValue: false, // React already does escaping, so disable it here
+      format: (value, format, lng) => {
+        if (format === 'uppercase') return value.toUpperCase()
+        return value
+      },
+    },
     detection: {
       order: ['querystring', 'cookie', 'header'],
       lookupQuerystring: 'lng',

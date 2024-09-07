@@ -3,23 +3,26 @@ const Message = require('../model/messageSchema')
 const NoteMessage = require('../model/noteMessageSchema')
 const { sendNotification } = require('../services/notificationService')
 const asyncHandler = require('express-async-handler')
-const i18n = require('../i18n')
+const i18n = require('i18next')
 const User = require('../model/userSchema')
 
 const notificationNews = async (req, res) => {
+  const t = key => i18n.t(key, { ns: 'notification' })
   try {
     // If you want to localize this message based on a specific user's language
-    // const user = await User.findById(req.body.userId);
-    // i18n.changeLanguage(user.userLanguage);
+    const user = await User.findById('660161af451e8641829f6113')
+    await i18n.changeLanguage(user.userLanguage)
+    // console.log(t('nuclearFusionTrouble'))
 
     await sendNotification({
-      title: i18n.t('nuclearFusionTrouble'),
+      title: t('nuclearFusionTrouble'),
       image:
         'https://www.techspot.com/images2/news/bigimage/2024/07/2024-07-05-image-10.jpg',
       url: 'https://www.rapidrecap.co.in/',
-      userId: '6613f495ce72abb1ce9abde3',
+      userId: '660161af451e8641829f6113',
     })
-    res.status(200).json({ message: i18n.t('notifSentSuccess') })
+    // console.log(t('notifSentSuccess'))
+    res.status(200).json({ message: t('notifSentSuccess') })
   } catch (error) {
     res.status(500).json({ message: error.message })
     console.error(error)
@@ -69,7 +72,7 @@ const getNoteMessages = asyncHandler(async (req, res) => {
 
   try {
     const user = await User.findById(userId)
-    i18n.changeLanguage(user.userLanguage)
+    await i18n.changeLanguage(user.userLanguage)
 
     const noteMessages = await NoteMessage.find({ userId, read: false }).sort({
       createdAt: -1,

@@ -5,7 +5,7 @@ const QuizAttempt = require('../model/quizAttemptSchema')
 const User = require('../model/userSchema')
 const { updatePercentilesOnQuizDeactivation } = require('./quiz.utils')
 const rankUpdate = require('./update.utils/rank.update')
-const CircleAndSocietyData = require('../data/CircleAndSocietyData')
+const getCircleAndSocietyData = require('../data/CircleAndSocietyData')
 const { logActivity } = require('./activity.utils')
 const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const configService = require('../configService')
@@ -13,7 +13,8 @@ const NoteMessage = require('../model/noteMessageSchema')
 const cache = require('memory-cache')
 const i18n = require('../i18n')
 
-const findSocietyCircleByIQ = IQScore => {
+const findSocietyCircleByIQ = (IQScore, user) => {
+  const CircleAndSocietyData = getCircleAndSocietyData(user) // Fetch data by calling the function
   return CircleAndSocietyData.find(data => {
     return (
       IQScore >= data.IQ_Lower &&
@@ -36,11 +37,8 @@ const handleSocietyOrCircleUpgrade = async (
       return
     }
 
-    // Set the language for this session
-    i18n.changeLanguage(user.userLanguage)
-
-    const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore)
-    const currSocietyCircle = findSocietyCircleByIQ(currIQScore)
+    const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore, user)
+    const currSocietyCircle = findSocietyCircleByIQ(currIQScore, user)
 
     if (!prevSocietyCircle || !currSocietyCircle) {
       console.error(
