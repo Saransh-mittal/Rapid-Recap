@@ -13,8 +13,8 @@ const NoteMessage = require('../model/noteMessageSchema')
 const cache = require('memory-cache')
 const i18n = require('../i18n')
 
-const findSocietyCircleByIQ = (IQScore, user) => {
-  const CircleAndSocietyData = getCircleAndSocietyData(user) // Fetch data by calling the function
+const findSocietyCircleByIQ = async (IQScore, user) => {
+  const CircleAndSocietyData = await getCircleAndSocietyData(user) // Fetch data by calling the function
   return CircleAndSocietyData.find(data => {
     return (
       IQScore >= data.IQ_Lower &&
@@ -37,8 +37,8 @@ const handleSocietyOrCircleUpgrade = async (
       return
     }
 
-    const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore, user)
-    const currSocietyCircle = findSocietyCircleByIQ(currIQScore, user)
+    const prevSocietyCircle = await findSocietyCircleByIQ(prevIQScore, user)
+    const currSocietyCircle = await findSocietyCircleByIQ(currIQScore, user)
 
     if (!prevSocietyCircle || !currSocietyCircle) {
       console.error(
@@ -169,18 +169,44 @@ const fetchUniqueArticleIds = async () => {
 }
 
 const updatePercentilesForArticles = async uniqueArticleIds => {
+  const batchSize = 1000 // Adjust this value based on your system's capabilities
+  const totalBatches = Math.ceil(uniqueArticleIds.length / batchSize)
+
+  const processBatch = async (batch, batchIndex) => {
+    try {
+      await Promise.all(
+        batch.map(async doc => {
+          try {
+            await updatePercentilesOnQuizDeactivation({
+              id: doc.articleId.toString(),
+            })
+          } catch (error) {
+            console.error(
+              `Error updating percentiles for article ${doc.articleId}: ${error.message}`,
+            )
+            // Continue processing other articles in the batch
+          }
+        }),
+      )
+      console.log(`Processed batch ${batchIndex + 1} of ${totalBatches}`)
+    } catch (error) {
+      console.error(
+        `Error processing batch ${batchIndex + 1}: ${error.message}`,
+      )
+      // Continue processing other batches
+    }
+  }
+
   try {
-    await Promise.all(
-      uniqueArticleIds.map(async doc => {
-        await updatePercentilesOnQuizDeactivation({
-          id: doc.articleId.toString(),
-        })
-      }),
-    )
+    for (let i = 0; i < uniqueArticleIds.length; i += batchSize) {
+      const batch = uniqueArticleIds.slice(i, i + batchSize)
+      await processBatch(batch, i / batchSize)
+    }
+    console.log('Finished processing all article batches')
   } catch (error) {
     console.error(`Error in updatePercentilesForArticles: ${error.message}`)
     console.error(`Stack trace: ${error.stack}`)
-    throw error
+    // Don't throw the error here, so the process can continue with other tasks
   }
 }
 
@@ -188,60 +214,73 @@ const calculateUserScores = async users => {
   const userScores = []
   let sumOfUserScores = 0
   const currSeason = configService.getCurrentSeason()
+  const batchSize = 200 // Adjust this value based on your system's capabilities
 
-  const fetchQuizAttemptsPromises = users.map(async user => {
-    try {
-      const quizAttempts = await QuizAttempt.find({
-        user: user._id,
-        season: parseInt(currSeason, 10),
-      }).populate({
-        path: 'article',
-        populate: { path: 'quiz' },
-      })
-      return { user, quizAttempts }
-    } catch (error) {
-      console.error(
-        `Error fetching quiz attempts for user ${user._id}: ${error.message}`,
-      )
-      console.error(`Stack trace: ${error.stack}`)
-      throw error
-    }
-  })
+  const processBatch = async batch => {
+    const fetchQuizAttemptsPromises = batch.map(async user => {
+      try {
+        const quizAttempts = await QuizAttempt.find({
+          user: user._id,
+          season: parseInt(currSeason, 10),
+        }).populate({
+          path: 'article',
+          populate: { path: 'quiz' },
+        })
+        return { user, quizAttempts }
+      } catch (error) {
+        console.error(
+          `Error fetching quiz attempts for user ${user._id}: ${error.message}`,
+        )
+        console.error(`Stack trace: ${error.stack}`)
+        return { user, quizAttempts: [] }
+      }
+    })
 
-  const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises)
-  for (const { user, quizAttempts } of userQuizAttempts) {
-    let userScore = user.baseUserScore || 0
+    const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises)
+    for (const { user, quizAttempts } of userQuizAttempts) {
+      let userScore = user.baseUserScore || 0
 
-    for (const attempt of quizAttempts) {
-      if (
-        !attempt ||
-        !attempt.article ||
-        !attempt.article.quiz ||
-        !attempt.articleDifficulty
-      ) {
-        console.error(`Invalid quiz attempt data for user ${user._id}.`)
-        continue
+      for (const attempt of quizAttempts) {
+        if (
+          !attempt ||
+          !attempt.article ||
+          !attempt.article.quiz ||
+          !attempt.articleDifficulty
+        ) {
+          console.error(`Invalid quiz attempt data for user ${user._id}.`)
+          continue
+        }
+
+        const quizScore = attempt.articleDifficulty * attempt.userPercentile
+        userScore += quizScore
       }
 
-      const quizScore = attempt.articleDifficulty * attempt.userPercentile
-      userScore += quizScore
-    }
+      userScore = typeof userScore === 'number' && userScore ? userScore : 0
+      try {
+        const u = await User.findById(user._id)
+        u.userScore = userScore
+        await u.save()
+      } catch (error) {
+        console.error(
+          `Error saving user score for user ${user._id}: ${error.message}`,
+        )
+        console.error(`Stack trace: ${error.stack}`)
+      }
 
-    userScore = typeof userScore === 'number' && userScore ? userScore : 0
-    try {
-      const u = await User.findById(user._id)
-      u.userScore = userScore
-      await u.save()
-    } catch (error) {
-      console.error(
-        `Error saving user score for user ${user._id}: ${error.message}`,
-      )
-      console.error(`Stack trace: ${error.stack}`)
-      throw error
+      sumOfUserScores += userScore
+      userScores.push({ user, userScore })
     }
+  }
 
-    sumOfUserScores += userScore
-    userScores.push({ user, userScore })
+  // Process users in batches
+  for (let i = 0; i < users.length; i += batchSize) {
+    const batch = users.slice(i, i + batchSize)
+    await processBatch(batch)
+    console.log(
+      `Processed batch ${i / batchSize + 1} of ${Math.ceil(
+        users.length / batchSize,
+      )}`,
+    )
   }
 
   return { userScores, sumOfUserScores }
