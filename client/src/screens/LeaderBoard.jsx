@@ -35,7 +35,7 @@ const LeaderBoard = () => {
   const { t } = useTranslation('LeaderBoard')
   const PAGE_LIMIT = 20
   const navigate = useNavigate()
-  const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { user } = useSelector(state => state.auth)
   const toast = useToast()
 
   // State hooks
@@ -44,21 +44,15 @@ const LeaderBoard = () => {
   const [leaders, setLeaders] = useState([])
   const [searchResults, setSearchResults] = useState([])
 
-  // Media query hooks
-  const [isLgScreen] = useMediaQuery('(max-width: 1024px)')
-  const [isMdScreen] = useMediaQuery('(max-width: 820px)')
   const [isBaseScreen] = useMediaQuery('(max-width: 768px)')
 
-  // Pagination state
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-  const [loadNextPage, setLoadNextPage] = useState(true)
 
   const fetchLeaderBoard = useCallback(
     async (society = '', page = 1) => {
       if (!hasMore) {
         setIsLoading(false)
-        setLoadNextPage(false)
         return
       }
       try {
@@ -84,37 +78,22 @@ const LeaderBoard = () => {
           position: 'top',
         })
       } finally {
-        setLoadNextPage(false)
         setIsLoading(false)
       }
     },
     [hasMore, PAGE_LIMIT, toast, t],
   )
 
-  const handleScroll = useCallback(async () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop + 500 >
-        document.documentElement.scrollHeight &&
-      hasMore
-    ) {
-      setLoadNextPage(true)
-      setPage(prevPage => prevPage + 1)
-    }
-  }, [hasMore])
-
-  const debouncedHandleScroll = useMemo(
-    () => debounce(handleScroll, 300),
-    [handleScroll],
-  )
-
   useEffect(() => {
     document.title = t('helmet.title')
     fetchLeaderBoard()
-    window.addEventListener('scroll', debouncedHandleScroll)
-    return () => {
-      window.removeEventListener('scroll', debouncedHandleScroll)
+  }, [fetchLeaderBoard])
+
+  const handleLoadMore = useCallback(() => {
+    if (hasMore) {
+      setPage(prevPage => prevPage + 1)
     }
-  }, [isAuthenticated, debouncedHandleScroll])
+  }, [hasMore])
 
   return (
     <>
@@ -184,23 +163,38 @@ const LeaderBoard = () => {
                 <SearchBar
                   setSearchResults={setSearchResults}
                   setSearchLoad={setSearchLoad}
+                  w={isBaseScreen ? '75%' : '50%'}
                 />
               </Flex>
 
-              <LeaderBoardTable
-                hasMore={hasMore}
-                PAGE_LIMIT={PAGE_LIMIT}
-                loadNextPage={loadNextPage}
-                leaders={leaders}
-                searchResults={searchResults}
-                searchLoad={searchLoad}
-                isBaseScreen={isBaseScreen}
-                isLgScreen={isLgScreen}
-                isMdScreen={isMdScreen}
-                currUserChar={user}
-                navigate={navigate}
-                setLoadNextPage={setLoadNextPage}
-              />
+              <Box
+                height="calc(100vh - 300px)"
+                overflowY="auto"
+                css={{
+                  '&::-webkit-scrollbar': {
+                    width: '4px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    width: '6px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: useColorModeValue('purple.500', 'purple.300'),
+                    borderRadius: '24px',
+                  },
+                }}
+              >
+                <LeaderBoardTable
+                  leaders={leaders}
+                  searchResults={searchResults}
+                  searchLoad={searchLoad}
+                  currUserChar={user}
+                  navigate={navigate}
+                  hasMore={hasMore}
+                  onLoadMore={handleLoadMore}
+                  isLoading={isLoading}
+                  PAGE_LIMIT={PAGE_LIMIT}
+                />
+              </Box>
             </React.Suspense>
           </VStack>
         </Flex>

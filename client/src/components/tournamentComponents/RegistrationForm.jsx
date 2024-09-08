@@ -3,7 +3,6 @@ import {
   VStack,
   Text,
   Button,
-  Input,
   Alert,
   AlertIcon,
   SimpleGrid,
@@ -27,6 +26,7 @@ import {
   FaUserTie,
   FaPlane,
 } from 'react-icons/fa'
+import { useSelector } from 'react-redux'
 
 const MotionBox = motion(Box)
 
@@ -102,7 +102,7 @@ const CategoryCard = ({ category, isSelected, onSelect }) => {
 }
 
 const RegistrationForm = ({ onRegister }) => {
-  const [username, setUsername] = useState('')
+  const { user } = useSelector(state => state.auth)
   const [selectedCategories, setSelectedCategories] = useState([])
   const [error, setError] = useState('')
 
@@ -115,10 +115,6 @@ const RegistrationForm = ({ onRegister }) => {
   }
 
   const handleRegister = () => {
-    if (username.trim() === '') {
-      setError('Please enter a username.')
-      return
-    }
     if (selectedCategories.length !== 5) {
       setError('Please select exactly 5 categories.')
       return
@@ -131,17 +127,6 @@ const RegistrationForm = ({ onRegister }) => {
 
   return (
     <VStack spacing={6} align="stretch">
-      <Input
-        placeholder="Enter your username"
-        value={username}
-        onChange={e => setUsername(e.target.value)}
-        size="lg"
-        borderColor="gray.600"
-        _hover={{ borderColor: 'gray.500' }}
-        _focus={{ borderColor: 'pink.500', boxShadow: '0 0 0 1px #D53F8C' }}
-        bg="gray.800"
-        color="white"
-      />
       <Box>
         <Heading size="md" mb={4} color="white">
           Select 5 categories:

@@ -30,6 +30,7 @@ import {
   setSearchTerm,
 } from '../../redux/articleSlice'
 import { useTranslation } from 'react-i18next'
+import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
 
 // Lazy load components
 const Categories = React.lazy(() => import('./Categories'))
@@ -319,7 +320,11 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
                         i18n.language === 'en' ? item?.title : item?.hindiTitle
                       }
                       urlTitle={item?.title}
-                      image={item.imgURL || rrImage}
+                      image={
+                        (!blackListedImgUrls.find(url => url === item.imgURL) &&
+                          item.imgURL) ||
+                        rrImage
+                      }
                       category={t(`categories.${item?.category.toLowerCase()}`)}
                       date={formatDate(item?.dateTime, i18n.language)}
                       readTime={item.avgReadTime}

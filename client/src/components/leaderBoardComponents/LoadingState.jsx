@@ -1,9 +1,9 @@
-import { Spinner, Tbody, Td, Tr } from "@chakra-ui/react";
+import { Spinner, Tbody, Td, Tr } from '@chakra-ui/react'
 
 const LoadingState = () => (
-  <Tbody marginTop={"20px"} className="Entries">
+  <Tbody marginTop={'20px'} className="Entries">
     <Tr>
-      <Td colSpan={6} textAlign={"center"}>
+      <Td colSpan={6} textAlign={'center'}>
         <Spinner
           thickness="4px"
           speed="0.65s"
@@ -14,6 +14,6 @@ const LoadingState = () => (
       </Td>
     </Tr>
   </Tbody>
-);
+)
 
-export default LoadingState;
+export default LoadingState

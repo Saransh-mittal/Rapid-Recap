@@ -3,6 +3,7 @@ import { Text, SlideFade, Heading, Image, Flex } from '@chakra-ui/react'
 import rocket from '/images/rocket.webp'
 import Button from '../../miscellaneous/ButtonComponent'
 import ButtonGradient from '../../../assets/svg/ButtonGradient'
+import { useTranslation } from 'react-i18next'
 
 const BoostedSubmittedQuizInterface = ({
   score,

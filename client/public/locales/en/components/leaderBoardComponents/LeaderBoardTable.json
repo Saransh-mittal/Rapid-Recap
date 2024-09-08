@@ -5,7 +5,8 @@
   "inGameName": "In Game Name",
   "iqScores": "IQ Scores",
   "quizSubmissions": "Quiz Submissions",
-  "avgRQMScore": "Avg. RQM Scores",
+  "avgRQMScore": "Avg. RQM ",
   "Player": "Player",
-  "Experience": "Experience"
+  "Experience": "Experience",
+  "rankAndPlayer": "Rank & Player"
 }

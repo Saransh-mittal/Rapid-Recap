@@ -222,6 +222,7 @@ const OutsideNavbarContent = ({
                 navigate={navigate}
                 renderNotificationBadge={renderNotificationBadge}
                 isGuest={user?.role === 'guest'}
+                t={t}
               />
             </>
           )}
@@ -430,7 +431,13 @@ const SearchComponent = ({
   </Box>
 )
 
-const MessengerComponent = ({ notification, navigate, isGuest, playClick }) => {
+const MessengerComponent = ({
+  notification,
+  navigate,
+  isGuest,
+  playClick,
+  t,
+}) => {
   const dispatch = useDispatch()
   return (
     <Box
