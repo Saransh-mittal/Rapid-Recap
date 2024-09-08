@@ -32,7 +32,9 @@ import {
   mockPreviousTournamentData,
 } from '../components/tournamentComponents/mockData'
 import axios from 'axios'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { addNoteMessage } from '../redux/appSlice'
+import { setUser } from '../redux/authSlice'
 
 const MotionBox = motion(Box)
 const MotionTab = motion(Tab)
@@ -41,10 +43,10 @@ const Tournament = () => {
   const [tournamentData, setTournamentData] = useState(null)
   const [previousTournamentData, setPreviousTournamentData] = useState(null)
   const [isFetching, setIsFetching] = useState(true)
-  const [userDetails, setUserDetails] = useState(null)
+  const dispatch = useDispatch()
   const [registerLoading, setRegisterLoading] = useState(false)
   const { user, loginCheckStatus } = useSelector(state => state.auth)
-  const [isUserRegistered, setIsUserRegistered] = useState(false)
+
   const [userRegistrationDetails, setUserRegistrationDetails] = useState({
     isRegistered: false,
     selectedCategories: [],
@@ -105,6 +107,22 @@ const Tournament = () => {
         ...tournamentData,
         registeredCount: tournamentData.registeredCount + 1,
       })
+      dispatch(
+        addNoteMessage({
+          messageType: 'xpAward',
+          xpAwarded: 5,
+          title: 'XP Awarded For Tournament Registration',
+          actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+          width: '250px',
+          xpSource: 'tournament-registration',
+        }),
+      )
+      dispatch(
+        setUser({
+          ...user,
+          xp: user.xp + 5,
+        }),
+      )
       setRegisterLoading(false)
     } catch (error) {
       console.log(error)

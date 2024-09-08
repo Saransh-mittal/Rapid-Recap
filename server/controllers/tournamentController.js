@@ -10,6 +10,7 @@ const { logActivity } = require('../utils/activity.utils')
 const { generateCategoryQuiz } = require('../utils/quiz.utils')
 const { commitSession, abortSession, startSession } = require('../db/session')
 const { getUserRegistrationDetails } = require('../utils/tournament.utils')
+const { activityTypes } = require('../data/activityTypes')
 
 // @desc   Get the latest tournament
 // @route  GET /api/tournament/latest
@@ -134,12 +135,12 @@ const registerForTournament = asyncHandler(async (req, res) => {
     // Add user to tournament participants
     tournament.participants.push(userId)
     await tournament.save({ session })
-    // const currentDate = new Date().toISOString().split('T')[0]
-    // logActivity({
-    //   userInGameName: user.inGameName,
-    //   type: activityTypes.TOURNAMENT_REGISTRATION.type,
-    //   date: currentDate,
-    // })
+    const currentDate = new Date().toISOString().split('T')[0]
+    logActivity({
+      userInGameName: user.inGameName,
+      type: activityTypes.TOURNAMENT_REGISTRATION.type,
+      date: currentDate,
+    })
     await commitSession(session)
     res.status(201).json(registration)
   } catch (error) {
@@ -147,24 +148,6 @@ const registerForTournament = asyncHandler(async (req, res) => {
     await abortSession(session)
     throw new Error(error.message)
   }
-})
-
-// @desc   Get the current tournament
-// @route  GET /api/tournament/current
-// @access Public
-const getCurrentTournament = asyncHandler(async (req, res) => {
-  const currentDate = new Date()
-  const tournament = await Tournament.findOne({
-    registrationStartDate: { $lte: currentDate },
-    registrationEndDate: { $gte: currentDate },
-  })
-
-  if (!tournament) {
-    res.status(404)
-    throw new Error('No active tournament found')
-  }
-
-  res.json(tournament)
 })
 
 // @desc   Add a new current affairs question
@@ -427,7 +410,6 @@ const submitQuiz = asyncHandler(async (req, res) => {
 
 module.exports = {
   registerForTournament,
-  getCurrentTournament,
   addCurrentAffairsQuestion,
   getCurrentAffairsQuestions,
   updateCurrentAffairsQuestion,

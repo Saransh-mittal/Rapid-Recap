@@ -1,7 +1,6 @@
 const express = require('express')
 const {
   registerForTournament,
-  getCurrentTournament,
   addCurrentAffairsQuestion,
   getCurrentAffairsQuestions,
   updateCurrentAffairsQuestion,
@@ -19,7 +18,7 @@ const router = express.Router()
 router.get('/previous', getPreviousTournament)
 router.get('/latest', getLatestTournament)
 router.post('/register', Authenticate, registerForTournament)
-router.get('/current', getCurrentTournament)
+
 router.post(
   '/questions/current-affairs',
   Authenticate,
