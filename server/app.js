@@ -102,6 +102,9 @@ webpush.setVapidDetails(
 // require("./scripts/chatStatus");
 // -------------------
 
+// const dailyUserIQCalc = require('./utils/dailyUserIQCalc.utils')
+// dailyUserIQCalc()
+
 // const { exportDataToCSV } = require("./services/recommendationService");
 // exportDataToCSV();
 app.use(express.json())
@@ -110,6 +113,8 @@ app.use(express.json())
 app.use(errorHandler)
 // const generateSitemap = require('./generate-sitemap')
 // generateSitemap()
+// const generateGoogleNewsSitemap = require('./google-sitemap-generator')
+// generateGoogleNewsSitemap()
 // require('./scheduler/setupCronJobs')
 const PORT = process.env.PORT
 authRouter.use(cookieParser())

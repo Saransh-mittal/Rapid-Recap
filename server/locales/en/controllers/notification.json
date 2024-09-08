@@ -1,4 +1,5 @@
 {
   "nuclearFusionTrouble": "World's biggest nuclear fusion project in trouble, launch pushed back to 2039",
-  "notifSentSuccess": "Notification sent successfully"
+  "notifSentSuccess": "Notification sent successfully",
+  "streak_broken_notification_body": "Hey {{name}} 👋, your streak was broken, but you can still revive it! Your streak revival period has started — give 6 quizzes on any day during this period to activate and utilize QuinBoost and get your streak back on track. You have {{remainingTime}} left to revive your streak. Don’t miss out! 🚀📈"
 }
