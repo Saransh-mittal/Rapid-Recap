@@ -1,5 +1,15 @@
 import React from 'react'
-import { Text, Table, Thead, Tbody, Tr, Th, Td, Box } from '@chakra-ui/react'
+import {
+  Text,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Box,
+  Flex,
+} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 
 import { Medal, Trophy, Crown } from 'lucide-react'
@@ -9,13 +19,29 @@ const LeaderboardTable = ({ data }) => {
     <Table variant="unstyled">
       <Thead>
         <Tr>
-          <Th color="white" fontSize={{ base: 'sm', md: 'lg' }}>
+          <Th
+            color="white"
+            fontSize={{ base: 'xs', md: 'lg' }}
+            px={{ base: 4, md: 6 }}
+            textAlign={'center'}
+          >
             Rank
           </Th>
-          <Th color="white" fontSize="lg">
+          <Th
+            color="white"
+            fontSize={{ base: 'xs', md: 'lg' }}
+            px={6}
+            textAlign={'center'}
+          >
             Username
           </Th>
-          <Th color="white" fontSize="lg" isNumeric>
+          <Th
+            color="white"
+            fontSize={{ base: 'xs', md: 'lg' }}
+            px={6}
+            textAlign={'center'}
+            isNumeric
+          >
             Score
           </Th>
         </Tr>
@@ -35,22 +61,34 @@ const LeaderboardTable = ({ data }) => {
             borderBottom="1px solid"
             borderColor="whiteAlpha.300"
           >
-            <Td>
-              {player.rank === 1 && <Crown size={24} color="gold" />}
-              {player.rank === 2 && <Trophy size={24} color="silver" />}
-              {player.rank === 3 && <Medal size={24} color="#CD7F32" />}
+            <Td textAlign={'center'}>
+              {player.rank === 1 && (
+                <Flex justifyContent={'center'}>
+                  <Crown size={24} color="gold" />
+                </Flex>
+              )}
+              {player.rank === 2 && (
+                <Flex justifyContent={'center'}>
+                  <Trophy size={24} color="silver" />
+                </Flex>
+              )}
+              {player.rank === 3 && (
+                <Flex justifyContent={'center'}>
+                  <Medal size={24} color="#CD7F32" />
+                </Flex>
+              )}
               {player.rank > 3 && (
                 <Text fontSize="xl" fontWeight="bold">
                   {player.rank}
                 </Text>
               )}
             </Td>
-            <Td>
+            <Td textAlign={'center'}>
               <Text fontSize="xl" fontWeight="semibold">
                 {player.username}
               </Text>
             </Td>
-            <Td isNumeric>
+            <Td textAlign={'center'} isNumeric>
               <Text fontSize="xl" fontWeight="bold">
                 {player.score}
               </Text>
