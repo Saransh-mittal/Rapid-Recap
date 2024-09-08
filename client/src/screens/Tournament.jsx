@@ -27,10 +27,6 @@ import PreviousTournamentLeaderboard from '../components/tournamentComponents/Pr
 import EpicQuestGuide from '../components/tournamentComponents/EpicQuestGuide'
 import TournamentStatus from '../components/tournamentComponents/TournamentStatus'
 
-import {
-  mockTournamentData,
-  mockPreviousTournamentData,
-} from '../components/tournamentComponents/mockData'
 import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../redux/appSlice'
@@ -45,7 +41,9 @@ const Tournament = () => {
   const [isFetching, setIsFetching] = useState(true)
   const dispatch = useDispatch()
   const [registerLoading, setRegisterLoading] = useState(false)
-  const { user, loginCheckStatus } = useSelector(state => state.auth)
+  const { user, loginCheckStatus, isAuthenticated } = useSelector(
+    state => state.auth,
+  )
 
   const [userRegistrationDetails, setUserRegistrationDetails] = useState({
     isRegistered: false,
@@ -238,6 +236,8 @@ const Tournament = () => {
               />
               {tournamentData?.status === 'registration' && (
                 <RegistrationSection
+                  isAuthenticated={isAuthenticated}
+                  userRole={user?.role}
                   tournamentData={tournamentData}
                   registrationStatus={
                     userRegistrationDetails.isRegistered
