@@ -5,12 +5,14 @@ export const mockTournamentData = {
     startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 1 day from now
     endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
     participants: [],
+    registeredCount: 42,
   },
   upcoming: {
     status: 'upcoming',
     startDate: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(), // 1 hour from now
     endDate: new Date(Date.now() + 49 * 60 * 60 * 1000).toISOString(), // 49 hours from now
     participants: [],
+    registeredCount: 42,
   },
   ongoing: {
     status: 'ongoing',

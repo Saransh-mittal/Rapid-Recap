@@ -1,4 +1,3 @@
-// pages/Tournament.js
 import React, { useState, useEffect } from 'react'
 import {
   Box,
@@ -25,6 +24,7 @@ import RegistrationSection from '../components/tournamentComponents/Registration
 import LeaderboardSection from '../components/tournamentComponents/LeaderboardSection'
 import PreviousTournamentLeaderboard from '../components/tournamentComponents/PreviousTournamentLeaderboard'
 import EpicQuestGuide from '../components/tournamentComponents/EpicQuestGuide'
+import TournamentStatus from '../components/tournamentComponents/TournamentStatus'
 
 import {
   mockTournamentData,
@@ -44,7 +44,7 @@ const Tournament = () => {
   const fetchTournamentData = async () => {
     setIsFetching(true)
     setTimeout(() => {
-      setTournamentData(mockTournamentData.registration)
+      setTournamentData(mockTournamentData.upcoming)
       setPreviousTournamentData(mockPreviousTournamentData)
       setIsFetching(false)
     }, 1000)
@@ -57,6 +57,11 @@ const Tournament = () => {
   const handleRegister = details => {
     setUserDetails(details)
     setRegistrationStatus('registered')
+  }
+
+  const handleEnterTournament = () => {
+    // Logic to enter the tournament
+    console.log('Entering tournament...')
   }
 
   const renderTournamentContent = () => {
@@ -142,16 +147,25 @@ const Tournament = () => {
               boxShadow="0 8px 32px rgba(31, 38, 135, 0.37)"
             >
               <TimeInfo tournamentData={tournamentData} />
-              <RegistrationSection
+              <TournamentStatus
                 tournamentData={tournamentData}
                 registrationStatus={registrationStatus}
-                handleRegister={handleRegister}
-                userDetails={userDetails}
+                handleEnterTournament={handleEnterTournament}
               />
-              <LeaderboardSection
-                tournamentData={tournamentData}
-                registrationStatus={registrationStatus}
-              />
+              {tournamentData?.status === 'registration' && (
+                <RegistrationSection
+                  tournamentData={tournamentData}
+                  registrationStatus={registrationStatus}
+                  handleRegister={handleRegister}
+                  userDetails={userDetails}
+                />
+              )}
+              {tournamentData?.status === 'ongoing' && (
+                <LeaderboardSection
+                  tournamentData={tournamentData}
+                  registrationStatus={registrationStatus}
+                />
+              )}
             </Box>
           </TabPanel>
           <TabPanel>

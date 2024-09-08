@@ -6,10 +6,10 @@ import { formatDateLangTranslate } from '../../utils/helper.utils'
 const MotionBox = motion(Box)
 
 const TimeInfo = ({ tournamentData }) => {
-  const startDate = formatDateLangTranslate(tournamentData.startDate)
-  const endDate = formatDateLangTranslate(tournamentData.endDate)
-  const startDateTime = new Date(tournamentData.startDate)
-  const endDateTime = new Date(tournamentData.endDate)
+  const startDate = formatDateLangTranslate(tournamentData?.startDate)
+  const endDate = formatDateLangTranslate(tournamentData?.endDate)
+  const startDateTime = new Date(tournamentData?.startDate)
+  const endDateTime = new Date(tournamentData?.endDate)
 
   return (
     <VStack spacing={4} align="stretch">
