@@ -5,13 +5,10 @@ import {
   AlertIcon,
   Heading,
   Text,
-  Button,
   Box,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
   useColorModeValue,
+  Flex,
+  Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import RegistrationForm from './RegistrationForm'
@@ -31,6 +28,10 @@ const RegistrationSection = ({
     'rgba(0, 0, 0, 0.3)',
   )
   const borderColor = useColorModeValue('pink.200', 'pink.700')
+  const textColor = useColorModeValue('gray.800', 'white')
+  const headingColor = useColorModeValue('cyan.300', 'cyan.200')
+  const labelColor = useColorModeValue('pink.300', 'pink.200')
+  const valueColor = useColorModeValue('yellow.300', 'yellow.200')
 
   return (
     <>
@@ -73,17 +74,43 @@ const RegistrationSection = ({
                 <Box
                   bg={bgColor}
                   borderRadius="lg"
-                  p={4}
+                  p={6}
                   borderWidth={2}
                   borderColor={borderColor}
+                  boxShadow="md"
                 >
-                  <Text fontWeight="semibold" mb={2}>
+                  <Heading size="md" mb={4} color={headingColor}>
                     Your Tournament Details:
-                  </Text>
-                  <Text>In-Game-Name: {userDetails?.inGameName}</Text>
-                  <Text textTransform={'capitalize'}>
-                    Selected Categories: {userDetails?.categories?.join(', ')}
-                  </Text>
+                  </Heading>
+                  <VStack align="start" spacing={3}>
+                    <Flex align="center">
+                      <Text fontWeight="semibold" mr={2} color={labelColor}>
+                        In-Game-Name:
+                      </Text>
+                      <Text color={valueColor}>{userDetails?.inGameName}</Text>
+                    </Flex>
+                    <Box>
+                      <Text fontWeight="semibold" mb={2} color={labelColor}>
+                        Selected Categories:
+                      </Text>
+                      <Flex flexWrap="wrap" gap={2}>
+                        {userDetails?.categories?.map((category, index) => (
+                          <Badge
+                            key={index}
+                            colorScheme="purple"
+                            variant="solid"
+                            fontSize="sm"
+                            textTransform="capitalize"
+                            borderRadius="full"
+                            px={3}
+                            py={1}
+                          >
+                            {category}
+                          </Badge>
+                        ))}
+                      </Flex>
+                    </Box>
+                  </VStack>
                 </Box>
               </VStack>
             )}

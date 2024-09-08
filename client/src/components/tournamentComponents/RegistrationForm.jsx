@@ -10,11 +10,13 @@ import {
   Flex,
   Icon,
   useToast,
+  Text,
 } from '@chakra-ui/react'
 
 import { useSelector } from 'react-redux'
 import CategoryCard from './CategoryCard'
-import { FaDice } from 'react-icons/fa'
+import { FaDice, FaNewspaper } from 'react-icons/fa'
+import { motion } from 'framer-motion'
 
 const categories = [
   'world',
@@ -33,23 +35,39 @@ const categories = [
   'tourism',
 ]
 
+const MotionBox = motion(Box)
+
 const RegistrationForm = ({ onRegister, registerLoading }) => {
   const { user } = useSelector(state => state.auth)
   const [selectedCategories, setSelectedCategories] = useState([])
+  const [userSelectedCategories, setUserSelectedCategories] = useState([])
   const [error, setError] = useState('')
   const toast = useToast()
 
   const handleCategorySelect = category => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter(c => c !== category))
+    if (userSelectedCategories.includes(category)) {
+      const newUserSelected = userSelectedCategories.filter(c => c !== category)
+      setUserSelectedCategories(newUserSelected)
+      setSelectedCategories(prevSelected =>
+        prevSelected.filter(c => c !== category),
+      )
     } else if (selectedCategories.length < 5) {
-      setSelectedCategories([...selectedCategories, category])
+      setUserSelectedCategories([...userSelectedCategories, category])
+      setSelectedCategories(prevSelected => [...prevSelected, category])
     }
   }
 
   const handleRandomPick = () => {
-    const shuffled = [...categories].sort(() => 0.5 - Math.random())
-    setSelectedCategories(shuffled.slice(0, 5))
+    const remainingCount = 5 - userSelectedCategories.length
+    if (remainingCount <= 0) return
+
+    const availableCategories = categories.filter(
+      category => !userSelectedCategories.includes(category),
+    )
+    const shuffled = availableCategories.sort(() => 0.5 - Math.random())
+    const newSelections = shuffled.slice(0, remainingCount)
+
+    setSelectedCategories([...userSelectedCategories, ...newSelections])
     setError('')
   }
 
@@ -98,7 +116,7 @@ const RegistrationForm = ({ onRegister, registerLoading }) => {
       <Box>
         <Flex justifyContent={'space-between'} alignItems={'center'} mb={4}>
           <Heading size="md" color="white">
-            Select 5 categories:
+            Select 5 more categories:
           </Heading>
           <Button
             onClick={handleRandomPick}
@@ -120,9 +138,12 @@ const RegistrationForm = ({ onRegister, registerLoading }) => {
             }}
             transition="all 0.2s"
           >
-            Surprise Me
+            Quick Pick
           </Button>
         </Flex>
+        <Text color="gray.600" fontWeight="bold" mb={2}>
+          Note: Current Affairs is compulsory.
+        </Text>
         <SimpleGrid columns={{ base: 2, md: 3, xl: 4 }} spacing={4}>
           {categories.map(category => (
             <CategoryCard
@@ -132,6 +153,28 @@ const RegistrationForm = ({ onRegister, registerLoading }) => {
               onSelect={handleCategorySelect}
             />
           ))}
+          <MotionBox
+            borderWidth="1px"
+            borderRadius="lg"
+            borderColor="pink.500"
+            bg="rgba(237, 100, 166, 0.1)"
+            p={4}
+            cursor="not-allowed"
+            boxShadow="0 0 0 2px rgba(237, 100, 166, 0.6)"
+          >
+            <VStack spacing={2}>
+              <Box as={FaNewspaper} size="30px" color="pink.400" />
+              <Text
+                fontWeight="bold"
+                textAlign="center"
+                fontSize="sm"
+                color="pink.400"
+                textTransform="capitalize"
+              >
+                Current Affairs
+              </Text>
+            </VStack>
+          </MotionBox>
         </SimpleGrid>
       </Box>
       {error && (
