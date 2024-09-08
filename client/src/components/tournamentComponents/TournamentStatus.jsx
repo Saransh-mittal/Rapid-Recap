@@ -1,5 +1,14 @@
-import { VStack, Alert, AlertIcon, Heading, Button } from '@chakra-ui/react'
-import { Trophy } from 'lucide-react'
+import React from 'react'
+import {
+  VStack,
+  Alert,
+  AlertIcon,
+  Heading,
+  Button,
+  Box,
+} from '@chakra-ui/react'
+import { Trophy, Clock } from 'lucide-react'
+import RegisteredUsersCount from './RegisteredUsersCount'
 
 const TournamentStatus = ({
   tournamentData,
@@ -8,27 +17,34 @@ const TournamentStatus = ({
 }) => {
   return (
     <>
-      {tournamentData?.status === 'upcoming' && (
-        <>
-          <Heading size="lg" mb={4}>
+      {/* {tournamentData?.status === 'upcoming' && (
+        <VStack spacing={6} align="stretch">
+          <Heading size="lg" mb={4} display="flex" alignItems="center">
+            <Clock color="#4FD1C5" style={{ marginRight: '0.5rem' }} />
             Tournament Starting Soon
           </Heading>
-          <Alert status="info" color="black">
-            <AlertIcon />
+          <Alert status="info" borderRadius="md" bg="blue.700" color="white">
+            <AlertIcon color="blue.200" />
             The tournament will begin shortly. Get ready!
           </Alert>
-        </>
+          <RegisteredUsersCount count={tournamentData.registeredCount} />
+        </VStack>
       )}
       {tournamentData?.status === 'ongoing' && (
-        <>
+        <VStack spacing={6} align="stretch">
           <Heading size="lg" mb={4} display="flex" alignItems="center">
             <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
             Tournament in Progress
           </Heading>
           {registrationStatus === 'registered' ? (
-            <VStack spacing={4} align="stretch">
-              <Alert status="success" color="black">
-                <AlertIcon />
+            <>
+              <Alert
+                status="success"
+                borderRadius="md"
+                bg="green.700"
+                color="white"
+              >
+                <AlertIcon color="green.200" />
                 You're registered for the tournament!
               </Alert>
               <Button
@@ -42,25 +58,30 @@ const TournamentStatus = ({
               >
                 Enter Tournament
               </Button>
-            </VStack>
+            </>
           ) : (
-            <Alert status="warning" color="black">
-              <AlertIcon />
+            <Alert
+              status="warning"
+              borderRadius="md"
+              bg="orange.700"
+              color="white"
+            >
+              <AlertIcon color="orange.200" />
               You are not registered for this tournament.
             </Alert>
           )}
-        </>
-      )}
+        </VStack>
+      )} */}
       {tournamentData?.status === 'completed' && (
-        <>
-          <Heading size="lg" mb={4}>
+        <VStack spacing={6} align="stretch">
+          <Heading size={{ base: 'md', md: 'lg' }} mb={4}>
             Tournament Completed
           </Heading>
-          <Alert status="info" color="black">
-            <AlertIcon />
+          <Alert status="info" borderRadius="md" bg="blue.700" color="white">
+            <AlertIcon color="blue.200" />
             This tournament has ended. Check out the results below!
           </Alert>
-        </>
+        </VStack>
       )}
     </>
   )

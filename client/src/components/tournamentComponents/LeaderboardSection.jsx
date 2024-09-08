@@ -40,7 +40,7 @@ const LeaderboardSection = ({ tournamentData, registrationStatus }) => {
       )}
       {tournamentData.status === 'completed' && (
         <>
-          <Heading size="lg" mb={4}>
+          <Heading size={{ base: 'md', md: 'lg' }} mb={4}>
             Tournament Completed
           </Heading>
           <Alert status="info" color="black">

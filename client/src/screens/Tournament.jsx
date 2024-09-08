@@ -1,4 +1,3 @@
-// pages/Tournament.js
 import React, { useState, useEffect } from 'react'
 import {
   Box,
@@ -25,6 +24,7 @@ import RegistrationSection from '../components/tournamentComponents/Registration
 import LeaderboardSection from '../components/tournamentComponents/LeaderboardSection'
 import PreviousTournamentLeaderboard from '../components/tournamentComponents/PreviousTournamentLeaderboard'
 import EpicQuestGuide from '../components/tournamentComponents/EpicQuestGuide'
+import TournamentStatus from '../components/tournamentComponents/TournamentStatus'
 
 import {
   mockTournamentData,
@@ -44,7 +44,7 @@ const Tournament = () => {
   const fetchTournamentData = async () => {
     setIsFetching(true)
     setTimeout(() => {
-      setTournamentData(mockTournamentData.registration)
+      setTournamentData(mockTournamentData.completed)
       setPreviousTournamentData(mockPreviousTournamentData)
       setIsFetching(false)
     }, 1000)
@@ -57,6 +57,11 @@ const Tournament = () => {
   const handleRegister = details => {
     setUserDetails(details)
     setRegistrationStatus('registered')
+  }
+
+  const handleEnterTournament = () => {
+    // Logic to enter the tournament
+    console.log('Entering tournament...')
   }
 
   const renderTournamentContent = () => {
@@ -94,7 +99,7 @@ const Tournament = () => {
 
     return (
       <Tabs isFitted variant="soft-rounded" colorScheme="pink">
-        <TabList mb="1em" justifyContent={'center'}>
+        <TabList mb="0.7em" justifyContent={'center'} mx={4}>
           <MotionTab
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -107,9 +112,10 @@ const Tournament = () => {
             fontWeight="bold"
             py={3}
             px={6}
+            // ml={4}
           >
             <HStack spacing={2}>
-              <Trophy size={20} />
+              <Trophy width={20} height={20} />
               <Text>Current Tournament</Text>
             </HStack>
           </MotionTab>
@@ -125,6 +131,7 @@ const Tournament = () => {
             fontWeight="bold"
             py={3}
             px={6}
+            // mr={4}
           >
             <HStack spacing={2}>
               <History size={20} />
@@ -142,16 +149,25 @@ const Tournament = () => {
               boxShadow="0 8px 32px rgba(31, 38, 135, 0.37)"
             >
               <TimeInfo tournamentData={tournamentData} />
-              <RegistrationSection
+              <TournamentStatus
                 tournamentData={tournamentData}
                 registrationStatus={registrationStatus}
-                handleRegister={handleRegister}
-                userDetails={userDetails}
+                handleEnterTournament={handleEnterTournament}
               />
-              <LeaderboardSection
-                tournamentData={tournamentData}
-                registrationStatus={registrationStatus}
-              />
+              {tournamentData?.status === 'registration' && (
+                <RegistrationSection
+                  tournamentData={tournamentData}
+                  registrationStatus={registrationStatus}
+                  handleRegister={handleRegister}
+                  userDetails={userDetails}
+                />
+              )}
+              {tournamentData?.status === 'ongoing' && (
+                <LeaderboardSection
+                  tournamentData={tournamentData}
+                  registrationStatus={registrationStatus}
+                />
+              )}
             </Box>
           </TabPanel>
           <TabPanel>

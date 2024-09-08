@@ -6,10 +6,10 @@ import { formatDateLangTranslate } from '../../utils/helper.utils'
 const MotionBox = motion(Box)
 
 const TimeInfo = ({ tournamentData }) => {
-  const startDate = formatDateLangTranslate(tournamentData.startDate)
-  const endDate = formatDateLangTranslate(tournamentData.endDate)
-  const startDateTime = new Date(tournamentData.startDate)
-  const endDateTime = new Date(tournamentData.endDate)
+  const startDate = formatDateLangTranslate(tournamentData?.startDate)
+  const endDate = formatDateLangTranslate(tournamentData?.endDate)
+  const startDateTime = new Date(tournamentData?.startDate)
+  const endDateTime = new Date(tournamentData?.endDate)
 
   return (
     <VStack spacing={4} align="stretch">
@@ -30,10 +30,12 @@ const TimeInfo = ({ tournamentData }) => {
             <Text fontSize="sm" fontWeight="bold" color="pink.400">
               Starts
             </Text>
-            <Text fontSize="xl" fontWeight="bold">
+            <Text fontSize={{ base: 'md', md: 'xl' }} fontWeight="bold">
               {startDate}
             </Text>
-            <Text fontSize="md">{startDateTime.toLocaleTimeString()}</Text>
+            <Text fontSize={{ base: 'sm', md: 'md' }}>
+              {startDateTime.toLocaleTimeString()}
+            </Text>
           </VStack>
         </MotionBox>
         <MotionBox
@@ -52,10 +54,12 @@ const TimeInfo = ({ tournamentData }) => {
             <Text fontSize="sm" fontWeight="bold" color="pink.400">
               Ends
             </Text>
-            <Text fontSize="xl" fontWeight="bold">
+            <Text fontSize={{ base: 'md', md: 'xl' }} fontWeight="bold">
               {endDate}
             </Text>
-            <Text fontSize="md">{endDateTime.toLocaleTimeString()}</Text>
+            <Text fontSize={{ base: 'sm', md: 'md' }}>
+              {endDateTime.toLocaleTimeString()}
+            </Text>
           </VStack>
         </MotionBox>
       </HStack>
