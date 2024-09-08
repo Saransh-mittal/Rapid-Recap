@@ -9,7 +9,7 @@ const LeaderboardTable = ({ data }) => {
     <Table variant="unstyled">
       <Thead>
         <Tr>
-          <Th color="white" fontSize="lg">
+          <Th color="white" fontSize={{ base: 'sm', md: 'lg' }}>
             Rank
           </Th>
           <Th color="white" fontSize="lg">

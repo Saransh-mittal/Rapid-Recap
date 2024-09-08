@@ -5,6 +5,7 @@ const Chat = require('../model/chatSchema')
 const { sendNotification } = require('../services/notificationService')
 const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const { logActivity } = require('../utils/activity.utils')
+const i18n = require('i18next')
 
 //@description     Send friend request
 //@route           POST /api/friends/send-request
@@ -25,7 +26,7 @@ const sendRequest = asyncHandler(async (req, res) => {
     }).select('name pic role')
     const receiver = await User.findByIdAndUpdate(toId, {
       $push: { receivedRequests: newRequest._id },
-    }).select('inGameName role')
+    }).select('inGameName role userLanguage')
 
     if (receiver.role === 'guest' || sender.role === 'guest') {
       return res
@@ -33,10 +34,14 @@ const sendRequest = asyncHandler(async (req, res) => {
         .json({ message: 'Guest users cannot send or receive friend requests' })
     }
 
+    const localizedI18n = i18n.cloneInstance({ initImmediate: false })
+    await localizedI18n.changeLanguage(receiver.userLanguage)
+    const t = (key, options) =>
+      localizedI18n.t(key, { ns: 'friendsController', ...options })
+
     await sendNotification({
-      title: `Friend request from ${sender.name}`,
+      title: t('requestFrom', { name: sender.name }),
       icon: sender.pic,
-      // url: `/profile/${receiver.inGameName}/?requestId=${newRequest._id}`,
       url: `/home?wiseweb=true`,
       userId: toId.toString(),
     })
@@ -63,10 +68,10 @@ const acceptRequest = asyncHandler(async (req, res) => {
 
     const sender = await User.findByIdAndUpdate(request.from._id, {
       $push: { friends: request.to._id },
-    }).select('inGameName _id role')
+    }).select('inGameName _id role userLanguage')
     const receiver = await User.findByIdAndUpdate(request.to._id, {
       $push: { friends: request.from._id },
-    }).select('inGameName pic _id name role')
+    }).select('inGameName pic _id name role userLanguage')
 
     if (receiver.role === 'guest' || sender.role === 'guest') {
       return res
@@ -95,10 +100,15 @@ const acceptRequest = asyncHandler(async (req, res) => {
       type: activityTypes.WISE_WEB_EXPANSION.type,
       date: currentDate,
     })
+    const localizedI18n1 = i18n.cloneInstance({ initImmediate: false })
+    await localizedI18n1.changeLanguage(receiver.userLanguage)
+    let t = (key, options) =>
+      localizedI18n1.t(key, { ns: 'friendsController', ...options })
     const noteMessageForSender = new NoteMessage({
       userId: sender._id,
-      title: 'Friend request accepted',
-      content: `You are now friends with ${receiver.name}`,
+      title: t('requestAccepted'),
+      // content: `You are now friends with ${receiver.name}`,
+      content: t('nowFriendsWith', { name: receiver.name }),
       messageType: 'xpAward',
       xpAwarded: getXpForActivity({
         activityType: 'Wise Web expansion',
@@ -112,10 +122,16 @@ const acceptRequest = asyncHandler(async (req, res) => {
       type: activityTypes.WISE_WEB_EXPANSION.type,
       date: currentDate,
     })
+    const localizedI18n2 = i18n.cloneInstance({ initImmediate: false })
+    await localizedI18n2.changeLanguage(sender.userLanguage)
+    t = (key, options) =>
+      localizedI18n2.t(key, { ns: 'friendsController', ...options })
+
     const noteMessageForReceiver = new NoteMessage({
       userId: receiver._id,
-      title: 'Friend request accepted',
-      content: `You are now friends with ${sender.name}`,
+      title: t('requestAccepted'),
+      // content: `You are now friends with ${sender.name}`,
+      content: t('nowFriendsWith', { name: sender.name }),
       messageType: 'xpAward',
       xpAwarded: getXpForActivity({
         activityType: 'Wise Web expansion',
@@ -124,8 +140,12 @@ const acceptRequest = asyncHandler(async (req, res) => {
       actions: [{ actionType: 'VIEW_EXPERIENCE' }],
     })
     await noteMessageForReceiver.save()
+    const localizedI18n3 = i18n.cloneInstance({ initImmediate: false })
+    await localizedI18n3.changeLanguage(receiver.userLanguage)
+    t = (key, options) =>
+      localizedI18n2.t(key, { ns: 'friendsController', ...options })
     await sendNotification({
-      title: `Friend request accepted by ${receiver.name}`,
+      title: t('requestAcceptedBy', { name: receiver.name }),
       icon: receiver.pic,
       url: `/home?wiseweb=true`,
       userId: sender._id.toString(),

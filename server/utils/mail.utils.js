@@ -92,15 +92,22 @@ const mailForStreakBroken = async () => {
           }
           await user.save()
         }
+        const localizedI18n = i18n.cloneInstance()
+
+        // Switch to user's language
+        await localizedI18n.changeLanguage(user.userLanguage)
+
+        // Translation function for specific namespace
+        const t = (key, options) =>
+          localizedI18n.t(key, { ns: 'mail.utils', ...options })
         await sendNotification({
           userId: user._id,
 
-          title: "Let's Get Back on Track! 🔄",
-          body: `Hey ${
-            user.name
-          } 👋, your streak was broken, but you can still revive it! Your streak revival period has started — give 6 quizzes on any day during this period to activate and utilize QuinBoost and get your streak back on track. You have ${formatRemainingTime(
-            remainingTimeBeforeRevival,
-          )} left to revive your streak. Don’t miss out! 🚀📈`,
+          title: i18n.t('streak_broken_notification_title'),
+          body: i18n.t('streak_broken_notification_body', {
+            name: user.name.split(' ')[0],
+            remainingTime: formatRemainingTime(remainingTimeBeforeRevival),
+          }),
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
         })
@@ -119,8 +126,11 @@ const mailForStreakBroken = async () => {
           userId: user._id,
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
-          title: 'Restart Your Rapid Recap Quiz Streak Today!',
-          body: `Hey ${user.name}! You've missed your quiz streak for ${streakBrokenDays} days. Life gets busy, but we're here to help you get back on track. Tap to resume your learning journey with Rapid Recap! 🚀`,
+          title: i18n.t('streak_seven_periodic_notification_title'),
+          body: i18n.t('streak_seven_periodic_notification_body', {
+            name: user.name.split(' ')[0],
+            streak_days: streakBrokenDays,
+          }),
         })
         await transporter.sendMail({
           from: MailTemplates.StreakSevenPeriodic.from,
@@ -139,8 +149,10 @@ const mailForStreakBroken = async () => {
           userId: user._id,
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
-          title: 'We Miss You! Resume Your Quiz Journey 🚀',
-          body: `Hey ${user.name}, it's been 2 days since we saw you on Rapid Recap. Jump back in and restart your learning journey! 🌟📚 Tap to continue.`,
+          title: i18n.t('no_login_two_days_notification_title'),
+          body: i18n.t('no_login_two_days_notification_body', {
+            name: user.name.split(' ')[0],
+          }),
         })
         await transporter.sendMail({
           from: MailTemplates.noLoginFor2Days.from,
@@ -156,8 +168,11 @@ const mailForStreakBroken = async () => {
           userId: user._id,
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
-          title: "It's Been a While! Restart Your Learning Journey 🚀",
-          body: `Hey ${user.name}, it's been ${noLoginDaysSpent} days since we saw you on Rapid Recap. Dive back in and explore our latest quizzes and content! 🌟📚 Tap to continue.`,
+          title: i18n.t('no_login_seven_days_notification_title'),
+          body: i18n.t('no_login_seven_days_notification_body', {
+            name: user.name.split(' ')[0],
+            inactive_days: noLoginDaysSpent,
+          }),
         })
         await transporter.sendMail({
           from: MailTemplates.noLoginForSevenPeriodic.from,

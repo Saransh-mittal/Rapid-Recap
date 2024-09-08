@@ -53,7 +53,7 @@ const Tournament = () => {
     try {
       // Simulating API call with setTimeout
       setTimeout(() => {
-        setTournamentData(mockTournamentData.upcoming)
+        setTournamentData(mockTournamentData.registration)
         setPreviousTournamentData(mockPreviousTournamentData)
         setIsFetching(false)
       }, 1000)
@@ -98,7 +98,12 @@ const Tournament = () => {
               <Text fontSize="sm" fontWeight="bold" color="pink.400">
                 Starts
               </Text>
-              <Text fontSize="xl" fontWeight="bold">
+              <Text
+                fontSize="xl"
+                fontWeight="bold"
+                w={'85px'}
+                textAlign={'center'}
+              >
                 {startDate.toLocaleDateString()}
               </Text>
               <Text fontSize="md">{startDate.toLocaleTimeString()}</Text>
@@ -139,6 +144,7 @@ const Tournament = () => {
             textAlign="center"
             fontStyle="italic"
             color="gray.300"
+            my={{ base: 6, md: 0 }}
           >
             Join the epic quest for{' '}
             {Math.ceil((endDate - startDate) / (1000 * 60 * 60))} hours of
@@ -185,7 +191,7 @@ const Tournament = () => {
 
     return (
       <Tabs isFitted variant="soft-rounded" colorScheme="pink">
-        <TabList mb="1em">
+        <TabList mb="1em" justifyContent={'center'}>
           <MotionTab
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -235,7 +241,7 @@ const Tournament = () => {
               {renderTimeInfo()}
               {tournamentData.status === 'registration' && (
                 <>
-                  <Heading size="lg" mb={4}>
+                  <Heading size="lg" mb={4} justifyContent={'center'}>
                     Registration Open
                   </Heading>
                   {registrationStatus === 'not-registered' ? (
@@ -321,7 +327,12 @@ const Tournament = () => {
               p={6}
               boxShadow="0 8px 32px rgba(31, 38, 135, 0.37)"
             >
-              <Heading size="lg" mb={4} display="flex" alignItems="center">
+              <Heading
+                size={{ base: 'sm', md: 'lg' }}
+                mb={4}
+                display="flex"
+                alignItems="center"
+              >
                 <Crown color="#C0C0C0" style={{ marginRight: '0.5rem' }} />
                 Previous Tournament Leaderboard
               </Heading>
@@ -344,7 +355,7 @@ const Tournament = () => {
 
   return (
     <Box color="white" mt={{ base: 4, md: 8 }} minHeight="100vh">
-      <Container maxW="container.xl" py={16}>
+      <Container maxW="container.xl" py={16} px={0}>
         <Box
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -352,7 +363,7 @@ const Tournament = () => {
           transition={{ duration: 0.5 }}
           as={MotionBox}
         >
-          <Heading as="h1" size="2xl" mb={8} textAlign="center">
+          <Heading as="h1" size={'2xl'} mb={8} textAlign="center">
             Rapid Recap Tournament
           </Heading>
         </Box>
