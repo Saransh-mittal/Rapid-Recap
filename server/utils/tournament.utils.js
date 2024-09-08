@@ -4,6 +4,14 @@ const {
 
 const getUserRegistrationDetails = async (userId, tournamentId, session) => {
   try {
+    if (
+      !userId ||
+      !tournamentId ||
+      userId === 'undefined' ||
+      tournamentId === 'undefined'
+    ) {
+      return
+    }
     const registration = await TournamentRegistration.findOne({
       user: userId,
       tournament: tournamentId,

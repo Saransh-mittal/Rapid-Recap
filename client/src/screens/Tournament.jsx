@@ -27,12 +27,10 @@ import PreviousTournamentLeaderboard from '../components/tournamentComponents/Pr
 import EpicQuestGuide from '../components/tournamentComponents/EpicQuestGuide'
 import TournamentStatus from '../components/tournamentComponents/TournamentStatus'
 
-import {
-  mockTournamentData,
-  mockPreviousTournamentData,
-} from '../components/tournamentComponents/mockData'
 import axios from 'axios'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { addNoteMessage } from '../redux/appSlice'
+import { setUser } from '../redux/authSlice'
 
 const MotionBox = motion(Box)
 const MotionTab = motion(Tab)
@@ -41,10 +39,12 @@ const Tournament = () => {
   const [tournamentData, setTournamentData] = useState(null)
   const [previousTournamentData, setPreviousTournamentData] = useState(null)
   const [isFetching, setIsFetching] = useState(true)
-  const [userDetails, setUserDetails] = useState(null)
+  const dispatch = useDispatch()
   const [registerLoading, setRegisterLoading] = useState(false)
-  const { user, loginCheckStatus } = useSelector(state => state.auth)
-  const [isUserRegistered, setIsUserRegistered] = useState(false)
+  const { user, loginCheckStatus, isAuthenticated } = useSelector(
+    state => state.auth,
+  )
+
   const [userRegistrationDetails, setUserRegistrationDetails] = useState({
     isRegistered: false,
     selectedCategories: [],
@@ -105,6 +105,22 @@ const Tournament = () => {
         ...tournamentData,
         registeredCount: tournamentData.registeredCount + 1,
       })
+      dispatch(
+        addNoteMessage({
+          messageType: 'xpAward',
+          xpAwarded: 5,
+          title: 'XP Awarded For Tournament Registration',
+          actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+          width: '250px',
+          xpSource: 'tournament-registration',
+        }),
+      )
+      dispatch(
+        setUser({
+          ...user,
+          xp: user.xp + 5,
+        }),
+      )
       setRegisterLoading(false)
     } catch (error) {
       console.log(error)
@@ -123,6 +139,13 @@ const Tournament = () => {
     // Logic to enter the tournament
     console.log('Entering tournament...')
   }
+
+  const currentTournamentNumber = tournamentData
+    ? String(tournamentData.tournamentNumber).padStart(3, '0')
+    : '000'
+  const previousTournamentNumber = previousTournamentData
+    ? String(previousTournamentData.tournamentNumber).padStart(3, '0')
+    : 'N/A'
 
   const renderTournamentContent = () => {
     if (isFetching) {
@@ -159,7 +182,7 @@ const Tournament = () => {
 
     return (
       <Tabs isFitted variant="soft-rounded" colorScheme="pink">
-        <TabList mb="0.7em" justifyContent={'center'} mx={4}>
+        <TabList mb="0.7em" justifyContent={'center'} mx={{ base: 2, md: 4 }}>
           <MotionTab
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -171,12 +194,19 @@ const Tournament = () => {
             fontSize="lg"
             fontWeight="bold"
             py={3}
-            px={6}
-            // ml={4}
+            px={{ base: 2, md: 6 }}
+            display={'flex'}
+            height={'fit-content'}
+            flexDirection={'column'}
           >
+            <Text fontSize="2xs" fontWeight="bold" m={0} p={0}>
+              Tournament #{currentTournamentNumber}
+            </Text>
             <HStack spacing={2}>
               <Trophy width={20} height={20} />
-              <Text>Current Tournament</Text>
+              <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing={'2px'}>
+                Current Tournament
+              </Text>
             </HStack>
           </MotionTab>
           <MotionTab
@@ -190,12 +220,19 @@ const Tournament = () => {
             fontSize="lg"
             fontWeight="bold"
             py={3}
-            px={6}
-            // mr={4}
+            px={{ base: 2, md: 6 }}
+            display={'flex'}
+            height={'fit-content'}
+            flexDirection={'column'}
           >
+            <Text fontSize="xs" fontWeight="bold" m={0} p={0}>
+              Tournament #{previousTournamentNumber}
+            </Text>
             <HStack spacing={2}>
               <History size={20} />
-              <Text>Previous Tournament</Text>
+              <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing={'2px'}>
+                Previous Tournament
+              </Text>
             </HStack>
           </MotionTab>
         </TabList>
@@ -220,6 +257,8 @@ const Tournament = () => {
               />
               {tournamentData?.status === 'registration' && (
                 <RegistrationSection
+                  isAuthenticated={isAuthenticated}
+                  userRole={user?.role}
                   tournamentData={tournamentData}
                   registrationStatus={
                     userRegistrationDetails.isRegistered

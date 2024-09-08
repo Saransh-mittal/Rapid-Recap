@@ -41,9 +41,7 @@ const TimeInfo = ({ tournamentData }) => {
             <Text fontSize={{ base: 'md', md: 'xl' }} fontWeight="bold">
               {startDate}
             </Text>
-            <Text fontSize={{ base: 'sm', md: 'md' }}>
-              {startDateTime}
-            </Text>
+            <Text fontSize={{ base: 'sm', md: 'md' }}>{startDateTime}</Text>
           </VStack>
         </MotionBox>
         <MotionBox
@@ -65,9 +63,7 @@ const TimeInfo = ({ tournamentData }) => {
             <Text fontSize={{ base: 'md', md: 'xl' }} fontWeight="bold">
               {endDate}
             </Text>
-            <Text fontSize={{ base: 'sm', md: 'md' }}>
-              {endDateTime}
-            </Text>
+            <Text fontSize={{ base: 'sm', md: 'md' }}>{endDateTime}</Text>
           </VStack>
         </MotionBox>
       </HStack>
@@ -83,9 +79,7 @@ const TimeInfo = ({ tournamentData }) => {
           color="gray.300"
           py={4}
         >
-          Join the epic quest for{' '}
-          {Math.ceil((endDateTime - startDateTime) / (1000 * 60 * 60))} hours of
-          glory!
+          Join the epic quest for 48 hrs of glory!
         </Text>
       </MotionBox>
     </VStack>
