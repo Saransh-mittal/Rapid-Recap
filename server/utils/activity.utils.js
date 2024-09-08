@@ -3,6 +3,7 @@ const Activity = require('../model/activitySchema')
 const User = require('../model/userSchema')
 const { getXpForActivity, activityTypes } = require('../data/activityTypes')
 const NoteMessage = require('../model/noteMessageSchema')
+const i18n = require('i18next')
 
 const MAX_RETRIES = 10
 const BASE_RETRY_DELAY_MS = 500
@@ -29,7 +30,14 @@ const logActivity = async ({
         type,
         timestamp: date,
       })
+      const localizedI18n = i18n.cloneInstance()
 
+      // Switch to user's language
+      await localizedI18n.changeLanguage(user.userLanguage)
+
+      // Translation function for specific namespace
+      const t = (key, options) =>
+        localizedI18n.t(key, { ns: 'activity.utils', ...options })
       if (isXpAlreadyAwarded.length > 0) {
         return 0
       }
@@ -37,9 +45,11 @@ const logActivity = async ({
       if (type === '5-day login streak') {
         const newNoteMessage = new NoteMessage({
           userId: user._id,
-          title: '5-day login streak',
+          title: t('5_day_login_streak.title'),
           isMilestone: true,
-          milestoneContent: `Congratulations! You have logged in for ${user.loginStreak} days in a row!`,
+          milestoneContent: t('5_day_login_streak.content', {
+            days: user.loginStreak,
+          }),
           messageType: 'xpAward',
           xpAwarded: activityTypes.FIVE_DAY_LOGIN_STREAK.xp,
         })

@@ -10,7 +10,7 @@ const {
   isEncrypted,
   isGuestUser,
 } = require('../utils/miscellaneous.utils')
-
+const i18n = require('i18next')
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
 //@access          Protected
@@ -144,7 +144,7 @@ const sendMessage = asyncHandler(async (req, res) => {
         // Only send notification if the user doesn't have this chat open
         if (!userChats || !userChats.has(chatId)) {
           await sendNotification({
-            title: `New message from ${message.sender.name}`,
+            title: `${message.sender.name}`,
             body: decryptedMessage.content,
             icon: message.sender.pic,
             url: `/chats?chatId=${chatId}`,
@@ -231,9 +231,14 @@ const deleteMessage = asyncHandler(async (req, res) => {
       const chat = await Chat.findById(message.chat).populate('users')
       for (let user of chat.users) {
         if (user._id.toString() !== req.user._id.toString()) {
+          const localizedI18n = i18n.cloneInstance({ initImmediate: false })
+          await localizedI18n.changeLanguage(user.userLanguage) // Switch to recipient's language
+          const t = (key, options) =>
+            localizedI18n.t(key, { ns: 'messageControllers', ...options })
+
           await sendNotification({
-            title: 'Message Deleted',
-            body: 'A message was deleted from this chat',
+            title: t('messageDeleted'),
+            body: t('deletedFromChat'),
             icon: req.user.pic,
             url: `/chats?chatId=${message.chat}`,
             userId: user._id,
