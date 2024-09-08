@@ -17,6 +17,11 @@ const tournamentSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  tournamentNumber: {
+    type: Number,
+    required: true,
+    unique: true,
+  },
   participants: [
     {
       type: mongoose.Schema.Types.ObjectId,

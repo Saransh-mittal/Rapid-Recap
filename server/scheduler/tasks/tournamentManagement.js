@@ -11,14 +11,27 @@ const startRegistration = async () => {
   // registration start date will be 2 hrs + of start date
   const registrationStartDate = moment(startDate).add(2, 'hours')
 
+  // Find the latest tournament to determine the next tournament number
+  const latestTournament = await Tournament.findOne().sort({
+    tournamentNumber: -1,
+  })
+  const nextTournamentNumber = latestTournament
+    ? latestTournament.tournamentNumber + 1
+    : 1
+
   await Tournament.create({
+    tournamentNumber: nextTournamentNumber,
     startDate: startDate.toDate(),
     endDate: endDate.toDate(),
     registrationStartDate: registrationStartDate.toDate(),
     registrationEndDate: registrationEndDate.toDate(),
     status: 'registration',
   })
-  console.log('New tournament registration started')
+  console.log(
+    `New tournament #${nextTournamentNumber
+      .toString()
+      .padStart(3, '0')} registration started`,
+  )
 }
 
 const endRegistration = async () => {

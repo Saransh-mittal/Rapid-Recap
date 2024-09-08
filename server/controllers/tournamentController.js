@@ -59,6 +59,7 @@ const getLatestTournament = asyncHandler(async (req, res) => {
 
   const result = {
     ...tournament._doc,
+    tournamentNumber: tournament.tournamentNumber,
     registeredCount: tournament.participants.length,
     ...registrationDetails,
   }
@@ -80,8 +81,11 @@ const getPreviousTournament = asyncHandler(async (req, res) => {
     res.json(null)
     return
   }
-
-  res.json(previousTournament)
+  const result = {
+    ...previousTournament._doc,
+    tournamentNumber: previousTournament.tournamentNumber,
+  }
+  res.json(result)
 })
 
 // @desc   Register for a tournament

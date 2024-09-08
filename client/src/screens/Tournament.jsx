@@ -140,6 +140,13 @@ const Tournament = () => {
     console.log('Entering tournament...')
   }
 
+  const currentTournamentNumber = tournamentData
+    ? String(tournamentData.tournamentNumber).padStart(3, '0')
+    : '000'
+  const previousTournamentNumber = previousTournamentData
+    ? String(previousTournamentData.tournamentNumber).padStart(3, '0')
+    : 'N/A'
+
   const renderTournamentContent = () => {
     if (isFetching) {
       return (
@@ -175,7 +182,7 @@ const Tournament = () => {
 
     return (
       <Tabs isFitted variant="soft-rounded" colorScheme="pink">
-        <TabList mb="0.7em" justifyContent={'center'} mx={4}>
+        <TabList mb="0.7em" justifyContent={'center'} mx={{ base: 2, md: 4 }}>
           <MotionTab
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -187,12 +194,19 @@ const Tournament = () => {
             fontSize="lg"
             fontWeight="bold"
             py={3}
-            px={6}
-            // ml={4}
+            px={{ base: 2, md: 6 }}
+            display={'flex'}
+            height={'fit-content'}
+            flexDirection={'column'}
           >
+            <Text fontSize="2xs" fontWeight="bold" m={0} p={0}>
+              Tournament #{currentTournamentNumber}
+            </Text>
             <HStack spacing={2}>
               <Trophy width={20} height={20} />
-              <Text>Current Tournament</Text>
+              <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing={'2px'}>
+                Current Tournament
+              </Text>
             </HStack>
           </MotionTab>
           <MotionTab
@@ -206,12 +220,19 @@ const Tournament = () => {
             fontSize="lg"
             fontWeight="bold"
             py={3}
-            px={6}
-            // mr={4}
+            px={{ base: 2, md: 6 }}
+            display={'flex'}
+            height={'fit-content'}
+            flexDirection={'column'}
           >
+            <Text fontSize="xs" fontWeight="bold" m={0} p={0}>
+              Tournament #{previousTournamentNumber}
+            </Text>
             <HStack spacing={2}>
               <History size={20} />
-              <Text>Previous Tournament</Text>
+              <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing={'2px'}>
+                Previous Tournament
+              </Text>
             </HStack>
           </MotionTab>
         </TabList>
