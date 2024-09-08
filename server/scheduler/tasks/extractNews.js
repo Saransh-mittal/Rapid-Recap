@@ -1,6 +1,7 @@
 const { extractNewsUtilityFunc } = require('../../utils/article.utils')
 const { mailTransporter } = require('../../utils/mail.utils')
 const generateSitemap = require('../../generate-sitemap')
+const generateGoogleNewsSitemap = require('../../google-sitemap-generator')
 
 async function extractNews(country) {
   try {
@@ -73,6 +74,7 @@ async function extractNews(country) {
       html: htmlTemplate,
     })
     generateSitemap()
+    generateGoogleNewsSitemap()
     console.log(`No. of news fetched for DB : ${result.length}`)
     console.log(articlesSavedPerCategory)
     console.log(`News extracted successfully for country: ${country}`)
