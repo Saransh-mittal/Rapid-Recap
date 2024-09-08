@@ -2,7 +2,6 @@
 
 import axios from 'axios'
 import debounce from 'lodash.debounce'
-import { useTranslation } from 'react-i18next'
 
 // API Requests
 export const fetchMessagesApi = async chatId => {
