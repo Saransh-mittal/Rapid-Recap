@@ -8,10 +8,13 @@ import {
   Box,
   Heading,
   Flex,
+  Icon,
+  useToast,
 } from '@chakra-ui/react'
 
 import { useSelector } from 'react-redux'
 import CategoryCard from './CategoryCard'
+import { FaDice } from 'react-icons/fa'
 
 const categories = [
   'world',
@@ -30,10 +33,11 @@ const categories = [
   'tourism',
 ]
 
-const RegistrationForm = ({ onRegister }) => {
+const RegistrationForm = ({ onRegister, registerLoading }) => {
   const { user } = useSelector(state => state.auth)
   const [selectedCategories, setSelectedCategories] = useState([])
   const [error, setError] = useState('')
+  const toast = useToast()
 
   const handleCategorySelect = category => {
     if (selectedCategories.includes(category)) {
@@ -43,23 +47,82 @@ const RegistrationForm = ({ onRegister }) => {
     }
   }
 
-  const handleRegister = () => {
+  const handleRandomPick = () => {
+    const shuffled = [...categories].sort(() => 0.5 - Math.random())
+    setSelectedCategories(shuffled.slice(0, 5))
+    setError('')
+  }
+
+  const handleRegister = async () => {
     if (selectedCategories.length !== 5) {
-      setError('Please select exactly 5 categories.')
+      toast({
+        title: 'Invalid Selection',
+        description: 'Please select exactly 5 categories.',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
       return
     }
-    onRegister({
-      username,
-      categories: [...selectedCategories, 'Current Affairs'],
-    })
+
+    try {
+      await onRegister({
+        userId: user._id,
+        selectedCategories: [...selectedCategories],
+      })
+      toast({
+        title: 'Registration Successful',
+        description:
+          'You have been successfully registered for the tournament.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+    } catch (err) {
+      toast({
+        title: 'Registration Failed',
+        description:
+          'There was an error during registration. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+    }
   }
 
   return (
     <VStack spacing={6} align="stretch">
       <Box>
-        <Heading size="md" mb={4} color="white">
-          Select 5 categories:
-        </Heading>
+        <Flex justifyContent={'space-between'} alignItems={'center'} mb={4}>
+          <Heading size="md" color="white">
+            Select 5 categories:
+          </Heading>
+          <Button
+            onClick={handleRandomPick}
+            variant="outline"
+            size="md"
+            fontWeight="medium"
+            leftIcon={<Icon as={FaDice} />}
+            color="pink.300"
+            borderColor="pink.300"
+            _hover={{
+              bg: 'rgba(237, 100, 166, 0.1)',
+              borderColor: 'pink.400',
+              color: 'pink.400',
+              boxShadow: '0px 0px 8px rgba(237, 100, 166, 0.4)',
+            }}
+            _active={{
+              bg: 'rgba(237, 100, 166, 0.2)',
+              transform: 'scale(0.95)',
+            }}
+            transition="all 0.2s"
+          >
+            Surprise Me
+          </Button>
+        </Flex>
         <SimpleGrid columns={{ base: 2, md: 3, xl: 4 }} spacing={4}>
           {categories.map(category => (
             <CategoryCard
@@ -88,6 +151,7 @@ const RegistrationForm = ({ onRegister }) => {
           transform: 'translateY(-2px)',
         }}
         transition="all 0.2s"
+        isLoading={registerLoading}
       >
         Register for Tournament
       </Button>

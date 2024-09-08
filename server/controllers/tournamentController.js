@@ -9,12 +9,14 @@ const TournamentQuestion = require('../model/tournamentQuestionSchema')
 const { logActivity } = require('../utils/activity.utils')
 const { generateCategoryQuiz } = require('../utils/quiz.utils')
 const { commitSession, abortSession, startSession } = require('../db/session')
+const { getUserRegistrationDetails } = require('../utils/tournament.utils')
 
 // @desc   Get the latest tournament
 // @route  GET /api/tournament/latest
 // @access Public
 const getLatestTournament = asyncHandler(async (req, res) => {
   const currentDate = new Date()
+  const userId = req.query.userId
 
   const tournament = await Tournament.findOne({
     $or: [
@@ -25,8 +27,8 @@ const getLatestTournament = asyncHandler(async (req, res) => {
   }).sort({ startDate: -1 })
 
   if (!tournament) {
-    res.status(404)
-    throw new Error('No active tournament found')
+    res.json(null)
+    return
   }
 
   // Update tournament status if needed
@@ -49,7 +51,17 @@ const getLatestTournament = asyncHandler(async (req, res) => {
 
   await tournament.save()
 
-  res.json(tournament)
+  const registrationDetails = await getUserRegistrationDetails(
+    userId,
+    tournament._id,
+  )
+
+  const result = {
+    ...tournament._doc,
+    registeredCount: tournament.participants.length,
+    ...registrationDetails,
+  }
+  res.json(result)
 })
 
 // @desc   Get the previous completed tournament
@@ -64,8 +76,8 @@ const getPreviousTournament = asyncHandler(async (req, res) => {
   }).sort({ endDate: -1 })
 
   if (!previousTournament) {
-    res.status(404)
-    throw new Error('No previous tournament found')
+    res.json(null)
+    return
   }
 
   res.json(previousTournament)
@@ -78,45 +90,63 @@ const registerForTournament = asyncHandler(async (req, res) => {
   const { userId, tournamentId, selectedCategories } = req.body
 
   // Check if user is eligible to register
-  const user = await User.findById(userId)
-  if (!user || user.role === 'guest') {
-    res.status(403)
-    throw new Error('User is not eligible to register for the tournament')
-  }
+  const session = await startSession()
+  try {
+    const user = await User.findById(userId).session(session)
+    if (!user || user.role === 'guest') {
+      res.status(403)
+      throw new Error('User is not eligible to register for the tournament')
+    }
+    // Check if user is already registered
+    const { isRegistered } = await getUserRegistrationDetails(
+      userId,
+      tournamentId,
+      session,
+    )
+    if (isRegistered) {
+      res.status(400)
+      throw new Error('User is already registered for this tournament')
+    }
+    // Check if tournament registration is open
+    const tournament = await Tournament.findById(tournamentId).session(session)
+    if (!tournament || tournament.status !== 'registration') {
+      res.status(400)
+      throw new Error('Tournament registration is not open')
+    }
 
-  // Check if tournament registration is open
-  const tournament = await Tournament.findById(tournamentId)
-  if (!tournament || tournament.status !== 'registration') {
+    // Validate selected categories
+
+    if (
+      selectedCategories.length < 5 ||
+      selectedCategories.includes('current affairs')
+    ) {
+      res.status(400)
+      throw new Error('Invalid category selection')
+    }
+
+    // Create tournament registration
+    const registration = await TournamentRegistration.create({
+      user: userId,
+      tournament: tournamentId,
+      selectedCategories: [...selectedCategories, 'current affairs'],
+    })
+
+    // Add user to tournament participants
+    tournament.participants.push(userId)
+    await tournament.save({ session })
+    // const currentDate = new Date().toISOString().split('T')[0]
+    // logActivity({
+    //   userInGameName: user.inGameName,
+    //   type: activityTypes.TOURNAMENT_REGISTRATION.type,
+    //   date: currentDate,
+    // })
+    await commitSession(session)
+    res.status(201).json(registration)
+  } catch (error) {
     res.status(400)
-    throw new Error('Tournament registration is not open')
+    await abortSession(session)
+    throw new Error(error.message)
   }
-
-  // Validate selected categories
-  if (
-    selectedCategories.length !== 5 ||
-    !selectedCategories.includes('Current Affairs')
-  ) {
-    res.status(400)
-    throw new Error('Invalid category selection')
-  }
-
-  // Create tournament registration
-  const registration = await TournamentRegistration.create({
-    user: userId,
-    tournament: tournamentId,
-    selectedCategories: [...selectedCategories, 'Current Affairs'],
-  })
-
-  // Add user to tournament participants
-  tournament.participants.push(userId)
-  await tournament.save()
-  const currentDate = new Date().toISOString().split('T')[0]
-  logActivity({
-    userInGameName: user.inGameName,
-    type: activityTypes.TOURNAMENT_REGISTRATION.type,
-    date: currentDate,
-  })
-  res.status(201).json(registration)
 })
 
 // @desc   Get the current tournament

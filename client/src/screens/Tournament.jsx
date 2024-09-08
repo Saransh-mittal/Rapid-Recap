@@ -14,6 +14,7 @@ import {
   Heading,
   HStack,
   Text,
+  useToast,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Trophy, History, Crown } from 'lucide-react'
@@ -30,6 +31,8 @@ import {
   mockTournamentData,
   mockPreviousTournamentData,
 } from '../components/tournamentComponents/mockData'
+import axios from 'axios'
+import { useSelector } from 'react-redux'
 
 const MotionBox = motion(Box)
 const MotionTab = motion(Tab)
@@ -37,26 +40,83 @@ const MotionTab = motion(Tab)
 const Tournament = () => {
   const [tournamentData, setTournamentData] = useState(null)
   const [previousTournamentData, setPreviousTournamentData] = useState(null)
-  const [isFetching, setIsFetching] = useState(false)
-  const [registrationStatus, setRegistrationStatus] = useState('not-registered')
+  const [isFetching, setIsFetching] = useState(true)
   const [userDetails, setUserDetails] = useState(null)
+  const [registerLoading, setRegisterLoading] = useState(false)
+  const { user, loginCheckStatus } = useSelector(state => state.auth)
+  const [isUserRegistered, setIsUserRegistered] = useState(false)
+  const [userRegistrationDetails, setUserRegistrationDetails] = useState({
+    isRegistered: false,
+    selectedCategories: [],
+    completedCategories: [],
+    totalScore: 0,
+  })
+  const toast = useToast()
 
   const fetchTournamentData = async () => {
     setIsFetching(true)
-    setTimeout(() => {
-      setTournamentData(mockTournamentData.completed)
-      setPreviousTournamentData(mockPreviousTournamentData)
+    try {
+      const currTournamentData = await axios.get(
+        `/api/tournament/latest?userId=${user?._id}`,
+      )
+      const prevTournamentData = await axios.get('/api/tournament/previous')
+
+      setTournamentData(currTournamentData.data)
+      setPreviousTournamentData(prevTournamentData.data)
+      setUserRegistrationDetails({
+        isRegistered: currTournamentData.data.isRegistered,
+        selectedCategories: currTournamentData.data.selectedCategories || [],
+        completedCategories: currTournamentData.data.completedCategories || [],
+        totalScore: currTournamentData.data.totalScore || 0,
+      })
       setIsFetching(false)
-    }, 1000)
+    } catch (error) {
+      console.log(error)
+      toast({
+        title: 'An error occurred.',
+        description: 'Failed to fetch tournament data.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+    }
   }
 
   useEffect(() => {
-    fetchTournamentData()
-  }, [])
+    if (loginCheckStatus === 'fulfilled') fetchTournamentData()
+  }, [loginCheckStatus])
 
-  const handleRegister = details => {
-    setUserDetails(details)
-    setRegistrationStatus('registered')
+  const handleRegister = async details => {
+    const dataPayload = {
+      ...details,
+      tournamentId: tournamentData._id,
+    }
+    setRegisterLoading(true)
+    try {
+      const { data } = await axios.post('/api/tournament/register', dataPayload)
+      setUserRegistrationDetails({
+        isRegistered: true,
+        selectedCategories: data.selectedCategories || [],
+        completedCategories: data.completedCategories || [],
+        totalScore: data.totalScore || 0,
+      })
+      setTournamentData({
+        ...tournamentData,
+        registeredCount: tournamentData.registeredCount + 1,
+      })
+      setRegisterLoading(false)
+    } catch (error) {
+      console.log(error)
+      toast({
+        title: 'An error occurred.',
+        description: 'Failed to register for the tournament.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+    }
   }
 
   const handleEnterTournament = () => {
@@ -151,21 +211,37 @@ const Tournament = () => {
               <TimeInfo tournamentData={tournamentData} />
               <TournamentStatus
                 tournamentData={tournamentData}
-                registrationStatus={registrationStatus}
+                registrationStatus={
+                  userRegistrationDetails.isRegistered
+                    ? 'registered'
+                    : 'not-registered'
+                }
                 handleEnterTournament={handleEnterTournament}
               />
               {tournamentData?.status === 'registration' && (
                 <RegistrationSection
                   tournamentData={tournamentData}
-                  registrationStatus={registrationStatus}
+                  registrationStatus={
+                    userRegistrationDetails.isRegistered
+                      ? 'registered'
+                      : 'not-registered'
+                  }
                   handleRegister={handleRegister}
-                  userDetails={userDetails}
+                  userDetails={{
+                    inGameName: user?.inGameName,
+                    categories: userRegistrationDetails?.selectedCategories,
+                  }}
+                  registerLoading={registerLoading}
                 />
               )}
               {tournamentData?.status === 'ongoing' && (
                 <LeaderboardSection
                   tournamentData={tournamentData}
-                  registrationStatus={registrationStatus}
+                  registrationStatus={
+                    userRegistrationDetails.isRegistered
+                      ? 'registered'
+                      : 'not-registered'
+                  }
                 />
               )}
             </Box>

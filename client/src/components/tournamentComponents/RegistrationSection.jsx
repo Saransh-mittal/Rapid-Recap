@@ -24,6 +24,7 @@ const RegistrationSection = ({
   registrationStatus,
   handleRegister,
   userDetails,
+  registerLoading,
 }) => {
   const bgColor = useColorModeValue(
     'rgba(255, 255, 255, 0.08)',
@@ -45,7 +46,10 @@ const RegistrationSection = ({
             </Heading>
             <RegisteredUsersCount count={tournamentData.registeredCount} />
             {registrationStatus === 'not-registered' ? (
-              <RegistrationForm onRegister={handleRegister} />
+              <RegistrationForm
+                onRegister={handleRegister}
+                registerLoading={registerLoading}
+              />
             ) : (
               <VStack spacing={4} align="stretch">
                 <Alert
@@ -76,9 +80,9 @@ const RegistrationSection = ({
                   <Text fontWeight="semibold" mb={2}>
                     Your Tournament Details:
                   </Text>
-                  <Text>Username: {userDetails?.username}</Text>
-                  <Text>
-                    Selected Categories: {userDetails?.categories.join(', ')}
+                  <Text>In-Game-Name: {userDetails?.inGameName}</Text>
+                  <Text textTransform={'capitalize'}>
+                    Selected Categories: {userDetails?.categories?.join(', ')}
                   </Text>
                 </Box>
               </VStack>
