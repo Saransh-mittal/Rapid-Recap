@@ -1,8 +1,3 @@
 {
-  "guestCannotChat": "अतिथि उपयोगकर्ता चैट नहीं कर सकते",
-  "fillAllFields": "कृपया सभी फील्ड भरें",
-  "minTwoUsers": "ग्रुप चैट बनाने के लिए 2 से अधिक उपयोगकर्ताओं की आवश्यकता है",
-  "chatNotFound": "चैट नहीं मिली",
-  "invalidAction": "अवैध कार्रवाई",
-  "requestHandled": "चैट अनुरोध को संभाला गया"
+  "sharedArticle": "एक लेख साझा किया"
 }

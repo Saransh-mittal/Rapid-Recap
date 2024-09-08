@@ -148,7 +148,7 @@ const App = () => {
 
   useEffect(() => {
     let timer
-
+    dispatch(fetchUnreadNoteMessages())
     if (isAuthenticated) {
       dispatch(isSubscribedChecker())
       dispatch(checkNotificationStatus())

@@ -5,14 +5,16 @@ const QuizAttempt = require('../model/quizAttemptSchema')
 const User = require('../model/userSchema')
 const { updatePercentilesOnQuizDeactivation } = require('./quiz.utils')
 const rankUpdate = require('./update.utils/rank.update')
-const CircleAndSocietyData = require('../data/CircleAndSocietyData')
+const getCircleAndSocietyData = require('../data/CircleAndSocietyData')
 const { logActivity } = require('./activity.utils')
 const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const configService = require('../configService')
 const NoteMessage = require('../model/noteMessageSchema')
 const cache = require('memory-cache')
+const i18n = require('../i18n')
 
-const findSocietyCircleByIQ = IQScore => {
+const findSocietyCircleByIQ = async (IQScore, user) => {
+  const CircleAndSocietyData = await getCircleAndSocietyData(user) // Fetch data by calling the function
   return CircleAndSocietyData.find(data => {
     return (
       IQScore >= data.IQ_Lower &&
@@ -34,6 +36,9 @@ const handleSocietyOrCircleUpgrade = async (
       console.error(`User not found for ID: ${userId}`)
       return
     }
+
+    // Set the language for this session
+    i18n.changeLanguage(user.userLanguage)
 
     const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore)
     const currSocietyCircle = findSocietyCircleByIQ(currIQScore)
@@ -72,12 +77,14 @@ const handleSocietyOrCircleUpgrade = async (
           })
           const noteMessage = new NoteMessage({
             userId: user._id,
-            title: 'Society/Circle Upgrade',
-            milestoneContent: `Congratulations! You have been upgraded to the ${
-              changedSocietyOrCircle === 'society'
-                ? currSocietyCircle.society
-                : currSocietyCircle.circle
-            } ${changedSocietyOrCircle}.`,
+            title: i18n.t('upgradeTitle'),
+            milestoneContent: i18n.t('upgradeContent', {
+              society:
+                changedSocietyOrCircle === 'society'
+                  ? currSocietyCircle.society
+                  : currSocietyCircle.circle,
+              type: changedSocietyOrCircle,
+            }),
             messageType: 'xpAward',
             xpAwarded: getXpForActivity({
               activityType: type,
@@ -106,12 +113,6 @@ const handleSocietyOrCircleUpgrade = async (
     user.currentCircle = currSocietyCircle.circle
 
     await user.save()
-
-    console.log(
-      `Updated society/circle for user ${userId}: ${
-        currSocietyCircle.society
-      } - ${currSocietyCircle.circle || 'N/A'}`,
-    )
   } catch (error) {
     console.error(
       `Error in handleSocietyOrCircleUpgrade for user ${userId}: ${error.message}`,
@@ -156,7 +157,9 @@ const fetchUsersWithQuizAttempts = async () => {
 
 const fetchUniqueArticleIds = async () => {
   try {
+    const currSeason = configService.getCurrentSeason()
     return await QuizAttempt.aggregate([
+      { $match: { season: parseInt(currSeason, 10) } },
       { $group: { _id: '$article' } },
       { $project: { _id: 0, articleId: '$_id' } },
     ])
@@ -168,18 +171,44 @@ const fetchUniqueArticleIds = async () => {
 }
 
 const updatePercentilesForArticles = async uniqueArticleIds => {
+  const batchSize = 1000 // Adjust this value based on your system's capabilities
+  const totalBatches = Math.ceil(uniqueArticleIds.length / batchSize)
+
+  const processBatch = async (batch, batchIndex) => {
+    try {
+      await Promise.all(
+        batch.map(async doc => {
+          try {
+            await updatePercentilesOnQuizDeactivation({
+              id: doc.articleId.toString(),
+            })
+          } catch (error) {
+            console.error(
+              `Error updating percentiles for article ${doc.articleId}: ${error.message}`,
+            )
+            // Continue processing other articles in the batch
+          }
+        }),
+      )
+      console.log(`Processed batch ${batchIndex + 1} of ${totalBatches}`)
+    } catch (error) {
+      console.error(
+        `Error processing batch ${batchIndex + 1}: ${error.message}`,
+      )
+      // Continue processing other batches
+    }
+  }
+
   try {
-    await Promise.all(
-      uniqueArticleIds.map(async doc => {
-        await updatePercentilesOnQuizDeactivation({
-          id: doc.articleId.toString(),
-        })
-      }),
-    )
+    for (let i = 0; i < uniqueArticleIds.length; i += batchSize) {
+      const batch = uniqueArticleIds.slice(i, i + batchSize)
+      await processBatch(batch, i / batchSize)
+    }
+    console.log('Finished processing all article batches')
   } catch (error) {
     console.error(`Error in updatePercentilesForArticles: ${error.message}`)
     console.error(`Stack trace: ${error.stack}`)
-    throw error
+    // Don't throw the error here, so the process can continue with other tasks
   }
 }
 

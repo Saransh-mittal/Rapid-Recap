@@ -10,6 +10,7 @@ const {
 } = require('../utils/miscellaneous.utils')
 const { userOpenChats } = require('../sharedState')
 const { sendNotification } = require('../services/notificationService')
+const i18n = require('i18next')
 
 //@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
@@ -24,6 +25,7 @@ const accessChat = asyncHandler(async (req, res) => {
   if (isGuest) {
     return res.status(400).send({ message: 'Guest users cannot chat' })
   }
+
   const isFriend =
     (await User.findOne({
       _id: userId,
@@ -287,14 +289,14 @@ const addToGroup = asyncHandler(async (req, res) => {
 const shareMessage = asyncHandler(async (req, res) => {
   const { chatIds, type, articleId } = req.body
 
-  const article = await Article.findById(articleId).select(
-    '_id title category dateTime imgURL',
-  )
+  const article = await Article.findById(articleId).select('_id')
   if (!article) {
     res.status(404)
     throw new Error('Article not found')
   }
-  const sender = await User.findById(req.user._id).select('pic name')
+
+  const sender = await User.findById(req.user._id).select('pic name') // Combined query
+
   const newMessages = []
   for (let chatId of chatIds) {
     const chat = await Chat.findById(chatId)
@@ -302,6 +304,7 @@ const shareMessage = asyncHandler(async (req, res) => {
       res.status(404)
       throw new Error('Chat not found')
     }
+
     if (
       chat.status !== 'accepted' &&
       chat.latestMessage &&
@@ -309,19 +312,17 @@ const shareMessage = asyncHandler(async (req, res) => {
     ) {
       continue // Skip this chat if it's not accepted and the sender isn't the requester
     }
+
     let newMessage = new Message({
       sender: req.user._id,
       chat: chatId,
       type: type,
       article: {
         _id: article._id,
-        title: article.title,
-        category: article.category,
-        date: formatDate(article.dateTime),
-        image: article.imgURL[0],
       },
       status: 'sent',
     })
+
     await newMessage.save()
     chat.latestMessage = newMessage
     await chat.save()
@@ -329,12 +330,19 @@ const shareMessage = asyncHandler(async (req, res) => {
     const chatUsers = chat.users
     for (let user of chatUsers) {
       if (user.toString() !== req.user._id.toString()) {
+        const recipient = await User.findById(user).select('userLanguage _id')
+
+        // Create a new i18n instance scoped to this recipient
+        const localizedI18n = i18n.cloneInstance({ initImmediate: false })
+        await localizedI18n.changeLanguage(recipient.userLanguage)
+        const t = (key, options) =>
+          localizedI18n.t(key, { ns: 'chatController', ...options })
+
         const userChats = userOpenChats.get(user._id.toString())
-        // Only send notification if the user doesn't have this chat open
         if (!userChats || !userChats.has(chatId)) {
           await sendNotification({
-            title: `New message from ${sender.name}`,
-            body: 'Shared an Article',
+            title: `${sender.name}`,
+            body: t('sharedArticle'), // Localized text
             icon: sender.pic,
             url: `/chats?chatId=${chatId}`,
             userId: user._id,
@@ -343,6 +351,7 @@ const shareMessage = asyncHandler(async (req, res) => {
         }
       }
     }
+
     newMessage = await newMessage.populate('sender', 'name pic')
     newMessage = await newMessage.populate('chat')
     newMessage = await User.populate(newMessage, {
