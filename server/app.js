@@ -116,7 +116,7 @@ app.use(errorHandler)
 // generateSitemap()
 // const generateGoogleNewsSitemap = require('./google-sitemap-generator')
 // generateGoogleNewsSitemap()
-// require('./scheduler/setupCronJobs')
+require('./scheduler/setupCronJobs')
 const PORT = process.env.PORT
 authRouter.use(cookieParser())
 authRouter.use('/user', userRoutes)

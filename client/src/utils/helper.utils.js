@@ -99,3 +99,12 @@ export const changeLanguage = async (lng, setLoading, setCurrentLanguage) => {
     console.error('Error changing language:', error)
   }
 }
+
+export const formatLocalDateTime = dateString => {
+  const date = new Date(dateString)
+  return date.toLocaleString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  })
+}

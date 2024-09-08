@@ -8,10 +8,13 @@ const startRegistration = async () => {
     .add(4, 'days')
     .set({ hour: 23, minute: 0, second: 0 })
 
+  // registration start date will be 2 hrs + of start date
+  const registrationStartDate = moment(startDate).add(2, 'hours')
+
   await Tournament.create({
     startDate: startDate.toDate(),
     endDate: endDate.toDate(),
-    registrationStartDate: startDate.toDate(),
+    registrationStartDate: registrationStartDate.toDate(),
     registrationEndDate: registrationEndDate.toDate(),
     status: 'registration',
   })

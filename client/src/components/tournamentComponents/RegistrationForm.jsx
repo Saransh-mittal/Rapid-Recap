@@ -29,7 +29,7 @@ const categories = [
   'tourism',
 ]
 
-const RegistrationForm = ({ onRegister }) => {
+const RegistrationForm = ({ onRegister, registerLoading }) => {
   const { user } = useSelector(state => state.auth)
   const [selectedCategories, setSelectedCategories] = useState([])
   const [error, setError] = useState('')
@@ -48,8 +48,8 @@ const RegistrationForm = ({ onRegister }) => {
       return
     }
     onRegister({
-      username,
-      categories: [...selectedCategories, 'Current Affairs'],
+      userId: user._id,
+      selectedCategories: [...selectedCategories],
     })
   }
 
@@ -87,6 +87,7 @@ const RegistrationForm = ({ onRegister }) => {
           transform: 'translateY(-2px)',
         }}
         transition="all 0.2s"
+        isLoading={registerLoading}
       >
         Register for Tournament
       </Button>

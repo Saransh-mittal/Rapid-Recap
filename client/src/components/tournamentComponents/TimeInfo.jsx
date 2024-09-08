@@ -1,15 +1,23 @@
 // components/tournamentComponents/TimeInfo.js
 import { VStack, HStack, Box, Text } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { formatDateLangTranslate } from '../../utils/helper.utils'
+import {
+  formatDateLangTranslate,
+  formatLocalDateTime,
+} from '../../utils/helper.utils'
 
 const MotionBox = motion(Box)
 
 const TimeInfo = ({ tournamentData }) => {
-  const startDate = formatDateLangTranslate(tournamentData?.startDate)
-  const endDate = formatDateLangTranslate(tournamentData?.endDate)
-  const startDateTime = new Date(tournamentData?.startDate)
-  const endDateTime = new Date(tournamentData?.endDate)
+  const startDate = formatDateLangTranslate(
+    tournamentData?.registrationStartDate,
+  )
+
+  const endDate = formatDateLangTranslate(tournamentData?.registrationEndDate)
+  const startDateTime = formatLocalDateTime(
+    tournamentData?.registrationStartDate,
+  )
+  const endDateTime = formatLocalDateTime(tournamentData?.registrationEndDate)
 
   return (
     <VStack spacing={4} align="stretch">
@@ -33,7 +41,7 @@ const TimeInfo = ({ tournamentData }) => {
             <Text fontSize="xl" fontWeight="bold">
               {startDate}
             </Text>
-            <Text fontSize="md">{startDateTime.toLocaleTimeString()}</Text>
+            <Text fontSize="md">{startDateTime}</Text>
           </VStack>
         </MotionBox>
         <MotionBox
@@ -55,7 +63,7 @@ const TimeInfo = ({ tournamentData }) => {
             <Text fontSize="xl" fontWeight="bold">
               {endDate}
             </Text>
-            <Text fontSize="md">{endDateTime.toLocaleTimeString()}</Text>
+            <Text fontSize="md">{endDateTime}</Text>
           </VStack>
         </MotionBox>
       </HStack>
