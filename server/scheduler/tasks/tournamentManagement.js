@@ -19,9 +19,13 @@ const startRegistration = async () => {
     ? latestTournament.tournamentNumber + 1
     : 1
 
+  const tournamentStartDate = moment(startDate)
+    .add(5, 'days')
+    .set({ hour: 0, minute: 0, second: 0 })
+
   await Tournament.create({
     tournamentNumber: nextTournamentNumber,
-    startDate: startDate.toDate(),
+    startDate: tournamentStartDate.toDate(),
     endDate: endDate.toDate(),
     registrationStartDate: registrationStartDate.toDate(),
     registrationEndDate: registrationEndDate.toDate(),

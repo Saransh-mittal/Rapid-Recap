@@ -31,6 +31,7 @@ import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../redux/appSlice'
 import { setUser } from '../redux/authSlice'
+import CategorySelection from '../components/tournamentComponents/CategorySelection'
 
 const MotionBox = motion(Box)
 const MotionTab = motion(Tab)
@@ -138,6 +139,10 @@ const Tournament = () => {
   const handleEnterTournament = () => {
     // Logic to enter the tournament
     console.log('Entering tournament...')
+  }
+  const handleCategorySelect = category => {
+    console.log(`Starting quiz for category: ${category}`)
+    // Add logic to start the quiz for the selected category
   }
 
   const currentTournamentNumber = tournamentData
@@ -274,14 +279,22 @@ const Tournament = () => {
                 />
               )}
               {tournamentData?.status === 'ongoing' && (
-                <LeaderboardSection
-                  tournamentData={tournamentData}
-                  registrationStatus={
-                    userRegistrationDetails.isRegistered
-                      ? 'registered'
-                      : 'not-registered'
-                  }
-                />
+                <VStack spacing={8} align="stretch">
+                  {userRegistrationDetails.isRegistered ? (
+                    <CategorySelection
+                      userSelectedcategories={
+                        userRegistrationDetails.selectedCategories
+                      }
+                      onCategorySelect={handleCategorySelect}
+                    />
+                  ) : (
+                    <Alert status="warning" color="black">
+                      <AlertIcon />
+                      You are not registered for this tournament. Registration
+                      is closed, but you can still view the leaderboard.
+                    </Alert>
+                  )}
+                </VStack>
               )}
             </Box>
           </TabPanel>
@@ -330,9 +343,7 @@ const Tournament = () => {
             {tournamentData?.status !== 'ongoing' ? (
               <EpicQuestGuide />
             ) : (
-              <Heading size="lg" mb={4}>
-                Current Leaderboard
-              </Heading>
+              <LeaderboardSection tournamentData={tournamentData} />
             )}
           </Box>
         </Flex>
