@@ -1,6 +1,14 @@
 import React from 'react'
-import { VStack, Alert, AlertIcon, Heading, Text, Flex } from '@chakra-ui/react'
-import { Clock, UserCheck, UserPlus } from 'lucide-react'
+import {
+  VStack,
+  Alert,
+  AlertIcon,
+  Heading,
+  Text,
+  Flex,
+  Button,
+} from '@chakra-ui/react'
+import { Clock, Trophy, UserCheck, UserPlus } from 'lucide-react'
 import RegisteredUsersCount from './RegisteredUsersCount'
 import { useSelector } from 'react-redux'
 
@@ -10,7 +18,13 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
     <>
       {tournamentData?.status === 'upcoming' && (
         <VStack spacing={6} align="stretch">
-          <Heading size="lg" mb={4} display="flex" alignItems="center">
+          <Heading
+            size="lg"
+            mb={4}
+            display="flex"
+            alignItems="center"
+            fontSize={{ base: 'lg', md: 'xl' }}
+          >
             <Clock color="#4FD1C5" style={{ marginRight: '0.5rem' }} />
             Tournament Starting Soon
           </Heading>
@@ -44,7 +58,7 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
               </Text>
             ) : registrationStatus === 'registered' ? (
               <Flex align="center">
-                <UserCheck className="mr-2" size={16} />
+                <UserCheck style={{ marginRight: '0.5rem' }} size={16} />
                 <Text>You're registered! Get ready for the tournament.</Text>
               </Flex>
             ) : (
@@ -69,30 +83,7 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
             <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
             Tournament in Progress
           </Heading>
-          {registrationStatus === 'registered' ? (
-            <>
-              <Alert
-                status="success"
-                borderRadius="md"
-                bg="green.700"
-                color="white"
-              >
-                <AlertIcon color="green.200" />
-                You're registered for the tournament!
-              </Alert>
-              <Button
-                colorScheme="pink"
-                size="lg"
-                onClick={handleEnterTournament}
-                boxShadow="0 0 15px rgba(237, 100, 166, 0.5)"
-                _hover={{
-                  boxShadow: '0 0 20px rgba(237, 100, 166, 0.7)',
-                }}
-              >
-                Enter Tournament
-              </Button>
-            </>
-          ) : (
+          {registrationStatus === 'registered' ? null : (
             <Alert
               status="warning"
               borderRadius="md"

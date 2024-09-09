@@ -9,6 +9,7 @@ const {
   submitQuiz,
   getLatestTournament,
   getPreviousTournament,
+  getCurrentTournamentLeaderboard,
 } = require('../controllers/tournamentController')
 
 const { Authenticate, adminMiddleware } = require('../middleware/authenticate')
@@ -18,7 +19,7 @@ const router = express.Router()
 router.get('/previous', getPreviousTournament)
 router.get('/latest', getLatestTournament)
 router.post('/register', Authenticate, registerForTournament)
-
+router.get('/leaderboard', getCurrentTournamentLeaderboard)
 router.post(
   '/questions/current-affairs',
   Authenticate,

@@ -59,7 +59,6 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     userId !== '' &&
     userId !== undefined
   ) {
-    console.log('userId', userId)
     userRegistration = await TournamentRegistration.findOne({
       user: userId,
       tournament: tournament._id,
@@ -71,6 +70,7 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     registeredCount: await TournamentRegistration.countDocuments({
       tournament: tournament._id,
     }),
+    status: 'ongoing',
     isRegistered: !!userRegistration,
     selectedCategories: userRegistration
       ? userRegistration.selectedCategories
@@ -81,39 +81,62 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     totalScore: userRegistration ? userRegistration.totalScore : 0,
   }
 
-  // If the tournament is ongoing, include the leaderboard
-  if (tournament.status === 'ongoing') {
-    const leaderboardData = await TournamentRegistration.aggregate([
-      { $match: { tournament: tournament._id } },
-      {
-        $lookup: {
-          from: 'Users', // Use the collection name from your User schema
-          localField: 'user',
-          foreignField: '_id',
-          as: 'userDetails',
-        },
-      },
-      { $unwind: '$userDetails' },
-      {
-        $project: {
-          inGameName: '$userDetails.inGameName',
-          totalScore: 1,
-          level: '$userDetails.level',
-          xp: '$userDetails.xp',
-        },
-      },
-      { $sort: { totalScore: -1, xp: -1 } },
-    ])
+  res.json(result)
+})
 
-    result.leaderboard = leaderboardData.map((entry, index) => ({
-      rank: index + 1,
-      inGameName: entry.inGameName,
-      score: entry.totalScore,
-      level: entry.level,
-    }))
+// @desc   Get the current tournament leaderboard
+// @route  GET /api/tournament/leaderboard
+// @access Public
+const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
+  const { tournamentId, page = 1, limit = 50 } = req.query
+  const skip = (page - 1) * limit
+
+  const tournament = await Tournament.findById(tournamentId)
+  if (!tournament) {
+    res.status(404)
+    throw new Error('Tournament not found')
   }
 
-  res.json(result)
+  const leaderboardData = await TournamentRegistration.aggregate([
+    { $match: { tournament: tournament._id } },
+    {
+      $lookup: {
+        from: 'Users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    { $unwind: '$userDetails' },
+    {
+      $project: {
+        inGameName: '$userDetails.inGameName',
+        totalScore: 1,
+        level: '$userDetails.level',
+      },
+    },
+    { $sort: { totalScore: -1, level: -1 } },
+    { $skip: skip },
+    { $limit: parseInt(limit) },
+  ])
+
+  const totalParticipants = await TournamentRegistration.countDocuments({
+    tournament: tournament._id,
+  })
+
+  const leaderboard = leaderboardData.map((entry, index) => ({
+    rank: skip + index + 1,
+    inGameName: entry.inGameName,
+    score: entry.totalScore,
+    level: entry.level,
+  }))
+
+  res.json({
+    leaderboard,
+    currentPage: page,
+    totalPages: Math.ceil(totalParticipants / limit),
+    hasMore: skip + leaderboardData.length < totalParticipants,
+  })
 })
 
 // @desc   Get the previous completed tournament
@@ -472,4 +495,5 @@ module.exports = {
   submitQuiz,
   getLatestTournament,
   getPreviousTournament,
+  getCurrentTournamentLeaderboard,
 }

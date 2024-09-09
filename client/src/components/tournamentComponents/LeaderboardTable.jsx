@@ -1,4 +1,5 @@
-import React from 'react'
+// LeaderboardTable.js
+import React, { forwardRef } from 'react'
 import {
   Text,
   Table,
@@ -15,7 +16,7 @@ import { Medal, Trophy, Crown } from 'lucide-react'
 
 const MotionBox = motion(Box)
 
-const LeaderboardTable = ({ data }) => {
+const LeaderboardTable = forwardRef(({ data }, ref) => {
   return (
     <Box
       maxHeight="400px"
@@ -67,7 +68,7 @@ const LeaderboardTable = ({ data }) => {
           {data.map((player, index) => (
             <MotionBox
               as={Tr}
-              key={player.rank}
+              key={`${player.rank}-${player.inGameName}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -112,10 +113,15 @@ const LeaderboardTable = ({ data }) => {
               </Td>
             </MotionBox>
           ))}
+          {data && data.length > 0 && (
+            <Tr>
+              <Td ref={ref} style={{ height: '20px' }} />
+            </Tr>
+          )}
         </Tbody>
       </Table>
     </Box>
   )
-}
+})
 
 export default LeaderboardTable
