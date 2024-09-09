@@ -11,10 +11,12 @@ import {
   Icon,
   Text,
   useToast,
+  useDisclosure,
 } from '@chakra-ui/react'
 import { FaDice, FaNewspaper } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import CategoryCard from './CategoryCard'
+import QuizConfirmationModal from './tournamentQuiz/QuizConfirmationModal'
 
 const MotionBox = motion(Box)
 
@@ -41,25 +43,48 @@ const CategorySelection = ({
   onRegister,
   isRegistration = false,
   registerLoading = false,
+  completedQuizzes = ['world', 'technology'], // New prop to track completed quizzes
 }) => {
   const [selectedCategories, setSelectedCategories] = useState([])
   const [userSelectedCategories, setUserSelectedCategories] = useState([])
   const toast = useToast()
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   const handleCategorySelect = category => {
-    if (userSelectedCategories.includes(category)) {
-      const newUserSelected = userSelectedCategories.filter(c => c !== category)
-      setUserSelectedCategories(newUserSelected)
-      setSelectedCategories(prevSelected =>
-        prevSelected.filter(c => c !== category),
-      )
-    } else if (selectedCategories.length < 5) {
-      setUserSelectedCategories([...userSelectedCategories, category])
-      setSelectedCategories(prevSelected => [...prevSelected, category])
+    if (completedQuizzes.includes(category)) {
+      toast({
+        title: 'Quiz Already Completed',
+        description: `You have already completed the ${category} quiz.`,
+        status: 'info',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+      return
     }
 
-    if (!isRegistration) {
-      onCategorySelect(category)
+    if (isRegistration) {
+      // For registration, allow selecting multiple categories
+      if (userSelectedCategories.includes(category)) {
+        const newUserSelected = userSelectedCategories.filter(
+          c => c !== category,
+        )
+        setUserSelectedCategories(newUserSelected)
+        setSelectedCategories(prevSelected =>
+          prevSelected.filter(c => c !== category),
+        )
+      } else if (selectedCategories.length < 5) {
+        setUserSelectedCategories([...userSelectedCategories, category])
+        setSelectedCategories(prevSelected => [...prevSelected, category])
+      }
+    } else {
+      // For quiz selection (non-registration), only allow one category to be selected
+      if (selectedCategories.includes(category)) {
+        setSelectedCategories([])
+      } else {
+        setSelectedCategories([category])
+        onCategorySelect(category)
+      }
     }
   }
 
@@ -92,8 +117,13 @@ const CategorySelection = ({
       onRegister([...selectedCategories, 'current affairs'])
     } else {
       // This is for quiz selection during the tournament
-      onCategorySelect(selectedCategories[0])
+      onOpen()
     }
+  }
+
+  const startQuiz = () => {
+    onClose()
+    onCategorySelect(selectedCategories[0])
   }
 
   return (
@@ -145,6 +175,7 @@ const CategorySelection = ({
               category={category}
               isSelected={selectedCategories.includes(category)}
               onSelect={handleCategorySelect}
+              isCompleted={completedQuizzes.includes(category)}
             />
           ))}
           {isRegistration && (
@@ -185,14 +216,22 @@ const CategorySelection = ({
         }}
         transition="all 0.2s"
         isLoading={registerLoading}
-        isDisabled={!isRegistration && selectedCategories.length !== 1}
+        isDisabled={
+          !isRegistration &&
+          (selectedCategories.length !== 1 ||
+            completedQuizzes.includes(selectedCategories[0]))
+        }
       >
-        {isRegistration
-          ? 'Register for Tournament'
-          : `Start Quiz${selectedCategories.length >= 1 ? ' :' : ''} ${
-              selectedCategories[0] || ''
-            }`}
+        {`Start Quiz${selectedCategories.length >= 1 ? ' :' : ''} ${
+          selectedCategories[0] || ''
+        }`}
       </Button>
+      <QuizConfirmationModal
+        isOpen={isOpen}
+        onClose={onClose}
+        onConfirm={startQuiz}
+        category={selectedCategories[0]}
+      />
     </VStack>
   )
 }

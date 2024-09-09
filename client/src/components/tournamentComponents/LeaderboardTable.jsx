@@ -1,4 +1,5 @@
-import React from 'react'
+// LeaderboardTable.js
+import React, { forwardRef } from 'react'
 import {
   Text,
   Table,
@@ -15,7 +16,7 @@ import { Medal, Trophy, Crown } from 'lucide-react'
 
 const MotionBox = motion(Box)
 
-const LeaderboardTable = ({ data }) => {
+const LeaderboardTable = forwardRef(({ data }, ref) => {
   return (
     <Box
       maxHeight="400px"
@@ -67,7 +68,7 @@ const LeaderboardTable = ({ data }) => {
           {data.map((player, index) => (
             <MotionBox
               as={Tr}
-              key={player.rank}
+              key={`${player.rank}-${player.inGameName}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -81,41 +82,46 @@ const LeaderboardTable = ({ data }) => {
               <Td textAlign={'center'}>
                 {player.rank === 1 && (
                   <Flex justifyContent={'center'}>
-                    <Crown size={24} color="gold" />
+                    <Crown color="gold" width={'20px'} height={'20px'} />
                   </Flex>
                 )}
                 {player.rank === 2 && (
                   <Flex justifyContent={'center'}>
-                    <Trophy size={24} color="silver" />
+                    <Trophy color="silver" width={'20px'} height={'20px'} />
                   </Flex>
                 )}
                 {player.rank === 3 && (
                   <Flex justifyContent={'center'}>
-                    <Medal size={24} color="#CD7F32" />
+                    <Medal color="#CD7F32" width={'20px'} height={'20px'} />
                   </Flex>
                 )}
                 {player.rank > 3 && (
-                  <Text fontSize="xl" fontWeight="bold">
+                  <Text fontSize={{ base: 'xs', md: 'lg' }} fontWeight="bold">
                     {player.rank}
                   </Text>
                 )}
               </Td>
               <Td textAlign={'center'}>
-                <Text fontSize="xl" fontWeight="semibold">
+                <Text fontSize={{ base: 'xs', md: 'lg' }} fontWeight="semibold">
                   {player.inGameName}
                 </Text>
               </Td>
               <Td textAlign={'center'} isNumeric>
-                <Text fontSize="xl" fontWeight="bold">
+                <Text fontSize={{ base: 'xs', md: 'lg' }} fontWeight="bold">
                   {player.score}
                 </Text>
               </Td>
             </MotionBox>
           ))}
+          {data && data.length > 0 && (
+            <Tr>
+              <Td ref={ref} style={{ height: '20px' }} />
+            </Tr>
+          )}
         </Tbody>
       </Table>
     </Box>
   )
-}
+})
 
 export default LeaderboardTable

@@ -37,34 +37,52 @@ const categoryIcons = {
   tourism: FaPlane,
 }
 
-const CategoryCard = ({ category, isSelected, onSelect }) => {
+const CategoryCard = ({ category, isSelected, isCompleted, onSelect }) => {
   const IconComponent = categoryIcons[category] || FaGlobeAmericas
 
   return (
     <MotionBox
       borderWidth="1px"
       borderRadius="lg"
-      borderColor={isSelected ? 'pink.500' : 'gray.700'}
-      bg={isSelected ? 'rgba(237, 100, 166, 0.1)' : 'gray.800'}
+      borderColor={
+        isCompleted ? 'green.500' : isSelected ? 'pink.500' : 'gray.700'
+      }
+      bg={
+        isCompleted
+          ? 'rgba(72, 187, 120, 0.1)'
+          : isSelected
+          ? 'rgba(237, 100, 166, 0.1)'
+          : 'gray.800'
+      }
       p={4}
       cursor="pointer"
       onClick={() => onSelect(category)}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.2 }}
-      boxShadow={isSelected ? '0 0 0 2px rgba(237, 100, 166, 0.6)' : 'none'}
+      boxShadow={
+        isCompleted
+          ? '0 0 0 2px rgba(72, 187, 120, 0.6)'
+          : isSelected
+          ? '0 0 0 2px rgba(237, 100, 166, 0.6)'
+          : 'none'
+      }
     >
       <VStack spacing={2}>
         <Box
           as={IconComponent}
           size="30px"
-          color={isSelected ? 'pink.400' : 'gray.400'}
+          color={
+            isCompleted ? 'green.400' : isSelected ? 'pink.400' : 'gray.400'
+          }
         />
         <Text
           fontWeight="bold"
           textAlign="center"
           fontSize="sm"
-          color={isSelected ? 'pink.400' : 'gray.300'}
+          color={
+            isCompleted ? 'green.400' : isSelected ? 'pink.400' : 'gray.300'
+          }
           textTransform="capitalize"
         >
           {category}
