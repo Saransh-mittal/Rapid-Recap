@@ -37,12 +37,14 @@ const handleSocietyOrCircleUpgrade = async (
       return
     }
 
-    // Set the language for this session
-    i18n.changeLanguage(user.userLanguage)
-
     const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore)
     const currSocietyCircle = findSocietyCircleByIQ(currIQScore)
+    const localizedI18n = i18n.cloneInstance({ initImmediate: false })
 
+    // Switch to user's language
+    await localizedI18n.changeLanguage(
+      user?.userLanguage ? user.userLanguage : 'en',
+    )
     if (!prevSocietyCircle || !currSocietyCircle) {
       console.error(
         `Invalid society/circle data for IQ scores: ${prevIQScore} or ${currIQScore}`,

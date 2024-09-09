@@ -1,1 +1,0 @@
-import{aa as c,o as p,ad as d}from"./index-38a207a9.js";var m=c(function(s,a){const{direction:e,align:r,justify:i,wrap:t,basis:l,grow:n,shrink:o,...x}=s,f={display:"flex",flexDirection:e,alignItems:r,justifyContent:i,flexWrap:t,flexBasis:l,flexGrow:n,flexShrink:o};return p.jsx(d.div,{ref:a,__css:f,...x})});m.displayName="Flex";export{m as F};
