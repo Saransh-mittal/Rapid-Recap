@@ -15,6 +15,7 @@ import {
   HStack,
   Text,
   useToast,
+  useMediaQuery,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Trophy, History, Crown } from 'lucide-react'
@@ -31,6 +32,7 @@ import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../redux/appSlice'
 import { setUser } from '../redux/authSlice'
+import CategorySelection from '../components/tournamentComponents/CategorySelection'
 
 const MotionBox = motion(Box)
 const MotionTab = motion(Tab)
@@ -44,7 +46,7 @@ const Tournament = () => {
   const { user, loginCheckStatus, isAuthenticated } = useSelector(
     state => state.auth,
   )
-
+  const isScreenSmallerThan400px = useMediaQuery('(max-width: 400px)')[0]
   const [userRegistrationDetails, setUserRegistrationDetails] = useState({
     isRegistered: false,
     selectedCategories: [],
@@ -139,6 +141,10 @@ const Tournament = () => {
     // Logic to enter the tournament
     console.log('Entering tournament...')
   }
+  const handleCategorySelect = category => {
+    console.log(`Starting quiz for category: ${category}`)
+    // Add logic to start the quiz for the selected category
+  }
 
   const currentTournamentNumber = tournamentData
     ? String(tournamentData.tournamentNumber).padStart(3, '0')
@@ -205,7 +211,7 @@ const Tournament = () => {
             <HStack spacing={2}>
               <Trophy width={20} height={20} />
               <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing={'2px'}>
-                Current Tournament
+                {isScreenSmallerThan400px ? 'Curr.' : 'Current'} Tournament
               </Text>
             </HStack>
           </MotionTab>
@@ -231,7 +237,7 @@ const Tournament = () => {
             <HStack spacing={2}>
               <History size={20} />
               <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing={'2px'}>
-                Previous Tournament
+                {isScreenSmallerThan400px ? 'Prev.' : `Previous`} Tournament
               </Text>
             </HStack>
           </MotionTab>
@@ -249,7 +255,7 @@ const Tournament = () => {
               <TournamentStatus
                 tournamentData={tournamentData}
                 registrationStatus={
-                  userRegistrationDetails?.isRegistered
+                  userRegistrationDetails.isRegistered
                     ? 'registered'
                     : 'not-registered'
                 }
@@ -261,7 +267,7 @@ const Tournament = () => {
                   userRole={user?.role}
                   tournamentData={tournamentData}
                   registrationStatus={
-                    userRegistrationDetails?.isRegistered
+                    userRegistrationDetails.isRegistered
                       ? 'registered'
                       : 'not-registered'
                   }
@@ -274,14 +280,22 @@ const Tournament = () => {
                 />
               )}
               {tournamentData?.status === 'ongoing' && (
-                <LeaderboardSection
-                  tournamentData={tournamentData}
-                  registrationStatus={
-                    userRegistrationDetails?.isRegistered
-                      ? 'registered'
-                      : 'not-registered'
-                  }
-                />
+                <VStack spacing={8} align="stretch">
+                  {userRegistrationDetails.isRegistered ? (
+                    <CategorySelection
+                      userSelectedcategories={
+                        userRegistrationDetails.selectedCategories
+                      }
+                      onCategorySelect={handleCategorySelect}
+                    />
+                  ) : (
+                    <Alert status="warning" color="black">
+                      <AlertIcon />
+                      You are not registered for this tournament. Registration
+                      is closed, but you can still view the leaderboard.
+                    </Alert>
+                  )}
+                </VStack>
               )}
             </Box>
           </TabPanel>
@@ -330,9 +344,7 @@ const Tournament = () => {
             {tournamentData?.status !== 'ongoing' ? (
               <EpicQuestGuide />
             ) : (
-              <Heading size="lg" mb={4}>
-                Current Leaderboard
-              </Heading>
+              <LeaderboardSection tournamentData={tournamentData} />
             )}
           </Box>
         </Flex>

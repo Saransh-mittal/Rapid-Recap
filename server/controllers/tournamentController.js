@@ -51,18 +51,68 @@ const getLatestTournament = asyncHandler(async (req, res) => {
   }
 
   await tournament.save()
-
-  const registrationDetails = await getUserRegistrationDetails(
-    userId,
-    tournament._id,
-  )
-
-  const result = {
-    ...tournament._doc,
-    tournamentNumber: tournament.tournamentNumber,
-    registeredCount: tournament.participants.length,
-    ...registrationDetails,
+  let userRegistration = null
+  if (
+    userId &&
+    userId !== 'undefined' &&
+    userId !== 'null' &&
+    userId !== '' &&
+    userId !== undefined
+  ) {
+    console.log('userId', userId)
+    userRegistration = await TournamentRegistration.findOne({
+      user: userId,
+      tournament: tournament._id,
+    })
   }
+
+  let result = {
+    ...tournament.toObject(),
+    registeredCount: await TournamentRegistration.countDocuments({
+      tournament: tournament._id,
+    }),
+    isRegistered: !!userRegistration,
+    selectedCategories: userRegistration
+      ? userRegistration.selectedCategories
+      : [],
+    completedCategories: userRegistration
+      ? userRegistration.completedCategories
+      : [],
+    totalScore: userRegistration ? userRegistration.totalScore : 0,
+  }
+
+  // If the tournament is ongoing, include the leaderboard
+  if (tournament.status === 'ongoing') {
+    const leaderboardData = await TournamentRegistration.aggregate([
+      { $match: { tournament: tournament._id } },
+      {
+        $lookup: {
+          from: 'Users', // Use the collection name from your User schema
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userDetails',
+        },
+      },
+      { $unwind: '$userDetails' },
+      {
+        $project: {
+          inGameName: '$userDetails.inGameName',
+          totalScore: 1,
+          level: '$userDetails.level',
+          xp: '$userDetails.xp',
+        },
+      },
+      { $sort: { totalScore: -1, xp: -1 } },
+    ])
+
+    result.leaderboard = leaderboardData.map((entry, index) => ({
+      rank: index + 1,
+      inGameName: entry.inGameName,
+      score: entry.totalScore,
+      level: entry.level,
+    }))
+  }
+
   res.json(result)
 })
 
