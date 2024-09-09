@@ -340,6 +340,7 @@ const Tournament = () => {
             bg="rgba(0, 0, 0, 0.1)"
             backdropFilter="blur(5px)"
             as={MotionBox}
+            bgGradient="linear(to-br, rgba(26, 32, 44, 0.5), rgba(49, 10, 103, 0.5))"
           >
             {tournamentData?.status !== 'ongoing' ? (
               <EpicQuestGuide />

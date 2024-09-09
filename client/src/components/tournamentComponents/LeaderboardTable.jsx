@@ -82,32 +82,32 @@ const LeaderboardTable = forwardRef(({ data }, ref) => {
               <Td textAlign={'center'}>
                 {player.rank === 1 && (
                   <Flex justifyContent={'center'}>
-                    <Crown size={24} color="gold" />
+                    <Crown color="gold" width={'20px'} height={'20px'} />
                   </Flex>
                 )}
                 {player.rank === 2 && (
                   <Flex justifyContent={'center'}>
-                    <Trophy size={24} color="silver" />
+                    <Trophy color="silver" width={'20px'} height={'20px'} />
                   </Flex>
                 )}
                 {player.rank === 3 && (
                   <Flex justifyContent={'center'}>
-                    <Medal size={24} color="#CD7F32" />
+                    <Medal color="#CD7F32" width={'20px'} height={'20px'} />
                   </Flex>
                 )}
                 {player.rank > 3 && (
-                  <Text fontSize="xl" fontWeight="bold">
+                  <Text fontSize={{ base: 'xs', md: 'lg' }} fontWeight="bold">
                     {player.rank}
                   </Text>
                 )}
               </Td>
               <Td textAlign={'center'}>
-                <Text fontSize="xl" fontWeight="semibold">
+                <Text fontSize={{ base: 'xs', md: 'lg' }} fontWeight="semibold">
                   {player.inGameName}
                 </Text>
               </Td>
               <Td textAlign={'center'} isNumeric>
-                <Text fontSize="xl" fontWeight="bold">
+                <Text fontSize={{ base: 'xs', md: 'lg' }} fontWeight="bold">
                   {player.score}
                 </Text>
               </Td>
