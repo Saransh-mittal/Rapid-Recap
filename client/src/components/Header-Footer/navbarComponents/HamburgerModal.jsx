@@ -120,7 +120,7 @@ const HamburgerModal = ({
               }
               ref={ref => (navLinkRefs.current[index] = ref)}
             >
-              {t(item.label.toLowerCase())}
+              {item.label}
             </NavLink>
           </Tooltip>
           {notLogined && item.label === 'Leaderboard' && <LockIcon />}
