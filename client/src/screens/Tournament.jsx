@@ -249,7 +249,7 @@ const Tournament = () => {
               <TournamentStatus
                 tournamentData={tournamentData}
                 registrationStatus={
-                  userRegistrationDetails.isRegistered
+                  userRegistrationDetails?.isRegistered
                     ? 'registered'
                     : 'not-registered'
                 }
@@ -261,7 +261,7 @@ const Tournament = () => {
                   userRole={user?.role}
                   tournamentData={tournamentData}
                   registrationStatus={
-                    userRegistrationDetails.isRegistered
+                    userRegistrationDetails?.isRegistered
                       ? 'registered'
                       : 'not-registered'
                   }
@@ -277,7 +277,7 @@ const Tournament = () => {
                 <LeaderboardSection
                   tournamentData={tournamentData}
                   registrationStatus={
-                    userRegistrationDetails.isRegistered
+                    userRegistrationDetails?.isRegistered
                       ? 'registered'
                       : 'not-registered'
                   }

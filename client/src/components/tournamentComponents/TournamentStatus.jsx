@@ -6,72 +6,78 @@ import {
   Heading,
   Button,
   Box,
+  Badge,
+  Text,
+  Flex,
 } from '@chakra-ui/react'
-import { Trophy, Clock } from 'lucide-react'
+import { Trophy, Clock, UserCheck, UserPlus } from 'lucide-react'
 import RegisteredUsersCount from './RegisteredUsersCount'
+import { useSelector } from 'react-redux'
 
 const TournamentStatus = ({
   tournamentData,
   registrationStatus,
   handleEnterTournament,
 }) => {
+  const { isAuthenticated, user } = useSelector(state => state.auth)
   return (
     <>
-      {/* {tournamentData?.status === 'upcoming' && (
+      {tournamentData?.status === 'upcoming' && (
         <VStack spacing={6} align="stretch">
           <Heading size="lg" mb={4} display="flex" alignItems="center">
-            <Clock color="#4FD1C5" style={{ marginRight: '0.5rem' }} />
+            <Clock />
             Tournament Starting Soon
           </Heading>
-          <Alert status="info" borderRadius="md" bg="blue.700" color="white">
-            <AlertIcon color="blue.200" />
-            The tournament will begin shortly. Get ready!
-          </Alert>
-          <RegisteredUsersCount count={tournamentData.registeredCount} />
+          <Flex
+            direction="column"
+            align="center"
+            justify="center"
+            borderRadius="md"
+            p={4}
+            fontSize="sm"
+            fontWeight="semibold"
+            bg={registrationStatus === 'registered' ? 'green.100' : 'blue.100'}
+            color={
+              registrationStatus === 'registered' ? 'green.800' : 'blue.800'
+            }
+            borderColor={
+              registrationStatus === 'registered' ? 'green.500' : 'blue.500'
+            }
+            borderWidth="1px"
+            wordBreak="break-word"
+          >
+            {!isAuthenticated ? (
+              <Text>
+                To join the Rapid Recap tournament, please log in with a
+                verified email.
+              </Text>
+            ) : user?.role === 'guest' ? (
+              <Text>
+                Guest users are not allowed to participate in the tournament.
+                Please register to participate.
+              </Text>
+            ) : registrationStatus === 'registered' ? (
+              <Flex align="center">
+                <UserCheck className="mr-2" size={16} />
+                <Text>You're registered! Get ready for the tournament.</Text>
+              </Flex>
+            ) : (
+              <>
+                <Flex align="center">
+                  <UserPlus className="mr-2" size={16} />
+                  <Text>You have not registered for the tournament!</Text>
+                </Flex>
+                <Text mt={2} color="gray.600" textAlign="center">
+                  Don’t miss out on future tournaments! Register on time to
+                  secure your spot in the upcoming competitions.
+                </Text>
+              </>
+            )}
+          </Flex>
+          <RegisteredUsersCount count={tournamentData?.registeredCount} />
         </VStack>
       )}
-      {tournamentData?.status === 'ongoing' && (
-        <VStack spacing={6} align="stretch">
-          <Heading size="lg" mb={4} display="flex" alignItems="center">
-            <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
-            Tournament in Progress
-          </Heading>
-          {registrationStatus === 'registered' ? (
-            <>
-              <Alert
-                status="success"
-                borderRadius="md"
-                bg="green.700"
-                color="white"
-              >
-                <AlertIcon color="green.200" />
-                You're registered for the tournament!
-              </Alert>
-              <Button
-                colorScheme="pink"
-                size="lg"
-                onClick={handleEnterTournament}
-                boxShadow="0 0 15px rgba(237, 100, 166, 0.5)"
-                _hover={{
-                  boxShadow: '0 0 20px rgba(237, 100, 166, 0.7)',
-                }}
-              >
-                Enter Tournament
-              </Button>
-            </>
-          ) : (
-            <Alert
-              status="warning"
-              borderRadius="md"
-              bg="orange.700"
-              color="white"
-            >
-              <AlertIcon color="orange.200" />
-              You are not registered for this tournament.
-            </Alert>
-          )}
-        </VStack>
-      )} */}
+
       {tournamentData?.status === 'completed' && (
         <VStack spacing={6} align="stretch">
           <Heading size={{ base: 'md', md: 'lg' }} mb={4}>
