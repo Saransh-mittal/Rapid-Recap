@@ -10,6 +10,7 @@ const {
   getLatestTournament,
   getPreviousTournament,
   getCurrentTournamentLeaderboard,
+  searchTournamentLeaderboard,
 } = require('../controllers/tournamentController')
 
 const { Authenticate, adminMiddleware } = require('../middleware/authenticate')
@@ -20,6 +21,7 @@ router.get('/previous', getPreviousTournament)
 router.get('/latest', getLatestTournament)
 router.post('/register', Authenticate, registerForTournament)
 router.get('/leaderboard', getCurrentTournamentLeaderboard)
+router.get('/leaderboard/search', searchTournamentLeaderboard)
 router.post(
   '/questions/current-affairs',
   Authenticate,

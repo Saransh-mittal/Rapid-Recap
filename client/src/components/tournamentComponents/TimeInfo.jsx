@@ -9,33 +9,40 @@ import {
 const MotionBox = motion(Box)
 
 const TimeInfo = ({ tournamentData }) => {
-  const dateMap = {
+  const dateMapStart = {
     registration: tournamentData?.registrationStartDate,
     upcoming: tournamentData?.startDate,
-    ongoing: tournamentData?.ongoingDate, // Adjust this to the correct date field
-    completed: tournamentData?.completedDate, // Adjust this to the correct date field
+    ongoing: tournamentData?.startDate, // Adjust this to the correct date field
+    completed: null, // Adjust this to the correct date field
   }
-
+  const dateMapEnd = {
+    registration: tournamentData?.registrationEndDate,
+    upcoming: null,
+    ongoing: tournamentData?.endDate, // Adjust this to the correct date field
+    completed: null, // Adjust this to the correct date field
+  }
   // Find the first matching date where the status is not equal
   const startDate = formatDateLangTranslate(
-    dateMap[tournamentData.status] || tournamentData?.defaultDate,
+    dateMapStart[tournamentData?.status],
   )
 
-  const endDate = formatDateLangTranslate(tournamentData?.registrationEndDate)
+  const endDate = formatDateLangTranslate(dateMapEnd[tournamentData?.status])
   const startDateTime = formatLocalDateTime(
-    dateMap[tournamentData.status] || tournamentData?.defaultDateTime,
+    dateMapStart[tournamentData?.status],
   )
-  const endDateTime = formatLocalDateTime(tournamentData?.registrationEndDate)
+  const endDateTime = formatLocalDateTime(dateMapEnd[tournamentData?.status])
 
   const statusTextMap = {
     registration: 'Starts',
     upcoming: 'Starts At',
-    ongoing: 'Starts At', // Adjust as needed
-    completed: 'Starts At', // Adjust as needed
+    ongoing: 'Starts', // Adjust as needed
+    completed: '', // Adjust as needed
   }
 
   // Default to 'Starts At' if no match is found
   const statusText = statusTextMap[tournamentData?.status] || 'Starts At'
+
+  if (tournamentData?.status === 'completed') return null
 
   return (
     <VStack spacing={4} align="stretch">
@@ -62,7 +69,7 @@ const TimeInfo = ({ tournamentData }) => {
             <Text fontSize={{ base: 'sm', md: 'md' }}>{startDateTime}</Text>
           </VStack>
         </MotionBox>
-        {tournamentData.status !== 'upcoming' && (
+        {tournamentData?.status !== 'upcoming' && (
           <MotionBox
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

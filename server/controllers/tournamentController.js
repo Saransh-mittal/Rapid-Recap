@@ -111,31 +111,104 @@ const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
     {
       $project: {
         inGameName: '$userDetails.inGameName',
+        name: '$userDetails.name',
+        email: '$userDetails.email',
         totalScore: 1,
         level: '$userDetails.level',
+        xp: '$userDetails.xp',
       },
     },
-    { $sort: { totalScore: -1, level: -1 } },
-    { $skip: skip },
-    { $limit: parseInt(limit) },
+    { $sort: { totalScore: -1, xp: -1 } },
+    {
+      $group: {
+        _id: null,
+        totalCount: { $sum: 1 },
+        entries: { $push: '$$ROOT' },
+      },
+    },
+    {
+      $project: {
+        totalCount: 1,
+        entries: { $slice: ['$entries', skip, parseInt(limit)] },
+      },
+    },
   ])
 
-  const totalParticipants = await TournamentRegistration.countDocuments({
-    tournament: tournament._id,
-  })
+  const result = leaderboardData[0] || { totalCount: 0, entries: [] }
 
-  const leaderboard = leaderboardData.map((entry, index) => ({
+  const leaderboard = result.entries.map((entry, index) => ({
     rank: skip + index + 1,
     inGameName: entry.inGameName,
+    name: entry.name,
+    email: entry.email,
     score: entry.totalScore,
     level: entry.level,
   }))
 
   res.json({
     leaderboard,
-    currentPage: page,
-    totalPages: Math.ceil(totalParticipants / limit),
-    hasMore: skip + leaderboardData.length < totalParticipants,
+    currentPage: parseInt(page),
+    totalPages: Math.ceil(result.totalCount / limit),
+    hasMore: skip + leaderboard.length < result.totalCount,
+  })
+})
+
+// @desc   Search tournament leaderboard
+// @route  GET /api/tournament/leaderboard/search
+// @access Public
+const searchTournamentLeaderboard = asyncHandler(async (req, res) => {
+  const { tournamentId, searchQuery } = req.query
+
+  const tournament = await Tournament.findById(tournamentId)
+  if (!tournament) {
+    res.status(404)
+    throw new Error('Tournament not found')
+  }
+
+  const regex = new RegExp(searchQuery.trim(), 'i')
+
+  // First, get all participants sorted by score
+  const allParticipants = await TournamentRegistration.aggregate([
+    { $match: { tournament: tournament._id } },
+    {
+      $lookup: {
+        from: 'Users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    { $unwind: '$userDetails' },
+    {
+      $project: {
+        inGameName: '$userDetails.inGameName',
+        name: '$userDetails.name',
+        email: '$userDetails.email',
+        totalScore: 1,
+        level: '$userDetails.level',
+        xp: '$userDetails.xp',
+      },
+    },
+    { $sort: { totalScore: -1, xp: -1 } },
+  ])
+
+  // Now, filter and rank the participants
+  const leaderboard = allParticipants
+    .map((participant, index) => ({
+      ...participant,
+      rank: index + 1,
+    }))
+    .filter(
+      participant =>
+        regex.test(participant.inGameName) ||
+        regex.test(participant.name) ||
+        regex.test(participant.email),
+    )
+    .map(({ _id, ...rest }) => rest) // Remove the _id field
+
+  res.json({
+    leaderboard,
+    totalParticipants: allParticipants.length,
   })
 })
 
@@ -496,4 +569,5 @@ module.exports = {
   getLatestTournament,
   getPreviousTournament,
   getCurrentTournamentLeaderboard,
+  searchTournamentLeaderboard,
 }
