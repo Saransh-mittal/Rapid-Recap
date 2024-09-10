@@ -1,4 +1,10 @@
-import React, { useMemo, useCallback, Suspense } from 'react'
+import React, {
+  useMemo,
+  useCallback,
+  Suspense,
+  useRef,
+  forwardRef,
+} from 'react'
 import {
   Table,
   Tbody,
@@ -7,159 +13,188 @@ import {
   Thead,
   Tr,
   Box,
-  VStack,
-  Flex,
-  Image,
-  Text,
   useColorModeValue,
   useBreakpointValue,
+  Skeleton,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
+
 const LeaderBoardRow = React.lazy(() => import('./LeaderBoardRow'))
 const LoadingState = React.lazy(() => import('./LoadingState'))
 const VerticalDotsSeparator = React.lazy(() =>
   import('./VerticalDotsSeparator'),
 )
 
-const LeaderBoardTable = ({
-  leaders,
-  searchResults,
-  searchLoad,
-  isBaseScreen,
-  isLgScreen,
-  isMdScreen,
-  currUserChar,
-  navigate,
-  loadNextPage,
-  PAGE_LIMIT,
-  hasMore,
-}) => {
-  const { t } = useTranslation('LeaderBoardTable')
-  const data = useMemo(
-    () => (searchResults.length > 0 ? searchResults : leaders),
-    [searchResults, leaders],
-  )
+const LeaderBoardTable = forwardRef(
+  (
+    {
+      leaders,
+      searchResults,
+      searchLoad,
+      currUserChar,
+      navigate,
+      isLoading,
+      PAGE_LIMIT,
+    },
+    ref,
+  ) => {
+    const { t } = useTranslation('LeaderBoardTable')
+    const data = useMemo(
+      () => (searchResults.length > 0 ? searchResults : leaders),
+      [searchResults, leaders],
+    )
+    const scrollRef = useRef(null)
 
-  const uniqueData = useMemo(() => {
-    const seenUserIds = new Set()
-    return data.filter(user => {
-      if (seenUserIds.has(user._id)) {
-        return false
-      } else {
-        seenUserIds.add(user._id)
-        return true
-      }
-    })
-  }, [data])
+    const uniqueData = useMemo(() => {
+      const seenUserIds = new Set()
+      return data.filter(user => {
+        if (seenUserIds.has(user._id)) {
+          return false
+        } else {
+          seenUserIds.add(user._id)
+          return true
+        }
+      })
+    }, [data])
 
-  const handleNavigate = useCallback(route => navigate(route), [navigate])
+    const handleNavigate = useCallback(route => navigate(route), [navigate])
 
-  const textColor = useColorModeValue('gray.100', 'gray.50')
-  const accentColor = useColorModeValue('purple.500', 'purple.300')
+    const textColor = useColorModeValue('gray.100', 'gray.50')
+    const accentColor = useColorModeValue('purple.500', 'purple.300')
+    const bgColor = useColorModeValue('gray.800', 'gray.900')
 
-  const isMobile = useBreakpointValue({ base: true, md: false })
-  const isTablet = useBreakpointValue({ base: false, md: true, lg: false })
-  const isDesktop = useBreakpointValue({ base: false, lg: true })
+    const isMobile = useBreakpointValue({ base: true, md: false })
+    const isTablet = useBreakpointValue({ base: false, md: true, lg: false })
+    const isDesktop = useBreakpointValue({ base: false, lg: true })
 
-  return (
-    <Box overflowX="hidden">
-      <Table variant="unstyled">
-        <Thead>
-          <Tr>
-            <Th
-              textAlign="center"
-              color={accentColor}
-              paddingX={{ base: '0', md: '24px' }}
-            >
-              {t('rank')}
+    const renderHeader = () => (
+      <Thead>
+        <Tr>
+          {isMobile ? (
+            <Th textAlign="center" color={accentColor} width={'40%'}>
+              {t('rankAndPlayer')}
             </Th>
-            <Th
-              textAlign="center"
-              color={accentColor}
-              paddingX={{ base: '0', md: '24px' }}
-            >
-              {t('Player')}
-            </Th>
-            {isTablet && (
-              <Th textAlign="center" color={accentColor}>
-                {t('Experience')}
-              </Th>
-            )}
-            <Th
-              textAlign="center"
-              color={accentColor}
-              paddingX={{ base: '0', md: '24px' }}
-            >
-              {t('iqScores')}
-            </Th>
-            {isDesktop && (
-              <>
-                <Th textAlign="center" color={accentColor}>
-                  {t('quizSubmissions')}
-                </Th>
-                <Th textAlign="center" color={accentColor}>
-                  {t('avgRQMScore')}
-                </Th>
-              </>
-            )}
-          </Tr>
-        </Thead>
-        <Suspense fallback={<LoadingState />}>
-          {searchLoad ? (
-            <LoadingState />
           ) : (
-            <Tbody>
-              {uniqueData.length > 0 &&
-                uniqueData.map((user, index) => (
-                  <LeaderBoardRow
-                    key={`${user._id}-${index}`}
-                    user={user}
-                    index={index}
-                    currUserChar={currUserChar}
-                    isMobile={isMobile}
-                    isTablet={isTablet}
-                    isDesktop={isDesktop}
-                    navigate={handleNavigate}
-                    textColor={textColor}
-                    accentColor={accentColor}
-                  />
-                ))}
-              {currUserChar?.rank > 500 && (
-                <>
-                  <Tr>
-                    <Td colSpan={isDesktop ? 6 : 4}>
-                      <VerticalDotsSeparator />
-                    </Td>
-                  </Tr>
-                  <LeaderBoardRow
-                    key={`currentUser-${currUserChar._id}`}
-                    user={currUserChar}
-                    index={50}
-                    currUserChar={currUserChar}
-                    isMobile={isMobile}
-                    isTablet={isTablet}
-                    isDesktop={isDesktop}
-                    navigate={handleNavigate}
-                    textColor={textColor}
-                    accentColor={accentColor}
-                  />
-                </>
-              )}
-              {loadNextPage &&
-                hasMore &&
-                Array.from({ length: PAGE_LIMIT }).map((_, index) => (
-                  <Tr key={index}>
-                    <Td colSpan={isDesktop ? 6 : 4}>
-                      <Box height="50px" borderRadius={'10px'} bg="gray.800" />
-                    </Td>
-                  </Tr>
-                ))}
-            </Tbody>
+            <>
+              <Th width="10%" textAlign="center" color={accentColor}>
+                {t('rank')}
+              </Th>
+              <Th width="25%" textAlign="left" color={accentColor}>
+                {t('Player')}
+              </Th>
+            </>
           )}
-        </Suspense>
-      </Table>
-    </Box>
-  )
-}
+          <Th
+            width={isMobile ? '30%' : '15%'}
+            textAlign="center"
+            color={accentColor}
+          >
+            {t('iqScores')}
+          </Th>
+          {isDesktop && (
+            <>
+              <Th width="20%" textAlign="center" color={accentColor}>
+                {t('quizSubmissions')}
+              </Th>
+              <Th width="15%" textAlign="center" color={accentColor}>
+                {t('avgRQMScore')}
+              </Th>
+            </>
+          )}
+        </Tr>
+      </Thead>
+    )
+
+    const renderLoadingSkeleton = () => {
+      return (
+        <Tbody>
+          {Array.from({ length: PAGE_LIMIT }).map((_, index) => (
+            <Tr key={index}>
+              <Td colSpan={isDesktop ? 6 : 4}>
+                <Skeleton
+                  height="50px"
+                  width={'100%'}
+                  startColor="gray.600"
+                  endColor="gray.800"
+                />
+              </Td>
+            </Tr>
+          ))}
+        </Tbody>
+      )
+    }
+
+    return (
+      <Box position="relative" width="100%">
+        <Box position="sticky" top="0" zIndex="2" bg={bgColor} width="100%">
+          <Table variant="unstyled" layout="fixed" width="100%">
+            {renderHeader()}
+          </Table>
+        </Box>
+        <Box
+          overflowY="auto"
+          maxHeight="calc(100vh - 200px)"
+          width="100%"
+          ref={scrollRef}
+          css={{ '&::-webkit-scrollbar': { display: 'none' } }}
+        >
+          <Table variant="unstyled" layout="fixed" width="100%">
+            <Suspense fallback={<LoadingState />}>
+              {isLoading ? (
+                renderLoadingSkeleton()
+              ) : searchLoad ? (
+                <LoadingState />
+              ) : (
+                <Tbody>
+                  {uniqueData.length > 0 &&
+                    uniqueData.map((user, index) => (
+                      <LeaderBoardRow
+                        key={`${user._id}-${index}`}
+                        user={user}
+                        index={index}
+                        currUserChar={currUserChar}
+                        isMobile={isMobile}
+                        isTablet={isTablet}
+                        isDesktop={isDesktop}
+                        navigate={handleNavigate}
+                        textColor={textColor}
+                        accentColor={accentColor}
+                      />
+                    ))}
+                  {uniqueData && uniqueData.length > 0 && (
+                    <Tr>
+                      <Td ref={ref} style={{ height: '20px' }} />
+                    </Tr>
+                  )}
+                  {currUserChar?.rank > 500 && (
+                    <>
+                      <Tr>
+                        <Td colSpan={isDesktop ? 6 : 4}>
+                          <VerticalDotsSeparator />
+                        </Td>
+                      </Tr>
+                      <LeaderBoardRow
+                        key={`currentUser-${currUserChar._id}`}
+                        user={currUserChar}
+                        index={50}
+                        currUserChar={currUserChar}
+                        isMobile={isMobile}
+                        isTablet={isTablet}
+                        isDesktop={isDesktop}
+                        navigate={handleNavigate}
+                        textColor={textColor}
+                        accentColor={accentColor}
+                      />
+                    </>
+                  )}
+                </Tbody>
+              )}
+            </Suspense>
+          </Table>
+        </Box>
+      </Box>
+    )
+  },
+)
 
 export default LeaderBoardTable

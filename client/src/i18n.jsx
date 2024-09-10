@@ -4,7 +4,15 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import HttpBackend from 'i18next-http-backend'
 
 const namespaces = {
-  screens: ['Contact', 'Home', 'LeaderBoard', 'Profile', 'Register', 'Signin'],
+  screens: [
+    'Contact',
+    'Home',
+    'LeaderBoard',
+    'Profile',
+    'Register',
+    'Signin',
+    'Tournament',
+  ],
   utils: ['formatDate'],
   categories: ['categories'],
   articleComponents: [
@@ -32,6 +40,7 @@ const namespaces = {
     'TotalUserAttempted',
     'TrackTime',
   ],
+  tournamentComponents: ['EpicQuestGuide'],
   authComponents: [
     'EmailVerify',
     'GuestLogin',
@@ -131,6 +140,8 @@ i18n
             return `/locales/${lng}/utils/${namespace}.json`
           case 'articleComponents':
             return `/locales/${lng}/components/articleComponents/${namespace}.json`
+          case 'tournamentComponents':
+            return `/locales/${lng}/components/tournamentComponents/${namespace}.json`
           case 'authComponents':
             return `/locales/${lng}/components/authComponents/${namespace}.json`
           case 'contactComponents':

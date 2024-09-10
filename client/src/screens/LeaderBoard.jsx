@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Flex,
   Heading as ChakraHeading,
@@ -13,9 +13,9 @@ import {
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import debounce from 'lodash.debounce'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+import { useInView } from 'react-intersection-observer'
 
 // Dynamic imports for code splitting
 const SearchBar = React.lazy(() =>
@@ -23,9 +23,6 @@ const SearchBar = React.lazy(() =>
 )
 const LeaderBoardTable = React.lazy(() =>
   import('../components/leaderBoardComponents/LeaderBoardTable'),
-)
-const Heading = React.lazy(() =>
-  import('../components/miscellaneous/HeadingComponent'),
 )
 
 import medalIcon from '../assets/medal.webp'
@@ -35,31 +32,28 @@ const LeaderBoard = () => {
   const { t } = useTranslation('LeaderBoard')
   const PAGE_LIMIT = 20
   const navigate = useNavigate()
-  const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { user } = useSelector(state => state.auth)
   const toast = useToast()
+  const { ref, inView } = useInView({
+    threshold: 0,
+    triggerOnce: false,
+  })
 
   // State hooks
   const [isLoading, setIsLoading] = useState(true)
   const [searchLoad, setSearchLoad] = useState(false)
   const [leaders, setLeaders] = useState([])
   const [searchResults, setSearchResults] = useState([])
-  const [activeSociety, setActiveSociety] = useState(null)
 
-  // Media query hooks
-  const [isLgScreen] = useMediaQuery('(max-width: 1024px)')
-  const [isMdScreen] = useMediaQuery('(max-width: 820px)')
   const [isBaseScreen] = useMediaQuery('(max-width: 768px)')
 
-  // Pagination state
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-  const [loadNextPage, setLoadNextPage] = useState(true)
 
   const fetchLeaderBoard = useCallback(
-    async (society = '', page = 1) => {
+    async (society = '') => {
       if (!hasMore) {
         setIsLoading(false)
-        setLoadNextPage(false)
         return
       }
       try {
@@ -75,6 +69,7 @@ const LeaderBoard = () => {
           if (page === 1) return fetchedLeaders
           return [...prevLeaders, ...fetchedLeaders]
         })
+        setPage(prevPage => prevPage + 1)
       } catch (error) {
         toast({
           title: t('toastErrorTitle'),
@@ -85,43 +80,22 @@ const LeaderBoard = () => {
           position: 'top',
         })
       } finally {
-        setLoadNextPage(false)
         setIsLoading(false)
       }
     },
-    [hasMore, PAGE_LIMIT, toast, t],
-  )
-
-  const handleScroll = useCallback(async () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop + 500 >
-        document.documentElement.scrollHeight &&
-      hasMore
-    ) {
-      setLoadNextPage(true)
-      setPage(prevPage => prevPage + 1)
-    }
-  }, [hasMore])
-
-  const debouncedHandleScroll = useMemo(
-    () => debounce(handleScroll, 300),
-    [handleScroll],
+    [hasMore, PAGE_LIMIT, toast, t, inView],
   )
 
   useEffect(() => {
     document.title = t('helmet.title')
     fetchLeaderBoard()
-    window.addEventListener('scroll', debouncedHandleScroll)
-    return () => {
-      window.removeEventListener('scroll', debouncedHandleScroll)
-    }
-  }, [isAuthenticated, debouncedHandleScroll])
-
+  }, [])
   useEffect(() => {
-    if (page > 1) {
-      fetchLeaderBoard(activeSociety, page)
+    if (inView && !isLoading && hasMore) {
+      setIsLoading(true)
+      fetchLeaderBoard()
     }
-  }, [page, activeSociety, fetchLeaderBoard])
+  }, [inView, isLoading, hasMore])
 
   return (
     <>
@@ -191,23 +165,37 @@ const LeaderBoard = () => {
                 <SearchBar
                   setSearchResults={setSearchResults}
                   setSearchLoad={setSearchLoad}
+                  w={isBaseScreen ? '75%' : '50%'}
                 />
               </Flex>
 
-              <LeaderBoardTable
-                hasMore={hasMore}
-                PAGE_LIMIT={PAGE_LIMIT}
-                loadNextPage={loadNextPage}
-                leaders={leaders}
-                searchResults={searchResults}
-                searchLoad={searchLoad}
-                isBaseScreen={isBaseScreen}
-                isLgScreen={isLgScreen}
-                isMdScreen={isMdScreen}
-                currUserChar={user}
-                navigate={navigate}
-                setLoadNextPage={setLoadNextPage}
-              />
+              <Box
+                height="calc(100vh - 300px)"
+                overflowY="auto"
+                css={{
+                  '&::-webkit-scrollbar': {
+                    width: '4px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    width: '6px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: useColorModeValue('purple.500', 'purple.300'),
+                    borderRadius: '24px',
+                  },
+                }}
+              >
+                <LeaderBoardTable
+                  leaders={leaders}
+                  ref={ref}
+                  searchResults={searchResults}
+                  searchLoad={searchLoad}
+                  currUserChar={user}
+                  navigate={navigate}
+                  isLoading={isLoading}
+                  PAGE_LIMIT={PAGE_LIMIT}
+                />
+              </Box>
             </React.Suspense>
           </VStack>
         </Flex>

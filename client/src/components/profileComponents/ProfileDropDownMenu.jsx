@@ -1,11 +1,13 @@
-import { Avatar, Flex, Box, Icon } from '@chakra-ui/react'
+import { Avatar, Flex, Box, Icon, Text, Spinner } from '@chakra-ui/react'
 import React, { useState, useMemo, useCallback, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import { NavLink } from 'react-router-dom'
 import { addNoteMessage } from '../../redux/appSlice'
-import { LockIcon } from '@chakra-ui/icons'
+import { LockIcon, QuestionIcon } from '@chakra-ui/icons'
+import UserSVG from '../../assets/svg/UserSVG'
+import LogoutSVG from '../../assets/svg/LogoutSVG'
 import { useTranslation } from 'react-i18next'
 
 const Inbox = React.lazy(() =>
@@ -35,7 +37,6 @@ const ProfileDropDownMenu = ({
   display,
 }) => {
   const { t } = useTranslation(['ProfileDropDownMenu'])
-
   const listStyle = useMemo(
     () => ({
       position: 'relative',
@@ -46,7 +47,7 @@ const ProfileDropDownMenu = ({
       backgroundColor: '#526D82',
       color: 'white',
       cursor: 'pointer',
-      width: '100px',
+      width: '120px',
       borderBottom: '1px solid',
       backgroundImage:
         'linear-gradient(to right, transparent, #27374D, transparent)',
@@ -65,9 +66,10 @@ const ProfileDropDownMenu = ({
   )
 
   const { playClick } = useSound()
-  const { user } = useSelector(state => state.auth)
+  const { user, isAuthenticated } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
   const dispatch = useDispatch()
+  const showDashboard = isAuthenticated && user && user.role === 'admin'
 
   const [isOpen, setIsOpen] = useState(false)
 
@@ -156,35 +158,64 @@ const ProfileDropDownMenu = ({
             flexDirection: 'column',
             padding: '0',
             top: '3rem',
+            right: '-1rem',
           }}
         >
-          <Suspense fallback={<div>{t('loading')}</div>}>
-            <motion.li
-              whileHover={listHoverStyle}
-              style={listStyle}
-              variants={itemVariants}
+          <Suspense fallback={<Spinner />}>
+            <NavLink
+              to={`${toProfile}/${user?.inGameName}`}
+              ref={refProfile}
+              onClick={handleProfileClick}
             >
-              <Inbox
-                className={'inbox-button-lg'}
-                onClick={() => setIsDrawerOpen(true)}
-                notifyCont={notifyCont}
-                display={{ base: 'none', md: 'flex' }}
-                h="5"
-                w="5"
-              />
-            </motion.li>
+              <motion.li
+                whileHover={listHoverStyle}
+                style={listStyle}
+                variants={itemVariants}
+              >
+                <Flex
+                  width={'100%'}
+                  justifyContent={'flex-start'}
+                  alignItems={'center'}
+                  gap={2}
+                >
+                  <UserSVG fill={'white'} width={'16px'} height={'16px'} />
+                  <Text padding={0} margin={0}>
+                    {t('view_profile')}
+                  </Text>
+                </Flex>
+              </motion.li>
+            </NavLink>
+            {showDashboard && (
+              <NavLink to={`/dashboard`} onClick={handleProfileClick}>
+                <motion.li
+                  whileHover={listHoverStyle}
+                  style={listStyle}
+                  variants={itemVariants}
+                >
+                  <Flex
+                    width={'100%'}
+                    justifyContent={'flex-start'}
+                    alignItems={'center'}
+                    gap={2}
+                  >
+                    <Text padding={0} margin={0}>
+                      Dashboard
+                    </Text>
+                  </Flex>
+                </motion.li>
+              </NavLink>
+            )}
             <motion.li
               whileHover={listHoverStyle}
               style={listStyle}
               variants={itemVariants}
-              padding={0}
             >
               {user?.role === 'guest' ? (
                 <Flex
                   width={'100%'}
                   alignItems={'center'}
                   opacity={0.5}
-                  justifyContent={'center'}
+                  justifyContent={'flex-start'}
                   onClick={() =>
                     dispatch(
                       addNoteMessage({
@@ -200,24 +231,40 @@ const ProfileDropDownMenu = ({
                     )
                   }
                 >
-                  <UserFriendsSVG
-                    fill={'white'}
-                    width={'20px'}
-                    height={'20px'}
-                  />
+                  <Flex
+                    onClick={onOpenWiseWeb}
+                    width={'100%'}
+                    justifyContent={'flex-start'}
+                    alignItems={'center'}
+                    gap={2}
+                  >
+                    <UserFriendsSVG
+                      fill={'white'}
+                      width={'16px'}
+                      height={'16px'}
+                    />
+                    <Text padding={0} margin={0} fontSize={'0.75rem'}>
+                      {t('Wise Web')}
+                    </Text>
+                  </Flex>
                   <Icon as={LockIcon} color={'white'} ml={2} />
                 </Flex>
               ) : (
                 <Flex
                   onClick={onOpenWiseWeb}
                   width={'100%'}
-                  justifyContent={'center'}
+                  justifyContent={'flex-start'}
+                  alignItems={'center'}
+                  gap={2}
                 >
                   <UserFriendsSVG
                     fill={'white'}
-                    width={'20px'}
-                    height={'20px'}
+                    width={'16px'}
+                    height={'16px'}
                   />
+                  <Text padding={0} margin={0}>
+                    {t('Wise Web')}
+                  </Text>
                   {unreadFriendRequests !== 0 && (
                     <Box
                       h="8px"
@@ -233,17 +280,48 @@ const ProfileDropDownMenu = ({
                 </Flex>
               )}
             </motion.li>
-            <NavLink
-              to={`${toProfile}/${user?.inGameName}`}
-              ref={refProfile}
-              onClick={handleProfileClick}
+            <motion.li
+              whileHover={listHoverStyle}
+              style={listStyle}
+              variants={itemVariants}
             >
+              <Flex
+                w={'100%'}
+                justifyContent={'flex-start'}
+                alignItems={'center'}
+                gap={2}
+                onClick={() => setIsDrawerOpen(true)}
+              >
+                <Inbox
+                  className={'inbox-button-lg'}
+                  notifyCont={notifyCont}
+                  display={{ base: 'none', md: 'flex' }}
+                  h="16px"
+                  w="16px"
+                />
+
+                <Text padding={0} margin={0}>
+                  {t('View Inbox')}
+                </Text>
+              </Flex>
+            </motion.li>
+            <NavLink to={`/contact`} onClick={handleProfileClick}>
               <motion.li
                 whileHover={listHoverStyle}
                 style={listStyle}
                 variants={itemVariants}
               >
-                {t('view_profile')}
+                <Flex
+                  width={'100%'}
+                  justifyContent={'flex-start'}
+                  alignItems={'center'}
+                  gap={2}
+                >
+                  <QuestionIcon fill={'white'} width={'16px'} height={'16px'} />
+                  <Text padding={0} margin={0}>
+                    {t('Contact Us')}
+                  </Text>
+                </Flex>
               </motion.li>
             </NavLink>
             <motion.li
@@ -255,7 +333,17 @@ const ProfileDropDownMenu = ({
                 handleLogout()
               }}
             >
-              {t('logout')}
+              <Flex
+                width={'100%'}
+                justifyContent={'flex-start'}
+                alignItems={'center'}
+                gap={2}
+              >
+                <LogoutSVG fill={'white'} width={'16px'} height={'16px'} />
+                <Text padding={0} margin={0}>
+                  {t('logout')}
+                </Text>
+              </Flex>
             </motion.li>
           </Suspense>
         </motion.ul>

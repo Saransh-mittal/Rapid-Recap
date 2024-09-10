@@ -16,6 +16,8 @@ const NavbarContent = ({
 }) => {
   const { playClick } = useSound()
   const { isAdmin, isAuthenticated, user } = useSelector(state => state.auth)
+
+  // console.log('isAdmin:', isAdmin)
   const { t } = useTranslation('NavbarContent')
 
   const handleClick = useCallback(() => {
@@ -23,12 +25,9 @@ const NavbarContent = ({
     if (setIsHamburgerOpen) setIsHamburgerOpen(false)
   }, [playClick, setIsHamburgerOpen])
 
-  const showDashboard = isAdmin && isAuthenticated && user
-
   const memoizedNavItems = useMemo(() => {
     return navItems.map((item, index) => {
-      const translatedLabel = t(item.label)
-      if (item.label === 'Dashboard' && !showDashboard) return null
+      if (item.label === 'Dashboard') return null
       return (
         <ListItem
           className={`nav-item `}
@@ -46,7 +45,7 @@ const NavbarContent = ({
             onClick={playClick}
             ref={ref => (navLinkRefs.current[index] = ref)}
           >
-            {translatedLabel}
+            {item.label}
             {item.label === 'Season' && (
               <Suspense fallback={<div>Loading...</div>}>
                 <>
@@ -86,7 +85,6 @@ const NavbarContent = ({
     isAdmin,
     isAuthenticated,
     user,
-    t,
   ])
 
   return (
