@@ -244,7 +244,7 @@ const ProfileDropDownMenu = ({
                       height={'16px'}
                     />
                     <Text padding={0} margin={0} fontSize={'0.75rem'}>
-                      {t('Wise Web')}
+                      {t('Wise_Web')}
                     </Text>
                   </Flex>
                   <Icon as={LockIcon} color={'white'} ml={2} />
@@ -263,7 +263,7 @@ const ProfileDropDownMenu = ({
                     height={'16px'}
                   />
                   <Text padding={0} margin={0}>
-                    {t('Wise Web')}
+                    {t('Wise_Web')}
                   </Text>
                   {unreadFriendRequests !== 0 && (
                     <Box
@@ -301,7 +301,7 @@ const ProfileDropDownMenu = ({
                 />
 
                 <Text padding={0} margin={0}>
-                  {t('View Inbox')}
+                  {t('View_Inbox')}
                 </Text>
               </Flex>
             </motion.li>
@@ -319,7 +319,7 @@ const ProfileDropDownMenu = ({
                 >
                   <QuestionIcon fill={'white'} width={'16px'} height={'16px'} />
                   <Text padding={0} margin={0}>
-                    {t('Contact Us')}
+                    {t('Contact_Us')}
                   </Text>
                 </Flex>
               </motion.li>
