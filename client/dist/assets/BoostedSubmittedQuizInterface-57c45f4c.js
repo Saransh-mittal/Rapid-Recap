@@ -1,0 +1,49 @@
+import{u as x,o as e}from"./index-7983053e.js";import g from"./ButtonComponent-28a2c894.js";import f from"./ButtonGradient-fec8a26e.js";import{S as u}from"./chunk-7254PCTD-664fa015.js";import{F as t}from"./chunk-KRPLQIP4-cd34cdce.js";import{H as o}from"./chunk-7OLJDQMT-7c57cf98.js";import{T as i}from"./chunk-2OOHT3W5-72b83fd6.js";import{I as h}from"./chunk-QINAG4RG-24e5420b.js";import"./useSound-24a6b37c.js";import"./chunk-KC77MHL3-3374bc96.js";import"./chunk-G72KV6MB-cc7017c7.js";import"./chunk-57I6FYPZ-f07a7c98.js";import"./chunk-6NHXDBFO-ad9f4b34.js";import"./chunk-R3DH46PF-f0689d26.js";import"./chunk-SPIKMR6I-06ff1d4f.js";const b="/images/rocket.webp",Y=({score:n,isOpen:a,submitLoad:s,onViewReport:l,isBoosted:d,isQuinBoostAvailable:m})=>{const{t:r}=x("BoostedSubmittedQuizInterface"),c={position:"relative",bottom:"-500%",animation:"animate-rocket 2s ease forwards, animate 0.2s ease infinite"},p={position:"relative",bottom:"-500%",animation:"animate-rocket 2s ease forwards"};return e.jsx(u,{direction:"bottom",in:a,offsetY:"20px",style:{zIndex:10},children:e.jsxs(t,{position:"relative",flexDirection:"column",w:"100%",height:"100%",justifyContent:"center",alignItems:"center",color:"white",css:`
+          @property --angle {
+            syntax: '<angle>';
+            initial-value: 90deg;
+            inherits: true;
+          }
+
+          @property --gradX {
+            syntax: '<percentage>';
+            initial-value: 50%;
+            inherits: true;
+          }
+
+          @property --gradY {
+            syntax: '<percentage>';
+            initial-value: 0%;
+            inherits: true;
+          }
+
+          --d: 2500ms;
+          --angle: 90deg;
+          --gradX: 100%;
+          --gradY: 50%;
+          --c1: rgba(168, 239, 255, 1);
+          --c2: rgba(168, 239, 255, 0.1);
+
+          @keyframes animate-rocket {
+            0% {
+              bottom: -500%;
+            }
+            100% {
+              bottom: 5%;
+            }
+          }
+          @keyframes borderRotate {
+            100% {
+              --angle: 420deg;
+            }
+          }
+          @keyframes animate {
+            0%,
+            100% {
+              transform: translateY(-2px);
+            }
+            50% {
+              transform: translateY(2px);
+            }
+          }
+        `,children:[e.jsx(o,{as:"h3",size:"lg",width:"100%",textAlign:"center",marginBottom:"1rem",children:r("quizCompletedMessage")}),e.jsxs(t,{flexDirection:"row-reverse",children:[e.jsx(t,{justifyContent:"center",alignItems:"center",w:"100%",height:"120px",backgroundColor:"transparent",marginTop:"20",children:e.jsxs(t,{flexDirection:"column",style:p,children:[e.jsx(o,{as:"h4",fontSize:"4xl",textAlign:"center",fontFamily:'"Honk", system-ui',p:0,children:r("rapidQuizMasteryScore")}),e.jsx(t,{w:"100%",children:e.jsxs(t,{w:"100%",justifyContent:"center",flexDirection:"column",fontSize:"3vw",margin:"max(1rem, 3vw)",border:"0.35rem solid",paddingX:"2vw",paddingTop:"1vw",borderRadius:"1rem",style:{borderImage:"conic-gradient(from var(--angle), var(--c2), var(--c1) 0.1turn, var(--c1) 0.15turn, var(--c2) 0.25turn) 30"},animation:"borderRotate var(--d) linear infinite forwards",children:[s?e.jsx(o,{children:r("calculating")}):e.jsx(o,{children:n}),e.jsx(i,{fontSize:"1rem",color:"yellow",backgroundColor:"rgba(255,255,255,0.1)",textShadow:"1px 1px 2px rgba(0, 0, 0, 0.4)",padding:"2px",marginTop:"auto",marginBottom:"0.5rem",children:n!==0?d&&m?`1.75x ${r("boostedText")}`:`1.5x ${r("boostedText")}`:`"Don't give up! Keep going!"`})]})})]})}),e.jsx(t,{justifyContent:"center",alignItems:"center",width:"120px",height:"120px",borderRadius:"50%",backgroundColor:"transparent",children:e.jsx(t,{style:c,_before:{content:'""',position:"absolute",left:"50%",bottom:"-100px",transform:"translateX(-50%)",width:"10px",height:"100px",background:"linear-gradient(#00d0ff,transparent)"},_after:{content:'""',position:"absolute",left:"50%",bottom:"-100px",transform:"translateX(-50%)",width:"10px",height:"100px",background:"linear-gradient(#00d0ff,transparent)",filter:"blur(20px)"},children:e.jsx(h,{src:b,h:"50px",w:"35px",background:"none"})})})]}),n===0?e.jsx(i,{w:"75%",textAlign:"left",color:"#FFFFFF",p:0,m:0,fontWeight:"bold",fontStyle:"italic",fontSize:"1rem",borderLeft:"5px solid #CCCCCC",paddingLeft:"10px",marginTop:"4rem",children:r("noWorryMessage")}):e.jsx(i,{w:"75%",textAlign:"left",color:"#FFFFFF",p:0,m:0,fontWeight:"bold",fontStyle:"italic",fontSize:"1rem",borderLeft:"5px solid #CCCCCC",paddingLeft:"10px",marginTop:"4rem",children:r("congratulationMessage")}),e.jsxs(t,{mt:4,children:[e.jsx(f,{}),e.jsx(g,{colorScheme:"blue",onClick:l,children:r("viewReport")})]})]})})};export{Y as default};
