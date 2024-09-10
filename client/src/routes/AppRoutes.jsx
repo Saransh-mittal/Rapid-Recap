@@ -3,6 +3,7 @@ import { Route, Routes, Navigate } from 'react-router-dom'
 import Loading from '../components/miscellaneous/Loading'
 import AdminRoute from './AdminRoute'
 
+const Tournament = lazy(() => import('../screens/Tournament'))
 const Home = lazy(() => import('../screens/Home'))
 const Article = lazy(() => import('../screens/Article'))
 const Profile = lazy(() => import('../screens/Profile'))
@@ -32,6 +33,7 @@ const AppRoutes = ({ isToken }) => (
       <Route path="/profile" element={<Profile />} />
       <Route path="/contact" element={<ContactLayout />} />
       <Route path="/leaderboard" element={<LeaderBoard />} />
+      <Route path="/tournament" element={<Tournament />} />
       <Route
         path="/dashboard"
         element={
