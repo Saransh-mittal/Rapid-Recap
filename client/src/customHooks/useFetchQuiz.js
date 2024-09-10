@@ -8,15 +8,15 @@ const useFetchQuiz = (articleId, language, onClose) => {
   const [load, setLoad] = useState(true)
   const [quizId, setQuizId] = useState(null)
   const toast = useToast()
-  console.log(language)
+
   useEffect(() => {
     const fetchQuiz = async () => {
       setLoad(true)
       try {
         const response =
-          language === 'english'
-            ? await axios.put(`/api/articles/genQuiz/${articleId}`)
-            : await axios.put(`/api/articles/genHindiQuiz/${articleId}`)
+          language === 'hi'
+            ? await axios.put(`/api/articles/genHindiQuiz/${articleId}`)
+            : await axios.put(`/api/articles/genQuiz/${articleId}`)
         if (response.data.expired) {
           throw new Error('Quiz is already expired.')
         }

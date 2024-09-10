@@ -1,6 +1,6 @@
 import { Flex } from '@chakra-ui/react'
 import React from 'react'
-import Bubbles from '../../miscellaneous/bubbles'
+import Bubbles from '../miscellaneous/bubbles'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 

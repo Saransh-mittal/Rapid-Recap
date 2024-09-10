@@ -14,10 +14,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 
-// Lazy load components and screens
-const NotificationSubscription = React.lazy(() =>
-  import('./components/profileComponents/NotificationSubscription.jsx'),
-)
 const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
 const Footer = React.lazy(() => import('./components/Header-Footer/Footer.jsx'))
 const FixedBackground = React.lazy(() =>
@@ -38,7 +34,7 @@ const NoteMessageQueue = React.lazy(() =>
 const XPLevelModal = React.lazy(() =>
   import('./components/Header-Footer/navbarComponents/XPLevelModal.jsx'),
 )
-
+const Quiz = React.lazy(() => import('./screens/Quiz.jsx'))
 import {
   addNoteMessage,
   fetchUnreadNoteMessages,
@@ -65,9 +61,10 @@ const App = () => {
   const { isRegisterOpen, isSigninOpen, showXpLevelModal } = useSelector(
     state => state.app,
   )
+  const { isOpen } = useSelector(state => state.quiz)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
-  const { t: GuestLogintranslation } = useTranslation('GuestLogin')
+
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
 
   const handleClose = useCallback(() => {
@@ -305,7 +302,7 @@ const App = () => {
           t={GuestLoginModaltranslation}
         />
       </Suspense>
-
+      <Suspense fallback={null}>{isOpen && <Quiz />}</Suspense>
       <Suspense fallback={null}>
         <Signin
           isOpen={isSigninOpen}

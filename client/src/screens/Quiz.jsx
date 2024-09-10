@@ -1,80 +1,85 @@
-import React, {
-  useState,
-  useCallback,
-  useEffect,
-  lazy,
-  Suspense,
-  useMemo,
-} from 'react'
-import { Flex, useToast, Box, Spinner } from '@chakra-ui/react'
+import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react'
+import { Flex, useToast, Box } from '@chakra-ui/react'
 import './Quiz.css'
 import ReactGA from 'react-ga4'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
-import useFetchQuiz from '../../customHooks/useFetchQuiz'
-import useTimer from '../../customHooks/useTimer'
-import useSubmitQuiz from '../../customHooks/useSubmitQuiz'
-import useSound from '../../customHooks/useSound'
+import useFetchQuiz from '../customHooks/useFetchQuiz'
+import useTimer from '../customHooks/useTimer'
+import useSubmitQuiz from '../customHooks/useSubmitQuiz'
+import useSound from '../customHooks/useSound'
 import {
   dailyStreakCheckerAndUpdater,
   quinBoostChecker,
-} from '../../utils/quiz.utils'
+} from '../utils/quiz.utils'
 import { useTranslation } from 'react-i18next'
-import { addNoteMessage } from '../../redux/appSlice'
-import { setUser } from '../../redux/authSlice'
+import { addNoteMessage } from '../redux/appSlice'
+import { setUser } from '../redux/authSlice'
+import {
+  setIsQuinBoostAvailable,
+  setQuizLeftToGetQuizBoost,
+  setIsOpen,
+} from '../redux/quizSlice'
+import { setTotalUsersGivenQuiz } from '../redux/articleSlice'
 
 // Lazy load components
 const ConfirmationModal = lazy(() =>
-  import('./customQuizModal/ConfirmationModal'),
+  import('../components/quizComponents/customQuizModal/ConfirmationModal'),
 )
 const InstructionModal = lazy(() =>
-  import('./customQuizModal/InstructionModal'),
+  import('../components/quizComponents/customQuizModal/InstructionModal'),
 )
-const QuizInterface = lazy(() => import('./quizComponents/quizInterface'))
+const QuizInterface = lazy(() =>
+  import('../components/quizComponents/QuizInterface'),
+)
 const SubmittedQuizInterface = lazy(() =>
-  import('./quizComponents/SubmittedQuizInterface'),
+  import('../components/quizComponents/SubmittedQuizInterface'),
 )
 const BoostedSubmittedQuizInterface = lazy(() =>
-  import('./quizComponents/BoostedSubmittedQuizInterface'),
+  import('../components/quizComponents/BoostedSubmittedQuizInterface'),
 )
-const QuizGivenSummary = lazy(() => import('./quizComponents/QuizGivenSummary'))
-const ModalComponent = lazy(() => import('./ModalComponent'))
+const QuizGivenSummary = lazy(() =>
+  import('../components/quizComponents/QuizGivenSummary'),
+)
+const ModalComponent = lazy(() =>
+  import('../components/quizComponents/ModalComponent'),
+)
 const GetSetGoAnimation = lazy(() =>
-  import('./quizComponents/GetSetGoAnimation'),
+  import('../components/quizComponents/GetSetGoAnimation'),
 )
 
-const Quiz = ({
-  article,
-  isOpen,
-  onClose,
-  ofShowQuiz,
-  language,
-  isQuinBoostAvailable,
-  setIsQuinBoostAvailable,
-  setQuizLeftToGetQuizBoost,
-  setTotalUsersGivenQuiz,
-}) => {
+const Quiz = () => {
   const { t } = useTranslation('Quiz')
+
+  const dispatchRedux = useDispatch()
+  const onClose = useCallback(
+    () => dispatchRedux(setIsOpen(false)),
+    [dispatchRedux],
+  )
+  const { totalUsersGivenQuiz, articleData: article } = useSelector(
+    state => state.articles,
+  )
+  const { isOpen, language, isQuinBoostAvailable } = useSelector(
+    state => state.quiz,
+  )
   const articleId = article._id
   const { quizData, load, quizId, setLoad } = useFetchQuiz(
     articleId,
     language,
     onClose,
   )
+
   const totalQuestions = quizData ? quizData.questions.length : 0
   const toast = useToast()
   const { isBoosted } = useSelector(state => state.app)
   const { user } = useSelector(state => state.auth)
-  const dispatchRedux = useDispatch()
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [submitted, setSubmitted] = useState(false)
   const [userAnswers, setUserAnswers] = useState([])
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
   const [showInstruction, setShowInstruction] = useState(true)
-  const [isCloseButtonHovered, setIsCloseButtonHovered] = useState(false)
-  const [isStartQuizButtonHovered, setIsStartQuizButtonHovered] =
-    useState(false)
+
   const [showSubmittedInterface, setShowSubmittedInterface] = useState(false)
   const [showQuizSummary, setShowQuizSummary] = useState(false)
   const [result, setResult] = useState({})
@@ -162,7 +167,7 @@ const Quiz = ({
 
   const handleClose = async () => {
     try {
-      setTotalUsersGivenQuiz(prev => prev + 1)
+      dispatchRedux(setTotalUsersGivenQuiz(totalUsersGivenQuiz + 1))
       quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
@@ -178,7 +183,6 @@ const Quiz = ({
         setShowInstruction(false)
         onClose()
       } else {
-        ofShowQuiz()
         onClose()
         dispatchRedux(
           setUser({
@@ -520,7 +524,6 @@ const Quiz = ({
           timer={timer}
           isOpen={isOpen}
           onClose={handleClose}
-          setIsCloseButtonHovered={setIsCloseButtonHovered}
           renderModalBody={renderModalBody}
           load={load}
           showInstruction={showInstruction}

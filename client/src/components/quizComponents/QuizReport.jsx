@@ -5,7 +5,7 @@ import React, {
   useCallback,
   Suspense,
 } from 'react'
-import ModalComponent from '../ModalComponent'
+import ModalComponent from './ModalComponent'
 import { Flex, useToast, Spinner } from '@chakra-ui/react'
 import axios from 'axios'
 

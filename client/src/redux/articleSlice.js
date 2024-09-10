@@ -25,6 +25,7 @@ const articleSlice = createSlice({
     hasMore: true,
     searchLoading: false,
     searchTerm: '',
+    totalUsersGivenQuiz: 0,
   },
   reducers: {
     setSearchTerm: (state, action) => {
@@ -32,11 +33,15 @@ const articleSlice = createSlice({
     },
     setArticleData: (state, action) => {
       state.articleData = action.payload
+      state.totalUsersGivenQuiz = action.payload?.quizAttemptCnt || 0
     },
     clearSearch: state => {
       state.searchResults = []
       state.isSearching = false
       state.hasMore = true
+    },
+    setTotalUsersGivenQuiz: (state, action) => {
+      state.totalUsersGivenQuiz = action.payload
     },
   },
   extraReducers: builder => {
@@ -68,7 +73,11 @@ const articleSlice = createSlice({
   },
 })
 
-export const { clearSearch, setSearchTerm, setArticleData } =
-  articleSlice.actions
+export const {
+  clearSearch,
+  setSearchTerm,
+  setArticleData,
+  setTotalUsersGivenQuiz,
+} = articleSlice.actions
 
 export default articleSlice.reducer

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Text } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import useSound from '../../../customHooks/useSound'
+import useSound from '../../customHooks/useSound'
 
 const MotionBox = motion(Box)
 

@@ -20,9 +20,6 @@ const InstructionModalBody = ({ isQuinBoostAvailable, isBoosted }) => {
 
   const instructions = t('instructions', { returnObjects: true })
 
-  // Debugging: Ensure instructions is an array
-  console.log('Instructions:', instructions)
-
   return (
     <Box
       color={textColor}

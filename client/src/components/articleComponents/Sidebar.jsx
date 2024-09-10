@@ -16,7 +16,6 @@ import {
   Skeleton,
   useToast,
   Spinner,
-  ButtonGroup,
   Button,
 } from '@chakra-ui/react'
 import { LockIcon } from '@chakra-ui/icons'
@@ -29,7 +28,9 @@ import { formatDate } from '../../utils/helper.utils'
 import slugify from 'slugify'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
-import i18n from 'i18next'
+import { setIsOpen } from '../../redux/quizSlice'
+import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
+import rrImage from '/images/rrlogo_HD.webp'
 
 const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
 const QuizExpired = React.lazy(() => import('./QuizExpired'))
@@ -46,7 +47,6 @@ const Sidebar = ({
   trackGenerateQuizClick,
   setShowQuiz,
   showQuiz,
-  onOpen,
   totalUsersGivenQuiz,
   articleHeight,
   article,
@@ -89,8 +89,7 @@ const Sidebar = ({
       return
     }
     trackGenerateQuizClick()
-    setShowQuiz(!showQuiz)
-    onOpen()
+    dispatchRedux(setIsOpen(true))
   }, [
     notLoggedIn,
     playClick,
@@ -98,7 +97,7 @@ const Sidebar = ({
     trackGenerateQuizClick,
     setShowQuiz,
     showQuiz,
-    onOpen,
+    dispatchRedux,
   ])
 
   const handleRelatedArticleClick = useCallback(
@@ -219,10 +218,15 @@ const Sidebar = ({
           <Image
             w={{ base: '130px', md: '160px' }}
             h="auto"
+            maxHeight={{ base: '100px', md: '120px' }}
             mr={3}
             mt={2}
             float="left"
-            src={item.imgURL || Alt_img}
+            src={
+              (!blackListedImgUrls.find(url => url === item?.imgURL?.[0]) &&
+                item?.imgURL?.[0]) ||
+              rrImage
+            }
             alt={t('articleImageAlt')}
             onError={e => {
               e.target.onerror = null

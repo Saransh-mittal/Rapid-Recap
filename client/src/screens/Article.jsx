@@ -9,29 +9,21 @@ import React, {
   useCallback,
 } from 'react'
 import axios from 'axios'
-import {
-  Flex,
-  useToast,
-  useDisclosure,
-  Grid,
-  useMediaQuery,
-} from '@chakra-ui/react'
+import { Flex, useToast, Grid, useMediaQuery } from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import imageData from '../assets/AltNewsImage'
 import { quinBoostChecker } from '../utils/quiz.utils'
 import slugify from 'slugify'
 import i18n from 'i18next'
 import { blackListedImgUrls } from '../assets/blackListedImgUrls'
 import rrImage from '/images/rrlogo_HD.webp'
+import { setArticleData, setTotalUsersGivenQuiz } from '../redux/articleSlice'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
-const Quiz = lazy(() => import('../components/articleComponents/Quiz'))
-const ExpectedIQModal = lazy(() =>
-  import('../components/articleComponents/ExpectedIQModal'),
-)
+
 const QuinBoostModal = lazy(() =>
   import('../components/articleComponents/QuinBoostModal'),
 )
@@ -49,9 +41,10 @@ const Article = () => {
   const toast = useToast()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { isBoosted } = useSelector(state => state.app)
-  const { articleData } = useSelector(state => state.articles)
-
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { articleData, totalUsersGivenQuiz } = useSelector(
+    state => state.articles,
+  )
+  const dispatch = useDispatch()
   const { id } = useParams()
 
   const [alt_image, setAlt_image] = useState(null)
@@ -62,7 +55,6 @@ const Article = () => {
       : articleData?.imgURL,
   )
 
-  const [load, setLoad] = useState(true)
   const [articleLoading, setArticleLoading] = useState(
     articleData ? false : true,
   )
@@ -76,11 +68,7 @@ const Article = () => {
   const [RQM_score, setRQM_score] = useState(null)
   const [onGoingQuiz, setOnGoingQuiz] = useState(null)
   const [quizExpired, setQuizExpired] = useState(null)
-  const [showExpectedIQ, setShowExpectedIQ] = useState(false)
-  const [expectedIQ, setExpectedIQ] = useState(null)
-  const [totalUsersGivenQuiz, setTotalUsersGivenQuiz] = useState(
-    articleData?.quizAttemptCnt,
-  )
+
   const [title, setTitle] = useState({
     english: articleData?.title || '',
     hindi: articleData?.hindiTitle || '',
@@ -154,8 +142,9 @@ const Article = () => {
         `/api/articles/article/${id}?lang=${i18n.language}`,
       )
       const articleData = response.data.newArticle
+      dispatch(setArticleData(articleData))
       setArticle(articleData)
-      setTotalUsersGivenQuiz(articleData.quizAttemptCnt)
+      dispatch(setTotalUsersGivenQuiz(articleData.quizAttemptCnt))
 
       const image = Array.isArray(articleData.imgURL)
         ? articleData.imgURL[0]
@@ -216,62 +205,13 @@ const Article = () => {
       setOnGoingQuiz(false)
     } finally {
       localStorage.setItem('isQuizGivenCalled', true)
-      setLoad(false)
     }
   }, [id])
-
-  const getExpectedIQ = useCallback(async () => {
-    try {
-      const articlePage = document.querySelector('.article-page')
-      document.querySelector('body').style.overflow = 'hidden'
-      const overlay = document.createElement('div')
-      overlay.classList.add('custom-overlay')
-      const overlayNav = document.createElement('div')
-      overlayNav.classList.add('custom-overlay-nav')
-      articlePage.appendChild(overlay)
-      document.querySelector('.navbar').appendChild(overlayNav)
-      articlePage.classList.add('shepherd-active')
-      const loadingOverlay = document.createElement('div')
-      loadingOverlay.classList.add('loading-overlay')
-      const spinnerContainer = document.createElement('div')
-      spinnerContainer.classList.add('spinner-container')
-      const loadingSpinner = document.createElement('div')
-      loadingSpinner.classList.add('loading-spinner')
-      spinnerContainer.appendChild(loadingSpinner)
-      loadingOverlay.appendChild(spinnerContainer)
-      articlePage.appendChild(loadingOverlay)
-
-      const response = await axios.get(`/api/user/expectedIQScore`)
-      setShowExpectedIQ(true)
-      setExpectedIQ(response.data.ExpectedIQScore)
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description:
-          error.response.data.error || 'Error checking for expected IQ',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
-    } finally {
-      const loadingOverlay = document.querySelector('.loading-overlay')
-      if (loadingOverlay) loadingOverlay.remove()
-      document.querySelector('body').style.overflow = 'auto'
-      const overlay = document.querySelector('.custom-overlay')
-      if (overlay) overlay.remove()
-      const overlayNav = document.querySelector('.custom-overlay-nav')
-      if (overlayNav) overlayNav.remove()
-      const articlePage = document.querySelector('.article-page')
-      articlePage.classList.remove('shepherd-active')
-    }
-  }, [toast])
 
   const handleLanguageChange = useCallback(
     async event => {
       setTranslateLoading(true)
       try {
-        // if (event.target.value === 'hindi') {
         if (i18n.language === 'hi') {
           if (article.hindiTitle) {
             setTitle(prevTitle => ({ ...prevTitle, hindi: article.hindiTitle }))
@@ -392,39 +332,6 @@ const Article = () => {
   return (
     <Suspense fallback={<Loading />}>
       <Flex w={'100vw'}>
-        {/* {showQuizLangModal && (
-          <SelectQuizLangModal
-            setSelectLanForQuiz={setSelectLanForQuiz}
-            setShowQuizLangModal={setShowQuizLangModal}
-          />
-        )} */}
-        {showExpectedIQ && expectedIQ && (
-          <ExpectedIQModal
-            expectedIQ={expectedIQ}
-            setShowExpectedIQ={setShowExpectedIQ}
-          />
-        )}
-        {showQuiz && !givenQuiz && (
-          // && !showQuizLangModal
-          <Quiz
-            setTotalUsersGivenQuiz={setTotalUsersGivenQuiz}
-            setIsQuinBoostAvailable={setIsQuinBoostAvailable}
-            setQuizLeftToGetQuizBoost={setQuizLeftToGetQuizBoost}
-            isQuinBoostAvailable={isQuinBoostAvailable}
-            article={article}
-            isOpen={isOpen || true}
-            onClose={() => {
-              onClose()
-              setShowQuiz(false)
-            }}
-            ofShowQuiz={() => {
-              setShowQuiz(false)
-              setGivenQuiz(true)
-              user.IQ_score === 0 && getExpectedIQ()
-            }}
-            language={i18n.language === 'en' ? 'english' : 'hindi'}
-          />
-        )}
         <Flex
           className="article-page"
           marginTop={'4.5rem'}
@@ -580,7 +487,7 @@ const Article = () => {
                 trackGenerateQuizClick={trackGenerateQuizClick}
                 setShowQuiz={setShowQuiz}
                 showQuiz={showQuiz}
-                onOpen={onOpen}
+                // onOpen={onOpen}
                 totalUsersGivenQuiz={totalUsersGivenQuiz}
                 articleHeight={articleHeight}
                 article={article}

@@ -8,7 +8,7 @@ import {
   Tooltip,
   useDisclosure,
 } from '@chakra-ui/react'
-import QuizReport from './quizComponents/QuizReport'
+import QuizReport from '../quizComponents/QuizReport'
 import medalIcon from '../../assets/medal.webp'
 import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'

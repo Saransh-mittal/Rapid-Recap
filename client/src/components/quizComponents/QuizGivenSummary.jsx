@@ -20,16 +20,16 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import axios from 'axios'
-import Loading from '../../miscellaneous/Loading'
+import Loading from '../miscellaneous/Loading'
 import { motion } from 'framer-motion'
-import useSound from '../../../customHooks/useSound'
+import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
 
 // Lazy load components and assets
 const GivenQuizInterface = lazy(() => import('./GivenQuizInterface'))
-const Heading = lazy(() => import('../../miscellaneous/HeadingComponent'))
-const ArrowLeftSVG = lazy(() => import('../../../assets/svg/ArrowLeftSVG'))
-const ArrowRightSVG = lazy(() => import('../../../assets/svg/ArrowRightSVG'))
+const Heading = lazy(() => import('../miscellaneous/HeadingComponent'))
+const ArrowLeftSVG = lazy(() => import('../../assets/svg/ArrowLeftSVG'))
+const ArrowRightSVG = lazy(() => import('../../assets/svg/ArrowRightSVG'))
 
 const QuizGivenSummary = ({
   isOpen,

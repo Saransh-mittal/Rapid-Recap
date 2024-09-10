@@ -1,6 +1,6 @@
 import React from 'react'
 import { Flex, Text, Image, Badge, Box } from '@chakra-ui/react'
-import QuinBoost from '../quizComponents/QuinBoost'
+import QuinBoost from '../../quizComponents/QuinBoost'
 import Button from '../../miscellaneous/ButtonComponent'
 import starBoost from '/GIFs/starBoost.gif'
 import { useTranslation } from 'react-i18next'

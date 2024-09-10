@@ -36,14 +36,14 @@ import {
 import {
   DIFF_COLOR,
   ICONS_ARTICLE_DIFFICULTY,
-} from '../../../models/articleDifficulty'
+} from '../../models/articleDifficulty'
 import { useTranslation } from 'react-i18next'
 
 // Lazy load components and assets
 const Line = lazy(() =>
   import('react-chartjs-2').then(module => ({ default: module.Line })),
 )
-const ArrowRightSVG = lazy(() => import('../../../assets/svg/ArrowRightSVG'))
+const ArrowRightSVG = lazy(() => import('../../assets/svg/ArrowRightSVG'))
 
 ChartJS.register(
   CategoryScale,
