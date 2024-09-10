@@ -35,8 +35,6 @@ const LeaderBoardTable = forwardRef(
       navigate,
       isLoading,
       PAGE_LIMIT,
-      hasMore,
-      onLoadMore,
     },
     ref,
   ) => {
@@ -46,19 +44,6 @@ const LeaderBoardTable = forwardRef(
       [searchResults, leaders],
     )
     const scrollRef = useRef(null)
-
-    const handleScroll = useCallback(() => {
-      if (scrollRef.current) {
-        const { scrollTop, scrollHeight, clientHeight } = scrollRef.current
-        if (
-          scrollHeight - scrollTop <= clientHeight * 1.5 &&
-          hasMore &&
-          !isLoading
-        ) {
-          onLoadMore()
-        }
-      }
-    }, [hasMore, isLoading, onLoadMore])
 
     const uniqueData = useMemo(() => {
       const seenUserIds = new Set()
@@ -151,7 +136,6 @@ const LeaderBoardTable = forwardRef(
           maxHeight="calc(100vh - 200px)"
           width="100%"
           ref={scrollRef}
-          onScroll={handleScroll}
           css={{ '&::-webkit-scrollbar': { display: 'none' } }}
         >
           <Table variant="unstyled" layout="fixed" width="100%">

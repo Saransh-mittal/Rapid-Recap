@@ -92,15 +92,10 @@ const LeaderBoard = () => {
   }, [])
   useEffect(() => {
     if (inView && !isLoading && hasMore) {
+      setIsLoading(true)
       fetchLeaderBoard()
     }
   }, [inView, isLoading, hasMore])
-
-  const handleLoadMore = useCallback(() => {
-    // if (hasMore) {
-    //   setPage(prevPage => prevPage + 1)
-    // }
-  }, [hasMore])
 
   return (
     <>
@@ -197,8 +192,6 @@ const LeaderBoard = () => {
                   searchLoad={searchLoad}
                   currUserChar={user}
                   navigate={navigate}
-                  hasMore={hasMore}
-                  onLoadMore={handleLoadMore}
                   isLoading={isLoading}
                   PAGE_LIMIT={PAGE_LIMIT}
                 />
