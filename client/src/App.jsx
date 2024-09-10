@@ -13,11 +13,6 @@ import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
-
-// Lazy load components and screens
-const NotificationSubscription = React.lazy(() =>
-  import('./components/profileComponents/NotificationSubscription.jsx'),
-)
 const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
 const Footer = React.lazy(() => import('./components/Header-Footer/Footer.jsx'))
 const FixedBackground = React.lazy(() =>
@@ -67,7 +62,6 @@ const App = () => {
   )
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
-  const { t: GuestLogintranslation } = useTranslation('GuestLogin')
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
 
   const handleClose = useCallback(() => {
