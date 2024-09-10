@@ -15,26 +15,16 @@ import {
   Tooltip,
   UnorderedList,
   useDisclosure,
+  VStack,
 } from '@chakra-ui/react'
 import { LockIcon, SearchIcon } from '@chakra-ui/icons'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import { ChatState } from '../../../contextAPI/ChatProvider'
-import heroBG from '../../../assets/hero/hero-bg.webp'
 import FixedBackground from '../../miscellaneous/FixedBackground'
+import Footer from '../Footer'
 
-const BackgroundCircles = lazy(() =>
-  import('../design/Header').then(module => ({
-    default: module.BackgroundCircles,
-  })),
-)
-const Rings = lazy(() =>
-  import('../design/Header').then(module => ({ default: module.Rings })),
-)
-const SideLines = lazy(() =>
-  import('../design/Header').then(module => ({ default: module.SideLines })),
-)
 const LogoutButton = lazy(() => import('./LogoutButton'))
 const GetStarted = lazy(() => import('./GetStarted'))
 const NavBrand = lazy(() => import('./NavBrand'))
@@ -120,7 +110,7 @@ const HamburgerModal = ({
               }
               ref={ref => (navLinkRefs.current[index] = ref)}
             >
-              {t(item.label.toLowerCase())}
+              {item.label}
             </NavLink>
           </Tooltip>
           {notLogined && item.label === 'Leaderboard' && <LockIcon />}
@@ -148,13 +138,13 @@ const HamburgerModal = ({
           alignItems={'center'}
           p={'20px'}
           display={'flex'}
+          justifyContent={'space-between'}
         >
           <Suspense fallback={<div>Loading...</div>}>
             <NavBrand isHamburgerOpen={true} />
           </Suspense>
           <ModalCloseButton
-            marginTop={'15px'}
-            marginRight={'10px'}
+            position="static"
             bg={'white'}
             color={'black'}
             height={'35px'}
@@ -162,181 +152,136 @@ const HamburgerModal = ({
           />
         </ModalHeader>
         <ModalBody p={0} w={'100%'}>
-          <Flex
-            height={'100vh'}
-            width={'100%'}
-            position={'relative'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            flexDirection={'column'}
-            className="hamburger-menu"
-            overflow={'hidden'}
+          <VStack
+            spacing={4}
+            align="stretch"
+            height={'calc(100vh - 80px)'}
+            justifyContent={'space-between'}
+            px={4}
           >
-            {!notLogined && (
-              <Flex
-                position={'absolute'}
-                top={'3rem'}
-                zIndex={1}
-                flexDirection={'column'}
-                gap={4}
-                justifyContent={'center'}
-                alignItems={'center'}
-                onClick={handleProfileClick}
-                cursor={'pointer'}
-              >
-                <Flex w={'100%'} h={'100%'} position={'relative'}></Flex>
-                <Avatar src={user?.pic} h={'6rem'} w={'6rem'} rounded={'50%'} />
-                <Text letterSpacing={'2px'} fontWeight={'bold'}>
-                  <span
-                    style={{
-                      background: '#5ac8fa',
-                      color: '#0f0d15',
-                      borderRadius: '10px',
-                      padding: '5px',
-                    }}
-                  >
-                    {user?.name}
-                  </span>
-                </Text>
-              </Flex>
-            )}
+            <VStack spacing={6} align="center" mt={8}>
+              {!notLogined && (
+                <Flex
+                  flexDirection={'column'}
+                  gap={4}
+                  justifyContent={'center'}
+                  alignItems={'center'}
+                  onClick={handleProfileClick}
+                  cursor={'pointer'}
+                >
+                  <Avatar
+                    src={user?.pic}
+                    h={'6rem'}
+                    w={'6rem'}
+                    rounded={'50%'}
+                  />
+                  <Text letterSpacing={'2px'} fontWeight={'bold'}>
+                    <span
+                      style={{
+                        background: '#5ac8fa',
+                        color: '#0f0d15',
+                        borderRadius: '10px',
+                        padding: '5px',
+                      }}
+                    >
+                      {user?.name}
+                    </span>
+                  </Text>
+                </Flex>
+              )}
 
-            <UnorderedList
-              display={'flex'}
-              p={0}
-              m={0}
-              w={'100%'}
-              justifyContent={'center'}
-              alignItems={'center'}
-              listStyleType={'none'}
-              gap={'2rem'}
-              letterSpacing={'2px'}
-              flexDirection="column"
-              zIndex={1}
-              position={'absolute'}
-              top={notLogined ? '30%' : '32%'}
-            >
-              <Flex gap={4}>
-                <ListItem
-                  className="nav-item"
-                  display={'flex'}
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  gap={'0.25rem'}
-                >
-                  <Box
-                    _hover={{ cursor: 'pointer' }}
-                    onClick={handleChatClick}
-                    display={notLogined ? 'none' : 'block'}
-                    color={'white'}
-                    position={'relative'}
-                  >
-                    {Array.isArray(notification) && notification.length > 0 && (
-                      <Badge
-                        bg={'red'}
-                        position={'absolute'}
-                        color={'white'}
-                        borderRadius={'50%'}
-                        h={'18px'}
-                        w={'18px'}
-                        textAlign={'center'}
-                        right={'-0.5rem'}
-                        top={'-0.65rem'}
-                      >
-                        {notification.length}
-                      </Badge>
-                    )}
+              <Flex gap={4} justifyContent="center" flexWrap="wrap">
+                {!notLogined && (
+                  <>
+                    <Box onClick={handleChatClick} position="relative">
+                      {Array.isArray(notification) &&
+                        notification.length > 0 && (
+                          <Badge
+                            bg={'red'}
+                            position={'absolute'}
+                            color={'white'}
+                            borderRadius={'50%'}
+                            h={'18px'}
+                            w={'18px'}
+                            textAlign={'center'}
+                            right={'-0.5rem'}
+                            top={'-0.65rem'}
+                          >
+                            {notification.length}
+                          </Badge>
+                        )}
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <FaMessenger
+                          width={'25px'}
+                          height={'25px'}
+                          fill={'#fff'}
+                        />
+                      </Suspense>
+                    </Box>
                     <Suspense fallback={<div>Loading...</div>}>
-                      <FaMessenger
-                        width={'25px'}
-                        height={'25px'}
-                        fill={'#fff'}
+                      <Inbox
+                        className={'inbox-button-lg'}
+                        onClick={handleInboxClick}
+                        notifyCont={notifyCont}
+                        h="25px"
+                        w="25px"
                       />
                     </Suspense>
-                  </Box>
-                </ListItem>
-                <ListItem
-                  className="nav-item"
-                  display={'flex'}
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  gap={'0.25rem'}
-                >
-                  <Suspense fallback={<div>Loading...</div>}>
-                    <Inbox
-                      className={'inbox-button-lg'}
-                      onClick={handleInboxClick}
-                      notifyCont={notifyCont}
-                      display={notLogined ? 'none' : 'flex'}
-                      h="25px"
-                      w="25px"
-                    />
-                  </Suspense>
-                </ListItem>
-                <ListItem
-                  className="nav-item"
-                  display={'flex'}
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  gap={'0.25rem'}
-                >
-                  <Flex
-                    onClick={() => {
-                      onClose()
-                      onOpenWiseWeb()
-                    }}
-                    width={'100%'}
-                    justifyContent={'center'}
-                    display={notLogined ? 'none' : 'block'}
-                  >
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <UserFriendsSVG
-                        width={'25px'}
-                        height={'25px'}
-                        fill={'#fff'}
-                      />
-                    </Suspense>
-                    {unreadFriendRequests !== 0 && (
-                      <Box
-                        h="8px"
-                        w="8px"
-                        bg={'red'}
-                        borderRadius={'50%'}
-                        position={'absolute'}
-                        right={'39%'}
-                        top={'0'}
-                        zIndex={2}
-                      />
-                    )}
-                  </Flex>
-                </ListItem>
-                <ListItem>
-                  <Box
-                    _hover={{ cursor: 'pointer' }}
-                    display={notLogined ? 'none' : 'flex'}
-                    onClick={handleUserSearchClick}
-                    position={'relative'}
-                    mx={1}
-                  >
-                    <SearchIcon boxSize={6} color={'white'} />
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <UserSearchDrawer
-                        isOpen={isOpenUserSearch}
-                        onClose={onCloseUserSearch}
-                        onSearchClick={onClose}
-                      />
-                    </Suspense>
-                  </Box>
-                </ListItem>
+                    <Flex
+                      onClick={() => {
+                        onClose()
+                        onOpenWiseWeb()
+                      }}
+                      position="relative"
+                    >
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <UserFriendsSVG
+                          width={'25px'}
+                          height={'25px'}
+                          fill={'#fff'}
+                        />
+                      </Suspense>
+                      {unreadFriendRequests !== 0 && (
+                        <Box
+                          h="8px"
+                          w="8px"
+                          bg={'red'}
+                          borderRadius={'50%'}
+                          position={'absolute'}
+                          right={'-4px'}
+                          top={'-4px'}
+                        />
+                      )}
+                    </Flex>
+                    <Box onClick={handleUserSearchClick}>
+                      <SearchIcon boxSize={6} color={'white'} />
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <UserSearchDrawer
+                          isOpen={isOpenUserSearch}
+                          onClose={onCloseUserSearch}
+                          onSearchClick={onClose}
+                        />
+                      </Suspense>
+                    </Box>
+                  </>
+                )}
               </Flex>
-              {memoizedNavItems}
-            </UnorderedList>
-            <Suspense fallback={<div>Loading...</div>}>
-              <Rings />
-              <SideLines />
-              <BackgroundCircles />
-            </Suspense>
-            <Flex position={'absolute'} bottom={notLogined ? '30%' : '22%'}>
+
+              <UnorderedList
+                styleType="none"
+                spacing={4}
+                width="100%"
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                p={0}
+                m={0}
+              >
+                {memoizedNavItems}
+              </UnorderedList>
+            </VStack>
+
+            <VStack spacing={4} mb={8}>
               {notLogined ? (
                 <Suspense fallback={<div>Loading...</div>}>
                   <GetStarted
@@ -349,8 +294,9 @@ const HamburgerModal = ({
                   <LogoutButton handleLogout={handleLogout} />
                 </Suspense>
               )}
-            </Flex>
-          </Flex>
+              <Footer />
+            </VStack>
+          </VStack>
         </ModalBody>
       </ModalContent>
     </Modal>

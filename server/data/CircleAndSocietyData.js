@@ -5,7 +5,9 @@ async function getCircleAndSocietyData(user) {
   const localizedI18n = i18n.cloneInstance({ initImmediate: false })
 
   // Switch to user's language
-  await localizedI18n.changeLanguage(user.userLanguage)
+  await localizedI18n.changeLanguage(
+    user?.userLanguage ? user.userLanguage : 'en',
+  )
 
   // Translation function for specific namespace
 

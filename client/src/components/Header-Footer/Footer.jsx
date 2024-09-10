@@ -43,7 +43,7 @@ const Footer = React.memo(() => {
             </Suspense>
           </Link>
         </Box>
-        <Box>
+        <Box color={'#f9f9f9'}>
           <NavLink
             to="/contact"
             color="#f9f9f9"

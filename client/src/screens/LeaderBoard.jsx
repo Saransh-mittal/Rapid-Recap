@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Flex,
   Heading as ChakraHeading,
@@ -13,9 +13,9 @@ import {
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import debounce from 'lodash.debounce'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+import { useInView } from 'react-intersection-observer'
 
 // Dynamic imports for code splitting
 const SearchBar = React.lazy(() =>
@@ -23,9 +23,6 @@ const SearchBar = React.lazy(() =>
 )
 const LeaderBoardTable = React.lazy(() =>
   import('../components/leaderBoardComponents/LeaderBoardTable'),
-)
-const Heading = React.lazy(() =>
-  import('../components/miscellaneous/HeadingComponent'),
 )
 
 import medalIcon from '../assets/medal.webp'
@@ -37,6 +34,10 @@ const LeaderBoard = () => {
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const toast = useToast()
+  const { ref, inView } = useInView({
+    threshold: 0,
+    triggerOnce: false,
+  })
 
   // State hooks
   const [isLoading, setIsLoading] = useState(true)
@@ -50,7 +51,7 @@ const LeaderBoard = () => {
   const [hasMore, setHasMore] = useState(true)
 
   const fetchLeaderBoard = useCallback(
-    async (society = '', page = 1) => {
+    async (society = '') => {
       if (!hasMore) {
         setIsLoading(false)
         return
@@ -68,6 +69,7 @@ const LeaderBoard = () => {
           if (page === 1) return fetchedLeaders
           return [...prevLeaders, ...fetchedLeaders]
         })
+        setPage(prevPage => prevPage + 1)
       } catch (error) {
         toast({
           title: t('toastErrorTitle'),
@@ -81,19 +83,19 @@ const LeaderBoard = () => {
         setIsLoading(false)
       }
     },
-    [hasMore, PAGE_LIMIT, toast, t],
+    [hasMore, PAGE_LIMIT, toast, t, inView],
   )
 
   useEffect(() => {
     document.title = t('helmet.title')
     fetchLeaderBoard()
-  }, [fetchLeaderBoard])
-
-  const handleLoadMore = useCallback(() => {
-    if (hasMore) {
-      setPage(prevPage => prevPage + 1)
+  }, [])
+  useEffect(() => {
+    if (inView && !isLoading && hasMore) {
+      setIsLoading(true)
+      fetchLeaderBoard()
     }
-  }, [hasMore])
+  }, [inView, isLoading, hasMore])
 
   return (
     <>
@@ -185,12 +187,11 @@ const LeaderBoard = () => {
               >
                 <LeaderBoardTable
                   leaders={leaders}
+                  ref={ref}
                   searchResults={searchResults}
                   searchLoad={searchLoad}
                   currUserChar={user}
                   navigate={navigate}
-                  hasMore={hasMore}
-                  onLoadMore={handleLoadMore}
                   isLoading={isLoading}
                   PAGE_LIMIT={PAGE_LIMIT}
                 />
