@@ -33,6 +33,10 @@ const tournamentSchema = new mongoose.Schema({
     enum: ['upcoming', 'registration', 'ongoing', 'completed'],
     default: 'upcoming',
   },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const Tournament = mongoose.model('TOURNAMENT', tournamentSchema)

@@ -70,7 +70,7 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     registeredCount: await TournamentRegistration.countDocuments({
       tournament: tournament._id,
     }),
-    status: 'ongoing',
+    // status: 'ongoing',
     isRegistered: !!userRegistration,
     selectedCategories: userRegistration
       ? userRegistration.selectedCategories
@@ -300,6 +300,32 @@ const registerForTournament = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc   Get current affairs questions for the current tournament
+// @route  GET /api/tournament/questions/current-affairs/current
+// @access Private (Admin only)
+const getCurrentTournamentCurrentAffairsQuestions = asyncHandler(
+  async (req, res) => {
+    // Find the current active tournament
+    const currentTournament = await Tournament.findOne({ isActive: true })
+
+    if (!currentTournament) {
+      res.status(404)
+      throw new Error('No active tournament found')
+    }
+
+    // Get the start and end dates of the current tournament
+    const { registrationStartDate, registrationEndDate } = currentTournament
+
+    // Find current affairs questions created between the start and end dates of the tournament
+    const questions = await TournamentQuestion.find({
+      category: 'current affairs',
+      createdAt: { $gte: registrationStartDate, $lte: registrationEndDate },
+    })
+
+    res.json(questions)
+  },
+)
+
 // @desc   Add a new current affairs question
 // @route  POST /api/tournament/questions/current-affairs
 // @access Private (Admin only)
@@ -333,7 +359,7 @@ const addCurrentAffairsQuestion = asyncHandler(async (req, res) => {
     options,
     hindiOptions,
     correctAnswer,
-    category: 'Current Affairs',
+    category: 'current affairs',
     difficulty,
     isManuallyAdded: true,
   })
@@ -344,16 +370,6 @@ const addCurrentAffairsQuestion = asyncHandler(async (req, res) => {
     res.status(400)
     throw new Error('Invalid question data')
   }
-})
-
-// @desc   Get all current affairs questions
-// @route  GET /api/tournament/questions/current-affairs
-// @access Private (Admin only)
-const getCurrentAffairsQuestions = asyncHandler(async (req, res) => {
-  const questions = await TournamentQuestion.find({
-    category: 'Current Affairs',
-  })
-  res.json(questions)
 })
 
 // @desc   Update a current affairs question
@@ -367,9 +383,9 @@ const updateCurrentAffairsQuestion = asyncHandler(async (req, res) => {
     throw new Error('Question not found')
   }
 
-  if (question.category !== 'Current Affairs') {
+  if (question.category !== 'current affairs') {
     res.status(400)
-    throw new Error('This is not a Current Affairs question')
+    throw new Error('This is not a current affairs question')
   }
 
   const updatedQuestion = await TournamentQuestion.findByIdAndUpdate(
@@ -392,12 +408,12 @@ const deleteCurrentAffairsQuestion = asyncHandler(async (req, res) => {
     throw new Error('Question not found')
   }
 
-  if (question.category !== 'Current Affairs') {
+  if (question.category !== 'current affairs') {
     res.status(400)
-    throw new Error('This is not a Current Affairs question')
+    throw new Error('This is not a current affairs question')
   }
 
-  await question.remove()
+  await question.deleteOne()
 
   res.json({ message: 'Question removed' })
 })
@@ -561,7 +577,7 @@ const submitQuiz = asyncHandler(async (req, res) => {
 module.exports = {
   registerForTournament,
   addCurrentAffairsQuestion,
-  getCurrentAffairsQuestions,
+
   updateCurrentAffairsQuestion,
   deleteCurrentAffairsQuestion,
   startQuiz,
@@ -570,4 +586,5 @@ module.exports = {
   getPreviousTournament,
   getCurrentTournamentLeaderboard,
   searchTournamentLeaderboard,
+  getCurrentTournamentCurrentAffairsQuestions,
 }
