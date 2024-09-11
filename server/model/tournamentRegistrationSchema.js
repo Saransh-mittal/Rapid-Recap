@@ -101,6 +101,11 @@ const quizSessionSchema = new mongoose.Schema({
   },
 })
 
+// Add a unique compound index
+quizSessionSchema.index(
+  { user: 1, tournament: 1, category: 1 },
+  { unique: true },
+)
 const QuizSession = mongoose.model('QUIZ_SESSION', quizSessionSchema)
 
 module.exports = {

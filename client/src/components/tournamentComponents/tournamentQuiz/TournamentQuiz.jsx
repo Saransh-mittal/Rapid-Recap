@@ -11,6 +11,8 @@ import { addNoteMessage } from '../../../redux/appSlice'
 import useTimer from '../../../customHooks/useTimer'
 import useSound from '../../../customHooks/useSound'
 import QuizGivenSummary from '../../quizComponents/QuizGivenSummary'
+import ShutterAnimation from './ShutterAnimation'
+import FullScreenLoadingSpinner from './FullScreenLoadingSpinner'
 
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
 const SubmittedQuizInterface = lazy(() =>
@@ -20,9 +22,6 @@ const ConfirmationModal = lazy(() =>
   import('../../quizComponents/customQuizModal/ConfirmationModal'),
 )
 const ModalComponent = lazy(() => import('../../quizComponents/ModalComponent'))
-const GetSetGoAnimation = lazy(() =>
-  import('../../quizComponents/GetSetGoAnimation'),
-)
 
 const TournamentQuiz = () => {
   const { t } = useTranslation('Quiz')
@@ -32,7 +31,7 @@ const TournamentQuiz = () => {
   const { isOpen } = useSelector(state => state.quiz)
   const { user } = useSelector(state => state.auth)
   const { tournamentId, category } = useSelector(state => state.tournament)
-
+  const [error, setError] = useState(null)
   const [quizSession, setQuizSession] = useState(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState([])
@@ -49,6 +48,7 @@ const TournamentQuiz = () => {
 
   const startQuiz = useCallback(async () => {
     setLoading(true)
+    setError(null) // Clear any previous errors
     try {
       const response = await axios.post('/api/tournament/quiz/start', {
         userId: user._id,
@@ -61,13 +61,25 @@ const TournamentQuiz = () => {
       )
       setShowGetSetGo(true)
     } catch (error) {
-      toast({
-        title: t('QuizStartFailed'),
-        description: error.response?.data?.message || t('UnexpectedError'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
+      if (error.response && error.response.status === 400) {
+        setError(error.response.data.message)
+        toast({
+          title: t('QuizStartFailed'),
+          description: error.response.data.message,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+      } else {
+        setError(t('UnexpectedError'))
+        toast({
+          title: t('QuizStartFailed'),
+          description: t('UnexpectedError'),
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+      }
       dispatch(setIsOpen(false))
     } finally {
       setLoading(false)
@@ -167,10 +179,14 @@ const TournamentQuiz = () => {
   }, [submitted, currentQuestionIndex, quizSession, dispatch])
 
   const handleConfirmClose = useCallback(() => {
+    handleSubmitQuiz({
+      timeTaken,
+      userAnswers,
+    })
     dispatch(setIsOpen(false))
     dispatch(setTournamentQuiz(false))
     setShowConfirmationModal(false)
-  }, [dispatch])
+  }, [dispatch, timeTaken, userAnswers, handleSubmitQuiz])
 
   const handleAnimationComplete = useCallback(() => {
     setShowGetSetGo(false)
@@ -183,13 +199,27 @@ const TournamentQuiz = () => {
 
   const renderModalBody = useCallback(() => {
     if (loading) {
-      return <Box>Loading quiz...</Box>
+      return <FullScreenLoadingSpinner />
     }
 
     if (showGetSetGo) {
       return (
-        <Suspense fallback={<div>Loading...</div>}>
-          <GetSetGoAnimation onComplete={handleAnimationComplete} />
+        <Suspense fallback={null}>
+          <ShutterAnimation onComplete={handleAnimationComplete} />
+        </Suspense>
+      )
+    }
+
+    if (showCategoryQuizSummary) {
+      return (
+        <Suspense fallback={null}>
+          <QuizGivenSummary
+            isOpen={showCategoryQuizSummary}
+            onClose={() => setShowCategoryQuizSummary(false)}
+            isTournament={true}
+            tournamentId={tournamentId}
+            category={category}
+          />
         </Suspense>
       )
     }
