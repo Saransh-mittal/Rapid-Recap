@@ -10,6 +10,8 @@ import { setUser } from '../../../redux/authSlice'
 import { addNoteMessage } from '../../../redux/appSlice'
 import useTimer from '../../../customHooks/useTimer'
 import useSound from '../../../customHooks/useSound'
+import ShutterAnimation from './ShutterAnimation'
+import FullScreenLoadingSpinner from './FullScreenLoadingSpinner'
 
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
 const SubmittedQuizInterface = lazy(() =>
@@ -19,9 +21,6 @@ const ConfirmationModal = lazy(() =>
   import('../../quizComponents/customQuizModal/ConfirmationModal'),
 )
 const ModalComponent = lazy(() => import('../../quizComponents/ModalComponent'))
-const GetSetGoAnimation = lazy(() =>
-  import('../../quizComponents/GetSetGoAnimation'),
-)
 
 const TournamentQuiz = () => {
   const { t } = useTranslation('Quiz')
@@ -181,13 +180,13 @@ const TournamentQuiz = () => {
 
   const renderModalBody = useCallback(() => {
     if (loading) {
-      return <Box>Loading quiz...</Box>
+      return <FullScreenLoadingSpinner />
     }
 
     if (showGetSetGo) {
       return (
-        <Suspense fallback={<div>Loading...</div>}>
-          <GetSetGoAnimation onComplete={handleAnimationComplete} />
+        <Suspense fallback={null}>
+          <ShutterAnimation onComplete={handleAnimationComplete} />
         </Suspense>
       )
     }
