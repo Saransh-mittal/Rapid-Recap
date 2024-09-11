@@ -11,6 +11,7 @@ const { generateCategoryQuiz } = require('../utils/quiz.utils')
 const { commitSession, abortSession, startSession } = require('../db/session')
 const { getUserRegistrationDetails } = require('../utils/tournament.utils')
 const { activityTypes } = require('../data/activityTypes')
+const mongoose = require('mongoose')
 
 // @desc   Get the latest tournament
 // @route  GET /api/tournament/latest
@@ -300,6 +301,32 @@ const registerForTournament = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc   Get current affairs questions for the current tournament
+// @route  GET /api/tournament/questions/current-affairs/current
+// @access Private (Admin only)
+const getCurrentTournamentCurrentAffairsQuestions = asyncHandler(
+  async (req, res) => {
+    // Find the current active tournament
+    const currentTournament = await Tournament.findOne({ isActive: true })
+
+    if (!currentTournament) {
+      res.status(404)
+      throw new Error('No active tournament found')
+    }
+
+    // Get the start and end dates of the current tournament
+    const { registrationStartDate, registrationEndDate } = currentTournament
+
+    // Find current affairs questions created between the start and end dates of the tournament
+    const questions = await TournamentQuestion.find({
+      category: 'current affairs',
+      createdAt: { $gte: registrationStartDate, $lte: registrationEndDate },
+    })
+
+    res.json(questions)
+  },
+)
+
 // @desc   Add a new current affairs question
 // @route  POST /api/tournament/questions/current-affairs
 // @access Private (Admin only)
@@ -333,7 +360,7 @@ const addCurrentAffairsQuestion = asyncHandler(async (req, res) => {
     options,
     hindiOptions,
     correctAnswer,
-    category: 'Current Affairs',
+    category: 'current affairs',
     difficulty,
     isManuallyAdded: true,
   })
@@ -344,16 +371,6 @@ const addCurrentAffairsQuestion = asyncHandler(async (req, res) => {
     res.status(400)
     throw new Error('Invalid question data')
   }
-})
-
-// @desc   Get all current affairs questions
-// @route  GET /api/tournament/questions/current-affairs
-// @access Private (Admin only)
-const getCurrentAffairsQuestions = asyncHandler(async (req, res) => {
-  const questions = await TournamentQuestion.find({
-    category: 'Current Affairs',
-  })
-  res.json(questions)
 })
 
 // @desc   Update a current affairs question
@@ -367,9 +384,9 @@ const updateCurrentAffairsQuestion = asyncHandler(async (req, res) => {
     throw new Error('Question not found')
   }
 
-  if (question.category !== 'Current Affairs') {
+  if (question.category !== 'current affairs') {
     res.status(400)
-    throw new Error('This is not a Current Affairs question')
+    throw new Error('This is not a current affairs question')
   }
 
   const updatedQuestion = await TournamentQuestion.findByIdAndUpdate(
@@ -392,12 +409,12 @@ const deleteCurrentAffairsQuestion = asyncHandler(async (req, res) => {
     throw new Error('Question not found')
   }
 
-  if (question.category !== 'Current Affairs') {
+  if (question.category !== 'current affairs') {
     res.status(400)
-    throw new Error('This is not a Current Affairs question')
+    throw new Error('This is not a current affairs question')
   }
 
-  await question.remove()
+  await question.deleteOne()
 
   res.json({ message: 'Question removed' })
 })
@@ -418,7 +435,7 @@ const startQuiz = asyncHandler(async (req, res) => {
     category,
     questions: questions.map(q => q._id),
     startTime: new Date(),
-    endTime: new Date(Date.now() + 50000), // 50 seconds from now
+    endTime: new Date(Date.now() + 60000), // 50 seconds from now
   })
 
   // Remove sensitive information (like correct answer) before sending to client
@@ -446,7 +463,7 @@ const startQuiz = asyncHandler(async (req, res) => {
 // @route  POST /api/tournament/quiz/submit
 // @access Private
 const submitQuiz = asyncHandler(async (req, res) => {
-  const { quizSessionId, userResponses } = req.body
+  const { quizSessionId, userResponses, timeTaken } = req.body
   const session = await startSession()
 
   try {
@@ -466,16 +483,12 @@ const submitQuiz = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findById(quizSession.user).session(session)
-    const tournament = await Tournament.findById(
-      quizSession.tournament,
-    ).session(session)
     const questions = await TournamentQuestion.find({
       _id: { $in: quizSession.questions },
     }).session(session)
 
     // Calculate score and RQM
     let score = 0
-    const timeTaken = (new Date() - quizSession.startTime) / 1000 // in seconds
     const updatedResponses = questions.map((question, index) => {
       const isCorrect = question.correctAnswer === userResponses[index]
       if (isCorrect) score++
@@ -521,35 +534,79 @@ const submitQuiz = asyncHandler(async (req, res) => {
 
     await user.save({ session })
 
-    // Update tournament leaderboard
-    const existingParticipant = tournament.participants.find(
-      p => p.user.toString() === quizSession.user.toString(),
-    )
-    if (existingParticipant) {
-      existingParticipant.score = registration.totalScore
-    } else {
-      tournament.participants.push({
-        user: quizSession.user,
-        score: registration.totalScore,
-      })
-    }
-    tournament.participants.sort((a, b) => b.score - a.score)
-    await tournament.save({ session })
+    // Get top 3 leaders for the category
+    const topLeaders = await QuizSession.aggregate([
+      {
+        $match: {
+          tournament: quizSession.tournament,
+          category: quizSession.category,
+          completed: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'Users', // Assuming your User collection is named 'users'
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userDetails',
+        },
+      },
+      { $unwind: '$userDetails' },
+      {
+        $project: {
+          inGameName: {
+            $ifNull: ['$userDetails.inGameName', 'Unknown Player'],
+          },
+          score: '$RQM_score',
+        },
+      },
+      { $sort: { score: -1 } },
+      { $limit: 3 },
+      {
+        $group: {
+          _id: null,
+          leaders: { $push: '$$ROOT' },
+          scores: { $push: '$score' },
+        },
+      },
+      {
+        $project: {
+          leaders: {
+            $map: {
+              input: '$leaders',
+              as: 'leader',
+              in: {
+                inGameName: '$$leader.inGameName',
+                score: '$$leader.score',
+                rank: {
+                  $add: [{ $indexOfArray: ['$scores', '$$leader.score'] }, 1],
+                },
+              },
+            },
+          },
+        },
+      },
+      { $unwind: '$leaders' },
+      { $replaceRoot: { newRoot: '$leaders' } },
+      { $sort: { rank: 1 } },
+    ]).session(session)
 
     await commitSession()
 
-    logActivity({
-      userInGameName: user.inGameName,
-      type: activityTypes.TOURNAMENT_QUIZ.type,
-      // Add any other relevant activity data
-    })
-
+    const quizDifficultyLevel =
+      quizDifficulty < 0.5
+        ? 'easy'
+        : quizDifficulty >= 0.5 && quizDifficulty < 0.7
+        ? 'medium'
+        : 'hard'
     res.json({
       message: 'Quiz submitted successfully',
       score: `${score}/${questions.length}`,
       RQM_score,
+      quizDifficulty: quizDifficultyLevel,
       timeTaken,
       totalTournamentScore: registration.totalScore,
+      topLeaders: topLeaders,
     })
   } catch (error) {
     await abortSession(session)
@@ -558,10 +615,123 @@ const submitQuiz = asyncHandler(async (req, res) => {
   }
 })
 
+const getQuizSummary = asyncHandler(async (req, res) => {
+  const { category, tournamentId } = req.query
+  const userId = req.user._id
+
+  const quizSession = await QuizSession.findOne({
+    user: userId,
+    tournament: tournamentId,
+    category: category,
+    completed: true,
+  })
+    .populate('questions')
+    .populate('user', 'inGameName')
+    .sort({ createdAt: -1 }) // Get the most recent completed session
+    .lean()
+
+  if (!quizSession) {
+    res.status(404)
+    throw new Error('Quiz session not found')
+  }
+
+  const registration = await TournamentRegistration.findOne({
+    user: userId,
+    tournament: tournamentId,
+  }).lean()
+
+  if (!registration) {
+    res.status(404)
+    throw new Error('Tournament registration not found')
+  }
+
+  const questions = quizSession.questions
+  const totalQuestions = questions.length
+  const score = quizSession.responses.filter(r => r.isCorrect).length
+  const quizDifficulty =
+    questions.reduce((acc, q) => acc + parseFloat(q.difficulty), 0) /
+    totalQuestions
+  const quizDifficultyLevel =
+    quizDifficulty < 0.5 ? 'easy' : quizDifficulty < 0.7 ? 'medium' : 'hard'
+
+  const topLeaders = await QuizSession.aggregate([
+    {
+      $match: {
+        tournament: new mongoose.Types.ObjectId(tournamentId),
+        category: category,
+        completed: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    { $unwind: '$userDetails' },
+    {
+      $project: {
+        inGameName: { $ifNull: ['$userDetails.inGameName', 'Unknown Player'] },
+        score: '$RQM_score',
+      },
+    },
+    { $sort: { score: -1 } },
+    { $limit: 3 },
+    {
+      $group: {
+        _id: null,
+        leaders: { $push: '$$ROOT' },
+        scores: { $push: '$score' },
+      },
+    },
+    {
+      $project: {
+        leaders: {
+          $map: {
+            input: '$leaders',
+            as: 'leader',
+            in: {
+              inGameName: '$$leader.inGameName',
+              score: '$$leader.score',
+              rank: {
+                $add: [{ $indexOfArray: ['$scores', '$$leader.score'] }, 1],
+              },
+            },
+          },
+        },
+      },
+    },
+    { $unwind: '$leaders' },
+    { $replaceRoot: { newRoot: '$leaders' } },
+    { $sort: { rank: 1 } },
+  ])
+
+  const summary = {
+    score: `${score}/${totalQuestions}`,
+    RQM_score: quizSession.RQM_score,
+    quizDifficulty: quizDifficultyLevel,
+    timeTaken: quizSession.timeTaken,
+    totalTournamentScore: registration.totalScore,
+    topLeaders: topLeaders,
+    result: quizSession.responses.map((response, index) => ({
+      question: questions[index].question,
+      options: questions[index].options,
+      answer: questions[index].correctAnswer,
+      userAnswer: response.userAnswer,
+      isCorrect: response.isCorrect,
+      explanation: questions[index].explanation || 'No explanation provided',
+    })),
+  }
+
+  res.json(summary)
+})
+
 module.exports = {
   registerForTournament,
   addCurrentAffairsQuestion,
-  getCurrentAffairsQuestions,
+
   updateCurrentAffairsQuestion,
   deleteCurrentAffairsQuestion,
   startQuiz,
@@ -570,4 +740,6 @@ module.exports = {
   getPreviousTournament,
   getCurrentTournamentLeaderboard,
   searchTournamentLeaderboard,
+  getCurrentTournamentCurrentAffairsQuestions,
+  getQuizSummary,
 }

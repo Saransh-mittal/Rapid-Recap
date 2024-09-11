@@ -38,6 +38,9 @@ const QuizGivenSummary = ({
   fetchQuizSummaryFromAnotherComp,
   timeTakenInitial = 0,
   quizGivenSummaryInitial = [],
+  isTournament = false,
+  tournamentId,
+  category,
 }) => {
   const { t } = useTranslation('QuizGivenSummary')
   const toast = useToast()
@@ -52,7 +55,14 @@ const QuizGivenSummary = ({
 
   const fetchQuizSummary = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/quiz/summary/${articleId}`)
+      const response = isTournament
+        ? await axios.get(`/api/tournament/quiz/summary`, {
+            params: {
+              tournamentId,
+              category,
+            },
+          })
+        : await axios.get(`/api/quiz/summary/${articleId}`)
       setTimeTaken(response.data.timeTaken)
       setQuizGivenSummary(() => [...response.data.result])
     } catch (error) {

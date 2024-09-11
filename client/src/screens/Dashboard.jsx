@@ -31,6 +31,9 @@ const DataTable = lazy(() => import('../components/miscellaneous/DataTable'))
 const NotificationStatus = lazy(() =>
   import('../components/miscellaneous/NotificationStatus'),
 )
+const CurrentAffairsManagement = lazy(() =>
+  import('../components/dashboardComponents/CurrentAffairsManagement'),
+)
 
 const Dashboard = () => {
   const [quizAttempts, setQuizAttempts] = useState([])
@@ -55,7 +58,11 @@ const Dashboard = () => {
     onOpen: onNotificationStatusOpen,
     onClose: onNotificationStatusClose,
   } = useDisclosure()
-
+  const {
+    isOpen: isCurrentAffairsOpen,
+    onOpen: onCurrentAffairsOpen,
+    onClose: onCurrentAffairsClose,
+  } = useDisclosure()
   const {
     isOpen: isArticleManagementOpen,
     onOpen: onArticleManagementOpen,
@@ -263,39 +270,6 @@ const Dashboard = () => {
     return columns
   }, [selectedTables])
 
-  // const renderButton = useCallback(
-  //   (label, table) => (
-  //     <Button
-  //       onClick={
-  //         table === 'notificationStatus'
-  //           ? handleNotificationStatusClick
-  //           : table === 'articleManagement'
-  //           ? handleModalClick
-  //           : () => handleTableChange(table)
-  //       }
-  //       backgroundColor={
-  //         selectedTables.includes(table) || table === 'articleManagement'
-  //           ? 'blue.500'
-  //           : 'gray.200'
-  //       }
-  //       color={
-  //         selectedTables.includes(table) || table === 'articleManagement'
-  //           ? 'white'
-  //           : 'black'
-  //       }
-  //     >
-  //       {label}
-  //     </Button>
-  //   ),
-  //   [
-  //     selectedTables,
-  //     handleNotificationStatusClick,
-  //     handleTableChange,
-  //     handleModalClick,
-  //     onArticleModalOpen,
-  //   ],
-  // )
-
   const { data: mergedData, totals } = mergeData()
 
   return (
@@ -368,6 +342,10 @@ const Dashboard = () => {
                 onNotificationStatusOpen,
               )}
               {renderModalButton('Manage Articles', onArticleManagementOpen)}
+              {renderModalButton(
+                'Manage Current Affairs',
+                onCurrentAffairsOpen,
+              )}
             </VStack>
           ) : (
             <HStack spacing={4} align="flex-start" marginTop={4}>
@@ -379,6 +357,10 @@ const Dashboard = () => {
                 onNotificationStatusOpen,
               )}
               {renderModalButton('Manage Articles', onArticleManagementOpen)}
+              {renderModalButton(
+                'Manage Current Affairs',
+                onCurrentAffairsOpen,
+              )}
             </HStack>
           )}
         </Flex>
@@ -479,6 +461,12 @@ const Dashboard = () => {
           isOpen={isArticleManagementOpen}
           onOpen={onArticleManagementOpen}
           onClose={onArticleManagementClose}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <CurrentAffairsManagement
+          isOpen={isCurrentAffairsOpen}
+          onClose={onCurrentAffairsClose}
         />
       </Suspense>
     </Box>

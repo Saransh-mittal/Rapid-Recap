@@ -41,7 +41,7 @@ const OptionButton = React.memo(
       >
         <Flex alignItems="flex-start" width="100%">
           <Text fontSize="md" fontWeight="bold" mr={2} mb={0} flexShrink={0}>
-            {optionKey.toUpperCase()}.
+            {optionKey?.toUpperCase()}.
           </Text>
           <Text fontSize="md" mb={0} textAlign="left" wordBreak="break-word">
             {optionText}
@@ -151,14 +151,17 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
                 optionKey={key}
                 optionText={value}
                 isCorrect={
-                  currentQuestion.answer.toUpperCase() === key.toUpperCase()
+                  currentQuestion?.answer?.toUpperCase() === key?.toUpperCase()
                 }
                 isUserAnswer={
-                  currentQuestion.userAnswer.toUpperCase() === key.toUpperCase()
+                  currentQuestion?.userAnswer?.toUpperCase() ===
+                  key?.toUpperCase()
                 }
                 isDisabled={
-                  currentQuestion.answer.toUpperCase() !== key.toUpperCase() &&
-                  currentQuestion.userAnswer.toUpperCase() !== key.toUpperCase()
+                  currentQuestion?.answer?.toUpperCase() !==
+                    key?.toUpperCase() &&
+                  currentQuestion?.userAnswer?.toUpperCase() !==
+                    key?.toUpperCase()
                 }
               />
             ))}

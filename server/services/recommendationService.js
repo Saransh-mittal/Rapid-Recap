@@ -124,6 +124,7 @@ async function generateRecommendations(userId) {
 }
 
 async function updateRecommendations(userId) {
+  console.log('Updating recommendations for user:', userId)
   try {
     const userRecommendations = await Recommendation.findOne({
       user_id: userId,

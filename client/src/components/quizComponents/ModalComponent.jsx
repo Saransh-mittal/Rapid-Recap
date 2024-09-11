@@ -11,10 +11,10 @@ import {
   Flex,
   Skeleton,
   SkeletonCircle,
-  Spinner,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import QuizBG from '../tournamentComponents/tournamentQuiz/QuizBG'
 
 // Lazy load components and assets
 const Countdown = lazy(() => import('./Countdown'))
@@ -40,9 +40,14 @@ const ModalComponent = ({
   timer,
   setSubmitted,
   showGetSetGo,
+  size = { base: 'full', md: '2xl' },
+  isTournament = false,
 }) => {
-  const textColor = 'white'
   const { t } = useTranslation('ModalComponent')
+
+  // Helper function to toggle between the default (purple) and tournament (gold) colors
+  const getColor = (defaultColor, tournamentColor) =>
+    isTournament ? tournamentColor : defaultColor
 
   // Memoize the button text based on the state
   const buttonText = useMemo(() => {
@@ -73,27 +78,30 @@ const ModalComponent = ({
     handleNextQuestion,
   ])
 
-  // Adding a simple console log to check if the function is being called
   const handleClick = () => {
     const action = buttonAction()
     action()
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '2xl' }}>
+    <Modal isOpen={isOpen} onClose={onClose} size={size}>
       <ModalOverlay
         bg="blackAlpha.300"
         backdropFilter="blur(40px) hue-rotate(90deg)"
       />
       <ModalContent
         bg="rgba(26, 21, 39, 0.9)"
-        color={textColor}
+        bgPosition="center"
+        bgSize="cover"
+        bgRepeat="no-repeat"
+        color={getColor('white', 'rgba(255, 223, 0, 0.9)')}
         borderRadius="xl"
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
-        className="animated-gradient scene"
-        overflow={'hidden'}
+        overflow="hidden"
+        position="relative"
       >
-        {timer && (
+        {isTournament && <QuizBG />}
+        {timer > 0 && (
           <SkeletonCircle
             color="red"
             isLoaded={!load}
@@ -101,12 +109,13 @@ const ModalComponent = ({
             size={load ? '20' : 'auto'}
             marginBottom={load ? '10px' : '0'}
           >
-            {!submitted && timer && (
+            {!submitted && timer > 0 && (
               <Suspense fallback={null}>
                 <Countdown
                   timer={timer}
                   submitted={submitted}
                   start={!showInstruction}
+                  isTournament={isTournament}
                 />
               </Suspense>
             )}
@@ -114,7 +123,7 @@ const ModalComponent = ({
         )}
         <ModalCloseButton
           zIndex={1}
-          backgroundColor="purple.300"
+          backgroundColor={getColor('purple.300', 'rgba(255, 215, 0, 0.8)')}
           style={{
             right: '10px',
             color: 'white',
@@ -131,12 +140,16 @@ const ModalComponent = ({
           {renderModalBody()}
         </ModalBody>
         {!submitted && (
-          <Flex flexDirection={'column'} color={'white'} w={'100%'}>
+          <Flex
+            flexDirection={'column'}
+            color={getColor('white', 'yellow.400')}
+            w={'100%'}
+          >
             {load && showInstruction && (
               <Text
                 fontSize="lg"
                 fontWeight={'semibold'}
-                color={textColor}
+                color={getColor('white', 'yellow.300')}
                 textAlign={'center'}
               >
                 {t('QuizIsGenerating')}
@@ -177,13 +190,13 @@ const ModalComponent = ({
                         width={{ base: '100%', lg: '50%' }}
                         bg={
                           isAnswered || showInstruction
-                            ? 'purple.500'
+                            ? getColor('purple.500', 'rgba(255, 215, 0, 0.5)')
                             : 'rgba(255, 255, 255, 0.1)'
                         }
                         _hover={{
                           bg:
                             isAnswered || showInstruction
-                              ? 'purple.600'
+                              ? getColor('purple.600', 'rgba(255, 215, 0, 0.6)')
                               : 'rgba(255, 255, 255, 0.15)',
                         }}
                         isLoading={submitLoad}

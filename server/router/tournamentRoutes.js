@@ -2,7 +2,6 @@ const express = require('express')
 const {
   registerForTournament,
   addCurrentAffairsQuestion,
-  getCurrentAffairsQuestions,
   updateCurrentAffairsQuestion,
   deleteCurrentAffairsQuestion,
   startQuiz,
@@ -11,6 +10,8 @@ const {
   getPreviousTournament,
   getCurrentTournamentLeaderboard,
   searchTournamentLeaderboard,
+  getCurrentTournamentCurrentAffairsQuestions,
+  getQuizSummary,
 } = require('../controllers/tournamentController')
 
 const { Authenticate, adminMiddleware } = require('../middleware/authenticate')
@@ -22,20 +23,20 @@ router.get('/latest', getLatestTournament)
 router.post('/register', Authenticate, registerForTournament)
 router.get('/leaderboard', getCurrentTournamentLeaderboard)
 router.get('/leaderboard/search', searchTournamentLeaderboard)
+router.get(
+  '/questions/current-affairs/current',
+  Authenticate,
+  adminMiddleware,
+  getCurrentTournamentCurrentAffairsQuestions,
+)
 router.post(
   '/questions/current-affairs',
   Authenticate,
   adminMiddleware,
   addCurrentAffairsQuestion,
 )
-router.get(
-  '/questions/current-affairs',
-  Authenticate,
-  adminMiddleware,
-  getCurrentAffairsQuestions,
-)
 router.put(
-  'questions/current-affairs/:id',
+  '/questions/current-affairs/:id',
   Authenticate,
   adminMiddleware,
   updateCurrentAffairsQuestion,
@@ -46,7 +47,8 @@ router.delete(
   adminMiddleware,
   deleteCurrentAffairsQuestion,
 )
-router.post('/start', Authenticate, startQuiz)
-router.post('/submit', Authenticate, submitQuiz)
+router.post('/quiz/start', Authenticate, startQuiz)
+router.post('/quiz/submit', Authenticate, submitQuiz)
+router.get('/quiz/summary', Authenticate, getQuizSummary)
 
 module.exports = router

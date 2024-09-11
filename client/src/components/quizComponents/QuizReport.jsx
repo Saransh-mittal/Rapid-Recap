@@ -14,7 +14,14 @@ const SubmittedQuizInterface = React.lazy(() =>
   import('./SubmittedQuizInterface'),
 )
 
-const QuizReport = ({ isOpen, articleId, onClose }) => {
+const QuizReport = ({
+  isOpen,
+  articleId,
+  onClose,
+  isTournament = false,
+  tournamentId,
+  category,
+}) => {
   const [showQuizSummary, setShowQuizSummary] = useState(false)
   const [load, setLoad] = useState(true)
   const [timeTaken, setTimeTaken] = useState(0)
@@ -24,7 +31,15 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
 
   const fetchQuizSummary = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/quiz/summary/${articleId}`)
+      const response = isTournament
+        ? await axios.get(`/api/tournament/quiz/summary`, {
+            params: {
+              tournamentId,
+              category,
+            },
+          })
+        : await axios.get(`/api/quiz/summary/${articleId}`)
+
       setTimeTaken(response.data.timeTaken)
       setResult(response.data)
       setQuizGivenSummary(() => [...response.data.result])
@@ -58,6 +73,9 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
             onClose={() => setShowQuizSummary(false)}
             articleId={articleId}
             fetchQuizSummaryFromAnotherComp={true}
+            isTournament={isTournament}
+            tournamentId={tournamentId}
+            category={category}
           />
         </Suspense>
       )
@@ -82,6 +100,7 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
           submitLoad={false}
           result={result}
           onViewReport={() => setShowQuizSummary(true)}
+          isTournament={isTournament}
         />
       </Suspense>
     )
@@ -101,6 +120,8 @@ const QuizReport = ({ isOpen, articleId, onClose }) => {
       renderModalBody={renderModalBody}
       onClose={onClose}
       isOpen={isOpen}
+      isTournament={isTournament}
+      size={isTournament ? 'full' : { base: 'full', md: '2xl' }}
     />
   )
 }

@@ -282,6 +282,7 @@ const endTournament = async () => {
   const currentTournament = await Tournament.findOne({ status: 'ongoing' })
   if (currentTournament) {
     currentTournament.status = 'completed'
+    currentTournament.isActive = false
     await currentTournament.save()
     console.log('Tournament ended')
   }

@@ -2,19 +2,20 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Box, Text } from '@chakra-ui/react'
 import useSound from '../../customHooks/useSound'
 
-const Countdown = ({ timer, submitted }) => {
+const Countdown = ({ timer, submitted, isTournament = false }) => {
   const [offset, setOffset] = useState(0)
   const [isFlashing, setIsFlashing] = useState(false)
   const initialTimer = 50
   const { play30SecSound, play20SecSound, play10SecSound, playEndSound } =
     useSound()
 
+  // Helper to switch between default and tournament colors
   const getColor = useCallback(() => {
-    if (timer > 30) return '#9F7AEA'
-    if (timer > 20) return '#F6E05E'
-    if (timer > 10) return '#ED8936'
-    return '#F56565'
-  }, [timer])
+    if (timer > 30) return isTournament ? '#FFD700' : '#9F7AEA' // Gold or Purple
+    if (timer > 20) return isTournament ? '#FFEA70' : '#F6E05E' // Light Gold or Yellow
+    if (timer > 10) return isTournament ? '#FFC107' : '#ED8936' // Amber or Orange
+    return isTournament ? '#FF4500' : '#F56565' // Red for both
+  }, [timer, isTournament])
 
   useEffect(() => {
     const percentage = (timer / initialTimer) * 100

@@ -1,5 +1,5 @@
 // /hooks/useTimer.js
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from 'react'
 
 const useTimer = (
   isOpen,
@@ -7,47 +7,47 @@ const useTimer = (
   showInstruction,
   userAnswers,
   onTimerEnd,
-  setSubmitted
+  setSubmitted,
 ) => {
-  const [timer, setTimer] = useState(50);
-  const [timeTaken, setTimeTaken] = useState(0);
-  const userAnswersRef = useRef(userAnswers);
+  const [timer, setTimer] = useState(50)
+  const [timeTaken, setTimeTaken] = useState(0)
+  const userAnswersRef = useRef(userAnswers)
 
   // Update the ref whenever userAnswers changes
   useEffect(() => {
-    userAnswersRef.current = userAnswers;
-  }, [userAnswers]);
+    userAnswersRef.current = userAnswers
+  }, [userAnswers])
 
   useEffect(() => {
-    let timerId = null;
+    let timerId = null
 
     if (isOpen && !submitted && !showInstruction) {
       timerId = setInterval(() => {
-        setTimer((prevTimer) => {
+        setTimer(prevTimer => {
           if (prevTimer > 0) {
-            return prevTimer - 1;
+            return prevTimer - 1
           } else {
             onTimerEnd({
               timeTaken: 50,
               userAnswers: userAnswersRef.current,
               setSubmitted,
-            });
-            clearInterval(timerId);
-            return prevTimer;
+            })
+            clearInterval(timerId)
+            return prevTimer
           }
-        });
-        setTimeTaken((prevTimeTaken) => prevTimeTaken + 1);
-      }, 1000);
+        })
+        setTimeTaken(prevTimeTaken => prevTimeTaken + 1)
+      }, 1000)
     }
 
     if (submitted || showInstruction || !isOpen) {
-      clearInterval(timerId);
+      clearInterval(timerId)
     }
 
-    return () => clearInterval(timerId);
-  }, [isOpen, submitted, showInstruction]);
+    return () => clearInterval(timerId)
+  }, [isOpen, submitted, showInstruction])
 
-  return { timer, timeTaken };
-};
+  return { timer, timeTaken }
+}
 
-export default useTimer;
+export default useTimer
