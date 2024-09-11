@@ -30,7 +30,7 @@ const TournamentQuiz = () => {
   const { isOpen } = useSelector(state => state.quiz)
   const { user } = useSelector(state => state.auth)
   const { tournamentId, category } = useSelector(state => state.tournament)
-
+  const [error, setError] = useState(null)
   const [quizSession, setQuizSession] = useState(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState([])
@@ -46,6 +46,7 @@ const TournamentQuiz = () => {
 
   const startQuiz = useCallback(async () => {
     setLoading(true)
+    setError(null) // Clear any previous errors
     try {
       const response = await axios.post('/api/tournament/quiz/start', {
         userId: user._id,
@@ -58,13 +59,25 @@ const TournamentQuiz = () => {
       )
       setShowGetSetGo(true)
     } catch (error) {
-      toast({
-        title: t('QuizStartFailed'),
-        description: error.response?.data?.message || t('UnexpectedError'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
+      if (error.response && error.response.status === 400) {
+        setError(error.response.data.message)
+        toast({
+          title: t('QuizStartFailed'),
+          description: error.response.data.message,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+      } else {
+        setError(t('UnexpectedError'))
+        toast({
+          title: t('QuizStartFailed'),
+          description: t('UnexpectedError'),
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+      }
       dispatch(setIsOpen(false))
     } finally {
       setLoading(false)
@@ -164,10 +177,14 @@ const TournamentQuiz = () => {
   }, [submitted, currentQuestionIndex, quizSession, dispatch])
 
   const handleConfirmClose = useCallback(() => {
+    handleSubmitQuiz({
+      timeTaken,
+      userAnswers,
+    })
     dispatch(setIsOpen(false))
     dispatch(setTournamentQuiz(false))
     setShowConfirmationModal(false)
-  }, [dispatch])
+  }, [dispatch, timeTaken, userAnswers, handleSubmitQuiz])
 
   const handleAnimationComplete = useCallback(() => {
     setShowGetSetGo(false)

@@ -422,7 +422,25 @@ const deleteCurrentAffairsQuestion = asyncHandler(async (req, res) => {
 // @access Private
 const startQuiz = asyncHandler(async (req, res) => {
   const { userId, tournamentId, category } = req.body
+  // Check if a session already exists
+  const existingSession = await QuizSession.findOne({
+    user: userId,
+    tournament: tournamentId,
+    category: category,
+    completed: false,
+  })
 
+  if (existingSession) {
+    // If an incomplete session exists, return an error
+    return res.status(400).json({
+      message: 'A quiz session for this category is already in progress',
+      existingSession: {
+        _id: existingSession._id,
+        startTime: existingSession.startTime,
+        endTime: existingSession.endTime,
+      },
+    })
+  }
   // Generate quiz questions
   const questions = await generateCategoryQuiz(userId, tournamentId, category)
 
