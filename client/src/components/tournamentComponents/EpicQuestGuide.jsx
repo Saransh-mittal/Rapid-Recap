@@ -12,18 +12,26 @@ import {
   AccordionIcon,
   Icon,
   Flex,
+  Button,
+  useDisclosure,
+  useTheme,
 } from '@chakra-ui/react'
-import { FaQuestionCircle, FaLightbulb } from 'react-icons/fa'
+import { FaQuestionCircle, FaLightbulb, FaInfoCircle } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
+import TournamentGuideModal from './TournamentGuideModal'
+import { motion } from 'framer-motion'
+
+const MotionButton = motion(Button)
 
 const EpicQuestGuide = () => {
   const { t } = useTranslation('EpicQuestGuide') // Load the 'epicQuestGuide' namespace
-
+  const theme = useTheme()
   const bgColor = 'rgba(0, 0, 0, 0.3)'
   const borderColor = 'pink.700'
   const questionColor = 'white'
   const answerColor = 'gray.300'
   const iconColor = 'pink.400'
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   const guideInstructions = t('questions', { returnObjects: true })
 
@@ -98,8 +106,35 @@ const EpicQuestGuide = () => {
               </AccordionItem>
             ))}
           </Accordion>
+          <MotionButton
+            onClick={onOpen}
+            leftIcon={<FaInfoCircle />}
+            bg="linear-gradient(45deg, #FF00EA, #8A2BE2)"
+            color="white"
+            borderRadius="full"
+            px={6}
+            py={3}
+            fontSize="lg"
+            fontWeight="bold"
+            _hover={{
+              bg: 'linear-gradient(45deg, #FF00EA, #8A2BE2)',
+              opacity: 0.9,
+              transform: 'scale(1.05)',
+            }}
+            _active={{
+              bg: 'linear-gradient(45deg, #FF00EA, #8A2BE2)',
+              transform: 'scale(0.95)',
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            boxShadow={`0 0 20px ${theme.colors.pink[400]}40`}
+          >
+            Know More
+          </MotionButton>
         </VStack>
       </Container>
+      <TournamentGuideModal isOpen={isOpen} onClose={onClose} />
     </Box>
   )
 }

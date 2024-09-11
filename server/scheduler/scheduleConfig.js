@@ -11,8 +11,12 @@ const deleteExpiredGuestAccountsTask = require('./tasks/deleteExpiredGuestAccoun
 const sendGuestAccountExpiryNotifs = require('./tasks/guestAccountExpiryNotifs')
 const {
   startRegistration,
+  inRegisterationPeriod,
+  lastDayOfRegisterationPeriod,
   endRegistration,
   startTournament,
+  day1EndOfTournament,
+  day2OfTournament,
   endTournament,
 } = require('./tasks/tournamentManagement')
 
@@ -156,18 +160,40 @@ let schedules = [
   //   sendGuestAccountExpiryNotifs,
   // ),
   // New tournament management schedules
-  // createSchedule('startTournamentRegistration', '02:00', startRegistration),
+  createSchedule('startTournamentRegistration', '02:00', startRegistration),
   createSchedule('endTournamentRegistration', '23:00', endRegistration),
   createSchedule('startTournament', '00:00', startTournament),
   createSchedule('endTournament', '23:59', endTournament),
-  createSchedule('startTournamentRegistration', '14:46', startRegistration),
+  {
+    name: 'inRegistrationPeriod',
+    cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
+    task: inRegisterationPeriod,
+  },
+  {
+    name: 'lastDayOfRegistrationPeriod',
+    cronPattern: '0 20 * * 5', // At 8:00 PM on Friday
+    task: lastDayOfRegisterationPeriod,
+  },
+  {
+    name: 'day1EndOfTournament',
+    cronPattern: '0 22 * * 6', // At 10:00 PM on Saturday
+    task: day1EndOfTournament,
+  },
+  {
+    name: 'day2OfTournament',
+    cronPattern: '0 11 * * 0', // At 11:00 AM on Sunday
+    task: day2OfTournament,
+  },
 ]
 
 // Sort schedules by time
-schedules.sort((a, b) => a.time.valueOf() - b.time.valueOf())
+// schedules.sort((a, b) => a.time.valueOf() - b.time.valueOf())
 
 // Convert times to cron patterns and add them to each schedule
 schedules.forEach(schedule => {
+  if (!schedule.time) {
+    return
+  }
   const timeUTC = schedule.time.clone().tz('UTC')
   const timeLocal = timeUTC.clone().local()
   const dayOfWeek = schedule.name.includes('Tournament')

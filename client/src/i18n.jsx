@@ -12,6 +12,7 @@ const namespaces = {
     'Register',
     'Signin',
     'Tournament',
+    'Quiz', //
   ],
   utils: ['formatDate'],
   categories: ['categories'],
@@ -19,28 +20,28 @@ const namespaces = {
     'ArticleHeader',
     'AuthorInfo',
     'BoostSection',
-    'BoostedSubmittedQuizInterface',
-    'ConfirmationModal',
-    'ExpectedIQModal',
     'GivenQuiz',
-    'GivenQuizInterface',
-    'InstructionModal',
-    'ModalComponent',
-    'QuinBoost',
     'QuinBoostModal',
-    'Quiz',
     'QuizExpired',
-    'QuizGivenSummary',
-    'QuizInterface',
     'RelatedArticlesToggle',
     'ShareButton',
     'Sidebar',
-    'SubmittedQuizInterface',
     'TakeQuizButton',
     'TotalUserAttempted',
     'TrackTime',
   ],
   tournamentComponents: ['EpicQuestGuide'],
+  quizComponents: [
+    'BoostedSubmittedQuizInterface', //
+    'ConfirmationModal', //
+    'GivenQuizInterface', //
+    'InstructionModal', //
+    'ModalComponent', //
+    'QuinBoost', //
+    'QuizGivenSummary', //
+    'QuizInterface', //
+    'SubmittedQuizInterface', //
+  ],
   authComponents: [
     'EmailVerify',
     'GuestLogin',
@@ -142,6 +143,8 @@ i18n
             return `/locales/${lng}/components/articleComponents/${namespace}.json`
           case 'tournamentComponents':
             return `/locales/${lng}/components/tournamentComponents/${namespace}.json`
+          case 'quizComponents':
+            return `/locales/${lng}/components/quizComponents/${namespace}.json`
           case 'authComponents':
             return `/locales/${lng}/components/authComponents/${namespace}.json`
           case 'contactComponents':
