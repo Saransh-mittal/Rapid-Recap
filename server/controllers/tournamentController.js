@@ -434,7 +434,7 @@ const startQuiz = asyncHandler(async (req, res) => {
     category,
     questions: questions.map(q => q._id),
     startTime: new Date(),
-    endTime: new Date(Date.now() + 50000), // 50 seconds from now
+    endTime: new Date(Date.now() + 60000), // 50 seconds from now
   })
 
   // Remove sensitive information (like correct answer) before sending to client
@@ -462,7 +462,7 @@ const startQuiz = asyncHandler(async (req, res) => {
 // @route  POST /api/tournament/quiz/submit
 // @access Private
 const submitQuiz = asyncHandler(async (req, res) => {
-  const { quizSessionId, userResponses } = req.body
+  const { quizSessionId, userResponses, timeTaken } = req.body
   const session = await startSession()
 
   try {
@@ -482,16 +482,12 @@ const submitQuiz = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findById(quizSession.user).session(session)
-    const tournament = await Tournament.findById(
-      quizSession.tournament,
-    ).session(session)
     const questions = await TournamentQuestion.find({
       _id: { $in: quizSession.questions },
     }).session(session)
 
     // Calculate score and RQM
     let score = 0
-    const timeTaken = (new Date() - quizSession.startTime) / 1000 // in seconds
     const updatedResponses = questions.map((question, index) => {
       const isCorrect = question.correctAnswer === userResponses[index]
       if (isCorrect) score++
@@ -537,35 +533,79 @@ const submitQuiz = asyncHandler(async (req, res) => {
 
     await user.save({ session })
 
-    // Update tournament leaderboard
-    const existingParticipant = tournament.participants.find(
-      p => p.user.toString() === quizSession.user.toString(),
-    )
-    if (existingParticipant) {
-      existingParticipant.score = registration.totalScore
-    } else {
-      tournament.participants.push({
-        user: quizSession.user,
-        score: registration.totalScore,
-      })
-    }
-    tournament.participants.sort((a, b) => b.score - a.score)
-    await tournament.save({ session })
+    // Get top 3 leaders for the category
+    const topLeaders = await QuizSession.aggregate([
+      {
+        $match: {
+          tournament: quizSession.tournament,
+          category: quizSession.category,
+          completed: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'Users', // Assuming your User collection is named 'users'
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userDetails',
+        },
+      },
+      { $unwind: '$userDetails' },
+      {
+        $project: {
+          inGameName: {
+            $ifNull: ['$userDetails.inGameName', 'Unknown Player'],
+          },
+          score: '$RQM_score',
+        },
+      },
+      { $sort: { score: -1 } },
+      { $limit: 3 },
+      {
+        $group: {
+          _id: null,
+          leaders: { $push: '$$ROOT' },
+          scores: { $push: '$score' },
+        },
+      },
+      {
+        $project: {
+          leaders: {
+            $map: {
+              input: '$leaders',
+              as: 'leader',
+              in: {
+                inGameName: '$$leader.inGameName',
+                score: '$$leader.score',
+                rank: {
+                  $add: [{ $indexOfArray: ['$scores', '$$leader.score'] }, 1],
+                },
+              },
+            },
+          },
+        },
+      },
+      { $unwind: '$leaders' },
+      { $replaceRoot: { newRoot: '$leaders' } },
+      { $sort: { rank: 1 } },
+    ]).session(session)
 
     await commitSession()
 
-    logActivity({
-      userInGameName: user.inGameName,
-      type: activityTypes.TOURNAMENT_QUIZ.type,
-      // Add any other relevant activity data
-    })
-
+    const quizDifficultyLevel =
+      quizDifficulty < 0.5
+        ? 'easy'
+        : quizDifficulty >= 0.5 && quizDifficulty < 0.7
+        ? 'medium'
+        : 'hard'
     res.json({
       message: 'Quiz submitted successfully',
       score: `${score}/${questions.length}`,
       RQM_score,
+      quizDifficulty: quizDifficultyLevel,
       timeTaken,
       totalTournamentScore: registration.totalScore,
+      topLeaders: topLeaders,
     })
   } catch (error) {
     await abortSession(session)

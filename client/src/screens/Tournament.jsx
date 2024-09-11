@@ -33,6 +33,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../redux/appSlice'
 import { setUser } from '../redux/authSlice'
 import CategorySelection from '../components/tournamentComponents/CategorySelection'
+import { setIsOpen, setTournamentQuiz } from '../redux/quizSlice'
+import { setCategory, setTournamentId } from '../redux/tournamentSlice'
 
 const MotionBox = motion(Box)
 const MotionTab = motion(Tab)
@@ -53,6 +55,7 @@ const Tournament = () => {
     completedCategories: [],
     totalScore: 0,
   })
+
   const toast = useToast()
 
   const fetchTournamentData = async () => {
@@ -142,7 +145,10 @@ const Tournament = () => {
     console.log('Entering tournament...')
   }
   const handleCategorySelect = category => {
-    console.log(`Starting quiz for category: ${category}`)
+    dispatch(setTournamentId(tournamentData._id))
+    dispatch(setCategory(category))
+    dispatch(setTournamentQuiz(true))
+    dispatch(setIsOpen(true))
     // Add logic to start the quiz for the selected category
   }
 

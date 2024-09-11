@@ -17,6 +17,7 @@ import { FaDice, FaNewspaper } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import CategoryCard from './CategoryCard'
 import QuizConfirmationModal from './tournamentQuiz/QuizConfirmationModal'
+import { useDispatch } from 'react-redux'
 
 const MotionBox = motion(Box)
 
@@ -83,7 +84,6 @@ const CategorySelection = ({
         setSelectedCategories([])
       } else {
         setSelectedCategories([category])
-        onCategorySelect(category)
       }
     }
   }

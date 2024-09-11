@@ -11,10 +11,10 @@ import {
   Flex,
   Skeleton,
   SkeletonCircle,
-  Spinner,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import QuizBG from '../tournamentComponents/tournamentQuiz/QuizBG'
 
 // Lazy load components and assets
 const Countdown = lazy(() => import('./Countdown'))
@@ -40,6 +40,8 @@ const ModalComponent = ({
   timer,
   setSubmitted,
   showGetSetGo,
+  size = { base: 'full', md: '2xl' },
+  isTournament = false,
 }) => {
   const textColor = 'white'
   const { t } = useTranslation('ModalComponent')
@@ -80,20 +82,26 @@ const ModalComponent = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '2xl' }}>
+    <Modal isOpen={isOpen} onClose={onClose} size={size}>
       <ModalOverlay
         bg="blackAlpha.300"
         backdropFilter="blur(40px) hue-rotate(90deg)"
       />
       <ModalContent
         bg="rgba(26, 21, 39, 0.9)"
+        // bgImage={`url(${tournamentBG})`}
+        bgPosition="center"
+        bgSize="cover"
+        bgRepeat="no-repeat"
         color={textColor}
         borderRadius="xl"
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
         className="animated-gradient scene"
-        overflow={'hidden'}
+        overflow="hidden"
+        position="relative"
       >
-        {timer && (
+        {isTournament && <QuizBG />}
+        {timer > 0 && (
           <SkeletonCircle
             color="red"
             isLoaded={!load}
@@ -101,7 +109,7 @@ const ModalComponent = ({
             size={load ? '20' : 'auto'}
             marginBottom={load ? '10px' : '0'}
           >
-            {!submitted && timer && (
+            {!submitted && timer > 0 && (
               <Suspense fallback={null}>
                 <Countdown
                   timer={timer}

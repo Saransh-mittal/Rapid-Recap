@@ -46,7 +46,7 @@ router.delete(
   adminMiddleware,
   deleteCurrentAffairsQuestion,
 )
-router.post('/start', Authenticate, startQuiz)
-router.post('/submit', Authenticate, submitQuiz)
+router.post('/quiz/start', Authenticate, startQuiz)
+router.post('/quiz/submit', Authenticate, submitQuiz)
 
 module.exports = router

@@ -4,7 +4,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import os
 import pickle
 import pymongo
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import pytz
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     mongo_uri = os.getenv("DATABASE")
 
     # Set start date to April 1, 2024
-    start_date = datetime(2024, 4, 1, tzinfo=pytz.UTC)
+    start_date = datetime.now(pytz.UTC) - timedelta(days=45)
 
     print(f"Fetching articles from {start_date} onwards...")
 

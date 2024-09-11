@@ -50,6 +50,7 @@ import {
   checkNotificationStatus,
   isSubscribedChecker,
 } from './redux/notificationSlice.js'
+import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -61,7 +62,7 @@ const App = () => {
   const { isRegisterOpen, isSigninOpen, showXpLevelModal } = useSelector(
     state => state.app,
   )
-  const { isOpen } = useSelector(state => state.quiz)
+  const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
 
@@ -302,7 +303,9 @@ const App = () => {
           t={GuestLoginModaltranslation}
         />
       </Suspense>
-      <Suspense fallback={null}>{isOpen && <Quiz />}</Suspense>
+      <Suspense fallback={null}>
+        {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null}
+      </Suspense>
       <Suspense fallback={null}>
         <Signin
           isOpen={isSigninOpen}

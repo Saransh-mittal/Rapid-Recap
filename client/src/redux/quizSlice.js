@@ -7,6 +7,7 @@ const quizSlice = createSlice({
     language: 'en',
     isQuinBoostAvailable: false,
     quizLeftToGetQuizBoost: 5,
+    tournamentQuiz: false,
   },
   reducers: {
     setIsOpen(state, action) {
@@ -21,6 +22,9 @@ const quizSlice = createSlice({
     setQuizLeftToGetQuizBoost(state, action) {
       state.quizLeftToGetQuizBoost = action.payload
     },
+    setTournamentQuiz(state, action) {
+      state.tournamentQuiz = action.payload
+    },
   },
 })
 
@@ -29,6 +33,7 @@ export const {
   setLanguage,
   setIsQuinBoostAvailable,
   setQuizLeftToGetQuizBoost,
+  setTournamentQuiz,
 } = quizSlice.actions
 
 export default quizSlice.reducer
