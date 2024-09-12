@@ -39,6 +39,7 @@ import {
   setCompletedCategories,
   setTournamentId,
 } from '../redux/tournamentSlice'
+import FullScreenLoadingSpinner from '../components/tournamentComponents/tournamentQuiz/FullScreenLoadingSpinner'
 
 const MotionBox = motion(Box)
 const MotionTab = motion(Tab)
@@ -328,6 +329,7 @@ const Tournament = () => {
 
   return (
     <Box color="white" mt={{ base: 4, md: 8 }} minHeight="100vh">
+      {isFetching && <FullScreenLoadingSpinner />}
       <Container maxW="container.xl" py={16} px={0}>
         <TournamentHeader />
         <Flex direction={{ base: 'column', lg: 'row' }} gap={8}>

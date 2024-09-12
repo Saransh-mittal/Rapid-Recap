@@ -46,7 +46,7 @@ const FullScreenLoadingSpinner = () => {
         color="white"
         animation={`${pulse} 1.5s ease-in-out infinite`}
       >
-        Loading Quiz...
+        Loading ...
       </Text>
     </Flex>
   )
