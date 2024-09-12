@@ -13,7 +13,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
 const OptionButton = React.memo(
-  ({ optionKey, optionText, isCorrect, isUserAnswer, isDisabled }) => (
+  ({
+    optionKey,
+    optionText,
+    isCorrect,
+    isUserAnswer,
+    isDisabled,
+    isTournament,
+  }) => (
     <motion.div>
       <Button
         isDisabled={isDisabled}
@@ -23,9 +30,13 @@ const OptionButton = React.memo(
         justifyContent="flex-start"
         bg={
           isCorrect
-            ? 'green.300'
+            ? isTournament
+              ? 'green.600'
+              : 'green.300'
             : isUserAnswer && !isCorrect
-            ? 'red.300'
+            ? isTournament
+              ? 'orange.600'
+              : 'red.300'
             : 'rgba(255, 255, 255, 0.1)'
         }
         _hover={isDisabled}
@@ -52,9 +63,16 @@ const OptionButton = React.memo(
   ),
 )
 
-const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
+const GivenQuizInterface = ({
+  currentQuestionIndex,
+  quizGivenSummary,
+  isTournament = false,
+}) => {
   const { t } = useTranslation('GivenQuizInterface')
   const [loading, setLoading] = useState(true)
+
+  const getColor = (defaultColor, tournamentColor) =>
+    isTournament ? tournamentColor : defaultColor
 
   useEffect(() => {
     if (quizGivenSummary.length > 0) {
@@ -70,7 +88,7 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
   if (loading) {
     return (
       <Center height="100vh">
-        <Spinner size="xl" color="purple.500" />
+        <Spinner size="xl" color={getColor('purple.500', 'yellow.500')} />
       </Center>
     )
   }
@@ -78,7 +96,7 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
   if (!currentQuestion) {
     return (
       <Center height="100vh">
-        <Text fontSize="xl" color="gray.100">
+        <Text fontSize="xl" color={getColor('gray.100', 'yellow.400')}>
           {t('noQuizData')}
         </Text>
       </Center>
@@ -95,7 +113,6 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
       display="flex"
       flexDirection="column"
       justifyContent="center"
-      bg="rgba(26, 21, 39, 0.9)"
       borderRadius="xl"
       boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
     >
@@ -111,7 +128,7 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
             fontSize={{ base: 'xl', md: '2xl' }}
             fontWeight="bold"
             mb={6}
-            color="purple.200"
+            color={getColor('purple.200', 'yellow.500')}
             textAlign="center"
           >
             {t('questionLabel', {
@@ -128,9 +145,9 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
               size="sm"
               width="100%"
               borderRadius="full"
-              colorScheme="purple"
+              colorScheme={getColor('purple', 'yellow')}
             />
-            <Text ml={4} color="white" flexShrink={0}>
+            <Text ml={4} color={getColor('white', 'yellow.100')} flexShrink={0}>
               {currentQuestionIndex + 1} / {quizGivenSummary.length}
             </Text>
           </Flex>
@@ -138,7 +155,7 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
           <Text
             fontSize={{ base: 'lg', md: 'xl' }}
             mb={8}
-            color="gray.100"
+            color={getColor('gray.100', 'yellow.300')}
             wordBreak="break-word"
           >
             {currentQuestion.question}
@@ -163,6 +180,7 @@ const GivenQuizInterface = ({ currentQuestionIndex, quizGivenSummary }) => {
                   currentQuestion?.userAnswer?.toUpperCase() !==
                     key?.toUpperCase()
                 }
+                isTournament={isTournament}
               />
             ))}
           </VStack>

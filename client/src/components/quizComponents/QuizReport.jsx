@@ -28,7 +28,7 @@ const QuizReport = ({
   const [quizGivenSummary, setQuizGivenSummary] = useState([])
   const [result, setResult] = useState({})
   const toast = useToast()
-
+  console.log(isTournament)
   const fetchQuizSummary = useCallback(async () => {
     try {
       const response = isTournament

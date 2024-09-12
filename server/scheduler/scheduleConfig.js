@@ -160,30 +160,30 @@ let schedules = [
   //   sendGuestAccountExpiryNotifs,
   // ),
   // New tournament management schedules
-  createSchedule('startTournamentRegistration', '02:00', startRegistration),
-  createSchedule('endTournamentRegistration', '23:00', endRegistration),
-  createSchedule('startTournament', '00:00', startTournament),
-  createSchedule('endTournament', '23:59', endTournament),
-  {
-    name: 'inRegistrationPeriod',
-    cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
-    task: inRegisterationPeriod,
-  },
-  {
-    name: 'lastDayOfRegistrationPeriod',
-    cronPattern: '0 20 * * 5', // At 8:00 PM on Friday
-    task: lastDayOfRegisterationPeriod,
-  },
-  {
-    name: 'day1EndOfTournament',
-    cronPattern: '0 22 * * 6', // At 10:00 PM on Saturday
-    task: day1EndOfTournament,
-  },
-  {
-    name: 'day2OfTournament',
-    cronPattern: '0 11 * * 0', // At 11:00 AM on Sunday
-    task: day2OfTournament,
-  },
+  // createSchedule('startTournamentRegistration', '02:00', startRegistration),
+  // createSchedule('endTournamentRegistration', '23:00', endRegistration),
+  // createSchedule('startTournament', '00:00', startTournament),
+  // createSchedule('endTournament', '23:59', endTournament),
+  // {
+  //   name: 'inRegistrationPeriod',
+  //   cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
+  //   task: inRegisterationPeriod,
+  // },
+  // {
+  //   name: 'lastDayOfRegistrationPeriod',
+  //   cronPattern: '0 20 * * 5', // At 8:00 PM on Friday
+  //   task: lastDayOfRegisterationPeriod,
+  // },
+  // {
+  //   name: 'day1EndOfTournament',
+  //   cronPattern: '0 22 * * 6', // At 10:00 PM on Saturday
+  //   task: day1EndOfTournament,
+  // },
+  // {
+  //   name: 'day2OfTournament',
+  //   cronPattern: '0 11 * * 0', // At 11:00 AM on Sunday
+  //   task: day2OfTournament,
+  // },
 ]
 
 // Sort schedules by time

@@ -24,8 +24,8 @@ import Loading from '../miscellaneous/Loading'
 import { motion } from 'framer-motion'
 import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
+import QuizBG from '../tournamentComponents/tournamentQuiz/QuizBG'
 
-// Lazy load components and assets
 const GivenQuizInterface = lazy(() => import('./GivenQuizInterface'))
 const Heading = lazy(() => import('../miscellaneous/HeadingComponent'))
 const ArrowLeftSVG = lazy(() => import('../../assets/svg/ArrowLeftSVG'))
@@ -53,6 +53,9 @@ const QuizGivenSummary = ({
   const [timeTaken, setTimeTaken] = useState(timeTakenInitial)
   const { playClick } = useSound()
 
+  const getColor = (defaultColor, tournamentColor) =>
+    isTournament ? tournamentColor : defaultColor
+
   const fetchQuizSummary = useCallback(async () => {
     try {
       const response = isTournament
@@ -78,7 +81,7 @@ const QuizGivenSummary = ({
     } finally {
       setIsLoading(false)
     }
-  }, [articleId, toast])
+  }, [articleId, toast, isTournament, tournamentId, category, t])
 
   const handleNextQuestion = useCallback(() => {
     playClick()
@@ -103,18 +106,22 @@ const QuizGivenSummary = ({
   )
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '3xl' }}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={isTournament ? 'full' : { base: 'full', md: '3xl' }}
+    >
       <ModalOverlay
         bg="blackAlpha.300"
         backdropFilter="blur(40px) hue-rotate(90deg)"
       />
 
       <ModalContent
-        bg="rgba(26, 21, 39, 0.9)"
         color={'white'}
         borderRadius="xl"
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
       >
+        {isTournament && <QuizBG />}
         {isLoading ? (
           <Loading />
         ) : (
@@ -134,14 +141,15 @@ const QuizGivenSummary = ({
                     marginBottom="1rem"
                     tagColor={
                       !currentQuestion.userAnswer
-                        ? 'blue'
+                        ? getColor('blue', 'yellow')
                         : currentQuestion.isCorrect
-                        ? 'green'
-                        : 'red'
+                        ? getColor('green', 'lime')
+                        : getColor('red', 'orange')
                     }
                     marginTop="1rem"
                     tagFontSize="xl"
                     tagFontWeight="bold"
+                    color={getColor('red', 'orange')}
                   />
                 </Suspense>
               </Flex>
@@ -153,7 +161,7 @@ const QuizGivenSummary = ({
               }}
               onMouseEnter={() => setIsCloseButtonHovered(true)}
               onMouseLeave={() => setIsCloseButtonHovered(false)}
-              bg={'purple.300'}
+              bg={getColor('purple.300', 'yellow.300')}
             />
             <ModalBody
               display={'flex'}
@@ -169,6 +177,8 @@ const QuizGivenSummary = ({
                 <GivenQuizInterface
                   quizGivenSummary={quizGivenSummary}
                   currentQuestionIndex={currentQuestionIndex}
+                  isTournament={isTournament}
+                  getColor={getColor}
                 />
               </Suspense>
             </ModalBody>
@@ -179,9 +189,12 @@ const QuizGivenSummary = ({
               justifyContent={'center'}
               flexDirection={'column'}
             >
-              <Text textColor={'white'} marginBottom={4} marginTop={2}>
-                {t('explanation')} {currentQuestion.explanation}
-              </Text>
+              {!isTournament && (
+                <Text textColor={'white'} marginBottom={4} marginTop={2}>
+                  {t('explanation')} {currentQuestion.explanation}
+                </Text>
+              )}
+
               <Flex
                 justifyContent={'center'}
                 gap={'40px'}
@@ -214,9 +227,9 @@ const QuizGivenSummary = ({
                         mt={5}
                         size={'lg'}
                         width={'150px'}
-                        bg={'purple.500'}
+                        bg={getColor('purple.500', 'yellow.500')}
                         _hover={{
-                          bg: 'purple.600',
+                          bg: getColor('purple.600', 'yellow.600'),
                         }}
                       >
                         {t('next')}
@@ -251,9 +264,9 @@ const QuizGivenSummary = ({
                         mt={5}
                         size={'lg'}
                         width={'150px'}
-                        bg={'purple.500'}
+                        bg={getColor('purple.500', 'yellow.500')}
                         _hover={{
-                          bg: 'purple.600',
+                          bg: getColor('purple.600', 'yellow.600'),
                         }}
                       >
                         {t('previous')}
