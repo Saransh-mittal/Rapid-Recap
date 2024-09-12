@@ -1,0 +1,156 @@
+import React from 'react'
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  VStack,
+  HStack,
+  Text,
+  Box,
+  Progress,
+  Flex,
+  Heading,
+  SimpleGrid,
+  Badge,
+  Button,
+  useToast,
+} from '@chakra-ui/react'
+import { Trophy, Target, Clock } from 'lucide-react'
+import CategoryCard from './CategoryCard'
+import QuizBG from './tournamentQuiz/QuizBG'
+import UserSVG from '../../assets/svg/UserSVG'
+import { useNavigate } from 'react-router-dom'
+
+const UserStatsModal = ({ isOpen, onClose, userStats }) => {
+  const statsRef = React.useRef(null)
+  const navigate = useNavigate()
+
+  if (!userStats) return null
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="full">
+      <ModalOverlay />
+      <ModalContent
+        color="white"
+        borderRadius="lg"
+        boxShadow="0 0 20px rgba(255, 215, 0, 0.3)"
+        ref={statsRef}
+      >
+        <QuizBG />
+        <ModalHeader
+          fontSize="3xl"
+          fontWeight="bold"
+          textAlign="center"
+          borderBottom="2px solid"
+          borderColor="gold"
+          pb={4}
+        >
+          Player Statistics
+        </ModalHeader>
+        <ModalCloseButton color="gold" />
+        <ModalBody w={'90%'}>
+          <VStack spacing={8} align="stretch" py={6}>
+            <Box>
+              <Heading size="lg" mb={4} color="gold">
+                Overall Performance
+              </Heading>
+              <HStack
+                justify="space-between"
+                bg="whiteAlpha.200"
+                p={4}
+                borderRadius="md"
+              >
+                <HStack>
+                  <Trophy color="gold" size={32} />
+                  <VStack align="start" spacing={0}>
+                    <Text fontSize="sm">Total Score</Text>
+                    <Text
+                      fontSize={{ base: 'xl', md: '2xl' }}
+                      fontWeight="bold"
+                      color="gold"
+                    >
+                      {userStats.totalScore}
+                    </Text>
+                  </VStack>
+                </HStack>
+                <Badge fontSize={{ base: 'sm', md: 'lg' }}>
+                  Quiz Count {userStats.completedCategories.length}
+                </Badge>
+              </HStack>
+            </Box>
+
+            <Box>
+              <Heading size="lg" mb={4} color="gold">
+                Category Breakdown
+              </Heading>
+              <SimpleGrid
+                columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
+                spacing={4}
+              >
+                {userStats.categoryStats.map((stat, index) => (
+                  <Box key={index}>
+                    <CategoryCard
+                      category={stat.category}
+                      isCompleted={userStats.completedCategories.includes(
+                        stat.category,
+                      )}
+                      isSelected={false}
+                      onSelect={() => {}}
+                    />
+                    <VStack
+                      mt={2}
+                      bg="whiteAlpha.200"
+                      p={2}
+                      borderRadius="md"
+                      spacing={1}
+                      align="stretch"
+                    >
+                      <Flex justify="space-between">
+                        <HStack>
+                          <Trophy color="gold" size={16} />
+                          <Text fontSize="sm">Rank: #{stat.ranking}</Text>
+                        </HStack>
+                        <Text fontSize="sm" fontWeight="bold" color="cyan">
+                          RQM: {stat.RQM_score.toFixed(2)}
+                        </Text>
+                      </Flex>
+                      <Progress
+                        value={(stat.score / 100) * 100}
+                        colorScheme="yellow"
+                        size="sm"
+                      />
+                      <Flex justify="space-between">
+                        <HStack>
+                          <Target color="cyan" size={16} />
+                          <Text fontSize="sm">Right : {stat.score}</Text>
+                        </HStack>
+                        <HStack>
+                          <Clock color="pink" size={16} />
+                          <Text fontSize="sm">{stat.timeTaken}s</Text>
+                        </HStack>
+                      </Flex>
+                    </VStack>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            </Box>
+          </VStack>
+          <Flex justifyContent="center" mt={6}>
+            <Button
+              leftIcon={<UserSVG fill={'white'} />}
+              colorScheme="pink"
+              onClick={() => navigate(`/profile/${userStats.inGameName}`)}
+            >
+              View Profile
+            </Button>
+          </Flex>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  )
+}
+
+export default UserStatsModal

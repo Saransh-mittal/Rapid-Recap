@@ -7,6 +7,7 @@ import {
   Center,
   HStack,
   Text,
+  useDisclosure,
 } from '@chakra-ui/react'
 import { Trophy, Medal } from 'lucide-react'
 import LeaderboardTable from './LeaderboardTable'
@@ -15,6 +16,7 @@ import axios from 'axios'
 import { useInView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
 import { setRefetchLeaderBoard } from '../../redux/tournamentSlice'
+import UserStatsModal from './UserStatsModal'
 
 const LeaderboardSection = ({ tournamentData }) => {
   const [leaderboardData, setLeaderboardData] = useState([])
@@ -31,11 +33,13 @@ const LeaderboardSection = ({ tournamentData }) => {
   const { user } = useSelector(state => state.auth)
   const { refetchLeaderBoard } = useSelector(state => state.tournament)
   const dispatch = useDispatch()
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [selectedUserStats, setSelectedUserStats] = useState(null)
+
   const lock = useRef(false)
 
   const fetchLeaderboard = useCallback(
     async (isFirstLoad = false, resetPage = false) => {
-      console.log(isLoading, hasMore, resetPage, refetchLeaderBoard)
       if (
         isLoading ||
         (!hasMore && !resetPage && !refetchLeaderBoard) ||
@@ -46,7 +50,6 @@ const LeaderboardSection = ({ tournamentData }) => {
       lock.current = true
       setIsLoading(true)
       try {
-        console.log(tournamentData._id, page, resetPage, user?._id)
         const response = await axios.get(`/api/tournament/leaderboard`, {
           params: {
             tournamentId: tournamentData._id,
@@ -57,7 +60,7 @@ const LeaderboardSection = ({ tournamentData }) => {
         })
 
         const newData = response.data.leaderboard
-        console.log(resetPage, newData)
+
         setLeaderboardData(prevData =>
           resetPage || refetchLeaderBoard ? newData : [...prevData, ...newData],
         )
@@ -82,6 +85,23 @@ const LeaderboardSection = ({ tournamentData }) => {
       refetchLeaderBoard,
     ],
   )
+
+  const handleUserStandingClick = async () => {
+    if (user && userStanding) {
+      try {
+        const response = await axios.get(
+          `/api/tournament/user-stats/${tournamentData._id}/${user._id}`,
+        )
+        setSelectedUserStats({
+          ...response.data,
+          inGameName: userStanding.inGameName,
+        })
+        onOpen()
+      } catch (error) {
+        console.error('Error fetching user stats:', error)
+      }
+    }
+  }
 
   useEffect(() => {
     fetchLeaderboard(true)
@@ -135,7 +155,15 @@ const LeaderboardSection = ({ tournamentData }) => {
         setIsSearchActive={setIsSearchActive}
       />
       {userStanding && (
-        <Box bg="whiteAlpha.200" p={4} borderRadius="md" boxShadow="md">
+        <Box
+          bg="whiteAlpha.200"
+          p={4}
+          borderRadius="md"
+          boxShadow="md"
+          cursor="pointer"
+          onClick={handleUserStandingClick}
+          _hover={{ bg: 'whiteAlpha.300' }}
+        >
           <HStack justifyContent="space-between" alignItems="center">
             <HStack>
               <Medal color="#ECC94B" />
@@ -157,7 +185,11 @@ const LeaderboardSection = ({ tournamentData }) => {
         </Box>
       )}
       <Box>
-        <LeaderboardTable data={leaderboardData} ref={ref} />
+        <LeaderboardTable
+          data={leaderboardData}
+          ref={ref}
+          tournamentId={tournamentData._id}
+        />
         {isLoading && (
           <Center mt={4}>
             <Spinner
@@ -170,6 +202,11 @@ const LeaderboardSection = ({ tournamentData }) => {
           </Center>
         )}
       </Box>
+      <UserStatsModal
+        isOpen={isOpen}
+        onClose={onClose}
+        userStats={selectedUserStats}
+      />
     </VStack>
   )
 }
