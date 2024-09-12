@@ -221,7 +221,7 @@ const SubmittedQuizInterface = ({
       flexDirection="column"
       justifyContent="space-between"
       borderRadius="xl"
-      mt={4}
+      mt={isTournament ? 4 : -12}
       border={getColor('none', '1px solid rgba(255,215,0,0.3)')}
       boxShadow={getColor('none', '0 0 20px rgba(255,215,0,0.2)')}
     >
