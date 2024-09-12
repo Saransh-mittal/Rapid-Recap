@@ -12,6 +12,7 @@ const {
   searchTournamentLeaderboard,
   getCurrentTournamentCurrentAffairsQuestions,
   getQuizSummary,
+  getUserStats,
 } = require('../controllers/tournamentController')
 
 const { Authenticate, adminMiddleware } = require('../middleware/authenticate')
@@ -50,5 +51,6 @@ router.delete(
 router.post('/quiz/start', Authenticate, startQuiz)
 router.post('/quiz/submit', Authenticate, submitQuiz)
 router.get('/quiz/summary', Authenticate, getQuizSummary)
+router.get('/user-stats/:tournamentId/:userId', getUserStats)
 
 module.exports = router

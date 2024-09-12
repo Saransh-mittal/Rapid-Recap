@@ -7,6 +7,7 @@ import {
   Center,
   HStack,
   Text,
+  useDisclosure,
 } from '@chakra-ui/react'
 import { Trophy, Medal } from 'lucide-react'
 import LeaderboardTable from './LeaderboardTable'
@@ -14,6 +15,7 @@ import LeaderboardSearch from './LeaderboardSearch'
 import axios from 'axios'
 import { useInView } from 'react-intersection-observer'
 import { useSelector } from 'react-redux'
+import UserStatsModal from './UserStatsModal'
 
 const LeaderboardSection = ({ tournamentData }) => {
   const [leaderboardData, setLeaderboardData] = useState([])
@@ -28,6 +30,8 @@ const LeaderboardSection = ({ tournamentData }) => {
     triggerOnce: false,
   })
   const { user } = useSelector(state => state.auth)
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [selectedUserStats, setSelectedUserStats] = useState(null)
 
   const lock = useRef(false)
 
@@ -64,6 +68,23 @@ const LeaderboardSection = ({ tournamentData }) => {
     },
     [tournamentData._id, page, hasMore, isLoading, user?._id],
   )
+
+  const handleUserStandingClick = async () => {
+    if (user && userStanding) {
+      try {
+        const response = await axios.get(
+          `/api/tournament/user-stats/${tournamentData._id}/${user._id}`,
+        )
+        setSelectedUserStats({
+          ...response.data,
+          inGameName: userStanding.inGameName,
+        })
+        onOpen()
+      } catch (error) {
+        console.error('Error fetching user stats:', error)
+      }
+    }
+  }
 
   useEffect(() => {
     fetchLeaderboard(true)
@@ -109,7 +130,15 @@ const LeaderboardSection = ({ tournamentData }) => {
         setIsSearchActive={setIsSearchActive}
       />
       {userStanding && (
-        <Box bg="whiteAlpha.200" p={4} borderRadius="md" boxShadow="md">
+        <Box
+          bg="whiteAlpha.200"
+          p={4}
+          borderRadius="md"
+          boxShadow="md"
+          cursor="pointer"
+          onClick={handleUserStandingClick}
+          _hover={{ bg: 'whiteAlpha.300' }}
+        >
           <HStack justifyContent="space-between" alignItems="center">
             <HStack>
               <Medal color="#ECC94B" />
@@ -131,7 +160,11 @@ const LeaderboardSection = ({ tournamentData }) => {
         </Box>
       )}
       <Box>
-        <LeaderboardTable data={leaderboardData} ref={ref} />
+        <LeaderboardTable
+          data={leaderboardData}
+          ref={ref}
+          tournamentId={tournamentData._id}
+        />
         {isLoading && (
           <Center mt={4}>
             <Spinner
@@ -144,6 +177,11 @@ const LeaderboardSection = ({ tournamentData }) => {
           </Center>
         )}
       </Box>
+      <UserStatsModal
+        isOpen={isOpen}
+        onClose={onClose}
+        userStats={selectedUserStats}
+      />
     </VStack>
   )
 }

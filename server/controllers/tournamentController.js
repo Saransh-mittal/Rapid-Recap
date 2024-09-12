@@ -156,6 +156,7 @@ const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
         name: userEntry.name,
         score: userEntry.totalScore,
         level: userEntry.level,
+        userId: userEntry.userId,
       }
     }
   }
@@ -167,6 +168,7 @@ const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
     email: entry.email,
     score: entry.totalScore,
     level: entry.level,
+    userId: entry.userId,
   }))
 
   res.json({
@@ -770,6 +772,86 @@ const getQuizSummary = asyncHandler(async (req, res) => {
   res.json(summary)
 })
 
+// @desc   Get user stats for a tournament
+// @route  GET /api/tournament/user-stats/:tournamentId/:userId
+// @access Public
+const getUserStats = asyncHandler(async (req, res) => {
+  const { userId, tournamentId } = req.params
+
+  // Fetch tournament registration
+  const registration = await TournamentRegistration.findOne({
+    user: userId,
+    tournament: tournamentId,
+  })
+
+  if (!registration) {
+    return res
+      .status(404)
+      .json({ message: 'User not registered for this tournament' })
+  }
+
+  // Fetch quiz sessions for the user in this tournament
+  const quizSessions = await QuizSession.find({
+    user: userId,
+    tournament: tournamentId,
+  })
+
+  // Calculate stats
+  const categoryStats = await Promise.all(
+    quizSessions.map(async session => {
+      const [{ rank }] = await QuizSession.aggregate([
+        {
+          $match: {
+            tournament: new mongoose.Types.ObjectId(tournamentId),
+            category: session.category,
+          },
+        },
+        {
+          $group: {
+            _id: '$user',
+            bestScore: { $max: '$RQM_score' },
+          },
+        },
+        { $sort: { bestScore: -1 } },
+        {
+          $group: {
+            _id: null,
+            userScores: { $push: '$bestScore' },
+          },
+        },
+        {
+          $project: {
+            rank: {
+              $add: [
+                {
+                  $indexOfArray: ['$userScores', session.RQM_score],
+                },
+                1,
+              ],
+            },
+          },
+        },
+      ])
+
+      return {
+        category: session.category,
+        score: session.score,
+        RQM_score: session.RQM_score,
+        timeTaken: session.timeTaken,
+        ranking: rank,
+      }
+    }),
+  )
+
+  const userStats = {
+    totalScore: registration.totalScore,
+    completedCategories: registration.completedCategories,
+    categoryStats,
+  }
+
+  res.json(userStats)
+})
+
 module.exports = {
   registerForTournament,
   addCurrentAffairsQuestion,
@@ -783,4 +865,5 @@ module.exports = {
   searchTournamentLeaderboard,
   getCurrentTournamentCurrentAffairsQuestions,
   getQuizSummary,
+  getUserStats,
 }
