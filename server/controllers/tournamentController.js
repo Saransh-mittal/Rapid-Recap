@@ -637,6 +637,11 @@ const submitQuiz = asyncHandler(async (req, res) => {
 
     await commitSession()
 
+    logActivity({
+      userInGameName: user.inGameName,
+      type: activityTypes.TOURNAMENT_QUIZ.type,
+    })
+
     const quizDifficultyLevel =
       quizDifficulty < 0.5
         ? 'easy'
