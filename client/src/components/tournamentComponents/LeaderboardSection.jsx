@@ -14,7 +14,8 @@ import LeaderboardTable from './LeaderboardTable'
 import LeaderboardSearch from './LeaderboardSearch'
 import axios from 'axios'
 import { useInView } from 'react-intersection-observer'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setRefetchLeaderBoard } from '../../redux/tournamentSlice'
 import UserStatsModal from './UserStatsModal'
 
 const LeaderboardSection = ({ tournamentData }) => {
@@ -30,6 +31,8 @@ const LeaderboardSection = ({ tournamentData }) => {
     triggerOnce: false,
   })
   const { user } = useSelector(state => state.auth)
+  const { refetchLeaderBoard } = useSelector(state => state.tournament)
+  const dispatch = useDispatch()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [selectedUserStats, setSelectedUserStats] = useState(null)
 
@@ -37,7 +40,12 @@ const LeaderboardSection = ({ tournamentData }) => {
 
   const fetchLeaderboard = useCallback(
     async (isFirstLoad = false, resetPage = false) => {
-      if (isLoading || (!hasMore && !resetPage) || lock.current) return
+      if (
+        isLoading ||
+        (!hasMore && !resetPage && !refetchLeaderBoard) ||
+        lock.current
+      )
+        return
 
       lock.current = true
       setIsLoading(true)
@@ -45,19 +53,21 @@ const LeaderboardSection = ({ tournamentData }) => {
         const response = await axios.get(`/api/tournament/leaderboard`, {
           params: {
             tournamentId: tournamentData._id,
-            page: resetPage ? 1 : page,
+            page: resetPage || refetchLeaderBoard ? 1 : page,
             limit: 50,
             userId: user?._id, // Pass the user ID to get user standings
           },
         })
+
         const newData = response.data.leaderboard
+
         setLeaderboardData(prevData =>
-          resetPage ? newData : [...prevData, ...newData],
+          resetPage || refetchLeaderBoard ? newData : [...prevData, ...newData],
         )
         setHasMore(response.data.hasMore)
         setPage(prevPage => (resetPage ? 2 : prevPage + 1))
         setUserStanding(response.data.userStanding) // Set user standings
-
+        dispatch(setRefetchLeaderBoard(false))
         if (isFirstLoad) setFirstLoadComplete(true)
       } catch (error) {
         console.error('Error fetching leaderboard:', error)
@@ -66,7 +76,14 @@ const LeaderboardSection = ({ tournamentData }) => {
         lock.current = false
       }
     },
-    [tournamentData._id, page, hasMore, isLoading, user?._id],
+    [
+      tournamentData._id,
+      page,
+      hasMore,
+      isLoading,
+      user?._id,
+      refetchLeaderBoard,
+    ],
   )
 
   const handleUserStandingClick = async () => {
@@ -88,7 +105,7 @@ const LeaderboardSection = ({ tournamentData }) => {
 
   useEffect(() => {
     fetchLeaderboard(true)
-  }, [])
+  }, [refetchLeaderBoard])
 
   useEffect(() => {
     if (
@@ -97,11 +114,19 @@ const LeaderboardSection = ({ tournamentData }) => {
       hasMore &&
       !lock.current &&
       firstLoadComplete &&
-      !isSearchActive
+      !isSearchActive &&
+      !refetchLeaderBoard
     ) {
       fetchLeaderboard()
     }
-  }, [inView, isLoading, hasMore, firstLoadComplete, isSearchActive])
+  }, [
+    inView,
+    isLoading,
+    hasMore,
+    firstLoadComplete,
+    isSearchActive,
+    refetchLeaderBoard,
+  ])
 
   const handleSearch = searchResults => {
     setLeaderboardData(searchResults)

@@ -9,6 +9,7 @@ const initialState = {
   leaderboard: [],
   isLoading: false,
   error: null,
+  refetchLeaderBoard: false,
 }
 
 const tournamentSlice = createSlice({
@@ -45,6 +46,9 @@ const tournamentSlice = createSlice({
     resetTournamentState: state => {
       Object.assign(state, initialState)
     },
+    setRefetchLeaderBoard: (state, action) => {
+      state.refetchLeaderBoard = action.payload
+    },
   },
 })
 
@@ -59,6 +63,7 @@ export const {
   setError,
   resetTournamentState,
   setCompletedCategories,
+  setRefetchLeaderBoard,
 } = tournamentSlice.actions
 
 export default tournamentSlice.reducer

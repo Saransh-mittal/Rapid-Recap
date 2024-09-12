@@ -13,7 +13,10 @@ import useSound from '../../../customHooks/useSound'
 import QuizGivenSummary from '../../quizComponents/QuizGivenSummary'
 import ShutterAnimation from './ShutterAnimation'
 import FullScreenLoadingSpinner from './FullScreenLoadingSpinner'
-import { setCompletedCategories } from '../../../redux/tournamentSlice'
+import {
+  setCompletedCategories,
+  setRefetchLeaderBoard,
+} from '../../../redux/tournamentSlice'
 
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
 const SubmittedQuizInterface = lazy(() =>
@@ -151,7 +154,16 @@ const TournamentQuiz = () => {
         setSubmitting(false)
       }
     },
-    [quizSession, userAnswers, dispatch, user, category, toast, t],
+    [
+      quizSession,
+      userAnswers,
+      dispatch,
+      user,
+      category,
+      setRefetchLeaderBoard,
+      toast,
+      t,
+    ],
   )
 
   const { timer, timeTaken } = useTimer(
@@ -169,6 +181,7 @@ const TournamentQuiz = () => {
     } else {
       dispatch(setIsOpen(false))
       dispatch(setTournamentQuiz(false))
+      dispatch(setRefetchLeaderBoard(true))
       dispatch(
         addNoteMessage({
           messageType: 'xpAward',
