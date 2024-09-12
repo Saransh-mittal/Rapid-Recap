@@ -13,6 +13,7 @@ import useSound from '../../../customHooks/useSound'
 import QuizGivenSummary from '../../quizComponents/QuizGivenSummary'
 import ShutterAnimation from './ShutterAnimation'
 import FullScreenLoadingSpinner from './FullScreenLoadingSpinner'
+import { setCompletedCategories } from '../../../redux/tournamentSlice'
 
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
 const SubmittedQuizInterface = lazy(() =>
@@ -30,7 +31,10 @@ const TournamentQuiz = () => {
 
   const { isOpen } = useSelector(state => state.quiz)
   const { user } = useSelector(state => state.auth)
-  const { tournamentId, category } = useSelector(state => state.tournament)
+  const { tournamentId, category, completedCategories } = useSelector(
+    state => state.tournament,
+  )
+
   const [error, setError] = useState(null)
   const [quizSession, setQuizSession] = useState(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -122,7 +126,7 @@ const TournamentQuiz = () => {
         })
         setResult(response.data)
         setSubmitted(true)
-
+        dispatch(setCompletedCategories([...completedCategories, category]))
         dispatch(
           setUser({
             ...user,
@@ -168,7 +172,7 @@ const TournamentQuiz = () => {
       dispatch(
         addNoteMessage({
           messageType: 'xpAward',
-          xpAwarded: response.data.xpAwarded,
+          xpAwarded: 10,
           title: t('XP Awarded For Tournament Quiz'),
           actions: [{ actionType: 'VIEW_EXPERIENCE' }],
           width: '250px',
@@ -198,6 +202,19 @@ const TournamentQuiz = () => {
   }, [])
 
   const renderModalBody = useCallback(() => {
+    if (showCategoryQuizSummary) {
+      return (
+        <Suspense fallback={null}>
+          <QuizGivenSummary
+            isOpen={showCategoryQuizSummary}
+            onClose={() => setShowCategoryQuizSummary(false)}
+            isTournament={true}
+            tournamentId={tournamentId}
+            category={category}
+          />
+        </Suspense>
+      )
+    }
     if (loading) {
       return <FullScreenLoadingSpinner />
     }
@@ -206,34 +223,6 @@ const TournamentQuiz = () => {
       return (
         <Suspense fallback={null}>
           <ShutterAnimation onComplete={handleAnimationComplete} />
-        </Suspense>
-      )
-    }
-
-    if (showCategoryQuizSummary) {
-      return (
-        <Suspense fallback={null}>
-          <QuizGivenSummary
-            isOpen={showCategoryQuizSummary}
-            onClose={() => setShowCategoryQuizSummary(false)}
-            isTournament={true}
-            tournamentId={tournamentId}
-            category={category}
-          />
-        </Suspense>
-      )
-    }
-
-    if (showCategoryQuizSummary) {
-      return (
-        <Suspense fallback={null}>
-          <QuizGivenSummary
-            isOpen={showCategoryQuizSummary}
-            onClose={() => setShowCategoryQuizSummary(false)}
-            isTournament={true}
-            tournamentId={tournamentId}
-            category={category}
-          />
         </Suspense>
       )
     }
@@ -295,6 +284,8 @@ const TournamentQuiz = () => {
     quizSession,
     handleAnswer,
     userAnswers,
+    showCategoryQuizSummary,
+    tournamentId,
   ])
 
   return (

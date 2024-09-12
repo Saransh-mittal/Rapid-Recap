@@ -17,7 +17,7 @@ import { FaDice, FaNewspaper } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import CategoryCard from './CategoryCard'
 import QuizConfirmationModal from './tournamentQuiz/QuizConfirmationModal'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import QuizReport from '../quizComponents/QuizReport'
 
 const MotionBox = motion(Box)
@@ -45,7 +45,6 @@ const CategorySelection = ({
   onRegister,
   isRegistration = false,
   registerLoading = false,
-  completedQuizzes = [], // New prop to track completed quizzes
   tournamentId,
 }) => {
   const [showQuizSummary, setShowQuizSummary] = useState(false)
@@ -53,6 +52,9 @@ const CategorySelection = ({
   const [userSelectedCategories, setUserSelectedCategories] = useState([])
   const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const { completedCategories: completedQuizzes } = useSelector(
+    state => state.tournament,
+  )
 
   const handleCategorySelect = category => {
     if (completedQuizzes.includes(category)) {

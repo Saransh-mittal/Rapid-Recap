@@ -682,7 +682,7 @@ const getQuizSummary = asyncHandler(async (req, res) => {
     },
     {
       $lookup: {
-        from: 'users',
+        from: 'Users',
         localField: 'user',
         foreignField: '_id',
         as: 'userDetails',
