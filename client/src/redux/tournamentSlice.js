@@ -5,6 +5,7 @@ const initialState = {
   category: null,
   currentTournament: null,
   participatedTournaments: [],
+  completedCategories: [],
   leaderboard: [],
   isLoading: false,
   error: null,
@@ -35,6 +36,9 @@ const tournamentSlice = createSlice({
     setIsLoading: (state, action) => {
       state.isLoading = action.payload
     },
+    setCompletedCategories: (state, action) => {
+      state.completedCategories = action.payload
+    },
     setError: (state, action) => {
       state.error = action.payload
     },
@@ -54,6 +58,7 @@ export const {
   setIsLoading,
   setError,
   resetTournamentState,
+  setCompletedCategories,
 } = tournamentSlice.actions
 
 export default tournamentSlice.reducer

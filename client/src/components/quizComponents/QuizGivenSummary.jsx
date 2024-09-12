@@ -117,6 +117,7 @@ const QuizGivenSummary = ({
       />
 
       <ModalContent
+        bg={isTournament ? 'none' : 'rgba(26, 21, 39, 0.9)'}
         color={'white'}
         borderRadius="xl"
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
@@ -198,7 +199,7 @@ const QuizGivenSummary = ({
               <Flex
                 justifyContent={'center'}
                 gap={'40px'}
-                w="100%"
+                w={isTournament ? '50%' : '100%'}
                 flexDirection={'row-reverse'}
               >
                 {currentQuestionIndex < quizGivenSummary.length - 1 && (

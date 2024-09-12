@@ -457,7 +457,7 @@ const getQuizSummary = async (req, res) => {
       result,
       timeTaken: quizAttempt.timeTaken,
       RQM_score: quizAttempt.RQM_score,
-      articleDifficulty: articleDifficultyLevel,
+      quizDifficulty: articleDifficultyLevel,
       score: scoreString,
     })
   } catch (error) {

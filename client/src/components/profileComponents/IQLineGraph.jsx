@@ -1,37 +1,23 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  lazy,
-  Suspense,
-} from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Flex,
   Text,
   Tooltip,
   Image,
   Spinner,
-  Tag,
-  useToast,
   useBreakpointValue,
   Badge,
 } from '@chakra-ui/react'
 import moment from 'moment'
-import axios from 'axios'
+
 import Lock from '/images/lock.webp'
 import { useDispatch, useSelector } from 'react-redux'
-import useSound from '../../customHooks/useSound'
+
 import SVGIQLineGraph from '../../assets/svg/SVGIQLineGraph'
 import { addNoteMessage } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 import { formatDate } from '../../utils/helper.utils'
 import i18n from 'i18next'
-
-// Lazy load the ExpectedIQModal component
-const ExpectedIQModal = lazy(() =>
-  import('../articleComponents/ExpectedIQModal'),
-)
 
 // LoadingSpinner Component
 const LoadingSpinner = React.memo(() => (
@@ -53,54 +39,29 @@ const LoadingSpinner = React.memo(() => (
 ))
 
 // NoDataMessage Component
-const NoDataMessage = React.memo(
-  ({
-    viewingHistory,
-    getExpectedIQ,
-    showExpectedIQ,
-    expectedIQ,
-    isLoading,
-    setShowExpectedIQ,
-  }) => {
-    const { t } = useTranslation('IQLineGraph')
-    return (
-      <Flex
-        w="100%"
-        justifyContent="center"
-        alignItems="center"
-        flexDirection="column"
-        position="relative"
-        backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-        boxShadow={{
-          xl: 'none',
-          base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-        }}
-      >
-        <Text m={0}>
-          {viewingHistory ? t('noDataAvailable') : t('giveQuizzes')}
-        </Text>
+const NoDataMessage = React.memo(({ viewingHistory }) => {
+  const { t } = useTranslation('IQLineGraph')
+  return (
+    <Flex
+      w="100%"
+      justifyContent="center"
+      alignItems="center"
+      flexDirection="column"
+      position="relative"
+      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
+      boxShadow={{
+        xl: 'none',
+        base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+      }}
+    >
+      <Text m={0}>
+        {viewingHistory ? t('noDataAvailable') : t('giveQuizzes')}
+      </Text>
 
-        <Image
-          h="200px"
-          w="200px"
-          background="transparent"
-          src={Lock}
-          onClick={getExpectedIQ}
-        />
-
-        {showExpectedIQ && (
-          <Suspense fallback={<Spinner />}>
-            <ExpectedIQModal
-              expectedIQ={expectedIQ}
-              setShowExpectedIQ={setShowExpectedIQ}
-              isLoading={isLoading}
-            />
-          </Suspense>
-        )}
-      </Flex>
-    )
-  },
-)
+      <Image h="200px" w="200px" background="transparent" src={Lock} />
+    </Flex>
+  )
+})
 
 // GraphHeader Component
 const GraphHeader = React.memo(
@@ -175,16 +136,13 @@ const IQLineGraph = ({
   privateLineGraph,
   loginedUserProfile,
   viewingHistory = false,
-  isNavIQ = false,
-  iOpenedFromNav = false,
   graphwidth,
   isGuest,
   t,
 }) => {
-  const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const [isLoading, setIsLoading] = useState(true)
-  const toast = useToast()
+
   const responsiveChartWidth = useBreakpointValue({
     base: 350,
     md: 300,
@@ -194,8 +152,6 @@ const IQLineGraph = ({
   })
   const dispatch = useDispatch()
   const [hoveredData, setHoveredData] = useState(null)
-  const [expectedIQ, setExpectedIQ] = useState(0)
-  const [showExpectedIQ, setShowExpectedIQ] = useState(false)
 
   const chartData = useMemo(() => {
     return lineGraph.map(entry => ({
@@ -215,30 +171,6 @@ const IQLineGraph = ({
     },
     [chartData],
   )
-
-  const getExpectedIQ = useCallback(async () => {
-    playClick()
-    setIsLoading(true)
-    setShowExpectedIQ(true)
-    try {
-      const response = await axios.get('/api/user/expectedIQScore')
-      if (response.data.ExpectedIQScore) {
-        setExpectedIQ(response.data.ExpectedIQScore)
-      }
-    } catch (error) {
-      toast({
-        title: t('errorOccurred'),
-        description: t('unableToFetch'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-      console.error(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [playClick, toast, t])
 
   useEffect(() => {
     setHoveredData(chartData[chartData.length - 2])
@@ -293,14 +225,7 @@ const IQLineGraph = ({
         {isLoading ? (
           <LoadingSpinner />
         ) : (
-          <NoDataMessage
-            viewingHistory={viewingHistory}
-            getExpectedIQ={getExpectedIQ}
-            showExpectedIQ={showExpectedIQ}
-            expectedIQ={expectedIQ}
-            isLoading={isLoading}
-            setShowExpectedIQ={setShowExpectedIQ}
-          />
+          <NoDataMessage viewingHistory={viewingHistory} />
         )}
       </Flex>
     )

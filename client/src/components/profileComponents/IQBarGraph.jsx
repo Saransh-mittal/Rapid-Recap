@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense, useCallback } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   Badge,
   Flex,
@@ -7,20 +7,13 @@ import {
   Text,
   Tooltip,
   useBreakpointValue,
-  useToast,
 } from '@chakra-ui/react'
-import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Lock from '/images/lock.webp'
-import useSound from '../../customHooks/useSound'
+
 import SVGBarGraph from '../../assets/svg/SVGBarGraph'
 import { addNoteMessage } from '../../redux/appSlice'
-
-// Lazy load ExpectedIQModal component
-const ExpectedIQModal = lazy(() =>
-  import('../articleComponents/ExpectedIQModal'),
-)
 
 // LoadingSpinner Component
 const LoadingSpinner = React.memo(() => (
@@ -59,41 +52,25 @@ const HiddenGraphMessage = React.memo(() => (
 ))
 
 // NoDataMessage Component
-const NoDataMessage = React.memo(
-  ({ getExpectedIQ, expectedIQ, setShowExpectedIQ, showExpectedIQ, t }) => {
-    return (
-      <Flex
-        w="100%"
-        justifyContent="center"
-        alignItems="center"
-        flexDirection="column"
-        position="relative"
-        backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-        boxShadow={{
-          xl: 'none',
-          base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-        }}
-      >
-        <Text m={0}>{t('giveQuizzesToUnlock')}</Text>
-        <Image
-          h="200px"
-          w="200px"
-          src={Lock}
-          onClick={getExpectedIQ}
-          cursor="pointer"
-        />
-        {showExpectedIQ && (
-          <Suspense fallback={<Spinner />}>
-            <ExpectedIQModal
-              expectedIQ={expectedIQ}
-              setShowExpectedIQ={setShowExpectedIQ}
-            />
-          </Suspense>
-        )}
-      </Flex>
-    )
-  },
-)
+const NoDataMessage = React.memo(({ t }) => {
+  return (
+    <Flex
+      w="100%"
+      justifyContent="center"
+      alignItems="center"
+      flexDirection="column"
+      position="relative"
+      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
+      boxShadow={{
+        xl: 'none',
+        base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+      }}
+    >
+      <Text m={0}>{t('giveQuizzesToUnlock')}</Text>
+      <Image h="200px" w="200px" src={Lock} cursor="pointer" />
+    </Flex>
+  )
+})
 
 const IQBarGraph = ({
   barGraph,
@@ -102,7 +79,6 @@ const IQBarGraph = ({
   isGuest,
   t,
 }) => {
-  const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const [graphData, setGraphData] = useState({
     userIQ: null,
@@ -125,9 +101,6 @@ const IQBarGraph = ({
     count: null,
   })
   const [isLoading, setIsLoading] = useState(true)
-  const [expectedIQ, setExpectedIQ] = useState(0)
-  const [showExpectedIQ, setShowExpectedIQ] = useState(false)
-  const toast = useToast()
 
   useEffect(() => {
     if (barGraph) {
@@ -165,30 +138,6 @@ const IQBarGraph = ({
     },
     [graphData],
   )
-
-  const getExpectedIQ = useCallback(async () => {
-    playClick()
-    setIsLoading(true)
-    setShowExpectedIQ(true)
-    try {
-      const response = await axios.get('/api/user/expectedIQScore')
-      if (response.data.ExpectedIQScore !== null) {
-        setExpectedIQ(response.data.ExpectedIQScore)
-      }
-    } catch (error) {
-      toast({
-        title: t('errorOccurred'),
-        description: t('unableToFetchExpectedIQ'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-      console.error(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [playClick, toast, t])
 
   if (isGuest) {
     return (
@@ -239,15 +188,7 @@ const IQBarGraph = ({
   }
 
   if (graphData.userIQ === 0) {
-    return (
-      <NoDataMessage
-        getExpectedIQ={getExpectedIQ}
-        expectedIQ={expectedIQ}
-        setShowExpectedIQ={setShowExpectedIQ}
-        showExpectedIQ={showExpectedIQ}
-        t={t}
-      />
-    )
+    return <NoDataMessage t={t} />
   }
 
   return (

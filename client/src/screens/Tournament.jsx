@@ -34,7 +34,11 @@ import { addNoteMessage } from '../redux/appSlice'
 import { setUser } from '../redux/authSlice'
 import CategorySelection from '../components/tournamentComponents/CategorySelection'
 import { setIsOpen, setTournamentQuiz } from '../redux/quizSlice'
-import { setCategory, setTournamentId } from '../redux/tournamentSlice'
+import {
+  setCategory,
+  setCompletedCategories,
+  setTournamentId,
+} from '../redux/tournamentSlice'
 
 const MotionBox = motion(Box)
 const MotionTab = motion(Tab)
@@ -48,6 +52,7 @@ const Tournament = () => {
   const { user, loginCheckStatus, isAuthenticated } = useSelector(
     state => state.auth,
   )
+
   const isScreenSmallerThan400px = useMediaQuery('(max-width: 400px)')[0]
   const [userRegistrationDetails, setUserRegistrationDetails] = useState({
     isRegistered: false,
@@ -55,8 +60,6 @@ const Tournament = () => {
     completedCategories: [],
     totalScore: 0,
   })
-
-  const [completedCategories, setCompletedCategories] = useState([])
 
   const toast = useToast()
 
@@ -76,7 +79,11 @@ const Tournament = () => {
         completedCategories: currTournamentData.data.completedCategories || [],
         totalScore: currTournamentData.data.totalScore || 0,
       })
-      setCompletedCategories(currTournamentData.data.completedCategories || [])
+      dispatch(
+        setCompletedCategories(
+          currTournamentData.data.completedCategories || [],
+        ),
+      )
       setIsFetching(false)
     } catch (error) {
       console.log(error)
@@ -296,7 +303,6 @@ const Tournament = () => {
                         userRegistrationDetails.selectedCategories
                       }
                       onCategorySelect={handleCategorySelect}
-                      completedQuizzes={completedCategories}
                       tournamentId={tournamentData._id}
                     />
                   ) : (
