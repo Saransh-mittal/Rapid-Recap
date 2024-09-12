@@ -1,4 +1,3 @@
-// LeaderboardTable.js
 import React, { forwardRef } from 'react'
 import {
   Text,
@@ -10,6 +9,7 @@ import {
   Td,
   Box,
   Flex,
+  VStack,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Medal, Trophy, Crown } from 'lucide-react'
@@ -19,7 +19,7 @@ const MotionBox = motion(Box)
 const LeaderboardTable = forwardRef(({ data }, ref) => {
   return (
     <Box
-      maxHeight="400px"
+      maxHeight="500px"
       overflowY="auto"
       css={{
         '&::-webkit-scrollbar': {
@@ -51,7 +51,7 @@ const LeaderboardTable = forwardRef(({ data }, ref) => {
               px={6}
               textAlign={'center'}
             >
-              In-Game-Name
+              Player
             </Th>
             <Th
               color="white"
@@ -101,10 +101,19 @@ const LeaderboardTable = forwardRef(({ data }, ref) => {
                   </Text>
                 )}
               </Td>
-              <Td textAlign={'center'}>
-                <Text fontSize={{ base: 'xs', md: 'lg' }} fontWeight="semibold">
-                  {player.inGameName}
-                </Text>
+              <Td>
+                <VStack spacing={0} align={'left'} w={'fit-content'} ml={'25%'}>
+                  <Text
+                    fontSize={{ base: 'xs', md: 'sm' }}
+                    fontWeight="semibold"
+                    textAlign={'left'}
+                  >
+                    {player.name}
+                  </Text>
+                  <Text fontSize={{ base: 'xs', md: 'sm' }} color="gray.400">
+                    @{player.inGameName}
+                  </Text>
+                </VStack>
               </Td>
               <Td textAlign={'center'} isNumeric>
                 <Text fontSize={{ base: 'xs', md: 'lg' }} fontWeight="bold">

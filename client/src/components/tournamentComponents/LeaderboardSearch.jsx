@@ -16,6 +16,7 @@ const LeaderboardSearch = ({
   setSearchLoad,
   tournamentId,
   onEmptySearch,
+  setIsSearchActive,
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const toast = useToast()
@@ -67,6 +68,7 @@ const LeaderboardSearch = ({
       debouncedSearch.cancel()
       return
     }
+    setIsSearchActive(true)
     debouncedSearch(query)
   }
 

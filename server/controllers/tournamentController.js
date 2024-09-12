@@ -89,7 +89,7 @@ const getLatestTournament = asyncHandler(async (req, res) => {
 // @route  GET /api/tournament/leaderboard
 // @access Public
 const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
-  const { tournamentId, page = 1, limit = 50 } = req.query
+  const { tournamentId, page = 1, limit = 50, userId } = req.query
   const skip = (page - 1) * limit
 
   const tournament = await Tournament.findById(tournamentId)
@@ -117,6 +117,7 @@ const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
         totalScore: 1,
         level: '$userDetails.level',
         xp: '$userDetails.xp',
+        userId: '$userDetails._id',
       },
     },
     { $sort: { totalScore: -1, xp: -1 } },
@@ -131,11 +132,33 @@ const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
       $project: {
         totalCount: 1,
         entries: { $slice: ['$entries', skip, parseInt(limit)] },
+        allEntries: '$entries', // Keep all entries for finding user rank
       },
     },
   ])
 
-  const result = leaderboardData[0] || { totalCount: 0, entries: [] }
+  const result = leaderboardData[0] || {
+    totalCount: 0,
+    entries: [],
+    allEntries: [],
+  }
+
+  let userStanding = null
+  if (userId) {
+    const userIndex = result.allEntries.findIndex(
+      entry => entry.userId.toString() === userId,
+    )
+    if (userIndex !== -1) {
+      const userEntry = result.allEntries[userIndex]
+      userStanding = {
+        rank: userIndex + 1,
+        inGameName: userEntry.inGameName,
+        name: userEntry.name,
+        score: userEntry.totalScore,
+        level: userEntry.level,
+      }
+    }
+  }
 
   const leaderboard = result.entries.map((entry, index) => ({
     rank: skip + index + 1,
@@ -151,6 +174,7 @@ const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
     currentPage: parseInt(page),
     totalPages: Math.ceil(result.totalCount / limit),
     hasMore: skip + leaderboard.length < result.totalCount,
+    userStanding,
   })
 })
 
@@ -749,7 +773,6 @@ const getQuizSummary = asyncHandler(async (req, res) => {
 module.exports = {
   registerForTournament,
   addCurrentAffairsQuestion,
-
   updateCurrentAffairsQuestion,
   deleteCurrentAffairsQuestion,
   startQuiz,

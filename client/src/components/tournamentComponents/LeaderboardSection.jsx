@@ -1,13 +1,23 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { VStack, Heading, Box, Spinner, Center } from '@chakra-ui/react'
-import { Trophy } from 'lucide-react'
+import {
+  VStack,
+  Heading,
+  Box,
+  Spinner,
+  Center,
+  HStack,
+  Text,
+} from '@chakra-ui/react'
+import { Trophy, Medal } from 'lucide-react'
 import LeaderboardTable from './LeaderboardTable'
 import LeaderboardSearch from './LeaderboardSearch'
 import axios from 'axios'
 import { useInView } from 'react-intersection-observer'
+import { useSelector } from 'react-redux'
 
 const LeaderboardSection = ({ tournamentData }) => {
   const [leaderboardData, setLeaderboardData] = useState([])
+  const [userStanding, setUserStanding] = useState(null)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
@@ -17,6 +27,7 @@ const LeaderboardSection = ({ tournamentData }) => {
     threshold: 0,
     triggerOnce: false,
   })
+  const { user } = useSelector(state => state.auth)
 
   const lock = useRef(false)
 
@@ -32,6 +43,7 @@ const LeaderboardSection = ({ tournamentData }) => {
             tournamentId: tournamentData._id,
             page: resetPage ? 1 : page,
             limit: 50,
+            userId: user?._id, // Pass the user ID to get user standings
           },
         })
         const newData = response.data.leaderboard
@@ -40,6 +52,7 @@ const LeaderboardSection = ({ tournamentData }) => {
         )
         setHasMore(response.data.hasMore)
         setPage(prevPage => (resetPage ? 2 : prevPage + 1))
+        setUserStanding(response.data.userStanding) // Set user standings
 
         if (isFirstLoad) setFirstLoadComplete(true)
       } catch (error) {
@@ -49,7 +62,7 @@ const LeaderboardSection = ({ tournamentData }) => {
         lock.current = false
       }
     },
-    [tournamentData._id, page, hasMore, isLoading],
+    [tournamentData._id, page, hasMore, isLoading, user?._id],
   )
 
   useEffect(() => {
@@ -93,7 +106,30 @@ const LeaderboardSection = ({ tournamentData }) => {
         setSearchLoad={setIsLoading}
         tournamentId={tournamentData._id}
         onEmptySearch={handleEmptySearch}
+        setIsSearchActive={setIsSearchActive}
       />
+      {userStanding && (
+        <Box bg="whiteAlpha.200" p={4} borderRadius="md" boxShadow="md">
+          <HStack justifyContent="space-between" alignItems="center">
+            <HStack>
+              <Medal color="#ECC94B" />
+              <VStack alignItems="flex-start" spacing={0}>
+                <Text fontWeight="bold">Your Current Rank</Text>
+                <Text fontSize="2xl" fontWeight="bold" color="pink.400">
+                  #{userStanding.rank}
+                </Text>
+              </VStack>
+            </HStack>
+            <VStack alignItems="flex-end" spacing={0}>
+              <Text fontWeight="bold">{userStanding.name}</Text>
+              <Text color="gray.400">@{userStanding.inGameName}</Text>
+              <Text fontSize="xl" fontWeight="bold" color="pink.400">
+                Score: {userStanding.score}
+              </Text>
+            </VStack>
+          </HStack>
+        </Box>
+      )}
       <Box>
         <LeaderboardTable data={leaderboardData} ref={ref} />
         {isLoading && (
