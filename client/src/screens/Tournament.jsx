@@ -409,6 +409,11 @@ const Tournament = () => {
             backdropFilter="blur(5px)"
           >
             {renderTournamentContent()}
+            {tournamentData?.status === 'completed' && (
+              <Suspense fallback={<Skeleton height="40px" />}>
+                <LeaderboardSection tournamentData={tournamentData} />
+              </Suspense>
+            )}
           </MotionBox>
           <MotionBox
             flex={1}

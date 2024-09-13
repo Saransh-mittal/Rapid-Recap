@@ -147,7 +147,9 @@ const LeaderboardSection = ({ tournamentData }) => {
     <VStack spacing={6} align="stretch">
       <Heading size="lg" display="flex" alignItems="center">
         <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
-        {t('currentLeaderboard')}
+        {tournamentData?.status === 'completed'
+          ? t(`Leaderboard`)
+          : t('currentLeaderboard')}
       </Heading>
       <Suspense fallback={<Spinner size="xl" />}>
         <LeaderboardSearch
@@ -172,7 +174,11 @@ const LeaderboardSection = ({ tournamentData }) => {
             <HStack>
               <Medal color="#ECC94B" />
               <VStack alignItems="flex-start" spacing={0}>
-                <Text fontWeight="bold">{t('yourCurrentRank')}</Text>
+                <Text fontWeight="bold">
+                  {tournamentData?.status === 'completed'
+                    ? t('Your Rank')
+                    : t('yourCurrentRank')}
+                </Text>
                 <Text fontSize="2xl" fontWeight="bold" color="pink.400">
                   #{userStanding.rank}
                 </Text>
