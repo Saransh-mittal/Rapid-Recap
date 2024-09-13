@@ -25,6 +25,7 @@ import { motion } from 'framer-motion'
 import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
 import QuizBG from '../tournamentComponents/tournamentQuiz/QuizBG'
+import i18n from 'i18next'
 
 const GivenQuizInterface = lazy(() => import('./GivenQuizInterface'))
 const Heading = lazy(() => import('../miscellaneous/HeadingComponent'))
@@ -58,11 +59,13 @@ const QuizGivenSummary = ({
 
   const fetchQuizSummary = useCallback(async () => {
     try {
+      // console.log(i18n.language)
       const response = isTournament
         ? await axios.get(`/api/tournament/quiz/summary`, {
             params: {
               tournamentId,
               category,
+              lang: i18n.language,
             },
           })
         : await axios.get(`/api/quiz/summary/${articleId}`)

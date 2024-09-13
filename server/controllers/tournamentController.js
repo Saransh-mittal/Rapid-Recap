@@ -287,10 +287,11 @@ const registerForTournament = asyncHandler(async (req, res) => {
   const session = await startSession()
   try {
     const user = await User.findById(userId).session(session)
-    if (!user || user.role === 'guest') {
+    if (!user || user.role === 'guest' || user.streak < 2) {
       res.status(403)
       throw new Error('User is not eligible to register for the tournament')
     }
+
     // Check if user is already registered
     const { isRegistered } = await getUserRegistrationDetails(
       userId,
@@ -684,7 +685,7 @@ const submitQuiz = asyncHandler(async (req, res) => {
 })
 
 const getQuizSummary = asyncHandler(async (req, res) => {
-  const { category, tournamentId } = req.query
+  const { category, tournamentId, lang } = req.query
   const userId = req.user._id
 
   const quizSession = await QuizSession.findOne({
@@ -784,8 +785,14 @@ const getQuizSummary = asyncHandler(async (req, res) => {
     totalTournamentScore: registration.totalScore,
     topLeaders: topLeaders,
     result: quizSession.responses.map((response, index) => ({
-      question: questions[index].question,
-      options: questions[index].options,
+      question:
+        lang === 'hi'
+          ? questions[index].hindiQuestion
+          : questions[index].question,
+      options:
+        lang === 'hi'
+          ? questions[index].hindiOptions
+          : questions[index].options,
       answer: questions[index].correctAnswer,
       userAnswer: response.userAnswer,
       isCorrect: response.isCorrect,
