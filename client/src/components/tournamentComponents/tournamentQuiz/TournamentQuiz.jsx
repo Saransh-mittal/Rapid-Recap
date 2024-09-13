@@ -22,6 +22,7 @@ import {
   setCompletedCategories,
   setRefetchLeaderBoard,
 } from '../../../redux/tournamentSlice'
+import i18n from 'i18next'
 
 // Lazy loaded components
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
@@ -78,6 +79,7 @@ const TournamentQuiz = () => {
         userId: user._id,
         tournamentId,
         category,
+        lang: i18n.language,
       })
       setQuizSession(response.data.quizSession)
       setUserAnswers(initializeUserAnswers)

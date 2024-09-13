@@ -464,7 +464,7 @@ const deleteCurrentAffairsQuestion = asyncHandler(async (req, res) => {
 // @route  POST /api/tournament/quiz/start
 // @access Private
 const startQuiz = asyncHandler(async (req, res) => {
-  const { userId, tournamentId, category } = req.body
+  const { userId, tournamentId, category, lang } = req.body
   // Check if a session already exists
   const existingSession = await QuizSession.findOne({
     user: userId,
@@ -500,10 +500,8 @@ const startQuiz = asyncHandler(async (req, res) => {
   // Remove sensitive information (like correct answer) before sending to client
   const clientQuestions = questions.map(q => ({
     _id: q._id,
-    question: q.question,
-    hindiQuestion: q.hindiQuestion,
-    options: q.options,
-    hindiOptions: q.hindiOptions,
+    question: lang === 'hi' ? q.hindiQuestion : q.question,
+    options: lang === 'hi' ? q.hindiOptions : q.options,
   }))
 
   res.json({
