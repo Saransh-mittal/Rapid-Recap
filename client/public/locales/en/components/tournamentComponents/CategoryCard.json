@@ -1,0 +1,16 @@
+{
+  "world": "World",
+  "politics": "Politics",
+  "business": "Business",
+  "technology": "Technology",
+  "sports": "Sports",
+  "health": "Health",
+  "science": "Science",
+  "environment": "Environment",
+  "crime": "Crime",
+  "education": "Education",
+  "entertainment": "Entertainment",
+  "food": "Food",
+  "lifestyle": "Lifestyle",
+  "tourism": "Tourism"
+}

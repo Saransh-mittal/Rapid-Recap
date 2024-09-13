@@ -33,6 +33,7 @@ const namespaces = {
   ],
   tournamentComponents: [
     'EpicQuestGuide',
+    'CategoryCard',
     'CategorySelection',
     'LeaderboardSearch',
     'LeaderboardSection',

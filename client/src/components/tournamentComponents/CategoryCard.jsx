@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, Suspense } from 'react'
 import { VStack, Text, Box } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load the SVGs
 const GlobeAmericas = React.lazy(() => import('../../assets/svg/GlobeAmericas'))
@@ -39,6 +40,8 @@ const categoryIcons = {
 }
 
 const CategoryCard = ({ category, isSelected, isCompleted, onSelect }) => {
+  const { t } = useTranslation('CategoryCard') // Translation for categories
+
   // Memoize the IconComponent to prevent recalculating
   const IconComponent = useMemo(
     () => categoryIcons[category] || GlobeAmericas,
@@ -96,7 +99,7 @@ const CategoryCard = ({ category, isSelected, isCompleted, onSelect }) => {
           }
           textTransform="capitalize"
         >
-          {category}
+          {t(category)} {/* Internationalized category name */}
         </Text>
       </VStack>
     </MotionBox>
