@@ -1,22 +1,25 @@
-import React from 'react'
-import {
-  VStack,
-  Alert,
-  AlertIcon,
-  Heading,
-  Text,
-  Flex,
-  Button,
-} from '@chakra-ui/react'
-import { Clock, Trophy, UserCheck, UserPlus } from 'lucide-react'
-import RegisteredUsersCount from './RegisteredUsersCount'
+import React, { useMemo, lazy, Suspense } from 'react'
+import { VStack, Alert, AlertIcon, Heading, Text, Flex } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
+import { Clock, UserCheck, UserPlus, Trophy } from 'lucide-react'
+
+// Lazy load RegisteredUsersCount component
+const RegisteredUsersCount = lazy(() => import('./RegisteredUsersCount'))
 
 const TournamentStatus = ({ tournamentData, registrationStatus }) => {
   const { isAuthenticated, user } = useSelector(state => state.auth)
+
+  // Memoize the tournament status to avoid re-renders when not required
+  const status = useMemo(() => tournamentData?.status, [tournamentData?.status])
+
+  const registeredCount = useMemo(
+    () => tournamentData?.registeredCount,
+    [tournamentData?.registeredCount],
+  )
+
   return (
     <>
-      {tournamentData?.status === 'upcoming' && (
+      {status === 'upcoming' && (
         <VStack spacing={6} align="stretch">
           <Heading
             size="lg"
@@ -25,7 +28,9 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
             alignItems="center"
             fontSize={{ base: 'lg', md: 'xl' }}
           >
-            <Clock color="#4FD1C5" style={{ marginRight: '0.5rem' }} />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Clock color="#4FD1C5" style={{ marginRight: '0.5rem' }} />
+            </Suspense>
             Tournament Starting Soon
           </Heading>
           <Flex
@@ -58,13 +63,17 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
               </Text>
             ) : registrationStatus === 'registered' ? (
               <Flex align="center">
-                <UserCheck style={{ marginRight: '0.5rem' }} size={16} />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <UserCheck style={{ marginRight: '0.5rem' }} size={16} />
+                </Suspense>
                 <Text>You're registered! Get ready for the tournament.</Text>
               </Flex>
             ) : (
               <>
                 <Flex align="center">
-                  <UserPlus className="mr-2" size={16} />
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <UserPlus className="mr-2" size={16} />
+                  </Suspense>
                   <Text>You have not registered for the tournament!</Text>
                 </Flex>
                 <Text mt={2} color="gray.600" textAlign="center">
@@ -74,18 +83,22 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
               </>
             )}
           </Flex>
-          <RegisteredUsersCount count={tournamentData?.registeredCount} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <RegisteredUsersCount count={registeredCount} />
+          </Suspense>
         </VStack>
       )}
-      {tournamentData?.status === 'ongoing' && (
+      {status === 'ongoing' && (
         <VStack spacing={6} align="stretch">
           <Heading size="lg" mb={4} display="flex" alignItems="center">
-            <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
+            </Suspense>
             Tournament in Progress
           </Heading>
         </VStack>
-      )}{' '}
-      {tournamentData?.status === 'completed' && (
+      )}
+      {status === 'completed' && (
         <VStack spacing={6} align="stretch">
           <Heading size={{ base: 'md', md: 'lg' }} mb={4}>
             Tournament Completed
@@ -100,4 +113,4 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
   )
 }
 
-export default TournamentStatus
+export default React.memo(TournamentStatus)

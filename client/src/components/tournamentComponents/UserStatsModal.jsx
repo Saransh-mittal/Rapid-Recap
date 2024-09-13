@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { lazy, Suspense, useMemo, useCallback } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -16,19 +16,29 @@ import {
   SimpleGrid,
   Badge,
   Button,
-  useToast,
+  Spinner,
 } from '@chakra-ui/react'
 import { Trophy, Target, Clock } from 'lucide-react'
-import CategoryCard from './CategoryCard'
-import QuizBG from './tournamentQuiz/QuizBG'
-import UserSVG from '../../assets/svg/UserSVG'
 import { useNavigate } from 'react-router-dom'
+
+// Lazy load heavy components
+const CategoryCard = lazy(() => import('./CategoryCard'))
+const QuizBG = lazy(() => import('./tournamentQuiz/QuizBG'))
+const UserSVG = lazy(() => import('../../assets/svg/UserSVG'))
 
 const UserStatsModal = ({ isOpen, onClose, userStats }) => {
   const statsRef = React.useRef(null)
   const navigate = useNavigate()
 
   if (!userStats) return null
+
+  // Memoize category stats for better performance
+  const categoryStats = useMemo(() => userStats.categoryStats, [userStats])
+
+  // Memoized navigation handler to avoid recreating on each render
+  const handleProfileNavigation = useCallback(() => {
+    navigate(`/profile/${userStats.inGameName}`)
+  }, [navigate, userStats.inGameName])
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="full">
@@ -39,7 +49,10 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
         boxShadow="0 0 20px rgba(255, 215, 0, 0.3)"
         ref={statsRef}
       >
-        <QuizBG />
+        {/* Lazy load background */}
+        <Suspense fallback={<Spinner />}>
+          <QuizBG />
+        </Suspense>
         <ModalHeader
           fontSize="3xl"
           fontWeight="bold"
@@ -90,16 +103,19 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
                 columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
                 spacing={4}
               >
-                {userStats.categoryStats.map((stat, index) => (
+                {categoryStats.map((stat, index) => (
                   <Box key={index}>
-                    <CategoryCard
-                      category={stat.category}
-                      isCompleted={userStats.completedCategories.includes(
-                        stat.category,
-                      )}
-                      isSelected={false}
-                      onSelect={() => {}}
-                    />
+                    {/* Lazy load CategoryCard */}
+                    <Suspense fallback={<Spinner />}>
+                      <CategoryCard
+                        category={stat.category}
+                        isCompleted={userStats.completedCategories.includes(
+                          stat.category,
+                        )}
+                        isSelected={false}
+                        onSelect={() => {}}
+                      />
+                    </Suspense>
                     <VStack
                       mt={2}
                       bg="whiteAlpha.200"
@@ -139,13 +155,16 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
             </Box>
           </VStack>
           <Flex justifyContent="center" mt={6}>
-            <Button
-              leftIcon={<UserSVG fill={'white'} />}
-              colorScheme="pink"
-              onClick={() => navigate(`/profile/${userStats.inGameName}`)}
-            >
-              View Profile
-            </Button>
+            {/* Lazy load UserSVG */}
+            <Suspense fallback={<Spinner />}>
+              <Button
+                leftIcon={<UserSVG fill={'white'} />}
+                colorScheme="pink"
+                onClick={handleProfileNavigation}
+              >
+                View Profile
+              </Button>
+            </Suspense>
           </Flex>
         </ModalBody>
       </ModalContent>

@@ -3,7 +3,6 @@ import React, {
   useEffect,
   useCallback,
   useRef,
-  useMemo,
   Suspense,
 } from 'react'
 import {
@@ -20,6 +19,7 @@ import { Trophy, Medal } from 'lucide-react'
 import axios from 'axios'
 import { useInView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next' // Import useTranslation
 import { setRefetchLeaderBoard } from '../../redux/tournamentSlice'
 
 // Lazy load components
@@ -28,6 +28,8 @@ const LeaderboardSearch = React.lazy(() => import('./LeaderboardSearch'))
 const UserStatsModal = React.lazy(() => import('./UserStatsModal'))
 
 const LeaderboardSection = ({ tournamentData }) => {
+  const { t } = useTranslation('LeaderboardSection')
+
   const [leaderboardData, setLeaderboardData] = useState([])
   const [userStanding, setUserStanding] = useState(null)
   const [page, setPage] = useState(1)
@@ -44,7 +46,6 @@ const LeaderboardSection = ({ tournamentData }) => {
 
   const lock = useRef(false)
 
-  // Memoize API request to avoid unnecessary reruns
   const fetchLeaderboard = useCallback(
     async (isFirstLoad = false, resetPage = false) => {
       if (
@@ -62,7 +63,7 @@ const LeaderboardSection = ({ tournamentData }) => {
             tournamentId: tournamentData._id,
             page: resetPage || refetchLeaderBoard ? 1 : page,
             limit: 20,
-            userId: user?._id, // Pass the user ID to get user standings
+            userId: user?._id,
           },
         })
 
@@ -77,7 +78,7 @@ const LeaderboardSection = ({ tournamentData }) => {
         dispatch(setRefetchLeaderBoard(false))
         if (isFirstLoad) setFirstLoadComplete(true)
       } catch (error) {
-        console.error('Error fetching leaderboard:', error)
+        console.error(t('fetchError'), error)
       } finally {
         setIsLoading(false)
         lock.current = false
@@ -91,6 +92,7 @@ const LeaderboardSection = ({ tournamentData }) => {
       user?._id,
       refetchLeaderBoard,
       dispatch,
+      t,
     ],
   )
 
@@ -106,10 +108,10 @@ const LeaderboardSection = ({ tournamentData }) => {
         })
         onOpen()
       } catch (error) {
-        console.error('Error fetching user stats:', error)
+        console.error(t('fetchError'), error)
       }
     }
-  }, [user, userStanding, tournamentData._id, onOpen])
+  }, [user, userStanding, tournamentData._id, onOpen, t])
 
   useEffect(() => {
     fetchLeaderboard(true)
@@ -138,13 +140,13 @@ const LeaderboardSection = ({ tournamentData }) => {
     setPage(1)
     setHasMore(true)
     fetchLeaderboard(false, true)
-  }, [])
+  }, [fetchLeaderboard])
 
   return (
     <VStack spacing={6} align="stretch">
       <Heading size="lg" display="flex" alignItems="center">
         <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
-        Current Leaderboard
+        {t('currentLeaderboard')}
       </Heading>
       <Suspense fallback={<Spinner size="xl" />}>
         <LeaderboardSearch
@@ -169,7 +171,7 @@ const LeaderboardSection = ({ tournamentData }) => {
             <HStack>
               <Medal color="#ECC94B" />
               <VStack alignItems="flex-start" spacing={0}>
-                <Text fontWeight="bold">Your Current Rank</Text>
+                <Text fontWeight="bold">{t('yourCurrentRank')}</Text>
                 <Text fontSize="2xl" fontWeight="bold" color="pink.400">
                   #{userStanding.rank}
                 </Text>
@@ -179,7 +181,7 @@ const LeaderboardSection = ({ tournamentData }) => {
               <Text fontWeight="bold">{userStanding.name}</Text>
               <Text color="gray.400">@{userStanding.inGameName}</Text>
               <Text fontSize="xl" fontWeight="bold" color="pink.400">
-                Score: {userStanding.score}
+                {t('score')}: {userStanding.score}
               </Text>
             </VStack>
           </HStack>

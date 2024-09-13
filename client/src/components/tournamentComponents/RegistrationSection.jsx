@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense, useCallback } from 'react'
 import {
   VStack,
   Alert,
@@ -11,8 +11,11 @@ import {
   Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import RegistrationForm from './RegistrationForm'
-import RegisteredUsersCount from './RegisteredUsersCount'
+import { useTranslation } from 'react-i18next'
+
+// Lazy load components
+const RegistrationForm = React.lazy(() => import('./RegistrationForm'))
+const RegisteredUsersCount = React.lazy(() => import('./RegisteredUsersCount'))
 
 const MotionBox = motion(Box)
 
@@ -25,17 +28,19 @@ const RegistrationSection = ({
   isAuthenticated,
   userRole,
 }) => {
+  const { t } = useTranslation('RegistrationSection') // Translation hook for this component
+
   const bgColor = useColorModeValue(
     'rgba(255, 255, 255, 0.08)',
     'rgba(0, 0, 0, 0.3)',
   )
   const borderColor = useColorModeValue('pink.200', 'pink.700')
-  const textColor = useColorModeValue('gray.800', 'white')
   const headingColor = useColorModeValue('cyan.300', 'cyan.200')
   const labelColor = useColorModeValue('pink.300', 'pink.200')
   const valueColor = useColorModeValue('yellow.300', 'yellow.200')
 
-  const renderContent = () => {
+  // Memoize renderContent to avoid unnecessary re-renders
+  const renderContent = useCallback(() => {
     if (!isAuthenticated || userRole === 'guest') {
       return (
         <Box
@@ -60,26 +65,27 @@ const RegistrationSection = ({
           >
             <AlertIcon boxSize="40px" mr={0} color="blue.300" />
             <Text fontWeight="bold" fontSize="xl" mt={4} mb={2}>
-              Exclusive Tournament Access
+              {t('exclusiveAccess.title')}
             </Text>
-            <Text>
-              To participate in this epic battle of wits, you need to be logged
-              in with a verified email account.
-            </Text>
-            <Text mt={2}>
-              Join our community of knowledge warriors and prove your mettle!
-            </Text>
+            <Text>{t('exclusiveAccess.description')}</Text>
+            <Text mt={2}>{t('exclusiveAccess.callToAction')}</Text>
           </Alert>
         </Box>
       )
     }
 
-    return registrationStatus === 'not-registered' ? (
-      <RegistrationForm
-        onRegister={handleRegister}
-        registerLoading={registerLoading}
-      />
-    ) : (
+    if (registrationStatus === 'not-registered') {
+      return (
+        <Suspense fallback={<Text>{t('loadingRegistrationForm')}</Text>}>
+          <RegistrationForm
+            onRegister={handleRegister}
+            registerLoading={registerLoading}
+          />
+        </Suspense>
+      )
+    }
+
+    return (
       <VStack spacing={4} align="stretch">
         <Alert
           status="success"
@@ -95,9 +101,9 @@ const RegistrationSection = ({
         >
           <AlertIcon boxSize="40px" mr={0} color="green.300" />
           <Text fontWeight="bold" fontSize="xl" mt={4} mb={2}>
-            Registration Successful!
+            {t('registrationSuccess.title')}
           </Text>
-          <Text>Prepare for an epic battle of wits!</Text>
+          <Text>{t('registrationSuccess.description')}</Text>
         </Alert>
         <Box
           bg={bgColor}
@@ -108,18 +114,18 @@ const RegistrationSection = ({
           boxShadow="md"
         >
           <Heading size="md" mb={4} color={headingColor}>
-            Your Tournament Details:
+            {t('tournamentDetails.heading')}
           </Heading>
           <VStack align="start" spacing={3}>
             <Flex align="center">
               <Text fontWeight="semibold" mr={2} color={labelColor}>
-                In-Game-Name:
+                {t('userDetails.inGameNameLabel')}
               </Text>
               <Text color={valueColor}>{userDetails?.inGameName}</Text>
             </Flex>
             <Box>
               <Text fontWeight="semibold" mb={2} color={labelColor}>
-                Selected Categories:
+                {t('userDetails.selectedCategoriesLabel')}
               </Text>
               <Flex flexWrap="wrap" gap={2}>
                 {userDetails?.categories?.map((category, index) => (
@@ -142,7 +148,20 @@ const RegistrationSection = ({
         </Box>
       </VStack>
     )
-  }
+  }, [
+    isAuthenticated,
+    userRole,
+    registrationStatus,
+    handleRegister,
+    registerLoading,
+    bgColor,
+    borderColor,
+    headingColor,
+    labelColor,
+    valueColor,
+    userDetails,
+    t,
+  ])
 
   return (
     <>
@@ -154,9 +173,11 @@ const RegistrationSection = ({
         >
           <VStack spacing={6} align="stretch">
             <Heading size={{ base: 'md', md: 'lg' }} mt={4} color="pink.400">
-              Tournament Registration
+              {t('tournamentRegistrationHeading')}
             </Heading>
-            <RegisteredUsersCount count={tournamentData.registeredCount} />
+            <Suspense fallback={<Text>{t('loadingUsersCount')}</Text>}>
+              <RegisteredUsersCount count={tournamentData.registeredCount} />
+            </Suspense>
             {renderContent()}
           </VStack>
         </MotionBox>
