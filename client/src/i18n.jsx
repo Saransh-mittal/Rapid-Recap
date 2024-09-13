@@ -30,17 +30,17 @@ const namespaces = {
     'TotalUserAttempted',
     'TrackTime',
   ],
-  tournamentComponents: ['EpicQuestGuide'],
+  tournamentComponents: ['EpicQuestGuide', 'CategorySelection'],
   quizComponents: [
-    'BoostedSubmittedQuizInterface', //
-    'ConfirmationModal', //
-    'GivenQuizInterface', //
-    'InstructionModal', //
-    'ModalComponent', //
-    'QuinBoost', //
-    'QuizGivenSummary', //
-    'QuizInterface', //
-    'SubmittedQuizInterface', //
+    'BoostedSubmittedQuizInterface',
+    'ConfirmationModal',
+    'GivenQuizInterface',
+    'InstructionModal',
+    'ModalComponent',
+    'QuinBoost',
+    'QuizGivenSummary',
+    'QuizInterface',
+    'SubmittedQuizInterface',
   ],
   authComponents: [
     'EmailVerify',

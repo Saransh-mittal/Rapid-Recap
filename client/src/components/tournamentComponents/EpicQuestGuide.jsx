@@ -152,7 +152,7 @@ const EpicQuestGuide = () => {
             boxShadow={`0 0 20px ${theme.colors.pink[400]}40`}
             {...buttonAnimationProps}
           >
-            Know More
+            {t('knowMore')}
           </MotionButton>
         </VStack>
       </Container>

@@ -1,0 +1,13 @@
+{
+  "selectFiveCategories": "Select 5 Categories",
+  "selectCategoryStartQuiz": "Select a Category to Start Quiz",
+  "quickPick": "Quick Pick",
+  "loading": "Loading...",
+  "currentAffairsNote": "Current Affairs is a mandatory category.",
+  "currentAffairs": "Current Affairs",
+  "invalidSelectionTitle": "Invalid Selection",
+  "invalidSelectionDescription": "Please select exactly 5 categories.",
+  "startQuiz": "Start Quiz",
+  "loadingModal": "Loading modal...",
+  "loadingQuizReport": "Loading quiz report..."
+}
