@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Center, Spinner } from '@chakra-ui/react'
+import { Box, Center } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 import ComingSoonTournament from './ComingSoonTournament'
 import Tournament from './Tournament'
+import FullScreenLoadingSpinner from '../components/tournamentComponents/tournamentQuiz/FullScreenLoadingSpinner'
 
 const TournamentWrapper = () => {
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const { user } = useSelector(state => state.auth)
+  const { user, loginCheckStatus } = useSelector(state => state.auth)
 
   useEffect(() => {
     const checkAuthorization = async () => {
@@ -23,6 +24,7 @@ const TournamentWrapper = () => {
       } else {
         setIsAuthorized(false)
       }
+      if (loginCheckStatus === 'pending') return
       setIsLoading(false)
     }
 
@@ -32,7 +34,7 @@ const TournamentWrapper = () => {
   if (isLoading) {
     return (
       <Center height="100vh">
-        <Spinner size="xl" color="pink.500" />
+        <FullScreenLoadingSpinner />
       </Center>
     )
   }
