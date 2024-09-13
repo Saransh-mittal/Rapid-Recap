@@ -33,6 +33,7 @@ const namespaces = {
   tournamentComponents: [
     'EpicQuestGuide',
     'CategorySelection',
+    'LeaderboardSearch',
     'LeaderboardSection',
     'LeaderboardTable',
     'PreviousTournamentLeaderboard',
@@ -105,6 +106,7 @@ const namespaces = {
     'StreakNoteMessage',
     'XPAwardNoteMessage',
     'DifficultyLegend',
+    'NoteMessageQueue',
   ],
   Notifications: ['NotificationSubscription'],
   streakComponents: ['DailyStreakModal'],

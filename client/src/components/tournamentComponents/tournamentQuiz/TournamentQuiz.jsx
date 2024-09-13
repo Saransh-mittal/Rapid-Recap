@@ -1,4 +1,11 @@
-import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react'
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  lazy,
+  Suspense,
+  useMemo,
+} from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Flex, useToast, Box } from '@chakra-ui/react'
 import axios from 'axios'
@@ -10,14 +17,13 @@ import { setUser } from '../../../redux/authSlice'
 import { addNoteMessage } from '../../../redux/appSlice'
 import useTimer from '../../../customHooks/useTimer'
 import useSound from '../../../customHooks/useSound'
-import QuizGivenSummary from '../../quizComponents/QuizGivenSummary'
-import ShutterAnimation from './ShutterAnimation'
 import FullScreenLoadingSpinner from './FullScreenLoadingSpinner'
 import {
   setCompletedCategories,
   setRefetchLeaderBoard,
 } from '../../../redux/tournamentSlice'
 
+// Lazy loaded components
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
 const SubmittedQuizInterface = lazy(() =>
   import('../../quizComponents/SubmittedQuizInterface'),
@@ -26,6 +32,10 @@ const ConfirmationModal = lazy(() =>
   import('../../quizComponents/customQuizModal/ConfirmationModal'),
 )
 const ModalComponent = lazy(() => import('../../quizComponents/ModalComponent'))
+const QuizGivenSummary = lazy(() =>
+  import('../../quizComponents/QuizGivenSummary'),
+)
+const ShutterAnimation = lazy(() => import('./ShutterAnimation'))
 
 const TournamentQuiz = () => {
   const { t } = useTranslation('Quiz')
@@ -38,6 +48,7 @@ const TournamentQuiz = () => {
     state => state.tournament,
   )
 
+  // Local states
   const [error, setError] = useState(null)
   const [quizSession, setQuizSession] = useState(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -53,6 +64,12 @@ const TournamentQuiz = () => {
 
   const { playClick } = useSound()
 
+  // Memoize userAnswers initialization
+  const initializeUserAnswers = useMemo(
+    () => new Array(quizSession?.questions.length).fill(''),
+    [quizSession],
+  )
+
   const startQuiz = useCallback(async () => {
     setLoading(true)
     setError(null) // Clear any previous errors
@@ -63,9 +80,7 @@ const TournamentQuiz = () => {
         category,
       })
       setQuizSession(response.data.quizSession)
-      setUserAnswers(
-        new Array(response.data.quizSession.questions.length).fill(''),
-      )
+      setUserAnswers(initializeUserAnswers)
       setShowGetSetGo(true)
     } catch (error) {
       if (error.response && error.response.status === 400) {
@@ -91,7 +106,7 @@ const TournamentQuiz = () => {
     } finally {
       setLoading(false)
     }
-  }, [user._id, tournamentId, category, dispatch, toast, t])
+  }, [user._id, tournamentId, category, dispatch, toast])
 
   useEffect(() => {
     if (isOpen) {
@@ -125,6 +140,7 @@ const TournamentQuiz = () => {
         const response = await axios.post('/api/tournament/quiz/submit', {
           quizSessionId: quizSession._id,
           userResponses: userAnswers,
+          questionsIds: quizSession.questions.map(question => question._id),
           timeTaken,
         })
         setResult(response.data)
@@ -162,7 +178,6 @@ const TournamentQuiz = () => {
       category,
       setRefetchLeaderBoard,
       toast,
-      t,
     ],
   )
 
@@ -228,6 +243,7 @@ const TournamentQuiz = () => {
         </Suspense>
       )
     }
+
     if (loading) {
       return <FullScreenLoadingSpinner />
     }
@@ -248,7 +264,6 @@ const TournamentQuiz = () => {
             result={result}
             isTournament={true}
             onViewReport={() => {
-              /* Implement view report logic */
               playClick()
               setShowCategoryQuizSummary(true)
             }}
@@ -299,6 +314,7 @@ const TournamentQuiz = () => {
     userAnswers,
     showCategoryQuizSummary,
     tournamentId,
+    category,
   ])
 
   return (

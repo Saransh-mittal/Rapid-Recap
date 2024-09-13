@@ -15,6 +15,7 @@ const XPAwardNoteMessage = lazy(() =>
 const StreakNoteMessage = lazy(() => import('./noteMessages/StreakNoteMessage'))
 import { SOUND_TYPES } from '../../models/soundSettings'
 import useSound from '../../customHooks/useSound'
+import { useTranslation } from 'react-i18next'
 const NoteMessageQueue = () => {
   const dispatch = useDispatch()
   const noteMessageQueue = useSelector(state => state.app.noteMessageQueue)
@@ -22,6 +23,7 @@ const NoteMessageQueue = () => {
     state => state.app.showingSummaryForNoteMessages,
   )
   const { playNoteMessageSound, playMilestoneSound } = useSound()
+  const { t } = useTranslation('NoteMessageQueue')
 
   // Memoize actions array to avoid recreating on each render
   const actions = useMemo(
@@ -73,7 +75,8 @@ const NoteMessageQueue = () => {
       <Suspense fallback={null}>
         <NoteMessage
           messageId={uuidv4()}
-          title={`You have ${noteMessageQueue.length} new messages.`}
+          title={t('newMessages', { number: noteMessageQueue.length })}
+          // title={`You have ${noteMessageQueue.length} new messages.`}
           actions={actions}
           onClose={handleClose}
           duration={null}
