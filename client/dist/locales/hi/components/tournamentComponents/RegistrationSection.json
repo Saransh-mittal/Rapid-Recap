@@ -1,0 +1,21 @@
+{
+  "tournamentRegistrationHeading": "टूर्नामेंट पंजीकरण",
+  "loadingUsersCount": "उपयोगकर्ताओं की गिनती लोड हो रही है...",
+  "loadingRegistrationForm": "पंजीकरण फ़ॉर्म लोड हो रहा है...",
+  "exclusiveAccess": {
+    "title": "विशेष टूर्नामेंट एक्सेस",
+    "description": "इस महाकवि की लड़ाई में भाग लेने के लिए, आपको एक सत्यापित ईमेल खाता के साथ लॉग इन होना आवश्यक है।",
+    "callToAction": "हमारे ज्ञान योद्धाओं के समुदाय में शामिल हों और अपनी क्षमता साबित करें!"
+  },
+  "registrationSuccess": {
+    "title": "पंजीकरण सफल!",
+    "description": "महाकवि की लड़ाई के लिए तैयार हो जाइए!"
+  },
+  "tournamentDetails": {
+    "heading": "आपके टूर्नामेंट विवरण:"
+  },
+  "userDetails": {
+    "inGameNameLabel": "इन-गेम नाम:",
+    "selectedCategoriesLabel": "चुनी गई श्रेणियाँ:"
+  }
+}

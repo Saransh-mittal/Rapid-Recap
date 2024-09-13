@@ -1,0 +1,10 @@
+{
+  "registrationSuccess": {
+    "title": "Registration Successful",
+    "description": "You have been successfully registered for the tournament."
+  },
+  "registrationError": {
+    "title": "Registration Failed",
+    "description": "There was an error during registration. Please try again."
+  }
+}

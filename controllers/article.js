@@ -218,19 +218,6 @@ const getArticle = async (req, res) => {
   }
 }
 
-const getQuizTitan = async (req, res) => {
-  const { id } = req.params
-  try {
-    const totalUsersGivenQuiz = await QuizAttempt.find({
-      article: id,
-    }).countDocuments()
-    res.status(200).send({ totalUsersGivenQuiz })
-  } catch (error) {
-    res.status(400).json({ error: error || 'Something went wrong' })
-    console.log(error)
-  }
-}
-
 const getQuiz = async (req, res) => {
   const { articleId } = req.params
   const userId = req.user._id
@@ -430,40 +417,6 @@ const getArticleQuizStatus = async (req, res) => {
     res.status(200).json({ status: userStatus.status })
   } catch (error) {
     res.status(400).json({ error: error || 'Something went wrong' })
-    console.log(error)
-  }
-}
-
-const getTopRankers = async (req, res) => {
-  const { articleId } = req.query
-  try {
-    const quizAttempts = await QuizAttempt.find({ article: articleId })
-      .sort({ RQM_score: -1 })
-      .limit(3)
-      .populate({
-        path: 'user',
-        select: 'name inGameName IQ_score maxIQScore', // Specify the fields you want to select
-      })
-
-    const rankers = []
-    let rank = 1
-    quizAttempts.forEach((attempt, index) => {
-      //console.log(attempt);
-      if (!attempt.user) {
-        return
-      }
-      rankers.push({
-        rank: rank,
-        name: attempt.user.name,
-        inGameName: attempt.user.inGameName,
-        IQ_score: attempt.user.IQ_score,
-        maxIQScore: attempt.user.maxIQScore,
-      })
-      rank++
-    })
-    res.status(200).json({ rankers })
-  } catch (error) {
-    res.status(500).json({ error: error || 'Something went wrong' })
     console.log(error)
   }
 }
@@ -968,13 +921,11 @@ module.exports = {
   getQuiz,
   getArticleQuizStatus,
   startQuiz,
-  getTopRankers,
   hindiTranslation,
   getHindiQuiz,
   getWorldNews,
   extractNews,
   testNewsApi,
-  getQuizTitan,
   getArticleIds,
   getAvgRQMOnArticle,
   updateArticle,

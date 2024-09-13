@@ -1,1 +1,0 @@
-import{L as o,S as D,a}from"./SkullIcon-1a3b3ad1.js";const I={EASY:"easy",MEDIUM:"medium",HARD:"hard"},A={[I.EASY]:o,[I.MEDIUM]:D,[I.HARD]:a},E={[I.EASY]:"green",[I.MEDIUM]:"yellow",[I.HARD]:"red"};export{E as D,A as I};

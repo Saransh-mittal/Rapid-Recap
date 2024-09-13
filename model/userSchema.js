@@ -113,7 +113,6 @@ const userSchema = new mongoose.Schema(
       lineGraph: { type: Boolean, default: false },
       barGraph: { type: Boolean, default: false },
       solvedQuizzes: { type: Boolean, default: false },
-      // dailyActivity: { type: Boolean, default: false },
       society: { type: Boolean, default: false },
       seasonAnalytics: { type: Boolean, default: false },
     },

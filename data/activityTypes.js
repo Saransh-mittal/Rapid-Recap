@@ -13,6 +13,9 @@ const activityTypes = {
   WISE_WEB_EXPANSION: { type: 'Wise Web expansion', xp: 10 },
   RC_PURCHASE: { type: 'RC purchase (first purchase)', xp: 50 },
   SOCIETY_OR_CIRCLE_UPGRADE: { type: 'Society or Circle upgrade' },
+  TOURNAMENT_REGISTRATION: { type: 'Tournament registration', xp: 5 },
+  TOURNAMENT_QUIZ: { type: 'Tournament participation', xp: 10 },
+  TOURNAMENT_WIN: { type: 'Tournament win', xp: 50 },
 }
 
 const getXpForActivity = ({

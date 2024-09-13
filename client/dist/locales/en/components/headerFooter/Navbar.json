@@ -6,5 +6,6 @@
   "confirm": "Confirm Logout!!!",
   "confirmMessage": "As a guest user, your progress and account may be lost if you logout. Are you sure you want to proceed?",
   "cancel": "Cancel",
-  "ConrfirmLogout": "Confirm Logout"
+  "ConrfirmLogout": "Confirm Logout",
+  "tournament": "Tournament"
 }

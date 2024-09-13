@@ -1,0 +1,21 @@
+{
+  "tournamentRegistrationHeading": "Tournament Registration",
+  "loadingUsersCount": "Loading Users Count...",
+  "loadingRegistrationForm": "Loading Registration Form...",
+  "exclusiveAccess": {
+    "title": "Exclusive Tournament Access",
+    "description": "To participate in this epic battle of wits, you need to be logged in with a verified email account.",
+    "callToAction": "Join our community of knowledge warriors and prove your mettle!"
+  },
+  "registrationSuccess": {
+    "title": "Registration Successful!",
+    "description": "Prepare for an epic battle of wits!"
+  },
+  "tournamentDetails": {
+    "heading": "Your Tournament Details:"
+  },
+  "userDetails": {
+    "inGameNameLabel": "In-Game-Name:",
+    "selectedCategoriesLabel": "Selected Categories:"
+  }
+}

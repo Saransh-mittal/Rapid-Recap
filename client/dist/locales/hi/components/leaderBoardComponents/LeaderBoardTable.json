@@ -4,7 +4,8 @@
   "inGameName": "इन गेम नाम",
   "iqScores": "IQ स्कोर",
   "quizSubmissions": "क्विज सबमिशन",
-  "avgRQMScore": "औसत RQM स्कोर",
+  "avgRQMScore": "औसत RQM",
   "Player": "खिलाड़ी",
-  "Experience": "अनुभव"
+  "Experience": "अनुभव",
+  "rankAndPlayer": "रैंक और खिलाड़ी"
 }

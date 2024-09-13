@@ -7,6 +7,11 @@ const fakeQuizAttemptMinMax = require('../data/fakeAttemptMinMax.json')
 const configService = require('../configService')
 const User = require('../model/userSchema')
 const { cancelScheduledNotif } = require('./notif.utils')
+const {
+  TournamentRegistration,
+} = require('../model/tournamentRegistrationSchema')
+const TournamentQuestion = require('../model/tournamentQuestionSchema')
+const Tournament = require('../model/tournamentSchema')
 const genQuiz = async ({ fullQuiz, title }) => {
   const selectedQuestions = new Set() // Using a Set to ensure uniqueness
 
@@ -612,6 +617,47 @@ const sendMailsForQuizRemainingToReviveStreak = async (
   }
 }
 
+const generateCategoryQuiz = async (userId, tournamentId, category) => {
+  // Verify user registration
+  const registration = await TournamentRegistration.findOne({
+    user: userId,
+    tournament: tournamentId,
+  })
+  const tournament = await Tournament.findById(tournamentId)
+  if (!registration) {
+    throw new Error('User is not registered for this tournament')
+  }
+
+  // Verify category selection
+  if (!registration.selectedCategories.includes(category)) {
+    throw new Error('Invalid category selection')
+  }
+
+  // Check if category is already completed
+  if (registration.completedCategories.includes(category)) {
+    throw new Error('Category already completed')
+  }
+
+  // Get questions for the selected category
+  const questions = await TournamentQuestion.aggregate([
+    {
+      $match: {
+        category: category,
+        createdAt: {
+          $gte: tournament.registrationStartDate,
+          $lte: tournament.registrationEndDate,
+        },
+      },
+    },
+    { $sample: { size: 5 } },
+  ])
+
+  if (questions.length < 5) {
+    throw new Error('Not enough questions available for this category')
+  }
+
+  return questions
+}
 module.exports = {
   genQuiz,
   generateQuestionsForQuiz,
@@ -621,4 +667,5 @@ module.exports = {
   fetchTodaysPastRQMs,
   fakeQuizAttemptCnt,
   sendMailsForQuizRemainingToReviveStreak,
+  generateCategoryQuiz,
 }
