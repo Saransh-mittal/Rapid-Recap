@@ -76,7 +76,6 @@ const NoteMessageQueue = () => {
         <NoteMessage
           messageId={uuidv4()}
           title={t('newMessages', { number: noteMessageQueue.length })}
-          // title={`You have ${noteMessageQueue.length} new messages.`}
           actions={actions}
           onClose={handleClose}
           duration={null}

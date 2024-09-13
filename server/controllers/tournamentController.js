@@ -73,7 +73,7 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     }),
 
     isRegistered: !!userRegistration,
-    status: 'registration',
+    // status: 'registration',
     selectedCategories: userRegistration
       ? userRegistration.selectedCategories
       : [],

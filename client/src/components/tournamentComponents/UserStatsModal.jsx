@@ -18,8 +18,11 @@ import {
   Button,
   Spinner,
 } from '@chakra-ui/react'
-import { Trophy, Target, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import TrophySVG from '../../assets/svg/TrophySVG'
+import Target from '../../assets/svg/Target'
+import ClockSVG from '../../assets/svg/ClockSVG'
 
 // Lazy load heavy components
 const CategoryCard = lazy(() => import('./CategoryCard'))
@@ -27,18 +30,24 @@ const QuizBG = lazy(() => import('./tournamentQuiz/QuizBG'))
 const UserSVG = lazy(() => import('../../assets/svg/UserSVG'))
 
 const UserStatsModal = ({ isOpen, onClose, userStats }) => {
+  const { t } = useTranslation('UserStatsModal')
   const statsRef = React.useRef(null)
   const navigate = useNavigate()
 
-  if (!userStats) return null
-
   // Memoize category stats for better performance
-  const categoryStats = useMemo(() => userStats.categoryStats, [userStats])
+  const categoryStats = useMemo(
+    () => userStats?.categoryStats || [],
+    [userStats],
+  )
 
   // Memoized navigation handler to avoid recreating on each render
   const handleProfileNavigation = useCallback(() => {
-    navigate(`/profile/${userStats.inGameName}`)
-  }, [navigate, userStats.inGameName])
+    if (userStats) {
+      navigate(`/profile/${userStats.inGameName}`)
+    }
+  }, [navigate, userStats])
+
+  if (!userStats) return null
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="full">
@@ -61,14 +70,14 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
           borderColor="gold"
           pb={4}
         >
-          Player Statistics
+          {t('playerStatistics')}
         </ModalHeader>
         <ModalCloseButton color="gold" />
         <ModalBody w={'90%'}>
           <VStack spacing={8} align="stretch" py={6}>
             <Box>
               <Heading size="lg" mb={4} color="gold">
-                Overall Performance
+                {t('overallPerformance')}
               </Heading>
               <HStack
                 justify="space-between"
@@ -77,9 +86,9 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
                 borderRadius="md"
               >
                 <HStack>
-                  <Trophy color="gold" size={32} />
+                  <TrophySVG color="gold" size={32} />
                   <VStack align="start" spacing={0}>
-                    <Text fontSize="sm">Total Score</Text>
+                    <Text fontSize="sm">{t('totalScore')}</Text>
                     <Text
                       fontSize={{ base: 'xl', md: '2xl' }}
                       fontWeight="bold"
@@ -90,14 +99,14 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
                   </VStack>
                 </HStack>
                 <Badge fontSize={{ base: 'sm', md: 'lg' }}>
-                  Quiz Count {userStats.completedCategories.length}
+                  {t('quizCount')} {userStats.completedCategories.length}
                 </Badge>
               </HStack>
             </Box>
 
             <Box>
               <Heading size="lg" mb={4} color="gold">
-                Category Breakdown
+                {t('categoryBreakdown')}
               </Heading>
               <SimpleGrid
                 columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
@@ -126,11 +135,13 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
                     >
                       <Flex justify="space-between">
                         <HStack>
-                          <Trophy color="gold" size={16} />
-                          <Text fontSize="sm">Rank: #{stat.ranking}</Text>
+                          <TrophySVG color="gold" size={16} />
+                          <Text fontSize="sm">
+                            {t('rank')}: #{stat.ranking}
+                          </Text>
                         </HStack>
                         <Text fontSize="sm" fontWeight="bold" color="cyan">
-                          RQM: {stat.RQM_score.toFixed(2)}
+                          {t('RQM')}: {stat.RQM_score.toFixed(2)}
                         </Text>
                       </Flex>
                       <Progress
@@ -141,10 +152,12 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
                       <Flex justify="space-between">
                         <HStack>
                           <Target color="cyan" size={16} />
-                          <Text fontSize="sm">Right : {stat.score}</Text>
+                          <Text fontSize="sm">
+                            {t('right')}: {stat.score}
+                          </Text>
                         </HStack>
                         <HStack>
-                          <Clock color="pink" size={16} />
+                          <ClockSVG color="pink" size={16} />
                           <Text fontSize="sm">{stat.timeTaken}s</Text>
                         </HStack>
                       </Flex>
@@ -162,7 +175,7 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
                 colorScheme="pink"
                 onClick={handleProfileNavigation}
               >
-                View Profile
+                {t('viewProfile')}
               </Button>
             </Suspense>
           </Flex>

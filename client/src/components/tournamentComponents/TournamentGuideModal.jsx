@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import TrophySVG from '../../assets/svg/TrophySVG'
 import CalenderSVG from '../../assets/svg/CalenderSVG'
 import ClipboardList from '../../assets/svg/ClipboardList'
@@ -31,17 +32,17 @@ const MotionHeading = motion(Heading)
 const MotionText = motion(Text)
 
 const TournamentGuideModal = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('TournamentGuideModal')
   const [currentPage, setCurrentPage] = useState(1)
   const [direction, setDirection] = useState(0)
   const theme = useTheme()
 
   const bgGradient = `linear(to-br, ${theme.colors.gray[900]}, ${theme.colors.purple[900]})`
 
-  // Memoize page contents to avoid re-creating them on every render
   const pages = useMemo(
     () => [
       {
-        title: 'Welcome to Rapid Recap Tournament!',
+        title: t('page1.title'),
         icon: TrophySVG,
         content: (
           <VStack spacing={4} align="stretch">
@@ -50,29 +51,27 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Welcome to the exciting world of Rapid Recap Tournament!
+              {t('page1.content1')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              This weekend event is your chance to showcase your knowledge,
-              compete with others, and have a blast while learning new things.
+              {t('page1.content2')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              Get ready for a thrilling quiz experience that covers various
-              categories and keeps you up-to-date with current affairs!
+              {t('page1.content3')}
             </MotionText>
           </VStack>
         ),
       },
       {
-        title: 'Eligibility and Registration',
+        title: t('page2.title'),
         icon: CalenderSVG,
         content: (
           <VStack spacing={4} align="stretch">
@@ -81,31 +80,27 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              To join the tournament, you need to maintain a 5-day Quiz streak
-              in the Rapid Recap app. It's like building your quiz power!
+              {t('page2.content1')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Registration is open from Monday to Friday until 11 PM. Don't miss
-              your chance to enter the arena of knowledge!
+              {t('page2.content2')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              During registration, you'll choose 5 categories out of 15 exciting
-              options. Plus, everyone gets to tackle the "Current Affairs"
-              category!
+              {t('page2.content3')}
             </MotionText>
           </VStack>
         ),
       },
       {
-        title: 'Tournament Structure',
+        title: t('page3.title'),
         icon: ClipboardList,
         content: (
           <VStack spacing={4} align="stretch">
@@ -114,31 +109,27 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              The big event happens every Saturday and Sunday. You can
-              participate at any time during these two days!
+              {t('page3.content1')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              You'll face 5 questions from each of your chosen categories, plus
-              5 from Current Affairs. That's a total of 30 brain-teasing
-              questions!
+              {t('page3.content2')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              The Current Affairs questions come about global events from the
-              last 5 days, keeping you in the loop!
+              {t('page3.content3')}
             </MotionText>
           </VStack>
         ),
       },
       {
-        title: 'Quiz Challenge',
+        title: t('page4.title'),
         icon: ClockSVG,
         content: (
           <VStack spacing={4} align="stretch">
@@ -147,30 +138,27 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Here's where the adrenaline kicks in: you have just 50 seconds to
-              answer 5 questions. It's a true test of speed and knowledge!
+              {t('page4.content1')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Don't stress if you can't answer them all. The goal is to have fun
-              and learn something new with every quiz.
+              {t('page4.content2')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              Remember, practice makes perfect. The more you play, the better
-              you'll get at tackling these rapid-fire questions!
+              {t('page4.content3')}
             </MotionText>
           </VStack>
         ),
       },
       {
-        title: 'Scoring and Leaderboard',
+        title: t('page5.title'),
         icon: Medal,
         content: (
           <VStack spacing={4} align="stretch">
@@ -179,30 +167,27 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              After completing the quiz, you'll see how you stack up against
-              other players on our real-time leaderboard.
+              {t('page5.content1')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Your ranking is based on your total RQM (Rapid Quiz Master) score,
-              which combines your performance across all categories.
+              {t('page5.content2')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              The leaderboard updates instantly, so you'll always know where you
-              stand in the heat of the competition!
+              {t('page5.content3')}
             </MotionText>
           </VStack>
         ),
       },
       {
-        title: 'Final Tips and Good Luck!',
+        title: t('page6.title'),
         icon: Globe,
         content: (
           <VStack spacing={4} align="stretch">
@@ -211,25 +196,21 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Stay curious and keep learning! The tournament is designed to be
-              both fun and educational.
+              {t('page6.content1')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Don't forget to brush up on current affairs. It might give you the
-              edge you need to climb the leaderboard!
+              {t('page6.content2')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              Most importantly, enjoy the experience. Whether you're aiming for
-              the top spot or just having fun, you're part of an epic quest for
-              knowledge!
+              {t('page6.content3')}
             </MotionText>
             <MotionText
               initial={{ opacity: 0, y: 20 }}
@@ -237,17 +218,15 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
               transition={{ delay: 0.5 }}
               fontWeight="bold"
             >
-              Good luck, Rapid Recapper! May your mind be quick and your answers
-              true! 🏆🎉
+              {t('page6.content4')}
             </MotionText>
           </VStack>
         ),
       },
     ],
-    [],
+    [t],
   )
 
-  // Memoize page animations
   const pageVariants = useMemo(
     () => ({
       enter: direction => ({
@@ -284,7 +263,6 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
     [],
   )
 
-  // Memoize page navigation functions
   const nextPage = useCallback(
     () => setCurrentPage(prev => Math.min(prev + 1, pages.length)),
     [pages.length],
@@ -398,7 +376,7 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
             _hover={{ bg: 'rgba(255, 255, 255, 0.2)' }}
             leftIcon={<ChevronLeftIcon />}
           >
-            Previous
+            {t('previous')}
           </Button>
           <Button
             onClick={() => {
@@ -411,7 +389,7 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
             _hover={{ bg: 'pink.600' }}
             rightIcon={<ChevronRightIcon />}
           >
-            Next
+            {t('next')}
           </Button>
         </Flex>
       </ModalContent>

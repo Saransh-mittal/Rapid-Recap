@@ -1,12 +1,14 @@
 import React, { useMemo, Suspense } from 'react'
 import { Box, Heading, Spinner } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load motion Box for code splitting
 const MotionBox = motion(Box)
 
 const TournamentHeader = () => {
   // Memoize animation properties to avoid re-creation on each render
+  const { t } = useTranslation('TournamentHeader')
   const motionProps = useMemo(
     () => ({
       initial: { opacity: 0, y: 20 },
@@ -21,7 +23,7 @@ const TournamentHeader = () => {
     <Suspense fallback={<Spinner />}>
       <MotionBox {...motionProps}>
         <Heading as="h1" size="2xl" mb={8} textAlign="center">
-          Rapid Recap Tournament
+          {t('Rapid Recap Tournament')}
         </Heading>
       </MotionBox>
     </Suspense>
