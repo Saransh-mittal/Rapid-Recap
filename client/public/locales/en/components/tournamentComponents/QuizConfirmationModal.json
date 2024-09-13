@@ -1,0 +1,13 @@
+{
+  "quizInstructions": "Quiz Instructions",
+  "confirmation": "Are you sure you want to start the quiz in the {{category}} category?",
+  "readInstructions": "Please read the instructions below before starting.",
+  "instructions": [
+    "You have 50 seconds to answer 5 questions.",
+    "Each correct answer awards you points based on the difficulty.",
+    "The faster you answer, the more points you score.",
+    "Try to finish the quiz within the time limit."
+  ],
+  "cancel": "Cancel",
+  "startQuiz": "Start Quiz"
+}

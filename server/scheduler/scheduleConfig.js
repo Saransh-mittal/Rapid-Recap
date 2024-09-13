@@ -9,6 +9,16 @@ const calculateUserIQScores = require('./tasks/userIQScoreScheduler')
 const incFakeQuizAttempts = require('./tasks/incFakeQuizAttempts')
 const deleteExpiredGuestAccountsTask = require('./tasks/deleteExpiredGuestAccounts')
 const sendGuestAccountExpiryNotifs = require('./tasks/guestAccountExpiryNotifs')
+const {
+  startRegistration,
+  inRegisterationPeriod,
+  lastDayOfRegisterationPeriod,
+  endRegistration,
+  startTournament,
+  day1EndOfTournament,
+  day2OfTournament,
+  endTournament,
+} = require('./tasks/tournamentManagement')
 
 const currentDate = moment().format('YYYY-MM-DD')
 
@@ -149,16 +159,57 @@ let schedules = [
     '20:00',
     sendGuestAccountExpiryNotifs,
   ),
+  // New tournament management schedules
+  createSchedule('startTournamentRegistration', '02:00', startRegistration),
+  createSchedule('endTournamentRegistration', '23:00', endRegistration),
+  createSchedule('startTournament', '00:00', startTournament),
+  createSchedule('endTournament', '23:59', endTournament),
+  // {
+  //   name: 'inRegistrationPeriod',
+  //   cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
+  //   task: inRegisterationPeriod,
+  // },
+  // {
+  //   name: 'lastDayOfRegistrationPeriod',
+  //   cronPattern: '0 20 * * 5', // At 8:00 PM on Friday
+  //   task: lastDayOfRegisterationPeriod,
+  // },
+  // {
+  //   name: 'day1EndOfTournament',
+  //   cronPattern: '0 22 * * 6', // At 10:00 PM on Saturday
+  //   task: day1EndOfTournament,
+  // },
+  // {
+  //   name: 'day2OfTournament',
+  //   cronPattern: '0 11 * * 0', // At 11:00 AM on Sunday
+  //   task: day2OfTournament,
+  // },
 ]
 
 // Sort schedules by time
-schedules.sort((a, b) => a.time.valueOf() - b.time.valueOf())
+// schedules.sort((a, b) => a.time.valueOf() - b.time.valueOf())
 
 // Convert times to cron patterns and add them to each schedule
 schedules.forEach(schedule => {
+  if (!schedule.time) {
+    return
+  }
   const timeUTC = schedule.time.clone().tz('UTC')
   const timeLocal = timeUTC.clone().local()
-  schedule.cronPattern = `${timeLocal.minute()} ${timeLocal.hour()} * * *`
+  const dayOfWeek = schedule.name.includes('Tournament')
+    ? schedule.name.includes('Registration')
+      ? schedule.name.includes('start')
+        ? 6
+        : schedule.name.includes('end')
+        ? 1
+        : '*'
+      : schedule.name.includes('start')
+      ? 2
+      : schedule.name.includes('end')
+      ? 3
+      : '*'
+    : '*'
+  schedule.cronPattern = `${timeLocal.minute()} ${timeLocal.hour()} * * ${dayOfWeek}`
 })
 
 module.exports = schedules

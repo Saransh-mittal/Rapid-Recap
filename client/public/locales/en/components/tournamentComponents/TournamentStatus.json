@@ -1,0 +1,18 @@
+{
+  "upcoming": {
+    "title": "Tournament Starting Soon",
+    "loginPrompt": "To join the Rapid Recap tournament, please log in with a verified email.",
+    "guestPrompt": "Guest users are not allowed to participate in the tournament. Please register to participate.",
+    "registered": "You're registered! Get ready for the tournament.",
+    "notRegistered": "You have not registered for the tournament!",
+    "futurePrompt": "Don’t miss out on future tournaments! Register on time to secure your spot in the upcoming competitions."
+  },
+  "ongoing": {
+    "title": "Tournament in Progress"
+  },
+  "completed": {
+    "title": "Tournament Completed",
+    "message": "This tournament has ended. Check out the results below!"
+  },
+  "loading": "Loading..."
+}

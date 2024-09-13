@@ -305,7 +305,7 @@ const saveAttempt = async (req, res) => {
     res.status(201).json({
       message: 'Attempt saved successfully',
       RQM_score,
-      articleDifficulty: articleDifficultyLevel,
+      quizDifficulty: articleDifficultyLevel,
       timeTaken,
       score: scoreString,
       pastRQMs,
@@ -457,7 +457,7 @@ const getQuizSummary = async (req, res) => {
       result,
       timeTaken: quizAttempt.timeTaken,
       RQM_score: quizAttempt.RQM_score,
-      articleDifficulty: articleDifficultyLevel,
+      quizDifficulty: articleDifficultyLevel,
       score: scoreString,
     })
   } catch (error) {

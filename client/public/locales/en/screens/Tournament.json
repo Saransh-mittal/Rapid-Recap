@@ -1,5 +1,23 @@
 {
-  "heading": "Tournament Coming Soon",
-  "subheading": "Prepare for an epic battle of knowledge and skill!",
-  "note": "Note: The guide may be subject to changes upon release."
+  "noTournamentData": {
+    "title": "No Tournament Data Available",
+    "description": "Stay tuned for upcoming tournaments!"
+  },
+  "tournamentNumber": "Tournament #{{number}}",
+  "tournament": "Tournament",
+  "current": "Current",
+  "previous": "Previous",
+  "curr": "Curr.",
+  "prev": "Prev.",
+  "tournamentStatus": {
+    "notRegistered": "You are not registered for this tournament. Registration is closed, but you can still view the leaderboard."
+  },
+  "registrationSuccess": {
+    "title": "XP Awarded For Tournament Registration"
+  },
+  "errorMessages": {
+    "fetchData": "Failed to fetch tournament data.",
+    "registerError": "Failed to register for the tournament."
+  },
+  "errorOccurred": "An error occurred"
 }

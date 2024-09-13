@@ -1,0 +1,189 @@
+import React, { Suspense, useCallback } from 'react'
+import {
+  VStack,
+  Alert,
+  AlertIcon,
+  Heading,
+  Text,
+  Box,
+  useColorModeValue,
+  Flex,
+  Badge,
+} from '@chakra-ui/react'
+import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+
+// Lazy load components
+const RegistrationForm = React.lazy(() => import('./RegistrationForm'))
+const RegisteredUsersCount = React.lazy(() => import('./RegisteredUsersCount'))
+
+const MotionBox = motion(Box)
+
+const RegistrationSection = ({
+  tournamentData,
+  registrationStatus,
+  handleRegister,
+  userDetails,
+  registerLoading,
+  isAuthenticated,
+  userRole,
+}) => {
+  const { t } = useTranslation('RegistrationSection') // Translation hook for this component
+
+  const bgColor = useColorModeValue(
+    'rgba(255, 255, 255, 0.08)',
+    'rgba(0, 0, 0, 0.3)',
+  )
+  const borderColor = useColorModeValue('pink.200', 'pink.700')
+  const headingColor = useColorModeValue('cyan.300', 'cyan.200')
+  const labelColor = useColorModeValue('pink.300', 'pink.200')
+  const valueColor = useColorModeValue('yellow.300', 'yellow.200')
+
+  // Memoize renderContent to avoid unnecessary re-renders
+  const renderContent = useCallback(() => {
+    if (!isAuthenticated || userRole === 'guest') {
+      return (
+        <Box
+          bg={bgColor}
+          borderRadius="lg"
+          p={6}
+          borderWidth={2}
+          borderColor={borderColor}
+          boxShadow="0px 4px 10px rgba(237, 100, 166, 0.3)"
+        >
+          <Alert
+            status="info"
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            borderRadius="lg"
+            p={4}
+            bg="blue.800"
+            color="white"
+          >
+            <AlertIcon boxSize="40px" mr={0} color="blue.300" />
+            <Text fontWeight="bold" fontSize="xl" mt={4} mb={2}>
+              {t('exclusiveAccess.title')}
+            </Text>
+            <Text>{t('exclusiveAccess.description')}</Text>
+            <Text mt={2}>{t('exclusiveAccess.callToAction')}</Text>
+          </Alert>
+        </Box>
+      )
+    }
+
+    if (registrationStatus === 'not-registered') {
+      return (
+        <Suspense fallback={<Text>{t('loadingRegistrationForm')}</Text>}>
+          <RegistrationForm
+            onRegister={handleRegister}
+            registerLoading={registerLoading}
+          />
+        </Suspense>
+      )
+    }
+
+    return (
+      <VStack spacing={4} align="stretch">
+        <Alert
+          status="success"
+          variant="subtle"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          textAlign="center"
+          borderRadius="lg"
+          p={4}
+          bg="green.800"
+          color="white"
+        >
+          <AlertIcon boxSize="40px" mr={0} color="green.300" />
+          <Text fontWeight="bold" fontSize="xl" mt={4} mb={2}>
+            {t('registrationSuccess.title')}
+          </Text>
+          <Text>{t('registrationSuccess.description')}</Text>
+        </Alert>
+        <Box
+          bg={bgColor}
+          borderRadius="lg"
+          p={6}
+          borderWidth={2}
+          borderColor={borderColor}
+          boxShadow="md"
+        >
+          <Heading size="md" mb={4} color={headingColor}>
+            {t('tournamentDetails.heading')}
+          </Heading>
+          <VStack align="start" spacing={3}>
+            <Flex align="center">
+              <Text fontWeight="semibold" mr={2} color={labelColor}>
+                {t('userDetails.inGameNameLabel')}
+              </Text>
+              <Text color={valueColor}>{userDetails?.inGameName}</Text>
+            </Flex>
+            <Box>
+              <Text fontWeight="semibold" mb={2} color={labelColor}>
+                {t('userDetails.selectedCategoriesLabel')}
+              </Text>
+              <Flex flexWrap="wrap" gap={2}>
+                {userDetails?.categories?.map((category, index) => (
+                  <Badge
+                    key={index}
+                    colorScheme="purple"
+                    variant="solid"
+                    fontSize="sm"
+                    textTransform="capitalize"
+                    borderRadius="full"
+                    px={3}
+                    py={1}
+                  >
+                    {category}
+                  </Badge>
+                ))}
+              </Flex>
+            </Box>
+          </VStack>
+        </Box>
+      </VStack>
+    )
+  }, [
+    isAuthenticated,
+    userRole,
+    registrationStatus,
+    handleRegister,
+    registerLoading,
+    bgColor,
+    borderColor,
+    headingColor,
+    labelColor,
+    valueColor,
+    userDetails,
+    t,
+  ])
+
+  return (
+    <>
+      {tournamentData?.status === 'registration' && (
+        <MotionBox
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <VStack spacing={6} align="stretch">
+            <Heading size={{ base: 'md', md: 'lg' }} mt={4} color="pink.400">
+              {t('tournamentRegistrationHeading')}
+            </Heading>
+            <Suspense fallback={<Text>{t('loadingUsersCount')}</Text>}>
+              <RegisteredUsersCount count={tournamentData.registeredCount} />
+            </Suspense>
+            {renderContent()}
+          </VStack>
+        </MotionBox>
+      )}
+    </>
+  )
+}
+
+export default RegistrationSection

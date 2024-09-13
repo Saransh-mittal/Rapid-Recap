@@ -1,8 +1,8 @@
 import * as React from 'react'
 const CrownSVG = props => (
   <svg
-    width="20px"
-    height="20px"
+    width={props.size || '20px'}
+    height={props.size || '20px'}
     viewBox="0 0 128 128"
     xmlns="http://www.w3.org/2000/svg"
     xmlnsXlink="http://www.w3.org/1999/xlink"

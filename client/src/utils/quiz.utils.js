@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { fetchDailyStreak } from '../redux/appSlice'
-import { useSelector } from 'react-redux'
 
 const quinBoostChecker = async ({
   setIsQuinBoostAvailable,

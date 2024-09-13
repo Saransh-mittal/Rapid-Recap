@@ -10,7 +10,6 @@ const {
   getUserIQScoreHistory,
   currentTopPercentOfUser,
   getSolvedQuizzesCount,
-  // getDailyActivity,
   calculateUserRank,
   dailyStreakCalculator,
   longestStreakCalculator,
@@ -650,12 +649,11 @@ const profile = async (req, res) => {
     } = await currentTopPercentOfUser({ userId: user._id })
     const [
       solvedQuizzes,
-      // dailyActivity,
       rank,
       iqScoresHistory,
     ] = await Promise.all([
       getSolvedQuizzesCount({ userId: user._id }),
-      // getDailyActivity({ userId: user._id }),
+
       calculateUserRank({ userId: user._id }),
       getUserIQScoreHistory({ userId: user._id }),
     ])
@@ -665,7 +663,6 @@ const profile = async (req, res) => {
       lineGraph: false,
       barGraph: false,
       solvedQuizzes: false,
-      // dailyActivity: false,
       society: false,
     }
 
@@ -681,7 +678,6 @@ const profile = async (req, res) => {
         USER_IQ,
       },
       solvedQuizzes,
-      // dailyActivity,
       leftProfileView: {
         rank,
         name: user.name,
@@ -1016,7 +1012,6 @@ const profilePrivacy = async (req, res) => {
     lineGraph,
     barGraph,
     solvedQuizzes,
-    // dailyActivity,
     society,
     seasonAnalytics,
   } = req.body
@@ -1030,7 +1025,6 @@ const profilePrivacy = async (req, res) => {
       lineGraph,
       barGraph,
       solvedQuizzes,
-      // dailyActivity,
       society,
       seasonAnalytics,
     }

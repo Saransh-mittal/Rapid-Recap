@@ -13,6 +13,7 @@ import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
+
 const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
 const Footer = React.lazy(() => import('./components/Header-Footer/Footer.jsx'))
 const FixedBackground = React.lazy(() =>
@@ -33,7 +34,7 @@ const NoteMessageQueue = React.lazy(() =>
 const XPLevelModal = React.lazy(() =>
   import('./components/Header-Footer/navbarComponents/XPLevelModal.jsx'),
 )
-
+const Quiz = React.lazy(() => import('./screens/Quiz.jsx'))
 import {
   addNoteMessage,
   fetchUnreadNoteMessages,
@@ -49,6 +50,7 @@ import {
   checkNotificationStatus,
   isSubscribedChecker,
 } from './redux/notificationSlice.js'
+import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -60,8 +62,10 @@ const App = () => {
   const { isRegisterOpen, isSigninOpen, showXpLevelModal } = useSelector(
     state => state.app,
   )
+  const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
+
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
 
   const handleClose = useCallback(() => {
@@ -299,7 +303,9 @@ const App = () => {
           t={GuestLoginModaltranslation}
         />
       </Suspense>
-
+      <Suspense fallback={null}>
+        {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null}
+      </Suspense>
       <Suspense fallback={null}>
         <Signin
           isOpen={isSigninOpen}

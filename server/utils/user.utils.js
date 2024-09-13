@@ -344,15 +344,6 @@ const getSolvedQuizzesCount = async ({ userId, season = null }) => {
   }
 }
 
-// const getDailyActivity = async ({ userId }) => {
-//   const quizAttempts = await QuizAttempt.aggregate([
-//     { $match: { user: userId } }, // Filter quiz attempts by user ID
-//     { $project: { date: "$createdAt" } }, // Rename createdAt to date
-//   ]);
-
-//   return quizAttempts;
-// };
-
 const calculateUserRank = async ({ userId }) => {
   const user = await User.findById(userId)
   return user.rank
@@ -623,7 +614,7 @@ module.exports = {
   getUserIQScoreHistory,
   currentTopPercentOfUser,
   getSolvedQuizzesCount,
-  // getDailyActivity,
+
   calculateUserRank,
   dailyStreakCalculator,
   longestStreakCalculator,

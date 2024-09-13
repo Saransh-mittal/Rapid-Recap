@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { lazy, Suspense, useMemo, useCallback } from 'react'
 import {
   Box,
   VStack,
@@ -12,20 +12,51 @@ import {
   AccordionIcon,
   Icon,
   Flex,
+  Button,
+  useDisclosure,
+  useTheme,
+  Spinner,
 } from '@chakra-ui/react'
-import { FaQuestionCircle, FaLightbulb } from 'react-icons/fa'
+import { FaQuestionCircle, FaLightbulb, FaInfoCircle } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
+
+const MotionButton = motion(Button)
+
+// Lazy load TournamentGuideModal for code splitting
+const TournamentGuideModal = lazy(() => import('./TournamentGuideModal'))
 
 const EpicQuestGuide = () => {
-  const { t } = useTranslation('EpicQuestGuide') // Load the 'epicQuestGuide' namespace
+  const { t } = useTranslation('EpicQuestGuide')
+  const theme = useTheme()
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
-  const bgColor = 'rgba(0, 0, 0, 0.3)'
-  const borderColor = 'pink.700'
-  const questionColor = 'white'
-  const answerColor = 'gray.300'
-  const iconColor = 'pink.400'
+  // Memoize static styles to avoid re-calculation
+  const bgColor = useMemo(() => 'rgba(0, 0, 0, 0.3)', [])
+  const borderColor = useMemo(() => 'pink.700', [])
+  const questionColor = useMemo(() => 'white', [])
+  const answerColor = useMemo(() => 'gray.300', [])
+  const iconColor = useMemo(() => 'pink.400', [])
 
-  const guideInstructions = t('questions', { returnObjects: true })
+  // Memoize guide instructions
+  const guideInstructions = useMemo(
+    () => t('questions', { returnObjects: true }),
+    [t],
+  )
+
+  // Memoize onOpen and onClose to avoid re-renders of the MotionButton
+  const handleOpen = useCallback(onOpen, [])
+  const handleClose = useCallback(onClose, [])
+
+  // Memoize animation properties for MotionButton
+  const buttonAnimationProps = useMemo(
+    () => ({
+      whileHover: { scale: 1.05 },
+      whileTap: { scale: 0.95 },
+      transition: { type: 'spring', stiffness: 500, damping: 30 },
+    }),
+    [],
+  )
 
   return (
     <Box minHeight="100vh" pb={12} borderRadius="xl">
@@ -38,10 +69,10 @@ const EpicQuestGuide = () => {
               bgClip="text"
               letterSpacing="tight"
             >
-              {t('title')} {/* Translated title */}
+              {t('title')}
             </Heading>
             <Text mt={2} fontSize="lg" color="gray.400">
-              {t('subtitle')} {/* Translated subtitle */}
+              {t('subtitle')}
             </Text>
           </Box>
 
@@ -75,7 +106,7 @@ const EpicQuestGuide = () => {
                         fontWeight="semibold"
                         color={questionColor}
                       >
-                        {instruction.question} {/* Translated question */}
+                        {instruction.question}
                       </Text>
                     </Flex>
                     <AccordionIcon color={iconColor} />
@@ -91,15 +122,44 @@ const EpicQuestGuide = () => {
                       mt={1}
                     />
                     <Text fontSize="md" color={answerColor}>
-                      {instruction.answer} {/* Translated answer */}
+                      {instruction.answer}
                     </Text>
                   </Flex>
                 </AccordionPanel>
               </AccordionItem>
             ))}
           </Accordion>
+
+          <MotionButton
+            onClick={handleOpen}
+            leftIcon={<FaInfoCircle />}
+            bg="linear-gradient(45deg, #FF00EA, #8A2BE2)"
+            color="white"
+            borderRadius="full"
+            px={6}
+            py={3}
+            fontSize="lg"
+            fontWeight="bold"
+            _hover={{
+              bg: 'linear-gradient(45deg, #FF00EA, #8A2BE2)',
+              opacity: 0.9,
+              transform: 'scale(1.05)',
+            }}
+            _active={{
+              bg: 'linear-gradient(45deg, #FF00EA, #8A2BE2)',
+              transform: 'scale(0.95)',
+            }}
+            boxShadow={`0 0 20px ${theme.colors.pink[400]}40`}
+            {...buttonAnimationProps}
+          >
+            {t('knowMore')}
+          </MotionButton>
         </VStack>
       </Container>
+
+      <Suspense fallback={<Spinner />}>
+        <TournamentGuideModal isOpen={isOpen} onClose={handleClose} />
+      </Suspense>
     </Box>
   )
 }

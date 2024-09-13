@@ -13,7 +13,7 @@ const logActivity = async ({
   type,
   userIQ,
   previousIQ,
-  date,
+  date = new Date(),
   consecutiveQuizCount = 0,
 }) => {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {

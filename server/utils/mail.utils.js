@@ -103,8 +103,8 @@ const mailForStreakBroken = async () => {
         await sendNotification({
           userId: user._id,
 
-          title: i18n.t('streak_broken_notification_title'),
-          body: i18n.t('streak_broken_notification_body', {
+          title: t('streak_broken_notification_title'),
+          body: t('streak_broken_notification_body', {
             name: user.name.split(' ')[0],
             remainingTime: formatRemainingTime(remainingTimeBeforeRevival),
           }),
@@ -126,8 +126,8 @@ const mailForStreakBroken = async () => {
           userId: user._id,
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
-          title: i18n.t('streak_seven_periodic_notification_title'),
-          body: i18n.t('streak_seven_periodic_notification_body', {
+          title: t('streak_seven_periodic_notification_title'),
+          body: t('streak_seven_periodic_notification_body', {
             name: user.name.split(' ')[0],
             streak_days: streakBrokenDays,
           }),
@@ -149,8 +149,8 @@ const mailForStreakBroken = async () => {
           userId: user._id,
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
-          title: i18n.t('no_login_two_days_notification_title'),
-          body: i18n.t('no_login_two_days_notification_body', {
+          title: t('no_login_two_days_notification_title'),
+          body: t('no_login_two_days_notification_body', {
             name: user.name.split(' ')[0],
           }),
         })
@@ -168,8 +168,8 @@ const mailForStreakBroken = async () => {
           userId: user._id,
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
-          title: i18n.t('no_login_seven_days_notification_title'),
-          body: i18n.t('no_login_seven_days_notification_body', {
+          title: t('no_login_seven_days_notification_title'),
+          body: t('no_login_seven_days_notification_body', {
             name: user.name.split(' ')[0],
             inactive_days: noLoginDaysSpent,
           }),

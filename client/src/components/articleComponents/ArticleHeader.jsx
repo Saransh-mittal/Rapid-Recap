@@ -20,7 +20,7 @@ import axios from 'axios'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
-import { formatDateLangTranslate } from '../../utils/helper.utils'
+import { formatDate } from '../../utils/helper.utils'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -49,8 +49,8 @@ const ArticleHeader = ({
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()
   const { user } = useSelector(state => state.auth)
-  const locale = i18n.language === 'hi' ? 'hi-IN' : 'en-US' // assuming 'i18n.language' returns the current language
-  const formattedDate = formatDateLangTranslate(new Date(dateTime), locale)
+  const lang = i18n.language // assuming 'i18n.language' returns the current language
+  const formattedDate = formatDate(new Date(dateTime), lang)
 
   const {
     isOpen: isOpenArticleForm,
