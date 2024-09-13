@@ -117,7 +117,9 @@ const saveTournamentQuestions = async (article, response) => {
     })
 
     await newQuestion.save()
-
+    if (!article.tournamentQuestions) {
+      article.tournamentQuestions = []
+    }
     article.tournamentQuestions.push(newQuestion._id)
   }
 
