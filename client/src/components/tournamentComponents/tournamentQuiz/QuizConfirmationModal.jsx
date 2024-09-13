@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo, useMemo, useCallback, Suspense } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -17,19 +17,33 @@ import {
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
+// Lazy load MotionBox and Chakra UI Box
 const MotionBox = motion(Box)
 
 const QuizConfirmationModal = ({ isOpen, onClose, onConfirm, category }) => {
   const { t } = useTranslation('InstructionModal')
   const theme = useTheme()
 
-  const instructions = t('instructions', { returnObjects: true })
+  // Memoize instructions to avoid unnecessary re-renders
+  const instructions = useMemo(
+    () => t('instructions', { returnObjects: true }),
+    [t],
+  )
 
-  const modalBg = `linear(to-br, ${theme.colors.gray[900]}, ${theme.colors.purple[900]})`
+  // Memoize static color values to optimize renders
+  const modalBg = useMemo(
+    () =>
+      `linear(to-br, ${theme.colors.gray[900]}, ${theme.colors.purple[900]})`,
+    [theme],
+  )
   const textColor = 'white'
   const headerColor = 'pink.300'
   const headingColor = 'purple.200'
 
+  // Memoize onConfirm to prevent re-creation on every render
+  const handleConfirm = useCallback(() => onConfirm(), [onConfirm])
+
+  // Optimized Modal Component with Suspense
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
       <ModalOverlay backdropFilter="blur(10px)" bg="blackAlpha.700" />
@@ -80,35 +94,13 @@ const QuizConfirmationModal = ({ isOpen, onClose, onConfirm, category }) => {
 
             {Array.isArray(instructions) &&
               instructions.map((instruction, index) => (
-                <MotionBox
+                <MemoizedMotionBox
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  bg="rgba(255, 255, 255, 0.05)"
-                  p={3}
-                  borderRadius="xl"
-                  boxShadow="inner"
-                >
-                  <Flex align="center">
-                    <Box
-                      as="span"
-                      fontWeight="bold"
-                      fontSize="md"
-                      color={headingColor}
-                      mr={3}
-                    >
-                      {index + 1}.
-                    </Box>
-                    <Text
-                      fontSize="md"
-                      fontWeight={'semibold'}
-                      color={textColor}
-                    >
-                      {instruction}
-                    </Text>
-                  </Flex>
-                </MotionBox>
+                  index={index}
+                  instruction={instruction}
+                  textColor={textColor}
+                  headingColor={headingColor}
+                />
               ))}
           </VStack>
         </ModalBody>
@@ -126,7 +118,7 @@ const QuizConfirmationModal = ({ isOpen, onClose, onConfirm, category }) => {
           >
             Cancel
           </Button>
-          <Button colorScheme="pink" onClick={onConfirm}>
+          <Button colorScheme="pink" onClick={handleConfirm}>
             Start Quiz
           </Button>
         </ModalFooter>
@@ -135,4 +127,34 @@ const QuizConfirmationModal = ({ isOpen, onClose, onConfirm, category }) => {
   )
 }
 
-export default QuizConfirmationModal
+// Memoize MotionBox component for better performance
+const MemoizedMotionBox = memo(
+  ({ index, instruction, textColor, headingColor }) => (
+    <MotionBox
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      bg="rgba(255, 255, 255, 0.05)"
+      p={3}
+      borderRadius="xl"
+      boxShadow="inner"
+    >
+      <Flex align="center">
+        <Box
+          as="span"
+          fontWeight="bold"
+          fontSize="md"
+          color={headingColor}
+          mr={3}
+        >
+          {index + 1}.
+        </Box>
+        <Text fontSize="md" fontWeight={'semibold'} color={textColor}>
+          {instruction}
+        </Text>
+      </Flex>
+    </MotionBox>
+  ),
+)
+
+export default memo(QuizConfirmationModal)

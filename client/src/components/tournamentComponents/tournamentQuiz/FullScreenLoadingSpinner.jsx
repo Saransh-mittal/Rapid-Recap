@@ -1,19 +1,35 @@
-import React from 'react'
-import { Box, Flex, Text, keyframes, useTheme } from '@chakra-ui/react'
+// FullScreenLoadingSpinner.js
+import React, { useMemo } from 'react'
+import {
+  Box,
+  Flex,
+  Text,
+  keyframes,
+  useTheme,
+  usePrefersReducedMotion,
+} from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 
-const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`
-
-const pulse = keyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-`
-
-const FullScreenLoadingSpinner = () => {
+const FullScreenLoadingSpinner = React.memo(() => {
   const theme = useTheme()
+  const prefersReducedMotion = usePrefersReducedMotion()
+
+  // Memoized animations to prevent recalculation on every render
+  const spinAnimation = useMemo(() => {
+    if (prefersReducedMotion) return undefined
+    return `${keyframes`
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    `} 1s linear infinite`
+  }, [prefersReducedMotion])
+
+  const pulseAnimation = useMemo(() => {
+    if (prefersReducedMotion) return undefined
+    return `${keyframes`
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    `} 1.5s ease-in-out infinite`
+  }, [prefersReducedMotion])
 
   return (
     <Flex
@@ -36,7 +52,7 @@ const FullScreenLoadingSpinner = () => {
         border="4px solid"
         borderColor="transparent"
         borderTopColor={theme.colors.yellow[400]}
-        animation={`${spin} 1s linear infinite`}
+        animation={spinAnimation}
         mb="4"
       />
       <Text
@@ -44,12 +60,12 @@ const FullScreenLoadingSpinner = () => {
         fontSize="2xl"
         fontWeight="bold"
         color="white"
-        animation={`${pulse} 1.5s ease-in-out infinite`}
+        animation={pulseAnimation}
       >
         Loading ...
       </Text>
     </Flex>
   )
-}
+})
 
 export default FullScreenLoadingSpinner

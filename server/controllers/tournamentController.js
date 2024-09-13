@@ -507,7 +507,7 @@ const startQuiz = asyncHandler(async (req, res) => {
 // @route  POST /api/tournament/quiz/submit
 // @access Private
 const submitQuiz = asyncHandler(async (req, res) => {
-  const { quizSessionId, userResponses, timeTaken } = req.body
+  const { quizSessionId, userResponses, timeTaken, questionsIds } = req.body
   const session = await startSession()
 
   try {
@@ -533,15 +533,20 @@ const submitQuiz = asyncHandler(async (req, res) => {
 
     // Calculate score and RQM
     let score = 0
-    const updatedResponses = questions.map((question, index) => {
-      const isCorrect = question.correctAnswer === userResponses[index]
-      if (isCorrect) score++
+    let correctCount = 0
+
+    const updatedResponses = userResponses.map((response, index) => {
+      const isCorrect =
+        questions.find(q => q._id.toString() === questionsIds[index])
+          .correctAnswer === response
+      if (isCorrect) correctCount++
       return {
-        questionId: question._id,
-        userAnswer: userResponses[index],
+        questionId: questionsIds[index],
+        userAnswer: response,
         isCorrect,
       }
     })
+    score = correctCount
 
     const quizDifficulty =
       questions.reduce(

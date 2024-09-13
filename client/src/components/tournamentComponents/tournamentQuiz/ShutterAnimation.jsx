@@ -1,26 +1,36 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Box, Flex, Text, useTheme } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 
+// MotionBox component using motion from framer-motion
 const MotionBox = motion(Box)
 
 const ShutterAnimation = ({ onComplete }) => {
   const [isVisible, setIsVisible] = useState(true)
   const theme = useTheme()
 
+  // Memoizing the shutter color to prevent recalculating on each render
+  const shutterColor = useMemo(() => {
+    return theme.colors.yellow?.[600] || theme.colors.yellow || '#B7791F'
+  }, [theme])
+
+  // Callback to trigger when the animation completes
+  const handleComplete = useCallback(() => {
+    if (onComplete) {
+      onComplete()
+    }
+  }, [onComplete])
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsVisible(false)
-    }, 3000) // Show for 3 seconds before starting to close
+      setIsVisible(false) // Hide the animation after 3 seconds
+    }, 3000)
 
     return () => clearTimeout(timer)
   }, [])
 
-  const shutterColor =
-    theme.colors.yellow?.[600] || theme.colors.yellow || '#B7791F'
-
   return (
-    <AnimatePresence onExitComplete={onComplete}>
+    <AnimatePresence onExitComplete={handleComplete}>
       {isVisible && (
         <Flex
           position="fixed"
@@ -33,6 +43,7 @@ const ShutterAnimation = ({ onComplete }) => {
           bg="gray.900"
           zIndex={9999}
         >
+          {/* MotionBox for left and right shutters */}
           <MotionBox
             position="absolute"
             inset="0"
@@ -63,6 +74,7 @@ const ShutterAnimation = ({ onComplete }) => {
             />
           </MotionBox>
 
+          {/* Centered text content */}
           <Flex
             zIndex={10}
             flexDirection="column"
@@ -87,6 +99,7 @@ const ShutterAnimation = ({ onComplete }) => {
             </Text>
           </Flex>
 
+          {/* Subtle background gradient effect */}
           <Box
             position="absolute"
             inset="0"

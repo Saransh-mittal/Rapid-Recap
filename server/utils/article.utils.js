@@ -14,6 +14,9 @@ const {
 const { Recommendation } = require('../model/recommendationSchema')
 const newsClassifierService = require('../ml/services/newsClassifierService')
 const cache = require('memory-cache')
+const {
+  generateTournamentQuestions,
+} = require('../services/tournamentQuestionService')
 
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
