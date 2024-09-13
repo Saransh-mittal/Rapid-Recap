@@ -13,12 +13,14 @@ const {
   getCurrentTournamentCurrentAffairsQuestions,
   getQuizSummary,
   getUserStats,
+  authorizeUsers,
 } = require('../controllers/tournamentController')
 
 const { Authenticate, adminMiddleware } = require('../middleware/authenticate')
 
 const router = express.Router()
 
+router.get('/authorize', Authenticate, authorizeUsers)
 router.get('/previous', getPreviousTournament)
 router.get('/latest', getLatestTournament)
 router.post('/register', Authenticate, registerForTournament)

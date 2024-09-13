@@ -12,6 +12,7 @@ const { commitSession, abortSession, startSession } = require('../db/session')
 const { getUserRegistrationDetails } = require('../utils/tournament.utils')
 const { activityTypes } = require('../data/activityTypes')
 const mongoose = require('mongoose')
+const authorizedInGameNames = require('../data/authorizedInGameNames')
 
 // @desc   Get the latest tournament
 // @route  GET /api/tournament/latest
@@ -83,6 +84,20 @@ const getLatestTournament = asyncHandler(async (req, res) => {
   }
 
   res.json(result)
+})
+
+// @desc   Authorize users for the tournament
+// @route  GET /api/tournament/authorize
+// @access Private
+const authorizeUsers = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const user = await User.findById(userId)
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' })
+  }
+
+  const isAuthorized = authorizedInGameNames.includes(user.inGameName)
+  res.json({ isAuthorized })
 })
 
 // @desc   Get the current tournament leaderboard
@@ -876,4 +891,5 @@ module.exports = {
   getCurrentTournamentCurrentAffairsQuestions,
   getQuizSummary,
   getUserStats,
+  authorizeUsers,
 }
