@@ -1,28 +1,30 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, useCallback, Suspense, lazy } from 'react'
 import {
   VStack,
   Button,
-  Alert,
-  AlertIcon,
   SimpleGrid,
   Box,
   Heading,
   Flex,
-  Icon,
   Text,
   useToast,
   useDisclosure,
 } from '@chakra-ui/react'
-import { FaDice, FaNewspaper } from 'react-icons/fa'
 import { motion } from 'framer-motion'
-import CategoryCard from './CategoryCard'
-import QuizConfirmationModal from './tournamentQuiz/QuizConfirmationModal'
-import { useDispatch, useSelector } from 'react-redux'
-import QuizReport from '../quizComponents/QuizReport'
+import { useSelector } from 'react-redux'
+
+// Lazy load components
+const CategoryCard = lazy(() => import('./CategoryCard'))
+const QuizConfirmationModal = lazy(() =>
+  import('./tournamentQuiz/QuizConfirmationModal'),
+)
+const QuizReport = lazy(() => import('../quizComponents/QuizReport'))
+const Dice = lazy(() => import('../../assets/svg/Dice'))
+const Newspaper = lazy(() => import('../../assets/svg/Newspaper'))
 
 const MotionBox = motion(Box)
 
-const categories = [
+const categoriesList = [
   'world',
   'politics',
   'business',
@@ -56,51 +58,59 @@ const CategorySelection = ({
     state => state.tournament,
   )
 
-  const handleCategorySelect = category => {
-    if (completedQuizzes.includes(category)) {
-      setSelectedCategories([category])
-      setShowQuizSummary(true)
-      return
-    }
-
-    if (isRegistration) {
-      // For registration, allow selecting multiple categories
-      if (userSelectedCategories.includes(category)) {
-        const newUserSelected = userSelectedCategories.filter(
-          c => c !== category,
-        )
-        setUserSelectedCategories(newUserSelected)
-        setSelectedCategories(prevSelected =>
-          prevSelected.filter(c => c !== category),
-        )
-      } else if (selectedCategories.length < 5) {
-        setUserSelectedCategories([...userSelectedCategories, category])
-        setSelectedCategories(prevSelected => [...prevSelected, category])
-      }
-    } else {
-      // For quiz selection (non-registration), only allow one category to be selected
-      if (selectedCategories.includes(category)) {
-        setSelectedCategories([])
-      } else {
+  const handleCategorySelect = useCallback(
+    category => {
+      if (completedQuizzes.includes(category)) {
         setSelectedCategories([category])
+        setShowQuizSummary(true)
+        return
       }
-    }
-  }
 
-  const handleRandomPick = () => {
+      if (isRegistration) {
+        // For registration, allow selecting multiple categories
+        if (userSelectedCategories.includes(category)) {
+          const newUserSelected = userSelectedCategories.filter(
+            c => c !== category,
+          )
+          setUserSelectedCategories(newUserSelected)
+          setSelectedCategories(prevSelected =>
+            prevSelected.filter(c => c !== category),
+          )
+        } else if (selectedCategories.length < 5) {
+          setUserSelectedCategories([...userSelectedCategories, category])
+          setSelectedCategories(prevSelected => [...prevSelected, category])
+        }
+      } else {
+        // For quiz selection (non-registration), only allow one category to be selected
+        if (selectedCategories.includes(category)) {
+          setSelectedCategories([])
+        } else {
+          setSelectedCategories([category])
+        }
+      }
+    },
+    [
+      completedQuizzes,
+      isRegistration,
+      selectedCategories,
+      userSelectedCategories,
+    ],
+  )
+
+  const handleRandomPick = useCallback(() => {
     const remainingCount = 5 - userSelectedCategories.length
     if (remainingCount <= 0) return
 
-    const availableCategories = categories.filter(
+    const availableCategories = categoriesList.filter(
       category => !userSelectedCategories.includes(category),
     )
     const shuffled = availableCategories.sort(() => 0.5 - Math.random())
     const newSelections = shuffled.slice(0, remainingCount)
 
     setSelectedCategories([...userSelectedCategories, ...newSelections])
-  }
+  }, [userSelectedCategories])
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (isRegistration) {
       if (selectedCategories.length !== 5) {
         toast({
@@ -118,12 +128,20 @@ const CategorySelection = ({
       // This is for quiz selection during the tournament
       onOpen()
     }
-  }
+  }, [isRegistration, selectedCategories, toast, onOpen, onRegister])
 
-  const startQuiz = () => {
+  const startQuiz = useCallback(() => {
     onClose()
     onCategorySelect(selectedCategories[0])
-  }
+  }, [onClose, onCategorySelect, selectedCategories])
+
+  const categoryOptions = useMemo(
+    () =>
+      userSelectedcategories && userSelectedcategories.length > 0
+        ? userSelectedcategories
+        : categoriesList,
+    [userSelectedcategories],
+  )
 
   return (
     <>
@@ -136,28 +154,30 @@ const CategorySelection = ({
                 : 'Select a category to start your quiz:'}
             </Heading>
             {isRegistration && (
-              <Button
-                onClick={handleRandomPick}
-                variant="outline"
-                size="md"
-                fontWeight="medium"
-                leftIcon={<Icon as={FaDice} />}
-                color="pink.300"
-                borderColor="pink.300"
-                _hover={{
-                  bg: 'rgba(237, 100, 166, 0.1)',
-                  borderColor: 'pink.400',
-                  color: 'pink.400',
-                  boxShadow: '0px 0px 8px rgba(237, 100, 166, 0.4)',
-                }}
-                _active={{
-                  bg: 'rgba(237, 100, 166, 0.2)',
-                  transform: 'scale(0.95)',
-                }}
-                transition="all 0.2s"
-              >
-                Quick Pick
-              </Button>
+              <Suspense fallback={<Button isLoading>Loading...</Button>}>
+                <Button
+                  onClick={handleRandomPick}
+                  variant="outline"
+                  size="md"
+                  fontWeight="medium"
+                  leftIcon={<Dice size={'16px'} color={'#ED64A6'} />}
+                  color="pink.300"
+                  borderColor="pink.300"
+                  _hover={{
+                    bg: 'rgba(237, 100, 166, 0.1)',
+                    borderColor: 'pink.400',
+                    color: 'pink.400',
+                    boxShadow: '0px 0px 8px rgba(237, 100, 166, 0.4)',
+                  }}
+                  _active={{
+                    bg: 'rgba(237, 100, 166, 0.2)',
+                    transform: 'scale(0.95)',
+                  }}
+                  transition="all 0.2s"
+                >
+                  Quick Pick
+                </Button>
+              </Suspense>
             )}
           </Flex>
           {isRegistration && (
@@ -166,17 +186,15 @@ const CategorySelection = ({
             </Text>
           )}
           <SimpleGrid columns={{ base: 2, md: 3, xl: 4 }} spacing={4}>
-            {(userSelectedcategories && userSelectedcategories.length > 0
-              ? userSelectedcategories
-              : categories
-            ).map(category => (
-              <CategoryCard
-                key={category}
-                category={category}
-                isSelected={selectedCategories.includes(category)}
-                onSelect={handleCategorySelect}
-                isCompleted={completedQuizzes.includes(category)}
-              />
+            {categoryOptions.map(category => (
+              <Suspense key={category} fallback={<Box p={4}>Loading...</Box>}>
+                <CategoryCard
+                  category={category}
+                  isSelected={selectedCategories.includes(category)}
+                  onSelect={handleCategorySelect}
+                  isCompleted={completedQuizzes.includes(category)}
+                />
+              </Suspense>
             ))}
             {isRegistration && (
               <MotionBox
@@ -189,7 +207,9 @@ const CategorySelection = ({
                 boxShadow="0 0 0 2px rgba(237, 100, 166, 0.6)"
               >
                 <VStack spacing={2}>
-                  <Box as={FaNewspaper} size="30px" color="pink.400" />
+                  <Suspense fallback={null}>
+                    <Newspaper size="32px" color="#ED64A6" />
+                  </Suspense>
                   <Text
                     fontWeight="bold"
                     textAlign="center"
@@ -234,24 +254,28 @@ const CategorySelection = ({
               : ''
           }`}
         </Button>
-        <QuizConfirmationModal
-          isOpen={isOpen}
-          onClose={onClose}
-          onConfirm={startQuiz}
-          category={selectedCategories[0]}
-        />
+        <Suspense fallback={<Box>Loading modal...</Box>}>
+          <QuizConfirmationModal
+            isOpen={isOpen}
+            onClose={onClose}
+            onConfirm={startQuiz}
+            category={selectedCategories[0]}
+          />
+        </Suspense>
       </VStack>
       {showQuizSummary && (
-        <QuizReport
-          isOpen={showQuizSummary}
-          onClose={() => {
-            onClose()
-            setShowQuizSummary(false)
-          }}
-          isTournament={true}
-          tournamentId={tournamentId}
-          category={selectedCategories[0]}
-        />
+        <Suspense fallback={<Box>Loading quiz report...</Box>}>
+          <QuizReport
+            isOpen={showQuizSummary}
+            onClose={() => {
+              onClose()
+              setShowQuizSummary(false)
+            }}
+            isTournament={true}
+            tournamentId={tournamentId}
+            category={selectedCategories[0]}
+          />
+        </Suspense>
       )}
     </>
   )

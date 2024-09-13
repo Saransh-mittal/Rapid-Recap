@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  Suspense,
+} from 'react'
 import {
   VStack,
   Heading,
@@ -10,13 +17,15 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import { Trophy, Medal } from 'lucide-react'
-import LeaderboardTable from './LeaderboardTable'
-import LeaderboardSearch from './LeaderboardSearch'
 import axios from 'axios'
 import { useInView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
 import { setRefetchLeaderBoard } from '../../redux/tournamentSlice'
-import UserStatsModal from './UserStatsModal'
+
+// Lazy load components
+const LeaderboardTable = React.lazy(() => import('./LeaderboardTable'))
+const LeaderboardSearch = React.lazy(() => import('./LeaderboardSearch'))
+const UserStatsModal = React.lazy(() => import('./UserStatsModal'))
 
 const LeaderboardSection = ({ tournamentData }) => {
   const [leaderboardData, setLeaderboardData] = useState([])
@@ -26,10 +35,7 @@ const LeaderboardSection = ({ tournamentData }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [firstLoadComplete, setFirstLoadComplete] = useState(false)
   const [isSearchActive, setIsSearchActive] = useState(false)
-  const { ref, inView } = useInView({
-    threshold: 0,
-    triggerOnce: false,
-  })
+  const { ref, inView } = useInView({ threshold: 0, triggerOnce: false })
   const { user } = useSelector(state => state.auth)
   const { refetchLeaderBoard } = useSelector(state => state.tournament)
   const dispatch = useDispatch()
@@ -38,6 +44,7 @@ const LeaderboardSection = ({ tournamentData }) => {
 
   const lock = useRef(false)
 
+  // Memoize API request to avoid unnecessary reruns
   const fetchLeaderboard = useCallback(
     async (isFirstLoad = false, resetPage = false) => {
       if (
@@ -54,7 +61,7 @@ const LeaderboardSection = ({ tournamentData }) => {
           params: {
             tournamentId: tournamentData._id,
             page: resetPage || refetchLeaderBoard ? 1 : page,
-            limit: 50,
+            limit: 2,
             userId: user?._id, // Pass the user ID to get user standings
           },
         })
@@ -66,7 +73,7 @@ const LeaderboardSection = ({ tournamentData }) => {
         )
         setHasMore(response.data.hasMore)
         setPage(prevPage => (resetPage ? 2 : prevPage + 1))
-        setUserStanding(response.data.userStanding) // Set user standings
+        setUserStanding(response.data.userStanding)
         dispatch(setRefetchLeaderBoard(false))
         if (isFirstLoad) setFirstLoadComplete(true)
       } catch (error) {
@@ -83,10 +90,11 @@ const LeaderboardSection = ({ tournamentData }) => {
       isLoading,
       user?._id,
       refetchLeaderBoard,
+      dispatch,
     ],
   )
 
-  const handleUserStandingClick = async () => {
+  const handleUserStandingClick = useCallback(async () => {
     if (user && userStanding) {
       try {
         const response = await axios.get(
@@ -101,7 +109,7 @@ const LeaderboardSection = ({ tournamentData }) => {
         console.error('Error fetching user stats:', error)
       }
     }
-  }
+  }, [user, userStanding, tournamentData._id, onOpen])
 
   useEffect(() => {
     fetchLeaderboard(true)
@@ -110,8 +118,6 @@ const LeaderboardSection = ({ tournamentData }) => {
   useEffect(() => {
     if (
       inView &&
-      !isLoading &&
-      hasMore &&
       !lock.current &&
       firstLoadComplete &&
       !isSearchActive &&
@@ -119,27 +125,20 @@ const LeaderboardSection = ({ tournamentData }) => {
     ) {
       fetchLeaderboard()
     }
-  }, [
-    inView,
-    isLoading,
-    hasMore,
-    firstLoadComplete,
-    isSearchActive,
-    refetchLeaderBoard,
-  ])
+  }, [inView, firstLoadComplete, isSearchActive, refetchLeaderBoard])
 
-  const handleSearch = searchResults => {
+  const handleSearch = useCallback(searchResults => {
     setLeaderboardData(searchResults)
     setIsSearchActive(true)
     setHasMore(false)
-  }
+  }, [])
 
-  const handleEmptySearch = () => {
+  const handleEmptySearch = useCallback(() => {
     setIsSearchActive(false)
     setPage(1)
     setHasMore(true)
     fetchLeaderboard(false, true)
-  }
+  }, [])
 
   return (
     <VStack spacing={6} align="stretch">
@@ -147,13 +146,15 @@ const LeaderboardSection = ({ tournamentData }) => {
         <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
         Current Leaderboard
       </Heading>
-      <LeaderboardSearch
-        onSearch={handleSearch}
-        setSearchLoad={setIsLoading}
-        tournamentId={tournamentData._id}
-        onEmptySearch={handleEmptySearch}
-        setIsSearchActive={setIsSearchActive}
-      />
+      <Suspense fallback={<Spinner size="xl" />}>
+        <LeaderboardSearch
+          onSearch={handleSearch}
+          setSearchLoad={setIsLoading}
+          tournamentId={tournamentData._id}
+          onEmptySearch={handleEmptySearch}
+          setIsSearchActive={setIsSearchActive}
+        />
+      </Suspense>
       {userStanding && (
         <Box
           bg="whiteAlpha.200"
@@ -185,11 +186,19 @@ const LeaderboardSection = ({ tournamentData }) => {
         </Box>
       )}
       <Box>
-        <LeaderboardTable
-          data={leaderboardData}
-          ref={ref}
-          tournamentId={tournamentData._id}
-        />
+        <Suspense
+          fallback={
+            <Center mt={4}>
+              <Spinner size="xl" />
+            </Center>
+          }
+        >
+          <LeaderboardTable
+            data={leaderboardData}
+            ref={ref}
+            tournamentId={tournamentData._id}
+          />
+        </Suspense>
         {isLoading && (
           <Center mt={4}>
             <Spinner
@@ -202,11 +211,13 @@ const LeaderboardSection = ({ tournamentData }) => {
           </Center>
         )}
       </Box>
-      <UserStatsModal
-        isOpen={isOpen}
-        onClose={onClose}
-        userStats={selectedUserStats}
-      />
+      <Suspense fallback={null}>
+        <UserStatsModal
+          isOpen={isOpen}
+          onClose={onClose}
+          userStats={selectedUserStats}
+        />
+      </Suspense>
     </VStack>
   )
 }

@@ -1,4 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  Suspense,
+  lazy,
+} from 'react'
 import {
   Box,
   Container,
@@ -16,30 +23,52 @@ import {
   Text,
   useToast,
   useMediaQuery,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Trophy, History, Crown } from 'lucide-react'
-
-import TournamentHeader from '../components/tournamentComponents/TournamentHeader'
-import TimeInfo from '../components/tournamentComponents/TimeInfo'
-import RegistrationSection from '../components/tournamentComponents/RegistrationSection'
-import LeaderboardSection from '../components/tournamentComponents/LeaderboardSection'
-import PreviousTournamentLeaderboard from '../components/tournamentComponents/PreviousTournamentLeaderboard'
-import EpicQuestGuide from '../components/tournamentComponents/EpicQuestGuide'
-import TournamentStatus from '../components/tournamentComponents/TournamentStatus'
-
+import { Trophy, History } from 'lucide-react'
 import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../redux/appSlice'
 import { setUser } from '../redux/authSlice'
-import CategorySelection from '../components/tournamentComponents/CategorySelection'
 import { setIsOpen, setTournamentQuiz } from '../redux/quizSlice'
 import {
   setCategory,
   setCompletedCategories,
   setTournamentId,
 } from '../redux/tournamentSlice'
-import FullScreenLoadingSpinner from '../components/tournamentComponents/tournamentQuiz/FullScreenLoadingSpinner'
+
+// Lazy load components for code splitting
+const TournamentHeader = lazy(() =>
+  import('../components/tournamentComponents/TournamentHeader'),
+)
+const TimeInfo = lazy(() =>
+  import('../components/tournamentComponents/TimeInfo'),
+)
+const RegistrationSection = lazy(() =>
+  import('../components/tournamentComponents/RegistrationSection'),
+)
+const LeaderboardSection = lazy(() =>
+  import('../components/tournamentComponents/LeaderboardSection'),
+)
+const PreviousTournamentLeaderboard = lazy(() =>
+  import('../components/tournamentComponents/PreviousTournamentLeaderboard'),
+)
+const EpicQuestGuide = lazy(() =>
+  import('../components/tournamentComponents/EpicQuestGuide'),
+)
+const TournamentStatus = lazy(() =>
+  import('../components/tournamentComponents/TournamentStatus'),
+)
+const CategorySelection = lazy(() =>
+  import('../components/tournamentComponents/CategorySelection'),
+)
+const FullScreenLoadingSpinner = lazy(() =>
+  import(
+    '../components/tournamentComponents/tournamentQuiz/FullScreenLoadingSpinner'
+  ),
+)
 
 const MotionBox = motion(Box)
 const MotionTab = motion(Tab)
@@ -55,6 +84,7 @@ const Tournament = () => {
   )
 
   const isScreenSmallerThan400px = useMediaQuery('(max-width: 400px)')[0]
+
   const [userRegistrationDetails, setUserRegistrationDetails] = useState({
     isRegistered: false,
     selectedCategories: [],
@@ -64,7 +94,7 @@ const Tournament = () => {
 
   const toast = useToast()
 
-  const fetchTournamentData = async () => {
+  const fetchTournamentData = useCallback(async () => {
     setIsFetching(true)
     try {
       const currTournamentData = await axios.get(
@@ -97,80 +127,84 @@ const Tournament = () => {
         position: 'top',
       })
     }
-  }
+  }, [dispatch, toast, user?._id])
 
   useEffect(() => {
     if (loginCheckStatus === 'fulfilled') fetchTournamentData()
-  }, [loginCheckStatus])
+  }, [loginCheckStatus, fetchTournamentData])
 
-  const handleRegister = async details => {
-    const dataPayload = {
-      ...details,
-      tournamentId: tournamentData._id,
-    }
-    setRegisterLoading(true)
-    try {
-      const { data } = await axios.post('/api/tournament/register', dataPayload)
-      setUserRegistrationDetails({
-        isRegistered: true,
-        selectedCategories: data.selectedCategories || [],
-        completedCategories: data.completedCategories || [],
-        totalScore: data.totalScore || 0,
-      })
-      setTournamentData({
-        ...tournamentData,
-        registeredCount: tournamentData.registeredCount + 1,
-      })
-      dispatch(
-        addNoteMessage({
-          messageType: 'xpAward',
-          xpAwarded: 5,
-          title: 'XP Awarded For Tournament Registration',
-          actions: [{ actionType: 'VIEW_EXPERIENCE' }],
-          width: '250px',
-          xpSource: 'tournament-registration',
-        }),
-      )
-      dispatch(
-        setUser({
-          ...user,
-          xp: user.xp + 5,
-        }),
-      )
-      setRegisterLoading(false)
-    } catch (error) {
-      console.log(error)
-      toast({
-        title: 'An error occurred.',
-        description: 'Failed to register for the tournament.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-    }
-  }
+  const handleRegister = useCallback(
+    async details => {
+      const dataPayload = { ...details, tournamentId: tournamentData._id }
+      setRegisterLoading(true)
+      try {
+        const { data } = await axios.post(
+          '/api/tournament/register',
+          dataPayload,
+        )
+        setUserRegistrationDetails({
+          isRegistered: true,
+          selectedCategories: data.selectedCategories || [],
+          completedCategories: data.completedCategories || [],
+          totalScore: data.totalScore || 0,
+        })
+        setTournamentData({
+          ...tournamentData,
+          registeredCount: tournamentData.registeredCount + 1,
+        })
+        dispatch(
+          addNoteMessage({
+            messageType: 'xpAward',
+            xpAwarded: 5,
+            title: 'XP Awarded For Tournament Registration',
+            actions: [{ actionType: 'VIEW_EXPERIENCE' }],
+            width: '250px',
+            xpSource: 'tournament-registration',
+          }),
+        )
+        dispatch(setUser({ ...user, xp: user.xp + 5 }))
+        setRegisterLoading(false)
+      } catch (error) {
+        console.log(error)
+        toast({
+          title: 'An error occurred.',
+          description: 'Failed to register for the tournament.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+      }
+    },
+    [dispatch, toast, tournamentData, user],
+  )
 
-  const handleEnterTournament = () => {
-    // Logic to enter the tournament
-    console.log('Entering tournament...')
-  }
-  const handleCategorySelect = category => {
-    dispatch(setTournamentId(tournamentData._id))
-    dispatch(setCategory(category))
-    dispatch(setTournamentQuiz(true))
-    dispatch(setIsOpen(true))
-    // Add logic to start the quiz for the selected category
-  }
+  const handleCategorySelect = useCallback(
+    category => {
+      dispatch(setTournamentId(tournamentData._id))
+      dispatch(setCategory(category))
+      dispatch(setTournamentQuiz(true))
+      dispatch(setIsOpen(true))
+    },
+    [dispatch, tournamentData?._id],
+  )
 
-  const currentTournamentNumber = tournamentData
-    ? String(tournamentData.tournamentNumber).padStart(3, '0')
-    : '000'
-  const previousTournamentNumber = previousTournamentData
-    ? String(previousTournamentData.tournamentNumber).padStart(3, '0')
-    : 'N/A'
+  const currentTournamentNumber = useMemo(
+    () =>
+      tournamentData
+        ? String(tournamentData.tournamentNumber).padStart(3, '0')
+        : '000',
+    [tournamentData],
+  )
+  const previousTournamentNumber = useMemo(
+    () =>
+      previousTournamentData
+        ? String(previousTournamentData.tournamentNumber).padStart(3, '0')
+        : 'N/A',
+    [previousTournamentData],
+  )
 
-  const renderTournamentContent = () => {
+  const renderTournamentContent = useCallback(() => {
     if (isFetching) {
       return (
         <VStack spacing={4} width="100%">
@@ -205,7 +239,7 @@ const Tournament = () => {
 
     return (
       <Tabs isFitted variant="soft-rounded" colorScheme="pink">
-        <TabList mb="0.7em" justifyContent={'center'} mx={{ base: 2, md: 4 }}>
+        <TabList mb="0.7em" justifyContent="center" mx={{ base: 2, md: 4 }}>
           <MotionTab
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -213,21 +247,21 @@ const Tournament = () => {
             bg="rgba(237, 100, 166, 0.1)"
             _selected={{ bg: 'pink.500', color: 'white' }}
             borderRadius="full"
-            boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+            boxShadow="0 4px 6px rgba(0, 0, 0,            0.1)"
             fontSize="lg"
             fontWeight="bold"
             py={3}
             px={{ base: 2, md: 6 }}
-            display={'flex'}
-            height={'fit-content'}
-            flexDirection={'column'}
+            display="flex"
+            height="fit-content"
+            flexDirection="column"
           >
             <Text fontSize="2xs" fontWeight="bold" m={0} p={0}>
               Tournament #{currentTournamentNumber}
             </Text>
             <HStack spacing={2}>
               <Trophy width={20} height={20} />
-              <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing={'2px'}>
+              <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing="2px">
                 {isScreenSmallerThan400px ? 'Curr.' : 'Current'} Tournament
               </Text>
             </HStack>
@@ -244,17 +278,17 @@ const Tournament = () => {
             fontWeight="bold"
             py={3}
             px={{ base: 2, md: 6 }}
-            display={'flex'}
-            height={'fit-content'}
-            flexDirection={'column'}
+            display="flex"
+            height="fit-content"
+            flexDirection="column"
           >
             <Text fontSize="xs" fontWeight="bold" m={0} p={0}>
               Tournament #{previousTournamentNumber}
             </Text>
             <HStack spacing={2}>
               <History size={20} />
-              <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing={'2px'}>
-                {isScreenSmallerThan400px ? 'Prev.' : `Previous`} Tournament
+              <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing="2px">
+                {isScreenSmallerThan400px ? 'Prev.' : 'Previous'} Tournament
               </Text>
             </HStack>
           </MotionTab>
@@ -268,44 +302,51 @@ const Tournament = () => {
               p={6}
               boxShadow="0 8px 32px rgba(31, 38, 135, 0.37)"
             >
-              <TimeInfo tournamentData={tournamentData} />
-              <TournamentStatus
-                tournamentData={tournamentData}
-                registrationStatus={
-                  userRegistrationDetails.isRegistered
-                    ? 'registered'
-                    : 'not-registered'
-                }
-                handleEnterTournament={handleEnterTournament}
-              />
-              {tournamentData?.status === 'registration' && (
-                <RegistrationSection
-                  isAuthenticated={isAuthenticated}
-                  userRole={user?.role}
+              <Suspense fallback={<Skeleton height="40px" />}>
+                <TimeInfo tournamentData={tournamentData} />
+              </Suspense>
+              <Suspense fallback={<Skeleton height="40px" />}>
+                <TournamentStatus
                   tournamentData={tournamentData}
                   registrationStatus={
                     userRegistrationDetails.isRegistered
                       ? 'registered'
                       : 'not-registered'
                   }
-                  handleRegister={handleRegister}
-                  userDetails={{
-                    inGameName: user?.inGameName,
-                    categories: userRegistrationDetails?.selectedCategories,
-                  }}
-                  registerLoading={registerLoading}
                 />
+              </Suspense>
+              {tournamentData?.status === 'registration' && (
+                <Suspense fallback={<Skeleton height="40px" />}>
+                  <RegistrationSection
+                    isAuthenticated={isAuthenticated}
+                    userRole={user?.role}
+                    tournamentData={tournamentData}
+                    registrationStatus={
+                      userRegistrationDetails.isRegistered
+                        ? 'registered'
+                        : 'not-registered'
+                    }
+                    handleRegister={handleRegister}
+                    userDetails={{
+                      inGameName: user?.inGameName,
+                      categories: userRegistrationDetails?.selectedCategories,
+                    }}
+                    registerLoading={registerLoading}
+                  />
+                </Suspense>
               )}
               {tournamentData?.status === 'ongoing' && (
                 <VStack spacing={8} align="stretch">
                   {userRegistrationDetails.isRegistered ? (
-                    <CategorySelection
-                      userSelectedcategories={
-                        userRegistrationDetails.selectedCategories
-                      }
-                      onCategorySelect={handleCategorySelect}
-                      tournamentId={tournamentData._id}
-                    />
+                    <Suspense fallback={<Skeleton height="40px" />}>
+                      <CategorySelection
+                        userSelectedcategories={
+                          userRegistrationDetails.selectedCategories
+                        }
+                        onCategorySelect={handleCategorySelect}
+                        tournamentId={tournamentData._id}
+                      />
+                    </Suspense>
                   ) : (
                     <Alert status="warning" color="black">
                       <AlertIcon />
@@ -318,22 +359,37 @@ const Tournament = () => {
             </Box>
           </TabPanel>
           <TabPanel>
-            <PreviousTournamentLeaderboard
-              previousTournamentData={previousTournamentData}
-            />
+            <Suspense fallback={<Skeleton height="40px" />}>
+              <PreviousTournamentLeaderboard
+                previousTournamentData={previousTournamentData}
+              />
+            </Suspense>
           </TabPanel>
         </TabPanels>
       </Tabs>
     )
-  }
+  }, [
+    isFetching,
+    tournamentData,
+    previousTournamentData,
+    userRegistrationDetails,
+    handleRegister,
+    handleCategorySelect,
+    currentTournamentNumber,
+    previousTournamentNumber,
+    isAuthenticated,
+    isScreenSmallerThan400px,
+  ])
 
   return (
     <Box color="white" mt={{ base: 4, md: 8 }} minHeight="100vh">
       {isFetching && <FullScreenLoadingSpinner />}
       <Container maxW="container.xl" py={16} px={0}>
-        <TournamentHeader />
+        <Suspense fallback={<Skeleton height="40px" />}>
+          <TournamentHeader />
+        </Suspense>
         <Flex direction={{ base: 'column', lg: 'row' }} gap={8}>
-          <Box
+          <MotionBox
             flex={1}
             rounded="lg"
             shadow="2xl"
@@ -344,11 +400,10 @@ const Tournament = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             bg="rgba(0, 0, 0, 0.1)"
             backdropFilter="blur(5px)"
-            as={MotionBox}
           >
             {renderTournamentContent()}
-          </Box>
-          <Box
+          </MotionBox>
+          <MotionBox
             flex={1}
             rounded="lg"
             shadow="2xl"
@@ -358,15 +413,18 @@ const Tournament = () => {
             transition={{ duration: 0.5, delay: 0.4 }}
             bg="rgba(0, 0, 0, 0.1)"
             backdropFilter="blur(5px)"
-            as={MotionBox}
             bgGradient="linear(to-br, rgba(26, 32, 44, 0.5), rgba(49, 10, 103, 0.5))"
           >
             {tournamentData?.status !== 'ongoing' ? (
-              <EpicQuestGuide />
+              <Suspense fallback={<Skeleton height="40px" />}>
+                <EpicQuestGuide />
+              </Suspense>
             ) : (
-              <LeaderboardSection tournamentData={tournamentData} />
+              <Suspense fallback={<Skeleton height="40px" />}>
+                <LeaderboardSection tournamentData={tournamentData} />
+              </Suspense>
             )}
-          </Box>
+          </MotionBox>
         </Flex>
       </Container>
     </Box>

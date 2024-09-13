@@ -83,17 +83,6 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
             <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
             Tournament in Progress
           </Heading>
-          {registrationStatus === 'registered' ? null : (
-            <Alert
-              status="warning"
-              borderRadius="md"
-              bg="orange.700"
-              color="white"
-            >
-              <AlertIcon color="orange.200" />
-              You are not registered for this tournament.
-            </Alert>
-          )}
         </VStack>
       )}{' '}
       {tournamentData?.status === 'completed' && (
