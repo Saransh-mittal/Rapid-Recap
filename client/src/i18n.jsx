@@ -12,7 +12,8 @@ const namespaces = {
     'Register',
     'Signin',
     'Tournament',
-    'Quiz', //
+    'Quiz',
+    'ComingSoonTournament',
   ],
   utils: ['formatDate'],
   categories: ['categories'],
@@ -30,17 +31,37 @@ const namespaces = {
     'TotalUserAttempted',
     'TrackTime',
   ],
-  tournamentComponents: ['EpicQuestGuide'],
+  tournamentComponents: [
+    'EpicQuestGuide',
+    'CategorySelection',
+    'LeaderboardSearch',
+    'LeaderboardSection',
+    'LeaderboardTable',
+    'PreviousTournamentLeaderboard',
+    'RegisteredUsersCount',
+    'RegistrationForm',
+    'RegistrationSection',
+    'TimeInfo',
+    'TournamentGuideModal',
+    'TournamentHeader',
+    'TournamentStatus',
+    'UserStatsModal',
+    'CategoryLeaders',
+    'LeaderCard',
+    'QuizConfirmationModal',
+    'ShuttlerAnimation',
+    'TournamentQuiz',
+  ],
   quizComponents: [
-    'BoostedSubmittedQuizInterface', //
-    'ConfirmationModal', //
-    'GivenQuizInterface', //
-    'InstructionModal', //
-    'ModalComponent', //
-    'QuinBoost', //
-    'QuizGivenSummary', //
-    'QuizInterface', //
-    'SubmittedQuizInterface', //
+    'BoostedSubmittedQuizInterface',
+    'ConfirmationModal',
+    'GivenQuizInterface',
+    'InstructionModal',
+    'ModalComponent',
+    'QuinBoost',
+    'QuizGivenSummary',
+    'QuizInterface',
+    'SubmittedQuizInterface',
   ],
   authComponents: [
     'EmailVerify',
@@ -91,6 +112,7 @@ const namespaces = {
     'StreakNoteMessage',
     'XPAwardNoteMessage',
     'DifficultyLegend',
+    'NoteMessageQueue',
   ],
   Notifications: ['NotificationSubscription'],
   streakComponents: ['DailyStreakModal'],

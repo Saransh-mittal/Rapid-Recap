@@ -38,6 +38,7 @@ import {
   setCompletedCategories,
   setTournamentId,
 } from '../redux/tournamentSlice'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components for code splitting
 const TournamentHeader = lazy(() =>
@@ -82,6 +83,7 @@ const Tournament = () => {
   const { user, loginCheckStatus, isAuthenticated } = useSelector(
     state => state.auth,
   )
+  const { t } = useTranslation('Tournament')
 
   const isScreenSmallerThan400px = useMediaQuery('(max-width: 400px)')[0]
 
@@ -119,8 +121,8 @@ const Tournament = () => {
     } catch (error) {
       console.log(error)
       toast({
-        title: 'An error occurred.',
-        description: 'Failed to fetch tournament data.',
+        title: t('errorOccurred'),
+        description: t('errorMessages.fetchData'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -156,7 +158,7 @@ const Tournament = () => {
           addNoteMessage({
             messageType: 'xpAward',
             xpAwarded: 5,
-            title: 'XP Awarded For Tournament Registration',
+            title: t('registerSuccess.title'),
             actions: [{ actionType: 'VIEW_EXPERIENCE' }],
             width: '250px',
             xpSource: 'tournament-registration',
@@ -167,8 +169,8 @@ const Tournament = () => {
       } catch (error) {
         console.log(error)
         toast({
-          title: 'An error occurred.',
-          description: 'Failed to register for the tournament.',
+          title: t('errorOccurred'),
+          description: t('errorMessages.registerError'),
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -227,10 +229,10 @@ const Tournament = () => {
             textAlign="center"
           >
             <Heading as="h2" size="xl" mb={4} color="pink.400">
-              No Tournament Data Available
+              {t('noTournamentHeader.title')}
             </Heading>
             <Text fontSize="xl" color="gray.300">
-              Stay tuned for upcoming tournaments!
+              {t('noTournamentHeader.description')}
             </Text>
           </MotionBox>
         </Center>
@@ -257,12 +259,15 @@ const Tournament = () => {
             flexDirection="column"
           >
             <Text fontSize="2xs" fontWeight="bold" m={0} p={0}>
-              Tournament #{currentTournamentNumber}
+              {t('tournamentNumber', {
+                number: currentTournamentNumber,
+              })}
             </Text>
             <HStack spacing={2}>
               <Trophy width={20} height={20} />
               <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing="2px">
-                {isScreenSmallerThan400px ? 'Curr.' : 'Current'} Tournament
+                {isScreenSmallerThan400px ? t('curr') : t('current')}{' '}
+                {t('tournament')}
               </Text>
             </HStack>
           </MotionTab>
@@ -283,12 +288,15 @@ const Tournament = () => {
             flexDirection="column"
           >
             <Text fontSize="xs" fontWeight="bold" m={0} p={0}>
-              Tournament #{previousTournamentNumber}
+              {t('tournamentNumber', {
+                number: previousTournamentNumber,
+              })}
             </Text>
             <HStack spacing={2}>
               <History size={20} />
               <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing="2px">
-                {isScreenSmallerThan400px ? 'Prev.' : 'Previous'} Tournament
+                {isScreenSmallerThan400px ? t('prev') : t('previous')}{' '}
+                {t('tournament')}
               </Text>
             </HStack>
           </MotionTab>
@@ -350,8 +358,7 @@ const Tournament = () => {
                   ) : (
                     <Alert status="warning" color="black">
                       <AlertIcon />
-                      You are not registered for this tournament. Registration
-                      is closed, but you can still view the leaderboard.
+                      {t('tournamentStatus.notRegistered')}
                     </Alert>
                   )}
                 </VStack>

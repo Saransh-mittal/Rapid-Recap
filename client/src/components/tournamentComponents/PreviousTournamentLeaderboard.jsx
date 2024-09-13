@@ -1,11 +1,14 @@
 import React, { useMemo, Suspense } from 'react'
 import { Box, Heading, Alert, AlertIcon } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 import CrownSVG from '../../assets/svg/CrownSVG'
 
 // Lazy load LeaderboardTable
 const LeaderboardTable = React.lazy(() => import('./LeaderboardTable'))
 
 const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
+  const { t } = useTranslation('PreviousTournamentLeaderboard')
+
   // Memoize the sliced data to avoid re-slicing on every render
   const leaderboardData = useMemo(() => {
     return previousTournamentData?.participants.slice(0, 5) || []
@@ -27,16 +30,16 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
         alignItems="center"
       >
         <CrownSVG color="#C0C0C0" style={{ marginRight: '0.5rem' }} />
-        Previous Tournament Leaderboard
+        {t('heading')}
       </Heading>
       {previousTournamentData ? (
-        <Suspense fallback={<Box>Loading leaderboard...</Box>}>
+        <Suspense fallback={<Box>{t('loading')}</Box>}>
           <LeaderboardTable data={leaderboardData} />
         </Suspense>
       ) : (
         <Alert status="info" color="black">
           <AlertIcon />
-          No previous tournament data available.
+          {t('noData')}
         </Alert>
       )}
     </Box>

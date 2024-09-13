@@ -1,14 +1,16 @@
 import React, { useMemo } from 'react'
 import { VStack, HStack, Box, Text } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import {
-  formatDateLangTranslate,
-  formatLocalDateTime,
-} from '../../utils/helper.utils'
+import { useTranslation } from 'react-i18next'
+import { formatDate, formatLocalDateTime } from '../../utils/helper.utils'
+import i18n from 'i18next'
 
 const MotionBox = motion(Box)
 
 const TimeInfo = ({ tournamentData }) => {
+  const { t } = useTranslation('TimeInfo') // Translation hook for this component
+  const lang = i18n.language // Get the current language from i18n
+
   // Memoize date and time computations to avoid recalculations
   const dateMapStart = useMemo(
     () => ({
@@ -31,12 +33,12 @@ const TimeInfo = ({ tournamentData }) => {
   )
 
   const startDate = useMemo(
-    () => formatDateLangTranslate(dateMapStart[tournamentData?.status]),
-    [dateMapStart, tournamentData?.status],
+    () => formatDate(dateMapStart[tournamentData?.status], lang),
+    [dateMapStart, tournamentData?.status, lang],
   )
   const endDate = useMemo(
-    () => formatDateLangTranslate(dateMapEnd[tournamentData?.status]),
-    [dateMapEnd, tournamentData?.status],
+    () => formatDate(dateMapEnd[tournamentData?.status], lang),
+    [dateMapEnd, tournamentData?.status, lang],
   )
 
   const startDateTime = useMemo(
@@ -50,17 +52,17 @@ const TimeInfo = ({ tournamentData }) => {
 
   const statusTextMap = useMemo(
     () => ({
-      registration: 'Starts',
-      upcoming: 'Starts At',
-      ongoing: 'Starts', // Adjust as needed
+      registration: t('starts'),
+      upcoming: t('startsAt'),
+      ongoing: t('starts'), // Adjust as needed
       completed: '', // Adjust as needed
     }),
-    [],
+    [t],
   )
 
   const statusText = useMemo(
-    () => statusTextMap[tournamentData?.status] || 'Starts At',
-    [statusTextMap, tournamentData?.status],
+    () => statusTextMap[tournamentData?.status] || t('startsAt'),
+    [statusTextMap, tournamentData?.status, t],
   )
 
   if (tournamentData?.status === 'completed') return null
@@ -106,7 +108,7 @@ const TimeInfo = ({ tournamentData }) => {
               borderColor="pink.400"
             >
               <Text fontSize="sm" fontWeight="bold" color="pink.400">
-                Ends
+                {t('ends')}
               </Text>
               <Text fontSize={{ base: 'md', md: 'xl' }} fontWeight="bold">
                 {endDate}
@@ -129,7 +131,7 @@ const TimeInfo = ({ tournamentData }) => {
           color="gray.300"
           py={4}
         >
-          Join the epic quest for 48 hrs of glory!
+          {t('questDescription')}
         </Text>
       </MotionBox>
     </VStack>

@@ -2,16 +2,17 @@ import React, { useMemo, lazy, Suspense } from 'react'
 import { VStack, Alert, AlertIcon, Heading, Text, Flex } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
 import { Clock, UserCheck, UserPlus, Trophy } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load RegisteredUsersCount component
 const RegisteredUsersCount = lazy(() => import('./RegisteredUsersCount'))
 
 const TournamentStatus = ({ tournamentData, registrationStatus }) => {
+  const { t } = useTranslation('TournamentStatus')
   const { isAuthenticated, user } = useSelector(state => state.auth)
 
   // Memoize the tournament status to avoid re-renders when not required
   const status = useMemo(() => tournamentData?.status, [tournamentData?.status])
-
   const registeredCount = useMemo(
     () => tournamentData?.registeredCount,
     [tournamentData?.registeredCount],
@@ -28,10 +29,10 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
             alignItems="center"
             fontSize={{ base: 'lg', md: 'xl' }}
           >
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div>{t('loading')}</div>}>
               <Clock color="#4FD1C5" style={{ marginRight: '0.5rem' }} />
             </Suspense>
-            Tournament Starting Soon
+            {t('upcoming.title')}
           </Heading>
           <Flex
             direction="column"
@@ -52,38 +53,31 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
             wordBreak="break-word"
           >
             {!isAuthenticated ? (
-              <Text>
-                To join the Rapid Recap tournament, please log in with a
-                verified email.
-              </Text>
+              <Text>{t('upcoming.loginPrompt')}</Text>
             ) : user?.role === 'guest' ? (
-              <Text>
-                Guest users are not allowed to participate in the tournament.
-                Please register to participate.
-              </Text>
+              <Text>{t('upcoming.guestPrompt')}</Text>
             ) : registrationStatus === 'registered' ? (
               <Flex align="center">
-                <Suspense fallback={<div>Loading...</div>}>
+                <Suspense fallback={<div>{t('loading')}</div>}>
                   <UserCheck style={{ marginRight: '0.5rem' }} size={16} />
                 </Suspense>
-                <Text>You're registered! Get ready for the tournament.</Text>
+                <Text>{t('upcoming.registered')}</Text>
               </Flex>
             ) : (
               <>
                 <Flex align="center">
-                  <Suspense fallback={<div>Loading...</div>}>
+                  <Suspense fallback={<div>{t('loading')}</div>}>
                     <UserPlus className="mr-2" size={16} />
                   </Suspense>
-                  <Text>You have not registered for the tournament!</Text>
+                  <Text>{t('upcoming.notRegistered')}</Text>
                 </Flex>
                 <Text mt={2} color="gray.600" textAlign="center">
-                  Don’t miss out on future tournaments! Register on time to
-                  secure your spot in the upcoming competitions.
+                  {t('upcoming.futurePrompt')}
                 </Text>
               </>
             )}
           </Flex>
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>{t('loading')}</div>}>
             <RegisteredUsersCount count={registeredCount} />
           </Suspense>
         </VStack>
@@ -91,21 +85,21 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
       {status === 'ongoing' && (
         <VStack spacing={6} align="stretch">
           <Heading size="lg" mb={4} display="flex" alignItems="center">
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div>{t('loading')}</div>}>
               <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
             </Suspense>
-            Tournament in Progress
+            {t('ongoing.title')}
           </Heading>
         </VStack>
       )}
       {status === 'completed' && (
         <VStack spacing={6} align="stretch">
           <Heading size={{ base: 'md', md: 'lg' }} mb={4}>
-            Tournament Completed
+            {t('completed.title')}
           </Heading>
           <Alert status="info" borderRadius="md" bg="blue.700" color="white">
             <AlertIcon color="blue.200" />
-            This tournament has ended. Check out the results below!
+            {t('completed.message')}
           </Alert>
         </VStack>
       )}

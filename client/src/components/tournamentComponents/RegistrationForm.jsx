@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useCallback } from 'react'
 import { VStack, useToast, Spinner } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load CategorySelection for code splitting
 const CategorySelection = lazy(() => import('./CategorySelection'))
@@ -8,6 +9,7 @@ const CategorySelection = lazy(() => import('./CategorySelection'))
 const RegistrationForm = ({ onRegister, registerLoading }) => {
   const { user } = useSelector(state => state.auth)
   const toast = useToast()
+  const { t } = useTranslation('RegistrationForm') // Translation hook for this component
 
   // Memoize handleRegistration to prevent unnecessary re-renders
   const handleRegistration = useCallback(
@@ -18,9 +20,8 @@ const RegistrationForm = ({ onRegister, registerLoading }) => {
           selectedCategories,
         })
         toast({
-          title: 'Registration Successful',
-          description:
-            'You have been successfully registered for the tournament.',
+          title: t('registrationSuccess.title'),
+          description: t('registrationSuccess.description'),
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -28,9 +29,8 @@ const RegistrationForm = ({ onRegister, registerLoading }) => {
         })
       } catch (err) {
         toast({
-          title: 'Registration Failed',
-          description:
-            'There was an error during registration. Please try again.',
+          title: t('registrationError.title'),
+          description: t('registrationError.description'),
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -38,7 +38,7 @@ const RegistrationForm = ({ onRegister, registerLoading }) => {
         })
       }
     },
-    [onRegister, user._id, toast],
+    [onRegister, user._id, toast, t],
   )
 
   return (

@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react'
 import { Box, Flex, Text, VStack, HStack, keyframes } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 import Medal from '../../../assets/svg/Medal'
 import CrownSVG from '../../../assets/svg/CrownSVG'
@@ -14,6 +15,7 @@ const glowAnimation = keyframes`
 
 const LeaderCard = ({ rank, inGameName, score }) => {
   // Memoize background gradient and icon to avoid recalculation on every render
+  const { t } = useTranslation('LeaderCard')
   const bgGradient = useMemo(() => {
     return rank === 1
       ? 'linear(to-b, rgba(255,215,0,0.3), rgba(255,215,0,0.1))'
@@ -55,7 +57,7 @@ const LeaderCard = ({ rank, inGameName, score }) => {
               {inGameName}
             </Text>
             <Text fontSize="sm" color="rgba(255,255,255,0.8)">
-              Rank: {rank}
+              {t('Rank')} {rank}
             </Text>
           </VStack>
         </HStack>

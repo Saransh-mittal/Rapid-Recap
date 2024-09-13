@@ -8,6 +8,7 @@ import React, {
 import ModalComponent from './ModalComponent'
 import { Flex, useToast, Spinner } from '@chakra-ui/react'
 import axios from 'axios'
+import i18n from 'i18next'
 
 const QuizGivenSummary = React.lazy(() => import('./QuizGivenSummary'))
 const SubmittedQuizInterface = React.lazy(() =>
@@ -28,7 +29,7 @@ const QuizReport = ({
   const [quizGivenSummary, setQuizGivenSummary] = useState([])
   const [result, setResult] = useState({})
   const toast = useToast()
-  console.log(isTournament)
+
   const fetchQuizSummary = useCallback(async () => {
     try {
       const response = isTournament
@@ -36,6 +37,7 @@ const QuizReport = ({
             params: {
               tournamentId,
               category,
+              lang: i18n.language,
             },
           })
         : await axios.get(`/api/quiz/summary/${articleId}`)

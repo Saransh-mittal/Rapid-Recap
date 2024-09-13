@@ -17,7 +17,7 @@ import CrownSVG from '../assets/svg/CrownSVG'
 const MotionBox = motion(Box)
 
 const ComingSoonTournament = () => {
-  const { t } = useTranslation('Tournament') // Load the 'tournament' namespace
+  const { t } = useTranslation('ComingSoonTournament') // Load the 'tournament' namespace
 
   return (
     <Box color="white" mt={{ base: 4, md: 8 }} minHeight="100vh">

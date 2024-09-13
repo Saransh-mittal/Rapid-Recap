@@ -11,6 +11,7 @@ import {
   Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load components
 const RegistrationForm = React.lazy(() => import('./RegistrationForm'))
@@ -27,6 +28,8 @@ const RegistrationSection = ({
   isAuthenticated,
   userRole,
 }) => {
+  const { t } = useTranslation('RegistrationSection') // Translation hook for this component
+
   const bgColor = useColorModeValue(
     'rgba(255, 255, 255, 0.08)',
     'rgba(0, 0, 0, 0.3)',
@@ -62,15 +65,10 @@ const RegistrationSection = ({
           >
             <AlertIcon boxSize="40px" mr={0} color="blue.300" />
             <Text fontWeight="bold" fontSize="xl" mt={4} mb={2}>
-              Exclusive Tournament Access
+              {t('exclusiveAccess.title')}
             </Text>
-            <Text>
-              To participate in this epic battle of wits, you need to be logged
-              in with a verified email account.
-            </Text>
-            <Text mt={2}>
-              Join our community of knowledge warriors and prove your mettle!
-            </Text>
+            <Text>{t('exclusiveAccess.description')}</Text>
+            <Text mt={2}>{t('exclusiveAccess.callToAction')}</Text>
           </Alert>
         </Box>
       )
@@ -78,7 +76,7 @@ const RegistrationSection = ({
 
     if (registrationStatus === 'not-registered') {
       return (
-        <Suspense fallback={<Text>Loading Registration Form...</Text>}>
+        <Suspense fallback={<Text>{t('loadingRegistrationForm')}</Text>}>
           <RegistrationForm
             onRegister={handleRegister}
             registerLoading={registerLoading}
@@ -103,9 +101,9 @@ const RegistrationSection = ({
         >
           <AlertIcon boxSize="40px" mr={0} color="green.300" />
           <Text fontWeight="bold" fontSize="xl" mt={4} mb={2}>
-            Registration Successful!
+            {t('registrationSuccess.title')}
           </Text>
-          <Text>Prepare for an epic battle of wits!</Text>
+          <Text>{t('registrationSuccess.description')}</Text>
         </Alert>
         <Box
           bg={bgColor}
@@ -116,18 +114,18 @@ const RegistrationSection = ({
           boxShadow="md"
         >
           <Heading size="md" mb={4} color={headingColor}>
-            Your Tournament Details:
+            {t('tournamentDetails.heading')}
           </Heading>
           <VStack align="start" spacing={3}>
             <Flex align="center">
               <Text fontWeight="semibold" mr={2} color={labelColor}>
-                In-Game-Name:
+                {t('userDetails.inGameNameLabel')}
               </Text>
               <Text color={valueColor}>{userDetails?.inGameName}</Text>
             </Flex>
             <Box>
               <Text fontWeight="semibold" mb={2} color={labelColor}>
-                Selected Categories:
+                {t('userDetails.selectedCategoriesLabel')}
               </Text>
               <Flex flexWrap="wrap" gap={2}>
                 {userDetails?.categories?.map((category, index) => (
@@ -162,6 +160,7 @@ const RegistrationSection = ({
     labelColor,
     valueColor,
     userDetails,
+    t,
   ])
 
   return (
@@ -174,9 +173,9 @@ const RegistrationSection = ({
         >
           <VStack spacing={6} align="stretch">
             <Heading size={{ base: 'md', md: 'lg' }} mt={4} color="pink.400">
-              Tournament Registration
+              {t('tournamentRegistrationHeading')}
             </Heading>
-            <Suspense fallback={<Text>Loading Users Count...</Text>}>
+            <Suspense fallback={<Text>{t('loadingUsersCount')}</Text>}>
               <RegisteredUsersCount count={tournamentData.registeredCount} />
             </Suspense>
             {renderContent()}

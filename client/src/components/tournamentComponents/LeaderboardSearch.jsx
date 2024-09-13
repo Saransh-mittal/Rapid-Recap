@@ -10,6 +10,7 @@ import {
 import { Search } from 'lucide-react'
 import debounce from 'lodash.debounce'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next'
 
 const LeaderboardSearch = ({
   onSearch,
@@ -20,6 +21,7 @@ const LeaderboardSearch = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const toast = useToast()
+  const { t } = useTranslation('LeaderboardSearch')
 
   const debouncedSearch = useCallback(
     debounce(async query => {
@@ -36,7 +38,7 @@ const LeaderboardSearch = ({
         onSearch(response.data.leaderboard)
         if (response.data.leaderboard.length === 0) {
           toast({
-            title: 'No players found',
+            title: t('No players found'),
             status: 'info',
             duration: 3000,
             isClosable: true,
@@ -46,7 +48,7 @@ const LeaderboardSearch = ({
       } catch (error) {
         console.error('Error searching players:', error)
         toast({
-          title: 'Error searching players',
+          title: t('Error searching players'),
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -80,7 +82,7 @@ const LeaderboardSearch = ({
         </InputLeftElement>
         <Input
           type="text"
-          placeholder={'Search players'}
+          placeholder={t('searchPlayer')}
           value={searchQuery}
           onChange={handleSearch}
           bg="whiteAlpha.200"

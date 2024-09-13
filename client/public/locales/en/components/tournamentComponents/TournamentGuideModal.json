@@ -1,0 +1,41 @@
+{
+  "page1": {
+    "title": "Welcome to Rapid Recap Tournament!",
+    "content1": "Welcome to the exciting world of Rapid Recap Tournament!",
+    "content2": "This weekend event is your chance to showcase your knowledge, compete with others, and have a blast while learning new things.",
+    "content3": "Get ready for a thrilling quiz experience that covers various categories and keeps you up-to-date with current affairs!"
+  },
+  "page2": {
+    "title": "Eligibility and Registration",
+    "content1": "To join the tournament, you need to maintain a 5-day Quiz streak in the Rapid Recap app. It's like building your quiz power!",
+    "content2": "Registration is open from Monday to Friday until 11 PM. Don't miss your chance to enter the arena of knowledge!",
+    "content3": "During registration, you'll choose 5 categories out of 15 exciting options. Plus, everyone gets to tackle the 'Current Affairs' category!"
+  },
+  "page3": {
+    "title": "Tournament Structure",
+    "content1": "The big event happens every Saturday and Sunday. You can participate at any time during these two days!",
+    "content2": "You'll face 5 questions from each of your chosen categories, plus 5 from Current Affairs. That's a total of 30 brain-teasing questions!",
+    "content3": "The Current Affairs questions come about global events from the last 5 days, keeping you in the loop!"
+  },
+  "page4": {
+    "title": "Quiz Challenge",
+    "content1": "Here's where the adrenaline kicks in: you have just 50 seconds to answer 5 questions. It's a true test of speed and knowledge!",
+    "content2": "Don't stress if you can't answer them all. The goal is to have fun and learn something new with every quiz.",
+    "content3": "Remember, practice makes perfect. The more you play, the better you'll get at tackling these rapid-fire questions!"
+  },
+  "page5": {
+    "title": "Scoring and Leaderboard",
+    "content1": "After completing the quiz, you'll see how you stack up against other players on our real-time leaderboard.",
+    "content2": "Your ranking is based on your total RQM (Rapid Quiz Master) score, which combines your performance across all categories.",
+    "content3": "The leaderboard updates instantly, so you'll always know where you stand in the heat of the competition!"
+  },
+  "page6": {
+    "title": "Final Tips and Good Luck!",
+    "content1": "Stay curious and keep learning! The tournament is designed to be both fun and educational.",
+    "content2": "Don't forget to brush up on current affairs. It might give you the edge you need to climb the leaderboard!",
+    "content3": "Most importantly, enjoy the experience. Whether you're aiming for the top spot or just having fun, you're part of an epic quest for knowledge!",
+    "content4": "Good luck, Rapid Recapper! May your mind be quick and your answers true! 🏆🎉"
+  },
+  "previous": "Previous",
+  "next": "Next"
+}

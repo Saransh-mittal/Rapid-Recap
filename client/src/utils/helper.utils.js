@@ -55,17 +55,6 @@ export function formatDate(datetime, lang) {
   }).format(date)
 }
 
-export const formatDateLangTranslate = (date, locale) => {
-  if (isNaN(Date.parse(date))) {
-    return '' // or return a default value
-  }
-  return new Intl.DateTimeFormat(locale, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(date))
-}
-
 export const formatRemainingTime = milliseconds => {
   const days = Math.floor(milliseconds / (24 * 60 * 60 * 1000))
   const hours = Math.floor(

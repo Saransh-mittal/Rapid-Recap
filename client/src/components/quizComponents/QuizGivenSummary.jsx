@@ -59,6 +59,7 @@ const QuizGivenSummary = ({
 
   const fetchQuizSummary = useCallback(async () => {
     try {
+      // console.log(i18n.language)
       const response = isTournament
         ? await axios.get(`/api/tournament/quiz/summary`, {
             params: {

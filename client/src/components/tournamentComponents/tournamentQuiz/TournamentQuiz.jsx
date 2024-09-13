@@ -39,7 +39,7 @@ const QuizGivenSummary = lazy(() =>
 const ShutterAnimation = lazy(() => import('./ShutterAnimation'))
 
 const TournamentQuiz = () => {
-  const { t } = useTranslation('Quiz')
+  const { t } = useTranslation('TournamentQuiz')
   const dispatch = useDispatch()
   const toast = useToast()
 
@@ -108,13 +108,13 @@ const TournamentQuiz = () => {
     } finally {
       setLoading(false)
     }
-  }, [user._id, tournamentId, category, dispatch, toast])
+  }, [user._id, tournamentId, category, dispatch, toast, t])
 
   useEffect(() => {
     if (isOpen) {
       startQuiz()
     }
-  }, [isOpen])
+  }, [isOpen, startQuiz])
 
   const handleAnswer = useCallback(
     selectedOption => {
@@ -172,15 +172,7 @@ const TournamentQuiz = () => {
         setSubmitting(false)
       }
     },
-    [
-      quizSession,
-      userAnswers,
-      dispatch,
-      user,
-      category,
-      setRefetchLeaderBoard,
-      toast,
-    ],
+    [quizSession, dispatch, user, category, completedCategories, t, toast],
   )
 
   const { timer, timeTaken } = useTimer(
@@ -203,14 +195,14 @@ const TournamentQuiz = () => {
         addNoteMessage({
           messageType: 'xpAward',
           xpAwarded: 10,
-          title: t('XP Awarded For Tournament Quiz'),
+          title: t('XPAwarded'),
           actions: [{ actionType: 'VIEW_EXPERIENCE' }],
           width: '250px',
           xpSource: 'TOURNAMENT_QUIZ',
         }),
       )
     }
-  }, [submitted, currentQuestionIndex, quizSession, dispatch])
+  }, [submitted, currentQuestionIndex, quizSession, dispatch, t])
 
   const handleConfirmClose = useCallback(() => {
     handleSubmitQuiz({
@@ -260,7 +252,7 @@ const TournamentQuiz = () => {
 
     if (submitted) {
       return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>{t('Loading')}</div>}>
           <SubmittedQuizInterface
             submitLoad={submitting}
             result={result}
@@ -286,7 +278,7 @@ const TournamentQuiz = () => {
           userSelect={'none'}
           position={'relative'}
         >
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>{t('Loading')}</div>}>
             <QuizInterface
               load={loading}
               currentQuestionIndex={currentQuestionIndex}
@@ -317,11 +309,13 @@ const TournamentQuiz = () => {
     showCategoryQuizSummary,
     tournamentId,
     category,
+    t,
+    playClick,
   ])
 
   return (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div>{t('Loading')}</div>}>
         <ModalComponent
           isOpen={isOpen}
           onClose={handleClose}
@@ -345,7 +339,7 @@ const TournamentQuiz = () => {
         />
       </Suspense>
       {showConfirmationModal && (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>{t('Loading')}</div>}>
           <ConfirmationModal
             isOpen={showConfirmationModal}
             onClose={() => setShowConfirmationModal(false)}

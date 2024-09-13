@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Box, Flex, Text, useTheme } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 // MotionBox component using motion from framer-motion
 const MotionBox = motion(Box)
@@ -8,6 +9,7 @@ const MotionBox = motion(Box)
 const ShutterAnimation = ({ onComplete }) => {
   const [isVisible, setIsVisible] = useState(true)
   const theme = useTheme()
+  const { t } = useTranslation('ShutterAnimation')
 
   // Memoizing the shutter color to prevent recalculating on each render
   const shutterColor = useMemo(() => {
@@ -88,14 +90,14 @@ const ShutterAnimation = ({ onComplete }) => {
               mb={4}
               textShadow="0 0 10px rgba(255,215,0,0.5)"
             >
-              Rapid Recap Tournament
+              {t('Rapid Recap Tournament')}
             </Text>
             <Text
               fontSize="xl"
               color="white"
               textShadow="0 0 5px rgba(255,215,0,0.3)"
             >
-              Get ready to begin!
+              {t('Get ready to begin!')}
             </Text>
           </Flex>
 

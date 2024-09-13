@@ -8,11 +8,14 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import UserFriendsSVG from '../../assets/svg/UserFriendsSVG'
 
 const MotionBox = motion(Box)
 
 const RegisteredUsersCount = ({ count }) => {
+  const { t } = useTranslation('RegisteredUsersCount') // Translation hook for this component
+
   // Memoizing background and border color to prevent unnecessary recalculations
   const bgColor = useColorModeValue(
     'rgba(255, 255, 255, 0.08)',
@@ -58,14 +61,12 @@ const RegisteredUsersCount = ({ count }) => {
                 color="#ED64A6"
                 style={{ marginRight: '0.5rem' }}
               />
-              Registered Participants
+              {t('label')}
             </StatLabel>
             <StatNumber fontSize="4xl" fontWeight="bold" color="white">
               {count}
             </StatNumber>
-            <StatHelpText color="gray.400">
-              Join the epic quest for knowledge!
-            </StatHelpText>
+            <StatHelpText color="gray.400">{t('helpText')}</StatHelpText>
           </Stat>
         </Box>
       </MotionBox>

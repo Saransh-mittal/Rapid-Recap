@@ -21,6 +21,7 @@ import {
 import { motion } from 'framer-motion'
 import { Medal, Trophy, Crown } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next' // Import the useTranslation hook
 
 // Lazy load UserStatsModal
 const UserStatsModal = React.lazy(() => import('./UserStatsModal'))
@@ -30,6 +31,9 @@ const MotionBox = motion(Box)
 const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [selectedUserStats, setSelectedUserStats] = useState(null)
+
+  const { t } = useTranslation('LeaderboardTable') // Load translations from the 'LeaderBoard' namespace
+  const { t: userStatstranlate } = useTranslation('UserStatsModal')
 
   // Memoize the handleRowClick function to avoid unnecessary re-creation
   const handleRowClick = useCallback(
@@ -137,7 +141,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
                 px={{ base: 4, md: 6 }}
                 textAlign={'center'}
               >
-                Rank
+                {t('Rank')} {/* Translate Rank */}
               </Th>
               <Th
                 color="white"
@@ -145,7 +149,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
                 px={6}
                 textAlign={'center'}
               >
-                Player
+                {t('Player')} {/* Translate Player */}
               </Th>
               <Th
                 color="white"
@@ -154,7 +158,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
                 textAlign={'center'}
                 isNumeric
               >
-                Score
+                {t('Score')} {/* Translate Score */}
               </Th>
             </Tr>
           </Thead>
@@ -168,11 +172,12 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
           </Tbody>
         </Table>
       </Box>
-      <Suspense fallback={<Box>Loading User Stats...</Box>}>
+      <Suspense fallback={<Box>{t('LoadingUserStats')}</Box>}>
         <UserStatsModal
           isOpen={isOpen}
           onClose={onClose}
           userStats={selectedUserStats}
+          t={userStatstranlate}
         />
       </Suspense>
     </>
