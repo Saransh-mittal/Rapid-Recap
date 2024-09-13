@@ -191,7 +191,7 @@ export const appSlice = createSlice({
                 ? 'Enjoy a 1.5x score multiplier on all quizzes today!'
                 : 'आज सभी क्विज़ पर 1.5x स्कोर मल्टीप्लायर का आनंद लें!',
             width: '300px',
-            xpAwared: action.payload?.xpAwarded,
+            xpAwarded: action.payload?.xpAwarded,
             duration: null,
           })
         action.payload?.isRevivalPeriod &&

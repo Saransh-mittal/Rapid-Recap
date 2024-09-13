@@ -12,6 +12,7 @@ import pickle
 import time
 import concurrent.futures
 from scipy import sparse
+from scipy.sparse import csr_matrix
 import logging
 import traceback
 
@@ -56,8 +57,7 @@ def load_data_from_db(mongo_uri, user_id):
     else:
         latest_date = datetime.now(pytz.utc)
 
-    start_date = latest_date - timedelta(days=30)
-
+    start_date = datetime.now(pytz.UTC) - timedelta(days=28)
     def fetch_quiz_attempts():
         return list(quiz_attempts_collection.find(
             {"user": ObjectId(user_id), "createdAt": {"$gte": start_date}},
@@ -178,7 +178,7 @@ def calculate_preference_score(user_id, quiz_attempts_df, time_spent_df):
 
     quiz_preference = user_quiz_attempts[['article', 'preference_score']] if 'article' in user_quiz_attempts.columns else pd.DataFrame()
     time_preference = user_time_spent[['articleId', 'preference_score']].rename(columns={'articleId': 'article'}) if 'articleId' in user_time_spent.columns else pd.DataFrame()
-    
+
     user_preference_df = pd.concat([quiz_preference, time_preference])
 
     if user_preference_df.empty:
@@ -276,6 +276,13 @@ def update_recommendations_in_db(user_id, recommendations, mongo_uri):
         upsert=True
     )
 
+def calculate_sigmoid_kernel(tfv_matrix):
+    # Convert to sparse matrix for memory efficiency
+    tfv_matrix_sparse = csr_matrix(tfv_matrix)
+
+    # Consider splitting into chunks for very large matrices
+    return sigmoid_kernel(tfv_matrix_sparse, tfv_matrix_sparse)
+
 if __name__ == "__main__":
     try:
         base_path = os.path.dirname(os.path.abspath(__file__))
@@ -288,7 +295,9 @@ if __name__ == "__main__":
 
         articles_df, quiz_attempts_df, time_spent_df = load_data_from_db(mongo_uri, user_id)
         tfv, tfv_matrix = load_tfidf()
-        sig = sigmoid_kernel(tfv_matrix, tfv_matrix)
+         # Use the function to calculate the sigmoid kernel with memory profiling
+        sig = calculate_sigmoid_kernel(tfv_matrix)
+
 
         recommendations = get_recommendations(user_id, articles_df, sig, quiz_attempts_df, time_spent_df)
 
