@@ -22,11 +22,12 @@ const MotionBox = motion(Box)
 
 const QuizConfirmationModal = ({ isOpen, onClose, onConfirm, category }) => {
   const { t } = useTranslation('QuizConfirmationModal')
+  const { t: t1 } = useTranslation('InstructionModal')
   const theme = useTheme()
 
   // Memoize instructions to avoid unnecessary re-renders
   const instructions = useMemo(
-    () => t('instructions', { returnObjects: true }),
+    () => t1('instructions', { returnObjects: true }),
     [t],
   )
 

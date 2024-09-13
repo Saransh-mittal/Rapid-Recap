@@ -50,7 +50,7 @@ const namespaces = {
     'CategoryLeaders',
     'LeaderCard',
     'QuizConfirmationModal',
-    'ShuttlerAnimation',
+    'ShutterAnimation',
     'TournamentQuiz',
   ],
   quizComponents: [
