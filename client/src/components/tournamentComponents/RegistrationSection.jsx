@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense, useCallback } from 'react'
 import {
   VStack,
   Alert,
@@ -11,8 +11,10 @@ import {
   Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import RegistrationForm from './RegistrationForm'
-import RegisteredUsersCount from './RegisteredUsersCount'
+
+// Lazy load components
+const RegistrationForm = React.lazy(() => import('./RegistrationForm'))
+const RegisteredUsersCount = React.lazy(() => import('./RegisteredUsersCount'))
 
 const MotionBox = motion(Box)
 
@@ -30,12 +32,12 @@ const RegistrationSection = ({
     'rgba(0, 0, 0, 0.3)',
   )
   const borderColor = useColorModeValue('pink.200', 'pink.700')
-  const textColor = useColorModeValue('gray.800', 'white')
   const headingColor = useColorModeValue('cyan.300', 'cyan.200')
   const labelColor = useColorModeValue('pink.300', 'pink.200')
   const valueColor = useColorModeValue('yellow.300', 'yellow.200')
 
-  const renderContent = () => {
+  // Memoize renderContent to avoid unnecessary re-renders
+  const renderContent = useCallback(() => {
     if (!isAuthenticated || userRole === 'guest') {
       return (
         <Box
@@ -74,12 +76,18 @@ const RegistrationSection = ({
       )
     }
 
-    return registrationStatus === 'not-registered' ? (
-      <RegistrationForm
-        onRegister={handleRegister}
-        registerLoading={registerLoading}
-      />
-    ) : (
+    if (registrationStatus === 'not-registered') {
+      return (
+        <Suspense fallback={<Text>Loading Registration Form...</Text>}>
+          <RegistrationForm
+            onRegister={handleRegister}
+            registerLoading={registerLoading}
+          />
+        </Suspense>
+      )
+    }
+
+    return (
       <VStack spacing={4} align="stretch">
         <Alert
           status="success"
@@ -142,7 +150,19 @@ const RegistrationSection = ({
         </Box>
       </VStack>
     )
-  }
+  }, [
+    isAuthenticated,
+    userRole,
+    registrationStatus,
+    handleRegister,
+    registerLoading,
+    bgColor,
+    borderColor,
+    headingColor,
+    labelColor,
+    valueColor,
+    userDetails,
+  ])
 
   return (
     <>
@@ -156,7 +176,9 @@ const RegistrationSection = ({
             <Heading size={{ base: 'md', md: 'lg' }} mt={4} color="pink.400">
               Tournament Registration
             </Heading>
-            <RegisteredUsersCount count={tournamentData.registeredCount} />
+            <Suspense fallback={<Text>Loading Users Count...</Text>}>
+              <RegisteredUsersCount count={tournamentData.registeredCount} />
+            </Suspense>
             {renderContent()}
           </VStack>
         </MotionBox>

@@ -1,4 +1,4 @@
-// components/tournamentComponents/TimeInfo.js
+import React, { useMemo } from 'react'
 import { VStack, HStack, Box, Text } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import {
@@ -9,38 +9,59 @@ import {
 const MotionBox = motion(Box)
 
 const TimeInfo = ({ tournamentData }) => {
-  const dateMapStart = {
-    registration: tournamentData?.registrationStartDate,
-    upcoming: tournamentData?.startDate,
-    ongoing: tournamentData?.startDate, // Adjust this to the correct date field
-    completed: null, // Adjust this to the correct date field
-  }
-  const dateMapEnd = {
-    registration: tournamentData?.registrationEndDate,
-    upcoming: null,
-    ongoing: tournamentData?.endDate, // Adjust this to the correct date field
-    completed: null, // Adjust this to the correct date field
-  }
-  // Find the first matching date where the status is not equal
-  const startDate = formatDateLangTranslate(
-    dateMapStart[tournamentData?.status],
+  // Memoize date and time computations to avoid recalculations
+  const dateMapStart = useMemo(
+    () => ({
+      registration: tournamentData?.registrationStartDate,
+      upcoming: tournamentData?.startDate,
+      ongoing: tournamentData?.startDate, // Adjust this to the correct date field
+      completed: null, // Adjust this to the correct date field
+    }),
+    [tournamentData],
   )
 
-  const endDate = formatDateLangTranslate(dateMapEnd[tournamentData?.status])
-  const startDateTime = formatLocalDateTime(
-    dateMapStart[tournamentData?.status],
+  const dateMapEnd = useMemo(
+    () => ({
+      registration: tournamentData?.registrationEndDate,
+      upcoming: null,
+      ongoing: tournamentData?.endDate, // Adjust this to the correct date field
+      completed: null, // Adjust this to the correct date field
+    }),
+    [tournamentData],
   )
-  const endDateTime = formatLocalDateTime(dateMapEnd[tournamentData?.status])
 
-  const statusTextMap = {
-    registration: 'Starts',
-    upcoming: 'Starts At',
-    ongoing: 'Starts', // Adjust as needed
-    completed: '', // Adjust as needed
-  }
+  const startDate = useMemo(
+    () => formatDateLangTranslate(dateMapStart[tournamentData?.status]),
+    [dateMapStart, tournamentData?.status],
+  )
+  const endDate = useMemo(
+    () => formatDateLangTranslate(dateMapEnd[tournamentData?.status]),
+    [dateMapEnd, tournamentData?.status],
+  )
 
-  // Default to 'Starts At' if no match is found
-  const statusText = statusTextMap[tournamentData?.status] || 'Starts At'
+  const startDateTime = useMemo(
+    () => formatLocalDateTime(dateMapStart[tournamentData?.status]),
+    [dateMapStart, tournamentData?.status],
+  )
+  const endDateTime = useMemo(
+    () => formatLocalDateTime(dateMapEnd[tournamentData?.status]),
+    [dateMapEnd, tournamentData?.status],
+  )
+
+  const statusTextMap = useMemo(
+    () => ({
+      registration: 'Starts',
+      upcoming: 'Starts At',
+      ongoing: 'Starts', // Adjust as needed
+      completed: '', // Adjust as needed
+    }),
+    [],
+  )
+
+  const statusText = useMemo(
+    () => statusTextMap[tournamentData?.status] || 'Starts At',
+    [statusTextMap, tournamentData?.status],
+  )
 
   if (tournamentData?.status === 'completed') return null
 
@@ -69,6 +90,7 @@ const TimeInfo = ({ tournamentData }) => {
             <Text fontSize={{ base: 'sm', md: 'md' }}>{startDateTime}</Text>
           </VStack>
         </MotionBox>
+
         {tournamentData?.status !== 'upcoming' && (
           <MotionBox
             initial={{ opacity: 0, y: 20 }}
@@ -94,6 +116,7 @@ const TimeInfo = ({ tournamentData }) => {
           </MotionBox>
         )}
       </HStack>
+
       <MotionBox
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -113,7 +113,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
   return (
     <>
       <Box
-        maxHeight="100px"
+        maxHeight="500px"
         overflowY="auto"
         css={{
           '&::-webkit-scrollbar': {

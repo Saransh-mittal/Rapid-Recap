@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, Suspense, useCallback } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -15,17 +15,14 @@ import {
   Progress,
   Box,
 } from '@chakra-ui/react'
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  FaTrophy,
-  FaCalendarAlt,
-  FaClipboardList,
-  FaClock,
-  FaMedal,
-  FaGlobe,
-  FaChevronLeft,
-  FaChevronRight,
-} from 'react-icons/fa'
+import TrophySVG from '../../assets/svg/TrophySVG'
+import CalenderSVG from '../../assets/svg/CalenderSVG'
+import ClipboardList from '../../assets/svg/ClipboardList'
+import ClockSVG from '../../assets/svg/ClockSVG'
+import Medal from '../../assets/svg/Medal'
+import Globe from '../../assets/svg/Globe'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
@@ -40,249 +37,262 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
 
   const bgGradient = `linear(to-br, ${theme.colors.gray[900]}, ${theme.colors.purple[900]})`
 
-  const pages = [
-    {
-      title: 'Welcome to Rapid Recap Tournament!',
-      icon: FaTrophy,
-      content: (
-        <VStack spacing={4} align="stretch">
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            Welcome to the exciting world of Rapid Recap Tournament!
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            This weekend event is your chance to showcase your knowledge,
-            compete with others, and have a blast while learning new things.
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            Get ready for a thrilling quiz experience that covers various
-            categories and keeps you up-to-date with current affairs!
-          </MotionText>
-        </VStack>
-      ),
-    },
-    {
-      title: 'Eligibility and Registration',
-      icon: FaCalendarAlt,
-      content: (
-        <VStack spacing={4} align="stretch">
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            To join the tournament, you need to maintain a 5-day Quiz streak in
-            the Rapid Recap app. It's like building your quiz power!
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            Registration is open from Monday to Friday until 11 PM. Don't miss
-            your chance to enter the arena of knowledge!
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            During registration, you'll choose 5 categories out of 15 exciting
-            options. Plus, everyone gets to tackle the "Current Affairs"
-            category!
-          </MotionText>
-        </VStack>
-      ),
-    },
-    {
-      title: 'Tournament Structure',
-      icon: FaClipboardList,
-      content: (
-        <VStack spacing={4} align="stretch">
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            The big event happens every Saturday and Sunday. You can participate
-            at any time during these two days!
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            You'll face 5 questions from each of your chosen categories, plus 5
-            from Current Affairs. That's a total of 30 brain-teasing questions!
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            The Current Affairs questions come about global events from the last
-            5 days, keeping you in the loop!
-          </MotionText>
-        </VStack>
-      ),
-    },
-    {
-      title: 'Quiz Challenge',
-      icon: FaClock,
-      content: (
-        <VStack spacing={4} align="stretch">
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            Here's where the adrenaline kicks in: you have just 50 seconds to
-            answer 5 questions. It's a true test of speed and knowledge!
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            Don't stress if you can't answer them all. The goal is to have fun
-            and learn something new with every quiz.
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            Remember, practice makes perfect. The more you play, the better
-            you'll get at tackling these rapid-fire questions!
-          </MotionText>
-        </VStack>
-      ),
-    },
-    {
-      title: 'Scoring and Leaderboard',
-      icon: FaMedal,
-      content: (
-        <VStack spacing={4} align="stretch">
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            After completing the quiz, you'll see how you stack up against other
-            players on our real-time leaderboard.
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            Your ranking is based on your total RQM (Rapid Quiz Master) score,
-            which combines your performance across all categories.
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            The leaderboard updates instantly, so you'll always know where you
-            stand in the heat of the competition!
-          </MotionText>
-        </VStack>
-      ),
-    },
-    {
-      title: 'Final Tips and Good Luck!',
-      icon: FaGlobe,
-      content: (
-        <VStack spacing={4} align="stretch">
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            Stay curious and keep learning! The tournament is designed to be
-            both fun and educational.
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            Don't forget to brush up on current affairs. It might give you the
-            edge you need to climb the leaderboard!
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            Most importantly, enjoy the experience. Whether you're aiming for
-            the top spot or just having fun, you're part of an epic quest for
-            knowledge!
-          </MotionText>
-          <MotionText
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            fontWeight="bold"
-          >
-            Good luck, Rapid Recapper! May your mind be quick and your answers
-            true! 🏆🎉
-          </MotionText>
-        </VStack>
-      ),
-    },
-  ]
-
-  const nextPage = () =>
-    setCurrentPage(prev => Math.min(prev + 1, pages.length))
-  const prevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1))
-
-  const pageVariants = {
-    enter: direction => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: direction => ({
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
-    }),
-  }
-
-  const pageTransition = {
-    type: 'spring',
-    stiffness: 300,
-    damping: 30,
-  }
-
-  const iconVariants = {
-    hidden: { scale: 0, rotate: -180 },
-    visible: {
-      scale: 1,
-      rotate: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 260,
-        damping: 20,
-        delay: 0.1,
+  // Memoize page contents to avoid re-creating them on every render
+  const pages = useMemo(
+    () => [
+      {
+        title: 'Welcome to Rapid Recap Tournament!',
+        icon: TrophySVG,
+        content: (
+          <VStack spacing={4} align="stretch">
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              Welcome to the exciting world of Rapid Recap Tournament!
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              This weekend event is your chance to showcase your knowledge,
+              compete with others, and have a blast while learning new things.
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              Get ready for a thrilling quiz experience that covers various
+              categories and keeps you up-to-date with current affairs!
+            </MotionText>
+          </VStack>
+        ),
       },
-    },
-  }
+      {
+        title: 'Eligibility and Registration',
+        icon: CalenderSVG,
+        content: (
+          <VStack spacing={4} align="stretch">
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              To join the tournament, you need to maintain a 5-day Quiz streak
+              in the Rapid Recap app. It's like building your quiz power!
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Registration is open from Monday to Friday until 11 PM. Don't miss
+              your chance to enter the arena of knowledge!
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              During registration, you'll choose 5 categories out of 15 exciting
+              options. Plus, everyone gets to tackle the "Current Affairs"
+              category!
+            </MotionText>
+          </VStack>
+        ),
+      },
+      {
+        title: 'Tournament Structure',
+        icon: ClipboardList,
+        content: (
+          <VStack spacing={4} align="stretch">
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              The big event happens every Saturday and Sunday. You can
+              participate at any time during these two days!
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              You'll face 5 questions from each of your chosen categories, plus
+              5 from Current Affairs. That's a total of 30 brain-teasing
+              questions!
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              The Current Affairs questions come about global events from the
+              last 5 days, keeping you in the loop!
+            </MotionText>
+          </VStack>
+        ),
+      },
+      {
+        title: 'Quiz Challenge',
+        icon: ClockSVG,
+        content: (
+          <VStack spacing={4} align="stretch">
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              Here's where the adrenaline kicks in: you have just 50 seconds to
+              answer 5 questions. It's a true test of speed and knowledge!
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Don't stress if you can't answer them all. The goal is to have fun
+              and learn something new with every quiz.
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              Remember, practice makes perfect. The more you play, the better
+              you'll get at tackling these rapid-fire questions!
+            </MotionText>
+          </VStack>
+        ),
+      },
+      {
+        title: 'Scoring and Leaderboard',
+        icon: Medal,
+        content: (
+          <VStack spacing={4} align="stretch">
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              After completing the quiz, you'll see how you stack up against
+              other players on our real-time leaderboard.
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Your ranking is based on your total RQM (Rapid Quiz Master) score,
+              which combines your performance across all categories.
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              The leaderboard updates instantly, so you'll always know where you
+              stand in the heat of the competition!
+            </MotionText>
+          </VStack>
+        ),
+      },
+      {
+        title: 'Final Tips and Good Luck!',
+        icon: Globe,
+        content: (
+          <VStack spacing={4} align="stretch">
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              Stay curious and keep learning! The tournament is designed to be
+              both fun and educational.
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Don't forget to brush up on current affairs. It might give you the
+              edge you need to climb the leaderboard!
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              Most importantly, enjoy the experience. Whether you're aiming for
+              the top spot or just having fun, you're part of an epic quest for
+              knowledge!
+            </MotionText>
+            <MotionText
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              fontWeight="bold"
+            >
+              Good luck, Rapid Recapper! May your mind be quick and your answers
+              true! 🏆🎉
+            </MotionText>
+          </VStack>
+        ),
+      },
+    ],
+    [],
+  )
+
+  // Memoize page animations
+  const pageVariants = useMemo(
+    () => ({
+      enter: direction => ({
+        x: direction > 0 ? 1000 : -1000,
+        opacity: 0,
+      }),
+      center: { x: 0, opacity: 1 },
+      exit: direction => ({
+        x: direction < 0 ? 1000 : -1000,
+        opacity: 0,
+      }),
+    }),
+    [],
+  )
+
+  const pageTransition = useMemo(
+    () => ({
+      type: 'spring',
+      stiffness: 300,
+      damping: 30,
+    }),
+    [],
+  )
+
+  const iconVariants = useMemo(
+    () => ({
+      hidden: { scale: 0, rotate: -180 },
+      visible: {
+        scale: 1,
+        rotate: 0,
+        transition: { type: 'spring', stiffness: 260, damping: 20, delay: 0.1 },
+      },
+    }),
+    [],
+  )
+
+  // Memoize page navigation functions
+  const nextPage = useCallback(
+    () => setCurrentPage(prev => Math.min(prev + 1, pages.length)),
+    [pages.length],
+  )
+  const prevPage = useCallback(
+    () => setCurrentPage(prev => Math.max(prev - 1, 1)),
+    [],
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl" isCentered>
@@ -321,21 +331,23 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
               direction="column"
               align="center"
             >
-              <MotionCircle
-                variants={iconVariants}
-                initial="hidden"
-                animate="visible"
-                size={{ base: '85px', md: '100px' }}
-                bg="rgba(255, 255, 255, 0.1)"
-                border="2px solid"
-                borderColor="pink.400"
-                mb={6}
-              >
-                {React.createElement(pages[currentPage - 1].icon, {
-                  size: 50,
-                  color: theme.colors.pink[400],
-                })}
-              </MotionCircle>
+              <Suspense fallback={<Circle size="100px" bg="gray.200" />}>
+                <MotionCircle
+                  variants={iconVariants}
+                  initial="hidden"
+                  animate="visible"
+                  size={{ base: '85px', md: '100px' }}
+                  bg="rgba(255, 255, 255, 0.1)"
+                  border="2px solid"
+                  borderColor="pink.400"
+                  mb={6}
+                >
+                  {React.createElement(pages[currentPage - 1].icon, {
+                    size: 50,
+                    color: theme.colors.pink[400],
+                  })}
+                </MotionCircle>
+              </Suspense>
               <MotionHeading
                 as="h2"
                 fontSize={{ base: '2xl', md: '4xl' }}
@@ -384,7 +396,7 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
             bg="rgba(255, 255, 255, 0.1)"
             color="white"
             _hover={{ bg: 'rgba(255, 255, 255, 0.2)' }}
-            leftIcon={<FaChevronLeft />}
+            leftIcon={<ChevronLeftIcon />}
           >
             Previous
           </Button>
@@ -397,7 +409,7 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
             bg="pink.500"
             color="white"
             _hover={{ bg: 'pink.600' }}
-            rightIcon={<FaChevronRight />}
+            rightIcon={<ChevronRightIcon />}
           >
             Next
           </Button>
