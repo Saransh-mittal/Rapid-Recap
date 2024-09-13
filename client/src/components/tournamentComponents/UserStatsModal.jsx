@@ -18,8 +18,10 @@ import {
   Button,
   Spinner,
 } from '@chakra-ui/react'
-import { Trophy, Target, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import TrophySVG from '../../assets/svg/TrophySVG'
+import Target from '../../assets/svg/Target'
+import ClockSVG from '../../assets/svg/ClockSVG'
 
 // Lazy load heavy components
 const CategoryCard = lazy(() => import('./CategoryCard'))
@@ -30,15 +32,20 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
   const statsRef = React.useRef(null)
   const navigate = useNavigate()
 
-  if (!userStats) return null
-
   // Memoize category stats for better performance
-  const categoryStats = useMemo(() => userStats.categoryStats, [userStats])
+  const categoryStats = useMemo(
+    () => userStats?.categoryStats || [],
+    [userStats],
+  )
 
   // Memoized navigation handler to avoid recreating on each render
   const handleProfileNavigation = useCallback(() => {
-    navigate(`/profile/${userStats.inGameName}`)
-  }, [navigate, userStats.inGameName])
+    if (userStats) {
+      navigate(`/profile/${userStats.inGameName}`)
+    }
+  }, [navigate, userStats])
+
+  if (!userStats) return null
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="full">
@@ -77,7 +84,7 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
                 borderRadius="md"
               >
                 <HStack>
-                  <Trophy color="gold" size={32} />
+                  <TrophySVG color="gold" size={32} />
                   <VStack align="start" spacing={0}>
                     <Text fontSize="sm">Total Score</Text>
                     <Text
@@ -126,7 +133,7 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
                     >
                       <Flex justify="space-between">
                         <HStack>
-                          <Trophy color="gold" size={16} />
+                          <TrophySVG color="gold" size={16} />
                           <Text fontSize="sm">Rank: #{stat.ranking}</Text>
                         </HStack>
                         <Text fontSize="sm" fontWeight="bold" color="cyan">
@@ -144,7 +151,7 @@ const UserStatsModal = ({ isOpen, onClose, userStats }) => {
                           <Text fontSize="sm">Right : {stat.score}</Text>
                         </HStack>
                         <HStack>
-                          <Clock color="pink" size={16} />
+                          <ClockSVG color="pink" size={16} />
                           <Text fontSize="sm">{stat.timeTaken}s</Text>
                         </HStack>
                       </Flex>
