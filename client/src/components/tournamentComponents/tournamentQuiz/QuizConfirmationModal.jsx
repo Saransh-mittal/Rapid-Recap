@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next'
 const MotionBox = motion(Box)
 
 const QuizConfirmationModal = ({ isOpen, onClose, onConfirm, category }) => {
-  const { t } = useTranslation('InstructionModal')
+  const { t } = useTranslation('QuizConfirmationModal')
   const theme = useTheme()
 
   // Memoize instructions to avoid unnecessary re-renders
@@ -76,11 +76,7 @@ const QuizConfirmationModal = ({ isOpen, onClose, onConfirm, category }) => {
         <ModalBody p={6}>
           <VStack spacing={4} align="stretch">
             <Text fontSize="lg" fontWeight="bold" textAlign="center">
-              Are you sure you want to start the quiz in the{' '}
-              <Text as="span" color="pink.300">
-                {category}
-              </Text>{' '}
-              category?
+              {t('confirmation', { category })}
             </Text>
 
             <Text
@@ -116,10 +112,10 @@ const QuizConfirmationModal = ({ isOpen, onClose, onConfirm, category }) => {
             color="white"
             _hover={{ bg: 'rgba(255, 255, 255, 0.2)' }}
           >
-            Cancel
+            {t('cancel')}
           </Button>
           <Button colorScheme="pink" onClick={handleConfirm}>
-            Start Quiz
+            {t('startQuiz')}
           </Button>
         </ModalFooter>
       </ModalContent>

@@ -33,6 +33,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
   const [selectedUserStats, setSelectedUserStats] = useState(null)
 
   const { t } = useTranslation('LeaderboardTable') // Load translations from the 'LeaderBoard' namespace
+  const { t: userStatstranlate } = useTranslation('UserStatsModal')
 
   // Memoize the handleRowClick function to avoid unnecessary re-creation
   const handleRowClick = useCallback(
@@ -176,6 +177,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
           isOpen={isOpen}
           onClose={onClose}
           userStats={selectedUserStats}
+          t={userStatstranlate}
         />
       </Suspense>
     </>

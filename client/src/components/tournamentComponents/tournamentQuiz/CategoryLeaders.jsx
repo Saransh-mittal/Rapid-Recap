@@ -1,10 +1,12 @@
 // CategoryLeaders.js
 import React, { Suspense, lazy } from 'react'
 import { Box, VStack, Text } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 
 const LeaderCard = lazy(() => import('./LeaderCard'))
 
 const CategoryLeaders = ({ leaders }) => {
+  const { t } = useTranslation('CategoryLeaders')
   return (
     <Box
       borderRadius="xl"
@@ -25,10 +27,10 @@ const CategoryLeaders = ({ leaders }) => {
         letterSpacing="wide"
         textShadow="0 0 10px rgba(255,215,0,0.5)"
       >
-        Category Leaders
+        {t('Category Leaders')}
       </Text>
       <VStack spacing={4} align="stretch">
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>{t('Loading...')}</div>}>
           {leaders.map((leader, index) => (
             <LeaderCard
               key={leader.inGameName}

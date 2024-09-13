@@ -19,7 +19,7 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
+
 import TrophySVG from '../../assets/svg/TrophySVG'
 import Target from '../../assets/svg/Target'
 import ClockSVG from '../../assets/svg/ClockSVG'
@@ -29,8 +29,7 @@ const CategoryCard = lazy(() => import('./CategoryCard'))
 const QuizBG = lazy(() => import('./tournamentQuiz/QuizBG'))
 const UserSVG = lazy(() => import('../../assets/svg/UserSVG'))
 
-const UserStatsModal = ({ isOpen, onClose, userStats }) => {
-  const { t } = useTranslation('UserStatsModal')
+const UserStatsModal = ({ isOpen, onClose, userStats, t }) => {
   const statsRef = React.useRef(null)
   const navigate = useNavigate()
 

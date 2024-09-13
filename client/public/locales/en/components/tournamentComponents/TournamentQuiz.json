@@ -1,0 +1,8 @@
+{
+  "QuizStartFailed": "Failed to start the quiz",
+  "UnexpectedError": "An unexpected error occurred. Please try again later.",
+  "QuizSubmissionFailed": "Failed to submit the quiz",
+  "XPAwarded": "XP Awarded For Tournament Quiz",
+  "ConfirmCloseMessage": "Are you sure you want to close the quiz? Any unsaved progress will be lost.",
+  "Loading": "Loading..."
+}

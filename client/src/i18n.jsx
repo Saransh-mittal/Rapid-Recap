@@ -12,7 +12,8 @@ const namespaces = {
     'Register',
     'Signin',
     'Tournament',
-    'Quiz', //
+    'Quiz',
+    'ComingSoonTournament',
   ],
   utils: ['formatDate'],
   categories: ['categories'],
@@ -45,6 +46,11 @@ const namespaces = {
     'TournamentHeader',
     'TournamentStatus',
     'UserStatsModal',
+    'CategoryLeaders',
+    'LeaderCard',
+    'QuizConfirmationModal',
+    'ShuttlerAnimation',
+    'TournamentQuiz',
   ],
   quizComponents: [
     'BoostedSubmittedQuizInterface',

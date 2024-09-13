@@ -29,6 +29,7 @@ const UserStatsModal = React.lazy(() => import('./UserStatsModal'))
 
 const LeaderboardSection = ({ tournamentData }) => {
   const { t } = useTranslation('LeaderboardSection')
+  const { t: userStatstranlate } = useTranslation('UserStatsModal')
 
   const [leaderboardData, setLeaderboardData] = useState([])
   const [userStanding, setUserStanding] = useState(null)
@@ -218,6 +219,7 @@ const LeaderboardSection = ({ tournamentData }) => {
           isOpen={isOpen}
           onClose={onClose}
           userStats={selectedUserStats}
+          t={userStatstranlate}
         />
       </Suspense>
     </VStack>
