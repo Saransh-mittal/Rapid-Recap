@@ -286,9 +286,25 @@ const registerForTournament = asyncHandler(async (req, res) => {
   const session = await startSession()
   try {
     const user = await User.findById(userId).session(session)
-    if (!user || user.role === 'guest' || user.streak < 2) {
-      res.status(403)
-      throw new Error('User is not eligible to register for the tournament')
+    if (!user) {
+      res.status(404).json({
+        message: 'User must be logged in to register for the tournament',
+      })
+    }
+    if (user.role === 'guest') {
+      res
+        .status(403)
+        .json({
+          message: 'Guest users are not allowed to register for the tournament',
+        })
+    }
+    if (user.streak < 2) {
+      res
+        .status(403)
+        .json({
+          message:
+            'User must have a minimum streak of 2 to register for the tournament',
+        })
     }
 
     // Check if user is already registered
