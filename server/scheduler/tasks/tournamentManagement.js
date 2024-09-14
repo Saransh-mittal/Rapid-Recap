@@ -35,28 +35,28 @@ const startRegistration = async () => {
     status: 'registration',
   })
 
-  const realUsers = await User.find({})
+  // const realUsers = await User.find({})
 
-  for (const user of realUsers) {
-    const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(user.userLanguage)
+  // for (const user of realUsers) {
+  //   const localizedI18n = i18n.cloneInstance()
+  //   await localizedI18n.changeLanguage(user.userLanguage)
 
-    const t = (key, options) =>
-      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+  //   const t = (key, options) =>
+  //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-    const title = t('tournament_registration_open.title')
-    const body =
-      user?.role === 'guest'
-        ? t('tournament_registration_open.body_guest')
-        : t('tournament_registration_open.body_user')
+  //   const title = t('tournament_registration_open.title')
+  //   const body =
+  //     user?.role === 'guest'
+  //       ? t('tournament_registration_open.body_guest')
+  //       : t('tournament_registration_open.body_user')
 
-    await sendNotification({
-      title,
-      body,
-      url: '/tournament',
-      userId: user._id,
-    })
-  }
+  //   await sendNotification({
+  //     title,
+  //     body,
+  //     url: '/tournament',
+  //     userId: user._id,
+  //   })
+  // }
   console.log(
     `New tournament #${nextTournamentNumber
       .toString()
@@ -137,62 +137,61 @@ const endRegistration = async () => {
   }
 
   if (currentTournament.status === 'upcoming' && currentTournament.isActive) {
-    const tournament = await Tournament.findOne({
-      isActive: true,
-    }).sort({ startDate: -1 })
+    const tournament = currentTournament
 
     const participantsCount = tournament.participants.length
     const registeredUsers = await TournamentRegistration.find({
       tournament: tournament._id,
     }).populate('user')
 
-    for (const registration of registeredUsers) {
-      const localizedI18n = i18n.cloneInstance()
-      await localizedI18n.changeLanguage(registration.user.userLanguage)
+    // for (const registration of registeredUsers) {
+    //   const localizedI18n = i18n.cloneInstance()
+    //   await localizedI18n.changeLanguage(registration.user.userLanguage)
 
-      const t = (key, options) =>
-        localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+    //   const t = (key, options) =>
+    //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-      const title = t('all_the_best.title')
-      const body = t('all_the_best.body', { participantsCount })
+    //   const title = t('all_the_best.title')
+    //   const body = t('all_the_best.body', { participantsCount })
 
-      await sendNotification({
-        title,
-        body,
-        url: '/tournament',
-        userId: registration.user._id,
-      })
-    }
+    //   await sendNotification({
+    //     title,
+    //     body,
+    //     url: '/tournament',
+    //     userId: registration.user._id,
+    //   })
+    // }
 
     const nonRegisteredUsers = await User.find({
       _id: { $nin: tournament.participants },
     })
 
-    for (const user of nonRegisteredUsers) {
-      const localizedI18n = i18n.cloneInstance()
-      await localizedI18n.changeLanguage(user.userLanguage)
+    // for (const user of nonRegisteredUsers) {
+    //   const localizedI18n = i18n.cloneInstance()
+    //   await localizedI18n.changeLanguage(user.userLanguage)
 
-      const t = (key, options) =>
-        localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+    //   const t = (key, options) =>
+    //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-      const title =
-        user?.role === 'guest'
-          ? t('see_you_next_time_guest.title')
-          : t('see_you_next_time_user.title')
+    //   const title =
+    //     user?.role === 'guest'
+    //       ? t('see_you_next_time_guest.title')
+    //       : t('see_you_next_time_user.title')
 
-      const body =
-        user?.role === 'guest'
-          ? t('see_you_next_time_guest.body', { participantsCount })
-          : t('see_you_next_time_user.body', { participantsCount })
+    //   const body =
+    //     user?.role === 'guest'
+    //       ? t('see_you_next_time_guest.body', { participantsCount })
+    //       : t('see_you_next_time_user.body', { participantsCount })
 
-      await sendNotification({
-        title,
-        body,
-        url: user?.role === 'guest' ? '/signup' : '/tournament',
-        userId: user._id,
-      })
-    }
+    //   await sendNotification({
+    //     title,
+    //     body,
+    //     url: '/tournament',
+    //     userId: user._id,
+    //   })
+    // }
   }
+  console.log('Tournament registration ended')
 }
 
 const startTournament = async () => {
@@ -203,31 +202,29 @@ const startTournament = async () => {
     console.log('Tournament started')
   }
 
-  const tournament = await Tournament.findOne({
-    isActive: true,
-  }).sort({ startDate: -1 })
+  const tournament = currentTournament
 
   const registeredUsers = await TournamentRegistration.find({
     tournament: tournament._id,
   }).populate('user')
 
-  for (const registration of registeredUsers) {
-    const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(registration.user.userLanguage)
+  // for (const registration of registeredUsers) {
+  //   const localizedI18n = i18n.cloneInstance()
+  //   await localizedI18n.changeLanguage(registration.user.userLanguage)
 
-    const t = (key, options) =>
-      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+  //   const t = (key, options) =>
+  //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-    const title = t('tournament_started.title')
-    const body = t('tournament_started.body')
+  //   const title = t('tournament_started.title')
+  //   const body = t('tournament_started.body')
 
-    await sendNotification({
-      title,
-      body,
-      url: '/tournament',
-      userId: registration.user._id,
-    })
-  }
+  //   await sendNotification({
+  //     title,
+  //     body,
+  //     url: '/tournament',
+  //     userId: registration.user._id,
+  //   })
+  // }
 }
 
 const day1EndOfTournament = async () => {
@@ -315,52 +312,52 @@ const endTournament = async () => {
     tournament: tournament._id,
   }).populate('user')
 
-  for (const registration of registeredUsers) {
-    const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(registration.user.userLanguage)
+  // for (const registration of registeredUsers) {
+  //   const localizedI18n = i18n.cloneInstance()
+  //   await localizedI18n.changeLanguage(registration.user.userLanguage)
 
-    const t = (key, options) =>
-      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+  //   const t = (key, options) =>
+  //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-    const title = t('tournament_completed.title')
-    const body = t('tournament_completed.body')
+  //   const title = t('tournament_completed.title')
+  //   const body = t('tournament_completed.body')
 
-    await sendNotification({
-      title,
-      body,
-      url: '/tournament',
-      userId: registration.user._id,
-    })
-  }
+  //   await sendNotification({
+  //     title,
+  //     body,
+  //     url: '/tournament',
+  //     userId: registration.user._id,
+  //   })
+  // }
 
   const nonRegisteredUsers = await User.find({
     _id: { $nin: tournament.participants },
   })
 
-  for (const user of nonRegisteredUsers) {
-    const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(user.userLanguage)
+  // for (const user of nonRegisteredUsers) {
+  //   const localizedI18n = i18n.cloneInstance()
+  //   await localizedI18n.changeLanguage(user.userLanguage)
 
-    const t = (key, options) =>
-      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+  //   const t = (key, options) =>
+  //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-    const title =
-      user?.role === 'guest'
-        ? t('next_time_guest.title')
-        : t('next_time_user.title')
+  //   const title =
+  //     user?.role === 'guest'
+  //       ? t('next_time_guest.title')
+  //       : t('next_time_user.title')
 
-    const body =
-      user?.role === 'guest'
-        ? t('next_time_guest.body')
-        : t('next_time_user.body')
+  //   const body =
+  //     user?.role === 'guest'
+  //       ? t('next_time_guest.body')
+  //       : t('next_time_user.body')
 
-    await sendNotification({
-      title,
-      body,
-      url: user?.role === 'guest' ? '/signup' : '/tournament',
-      userId: user._id,
-    })
-  }
+  //   await sendNotification({
+  //     title,
+  //     body,
+  //     url: user?.role === 'guest' ? '/signup' : '/tournament',
+  //     userId: user._id,
+  //   })
+  // }
 }
 
 module.exports = {

@@ -17,6 +17,7 @@ const authorizedInGameNames = [
   'aryansh812',
   'DYNAMIC_Info_King',
   'Smash_dev_ultra',
+  'Shilpa0209',
   // Add more authorized inGameNames as needed
 ]
 
