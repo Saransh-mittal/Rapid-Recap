@@ -39,6 +39,7 @@ import {
   setTournamentId,
 } from '../redux/tournamentSlice'
 import { useTranslation } from 'react-i18next'
+import TournamentContent from '../components/tournamentComponents/TournamentContent'
 
 // Lazy load components for code splitting
 const TournamentHeader = lazy(() =>
@@ -402,7 +403,20 @@ const Tournament = () => {
             bg="rgba(0, 0, 0, 0.1)"
             backdropFilter="blur(5px)"
           >
-            {renderTournamentContent()}
+            {/* {renderTournamentContent()} */}
+            <TournamentContent
+              isFetching={isFetching}
+              tournamentData={tournamentData}
+              previousTournamentData={previousTournamentData}
+              userRegistrationDetails={userRegistrationDetails}
+              isAuthenticated={isAuthenticated}
+              isScreenSmallerThan400px={isScreenSmallerThan400px}
+              handleRegister={handleRegister}
+              handleCategorySelect={handleCategorySelect}
+              user={user}
+              registerLoading={registerLoading}
+              t={t}
+            />
             {tournamentData?.status === 'completed' && (
               <Suspense fallback={<Skeleton height="40px" />}>
                 <LeaderboardSection tournamentData={tournamentData} />

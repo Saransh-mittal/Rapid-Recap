@@ -83,7 +83,7 @@ const EpicQuestGuide = () => {
                 border="none"
                 mb={4}
                 borderRadius="lg"
-                boxShadow="dark-lg"
+                boxShadow="dark-md"
                 bg={bgColor}
                 borderWidth="1px"
                 borderColor={borderColor}
@@ -109,7 +109,7 @@ const EpicQuestGuide = () => {
                         {instruction.question}
                       </Text>
                     </Flex>
-                    <AccordionIcon color={iconColor} />
+                    <AccordionIcon color="pink.400" />
                   </AccordionButton>
                 </h2>
                 <AccordionPanel pb={4}>

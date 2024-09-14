@@ -22,7 +22,15 @@ const TournamentHeader = () => {
   return (
     <Suspense fallback={<Spinner />}>
       <MotionBox {...motionProps}>
-        <Heading as="h1" size="2xl" mb={8} textAlign="center">
+        <Heading
+          as="h1"
+          size="2xl"
+          bgGradient="linear(to-r, pink.400, purple.400)"
+          bgClip="text"
+          letterSpacing="tight"
+          mb={8}
+          textAlign="center"
+        >
           {t('Rapid Recap Tournament')}
         </Heading>
       </MotionBox>
