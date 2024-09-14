@@ -84,7 +84,12 @@ const ModalComponent = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={size}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={size}
+      closeOnOverlayClick={false}
+    >
       <ModalOverlay
         bg="blackAlpha.300"
         backdropFilter="blur(40px) hue-rotate(90deg)"
@@ -95,6 +100,7 @@ const ModalComponent = ({
         bgSize="cover"
         bgRepeat="no-repeat"
         color={getColor('white', 'rgba(255, 223, 0, 0.9)')}
+        className="animated-gradient scene"
         borderRadius="xl"
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
         overflow="hidden"
@@ -121,21 +127,23 @@ const ModalComponent = ({
             )}
           </SkeletonCircle>
         )}
-        <ModalCloseButton
-          zIndex={1}
-          backgroundColor={getColor('purple.300', 'rgba(255, 215, 0, 0.8)')}
-          style={{
-            right: '10px',
-            color: 'white',
-            transition: 'background-color 0.3s, color 0.3s',
-          }}
-          onMouseEnter={() =>
-            setIsCloseButtonHovered && setIsCloseButtonHovered(true)
-          }
-          onMouseLeave={() =>
-            setIsCloseButtonHovered && setIsCloseButtonHovered(false)
-          }
-        />
+        {!showGetSetGo && (
+          <ModalCloseButton
+            zIndex={1}
+            backgroundColor={getColor('purple.300', 'rgba(255, 215, 0, 0.8)')}
+            style={{
+              right: '10px',
+              color: 'white',
+              transition: 'background-color 0.3s, color 0.3s',
+            }}
+            onMouseEnter={() =>
+              setIsCloseButtonHovered && setIsCloseButtonHovered(true)
+            }
+            onMouseLeave={() =>
+              setIsCloseButtonHovered && setIsCloseButtonHovered(false)
+            }
+          />
+        )}
         <ModalBody w={'100%'} h={'100%'} p={0}>
           {renderModalBody()}
         </ModalBody>

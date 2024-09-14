@@ -159,13 +159,17 @@ const Navbar = () => {
     setNotifyCnt(count)
   }, [updates])
 
+  const checkStreak = useCallback(() => {
+    if (!streakLoading) {
+      dispatchRedux(fetchDailyStreak())
+    }
+  }, [streakLoading, user, dispatchRedux])
+
   useEffect(() => {
     if (!updatesLoading) {
       dispatchRedux(fetchAppUpdates())
     }
-    if (!streakLoading) {
-      dispatchRedux(fetchDailyStreak())
-    }
+    checkStreak()
     if (!friendRequestsLoading) {
       dispatchRedux(fetchUnreadFriendRequestsCount())
     }

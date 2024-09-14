@@ -120,14 +120,8 @@ const Tournament = () => {
       setIsFetching(false)
     } catch (error) {
       console.log(error)
-      toast({
-        title: t('errorOccurred'),
-        description: t('errorMessages.fetchData'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
+      setTournamentData(null)
+      setIsFetching(false)
     }
   }, [dispatch, toast, user?._id])
 
@@ -158,7 +152,7 @@ const Tournament = () => {
           addNoteMessage({
             messageType: 'xpAward',
             xpAwarded: 5,
-            title: t('registerSuccess.title'),
+            title: t('registrationSuccess.title'),
             actions: [{ actionType: 'VIEW_EXPERIENCE' }],
             width: '250px',
             xpSource: 'tournament-registration',
@@ -229,10 +223,10 @@ const Tournament = () => {
             textAlign="center"
           >
             <Heading as="h2" size="xl" mb={4} color="pink.400">
-              {t('noTournamentHeader.title')}
+              {t('noTournamentData.title')}
             </Heading>
             <Text fontSize="xl" color="gray.300">
-              {t('noTournamentHeader.description')}
+              {t('noTournamentData.description')}
             </Text>
           </MotionBox>
         </Center>

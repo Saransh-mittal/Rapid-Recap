@@ -4,13 +4,14 @@ import { fetchDailyStreak } from '../redux/appSlice'
 const quinBoostChecker = async ({
   setIsQuinBoostAvailable,
   setQuizLeftToGetQuizBoost,
+  dispatch,
 }) => {
   try {
     const response = await axios.get(`/api/user/quinBoostChecker`)
 
     if (response.status === 200) {
-      setQuizLeftToGetQuizBoost(response.data.quizLeftToGetQuizBoost)
-      setIsQuinBoostAvailable(response.data.isQuinBoostAvailable)
+      dispatch(setQuizLeftToGetQuizBoost(response.data.quizLeftToGetQuizBoost))
+      dispatch(setIsQuinBoostAvailable(response.data.isQuinBoostAvailable))
     }
   } catch (error) {
     console.log(error)

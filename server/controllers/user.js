@@ -647,11 +647,7 @@ const profile = async (req, res) => {
       filteredIQData,
       USER_IQ,
     } = await currentTopPercentOfUser({ userId: user._id })
-    const [
-      solvedQuizzes,
-      rank,
-      iqScoresHistory,
-    ] = await Promise.all([
+    const [solvedQuizzes, rank, iqScoresHistory] = await Promise.all([
       getSolvedQuizzesCount({ userId: user._id }),
 
       calculateUserRank({ userId: user._id }),
@@ -1230,6 +1226,7 @@ const streakChecker = async (req, res) => {
       remainingTimeBeforeRevival =
         user.revivalPeriodEnd.getTime() - new Date().getTime()
       isRevivalPeriod = true
+      streakBeforeBreak = user.streakBeforeBreak
     }
     const isBoosted =
       user.streak > 0 &&

@@ -20,7 +20,7 @@ const {
   endTournament,
 } = require('./tasks/tournamentManagement')
 
-const currentDate = moment().format('YYYY-MM-DD')
+const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
 
 const createSchedule = (name, time, task) => ({
   name,
@@ -28,6 +28,12 @@ const createSchedule = (name, time, task) => ({
   task,
 })
 
+const tournamentDays = {
+  startRegistration: 6, // Saturday
+  endRegistration: 1, // Monday
+  startTournament: 2, // Tuesday
+  endTournament: 3, // Wednesday
+}
 let schedules = [
   createSchedule('newSeasonReset', '00:00', resetNewSeasonModal),
   createSchedule('userIQScore', '00:01', calculateUserIQScores),
@@ -160,30 +166,30 @@ let schedules = [
     sendGuestAccountExpiryNotifs,
   ),
   // New tournament management schedules
-  createSchedule('startTournamentRegistration', '02:00', startRegistration),
-  createSchedule('endTournamentRegistration', '23:00', endRegistration),
+  createSchedule('startRegistrationTournament', '02:00', startRegistration),
+  createSchedule('endRegistrationTournament', '23:00', endRegistration),
   createSchedule('startTournament', '00:00', startTournament),
   createSchedule('endTournament', '23:59', endTournament),
-  {
-    name: 'inRegistrationPeriod',
-    cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
-    task: inRegisterationPeriod,
-  },
-  {
-    name: 'lastDayOfRegistrationPeriod',
-    cronPattern: '0 20 * * 5', // At 8:00 PM on Friday
-    task: lastDayOfRegisterationPeriod,
-  },
-  {
-    name: 'day1EndOfTournament',
-    cronPattern: '0 22 * * 6', // At 10:00 PM on Saturday
-    task: day1EndOfTournament,
-  },
-  {
-    name: 'day2OfTournament',
-    cronPattern: '0 11 * * 0', // At 11:00 AM on Sunday
-    task: day2OfTournament,
-  },
+  // {
+  //   name: 'inRegistrationPeriod',
+  //   cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
+  //   task: inRegisterationPeriod,
+  // },
+  // {
+  //   name: 'lastDayOfRegistrationPeriod',
+  //   cronPattern: '0 20 * * 5', // At 8:00 PM on Friday
+  //   task: lastDayOfRegisterationPeriod,
+  // },
+  // {
+  //   name: 'day1EndOfTournament',
+  //   cronPattern: '0 22 * * 6', // At 10:00 PM on Saturday
+  //   task: day1EndOfTournament,
+  // },
+  // {
+  //   name: 'day2OfTournament',
+  //   cronPattern: '0 11 * * 0', // At 11:00 AM on Sunday
+  //   task: day2OfTournament,
+  // },
 ]
 
 // Sort schedules by time
@@ -194,16 +200,25 @@ schedules.forEach(schedule => {
   if (!schedule.time) {
     return
   }
-  const timeUTC = schedule.time.clone().tz('UTC')
-  const timeLocal = timeUTC.clone().local()
-  const dayOfWeek = schedule.name.includes('Tournament')
-    ? schedule.name.includes('Registration')
-      ? 1 // Monday for registration
-      : schedule.name.includes('end')
-      ? 0
-      : 6 // Sunday for end, Saturday for start
-    : '*'
-  schedule.cronPattern = `${timeLocal.minute()} ${timeLocal.hour()} * * ${dayOfWeek}`
+  const timeKolkata = schedule.time.clone()
+
+  let dayOfWeek = '*'
+  if (schedule.name.includes('Tournament')) {
+    for (const [event, day] of Object.entries(tournamentDays)) {
+      if (schedule.name.includes(event)) {
+        dayOfWeek = day
+        // Set the day of the week for the schedule in Kolkata time
+        timeKolkata.day(day)
+        break
+      }
+    }
+  }
+
+  // Generate cron pattern using Kolkata time
+  schedule.cronPattern = `${timeKolkata.minute()} ${timeKolkata.hour()} * * ${dayOfWeek}`
+
+  // Add Kolkata day to the schedule for reference
+  schedule.kolkataDay = timeKolkata.day()
 })
 
 module.exports = schedules

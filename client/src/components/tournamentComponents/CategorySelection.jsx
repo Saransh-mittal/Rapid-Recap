@@ -54,7 +54,8 @@ const CategorySelection = ({
 
   const [showQuizSummary, setShowQuizSummary] = useState(false)
   const [selectedCategories, setSelectedCategories] = useState([])
-  const [userSelectedCategories, setUserSelectedCategories] = useState([])
+  const [quickPickedCategories, setQuickPickedCategories] = useState([])
+  const [quickPickActive, setQuickPickActive] = useState(false)
   const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { completedCategories: completedQuizzes } = useSelector(
@@ -69,47 +70,54 @@ const CategorySelection = ({
         return
       }
 
-      if (isRegistration) {
-        if (userSelectedCategories.includes(category)) {
-          const newUserSelected = userSelectedCategories.filter(
-            c => c !== category,
-          )
-          setUserSelectedCategories(newUserSelected)
-          setSelectedCategories(prevSelected =>
-            prevSelected.filter(c => c !== category),
-          )
-        } else if (selectedCategories.length < 5) {
-          setUserSelectedCategories([...userSelectedCategories, category])
-          setSelectedCategories(prevSelected => [...prevSelected, category])
+      setSelectedCategories(prevSelected => {
+        if (prevSelected.includes(category)) {
+          // Allow deselection
+          return prevSelected.filter(c => c !== category)
+        } else if (isRegistration && prevSelected.length < 5) {
+          // Allow selection up to 5 categories for registration
+          return [...prevSelected, category]
+        } else if (!isRegistration) {
+          // For non-registration, only allow one selection
+          return [category]
         }
-      } else {
-        if (selectedCategories.includes(category)) {
-          setSelectedCategories([])
-        } else {
-          setSelectedCategories([category])
-        }
-      }
+        return prevSelected
+      })
+      // Remove the category from quickPickedCategories if it was there
+      setQuickPickedCategories(prev => prev.filter(c => c !== category))
     },
-    [
-      completedQuizzes,
-      isRegistration,
-      selectedCategories,
-      userSelectedCategories,
-    ],
+    [completedQuizzes, isRegistration],
   )
 
   const handleRandomPick = useCallback(() => {
-    const remainingCount = 5 - userSelectedCategories.length
+    const remainingCount = 5 - selectedCategories.length
     if (remainingCount <= 0) return
 
     const availableCategories = categoriesList.filter(
-      category => !userSelectedCategories.includes(category),
+      category =>
+        !selectedCategories.includes(category) &&
+        !completedQuizzes.includes(category),
     )
     const shuffled = availableCategories.sort(() => 0.5 - Math.random())
     const newSelections = shuffled.slice(0, remainingCount)
 
-    setSelectedCategories([...userSelectedCategories, ...newSelections])
-  }, [userSelectedCategories])
+    setSelectedCategories(prev => [...prev, ...newSelections])
+    setQuickPickedCategories(prev => [...prev, ...newSelections])
+    setQuickPickActive(true)
+  }, [selectedCategories, completedQuizzes])
+
+  const handleQuickPick = useCallback(() => {
+    if (quickPickActive) {
+      // Remove only the categories selected by quick pick
+      setSelectedCategories(prev =>
+        prev.filter(category => !quickPickedCategories.includes(category)),
+      )
+      setQuickPickedCategories([])
+      setQuickPickActive(false)
+    } else {
+      handleRandomPick()
+    }
+  }, [quickPickActive, quickPickedCategories, handleRandomPick])
 
   const handleSubmit = useCallback(() => {
     if (isRegistration) {
@@ -124,7 +132,7 @@ const CategorySelection = ({
         })
         return
       }
-      onRegister([...selectedCategories, 'current affairs'])
+      onRegister([...selectedCategories])
     } else {
       onOpen()
     }
@@ -156,26 +164,37 @@ const CategorySelection = ({
             {isRegistration && (
               <Suspense fallback={<Button isLoading>{t('loading')}</Button>}>
                 <Button
-                  onClick={handleRandomPick}
+                  onClick={handleQuickPick}
                   variant="outline"
                   size="md"
                   fontWeight="medium"
-                  leftIcon={<Dice size={'16px'} color={'#ED64A6'} />}
-                  color="pink.300"
-                  borderColor="pink.300"
+                  leftIcon={
+                    <Dice
+                      size={'16px'}
+                      color={quickPickActive ? '#68D391' : '#ED64A6'}
+                    />
+                  }
+                  color={quickPickActive ? 'green.300' : 'pink.300'}
+                  borderColor={quickPickActive ? 'green.300' : 'pink.300'}
                   _hover={{
-                    bg: 'rgba(237, 100, 166, 0.1)',
-                    borderColor: 'pink.400',
-                    color: 'pink.400',
-                    boxShadow: '0px 0px 8px rgba(237, 100, 166, 0.4)',
+                    bg: quickPickActive
+                      ? 'rgba(104, 211, 145, 0.1)'
+                      : 'rgba(237, 100, 166, 0.1)',
+                    borderColor: quickPickActive ? 'green.400' : 'pink.400',
+                    color: quickPickActive ? 'green.400' : 'pink.400',
+                    boxShadow: quickPickActive
+                      ? '0px 0px 8px rgba(104, 211, 145, 0.4)'
+                      : '0px 0px 8px rgba(237, 100, 166, 0.4)',
                   }}
                   _active={{
-                    bg: 'rgba(237, 100, 166, 0.2)',
+                    bg: quickPickActive
+                      ? 'rgba(104, 211, 145, 0.2)'
+                      : 'rgba(237, 100, 166, 0.2)',
                     transform: 'scale(0.95)',
                   }}
                   transition="all 0.2s"
                 >
-                  {t('quickPick')}
+                  {quickPickActive ? t('clearQuickPick') : t('quickPick')}
                 </Button>
               </Suspense>
             )}
@@ -240,13 +259,15 @@ const CategorySelection = ({
           transition="all 0.2s"
           isLoading={registerLoading}
           isDisabled={
-            !isRegistration &&
-            (selectedCategories.length !== 1 ||
-              completedQuizzes.includes(selectedCategories[0]))
+            !isRegistration
+              ? selectedCategories.length !== 1 ||
+                completedQuizzes.includes(selectedCategories[0])
+              : selectedCategories.length !== 5
           }
         >
-          {t('startQuiz')}
+          {isRegistration ? `Register` : t('startQuiz')}
           {selectedCategories[0] &&
+          !isRegistration &&
           !completedQuizzes.includes(selectedCategories[0])
             ? ` : ${selectedCategories[0]}`
             : ''}

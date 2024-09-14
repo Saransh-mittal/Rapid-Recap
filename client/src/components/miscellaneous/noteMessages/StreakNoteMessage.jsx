@@ -88,6 +88,8 @@ const StreakNoteMessage = ({
           <Text fontSize="md" fontWeight="medium" color="gray.300">
             {streakStatus === 'broken'
               ? t('StreakNoteMessage.broken', { streakCount })
+              : streakStatus === 'revival'
+              ? t(`StreakNoteMessage.reviveMsg`, { streakCount })
               : t('StreakNoteMessage.current', { streakCount })}
           </Text>
           {streakStatus === 'revival' && (

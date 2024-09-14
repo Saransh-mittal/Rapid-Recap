@@ -11,6 +11,7 @@ const {
   TournamentRegistration,
 } = require('../model/tournamentRegistrationSchema')
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
+const Tournament = require('../model/tournamentSchema')
 const genQuiz = async ({ fullQuiz, title }) => {
   const selectedQuestions = new Set() // Using a Set to ensure uniqueness
 
@@ -622,6 +623,7 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
     user: userId,
     tournament: tournamentId,
   })
+  const tournament = await Tournament.findById(tournamentId)
   if (!registration) {
     throw new Error('User is not registered for this tournament')
   }
@@ -641,7 +643,10 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
     {
       $match: {
         category: category,
-        createdAt: { $gte: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) },
+        createdAt: {
+          $gte: tournament.registrationStartDate,
+          $lte: tournament.registrationEndDate,
+        },
       },
     },
     { $sample: { size: 5 } },
