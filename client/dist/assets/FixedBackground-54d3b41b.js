@@ -1,0 +1,1 @@
+import{t as o}from"./index-b3b25442.js";import{c as t}from"./hero-bg-398f8039.js";const a=()=>o.jsx("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,backgroundImage:`url(${t})`,backgroundPosition:"center",backgroundRepeat:"no-repeat",backgroundSize:"cover",zIndex:-1}});export{a as default};
