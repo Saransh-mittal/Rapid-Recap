@@ -11,8 +11,11 @@ import {
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
-import EpicQuestGuide from '../components/tournamentComponents/EpicQuestGuide'
 import CrownSVG from '../assets/svg/CrownSVG'
+
+const EpicQuestGuide = React.lazy(() =>
+  import('../components/tournamentComponents/EpicQuestGuide'),
+)
 
 const MotionBox = motion(Box)
 
