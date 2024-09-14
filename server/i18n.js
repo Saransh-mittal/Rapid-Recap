@@ -12,6 +12,7 @@ const namespaces = {
   ],
   utils: ['activity.utils', 'dailyUserIQCalc.utils', 'mail.utils'],
   data: ['CircleAndSocietyData'],
+  scheduler: ['tournamentManagement'],
 }
 
 i18n
@@ -41,6 +42,11 @@ i18n
             return path.join(
               __dirname,
               `./locales/${lng}/data/${namespace}.json`,
+            )
+          case 'scheduler':
+            return path.join(
+              __dirname,
+              `./locales/${lng}/scheduler/${namespace}.json`,
             )
           default:
             return path.join(__dirname, `./locales/${lng}/${namespace}.json`) // fallback
