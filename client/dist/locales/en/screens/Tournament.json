@@ -13,7 +13,8 @@
     "notRegistered": "You are not registered for this tournament. Registration is closed, but you can still view the leaderboard."
   },
   "registrationSuccess": {
-    "title": "XP Awarded For Tournament Registration"
+    "title": "Registration Successful",
+    "description": "You have successfully registered for the tournament!"
   },
   "errorMessages": {
     "fetchData": "Failed to fetch tournament data.",

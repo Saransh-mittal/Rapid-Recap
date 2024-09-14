@@ -11,6 +11,10 @@ const authorizedInGameNames = [
   'mmadhavpareek',
   'kavita',
   'Nirmal_01',
+  'Rustybhai',
+  'Anushka',
+  'Godlday',
+  'aryansh812',
   // Add more authorized inGameNames as needed
 ]
 

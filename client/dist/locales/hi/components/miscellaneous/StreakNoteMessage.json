@@ -1,6 +1,7 @@
 {
   "StreakNoteMessage": {
     "broken": "आपकी {{streakCount}}-दिन की स्ट्रीक समाप्त हो गई है",
+    "reviveMsg": "{{streakCount}} दिनों की अपनी टूटी हुई स्ट्रीक को पुनर्जीवित करें",
     "current": "वर्तमान स्ट्रीक: {{streakCount}} दिन",
     "timeRemaining": "अपनी स्ट्रीक को पुनर्जीवित करने का समय शेष:",
     "toRevive": "पुनर्जीवित करने के लिए",

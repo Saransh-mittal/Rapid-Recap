@@ -20,7 +20,7 @@ const {
   endTournament,
 } = require('./tasks/tournamentManagement')
 
-const currentDate = moment().format('YYYY-MM-DD')
+const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
 
 const createSchedule = (name, time, task) => ({
   name,
@@ -28,6 +28,12 @@ const createSchedule = (name, time, task) => ({
   task,
 })
 
+const tournamentDays = {
+  startRegistration: 6, // Saturday
+  endRegistration: 1, // Monday
+  startTournament: 2, // Tuesday
+  endTournament: 3, // Wednesday
+}
 let schedules = [
   createSchedule('newSeasonReset', '00:00', resetNewSeasonModal),
   createSchedule('userIQScore', '00:01', calculateUserIQScores),
@@ -160,8 +166,8 @@ let schedules = [
     sendGuestAccountExpiryNotifs,
   ),
   // New tournament management schedules
-  createSchedule('startTournamentRegistration', '02:00', startRegistration),
-  createSchedule('endTournamentRegistration', '23:00', endRegistration),
+  createSchedule('startRegistrationTournament', '02:00', startRegistration),
+  createSchedule('endRegistrationTournament', '23:00', endRegistration),
   createSchedule('startTournament', '00:00', startTournament),
   createSchedule('endTournament', '23:59', endTournament),
   // {
@@ -194,22 +200,25 @@ schedules.forEach(schedule => {
   if (!schedule.time) {
     return
   }
-  const timeUTC = schedule.time.clone().tz('UTC')
-  const timeLocal = timeUTC.clone().local()
-  const dayOfWeek = schedule.name.includes('Tournament')
-    ? schedule.name.includes('Registration')
-      ? schedule.name.includes('start')
-        ? 6
-        : schedule.name.includes('end')
-        ? 1
-        : '*'
-      : schedule.name.includes('start')
-      ? 2
-      : schedule.name.includes('end')
-      ? 3
-      : '*'
-    : '*'
-  schedule.cronPattern = `${timeLocal.minute()} ${timeLocal.hour()} * * ${dayOfWeek}`
+  const timeKolkata = schedule.time.clone()
+
+  let dayOfWeek = '*'
+  if (schedule.name.includes('Tournament')) {
+    for (const [event, day] of Object.entries(tournamentDays)) {
+      if (schedule.name.includes(event)) {
+        dayOfWeek = day
+        // Set the day of the week for the schedule in Kolkata time
+        timeKolkata.day(day)
+        break
+      }
+    }
+  }
+
+  // Generate cron pattern using Kolkata time
+  schedule.cronPattern = `${timeKolkata.minute()} ${timeKolkata.hour()} * * ${dayOfWeek}`
+
+  // Add Kolkata day to the schedule for reference
+  schedule.kolkataDay = timeKolkata.day()
 })
 
 module.exports = schedules
