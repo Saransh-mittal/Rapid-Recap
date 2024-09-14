@@ -1,1 +1,0 @@
-import{t}from"./index-b3b25442.js";const o="/images/tourBGDark.jpeg",r=()=>t.jsx("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,backgroundImage:`url(${o})`,backgroundPosition:"center",backgroundRepeat:"no-repeat",backgroundSize:"cover",zIndex:-1}});export{r as default};

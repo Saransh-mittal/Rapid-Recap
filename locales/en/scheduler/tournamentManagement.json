@@ -1,0 +1,53 @@
+{
+  "tournament_registration_open": {
+    "title": "Tournament Registration Open!",
+    "body_guest": "Registration for the tournament has started. Secure your progress now by registering and enter the tournament!",
+    "body_user": "Registration for the tournament has started. Don't miss your chance to join!"
+  },
+  "reminder_to_register": {
+    "title": "Reminder to Register!",
+    "body_guest": "You haven't registered for the tournament yet. Secure your progress now and enter the tournament! {{participantsCount}} users have already registered.",
+    "body_user": "You haven't registered for the tournament yet. Register now! {{participantsCount}} users have already registered."
+  },
+  "last_day_to_register": {
+    "title": "Last Day to Register!",
+    "body_guest": "Today is the last day to register for the tournament. Secure your progress now and enter the tournament! {{participantsCount}} users have already registered.",
+    "body_user": "Today is the last day to register for the tournament. Register now! {{participantsCount}} users have already registered."
+  },
+  "all_the_best": {
+    "title": "All the Best for the Tournament!",
+    "body": "Get ready! The tournament is about to begin. Prepare your strategies now. There are {{participantsCount}} participants competing."
+  },
+  "see_you_next_time_guest": {
+    "title": "🔒 Don’t Miss Out Again!",
+    "body": "The tournament registration has ended, and {{participantsCount}} users are already competing! You missed this one, but don’t worry—secure your progress by creating an account and be ready to join the next tournament!"
+  },
+  "see_you_next_time_user": {
+    "title": "⚡ You Missed the Tournament!",
+    "body": "The tournament registration has ended, and {{participantsCount}} users are already competing. Don’t worry—you can catch the next one! Stay tuned for more exciting events!"
+  },
+  "tournament_started": {
+    "title": "🏆 The Tournament Has Begun!",
+    "body": "Get ready for an exciting challenge! Wishing you the best of luck! 💪"
+  },
+  "day_1_completed": {
+    "title": "🏆 Day 1 of the Tournament Completed!",
+    "body": "Day 1 is over! Check your rank on the leaderboard and see how you performed. Keep pushing! 💪"
+  },
+  "day_2": {
+    "title": "🔥 Day 2 of the Tournament!",
+    "body": "The tournament is halfway there! Keep the momentum going and show them what you’ve got! 💥"
+  },
+  "tournament_completed": {
+    "title": "🎉 Tournament Completed!",
+    "body": "The tournament has come to an end. Thank you for your amazing participation! We hope you had a great time!"
+  },
+  "next_time_guest": {
+    "title": "🔒 Secure Your Spot for the Next Tournament!",
+    "body": "The tournament has ended, but you can still be part of the action next time! Create an account to save your progress and get ready for future challenges!"
+  },
+  "next_time_user": {
+    "title": "Don’t Miss Out Next Time!",
+    "body": "The tournament has ended, but there's always another chance! Stay tuned and register early for the next event!"
+  }
+}
