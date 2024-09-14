@@ -1,6 +1,7 @@
 {
   "StreakNoteMessage": {
     "broken": "Your {{streakCount}}-day streak has ended",
+    "reviveMsg": "Revive your broken streak of {{streakCount}} days",
     "current": "Current streak: {{streakCount}} days",
     "timeRemaining": "Time remaining to revive your streak:",
     "toRevive": "to revive",

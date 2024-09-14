@@ -8,9 +8,9 @@ const {
 
 const startRegistration = async () => {
   const startDate = moment().tz('Asia/Kolkata').startOf('day')
-  const endDate = moment(startDate).add(6, 'days').endOf('day')
+  const endDate = moment(startDate).add(4, 'days').endOf('day')
   const registrationEndDate = moment(startDate)
-    .add(4, 'days')
+    .add(2, 'days')
     .set({ hour: 23, minute: 0, second: 0 })
 
   // registration start date will be 2 hrs + of start date
@@ -25,7 +25,7 @@ const startRegistration = async () => {
     : 1
 
   const tournamentStartDate = moment(startDate)
-    .add(5, 'days')
+    .add(3, 'days')
     .set({ hour: 0, minute: 0, second: 0 })
 
   await Tournament.create({

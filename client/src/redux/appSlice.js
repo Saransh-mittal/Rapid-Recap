@@ -73,6 +73,9 @@ export const appSlice = createSlice({
   name: 'app',
   initialState,
   reducers: {
+    setStreakLoading: (state, action) => {
+      state.streakLoading = action.payload
+    },
     updateUnreadFriendRequests: (state, action) => {
       state.unreadFriendRequests = action.payload
     },
@@ -263,6 +266,7 @@ export const {
   resetAllState,
   setIsRegisterOpen,
   setIsSigninOpen,
+  setStreakLoading,
   setShowNote,
   setExportData,
   addNoteMessage,

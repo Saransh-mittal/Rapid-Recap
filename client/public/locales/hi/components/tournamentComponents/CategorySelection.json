@@ -9,5 +9,6 @@
   "invalidSelectionDescription": "कृपया ठीक 5 श्रेणियाँ चुनें।",
   "startQuiz": "क्विज़ शुरू करें",
   "loadingModal": "मोडल लोड हो रहा है...",
-  "loadingQuizReport": "क्विज़ रिपोर्ट लोड हो रही है..."
+  "loadingQuizReport": "क्विज़ रिपोर्ट लोड हो रही है...",
+  "clearQuickPick": "जल्दी चुनाई हुई श्रेणियाँ हटाएं"
 }

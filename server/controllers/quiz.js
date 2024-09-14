@@ -129,7 +129,7 @@ const saveAttempt = async (req, res) => {
         qBoost.article = article._id
         await qBoost.save({ session })
         if (user.revivalPeriodEnd) {
-          user.streak = user.streakBeforeBreak
+          user.streak = user.streakBeforeBreak + 1
           user.streakBeforeBreak = 0
           user.revivalPeriodEnd = null
           await user.save({ session })

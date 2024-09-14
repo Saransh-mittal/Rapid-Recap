@@ -21,6 +21,10 @@ import i18n from 'i18next'
 import { blackListedImgUrls } from '../assets/blackListedImgUrls'
 import rrImage from '/images/rrlogo_HD.webp'
 import { setArticleData, setTotalUsersGivenQuiz } from '../redux/articleSlice'
+import {
+  setIsQuinBoostAvailable,
+  setQuizLeftToGetQuizBoost,
+} from '../redux/quizSlice'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
 
@@ -43,6 +47,9 @@ const Article = () => {
   const { isBoosted } = useSelector(state => state.app)
   const { articleData, totalUsersGivenQuiz } = useSelector(
     state => state.articles,
+  )
+  const { quizLeftToGetQuizBoost, isQuinBoostAvailable } = useSelector(
+    state => state.quiz,
   )
   const dispatch = useDispatch()
   const { id } = useParams()
@@ -87,8 +94,7 @@ const Article = () => {
   const [selectedLanguage, setSelectedLanguage] = useState(
     i18n.language === 'en' ? 'english' : 'hindi',
   )
-  const [isQuinBoostAvailable, setIsQuinBoostAvailable] = useState(false)
-  const [quizLeftToGetQuizBoost, setQuizLeftToGetQuizBoost] = useState(5)
+
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
   const [isLargerThan821] = useMediaQuery('(min-width: 821px)')
   const [bookmark, setBookmark] = useState(false)
@@ -282,7 +288,11 @@ const Article = () => {
 
   useEffect(() => {
     document.title = 'Article page'
-    quinBoostChecker({ setIsQuinBoostAvailable, setQuizLeftToGetQuizBoost })
+    quinBoostChecker({
+      setIsQuinBoostAvailable,
+      setQuizLeftToGetQuizBoost,
+      dispatch,
+    })
     fetchArticle()
 
     quizFetchTimer.current = setTimeout(() => {

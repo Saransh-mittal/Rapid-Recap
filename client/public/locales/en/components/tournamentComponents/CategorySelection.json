@@ -2,6 +2,7 @@
   "selectFiveCategories": "Select 5 Categories",
   "selectCategoryStartQuiz": "Select a Category to Start Quiz",
   "quickPick": "Quick Pick",
+  "clearQuickPick": "Clear Quick Pick",
   "loading": "Loading...",
   "currentAffairsNote": "Current Affairs is a mandatory category.",
   "currentAffairs": "Current Affairs",

@@ -13,7 +13,7 @@ import {
   quinBoostChecker,
 } from '../utils/quiz.utils'
 import { useTranslation } from 'react-i18next'
-import { addNoteMessage } from '../redux/appSlice'
+import { addNoteMessage, setStreakLoading } from '../redux/appSlice'
 import { setUser } from '../redux/authSlice'
 import {
   setIsQuinBoostAvailable,
@@ -21,6 +21,7 @@ import {
   setIsOpen,
 } from '../redux/quizSlice'
 import { setTotalUsersGivenQuiz } from '../redux/articleSlice'
+import i18n from 'i18next'
 
 // Lazy load components
 const ConfirmationModal = lazy(() =>
@@ -59,13 +60,11 @@ const Quiz = () => {
   const { totalUsersGivenQuiz, articleData: article } = useSelector(
     state => state.articles,
   )
-  const { isOpen, language, isQuinBoostAvailable } = useSelector(
-    state => state.quiz,
-  )
+  const { isOpen, isQuinBoostAvailable } = useSelector(state => state.quiz)
   const articleId = article._id
   const { quizData, load, quizId, setLoad } = useFetchQuiz(
     articleId,
-    language,
+    i18n.language,
     onClose,
   )
 
@@ -167,10 +166,12 @@ const Quiz = () => {
 
   const handleClose = async () => {
     try {
+      dispatchRedux(setStreakLoading(true))
       dispatchRedux(setTotalUsersGivenQuiz(totalUsersGivenQuiz + 1))
       quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
+        dispatch: dispatchRedux,
       })
 
       if (
@@ -238,24 +239,6 @@ const Quiz = () => {
               streakCount: user.streakBeforeBreak + 1,
             }),
           )
-        user.revivalPeriodEnd &&
-          user.todaysQuizCnt + 1 < 6 &&
-          setTimeout(
-            () =>
-              dispatchRedux(
-                addNoteMessage({
-                  messageType: 'streak',
-                  streakStatus: 'revival',
-                  streakCount: user?.streakBeforeBreak,
-                  remainingTime:
-                    user.revivalPeriodEnd.getTime() - new Date().getTime(),
-                  remainingQuizzes: 6 - user.todaysQuizCnt + 1,
-                  title: t('Revive your streak!'),
-                  width: '300px',
-                }),
-              ),
-            14000,
-          )
       }
       setTimeout(() => dailyStreakCheckerAndUpdater(dispatchRedux), 14000)
     } catch (error) {
@@ -268,6 +251,7 @@ const Quiz = () => {
       quinBoostChecker({
         setIsQuinBoostAvailable,
         setQuizLeftToGetQuizBoost,
+        dispatch: dispatchRedux,
       })
 
       handleSubmitQuiz({
@@ -370,10 +354,10 @@ const Quiz = () => {
 
   const stars = () => {
     let count = 40
-    let scene = document.querySelector('.scene')
+    let scene = document?.querySelector('.scene')
     let i = 0
     while (i < count) {
-      let star = document.createElement('i')
+      let star = document?.createElement('i')
       let x = Math.floor(Math.random() * window.innerWidth)
       let duration = Math.random() * 1
       let h = Math.random() * 100
@@ -381,7 +365,7 @@ const Quiz = () => {
       star.style.width = '1px'
       star.style.height = `${h}px`
       star.style.animationDuration = `${duration}s`
-      scene.appendChild(star)
+      scene?.appendChild(star)
       i++
     }
   }
@@ -398,7 +382,7 @@ const Quiz = () => {
           <Suspense fallback={null}>
             <InstructionModal
               isQuinBoostAvailable={isQuinBoostAvailable}
-              language={language}
+              language={i18n.language}
             />
           </Suspense>
         </Box>
@@ -498,7 +482,7 @@ const Quiz = () => {
     showGetSetGo,
     handleAnimationComplete,
     isQuinBoostAvailable,
-    language,
+    i18n.language,
     showQuizSummary,
     isOpen,
     articleId,

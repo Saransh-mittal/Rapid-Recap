@@ -152,7 +152,7 @@ const Tournament = () => {
           addNoteMessage({
             messageType: 'xpAward',
             xpAwarded: 5,
-            title: t('registerSuccess.title'),
+            title: t('registrationSuccess.title'),
             actions: [{ actionType: 'VIEW_EXPERIENCE' }],
             width: '250px',
             xpSource: 'tournament-registration',
