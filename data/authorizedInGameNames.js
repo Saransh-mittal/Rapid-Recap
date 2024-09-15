@@ -19,6 +19,7 @@ const authorizedInGameNames = [
   'Smash_dev_ultra',
   'Shilpa0209',
   'Rekha23',
+  'Promqueen',
   // Add more authorized inGameNames as needed
 ]
 
