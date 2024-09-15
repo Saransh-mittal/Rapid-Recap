@@ -162,10 +162,22 @@ const Tournament = () => {
         dispatch(setUser({ ...user, xp: user.xp + 5 }))
         setRegisterLoading(false)
       } catch (error) {
-        console.log(error)
+        console.error(error)
+        setRegisterLoading(false)
+
+        let errorMessage = t('errorMessages.registerError')
+
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.message
+        ) {
+          errorMessage = error.response.data.message
+        }
+
         toast({
           title: t('errorOccurred'),
-          description: t('errorMessages.registerError'),
+          description: errorMessage,
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -173,7 +185,16 @@ const Tournament = () => {
         })
       }
     },
-    [dispatch, toast, tournamentData, user],
+    [
+      dispatch,
+      toast,
+      tournamentData,
+      user,
+      t,
+      setRegisterLoading,
+      setUserRegistrationDetails,
+      setTournamentData,
+    ],
   )
 
   const handleCategorySelect = useCallback(

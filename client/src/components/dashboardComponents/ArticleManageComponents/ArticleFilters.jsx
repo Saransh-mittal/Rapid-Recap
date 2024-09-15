@@ -3,7 +3,7 @@
 import React, { useCallback, useMemo } from 'react'
 import { Input, Select, IconButton, Flex, VStack } from '@chakra-ui/react'
 import { SearchIcon } from '@chakra-ui/icons'
-import { categories } from '../../../assets/Categories'
+import { getCategories, getCategoryKey } from '../../../assets/Categories'
 
 const ArticleFilters = React.memo(
   ({ searchTerm, setSearchTerm, filters, setFilters, fetchArticles }) => {
@@ -25,22 +25,24 @@ const ArticleFilters = React.memo(
 
     const handleFilterChange = useCallback(
       field => e => {
-        setFilters(prevFilters => ({ ...prevFilters, [field]: e.target.value }))
+        const value =
+          field === 'category' ? getCategoryKey(e.target.value) : e.target.value
+        setFilters(prevFilters => ({ ...prevFilters, [field]: value }))
       },
       [setFilters],
     )
 
     const memoizedCategoryOptions = useMemo(
       () =>
-        categories.map(
+        getCategories().map(
           category =>
-            category !== 'all' && (
+            category.key !== 'all' && (
               <option
-                key={category}
-                value={category}
+                key={category.key}
+                value={category.key}
                 style={{ background: '#1a1527' }}
               >
-                {category}
+                {category.label}
               </option>
             ),
         ),
