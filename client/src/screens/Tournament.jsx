@@ -6,6 +6,7 @@ import React, {
   Suspense,
   lazy,
 } from 'react'
+import { Helmet } from 'react-helmet'
 import {
   Box,
   Container,
@@ -244,7 +245,7 @@ const Tournament = () => {
             bg="rgba(237, 100, 166, 0.1)"
             _selected={{ bg: 'pink.500', color: 'white' }}
             borderRadius="full"
-            boxShadow="0 4px 6px rgba(0, 0, 0,            0.1)"
+            boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
             fontSize="lg"
             fontWeight="bold"
             py={3}
@@ -383,71 +384,132 @@ const Tournament = () => {
     isScreenSmallerThan400px,
   ])
 
+  // SEO-related data
+  const pageTitle = tournamentData
+    ? `Tournament #${tournamentData.tournamentNumber} | Rapid Recap`
+    : 'Tournaments | Rapid Recap'
+  const pageDescription = tournamentData
+    ? `Join Tournament #${tournamentData.tournamentNumber}. Compete with players worldwide, test your skills, and win exciting prizes!`
+    : 'Participate in our regular tournaments, compete with players worldwide, and win exciting prizes!'
+  const canonicalUrl = `https://www.rapidrecap.co.in/tournament`
+
+  // Structured data for SEO
+  const structuredData = tournamentData
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'QuizEvent',
+        name: `Tournament #${tournamentData.tournamentNumber}`,
+        description: pageDescription,
+        startDate: tournamentData.startDate,
+        endDate: tournamentData.endDate,
+        url: canonicalUrl,
+        location: {
+          '@type': 'VirtualLocation',
+          name: 'Rapid Recap',
+        },
+        organizer: {
+          '@type': 'Organization',
+          name: 'Rapid Recap',
+          url: 'https://www.rapidrecap.co.in/',
+        },
+        competitor: {
+          '@type': 'Person',
+          name: 'Tournament Participants',
+        },
+      }
+    : null
+
   return (
-    <Box color="white" mt={{ base: 4, md: 8 }} minHeight="100vh">
-      {isFetching && <FullScreenLoadingSpinner />}
-      <Container maxW="container.xl" py={16} px={0}>
-        <Suspense fallback={<Skeleton height="40px" />}>
-          <TournamentHeader />
-        </Suspense>
-        <Flex direction={{ base: 'column', lg: 'row' }} gap={8}>
-          <MotionBox
-            flex={1}
-            rounded="lg"
-            shadow="2xl"
-            py={6}
-            px={2}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            bg="rgba(0, 0, 0, 0.1)"
-            backdropFilter="blur(5px)"
-          >
-            {/* {renderTournamentContent()} */}
-            <TournamentContent
-              isFetching={isFetching}
-              tournamentData={tournamentData}
-              previousTournamentData={previousTournamentData}
-              userRegistrationDetails={userRegistrationDetails}
-              isAuthenticated={isAuthenticated}
-              isScreenSmallerThan400px={isScreenSmallerThan400px}
-              handleRegister={handleRegister}
-              handleCategorySelect={handleCategorySelect}
-              user={user}
-              registerLoading={registerLoading}
-              t={t}
-            />
-            {tournamentData?.status === 'completed' && (
-              <Suspense fallback={<Skeleton height="40px" />}>
-                <LeaderboardSection tournamentData={tournamentData} />
-              </Suspense>
-            )}
-          </MotionBox>
-          <MotionBox
-            flex={1}
-            rounded="lg"
-            shadow="2xl"
-            p={6}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            bg="rgba(0, 0, 0, 0.1)"
-            backdropFilter="blur(5px)"
-            bgGradient="linear(to-br, rgba(26, 32, 44, 0.5), rgba(49, 10, 103, 0.5))"
-          >
-            {tournamentData?.status !== 'ongoing' ? (
-              <Suspense fallback={<Skeleton height="40px" />}>
-                <EpicQuestGuide />
-              </Suspense>
-            ) : (
-              <Suspense fallback={<Skeleton height="40px" />}>
-                <LeaderboardSection tournamentData={tournamentData} />
-              </Suspense>
-            )}
-          </MotionBox>
-        </Flex>
-      </Container>
-    </Box>
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:image"
+          content="https://yourgame.com/tournament-image.jpg"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta
+          name="twitter:image"
+          content="https://yourgame.com/tournament-image.jpg"
+        />
+        {structuredData && (
+          <script type="application/ld+json">
+            {JSON.stringify(structuredData)}
+          </script>
+        )}
+      </Helmet>
+      <Box color="white" mt={{ base: 4, md: 8 }} minHeight="100vh">
+        {isFetching && <FullScreenLoadingSpinner />}
+        <Container maxW="container.xl" py={16} px={0}>
+          <Suspense fallback={<Skeleton height="40px" />}>
+            <TournamentHeader />
+          </Suspense>
+          <Flex direction={{ base: 'column', lg: 'row' }} gap={8}>
+            <MotionBox
+              flex={1}
+              rounded="lg"
+              shadow="2xl"
+              py={6}
+              px={2}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              bg="rgba(0, 0, 0, 0.1)"
+              backdropFilter="blur(5px)"
+            >
+              <TournamentContent
+                isFetching={isFetching}
+                tournamentData={tournamentData}
+                previousTournamentData={previousTournamentData}
+                userRegistrationDetails={userRegistrationDetails}
+                isAuthenticated={isAuthenticated}
+                isScreenSmallerThan400px={isScreenSmallerThan400px}
+                handleRegister={handleRegister}
+                handleCategorySelect={handleCategorySelect}
+                user={user}
+                registerLoading={registerLoading}
+                t={t}
+              />
+              {tournamentData?.status === 'completed' && (
+                <Suspense fallback={<Skeleton height="40px" />}>
+                  <LeaderboardSection tournamentData={tournamentData} />
+                </Suspense>
+              )}
+            </MotionBox>
+            <MotionBox
+              flex={1}
+              rounded="lg"
+              shadow="2xl"
+              p={6}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              bg="rgba(0, 0, 0, 0.1)"
+              backdropFilter="blur(5px)"
+              bgGradient="linear(to-br, rgba(26, 32, 44, 0.5), rgba(49, 10, 103, 0.5))"
+            >
+              {tournamentData?.status !== 'ongoing' ? (
+                <Suspense fallback={<Skeleton height="40px" />}>
+                  <EpicQuestGuide />
+                </Suspense>
+              ) : (
+                <Suspense fallback={<Skeleton height="40px" />}>
+                  <LeaderboardSection tournamentData={tournamentData} />
+                </Suspense>
+              )}
+            </MotionBox>
+          </Flex>
+        </Container>
+      </Box>
+    </>
   )
 }
 
