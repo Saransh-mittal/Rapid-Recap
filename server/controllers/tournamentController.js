@@ -254,26 +254,60 @@ const searchTournamentLeaderboard = asyncHandler(async (req, res) => {
   })
 })
 
-// @desc   Get the previous completed tournament
-// @route  GET /api/tournament/previous
+// @desc   Get the top 5 leaders from the previous tournament
+// @route  GET /api/tournament/previous-leaderboard
 // @access Public
 const getPreviousTournament = asyncHandler(async (req, res) => {
-  const currentDate = new Date()
-
-  const previousTournament = await Tournament.findOne({
-    status: 'completed',
-    endDate: { $lt: currentDate },
-  }).sort({ endDate: -1 })
+  // Find the most recent completed tournament
+  const previousTournament = await Tournament.findOne(
+    { status: 'completed' },
+    {},
+    { sort: { endDate: -1 } },
+  )
 
   if (!previousTournament) {
-    res.json(null)
-    return
+    return res.json(null)
   }
-  const result = {
-    ...previousTournament._doc,
+
+  const topLeaders = await TournamentRegistration.aggregate([
+    { $match: { tournament: previousTournament._id } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    { $unwind: '$userDetails' },
+    {
+      $project: {
+        inGameName: '$userDetails.inGameName',
+        name: '$userDetails.name',
+        totalScore: 1,
+        level: '$userDetails.level',
+        userId: '$userDetails._id',
+      },
+    },
+    { $sort: { totalScore: -1, level: -1 } },
+    { $limit: 5 },
+  ])
+
+  const formattedLeaders = topLeaders.map((leader, index) => ({
+    rank: index + 1,
+    inGameName: leader.inGameName,
+    name: leader.name,
+    score: leader.totalScore,
+    level: leader.level,
+    userId: leader.userId,
+  }))
+
+  res.json({
+    tournamentId: previousTournament._id,
     tournamentNumber: previousTournament.tournamentNumber,
-  }
-  res.json(result)
+    endDate: previousTournament.endDate,
+    topLeaders: formattedLeaders,
+  })
 })
 
 // @desc   Register for a tournament
