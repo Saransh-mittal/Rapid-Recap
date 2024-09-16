@@ -1,1 +1,0 @@
-import{aj as i,as as c,at as l,t as n,al as r,ak as o}from"./index-C_2vXWtG.js";var d=i(function(a,s){const e=c("Badge",a),{className:g,...t}=l(a);return n.jsx(r.span,{ref:s,className:o("chakra-badge",a.className),...t,__css:{display:"inline-block",whiteSpace:"nowrap",verticalAlign:"middle",...e}})});d.displayName="Badge";export{d as B};
