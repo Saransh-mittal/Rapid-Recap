@@ -312,7 +312,8 @@ const processExtractedNews = async (news, category) => {
     2. Do not summarize the content if the mainText is 2500 characters or less.
     4. If Article is incomplete then either complete it to your knowledge or remove it.
     3. If the mainText exceeds 2500 characters, summarize it to more than 800 characters but less than 2500 characters, keeping the most important information.
-    4. Ensure that the returned JSON object includes all original fields.
+    4. Rewrite the  mainText and title to be more engaging
+    5. Ensure that the returned JSON object includes all original fields.
   `
 
   const summarizationInstructions = `

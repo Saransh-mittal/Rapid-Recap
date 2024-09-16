@@ -522,7 +522,8 @@ const fakeQuizAttemptCnt = async () => {
 
     for (let article of articles) {
       let quizAttemptCnt = article.quizAttemptCnt
-      let { min, max } = fakeQuizAttemptMinMax[article.category]
+      let { min, max } =
+        fakeQuizAttemptMinMax[article?.category?.toLocaleLowerCase()]
 
       if (quizAttemptCnt < min) {
         const skew = 1 // Adjust this value to control the skewness

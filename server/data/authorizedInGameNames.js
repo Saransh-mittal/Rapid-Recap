@@ -18,6 +18,8 @@ const authorizedInGameNames = [
   'DYNAMIC_Info_King',
   'Smash_dev_ultra',
   'Shilpa0209',
+  'Rekha23',
+  'Promqueen',
   // Add more authorized inGameNames as needed
 ]
 

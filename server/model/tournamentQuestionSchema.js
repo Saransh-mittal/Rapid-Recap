@@ -1,13 +1,6 @@
 const mongoose = require('mongoose')
 
 const tournamentQuestionSchema = new mongoose.Schema({
-  article: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'ARTICLE',
-    required: function () {
-      return this.category !== 'current affairs'
-    },
-  },
   question: {
     type: String,
     required: true,
