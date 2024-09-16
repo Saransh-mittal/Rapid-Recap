@@ -44,12 +44,7 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
       boxShadow="0 8px 32px rgba(31, 38, 135, 0.37)"
     >
       <VStack spacing={4} align="stretch">
-        <Heading
-          size={{ base: 'md', md: 'lg' }}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
+        <Heading size={'md'} display="flex" alignItems="center">
           <Trophy color="gold" style={{ marginRight: '0.5rem' }} />
           {t('heading')}
         </Heading>

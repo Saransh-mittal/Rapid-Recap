@@ -77,6 +77,7 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     registeredCount: await TournamentRegistration.countDocuments({
       tournament: tournament._id,
     }),
+    status: 'registration',
     isRegistered: !!userRegistration,
     selectedCategories: userRegistration
       ? userRegistration.selectedCategories

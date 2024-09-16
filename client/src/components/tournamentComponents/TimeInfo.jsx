@@ -59,6 +59,20 @@ const TimeInfo = ({ tournamentData }) => {
     }),
     [t],
   )
+  const statusEndTextMap = useMemo(
+    () => ({
+      registration: t('Registration ends'),
+      upcoming: t('endsAt'),
+      ongoing: t('ends'), // Adjust as needed
+      completed: '', // Adjust as needed
+    }),
+    [t],
+  )
+
+  const statusTextEndMap = useMemo(
+    () => statusEndTextMap[tournamentData?.status] || t('ends'),
+    [statusEndTextMap, tournamentData?.status, t],
+  )
 
   const statusText = useMemo(
     () => statusTextMap[tournamentData?.status] || t('startsAt'),
@@ -70,28 +84,30 @@ const TimeInfo = ({ tournamentData }) => {
   return (
     <VStack spacing={4} align="stretch">
       <HStack spacing={4} justify="center">
-        <MotionBox
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <VStack
-            bg="rgba(237, 100, 166, 0.1)"
-            p={4}
-            rounded="lg"
-            shadow="md"
-            borderWidth={1}
-            borderColor="pink.400"
+        {tournamentData?.status !== 'registration' && (
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <Text fontSize="sm" fontWeight="bold" color="pink.400">
-              {statusText}
-            </Text>
-            <Text fontSize={{ base: 'md', md: 'xl' }} fontWeight="bold">
-              {startDate}
-            </Text>
-            <Text fontSize={{ base: 'sm', md: 'md' }}>{startDateTime}</Text>
-          </VStack>
-        </MotionBox>
+            <VStack
+              bg="rgba(237, 100, 166, 0.1)"
+              p={4}
+              rounded="lg"
+              shadow="md"
+              borderWidth={1}
+              borderColor="pink.400"
+            >
+              <Text fontSize="sm" fontWeight="bold" color="pink.400">
+                {statusText}
+              </Text>
+              <Text fontSize={{ base: 'md', md: 'xl' }} fontWeight="bold">
+                {startDate}
+              </Text>
+              <Text fontSize={{ base: 'sm', md: 'md' }}>{startDateTime}</Text>
+            </VStack>
+          </MotionBox>
+        )}
 
         {tournamentData?.status !== 'upcoming' && (
           <MotionBox
@@ -108,7 +124,7 @@ const TimeInfo = ({ tournamentData }) => {
               borderColor="pink.400"
             >
               <Text fontSize="sm" fontWeight="bold" color="pink.400">
-                {t('ends')}
+                {statusTextEndMap}
               </Text>
               <Text fontSize={{ base: 'md', md: 'xl' }} fontWeight="bold">
                 {endDate}
