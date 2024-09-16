@@ -105,7 +105,10 @@ webpush.setVapidDetails(
 
 // const dailyUserIQCalc = require('./utils/dailyUserIQCalc.utils')
 // dailyUserIQCalc()
-
+// const {
+//   generateTournamentQuestions,
+// } = require('./services/tournamentQuestionService')
+// generateTournamentQuestions()
 // const { exportDataToCSV } = require("./services/recommendationService");
 // exportDataToCSV();
 app.use(express.json())

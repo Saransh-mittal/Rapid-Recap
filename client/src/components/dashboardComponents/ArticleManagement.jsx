@@ -66,7 +66,7 @@ const ArticleManagement = ({ isOpen, onOpen, onClose }) => {
     title: '',
     mainText: '',
     imgURL: [],
-    category: 'General',
+    category: 'general',
     avgReadTime: 0,
     url: '',
   })
@@ -162,7 +162,7 @@ const ArticleManagement = ({ isOpen, onOpen, onClose }) => {
         title: '',
         mainText: '',
         imgURL: [],
-        category: 'General',
+        category: 'general',
         avgReadTime: 0,
         url: '',
       })
