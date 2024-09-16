@@ -8,7 +8,12 @@ const User = require('../model/userSchema')
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
 const { logActivity } = require('../utils/activity.utils')
 const { generateCategoryQuiz } = require('../utils/quiz.utils')
-const { commitSession, abortSession, startSession } = require('../db/session')
+const {
+  commitSession,
+  abortSession,
+  startSession,
+  endSession,
+} = require('../db/session')
 const { getUserRegistrationDetails } = require('../utils/tournament.utils')
 const { activityTypes } = require('../data/activityTypes')
 const mongoose = require('mongoose')
@@ -567,164 +572,197 @@ const startQuiz = asyncHandler(async (req, res) => {
 // @access Private
 const submitQuiz = asyncHandler(async (req, res) => {
   const { quizSessionId, userResponses, timeTaken, questionsIds } = req.body
-  const session = await startSession()
 
-  try {
-    const quizSession = await QuizSession.findById(quizSessionId).session(
-      session,
-    )
-    if (!quizSession) {
-      throw new Error('Quiz session not found')
-    }
+  const maxRetries = 3
+  let retryCount = 0
+  let success = false
 
-    if (quizSession.completed) {
-      throw new Error('Quiz already submitted')
-    }
+  while (retryCount < maxRetries && !success) {
+    const session = await startSession()
 
-    if (new Date() > quizSession.endTime) {
-      throw new Error('Quiz time expired')
-    }
-
-    const user = await User.findById(quizSession.user).session(session)
-    const questions = await TournamentQuestion.find({
-      _id: { $in: quizSession.questions },
-    }).session(session)
-
-    // Calculate score and RQM
-    let score = 0
-    let correctCount = 0
-
-    const updatedResponses = userResponses.map((response, index) => {
-      const isCorrect =
-        questions.find(q => q._id.toString() === questionsIds[index])
-          .correctAnswer === response
-      if (isCorrect) correctCount++
-      return {
-        questionId: questionsIds[index],
-        userAnswer: response,
-        isCorrect,
+    try {
+      const quizSession = await QuizSession.findById(quizSessionId).session(
+        session,
+      )
+      if (!quizSession) {
+        throw new Error('Quiz session not found')
       }
-    })
-    score = correctCount
 
-    const quizDifficulty =
-      questions.reduce(
-        (acc, question) => acc + parseFloat(question.difficulty),
-        0,
-      ) / questions.length
-    const apparentTimeTaken =
-      timeTaken <= 10
-        ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
-        : timeTaken
-    const apparentScore =
-      ((score / questions.length) * Math.log(score / questions.length + 1)) /
-      Math.log(1.3)
-    let RQM_score = Math.ceil(
-      ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000,
-    )
+      if (quizSession.completed) {
+        throw new Error('Quiz already submitted')
+      }
 
-    // Update quiz session
-    quizSession.responses = updatedResponses
-    quizSession.score = score
-    quizSession.RQM_score = RQM_score
-    quizSession.timeTaken = timeTaken
-    quizSession.completed = true
-    await quizSession.save({ session })
+      if (new Date() > quizSession.endTime) {
+        throw new Error('Quiz time expired')
+      }
 
-    // Update tournament registration
-    const registration = await TournamentRegistration.findOne({
-      user: quizSession.user,
-      tournament: quizSession.tournament,
-    }).session(session)
-    registration.completedCategories.push(quizSession.category)
-    registration.totalScore += RQM_score
-    await registration.save({ session })
+      const user = await User.findById(quizSession.user).session(session)
+      const questions = await TournamentQuestion.find({
+        _id: { $in: quizSession.questions },
+      }).session(session)
 
-    await user.save({ session })
+      // Calculate score and RQM
+      let score = 0
+      let correctCount = 0
 
-    // Get top 3 leaders for the category
-    const topLeaders = await QuizSession.aggregate([
-      {
-        $match: {
-          tournament: quizSession.tournament,
-          category: quizSession.category,
-          completed: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'Users', // Assuming your User collection is named 'users'
-          localField: 'user',
-          foreignField: '_id',
-          as: 'userDetails',
-        },
-      },
-      { $unwind: '$userDetails' },
-      {
-        $project: {
-          inGameName: {
-            $ifNull: ['$userDetails.inGameName', 'Unknown Player'],
+      const updatedResponses = userResponses.map((response, index) => {
+        const isCorrect =
+          questions.find(q => q._id.toString() === questionsIds[index])
+            .correctAnswer === response
+        if (isCorrect) correctCount++
+        return {
+          questionId: questionsIds[index],
+          userAnswer: response,
+          isCorrect,
+        }
+      })
+      score = correctCount
+
+      const quizDifficulty =
+        questions.reduce(
+          (acc, question) => acc + parseFloat(question.difficulty),
+          0,
+        ) / questions.length
+      const apparentTimeTaken =
+        timeTaken <= 10
+          ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
+          : timeTaken
+      const apparentScore =
+        ((score / questions.length) * Math.log(score / questions.length + 1)) /
+        Math.log(1.3)
+      let RQM_score = Math.ceil(
+        ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000,
+      )
+
+      // Update quiz session
+      quizSession.responses = updatedResponses
+      quizSession.score = score
+      quizSession.RQM_score = RQM_score
+      quizSession.timeTaken = timeTaken
+      quizSession.completed = true
+      await quizSession.save({ session })
+
+      // Update tournament registration
+      const registration = await TournamentRegistration.findOne({
+        user: quizSession.user,
+        tournament: quizSession.tournament,
+      }).session(session)
+      registration.completedCategories.push(quizSession.category)
+      registration.totalScore += RQM_score
+      await registration.save({ session })
+
+      await user.save({ session })
+
+      // Get top 3 leaders for the category
+      const topLeaders = await QuizSession.aggregate([
+        {
+          $match: {
+            tournament: quizSession.tournament,
+            category: quizSession.category,
+            completed: true,
           },
-          score: '$RQM_score',
         },
-      },
-      { $sort: { score: -1 } },
-      { $limit: 3 },
-      {
-        $group: {
-          _id: null,
-          leaders: { $push: '$$ROOT' },
-          scores: { $push: '$score' },
+        {
+          $lookup: {
+            from: 'Users', // Assuming your User collection is named 'users'
+            localField: 'user',
+            foreignField: '_id',
+            as: 'userDetails',
+          },
         },
-      },
-      {
-        $project: {
-          leaders: {
-            $map: {
-              input: '$leaders',
-              as: 'leader',
-              in: {
-                inGameName: '$$leader.inGameName',
-                score: '$$leader.score',
-                rank: {
-                  $add: [{ $indexOfArray: ['$scores', '$$leader.score'] }, 1],
+        { $unwind: '$userDetails' },
+        {
+          $project: {
+            inGameName: {
+              $ifNull: ['$userDetails.inGameName', 'Unknown Player'],
+            },
+            score: '$RQM_score',
+          },
+        },
+        { $sort: { score: -1 } },
+        { $limit: 3 },
+        {
+          $group: {
+            _id: null,
+            leaders: { $push: '$$ROOT' },
+            scores: { $push: '$score' },
+          },
+        },
+        {
+          $project: {
+            leaders: {
+              $map: {
+                input: '$leaders',
+                as: 'leader',
+                in: {
+                  inGameName: '$$leader.inGameName',
+                  score: '$$leader.score',
+                  rank: {
+                    $add: [{ $indexOfArray: ['$scores', '$$leader.score'] }, 1],
+                  },
                 },
               },
             },
           },
         },
-      },
-      { $unwind: '$leaders' },
-      { $replaceRoot: { newRoot: '$leaders' } },
-      { $sort: { rank: 1 } },
-    ]).session(session)
+        { $unwind: '$leaders' },
+        { $replaceRoot: { newRoot: '$leaders' } },
+        { $sort: { rank: 1 } },
+      ]).session(session)
+      success = true
+      await commitSession()
 
-    await commitSession()
+      logActivity({
+        userInGameName: user.inGameName,
+        type: activityTypes.TOURNAMENT_QUIZ.type,
+      })
 
-    logActivity({
-      userInGameName: user.inGameName,
-      type: activityTypes.TOURNAMENT_QUIZ.type,
-    })
+      const quizDifficultyLevel =
+        quizDifficulty < 0.5
+          ? 'easy'
+          : quizDifficulty >= 0.5 && quizDifficulty < 0.7
+          ? 'medium'
+          : 'hard'
+      res.json({
+        message: 'Quiz submitted successfully',
+        score: `${score}/${questions.length}`,
+        RQM_score,
+        quizDifficulty: quizDifficultyLevel,
+        timeTaken,
+        totalTournamentScore: registration.totalScore,
+        topLeaders: topLeaders,
+      })
+    } catch (error) {
+      await abortSession(session)
 
-    const quizDifficultyLevel =
-      quizDifficulty < 0.5
-        ? 'easy'
-        : quizDifficulty >= 0.5 && quizDifficulty < 0.7
-        ? 'medium'
-        : 'hard'
-    res.json({
-      message: 'Quiz submitted successfully',
-      score: `${score}/${questions.length}`,
-      RQM_score,
-      quizDifficulty: quizDifficultyLevel,
-      timeTaken,
-      totalTournamentScore: registration.totalScore,
-      topLeaders: topLeaders,
-    })
-  } catch (error) {
-    await abortSession(session)
-    res.status(400)
-    throw new Error(error.message)
+      if (
+        error.name === 'MongoError' &&
+        (error.code === 112 || error.code === 251)
+      ) {
+        // These error codes typically indicate transient errors
+        retryCount++
+        if (retryCount < maxRetries) {
+          console.log(`Retrying transaction (attempt ${retryCount + 1})...`)
+          await new Promise(resolve =>
+            setTimeout(resolve, 2 ** retryCount * 100),
+          ) // Exponential backoff
+        }
+      } else {
+        console.error('Non-transient error:', error)
+        res
+          .status(400)
+          .json({ error: error.message || 'Error submitting quiz' })
+        break
+      }
+    } finally {
+      await endSession()
+    }
+  }
+
+  if (!success && retryCount === maxRetries) {
+    res
+      .status(500)
+      .json({ error: 'Max retries reached. Unable to submit quiz.' })
   }
 })
 
