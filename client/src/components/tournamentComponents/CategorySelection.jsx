@@ -9,6 +9,7 @@ import {
   Text,
   useToast,
   useDisclosure,
+  Badge,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useSelector } from 'react-redux'
@@ -203,6 +204,28 @@ const CategorySelection = ({
             <Text color="gray.600" fontWeight="bold" mb={2}>
               {t('currentAffairsNote')}
             </Text>
+          )}
+          {isRegistration && (
+            <Badge
+              colorScheme="gray" // Base color for the badge
+              textColor="white" // Default text color for the badge
+              fontWeight="bold"
+              mb={2}
+              fontSize="sm"
+              // bg="transparent" // Dark background color
+              bg={` ${
+                selectedCategories.length === 5 ? 'green.700' : 'gray.700'
+              }`}
+              px={2}
+              py={1}
+              borderRadius={'lg'}
+            >
+              {t('SelectCategoryNote')}{' '}
+              <Box as="span" color="teal.300" fontSize={'xl'}>
+                {' '}
+                {5 - selectedCategories.length}
+              </Box>
+            </Badge>
           )}
           <SimpleGrid columns={{ base: 2, md: 3, xl: 4 }} spacing={4}>
             {categoryOptions.map(category => (

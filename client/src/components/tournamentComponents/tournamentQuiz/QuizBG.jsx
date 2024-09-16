@@ -1,5 +1,5 @@
 import React from 'react'
-import quizBg from '/images/tourBGDark.jpeg' // Adjust the path as necessary
+import quizBg from '/images/tourBGDark.webp' // Adjust the path as necessary
 
 const QuizBG = () => {
   return (

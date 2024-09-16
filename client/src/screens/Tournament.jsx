@@ -163,10 +163,22 @@ const Tournament = () => {
         dispatch(setUser({ ...user, xp: user.xp + 5 }))
         setRegisterLoading(false)
       } catch (error) {
-        console.log(error)
+        console.error(error)
+        setRegisterLoading(false)
+
+        let errorMessage = t('errorMessages.registerError')
+
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.message
+        ) {
+          errorMessage = error.response.data.message
+        }
+
         toast({
           title: t('errorOccurred'),
-          description: t('errorMessages.registerError'),
+          description: errorMessage,
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -174,7 +186,16 @@ const Tournament = () => {
         })
       }
     },
-    [dispatch, toast, tournamentData, user],
+    [
+      dispatch,
+      toast,
+      tournamentData,
+      user,
+      t,
+      setRegisterLoading,
+      setUserRegistrationDetails,
+      setTournamentData,
+    ],
   )
 
   const handleCategorySelect = useCallback(
@@ -429,17 +450,11 @@ const Tournament = () => {
         <meta property="og:description" content={pageDescription} />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="website" />
-        <meta
-          property="og:image"
-          content="https://yourgame.com/tournament-image.jpg"
-        />
+        <meta property="og:image" content="/images/tourBGDark.webp" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
-        <meta
-          name="twitter:image"
-          content="https://yourgame.com/tournament-image.jpg"
-        />
+        <meta name="twitter:image" content="/images/tourBGDark.webp" />
         {structuredData && (
           <script type="application/ld+json">
             {JSON.stringify(structuredData)}

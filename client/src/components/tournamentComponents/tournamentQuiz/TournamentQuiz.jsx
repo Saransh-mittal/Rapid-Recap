@@ -177,7 +177,7 @@ const TournamentQuiz = () => {
 
   const { timer, timeTaken } = useTimer(
     quizStarted,
-    submitted,
+    submitting,
     false,
     userAnswers,
     handleSubmitQuiz,

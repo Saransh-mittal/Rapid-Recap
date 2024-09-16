@@ -40,6 +40,7 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
   const [editingQuestion, setEditingQuestion] = useState(null)
   const [bulkQuestions, setBulkQuestions] = useState('')
   const toast = useToast()
+  const [isBulkLoading, setIsBulkLoading] = useState(false)
 
   useEffect(() => {
     fetchQuestions()
@@ -176,6 +177,7 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
   }
 
   const handleBulkSubmit = async () => {
+    setIsBulkLoading(true) // Show the spinner
     try {
       const parsedQuestions = JSON.parse(bulkQuestions)
       const token = localStorage.getItem('token')
@@ -208,6 +210,8 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
         duration: 5000,
         isClosable: true,
       })
+    } finally {
+      setIsBulkLoading(false) // Hide the spinner after process is done
     }
   }
 
@@ -333,7 +337,12 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
               height="200px"
             />
           </FormControl>
-          <Button colorScheme="blue" onClick={handleBulkSubmit} mt={4}>
+          <Button
+            colorScheme="blue"
+            onClick={handleBulkSubmit}
+            mt={4}
+            isLoading={isBulkLoading}
+          >
             Add Bulk Questions
           </Button>
 
