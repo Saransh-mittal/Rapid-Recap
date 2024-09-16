@@ -7,7 +7,7 @@ schedules.forEach(schedule => {
   console.log(
     `Scheduled ${schedule.name} task for ${schedule?.time?.format(
       'HH:mm',
-    )} IST`,
+    )} UTC`,
   )
 })
 

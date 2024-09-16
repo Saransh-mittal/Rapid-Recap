@@ -2,16 +2,44 @@ const Article = require('../model/articleSchema')
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
 const OpenAI = require('openai')
 
-const generateTournamentQuestions = async articleId => {
+const generateTournamentQuestions = async category => {
   try {
-    const article = await Article.findById(articleId)
+    console.log('Generating tournament questions...')
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
+    const article = await Article.find({ category, createdAt: { $gte: today } })
+
+    const textForOpenAI = article.map(a => a.mainText).join('\n\n') // Concatenate all articles
     if (!article) {
       throw new Error('Article not found')
     }
 
-    const prompt = `Generate 3 multiple-choice questions based on the following article. Each question should capture a key point from the article and be suitable for a general knowledge tournament. For each question, provide 4 options (a, b, c, d) and indicate the correct answer. Also get the hindi translated version of the questions and options .If the question requires remembering numerical data, specific dates, or names(except author names and small names.), assign a higher difficulty level between 0.5 to 0.99 . Give These things higher priority while assigning difficulty. Use the following format:
+    const prompt = `Generate around 20 multiple-choice questions from the following corpus of multiple articles. Each question should capture a key point from the articles and be suitable for a general knowledge tournament.
 
-  Article: "${article.mainText}"
+Requirements:
+Keep questions short and concise, as users will have less than 10 seconds to answer.
+Each question should stand alone and describe enough context since users won't know which article it is based on.
+For each question, provide 4 randomized answer options (a, b, c, d), with the correct answer randomly placed (not always in the same position).
+Indicate the correct answer after the options, and randomize its placement to ensure it doesn’t always appear in the same letter option (a, b, c, d). Give more probablity to the correct answer to be in the last option i.e. 'd'.
+Example Output Format:
+
+Q1. Which country hosted the 2024 Summer Olympics?
+a) China
+b) Japan
+c) France
+d) Italy
+Correct answer: c) France
+
+Q2. Who invented the World Wide Web?
+a) Steve Jobs
+b) Bill Gates
+c) Mark Zuckerberg
+d) Tim Berners-Lee
+Correct answer: d) Tim Berners-Lee
+
+Also get the hindi translated version of the questions and options .If the question requires remembering numerical data, specific dates, or names(except author names and small names.), assign a higher difficulty level between 0.5 to 0.99 . Give These things higher priority while assigning difficulty. Use the following format:
+
+  Article: "${textForOpenAI}"
 
   Each question should be in the following JSON format:
   {
@@ -77,7 +105,6 @@ const generateTournamentQuestions = async articleId => {
 
         // check if response is valid
         if (
-          response.questions.length === 3 &&
           response.questions.every(
             q =>
               q.question &&
@@ -97,33 +124,25 @@ const generateTournamentQuestions = async articleId => {
       console.log(`Retrying... ${attempts} attempts left.`)
     }
 
-    await saveTournamentQuestions(article, response)
+    await saveTournamentQuestions(category, response)
   } catch (error) {
     console.error('Error generating tournament questions:', error.message)
   }
 }
 
-const saveTournamentQuestions = async (article, response) => {
+const saveTournamentQuestions = async (category, response) => {
   for (let question of response.questions) {
     const newQuestion = new TournamentQuestion({
-      article: article._id,
       question: question.question,
       hindiQuestion: question.hindiQuestion,
       options: question.options,
       hindiOptions: question.hindiOptions,
       correctAnswer: question.correctAnswer,
       difficulty: question.difficulty,
-      category: article.category,
+      category: category,
     })
-
     await newQuestion.save()
-    if (!article.tournamentQuestions) {
-      article.tournamentQuestions = []
-    }
-    article.tournamentQuestions.push(newQuestion._id)
   }
-
-  await article.save()
 }
 
 module.exports = {

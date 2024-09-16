@@ -18,8 +18,8 @@ const {
   day1EndOfTournament,
   day2OfTournament,
   endTournament,
-  checkTimeOfRun,
 } = require('./tasks/tournamentManagement')
+const { runTournamentServiceTask } = require('./tasks/runTournamentService')
 
 const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
 
@@ -75,7 +75,10 @@ let schedules = [
   createSchedule('extractNews1', '02:25', () => extractNews(null)),
   createSchedule('extractNews2', '09:00', () => extractNews('in')),
   createSchedule('extractNews3', '15:00', () => extractNews('in')),
-  createSchedule('extractNews4', '23:00', () => extractNews('in')),
+  createSchedule('extractNews4', '23:00', () => {
+    extractNews('in')
+    runTournamentServiceTask()
+  }),
   createSchedule('updateRecommendations', '01:00', updateDailyRecommendations),
   createSchedule('streakBrokenMails', '03:30', sendStreakBrokenMails),
   createSchedule(
@@ -177,7 +180,6 @@ let schedules = [
   createSchedule('endRegistrationTournament', '23:00', endRegistration),
   createSchedule('startTournament', '00:00', startTournament),
   createSchedule('endTournament', '23:59', endTournament),
-  createSchedule('timeofrun', '10:40', checkTimeOfRun),
   // {
   //   name: 'inRegistrationPeriod',
   //   cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday

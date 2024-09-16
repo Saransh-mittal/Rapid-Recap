@@ -12,6 +12,7 @@ const MailTemplates = require('../data/MailTemplates')
 const { getTopThreeRecommendedArticles } = require('./article.utils')
 const { sendNotification } = require('../services/notificationService')
 const { formatRemainingTime } = require('./miscellaneous.utils')
+const i18n = require('i18next')
 
 //These id's and secrets should come from .env file.
 

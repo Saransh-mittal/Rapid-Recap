@@ -68,7 +68,7 @@ const articleSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      default: 'General',
+      default: 'general',
     },
     relatedArticles: [
       {
@@ -83,12 +83,10 @@ const articleSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    tournamentQuestions: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'TOURNAMENT_QUESTION',
-      },
-    ],
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { collection: 'Articles' },
 )
