@@ -360,6 +360,10 @@ const endTournament = async () => {
   // }
 }
 
+const checkTimeOfRun = async () => {
+  console.log('checkTimeOfRun')
+}
+
 module.exports = {
   startRegistration,
   inRegisterationPeriod,
@@ -369,4 +373,5 @@ module.exports = {
   day1EndOfTournament,
   day2OfTournament,
   endTournament,
+  checkTimeOfRun,
 }

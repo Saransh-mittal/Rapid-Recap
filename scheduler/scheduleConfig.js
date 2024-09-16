@@ -18,15 +18,22 @@ const {
   day1EndOfTournament,
   day2OfTournament,
   endTournament,
+  checkTimeOfRun,
 } = require('./tasks/tournamentManagement')
 
 const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
 
-const createSchedule = (name, time, task) => ({
-  name,
-  time: moment.tz(`${currentDate} ${time}`, 'Asia/Kolkata'),
-  task,
-})
+const createSchedule = (name, time, task) => {
+  // Parse the time in Kolkata time zone, then convert to UTC
+  const scheduledTime = moment
+    .tz(`${currentDate} ${time}`, 'Asia/Kolkata')
+    .utc()
+  return {
+    name,
+    time: scheduledTime,
+    task,
+  }
+}
 
 const tournamentDays = {
   startRegistration: 6, // Saturday
@@ -170,6 +177,7 @@ let schedules = [
   createSchedule('endRegistrationTournament', '23:00', endRegistration),
   createSchedule('startTournament', '00:00', startTournament),
   createSchedule('endTournament', '23:59', endTournament),
+  createSchedule('timeofrun', '10:40', checkTimeOfRun),
   // {
   //   name: 'inRegistrationPeriod',
   //   cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
@@ -200,25 +208,34 @@ schedules.forEach(schedule => {
   if (!schedule.time) {
     return
   }
-  const timeKolkata = schedule.time.clone()
+
+  // Convert the schedule time from IST to UTC
+  const timeIST = moment.tz(schedule.time, 'Asia/Kolkata')
+  const timeUTC = timeIST.clone().tz('UTC')
 
   let dayOfWeek = '*'
   if (schedule.name.includes('Tournament')) {
     for (const [event, day] of Object.entries(tournamentDays)) {
       if (schedule.name.includes(event)) {
-        dayOfWeek = day
-        // Set the day of the week for the schedule in Kolkata time
-        timeKolkata.day(day)
+        // Set the day in IST
+        timeIST.day(day)
+        // Convert to UTC after setting the day
+        const updatedTimeUTC = timeIST.clone().tz('UTC')
+        dayOfWeek = updatedTimeUTC.day()
         break
       }
     }
+  } else {
+    // For non-tournament schedules, use the day from the UTC time
+    dayOfWeek = timeUTC.day()
   }
 
-  // Generate cron pattern using Kolkata time
-  schedule.cronPattern = `${timeKolkata.minute()} ${timeKolkata.hour()} * * ${dayOfWeek}`
+  // Generate cron pattern using UTC time
+  schedule.cronPattern = `${timeUTC.minute()} ${timeUTC.hour()} * * ${dayOfWeek}`
 
-  // Add Kolkata day to the schedule for reference
-  schedule.kolkataDay = timeKolkata.day()
+  // Add UTC day and time to the schedule for reference
+  schedule.utcDay = timeUTC.day()
+  schedule.utcTime = timeUTC.format('HH:mm')
 })
 
 module.exports = schedules
