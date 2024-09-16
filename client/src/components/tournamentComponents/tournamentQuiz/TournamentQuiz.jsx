@@ -59,17 +59,12 @@ const TournamentQuiz = () => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [stopTimer, setStopTimer] = useState(false)
   const [showGetSetGo, setShowGetSetGo] = useState(false)
   const [quizStarted, setQuizStarted] = useState(false)
   const [showCategoryQuizSummary, setShowCategoryQuizSummary] = useState(false)
 
   const { playClick } = useSound()
-
-  // Memoize userAnswers initialization
-  const initializeUserAnswers = useMemo(
-    () => new Array(quizSession?.questions.length).fill(''),
-    [quizSession],
-  )
 
   const startQuiz = useCallback(async () => {
     setLoading(true)
@@ -82,7 +77,9 @@ const TournamentQuiz = () => {
         lang: i18n.language,
       })
       setQuizSession(response.data.quizSession)
-      setUserAnswers(initializeUserAnswers)
+      setUserAnswers(
+        new Array(response.data.quizSession?.questions.length).fill(''),
+      )
       setShowGetSetGo(true)
     } catch (error) {
       if (error.response && error.response.status === 400) {
@@ -125,7 +122,7 @@ const TournamentQuiz = () => {
         return newAnswers
       })
     },
-    [currentQuestionIndex, playClick],
+    [currentQuestionIndex, playClick, setUserAnswers],
   )
 
   const handleNextQuestion = useCallback(() => {
@@ -138,6 +135,7 @@ const TournamentQuiz = () => {
   const handleSubmitQuiz = useCallback(
     async ({ timeTaken, userAnswers }) => {
       setSubmitting(true)
+      setStopTimer(true)
       try {
         const response = await axios.post('/api/tournament/quiz/submit', {
           quizSessionId: quizSession._id,
@@ -177,7 +175,7 @@ const TournamentQuiz = () => {
 
   const { timer, timeTaken } = useTimer(
     quizStarted,
-    submitting,
+    stopTimer,
     false,
     userAnswers,
     handleSubmitQuiz,
