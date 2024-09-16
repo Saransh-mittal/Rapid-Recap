@@ -36,10 +36,10 @@ const createSchedule = (name, time, task) => {
 }
 
 const tournamentDays = {
-  startRegistration: 6, // Saturday
-  endRegistration: 0, // Monday
-  startTournament: 1, // Tuesday
-  endTournament: 2, // Wednesday
+  startRegistration: 2, // Saturday
+  endRegistration: 2, // Monday
+  startTournament: 3, // Tuesday
+  endTournament: 1, // Wednesday
 }
 let schedules = [
   createSchedule('newSeasonReset', '00:00', resetNewSeasonModal),
