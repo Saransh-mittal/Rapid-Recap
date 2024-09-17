@@ -612,11 +612,30 @@ const searchArticles = asyncHandler(async (req, res) => {
       )
 
     articles.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
-
+    const processedArticles = await Promise.all(
+      articles.map(async article => {
+        const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+        return {
+          category: article.category,
+          title: article.title,
+          quizAttemptCnt: article.quizAttemptCnt,
+          mainText: paragraphs,
+          author: article.author,
+          imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
+          hindiTitle: article?.hindiTitle,
+          hindiMainText: article?.hindiMainText,
+          hindiAuthor: article?.hindiAuthor,
+          avgReadTime: article?.avgReadTime,
+          date: formatDate(article.dateTime),
+          dateTime: article.dateTime,
+          _id: article._id,
+        }
+      }),
+    )
     const totalPages = Math.ceil(totalArticles / limitNumber)
 
     res.json({
-      articles,
+      articles: processedArticles,
       currentPage: pageNumber,
       totalPages,
       totalArticles,
