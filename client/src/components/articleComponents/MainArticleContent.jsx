@@ -6,7 +6,134 @@ import {
   Skeleton,
   Text,
   useBreakpointValue,
+  ListItem,
+  UnorderedList,
 } from '@chakra-ui/react'
+
+const FormattedContent = ({ mainText }) => {
+  const parseContent = text => {
+    // Join the text if it's an array, otherwise use it as is
+    const fullText = Array.isArray(text) ? text.join('\n') : text
+
+    // Clean the text: remove numeric prefixes and normalize colons
+    const cleanText = fullText?.replace(/\d+\.\s+/g, '').replace(/:{2,}/g, ':')
+
+    // Split the text into sections based on bold headers
+    const sections = cleanText
+      ?.split(/(?=\*\*.+?\*\*:)/)
+      ?.filter(item => item.trim() !== '')
+    if (sections?.length === 1) {
+      // return the original 3 paragraphs of the mainText and also bold the ** headers in the first paragraph
+      return mainText?.map((item, _) => {
+        return {
+          type: 'paragraph',
+          header: item.trim(),
+        }
+      })
+    }
+    return sections?.map(section => {
+      const [header, ...content] = section.split(':')
+      const headerText = header.trim()
+      const contentText = content.join(':').trim()
+
+      if (contentText.includes('\n')) {
+        // If the content has line breaks, treat it as a list
+        const listItems = contentText
+          .split('\n')
+          .filter(item => item.trim() !== '')
+        return { type: 'list', header: headerText, items: listItems }
+      } else {
+        // Otherwise, treat it as a paragraph
+        return { type: 'paragraph', header: headerText, content: contentText }
+      }
+    })
+  }
+
+  const formatText = (text, type) => {
+    return text?.split(/(\*\*.*?\*\*)/).map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <Text
+            as={type === 'list' ? 'strong' : 'span'}
+            key={index}
+            display="inline"
+            fontWeight="bold"
+          >
+            {part.slice(2, -2)}
+          </Text>
+        )
+      }
+      return (
+        <Text as="span" key={index} display="inline">
+          {part}
+        </Text>
+      )
+    })
+  }
+
+  const formatHeader = header => {
+    return header.split(/(\*\*.*?\*\*)/).map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <Text as="strong" key={index} display="inline" fontWeight="bold">
+            {part.slice(2, -2)}
+          </Text>
+        )
+      } else if (part.startsWith('**')) {
+        return (
+          <Text as="strong" key={index} display="inline" fontWeight="bold">
+            {part.slice(2)}
+          </Text>
+        )
+      } else if (part.endsWith('**')) {
+        return (
+          <Text as="strong" key={index} display="inline" fontWeight="bold">
+            {part.slice(0, -2)}
+          </Text>
+        )
+      }
+      return (
+        <Text as="span" key={index} display="inline">
+          {part}
+        </Text>
+      )
+    })
+  }
+
+  const parsedContent = parseContent(mainText)
+
+  return (
+    <Box>
+      {parsedContent?.map((item, index) => {
+        if (item.type === 'paragraph') {
+          return (
+            <Box key={index} mb={4}>
+              <Text as="div" display="block" mb={2}>
+                {formatHeader(item.header)}
+              </Text>
+              <Text>{formatText(item.content, item.type)}</Text>
+            </Box>
+          )
+        } else if (item.type === 'list') {
+          return (
+            <Box key={index} mb={4}>
+              <Text as="div" display="block" mb={2}>
+                {formatHeader(item.header)}
+              </Text>
+              <UnorderedList spacing={2}>
+                {item.items.map((listItem, listItemIndex) => (
+                  <ListItem key={listItemIndex}>
+                    {formatText(listItem, item.type)}
+                  </ListItem>
+                ))}
+              </UnorderedList>
+            </Box>
+          )
+        }
+      })}
+    </Box>
+  )
+}
 
 const MainArticleContent = ({
   imgURL,
@@ -34,20 +161,14 @@ const MainArticleContent = ({
 
   return (
     <Flex w={{ base: '90vw', md: '100%' }} overflow="hidden">
-      <Skeleton
-        isLoaded={!translateLoading && !articleLoading}
-        // isLoaded={false}
-        w={'100%'}
-      >
+      <Skeleton isLoaded={!translateLoading && !articleLoading} w={'100%'}>
         <Box
           ref={articleRef}
           px={padding}
           py={3}
           bg="rgba(26, 21, 39, 0.8)"
-          // bgGradient="linear(to-r, rgba(26, 21, 39, 0.6), rgba(34, 32, 52, 0.6), rgba(48, 44, 66, 6))"
           borderRadius="lg"
           boxShadow="lg"
-          // color="#E5E7EB"
           fontFamily="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
           fontSize={fontSize}
           lineHeight="1.8"
@@ -59,7 +180,7 @@ const MainArticleContent = ({
                 alt="Article Image"
                 borderRadius="md"
                 mb={[3, 4, 5]}
-                width={{ base: '100%', sm: '100%', md: '80%', lg: '98%' }}
+                width={{ base: '100%', sm: '100%', md: '80%', lg: '100%' }}
                 height="auto"
                 maxHeight={{
                   base: '300px',
@@ -73,68 +194,7 @@ const MainArticleContent = ({
               />
             </Flex>
           </figure>
-          {mainText[selectedLanguage]?.length === 3 ? (
-            <>
-              <Text
-                align="justify"
-                mb={[2, 3, 4]}
-                mx={[1, 2]}
-                fontSize={fontSize}
-                letterSpacing={1}
-              >
-                {mainText[selectedLanguage][0]}
-              </Text>
-
-              <Box mt={2} mb={2}>
-                <Flex position="relative" width="100%">
-                  <Text
-                    ref={textRef}
-                    align="justify"
-                    letterSpacing={1}
-                    fontSize={fontSize}
-                    style={{ userSelect: 'text' }}
-                    mx={[1, 2]}
-                  >
-                    {mainText[selectedLanguage][1]}
-                  </Text>
-                </Flex>
-              </Box>
-
-              <Flex mt={2} mb={2}>
-                <Text
-                  ref={textRef}
-                  align="justify"
-                  letterSpacing={1}
-                  fontSize={fontSize}
-                  style={{ userSelect: 'text' }}
-                  mx={[1, 2]}
-                >
-                  {mainText[selectedLanguage][2]}
-                </Text>
-              </Flex>
-            </>
-          ) : (
-            <>
-              <Text
-                align="justify"
-                letterSpacing={1}
-                mb={[2, 3, 4]}
-                fontSize={fontSize}
-              >
-                {mainText[selectedLanguage]?.[0]}
-              </Text>
-              <Flex position="relative" width="100%">
-                <Text
-                  align="justify"
-                  letterSpacing={1}
-                  fontSize={fontSize}
-                  style={{ userSelect: 'text' }}
-                >
-                  {mainText[selectedLanguage]?.[1]}
-                </Text>
-              </Flex>
-            </>
-          )}
+          <FormattedContent mainText={mainText[selectedLanguage]} />
         </Box>
       </Skeleton>
     </Flex>

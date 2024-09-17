@@ -278,7 +278,7 @@ const getPreviousTournament = asyncHandler(async (req, res) => {
     { $match: { tournament: previousTournament._id } },
     {
       $lookup: {
-        from: 'users',
+        from: 'Users',
         localField: 'user',
         foreignField: '_id',
         as: 'userDetails',
@@ -579,9 +579,11 @@ const submitQuiz = asyncHandler(async (req, res) => {
   let success = false
 
   while (retryCount < maxRetries && !success) {
-    const session = await startSession()
+    const session = await mongoose.startSession()
 
     try {
+      session.startTransaction()
+
       const quizSession = await QuizSession.findById(quizSessionId).session(
         session,
       )
@@ -590,11 +592,13 @@ const submitQuiz = asyncHandler(async (req, res) => {
       }
 
       if (quizSession.completed) {
-        throw new Error('Quiz already submitted')
+        await session.abortTransaction()
+        return res.status(400).json({ error: 'Quiz already submitted' })
       }
 
       if (new Date() > quizSession.endTime) {
-        throw new Error('Quiz time expired')
+        await session.abortTransaction()
+        return res.status(400).json({ error: 'Quiz time expired' })
       }
 
       const user = await User.findById(quizSession.user).session(session)
@@ -652,8 +656,6 @@ const submitQuiz = asyncHandler(async (req, res) => {
       registration.totalScore += RQM_score
       await registration.save({ session })
 
-      await user.save({ session })
-
       // Get top 3 leaders for the category
       const topLeaders = await QuizSession.aggregate([
         {
@@ -710,8 +712,9 @@ const submitQuiz = asyncHandler(async (req, res) => {
         { $replaceRoot: { newRoot: '$leaders' } },
         { $sort: { rank: 1 } },
       ]).session(session)
+
+      await session.commitTransaction()
       success = true
-      await commitSession()
 
       logActivity({
         userInGameName: user.inGameName,
@@ -734,13 +737,14 @@ const submitQuiz = asyncHandler(async (req, res) => {
         topLeaders: topLeaders,
       })
     } catch (error) {
-      await abortSession(session)
+      await session.abortTransaction()
 
       if (
-        error.name === 'MongoError' &&
-        (error.code === 112 || error.code === 251)
+        error.name === 'MongoServerError' &&
+        (error.code === 112 ||
+          error.code === 251 ||
+          error.hasErrorLabel('TransientTransactionError'))
       ) {
-        // These error codes typically indicate transient errors
         retryCount++
         if (retryCount < maxRetries) {
           console.log(`Retrying transaction (attempt ${retryCount + 1})...`)
@@ -750,17 +754,16 @@ const submitQuiz = asyncHandler(async (req, res) => {
         }
       } else {
         console.error('Non-transient error:', error)
-        res
+        return res
           .status(400)
           .json({ error: error.message || 'Error submitting quiz' })
-        break
       }
     } finally {
-      await endSession()
+      session.endSession()
     }
   }
 
-  if (!success && retryCount === maxRetries) {
+  if (!success) {
     res
       .status(500)
       .json({ error: 'Max retries reached. Unable to submit quiz.' })
