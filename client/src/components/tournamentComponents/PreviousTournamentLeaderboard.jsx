@@ -6,6 +6,7 @@ import {
   AlertIcon,
   Skeleton,
   VStack,
+  Text,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { Trophy } from 'lucide-react'
@@ -20,7 +21,7 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
   const { t } = useTranslation('PreviousTournamentLeaderboard')
 
   const leaderboardData = useMemo(() => {
-    return previousTournamentData?.participants.slice(0, 5) || []
+    return previousTournamentData?.topLeaders || []
   }, [previousTournamentData])
 
   const tournamentInfo = useMemo(() => {
@@ -56,12 +57,18 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
 
         {tournamentInfo && (
           <Box textAlign="center" fontSize="sm" color="gray.400">
-            <Text>
-              {t('tournamentNumber', { number: tournamentInfo.number })}
-            </Text>
             <Text>{t('endDate', { date: tournamentInfo.endDate })}</Text>
           </Box>
         )}
+
+        <Text
+          textAlign="center"
+          fontSize="sm"
+          fontWeight="bold"
+          color="gray.300"
+        >
+          These are the top 5 leaders of the previous tournament
+        </Text>
 
         {previousTournamentData ? (
           <Suspense fallback={<Skeleton height="200px" />}>
