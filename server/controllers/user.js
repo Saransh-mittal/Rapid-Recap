@@ -681,6 +681,8 @@ const profile = async (req, res) => {
         pic: user.pic,
         bio: user.bio,
         _id: user._id.toString(),
+        tournamentPerformance: user.tournamentPerformance,
+        displayedBadge: user.displayedBadge,
       },
       experience: {
         level: user.level,
@@ -1562,6 +1564,41 @@ const updateUserLanguage = async (req, res) => {
   }
 }
 
+//@desc   Update displayed badge
+//@route  POST /api/user/update-displayed-badge
+//@access Private
+const updateDisplayedBadge = async (req, res) => {
+  try {
+    const { tournamentNumber } = req.body
+    const userId = req.user._id // Assuming you have authentication middleware
+
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const validTournament = user.tournamentPerformance.find(
+      t => t.tournamentNumber === tournamentNumber,
+    )
+    if (!validTournament) {
+      return res.status(400).json({ error: 'Invalid tournament number' })
+    }
+    const rankInTournament = validTournament.rank
+    user.displayedBadge = { tournamentNumber, rank: rankInTournament }
+    await user.save()
+
+    res
+      .status(200)
+      .json({
+        message: 'Displayed badge updated successfully',
+        badge: user.displayedBadge,
+      })
+  } catch (error) {
+    console.error('Error updating displayed badge:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1598,4 +1635,5 @@ module.exports = {
   getUserIds,
   soundController,
   updateUserLanguage,
+  updateDisplayedBadge,
 }

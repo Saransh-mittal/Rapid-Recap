@@ -296,6 +296,31 @@ const userSchema = new mongoose.Schema(
       enum: ['', 'en', 'hi'],
     },
     expiresAt: { type: Date },
+    tournamentPerformance: [
+      {
+        tournament: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'TOURNAMENT',
+        },
+        score: {
+          type: Number,
+          default: 0,
+        },
+        rank: {
+          type: Number,
+        },
+        endDate: {
+          type: Date,
+        },
+        tournamentNumber: {
+          type: Number,
+        },
+      },
+    ],
+    displayedBadge: {
+      type: Object,
+      default: null,
+    },
   },
   { collection: 'Users' },
 )
