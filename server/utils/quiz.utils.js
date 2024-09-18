@@ -646,7 +646,7 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
         category: category,
         createdAt: {
           $gte: tournament.registrationStartDate,
-          $lte: tournament.registrationEndDate,
+          $lte: tournament.startDate,
         },
       },
     },
