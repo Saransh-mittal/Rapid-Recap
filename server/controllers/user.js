@@ -549,13 +549,14 @@ const leaderBoard = async (req, res) => {
           quizAttemptsLength: 1,
           level: 1,
           xp: 1,
+          displayedBadge: 1,
           rankedInCurrentSeason: 1,
         },
       },
     ])
 
     const currUserPromise = User.findById(currUserId)
-      .select('avgRQM quizAttempts')
+      .select('avgRQM quizAttempts displayedBadge')
       .populate({
         path: 'quizAttempts',
         match: { season: 2 },
@@ -587,6 +588,7 @@ const leaderBoard = async (req, res) => {
         level,
         xp,
         rankedInCurrentSeason,
+        displayedBadge,
       } = user
       return {
         _id,
@@ -600,6 +602,7 @@ const leaderBoard = async (req, res) => {
         level,
         xp,
         rankedInCurrentSeason,
+        displayedBadge,
       }
     })
 
@@ -947,17 +950,6 @@ const userSearch = async (req, res) => {
 
     prioritizedUsers.forEach(user => {
       let sum = 0
-      // _id,
-      //   RQM_avg: avgRQM?.toFixed(0),
-      //   name,
-      //   inGameName,
-      //   IQ_score,
-      //   pic,
-      //   quizSubmissions: quizAttemptsLength,
-      //   maxIQScore,
-      //   level,
-      //   xp,
-      //   rankedInCurrentSeason,
       const {
         name,
         inGameName,
@@ -970,6 +962,7 @@ const userSearch = async (req, res) => {
         xp,
         level,
         rankedInCurrentSeason,
+        displayedBadge,
       } = user
       for (let i = 0; i < user.quizAttempts.length; i++) {
         sum += user.quizAttempts[i].RQM_score
@@ -993,6 +986,7 @@ const userSearch = async (req, res) => {
         xp,
         level,
         rankedInCurrentSeason,
+        displayedBadge,
       })
     })
 

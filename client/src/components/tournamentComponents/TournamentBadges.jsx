@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Box, Text, Image, Flex, VStack } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { createPortal } from 'react-dom'
 
 // Assuming these SVG components are available in your project
 import CrownSVG from '../../assets/svg/CrownSVG'
@@ -51,16 +52,25 @@ const TournamentBadge = ({
   name,
   inGameName,
   participantCnt,
+  size = 'md',
 }) => {
   const [showDialog, setShowDialog] = useState(false)
   const badgeRef = useRef(null)
   const dialogRef = useRef(null)
   const { image, textPosition, style, icon: RankIcon } = badgeConfig[rank] || {}
+  const sizeValues = {
+    base: { width: '40px', height: '40px', fontSize: '6px' },
+    sm: { width: '50px', height: '50px', fontSize: '6px' },
+    md: { width: '60px', height: '60px', fontSize: '7px' },
+    lg: { width: '80px', height: '80px', fontSize: '8px' },
+  }
+  const { width, height, fontSize } = sizeValues[size] || sizeValues.md
 
   useEffect(() => {
     if (showDialog && badgeRef.current && dialogRef.current) {
       const badgeRect = badgeRef.current.getBoundingClientRect()
       const windowWidth = window.innerWidth
+      const windowHeight = window.innerHeight
 
       let topPosition = badgeRect.bottom + window.scrollY
       let leftPosition =
@@ -77,7 +87,7 @@ const TournamentBadge = ({
       }
 
       // If the dialog would go off the bottom of the screen, position it above the badge instead
-      if (topPosition + dialogRef.current.offsetHeight > window.innerHeight) {
+      if (topPosition + dialogRef.current.offsetHeight > windowHeight) {
         topPosition =
           badgeRect.top - dialogRef.current.offsetHeight + window.scrollY
       }
@@ -87,19 +97,79 @@ const TournamentBadge = ({
     }
   }, [showDialog])
 
+  const handleClick = e => {
+    e.stopPropagation() // Prevent event from bubbling up
+    setShowDialog(prevState => !prevState)
+  }
+
   if (!tournamentNumber || !rank) return null
+
+  const dialogContent = showDialog && (
+    <motion.div
+      ref={dialogRef}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+      style={{
+        position: 'fixed',
+        zIndex: 9999,
+        pointerEvents: 'auto',
+        width: `${DIALOG_WIDTH}px`,
+      }}
+    >
+      <Box
+        p={4}
+        borderRadius="md"
+        width="100%"
+        {...style}
+        position="relative"
+        boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+      >
+        <VStack spacing={2} align="center">
+          <Flex alignItems="center" justifyContent="center" mb={0}>
+            <Box bg="rgba(255, 255, 255, 0.2)" borderRadius="50%" p={1} mr={2}>
+              <RankIcon
+                size="24px"
+                style={{
+                  filter: 'drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.5))',
+                }}
+                color={style.color}
+              />
+            </Box>
+            <Flex flexDirection={'column'}>
+              <Text fontWeight="bold" fontSize="xl" mb={0}>
+                {name}
+              </Text>
+              <Text fontSize="md" opacity={0.8}>
+                @{inGameName}
+              </Text>
+            </Flex>
+          </Flex>
+
+          <Text fontSize="md" fontWeight="semibold">
+            Rank {rank} in Tournament #
+            {String(tournamentNumber).padStart(3, '0')}
+          </Text>
+          <Text fontSize="sm" opacity={0.9}>
+            Out of {participantCnt} participants
+          </Text>
+        </VStack>
+      </Box>
+    </motion.div>
+  )
 
   return (
     <Box position="relative" ref={badgeRef}>
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setShowDialog(!showDialog)}
+        onClick={handleClick}
       >
         <Box
           position="relative"
-          width="80px"
-          height="80px"
+          width={width}
+          height={height}
           borderRadius="50%"
           overflow="hidden"
           boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
@@ -121,7 +191,7 @@ const TournamentBadge = ({
             left="50%"
             transform={`translateX(${textPosition.x}%) translateY(${textPosition.y}%)`}
             color="white"
-            fontSize="8px"
+            fontSize={fontSize}
             fontWeight="bold"
             textShadow="1px 1px 2px rgba(0,0,0,0.6)"
           >
@@ -129,64 +199,10 @@ const TournamentBadge = ({
           </Text>
         </Box>
       </motion.div>
-
-      <AnimatePresence>
-        {showDialog && (
-          <motion.div
-            ref={dialogRef}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-            style={{
-              position: 'fixed',
-              zIndex: 9999,
-              pointerEvents: 'auto',
-              width: `${DIALOG_WIDTH}px`,
-            }}
-          >
-            <Box
-              p={4}
-              borderRadius="md"
-              width="100%"
-              {...style}
-              position="relative"
-            >
-              <VStack spacing={2} align="center">
-                <Flex alignItems="center" justifyContent="center" mb={2}>
-                  <Box
-                    bg="rgba(255, 255, 255, 0.2)"
-                    borderRadius="50%"
-                    p={1}
-                    mr={2}
-                  >
-                    <RankIcon
-                      size="24px"
-                      style={{
-                        filter: 'drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.5))',
-                      }}
-                      color={style.color}
-                    />
-                  </Box>
-                  <Text fontWeight="bold" fontSize="xl">
-                    {name}
-                  </Text>
-                </Flex>
-                <Text fontSize="md" opacity={0.8}>
-                  @{inGameName}
-                </Text>
-                <Text fontSize="lg" fontWeight="semibold">
-                  Rank {rank} in Tournament #
-                  {String(tournamentNumber).padStart(3, '0')}
-                </Text>
-                <Text fontSize="sm" opacity={0.9}>
-                  Out of {participantCnt} participants
-                </Text>
-              </VStack>
-            </Box>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {createPortal(
+        <AnimatePresence>{dialogContent}</AnimatePresence>,
+        document.body,
+      )}
     </Box>
   )
 }

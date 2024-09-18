@@ -329,6 +329,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             {user?.role === 'guest' ? t('na') : leftProfileView?.rank}
           </Heading>
         </Flex>
+        <Flex></Flex>
         <Flex flexDirection="column" ml="auto">
           {window.location.pathname.split('/').pop() !== user?.inGameName &&
             user?.role !== 'guest' && (
@@ -365,7 +366,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             )}
         </Flex>
         <Suspense fallback={<Spinner />}>
-          <Flex mt="auto" mr={-5}>
+          <Flex mr={-5}>
             {selectedBadge && (
               <TournamentBadges
                 tournamentNumber={selectedBadge?.tournamentNumber}
@@ -373,6 +374,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                 name={leftProfileView?.name}
                 inGameName={leftProfileView?.inGameName}
                 participantCnt={selectedBadge?.participantCnt}
+                size="lg"
               />
             )}
           </Flex>
