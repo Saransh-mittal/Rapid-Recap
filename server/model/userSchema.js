@@ -315,6 +315,9 @@ const userSchema = new mongoose.Schema(
         tournamentNumber: {
           type: Number,
         },
+        participantCnt: {
+          type: Number,
+        },
       },
     ],
     displayedBadge: {

@@ -1584,15 +1584,17 @@ const updateDisplayedBadge = async (req, res) => {
       return res.status(400).json({ error: 'Invalid tournament number' })
     }
     const rankInTournament = validTournament.rank
-    user.displayedBadge = { tournamentNumber, rank: rankInTournament }
+    user.displayedBadge = {
+      tournamentNumber,
+      rank: rankInTournament,
+      participantCnt: validTournament.participantCnt,
+    }
     await user.save()
 
-    res
-      .status(200)
-      .json({
-        message: 'Displayed badge updated successfully',
-        badge: user.displayedBadge,
-      })
+    res.status(200).json({
+      message: 'Displayed badge updated successfully',
+      badge: user.displayedBadge,
+    })
   } catch (error) {
     console.error('Error updating displayed badge:', error)
     res.status(500).json({ error: 'Internal Server Error' })

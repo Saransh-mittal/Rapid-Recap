@@ -58,13 +58,14 @@ const FormattedContent = ({ mainText }) => {
             key={index}
             display="inline"
             fontWeight="bold"
+            align={'justify'}
           >
             {part.slice(2, -2)}
           </Text>
         )
       }
       return (
-        <Text as="span" key={index} display="inline">
+        <Text as="span" key={index} display="inline" align={'justify'}>
           {part}
         </Text>
       )
@@ -75,25 +76,43 @@ const FormattedContent = ({ mainText }) => {
     return header.split(/(\*\*.*?\*\*)/).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
-          <Text as="strong" key={index} display="inline" fontWeight="bold">
+          <Text
+            as="strong"
+            key={index}
+            display="inline"
+            fontWeight="bold"
+            align={'justify'}
+          >
             {part.slice(2, -2)}
           </Text>
         )
       } else if (part.startsWith('**')) {
         return (
-          <Text as="strong" key={index} display="inline" fontWeight="bold">
+          <Text
+            as="strong"
+            key={index}
+            display="inline"
+            fontWeight="bold"
+            align={'justify'}
+          >
             {part.slice(2)}
           </Text>
         )
       } else if (part.endsWith('**')) {
         return (
-          <Text as="strong" key={index} display="inline" fontWeight="bold">
+          <Text
+            as="strong"
+            key={index}
+            display="inline"
+            fontWeight="bold"
+            align={'justify'}
+          >
             {part.slice(0, -2)}
           </Text>
         )
       }
       return (
-        <Text as="span" key={index} display="inline">
+        <Text as="span" key={index} display="inline" align={'justify'}>
           {part}
         </Text>
       )
@@ -108,16 +127,18 @@ const FormattedContent = ({ mainText }) => {
         if (item.type === 'paragraph') {
           return (
             <Box key={index} mb={4}>
-              <Text as="div" display="block" mb={2}>
+              <Text as="div" display="block" mb={2} align={'justify'}>
                 {formatHeader(item.header)}
               </Text>
-              <Text>{formatText(item.content, item.type)}</Text>
+              <Text align={'justify'}>
+                {formatText(item.content, item.type)}
+              </Text>
             </Box>
           )
         } else if (item.type === 'list') {
           return (
             <Box key={index} mb={4}>
-              <Text as="div" display="block" mb={2}>
+              <Text as="div" display="block" mb={2} align={'justify'}>
                 {formatHeader(item.header)}
               </Text>
               <UnorderedList spacing={2}>

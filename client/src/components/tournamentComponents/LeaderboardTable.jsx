@@ -19,10 +19,11 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Medal, Trophy, Crown } from 'lucide-react'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next' // Import the useTranslation hook
-
+import Medal from '../../assets/svg/Medal'
+import TrophySVG from '../../assets/svg/TrophySVG'
+import CrownSVG from '../../assets/svg/CrownSVG'
 // Lazy load UserStatsModal
 const UserStatsModal = React.lazy(() => import('./UserStatsModal'))
 
@@ -72,17 +73,17 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
         <Td textAlign={'center'}>
           {player.rank === 1 && (
             <Flex justifyContent={'center'}>
-              <Crown color="gold" width={'20px'} height={'20px'} />
+              <CrownSVG color="gold" width={'20px'} height={'20px'} />
             </Flex>
           )}
           {player.rank === 2 && (
             <Flex justifyContent={'center'}>
-              <Trophy color="silver" width={'20px'} height={'20px'} />
+              <TrophySVG color="silver" width={'20px'} height={'20px'} />
             </Flex>
           )}
           {player.rank === 3 && (
             <Flex justifyContent={'center'}>
-              <Medal color="#CD7F32" width={'20px'} height={'20px'} />
+              <Medal color="#CD7F32" width={'25px'} height={'25px'} />
             </Flex>
           )}
           {player.rank > 3 && (

@@ -15,10 +15,6 @@ import {
   useToast,
   Spinner,
   Badge,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
@@ -27,15 +23,21 @@ import { setUser } from '../../redux/authSlice'
 import UserPlusSVG from '../../assets/svg/UserPlusSVG'
 import useSound from '../../customHooks/useSound'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
-import { ChevronDownIcon, QuestionOutlineIcon } from '@chakra-ui/icons'
-import GuestLoginModal from '../authComponents/GuestLoginModal'
+import { QuestionOutlineIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
-import TournamentBadges from '../tournamentComponents/TournamentBadges'
-import StyledDropdownMenu from '../miscellaneous/StyledDropdownMenu'
 
 // Lazy loading for components that are not needed immediately
 const EditProfileModal = React.lazy(() => import('./EditProfileModal'))
 const NameLightning = React.lazy(() => import('../miscellaneous/NameLightning'))
+const GuestLoginModal = React.lazy(() =>
+  import('../authComponents/GuestLoginModal'),
+)
+const TournamentBadges = React.lazy(() =>
+  import('../tournamentComponents/TournamentBadges'),
+)
+const StyledDropdownMenu = React.lazy(() =>
+  import('../miscellaneous/StyledDropdownMenu'),
+)
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const { t } = useTranslation('LeftProfileBox')
@@ -167,6 +169,23 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           tournamentNumber: option.value,
         })
         setSelectedBadge(response.data.badge)
+
+        // Update local storage
+        const cachedProfile = localStorage.getItem('userProfile')
+        if (cachedProfile) {
+          const parsedProfile = JSON.parse(cachedProfile)
+          const updatedCachedProfile = {
+            ...parsedProfile,
+            leftProfileView: {
+              ...parsedProfile.leftProfileView,
+              displayedBadge: response.data.badge,
+            },
+          }
+          localStorage.setItem(
+            'userProfile',
+            JSON.stringify(updatedCachedProfile),
+          )
+        }
         toast({
           title: t('badgeUpdateSuccess'),
           status: 'success',
@@ -228,11 +247,18 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     }
   }, [canSendRequest, requestSent, sendFriendRequest])
 
-  const badgeOptions = leftProfileView?.tournamentPerformance?.map(
-    tournament => ({
-      label: t('tournamentBadge', { number: tournament.tournamentNumber }),
-      value: tournament.tournamentNumber,
-    }),
+  const badgeOptions = useMemo(
+    () =>
+      leftProfileView?.tournamentPerformance
+        ?.filter(tournament => tournament.rank <= 3)
+        ?.map(tournament => ({
+          label: t('tournamentBadge', {
+            number: '#' + String(tournament.tournamentNumber).padStart(3, '0'),
+          }),
+          value: tournament.tournamentNumber,
+          rank: tournament.rank,
+        })) || [],
+    [leftProfileView?.tournamentPerformance, t],
   )
 
   return (
@@ -338,14 +364,19 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
               </Flex>
             )}
         </Flex>
-        <Flex mt="auto" mr={-5}>
-          {selectedBadge && (
-            <TournamentBadges
-              tournamentNumber={selectedBadge.tournamentNumber}
-              rank={selectedBadge.rank}
-            />
-          )}
-        </Flex>
+        <Suspense fallback={<Spinner />}>
+          <Flex mt="auto" mr={-5}>
+            {selectedBadge && (
+              <TournamentBadges
+                tournamentNumber={selectedBadge?.tournamentNumber}
+                rank={selectedBadge?.rank}
+                name={leftProfileView?.name}
+                inGameName={leftProfileView?.inGameName}
+                participantCnt={selectedBadge?.participantCnt}
+              />
+            )}
+          </Flex>
+        </Suspense>
       </Flex>
 
       <Box marginTop="10px" w={{ base: '100%', lg: '100%' }}>
@@ -376,11 +407,15 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             </Flex>
           )}
           {window.location.pathname.split('/').pop() === user?.inGameName && (
-            <StyledDropdownMenu
-              options={badgeOptions}
-              onSelect={handleBadgeSelect}
-              buttonText={t('selectBadge')}
-            />
+            <Suspense fallback={<Spinner />}>
+              <StyledDropdownMenu
+                options={badgeOptions}
+                onSelect={handleBadgeSelect}
+                buttonText={t('selectBadge')}
+                t={t}
+                selectedBadge={selectedBadge}
+              />
+            </Suspense>
           )}
         </Flex>
       </Box>
@@ -394,6 +429,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             onSubmit={handleSubmitModal}
           />
         )}
+      </Suspense>
+      <Suspense fallback={null}>
         <GuestLoginModal
           isOpen={isGuestLoggedin}
           onClose={handleClose}
