@@ -296,7 +296,7 @@ const calculateAndAssignIQScores = async (userScores, sumOfUserScores) => {
     const normalizedScore = (userScore - meanOfUserScores) / standardDeviation
     const IQScore = 100 + 15 * normalizedScore
 
-    const currIQScore = Math.round(IQScore)
+    const currIQScore = IQScore.toFixed(1)
     try {
       const updatedUser = await User.findById(user._id)
       const awardableXpOrNot = currIQScore > user.maxIQScore

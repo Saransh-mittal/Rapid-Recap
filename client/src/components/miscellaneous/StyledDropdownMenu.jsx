@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Button,
@@ -46,8 +46,34 @@ const StyledDropdownMenu = ({
   t,
   selectedBadge,
 }) => {
-  const [isOpen, setIsOpen] = useState(false)
   const toast = useToast()
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  const handleSelect = useCallback(
+    option => {
+      onSelect(option)
+      setIsOpen(false)
+    },
+    [onSelect],
+  )
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false)
+  }, [])
+
+  const handleOpen = useCallback(() => {
+    if (options.length === 0) {
+      toast({
+        title: t('noBadgesAvailable'),
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      })
+    } else {
+      setIsOpen(true)
+    }
+  }, [options.length, t, toast])
 
   const getRankStyle = rank => {
     switch (rank) {
@@ -130,119 +156,144 @@ const StyledDropdownMenu = ({
         return null
     }
   }
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        handleClose()
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [handleClose])
 
   return (
-    <Menu>
-      {({ isOpen }) => (
-        <>
-          <MenuButton
-            as={Button}
-            size="md"
-            height="35px"
-            width="100%"
+    <div
+      ref={menuRef}
+      style={{
+        width: '100%',
+      }}
+    >
+      <Menu
+        isOpen={isOpen}
+        onClose={handleClose}
+        onOpen={handleOpen}
+        closeOnSelect={false}
+      >
+        <MenuButton
+          as={Button}
+          size="md"
+          height="35px"
+          width="100%"
+          border="none"
+          background="linear-gradient(135deg, #2C3E50, #4CA1AF)"
+          color="white"
+          _hover={{
+            background: 'linear-gradient(135deg, #4CA1AF, #2C3E50)',
+          }}
+          _active={{
+            background: 'linear-gradient(135deg, #4CA1AF, #2C3E50)',
+          }}
+          boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+          transition="all 0.3s ease"
+          onClick={() => {
+            if (options.length === 0) {
+              toast({
+                title: t('noBadgesAvailable'),
+                status: 'info',
+                duration: 3000,
+                isClosable: true,
+              })
+            }
+          }}
+        >
+          <Box as="span" position="relative" zIndex="1">
+            {options.length === 0 ? t('noBadgesAvailable') : buttonText}
+          </Box>
+        </MenuButton>
+        {options.length > 0 && (
+          <MenuList
+            bg="rgba(0, 0, 0, 0.8)"
             border="none"
-            background="linear-gradient(135deg, #2C3E50, #4CA1AF)"
-            color="white"
-            _hover={{
-              background: 'linear-gradient(135deg, #4CA1AF, #2C3E50)',
-            }}
-            _active={{
-              background: 'linear-gradient(135deg, #4CA1AF, #2C3E50)',
-            }}
-            boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
-            transition="all 0.3s ease"
-            onClick={() => {
-              if (options.length === 0) {
-                toast({
-                  title: t('noBadgesAvailable'),
-                  status: 'info',
-                  duration: 3000,
-                  isClosable: true,
-                })
-              }
-            }}
+            boxShadow="dark-lg"
+            padding="0"
+            overflow="hidden"
           >
-            <Box as="span" position="relative" zIndex="1">
-              {options.length === 0 ? t('noBadgesAvailable') : buttonText}
-            </Box>
-          </MenuButton>
-          {options.length > 0 && (
-            <MenuList
-              bg="rgba(0, 0, 0, 0.8)"
-              border="none"
-              boxShadow="dark-lg"
-              padding="0"
-              overflow="hidden"
-            >
-              <AnimatePresence>
-                {isOpen && (
-                  <motion.div
-                    initial="closed"
-                    animate="open"
-                    exit="closed"
-                    variants={{
-                      open: {
-                        clipPath: 'inset(0% 0% 0% 0% round 10px)',
-                        transition: {
-                          type: 'spring',
-                          bounce: 0,
-                          duration: 0.7,
-                          delayChildren: 0.3,
-                          staggerChildren: 0.05,
-                        },
+            <AnimatePresence>
+              {isOpen && (
+                <motion.div
+                  initial="closed"
+                  animate="open"
+                  exit="closed"
+                  variants={{
+                    open: {
+                      clipPath: 'inset(0% 0% 0% 0% round 10px)',
+                      transition: {
+                        type: 'spring',
+                        bounce: 0,
+                        duration: 0.7,
+                        delayChildren: 0.3,
+                        staggerChildren: 0.05,
                       },
-                      closed: {
-                        clipPath: 'inset(10% 50% 90% 50% round 10px)',
-                        transition: {
-                          type: 'spring',
-                          bounce: 0,
-                          duration: 0.3,
-                        },
+                    },
+                    closed: {
+                      clipPath: 'inset(10% 50% 90% 50% round 10px)',
+                      transition: {
+                        type: 'spring',
+                        bounce: 0,
+                        duration: 0.3,
                       },
-                    }}
-                  >
-                    {options?.map((option, index) => (
-                      <motion.div key={index} variants={itemVariants}>
-                        <MenuItem
-                          onClick={() => onSelect(option)}
-                          _hover={listHoverStyle}
-                          sx={{ ...listStyle, ...getRankStyle(option.rank) }}
+                    },
+                  }}
+                >
+                  {options?.map((option, index) => (
+                    <motion.div key={index} variants={itemVariants}>
+                      <MenuItem
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+
+                          handleSelect(option)
+                        }}
+                        _hover={listHoverStyle}
+                        sx={{ ...listStyle, ...getRankStyle(option.rank) }}
+                      >
+                        <Flex
+                          alignItems="center"
+                          width="100%"
+                          justifyContent="space-between"
                         >
-                          <Flex
-                            alignItems="center"
-                            width="100%"
-                            justifyContent="space-between"
-                          >
-                            <Flex alignItems="center">
-                              {getRankIcon(option.rank)}
-                              <Text fontWeight="bold" ml={2}>
-                                {option.label}
-                              </Text>
-                            </Flex>
-                            <Flex alignItems="center">
-                              <Text fontSize="sm" mr={2}>
-                                Rank: {option.rank}
-                              </Text>
-                              {selectedBadge &&
-                                selectedBadge.tournamentNumber ===
-                                  option.value && (
-                                  <Box ml={2}>
-                                    <GreenTickSVG size={20} />
-                                  </Box>
-                                )}
-                            </Flex>
+                          <Flex alignItems="center">
+                            {getRankIcon(option.rank)}
+                            <Text fontWeight="bold" ml={2}>
+                              {option.label}
+                            </Text>
                           </Flex>
-                        </MenuItem>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </MenuList>
-          )}
-        </>
-      )}
-    </Menu>
+                          <Flex alignItems="center">
+                            <Text fontSize="sm" mr={2}>
+                              Rank: {option.rank}
+                            </Text>
+                            {selectedBadge &&
+                              selectedBadge.tournamentNumber ===
+                                option.value && (
+                                <Box ml={2}>
+                                  <GreenTickSVG size={20} />
+                                </Box>
+                              )}
+                          </Flex>
+                        </Flex>
+                      </MenuItem>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </MenuList>
+        )}
+      </Menu>
+    </div>
   )
 }
 

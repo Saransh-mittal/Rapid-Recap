@@ -19,5 +19,13 @@
     "fetchData": "Failed to fetch tournament data.",
     "registerError": "Failed to register for the tournament."
   },
-  "errorOccurred": "An error occurred"
+  "errorOccurred": "An error occurred",
+  "bufferPeriod": {
+    "title": "Preparing for Next Tournament",
+    "message": "Tournament #{{tournamentNumber}} has concluded. We're preparing for the next exciting event!",
+    "nextTournamentPrompt": "The next tournament will be announced soon. Stay tuned!",
+    "viewPreviousResults": "View Previous Tournament Results",
+    "hidePreviousResults": "Hide Previous Tournament Results"
+  },
+  "loading": "Loading..."
 }

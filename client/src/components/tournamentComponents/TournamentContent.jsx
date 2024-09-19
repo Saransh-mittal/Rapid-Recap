@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { Suspense, useMemo } from 'react'
 import {
   VStack,
   Skeleton,
@@ -24,6 +24,7 @@ const TimeInfo = React.lazy(() => import('./TimeInfo'))
 const TournamentStatus = React.lazy(() => import('./TournamentStatus'))
 const RegistrationSection = React.lazy(() => import('./RegistrationSection'))
 const CategorySelection = React.lazy(() => import('./CategorySelection'))
+const BufferPeriodDisplay = React.lazy(() => import('./BufferPeriodDisplay'))
 
 const LoadingSkeleton = () => (
   <VStack spacing={4} width="100%">
@@ -113,6 +114,16 @@ const TournamentContent = React.memo(
 
     if (!tournamentData && !previousTournamentData) {
       return <NoTournamentData t={t} />
+    }
+
+    if (!tournamentData && previousTournamentData) {
+      return (
+        <Suspense fallback={<Skeleton height="40px" />}>
+          <BufferPeriodDisplay
+            previousTournamentData={previousTournamentData}
+          />
+        </Suspense>
+      )
     }
 
     return (

@@ -111,6 +111,7 @@ const namespaces = {
     'ButtonFactory',
     'milestones',
     'StreakNoteMessage',
+    'TournamentNoteMessage',
     'XPAwardNoteMessage',
     'DifficultyLegend',
     'NoteMessageQueue',

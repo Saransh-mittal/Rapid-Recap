@@ -63,6 +63,11 @@ const registerUser = async (req, res) => {
       .status(422)
       .json({ error: 'In Game Name cannot be greater than 16 characters' })
   }
+  if (name.length > 16) {
+    return res
+      .status(422)
+      .json({ error: 'Name cannot be greater than 16 characters' })
+  }
 
   if (inGameName.includes(' ')) {
     return res.status(422).json({ error: 'In Game Name cannot have spaces' })

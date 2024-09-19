@@ -4,11 +4,13 @@ import { useSelector } from 'react-redux'
 import axios from 'axios'
 import ComingSoonTournament from './ComingSoonTournament'
 import Tournament from './Tournament'
+import ServiceScreen from './ServiceScreen'
 import FullScreenLoadingSpinner from '../components/tournamentComponents/tournamentQuiz/FullScreenLoadingSpinner'
 
 const TournamentWrapper = () => {
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isUnderMaintenance, setIsUnderMaintenance] = useState(false)
   const { user, loginCheckStatus } = useSelector(state => state.auth)
 
   useEffect(() => {
@@ -17,6 +19,7 @@ const TournamentWrapper = () => {
         try {
           const response = await axios.get(`/api/tournament/authorize`)
           setIsAuthorized(response.data.isAuthorized)
+          setIsUnderMaintenance(response.data.isUnderMaintenance)
         } catch (error) {
           console.error('Error checking authorization:', error)
           setIsAuthorized(false)
@@ -29,7 +32,7 @@ const TournamentWrapper = () => {
     }
 
     checkAuthorization()
-  }, [user])
+  }, [user, loginCheckStatus])
 
   if (isLoading) {
     return (
@@ -37,6 +40,10 @@ const TournamentWrapper = () => {
         <FullScreenLoadingSpinner />
       </Center>
     )
+  }
+
+  if (isUnderMaintenance) {
+    return <ServiceScreen />
   }
 
   return <Box>{isAuthorized ? <Tournament /> : <ComingSoonTournament />}</Box>

@@ -7,19 +7,19 @@ import {
   Skeleton,
   VStack,
   Text,
+  HStack,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import { Trophy } from 'lucide-react'
+import { Trophy, Medal } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-// Lazy load LeaderboardTable
+// Lazy load components
 const LeaderboardTable = React.lazy(() => import('./LeaderboardTable'))
 
 const MotionBox = motion(Box)
 
 const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
   const { t } = useTranslation('PreviousTournamentLeaderboard')
-
   const leaderboardData = useMemo(() => {
     return previousTournamentData?.topLeaders || []
   }, [previousTournamentData])
@@ -32,18 +32,12 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
     }
   }, [previousTournamentData])
 
+  const userStanding = useMemo(() => {
+    return previousTournamentData?.userStanding || null
+  }, [previousTournamentData])
+
   return (
-    <MotionBox
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      bg="rgba(0, 0, 0, 0.2)"
-      backdropFilter="blur(10px)"
-      borderRadius="lg"
-      py={6}
-      px={4}
-      boxShadow="0 8px 32px rgba(31, 38, 135, 0.37)"
-    >
+    <MotionBox borderRadius="lg" py={6} px={4}>
       <VStack spacing={4} align="stretch">
         <Heading size={'md'} display="flex" alignItems="center">
           <Trophy color="gold" style={{ marginRight: '0.5rem' }} />
@@ -56,13 +50,43 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
           </Box>
         )}
 
+        {userStanding && (
+          <Box
+            bg="whiteAlpha.200"
+            p={4}
+            borderRadius="md"
+            boxShadow="md"
+            cursor="pointer"
+            _hover={{ bg: 'whiteAlpha.300' }}
+          >
+            <HStack justifyContent="space-between" alignItems="center">
+              <HStack>
+                <Medal color="#ECC94B" />
+                <VStack alignItems="flex-start" spacing={0}>
+                  <Text fontWeight="bold">{t('Your Rank')}</Text>
+                  <Text fontSize="2xl" fontWeight="bold" color="pink.400">
+                    #{userStanding.rank}
+                  </Text>
+                </VStack>
+              </HStack>
+              <VStack alignItems="flex-end" spacing={0}>
+                <Text fontWeight="bold">{userStanding.name}</Text>
+                <Text color="gray.400">@{userStanding.inGameName}</Text>
+                <Text fontSize="xl" fontWeight="bold" color="pink.400">
+                  {t('score')}: {userStanding.score}
+                </Text>
+              </VStack>
+            </HStack>
+          </Box>
+        )}
+
         <Text
           textAlign="center"
           fontSize="sm"
           fontWeight="bold"
           color="gray.300"
         >
-          These are the top 5 leaders of the previous tournament
+          {t('topLeadersInfo')}
         </Text>
 
         {previousTournamentData ? (

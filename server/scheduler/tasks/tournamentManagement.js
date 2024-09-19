@@ -295,6 +295,82 @@ const day2OfTournament = async () => {
   }
 }
 
+async function updateTournamentPerformanceAndBadges(tournament) {
+  try {
+    const leaderboardData = await TournamentRegistration.aggregate([
+      { $match: { tournament: tournament._id } },
+      {
+        $lookup: {
+          from: 'Users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userDetails',
+        },
+      },
+      { $unwind: '$userDetails' },
+      {
+        $project: {
+          user: '$user',
+          inGameName: '$userDetails.inGameName',
+          totalScore: 1,
+        },
+      },
+      { $sort: { totalScore: -1 } },
+      {
+        $group: {
+          _id: null,
+          entries: { $push: '$$ROOT' },
+          participantCount: { $sum: 1 },
+        },
+      },
+    ])
+
+    if (leaderboardData.length === 0) return
+
+    const { entries, participantCount } = leaderboardData[0]
+
+    // Update each user's tournament performance
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i]
+      const rank = i + 1
+
+      await User.updateOne(
+        { _id: entry.user },
+        {
+          $push: {
+            tournamentPerformance: {
+              tournament: tournament._id,
+              score: entry.totalScore,
+              rank: rank,
+              endDate: new Date(), // You might want to get the actual end date from the tournament
+              tournamentNumber: tournament.tournamentNumber, // Assuming tournamentId is unique and can be used as tournamentNumber
+              participantCnt: participantCount,
+            },
+          },
+        },
+      )
+
+      // Update badge for top 3 ranks
+      if (rank <= 3) {
+        await User.updateOne(
+          { _id: entry.user },
+          {
+            displayedBadge: {
+              tournamentNumber: tournament.tournamentNumber,
+              rank: rank,
+              participantCnt: participantCount,
+            },
+          },
+        )
+      }
+    }
+
+    console.log('Tournament performance and badges updated successfully')
+  } catch (error) {
+    console.error('Error updating tournament performance and badges:', error)
+  }
+}
+
 const endTournament = async () => {
   const currentTournament = await Tournament.findOne({ status: 'ongoing' })
   if (currentTournament) {
@@ -304,10 +380,8 @@ const endTournament = async () => {
     console.log('Tournament ended')
   }
 
-  const tournament = await Tournament.findOne({
-    isActive: true,
-  }).sort({ startDate: -1 })
-
+  const tournament = currentTournament
+  updateTournamentPerformanceAndBadges(tournament)
   const registeredUsers = await TournamentRegistration.find({
     tournament: tournament._id,
   }).populate('user')

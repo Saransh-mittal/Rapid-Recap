@@ -9,16 +9,7 @@ const TournamentBadge = lazy(() =>
 )
 
 const LeaderBoardRow = React.memo(
-  ({
-    user,
-    index,
-    currUserChar,
-    isMobile,
-    isDesktop,
-    navigate,
-    textColor,
-    accentColor,
-  }) => {
+  ({ user, index, isMobile, isDesktop, navigate, textColor, accentColor }) => {
     const { t } = useTranslation('LeaderBoardRow')
     const urlInGameName = user?.inGameName?.replace(/\./g, '%2E')
     const nameRef = useRef(null)
@@ -73,11 +64,6 @@ const LeaderBoardRow = React.memo(
         cursor="pointer"
         _hover={{ bg: 'whiteAlpha.100' }}
         transition="background 0.2s"
-        className={
-          currUserChar?.inGameName === user.inGameName
-            ? 'highlighted-card-2'
-            : ''
-        }
       >
         {isMobile ? (
           <Td

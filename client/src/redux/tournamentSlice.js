@@ -1,9 +1,67 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { addNoteMessage } from './appSlice'
+import axios from 'axios'
+
+export const checkTournamentRegistration = createAsyncThunk(
+  'tournament/checkRegistration',
+  async (_, { getState, dispatch }) => {
+    const { auth } = getState()
+    const { user } = auth
+
+    try {
+      const response = await axios.get('/api/tournament/active-registration')
+
+      const { tournament, isRegistered } = response.data
+
+      if (tournament && !isRegistered) {
+        if (user.streak < 5) {
+          dispatch(
+            addNoteMessage({
+              title: 'Keep Going!',
+              messageType: 'tournament',
+              tournamentStatus: 'locked',
+              tournamentName: String(
+                String(tournament.tournamentNumber).padStart(3, '0'),
+              ),
+              tournamentEndTime: tournament.registrationEndDate,
+              userStreak: user.streak,
+              requiredStreak: 5,
+              duration: 10000,
+              width: '300px',
+            }),
+          )
+        } else {
+          dispatch(
+            addNoteMessage({
+              title: 'Tournament Time!',
+              duration: 10000,
+              width: '300px',
+              messageType: 'tournament',
+              tournamentStatus: 'registration',
+              tournamentName: String(
+                String(tournament?.tournamentNumber).padStart(3, '0'),
+              ),
+              tournamentEndTime: tournament?.registrationEndDate,
+              userStreak: user?.streak,
+              requiredStreak: 5,
+            }),
+          )
+        }
+      }
+
+      return { tournament, isRegistered }
+    } catch (error) {
+      console.error('Error checking tournament registration:', error)
+      // Handle error (e.g., dispatch an error notification)
+    }
+  },
+)
 
 const initialState = {
   tournamentId: null,
   category: null,
   currentTournament: null,
+  isRegistered: false,
   participatedTournaments: [],
   completedCategories: [],
   leaderboard: [],
@@ -49,6 +107,14 @@ const tournamentSlice = createSlice({
     setRefetchLeaderBoard: (state, action) => {
       state.refetchLeaderBoard = action.payload
     },
+  },
+  extraReducers: builder => {
+    builder.addCase(checkTournamentRegistration.fulfilled, (state, action) => {
+      if (action.payload) {
+        state.currentTournament = action.payload.tournament
+        state.isRegistered = action.payload.isRegistered
+      }
+    })
   },
 })
 
