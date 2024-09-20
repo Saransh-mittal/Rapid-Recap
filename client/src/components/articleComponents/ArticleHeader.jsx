@@ -1,4 +1,4 @@
-import React, { useCallback, Suspense } from 'react'
+import React, { useCallback, Suspense, useState } from 'react'
 import {
   Flex,
   Text,
@@ -7,6 +7,9 @@ import {
   useMediaQuery,
   useToast,
   Spinner,
+  Select,
+  Box,
+  Badge,
 } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import AuthorInfo from './articleHeaderComponents/AuthorInfo'
@@ -38,6 +41,7 @@ const ArticleHeader = ({
   isQuinBoostAvailable,
   quizLeftToGetQuizBoost,
   openModal,
+  onThemeChange,
 }) => {
   const { t } = useTranslation('ArticleHeader')
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
@@ -51,6 +55,8 @@ const ArticleHeader = ({
   const { user } = useSelector(state => state.auth)
   const lang = i18n.language // assuming 'i18n.language' returns the current language
   const formattedDate = formatDate(new Date(dateTime), lang)
+  const [theme, setTheme] = useState('')
+  const [isLoadingTheme, setIsLoadingTheme] = useState(false)
 
   const {
     isOpen: isOpenArticleForm,
@@ -101,6 +107,54 @@ const ArticleHeader = ({
     },
     [selectedArticle, onOpenArticleForm, toast, article],
   )
+
+  const handleThemeChange = async e => {
+    if (i18n.language === 'hi') {
+      // toast for feature not available in hindi
+      toast({
+        title: t('featureNotAvailableTitle'),
+        description: t('featureNotAvailableDescription'),
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+        position: 'top',
+      })
+      return
+    }
+    if (!user || user.role === 'guest') {
+      toast({
+        title: t('loginRequiredTitleWithRealAccount'),
+        description: t('loginRequiredDescriptionWithRealAccount'),
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+        position: 'top',
+      })
+      return
+    }
+    const selectedTheme = e.target.value
+    setTheme(selectedTheme)
+    setIsLoadingTheme(true)
+    try {
+      const response = await axios.post('/api/articles/story', {
+        articleId: article._id,
+        theme: selectedTheme,
+      })
+      onThemeChange(response.data.storyContent)
+    } catch (error) {
+      toast({
+        title: t('themeChangeErrorTitle'),
+        description:
+          error.response?.data?.message || t('themeChangeErrorDescription'),
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+        position: 'top',
+      })
+    } finally {
+      setIsLoadingTheme(false)
+    }
+  }
 
   const handleBookmarkClick = useCallback(() => {
     bookmarkStatus({ view: false, update: true })
@@ -218,31 +272,88 @@ const ArticleHeader = ({
               user={user}
             />
           </Flex>
-          {!isLargerThan768 && (
-            <Flex
-              justifyContent={{ base: 'flex-end', lg: '' }}
-              w={{ base: '100%', lg: 'auto' }}
-            >
-              <Text fontSize={['sm', 'md', 'lg']}>
-                {' '}
-                {avgTimeRead} {t('timeToRead')} • <time>{formattedDate}</time>
-              </Text>
-            </Flex>
-          )}
         </Flex>
-        <Flex w={'100%'} justifyContent={'flex-end'}>
-          {isLargerThan768 && (
-            <Flex
-              justifyContent={{ base: 'flex-end', lg: 'flex-start' }}
-              w={{ base: '100%', lg: 'auto' }}
-            >
-              <Text fontSize={['sm', 'md', 'lg']} mb={0}>
-                {avgTimeRead} {t('timeToRead')} • <time>{formattedDate}</time>
-              </Text>
-            </Flex>
-          )}
-        </Flex>
+        <Flex
+          flexDirection={'row-reverse'}
+          justifyContent={'center'}
+          alignItems={{ md: '', lg: 'center' }}
+        >
+          <Flex w={'fit-content'} justifyContent={'flex-end'} ml={'auto'}>
+            {isLargerThan768 ? (
+              <Flex
+                justifyContent={{ base: 'flex-end', lg: 'flex-start' }}
+                w={{ base: '100%', lg: 'auto' }}
+              >
+                <Text fontSize={['sm', 'md', 'lg']} mb={0}>
+                  {avgTimeRead} {t('timeToRead')} • <time>{formattedDate}</time>
+                </Text>
+              </Flex>
+            ) : (
+              <Flex
+                justifyContent={{ base: 'flex-end', lg: '' }}
+                w={{ base: '100%', lg: 'auto' }}
+                mt={2}
+              >
+                <Text fontSize={['sm', 'md', 'lg']}>
+                  {' '}
+                  {avgTimeRead} {t('timeToRead')} • <time>{formattedDate}</time>
+                </Text>
+              </Flex>
+            )}
+          </Flex>
 
+          <Flex
+            justifyContent="space-between"
+            alignItems="center"
+            flexDirection={['column', 'column', 'row']}
+            gap={2}
+            w={'fit-content'}
+          >
+            <Box position="relative" width={['150px', '100%', '200px']}>
+              <Select
+                placeholder={t('selectTheme')}
+                onChange={handleThemeChange}
+                value={theme}
+                isDisabled={isLoadingTheme}
+                bg="rgba(255, 255, 255, 0.1)"
+                color="white"
+                borderColor="rgba(255, 255, 255, 0.2)"
+                _hover={{ borderColor: 'rgba(255, 255, 255, 0.4)' }}
+                _focus={{
+                  borderColor: 'rgba(255, 255, 255, 0.6)',
+                  boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.6)',
+                }}
+              >
+                <option value="space">{t('space')}</option>
+                <option value="indian_mythology">{t('indianMythology')}</option>
+                <option value="bible_mythology">{t('bibleMythology')}</option>
+                <option value="greek_mythology">{t('greekMythology')}</option>
+                <option value="scifi">{t('scifi')}</option>
+                <option value="mystic_world">{t('mysticWorld')}</option>
+              </Select>
+              {isLoadingTheme && (
+                <Spinner
+                  size="sm"
+                  position="absolute"
+                  right="2.5rem"
+                  top="25%"
+                  transform="translateY(-50%)"
+                  color="white"
+                />
+              )}
+            </Box>
+            <Badge
+              colorScheme="purple"
+              variant="solid"
+              px={2}
+              py={1}
+              borderRadius="md"
+              fontSize="xs"
+            >
+              {t('featureInTesting')}
+            </Badge>
+          </Flex>
+        </Flex>
         <ShareChatModal
           isOpen={isOpen}
           onClose={onClose}

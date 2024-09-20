@@ -10,7 +10,8 @@ import {
   UnorderedList,
 } from '@chakra-ui/react'
 
-const FormattedContent = ({ mainText }) => {
+const FormattedContent = ({ mainText, themedContent }) => {
+  const content = themedContent || mainText
   const parseContent = text => {
     // Join the text if it's an array, otherwise use it as is
     const fullText = Array.isArray(text) ? text.join('\n') : text
@@ -22,9 +23,9 @@ const FormattedContent = ({ mainText }) => {
     const sections = cleanText
       ?.split(/(?=\*\*.+?\*\*:)/)
       ?.filter(item => item.trim() !== '')
-    if (sections?.length === 1) {
+    if (sections?.length === 1 && !themedContent) {
       // return the original 3 paragraphs of the mainText and also bold the ** headers in the first paragraph
-      return mainText?.map((item, _) => {
+      return content?.map((item, _) => {
         return {
           type: 'paragraph',
           header: item.trim(),
@@ -63,6 +64,30 @@ const FormattedContent = ({ mainText }) => {
             {part.slice(2, -2)}
           </Text>
         )
+      } else if (part.startsWith('**')) {
+        return (
+          <Text
+            as={type === 'list' ? 'strong' : 'span'}
+            key={index}
+            display="inline"
+            fontWeight="bold"
+            align={'justify'}
+          >
+            {part.slice(2)}
+          </Text>
+        )
+      } else if (part.endsWith('**')) {
+        return (
+          <Text
+            as={type === 'list' ? 'strong' : 'span'}
+            key={index}
+            display="inline"
+            fontWeight="bold"
+            align={'justify'}
+          >
+            {part.slice(0, -2)}
+          </Text>
+        )
       }
       return (
         <Text as="span" key={index} display="inline" align={'justify'}>
@@ -73,6 +98,20 @@ const FormattedContent = ({ mainText }) => {
   }
 
   const formatHeader = header => {
+    if (header.startsWith('### ')) {
+      return (
+        <Text
+          as="strong"
+          display="block"
+          fontWeight="extrabold"
+          fontSize="1.2em"
+          mb={2}
+          align={'justify'}
+        >
+          {header.slice(4)}
+        </Text>
+      )
+    }
     return header.split(/(\*\*.*?\*\*)/).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
@@ -119,7 +158,7 @@ const FormattedContent = ({ mainText }) => {
     })
   }
 
-  const parsedContent = parseContent(mainText)
+  const parsedContent = parseContent(content)
 
   return (
     <Box>
@@ -164,6 +203,7 @@ const MainArticleContent = ({
   textRef,
   articleRef,
   articleLoading,
+  themedContent,
 }) => {
   const [useAltImage, setUseAltImage] = useState(false)
 
@@ -215,7 +255,10 @@ const MainArticleContent = ({
               />
             </Flex>
           </figure>
-          <FormattedContent mainText={mainText[selectedLanguage]} />
+          <FormattedContent
+            mainText={mainText[selectedLanguage]}
+            themedContent={themedContent}
+          />
         </Box>
       </Skeleton>
     </Flex>

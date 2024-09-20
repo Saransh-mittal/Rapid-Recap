@@ -4,5 +4,19 @@
   "updateErrorTitle": "लेख अपडेट करने में त्रुटि",
   "loginRequiredTitle": "लॉगिन आवश्यक",
   "loginRequiredDescription": "कृपया इस लेख को साझा करने के लिए लॉगिन करें।",
-  "timeToRead": "मिनट पढ़ें"
+  "timeToRead": "मिनट पढ़ें",
+  "selectTheme": "थीम चुनें",
+  "space": "अंतरिक्ष",
+  "indianMythology": "भारतीय पौराणिक कथाएँ",
+  "bibleMythology": "बाइबल पौराणिक कथाएँ",
+  "greekMythology": "ग्रीक पौराणिक कथाएँ",
+  "scifi": "विज्ञान कथा",
+  "mysticWorld": "रहस्यमय दुनिया",
+  "featureInTesting": "परीक्षण में सुविधा",
+  "featureNotAvailableTitle": "सुविधा उपलब्ध नहीं है",
+  "featureNotAvailableDescription": "यह सुविधा इस समय हिंदी में उपलब्ध नहीं है।",
+  "loginRequiredTitleWithRealAccount": "लॉगिन आवश्यक है",
+  "loginRequiredDescriptionWithRealAccount": "इस सुविधा का उपयोग करने के लिए कृपया वास्तविक खाते से लॉगिन करें।",
+  "themeChangeErrorTitle": "थीम परिवर्तन त्रुटि",
+  "themeChangeErrorDescription": "थीम बदलते समय एक त्रुटि हुई। कृपया पुनः प्रयास करें।"
 }

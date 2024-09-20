@@ -65,6 +65,7 @@ const Article = () => {
   const [articleLoading, setArticleLoading] = useState(
     articleData ? false : true,
   )
+  const [themedContent, setThemedContent] = useState(null)
   const [showQuiz, setShowQuiz] = useState(false)
   const [textHeight, setTextHeight] = useState(0)
   const [articleHeight, setArticleHeight] = useState(0)
@@ -339,6 +340,9 @@ const Article = () => {
     window.scrollTo(0, 0)
   }, [])
 
+  const handleThemeChange = useCallback(newThemedContent => {
+    setThemedContent(newThemedContent)
+  }, [])
   return (
     <Suspense fallback={<Loading />}>
       <Flex w={'100vw'}>
@@ -454,6 +458,7 @@ const Article = () => {
                   isQuinBoostAvailable={isQuinBoostAvailable}
                   quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
                   openModal={openModal}
+                  onThemeChange={handleThemeChange}
                 />
               </header>
             </Flex>
@@ -485,6 +490,7 @@ const Article = () => {
                 bookmark={bookmark}
                 bookmarkStatus={bookmarkStatus}
                 articleLoading={articleLoading}
+                themedContent={themedContent}
               />
 
               <Sidebar

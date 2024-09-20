@@ -20,6 +20,9 @@ const NewsAPI = require('newsapi')
 const asyncHandler = require('express-async-handler')
 const { default: mongoose } = require('mongoose')
 const cache = require('memory-cache')
+const Story = require('../model/storySchema')
+const User = require('../model/userSchema')
+const { generateStory } = require('../services/storyGenerateService')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general', lang } = req.query
@@ -934,6 +937,58 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
   })
 })
 
+// @desc   Create a story from an article
+// @route  POST /api/articles/story
+// @access Protected
+const createStory = asyncHandler(async (req, res) => {
+  const { articleId, theme } = req.body
+  const userId = req.user._id
+  const user = await User.findById(userId).select('role')
+  if (!user || user.role === 'guest') {
+    res.status(401)
+    throw new Error('Unauthorized')
+  }
+  const article = await Article.findById(articleId)
+  if (!article) {
+    res.status(404)
+    throw new Error('Article not found')
+  }
+
+  const storyExists = await Story.findOne({ originalArticle: articleId, theme })
+  if (storyExists) {
+    return res.status(201).json(storyExists)
+  }
+  const storyContent = await generateStory(article, theme)
+
+  const newStory = new Story({
+    originalArticle: article._id,
+    theme,
+    storyContent,
+  })
+
+  await newStory.save()
+
+  res.status(201).json(newStory)
+})
+
+// @desc   Get a story by ID
+// @route  GET /api/articles/story/:id
+// @access Protected
+const getStory = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const user = await User.findById(userId).select('role')
+  if (!user || user.role === 'guest') {
+    res.status(401)
+    throw new Error('Unauthorized')
+  }
+  const story = await Story.findById(req.params.id).populate('originalArticle')
+  if (!story) {
+    res.status(404)
+    throw new Error('Story not found')
+  }
+  res.json(story)
+})
+
 module.exports = {
   allArticles,
   getArticle,
@@ -954,4 +1009,6 @@ module.exports = {
   deleteAdminArticleDetails,
   searchArticles,
   getRelatedArticles,
+  createStory,
+  getStory,
 }
