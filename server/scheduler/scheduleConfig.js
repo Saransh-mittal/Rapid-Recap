@@ -227,9 +227,6 @@ schedules.forEach(schedule => {
         break
       }
     }
-  } else {
-    // For non-tournament schedules, use the day from the UTC time
-    dayOfWeek = timeUTC.day()
   }
 
   // Generate cron pattern using UTC time

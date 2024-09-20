@@ -6,5 +6,8 @@
   "CONFIRM": "पुष्टि करें",
   "CANCEL": "रद्द करें",
   "VIEW_ALL": "सभी देखें",
-  "DISMISS": "खारिज करें"
+  "DISMISS": "खारिज करें",
+  "REGISTER_TOURNAMENT": "टूर्नामेंट रजिस्टर करें",
+  "VIEW_STREAK": "स्ट्रीक देखें",
+  "VIEW_TOURNAMENT": "टूर्नामेंट देखें"
 }

@@ -1,0 +1,24 @@
+{
+  "TournamentNoteMessage": {
+    "title": "टूर्नामेंट {{status}}",
+    "status": {
+      "registration": "पंजीकरण खुला है",
+      "locked": "पंजीकरण बंद है",
+      "default": "आगामी"
+    },
+    "registrationOpen": "पंजीकरण अब खुला है!",
+    "registrationEnds": "पंजीकरण खत्म होने में:",
+    "streakRequired": "{{requiredStreak}}-दिन की लगातारी आवश्यक है",
+    "yourStreak": "आपकी वर्तमान लगातारी: {{userStreak}} दिन",
+    "actions": {
+      "register": "अब पंजीकरण करें",
+      "viewStreak": "लगातारी देखें",
+      "viewTournament": "टूर्नामेंट देखें"
+    },
+    "motivation": {
+      "registration": "बिना देर किए न छूटें! अब {{tournamentName}} में शामिल हों और अपने कौशल का प्रदर्शन करें!",
+      "locked": "आप लगभग पहुंच गए हैं! इस टूर्नामेंट को अनलॉक करने के लिए और {{requiredStreak}} दिन बचे हैं। जारी रखें!",
+      "default": "तैयार हो जाइए प्रतिस्पर्धा करने और अद्भुत पुरस्कार जीतने के लिए!"
+    }
+  }
+}

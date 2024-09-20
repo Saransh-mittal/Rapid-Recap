@@ -51,6 +51,7 @@ import {
   isSubscribedChecker,
 } from './redux/notificationSlice.js'
 import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
+import { checkTournamentRegistration } from './redux/tournamentSlice.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -141,6 +142,9 @@ const App = () => {
   useEffect(() => {
     if (user?.newAccount) {
       setIsGuestLoggedin(true)
+    }
+    if (isAuthenticated && user.role !== 'guest') {
+      dispatch(checkTournamentRegistration())
     }
   }, [isAuthenticated, user])
 

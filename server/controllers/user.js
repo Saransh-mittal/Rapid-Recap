@@ -63,6 +63,11 @@ const registerUser = async (req, res) => {
       .status(422)
       .json({ error: 'In Game Name cannot be greater than 16 characters' })
   }
+  if (name.length > 16) {
+    return res
+      .status(422)
+      .json({ error: 'Name cannot be greater than 16 characters' })
+  }
 
   if (inGameName.includes(' ')) {
     return res.status(422).json({ error: 'In Game Name cannot have spaces' })
@@ -549,13 +554,14 @@ const leaderBoard = async (req, res) => {
           quizAttemptsLength: 1,
           level: 1,
           xp: 1,
+          displayedBadge: 1,
           rankedInCurrentSeason: 1,
         },
       },
     ])
 
     const currUserPromise = User.findById(currUserId)
-      .select('avgRQM quizAttempts')
+      .select('avgRQM quizAttempts displayedBadge')
       .populate({
         path: 'quizAttempts',
         match: { season: 2 },
@@ -587,6 +593,7 @@ const leaderBoard = async (req, res) => {
         level,
         xp,
         rankedInCurrentSeason,
+        displayedBadge,
       } = user
       return {
         _id,
@@ -600,6 +607,7 @@ const leaderBoard = async (req, res) => {
         level,
         xp,
         rankedInCurrentSeason,
+        displayedBadge,
       }
     })
 
@@ -683,6 +691,8 @@ const profile = async (req, res) => {
         pic: user.pic,
         bio: user.bio,
         _id: user._id.toString(),
+        tournamentPerformance: user.tournamentPerformance,
+        displayedBadge: user.displayedBadge,
       },
       experience: {
         level: user.level,
@@ -947,17 +957,6 @@ const userSearch = async (req, res) => {
 
     prioritizedUsers.forEach(user => {
       let sum = 0
-      // _id,
-      //   RQM_avg: avgRQM?.toFixed(0),
-      //   name,
-      //   inGameName,
-      //   IQ_score,
-      //   pic,
-      //   quizSubmissions: quizAttemptsLength,
-      //   maxIQScore,
-      //   level,
-      //   xp,
-      //   rankedInCurrentSeason,
       const {
         name,
         inGameName,
@@ -970,6 +969,7 @@ const userSearch = async (req, res) => {
         xp,
         level,
         rankedInCurrentSeason,
+        displayedBadge,
       } = user
       for (let i = 0; i < user.quizAttempts.length; i++) {
         sum += user.quizAttempts[i].RQM_score
@@ -993,6 +993,7 @@ const userSearch = async (req, res) => {
         xp,
         level,
         rankedInCurrentSeason,
+        displayedBadge,
       })
     })
 
@@ -1589,6 +1590,43 @@ const getUserTournamentData = async (req, res) => {
   }
 }
 
+//@desc   Update displayed badge
+//@route  POST /api/user/update-displayed-badge
+//@access Private
+const updateDisplayedBadge = async (req, res) => {
+  try {
+    const { tournamentNumber } = req.body
+    const userId = req.user._id // Assuming you have authentication middleware
+
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const validTournament = user.tournamentPerformance.find(
+      t => t.tournamentNumber === tournamentNumber,
+    )
+    if (!validTournament) {
+      return res.status(400).json({ error: 'Invalid tournament number' })
+    }
+    const rankInTournament = validTournament.rank
+    user.displayedBadge = {
+      tournamentNumber,
+      rank: rankInTournament,
+      participantCnt: validTournament.participantCnt,
+    }
+    await user.save()
+
+    res.status(200).json({
+      message: 'Displayed badge updated successfully',
+      badge: user.displayedBadge,
+    })
+  } catch (error) {
+    console.error('Error updating displayed badge:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1625,5 +1663,6 @@ module.exports = {
   getUserIds,
   soundController,
   updateUserLanguage,
+  updateDisplayedBadge,
   getUserTournamentData,
 }

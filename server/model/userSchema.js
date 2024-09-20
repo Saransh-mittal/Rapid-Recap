@@ -313,8 +313,18 @@ const userSchema = new mongoose.Schema(
         endDate: {
           type: Date,
         },
+        tournamentNumber: {
+          type: Number,
+        },
+        participantCnt: {
+          type: Number,
+        },
       },
     ],
+    displayedBadge: {
+      type: Object,
+      default: null,
+    },
   },
   { collection: 'Users' },
 )

@@ -16,6 +16,7 @@ const StreakNoteMessage = lazy(() => import('./noteMessages/StreakNoteMessage'))
 import { SOUND_TYPES } from '../../models/soundSettings'
 import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
+import TournamentNoteMessage from './noteMessages/TournamentNoteMessage'
 const NoteMessageQueue = () => {
   const dispatch = useDispatch()
   const noteMessageQueue = useSelector(state => state.app.noteMessageQueue)
@@ -126,6 +127,23 @@ const NoteMessageQueue = () => {
             title={message.title}
             duration={message.duration}
             width={message.width}
+          />
+        </Suspense>
+      )
+    case 'tournament':
+      return (
+        <Suspense fallback={null}>
+          <TournamentNoteMessage
+            messageId={message.id}
+            tournamentStatus={message.tournamentStatus}
+            tournamentName={message.tournamentName}
+            registrationEndTime={message.registrationEndTime}
+            userStreak={message.userStreak}
+            requiredStreak={message.requiredStreak}
+            title={message.title}
+            duration={message.duration}
+            width={message.width}
+            onClose={handleClose}
           />
         </Suspense>
       )

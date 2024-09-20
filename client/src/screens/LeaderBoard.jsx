@@ -10,7 +10,11 @@ import {
   Box,
   Text,
   useColorModeValue,
+  HStack,
+  Tooltip,
+  useBreakpointValue,
 } from '@chakra-ui/react'
+import { InfoOutlineIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
@@ -27,6 +31,7 @@ const LeaderBoardTable = React.lazy(() =>
 
 import medalIcon from '../assets/medal.webp'
 import { Helmet } from 'react-helmet'
+import Medal from '../assets/svg/Medal'
 
 const LeaderBoard = () => {
   const { t } = useTranslation('LeaderBoard')
@@ -46,6 +51,7 @@ const LeaderBoard = () => {
   const [searchResults, setSearchResults] = useState([])
 
   const [isBaseScreen] = useMediaQuery('(max-width: 768px)')
+  const isMobile = useBreakpointValue({ base: true, md: false })
 
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
@@ -97,6 +103,27 @@ const LeaderBoard = () => {
     }
   }, [inView, isLoading, hasMore])
 
+  const RankDisplay = ({ rank }) => (
+    <VStack alignItems="flex-start" spacing={0}>
+      <HStack>
+        <Text fontWeight="bold">{t('Your Rank')}</Text>
+        {!isMobile && (
+          <Tooltip label={t('rankDiscrepancyNote')} hasArrow>
+            <InfoOutlineIcon boxSize={3} />
+          </Tooltip>
+        )}
+      </HStack>
+      <Text fontSize="2xl" fontWeight="bold" color="pink.400">
+        #{rank}
+      </Text>
+      {isMobile && (
+        <Text fontSize="xs" color="gray.500">
+          {t('rankDiscrepancyNote')}
+        </Text>
+      )}
+    </VStack>
+  )
+
   return (
     <>
       <Helmet>
@@ -125,50 +152,72 @@ const LeaderBoard = () => {
           flexDirection={'column'}
         >
           <VStack spacing={8} align="stretch">
-            <Flex justifyContent="center" alignItems="center">
-              <Image
-                src={medalIcon}
-                alt="Rating"
-                width={'35px'}
-                height={'35px'}
-                bg={'none'}
-              />
-              <ChakraHeading
-                size="2xl"
-                bgGradient="linear(to-r, yellow.400, yellow.600)"
-                bgClip="text"
-                fontFamily="serif"
-                padding={'10px'}
-              >
-                {t('title')}
-              </ChakraHeading>
-              <Image
-                src={medalIcon}
-                alt="Rating"
-                width={'35px'}
-                height={'35px'}
-                bg={'none'}
-              />
+            <Flex flexDirection={'column'}>
+              <Flex justifyContent="center" alignItems="center">
+                <Image
+                  src={medalIcon}
+                  alt="Rating"
+                  width={'35px'}
+                  height={'35px'}
+                  bg={'none'}
+                />
+                <ChakraHeading
+                  size="2xl"
+                  bgGradient="linear(to-r, yellow.400, yellow.600)"
+                  bgClip="text"
+                  fontFamily="serif"
+                  padding={'10px'}
+                >
+                  {t('title')}
+                </ChakraHeading>
+                <Image
+                  src={medalIcon}
+                  alt="Rating"
+                  width={'35px'}
+                  height={'35px'}
+                  bg={'none'}
+                />
+              </Flex>
+
+              <Text fontSize="lg" color="gray.500" textAlign="center">
+                {t('tag')}
+              </Text>
             </Flex>
-
-            <Text fontSize="lg" color="gray.500" textAlign="center">
-              {t('tag')}
-            </Text>
-
             <React.Suspense fallback={<Spinner />}>
-              <Flex
-                alignItems="center"
-                justifyContent="center"
-                marginBottom="20px"
-                marginTop={'20px'}
-              >
+              <Flex alignItems="center" justifyContent="center">
                 <SearchBar
                   setSearchResults={setSearchResults}
                   setSearchLoad={setSearchLoad}
                   w={isBaseScreen ? '75%' : '50%'}
                 />
               </Flex>
-
+              {user && user.IQ_score && (
+                <Box
+                  bg="whiteAlpha.200"
+                  p={4}
+                  borderRadius="md"
+                  boxShadow="md"
+                  cursor="pointer"
+                  onClick={() => navigate(`/profile/${user.inGameName}`)}
+                  _hover={{ bg: 'whiteAlpha.300' }}
+                >
+                  <HStack justifyContent="space-between" alignItems="center">
+                    <HStack>
+                      <Flex mb={'auto'} mt={1}>
+                        <Medal color="#ECC94B" size={'25px'} />
+                      </Flex>
+                      <RankDisplay rank={user.rank} />
+                    </HStack>
+                    <VStack alignItems="flex-end" spacing={0}>
+                      <Text fontWeight="bold">{user.name}</Text>
+                      <Text color="gray.400">@{user.inGameName}</Text>
+                      <Text fontSize="xl" fontWeight="bold" color="pink.400">
+                        {t('score')}: {user.IQ_score}
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </Box>
+              )}
               <Box
                 height="calc(100vh - 300px)"
                 overflowY="auto"
@@ -190,7 +239,6 @@ const LeaderBoard = () => {
                   ref={ref}
                   searchResults={searchResults}
                   searchLoad={searchLoad}
-                  currUserChar={user}
                   navigate={navigate}
                   isLoading={isLoading}
                   PAGE_LIMIT={PAGE_LIMIT}

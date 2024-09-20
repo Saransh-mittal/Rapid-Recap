@@ -18,6 +18,12 @@ const messageActionHandlers = {
   VIEW_PROFILE: (actions, profileId) => {
     actions.navigateToProfile(profileId)
   },
+  VIEW_TOURNAMENT: actions => {
+    actions.navigateToTournament()
+  },
+  REGISTER_TOURNAMENT: actions => {
+    actions.navigateToTournament()
+  },
   SIGN_IN: () => {},
   GUEST: () => {},
   VIEW_EXPERIENCE: setShowXpLevelModal => {
@@ -36,6 +42,11 @@ export const createHandleMessageAction = (dispatch, actions) => {
         messageActionHandlers[actionType](() =>
           dispatch(actions.setShowingSummaryForNoteMessages(true)),
         )
+      } else if (
+        actionType === 'REGISTER_TOURNAMENT' ||
+        actionType === 'VIEW_TOURNAMENT'
+      ) {
+        messageActionHandlers['VIEW_TOURNAMENT'](actions)
       } else if (actionType === 'VIEW_PROFILE') {
         messageActionHandlers[actionType](actions, profileId)
       } else if (actionType === 'DISMISS') {
