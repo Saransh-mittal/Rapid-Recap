@@ -17,6 +17,8 @@ const {
   getAvgRQMOnArticle,
   searchArticles,
   getRelatedArticles,
+  createStory,
+  getStory,
 } = require('../controllers/article')
 const { Authenticate } = require('../middleware/authenticate')
 
@@ -34,5 +36,7 @@ router.route('/getArticleIds').get(getArticleIds)
 router.route('/getAvgRQMOnArticle').get(getAvgRQMOnArticle)
 router.route('/search').get(searchArticles)
 router.route('/related/:articleId').get(Authenticate, getRelatedArticles)
+router.route('/story').post(Authenticate, createStory)
+router.route('/story/:id').get(Authenticate, getStory)
 
 module.exports = router

@@ -4,5 +4,19 @@
   "updateErrorTitle": "Error updating article",
   "loginRequiredTitle": "Login Required",
   "loginRequiredDescription": "Please log in to share this article.",
-  "timeToRead": "min read"
+  "timeToRead": "min read",
+  "selectTheme": "Select Theme",
+  "space": "Space",
+  "indianMythology": "Indian Mythology",
+  "bibleMythology": "Bible Mythology",
+  "greekMythology": "Greek Mythology",
+  "scifi": "Sci-Fi",
+  "mysticWorld": "Mystic World",
+  "featureInTesting": "Feature in Testing",
+  "featureNotAvailableTitle": "Feature Not Available",
+  "featureNotAvailableDescription": "This feature is not available in Hindi at the moment.",
+  "loginRequiredTitleWithRealAccount": "Login Required",
+  "loginRequiredDescriptionWithRealAccount": "Please log in with a real account to use this feature.",
+  "themeChangeErrorTitle": "Theme Change Error",
+  "themeChangeErrorDescription": "An error occurred while changing the theme. Please try again."
 }
