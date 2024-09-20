@@ -13,7 +13,7 @@ import Heading from '../miscellaneous/HeadingComponent'
 import { useTranslation } from 'react-i18next'
 
 // Lazy load child components
-const IQLineGraph = React.lazy(() => import('./IQLineGraph'))
+const LineGraph = React.lazy(() => import('./LineGraph'))
 const IQBarGraph = React.lazy(() => import('./IQBarGraph'))
 const SolvedQuizzes = React.lazy(() => import('./SolvedQuizzes'))
 const RankAndSociety = React.lazy(() => import('./RankAndSociety'))
@@ -32,7 +32,7 @@ const SeasonModal = ({
   const [isLargerThan992px] = useMediaQuery('(min-width: 992px)')
   const [initialTouchY, setInitialTouchY] = useState(null)
   const { t: IQBartranslate } = useTranslation('IQBarGraph')
-  const { t: IQLineTranslate } = useTranslation('IQLineGraph')
+  const { t: IQLineTranslate } = useTranslation('LineGraph')
   const { t: SeasonModalTranslate } = useTranslation('SeasonModal')
 
   // Memoize scrollbar style creation function
@@ -216,12 +216,20 @@ const SeasonModal = ({
                       />
                     }
                   >
-                    <IQLineGraph
+                    <LineGraph
                       lineGraph={profile.lineGraph}
                       privateLineGraph={privacyProfileData.lineGraph}
                       loginedUserProfile={loginedUserProfile}
                       viewingHistory={true}
                       t={IQLineTranslate}
+                      quantities={[
+                        { label: IQLineTranslate('iqScore'), key: 'IQScore' },
+                        { label: IQLineTranslate('date'), key: 'date' },
+                        {
+                          label: IQLineTranslate('dailyRank'),
+                          key: 'dailyRank',
+                        },
+                      ]}
                     />
                     <IQBarGraph
                       barGraph={profile.barGraph}

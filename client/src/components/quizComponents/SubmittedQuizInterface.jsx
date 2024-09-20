@@ -95,7 +95,7 @@ const getReviewText = (field, value, t) => {
 
   if (field === 'timeTaken') {
     if (value >= 33 && value <= 50) return reviews.timeTaken.slow
-    if (value <= 16 && value > 33) return reviews.timeTaken.average
+    if (value >= 16 && value < 33) return reviews.timeTaken.average
     if (value >= 0 && value < 16) return reviews.timeTaken.fast
   }
 
@@ -325,6 +325,7 @@ const SubmittedQuizInterface = ({
                           justifyContent={'center'}
                           alignItems={'center'}
                           position={'relative'}
+                          h={'100%'}
                         >
                           {result?.quizDifficulty === 'easy'
                             ? t('easy')

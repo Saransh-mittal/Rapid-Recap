@@ -14,15 +14,13 @@ import {
 import { useTranslation } from 'react-i18next'
 
 // Lazy load components
-const IQLineGraph = React.lazy(() =>
-  import('../../profileComponents/IQLineGraph'),
-)
+const LineGraph = React.lazy(() => import('../../profileComponents/LineGraph'))
 const Heading = React.lazy(() => import('../../miscellaneous/HeadingComponent'))
 
 const IQScoreModal = ({ setShowIQScoreModal, isGuest }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { t } = useTranslation('IQScoreModal') // Use the translation hook
-  const { t: IQLineTranslate } = useTranslation('IQLineGraph')
+  const { t: IQLineTranslate } = useTranslation('LineGraph')
   const [lineGraph, setLineGraph] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -84,11 +82,16 @@ const IQScoreModal = ({ setShowIQScoreModal, isGuest }) => {
                 <Text color="red.500">{error}</Text>
               ) : (
                 <Suspense fallback={<Text>{t('loadingChart')}</Text>}>
-                  <IQLineGraph
+                  <LineGraph
                     lineGraph={lineGraph}
                     iOpenedFromNav={true}
                     graphwidth={responsiveChartWidth}
                     t={IQLineTranslate}
+                    quantities={[
+                      { label: IQLineTranslate('iqScore'), key: 'IQScore' },
+                      { label: IQLineTranslate('date'), key: 'date' },
+                      { label: IQLineTranslate('dailyRank'), key: 'dailyRank' },
+                    ]}
                   />
                 </Suspense>
               )}

@@ -21,10 +21,11 @@ import BookmarkSVG from '../assets/svg/BookmarkSVG.jsx'
 import HistogramSVG from '../assets/svg/HistogramSVG.jsx'
 import { findSocietyAndCircle } from '../utils/helper.utils.js'
 import { useTranslation } from 'react-i18next'
+import TournamentSection from '../components/profileComponents/TournamentSection.jsx'
 
 // Dynamic imports for code splitting
-const IQLineGraph = React.lazy(() =>
-  import('../components/profileComponents/IQLineGraph'),
+const LineGraph = React.lazy(() =>
+  import('../components/profileComponents/LineGraph.jsx'),
 )
 const SecureYourProgress = React.lazy(() =>
   import('../components/miscellaneous/SecureYourProgress.jsx'),
@@ -65,7 +66,7 @@ const Bookmarks = React.lazy(() =>
 export default function Profile() {
   const { t } = useTranslation('Profile')
   const { t: IQBarTranslate } = useTranslation('IQBarGraph')
-  const { t: IQLineTranslate } = useTranslation('IQLineGraph')
+  const { t: IQLineTranslate } = useTranslation('LineGraph')
   const { inGameName } = useParams()
   const { user } = useSelector(state => state.auth)
   const { userProfile, otherUserProfiles } = useSelector(state => state.content)
@@ -88,6 +89,7 @@ export default function Profile() {
     solvedQuizzes: false,
     society: false,
     seasonAnalytics: false,
+    tournamentAnalytics: false,
   })
 
   const {
@@ -624,6 +626,7 @@ export default function Profile() {
                 xl: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
               }}
               gap={{ base: '20px', xl: '0' }}
+              className="line-and-bar-graph"
             >
               {isLoading ? (
                 <>
@@ -637,13 +640,19 @@ export default function Profile() {
                 </>
               ) : (
                 <>
-                  <IQLineGraph
+                  <LineGraph
                     lineGraph={profile?.lineGraph}
                     privateLineGraph={privacyProfileData?.lineGraph}
                     loginedUserProfile={loginedUserProfile}
                     isGuest={user?.role === 'guest'}
                     t={IQLineTranslate}
+                    quantities={[
+                      { label: IQLineTranslate('iqScore'), key: 'IQScore' },
+                      { label: IQLineTranslate('date'), key: 'date' },
+                      { label: IQLineTranslate('dailyRank'), key: 'dailyRank' },
+                    ]}
                   />
+
                   <IQBarGraph
                     barGraph={profile?.barGraph}
                     privateBarGraph={privacyProfileData?.lineGraph}
@@ -708,6 +717,12 @@ export default function Profile() {
                 </>
               )}
             </Flex>
+            <TournamentSection
+              privateTournament={privacyProfileData?.tournamentAnalytics}
+              loginedUserProfile={loginedUserProfile}
+              isGuest={user?.role === 'guest'}
+              userId={profile?.userId}
+            />
           </Suspense>
         </Flex>
       </Flex>

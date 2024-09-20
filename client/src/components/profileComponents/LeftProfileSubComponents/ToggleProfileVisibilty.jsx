@@ -41,6 +41,9 @@ const ToggleProfileVisibility = ({ setShowHideModal, isGuest }) => {
     seasonAnalytics: user.profilePrivacy
       ? user?.profilePrivacy.seasonAnalytics
       : false,
+    tournamentAnalytics: user.profilePrivacy
+      ? user?.profilePrivacy.tournamentAnalytics
+      : false,
   })
   const [Guesthide, setGuestHide] = useState({
     fullProfile: user.profilePrivacy ? user.profilePrivacy.fullProfile : false,
@@ -63,6 +66,7 @@ const ToggleProfileVisibility = ({ setShowHideModal, isGuest }) => {
         barGraph: isFullProfileVisible,
         solvedQuizzes: isFullProfileVisible,
         society: isFullProfileVisible,
+        seasonAnalytics: isFullProfileVisible,
       }))
     } else if (key === 'fullProfile' && isGuest) {
       const isFullProfileVisible = !Guesthide[key]

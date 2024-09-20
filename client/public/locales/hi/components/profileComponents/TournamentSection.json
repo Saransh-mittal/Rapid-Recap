@@ -1,0 +1,17 @@
+{
+  "performanceHeading": "टूर्नामेंट प्रदर्शन",
+  "lastTournamentHeading": "अंतिम टूर्नामेंट की विजय",
+  "lastTournamentSubheading": "आपकी नवीनतम जीत देखें",
+  "analyticsButton": "टूर्नामेंट विश्लेषण",
+  "guestMessage": "कृपया अपनी प्रगति सुरक्षित करें और टूर्नामेंट में भाग लें और यहां अपना प्रदर्शन देखें...",
+  "fetchError": "डेटा प्राप्त करने में त्रुटि",
+  "chart": {
+    "label": "स्कोर",
+    "score": "स्कोर",
+    "rank": "रैंक",
+    "date": "तारीख"
+  },
+  "visibilityTooltip": "दूसरों के लिए दृश्यता",
+  "hidden": "छिपा हुआ",
+  "visible": "दृश्यमान"
+}

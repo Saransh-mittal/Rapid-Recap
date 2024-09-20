@@ -660,9 +660,11 @@ const profile = async (req, res) => {
       barGraph: false,
       solvedQuizzes: false,
       society: false,
+      tournamentAnalytics: false,
     }
 
     res.status(200).json({
+      userId: user._id,
       inGameName: user.inGameName,
       pic: user.pic,
       lineGraph: iqScoresHistory,
@@ -1010,6 +1012,7 @@ const profilePrivacy = async (req, res) => {
     solvedQuizzes,
     society,
     seasonAnalytics,
+    tournamentAnalytics,
   } = req.body
   try {
     const user = await User.findById(userId)
@@ -1023,6 +1026,7 @@ const profilePrivacy = async (req, res) => {
       solvedQuizzes,
       society,
       seasonAnalytics,
+      tournamentAnalytics,
     }
     await user.save()
     res.status(200).json({ message: 'Profile privacy settings updated' })
@@ -1562,6 +1566,29 @@ const updateUserLanguage = async (req, res) => {
   }
 }
 
+const getUserTournamentData = async (req, res) => {
+  try {
+    const userId = req.params.userId // Fetch the userId from the route parameters
+
+    const user = await User.findById(userId)
+      .select('tournamentPerformance') // Only fetch the tournamentPerformance field
+      .populate({
+        path: 'tournamentPerformance.tournament', // Populate tournament references
+        select: 'tournamentNumber', // Select specific fields from the tournament model
+      })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    res.status(200).json({
+      tournamentPerformance: user.tournamentPerformance,
+    })
+  } catch (error) {
+    console.error('Error fetching tournament performance:', error)
+    res.status(500).json({ message: 'Server error' })
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1598,4 +1625,5 @@ module.exports = {
   getUserIds,
   soundController,
   updateUserLanguage,
+  getUserTournamentData,
 }

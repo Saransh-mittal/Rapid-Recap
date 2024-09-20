@@ -304,60 +304,58 @@ const endTournament = async () => {
     console.log('Tournament ended')
   }
 
-  const tournament = await Tournament.findOne({
-    isActive: true,
-  }).sort({ startDate: -1 })
+  const tournament = currentTournament
 
   const registeredUsers = await TournamentRegistration.find({
     tournament: tournament._id,
   }).populate('user')
 
-  // for (const registration of registeredUsers) {
-  //   const localizedI18n = i18n.cloneInstance()
-  //   await localizedI18n.changeLanguage(registration.user.userLanguage)
+  for (const registration of registeredUsers) {
+    const localizedI18n = i18n.cloneInstance()
+    await localizedI18n.changeLanguage(registration.user.userLanguage)
 
-  //   const t = (key, options) =>
-  //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+    const t = (key, options) =>
+      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-  //   const title = t('tournament_completed.title')
-  //   const body = t('tournament_completed.body')
+    const title = t('tournament_completed.title')
+    const body = t('tournament_completed.body')
 
-  //   await sendNotification({
-  //     title,
-  //     body,
-  //     url: '/tournament',
-  //     userId: registration.user._id,
-  //   })
-  // }
+    await sendNotification({
+      title,
+      body,
+      url: '/tournament',
+      userId: registration.user._id,
+    })
+  }
 
   const nonRegisteredUsers = await User.find({
     _id: { $nin: tournament.participants },
   })
 
-  // for (const user of nonRegisteredUsers) {
-  //   const localizedI18n = i18n.cloneInstance()
-  //   await localizedI18n.changeLanguage(user.userLanguage)
+  for (const user of nonRegisteredUsers) {
+    const localizedI18n = i18n.cloneInstance()
+    await localizedI18n.changeLanguage(user.userLanguage)
 
-  //   const t = (key, options) =>
-  //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+    const t = (key, options) =>
+      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-  //   const title =
-  //     user?.role === 'guest'
-  //       ? t('next_time_guest.title')
-  //       : t('next_time_user.title')
+    const title =
+      user?.role === 'guest'
+        ? t('next_time_guest.title')
+        : t('next_time_user.title')
 
-  //   const body =
-  //     user?.role === 'guest'
-  //       ? t('next_time_guest.body')
-  //       : t('next_time_user.body')
+    const body =
+      user?.role === 'guest'
+        ? t('next_time_guest.body')
+        : t('next_time_user.body')
 
-  //   await sendNotification({
-  //     title,
-  //     body,
-  //     url: user?.role === 'guest' ? '/signup' : '/tournament',
-  //     userId: user._id,
-  //   })
-  // }
+    await sendNotification({
+      title,
+      body,
+      url: user?.role === 'guest' ? '/signup' : '/tournament',
+      userId: user._id,
+    })
+  }
 }
 
 module.exports = {

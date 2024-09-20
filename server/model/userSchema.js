@@ -115,6 +115,7 @@ const userSchema = new mongoose.Schema(
       solvedQuizzes: { type: Boolean, default: false },
       society: { type: Boolean, default: false },
       seasonAnalytics: { type: Boolean, default: false },
+      tournamentAnalytics: { type: Boolean, default: false },
     },
     societyUpgradeMessage: {
       type: String,
@@ -296,6 +297,24 @@ const userSchema = new mongoose.Schema(
       enum: ['', 'en', 'hi'],
     },
     expiresAt: { type: Date },
+    tournamentPerformance: [
+      {
+        tournament: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'TOURNAMENT',
+        },
+        score: {
+          type: Number,
+          default: 0,
+        },
+        rank: {
+          type: Number,
+        },
+        endDate: {
+          type: Date,
+        },
+      },
+    ],
   },
   { collection: 'Users' },
 )

@@ -36,6 +36,7 @@ const {
   getUserIds,
   soundController,
   updateUserLanguage,
+  getUserTournamentData,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -78,6 +79,9 @@ router.route('/lineGraph').get(Authenticate, NavLineGraph)
 router.route('/getUserIds').get(getUserIds)
 router.route('/soundController').post(Authenticate, soundController)
 router.route('/language').post(Authenticate, updateUserLanguage)
+router
+  .route('/getUserTournamentData/:userId')
+  .get(Authenticate, getUserTournamentData)
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
 
 // Guest routes
