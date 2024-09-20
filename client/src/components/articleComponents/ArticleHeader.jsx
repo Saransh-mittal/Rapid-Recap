@@ -135,6 +135,11 @@ const ArticleHeader = ({
     const selectedTheme = e.target.value
     setTheme(selectedTheme)
     setIsLoadingTheme(true)
+    if (!selectedTheme) {
+      onThemeChange(null)
+      setIsLoadingTheme(false)
+      return
+    }
     try {
       const response = await axios.post('/api/articles/story', {
         articleId: article._id,
