@@ -2,6 +2,8 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import io from 'socket.io-client'
 
 const ENDPOINT = 'http://localhost:3000' // Update this with your actual endpoint
+// https://www.rapidrecap.co.in
+// http://localhost:3000
 
 export const useSocket = user => {
   const [socketConnected, setSocketConnected] = useState(false)
