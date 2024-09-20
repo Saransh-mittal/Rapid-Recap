@@ -39,7 +39,7 @@ const generatePrompt = (article, theme) => {
       break
   }
 
-  const basePrompt = `Convert the following article into an engaging story for children aged 13+ years old. Use simple English that Indian kids can easily understand. Ensure that all information from the original article is retained. Theme: ${theme}.
+  const basePrompt = `Convert the following article into an engaging story for children aged 13+ years old. Remember all articles are current affairs so once upon a time will not look good so try not to use it. Try not to change much names or try to provide the original name if analogical name is used as a quiz is generated on the article and users need to give that quiz so they should know the original information .Use simple English that Indian kids can easily understand. Ensure that all information from the original article is retained. Theme: ${theme}.
 
 Article:
 ${article.mainText}
@@ -50,7 +50,9 @@ Instructions:
 3. Break down complex concepts into simpler terms.
 4. Use analogies and examples relevant for good experiences.
 5. If (${theme}) has some big stories then if possible use only one story to explain the whole article.
-6. Remember to keep the story under 2500 characters.
+6. Remember to keep the story under ${
+    article.mainText.length * 1.2 < 2500 ? article.mainText.length * 1.2 : 2500
+  } characters.
 7. use ** to bold the important points.
 8. If required use numerical numbering to explain the points for example 1,2,3,4,5,6,7,8,9,10 etc.
 
