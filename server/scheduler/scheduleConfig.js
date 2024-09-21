@@ -36,10 +36,10 @@ const createSchedule = (name, time, task) => {
 }
 
 const tournamentDays = {
-  startRegistration: 2, // Saturday
-  endRegistration: 2, // Monday
-  startTournament: 3, // Tuesday
-  endTournament: 1, // Wednesday
+  startRegistration: 1, // Monday
+  endRegistration: 5, // Friday
+  startTournament: 6, // Saturday
+  endTournament: 0, // Sunday
 }
 let schedules = [
   createSchedule('newSeasonReset', '00:00', resetNewSeasonModal),
@@ -180,30 +180,27 @@ let schedules = [
   createSchedule('endRegistrationTournament', '23:00', endRegistration),
   createSchedule('startTournament', '00:00', startTournament),
   createSchedule('endTournament', '23:59', endTournament),
-  // {
-  //   name: 'inRegistrationPeriod',
-  //   cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
-  //   task: inRegisterationPeriod,
-  // },
-  // {
-  //   name: 'lastDayOfRegistrationPeriod',
-  //   cronPattern: '0 20 * * 5', // At 8:00 PM on Friday
-  //   task: lastDayOfRegisterationPeriod,
-  // },
-  // {
-  //   name: 'day1EndOfTournament',
-  //   cronPattern: '0 22 * * 6', // At 10:00 PM on Saturday
-  //   task: day1EndOfTournament,
-  // },
-  // {
-  //   name: 'day2OfTournament',
-  //   cronPattern: '0 11 * * 0', // At 11:00 AM on Sunday
-  //   task: day2OfTournament,
-  // },
+  {
+    name: 'inRegistrationPeriod',
+    cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
+    task: inRegisterationPeriod,
+  },
+  {
+    name: 'lastDayOfRegistrationPeriod',
+    cronPattern: '0 20 * * 5', // At 8:00 PM on Friday
+    task: lastDayOfRegisterationPeriod,
+  },
+  {
+    name: 'day1EndOfTournament',
+    cronPattern: '0 22 * * 6', // At 10:00 PM on Saturday
+    task: day1EndOfTournament,
+  },
+  {
+    name: 'day2OfTournament',
+    cronPattern: '0 11 * * 0', // At 11:00 AM on Sunday
+    task: day2OfTournament,
+  },
 ]
-
-// Sort schedules by time
-// schedules.sort((a, b) => a.time.valueOf() - b.time.valueOf())
 
 // Convert times to cron patterns and add them to each schedule
 schedules.forEach(schedule => {

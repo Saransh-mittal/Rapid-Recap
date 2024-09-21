@@ -9,7 +9,8 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import { Clock, ChevronDown, ChevronUp } from 'lucide-react'
+import ClockSVG from '../../assets/svg/ClockSVG'
+import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 
 const PreviousTournamentLeaderboard = lazy(() =>
   import('./PreviousTournamentLeaderboard'),
@@ -25,7 +26,12 @@ const BufferPeriodDisplay = ({ previousTournamentData }) => {
     <Box bg="rgba(0, 0, 0, 0.2)" borderRadius="lg" py={6} px={3}>
       <VStack spacing={6} align="stretch">
         <Heading size="lg" display="flex" alignItems="center">
-          <Clock color="#4FD1C5" style={{ marginRight: '0.5rem' }} />
+          <ClockSVG
+            color="#4FD1C5"
+            style={{ marginRight: '0.5rem' }}
+            width={'20px'}
+            height={'20px'}
+          />
           {t('bufferPeriod.title')}
         </Heading>
         <Text>
@@ -40,7 +46,7 @@ const BufferPeriodDisplay = ({ previousTournamentData }) => {
           colorScheme="pink"
           size="lg"
           onClick={toggleLeaderboard}
-          rightIcon={showLeaderboard ? <ChevronUp /> : <ChevronDown />}
+          rightIcon={showLeaderboard ? <ChevronUpIcon /> : <ChevronDownIcon />}
         >
           {showLeaderboard
             ? t('bufferPeriod.hidePreviousResults')

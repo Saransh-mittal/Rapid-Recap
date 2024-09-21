@@ -9,9 +9,9 @@ const i18n = require('i18next')
 
 const startRegistration = async () => {
   const startDate = moment().tz('Asia/Kolkata').startOf('day')
-  const endDate = moment(startDate).add(4, 'days').endOf('day')
+  const endDate = moment(startDate).add(6, 'days').endOf('day')
   const registrationEndDate = moment(startDate)
-    .add(2, 'days')
+    .add(4, 'days')
     .set({ hour: 23, minute: 0, second: 0 })
 
   const registrationStartDate = moment(startDate).add(2, 'hours')
@@ -23,7 +23,7 @@ const startRegistration = async () => {
     : 1
 
   const tournamentStartDate = moment(startDate)
-    .add(3, 'days')
+    .add(5, 'days')
     .set({ hour: 0, minute: 0, second: 0 })
 
   await Tournament.create({
@@ -35,28 +35,28 @@ const startRegistration = async () => {
     status: 'registration',
   })
 
-  // const realUsers = await User.find({})
+  const realUsers = await User.find({})
 
-  // for (const user of realUsers) {
-  //   const localizedI18n = i18n.cloneInstance()
-  //   await localizedI18n.changeLanguage(user.userLanguage)
+  for (const user of realUsers) {
+    const localizedI18n = i18n.cloneInstance()
+    await localizedI18n.changeLanguage(user.userLanguage)
 
-  //   const t = (key, options) =>
-  //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+    const t = (key, options) =>
+      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-  //   const title = t('tournament_registration_open.title')
-  //   const body =
-  //     user?.role === 'guest'
-  //       ? t('tournament_registration_open.body_guest')
-  //       : t('tournament_registration_open.body_user')
+    const title = t('tournament_registration_open.title')
+    const body =
+      user?.role === 'guest'
+        ? t('tournament_registration_open.body_guest')
+        : t('tournament_registration_open.body_user')
 
-  //   await sendNotification({
-  //     title,
-  //     body,
-  //     url: '/tournament',
-  //     userId: user._id,
-  //   })
-  // }
+    await sendNotification({
+      title,
+      body,
+      url: '/tournament',
+      userId: user._id,
+    })
+  }
   console.log(
     `New tournament #${nextTournamentNumber
       .toString()
@@ -129,73 +129,77 @@ const lastDayOfRegisterationPeriod = async () => {
 }
 
 const endRegistration = async () => {
-  const currentTournament = await Tournament.findOne({ status: 'registration' })
+  const currentTournament = await Tournament.findOne({
+    status: 'registration',
+    isActive: true,
+  })
   if (currentTournament) {
     currentTournament.status = 'upcoming'
     await currentTournament.save()
     console.log('Tournament registration ended')
   }
 
-  if (currentTournament.status === 'upcoming' && currentTournament.isActive) {
-    const tournament = currentTournament
+  const tournament = currentTournament
 
-    const participantsCount = tournament.participants.length
-    const registeredUsers = await TournamentRegistration.find({
-      tournament: tournament._id,
-    }).populate('user')
+  const participantsCount = tournament.participants.length
+  const registeredUsers = await TournamentRegistration.find({
+    tournament: tournament._id,
+  }).populate('user')
 
-    // for (const registration of registeredUsers) {
-    //   const localizedI18n = i18n.cloneInstance()
-    //   await localizedI18n.changeLanguage(registration.user.userLanguage)
+  for (const registration of registeredUsers) {
+    const localizedI18n = i18n.cloneInstance()
+    await localizedI18n.changeLanguage(registration.user.userLanguage)
 
-    //   const t = (key, options) =>
-    //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+    const t = (key, options) =>
+      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-    //   const title = t('all_the_best.title')
-    //   const body = t('all_the_best.body', { participantsCount })
+    const title = t('all_the_best.title')
+    const body = t('all_the_best.body', { participantsCount })
 
-    //   await sendNotification({
-    //     title,
-    //     body,
-    //     url: '/tournament',
-    //     userId: registration.user._id,
-    //   })
-    // }
-
-    const nonRegisteredUsers = await User.find({
-      _id: { $nin: tournament.participants },
+    await sendNotification({
+      title,
+      body,
+      url: '/tournament',
+      userId: registration.user._id,
     })
+  }
 
-    // for (const user of nonRegisteredUsers) {
-    //   const localizedI18n = i18n.cloneInstance()
-    //   await localizedI18n.changeLanguage(user.userLanguage)
+  const nonRegisteredUsers = await User.find({
+    _id: { $nin: tournament.participants },
+  })
 
-    //   const t = (key, options) =>
-    //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+  for (const user of nonRegisteredUsers) {
+    const localizedI18n = i18n.cloneInstance()
+    await localizedI18n.changeLanguage(user.userLanguage)
 
-    //   const title =
-    //     user?.role === 'guest'
-    //       ? t('see_you_next_time_guest.title')
-    //       : t('see_you_next_time_user.title')
+    const t = (key, options) =>
+      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-    //   const body =
-    //     user?.role === 'guest'
-    //       ? t('see_you_next_time_guest.body', { participantsCount })
-    //       : t('see_you_next_time_user.body', { participantsCount })
+    const title =
+      user?.role === 'guest'
+        ? t('see_you_next_time_guest.title')
+        : t('see_you_next_time_user.title')
 
-    //   await sendNotification({
-    //     title,
-    //     body,
-    //     url: '/tournament',
-    //     userId: user._id,
-    //   })
-    // }
+    const body =
+      user?.role === 'guest'
+        ? t('see_you_next_time_guest.body', { participantsCount })
+        : t('see_you_next_time_user.body', { participantsCount })
+
+    await sendNotification({
+      title,
+      body,
+      url: '/tournament',
+      userId: user._id,
+    })
   }
   console.log('Tournament registration ended')
 }
 
 const startTournament = async () => {
-  const currentTournament = await Tournament.findOne({ status: 'upcoming' })
+  const currentTournament = await Tournament.findOne({
+    status: 'upcoming',
+    isActive: true,
+  })
   if (currentTournament) {
     currentTournament.status = 'ongoing'
     await currentTournament.save()
@@ -208,23 +212,23 @@ const startTournament = async () => {
     tournament: tournament._id,
   }).populate('user')
 
-  // for (const registration of registeredUsers) {
-  //   const localizedI18n = i18n.cloneInstance()
-  //   await localizedI18n.changeLanguage(registration.user.userLanguage)
+  for (const registration of registeredUsers) {
+    const localizedI18n = i18n.cloneInstance()
+    await localizedI18n.changeLanguage(registration.user.userLanguage)
 
-  //   const t = (key, options) =>
-  //     localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
+    const t = (key, options) =>
+      localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
 
-  //   const title = t('tournament_started.title')
-  //   const body = t('tournament_started.body')
+    const title = t('tournament_started.title')
+    const body = t('tournament_started.body')
 
-  //   await sendNotification({
-  //     title,
-  //     body,
-  //     url: '/tournament',
-  //     userId: registration.user._id,
-  //   })
-  // }
+    await sendNotification({
+      title,
+      body,
+      url: '/tournament',
+      userId: registration.user._id,
+    })
+  }
 }
 
 const day1EndOfTournament = async () => {
@@ -342,7 +346,7 @@ async function updateTournamentPerformanceAndBadges(tournament) {
               tournament: tournament._id,
               score: entry.totalScore,
               rank: rank,
-              endDate: new Date(), // You might want to get the actual end date from the tournament
+              endDate: tournament.endDate, // You might want to get the actual end date from the tournament
               tournamentNumber: tournament.tournamentNumber, // Assuming tournamentId is unique and can be used as tournamentNumber
               participantCnt: participantCount,
             },
@@ -372,7 +376,10 @@ async function updateTournamentPerformanceAndBadges(tournament) {
 }
 
 const endTournament = async () => {
-  const currentTournament = await Tournament.findOne({ status: 'ongoing' })
+  const currentTournament = await Tournament.findOne({
+    status: 'ongoing',
+    isActive: true,
+  })
   if (currentTournament) {
     currentTournament.status = 'completed'
     currentTournament.isActive = false

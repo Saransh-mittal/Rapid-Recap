@@ -131,9 +131,9 @@ const authorizeUsers = asyncHandler(async (req, res) => {
   if (!latestTournament) {
     return res.json({ isAuthorized: false, isUnderMaintenance: false })
   }
-  const isAuthorized = authorizedInGameNames.includes(user.inGameName)
+
   res.json({
-    isAuthorized,
+    isAuthorized: true,
     isUnderMaintenance: latestTournament.isUnderMaintenance,
   })
 })
@@ -416,12 +416,12 @@ const registerForTournament = asyncHandler(async (req, res) => {
         message: 'Guest users are not allowed to register for the tournament',
       })
     }
-    // if (user.streak < 2) {
-    //   return res.status(403).json({
-    //     message:
-    //       'User must have a minimum streak of 2 to register for the tournament',
-    //   })
-    // }
+    if (user.streak < 5) {
+      return res.status(403).json({
+        message:
+          'User must have a minimum streak of 5 to register for the tournament',
+      })
+    }
 
     // Check if user is already registered
     const { isRegistered } = await getUserRegistrationDetails(
