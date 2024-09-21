@@ -37,6 +37,10 @@ const tournamentSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  isUnderMaintenance: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const Tournament = mongoose.model('TOURNAMENT', tournamentSchema)

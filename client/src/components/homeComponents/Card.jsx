@@ -11,13 +11,15 @@ import {
   Heading,
 } from '@chakra-ui/react'
 import { motion, useAnimation, useSpring, useTransform } from 'framer-motion'
-import { Calendar, Clock, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useSound from '../../customHooks/useSound'
 import slugify from 'slugify'
 import { useDispatch } from 'react-redux'
 import { setArticleData } from '../../redux/articleSlice'
 import { useTranslation } from 'react-i18next'
+import CalendarSVG from '../../assets/svg/CalenderSVG'
+import ClockSVG from '../../assets/svg/ClockSVG'
+import ArrowRightSVG from '../../assets/svg/ArrowRightSVG'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -189,7 +191,7 @@ const Card = ({
               damping: 20,
             }}
           >
-            <Calendar size={12} style={{ marginRight: '4px' }} />
+            <CalendarSVG size={12} style={{ marginRight: '4px' }} />
             {date}
           </MotionBadge>
         </HStack>
@@ -221,7 +223,7 @@ const Card = ({
         bottom={3}
       >
         <HStack spacing={2}>
-          <Clock size={14} />
+          <ClockSVG size={14} />
           <MotionText
             fontSize="sm"
             fontWeight="medium"
@@ -246,7 +248,7 @@ const Card = ({
           whileHover={{ bg: 'blue.600' }}
           transition={{ duration: 0.2 }}
         >
-          <ArrowRight size={20} />
+          <ArrowRightSVG size={20} />
         </MotionCircle>
       </Flex>
     </MotionBox>

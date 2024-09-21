@@ -2,5 +2,6 @@
   "heading": "Previous Tournament Leaderboard",
   "loading": "Loading leaderboard...",
   "noData": "No previous tournament data available.",
-  "endDate": "End Date {{date}}"
+  "endDate": "End Date {{date}}",
+  "topLeadersInfo": "Top 5 leaders"
 }

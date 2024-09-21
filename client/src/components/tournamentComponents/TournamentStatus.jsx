@@ -1,8 +1,11 @@
 import React, { useMemo, lazy, Suspense } from 'react'
 import { VStack, Alert, AlertIcon, Heading, Text, Flex } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
-import { Clock, UserCheck, UserPlus, Trophy } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import { Trophy } from 'lucide-react'
+import ClockSVG from '../../assets/svg/ClockSVG'
+import UserCheckSVG from '../../assets/svg/UserCheckSVG'
+import UserPlusSVG from '../../assets/svg/UserPlusSVG'
+import TrophySVG from '../../assets/svg/TrophySVG'
 
 // Lazy load RegisteredUsersCount component
 const RegisteredUsersCount = lazy(() => import('./RegisteredUsersCount'))
@@ -30,7 +33,7 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
             fontSize={{ base: 'lg', md: 'xl' }}
           >
             <Suspense fallback={<div>{t('loading')}</div>}>
-              <Clock color="#4FD1C5" style={{ marginRight: '0.5rem' }} />
+              <ClockSVG color="#4FD1C5" style={{ marginRight: '0.5rem' }} />
             </Suspense>
             {t('upcoming.title')}
           </Heading>
@@ -59,7 +62,7 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
             ) : registrationStatus === 'registered' ? (
               <Flex align="center">
                 <Suspense fallback={<div>{t('loading')}</div>}>
-                  <UserCheck style={{ marginRight: '0.5rem' }} size={16} />
+                  <UserCheckSVG style={{ marginRight: '0.5rem' }} size={16} />
                 </Suspense>
                 <Text>{t('upcoming.registered')}</Text>
               </Flex>
@@ -67,7 +70,7 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
               <>
                 <Flex align="center">
                   <Suspense fallback={<div>{t('loading')}</div>}>
-                    <UserPlus className="mr-2" size={16} />
+                    <UserPlusSVG className="mr-2" size={16} />
                   </Suspense>
                   <Text>{t('upcoming.notRegistered')}</Text>
                 </Flex>
@@ -86,7 +89,7 @@ const TournamentStatus = ({ tournamentData, registrationStatus }) => {
         <VStack spacing={6} align="stretch">
           <Heading size="lg" mb={4} display="flex" alignItems="center">
             <Suspense fallback={<div>{t('loading')}</div>}>
-              <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
+              <TrophySVG color="#ECC94B" style={{ marginRight: '0.5rem' }} />
             </Suspense>
             {t('ongoing.title')}
           </Heading>

@@ -13,11 +13,23 @@ const {
   addAdminArticleDetails,
   deleteAdminArticleDetails,
 } = require('../controllers/article')
+
+const {
+  getAllTournaments,
+  updateMaintenanceStatus,
+} = require('../controllers/tournamentController')
 const router = express.Router()
 
 router.get('/verify-admin', Authenticate, adminMiddleware, (req, res) => {
   res.json({ isAdmin: true })
 })
+router.get('/tournament/all', Authenticate, adminMiddleware, getAllTournaments)
+router.put(
+  '/tournament/:id/maintenance',
+  Authenticate,
+  adminMiddleware,
+  updateMaintenanceStatus,
+)
 router.get(
   '/quiz-attempts',
   Authenticate,

@@ -21,21 +21,10 @@ import { useTranslation } from 'react-i18next'
 
 const LeaderBoardRow = React.lazy(() => import('./LeaderBoardRow'))
 const LoadingState = React.lazy(() => import('./LoadingState'))
-const VerticalDotsSeparator = React.lazy(() =>
-  import('./VerticalDotsSeparator'),
-)
 
 const LeaderBoardTable = forwardRef(
   (
-    {
-      leaders,
-      searchResults,
-      searchLoad,
-      currUserChar,
-      navigate,
-      isLoading,
-      PAGE_LIMIT,
-    },
+    { leaders, searchResults, searchLoad, navigate, isLoading, PAGE_LIMIT },
     ref,
   ) => {
     const { t } = useTranslation('LeaderBoardTable')
@@ -152,7 +141,6 @@ const LeaderBoardTable = forwardRef(
                         key={`${user._id}-${index}`}
                         user={user}
                         index={index}
-                        currUserChar={currUserChar}
                         isMobile={isMobile}
                         isTablet={isTablet}
                         isDesktop={isDesktop}
@@ -165,27 +153,6 @@ const LeaderBoardTable = forwardRef(
                     <Tr>
                       <Td ref={ref} style={{ height: '20px' }} />
                     </Tr>
-                  )}
-                  {currUserChar?.rank > 500 && (
-                    <>
-                      <Tr>
-                        <Td colSpan={isDesktop ? 6 : 4}>
-                          <VerticalDotsSeparator />
-                        </Td>
-                      </Tr>
-                      <LeaderBoardRow
-                        key={`currentUser-${currUserChar._id}`}
-                        user={currUserChar}
-                        index={50}
-                        currUserChar={currUserChar}
-                        isMobile={isMobile}
-                        isTablet={isTablet}
-                        isDesktop={isDesktop}
-                        navigate={handleNavigate}
-                        textColor={textColor}
-                        accentColor={accentColor}
-                      />
-                    </>
                   )}
                 </Tbody>
               )}

@@ -6,6 +6,7 @@ import {
   useDisclosure,
   VStack,
   HStack,
+  Text,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
@@ -48,6 +49,7 @@ const NoteMessage = ({
         setShowXpLevelModal,
         setIsNotifDrawerOpen,
         navigateToProfile: id => navigate(`/profile/${id}`),
+        navigateToTournament: () => navigate(`/tournament`),
       }),
     [dispatch, navigate],
   )
@@ -126,7 +128,7 @@ const NoteMessage = ({
               <CloseButton size="sm" onClick={handleClose} color="white" />
             </Box>
             <VStack align="stretch" p={3} spacing={2}>
-              {customContent ? customContent : content}
+              {customContent ? customContent : <Text>{content}</Text>}
               {actions.length > 0 && (
                 <HStack spacing={2} justify="center" pt={2}>
                   <Suspense fallback={null}>

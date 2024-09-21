@@ -122,7 +122,11 @@ const SeasonSelectorModal = ({
           width={{ base: '100vw !important', lg: '15rem !important' }}
         >
           <DrawerCloseButton color={'white'} />
-          <DrawerHeader textAlign={'center'} mt={{ base: '0', lg: '2rem' }}>
+          <DrawerHeader
+            textAlign={'center'}
+            mt={{ base: '0', lg: '2rem' }}
+            color={'white'}
+          >
             {t('selectSeason')} {/* Use translation key */}
           </DrawerHeader>
 

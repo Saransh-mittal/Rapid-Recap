@@ -67,6 +67,18 @@ const ButtonFactory = ({
           {t('VIEW_PROFILE')}
         </ElegantButton>
       )
+    case 'REGISTER_TOURNAMENT':
+      return (
+        <ElegantButton onClick={onClick} {...props}>
+          {t('REGISTER_TOURNAMENT')}
+        </ElegantButton>
+      )
+    case 'VIEW_TOURNAMENT':
+      return (
+        <ElegantButton onClick={onClick} {...props}>
+          {t('VIEW_TOURNAMENT')}
+        </ElegantButton>
+      )
     case 'VIEW_EXPERIENCE':
       return (
         <ElegantButton onClick={onClick} {...props}>

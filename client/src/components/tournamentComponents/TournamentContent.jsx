@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { Suspense, useMemo } from 'react'
 import {
   VStack,
   Skeleton,
@@ -15,7 +15,8 @@ import {
   HStack,
   Tab,
 } from '@chakra-ui/react'
-import { Trophy, History } from 'lucide-react'
+import TrophySVG from '../../assets/svg/TrophySVG'
+import { RepeatClockIcon } from '@chakra-ui/icons'
 
 const PreviousTournamentLeaderboard = React.lazy(() =>
   import('./PreviousTournamentLeaderboard'),
@@ -24,6 +25,7 @@ const TimeInfo = React.lazy(() => import('./TimeInfo'))
 const TournamentStatus = React.lazy(() => import('./TournamentStatus'))
 const RegistrationSection = React.lazy(() => import('./RegistrationSection'))
 const CategorySelection = React.lazy(() => import('./CategorySelection'))
+const BufferPeriodDisplay = React.lazy(() => import('./BufferPeriodDisplay'))
 
 const LoadingSkeleton = () => (
   <VStack spacing={4} width="100%">
@@ -115,19 +117,29 @@ const TournamentContent = React.memo(
       return <NoTournamentData t={t} />
     }
 
+    if (!tournamentData && previousTournamentData) {
+      return (
+        <Suspense fallback={<Skeleton height="40px" />}>
+          <BufferPeriodDisplay
+            previousTournamentData={previousTournamentData}
+          />
+        </Suspense>
+      )
+    }
+
     return (
       <Tabs isFitted variant="soft-rounded" colorScheme="pink">
         <TabList mb="0.7em" justifyContent="center" mx={{ base: 2, md: 4 }}>
           <TournamentTab
             number={currentTournamentNumber}
-            icon={Trophy}
+            icon={TrophySVG}
             label={{ short: 'curr', long: 'current' }}
             isScreenSmallerThan400px={isScreenSmallerThan400px}
             t={t}
           />
           <TournamentTab
             number={previousTournamentNumber}
-            icon={History}
+            icon={RepeatClockIcon}
             label={{ short: 'prev', long: 'previous' }}
             isScreenSmallerThan400px={isScreenSmallerThan400px}
             t={t}

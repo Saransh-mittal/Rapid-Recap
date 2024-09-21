@@ -40,7 +40,7 @@ const LoadingSpinner = React.memo(() => (
 
 // NoDataMessage Component
 const NoDataMessage = React.memo(({ viewingHistory }) => {
-  const { t } = useTranslation('IQLineGraph')
+  const { t } = useTranslation('LineGraph')
   return (
     <Flex
       w="100%"
@@ -65,7 +65,7 @@ const NoDataMessage = React.memo(({ viewingHistory }) => {
 
 // GraphHeader Component
 const GraphHeader = React.memo(
-  ({ hoveredData, loginedUserProfile, user, t }) => {
+  ({ hoveredData, loginedUserProfile, user, t, quantities }) => {
     return (
       <Flex justifyContent="space-between" position="relative">
         {loginedUserProfile && (
@@ -82,30 +82,18 @@ const GraphHeader = React.memo(
           </Tooltip>
         )}
         <Flex justifyContent="space-between" w="100%" marginTop="2rem">
-          <Flex flexDirection="column">
-            <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
-              {t('iqScore')}
-            </Text>
-            <Text textAlign="left" fontSize="1.5rem">
-              {hoveredData?.IQScore}
-            </Text>
-          </Flex>
-          <Flex flexDirection="column">
-            <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
-              {t('date')}
-            </Text>
-            <Text textAlign="left">
-              {hoveredData?.date
-                ? formatDate(hoveredData.date, i18n.language)
-                : ''}
-            </Text>
-          </Flex>
-          <Flex flexDirection="column">
-            <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
-              {t('dailyRank')}
-            </Text>
-            <Text textAlign="left">{hoveredData?.dailyRank}</Text>
-          </Flex>
+          {quantities.map((quantity, index) => (
+            <Flex flexDirection="column" key={index}>
+              <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
+                {quantity.label}
+              </Text>
+              <Text textAlign="left" fontSize="1.5rem">
+                {quantity.key === 'date' && hoveredData?.date
+                  ? formatDate(hoveredData.date, i18n.language) // Use the formatDate function here
+                  : hoveredData?.[quantity.key] || ''}
+              </Text>
+            </Flex>
+          ))}
         </Flex>
       </Flex>
     )
@@ -131,7 +119,7 @@ const GraphBody = React.memo(
   ),
 )
 
-const IQLineGraph = ({
+const LineGraph = ({
   lineGraph,
   privateLineGraph,
   loginedUserProfile,
@@ -139,6 +127,7 @@ const IQLineGraph = ({
   graphwidth,
   isGuest,
   t,
+  quantities, // New prop for quantities configuration
 }) => {
   const { user } = useSelector(state => state.auth)
   const [isLoading, setIsLoading] = useState(true)
@@ -154,8 +143,9 @@ const IQLineGraph = ({
   const [hoveredData, setHoveredData] = useState(null)
 
   const chartData = useMemo(() => {
-    return lineGraph.map(entry => ({
-      date: entry.date ? moment(entry.date, 'YYYY:MM:DD').toDate() : null,
+    // Ensure lineGraph is an array
+    return (Array.isArray(lineGraph) ? lineGraph : []).map(entry => ({
+      date: entry.date ? moment(entry.date, 'YYYY-MM-DD').toDate() : null, // Parse the date correctly
       IQScore: entry.IQScore,
       dailyRank: entry.dailyRank,
     }))
@@ -246,6 +236,7 @@ const IQLineGraph = ({
         loginedUserProfile={loginedUserProfile}
         user={user}
         t={t}
+        quantities={quantities} // Pass the dynamic quantities
       />
       <GraphBody
         chartData={chartData}
@@ -257,4 +248,4 @@ const IQLineGraph = ({
   )
 }
 
-export default IQLineGraph
+export default LineGraph

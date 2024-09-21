@@ -149,7 +149,7 @@ const TournamentQuiz = () => {
         dispatch(
           setUser({
             ...user,
-            xp: user.xp + response.data.xpAwarded,
+            xp: user.xp + 10,
           }),
         )
 

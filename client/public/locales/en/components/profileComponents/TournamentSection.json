@@ -1,0 +1,17 @@
+{
+  "performanceHeading": "Tournament Performance",
+  "lastTournamentHeading": "Last Tournament Triumphs",
+  "lastTournamentSubheading": "Behold your latest conquests",
+  "analyticsButton": "Tournament Analytics",
+  "guestMessage": "Please secure your progress to participate in tournament and view your tournament performance here...",
+  "fetchError": "Error fetching data",
+  "chart": {
+    "label": "Score",
+    "score": "Score",
+    "rank": "Rank",
+    "date": "Date"
+  },
+  "visibilityTooltip": "Visibility to others",
+  "hidden": "HIDDEN",
+  "visible": "VISIBLE"
+}

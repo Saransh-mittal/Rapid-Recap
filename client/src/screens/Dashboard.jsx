@@ -34,6 +34,9 @@ const NotificationStatus = lazy(() =>
 const CurrentAffairsManagement = lazy(() =>
   import('../components/dashboardComponents/CurrentAffairsManagement'),
 )
+const TournamentManagement = lazy(() =>
+  import('../components/dashboardComponents/TournamentManagement'),
+)
 
 const Dashboard = () => {
   const [quizAttempts, setQuizAttempts] = useState([])
@@ -53,6 +56,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const isScreenSmallerThen650px = useMediaQuery('(max-width: 650px)')[0]
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const {
+    isOpen: isTournamentManagementOpen,
+    onOpen: onTournamentManagementOpen,
+    onClose: onTournamentManagementClose,
+  } = useDisclosure()
   const {
     isOpen: isNotificationStatusOpen,
     onOpen: onNotificationStatusOpen,
@@ -341,6 +349,10 @@ const Dashboard = () => {
                 'Show Notification Status',
                 onNotificationStatusOpen,
               )}
+              {renderModalButton(
+                'Manage Tournaments',
+                onTournamentManagementOpen,
+              )}
               {renderModalButton('Manage Articles', onArticleManagementOpen)}
               {renderModalButton(
                 'Manage Current Affairs',
@@ -355,6 +367,10 @@ const Dashboard = () => {
               {renderModalButton(
                 'Show Notification Status',
                 onNotificationStatusOpen,
+              )}
+              {renderModalButton(
+                'Manage Tournaments',
+                onTournamentManagementOpen,
               )}
               {renderModalButton('Manage Articles', onArticleManagementOpen)}
               {renderModalButton(
@@ -467,6 +483,12 @@ const Dashboard = () => {
         <CurrentAffairsManagement
           isOpen={isCurrentAffairsOpen}
           onClose={onCurrentAffairsClose}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <TournamentManagement
+          isOpen={isTournamentManagementOpen}
+          onClose={onTournamentManagementClose}
         />
       </Suspense>
     </Box>

@@ -15,12 +15,13 @@ import {
   Text,
   useDisclosure,
 } from '@chakra-ui/react'
-import { Trophy, Medal } from 'lucide-react'
 import axios from 'axios'
 import { useInView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next' // Import useTranslation
 import { setRefetchLeaderBoard } from '../../redux/tournamentSlice'
+import TrophySVG from '../../assets/svg/TrophySVG'
+import Medal from '../../assets/svg/Medal'
 
 // Lazy load components
 const LeaderboardTable = React.lazy(() => import('./LeaderboardTable'))
@@ -146,7 +147,7 @@ const LeaderboardSection = ({ tournamentData }) => {
   return (
     <VStack spacing={6} align="stretch">
       <Heading size="lg" display="flex" alignItems="center">
-        <Trophy color="#ECC94B" style={{ marginRight: '0.5rem' }} />
+        <TrophySVG color="#ECC94B" style={{ marginRight: '0.5rem' }} />
         {tournamentData?.status === 'completed'
           ? t(`Leaderboard`)
           : t('currentLeaderboard')}

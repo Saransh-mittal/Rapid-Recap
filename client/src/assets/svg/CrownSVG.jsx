@@ -1,8 +1,8 @@
 import * as React from 'react'
-const CrownSVG = props => (
+const CrownSVG = ({ size, style, color, ...props }) => (
   <svg
-    width={props.size || '20px'}
-    height={props.size || '20px'}
+    width={size || '20px'}
+    height={size || '20px'}
     viewBox="0 0 128 128"
     xmlns="http://www.w3.org/2000/svg"
     xmlnsXlink="http://www.w3.org/1999/xlink"
@@ -10,15 +10,16 @@ const CrownSVG = props => (
     role="img"
     className="iconify iconify--noto"
     preserveAspectRatio="xMidYMid meet"
+    style={style}
     {...props}
   >
     <path
       d="M94.52 21.81c2.44-1.18 4.13-3.67 4.13-6.56a7.28 7.28 0 0 0-14.56 0c0 2.93 1.73 5.44 4.22 6.6c-2.88 15.6-7.3 27.21-23.75 29.69c0 0 4.43 22.15 25.15 22.15s22.82-21.93 22.82-21.93c-16.81.86-18.23-20.27-18.01-29.95z"
-      fill="#f19534"
+      fill={color || '#f19534'}
     />
     <path
       d="M34.74 21.81c-2.44-1.18-4.13-3.67-4.13-6.56a7.28 7.28 0 0 1 14.56 0c0 2.93-1.73 5.44-4.22 6.6c2.88 15.6 7.3 27.21 23.75 29.69c0 0-4.43 22.15-25.15 22.15S16.74 51.77 16.74 51.77c16.8.85 18.22-20.28 18-29.96z"
-      fill="#f19534"
+      fill={color || '#f19534'}
     />
     <path
       d="M89.43 73.69c.09 0 .18.01.27.01c5.71 0 10-1.67 13.22-4.08l-13.49 4.07z"
