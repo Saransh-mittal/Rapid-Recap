@@ -1,1 +1,0 @@
-import{t}from"./index-D4Mg_u3B.js";const a=()=>t.jsxs(t.Fragment,{children:[t.jsx("div",{className:"verticaldot"}),t.jsx("div",{className:"verticaldot"}),t.jsx("div",{className:"verticaldot"})]});export{a as default};

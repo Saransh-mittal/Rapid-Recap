@@ -17,5 +17,10 @@
   "rank": "Rank",
   "na": "N/A",
   "friend": "Friend",
-  "editProfile": "Edit Profile"
+  "editProfile": "Edit Profile",
+  "selectBadge": "Select Badge",
+  "noBadgesAvailable": "No Badges Available",
+  "badgeUpdateSuccess": "Badge updated successfully",
+  "badgeUpdateError": "Error updating badge",
+  "tournamentBadge": "T{{number}}"
 }

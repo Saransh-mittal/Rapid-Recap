@@ -6,5 +6,8 @@
   "CONFIRM": "Confirm",
   "CANCEL": "Cancel",
   "VIEW_ALL": "View All",
-  "DISMISS": "Dismiss"
+  "DISMISS": "Dismiss",
+  "REGISTER_TOURNAMENT": "Register Tournament",
+  "VIEW_STREAK": "View Streak",
+  "VIEW_TOURNAMENT": "View Tournament"
 }

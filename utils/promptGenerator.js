@@ -51,7 +51,7 @@ Instructions:
 4. Use analogies and examples relevant for good experiences.
 5. If (${theme}) has some big stories then if possible use only one story to explain the whole article.
 6. Remember to keep the story under ${
-    article.mainText.length * 1.2 < 2500 ? article.mainText.length * 1.2 : 2500
+    article.mainText.length * 1.1 < 2500 ? article.mainText.length * 1.1 : 2500
   } characters.
 7. use ** to bold the important points.
 8. If required use numerical numbering to explain the points for example 1,2,3,4,5,6,7,8,9,10 etc.

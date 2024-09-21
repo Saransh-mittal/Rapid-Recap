@@ -90,6 +90,33 @@ const getLatestTournament = asyncHandler(async (req, res) => {
   res.json(result)
 })
 
+// @desc   Get the active tournament registration details
+// @route  GET /api/tournament/active-registration
+// @access Private
+const getActiveTournamentRegistration = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const currentDate = new Date()
+  const tournament = await Tournament.findOne({
+    isActive: true,
+    registrationStartDate: { $lte: currentDate },
+    registrationEndDate: { $gte: currentDate },
+  })
+
+  if (!tournament) {
+    return res.json({ tournament: null, isRegistered: false })
+  }
+
+  const registration = await TournamentRegistration.findOne({
+    user: userId,
+    tournament: tournament._id,
+  })
+
+  res.json({
+    tournament,
+    isRegistered: !!registration,
+  })
+})
+
 // @desc   Authorize users for the tournament
 // @route  GET /api/tournament/authorize
 // @access Private
@@ -99,9 +126,55 @@ const authorizeUsers = asyncHandler(async (req, res) => {
   if (!user) {
     return res.status(404).json({ message: 'User not found' })
   }
+  const latestTournament = await Tournament.findOne().sort({ _id: -1 })
 
-  const isAuthorized = authorizedInGameNames.includes(user.inGameName)
-  res.json({ isAuthorized })
+  if (!latestTournament) {
+    return res.json({ isAuthorized: false, isUnderMaintenance: false })
+  }
+
+  res.json({
+    isAuthorized: true,
+    isUnderMaintenance: latestTournament.isUnderMaintenance,
+  })
+})
+
+// @desc   Get all tournaments
+// @route  GET /api/admin/tournament/all
+// @access Private (Admin only)
+const getAllTournaments = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Not authorized' })
+  }
+
+  const tournaments = await Tournament.find().sort({ tournamentNumber: -1 })
+  res.json(tournaments)
+})
+
+// @desc   Update tournament maintenance status
+// @route  PUT /api/admin/tournament/:id/maintenance
+// @access Private (Admin only)
+const updateMaintenanceStatus = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Not authorized' })
+  }
+
+  const { id } = req.params
+  const { isUnderMaintenance } = req.body
+
+  const tournament = await Tournament.findById(id)
+  if (!tournament) {
+    return res.status(404).json({ message: 'Tournament not found' })
+  }
+
+  tournament.isUnderMaintenance = isUnderMaintenance
+  await tournament.save()
+
+  res.json({
+    message: 'Tournament maintenance status updated successfully',
+    tournament,
+  })
 })
 
 // @desc   Get the current tournament leaderboard
@@ -262,6 +335,8 @@ const searchTournamentLeaderboard = asyncHandler(async (req, res) => {
 // @route  GET /api/tournament/previous-leaderboard
 // @access Public
 const getPreviousTournament = asyncHandler(async (req, res) => {
+  const userId = req.query.userId
+
   // Find the most recent completed tournament
   const previousTournament = await Tournament.findOne(
     { status: 'completed' },
@@ -294,7 +369,6 @@ const getPreviousTournament = asyncHandler(async (req, res) => {
       },
     },
     { $sort: { totalScore: -1, level: -1 } },
-    { $limit: 5 },
   ])
 
   const formattedLeaders = topLeaders.map((leader, index) => ({
@@ -306,11 +380,19 @@ const getPreviousTournament = asyncHandler(async (req, res) => {
     userId: leader.userId,
   }))
 
+  let userStanding = null
+  if (userId) {
+    userStanding = formattedLeaders.find(
+      leader => leader.userId.toString() === userId,
+    )
+  }
+
   res.json({
     tournamentId: previousTournament._id,
     tournamentNumber: previousTournament.tournamentNumber,
     endDate: previousTournament.endDate,
-    topLeaders: formattedLeaders,
+    topLeaders: formattedLeaders.slice(0, 5),
+    userStanding,
   })
 })
 
@@ -334,12 +416,12 @@ const registerForTournament = asyncHandler(async (req, res) => {
         message: 'Guest users are not allowed to register for the tournament',
       })
     }
-    // if (user.streak < 2) {
-    //   return res.status(403).json({
-    //     message:
-    //       'User must have a minimum streak of 2 to register for the tournament',
-    //   })
-    // }
+    if (user.streak < 5) {
+      return res.status(403).json({
+        message:
+          'User must have a minimum streak of 5 to register for the tournament',
+      })
+    }
 
     // Check if user is already registered
     const { isRegistered } = await getUserRegistrationDetails(
@@ -983,4 +1065,7 @@ module.exports = {
   getQuizSummary,
   getUserStats,
   authorizeUsers,
+  getActiveTournamentRegistration,
+  getAllTournaments,
+  updateMaintenanceStatus,
 }
