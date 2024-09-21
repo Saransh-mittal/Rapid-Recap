@@ -59,6 +59,7 @@ webpush.setVapidDetails(
 //require("./utils/deletion.utils/removeQuizAttemptForNullUser.del");
 // require('./utils/deletion.utils/removeArticle.del')
 // require("./utils/deletion.utils/useLessArticle.del");
+// require('./utils/deletion.utils/tournaments.del')
 // ---------------------------
 
 // -----Update Collection-----

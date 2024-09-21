@@ -282,17 +282,31 @@ const TournamentSection = ({
   if (isGuest) {
     return (
       <Flex
-        margin="10px"
-        w="100%"
+        w="full"
+        mt={10}
+        mx="auto"
+        p={{ base: 4, md: 6 }}
         justifyContent="center"
         alignItems="center"
         flexDirection="column"
+        borderRadius="lg"
+        border="1px"
+        borderColor="gray.700"
+        style={{
+          backgroundColor: 'rgba(15, 13, 21, 0.8)',
+          boxShadow:
+            '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+        }}
       >
         <Text color="gray.400" fontSize="lg" textAlign="center">
           {translate('guestMessage')}
         </Text>
       </Flex>
     )
+  }
+
+  if (tournamentData.length === 0) {
+    return null
   }
 
   return (
@@ -445,18 +459,21 @@ const TournamentSection = ({
                       </Box>
                     ))}
                   </SimpleGrid>
-                  <ProfileButton
-                    buttonText={translate('analyticsButton')}
-                    inGameName={inGameName}
-                    stateUserInGameName={user?.inGameName}
-                    Private={user?.profilePrivacy.tournamentAnalytics}
-                    hoverAnimation={hoverAnimation}
-                    onClick={onOpen}
-                    icon={
-                      <HistogramSVG width="20px" height="20px" fill="#fff" />
-                    }
-                    top="0.9rem"
-                  />
+                  <Flex position={'relative'}>
+                    <ProfileButton
+                      buttonText={translate('analyticsButton')}
+                      inGameName={inGameName}
+                      stateUserInGameName={user?.inGameName}
+                      Private={user?.profilePrivacy.tournamentAnalytics}
+                      hoverAnimation={hoverAnimation}
+                      onClick={onOpen}
+                      icon={
+                        <HistogramSVG width="20px" height="20px" fill="#fff" />
+                      }
+                      notShowVisibility={true}
+                      top="0.9rem"
+                    />
+                  </Flex>
                 </VStack>
               </Flex>
             </VStack>

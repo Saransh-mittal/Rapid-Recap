@@ -7,7 +7,7 @@ import {
   useColorModeValue,
   useToast,
 } from '@chakra-ui/react'
-import { SearchSvg } from '../../assets/svg/SectionSvg'
+import { Search2Icon } from '@chakra-ui/icons'
 import debounce from 'lodash.debounce'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
@@ -78,7 +78,7 @@ const LeaderboardSearch = ({
     <Box mb={4}>
       <InputGroup>
         <InputLeftElement pointerEvents="none">
-          <SearchSvg fill="gray.300" />
+          <Search2Icon color="gray.300" />
         </InputLeftElement>
         <Input
           type="text"
