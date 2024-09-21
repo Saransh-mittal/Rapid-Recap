@@ -12,6 +12,7 @@ import {
   Badge,
 } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
+import ReactGA from 'react-ga4'
 import AuthorInfo from './articleHeaderComponents/AuthorInfo'
 import BoostSection from './articleHeaderComponents/BoostSection'
 import BookmarkIcon from './articleHeaderComponents/BookmarkIcon'
@@ -146,6 +147,12 @@ const ArticleHeader = ({
         theme: selectedTheme,
       })
       onThemeChange(response.data.storyContent)
+      // Track theme selection in Google Analytics
+      ReactGA.event({
+        category: 'Article Interaction',
+        action: 'Theme Selection',
+        label: selectedTheme,
+      })
     } catch (error) {
       toast({
         title: t('themeChangeErrorTitle'),

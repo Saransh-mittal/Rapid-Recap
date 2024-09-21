@@ -19,7 +19,7 @@ import { setArticleData } from '../../redux/articleSlice'
 import { useTranslation } from 'react-i18next'
 import CalendarSVG from '../../assets/svg/CalenderSVG'
 import ClockSVG from '../../assets/svg/ClockSVG'
-import ArrowRightSVG from '../../assets/svg/ArrowRightSVG'
+import { ArrowForwardIcon } from '@chakra-ui/icons'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -248,7 +248,7 @@ const Card = ({
           whileHover={{ bg: 'blue.600' }}
           transition={{ duration: 0.2 }}
         >
-          <ArrowRightSVG size={20} />
+          <ArrowForwardIcon size={20} fill="#fff" />
         </MotionCircle>
       </Flex>
     </MotionBox>

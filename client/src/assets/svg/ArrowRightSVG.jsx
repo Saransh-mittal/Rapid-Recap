@@ -1,8 +1,8 @@
-const ArrowRightSVG = props => (
+const ArrowRightSVG = ({ size, ...props }) => (
   <svg
     fill="#000000"
-    width="800px"
-    height="800px"
+    width={size || '800px'}
+    height={size || '800px'}
     viewBox="-5 0 32 32"
     xmlns="http://www.w3.org/2000/svg"
     {...props}

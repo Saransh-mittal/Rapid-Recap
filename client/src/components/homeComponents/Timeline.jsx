@@ -169,10 +169,8 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
 
   const trackCategoryClick = useCallback(category => {
     ReactGA.send({
-      hitType: 'event',
-      eventCategory: 'Category Click',
-      eventAction: 'Click',
-      eventLabel: category,
+      category,
+      action: 'click',
     })
   }, [])
 
