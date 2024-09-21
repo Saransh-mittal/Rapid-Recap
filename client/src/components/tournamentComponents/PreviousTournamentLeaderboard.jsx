@@ -10,8 +10,9 @@ import {
   HStack,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import { Trophy, Medal } from 'lucide-react'
 import { motion } from 'framer-motion'
+import TrophySVG from '../../assets/svg/TrophySVG'
+import Medal from '../../assets/svg/Medal'
 
 // Lazy load components
 const LeaderboardTable = React.lazy(() => import('./LeaderboardTable'))
@@ -40,7 +41,7 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
     <MotionBox borderRadius="lg" py={6} px={4}>
       <VStack spacing={4} align="stretch">
         <Heading size={'md'} display="flex" alignItems="center">
-          <Trophy color="gold" style={{ marginRight: '0.5rem' }} />
+          <TrophySVG color="gold" style={{ marginRight: '0.5rem' }} />
           {t('heading')}
         </Heading>
 
