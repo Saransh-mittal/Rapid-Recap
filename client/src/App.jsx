@@ -86,7 +86,14 @@ const App = () => {
 
   useEffect(() => {
     const token = isToken()
-
+    dispatch(
+      addNoteMessage({
+        messageType: 'ratingFeedback',
+        title: 'We value your feedback!',
+        duration: null, // Set to null to keep it open until user submits or closes
+        width: '350px',
+      }),
+    )
     if (!token) {
       dispatch(
         addNoteMessage({
