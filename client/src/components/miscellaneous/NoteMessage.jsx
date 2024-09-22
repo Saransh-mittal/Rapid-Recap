@@ -56,6 +56,7 @@ const NoteMessage = ({
           handleSubmitFeedback(
             feedbackContent.rating,
             feedbackContent.feedback,
+            feedbackContent.storyId,
           ),
       }),
     [dispatch, navigate],

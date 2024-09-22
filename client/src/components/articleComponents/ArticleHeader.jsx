@@ -1,4 +1,10 @@
-import React, { useCallback, Suspense, useState } from 'react'
+import React, {
+  useCallback,
+  Suspense,
+  useState,
+  useEffect,
+  useRef,
+} from 'react'
 import {
   Flex,
   Text,
@@ -21,7 +27,7 @@ import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
 import useSound from '../../customHooks/useSound'
 import { EditIcon } from '@chakra-ui/icons'
 import axios from 'axios'
-import { setIsSigninOpen } from '../../redux/appSlice'
+import { addNoteMessage, setIsSigninOpen } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
 import { formatDate } from '../../utils/helper.utils'
@@ -58,7 +64,7 @@ const ArticleHeader = ({
   const formattedDate = formatDate(new Date(dateTime), lang)
   const [theme, setTheme] = useState('')
   const [isLoadingTheme, setIsLoadingTheme] = useState(false)
-
+  const timeoutRef = useRef(null)
   const {
     isOpen: isOpenArticleForm,
     onOpen: onOpenArticleForm,
@@ -110,18 +116,6 @@ const ArticleHeader = ({
   )
 
   const handleThemeChange = async e => {
-    // if (i18n.language === 'hi') {
-    //   // toast for feature not available in hindi
-    //   toast({
-    //     title: t('featureNotAvailableTitle'),
-    //     description: t('featureNotAvailableDescription'),
-    //     status: 'warning',
-    //     duration: 3000,
-    //     isClosable: true,
-    //     position: 'top',
-    //   })
-    //   return
-    // }
     if (!user || user.role === 'guest') {
       toast({
         title: t('loginRequiredTitleWithRealAccount'),
@@ -154,6 +148,19 @@ const ArticleHeader = ({
         action: 'Theme Selection',
         label: selectedTheme,
       })
+      // Store the timeout ID in the ref
+      timeoutRef.current = setTimeout(() => {
+        dispatchRedux(
+          addNoteMessage({
+            messageType: 'ratingFeedback',
+            title: t('Please rate us'),
+            duration: null,
+            width: '300px',
+            actions: [{ actionType: 'SUBMIT_FEEDBACK' }],
+            storyId: response.data._id,
+          }),
+        )
+      }, 90000)
     } catch (error) {
       toast({
         title: t('themeChangeErrorTitle'),
@@ -186,6 +193,15 @@ const ArticleHeader = ({
     }
     onOpenShareModal()
   }, [notLoggedIn, onOpenShareModal, toast])
+
+  useEffect(() => {
+    // Cleanup function to clear the timeout when component unmounts
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, []) // Empty dependency array means this effect runs only on mount and unmount
 
   return (
     <Skeleton isLoaded={!!title[selectedLanguage]} w={'100%'} mb={[3, 4, 5]}>

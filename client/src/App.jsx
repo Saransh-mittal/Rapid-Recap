@@ -86,15 +86,7 @@ const App = () => {
 
   useEffect(() => {
     const token = isToken()
-    dispatch(
-      addNoteMessage({
-        messageType: 'ratingFeedback',
-        title: t('Please rate us'), // Added translation
-        duration: 10000,
-        width: '300px',
-        actions: [{ actionType: 'SUBMIT_FEEDBACK' }], // Added translation
-      }),
-    )
+
     if (!token) {
       dispatch(
         addNoteMessage({

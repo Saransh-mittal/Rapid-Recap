@@ -159,6 +159,7 @@ const NoteMessageQueue = () => {
             duration={message.duration}
             width={message.width}
             onClose={handleClose}
+            storyId={message.storyId}
           />
         </Suspense>
       )

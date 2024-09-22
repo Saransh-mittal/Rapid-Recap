@@ -58,6 +58,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   const [showConfetti, setShowConfetti] = useState(false)
   const [rating, setRating] = useState(0)
   const [feedback, setFeedback] = useState('')
+  const [storyId, setStoryId] = useState(null)
 
   // Initialize translation
   const { t } = useTranslation('NoteMessageSummary')
@@ -73,10 +74,10 @@ const NoteMessageSummary = ({ messages, onClose }) => {
         setIsNotifDrawerOpen,
         navigateToProfile: id => navigate(`/profile/${id}`),
         handleSubmitFeedback: () => {
-          handleSubmitFeedback(rating, feedback)
+          handleSubmitFeedback(rating, feedback, storyId)
         },
       }),
-    [dispatch, navigate],
+    [dispatch, navigate, messages],
   )
 
   // Memoize handleDismiss and handleAction to avoid recreating the functions on every render
@@ -110,6 +111,12 @@ const NoteMessageSummary = ({ messages, onClose }) => {
     if (hasMilestone) {
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 5000) // Run confetti for 5 seconds
+    }
+    const feedbackMessage = messages.find(
+      message => message.messageType === 'ratingFeedback',
+    )
+    if (feedbackMessage) {
+      setStoryId(feedbackMessage.storyId)
     }
   }, [messages])
 

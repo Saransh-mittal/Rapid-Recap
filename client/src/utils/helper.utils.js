@@ -98,9 +98,13 @@ export const formatLocalDateTime = dateString => {
   })
 }
 
-export const handleSubmitFeedback = async (rating, feedback) => {
+export const handleSubmitFeedback = async (rating, feedback, storyId) => {
   try {
-    console.log(rating, feedback)
+    if (storyId === null) {
+      console.error('Story ID is missing!')
+      return
+    }
+    console.log(rating, feedback, storyId)
     console.log('Feedback submitted successfully!')
   } catch (error) {
     console.error('Error submitting feedback:', error)

@@ -12,6 +12,7 @@ const RatingFeedbackNoteMessage = ({
   onClose,
   duration,
   width = '320px',
+  storyId,
 }) => {
   const { t } = useTranslation('RatingFeedbackNoteMessage')
   const [rating, setRating] = useState(0)
@@ -60,6 +61,7 @@ const RatingFeedbackNoteMessage = ({
       feedbackContent={{
         rating,
         feedback,
+        storyId,
       }}
     />
   )
