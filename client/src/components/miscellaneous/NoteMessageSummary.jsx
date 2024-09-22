@@ -77,7 +77,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
           handleSubmitFeedback(rating, feedback, storyId)
         },
       }),
-    [dispatch, navigate, messages],
+    [dispatch, navigate, messages, rating, feedback, storyId],
   )
 
   // Memoize handleDismiss and handleAction to avoid recreating the functions on every render
