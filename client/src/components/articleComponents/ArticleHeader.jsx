@@ -16,7 +16,13 @@ import {
   Select,
   Box,
   Badge,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Button,
 } from '@chakra-ui/react'
+import { ChevronDownIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import ReactGA from 'react-ga4'
 import AuthorInfo from './articleHeaderComponents/AuthorInfo'
@@ -60,7 +66,7 @@ const ArticleHeader = ({
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()
   const { user } = useSelector(state => state.auth)
-  const lang = i18n.language // assuming 'i18n.language' returns the current language
+  const lang = i18n.language
   const formattedDate = formatDate(new Date(dateTime), lang)
   const [theme, setTheme] = useState('')
   const [isLoadingTheme, setIsLoadingTheme] = useState(false)
@@ -71,6 +77,15 @@ const ArticleHeader = ({
     onClose: onCloseArticleForm,
   } = useDisclosure()
   const [selectedArticle, setSelectedArticle] = React.useState({})
+
+  const themes = [
+    { value: 'space', label: t('space') },
+    { value: 'indian_mythology', label: t('indianMythology') },
+    { value: 'bible_mythology', label: t('bibleMythology') },
+    { value: 'greek_mythology', label: t('greekMythology') },
+    { value: 'scifi', label: t('scifi') },
+    { value: 'mystic_world', label: t('mysticWorld') },
+  ]
 
   const handleEditArticle = useCallback(async () => {
     try {
@@ -115,7 +130,7 @@ const ArticleHeader = ({
     [selectedArticle, onOpenArticleForm, toast, article],
   )
 
-  const handleThemeChange = async e => {
+  const handleThemeChange = async selectedTheme => {
     if (!user || user.role === 'guest') {
       toast({
         title: t('loginRequiredTitleWithRealAccount'),
@@ -127,7 +142,6 @@ const ArticleHeader = ({
       })
       return
     }
-    const selectedTheme = e.target.value
     setTheme(selectedTheme)
     setIsLoadingTheme(true)
     if (!selectedTheme) {
@@ -142,13 +156,11 @@ const ArticleHeader = ({
         lang: lang,
       })
       onThemeChange(response.data.storyContent)
-      // Track theme selection in Google Analytics
       ReactGA.event({
         category: 'Article Interaction',
         action: 'Theme Selection',
         label: selectedTheme,
       })
-      // Store the timeout ID in the ref
       timeoutRef.current = setTimeout(() => {
         dispatchRedux(
           addNoteMessage({
@@ -195,13 +207,12 @@ const ArticleHeader = ({
   }, [notLoggedIn, onOpenShareModal, toast])
 
   useEffect(() => {
-    // Cleanup function to clear the timeout when component unmounts
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
     }
-  }, []) // Empty dependency array means this effect runs only on mount and unmount
+  }, [])
 
   return (
     <Skeleton isLoaded={!!title[selectedLanguage]} w={'100%'} mb={[3, 4, 5]}>
@@ -339,37 +350,39 @@ const ArticleHeader = ({
             w={'fit-content'}
           >
             <Box position="relative" width={['150px', '100%', '200px']}>
-              <Select
-                placeholder={t('selectTheme')}
-                onChange={handleThemeChange}
-                value={theme}
-                isDisabled={isLoadingTheme}
-                bg="rgba(255, 255, 255, 0.1)"
-                color="white"
-                borderColor="rgba(255, 255, 255, 0.2)"
-                _hover={{ borderColor: 'rgba(255, 255, 255, 0.4)' }}
-                _focus={{
-                  borderColor: 'rgba(255, 255, 255, 0.6)',
-                  boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.6)',
-                }}
-              >
-                <option value="space">{t('space')}</option>
-                <option value="indian_mythology">{t('indianMythology')}</option>
-                <option value="bible_mythology">{t('bibleMythology')}</option>
-                <option value="greek_mythology">{t('greekMythology')}</option>
-                <option value="scifi">{t('scifi')}</option>
-                <option value="mystic_world">{t('mysticWorld')}</option>
-              </Select>
-              {isLoadingTheme && (
-                <Spinner
-                  size="sm"
-                  position="absolute"
-                  right="2.5rem"
-                  top="25%"
-                  transform="translateY(-50%)"
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<ChevronDownIcon />}
+                  isLoading={isLoadingTheme}
+                  loadingText={t('loading')}
+                  bg="rgba(255, 255, 255, 0.1)"
                   color="white"
-                />
-              )}
+                  borderColor="rgba(255, 255, 255, 0.2)"
+                  _hover={{ bg: 'rgba(255, 255, 255, 0.2)' }}
+                  _active={{ bg: 'rgba(255, 255, 255, 0.3)' }}
+                  _focus={{ boxShadow: '0 0 0 3px rgba(255, 255, 255, 0.6)' }}
+                  width="100%"
+                >
+                  {theme
+                    ? themes.find(t => t.value === theme)?.label
+                    : t('selectTheme')}
+                </MenuButton>
+                <MenuList bg="gray.800" borderColor="gray.600" boxShadow="xl">
+                  {themes.map(themeOption => (
+                    <MenuItem
+                      key={themeOption.value}
+                      onClick={() => handleThemeChange(themeOption.value)}
+                      bg="gray.800"
+                      color="white"
+                      _hover={{ bg: 'purple.700' }}
+                      _focus={{ bg: 'purple.700' }}
+                    >
+                      {themeOption.label}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
             </Box>
             <Badge
               colorScheme="purple"
