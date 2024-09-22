@@ -19,7 +19,8 @@
   "friend": "मित्र",
   "editProfile": "प्रोफ़ाइल संपादित करें",
   "selectBadge": "बैज चुनें",
-  "noBadgesAvailable": "कोई बैज उपलब्ध नहीं है",
+  "noBadge": "कोई बैज नहीं",
+  "noBadgesAvailable": "कोई बैज आपके लिए उपलब्ध नहीं है क्योंकि आप किसी भी टूर्नामेंट में लीडरबोर्ड के शीर्ष 3 में नहीं थे।",
   "badgeUpdateSuccess": "बैज सफलतापूर्वक अपडेट किया गया",
   "badgeUpdateError": "बैज अपडेट करने में त्रुटि",
   "tournamentBadge": "टूर्नामेंट {{number}}"
