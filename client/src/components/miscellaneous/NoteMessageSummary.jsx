@@ -16,6 +16,8 @@ import {
   HStack,
   Divider,
   Progress,
+  Flex,
+  Textarea,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
@@ -28,9 +30,13 @@ import {
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useNavigate } from 'react-router-dom'
 import Confetti from 'react-confetti'
-import { formatRemainingTime } from '../../utils/helper.utils'
+import {
+  formatRemainingTime,
+  handleSubmitFeedback,
+} from '../../utils/helper.utils'
 import { useTranslation } from 'react-i18next' // Import useTranslation
 import { getMilestoneInfo } from './noteMessages/milestones'
+import StarRating from './noteMessages/StarRating'
 
 // Lazy load components and assets
 const ButtonFactory = lazy(() => import('./ButtonFactory'))
@@ -50,6 +56,8 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [feedback, setFeedback] = useState('')
 
   // Initialize translation
   const { t } = useTranslation('NoteMessageSummary')
@@ -64,6 +72,9 @@ const NoteMessageSummary = ({ messages, onClose }) => {
         setShowXpLevelModal,
         setIsNotifDrawerOpen,
         navigateToProfile: id => navigate(`/profile/${id}`),
+        handleSubmitFeedback: () => {
+          handleSubmitFeedback(rating, feedback)
+        },
       }),
     [dispatch, navigate],
   )
@@ -263,6 +274,39 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                 </VStack>
               </HStack>
             </Suspense>
+          )
+        case 'ratingFeedback':
+          return (
+            <Flex
+              direction="column"
+              align="center"
+              w="100%"
+              position="relative"
+            >
+              <VStack spacing={4} align="center" w="100%">
+                <Text fontSize="lg" fontWeight="bold" color="purple.300">
+                  {t('rateYourExperience')}
+                </Text>
+                <Suspense fallback={<Box h="40px" />}>
+                  <StarRating rating={rating} onRatingChange={setRating} />
+                </Suspense>
+                <Textarea
+                  placeholder={t('feedbackPlaceholder')}
+                  value={feedback}
+                  onChange={e => setFeedback(e.target.value)}
+                  bg="gray.700"
+                  color="white"
+                  border="1px solid"
+                  borderColor="purple.500"
+                  _hover={{ borderColor: 'purple.400' }}
+                  _focus={{
+                    borderColor: 'purple.300',
+                    boxShadow: '0 0 0 1px #805AD5',
+                  }}
+                  resize="vertical"
+                />
+              </VStack>
+            </Flex>
           )
         default:
           return (

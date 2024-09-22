@@ -13,6 +13,9 @@ const XPAwardNoteMessage = lazy(() =>
   import('./noteMessages/XPAwardNoteMessage'),
 )
 const StreakNoteMessage = lazy(() => import('./noteMessages/StreakNoteMessage'))
+const RatingFeedbackNoteMessage = lazy(() =>
+  import('./noteMessages/RatingFeedbackNoteMessage'),
+)
 import { SOUND_TYPES } from '../../models/soundSettings'
 import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
@@ -140,6 +143,18 @@ const NoteMessageQueue = () => {
             registrationEndTime={message.registrationEndTime}
             userStreak={message.userStreak}
             requiredStreak={message.requiredStreak}
+            title={message.title}
+            duration={message.duration}
+            width={message.width}
+            onClose={handleClose}
+          />
+        </Suspense>
+      )
+    case 'ratingFeedback':
+      return (
+        <Suspense fallback={null}>
+          <RatingFeedbackNoteMessage
+            messageId={message.id}
             title={message.title}
             duration={message.duration}
             width={message.width}

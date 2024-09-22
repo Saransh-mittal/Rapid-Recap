@@ -97,3 +97,12 @@ export const formatLocalDateTime = dateString => {
     timeZoneName: 'short',
   })
 }
+
+export const handleSubmitFeedback = async (rating, feedback) => {
+  try {
+    console.log(rating, feedback)
+    console.log('Feedback submitted successfully!')
+  } catch (error) {
+    console.error('Error submitting feedback:', error)
+  }
+}

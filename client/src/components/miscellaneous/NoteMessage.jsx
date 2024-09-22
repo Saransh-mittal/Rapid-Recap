@@ -19,6 +19,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useTranslation } from 'react-i18next'
+import { handleSubmitFeedback } from '../../utils/helper.utils'
 
 // Lazy load utilities and components
 const ButtonFactory = lazy(() => import('./ButtonFactory'))
@@ -34,6 +35,7 @@ const NoteMessage = ({
   width = '320px',
   actions = [],
   customContent,
+  feedbackContent,
 }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -50,6 +52,11 @@ const NoteMessage = ({
         setIsNotifDrawerOpen,
         navigateToProfile: id => navigate(`/profile/${id}`),
         navigateToTournament: () => navigate(`/tournament`),
+        handleSubmitFeedback: () =>
+          handleSubmitFeedback(
+            feedbackContent.rating,
+            feedbackContent.feedback,
+          ),
       }),
     [dispatch, navigate],
   )

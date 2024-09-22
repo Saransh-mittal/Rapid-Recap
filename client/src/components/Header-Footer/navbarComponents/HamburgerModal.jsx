@@ -15,6 +15,7 @@ import {
   Tooltip,
   UnorderedList,
   useDisclosure,
+  useToast,
   VStack,
 } from '@chakra-ui/react'
 import { LockIcon, SearchIcon } from '@chakra-ui/icons'
@@ -47,6 +48,7 @@ const HamburgerModal = ({
   onOpenWiseWeb,
 }) => {
   const { t } = useTranslation('HamburgerModal')
+  const toast = useToast()
   const { user, isAdmin, isAuthenticated } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
 
@@ -229,8 +231,17 @@ const HamburgerModal = ({
                     </Suspense>
                     <Flex
                       onClick={() => {
-                        onClose()
-                        onOpenWiseWeb()
+                        toast({
+                          title: 'Wise Web',
+                          description:
+                            'Wise Web is currently under maintenance',
+                          status: 'info',
+                          duration: 9000,
+                          isClosable: true,
+                          position: 'top',
+                        })
+                        // onClose()
+                        // onOpenWiseWeb()
                       }}
                       position="relative"
                     >

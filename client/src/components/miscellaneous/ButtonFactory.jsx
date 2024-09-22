@@ -85,6 +85,12 @@ const ButtonFactory = ({
           {t('VIEW_EXPERIENCE')}
         </ElegantButton>
       )
+    case 'SUBMIT_FEEDBACK':
+      return (
+        <ElegantButton onClick={onClick} {...props}>
+          {t('SUBMIT_FEEDBACK')}
+        </ElegantButton>
+      )
     case 'INBOX':
       return (
         <ElegantButton onClick={onClick} {...props}>

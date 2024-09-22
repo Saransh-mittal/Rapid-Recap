@@ -66,6 +66,15 @@ const acceptRequest = asyncHandler(async (req, res) => {
     request.status = 'accepted'
     await request.save()
 
+    // check if already friends
+    const user1 = await User.findById(request.from._id).select('friends')
+    const user = await User.findById(request.to._id).select('friends')
+
+    const areFriends = user1.friends.includes(request.to._id)
+    if (areFriends) {
+      return res.status(200).json({ message: 'Already friends' })
+    }
+
     const sender = await User.findByIdAndUpdate(request.from._id, {
       $push: { friends: request.to._id },
     }).select('inGameName _id role userLanguage')

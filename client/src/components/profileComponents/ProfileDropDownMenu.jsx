@@ -1,4 +1,12 @@
-import { Avatar, Flex, Box, Icon, Text, Spinner } from '@chakra-ui/react'
+import {
+  Avatar,
+  Flex,
+  Box,
+  Icon,
+  Text,
+  Spinner,
+  useToast,
+} from '@chakra-ui/react'
 import React, { useState, useMemo, useCallback, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
@@ -37,6 +45,7 @@ const ProfileDropDownMenu = ({
   display,
 }) => {
   const { t } = useTranslation(['ProfileDropDownMenu'])
+  const toast = useToast()
   const listStyle = useMemo(
     () => ({
       position: 'relative',
@@ -232,7 +241,17 @@ const ProfileDropDownMenu = ({
                   }
                 >
                   <Flex
-                    onClick={onOpenWiseWeb}
+                    onClick={() => {
+                      toast({
+                        title: 'Wise Web',
+                        description: 'Wise Web is currently under maintenance',
+                        status: 'info',
+                        duration: 9000,
+                        isClosable: true,
+                        position: 'top',
+                      })
+                      // onOpenWiseWeb()
+                    }}
                     width={'100%'}
                     justifyContent={'flex-start'}
                     alignItems={'center'}
@@ -251,7 +270,17 @@ const ProfileDropDownMenu = ({
                 </Flex>
               ) : (
                 <Flex
-                  onClick={onOpenWiseWeb}
+                  onClick={() => {
+                    toast({
+                      title: 'Wise Web',
+                      description: 'Wise Web is currently under maintenance',
+                      status: 'info',
+                      duration: 9000,
+                      isClosable: true,
+                      position: 'top',
+                    })
+                    // onOpenWiseWeb()
+                  }}
                   width={'100%'}
                   justifyContent={'flex-start'}
                   alignItems={'center'}

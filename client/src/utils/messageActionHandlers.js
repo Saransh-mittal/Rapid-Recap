@@ -24,6 +24,9 @@ const messageActionHandlers = {
   REGISTER_TOURNAMENT: actions => {
     actions.navigateToTournament()
   },
+  SUBMIT_FEEDBACK: actions => {
+    actions.handleSubmitFeedback()
+  },
   SIGN_IN: () => {},
   GUEST: () => {},
   VIEW_EXPERIENCE: setShowXpLevelModal => {
@@ -49,6 +52,8 @@ export const createHandleMessageAction = (dispatch, actions) => {
         messageActionHandlers['VIEW_TOURNAMENT'](actions)
       } else if (actionType === 'VIEW_PROFILE') {
         messageActionHandlers[actionType](actions, profileId)
+      } else if (actionType === 'SUBMIT_FEEDBACK') {
+        messageActionHandlers[actionType](actions)
       } else if (actionType === 'DISMISS') {
         messageActionHandlers[actionType](dispatch, actions, messageId)
       } else if (actionType === 'VIEW_EXPERIENCE') {
