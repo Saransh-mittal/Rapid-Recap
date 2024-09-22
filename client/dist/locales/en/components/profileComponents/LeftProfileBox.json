@@ -19,7 +19,8 @@
   "friend": "Friend",
   "editProfile": "Edit Profile",
   "selectBadge": "Select Badge",
-  "noBadgesAvailable": "No Badges Available",
+  "noBadge": "No Badge",
+  "noBadgesAvailable": "No badges available for you as you were not in the top 3 of the leaderboard in any tournament.",
   "badgeUpdateSuccess": "Badge updated successfully",
   "badgeUpdateError": "Error updating badge",
   "tournamentBadge": "T{{number}}"

@@ -6,6 +6,7 @@ const { sendNotification } = require('../services/notificationService')
 const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const { logActivity } = require('../utils/activity.utils')
 const i18n = require('i18next')
+const NoteMessage = require('../model/noteMessageSchema')
 
 //@description     Send friend request
 //@route           POST /api/friends/send-request
@@ -65,6 +66,15 @@ const acceptRequest = asyncHandler(async (req, res) => {
 
     request.status = 'accepted'
     await request.save()
+
+    // check if already friends
+    const user1 = await User.findById(request.from._id).select('friends')
+    const user = await User.findById(request.to._id).select('friends')
+
+    const areFriends = user1.friends.includes(request.to._id)
+    if (areFriends) {
+      return res.status(200).json({ message: 'Already friends' })
+    }
 
     const sender = await User.findByIdAndUpdate(request.from._id, {
       $push: { friends: request.to._id },

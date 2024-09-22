@@ -35,7 +35,13 @@ const createStoryFeedback = asyncHandler(async (req, res) => {
     res.status(404)
     throw new Error('Story not found')
   }
-
+  const existingFeedback = await StoryFeedback.findOne({
+    story: storyId,
+    user: userId,
+  })
+  if (existingFeedback) {
+    return res.status(400).json({ message: 'Feedback already submitted' })
+  }
   const newFeedback = new StoryFeedback({
     story: storyId,
     user: userId,
@@ -58,18 +64,22 @@ const createStoryFeedback = asyncHandler(async (req, res) => {
 })
 
 // @desc   Get feedback for a story
-// @route  GET /api/contact/feedback/story/:storyId
+// @route  GET /api/admin/feedback/singleStory/:storyId
 // @access Admin
 const getStoryFeedback = asyncHandler(async (req, res) => {
   const { storyId } = req.params
-
+  if (!storyId) {
+    res.status(400)
+    throw new Error('Story ID is required')
+  }
+  console.log('storyId', storyId)
   const feedback = await StoryFeedback.find({ story: storyId })
 
   res.json(feedback)
 })
 
 // @desc   Get average rating and total feedback count for stories
-// @route  GET /api/contact/feedback/story/stats
+// @route  GET /api/admin/feedback/story/stats
 // @access Admin
 const getStoryFeedbackStats = asyncHandler(async (req, res) => {
   const { category, theme } = req.query

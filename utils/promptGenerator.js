@@ -55,6 +55,7 @@ Instructions:
   } characters.
 7. use ** to bold the important points.
 8. If required use numerical numbering to explain the points for example 1,2,3,4,5,6,7,8,9,10 etc.
+9. Return the content in the same language as the original article. Its very important if its in hindi than convert in hindi.
 
 ${themeSpecificInstructions}
 

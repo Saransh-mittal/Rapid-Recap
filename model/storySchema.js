@@ -20,7 +20,11 @@ const storySchema = new mongoose.Schema({
   },
   storyContent: {
     type: String,
-    required: true,
+    default: '',
+  },
+  language: {
+    type: String,
+    default: 'en',
   },
   createdAt: {
     type: Date,
