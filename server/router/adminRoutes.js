@@ -18,6 +18,10 @@ const {
   getAllTournaments,
   updateMaintenanceStatus,
 } = require('../controllers/tournamentController')
+const {
+  getStoryFeedback,
+  getStoryFeedbackStats,
+} = require('../controllers/feedbackController')
 const router = express.Router()
 
 router.get('/verify-admin', Authenticate, adminMiddleware, (req, res) => {
@@ -68,6 +72,19 @@ router.delete(
   Authenticate,
   adminMiddleware,
   deleteAdminArticleDetails,
+)
+
+router.get(
+  '/feedback/singleStory/:storyId',
+  Authenticate,
+  adminMiddleware,
+  getStoryFeedback,
+)
+router.get(
+  '/feedback/story/stats',
+  Authenticate,
+  adminMiddleware,
+  getStoryFeedbackStats,
 )
 
 module.exports = router

@@ -64,18 +64,22 @@ const createStoryFeedback = asyncHandler(async (req, res) => {
 })
 
 // @desc   Get feedback for a story
-// @route  GET /api/contact/feedback/story/:storyId
+// @route  GET /api/admin/feedback/singleStory/:storyId
 // @access Admin
 const getStoryFeedback = asyncHandler(async (req, res) => {
   const { storyId } = req.params
-
+  if (!storyId) {
+    res.status(400)
+    throw new Error('Story ID is required')
+  }
+  console.log('storyId', storyId)
   const feedback = await StoryFeedback.find({ story: storyId })
 
   res.json(feedback)
 })
 
 // @desc   Get average rating and total feedback count for stories
-// @route  GET /api/contact/feedback/story/stats
+// @route  GET /api/admin/feedback/story/stats
 // @access Admin
 const getStoryFeedbackStats = asyncHandler(async (req, res) => {
   const { category, theme } = req.query

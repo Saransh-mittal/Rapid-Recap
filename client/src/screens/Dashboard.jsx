@@ -21,6 +21,7 @@ import {
   useMediaQuery,
   useDisclosure,
   Spinner,
+  SimpleGrid,
 } from '@chakra-ui/react'
 
 const ArticleManagement = lazy(() =>
@@ -36,6 +37,9 @@ const CurrentAffairsManagement = lazy(() =>
 )
 const TournamentManagement = lazy(() =>
   import('../components/dashboardComponents/TournamentManagement'),
+)
+const StoryFeedbackAnalysis = lazy(() =>
+  import('../components/dashboardComponents/StoryFeedbackAnalysis'),
 )
 
 const Dashboard = () => {
@@ -55,6 +59,7 @@ const Dashboard = () => {
   const [dateError, setDateError] = useState('')
   const [loading, setLoading] = useState(true)
   const isScreenSmallerThen650px = useMediaQuery('(max-width: 650px)')[0]
+  const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const { isOpen, onOpen, onClose } = useDisclosure()
   const {
     isOpen: isTournamentManagementOpen,
@@ -76,15 +81,26 @@ const Dashboard = () => {
     onOpen: onArticleManagementOpen,
     onClose: onArticleManagementClose,
   } = useDisclosure()
+  const {
+    isOpen: isStoryFeedbackAnalysisOpen,
+    onOpen: onStoryFeedbackAnalysisOpen,
+    onClose: onStoryFeedbackAnalysisClose,
+  } = useDisclosure()
   const [isLoadingStatus, setIsLoadingStatus] = useState(true)
 
   const renderModalButton = useCallback(
     (label, onClickHandler) => (
-      <Button onClick={onClickHandler} backgroundColor="blue.500" color="white">
+      <Button
+        onClick={onClickHandler}
+        backgroundColor="blue.500"
+        color="white"
+        size={isLargerThan768 ? 'md' : 'sm'}
+        width="100%"
+      >
         {label}
       </Button>
     ),
-    [],
+    [isLargerThan768],
   )
 
   useEffect(() => {
@@ -198,11 +214,13 @@ const Dashboard = () => {
           selectedTables.includes(table) ? 'blue.500' : 'gray.200'
         }
         color={selectedTables.includes(table) ? 'white' : 'black'}
+        size={isLargerThan768 ? 'md' : 'sm'}
+        width="100%"
       >
         {label}
       </Button>
     ),
-    [selectedTables, handleTableChange],
+    [selectedTables, handleTableChange, isLargerThan768],
   )
 
   const handleDateChange = useCallback(
@@ -297,56 +315,47 @@ const Dashboard = () => {
           mt={'4rem'}
           mx={{ base: '0.75rem', md: '0' }}
         >
-          {(selectedTables.includes('quizAttempts') ||
-            selectedTables.includes('timeSpent')) && (
-            <HStack spacing={4} align="flex-start">
-              <label>
-                Start Date:
+          <VStack spacing={4} align="stretch" mt={4}>
+            {(selectedTables.includes('quizAttempts') ||
+              selectedTables.includes('timeSpent')) && (
+              <SimpleGrid columns={[1, null, 2]} spacing={4}>
                 <Input
                   type="date"
                   value={startDate}
                   max={new Date().toISOString().split('T')[0]}
                   onChange={handleDateChange(setStartDate)}
+                  placeholder="Start Date"
                 />
-              </label>
-
-              <label>
-                End Date:
                 <Input
                   type="date"
                   value={endDate}
                   max={new Date().toISOString().split('T')[0]}
                   onChange={handleDateChange(setEndDate)}
+                  placeholder="End Date"
                 />
-              </label>
-            </HStack>
-          )}
-          {selectedTables.includes('lastLogin') && (
-            <HStack spacing={4} align="flex-start" marginTop={4}>
-              <label>
-                Last Login After Date:
-                <Input
-                  type="date"
-                  value={lastLoginAfterDate}
-                  max={new Date().toISOString().split('T')[0]}
-                  onChange={handleDateChange(setLastLoginAfterDate)}
-                />
-              </label>
-            </HStack>
-          )}
-          {dateError && (
-            <Alert status="error" marginTop={4}>
-              <AlertIcon />
-              {dateError}
-            </Alert>
-          )}
-          {isScreenSmallerThen650px ? (
-            <VStack spacing={4} align="center" marginTop={4}>
-              {renderTableButton('Show Quiz Attempts', 'quizAttempts')}
-              {renderTableButton('Show Last Login Times', 'lastLogin')}
-              {renderTableButton('Show Time Spent', 'timeSpent')}
+              </SimpleGrid>
+            )}
+            {selectedTables.includes('lastLogin') && (
+              <Input
+                type="date"
+                value={lastLoginAfterDate}
+                max={new Date().toISOString().split('T')[0]}
+                onChange={handleDateChange(setLastLoginAfterDate)}
+                placeholder="Last Login After Date"
+              />
+            )}
+            {dateError && (
+              <Alert status="error">
+                <AlertIcon />
+                {dateError}
+              </Alert>
+            )}
+            <SimpleGrid columns={[2, null, 3, 4]} spacing={4}>
+              {renderTableButton('Quiz Attempts', 'quizAttempts')}
+              {renderTableButton('Last Login Times', 'lastLogin')}
+              {renderTableButton('Time Spent', 'timeSpent')}
               {renderModalButton(
-                'Show Notification Status',
+                'Notification Status',
                 onNotificationStatusOpen,
               )}
               {renderModalButton(
@@ -354,31 +363,10 @@ const Dashboard = () => {
                 onTournamentManagementOpen,
               )}
               {renderModalButton('Manage Articles', onArticleManagementOpen)}
-              {renderModalButton(
-                'Manage Current Affairs',
-                onCurrentAffairsOpen,
-              )}
-            </VStack>
-          ) : (
-            <HStack spacing={4} align="flex-start" marginTop={4}>
-              {renderTableButton('Show Quiz Attempts', 'quizAttempts')}
-              {renderTableButton('Show Last Login Times', 'lastLogin')}
-              {renderTableButton('Show Time Spent', 'timeSpent')}
-              {renderModalButton(
-                'Show Notification Status',
-                onNotificationStatusOpen,
-              )}
-              {renderModalButton(
-                'Manage Tournaments',
-                onTournamentManagementOpen,
-              )}
-              {renderModalButton('Manage Articles', onArticleManagementOpen)}
-              {renderModalButton(
-                'Manage Current Affairs',
-                onCurrentAffairsOpen,
-              )}
-            </HStack>
-          )}
+              {renderModalButton('Current Affairs', onCurrentAffairsOpen)}
+              {renderModalButton('Story Feedback', onStoryFeedbackAnalysisOpen)}
+            </SimpleGrid>
+          </VStack>
         </Flex>
         <Flex w="100%" mt="3rem">
           {selectedTables.length > 0 && (
@@ -489,6 +477,12 @@ const Dashboard = () => {
         <TournamentManagement
           isOpen={isTournamentManagementOpen}
           onClose={onTournamentManagementClose}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <StoryFeedbackAnalysis
+          isOpen={isStoryFeedbackAnalysisOpen}
+          onClose={onStoryFeedbackAnalysisClose}
         />
       </Suspense>
     </Box>
