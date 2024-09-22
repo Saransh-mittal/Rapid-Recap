@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import io from 'socket.io-client'
 
-const ENDPOINT = 'https://www.rapidrecap.co.in' // Update this with your actual endpoint
+const ENDPOINT = 'http://localhost:3000' // Update this with your actual endpoint
 // https://www.rapidrecap.co.in
 // http://localhost:3000
 
