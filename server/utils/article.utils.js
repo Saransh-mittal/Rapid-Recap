@@ -14,9 +14,6 @@ const {
 const { Recommendation } = require('../model/recommendationSchema')
 const newsClassifierService = require('../ml/services/newsClassifierService')
 const cache = require('memory-cache')
-const {
-  generateTournamentQuestions,
-} = require('../services/tournamentQuestionService')
 
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
@@ -428,7 +425,7 @@ const processExtractedNews = async (news, category) => {
       const newArticle = new Article(res)
       await newArticle.save()
       hindiConverter(newArticle._id.toString())
-      generateTournamentQuestions(newArticle._id.toString())
+
       processedOutput.push(newArticle)
     } catch (error) {
       console.error(
