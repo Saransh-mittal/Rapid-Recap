@@ -35,7 +35,13 @@ const createStoryFeedback = asyncHandler(async (req, res) => {
     res.status(404)
     throw new Error('Story not found')
   }
-
+  const existingFeedback = await StoryFeedback.findOne({
+    story: storyId,
+    user: userId,
+  })
+  if (existingFeedback) {
+    return res.status(400).json({ message: 'Feedback already submitted' })
+  }
   const newFeedback = new StoryFeedback({
     story: storyId,
     user: userId,

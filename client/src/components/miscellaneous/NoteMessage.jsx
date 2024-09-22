@@ -59,7 +59,7 @@ const NoteMessage = ({
             feedbackContent.storyId,
           ),
       }),
-    [dispatch, navigate],
+    [dispatch, navigate, feedbackContent],
   )
 
   // Memoize handleAction to avoid recreating the function on every render

@@ -104,7 +104,11 @@ export const handleSubmitFeedback = async (rating, feedback, storyId) => {
       console.error('Story ID is missing!')
       return
     }
-    console.log(rating, feedback, storyId)
+    await axios.post('/api/contact/feedback/story', {
+      storyId,
+      rating,
+      message: feedback,
+    })
     console.log('Feedback submitted successfully!')
   } catch (error) {
     console.error('Error submitting feedback:', error)

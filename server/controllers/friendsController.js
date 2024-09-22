@@ -6,6 +6,7 @@ const { sendNotification } = require('../services/notificationService')
 const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const { logActivity } = require('../utils/activity.utils')
 const i18n = require('i18next')
+const NoteMessage = require('../model/noteMessageSchema')
 
 //@description     Send friend request
 //@route           POST /api/friends/send-request
