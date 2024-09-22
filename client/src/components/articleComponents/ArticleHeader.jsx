@@ -110,18 +110,18 @@ const ArticleHeader = ({
   )
 
   const handleThemeChange = async e => {
-    if (i18n.language === 'hi') {
-      // toast for feature not available in hindi
-      toast({
-        title: t('featureNotAvailableTitle'),
-        description: t('featureNotAvailableDescription'),
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
-      return
-    }
+    // if (i18n.language === 'hi') {
+    //   // toast for feature not available in hindi
+    //   toast({
+    //     title: t('featureNotAvailableTitle'),
+    //     description: t('featureNotAvailableDescription'),
+    //     status: 'warning',
+    //     duration: 3000,
+    //     isClosable: true,
+    //     position: 'top',
+    //   })
+    //   return
+    // }
     if (!user || user.role === 'guest') {
       toast({
         title: t('loginRequiredTitleWithRealAccount'),
@@ -145,6 +145,7 @@ const ArticleHeader = ({
       const response = await axios.post('/api/articles/story', {
         articleId: article._id,
         theme: selectedTheme,
+        lang: lang,
       })
       onThemeChange(response.data.storyContent)
       // Track theme selection in Google Analytics

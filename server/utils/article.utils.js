@@ -51,7 +51,8 @@ const hindiConverter = async articleId => {
                                 1. Author is name of the author of the article, translate author name to hindi ,dont write its meaning.
                                 2. Break maintext in only 3 paragraphs.
                                 3. Make a JSON object containing hindiTitle, hindiAuthor, and hindiMainText.
-                                4.  Return the JSON object which contains the translated text and looks like :
+                                4. Ensure that all information from the original article mainText is retained
+                                5.  Return the JSON object which contains the translated text and looks like :
                                 {
                                   "hindiTitle": "translated title",
                                   "hindiAuthor": "translated author",

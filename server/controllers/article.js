@@ -23,6 +23,7 @@ const cache = require('memory-cache')
 const Story = require('../model/storySchema')
 const User = require('../model/userSchema')
 const { generateStory } = require('../services/storyGenerateService')
+const LanguageDetect = require('langdetect')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general', lang } = req.query
@@ -941,7 +942,7 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
 // @route  POST /api/articles/story
 // @access Protected
 const createStory = asyncHandler(async (req, res) => {
-  const { articleId, theme } = req.body
+  const { articleId, theme, lang = 'en' } = req.body
   const userId = req.user._id
   const user = await User.findById(userId).select('role')
   if (!user || user.role === 'guest') {
@@ -954,16 +955,41 @@ const createStory = asyncHandler(async (req, res) => {
     throw new Error('Article not found')
   }
 
-  const storyExists = await Story.findOne({ originalArticle: articleId, theme })
+  const storyExists = await Story.findOne({
+    originalArticle: articleId,
+    theme,
+    language: lang,
+  })
   if (storyExists) {
     return res.status(201).json(storyExists)
   }
-  const storyContent = await generateStory(article, theme)
-
+  const modifiedArticleForStory = {
+    ...article._doc,
+    title: lang === 'hi' ? article.hindiTitle : article.title,
+    mainText: lang === 'hi' ? article.hindiMainText : article.mainText,
+  }
+  let retries = 3
+  let storyContent = ''
+  let detectedLanguages = []
+  let dominantLanguage = {}
+  while (retries > 0) {
+    storyContent = await generateStory(modifiedArticleForStory, theme)
+    detectedLanguages = LanguageDetect.detect(storyContent)
+    dominantLanguage = detectedLanguages[0]
+    if (dominantLanguage.lang === lang) {
+      break
+    }
+    retries--
+  }
+  if (dominantLanguage.lang !== lang) {
+    res.status(400)
+    throw new Error('Language mismatch try again later !!')
+  }
   const newStory = new Story({
     originalArticle: article._id,
     theme,
     storyContent,
+    language: lang,
   })
 
   await newStory.save()
