@@ -63,14 +63,7 @@ const StyledDropdownMenu = ({
   }, [])
 
   const handleOpen = useCallback(() => {
-    if (options.length === 0) {
-      toast({
-        title: t('noBadgesAvailable'),
-        status: 'info',
-        duration: 3000,
-        isClosable: true,
-      })
-    } else {
+    if (options.length !== 0) {
       setIsOpen(true)
     }
   }, [options.length, t, toast])
@@ -210,7 +203,7 @@ const StyledDropdownMenu = ({
           }}
         >
           <Box as="span" position="relative" zIndex="1">
-            {options.length === 0 ? t('noBadgesAvailable') : buttonText}
+            {options.length === 0 ? t('noBadge') : buttonText}
           </Box>
         </MenuButton>
         {options.length > 0 && (
