@@ -115,16 +115,28 @@ const generateQuestionsForQuiz = async ({
     let result
     let response
 
-    const prompt = `Title: ${title}\nAuthor: ${author}\n\nMainText: ${mainText}\n\nInstructions:
+    const prompt = `Title: ${title}
+Author: ${author}
+
+MainText: ${mainText}
+
+Instructions:
 1. Divide the article into 3 paragraphs.
 2. Generate 2 to 5 unique questions for each paragraph.
 3. Provide 4 answer options for each question, with one correct answer labeled (a, b, c, or d).
-4. Include a brief explanation for each correct answer.
-5. Ensure all questions are derived from the provided text.
-6. Assign a difficulty level between 0 and 1 for each question (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)). **This field is mandatory**.
-7. If the question requires remembering numerical data, specific dates, or names(except author names and small names.), assign a higher difficulty level between 0.5 to 0.99 . Give These things higher priority while assigning difficulty.
-8. Evaluate the article's overall difficulty considering factors such as vocabulary complexity, sentence structure,clarity, coherence, information density, length, and reader engagement. If the article involves a significant amount of numerical or name-based information, assign a higher overall difficulty rating. Provide an overall difficulty rating between 0 and 1 (It can't be 0 or 1; it has to be a decimal value between 0 to 1, with two decimal accuracy).
-9. Return the response in the following JSON format:
+4. Distribute the correct answers across options with the following probabilities:
+   - Option 'd': 40% chance
+   - Options 'a', 'b', and 'c': 20% chance each
+   Ensure this distribution is applied across all questions in the quiz.
+5. Include a brief explanation for each correct answer.
+6. Double-check that the correct answer and explanation are consistent with each other and the article's content.
+7. Ensure all questions are derived from the provided text.
+8. Assign a difficulty level between 0.01 and 0.99 for each question (with two decimal accuracy). This field is mandatory.
+9. If the question requires remembering numerical data, specific dates, or names (except author names and short names), assign a higher difficulty level between 0.55 to 0.99. Give these things higher priority while assigning difficulty.
+10. Evaluate the article's overall difficulty considering factors such as vocabulary complexity, sentence structure, clarity, coherence, information density, length, and reader engagement. If the article involves a significant amount of numerical or name-based information, assign a higher overall difficulty rating.
+11. Provide an overall difficulty rating between 0.01 and 0.99 (with two decimal accuracy).
+12. Return the response in the following JSON format:
+
 {
   "title": "Title of the article",
   "paragraphs": [
@@ -274,89 +286,77 @@ const generateQuestionsForHindiQuiz = async ({
   })
   const combinedMainText = mainText.join(' ')
   //console.log(title, author, mainText);
-  const prompt = `Title: ${title}\n Author: ${author}\n\n MainText:${combinedMainText}\n\n`
-  const instructions = `Instructions:
-                                1. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para. Quiz should be generated in hindi langauge as article will be in hindi and it should be generated carefully.
-                                2. Generate minimum 2 and maximum 5 questions from each paragraph(very important!).
-                                3. Each question should have 4 options.
-                                4. Each question should have a correct option.
-                                5. Anwer should be one of the options key(a,b,c,d).
-                                6. Each answer should have an explanation.
-                                7. Nothing should be outside of the article provided(important)
-                                8. Every question should be unique.
-                                9. Give each question a difficulty level between 0 to 1 (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)). **This field is mandatory**..
-                                10. If the question requires remembering numerical data, specific dates, or names(except author names and small names.), assign a higher difficulty level between 0.5 to 0.99 . Give These things higher priority while assigning difficulty.
-                                11.Assess the overall difficulty level of the article by considering factors
-                                  such as vocabulary complexity, sentence structure, conceptual difficulty,
-                                  depth of analysis, background knowledge required, clarity and coherence,
-                                  density of information, language style, length of the article, and reader
-                                  engagement. Evaluate each criterion to determine the article's difficulty
-                                  rating on a scale from 0 to 1, where 0 represents low difficulty and 1 represents
-                                  high difficulty. Aggregate these assessments to derive an overall difficulty level
-                                  that reflects the article's complexity and suitability for readers of varying
-                                  proficiency levels (It can't be 0 or 1 it has to be in decimal between 0 to 1 (with two decimal accuracy)). **This field is mandatory**..
-                                12. Return response in following JSON object format:
-                                  {
-                                    title: "Title of the article",
-                                    para1 :
-                                    {
-                                      questions:
-                                      [
-                                        {
-                                          question: "",
-                                          options:
-                                          {
-                                            a: "",
-                                            b: "",
-                                            c: "",
-                                            d: ""
-                                          },
-                                          answer: "",
-                                          explanation:"",
-                                          difficulty: ""
-                                        },
-                                      ],
-                                    }
-                                    para2 :
-                                    {
-                                      questions:
-                                      [
-                                        {
-                                          question: "",
-                                          options:
-                                          {
-                                            a: "",
-                                            b: "",
-                                            c: "",
-                                            d: ""
-                                          },
-                                          answer: "",
-                                          explanation:"",
-                                          difficulty: ""
-                                        },
-                                      ],
-                                    }
-                                    para3 :
-                                    {
-                                      questions:
-                                      [
-                                        {
-                                          question: "",
-                                          options:
-                                          {
-                                            a: "",
-                                            b: "",
-                                            c: "",
-                                            d: ""
-                                          },
-                                          answer: "",
-                                          explanation:"",
-                                          difficulty: ""
-                                        },
-                                      ],
-                                    }
-                                    overAllDifficulty: ""
-                                  }`
+  const prompt = `शीर्षक: ${title}\nलेखक: ${author}\n\nमुख्य पाठ: ${combinedMainText}\n\n`
+  const instructions = `निर्देश:
+1. लेख को 3 अनुच्छेदों में इस तरह विभाजित करें कि प्रत्येक अनुच्छेद से कम से कम 2 प्रश्न बनाए जा सकें। क्विज़ हिंदी भाषा में तैयार की जानी चाहिए क्योंकि लेख हिंदी में होगा और इसे सावधानीपूर्वक तैयार किया जाना चाहिए।
+2. प्रत्येक अनुच्छेद से न्यूनतम 2 और अधिकतम 5 प्रश्न तैयार करें (बहुत महत्वपूर्ण!)।
+3. प्रत्येक प्रश्न के लिए 4 विकल्प प्रदान करें।
+4. प्रत्येक प्रश्न का एक सही विकल्प होना चाहिए।
+5. उत्तर विकल्पों में से एक की कुंजी (a, b, c, d) होनी चाहिए।
+6. प्रत्येक उत्तर के लिए एक व्याख्या प्रदान करें।
+7. दिए गए लेख के बाहर कुछ भी नहीं होना चाहिए (महत्वपूर्ण)।
+8. प्रत्येक प्रश्न अद्वितीय होना चाहिए।
+9. प्रत्येक प्रश्न को 0 से 1 के बीच एक कठिनाई स्तर दें (यह 0 या 1 नहीं हो सकता, यह 0 से 1 के बीच दशमलव में होना चाहिए (दो दशमलव सटीकता के साथ))। **यह फ़ील्ड अनिवार्य है**।
+10. यदि प्रश्न में संख्यात्मक डेटा, विशिष्ट तिथियों, या नामों (लेखक के नाम और छोटे नामों को छोड़कर) को याद रखने की आवश्यकता है, तो 0.55 से 0.99 के बीच एक उच्च कठिनाई स्तर असाइन करें। कठिनाई असाइन करते समय इन चीजों को उच्च प्राथमिकता दें।
+11. लेख के समग्र कठिनाई स्तर का मूल्यांकन करें, जिसमें शब्दावली की जटिलता, वाक्य संरचना, अवधारणात्मक कठिनाई, विश्लेषण की गहराई, आवश्यक पृष्ठभूमि ज्ञान, स्पष्टता और सुसंगतता, सूचना की सघनता, भाषा शैली, लेख की लंबाई और पाठक की रुचि जैसे कारकों पर विचार करें। प्रत्येक मानदंड का मूल्यांकन करके लेख की कठिनाई रेटिंग 0 से 1 के पैमाने पर निर्धारित करें, जहां 0 कम कठिनाई और 1 उच्च कठिनाई का प्रतिनिधित्व करता है। इन मूल्यांकनों को समेकित करके एक समग्र कठिनाई स्तर निकालें जो लेख की जटिलता और विभिन्न प्रवीणता स्तरों के पाठकों के लिए उपयुक्तता को दर्शाता हो (यह 0 या 1 नहीं हो सकता, यह 0 से 1 के बीच दशमलव में होना चाहिए (दो दशमलव सटीकता के साथ))। **यह फ़ील्ड अनिवार्य है**।
+12. सही उत्तरों को विकल्पों में निम्नलिखित संभावनाओं के साथ वितरित करें:
+    - विकल्प 'd': 40% संभावना
+    - विकल्प 'a', 'b', और 'c': प्रत्येक 20% संभावना
+    सुनिश्चित करें कि यह वितरण क्विज़ के सभी प्रश्नों में लागू हो।
+13. दोहरी जांच करें कि सही उत्तर और व्याख्या एक दूसरे के साथ और लेख की सामग्री के साथ सुसंगत हैं।
+14. प्रतिक्रिया को निम्नलिखित JSON ऑब्जेक्ट प्रारूप में वापस करें:
+{
+  title: "लेख का शीर्षक",
+  para1: {
+    questions: [
+      {
+        question: "",
+        options: {
+          a: "",
+          b: "",
+          c: "",
+          d: ""
+        },
+        answer: "",
+        explanation: "",
+        difficulty: ""
+      },
+    ],
+  },
+  para2: {
+    questions: [
+      {
+        question: "",
+        options: {
+          a: "",
+          b: "",
+          c: "",
+          d: ""
+        },
+        answer: "",
+        explanation: "",
+        difficulty: ""
+      },
+    ],
+  },
+  para3: {
+    questions: [
+      {
+        question: "",
+        options: {
+          a: "",
+          b: "",
+          c: "",
+          d: ""
+        },
+        answer: "",
+        explanation: "",
+        difficulty: ""
+      },
+    ],
+  },
+  overAllDifficulty: ""
+}`
   let result = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     response_format: { type: 'json_object' },
