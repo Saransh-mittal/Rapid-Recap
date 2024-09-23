@@ -17,6 +17,8 @@ const {
 const {
   getAllTournaments,
   updateMaintenanceStatus,
+  getQuestions,
+  editQuestion,
 } = require('../controllers/tournamentController')
 const {
   getStoryFeedback,
@@ -85,6 +87,13 @@ router.get(
   Authenticate,
   adminMiddleware,
   getStoryFeedbackStats,
+)
+router.get('/tournament/questions', Authenticate, adminMiddleware, getQuestions)
+router.put(
+  '/tournament/questions/:id',
+  Authenticate,
+  adminMiddleware,
+  editQuestion,
 )
 
 module.exports = router

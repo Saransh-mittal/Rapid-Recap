@@ -1051,11 +1051,11 @@ const getUserStats = asyncHandler(async (req, res) => {
 })
 
 // @desc  Get questions for the tournament
-// @route GET /api/tournament/questions
+// @route GET /api/admin/tournament/questions
 // @access Admin
 const getQuestions = asyncHandler(async (req, res) => {
   const { tournamentId, category, difficulty } = req.query
-
+  console.log('tournamentId', tournamentId)
   let filter = { isManuallyAdded: false }
 
   if (category) {
@@ -1084,7 +1084,7 @@ const getQuestions = asyncHandler(async (req, res) => {
 })
 
 // @desc Edit a question that is not manually added
-// @route PUT /api/tournament/questions/:id
+// @route PUT /api/admin/tournament/questions/:id
 // @access Admin
 const editQuestion = asyncHandler(async (req, res) => {
   const { id } = req.params

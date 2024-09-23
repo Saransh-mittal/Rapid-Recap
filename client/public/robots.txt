@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
+
+Disallow: /api/
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
 Sitemap: https://www.rapidrecap.co.in/sitemap.xml
 Sitemap: https://www.rapidrecap.co.in/google-news-sitemap.xml

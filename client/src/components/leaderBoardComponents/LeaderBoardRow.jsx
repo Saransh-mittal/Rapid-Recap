@@ -165,12 +165,7 @@ const LeaderBoardRow = React.memo(
               </Box>
             </Td>
             <Td width="25%">
-              <Flex
-                alignItems="center"
-                justifyContent="center"
-                gap={2}
-                position={'relative'}
-              >
+              <Flex gap={2} position={'relative'}>
                 <Flex alignItems="center">
                   <Image
                     src={user.pic}
