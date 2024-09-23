@@ -10,7 +10,6 @@ import {
   Image,
   Flex,
   Heading,
-  Text,
   Spinner,
 } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
@@ -53,13 +52,10 @@ const NotificationModal = ({
     >
       <ModalOverlay />
       <ModalContent
-        backgroundImage={{
-          base: 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-        }}
-        backgroundColor={{ base: '#0f0d15', xl: 'transparent' }}
-        boxShadow={{
-          base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-        }}
+        bg="rgba(15, 13, 21, 1)"
+        borderRadius="xl"
+        boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
+        border="1px solid rgba(255, 255, 255, 0.18)"
         color={'white'}
       >
         <ModalHeader display={'flex'} px={0} w={'100%'} pb={0}>
