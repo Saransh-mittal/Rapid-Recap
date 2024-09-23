@@ -28,6 +28,7 @@ const SearchBar = React.lazy(() =>
 const LeaderBoardTable = React.lazy(() =>
   import('../components/leaderBoardComponents/LeaderBoardTable'),
 )
+import UserCard from '../components/leaderBoardComponents/UserCard' // <-- New import
 
 import medalIcon from '../assets/medal.webp'
 import { Helmet } from 'react-helmet'
@@ -103,27 +104,6 @@ const LeaderBoard = () => {
     }
   }, [inView, isLoading, hasMore])
 
-  const RankDisplay = ({ rank }) => (
-    <VStack alignItems="flex-start" spacing={0}>
-      <HStack>
-        <Text fontWeight="bold">{t('Your Rank')}</Text>
-        {!isMobile && (
-          <Tooltip label={t('rankDiscrepancyNote')} hasArrow>
-            <InfoOutlineIcon boxSize={3} />
-          </Tooltip>
-        )}
-      </HStack>
-      <Text fontSize="2xl" fontWeight="bold" color="pink.400">
-        #{rank}
-      </Text>
-      {isMobile && (
-        <Text fontSize="xs" color="gray.500">
-          {t('rankDiscrepancyNote')}
-        </Text>
-      )}
-    </VStack>
-  )
-
   return (
     <>
       <Helmet>
@@ -183,6 +163,7 @@ const LeaderBoard = () => {
                 {t('tag')}
               </Text>
             </Flex>
+
             <React.Suspense fallback={<Spinner />}>
               <Flex alignItems="center" justifyContent="center">
                 <SearchBar
@@ -191,35 +172,12 @@ const LeaderBoard = () => {
                   w={isBaseScreen ? '75%' : '50%'}
                 />
               </Flex>
-              {user && user.IQ_score && (
-                <Box
-                  bg="whiteAlpha.200"
-                  p={4}
-                  borderRadius="md"
-                  boxShadow="md"
-                  cursor="pointer"
-                  onClick={() => navigate(`/profile/${user.inGameName}`)}
-                  _hover={{ bg: 'whiteAlpha.300' }}
-                >
-                  <HStack justifyContent="space-between" alignItems="center">
-                    <HStack>
-                      <Flex mb={'auto'} mt={1}>
-                        <Medal color="#ECC94B" size={'25px'} />
-                      </Flex>
-                      <RankDisplay rank={user.rank} />
-                    </HStack>
-                    <VStack alignItems="flex-end" spacing={0}>
-                      <Text fontWeight="bold">{user.name}</Text>
-                      <Text color="gray.400">@{user.inGameName}</Text>
-                      <Text fontSize="xl" fontWeight="bold" color="pink.400">
-                        {t('score')}: {user.IQ_score}
-                      </Text>
-                    </VStack>
-                  </HStack>
-                </Box>
-              )}
+
+              {/* Render UserCard here */}
+              <UserCard user={user} t={t} />
+
               <Box
-                height="calc(100vh - 300px)"
+                height="calc(100vh - 200px)"
                 overflowY="auto"
                 css={{
                   '&::-webkit-scrollbar': {
