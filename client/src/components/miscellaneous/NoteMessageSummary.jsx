@@ -18,6 +18,7 @@ import {
   Progress,
   Flex,
   Textarea,
+  Avatar,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
@@ -37,6 +38,8 @@ import {
 import { useTranslation } from 'react-i18next' // Import useTranslation
 import { getMilestoneInfo } from './noteMessages/milestones'
 import StarRating from './noteMessages/StarRating'
+import { LockIcon } from '@chakra-ui/icons'
+import CalenderSVG from '../../assets/svg/CalenderSVG'
 
 // Lazy load components and assets
 const ButtonFactory = lazy(() => import('./ButtonFactory'))
@@ -63,6 +66,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   // Initialize translation
   const { t } = useTranslation('NoteMessageSummary')
   const { t: GuestLoginTranslate } = useTranslation('GuestLogin')
+  const { t: tournamentTranslate } = useTranslation('TournamentNoteMessage')
 
   // Memoize handleMessageAction to prevent unnecessary re-renders
   const handleMessageAction = useMemo(
@@ -73,6 +77,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
         setShowXpLevelModal,
         setIsNotifDrawerOpen,
         navigateToProfile: id => navigate(`/profile/${id}`),
+        navigateToTournament: () => navigate(`/tournament`),
         handleSubmitFeedback: () => {
           handleSubmitFeedback(rating, feedback, storyId)
         },
@@ -145,7 +150,68 @@ const NoteMessageSummary = ({ messages, onClose }) => {
         return 'orange'
     }
   }
+  const getIcon = tournamentStatus => {
+    switch (tournamentStatus) {
+      case 'registration':
+        return <CalenderSVG height="40px" width="40px" />
+      case 'locked':
+        return <LockIcon height="40px" width="40px" />
+      default:
+        return <TrophySVG height="40px" width="40px" />
+    }
+  }
 
+  const getColorScheme = tournamentStatus => {
+    switch (tournamentStatus) {
+      case 'registration':
+        return 'green'
+      case 'locked':
+        return 'red'
+      default:
+        return 'blue'
+    }
+  }
+  const getMotivationalMessage = (
+    tournamentStatus,
+    requiredStreak,
+    userStreak,
+  ) => {
+    switch (tournamentStatus) {
+      case 'registration':
+        return tournamentTranslate(
+          'TournamentNoteMessage.motivation.registration',
+          {
+            tournamentName,
+          },
+        )
+      case 'locked':
+        return tournamentTranslate('TournamentNoteMessage.motivation.locked', {
+          requiredStreak: requiredStreak - userStreak,
+        })
+      default:
+        return tournamentTranslate('TournamentNoteMessage.motivation.default')
+    }
+  }
+  const LeaderboardItem = ({ rank, name, score, pic, message }) => (
+    <HStack spacing={2} w="100%">
+      <Text
+        fontWeight="bold"
+        color={`${getColorScheme(message?.tournamentStatus)}.300`}
+      >
+        {rank}.
+      </Text>
+      <Avatar size="xs" src={pic} />
+      <Text flex={1} color="white" isTruncated>
+        {name}
+      </Text>
+      <Text
+        fontWeight="bold"
+        color={`${getColorScheme(message?.tournamentStatus)}.300`}
+      >
+        {score}
+      </Text>
+    </HStack>
+  )
   const renderMessageContent = useCallback(
     message => {
       switch (message.messageType) {
@@ -312,6 +378,122 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                   }}
                   resize="vertical"
                 />
+              </VStack>
+            </Flex>
+          )
+        case 'tournament':
+          return (
+            <Flex
+              direction="column"
+              align="center"
+              w="100%"
+              position="relative"
+            >
+              <Box
+                bg={`${getColorScheme(message?.tournamentStatus)}.400`}
+                borderRadius="full"
+                p={2}
+                mb={3}
+                boxShadow={`0 0 15px ${getColorScheme(
+                  message?.tournamentStatus,
+                )}.300`}
+              >
+                <Suspense fallback={<Box width="40px" height="40px" />}>
+                  {getIcon(message?.tournamentStatus)}
+                </Suspense>
+              </Box>
+              <VStack spacing={2} align="center" w="100%">
+                <Text
+                  fontSize="xl"
+                  fontWeight="bold"
+                  color="white"
+                  textAlign="center"
+                >
+                  {message?.tournamentName}
+                </Text>
+                {message?.tournamentStatus === 'registration' && (
+                  <>
+                    <Text fontSize="md" fontWeight="medium" color="gray.300">
+                      {tournamentTranslate(
+                        'TournamentNoteMessage.registrationOpen',
+                      )}
+                    </Text>
+                    <Text fontSize="sm" color="gray.400">
+                      {tournamentTranslate(
+                        'TournamentNoteMessage.registrationEnds',
+                      )}
+                    </Text>
+                    <Text
+                      fontSize="md"
+                      fontWeight="bold"
+                      color={`${getColorScheme(message?.tournamentStatus)}.300`}
+                    >
+                      {formatRemainingTime(
+                        new Date(message?.registrationEndTime).getTime() -
+                          new Date().getTime(),
+                      )}
+                    </Text>
+                  </>
+                )}
+                {message?.tournamentStatus === 'locked' && (
+                  <>
+                    <Text fontSize="md" fontWeight="medium" color="gray.300">
+                      {tournamentTranslate(
+                        'TournamentNoteMessage.streakRequired',
+                        {
+                          requiredStreak: message?.requiredStreak,
+                        },
+                      )}
+                    </Text>
+                    <Text fontSize="sm" color="gray.400">
+                      {tournamentTranslate('TournamentNoteMessage.yourStreak', {
+                        userStreak: message?.userStreak,
+                      })}
+                    </Text>
+                    <Box w="100%" mt={2}>
+                      <Progress
+                        value={
+                          (message?.userStreak / message?.requiredStreak) * 100
+                        }
+                        colorScheme={getColorScheme(message?.tournamentStatus)}
+                        borderRadius="full"
+                      />
+                    </Box>
+                  </>
+                )}
+                {message?.leaderboard?.length > 0 && (
+                  <VStack w="100%" mt={4} spacing={2}>
+                    <Text fontSize="md" fontWeight="bold" color="white">
+                      {tournamentTranslate('TournamentNoteMessage.topLeaders')}
+                    </Text>
+                    {message?.leaderboard?.map((leader, index) => (
+                      <LeaderboardItem
+                        key={leader.userId}
+                        rank={index + 1}
+                        name={leader.inGameName || leader.name}
+                        score={leader.score}
+                        pic={leader.pic}
+                        message={message}
+                      />
+                    ))}
+                  </VStack>
+                )}
+                {(message?.leaderboard?.length === 0 ||
+                  !message.leaderboard) && (
+                  <Text
+                    fontSize="md"
+                    fontWeight="medium"
+                    color={`${getColorScheme(message?.tournamentStatus)}.300`}
+                    textAlign="center"
+                    mt={3}
+                  >
+                    {getMotivationalMessage(
+                      message?.tournamentStatus,
+                      message?.requiredStreak,
+                      message?.userStreak,
+                    )}
+                  </Text>
+                )}
               </VStack>
             </Flex>
           )

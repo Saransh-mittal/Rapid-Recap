@@ -1,5 +1,13 @@
 import React, { useMemo, lazy, Suspense } from 'react'
-import { Text, VStack, Box, Flex, Progress } from '@chakra-ui/react'
+import {
+  Text,
+  VStack,
+  Box,
+  Flex,
+  Progress,
+  HStack,
+  Avatar,
+} from '@chakra-ui/react'
 import NoteMessage from '../NoteMessage'
 import { formatRemainingTime } from '../../../utils/helper.utils'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +26,7 @@ const TournamentNoteMessage = ({
   onClose,
   duration,
   width = '320px',
+  leaderboard = [], // New prop for leaderboard data
 }) => {
   const { t } = useTranslation('TournamentNoteMessage')
 
@@ -57,6 +66,21 @@ const TournamentNoteMessage = ({
         return t('TournamentNoteMessage.motivation.default')
     }
   }
+
+  const LeaderboardItem = ({ rank, name, score, pic }) => (
+    <HStack spacing={2} w="100%">
+      <Text fontWeight="bold" color={`${getColorScheme()}.300`}>
+        {rank}.
+      </Text>
+      <Avatar size="xs" src={pic} />
+      <Text flex={1} color="white" isTruncated>
+        {name}
+      </Text>
+      <Text fontWeight="bold" color={`${getColorScheme()}.300`}>
+        {score}
+      </Text>
+    </HStack>
+  )
 
   const customContent = useMemo(
     () => (
@@ -118,15 +142,33 @@ const TournamentNoteMessage = ({
               </Box>
             </>
           )}
-          <Text
-            fontSize="md"
-            fontWeight="medium"
-            color={`${getColorScheme()}.300`}
-            textAlign="center"
-            mt={3}
-          >
-            {getMotivationalMessage()}
-          </Text>
+          {leaderboard?.length > 0 && (
+            <VStack w="100%" mt={4} spacing={2}>
+              <Text fontSize="md" fontWeight="bold" color="white">
+                {t('TournamentNoteMessage.topLeaders')}
+              </Text>
+              {leaderboard?.map((leader, index) => (
+                <LeaderboardItem
+                  key={leader.userId}
+                  rank={index + 1}
+                  name={leader.inGameName || leader.name}
+                  score={leader.score}
+                  pic={leader.pic}
+                />
+              ))}
+            </VStack>
+          )}
+          {(leaderboard.length === 0 || !leaderboard) && (
+            <Text
+              fontSize="md"
+              fontWeight="medium"
+              color={`${getColorScheme()}.300`}
+              textAlign="center"
+              mt={3}
+            >
+              {getMotivationalMessage()}
+            </Text>
+          )}
         </VStack>
       </Flex>
     ),
@@ -136,6 +178,7 @@ const TournamentNoteMessage = ({
       registrationEndTime,
       userStreak,
       requiredStreak,
+      leaderboard,
       t,
     ],
   )
@@ -162,9 +205,13 @@ const TournamentNoteMessage = ({
   return (
     <NoteMessage
       messageId={messageId}
-      title={t('TournamentNoteMessage.title', {
-        status: t(`TournamentNoteMessage.status.${tournamentStatus}`),
-      })}
+      title={
+        leaderboard.length === 0
+          ? t('TournamentNoteMessage.title', {
+              status: t(`TournamentNoteMessage.status.${tournamentStatus}`),
+            })
+          : t('TournamentNoteMessage.tournamentLeaderboard')
+      }
       customContent={customContent}
       onClose={onClose}
       duration={duration}

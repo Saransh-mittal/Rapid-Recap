@@ -147,6 +147,7 @@ const NoteMessageQueue = () => {
             duration={message.duration}
             width={message.width}
             onClose={handleClose}
+            leaderboard={message.leaderboard}
           />
         </Suspense>
       )

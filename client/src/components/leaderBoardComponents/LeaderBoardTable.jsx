@@ -54,32 +54,42 @@ const LeaderBoardTable = forwardRef(
 
     const isMobile = useBreakpointValue({ base: true, md: false })
     const isTablet = useBreakpointValue({ base: false, md: true, lg: false })
-    const isDesktop = useBreakpointValue({ base: false, lg: true })
+    const isDesktop = useBreakpointValue({ base: false, xl: true })
 
     const renderHeader = () => (
       <Thead>
         <Tr>
           {isMobile ? (
-            <Th textAlign="center" color={accentColor} width={'40%'}>
-              {t('rankAndPlayer')}
-            </Th>
+            <>
+              <Th textAlign="left" color={accentColor} width={'70%'} px={4}>
+                {t('rankAndPlayer')}
+              </Th>
+              <Th width={'30%'} textAlign="right" color={accentColor} px={2}>
+                {t('iqScores')}
+              </Th>
+            </>
           ) : (
             <>
-              <Th width="10%" textAlign="center" color={accentColor}>
+              <Th
+                width="10%"
+                textAlign={isTablet ? 'left' : 'center'}
+                color={accentColor}
+              >
                 {t('rank')}
               </Th>
               <Th width="25%" textAlign="left" color={accentColor}>
                 {t('Player')}
               </Th>
+              <Th
+                width={'15%'}
+                textAlign={isTablet ? 'right' : 'center'}
+                color={accentColor}
+              >
+                {t('iqScores')}
+              </Th>
             </>
           )}
-          <Th
-            width={isMobile ? '30%' : '15%'}
-            textAlign="center"
-            color={accentColor}
-          >
-            {t('iqScores')}
-          </Th>
+
           {isDesktop && (
             <>
               <Th width="20%" textAlign="center" color={accentColor}>

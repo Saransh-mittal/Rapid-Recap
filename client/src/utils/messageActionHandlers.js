@@ -18,8 +18,11 @@ const messageActionHandlers = {
   VIEW_PROFILE: (actions, profileId) => {
     actions.navigateToProfile(profileId)
   },
-  VIEW_TOURNAMENT: actions => {
+  VIEW_TOURNAMENT: (dispatch, actions, messageId) => {
     actions.navigateToTournament()
+    dispatch &&
+      messageId &&
+      dispatch(actions.removeNoteMessageWithId(messageId))
   },
   REGISTER_TOURNAMENT: actions => {
     actions.navigateToTournament()
@@ -49,7 +52,7 @@ export const createHandleMessageAction = (dispatch, actions) => {
         actionType === 'REGISTER_TOURNAMENT' ||
         actionType === 'VIEW_TOURNAMENT'
       ) {
-        messageActionHandlers['VIEW_TOURNAMENT'](actions)
+        messageActionHandlers['VIEW_TOURNAMENT'](dispatch, actions, messageId)
       } else if (actionType === 'VIEW_PROFILE') {
         messageActionHandlers[actionType](actions, profileId)
       } else if (actionType === 'SUBMIT_FEEDBACK') {

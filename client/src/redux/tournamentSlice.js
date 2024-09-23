@@ -48,10 +48,45 @@ export const checkTournamentRegistration = createAsyncThunk(
           )
         }
       }
-
+      dispatch(setTournamentId(tournament?._id))
+      dispatch(setStatus(tournament?.status))
       return { tournament, isRegistered }
     } catch (error) {
       console.error('Error checking tournament registration:', error)
+      // Handle error (e.g., dispatch an error notification)
+    }
+  },
+)
+
+export const getTopLeaderboard = createAsyncThunk(
+  'tournament/getTopLeaderboard',
+  async (tournamentId, { dispatch }) => {
+    try {
+      const response = await axios.get(`/api/tournament/leaderboard`, {
+        params: {
+          tournamentId,
+          page: 1,
+          limit: 3,
+        },
+      })
+      const { leaderboard, tournamentNumber } = response.data
+      dispatch(
+        addNoteMessage({
+          messageType: 'tournament',
+          tournamentName:
+            '#' + String(String(tournamentNumber).padStart(3, '0')),
+          duration: null,
+          width: '300px',
+          leaderboard,
+          actions: [
+            {
+              actionType: 'VIEW_TOURNAMENT',
+            },
+          ],
+        }),
+      )
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error)
       // Handle error (e.g., dispatch an error notification)
     }
   },
@@ -68,12 +103,16 @@ const initialState = {
   isLoading: false,
   error: null,
   refetchLeaderBoard: false,
+  status: null,
 }
 
 const tournamentSlice = createSlice({
   name: 'tournament',
   initialState,
   reducers: {
+    setStatus: (state, action) => {
+      state.status = action.payload
+    },
     setTournamentId: (state, action) => {
       state.tournamentId = action.payload
     },
@@ -130,6 +169,7 @@ export const {
   resetTournamentState,
   setCompletedCategories,
   setRefetchLeaderBoard,
+  setStatus,
 } = tournamentSlice.actions
 
 export default tournamentSlice.reducer

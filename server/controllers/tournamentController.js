@@ -206,6 +206,7 @@ const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
         inGameName: '$userDetails.inGameName',
         name: '$userDetails.name',
         email: '$userDetails.email',
+        pic: '$userDetails.pic',
         totalScore: 1,
         level: '$userDetails.level',
         xp: '$userDetails.xp',
@@ -261,6 +262,7 @@ const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
     score: entry.totalScore,
     level: entry.level,
     userId: entry.userId,
+    pic: entry?.pic,
   }))
 
   res.json({
@@ -269,6 +271,7 @@ const getCurrentTournamentLeaderboard = asyncHandler(async (req, res) => {
     totalPages: Math.ceil(result.totalCount / limit),
     hasMore: skip + leaderboard.length < result.totalCount,
     userStanding,
+    tournamentNumber: tournament.tournamentNumber,
   })
 })
 

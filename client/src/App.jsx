@@ -13,6 +13,7 @@ import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
+import moment from 'moment'
 
 const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
 const Footer = React.lazy(() => import('./components/Header-Footer/Footer.jsx'))
@@ -51,7 +52,10 @@ import {
   isSubscribedChecker,
 } from './redux/notificationSlice.js'
 import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
-import { checkTournamentRegistration } from './redux/tournamentSlice.js'
+import {
+  checkTournamentRegistration,
+  getTopLeaderboard,
+} from './redux/tournamentSlice.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -66,7 +70,7 @@ const App = () => {
   const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
-
+  const { tournamentId, status } = useSelector(state => state.tournament)
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
 
   const handleClose = useCallback(() => {
@@ -138,6 +142,13 @@ const App = () => {
 
     refreshAtMidnightUTC()
   }, [dispatch, isToken])
+
+  useEffect(() => {
+    if (tournamentId && status === 'ongoing') {
+      const currentDay = moment().day()
+      if (currentDay === 0) dispatch(getTopLeaderboard(tournamentId))
+    }
+  }, [tournamentId, status])
 
   useEffect(() => {
     if (user?.newAccount) {
