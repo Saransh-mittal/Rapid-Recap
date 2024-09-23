@@ -1050,6 +1050,81 @@ const getUserStats = asyncHandler(async (req, res) => {
   res.json(userStats)
 })
 
+// @desc  Get questions for the tournament
+// @route GET /api/tournament/questions
+// @access Admin
+const getQuestions = asyncHandler(async (req, res) => {
+  const { tournamentId, category, difficulty } = req.query
+
+  let filter = { isManuallyAdded: false }
+
+  if (category) {
+    filter.category = category
+  }
+
+  if (difficulty) {
+    filter.difficulty = difficulty
+  }
+
+  if (tournamentId) {
+    const tournament = await Tournament.findById(tournamentId)
+    if (!tournament) {
+      res.status(404)
+      throw new Error('Tournament not found')
+    }
+
+    filter.createdAt = {
+      $gte: tournament.registrationStartDate,
+      $lte: tournament.registrationEndDate,
+    }
+  }
+
+  const questions = await TournamentQuestion.find(filter)
+  res.status(200).json(questions)
+})
+
+// @desc Edit a question that is not manually added
+// @route PUT /api/tournament/questions/:id
+// @access Admin
+const editQuestion = asyncHandler(async (req, res) => {
+  const { id } = req.params
+  const {
+    question,
+    hindiQuestion,
+    options,
+    hindiOptions,
+    correctAnswer,
+    category,
+    difficulty,
+  } = req.body
+
+  const tournamentQuestion = await TournamentQuestion.findById(id)
+
+  if (!tournamentQuestion) {
+    res.status(404)
+    throw new Error('Question not found')
+  }
+
+  if (tournamentQuestion.isManuallyAdded) {
+    res.status(400)
+    throw new Error('Cannot edit manually added questions')
+  }
+
+  tournamentQuestion.question = question || tournamentQuestion.question
+  tournamentQuestion.hindiQuestion =
+    hindiQuestion || tournamentQuestion.hindiQuestion
+  tournamentQuestion.options = options || tournamentQuestion.options
+  tournamentQuestion.hindiOptions =
+    hindiOptions || tournamentQuestion.hindiOptions
+  tournamentQuestion.correctAnswer =
+    correctAnswer || tournamentQuestion.correctAnswer
+  tournamentQuestion.category = category || tournamentQuestion.category
+  tournamentQuestion.difficulty = difficulty || tournamentQuestion.difficulty
+
+  const updatedQuestion = await tournamentQuestion.save()
+  res.status(200).json(updatedQuestion)
+})
+
 module.exports = {
   registerForTournament,
   addCurrentAffairsQuestion,
@@ -1068,4 +1143,6 @@ module.exports = {
   getActiveTournamentRegistration,
   getAllTournaments,
   updateMaintenanceStatus,
+  getQuestions,
+  editQuestion,
 }
