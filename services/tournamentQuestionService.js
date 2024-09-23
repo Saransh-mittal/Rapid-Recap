@@ -20,7 +20,11 @@ Requirements:
 Keep questions short and concise, as users will have less than 10 seconds to answer.
 Each question should stand alone and describe enough context since users won't know which article it is based on.
 For each question, provide 4 randomized answer options (a, b, c, d), with the correct answer randomly placed (not always in the same position).
-Indicate the correct answer after the options, and randomize its placement to ensure it doesn’t always appear in the same letter option (a, b, c, d). Give more probablity to the correct answer to be in the last option i.e. 'd'.
+Distribute the correct answers across options with the following probabilities:
+   - Option 'd': 40% chance
+   - Options 'a', 'b', and 'c': 20% chance each
+   Ensure this distribution is applied across all questions in the quiz.
+   Double-check that the correct answer i.e. its consistent with the article's content
 Example Output Format:
 
 Q1. Which country hosted the 2024 Summer Olympics?
@@ -37,7 +41,7 @@ c) Mark Zuckerberg
 d) Tim Berners-Lee
 Correct answer: d) Tim Berners-Lee
 
-Also get the hindi translated version of the questions and options .If the question requires remembering numerical data, specific dates, or names(except author names and small names.), assign a higher difficulty level between 0.5 to 0.99 . Give These things higher priority while assigning difficulty. Use the following format:
+Also get the hindi translated version of the questions and options .If the question requires remembering numerical data, specific dates, or names(except author names and small names.), assign a higher difficulty level between 0.55 to 0.99 . Give These things higher priority while assigning difficulty. Use the following format:
 
   Article: "${textForOpenAI}"
 

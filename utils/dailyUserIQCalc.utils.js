@@ -12,6 +12,10 @@ const configService = require('../configService')
 const NoteMessage = require('../model/noteMessageSchema')
 const cache = require('memory-cache')
 const i18n = require('../i18n')
+const {
+  societyOrCircleUpgradeTemplate,
+} = require('../data/inboxNotificationsTemplates')
+const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 
 const findSocietyCircleByIQ = async (IQScore, user) => {
   const CircleAndSocietyData = await getCircleAndSocietyData(user) // Fetch data by calling the function
@@ -45,6 +49,7 @@ const handleSocietyOrCircleUpgrade = async (
     await localizedI18n.changeLanguage(
       user?.userLanguage ? user.userLanguage : 'en',
     )
+
     if (!prevSocietyCircle || !currSocietyCircle) {
       console.error(
         `Invalid society/circle data for IQ scores: ${prevIQScore} or ${currIQScore}`,
@@ -52,7 +57,6 @@ const handleSocietyOrCircleUpgrade = async (
       return
     }
 
-    // Check for any change in society or circle
     const hasSocietyOrCircleChanged =
       prevSocietyCircle.society !== currSocietyCircle.society ||
       prevSocietyCircle.circle !== currSocietyCircle.circle
@@ -62,7 +66,6 @@ const handleSocietyOrCircleUpgrade = async (
         : 'circle'
       : 'same'
 
-    // Check if it's an upgrade (moving to a higher IQ range)
     const isUpgrade = currSocietyCircle.IQ_Lower >= prevSocietyCircle.IQ_Lower
 
     if (hasSocietyOrCircleChanged) {
@@ -77,40 +80,34 @@ const handleSocietyOrCircleUpgrade = async (
             userIQ: currIQScore,
             previousIQ: previousIQForXp,
           })
-          const noteMessage = new NoteMessage({
-            userId: user._id,
-            title: i18n.t('upgradeTitle'),
-            milestoneContent: i18n.t('upgradeContent', {
-              society:
-                changedSocietyOrCircle === 'society'
-                  ? currSocietyCircle.society
-                  : currSocietyCircle.circle,
-              type: changedSocietyOrCircle,
-            }),
-            messageType: 'xpAward',
-            xpAwarded: getXpForActivity({
-              activityType: type,
-              userIQ: currIQScore || user.IQ_score,
-              previousIQ: previousIQForXp || user.prevIQScore,
-            }),
-            xpSource: 'Society/Circle Upgrade',
-            isMilestone: true,
-            actions: [{ actionType: 'VIEW_EXPERIENCE' }],
-          })
-          await noteMessage.save()
+
+          // ---- Create Inbox Notification ----
+          // const notificationTitle = localizedI18n.t('upgradeTitle')
+          // const notificationText = societyOrCircleUpgradeTemplate(
+          //   changedSocietyOrCircle === 'society'
+          //     ? currSocietyCircle.society
+          //     : currSocietyCircle.circle,
+          //   changedSocietyOrCircle,
+          // ) // Use the HTML template for society or circle upgrade
+
+          // const newNotification = new ApplicationUpdates({
+          //   userId: user._id,
+          //   title: notificationTitle,
+          //   mainText: notificationText, // HTML content for the inbox notification
+          //   img: currSocietyCircle.img || '', // Optional image
+          //   read: false,
+          // })
+          // await newNotification.save()
         }
       } else {
-        // Handle downgrade scenario
         user.societyUpgradeMessage = ''
         user.baseUpgradeIQ = null
       }
     } else if (user.baseUpgradeIQ && currIQScore < user.baseUpgradeIQ) {
-      // User's IQ has decreased but still in the same society/circle
       user.societyUpgradeMessage = ''
       user.baseUpgradeIQ = null
     }
 
-    // Update user's society and circle
     user.currentSociety = currSocietyCircle.society
     user.currentCircle = currSocietyCircle.circle
 

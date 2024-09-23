@@ -1,0 +1,1 @@
+import{ap as c,t as n,ar as i,aq as f}from"./index-D6f6IX8j.js";var w=c((o,e)=>{var a;const{overflow:r,overflowX:l,className:s,...t}=o;return n.jsx(i.div,{ref:e,className:f("chakra-table__container",s),...t,__css:{display:"block",whiteSpace:"nowrap",WebkitOverflowScrolling:"touch",overflowX:(a=r??l)!=null?a:"auto",overflowY:"hidden",maxWidth:"100%"}})});export{w as T};

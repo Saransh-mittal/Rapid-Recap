@@ -1876,6 +1876,326 @@ const MailTemplates = {
   </html>
   `,
   },
+  userWeeklyReportTemplate: {
+    from: 'rapidrecap2k23@gmail.com',
+    subject: 'Your Rapid Recap Weekly Report',
+    html: ({
+      name,
+      inGameName,
+      society,
+      circle,
+      iqScore,
+      iqChange,
+      averageRQM,
+      rqmChange,
+      experienceLevel,
+      ongoingSeason,
+      totalQuizzesThisWeek,
+      quizDistribution,
+      tournamentRank,
+      tournamentScore,
+      topPlayers,
+      categoryPerformance,
+      rank,
+    }) => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapid Recap Weekly Report</title>
+  <style type="text/css">
+    /* Reset styles for email clients */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; }
+
+    /* Base styles */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+      background-color: #121212;
+      color: #ffffff;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    h1, h2, h3 {
+      color: #bb86fc;
+      margin-top: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #1e1e1e;
+    }
+    .header {
+      background: linear-gradient(135deg, #4b0082, #9c27b0);
+      color: #ffffff;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 48px;
+      margin: 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .content {
+      padding: 40px 20px;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    .card {
+      background-color: #2c2c2c;
+      border: 1px solid #3d3d3d;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      color: #ffffff;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .metric {
+      display: inline-block;
+      margin-right: 30px;
+      margin-bottom: 20px;
+    }
+    .metric-label {
+      font-weight: bold;
+      color: #bb86fc;
+      font-size: 20px;
+    }
+    .metric-value {
+      font-size: 24px;
+      color: #03dac6;
+    }
+    .chart {
+      background-color: #333333;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+    }
+    .footer {
+      background-color: #121212;
+      color: #ffffff;
+      padding: 30px;
+      text-align: center;
+    }
+    /* Updated styles for table-based charts */
+    .chart-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 10px;
+    }
+    .chart-bar {
+      background: linear-gradient(to top, #6a1b9a, #9c27b0);
+      text-align: center;
+      color: #ffffff;
+      font-weight: bold;
+      border-radius: 8px 8px 0 0;
+      position: relative;
+    }
+    .chart-value {
+      position: absolute;
+      top: -30px;
+      left: 0;
+      right: 0;
+      color: #03dac6;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .chart-label {
+      text-align: center;
+      color: #e0e0e0;
+      font-size: 16px;
+      padding-top: 10px;
+    }
+    @media screen and (max-width: 600px) {
+      .container {
+        width: 100% !important;
+      }
+      .content-block {
+        padding: 20px !important;
+      }
+    }
+    .personal-info {
+      font-size: 22px;
+    }
+    .personal-info .name {
+      font-weight: bold;
+    }
+    .personal-info .in-game-name {
+      color: #bb86fc;
+      margin-top: 5px;
+    }
+    .personal-info .society-circle {
+      color: #03dac6;
+    }
+    .top-players-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+    }
+    .top-players-table td {
+      padding: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%" class="container">
+    <tr>
+      <td class="header">
+        <h1>Rapid Recap</h1>
+        <p style="font-size: 24px;">Weekly Report Season ${ongoingSeason}</p>
+      </td>
+    </tr>
+    <tr>
+      <td class="content">
+        <div class="section">
+          <h2 style="font-size: 36px;">Main Report</h2>
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+            <tr>
+              <td width="50%" valign="top">
+                <div class="card">
+                  <h3 style="font-size: 28px;">Personal Info</h3>
+                  <div class="personal-info">
+                    <p class="name">${name}</p>
+                    <p class="in-game-name">@${inGameName}</p>
+                    <p class="society-circle"><strong>Society:</strong> ${society}</p>
+                    <p class="society-circle"><strong>Circle:</strong> ${circle}</p>
+                  </div>
+                </div>
+              </td>
+              <td width="50%" valign="top">
+                <div class="card">
+                  <h3 style="font-size: 28px;">Performance Metrics</h3>
+                  <div class="metric">
+                    <div class="metric-label">IQ Score</div>
+                    <div class="metric-value">${iqScore} (${
+      iqChange >= 0 ? '+' : ''
+    }${iqChange})</div>
+                  </div>
+                  <div class="metric">
+                    <div class="metric-label">Average RQM</div>
+                    <div class="metric-value">${averageRQM} (${
+      rqmChange >= 0 ? '+' : ''
+    }${rqmChange})</div>
+                  </div>
+                  <div class="metric">
+                    <div class="metric-label">Experience Level</div>
+                    <div class="metric-value">${experienceLevel}</div>
+                  </div>
+                  <div class="metric">
+                    <div class="metric-label">Main Leaderboard Rank</div>
+                    <div class="metric-value">${rank}</div>
+                  </div>
+                  <div class="metric">
+                    <div class="metric-label">Total Quizzes This Week</div>
+                    <div class="metric-value">${totalQuizzesThisWeek}</div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="section">
+          <h2 style="font-size: 36px;">Quiz Distribution</h2>
+          <div class="chart">
+            <table class="chart-table">
+              <tr>
+                ${quizDistribution
+                  .map(
+                    item => `
+                  <td style="vertical-align: bottom; height: 250px;">
+                    <div class="chart-value">${item.value}</div>
+                    <div class="chart-bar" style="height: ${item.height}px;"></div>
+                  </td>
+                `,
+                  )
+                  .join('')}
+              </tr>
+              <tr>
+                ${quizDistribution
+                  .map(
+                    item => `
+                  <td class="chart-label">${item.label}</td>
+                `,
+                  )
+                  .join('')}
+              </tr>
+            </table>
+          </div>
+        </div>
+        <div class="section">
+          <h2 style="font-size: 36px;">Tournament Report</h2>
+          <div class="card">
+            <h3 style="font-size: 28px;">Top 5 Players</h3>
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="top-players-table">
+              <tr>
+                <th align="left" style="font-size: 22px; padding-bottom: 10px;">Rank</th>
+                <th align="left" style="font-size: 22px; padding-bottom: 10px;">Player</th>
+                <th align="left" style="font-size: 22px; padding-bottom: 10px;">Score</th>
+              </tr>
+              ${topPlayers
+                .map(
+                  (player, index) => `
+                <tr>
+                  <td style="font-size: 20px;">${index + 1}</td>
+                  <td style="font-size: 20px;">${player.name}<br>@${
+                    player.inGameName
+                  }</td>
+                  <td style="font-size: 20px;">${player.score}</td>
+                </tr>
+              `,
+                )
+                .join('')}
+            </table>
+            <p style="font-size: 22px;"><strong>Your Rank:</strong> ${tournamentRank}</p>
+            <p style="font-size: 22px;"><strong>Your Score:</strong> ${tournamentScore}</p>
+          </div>
+        </div>
+        <div class="section">
+          <h3 style="font-size: 28px;">Your Performance by Category</h3>
+          <div class="chart">
+            <table class="chart-table">
+              <tr>
+                ${categoryPerformance
+                  .map(
+                    category => `
+                  <td style="vertical-align: bottom; height: 300px;">
+                    <div class="chart-value">${category.value}%</div>
+                    <div class="chart-bar" style="height: ${category.height}px;"></div>
+                  </td>
+                `,
+                  )
+                  .join('')}
+              </tr>
+              <tr>
+                ${categoryPerformance
+                  .map(
+                    category => `
+                  <td class="chart-label">${category.name}</td>
+                `,
+                  )
+                  .join('')}
+              </tr>
+            </table>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="footer">
+        <p style="font-size: 20px;">Rapid Recap Inc</p>
+        <p style="font-size: 18px;">Jaipur, India</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  },
 }
 
 module.exports = MailTemplates

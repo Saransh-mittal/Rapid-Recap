@@ -38,6 +38,9 @@ const { activityTypes } = require('../data/activityTypes.js')
 const Activity = require('../model/activitySchema.js')
 const cache = require('memory-cache')
 const { hindiConverter } = require('../utils/article.utils.js')
+const {
+  quinBoostUnlockTemplate,
+} = require('../data/inboxNotificationsTemplates.js')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -1311,6 +1314,18 @@ const quinBoostChecker = async (req, res) => {
       quizLeftToGetQuizBoost === 0 && quizAttempts.length > 0
 
     if (isQuinBoostAvailable) {
+      const notificationTitle = 'Quin Boost Activated!'
+      const notificationText = quinBoostUnlockTemplate(1.5) // Using template for inbox notification
+
+      const newNotification = new ApplicationUpdates({
+        userId: user._id,
+        title: notificationTitle,
+        mainText: notificationText, // HTML template for the notification
+        img: '', // Optional image if needed
+        read: false,
+      })
+      console.log(notificationTitle)
+      await newNotification.save()
       const existingQuinBoost = await QuinBoost.findOne({
         user: userId,
         createdAt: { $gte: today },

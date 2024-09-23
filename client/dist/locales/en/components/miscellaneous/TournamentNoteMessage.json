@@ -19,6 +19,8 @@
       "registration": "Don't miss out! Join {{tournamentName}} now and showcase your skills!",
       "locked": "You're almost there! Just {{requiredStreak}} more days to unlock this tournament. Keep going!",
       "default": "Get ready to compete and win amazing prizes!"
-    }
+    },
+    "topLeaders": "Top 3 leaders",
+    "tournamentLeaderboard": "Tournament Leaderboard"
   }
 }
