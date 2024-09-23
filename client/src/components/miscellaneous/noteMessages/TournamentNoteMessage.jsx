@@ -94,7 +94,10 @@ const TournamentNoteMessage = ({
                 fontWeight="bold"
                 color={`${getColorScheme()}.300`}
               >
-                {formatRemainingTime(registrationEndTime)}
+                {formatRemainingTime(
+                  new Date(registrationEndTime).getTime() -
+                    new Date().getTime(),
+                )}
               </Text>
             </>
           )}

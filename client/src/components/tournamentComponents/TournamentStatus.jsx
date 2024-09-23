@@ -1,11 +1,11 @@
 import React, { useMemo, lazy, Suspense } from 'react'
 import { VStack, Alert, AlertIcon, Heading, Text, Flex } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
-import { Trophy } from 'lucide-react'
 import ClockSVG from '../../assets/svg/ClockSVG'
 import UserCheckSVG from '../../assets/svg/UserCheckSVG'
 import UserPlusSVG from '../../assets/svg/UserPlusSVG'
 import TrophySVG from '../../assets/svg/TrophySVG'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load RegisteredUsersCount component
 const RegisteredUsersCount = lazy(() => import('./RegisteredUsersCount'))

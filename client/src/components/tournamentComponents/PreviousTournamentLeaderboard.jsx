@@ -41,7 +41,11 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
     <MotionBox borderRadius="lg" py={6} px={4}>
       <VStack spacing={4} align="stretch">
         <Heading size={'md'} display="flex" alignItems="center">
-          <TrophySVG color="gold" style={{ marginRight: '0.5rem' }} />
+          <TrophySVG
+            color="gold"
+            style={{ marginRight: '0.5rem' }}
+            size={'25px'}
+          />
           {t('heading')}
         </Heading>
 

@@ -140,7 +140,7 @@ const NoteMessageQueue = () => {
             messageId={message.id}
             tournamentStatus={message.tournamentStatus}
             tournamentName={message.tournamentName}
-            registrationEndTime={message.registrationEndTime}
+            registrationEndTime={message.tournamentEndTime}
             userStreak={message.userStreak}
             requiredStreak={message.requiredStreak}
             title={message.title}

@@ -20,10 +20,10 @@ export const checkTournamentRegistration = createAsyncThunk(
               title: 'Keep Going!',
               messageType: 'tournament',
               tournamentStatus: 'locked',
-              tournamentName: String(
-                String(tournament.tournamentNumber).padStart(3, '0'),
-              ),
-              tournamentEndTime: tournament.registrationEndDate,
+              tournamentName:
+                '#' +
+                String(String(tournament?.tournamentNumber).padStart(3, '0')),
+              tournamentEndTime: tournament?.registrationEndDate,
               userStreak: user.streak,
               requiredStreak: 5,
               duration: 10000,
@@ -38,9 +38,9 @@ export const checkTournamentRegistration = createAsyncThunk(
               width: '300px',
               messageType: 'tournament',
               tournamentStatus: 'registration',
-              tournamentName: String(
-                String(tournament?.tournamentNumber).padStart(3, '0'),
-              ),
+              tournamentName:
+                '#' +
+                String(String(tournament?.tournamentNumber).padStart(3, '0')),
               tournamentEndTime: tournament?.registrationEndDate,
               userStreak: user?.streak,
               requiredStreak: 5,
