@@ -16,7 +16,7 @@ import {
   Tab,
 } from '@chakra-ui/react'
 import TrophySVG from '../../assets/svg/TrophySVG'
-import { RepeatClockIcon } from '@chakra-ui/icons'
+import ClockSVG from '../../assets/svg/ClockSVG'
 
 const PreviousTournamentLeaderboard = React.lazy(() =>
   import('./PreviousTournamentLeaderboard'),
@@ -69,7 +69,7 @@ const TournamentTab = React.memo(
         {t('tournamentNumber', { number })}
       </Text>
       <HStack spacing={2}>
-        <Icon width={20} height={20} />
+        <Icon width={20} height={20} color="white" />
         <Text fontSize={{ base: 'sm', md: 'lg' }} wordSpacing="2px">
           {isScreenSmallerThan400px ? t(label.short) : t(label.long)}{' '}
           {t('tournament')}
@@ -139,7 +139,7 @@ const TournamentContent = React.memo(
           />
           <TournamentTab
             number={previousTournamentNumber}
-            icon={RepeatClockIcon}
+            icon={ClockSVG}
             label={{ short: 'prev', long: 'previous' }}
             isScreenSmallerThan400px={isScreenSmallerThan400px}
             t={t}
