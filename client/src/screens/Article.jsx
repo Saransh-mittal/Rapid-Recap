@@ -156,7 +156,7 @@ const Article = () => {
         setSelectedLanguage(user?.userLanguage === 'hi' ? 'hindi' : 'english')
       }
       const articleData = response.data.newArticle
-      console.log(articleData)
+
       dispatch(setArticleData(articleData))
       setArticle(articleData)
       dispatch(setTotalUsersGivenQuiz(articleData.quizAttemptCnt))

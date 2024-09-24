@@ -52,7 +52,10 @@ const HamburgerModal = ({
   const { user, isAdmin, isAuthenticated } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
 
-  const { notification, openChat } = ChatState()
+  const chatState = ChatState()
+
+  const notification = chatState ? chatState.notification : []
+  const openChat = chatState ? chatState.openChat : () => {}
   const navigate = useNavigate()
   const {
     isOpen: isOpenUserSearch,
