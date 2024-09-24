@@ -419,7 +419,7 @@ const registerForTournament = asyncHandler(async (req, res) => {
         message: 'Guest users are not allowed to register for the tournament',
       })
     }
-    if (user.streak < 5) {
+    if (user.streak < 3) {
       return res.status(403).json({
         message:
           'User must have a minimum streak of 5 to register for the tournament',
