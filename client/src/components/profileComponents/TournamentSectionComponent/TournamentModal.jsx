@@ -19,10 +19,13 @@ import {
   Flex,
   Spinner,
 } from '@chakra-ui/react'
-import TrophySVG from '../../../assets/svg/TrophySVG'
 import { useTranslation } from 'react-i18next'
-import CategoryStatsCard from '../../tournamentComponents/CategoryStatsCard'
-import Heading from '../../miscellaneous/HeadingComponent'
+
+const CategoryStatsCard = lazy(() =>
+  import('../../tournamentComponents/CategoryStatsCard'),
+)
+const Heading = lazy(() => import('../../miscellaneous/HeadingComponent'))
+const TrophySVG = lazy(() => import('../../assets/svg/TrophySVG'))
 
 const TournamentModal = ({
   isOpen,

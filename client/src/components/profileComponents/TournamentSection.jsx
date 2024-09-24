@@ -35,13 +35,19 @@ import {
   Legend,
 } from 'chart.js'
 
-import CategoryStatsCard from '../tournamentComponents/CategoryStatsCard'
-import ProfileButton from './ProfileButton'
-import TournamentSelectorDrawer from './TournamentSectionComponent/TournamentSelectorDrawer'
-import QuizReport from '../quizComponents/QuizReport'
-import LastTournamentRank from './TournamentSectionComponent/LastTournamentRank'
-import HistogramSVG from '../../assets/svg/HistogramSVG'
-import TrophySVG from '../../assets/svg/TrophySVG'
+const CategoryStatsCard = lazy(() =>
+  import('../tournamentComponents/CategoryStatsCard'),
+)
+const ProfileButton = lazy(() => import('./ProfileButton'))
+const TournamentSelectorDrawer = lazy(() =>
+  import('./TournamentSectionComponent/TournamentSelectorDrawer'),
+)
+const QuizReport = lazy(() => import('../quizComponents/QuizReport'))
+const LastTournamentRank = lazy(() =>
+  import('./TournamentSectionComponent/LastTournamentRank'),
+)
+const HistogramSVG = lazy(() => import('../../assets/svg/HistogramSVG'))
+const TrophySVG = lazy(() => import('../../assets/svg/TrophySVG'))
 
 ChartJS.register(
   CategoryScale,

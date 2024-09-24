@@ -10,11 +10,15 @@ import {
   Flex,
   useMediaQuery,
 } from '@chakra-ui/react'
-import ButtonGradient from '../../../assets/svg/ButtonGradient.jsx'
-import Button from '../../miscellaneous/ButtonComponent.jsx'
-import TournamentModal from './TournamentModal.jsx'
-import QuizReport from '../../quizComponents/QuizReport.jsx'
+
 import { useTranslation } from 'react-i18next'
+
+const ButtonGradient = React.lazy(() =>
+  import('../../../assets/svg/ButtonGradient'),
+)
+const Button = React.lazy(() => import('../../miscellaneous/ButtonComponent'))
+const TournamentModal = React.lazy(() => import('./TournamentModal'))
+const QuizReport = React.lazy(() => import('../../quizComponents/QuizReport'))
 
 const TournamentSelectorDrawer = ({
   isOpen,
