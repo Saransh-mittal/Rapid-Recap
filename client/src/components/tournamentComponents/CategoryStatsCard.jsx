@@ -8,12 +8,12 @@ import {
   Progress,
   Spinner,
 } from '@chakra-ui/react'
-import TrophySVG from '../../assets/svg/TrophySVG'
-import Target from '../../assets/svg/Target'
-import ClockSVG from '../../assets/svg/ClockSVG'
 
 // Lazy load the CategoryCard
 const CategoryCard = React.lazy(() => import('./CategoryCard'))
+const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
+const Target = React.lazy(() => import('../../assets/svg/Target'))
+const ClockSVG = React.lazy(() => import('../../assets/svg/ClockSVG'))
 
 const CategoryStatsCard = ({
   stat,

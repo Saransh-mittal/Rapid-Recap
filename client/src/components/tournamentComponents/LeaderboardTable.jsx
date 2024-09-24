@@ -21,11 +21,12 @@ import {
 import { motion } from 'framer-motion'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next' // Import the useTranslation hook
-import Medal from '../../assets/svg/Medal'
-import TrophySVG from '../../assets/svg/TrophySVG'
-import CrownSVG from '../../assets/svg/CrownSVG'
+
 // Lazy load UserStatsModal
 const UserStatsModal = React.lazy(() => import('./UserStatsModal'))
+const Medal = React.lazy(() => import('../../assets/svg/Medal'))
+const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
+const CrownSVG = React.lazy(() => import('../../assets/svg/CrownSVG'))
 
 const MotionBox = motion(Box)
 

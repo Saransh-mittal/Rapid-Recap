@@ -11,11 +11,11 @@ import {
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import TrophySVG from '../../assets/svg/TrophySVG'
-import Medal from '../../assets/svg/Medal'
 
 // Lazy load components
 const LeaderboardTable = React.lazy(() => import('./LeaderboardTable'))
+const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
+const Medal = React.lazy(() => import('../../assets/svg/Medal'))
 
 const MotionBox = motion(Box)
 

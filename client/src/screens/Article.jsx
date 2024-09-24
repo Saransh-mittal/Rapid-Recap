@@ -25,7 +25,6 @@ import {
   setIsQuinBoostAvailable,
   setQuizLeftToGetQuizBoost,
 } from '../redux/quizSlice'
-import { detect } from 'lang-detector'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
 

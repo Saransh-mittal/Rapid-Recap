@@ -223,7 +223,7 @@ const Card = ({
         bottom={3}
       >
         <HStack spacing={2}>
-          <ClockSVG size={14} />
+          <ClockSVG size={14} color="#fff" />
           <MotionText
             fontSize="sm"
             fontWeight="medium"

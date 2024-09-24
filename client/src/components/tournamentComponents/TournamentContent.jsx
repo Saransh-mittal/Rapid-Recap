@@ -15,8 +15,6 @@ import {
   HStack,
   Tab,
 } from '@chakra-ui/react'
-import TrophySVG from '../../assets/svg/TrophySVG'
-import ClockSVG from '../../assets/svg/ClockSVG'
 
 const PreviousTournamentLeaderboard = React.lazy(() =>
   import('./PreviousTournamentLeaderboard'),
@@ -26,7 +24,8 @@ const TournamentStatus = React.lazy(() => import('./TournamentStatus'))
 const RegistrationSection = React.lazy(() => import('./RegistrationSection'))
 const CategorySelection = React.lazy(() => import('./CategorySelection'))
 const BufferPeriodDisplay = React.lazy(() => import('./BufferPeriodDisplay'))
-
+const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
+const ClockSVG = React.lazy(() => import('../../assets/svg/ClockSVG'))
 const LoadingSkeleton = () => (
   <VStack spacing={4} width="100%">
     <Skeleton height="40px" width="100%" />

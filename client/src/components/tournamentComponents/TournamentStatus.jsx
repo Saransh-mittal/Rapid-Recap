@@ -1,14 +1,14 @@
 import React, { useMemo, lazy, Suspense } from 'react'
 import { VStack, Alert, AlertIcon, Heading, Text, Flex } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
-import ClockSVG from '../../assets/svg/ClockSVG'
-import UserCheckSVG from '../../assets/svg/UserCheckSVG'
-import UserPlusSVG from '../../assets/svg/UserPlusSVG'
-import TrophySVG from '../../assets/svg/TrophySVG'
 import { useTranslation } from 'react-i18next'
 
 // Lazy load RegisteredUsersCount component
 const RegisteredUsersCount = lazy(() => import('./RegisteredUsersCount'))
+const ClockSVG = lazy(() => import('../../assets/svg/ClockSVG'))
+const UserCheckSVG = lazy(() => import('../../assets/svg/UserCheckSVG'))
+const UserPlusSVG = lazy(() => import('../../assets/svg/UserPlusSVG'))
+const TrophySVG = lazy(() => import('../../assets/svg/TrophySVG'))
 
 const TournamentStatus = ({ tournamentData, registrationStatus }) => {
   const { t } = useTranslation('TournamentStatus')

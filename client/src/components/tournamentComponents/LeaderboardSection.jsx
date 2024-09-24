@@ -20,13 +20,13 @@ import { useInView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next' // Import useTranslation
 import { setRefetchLeaderBoard } from '../../redux/tournamentSlice'
-import TrophySVG from '../../assets/svg/TrophySVG'
-import Medal from '../../assets/svg/Medal'
 
 // Lazy load components
 const LeaderboardTable = React.lazy(() => import('./LeaderboardTable'))
 const LeaderboardSearch = React.lazy(() => import('./LeaderboardSearch'))
 const UserStatsModal = React.lazy(() => import('./UserStatsModal'))
+const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
+const Medal = React.lazy(() => import('../../assets/svg/Medal'))
 
 const LeaderboardSection = ({ tournamentData }) => {
   const { t } = useTranslation('LeaderboardSection')

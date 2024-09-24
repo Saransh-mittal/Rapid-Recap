@@ -9,7 +9,8 @@ import {
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import UserFriendsSVG from '../../assets/svg/UserFriendsSVG'
+
+const UserFriendsSVG = lazy(() => import('../../assets/svg/UserFriendsSVG'))
 
 const MotionBox = motion(Box)
 

@@ -10,8 +10,6 @@ import {
   HStack,
   Text,
   Box,
-  Progress,
-  Flex,
   Heading,
   SimpleGrid,
   Badge,
@@ -20,15 +18,11 @@ import {
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
 
-import TrophySVG from '../../assets/svg/TrophySVG'
-import Target from '../../assets/svg/Target'
-import ClockSVG from '../../assets/svg/ClockSVG'
-import CategoryStatsCard from './CategoryStatsCard'
-
 // Lazy load heavy components
-const CategoryCard = lazy(() => import('./CategoryCard'))
 const QuizBG = lazy(() => import('./tournamentQuiz/QuizBG'))
 const UserSVG = lazy(() => import('../../assets/svg/UserSVG'))
+const TrophySVG = lazy(() => import('../../assets/svg/TrophySVG'))
+const CategoryStatsCard = lazy(() => import('./CategoryStatsCard'))
 
 const UserStatsModal = ({ isOpen, onClose, userStats, t }) => {
   const statsRef = React.useRef(null)

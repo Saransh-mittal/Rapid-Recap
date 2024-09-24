@@ -3,10 +3,9 @@ import { Box, Text, Image, Flex, VStack } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
 
-// Assuming these SVG components are available in your project
-import CrownSVG from '../../assets/svg/CrownSVG'
-import TrophySVG from '../../assets/svg/TrophySVG'
-import Medal from '../../assets/svg/Medal'
+const CrownSVG = import('../../assets/svg/CrownSVG')
+const TrophySVG = import('../../assets/svg/TrophySVG')
+const Medal = import('../../assets/svg/Medal')
 
 const badgeConfig = {
   1: {

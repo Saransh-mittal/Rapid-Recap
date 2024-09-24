@@ -18,12 +18,13 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import TrophySVG from '../../assets/svg/TrophySVG'
-import CalenderSVG from '../../assets/svg/CalenderSVG'
-import ClipboardList from '../../assets/svg/ClipboardList'
-import ClockSVG from '../../assets/svg/ClockSVG'
-import Medal from '../../assets/svg/Medal'
-import Globe from '../../assets/svg/Globe'
+
+const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
+const CalenderSVG = React.lazy(() => import('../../assets/svg/CalenderSVG'))
+const ClipboardList = React.lazy(() => import('../../assets/svg/ClipboardList'))
+const ClockSVG = React.lazy(() => import('../../assets/svg/ClockSVG'))
+const Medal = React.lazy(() => import('../../assets/svg/Medal'))
+const Globe = React.lazy(() => import('../../assets/svg/Globe'))
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)

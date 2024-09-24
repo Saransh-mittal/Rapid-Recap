@@ -9,12 +9,13 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import ClockSVG from '../../assets/svg/ClockSVG'
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 
 const PreviousTournamentLeaderboard = lazy(() =>
   import('./PreviousTournamentLeaderboard'),
 )
+
+const ClockSVG = lazy(() => import('../../assets/svg/ClockSVG'))
 
 const BufferPeriodDisplay = ({ previousTournamentData }) => {
   const { t } = useTranslation('Tournament')
