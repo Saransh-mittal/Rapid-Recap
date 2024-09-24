@@ -79,6 +79,7 @@ const ArticleHeader = ({
   const [selectedArticle, setSelectedArticle] = React.useState({})
 
   const themes = [
+    { value: 'original', label: t('original') },
     { value: 'space', label: t('space') },
     { value: 'indian_mythology', label: t('indianMythology') },
     { value: 'bible_mythology', label: t('bibleMythology') },
@@ -144,7 +145,7 @@ const ArticleHeader = ({
     }
     setTheme(selectedTheme)
     setIsLoadingTheme(true)
-    if (!selectedTheme) {
+    if (selectedTheme === 'original' || !selectedTheme) {
       onThemeChange(null)
       setIsLoadingTheme(false)
       return
@@ -366,7 +367,7 @@ const ArticleHeader = ({
                 >
                   {theme
                     ? themes.find(t => t.value === theme)?.label
-                    : t('selectTheme')}
+                    : t('original')}
                 </MenuButton>
                 <MenuList bg="gray.800" borderColor="gray.600" boxShadow="xl">
                   {themes.map(themeOption => (
