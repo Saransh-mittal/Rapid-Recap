@@ -197,7 +197,6 @@ const FormattedContent = ({ mainText, themedContent }) => {
 
 const MainArticleContent = ({
   imgURL,
-  translateLoading,
   selectedLanguage,
   mainText,
   textRef,
@@ -222,7 +221,7 @@ const MainArticleContent = ({
 
   return (
     <Flex w={{ base: '90vw', md: '100%' }} overflow="hidden">
-      <Skeleton isLoaded={!translateLoading && !articleLoading} w={'100%'}>
+      <Skeleton isLoaded={!articleLoading} w={'100%'}>
         <Box
           ref={articleRef}
           px={padding}

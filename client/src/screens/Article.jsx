@@ -93,7 +93,6 @@ const Article = () => {
     english: articleData?.mainText,
     hindi: articleData?.hindiMainText,
   })
-  const [translateLoading, setTranslateLoading] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState(
     i18n.language === 'en' ? 'english' : 'hindi',
   )
@@ -153,7 +152,11 @@ const Article = () => {
           user?.userLanguage ? user?.userLanguage : i18n.language
         }`,
       )
+      if (user?.userLanguage) {
+        setSelectedLanguage(user?.userLanguage === 'hi' ? 'hindi' : 'english')
+      }
       const articleData = response.data.newArticle
+      console.log(articleData)
       dispatch(setArticleData(articleData))
       setArticle(articleData)
       dispatch(setTotalUsersGivenQuiz(articleData.quizAttemptCnt))
@@ -220,68 +223,21 @@ const Article = () => {
     }
   }, [id])
 
-  const handleLanguageChange = useCallback(
-    async event => {
-      setTranslateLoading(true)
-      try {
-        if (i18n.language === 'hi') {
-          if (article.hindiTitle) {
-            setTitle(prevTitle => ({ ...prevTitle, hindi: article.hindiTitle }))
-            setAuthor(prevAuthor => ({
-              ...prevAuthor,
-              hindi: article.hindiAuthor,
-            }))
-            setMainText(prevMainText => ({
-              ...prevMainText,
-              hindi: article.hindiMainText,
-            }))
-          } else {
-            toast({
-              title: 'Wait',
-              description: 'Hindi translation Might Take 1 minute',
-              status: 'info',
-              duration: 9000,
-              isClosable: true,
-              position: 'top',
-            })
-            const response = await axios.get(
-              `/api/articles/hindiTranslation/${id}`,
-            )
-            if (response.data.status === 'ok') {
-              setArticle(response.data.article)
-              setTitle(prevTitle => ({
-                ...prevTitle,
-                hindi: response.data.article.hindiTitle,
-              }))
-              setAuthor(prevAuthor => ({
-                ...prevAuthor,
-                hindi: response.data.article.hindiAuthor,
-              }))
-              setMainText(prevMainText => ({
-                ...prevMainText,
-                hindi: response.data.article.hindiMainText,
-              }))
-            }
-          }
-          setSelectedLanguage('hindi')
-        } else {
-          setSelectedLanguage('english')
-        }
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'error setting language',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-          position: 'top',
-        })
-      } finally {
-        setTranslateLoading(false)
+  const handleLanguageChange = useCallback(() => {
+    if (i18n.language === 'hi') {
+      if (article.hindiTitle) {
+        setTitle(prevTitle => ({ ...prevTitle, hindi: article.hindiTitle }))
+        setAuthor(prevAuthor => ({
+          ...prevAuthor,
+          hindi: article.hindiAuthor,
+        }))
+        setMainText(prevMainText => ({
+          ...prevMainText,
+          hindi: article.hindiMainText,
+        }))
       }
-    },
-    [article, id, toast],
-  )
+    }
+  }, [article, id, toast])
 
   const trackGenerateQuizClick = useCallback(() => {
     ReactGA.send({
@@ -476,7 +432,6 @@ const Article = () => {
               className="article-all-content"
             >
               <MainArticleContent
-                translateLoading={translateLoading}
                 selectedLanguage={selectedLanguage}
                 title={title}
                 author={author}
