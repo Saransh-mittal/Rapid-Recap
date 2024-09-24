@@ -43,7 +43,9 @@ const TrackTime = lazy(() =>
 )
 const Article = () => {
   const toast = useToast()
-  const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { isAuthenticated, user, loginCheckStatus } = useSelector(
+    state => state.auth,
+  )
   const { isBoosted } = useSelector(state => state.app)
   const { articleData, totalUsersGivenQuiz } = useSelector(
     state => state.articles,
@@ -144,9 +146,12 @@ const Article = () => {
   )
 
   const fetchArticle = useCallback(async () => {
+    if (loginCheckStatus === 'pending') return
     try {
       const response = await axios.get(
-        `/api/articles/article/${id}?lang=${i18n.language}`,
+        `/api/articles/article/${id}?lang=${
+          user?.userLanguage ? user?.userLanguage : i18n.language
+        }`,
       )
       const articleData = response.data.newArticle
       dispatch(setArticleData(articleData))
@@ -178,7 +183,7 @@ const Article = () => {
     } finally {
       setArticleLoading(false)
     }
-  }, [id, toast])
+  }, [id, toast, loginCheckStatus, user, dispatch])
 
   const isQuizGiven = useCallback(async () => {
     const userId = user?._id
@@ -305,7 +310,7 @@ const Article = () => {
         clearTimeout(quizFetchTimer.current)
       }
     }
-  }, [fetchArticle, fetchQuiz])
+  }, [fetchArticle, fetchQuiz, loginCheckStatus])
 
   useEffect(() => {
     checkOnGoingQuiz()
