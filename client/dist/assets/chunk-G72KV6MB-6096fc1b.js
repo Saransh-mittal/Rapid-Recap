@@ -1,0 +1,1 @@
+import{aC as u}from"./index-e26f41e8.js";var l=Object.freeze(["base","sm","md","lg","xl","2xl"]);function c(n,t){return Array.isArray(n)?n.map(r=>r===null?null:t(r)):u(n)?Object.keys(n).reduce((r,e)=>(r[e]=t(n[e]),r),{}):n!=null?t(n):null}function f(n,t=l){const r={};return n.forEach((e,a)=>{const s=t[a];e!=null&&(r[s]=e)}),r}export{f as a,l as b,c as m};

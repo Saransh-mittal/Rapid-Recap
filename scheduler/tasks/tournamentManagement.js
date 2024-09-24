@@ -39,7 +39,9 @@ const startRegistration = async () => {
 
   for (const user of realUsers) {
     const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(user.userLanguage)
+    await localizedI18n.changeLanguage(
+      user?.userLanguage ? user?.userLanguage : 'en',
+    )
 
     const t = (key, options) =>
       localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
@@ -76,7 +78,9 @@ const inRegisterationPeriod = async () => {
 
   for (const user of nonRegisteredUsers) {
     const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(user.userLanguage)
+    await localizedI18n.changeLanguage(
+      user?.userLanguage ? user?.userLanguage : 'en',
+    )
 
     const t = (key, options) =>
       localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
@@ -108,7 +112,9 @@ const lastDayOfRegisterationPeriod = async () => {
 
   for (const user of nonRegisteredUsers) {
     const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(user.userLanguage)
+    await localizedI18n.changeLanguage(
+      user?.userLanguage ? user?.userLanguage : 'en',
+    )
 
     const t = (key, options) =>
       localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
@@ -170,7 +176,9 @@ const endRegistration = async () => {
 
   for (const user of nonRegisteredUsers) {
     const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(user.userLanguage)
+    await localizedI18n.changeLanguage(
+      user?.userLanguage ? user?.userLanguage : 'en',
+    )
 
     const t = (key, options) =>
       localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
@@ -417,7 +425,9 @@ const endTournament = async () => {
 
   for (const user of nonRegisteredUsers) {
     const localizedI18n = i18n.cloneInstance()
-    await localizedI18n.changeLanguage(user.userLanguage)
+    await localizedI18n.changeLanguage(
+      user?.userLanguage ? user?.userLanguage : 'en',
+    )
 
     const t = (key, options) =>
       localizedI18n.t(key, { ns: 'tournamentManagement', ...options })
