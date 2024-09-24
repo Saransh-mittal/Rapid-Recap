@@ -36,7 +36,11 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const [chats, setChats] = useState([])
   const [selectedChats, setSelectedChats] = useState([])
   const [loading, setLoading] = useState(true)
-  const { user, socket, socketConnected } = ChatState()
+  // const { user, socket, socketConnected } = ChatState()
+  const chatState = ChatState()
+  const user = chatState ? chatState.user : null
+  const socket = chatState ? chatState.socket : null
+
   const toast = useToast()
   const { playClick } = useSound()
 

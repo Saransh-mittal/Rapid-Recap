@@ -20,6 +20,10 @@ const {
   endTournament,
 } = require('./tasks/tournamentManagement')
 const { runTournamentServiceTask } = require('./tasks/runTournamentService')
+const {
+  registerDummyUsers,
+  simulateBotQuizParticipation,
+} = require('./tasks/dummyUserTournamentTasks')
 
 const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
 
@@ -185,6 +189,21 @@ let schedules = [
     cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
     task: inRegisterationPeriod,
   },
+  {
+    name: 'registerDummyUsers',
+    cronPattern: '0 12 * * 1,2,3,4,5', // At 12:00 PM on Monday, Tuesday, Wednesday, Thursday, and Friday
+    task: registerDummyUsers,
+  },
+  // {
+  //   name: 'botQuizParticipationSaturday',
+  //   cronPattern: '0 10,14,18 * * 6', // At 10:00 AM, 2:00 PM, and 6:00 PM on Saturday
+  //   task: simulateBotQuizParticipation,
+  // },
+  // {
+  //   name: 'botQuizParticipationSunday',
+  //   cronPattern: '0 11,15,19 * * 0', // At 11:00 AM, 3:00 PM, and 7:00 PM on Sunday
+  //   task: simulateBotQuizParticipation,
+  // },
   {
     name: 'lastDayOfRegistrationPeriod',
     cronPattern: '0 20 * * 5', // At 8:00 PM on Friday

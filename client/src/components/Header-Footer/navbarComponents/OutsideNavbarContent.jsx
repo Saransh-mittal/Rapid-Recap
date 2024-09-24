@@ -58,7 +58,8 @@ const OutsideNavbarContent = ({
   const { user, loginCheckStatus } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
   const { playClick } = useSound()
-  const { notification } = ChatState()
+  const chatState = ChatState()
+  const notification = chatState ? chatState.notification : []
   const navigate = useNavigate()
   const isToken = localStorage.getItem('token')
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]

@@ -27,7 +27,7 @@ const sendMailsToUsers = async (req, res) => {
     // get two users for testing saransh_1234 and mmadhavpareek
     const users = await User.find({
       inGameName: {
-        $in: ['saransh_1234', 'smash_deV'],
+        $in: ['saransh_1234'],
       },
     })
     const updateProgress = progressBar(users.length)
