@@ -24,11 +24,23 @@ const messageActionHandlers = {
       messageId &&
       dispatch(actions.removeNoteMessageWithId(messageId))
   },
-  REGISTER_TOURNAMENT: actions => {
+  REGISTER_TOURNAMENT: (dispatch, actions, messageId) => {
     actions.navigateToTournament()
+    dispatch &&
+      messageId &&
+      dispatch(actions.removeNoteMessageWithId(messageId))
   },
-  SUBMIT_FEEDBACK: actions => {
+  SUBMIT_FEEDBACK: (dispatch, actions, messageId) => {
     actions.handleSubmitFeedback()
+    dispatch &&
+      messageId &&
+      dispatch(actions.removeNoteMessageWithId(messageId))
+  },
+  SUBMIT_QUIZ_FEEDBACK: (dispatch, actions, messageId) => {
+    actions.handleQuizFeedback()
+    dispatch &&
+      messageId &&
+      dispatch(actions.removeNoteMessageWithId(messageId))
   },
   SIGN_IN: () => {},
   GUEST: () => {},
@@ -56,7 +68,9 @@ export const createHandleMessageAction = (dispatch, actions) => {
       } else if (actionType === 'VIEW_PROFILE') {
         messageActionHandlers[actionType](actions, profileId)
       } else if (actionType === 'SUBMIT_FEEDBACK') {
-        messageActionHandlers[actionType](actions)
+        messageActionHandlers[actionType](dispatch, actions, messageId)
+      } else if (actionType === 'SUBMIT_QUIZ_FEEDBACK') {
+        messageActionHandlers[actionType](dispatch, actions, messageId)
       } else if (actionType === 'DISMISS') {
         messageActionHandlers[actionType](dispatch, actions, messageId)
       } else if (actionType === 'VIEW_EXPERIENCE') {

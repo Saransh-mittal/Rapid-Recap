@@ -109,8 +109,23 @@ export const handleSubmitFeedback = async (rating, feedback, storyId) => {
       rating,
       message: feedback,
     })
-    console.log('Feedback submitted successfully!')
   } catch (error) {
     console.error('Error submitting feedback:', error)
+  }
+}
+
+export const handleQuizFeedback = async (rating, feedback, quizId) => {
+  try {
+    if (quizId === null) {
+      console.error('Quiz ID is missing!')
+      return
+    }
+    await axios.post('/api/contact/feedback/quiz', {
+      quizId,
+      rating,
+      message: feedback,
+    })
+  } catch (error) {
+    console.error('Error submitting quiz feedback:', error)
   }
 }

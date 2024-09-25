@@ -1324,7 +1324,7 @@ const quinBoostChecker = async (req, res) => {
         img: '', // Optional image if needed
         read: false,
       })
-      console.log(notificationTitle)
+
       await newNotification.save()
       const existingQuinBoost = await QuinBoost.findOne({
         user: userId,

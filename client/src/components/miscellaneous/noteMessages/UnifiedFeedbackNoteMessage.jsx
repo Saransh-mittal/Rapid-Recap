@@ -1,20 +1,22 @@
+// File: UnifiedFeedbackNoteMessage.jsx
 import React, { useState, useMemo, lazy, Suspense } from 'react'
 import { Text, VStack, Box, Flex, Textarea } from '@chakra-ui/react'
-import { useTranslation } from 'react-i18next'
-import NoteMessage from '../NoteMessage'
 
-// Lazy load components
+// Lazy load the StarRating component
 const StarRating = lazy(() => import('./StarRating'))
+const NoteMessage = lazy(() => import('./NoteMessage'))
 
-const RatingFeedbackNoteMessage = ({
+const UnifiedFeedbackNoteMessage = ({
   messageId,
   title,
   onClose,
   duration,
   width = '320px',
-  storyId,
+  feedbackId, // Can be quizId or storyId
+  feedbackType, // 'quiz' or 'storytheme'
+  FeedbackTitle = null,
+  t,
 }) => {
-  const { t } = useTranslation('RatingFeedbackNoteMessage')
   const [rating, setRating] = useState(0)
   const [feedback, setFeedback] = useState('')
 
@@ -23,7 +25,7 @@ const RatingFeedbackNoteMessage = ({
       <Flex direction="column" align="center" w="100%" position="relative">
         <VStack spacing={4} align="center" w="100%">
           <Text fontSize="lg" fontWeight="bold" color="purple.300">
-            {t('rateYourExperience')}
+            {FeedbackTitle !== null ? FeedbackTitle : t('rateYourExperience')}
           </Text>
           <Suspense fallback={<Box h="40px" />}>
             <StarRating rating={rating} onRatingChange={setRating} />
@@ -57,14 +59,21 @@ const RatingFeedbackNoteMessage = ({
       onClose={onClose}
       duration={duration}
       width={width}
-      actions={[{ actionType: 'SUBMIT_FEEDBACK' }]} // Added translation
+      actions={[
+        {
+          actionType:
+            feedbackType === 'quiz'
+              ? 'SUBMIT_QUIZ_FEEDBACK'
+              : 'SUBMIT_RATING_FEEDBACK',
+        },
+      ]}
       feedbackContent={{
         rating,
         feedback,
-        storyId,
+        feedbackId, // This can be either quizId or storyId
       }}
     />
   )
 }
 
-export default RatingFeedbackNoteMessage
+export default UnifiedFeedbackNoteMessage

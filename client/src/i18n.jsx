@@ -115,7 +115,7 @@ const namespaces = {
     'XPAwardNoteMessage',
     'DifficultyLegend',
     'NoteMessageQueue',
-    'RatingFeedbackNoteMessage',
+    'UnifiedFeedbackNoteMessage',
   ],
   Notifications: ['NotificationSubscription'],
   streakComponents: ['DailyStreakModal'],

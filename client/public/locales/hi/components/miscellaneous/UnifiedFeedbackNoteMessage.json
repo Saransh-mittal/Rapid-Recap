@@ -3,5 +3,7 @@
   "rateYourExperience": "आपका अनुभव कैसा रहा?",
   "feedbackPlaceholder": "अपने अनुभव के बारे में हमें और बताएं (वैकल्पिक)",
   "submitFeedback": "प्रतिक्रिया जमा करें",
-  "feedbackSubmitted": "आपकी प्रतिक्रिया के लिए धन्यवाद!"
+  "feedbackSubmitted": "आपकी प्रतिक्रिया के लिए धन्यवाद!",
+  "StoryBodyTitle": "कहानी थीम फीचर कैसा है?",
+  "QuizBodyTitle": "क्विज प्रश्न कैसे हैं?"
 }

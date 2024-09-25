@@ -97,7 +97,6 @@ const Quiz = () => {
     quizId,
     setResult,
   })
-
   const { timer, timeTaken } = useTimer(
     isOpen,
     submitted,
@@ -239,6 +238,18 @@ const Quiz = () => {
               streakCount: user.streakBeforeBreak + 1,
             }),
           )
+        if (user?.quizAttempts.length % 3 === 0) {
+          dispatchRedux(
+            addNoteMessage({
+              messageType: 'quizFeedback',
+              title: t('Please rate us'),
+              duration: null,
+              width: '300px',
+              actions: [{ actionType: 'SUBMIT_QUIZ_FEEDBACK' }],
+              quizId: quizId,
+            }),
+          )
+        }
       }
       setTimeout(() => dailyStreakCheckerAndUpdater(dispatchRedux), 14000)
     } catch (error) {
@@ -296,6 +307,18 @@ const Quiz = () => {
               xpSource: 'QUIZ',
             }),
           )
+      if (user?.quizAttempts.length % 3 === 0) {
+        dispatchRedux(
+          addNoteMessage({
+            messageType: 'quizFeedback',
+            title: t('Please rate us'),
+            duration: null,
+            width: '300px',
+            actions: [{ actionType: 'SUBMIT_QUIZ_FEEDBACK' }],
+            quizId: quizId,
+          }),
+        )
+      }
 
       setShowConfirmationModal(false)
     } catch (error) {

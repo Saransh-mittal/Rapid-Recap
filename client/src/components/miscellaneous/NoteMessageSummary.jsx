@@ -33,6 +33,7 @@ import { useNavigate } from 'react-router-dom'
 import Confetti from 'react-confetti'
 import {
   formatRemainingTime,
+  handleQuizFeedback,
   handleSubmitFeedback,
 } from '../../utils/helper.utils'
 import { useTranslation } from 'react-i18next' // Import useTranslation
@@ -60,8 +61,11 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   const { user } = useSelector(state => state.auth)
   const [showConfetti, setShowConfetti] = useState(false)
   const [rating, setRating] = useState(0)
+  const [quizRating, setQuizRating] = useState(0)
   const [feedback, setFeedback] = useState('')
+  const [quizFeedback, setQuizFeedback] = useState('')
   const [storyId, setStoryId] = useState(null)
+  const [quizId, setQuizId] = useState(null)
 
   // Initialize translation
   const { t } = useTranslation('NoteMessageSummary')
@@ -81,8 +85,21 @@ const NoteMessageSummary = ({ messages, onClose }) => {
         handleSubmitFeedback: () => {
           handleSubmitFeedback(rating, feedback, storyId)
         },
+        handleQuizFeedback: () => {
+          handleQuizFeedback(quizRating, quizFeedback, quizId)
+        },
       }),
-    [dispatch, navigate, messages, rating, feedback, storyId],
+    [
+      dispatch,
+      navigate,
+      messages,
+      rating,
+      feedback,
+      storyId,
+      quizRating,
+      quizFeedback,
+      quizId,
+    ],
   )
 
   // Memoize handleDismiss and handleAction to avoid recreating the functions on every render
@@ -121,7 +138,16 @@ const NoteMessageSummary = ({ messages, onClose }) => {
       message => message.messageType === 'ratingFeedback',
     )
     if (feedbackMessage) {
+      // console.log(feedbackMessage)
       setStoryId(feedbackMessage.storyId)
+    }
+
+    const quizFeedbackMessage = messages.find(
+      message => message.messageType === 'quizFeedback',
+    )
+    if (quizFeedbackMessage) {
+      console.log(quizFeedbackMessage)
+      setQuizId(quizFeedbackMessage.quizId)
     }
   }, [messages])
 
@@ -381,6 +407,42 @@ const NoteMessageSummary = ({ messages, onClose }) => {
               </VStack>
             </Flex>
           )
+        case 'quizFeedback':
+          return (
+            <Flex
+              direction="column"
+              align="center"
+              w="100%"
+              position="relative"
+            >
+              <VStack spacing={4} align="center" w="100%">
+                <Text fontSize="lg" fontWeight="bold" color="purple.300">
+                  {t('rateYourExperience')}
+                </Text>
+                <Suspense fallback={<Box h="40px" />}>
+                  <StarRating
+                    rating={quizRating}
+                    onRatingChange={setQuizRating}
+                  />
+                </Suspense>
+                <Textarea
+                  placeholder={t('feedbackPlaceholder')}
+                  value={quizFeedback}
+                  onChange={e => setQuizFeedback(e.target.value)}
+                  bg="gray.700"
+                  color="white"
+                  border="1px solid"
+                  borderColor="purple.500"
+                  _hover={{ borderColor: 'purple.400' }}
+                  _focus={{
+                    borderColor: 'purple.300',
+                    boxShadow: '0 0 0 1px #805AD5',
+                  }}
+                  resize="vertical"
+                />
+              </VStack>
+            </Flex>
+          )
         case 'tournament':
           return (
             <Flex
@@ -506,7 +568,18 @@ const NoteMessageSummary = ({ messages, onClose }) => {
           )
       }
     },
-    [t],
+    [
+      t,
+      rating,
+      setRating,
+      feedback,
+      setFeedback,
+      quizRating,
+      setQuizRating,
+      quizFeedback,
+      setQuizFeedback,
+      storyId,
+    ],
   )
 
   return (

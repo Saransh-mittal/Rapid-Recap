@@ -19,7 +19,10 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useTranslation } from 'react-i18next'
-import { handleSubmitFeedback } from '../../utils/helper.utils'
+import {
+  handleQuizFeedback,
+  handleSubmitFeedback,
+} from '../../utils/helper.utils'
 
 // Lazy load utilities and components
 const ButtonFactory = lazy(() => import('./ButtonFactory'))
@@ -36,6 +39,7 @@ const NoteMessage = ({
   actions = [],
   customContent,
   feedbackContent,
+  quizFeedbackContent,
 }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -58,8 +62,14 @@ const NoteMessage = ({
             feedbackContent.feedback,
             feedbackContent.storyId,
           ),
+        handleQuizFeedback: () =>
+          handleQuizFeedback(
+            quizFeedbackContent.rating,
+            quizFeedbackContent.feedback,
+            quizFeedbackContent.quizId,
+          ),
       }),
-    [dispatch, navigate, feedbackContent],
+    [dispatch, navigate, feedbackContent, quizFeedbackContent],
   )
 
   // Memoize handleAction to avoid recreating the function on every render
