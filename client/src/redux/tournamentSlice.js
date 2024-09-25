@@ -13,7 +13,11 @@ export const checkTournamentRegistration = createAsyncThunk(
 
       const { tournament, isRegistered } = response.data
 
-      if (tournament.status === 'registration' && !isRegistered) {
+      if (
+        tournament.status === 'registration' &&
+        !isRegistered &&
+        user.role !== 'guest'
+      ) {
         if (user.streak < 3) {
           dispatch(
             addNoteMessage({
@@ -110,6 +114,9 @@ const tournamentSlice = createSlice({
   name: 'tournament',
   initialState,
   reducers: {
+    setIsRegistered: (state, action) => {
+      state.isRegistered = action.payload
+    },
     setStatus: (state, action) => {
       state.status = action.payload
     },
@@ -170,6 +177,7 @@ export const {
   setCompletedCategories,
   setRefetchLeaderBoard,
   setStatus,
+  setIsRegistered,
 } = tournamentSlice.actions
 
 export default tournamentSlice.reducer

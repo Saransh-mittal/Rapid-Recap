@@ -244,7 +244,11 @@ const Quiz = () => {
           )
       }
       setTimeout(() => {
-        if (currentTournament.status === 'registration' && !isRegistered) {
+        if (
+          currentTournament.status === 'registration' &&
+          !isRegistered &&
+          user.role !== 'guest'
+        ) {
           if (user.streak < 3) {
             dispatchRedux(
               addNoteMessage({

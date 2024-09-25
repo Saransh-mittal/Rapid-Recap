@@ -25,6 +25,7 @@ import { setIsOpen, setTournamentQuiz } from '../redux/quizSlice'
 import {
   setCategory,
   setCompletedCategories,
+  setIsRegistered,
   setTournamentId,
 } from '../redux/tournamentSlice'
 import { useTranslation } from 'react-i18next'
@@ -138,6 +139,7 @@ const Tournament = () => {
           }),
         )
         dispatch(setUser({ ...user, xp: user.xp + 5 }))
+        dispatch(setIsRegistered(true))
         setRegisterLoading(false)
       } catch (error) {
         console.error(error)
