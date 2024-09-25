@@ -176,18 +176,23 @@ const NoteMessageSummary = ({ messages, onClose }) => {
     requiredStreak,
     userStreak,
   ) => {
+    const randomMessageNumber = Math.floor(Math.random() * 5) + 1
+    const randomMessageNumberForLocked = Math.floor(Math.random() * 3) + 1
     switch (tournamentStatus) {
       case 'registration':
         return tournamentTranslate(
-          'TournamentNoteMessage.motivation.registration',
+          `TournamentNoteMessage.motivation.registration.${randomMessageNumber}`,
           {
             tournamentName,
           },
         )
       case 'locked':
-        return tournamentTranslate('TournamentNoteMessage.motivation.locked', {
-          requiredStreak: requiredStreak - userStreak,
-        })
+        return tournamentTranslate(
+          `TournamentNoteMessage.motivation.locked.${randomMessageNumberForLocked}`,
+          {
+            requiredStreak: requiredStreak - userStreak,
+          },
+        )
       default:
         return tournamentTranslate('TournamentNoteMessage.motivation.default')
     }

@@ -53,15 +53,23 @@ const TournamentNoteMessage = ({
   }
 
   const getMotivationalMessage = () => {
+    const randomMessageNumber = Math.floor(Math.random() * 5) + 1
+    const randomMessageNumberForLocked = Math.floor(Math.random() * 3) + 1
     switch (tournamentStatus) {
       case 'registration':
-        return t('TournamentNoteMessage.motivation.registration', {
-          tournamentName,
-        })
+        return t(
+          `TournamentNoteMessage.motivation.registration.${randomMessageNumber}`,
+          {
+            tournamentName,
+          },
+        )
       case 'locked':
-        return t('TournamentNoteMessage.motivation.locked', {
-          requiredStreak: requiredStreak - userStreak,
-        })
+        return t(
+          `TournamentNoteMessage.motivation.locked.${randomMessageNumberForLocked}`,
+          {
+            requiredStreak: requiredStreak - userStreak,
+          },
+        )
       default:
         return t('TournamentNoteMessage.motivation.default')
     }

@@ -157,7 +157,7 @@ const App = () => {
     if (isAuthenticated && user.role !== 'guest') {
       dispatch(checkTournamentRegistration())
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated, user?.inGameName])
 
   useEffect(() => {
     let timer

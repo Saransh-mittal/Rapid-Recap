@@ -61,6 +61,9 @@ const Quiz = () => {
     state => state.articles,
   )
   const { isOpen, isQuinBoostAvailable } = useSelector(state => state.quiz)
+  const { isRegistered, currentTournament } = useSelector(
+    state => state.tournament,
+  )
   const articleId = article._id
   const { quizData, load, quizId, setLoad } = useFetchQuiz(
     articleId,
@@ -240,6 +243,53 @@ const Quiz = () => {
             }),
           )
       }
+      setTimeout(() => {
+        if (currentTournament.status === 'registration' && !isRegistered) {
+          if (user.streak < 3) {
+            dispatchRedux(
+              addNoteMessage({
+                title: 'Keep Going!',
+                messageType: 'tournament',
+                tournamentStatus: 'locked',
+                tournamentName:
+                  '#' +
+                  String(
+                    String(currentTournament?.tournamentNumber).padStart(
+                      3,
+                      '0',
+                    ),
+                  ),
+                tournamentEndTime: currentTournament?.registrationEndDate,
+                userStreak: user.streak,
+                requiredStreak: 3 - user.streak,
+                duration: 10000,
+                width: '300px',
+              }),
+            )
+          } else {
+            dispatch(
+              addNoteMessage({
+                title: 'Tournament Time!',
+                duration: 10000,
+                width: '300px',
+                messageType: 'tournament',
+                tournamentStatus: 'registration',
+                tournamentName:
+                  '#' +
+                  String(
+                    String(currentTournament?.tournamentNumber).padStart(
+                      3,
+                      '0',
+                    ),
+                  ),
+                tournamentEndTime: currentTournament?.registrationEndDate,
+                userStreak: user?.streak,
+                requiredStreak: 3,
+              }),
+            )
+          }
+        }
+      }, 10000)
       setTimeout(() => dailyStreakCheckerAndUpdater(dispatchRedux), 14000)
     } catch (error) {
       console.log(error)

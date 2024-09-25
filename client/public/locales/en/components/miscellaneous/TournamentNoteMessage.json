@@ -16,11 +16,21 @@
       "viewTournament": "View Tournament"
     },
     "motivation": {
-      "registration": "Don't miss out! Join {{tournamentName}} now and showcase your skills!",
-      "locked": "You're almost there! Just {{requiredStreak}} more days to unlock this tournament. Keep going!",
-      "default": "Get ready to compete and win amazing prizes!"
+      "registration": {
+        "1": "You’re on fire!🔥 Only 6 quizzes to complete across two days. That’s just 50 seconds per quiz!🏆 Why not showcase your skills in this weekend’s tournament?!",
+        "2": "Great progress!👏 You’ve already unlocked tournament eligibility. With just 6 quizzes spread over the weekend, time won’t be a problem. Ready to take the challenge?",
+        "3": "You’ve been doing amazing with your quizzes!🌟 Compete in the tournament and earn even more recognition. It’s quick, fun, and only takes minutes!",
+        "4": "You’re so close to the top!🚀 With just a minute per quiz, the tournament is the perfect chance to level up. Register now!",
+        "5": "Keep your streak going strong! Only 6 quizzes in tournament and you’re on your way to tournament glory.🎯 Register today – it’s fast and fun!"
+      },
+      "locked": {
+        "1": "You’re almost there! Just {{requiredStreak}} more days to unlock this tournament. Keep going!",
+        "2": "You’re just {{requiredStreak}} day away from competing in the tournament! 🏅 Get that last quiz streak and register for an epic weekend showdown!",
+        "3": "Almost there! Just {{requiredStreak}} more day to unlock tournament access. Only 6 quizzes over two days. Register now and get ready to show your knowledge!"
+      }
     },
-    "topLeaders": "Top 3 leaders",
-    "tournamentLeaderboard": "Tournament Leaderboard"
-  }
+    "default": "Get ready to compete and win amazing prizes!"
+  },
+  "topLeaders": "Top 3 leaders",
+  "tournamentLeaderboard": "Tournament Leaderboard"
 }
