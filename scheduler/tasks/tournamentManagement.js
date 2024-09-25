@@ -70,7 +70,7 @@ const inRegisterationPeriod = async () => {
   const tournament = await Tournament.findOne({
     isActive: true,
   }).sort({ startDate: -1 })
-
+  console.log('In registration period')
   const participantsCount = tournament.participants.length
   const nonRegisteredUsers = await User.find({
     _id: { $nin: tournament.participants },

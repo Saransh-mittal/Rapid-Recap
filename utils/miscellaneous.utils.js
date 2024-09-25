@@ -191,6 +191,22 @@ function formatRemainingTime(milliseconds) {
   return timeString.trim()
 }
 
+function convertISTtoUTCCron(hour, minute, daysOfWeek) {
+  // Create a moment object for the current date at the specified IST time
+  const istTime = moment.tz({ hour, minute }, 'Asia/Kolkata')
+
+  // Convert to UTC
+  const utcTime = istTime.clone().tz('UTC')
+
+  // Extract UTC hour and minute
+  const utcHour = utcTime.hour()
+  const utcMinute = utcTime.minute()
+
+  // Create the cron pattern
+  console.log(`${utcMinute} ${utcHour} * * ${daysOfWeek}`)
+  return `${utcMinute} ${utcHour} * * ${daysOfWeek}`
+}
+
 module.exports = {
   binarySearch,
   binarySearchForLeftRange,
@@ -206,4 +222,5 @@ module.exports = {
   toISOString,
   isGuestUser,
   formatRemainingTime,
+  convertISTtoUTCCron,
 }

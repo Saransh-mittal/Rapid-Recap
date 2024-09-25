@@ -1058,7 +1058,7 @@ const getUserStats = asyncHandler(async (req, res) => {
 // @access Admin
 const getQuestions = asyncHandler(async (req, res) => {
   const { tournamentId, category, difficulty } = req.query
-  console.log('tournamentId', tournamentId)
+
   let filter = { isManuallyAdded: false }
 
   if (category) {
@@ -1128,6 +1128,34 @@ const editQuestion = asyncHandler(async (req, res) => {
   res.status(200).json(updatedQuestion)
 })
 
+// @desc   Get the participants for the active tournament
+// @route  GET /api/admin/tournament/participants
+// @access Private (Admin only)
+const getTournamentParticipants = asyncHandler(async (req, res) => {
+  // Find the active tournament
+  const activeTournament = await Tournament.findOne({ isActive: true })
+
+  if (!activeTournament) {
+    return res.status(404).json({ message: 'No active tournament found' })
+  }
+
+  // Get the registered users for the active tournament
+  const registrations = await TournamentRegistration.find({
+    tournament: activeTournament._id,
+  }).populate('user', 'name inGameName email')
+
+  // Filter out dummy users and extract required information
+  const participants = registrations
+    .filter(reg => !reg.user.email.match(/^dummy\d+@mail\.com$/))
+    .map(reg => ({
+      name: reg.user.name,
+      inGameName: reg.user.inGameName,
+      email: reg.user.email,
+    }))
+
+  res.json(participants)
+})
+
 module.exports = {
   registerForTournament,
   addCurrentAffairsQuestion,
@@ -1148,4 +1176,5 @@ module.exports = {
   updateMaintenanceStatus,
   getQuestions,
   editQuestion,
+  getTournamentParticipants,
 }
