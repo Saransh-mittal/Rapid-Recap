@@ -2,6 +2,8 @@ const Feedback = require('../model/feedbackSchema')
 const asyncHandler = require('express-async-handler')
 const Story = require('../model/storySchema')
 const StoryFeedback = require('../model/storyFeedbackSchema')
+const QuizFeedback = require('../model/quizFeedbackSchema')
+const Quiz = require('../model/quizSchema')
 
 const submitFeedback = async (req, res) => {
   try {
@@ -53,13 +55,6 @@ const createStoryFeedback = asyncHandler(async (req, res) => {
 
   await newFeedback.save()
 
-  // Update story's average rating
-  story.totalRatings += 1
-  story.averageRating =
-    (story.averageRating * (story.totalRatings - 1) + rating) /
-    story.totalRatings
-  await story.save()
-
   res.status(201).json(newFeedback)
 })
 
@@ -102,9 +97,82 @@ const getStoryFeedbackStats = asyncHandler(async (req, res) => {
   res.json(stats[0] || { averageRating: 0, totalFeedback: 0 })
 })
 
+const createQuizFeedback = asyncHandler(async (req, res) => {
+  const { quizId, rating, message } = req.body
+  const userId = req.user._id // Assuming you have user authentication middleware
+
+  const quiz = await Quiz.findById(quizId).populate('article')
+  if (!quiz) {
+    res.status(404)
+    throw new Error('Quiz not found')
+  }
+
+  const existingFeedback = await QuizFeedback.findOne({
+    quiz: quizId,
+    user: userId,
+  })
+  if (existingFeedback) {
+    return res.status(400).json({ message: 'Feedback already submitted' })
+  }
+  const newFeedback = new QuizFeedback({
+    quiz: quizId,
+    user: userId,
+    rating,
+    message,
+    category: quiz.article.category,
+  })
+
+  await newFeedback.save()
+
+  // Update quiz's average rating
+  quiz.totalRatings += 1
+  quiz.averageRating =
+    (quiz.averageRating * (quiz.totalRatings - 1) + rating) / quiz.totalRatings
+  await quiz.save()
+
+  res.status(201).json(newFeedback)
+})
+
+const getQuizFeedbackStats = asyncHandler(async (req, res) => {
+  const { category } = req.query
+
+  const matchCriteria = {}
+  if (category) matchCriteria.category = category
+
+  const stats = await QuizFeedback.aggregate([
+    { $match: matchCriteria },
+    {
+      $group: {
+        _id: null,
+        averageRating: { $avg: '$rating' },
+        totalFeedback: { $sum: 1 },
+      },
+    },
+  ])
+
+  res.json(stats[0] || { averageRating: 0, totalFeedback: 0 })
+})
+
+const getQuizFeedback = async (req, res) => {
+  try {
+    const { quizId } = req.query
+
+    // Find all feedback for the quiz
+    const feedback = await QuizFeedback.find({ quiz: quizId })
+
+    res.json(feedback)
+  } catch (error) {
+    console.error('Error getting quiz feedback:', error)
+    res.status(500).json({ message: 'Failed to get quiz feedback' })
+  }
+}
+
 module.exports = {
   submitFeedback,
   createStoryFeedback,
   getStoryFeedbackStats,
   getStoryFeedback,
+  createQuizFeedback,
+  getQuizFeedbackStats,
+  getQuizFeedback,
 }

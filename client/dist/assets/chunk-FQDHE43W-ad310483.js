@@ -1,0 +1,1 @@
+import{M as e}from"./chunk-EL2VKIZQ-ad096aef.js";import{a as s}from"./chunk-JQMJHPZH-d2cd5a92.js";import{t as r,ar as i}from"./index-e0071fda.js";function m(t){const{leastDestructiveRef:o,...a}=t;return r.jsx(s,{...a,initialFocusRef:o})}var p=i((t,o)=>r.jsx(e,{ref:o,role:"alertdialog",...t}));export{m as A,p as a};
