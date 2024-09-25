@@ -100,7 +100,6 @@ const Quiz = () => {
     quizId,
     setResult,
   })
-
   const { timer, timeTaken } = useTimer(
     isOpen,
     submitted,
@@ -242,6 +241,18 @@ const Quiz = () => {
               streakCount: user.streakBeforeBreak + 1,
             }),
           )
+        if (user?.quizAttempts.length % 3 === 0) {
+          dispatchRedux(
+            addNoteMessage({
+              messageType: 'quizFeedback',
+              title: t('Please rate us'),
+              duration: null,
+              width: '300px',
+              actions: [{ actionType: 'SUBMIT_QUIZ_FEEDBACK' }],
+              quizId: quizId,
+            }),
+          )
+        }
       }
       setTimeout(() => {
         if (
@@ -265,7 +276,7 @@ const Quiz = () => {
                   ),
                 tournamentEndTime: currentTournament?.registrationEndDate,
                 userStreak: user.streak,
-                requiredStreak: 3 - user.streak,
+                requiredStreak: 3,
                 duration: 10000,
                 width: '300px',
               }),
@@ -350,6 +361,18 @@ const Quiz = () => {
               xpSource: 'QUIZ',
             }),
           )
+      if (user?.quizAttempts.length % 3 === 0) {
+        dispatchRedux(
+          addNoteMessage({
+            messageType: 'quizFeedback',
+            title: t('Please rate us'),
+            duration: null,
+            width: '300px',
+            actions: [{ actionType: 'SUBMIT_QUIZ_FEEDBACK' }],
+            quizId: quizId,
+          }),
+        )
+      }
 
       setShowConfirmationModal(false)
     } catch (error) {

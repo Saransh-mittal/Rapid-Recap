@@ -13,8 +13,11 @@ const XPAwardNoteMessage = lazy(() =>
   import('./noteMessages/XPAwardNoteMessage'),
 )
 const StreakNoteMessage = lazy(() => import('./noteMessages/StreakNoteMessage'))
-const RatingFeedbackNoteMessage = lazy(() =>
-  import('./noteMessages/RatingFeedbackNoteMessage'),
+const StoryFeedbackNoteMessage = lazy(() =>
+  import('./noteMessages/feedbackNoteMessages/StoryFeedbackNoteMessage'),
+)
+const QuizFeedbackNoteMessage = lazy(() =>
+  import('./noteMessages/feedbackNoteMessages/QuizFeedbackNoteMessage'),
 )
 import { SOUND_TYPES } from '../../models/soundSettings'
 import useSound from '../../customHooks/useSound'
@@ -151,16 +154,29 @@ const NoteMessageQueue = () => {
           />
         </Suspense>
       )
-    case 'ratingFeedback':
+    case 'storyFeedback':
       return (
         <Suspense fallback={null}>
-          <RatingFeedbackNoteMessage
+          <StoryFeedbackNoteMessage
             messageId={message.id}
             title={message.title}
             duration={message.duration}
             width={message.width}
             onClose={handleClose}
             storyId={message.storyId}
+          />
+        </Suspense>
+      )
+    case 'quizFeedback':
+      return (
+        <Suspense fallback={null}>
+          <QuizFeedbackNoteMessage
+            messageId={message.id}
+            title={message.title}
+            duration={message.duration}
+            width={message.width}
+            onClose={handleClose}
+            quizId={message.quizId}
           />
         </Suspense>
       )

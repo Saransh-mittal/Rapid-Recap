@@ -165,7 +165,7 @@ const ArticleHeader = ({
       timeoutRef.current = setTimeout(() => {
         dispatchRedux(
           addNoteMessage({
-            messageType: 'ratingFeedback',
+            messageType: 'storyFeedback',
             title: t('Please rate us'),
             duration: null,
             width: '300px',
