@@ -1,4 +1,5 @@
 import React, {
+  lazy,
   Suspense,
   useCallback,
   useEffect,

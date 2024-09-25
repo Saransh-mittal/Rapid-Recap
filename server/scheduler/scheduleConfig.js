@@ -24,6 +24,7 @@ const {
   registerDummyUsers,
   simulateBotQuizParticipation,
 } = require('./tasks/dummyUserTournamentTasks')
+const { convertISTtoUTCCron } = require('../utils/miscellaneous.utils')
 
 const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
 
@@ -186,12 +187,12 @@ let schedules = [
   createSchedule('endTournament', '23:59', endTournament),
   {
     name: 'inRegistrationPeriod',
-    cronPattern: '0 11 * * 2,3,4,5', // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
+    cronPattern: convertISTtoUTCCron(11, 0, '2,3,4,5'), // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
     task: inRegisterationPeriod,
   },
   {
     name: 'registerDummyUsers',
-    cronPattern: '0 12 * * 1,2,3,4,5', // At 12:00 PM on Monday, Tuesday, Wednesday, Thursday, and Friday
+    cronPattern: convertISTtoUTCCron(12, 0, '1,2,3,4,5'), // At 12:00 PM on Monday, Tuesday, Wednesday, Thursday, and Friday
     task: registerDummyUsers,
   },
   // {
@@ -206,17 +207,17 @@ let schedules = [
   // },
   {
     name: 'lastDayOfRegistrationPeriod',
-    cronPattern: '0 20 * * 5', // At 8:00 PM on Friday
+    cronPattern: convertISTtoUTCCron(20, 0, '5'), // At 8:00 PM on Friday
     task: lastDayOfRegisterationPeriod,
   },
   {
     name: 'day1EndOfTournament',
-    cronPattern: '0 22 * * 6', // At 10:00 PM on Saturday
+    cronPattern: convertISTtoUTCCron(22, 0, '6'), // At 10:00 PM on Saturday
     task: day1EndOfTournament,
   },
   {
     name: 'day2OfTournament',
-    cronPattern: '0 11 * * 0', // At 11:00 AM on Sunday
+    cronPattern: convertISTtoUTCCron(11, 0, '0'), // At 11:00 AM on Sunday
     task: day2OfTournament,
   },
 ]

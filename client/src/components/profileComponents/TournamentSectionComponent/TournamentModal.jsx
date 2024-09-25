@@ -1,7 +1,6 @@
 import React, { Suspense, useCallback, useEffect, useState } from 'react'
 import {
   Modal,
-  ModalOverlay,
   ModalContent,
   ModalHeader,
   ModalCloseButton,
@@ -16,16 +15,14 @@ import {
   Text,
   Badge,
   SimpleGrid,
-  Flex,
-  Spinner,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
+import Heading from '../../miscellaneous/HeadingComponent'
+import TrophySVG from '../../../assets/svg/TrophySVG'
 
 const CategoryStatsCard = lazy(() =>
   import('../../tournamentComponents/CategoryStatsCard'),
 )
-const Heading = lazy(() => import('../../miscellaneous/HeadingComponent'))
-const TrophySVG = lazy(() => import('../../assets/svg/TrophySVG'))
 
 const TournamentModal = ({
   isOpen,
@@ -210,13 +207,15 @@ const TournamentModal = ({
                       setCategory(stat?.category)
                     }}
                   >
-                    <CategoryStatsCard
-                      key={index}
-                      stat={stat}
-                      t={t}
-                      userStats={userStats}
-                      setShowQuizSummary={setShowQuizSummary}
-                    />
+                    <Suspense fallback={null}>
+                      <CategoryStatsCard
+                        key={index}
+                        stat={stat}
+                        t={t}
+                        userStats={userStats}
+                        setShowQuizSummary={setShowQuizSummary}
+                      />
+                    </Suspense>
                   </Box>
                 ))}
               </SimpleGrid>

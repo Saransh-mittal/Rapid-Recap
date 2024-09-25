@@ -6,7 +6,7 @@ import { NavLink } from 'react-router-dom'
 const InstagramSVG = lazy(() => import('../../assets/svg/InstagramSVG'))
 const LinkedinSVG = lazy(() => import('../../assets/svg/LinkedinSVG'))
 
-const Footer = React.memo(() => {
+const Footer = React.memo(({ onCloseMenu }) => {
   return (
     <Box as="footer" pt={3}>
       <Flex
@@ -43,7 +43,7 @@ const Footer = React.memo(() => {
             </Suspense>
           </Link>
         </Box>
-        <Box color={'#f9f9f9'}>
+        <Box color={'#f9f9f9'} onClick={onCloseMenu}>
           <NavLink
             to="/contact"
             color="#f9f9f9"

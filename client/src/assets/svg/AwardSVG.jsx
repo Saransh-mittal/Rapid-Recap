@@ -1,5 +1,5 @@
 import * as React from 'react'
-const SVGComponent = props => (
+const AwardSVG = props => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={24}
@@ -16,4 +16,4 @@ const SVGComponent = props => (
     <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
   </svg>
 )
-export default SVGComponent
+export default AwardSVG

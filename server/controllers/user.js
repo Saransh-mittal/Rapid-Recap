@@ -1314,18 +1314,6 @@ const quinBoostChecker = async (req, res) => {
       quizLeftToGetQuizBoost === 0 && quizAttempts.length > 0
 
     if (isQuinBoostAvailable) {
-      const notificationTitle = 'Quin Boost Activated!'
-      const notificationText = quinBoostUnlockTemplate(1.5) // Using template for inbox notification
-
-      const newNotification = new ApplicationUpdates({
-        userId: user._id,
-        title: notificationTitle,
-        mainText: notificationText, // HTML template for the notification
-        img: '', // Optional image if needed
-        read: false,
-      })
-      console.log(notificationTitle)
-      await newNotification.save()
       const existingQuinBoost = await QuinBoost.findOne({
         user: userId,
         createdAt: { $gte: today },
@@ -1343,6 +1331,20 @@ const quinBoostChecker = async (req, res) => {
           boosted: true,
         })
         await user.save()
+        const notificationTitle = 'Quin Boost Activated!'
+        const notificationText = quinBoostUnlockTemplate(
+          user.todayBoost ? 1.75 : 1.5,
+        ) // Using template for inbox notification
+
+        const newNotification = new ApplicationUpdates({
+          userId: user._id,
+          title: notificationTitle,
+          mainText: notificationText, // HTML template for the notification
+          img: '', // Optional image if needed
+          read: false,
+        })
+
+        await newNotification.save()
       }
     }
     res.status(200).json({

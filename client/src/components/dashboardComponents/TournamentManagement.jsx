@@ -37,6 +37,8 @@ const TournamentManagement = ({ isOpen, onClose }) => {
   const [editingQuestion, setEditingQuestion] = useState(null)
   const [categoryFilter, setCategoryFilter] = useState('')
   const [difficultyFilter, setDifficultyFilter] = useState('')
+  const [participants, setParticipants] = useState([])
+  const [loadingParticipants, setLoadingParticipants] = useState(false)
   const toast = useToast()
   const {
     isOpen: isQuestionModalOpen,
@@ -49,6 +51,25 @@ const TournamentManagement = ({ isOpen, onClose }) => {
       fetchTournaments()
     }
   }, [isOpen])
+
+  const fetchParticipants = async () => {
+    setLoadingParticipants(true)
+    try {
+      const response = await axios.get('/api/admin/tournament/participants')
+      setParticipants(response.data)
+    } catch (error) {
+      console.error('Error fetching participants:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch participants',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setLoadingParticipants(false)
+    }
+  }
 
   const fetchTournaments = async () => {
     try {
@@ -277,6 +298,41 @@ const TournamentManagement = ({ isOpen, onClose }) => {
                   </Table>
                 </Box>
               )}
+              <Box mt={8}>
+                <Heading size="md" mb={4}>
+                  Active Tournament Participants
+                </Heading>
+                <Button
+                  onClick={fetchParticipants}
+                  colorScheme="blue"
+                  isLoading={loadingParticipants}
+                  mb={4}
+                >
+                  Fetch Participants
+                </Button>
+                {participants.length > 0 ? (
+                  <Table variant="simple" colorScheme="whiteAlpha">
+                    <Thead>
+                      <Tr>
+                        <Th color="gray.300">Name</Th>
+                        <Th color="gray.300">In-Game Name</Th>
+                        <Th color="gray.300">Email</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {participants.map((participant, index) => (
+                        <Tr key={index}>
+                          <Td>{participant.name}</Td>
+                          <Td>{participant.inGameName}</Td>
+                          <Td>{participant.email}</Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                ) : (
+                  <Text>No participants found or not yet fetched.</Text>
+                )}
+              </Box>
             </>
           )}
         </ModalBody>

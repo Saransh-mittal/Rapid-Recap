@@ -308,7 +308,7 @@ const HamburgerModal = ({
                   <LogoutButton handleLogout={handleLogout} />
                 </Suspense>
               )}
-              <Footer />
+              <Footer onCloseMenu={onClose} />
             </VStack>
           </VStack>
         </ModalBody>

@@ -123,16 +123,14 @@ const saveAttempt = async (req, res) => {
         const correctAnswers = questions.map(question => question.answer)
         let score = correctAnswers.reduce((acc, answer, index) => {
           if (userResponses.length > index && answer === userResponses[index]) {
-            //console.log(acc);
             return acc + 1
           }
           return acc
         }, 0)
-        //console.log(score);
+
         score = score / quizData.questions.length
         const quizDifficulty =
           questions.reduce((acc, question, index) => {
-            //console.log(acc, question.difficulty);
             return acc + parseFloat(question.difficulty)
           }, 0) / questions.length
 
@@ -145,6 +143,7 @@ const saveAttempt = async (req, res) => {
         let RQM_score = Math.ceil(
           ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000,
         )
+
         const user = await User.findById(userId)
           .populate({
             path: 'quizAttempts',
@@ -155,7 +154,10 @@ const saveAttempt = async (req, res) => {
         let boosted = false
         let quinBoostUtilized = false
 
-        if (user.quinBoosts.length > 0) {
+        if (
+          user.quinBoosts.length > 0 &&
+          user.quinBoosts[user.quinBoosts.length - 1]?.boosted
+        ) {
           const quinBoost = user.quinBoosts[user.quinBoosts.length - 1]
           if (quinBoost.boosted) {
             RQM_score = Math.ceil(RQM_score * (user.todayBoost ? 1.75 : 1.5))
@@ -174,9 +176,12 @@ const saveAttempt = async (req, res) => {
           }
         } else if (user.todayBoost) {
           RQM_score = Math.ceil(RQM_score * 1.5)
+
           boosted = true
         }
+
         const articleDifficulty = quiz.overAllDifficulty
+
         const newQuizAttempt = new QuizAttempt({
           user: userId,
           article: articleId,
@@ -384,7 +389,7 @@ const getPercentile = async (req, res) => {
       ((totalAttempts - userPosition) / totalAttempts) * 100
     userAttempt.userPercentile = userPercentile
     await userAttempt.save()
-    console.log(userPercentile)
+
     res.status(200).json({ percentile: userPercentile })
   } catch (error) {
     console.log(error)
