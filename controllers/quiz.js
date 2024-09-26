@@ -24,6 +24,7 @@ const {
   endSession,
 } = require('../db/session.js')
 const { getTopThreeRecommendedArticles } = require('../utils/article.utils.js')
+const i18n = require('i18next')
 
 // @desc Save the quiz attempt
 // @route POST /api/quiz/saveAttempt
@@ -147,7 +148,7 @@ const saveAttempt = async (req, res) => {
         const user = await User.findById(userId)
           .populate({
             path: 'quizAttempts',
-            select: '_id',
+            select: '_id createdAt',
             match: { season: parseInt(configService.getCurrentSeason(), 10) },
           })
           .session(session)
@@ -173,6 +174,7 @@ const saveAttempt = async (req, res) => {
               await user.save({ session })
             }
             quinBoostUtilized = true
+            user.eligibleForTournament = true
           }
         } else if (user.todayBoost) {
           RQM_score = Math.ceil(RQM_score * 1.5)
@@ -229,6 +231,74 @@ const saveAttempt = async (req, res) => {
         if (articleDifficulty < 0.5) user.easyQuizCount++
         else if (articleDifficulty < 0.7) user.mediumQuizCount++
         else user.hardQuizCount++
+
+        // get quizAttempts count in last 30 minutes
+        const last30Min = new Date()
+        last30Min.setMinutes(last30Min.getMinutes() - 30)
+        const last30MinQuizAttempts = await QuizAttempt.countDocuments({
+          user: userId,
+          createdAt: { $gte: last30Min },
+        }).session(session)
+        // get todays quiz attempts count in which user has got RQM score > 42
+        const todaysQuizAttempts = await QuizAttempt.countDocuments({
+          user: userId,
+          createdAt: { $gte: today },
+          RQM_score: { $gt: 42 },
+        }).session(session)
+        if (last30MinQuizAttempts === 3 || todaysQuizAttempts === 2) {
+          user.eligibleForTournament = true
+        }
+
+        const localizedI18n = i18n.cloneInstance()
+        await localizedI18n.changeLanguage(user.userLanguage)
+        const t = (key, options) =>
+          localizedI18n.t(key, { ns: 'quiz', ...options })
+        let messageForTournamentEligibility = ''
+        if (!user.eligibleForTournament) {
+          if (RQM_score > 42 && todaysQuizAttempts < 2) {
+            // Do one more quiz with RQM score > 42 to be eligible for tournament
+            messageForTournamentEligibility = t(
+              t(
+                'Do one more quiz with RQM score > 42 to be eligible for tournament',
+              ),
+            )
+          } else if (user.todaysQuizCnt >= 4) {
+            messageForTournamentEligibility = t(
+              t(
+                'You have already attempted 4 quizzes today. Complete 2 more quizzes to be eligible for tournament',
+              ),
+            )
+          } else if (last30MinQuizAttempts < 3) {
+            if (last30MinQuizAttempts === 1) {
+              messageForTournamentEligibility = t(
+                t(
+                  'Do 2 more quizzes under 30 minutes to be eligible for tournament',
+                ),
+              )
+            } else {
+              // get the time left for 30 minutes from the last quiz attempt
+              const timeLeft =
+                30 -
+                Math.floor(
+                  (new Date().getTime() -
+                    user.quizAttempts[
+                      user.quizAttempts.length - 2
+                    ].createdAt.getTime()) /
+                    60000,
+                )
+              messageForTournamentEligibility = t(
+                `Do 1 more quiz under 30 minutes to be eligible for tournament. Time left:  minutes`,
+                {
+                  min: timeLeft,
+                },
+              )
+            }
+          } else {
+            messageForTournamentEligibility = t(
+              'You are not eligible for tournament. Play more quizzes to be eligible',
+            )
+          }
+        }
 
         user.rankedInCurrentSeason = true
         user.todaysQuizCnt++
@@ -352,6 +422,8 @@ const saveAttempt = async (req, res) => {
           pastRQMs,
           xpAwarded,
           quinBoostUtilized,
+          messageForTournamentEligibility,
+          userEligibleForTournament: user.eligibleForTournament,
         })
       } catch (error) {
         await abortSession(session)

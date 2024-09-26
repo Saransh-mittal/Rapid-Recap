@@ -1,0 +1,7 @@
+{
+  "Do one more quiz with RQM score > 42 to be eligible for tournament": "टूर्नामेंट के लिए पात्र होने के लिए RQM स्कोर > 42 के साथ एक और क्विज करें",
+  "You have already attempted 4 quizzes today. Complete 2 more quizzes to be eligible for tournament": "आपने आज पहले से ही 4 क्विज की कोशिश की है। टूर्नामेंट के लिए पात्र होने के लिए 2 और क्विज पूरे करें",
+  "Do 2 more quizzes under 30 minutes to be eligible for tournament": "टूर्नामेंट के लिए पात्र होने के लिए 30 मिनट के अंदर 2 और क्विज करें",
+  "Do 1 more quiz under 30 minutes to be eligible for tournament. Time left:  minutes": "टूर्नामेंट के लिए पात्र होने के लिए 30 मिनट के अंदर 1 और क्विज करें। समय बचा है: {{min}} मिनट",
+  "You are not eligible for tournament. Play more quizzes to be eligible": "आप टूर्नामेंट के लिए पात्र नहीं हैं। पात्र होने के लिए अधिक क्विज खेलें"
+}

@@ -1,0 +1,7 @@
+{
+  "Do one more quiz with RQM score > 42 to be eligible for tournament": "Do one more quiz with RQM score > 42 to be eligible for tournament",
+  "You have already attempted 4 quizzes today. Complete 2 more quizzes to be eligible for tournament": "You have already attempted 4 quizzes today. Complete 2 more quizzes to be eligible for tournament",
+  "Do 2 more quizzes under 30 minutes to be eligible for tournament": "Do 2 more quizzes under 30 minutes to be eligible for tournament",
+  "Do 1 more quiz under 30 minutes to be eligible for tournament. Time left:  minutes": "Do 1 more quiz under 30 minutes to be eligible for tournament. Time left: {{min}} minutes",
+  "You are not eligible for tournament. Play more quizzes to be eligible": "You are not eligible for tournament. Play more quizzes to be eligible"
+}

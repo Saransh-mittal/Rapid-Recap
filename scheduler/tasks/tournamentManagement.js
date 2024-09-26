@@ -449,6 +449,12 @@ const endTournament = async () => {
       userId: user._id,
     })
   }
+
+  // make EligibleForTournament of users false
+  await User.updateMany(
+    { eligibleForTournament: true },
+    { $set: { eligibleForTournament: false } },
+  )
 }
 
 module.exports = {
