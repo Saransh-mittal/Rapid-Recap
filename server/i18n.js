@@ -9,6 +9,7 @@ const namespaces = {
     'friendsController',
     'messageControllers',
     'notification',
+    'quiz',
   ],
   utils: ['activity.utils', 'dailyUserIQCalc.utils', 'mail.utils'],
   data: ['CircleAndSocietyData'],
