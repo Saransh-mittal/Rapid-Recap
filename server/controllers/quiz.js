@@ -24,6 +24,7 @@ const {
   endSession,
 } = require('../db/session.js')
 const { getTopThreeRecommendedArticles } = require('../utils/article.utils.js')
+const i18n = require('i18next')
 
 // @desc Save the quiz attempt
 // @route POST /api/quiz/saveAttempt
@@ -247,19 +248,33 @@ const saveAttempt = async (req, res) => {
         if (last30MinQuizAttempts === 3 || todaysQuizAttempts === 2) {
           user.eligibleForTournament = true
         }
+
+        const localizedI18n = i18n.cloneInstance()
+        await localizedI18n.changeLanguage(user.userLanguage)
+        const t = (key, options) =>
+          localizedI18n.t(key, { ns: 'quiz', ...options })
         let messageForTournamentEligibility = ''
         if (!user.eligibleForTournament) {
           if (RQM_score > 42 && todaysQuizAttempts < 2) {
             // Do one more quiz with RQM score > 42 to be eligible for tournament
-            messageForTournamentEligibility =
-              'Do one more quiz with RQM score > 42 to be eligible for tournament'
+            messageForTournamentEligibility = t(
+              t(
+                'Do one more quiz with RQM score > 42 to be eligible for tournament',
+              ),
+            )
           } else if (user.todaysQuizCnt >= 4) {
-            messageForTournamentEligibility =
-              'You have already attempted 4 quizzes today. Complete 2 more quizzes to be eligible for tournament'
+            messageForTournamentEligibility = t(
+              t(
+                'You have already attempted 4 quizzes today. Complete 2 more quizzes to be eligible for tournament',
+              ),
+            )
           } else if (last30MinQuizAttempts < 3) {
             if (last30MinQuizAttempts === 1) {
-              messageForTournamentEligibility =
-                'Do 2 more quizzes under 30 minutes to be eligible for tournament'
+              messageForTournamentEligibility = t(
+                t(
+                  'Do 2 more quizzes under 30 minutes to be eligible for tournament',
+                ),
+              )
             } else {
               // get the time left for 30 minutes from the last quiz attempt
               const timeLeft =
@@ -271,11 +286,17 @@ const saveAttempt = async (req, res) => {
                     ].createdAt.getTime()) /
                     60000,
                 )
-              messageForTournamentEligibility = `Do 1 more quiz under 30 minutes to be eligible for tournament. Time left: ${timeLeft} minutes`
+              messageForTournamentEligibility = t(
+                `Do 1 more quiz under 30 minutes to be eligible for tournament. Time left:  minutes`,
+                {
+                  min: timeLeft,
+                },
+              )
             }
           } else {
-            messageForTournamentEligibility =
-              'You are not eligible for tournament. Play more quizzes to be eligible'
+            messageForTournamentEligibility = t(
+              'You are not eligible for tournament. Play more quizzes to be eligible',
+            )
           }
         }
 
