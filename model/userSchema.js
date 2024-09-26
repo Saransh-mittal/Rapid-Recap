@@ -325,6 +325,10 @@ const userSchema = new mongoose.Schema(
       type: Object,
       default: null,
     },
+    eligibleForTournament: {
+      type: Boolean,
+      default: false,
+    },
   },
   { collection: 'Users' },
 )
