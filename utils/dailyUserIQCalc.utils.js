@@ -170,40 +170,21 @@ const fetchUniqueArticleIds = async () => {
 }
 
 const updatePercentilesForArticles = async uniqueArticleIds => {
-  const batchSize = 500 // Adjust this value based on your system's capabilities
-  const totalBatches = Math.ceil(uniqueArticleIds.length / batchSize)
-
-  const processBatch = async (batch, batchIndex) => {
-    try {
-      await Promise.all(
-        batch.map(async doc => {
-          try {
-            await updatePercentilesOnQuizDeactivation({
-              id: doc.articleId.toString(),
-            })
-          } catch (error) {
-            console.error(
-              `Error updating percentiles for article ${doc.articleId}: ${error.message}`,
-            )
-            // Continue processing other articles in the batch
-          }
-        }),
-      )
-      console.log(`Processed batch ${batchIndex + 1} of ${totalBatches}`)
-    } catch (error) {
-      console.error(
-        `Error processing batch ${batchIndex + 1}: ${error.message}`,
-      )
-      // Continue processing other batches
-    }
-  }
-
   try {
-    for (let i = 0; i < uniqueArticleIds.length; i += batchSize) {
-      const batch = uniqueArticleIds.slice(i, i + batchSize)
-      await processBatch(batch, i / batchSize)
+    for (const doc of uniqueArticleIds) {
+      try {
+        await updatePercentilesOnQuizDeactivation({
+          id: doc.articleId.toString(),
+        })
+        console.log(`Updated percentiles for article ${doc.articleId}`)
+      } catch (error) {
+        console.error(
+          `Error updating percentiles for article ${doc.articleId}: ${error.message}`,
+        )
+        // Continue processing other articles
+      }
     }
-    console.log('Finished processing all article batches')
+    console.log('Finished processing all articles')
   } catch (error) {
     console.error(`Error in updatePercentilesForArticles: ${error.message}`)
     console.error(`Stack trace: ${error.stack}`)

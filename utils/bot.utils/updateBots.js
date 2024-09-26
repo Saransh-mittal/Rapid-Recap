@@ -14,7 +14,15 @@ function shuffle(array) {
   }
   return array
 }
-
+async function asyncFilter(arr, predicate) {
+  const results = []
+  for (const item of arr) {
+    if (await predicate(item)) {
+      results.push(item)
+    }
+  }
+  return results
+}
 async function updateBots() {
   try {
     const botUsers = await User.find({
@@ -29,12 +37,16 @@ async function updateBots() {
     let articlesWithQuiz = await Article.find({
       quiz: { $exists: true },
     })
-    articlesWithQuiz = await Promise.all(
-      articlesWithQuiz.filter(async article => {
-        const quiz = await Quiz.findById(article.quiz)
-        return quiz ? true : false
-      }),
-    )
+    // articlesWithQuiz = await Promise.all(
+    //   articlesWithQuiz.filter(async article => {
+    //     const quiz = await Quiz.findById(article.quiz)
+    //     return quiz ? true : false
+    //   }),
+    // )
+    articlesWithQuiz = await asyncFilter(articlesWithQuiz, async article => {
+      const quiz = await Quiz.findById(article.quiz)
+      return quiz !== null
+    })
     console.log('Articles with quiz fetched successfully')
 
     console.log('Generating fake quiz attempts...')
