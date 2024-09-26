@@ -204,6 +204,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
     tournamentStatus,
     requiredStreak,
     userStreak,
+    messageForTournamentEligibility,
   ) => {
     const randomMessageNumber = Math.floor(Math.random() * 5) + 1
     const randomMessageNumberForLocked = Math.floor(Math.random() * 3) + 1
@@ -216,11 +217,14 @@ const NoteMessageSummary = ({ messages, onClose }) => {
           },
         )
       case 'locked':
-        return tournamentTranslate(
-          `TournamentNoteMessage.motivation.locked.${randomMessageNumberForLocked}`,
-          {
-            requiredStreak: requiredStreak - userStreak,
-          },
+        return (
+          messageForTournamentEligibility ||
+          tournamentTranslate(
+            `TournamentNoteMessage.motivation.locked.${randomMessageNumberForLocked}`,
+            {
+              requiredStreak: requiredStreak - userStreak,
+            },
+          )
         )
       default:
         return tournamentTranslate('TournamentNoteMessage.motivation.default')
@@ -561,6 +565,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                       message?.tournamentStatus,
                       message?.requiredStreak,
                       message?.userStreak,
+                      message?.messageForTournamentEligibility,
                     )}
                   </Text>
                 )}

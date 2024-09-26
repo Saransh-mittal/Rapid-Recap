@@ -1264,6 +1264,9 @@ const streakChecker = async (req, res) => {
     if (user.streak > user.longestStreak) {
       user.longestStreak = user.streak
     }
+    if (user.streak >= 2) {
+      user.eligibleForTournament = true
+    }
     await user.save()
 
     res.status(200).json({

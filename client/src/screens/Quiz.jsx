@@ -88,6 +88,10 @@ const Quiz = () => {
   const [isAnswered, setIsAnswered] = useState(false)
   const { playClick } = useSound()
   const [showGetSetGo, setShowGetSetGo] = useState(false)
+  const [messageForTournament, setMessageForTournament] = useState('')
+  const [userEligibleForTournament, setUserEligibleForTournament] = useState(
+    user.eligibleForTournament,
+  )
 
   useEffect(() => {
     const initialAnswers = Array(totalQuestions).fill('')
@@ -106,7 +110,13 @@ const Quiz = () => {
     showInstruction,
     userAnswers,
     ({ timeTaken, userAnswers, setSubmitted }) =>
-      handleSubmitQuiz({ timeTaken, userAnswers, setSubmitted }),
+      handleSubmitQuiz({
+        timeTaken,
+        userAnswers,
+        setSubmitted,
+        setMessageForTournament,
+        setUserEligibleForTournament,
+      }),
     setSubmitted,
   )
 
@@ -260,7 +270,7 @@ const Quiz = () => {
           !isRegistered &&
           user.role !== 'guest'
         ) {
-          if (user.streak < 3) {
+          if (!userEligibleForTournament) {
             dispatchRedux(
               addNoteMessage({
                 title: 'Keep Going!',
@@ -275,14 +285,15 @@ const Quiz = () => {
                     ),
                   ),
                 tournamentEndTime: currentTournament?.registrationEndDate,
+                messageForTournamentEligibility: messageForTournament,
                 userStreak: user.streak,
-                requiredStreak: 3,
+                requiredStreak: 2,
                 duration: 10000,
                 width: '300px',
               }),
             )
           } else {
-            dispatch(
+            dispatchRedux(
               addNoteMessage({
                 title: 'Tournament Time!',
                 duration: 10000,
@@ -299,7 +310,7 @@ const Quiz = () => {
                   ),
                 tournamentEndTime: currentTournament?.registrationEndDate,
                 userStreak: user?.streak,
-                requiredStreak: 3,
+                requiredStreak: 2,
               }),
             )
           }
@@ -323,6 +334,8 @@ const Quiz = () => {
         timeTaken,
         userAnswers,
         setSubmitted,
+        setMessageForTournament,
+        setUserEligibleForTournament,
       })
       dispatchRedux(
         setUser({
@@ -600,6 +613,8 @@ const Quiz = () => {
           setShowInstruction={setShowInstruction}
           isAnswered={isAnswered}
           showGetSetGo={showGetSetGo}
+          setMessageForTournament={setMessageForTournament}
+          setUserEligibleForTournament={setUserEligibleForTournament}
         />
       </Suspense>
       {!showInstruction && showConfirmationModal && (

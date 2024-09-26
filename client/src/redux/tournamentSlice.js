@@ -18,7 +18,7 @@ export const checkTournamentRegistration = createAsyncThunk(
         !isRegistered &&
         user.role !== 'guest'
       ) {
-        if (user.streak < 3) {
+        if (user.streak < 2 && !user.eligibleForTournament) {
           dispatch(
             addNoteMessage({
               title: 'Keep Going!',
@@ -29,7 +29,7 @@ export const checkTournamentRegistration = createAsyncThunk(
                 String(String(tournament?.tournamentNumber).padStart(3, '0')),
               tournamentEndTime: tournament?.registrationEndDate,
               userStreak: user.streak,
-              requiredStreak: 3,
+              requiredStreak: 2,
               duration: 10000,
               width: '300px',
             }),
@@ -47,7 +47,7 @@ export const checkTournamentRegistration = createAsyncThunk(
                 String(String(tournament?.tournamentNumber).padStart(3, '0')),
               tournamentEndTime: tournament?.registrationEndDate,
               userStreak: user?.streak,
-              requiredStreak: 3,
+              requiredStreak: 2,
             }),
           )
         }

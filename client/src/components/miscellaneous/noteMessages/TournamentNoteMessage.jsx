@@ -27,6 +27,7 @@ const TournamentNoteMessage = ({
   duration,
   width = '320px',
   leaderboard = [], // New prop for leaderboard data
+  messageForTournamentEligibility,
 }) => {
   const { t } = useTranslation('TournamentNoteMessage')
 
@@ -64,11 +65,14 @@ const TournamentNoteMessage = ({
           },
         )
       case 'locked':
-        return t(
-          `TournamentNoteMessage.motivation.locked.${randomMessageNumberForLocked}`,
-          {
-            requiredStreak: requiredStreak - userStreak,
-          },
+        return (
+          messageForTournamentEligibility ||
+          t(
+            `TournamentNoteMessage.motivation.locked.${randomMessageNumberForLocked}`,
+            {
+              requiredStreak: requiredStreak - userStreak,
+            },
+          )
         )
       default:
         return t('TournamentNoteMessage.motivation.default')

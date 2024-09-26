@@ -151,6 +151,9 @@ const NoteMessageQueue = () => {
             width={message.width}
             onClose={handleClose}
             leaderboard={message.leaderboard}
+            messageForTournamentEligibility={
+              message.messageForTournamentEligibility
+            }
           />
         </Suspense>
       )

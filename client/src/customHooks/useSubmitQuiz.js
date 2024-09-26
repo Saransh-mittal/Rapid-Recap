@@ -10,7 +10,13 @@ const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
   const toast = useToast()
   const { playEndChime } = useSound()
 
-  const handleSubmitQuiz = async ({ timeTaken, userAnswers, setSubmitted }) => {
+  const handleSubmitQuiz = async ({
+    timeTaken,
+    userAnswers,
+    setSubmitted,
+    setMessageForTournament,
+    setUserEligibleForTournament,
+  }) => {
     playEndChime()
     setSubmitLoad(true)
     setSubmitted(true)
@@ -34,6 +40,14 @@ const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
         position: 'top',
       })
       // console.log(response.data);
+      if (response.data?.messageForTournamentEligibility) {
+        setMessageForTournament &&
+          setMessageForTournament(response.data.messageForTournamentEligibility)
+      }
+      if (response.data?.userEligibleForTournament) {
+        setUserEligibleForTournament &&
+          setUserEligibleForTournament(response.data.userEligibleForTournament)
+      }
       setResult(response.data)
 
       return response.data

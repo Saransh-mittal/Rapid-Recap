@@ -37,6 +37,8 @@ const ModalComponent = ({
   timeTaken,
   userAnswers,
   handleSubmitQuiz,
+  setMessageForTournament,
+  setUserEligibleForTournament,
   timer,
   setSubmitted,
   showGetSetGo,
@@ -62,7 +64,14 @@ const ModalComponent = ({
       return startQuiz
     }
     if (currentQuestionIndex === totalQuestions - 1 && !submitted) {
-      return () => handleSubmitQuiz({ timeTaken, userAnswers, setSubmitted })
+      return () =>
+        handleSubmitQuiz({
+          timeTaken,
+          userAnswers,
+          setSubmitted,
+          setMessageForTournament,
+          setUserEligibleForTournament,
+        })
     }
     return handleNextQuestion
   }, [
