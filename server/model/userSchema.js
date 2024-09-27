@@ -321,6 +321,13 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    badges: [
+      {
+        tournamentNumber: Number,
+        badgeName: String,
+        text: String,
+      },
+    ],
     displayedBadge: {
       type: Object,
       default: null,

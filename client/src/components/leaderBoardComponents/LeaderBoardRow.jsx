@@ -61,8 +61,8 @@ const LeaderBoardRow = React.memo(
                 participantCnt={10}
                 size={isMobile ? 'sm' : 'md'}
                 badgeName={{
-                  name: 'ACE',
-                  text: 'Entertainment',
+                  name: 'TOP_5',
+                  text: '',
                 }}
               />
             </Box>
@@ -249,7 +249,7 @@ const LeaderBoardRow = React.memo(
                         {t('xpLevel')} {user.level}
                       </Text>
                     </Flex>
-                    <Flex position={'absolute'} right={0}>
+                    <Flex position={'absolute'} right={-9}>
                       {renderTournamentBadge()}
                     </Flex>
                   </Flex>
