@@ -59,9 +59,57 @@ const badgeConfig = {
       lg: { width: '80px', height: '80px', fontSize: '8px' },
     },
   },
-  TOP_5: {},
-  TOP_10: {},
-  TOP_25: {},
+  TOP_5: {
+    image: '/images/top5.webp',
+    textPosition: { x: -55, y: 85, bottom: '18%' },
+    style: {
+      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+      color: '#000000',
+      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
+      boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+    },
+    icon: props => <Medal {...props} />,
+    sizeValues: {
+      base: { width: '60px', height: '60px', fontSize: '8px' },
+      sm: { width: '60px', height: '60px', fontSize: '8px' },
+      md: { width: '70px', height: '70px', fontSize: '10px' },
+      lg: { width: '80px', height: '80px', fontSize: '10px' },
+    },
+  },
+  TOP_10: {
+    image: '/images/top10.webp',
+    textPosition: { x: -54, y: 85, bottom: '18%' },
+    style: {
+      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+      color: '#000000',
+      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
+      boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+    },
+    icon: props => <Medal {...props} />,
+    sizeValues: {
+      base: { width: '60px', height: '60px', fontSize: '8px' },
+      sm: { width: '50px', height: '50px', fontSize: '8px' },
+      md: { width: '70px', height: '70px', fontSize: '10px' },
+      lg: { width: '80px', height: '80px', fontSize: '10px' },
+    },
+  },
+  TOP_25: {
+    image: '/images/top25.webp',
+    textPosition: { x: -55, y: 85, bottom: '18%' },
+    style: {
+      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+      color: '#000000',
+      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
+      boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+    },
+    icon: props => <Medal {...props} />,
+    sizeValues: {
+      base: { width: '60px', height: '60px', fontSize: '8px' },
+      sm: { width: '60px', height: '60px', fontSize: '8px' },
+      md: { width: '70px', height: '70px', fontSize: '10px' },
+      lg: { width: '80px', height: '80px', fontSize: '10px' },
+    },
+  },
   QUIZ_WARRIOR: {},
   ACE: {
     image: '/images/ace_category.webp',
@@ -257,7 +305,8 @@ const TournamentBadge = ({
             height="100%"
             objectFit="contain"
           />
-          <Text
+          <Flex
+            flexDirection={'column'}
             position="absolute"
             bottom={textPosition?.bottom}
             left="50%"
@@ -268,9 +317,11 @@ const TournamentBadge = ({
             textShadow="1px 1px 2px rgba(0,0,0,0.6)"
             textTransform={'capitalize'}
           >
-            {badgeName?.text ||
-              '#' + tournamentNumber?.toString().padStart(3, '0')}
-          </Text>
+            <Flex>{badgeName?.text}</Flex>
+            <Flex justifyContent={'center'} mt={-1}>
+              {'#' + tournamentNumber?.toString().padStart(3, '0')}
+            </Flex>
+          </Flex>
         </Box>
       </motion.div>
       {createPortal(

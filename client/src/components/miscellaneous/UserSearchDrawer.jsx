@@ -41,7 +41,7 @@ const SearchResultItem = React.memo(
     return (
       <Flex
         alignItems="center"
-        p={3}
+        py={5}
         borderRadius="lg"
         transition="all 0.3s"
         cursor="pointer"
@@ -85,7 +85,7 @@ const SearchResultItem = React.memo(
             @{user.inGameName}
           </Text>
         </Box>
-        {user?.displayedBadge?.rank && (
+        {!user?.displayedBadge?.rank && (
           <Box
             ml={`-${4 + badgeOffset}px`}
             mt={0}
@@ -93,33 +93,41 @@ const SearchResultItem = React.memo(
             transition="margin-left 0.3s ease"
           >
             <TournamentBadges
-              tournamentNumber={user.displayedBadge.tournamentNumber}
-              rank={user.displayedBadge.rank}
-              name={user.name}
-              inGameName={user.inGameName}
-              participantCnt={user.displayedBadge.participantCnt}
-              size="base"
+              tournamentNumber={user?.displayedBadge?.tournamentNumber}
+              rank={user?.displayedBadge?.rank}
+              name={user?.name}
+              inGameName={user?.inGameName}
+              participantCnt={user?.displayedBadge?.participantCnt}
+              size="sm"
+              badgeName={{
+                name: 'CHAMP',
+                text: 'Entertainment',
+              }}
             />
           </Box>
         )}
-        <Badge
-          bg={badgeBg}
-          color="white"
-          borderRadius="full"
-          px={2}
-          py={1}
-          fontWeight="bold"
-          fontSize="xs"
-          boxShadow="0 2px 4px rgba(0,0,0,0.2)"
-          display="flex"
-          alignItems="center"
-          zIndex={1}
-        >
-          <Text as="span" role="img" aria-label="brain" mr={1}>
-            🧠
-          </Text>
-          {user.IQ_score}
-        </Badge>
+        <Flex justifyContent={'center'} mx={2}>
+          <Badge
+            bg={badgeBg}
+            color="white"
+            borderRadius="full"
+            px={2}
+            py={1}
+            fontWeight="bold"
+            fontSize="xs"
+            boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+            display="flex"
+            alignItems="center"
+            zIndex={1}
+            w={'4.6rem'}
+            justifyContent="center"
+          >
+            <Text as="span" role="img" aria-label="brain" mr={1}>
+              🧠
+            </Text>
+            {user.IQ_score}
+          </Badge>
+        </Flex>
       </Flex>
     )
   },
@@ -182,7 +190,7 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
   const SkeletonLoader = useMemo(
     () => (
       <VStack spacing={4} align="stretch" mt={4}>
-        {[...Array(10)].map((_, index) => (
+        {[...Array(10)]?.map((_, index) => (
           <Flex key={index} alignItems="center" p={3}>
             <SkeletonCircle size="10" />
             <Box ml={4} flex={1}>
