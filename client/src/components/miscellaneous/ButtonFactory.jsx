@@ -85,7 +85,7 @@ const ButtonFactory = ({
           {t('VIEW_EXPERIENCE')}
         </ElegantButton>
       )
-    case 'SUBMIT_FEEDBACK':
+    case 'SUBMIT_STORY_FEEDBACK':
       return (
         <ElegantButton onClick={onClick} {...props}>
           {t('SUBMIT_FEEDBACK')}

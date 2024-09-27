@@ -205,6 +205,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
     requiredStreak,
     userStreak,
     messageForTournamentEligibility,
+    tournamentName,
   ) => {
     const randomMessageNumber = Math.floor(Math.random() * 5) + 1
     const randomMessageNumberForLocked = Math.floor(Math.random() * 3) + 1
@@ -566,6 +567,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                       message?.requiredStreak,
                       message?.userStreak,
                       message?.messageForTournamentEligibility,
+                      message?.tournamentName,
                     )}
                   </Text>
                 )}

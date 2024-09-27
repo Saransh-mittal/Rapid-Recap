@@ -30,7 +30,7 @@ const messageActionHandlers = {
       messageId &&
       dispatch(actions.removeNoteMessageWithId(messageId))
   },
-  SUBMIT_FEEDBACK: (dispatch, actions, messageId) => {
+  SUBMIT_STORY_FEEDBACK: (dispatch, actions, messageId) => {
     actions.handleSubmitFeedback()
     dispatch &&
       messageId &&
@@ -67,7 +67,7 @@ export const createHandleMessageAction = (dispatch, actions) => {
         messageActionHandlers['VIEW_TOURNAMENT'](dispatch, actions, messageId)
       } else if (actionType === 'VIEW_PROFILE') {
         messageActionHandlers[actionType](actions, profileId)
-      } else if (actionType === 'SUBMIT_FEEDBACK') {
+      } else if (actionType === 'SUBMIT_STORY_FEEDBACK') {
         messageActionHandlers[actionType](dispatch, actions, messageId)
       } else if (actionType === 'SUBMIT_QUIZ_FEEDBACK') {
         messageActionHandlers[actionType](dispatch, actions, messageId)

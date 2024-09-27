@@ -63,7 +63,7 @@ const UnifiedFeedbackNoteMessage = ({
           actionType:
             feedbackType === 'quiz'
               ? 'SUBMIT_QUIZ_FEEDBACK'
-              : 'SUBMIT_RATING_FEEDBACK',
+              : 'SUBMIT_STORY_FEEDBACK',
         },
       ]}
       feedbackContent={{

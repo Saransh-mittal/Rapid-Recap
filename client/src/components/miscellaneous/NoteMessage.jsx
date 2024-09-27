@@ -60,13 +60,13 @@ const NoteMessage = ({
           handleSubmitFeedback(
             feedbackContent.rating,
             feedbackContent.feedback,
-            feedbackContent.storyId,
+            feedbackContent.feedbackId,
           ),
         handleQuizFeedback: () =>
           handleQuizFeedback(
             quizFeedbackContent.rating,
             quizFeedbackContent.feedback,
-            quizFeedbackContent.quizId,
+            quizFeedbackContent.feedbackId,
           ),
       }),
     [dispatch, navigate, feedbackContent, quizFeedbackContent],

@@ -211,6 +211,7 @@ const Quiz = () => {
               result?.quinBoostUtilized && user.revivalPeriodEnd
                 ? user.streakBeforeBreak + 1
                 : user.streak + 1,
+            quizAttempts: [...user?.quizAttempts, quizId],
           }),
         )
 

@@ -173,7 +173,7 @@ const ArticleHeader = ({
             storyId: response.data._id,
           }),
         )
-      }, 60000)
+      }, 45000)
     } catch (error) {
       toast({
         title: t('themeChangeErrorTitle'),
