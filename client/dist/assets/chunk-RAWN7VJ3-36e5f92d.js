@@ -1,1 +1,0 @@
-import{u as l}from"./chunk-JQMJHPZH-c22e222c.js";import{ar as c,as as f,t as m,at as n}from"./index-8749f2fd.js";var d=c((s,a)=>{const{className:o,...t}=s,e=f("chakra-modal__footer",o),r={display:"flex",alignItems:"center",justifyContent:"flex-end",...l().footer};return m.jsx(n.footer,{ref:a,...t,__css:r,className:e})});d.displayName="ModalFooter";export{d as M};
