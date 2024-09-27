@@ -244,7 +244,6 @@ const TournamentBadge = ({
           width={width}
           height={height}
           borderRadius="50%"
-          // overflow="hidden"
           boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
           transition="all 0.3s ease"
           _hover={{
@@ -260,9 +259,9 @@ const TournamentBadge = ({
           />
           <Text
             position="absolute"
-            bottom={textPosition.bottom}
+            bottom={textPosition?.bottom}
             left="50%"
-            transform={`translateX(${textPosition.x}%) translateY(${textPosition.y}%)`}
+            transform={`translateX(${textPosition?.x}%) translateY(${textPosition?.y}%)`}
             color="white"
             fontSize={fontSize}
             fontWeight="bold"

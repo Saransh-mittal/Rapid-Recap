@@ -61,7 +61,7 @@ const LeaderBoardRow = React.memo(
                 participantCnt={10}
                 size={isMobile ? 'sm' : 'md'}
                 badgeName={{
-                  name: 'CHAMP',
+                  name: 'ACE',
                   text: 'Entertainment',
                 }}
               />
