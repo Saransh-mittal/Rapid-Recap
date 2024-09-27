@@ -51,18 +51,15 @@ const LeaderBoardRow = React.memo(
               top="50%"
             >
               <TournamentBadge
-                // tournamentNumber={user?.displayedBadge?.tournamentNumber}
-                tournamentNumber={1}
-                // rank={user?.displayedBadge?.rank}
-                rank={1}
+                tournamentNumber={user?.displayedBadge?.tournamentNumber}
+                rank={user?.displayedBadge?.rank}
                 name={user?.name}
                 inGameName={user?.inGameName}
-                // participantCnt={user?.displayedBadge?.participantCnt}
-                participantCnt={10}
+                participantCnt={user?.displayedBadge?.participantCnt}
                 size={isMobile ? 'sm' : 'md'}
                 badgeName={{
-                  name: 'TOP_5',
-                  text: '',
+                  name: user?.displayedBadge?.badgeName,
+                  text: user?.displayedBadge?.text,
                 }}
               />
             </Box>

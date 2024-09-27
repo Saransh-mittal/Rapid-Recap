@@ -270,7 +270,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
       alignItems="center"
       p="5px"
     >
-      <Flex w="100%">
+      <Flex w="100%" mb={5}>
         <Image
           src={
             leftProfileView?.pic ||
@@ -282,12 +282,16 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           height="80px"
           marginRight="20px"
         />
-        <Flex margin="5px" position="relative" flexDirection="column">
+        <Flex
+          margin="5px"
+          // position="relative"
+          flexDirection="column"
+        >
           <Flex
             justifyContent="center"
             alignItems="center"
             w="100%"
-            position="relative"
+            // position="relative"
             marginBottom="15px"
           >
             <Flex alignItems="center">
@@ -366,8 +370,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             )}
         </Flex>
         <Suspense fallback={<Spinner />}>
-          <Flex mr={-5}>
-            {selectedBadge && (
+          <Flex mr={-4}>
+            {(selectedBadge || true) && (
               <TournamentBadges
                 tournamentNumber={selectedBadge?.tournamentNumber}
                 rank={selectedBadge?.rank}
@@ -375,6 +379,10 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                 inGameName={leftProfileView?.inGameName}
                 participantCnt={selectedBadge?.participantCnt}
                 size="lg"
+                badgeName={{
+                  name: selectedBadge?.badgeName,
+                  text: selectedBadge?.text,
+                }}
               />
             )}
           </Flex>
