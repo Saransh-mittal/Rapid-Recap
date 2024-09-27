@@ -3,12 +3,12 @@ import { Box, Text, Image, Flex, VStack } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
 
-const CrownSVG = import('../../assets/svg/CrownSVG')
-const TrophySVG = import('../../assets/svg/TrophySVG')
-const Medal = import('../../assets/svg/Medal')
+const CrownSVG = React.lazy(() => import('../../assets/svg/CrownSVG'))
+const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
+const Medal = React.lazy(() => import('../../assets/svg/Medal'))
 
 const badgeConfig = {
-  1: {
+  RANK_1: {
     image: '/images/goldTourBadge.webp',
     textPosition: { x: -57, y: 40, bottom: '15%' },
     style: {
@@ -18,8 +18,14 @@ const badgeConfig = {
       boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
     },
     icon: props => <CrownSVG {...props} />,
+    sizeValues: {
+      base: { width: '40px', height: '40px', fontSize: '6px' },
+      sm: { width: '50px', height: '50px', fontSize: '6px' },
+      md: { width: '60px', height: '60px', fontSize: '7px' },
+      lg: { width: '80px', height: '80px', fontSize: '8px' },
+    },
   },
-  2: {
+  RANK_2: {
     image: '/images/silverTourBadge.webp',
     textPosition: { x: -50, y: 25, bottom: '12%' },
     style: {
@@ -29,8 +35,14 @@ const badgeConfig = {
       boxShadow: '0 0 10px rgba(192, 192, 192, 0.5)',
     },
     icon: props => <TrophySVG {...props} />,
+    sizeValues: {
+      base: { width: '40px', height: '40px', fontSize: '6px' },
+      sm: { width: '50px', height: '50px', fontSize: '6px' },
+      md: { width: '60px', height: '60px', fontSize: '7px' },
+      lg: { width: '80px', height: '80px', fontSize: '8px' },
+    },
   },
-  3: {
+  RANK_3: {
     image: '/images/bronzeTourBadge.webp',
     textPosition: { x: -55, y: 85, bottom: '18%' },
     style: {
@@ -40,6 +52,64 @@ const badgeConfig = {
       boxShadow: '0 0 10px rgba(205, 127, 50, 0.5)',
     },
     icon: props => <Medal {...props} />,
+    sizeValues: {
+      base: { width: '40px', height: '40px', fontSize: '6px' },
+      sm: { width: '50px', height: '50px', fontSize: '6px' },
+      md: { width: '60px', height: '60px', fontSize: '7px' },
+      lg: { width: '80px', height: '80px', fontSize: '8px' },
+    },
+  },
+  TOP_5: {},
+  TOP_10: {},
+  TOP_25: {},
+  QUIZ_WARRIOR: {},
+  ACE: {
+    image: '/images/ace_category.webp',
+    textPosition: { x: -52, y: 110, bottom: '18%' },
+    style: {
+      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+      color: '#000000',
+      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
+      boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+    },
+    sizeValues: {
+      base: { width: '30px', height: '30px', fontSize: '6px' },
+      sm: { width: '45px', height: '45px', fontSize: '8px' },
+      md: { width: '60px', height: '60px', fontSize: '10px' },
+      lg: { width: '80px', height: '80px', fontSize: '12px' },
+    },
+  },
+  PRO: {
+    image: '/images/pro_category.webp',
+    textPosition: { x: -52, y: 130, bottom: '18%' },
+    style: {
+      background: 'linear-gradient(135deg, #C0C0C0, #A9A9A9)',
+      color: '#000000',
+      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
+      boxShadow: '0 0 10px rgba(192, 192, 192, 0.5)',
+    },
+    sizeValues: {
+      base: { width: '30px', height: '30px', fontSize: '6px' },
+      sm: { width: '45px', height: '45px', fontSize: '8px' },
+      md: { width: '60px', height: '60px', fontSize: '10px' },
+      lg: { width: '80px', height: '80px', fontSize: '12px' },
+    },
+  },
+  CHAMP: {
+    image: '/images/champ_category.webp',
+    textPosition: { x: -52, y: 130, bottom: '18%' },
+    style: {
+      background: 'linear-gradient(135deg, #CD7F32, #B8860B)',
+      color: '#FFFFFF',
+      textShadow: '0 0 5px rgba(0, 0, 0, 0.5)',
+      boxShadow: '0 0 10px rgba(205, 127, 50, 0.5)',
+    },
+    sizeValues: {
+      base: { width: '30px', height: '30px', fontSize: '6px' },
+      sm: { width: '45px', height: '45px', fontSize: '8px' },
+      md: { width: '60px', height: '60px', fontSize: '10px' },
+      lg: { width: '80px', height: '80px', fontSize: '12px' },
+    },
   },
 }
 
@@ -52,17 +122,19 @@ const TournamentBadge = ({
   inGameName,
   participantCnt,
   size = 'md',
+  badgeName = null,
 }) => {
   const [showDialog, setShowDialog] = useState(false)
   const badgeRef = useRef(null)
   const dialogRef = useRef(null)
-  const { image, textPosition, style, icon: RankIcon } = badgeConfig[rank] || {}
-  const sizeValues = {
-    base: { width: '40px', height: '40px', fontSize: '6px' },
-    sm: { width: '50px', height: '50px', fontSize: '6px' },
-    md: { width: '60px', height: '60px', fontSize: '7px' },
-    lg: { width: '80px', height: '80px', fontSize: '8px' },
-  }
+  const {
+    image,
+    textPosition,
+    style,
+    icon: RankIcon,
+    sizeValues,
+  } = badgeConfig[badgeName?.name] || {}
+
   const { width, height, fontSize } = sizeValues[size] || sizeValues.md
 
   useEffect(() => {
@@ -101,7 +173,7 @@ const TournamentBadge = ({
     setShowDialog(prevState => !prevState)
   }
 
-  if (!tournamentNumber || !rank) return null
+  // if (!tournamentNumber || !badgeName) return null
 
   const dialogContent = showDialog && (
     <motion.div
@@ -128,13 +200,15 @@ const TournamentBadge = ({
         <VStack spacing={2} align="center">
           <Flex alignItems="center" justifyContent="center" mb={0}>
             <Box bg="rgba(255, 255, 255, 0.2)" borderRadius="50%" p={1} mr={2}>
-              <RankIcon
-                size="24px"
-                style={{
-                  filter: 'drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.5))',
-                }}
-                color={style.color}
-              />
+              {RankIcon && (
+                <RankIcon
+                  size="24px"
+                  style={{
+                    filter: 'drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.5))',
+                  }}
+                  color={style?.color}
+                />
+              )}
             </Box>
             <Flex flexDirection={'column'}>
               <Text fontWeight="bold" fontSize="xl" mb={0}>
@@ -148,7 +222,7 @@ const TournamentBadge = ({
 
           <Text fontSize="md" fontWeight="semibold">
             Rank {rank} in Tournament #
-            {String(tournamentNumber).padStart(3, '0')}
+            {String(tournamentNumber)?.padStart(3, '0')}
           </Text>
           <Text fontSize="sm" opacity={0.9}>
             Out of {participantCnt} participants
@@ -170,7 +244,7 @@ const TournamentBadge = ({
           width={width}
           height={height}
           borderRadius="50%"
-          overflow="hidden"
+          // overflow="hidden"
           boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
           transition="all 0.3s ease"
           _hover={{
@@ -193,8 +267,10 @@ const TournamentBadge = ({
             fontSize={fontSize}
             fontWeight="bold"
             textShadow="1px 1px 2px rgba(0,0,0,0.6)"
+            textTransform={'capitalize'}
           >
-            #{tournamentNumber.toString().padStart(3, '0')}
+            {badgeName?.text ||
+              '#' + tournamentNumber?.toString().padStart(3, '0')}
           </Text>
         </Box>
       </motion.div>

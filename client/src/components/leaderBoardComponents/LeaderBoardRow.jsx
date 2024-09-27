@@ -35,7 +35,7 @@ const LeaderBoardRow = React.memo(
     }
 
     const renderTournamentBadge = () => {
-      if (user?.displayedBadge?.rank) {
+      if (user?.displayedBadge?.rank || true) {
         return (
           <Suspense
             fallback={
@@ -51,12 +51,19 @@ const LeaderBoardRow = React.memo(
               top="50%"
             >
               <TournamentBadge
-                tournamentNumber={user?.displayedBadge?.tournamentNumber}
-                rank={user?.displayedBadge?.rank}
+                // tournamentNumber={user?.displayedBadge?.tournamentNumber}
+                tournamentNumber={1}
+                // rank={user?.displayedBadge?.rank}
+                rank={1}
                 name={user?.name}
                 inGameName={user?.inGameName}
-                participantCnt={user?.displayedBadge?.participantCnt}
+                // participantCnt={user?.displayedBadge?.participantCnt}
+                participantCnt={10}
                 size={isMobile ? 'sm' : 'md'}
+                badgeName={{
+                  name: 'CHAMP',
+                  text: 'Entertainment',
+                }}
               />
             </Box>
           </Suspense>
