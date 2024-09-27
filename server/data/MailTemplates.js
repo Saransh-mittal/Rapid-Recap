@@ -2106,7 +2106,7 @@ const MailTemplates = {
             <table class="chart-table">
               <tr>
                 ${quizDistribution
-                  .map(
+                  ?.map(
                     item => `
                   <td style="vertical-align: bottom; height: 250px;">
                     <div class="chart-value">${item.value}</div>
@@ -2114,16 +2114,16 @@ const MailTemplates = {
                   </td>
                 `,
                   )
-                  .join('')}
+                  ?.join('')}
               </tr>
               <tr>
                 ${quizDistribution
-                  .map(
+                  ?.map(
                     item => `
                   <td class="chart-label">${item.label}</td>
                 `,
                   )
-                  .join('')}
+                  ?.join('')}
               </tr>
             </table>
           </div>
@@ -2139,7 +2139,7 @@ const MailTemplates = {
                 <th align="left" style="font-size: 22px; padding-bottom: 10px;">Score</th>
               </tr>
               ${topPlayers
-                .map(
+                ?.map(
                   (player, index) => `
                 <tr>
                   <td style="font-size: 20px;">${index + 1}</td>
@@ -2150,7 +2150,7 @@ const MailTemplates = {
                 </tr>
               `,
                 )
-                .join('')}
+                ?.join('')}
             </table>
             <p style="font-size: 22px;"><strong>Your Rank:</strong> ${tournamentRank}</p>
             <p style="font-size: 22px;"><strong>Your Score:</strong> ${tournamentScore}</p>
@@ -2162,7 +2162,7 @@ const MailTemplates = {
             <table class="chart-table">
               <tr>
                 ${categoryPerformance
-                  .map(
+                  ?.map(
                     category => `
                   <td style="vertical-align: bottom; height: 300px;">
                     <div class="chart-value">${category.value}%</div>
@@ -2170,16 +2170,16 @@ const MailTemplates = {
                   </td>
                 `,
                   )
-                  .join('')}
+                  ?.join('')}
               </tr>
               <tr>
                 ${categoryPerformance
-                  .map(
+                  ?.map(
                     category => `
                   <td class="chart-label">${category.name}</td>
                 `,
                   )
-                  .join('')}
+                  ?.join('')}
               </tr>
             </table>
           </div>
