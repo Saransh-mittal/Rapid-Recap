@@ -100,8 +100,8 @@ const SearchResultItem = React.memo(
               participantCnt={user?.displayedBadge?.participantCnt}
               size="sm"
               badgeName={{
-                name: 'CHAMP',
-                text: 'Entertainment',
+                name: user?.displayedBadge?.badgeName,
+                text: user?.displayedBadge?.text,
               }}
             />
           </Box>

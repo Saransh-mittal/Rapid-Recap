@@ -51,18 +51,15 @@ const LeaderBoardRow = React.memo(
               top="50%"
             >
               <TournamentBadge
-                // tournamentNumber={user?.displayedBadge?.tournamentNumber}
-                tournamentNumber={1}
-                // rank={user?.displayedBadge?.rank}
-                rank={1}
+                tournamentNumber={user?.displayedBadge?.tournamentNumber}
+                rank={user?.displayedBadge?.rank}
                 name={user?.name}
                 inGameName={user?.inGameName}
-                // participantCnt={user?.displayedBadge?.participantCnt}
-                participantCnt={10}
+                participantCnt={user?.displayedBadge?.participantCnt}
                 size={isMobile ? 'sm' : 'md'}
                 badgeName={{
-                  name: 'ACE',
-                  text: 'Entertainment',
+                  name: user?.displayedBadge?.badgeName,
+                  text: user?.displayedBadge?.text,
                 }}
               />
             </Box>
@@ -249,7 +246,7 @@ const LeaderBoardRow = React.memo(
                         {t('xpLevel')} {user.level}
                       </Text>
                     </Flex>
-                    <Flex position={'absolute'} right={0}>
+                    <Flex position={'absolute'} right={-9}>
                       {renderTournamentBadge()}
                     </Flex>
                   </Flex>

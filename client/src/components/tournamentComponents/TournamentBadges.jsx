@@ -2,164 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Box, Text, Image, Flex, VStack } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
-
-const CrownSVG = React.lazy(() => import('../../assets/svg/CrownSVG'))
-const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
-const Medal = React.lazy(() => import('../../assets/svg/Medal'))
-
-const badgeConfig = {
-  RANK_1: {
-    image: '/images/goldTourBadge.webp',
-    textPosition: { x: -57, y: 40, bottom: '15%' },
-    style: {
-      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-      color: '#000000',
-      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
-      boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
-    },
-    icon: props => <CrownSVG {...props} />,
-    sizeValues: {
-      base: { width: '40px', height: '40px', fontSize: '6px' },
-      sm: { width: '50px', height: '50px', fontSize: '6px' },
-      md: { width: '60px', height: '60px', fontSize: '7px' },
-      lg: { width: '80px', height: '80px', fontSize: '8px' },
-    },
-  },
-  RANK_2: {
-    image: '/images/silverTourBadge.webp',
-    textPosition: { x: -50, y: 25, bottom: '12%' },
-    style: {
-      background: 'linear-gradient(135deg, #C0C0C0, #A9A9A9)',
-      color: '#000000',
-      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
-      boxShadow: '0 0 10px rgba(192, 192, 192, 0.5)',
-    },
-    icon: props => <TrophySVG {...props} />,
-    sizeValues: {
-      base: { width: '40px', height: '40px', fontSize: '6px' },
-      sm: { width: '50px', height: '50px', fontSize: '6px' },
-      md: { width: '60px', height: '60px', fontSize: '7px' },
-      lg: { width: '80px', height: '80px', fontSize: '8px' },
-    },
-  },
-  RANK_3: {
-    image: '/images/bronzeTourBadge.webp',
-    textPosition: { x: -55, y: 85, bottom: '18%' },
-    style: {
-      background: 'linear-gradient(135deg, #CD7F32, #B8860B)',
-      color: '#FFFFFF',
-      textShadow: '0 0 5px rgba(0, 0, 0, 0.5)',
-      boxShadow: '0 0 10px rgba(205, 127, 50, 0.5)',
-    },
-    icon: props => <Medal {...props} />,
-    sizeValues: {
-      base: { width: '40px', height: '40px', fontSize: '6px' },
-      sm: { width: '50px', height: '50px', fontSize: '6px' },
-      md: { width: '60px', height: '60px', fontSize: '7px' },
-      lg: { width: '80px', height: '80px', fontSize: '8px' },
-    },
-  },
-  TOP_5: {
-    image: '/images/top5.webp',
-    textPosition: { x: -55, y: 85, bottom: '18%' },
-    style: {
-      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-      color: '#000000',
-      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
-      boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
-    },
-    icon: props => <Medal {...props} />,
-    sizeValues: {
-      base: { width: '60px', height: '60px', fontSize: '8px' },
-      sm: { width: '60px', height: '60px', fontSize: '8px' },
-      md: { width: '70px', height: '70px', fontSize: '10px' },
-      lg: { width: '80px', height: '80px', fontSize: '10px' },
-    },
-  },
-  TOP_10: {
-    image: '/images/top10.webp',
-    textPosition: { x: -54, y: 85, bottom: '18%' },
-    style: {
-      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-      color: '#000000',
-      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
-      boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
-    },
-    icon: props => <Medal {...props} />,
-    sizeValues: {
-      base: { width: '60px', height: '60px', fontSize: '8px' },
-      sm: { width: '50px', height: '50px', fontSize: '8px' },
-      md: { width: '70px', height: '70px', fontSize: '10px' },
-      lg: { width: '80px', height: '80px', fontSize: '10px' },
-    },
-  },
-  TOP_25: {
-    image: '/images/top25.webp',
-    textPosition: { x: -55, y: 85, bottom: '18%' },
-    style: {
-      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-      color: '#000000',
-      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
-      boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
-    },
-    icon: props => <Medal {...props} />,
-    sizeValues: {
-      base: { width: '60px', height: '60px', fontSize: '8px' },
-      sm: { width: '60px', height: '60px', fontSize: '8px' },
-      md: { width: '70px', height: '70px', fontSize: '10px' },
-      lg: { width: '80px', height: '80px', fontSize: '10px' },
-    },
-  },
-  QUIZ_WARRIOR: {},
-  ACE: {
-    image: '/images/ace_category.webp',
-    textPosition: { x: -52, y: 110, bottom: '18%' },
-    style: {
-      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-      color: '#000000',
-      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
-      boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
-    },
-    sizeValues: {
-      base: { width: '30px', height: '30px', fontSize: '6px' },
-      sm: { width: '45px', height: '45px', fontSize: '8px' },
-      md: { width: '60px', height: '60px', fontSize: '10px' },
-      lg: { width: '80px', height: '80px', fontSize: '12px' },
-    },
-  },
-  PRO: {
-    image: '/images/pro_category.webp',
-    textPosition: { x: -52, y: 130, bottom: '18%' },
-    style: {
-      background: 'linear-gradient(135deg, #C0C0C0, #A9A9A9)',
-      color: '#000000',
-      textShadow: '0 0 5px rgba(255, 255, 255, 0.5)',
-      boxShadow: '0 0 10px rgba(192, 192, 192, 0.5)',
-    },
-    sizeValues: {
-      base: { width: '30px', height: '30px', fontSize: '6px' },
-      sm: { width: '45px', height: '45px', fontSize: '8px' },
-      md: { width: '60px', height: '60px', fontSize: '10px' },
-      lg: { width: '80px', height: '80px', fontSize: '12px' },
-    },
-  },
-  CHAMP: {
-    image: '/images/champ_category.webp',
-    textPosition: { x: -52, y: 130, bottom: '18%' },
-    style: {
-      background: 'linear-gradient(135deg, #CD7F32, #B8860B)',
-      color: '#FFFFFF',
-      textShadow: '0 0 5px rgba(0, 0, 0, 0.5)',
-      boxShadow: '0 0 10px rgba(205, 127, 50, 0.5)',
-    },
-    sizeValues: {
-      base: { width: '30px', height: '30px', fontSize: '6px' },
-      sm: { width: '45px', height: '45px', fontSize: '8px' },
-      md: { width: '60px', height: '60px', fontSize: '10px' },
-      lg: { width: '80px', height: '80px', fontSize: '12px' },
-    },
-  },
-}
+import { badgeConfig } from '../../models/badgeConfig'
 
 const DIALOG_WIDTH = 250 // Set a fixed width for the dialog
 
@@ -183,7 +26,10 @@ const TournamentBadge = ({
     sizeValues,
   } = badgeConfig[badgeName?.name] || {}
 
-  const { width, height, fontSize } = sizeValues[size] || sizeValues.md
+  const sizeValue = sizeValues ? sizeValues[size] || sizeValues?.md : null
+  const width = sizeValue?.width
+  const height = sizeValue?.height
+  const fontSize = sizeValue?.fontSize
 
   useEffect(() => {
     if (showDialog && badgeRef.current && dialogRef.current) {
@@ -221,7 +67,7 @@ const TournamentBadge = ({
     setShowDialog(prevState => !prevState)
   }
 
-  // if (!tournamentNumber || !badgeName) return null
+  if (!tournamentNumber || !badgeName.name) return null
 
   const dialogContent = showDialog && (
     <motion.div

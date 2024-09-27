@@ -6,6 +6,9 @@ const {
   TournamentRegistration,
 } = require('../../model/tournamentRegistrationSchema')
 const i18n = require('i18next')
+const {
+  updateTournamentPerformanceAndBadges,
+} = require('../../utils/tournament.utils')
 
 const startRegistration = async () => {
   const startDate = moment().tz('Asia/Kolkata').startOf('day')
@@ -304,82 +307,6 @@ const day2OfTournament = async () => {
       url: '/tournament',
       userId: registration.user._id,
     })
-  }
-}
-
-async function updateTournamentPerformanceAndBadges(tournament) {
-  try {
-    const leaderboardData = await TournamentRegistration.aggregate([
-      { $match: { tournament: tournament._id } },
-      {
-        $lookup: {
-          from: 'Users',
-          localField: 'user',
-          foreignField: '_id',
-          as: 'userDetails',
-        },
-      },
-      { $unwind: '$userDetails' },
-      {
-        $project: {
-          user: '$user',
-          inGameName: '$userDetails.inGameName',
-          totalScore: 1,
-        },
-      },
-      { $sort: { totalScore: -1 } },
-      {
-        $group: {
-          _id: null,
-          entries: { $push: '$$ROOT' },
-          participantCount: { $sum: 1 },
-        },
-      },
-    ])
-
-    if (leaderboardData.length === 0) return
-
-    const { entries, participantCount } = leaderboardData[0]
-
-    // Update each user's tournament performance
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i]
-      const rank = i + 1
-
-      await User.updateOne(
-        { _id: entry.user },
-        {
-          $push: {
-            tournamentPerformance: {
-              tournament: tournament._id,
-              score: entry.totalScore,
-              rank: rank,
-              endDate: tournament.endDate, // You might want to get the actual end date from the tournament
-              tournamentNumber: tournament.tournamentNumber, // Assuming tournamentId is unique and can be used as tournamentNumber
-              participantCnt: participantCount,
-            },
-          },
-        },
-      )
-
-      // Update badge for top 3 ranks
-      if (rank <= 3) {
-        await User.updateOne(
-          { _id: entry.user },
-          {
-            displayedBadge: {
-              tournamentNumber: tournament.tournamentNumber,
-              rank: rank,
-              participantCnt: participantCount,
-            },
-          },
-        )
-      }
-    }
-
-    console.log('Tournament performance and badges updated successfully')
-  } catch (error) {
-    console.error('Error updating tournament performance and badges:', error)
   }
 }
 

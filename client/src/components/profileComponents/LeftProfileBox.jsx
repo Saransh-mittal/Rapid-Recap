@@ -380,8 +380,8 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                 participantCnt={selectedBadge?.participantCnt}
                 size="lg"
                 badgeName={{
-                  name: 'ACE',
-                  text: 'Entertainment',
+                  name: selectedBadge?.badgeName,
+                  text: selectedBadge?.text,
                 }}
               />
             )}
