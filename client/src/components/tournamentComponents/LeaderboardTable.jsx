@@ -63,7 +63,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{
           duration: 0.3,
-          delay: index * 0.1,
+          delay: (index % 20) * 0.1,
         }}
         _hover={{
           bg: 'whiteAlpha.100',
