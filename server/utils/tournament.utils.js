@@ -194,9 +194,11 @@ async function updateTournamentPerformanceAndBadges(tournament) {
           $push: {
             badges: {
               $each: allBadges.map(badge => ({
+                rank: rank,
                 tournamentNumber: tournament.tournamentNumber,
                 badgeName: badge.name,
                 text: badge.text,
+                participantCnt: participantCount,
               })),
             },
           },

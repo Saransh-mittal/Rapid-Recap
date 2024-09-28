@@ -82,6 +82,8 @@ webpush.setVapidDetails(
 // require('./utils/update.utils/article.update')
 // require("./utils/update.utils/quizAttemptIndex.update");
 // require("./utils/update.utils/timeSpentIndexes");
+// require('./utils/update.utils/userBadge')
+// require('./utils/update.utils/tournamentScore')
 // ---------------------------
 
 // -----Bot utils-----
