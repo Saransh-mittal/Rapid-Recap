@@ -170,16 +170,17 @@ const fetchUniqueArticleIds = async () => {
 }
 
 const updatePercentilesForArticles = async uniqueArticleIds => {
-  const batchSize = 50 // Adjust this value based on your system's capabilities
+  const batchSize = 8000 // Adjust this value based on your system's capabilities
   const totalBatches = Math.ceil(uniqueArticleIds.length / batchSize)
 
   const processBatch = async (batch, batchIndex) => {
     try {
       await Promise.all(
         batch.map(async doc => {
+          // console.log(doc.articleId._id)
           try {
             await updatePercentilesOnQuizDeactivation({
-              id: doc.articleId.toString(),
+              id: doc.articleId._id.toString(),
             })
           } catch (error) {
             console.error(
@@ -253,7 +254,7 @@ const calculateUserScores = async users => {
       const quizScore = attempt.articleDifficulty * attempt.userPercentile
       userScore += quizScore
     }
-
+    if (user.inGameName === 'Bsahu4712') console.log(userScore)
     userScore = typeof userScore === 'number' && userScore ? userScore : 0
     try {
       const u = await User.findById(user._id)
