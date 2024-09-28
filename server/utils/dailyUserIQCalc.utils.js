@@ -170,7 +170,7 @@ const fetchUniqueArticleIds = async () => {
 }
 
 const updatePercentilesForArticles = async uniqueArticleIds => {
-  const batchSize = 8000 // Adjust this value based on your system's capabilities
+  const batchSize = 25 // Adjust this value based on your system's capabilities
   const totalBatches = Math.ceil(uniqueArticleIds.length / batchSize)
 
   const processBatch = async (batch, batchIndex) => {
