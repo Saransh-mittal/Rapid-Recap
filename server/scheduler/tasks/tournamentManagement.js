@@ -387,7 +387,7 @@ const endTournament = async () => {
       userId: user._id,
     })
   }
-
+  // Sending weekly report to all users
   const users = await User.find({
     // inGameName: {
     //   $in: ['smash_deV', 'saransh_1234', 'tailonjackron@gmail.com'],
