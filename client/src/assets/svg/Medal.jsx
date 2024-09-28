@@ -2,8 +2,8 @@ import * as React from 'react'
 const Medal = props => (
   <svg
     fill={props.color || '#000000'}
-    width={props.size || '800px'}
-    height={props.size || '800px'}
+    width={props.size || '25px'}
+    height={props.size || '25px'}
     viewBox="0 0 24 24"
     xmlns="http://www.w3.org/2000/svg"
     {...props}

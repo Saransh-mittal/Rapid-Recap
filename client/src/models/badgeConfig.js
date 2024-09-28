@@ -3,8 +3,8 @@ import TrophySVG from '../assets/svg/TrophySVG'
 import Medal from '../assets/svg/Medal'
 export const badgeConfig = {
   RANK_1: {
-    image: '/images/goldTourBadge.webp',
-    textPosition: { x: -57, y: 140, bottom: '15%' },
+    image: '/images/rank_1.webp',
+    textPosition: { x: -57, y: 145, bottom: '15%' },
     style: {
       background: 'linear-gradient(135deg, #FFD700, #FFA500)',
       color: '#000000',
@@ -20,8 +20,8 @@ export const badgeConfig = {
     },
   },
   RANK_2: {
-    image: '/images/silverTourBadge.webp',
-    textPosition: { x: -50, y: 130, bottom: '12%' },
+    image: '/images/rank_2.webp',
+    textPosition: { x: -50, y: 145, bottom: '12%' },
     style: {
       background: 'linear-gradient(135deg, #C0C0C0, #A9A9A9)',
       color: '#000000',
@@ -37,8 +37,8 @@ export const badgeConfig = {
     },
   },
   RANK_3: {
-    image: '/images/bronzeTourBadge.webp',
-    textPosition: { x: -55, y: 130, bottom: '18%' },
+    image: '/images/rank_3.webp',
+    textPosition: { x: -55, y: 165, bottom: '18%' },
     style: {
       background: 'linear-gradient(135deg, #CD7F32, #B8860B)',
       color: '#FFFFFF',

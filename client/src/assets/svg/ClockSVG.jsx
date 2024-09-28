@@ -1,7 +1,7 @@
 const ClockSVG = props => (
   <svg
-    width={props.size || '800px'}
-    height={props.size || '800px'}
+    width={props.size || '20px'}
+    height={props.size || '20px'}
     viewBox="0 0 15 15"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"

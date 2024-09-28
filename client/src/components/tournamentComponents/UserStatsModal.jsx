@@ -14,6 +14,7 @@ import {
   SimpleGrid,
   Badge,
   Button,
+  Flex,
   Spinner,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'

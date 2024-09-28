@@ -113,6 +113,11 @@ webpush.setVapidDetails(
 // const { exportDataToCSV } = require("./services/recommendationService");
 // exportDataToCSV();
 
+// const {
+//   simulateBotQuizParticipation,
+// } = require('./scheduler/tasks/dummyUserTournamentTasks')
+// simulateBotQuizParticipation()
+
 app.use(express.json())
 // Error Handling middlewares
 // app.use(notFound);
