@@ -4,12 +4,22 @@ const User = require('../../model/userSchema')
 const { sendNotification } = require('../../services/notificationService')
 const {
   TournamentRegistration,
+  QuizSession,
 } = require('../../model/tournamentRegistrationSchema')
 const i18n = require('i18next')
 const {
   updateTournamentPerformanceAndBadges,
 } = require('../../utils/tournament.utils')
-const { sendMailsToUsers } = require('../../controllers/mail')
+const MailTemplates = require('../../data/MailTemplates')
+const {
+  mailTransporter,
+  getSociety,
+  getCircle,
+  calculateWeeklyIQChange,
+  calculateWeeklyRQMChange,
+  calculateWeeklyQuizCount,
+  calculateWeeklyQuizDifficultyDistribution,
+} = require('../../utils/mail.utils')
 
 const startRegistration = async () => {
   const startDate = moment().tz('Asia/Kolkata').startOf('day')
@@ -378,19 +388,154 @@ const endTournament = async () => {
     })
   }
 
+  const users = await User.find({
+    // inGameName: {
+    //   $in: ['smash_deV', 'saransh_1234', 'tailonjackron@gmail.com'],
+    // },
+  })
+
+  let topPlayers = []
+  let leaderboardData = []
+  const latestTournament = currentTournament
+
+  if (latestTournament) {
+    // Fetch top 5 players for the tournament
+    leaderboardData = await TournamentRegistration.aggregate([
+      { $match: { tournament: latestTournament._id } },
+      {
+        $lookup: {
+          from: 'Users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userDetails',
+        },
+      },
+      { $unwind: '$userDetails' },
+      {
+        $project: {
+          _id: '$userDetails._id',
+          inGameName: '$userDetails.inGameName',
+          name: '$userDetails.name',
+          totalScore: 1,
+        },
+      },
+      { $sort: { totalScore: -1 } },
+    ])
+
+    topPlayers = leaderboardData.filter((player, index) => index < 5)
+    topPlayers = topPlayers?.map((player, index) => {
+      return {
+        inGameName: player.inGameName,
+        name: player.name,
+        score: player.totalScore,
+        rank: index + 1,
+      }
+    })
+  }
+
+  for (const user of users) {
+    const society = getSociety(user.IQ_score)
+    const circle = getCircle(user.IQ_score)
+    const iqChangeNum = await calculateWeeklyIQChange(user._id)
+    const rqmChangeNum = await calculateWeeklyRQMChange(user._id, user.avgRQM)
+    const weeklyQuizCount = await calculateWeeklyQuizCount(user._id)
+    const quizDistribution = await calculateWeeklyQuizDifficultyDistribution(
+      user._id,
+    )
+
+    let tournamentScore = null
+    let categoryPerformance = []
+    let participatedInTournament = false
+    let userRank = 0
+    const findIndex = leaderboardData.findIndex(
+      player => player._id.toString() === user._id.toString(),
+    )
+    userRank = findIndex + 1
+    if (latestTournament) {
+      const userTournamentRegistration = await TournamentRegistration.findOne({
+        user: user._id,
+        tournament: latestTournament._id,
+      })
+
+      if (userTournamentRegistration) {
+        participatedInTournament = true
+        tournamentScore = userTournamentRegistration.totalScore
+
+        // Fetch quiz sessions for this user in the current tournament
+        const quizSessions = await QuizSession.find({
+          user: user._id,
+          tournament: latestTournament._id,
+          completed: true,
+        })
+
+        // Calculate category performance
+        const categoryScores = {}
+        quizSessions.forEach(session => {
+          if (!categoryScores[session.category]) {
+            categoryScores[session.category] = {
+              totalScore: 0,
+              count: 0,
+            }
+          }
+          categoryScores[session.category].totalScore += session.RQM_score
+          categoryScores[session.category].count++
+        })
+
+        // Calculate average scores and prepare categoryPerformance array
+        const maxScore = Math.max(
+          ...Object.values(categoryScores).map(c => c.totalScore / c.count),
+        )
+        categoryPerformance = Object.entries(categoryScores).map(
+          ([name, data]) => {
+            const value = Math.round((data.totalScore / data.count) * 100) / 100 // Round to 2 decimal places
+            const height = Math.round((value / maxScore) * 200) // Scale height to max 200
+            return { name, value, height }
+          },
+        )
+      }
+    }
+    const userData = {
+      name: user.name,
+      inGameName: user.inGameName,
+      society,
+      circle,
+      iqScore: user.IQ_score,
+      rank: user.rank,
+      iqChange:
+        iqChangeNum > 0
+          ? `+${iqChangeNum} this week`
+          : `${iqChangeNum} this week`,
+      averageRQM: user.avgRQM.toFixed(1),
+      rqmChange:
+        rqmChangeNum > 0
+          ? `+${rqmChangeNum} this week`
+          : `${rqmChangeNum} this week`,
+      experienceLevel: user.level,
+      ongoingSeason: user.currentSeason,
+      totalQuizzesThisWeek: weeklyQuizCount,
+      quizDistribution,
+      tournamentRank: userRank,
+      tournamentScore,
+      topPlayers,
+      categoryPerformance,
+      participatedInTournament,
+    }
+    const transporter = await mailTransporter()
+    await transporter.sendMail({
+      from: MailTemplates.userWeeklyReportTemplate.from,
+      to: user.email,
+      subject: MailTemplates.userWeeklyReportTemplate.subject,
+      html: MailTemplates.userWeeklyReportTemplate.html({
+        ...userData,
+      }),
+    })
+  }
+
   // make EligibleForTournament of users false
   await User.updateMany(
     { eligibleForTournament: true },
     { $set: { eligibleForTournament: false } },
   )
-
-  // Send weekly report emails to users
-  try {
-    await sendMailsToUsers()
-    console.log('Weekly report emails sent successfully')
-  } catch (error) {
-    console.error('Error sending weekly report emails:', error)
-  }
 }
 
 module.exports = {
