@@ -35,7 +35,7 @@ const LeaderBoardRow = React.memo(
     }
 
     const renderTournamentBadge = () => {
-      if (user?.displayedBadge?.rank) {
+      if (user?.displayedBadge) {
         return (
           <Suspense
             fallback={
