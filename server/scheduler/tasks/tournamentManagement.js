@@ -9,6 +9,7 @@ const i18n = require('i18next')
 const {
   updateTournamentPerformanceAndBadges,
 } = require('../../utils/tournament.utils')
+const { sendMailsToUsers } = require('../../controllers/mail')
 
 const startRegistration = async () => {
   const startDate = moment().tz('Asia/Kolkata').startOf('day')
@@ -382,6 +383,14 @@ const endTournament = async () => {
     { eligibleForTournament: true },
     { $set: { eligibleForTournament: false } },
   )
+
+  // Send weekly report emails to users
+  try {
+    await sendMailsToUsers()
+    console.log('Weekly report emails sent successfully')
+  } catch (error) {
+    console.error('Error sending weekly report emails:', error)
+  }
 }
 
 module.exports = {

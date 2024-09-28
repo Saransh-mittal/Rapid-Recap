@@ -1897,6 +1897,7 @@ const MailTemplates = {
       topPlayers,
       categoryPerformance,
       rank,
+      participatedInTournament,
     }) => `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2073,15 +2074,11 @@ const MailTemplates = {
                   <h3 style="font-size: 28px;">Performance Metrics</h3>
                   <div class="metric">
                     <div class="metric-label">IQ Score</div>
-                    <div class="metric-value">${iqScore} (${
-      iqChange >= 0 ? '+' : ''
-    }${iqChange})</div>
+                    <div class="metric-value">${iqScore} (${iqChange})</div>
                   </div>
                   <div class="metric">
                     <div class="metric-label">Average RQM</div>
-                    <div class="metric-value">${averageRQM} (${
-      rqmChange >= 0 ? '+' : ''
-    }${rqmChange})</div>
+                    <div class="metric-value">${averageRQM} (${rqmChange})</div>
                   </div>
                   <div class="metric">
                     <div class="metric-label">Experience Level</div>
@@ -2152,37 +2149,57 @@ const MailTemplates = {
                 )
                 ?.join('')}
             </table>
-            <p style="font-size: 22px;"><strong>Your Rank:</strong> ${tournamentRank}</p>
-            <p style="font-size: 22px;"><strong>Your Score:</strong> ${tournamentScore}</p>
+            <p style="font-size: 22px; color: #ffffff;"><strong>Your Rank:</strong> ${tournamentRank}</p>
+            <p style="font-size: 22px;color: #ffffff;"><strong>Your Score:</strong> ${tournamentScore}</p>
           </div>
         </div>
         <div class="section">
           <h3 style="font-size: 28px;">Your Performance by Category</h3>
-          <div class="chart">
-            <table class="chart-table">
-              <tr>
-                ${categoryPerformance
-                  ?.map(
-                    category => `
-                  <td style="vertical-align: bottom; height: 300px;">
-                    <div class="chart-value">${category.value}%</div>
-                    <div class="chart-bar" style="height: ${category.height}px;"></div>
-                  </td>
-                `,
-                  )
-                  ?.join('')}
-              </tr>
-              <tr>
-                ${categoryPerformance
-                  ?.map(
-                    category => `
-                  <td class="chart-label">${category.name}</td>
-                `,
-                  )
-                  ?.join('')}
-              </tr>
-            </table>
-          </div>
+          ${(() => {
+            if (!participatedInTournament) {
+              return `
+              <div class="card" style="text-align: center; padding: 20px;">
+                <p style="font-size: 24px; color: #bb86fc;">You didn't participated in this tournament.</p>
+                <p style="font-size: 18px;">Join the next tournament to see your performance here!</p>
+              </div>
+              `
+            } else if (categoryPerformance && categoryPerformance.length > 0) {
+              return `
+              <div class="chart">
+                <table class="chart-table">
+                  <tr>
+                    ${categoryPerformance
+                      .map(
+                        category => `
+                      <td style="vertical-align: bottom; height: 300px;">
+                        <div class="chart-value">RQM: ${category.value}</div>
+                        <div class="chart-bar" style="height: ${category.height}px;"></div>
+                      </td>
+                    `,
+                      )
+                      .join('')}
+                  </tr>
+                  <tr>
+                    ${categoryPerformance
+                      .map(
+                        category => `
+                      <td class="chart-label">${category.name}</td>
+                    `,
+                      )
+                      .join('')}
+                  </tr>
+                </table>
+              </div>
+              `
+            } else {
+              return `
+              <div class="card" style="text-align: center; padding: 20px;">
+                <p style="font-size: 24px; color: #bb86fc;">You didn't attempted any category quizzes in this tournament.</p>
+                <p style="font-size: 18px;">Try different categories in the next tournament to see your performance here!</p>
+              </div>
+              `
+            }
+          })()}
         </div>
       </td>
     </tr>
