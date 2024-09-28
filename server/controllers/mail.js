@@ -3,8 +3,22 @@ const Article = require('../model/articleSchema')
 const DailyIQ = require('../model/dailyIQSchema.js')
 const QuizAttempt = require('../model/quizAttemptSchema.js')
 const { Recommendation } = require('../model/recommendationSchema')
+const {
+  TournamentRegistration,
+  QuizSession,
+} = require('../model/tournamentRegistrationSchema.js')
+const Tournament = require('../model/tournamentSchema.js')
 const User = require('../model/userSchema')
-const { mailForStreakBroken, mailTransporter } = require('../utils/mail.utils')
+const {
+  mailForStreakBroken,
+  mailTransporter,
+  getSociety,
+  getCircle,
+  calculateWeeklyIQChange,
+  calculateWeeklyRQMChange,
+  calculateWeeklyQuizCount,
+  calculateWeeklyQuizDifficultyDistribution,
+} = require('../utils/mail.utils')
 const { progressBar } = require('../utils/progress.utils.js')
 
 const streakBroken = async (req, res) => {
@@ -14,108 +28,6 @@ const streakBroken = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message })
     console.error(error)
-  }
-}
-
-const getSociety = iqScore => {
-  if (iqScore < 90) return 'Explorers Society'
-  if (iqScore < 110) return 'Strivers Society'
-  if (iqScore < 130) return 'Elites Society'
-  if (iqScore < 150) return 'Mavericks Society'
-  return 'Titans Society'
-}
-const getCircle = iqScore => {
-  if (iqScore >= 90 && iqScore < 97) return 'Progressors Circle'
-  if (iqScore >= 97 && iqScore < 104) return 'Achievers Circle'
-  if (iqScore >= 104 && iqScore < 110) return 'Enthusiasts Circle'
-  if (iqScore >= 110 && iqScore < 120) return 'Masters Circle'
-  if (iqScore >= 120 && iqScore < 130) return 'Scholars Circle'
-  if (iqScore >= 130 && iqScore < 140) return 'Pioneers Circle'
-  if (iqScore >= 140 && iqScore < 150) return 'Visionaries Circle'
-  return 'None' // If iqScore is outside these ranges
-}
-
-const calculateWeeklyIQChange = async userId => {
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
-  const dailyIQScores = await DailyIQ.find({
-    user: userId,
-    date: { $gte: oneWeekAgo },
-  }).sort({ date: 1 })
-
-  if (dailyIQScores.length < 2) {
-    return 0 // Not enough data to calculate change
-  }
-
-  const oldestScore = dailyIQScores[0].IQ_score
-  const newestScore = dailyIQScores[dailyIQScores.length - 1].IQ_score
-
-  return (newestScore - oldestScore).toFixed(1)
-}
-
-const calculateWeeklyRQMChange = async (userId, currAvgRQM) => {
-  if (!currAvgRQM) {
-    return 0
-  }
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-  const quizAttemptsBeforeOneWeek = await QuizAttempt.find({
-    user: userId,
-    createdAt: { $lt: oneWeekAgo },
-  }).select('RQM_score')
-  const avgRQMBeforeOneWeek =
-    quizAttemptsBeforeOneWeek.reduce((acc, curr) => acc + curr.RQM_score, 0) /
-    quizAttemptsBeforeOneWeek.length
-  if (avgRQMBeforeOneWeek === 0) {
-    return 0
-  }
-  return (currAvgRQM - avgRQMBeforeOneWeek).toFixed(1)
-}
-
-const calculateWeeklyQuizCount = async userId => {
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
-  const quizCount = await QuizAttempt.countDocuments({
-    user: userId,
-    createdAt: { $gte: oneWeekAgo },
-  })
-
-  return quizCount
-}
-
-const calculateWeeklyQuizDifficultyDistribution = async userId => {
-  try {
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-    const quizAttempts = await QuizAttempt.find({
-      user: userId,
-      createdAt: { $gte: oneWeekAgo },
-    }).select('articleDifficulty')
-
-    const quizDistribution = [
-      { label: 'Easy', value: 0, height: 0 },
-      { label: 'Medium', value: 0, height: 0 },
-      { label: 'Hard', value: 0, height: 0 },
-    ]
-    quizAttempts.forEach(quizAttempt => {
-      const articleDifficulty = parseFloat(quizAttempt.articleDifficulty)
-
-      if (articleDifficulty < 0.5) quizDistribution[0].value++
-      else if (articleDifficulty < 0.7) quizDistribution[1].value++
-      else quizDistribution[2].value++
-    })
-    quizDistribution[0].height =
-      (quizDistribution[0].value / quizAttempts.length) * 100
-    quizDistribution[1].height =
-      (quizDistribution[1].value / quizAttempts.length) * 100
-    quizDistribution[2].height =
-      (quizDistribution[2].value / quizAttempts.length) * 100
-
-    return quizDistribution
-  } catch (error) {
-    console.log(error)
   }
 }
 
@@ -130,10 +42,53 @@ const sendMailsToUsers = async (req, res) => {
     // })
     // get two users for testing saransh_1234 and mmadhavpareek
     const users = await User.find({
-      inGameName: {
-        $in: ['smash_deV'],
-      },
+      // inGameName: {
+      //   $in: ['smash_deV', 'saransh_1234', 'tailonjackron@gmail.com'],
+      // },
     })
+
+    const latestTournament = await Tournament.findOne({
+      status: 'completed',
+      isActive: false,
+    }).sort({ startDate: -1 })
+
+    let topPlayers = []
+    let leaderboardData = []
+    if (latestTournament) {
+      // Fetch top 5 players for the tournament
+      leaderboardData = await TournamentRegistration.aggregate([
+        { $match: { tournament: latestTournament._id } },
+        {
+          $lookup: {
+            from: 'Users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'userDetails',
+          },
+        },
+        { $unwind: '$userDetails' },
+        {
+          $project: {
+            _id: '$userDetails._id',
+            inGameName: '$userDetails.inGameName',
+            name: '$userDetails.name',
+            totalScore: 1,
+          },
+        },
+        { $sort: { totalScore: -1 } },
+      ])
+
+      topPlayers = leaderboardData.filter((player, index) => index < 5)
+      topPlayers = topPlayers.map((player, index) => {
+        return {
+          inGameName: player.inGameName,
+          name: player.name,
+          score: player.totalScore,
+          rank: index + 1,
+        }
+      })
+    }
+
     const updateProgress = progressBar(users.length)
     for (const user of users) {
       const society = getSociety(user.IQ_score)
@@ -144,6 +99,61 @@ const sendMailsToUsers = async (req, res) => {
       const quizDistribution = await calculateWeeklyQuizDifficultyDistribution(
         user._id,
       )
+
+      let tournamentScore = null
+      let categoryPerformance = []
+      let participatedInTournament = false
+      let userRank = 0
+      const findIndex = leaderboardData.findIndex(
+        player => player._id.toString() === user._id.toString(),
+      )
+      userRank = findIndex + 1
+      if (latestTournament) {
+        const userTournamentRegistration = await TournamentRegistration.findOne(
+          {
+            user: user._id,
+            tournament: latestTournament._id,
+          },
+        )
+
+        if (userTournamentRegistration) {
+          participatedInTournament = true
+          tournamentScore = userTournamentRegistration.totalScore
+
+          // Fetch quiz sessions for this user in the current tournament
+          const quizSessions = await QuizSession.find({
+            user: user._id,
+            tournament: latestTournament._id,
+            completed: true,
+          })
+
+          // Calculate category performance
+          const categoryScores = {}
+          quizSessions.forEach(session => {
+            if (!categoryScores[session.category]) {
+              categoryScores[session.category] = {
+                totalScore: 0,
+                count: 0,
+              }
+            }
+            categoryScores[session.category].totalScore += session.RQM_score
+            categoryScores[session.category].count++
+          })
+
+          // Calculate average scores and prepare categoryPerformance array
+          const maxScore = Math.max(
+            ...Object.values(categoryScores).map(c => c.totalScore / c.count),
+          )
+          categoryPerformance = Object.entries(categoryScores).map(
+            ([name, data]) => {
+              const value =
+                Math.round((data.totalScore / data.count) * 100) / 100 // Round to 2 decimal places
+              const height = Math.round((value / maxScore) * 200) // Scale height to max 200
+              return { name, value, height }
+            },
+          )
+        }
+      }
       // Create a new update object for the user
       // const { title, mainText, img } = {
       //   title: 'Happy Independence Day! 🇮🇳',
@@ -202,23 +212,11 @@ const sendMailsToUsers = async (req, res) => {
         ongoingSeason: user.currentSeason,
         totalQuizzesThisWeek: weeklyQuizCount,
         quizDistribution,
-        // tournamentRank: 7,
-        // tournamentScore: 865,
-        // topPlayers: [
-        //   { name: 'Sarah Johnson', inGameName: 'QuizWhiz', score: 980 },
-        //   { name: 'Mike Chen', inGameName: 'BrainiacMC', score: 945 },
-        //   { name: 'Emily Patel', inGameName: 'TriviaQueen', score: 920 },
-        //   { name: 'Alex Rodriguez', inGameName: 'QuizKing99', score: 905 },
-        //   { name: 'Lisa Thompson', inGameName: 'FactMaster', score: 890 },
-        // ],
-        // categoryPerformance: [
-        //   { name: 'World', value: 80, height: 180 },
-        //   { name: 'Politics', value: 65, height: 135 },
-        //   { name: 'Technology', value: 90, height: 210 },
-        //   { name: 'Science', value: 75, height: 165 },
-        //   { name: 'Entertainment', value: 70, height: 150 },
-        //   { name: 'Current Affairs', value: 85, height: 195 },
-        // ],
+        tournamentRank: userRank,
+        tournamentScore,
+        topPlayers,
+        categoryPerformance,
+        participatedInTournament,
       }
       const transporter = await mailTransporter()
       await transporter.sendMail({
