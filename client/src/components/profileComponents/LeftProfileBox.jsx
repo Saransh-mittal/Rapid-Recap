@@ -370,7 +370,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             )}
         </Flex>
         <Suspense fallback={<Spinner />}>
-          {/* <Flex mr={-4}>
+          <Flex mr={-4}>
             {(selectedBadge || true) && (
               <TournamentBadges
                 tournamentNumber={selectedBadge?.tournamentNumber}
@@ -385,7 +385,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                 }}
               />
             )}
-          </Flex> */}
+          </Flex>
         </Suspense>
       </Flex>
 
