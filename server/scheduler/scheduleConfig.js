@@ -46,18 +46,39 @@ const tournamentDays = {
   startTournament: 6, // Saturday
   endTournament: 0, // Sunday
 }
+const isCalculating = { value: false }
 let schedules = [
   createSchedule('newSeasonReset', '00:00', resetNewSeasonModal),
-  createSchedule('userIQScore', '00:01', calculateUserIQScores),
-  createSchedule('userIQScore', '08:01', calculateUserIQScores),
-  createSchedule('userIQScore', '10:01', calculateUserIQScores),
-  createSchedule('userIQScore', '00:01', calculateUserIQScores),
-  createSchedule('userIQScore', '12:01', calculateUserIQScores),
-  createSchedule('userIQScore', '14:01', calculateUserIQScores),
-  createSchedule('userIQScore', '16:01', calculateUserIQScores),
-  createSchedule('userIQScore', '18:01', calculateUserIQScores),
-  createSchedule('userIQScore', '20:01', calculateUserIQScores),
-  createSchedule('userIQScore', '22:01', calculateUserIQScores),
+  createSchedule('userIQScore', '00:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
+  createSchedule('userIQScore', '08:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
+  createSchedule('userIQScore', '10:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
+  createSchedule('userIQScore', '00:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
+  createSchedule('userIQScore', '12:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
+  createSchedule('userIQScore', '14:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
+  createSchedule('userIQScore', '16:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
+  createSchedule('userIQScore', '18:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
+  createSchedule('userIQScore', '20:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
+  createSchedule('userIQScore', '22:01', () =>
+    calculateUserIQScores(isCalculating),
+  ),
   createSchedule('incFakeQuizAttempts', '20:00', incFakeQuizAttempts),
   createSchedule(
     'recommendedNewsNotification11',

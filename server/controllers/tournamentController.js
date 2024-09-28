@@ -303,6 +303,7 @@ const searchTournamentLeaderboard = asyncHandler(async (req, res) => {
     { $unwind: '$userDetails' },
     {
       $project: {
+        userId: '$userDetails._id',
         inGameName: '$userDetails.inGameName',
         name: '$userDetails.name',
         email: '$userDetails.email',
@@ -319,6 +320,7 @@ const searchTournamentLeaderboard = asyncHandler(async (req, res) => {
     .map((participant, index) => ({
       ...participant,
       rank: index + 1,
+      score: participant.totalScore,
     }))
     .filter(
       participant =>

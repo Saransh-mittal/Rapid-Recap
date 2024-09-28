@@ -164,10 +164,12 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   }, [leftProfileView?._id, toast, user, t])
 
   const handleBadgeSelect = useCallback(
-    async tournamentNumber => {
+    async (tournamentNumber, badgeName, text) => {
       try {
         const response = await axios.post('/api/user/update-displayed-badge', {
           tournamentNumber,
+          badgeName,
+          text,
         })
         setSelectedBadge(response.data.badge)
 
@@ -372,7 +374,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         </Flex>
         <Suspense fallback={<Spinner />}>
           <Flex mr={-4}>
-            {(selectedBadge || true) && (
+            {selectedBadge && (
               <TournamentBadges
                 tournamentNumber={selectedBadge?.tournamentNumber}
                 rank={selectedBadge?.rank}
@@ -458,6 +460,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             onBadgeSelect={handleBadgeSelect}
             userName={leftProfileView?.name}
             userInGameName={leftProfileView?.inGameName}
+            displayedBadge={selectedBadge}
           />
         )}
       </Suspense>

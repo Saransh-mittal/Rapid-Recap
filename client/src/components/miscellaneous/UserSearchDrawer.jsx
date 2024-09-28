@@ -85,7 +85,7 @@ const SearchResultItem = React.memo(
             @{user.inGameName}
           </Text>
         </Box>
-        {!user?.displayedBadge?.rank && (
+        {user?.displayedBadge && (
           <Box
             ml={`-${4 + badgeOffset}px`}
             mt={0}

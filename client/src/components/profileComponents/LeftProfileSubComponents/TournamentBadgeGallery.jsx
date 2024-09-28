@@ -30,9 +30,10 @@ const TournamentBadgeGallery = ({
   onBadgeSelect,
   userName,
   userInGameName,
+  displayedBadge,
 }) => {
   const [selectedBadgeGroup, setSelectedBadgeGroup] = useState(null)
-  const [selectedBadge, setSelectedBadge] = useState(null)
+  const [selectedBadge, setSelectedBadge] = useState(displayedBadge)
   const [savingError, setSavingError] = useState(null)
   const toast = useToast()
 
@@ -65,16 +66,9 @@ const TournamentBadgeGallery = ({
 
   const handleSaveBadge = async badge => {
     try {
-      await onBadgeSelect(badge.tournamentNumber)
-      setSelectedBadge(badge.badgeName)
+      await onBadgeSelect(badge.tournamentNumber, badge.badgeName, badge.text)
+      setSelectedBadge(badge)
       setSavingError(null)
-      toast({
-        title: 'Badge updated',
-        description: 'Your displayed badge has been updated successfully.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
     } catch (error) {
       setSavingError(badge.tournamentNumber)
       toast({
@@ -88,7 +82,9 @@ const TournamentBadgeGallery = ({
   }
 
   const BadgeItem = ({ badge, showCount = true }) => {
-    const isSelected = selectedBadge === badge.badgeName
+    const isSelected =
+      selectedBadge?.badgeName === badge.badgeName &&
+      selectedBadge?.tournamentNumber === badge.tournamentNumber
     const hasError = savingError === badge.badgeName
     const badgeGroup = groupedBadges[badge?.badgeName]
 
@@ -106,6 +102,8 @@ const TournamentBadgeGallery = ({
       ? 'Selected'
       : hasError
       ? 'Error saving'
+      : showCount && badgeGroup.length > 1
+      ? 'Click to open'
       : 'Click to select'
     const statusColor = isSelected
       ? 'green.400'
@@ -119,7 +117,11 @@ const TournamentBadgeGallery = ({
         rounded="lg"
         p={6}
         cursor="pointer"
-        onClick={() => handleBadgeClick(badge.badgeName, badge)}
+        onClick={() =>
+          selectedBadgeGroup
+            ? handleSaveBadge(badge)
+            : handleBadgeClick(badge.badgeName, badge)
+        }
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         transition={{ duration: 0.2 }}
@@ -183,7 +185,11 @@ const TournamentBadgeGallery = ({
                     leftIcon={<ChevronLeft />}
                     variant="ghost"
                     mb={6}
-                    onClick={() => setSelectedBadgeGroup(null)}
+                    onClick={() => {
+                      setSelectedBadgeGroup(null)
+                      setSelectedBadge(null)
+                    }}
+                    color={'white'}
                     _hover={{ bg: 'gray.700' }}
                   >
                     Back to All Badges
