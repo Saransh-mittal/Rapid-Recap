@@ -35,14 +35,15 @@ const GuestLoginModal = React.lazy(() =>
 const TournamentBadges = React.lazy(() =>
   import('../tournamentComponents/TournamentBadges'),
 )
-const StyledDropdownMenu = React.lazy(() =>
-  import('../miscellaneous/StyledDropdownMenu'),
+const TournamentBadgeGallery = React.lazy(() =>
+  import('./LeftProfileSubComponents/TournamentBadgeGallery'),
 )
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const { t } = useTranslation('LeftProfileBox')
   const toast = useToast()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isBadgeGalleryOpen, setIsBadgeGalleryOpen] = useState(false)
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const dispatch = useDispatch()
@@ -163,10 +164,12 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   }, [leftProfileView?._id, toast, user, t])
 
   const handleBadgeSelect = useCallback(
-    async option => {
+    async (tournamentNumber, badgeName, text) => {
       try {
         const response = await axios.post('/api/user/update-displayed-badge', {
-          tournamentNumber: option.value,
+          tournamentNumber,
+          badgeName,
+          text,
         })
         setSelectedBadge(response.data.badge)
 
@@ -291,10 +294,10 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             justifyContent="center"
             alignItems="center"
             w="100%"
-            // position="relative"
+            position="relative"
             marginBottom="15px"
           >
-            <Flex alignItems="center">
+            <Flex alignItems="center" position={'relative'}>
               <Heading
                 as="h4"
                 size="sm"
@@ -371,7 +374,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         </Flex>
         <Suspense fallback={<Spinner />}>
           <Flex mr={-4}>
-            {(selectedBadge || true) && (
+            {/* {selectedBadge && (
               <TournamentBadges
                 tournamentNumber={selectedBadge?.tournamentNumber}
                 rank={selectedBadge?.rank}
@@ -384,7 +387,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                   text: selectedBadge?.text,
                 }}
               />
-            )}
+            )} */}
           </Flex>
         </Suspense>
       </Flex>
@@ -417,15 +420,25 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             </Flex>
           )}
           {window.location.pathname.split('/').pop() === user?.inGameName && (
-            <Suspense fallback={<Spinner />}>
-              <StyledDropdownMenu
-                options={badgeOptions}
-                onSelect={handleBadgeSelect}
-                buttonText={t('selectBadge')}
-                t={t}
-                selectedBadge={selectedBadge}
-              />
-            </Suspense>
+            <Button
+              size="md"
+              height="35px"
+              width="100%"
+              border="none"
+              background="linear-gradient(135deg, #2C3E50, #4CA1AF)"
+              color="white"
+              _hover={{
+                background: 'linear-gradient(135deg, #4CA1AF, #2C3E50)',
+              }}
+              _active={{
+                background: 'linear-gradient(135deg, #4CA1AF, #2C3E50)',
+              }}
+              boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+              transition="all 0.3s ease"
+              onClick={() => setIsBadgeGalleryOpen(true)}
+            >
+              {t('showBadges')}
+            </Button>
           )}
         </Flex>
       </Box>
@@ -439,6 +452,17 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             onSubmit={handleSubmitModal}
           />
         )}
+        {/* {isBadgeGalleryOpen && (
+          <TournamentBadgeGallery
+            isOpen={isBadgeGalleryOpen}
+            onClose={() => setIsBadgeGalleryOpen(false)}
+            userBadges={leftProfileView?.badges}
+            onBadgeSelect={handleBadgeSelect}
+            userName={leftProfileView?.name}
+            userInGameName={leftProfileView?.inGameName}
+            displayedBadge={selectedBadge}
+          />
+        )} */}
       </Suspense>
       <Suspense fallback={null}>
         <GuestLoginModal

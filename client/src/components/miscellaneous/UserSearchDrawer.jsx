@@ -85,14 +85,14 @@ const SearchResultItem = React.memo(
             @{user.inGameName}
           </Text>
         </Box>
-        {!user?.displayedBadge?.rank && (
+        {user?.displayedBadge && (
           <Box
             ml={`-${4 + badgeOffset}px`}
             mt={0}
             zIndex={2}
             transition="margin-left 0.3s ease"
           >
-            <TournamentBadges
+            {/* <TournamentBadges
               tournamentNumber={user?.displayedBadge?.tournamentNumber}
               rank={user?.displayedBadge?.rank}
               name={user?.name}
@@ -103,7 +103,7 @@ const SearchResultItem = React.memo(
                 name: user?.displayedBadge?.badgeName,
                 text: user?.displayedBadge?.text,
               }}
-            />
+            /> */}
           </Box>
         )}
         <Flex justifyContent={'center'} mx={2}>
