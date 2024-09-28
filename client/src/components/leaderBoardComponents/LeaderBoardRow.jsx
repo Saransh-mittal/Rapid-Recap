@@ -50,7 +50,7 @@ const LeaderBoardRow = React.memo(
               left={`calc(${nameWidth}px + ${isMobile ? '10px' : `80px`})`}
               top="50%"
             >
-              <TournamentBadge
+              {/* <TournamentBadge
                 tournamentNumber={user?.displayedBadge?.tournamentNumber}
                 rank={user?.displayedBadge?.rank}
                 name={user?.name}
@@ -61,7 +61,7 @@ const LeaderBoardRow = React.memo(
                   name: user?.displayedBadge?.badgeName,
                   text: user?.displayedBadge?.text,
                 }}
-              />
+              /> */}
             </Box>
           </Suspense>
         )
