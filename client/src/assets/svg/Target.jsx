@@ -2,8 +2,8 @@ import * as React from 'react'
 const Target = props => (
   <svg
     fill={props.color || '#000000'}
-    width={props.size || '800px'}
-    height={props.size || '800px'}
+    width={props.size || '20px'}
+    height={props.size || '20px'}
     viewBox="-2 -2 24 24"
     xmlns="http://www.w3.org/2000/svg"
     preserveAspectRatio="xMinYMin"

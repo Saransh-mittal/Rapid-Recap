@@ -64,7 +64,7 @@ const LeaderboardSection = ({ tournamentData }) => {
           params: {
             tournamentId: tournamentData._id,
             page: resetPage || refetchLeaderBoard ? 1 : page,
-            limit: 20,
+            limit: 50,
             userId: user?._id,
           },
         })
