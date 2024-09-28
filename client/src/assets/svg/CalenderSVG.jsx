@@ -2,8 +2,8 @@ import * as React from 'react'
 const CalenderSVG = props => (
   <svg
     fill={props.color || 'white'}
-    width={props.size || '800px'}
-    height={props.size || '800px'}
+    width={props.size || '20px'}
+    height={props.size || '20px'}
     viewBox="0 0 24 24"
     xmlns="http://www.w3.org/2000/svg"
     {...props}

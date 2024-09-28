@@ -1,7 +1,7 @@
 const AlertCircle = props => (
   <svg
-    width="800px"
-    height="800px"
+    width="20px"
+    height="20px"
     viewBox="0 0 16 16"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
