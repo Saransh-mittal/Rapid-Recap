@@ -13,6 +13,8 @@ const { getTopThreeRecommendedArticles } = require('./article.utils')
 const { sendNotification } = require('../services/notificationService')
 const { formatRemainingTime } = require('./miscellaneous.utils')
 const i18n = require('i18next')
+const QuizAttempt = require('../model/quizAttemptSchema')
+const DailyIQ = require('../model/dailyIQSchema')
 
 //These id's and secrets should come from .env file.
 
@@ -230,9 +232,118 @@ const mailForMaintainStreakReminder = async ({ template }) => {
   }
 }
 
+const getSociety = iqScore => {
+  if (iqScore < 90) return 'Explorers'
+  if (iqScore < 110) return 'Strivers'
+  if (iqScore < 130) return 'Elites'
+  if (iqScore < 150) return 'Mavericks'
+  return 'Titans'
+}
+
+const getCircle = iqScore => {
+  if (iqScore >= 90 && iqScore < 97) return 'Progressors'
+  if (iqScore >= 97 && iqScore < 104) return 'Achievers'
+  if (iqScore >= 104 && iqScore < 110) return 'Enthusiasts'
+  if (iqScore >= 110 && iqScore < 120) return 'Masters'
+  if (iqScore >= 120 && iqScore < 130) return 'Scholars'
+  if (iqScore >= 130 && iqScore < 140) return 'Pioneers'
+  if (iqScore >= 140 && iqScore < 150) return 'Visionaries'
+  return 'None' // If iqScore is outside these ranges
+}
+
+const calculateWeeklyIQChange = async userId => {
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+  const dailyIQScores = await DailyIQ.find({
+    user: userId,
+    date: { $gte: oneWeekAgo },
+  }).sort({ date: 1 })
+
+  if (dailyIQScores.length < 2) {
+    return 0 // Not enough data to calculate change
+  }
+
+  const oldestScore = dailyIQScores[0].IQ_score
+  const newestScore = dailyIQScores[dailyIQScores.length - 1].IQ_score
+
+  return (newestScore - oldestScore).toFixed(1)
+}
+
+const calculateWeeklyRQMChange = async (userId, currAvgRQM) => {
+  if (!currAvgRQM) {
+    return 0
+  }
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  const quizAttemptsBeforeOneWeek = await QuizAttempt.find({
+    user: userId,
+    createdAt: { $lt: oneWeekAgo },
+  }).select('RQM_score')
+  const avgRQMBeforeOneWeek =
+    quizAttemptsBeforeOneWeek.reduce((acc, curr) => acc + curr.RQM_score, 0) /
+    quizAttemptsBeforeOneWeek.length
+  if (avgRQMBeforeOneWeek === 0) {
+    return 0
+  }
+  return (currAvgRQM - avgRQMBeforeOneWeek).toFixed(1)
+}
+
+const calculateWeeklyQuizCount = async userId => {
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+  const quizCount = await QuizAttempt.countDocuments({
+    user: userId,
+    createdAt: { $gte: oneWeekAgo },
+  })
+
+  return quizCount
+}
+
+const calculateWeeklyQuizDifficultyDistribution = async userId => {
+  try {
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const quizAttempts = await QuizAttempt.find({
+      user: userId,
+      createdAt: { $gte: oneWeekAgo },
+    }).select('articleDifficulty')
+
+    const quizDistribution = [
+      { label: 'Easy', value: 0, height: 0 },
+      { label: 'Medium', value: 0, height: 0 },
+      { label: 'Hard', value: 0, height: 0 },
+    ]
+    quizAttempts.forEach(quizAttempt => {
+      const articleDifficulty = parseFloat(quizAttempt.articleDifficulty)
+
+      if (articleDifficulty < 0.5) quizDistribution[0].value++
+      else if (articleDifficulty < 0.7) quizDistribution[1].value++
+      else quizDistribution[2].value++
+    })
+    quizDistribution[0].height =
+      (quizDistribution[0].value / quizAttempts.length) * 100
+    quizDistribution[1].height =
+      (quizDistribution[1].value / quizAttempts.length) * 100
+    quizDistribution[2].height =
+      (quizDistribution[2].value / quizAttempts.length) * 100
+
+    return quizDistribution
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 module.exports = {
   generateOtp,
   mailTransporter,
   mailForStreakBroken,
   mailForMaintainStreakReminder,
+  getSociety,
+  getCircle,
+  calculateWeeklyIQChange,
+  calculateWeeklyRQMChange,
+  calculateWeeklyQuizCount,
+  calculateWeeklyQuizDifficultyDistribution,
 }

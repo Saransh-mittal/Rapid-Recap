@@ -89,6 +89,7 @@ const simulateBotQuizParticipation = async () => {
   session.startTransaction()
 
   try {
+    console.log('Simulating quiz participation for bots...')
     // Find the current active tournament
     const activeTournament = await Tournament.findOne({
       status: 'ongoing',
@@ -138,8 +139,16 @@ const simulateBotQuizParticipation = async () => {
         endTime: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes from now
       })
 
-      // Simulate bot responses
-      const correctAnswers = Math.floor(Math.random() * 5) // 0 to 4 correct answers
+      // Simulate bot responses with the new probability distribution
+      const correctAnswers = (() => {
+        const rand = Math.random()
+        if (rand < 0.3) return 0
+        if (rand < 0.5) return 1
+        if (rand < 0.7) return 2
+        if (rand < 0.85) return 3
+        return 4
+      })()
+
       const timeTaken = Math.floor(Math.random() * 20) + 30 // 30 to 49 seconds
       let score = 0
       const responses = questions.map((question, index) => {

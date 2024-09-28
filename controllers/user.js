@@ -696,6 +696,7 @@ const profile = async (req, res) => {
         _id: user._id.toString(),
         tournamentPerformance: user.tournamentPerformance,
         displayedBadge: user.displayedBadge,
+        badges: user.badges,
       },
       experience: {
         level: user.level,
@@ -1615,7 +1616,7 @@ const getUserTournamentData = async (req, res) => {
 //@access Private
 const updateDisplayedBadge = async (req, res) => {
   try {
-    const { tournamentNumber } = req.body
+    const { badgeName, tournamentNumber, text } = req.body
     const userId = req.user._id // Assuming you have authentication middleware
 
     const user = await User.findById(userId)
@@ -1629,11 +1630,15 @@ const updateDisplayedBadge = async (req, res) => {
     if (!validTournament) {
       return res.status(400).json({ error: 'Invalid tournament number' })
     }
+
     const rankInTournament = validTournament.rank
+
     user.displayedBadge = {
       tournamentNumber,
       rank: rankInTournament,
       participantCnt: validTournament.participantCnt,
+      badgeName,
+      text,
     }
     await user.save()
 
