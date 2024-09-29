@@ -84,7 +84,8 @@ const TournamentBadgeGallery = ({
   const BadgeItem = ({ badge, showCount = true }) => {
     const isSelected =
       selectedBadge?.badgeName === badge.badgeName &&
-      selectedBadge?.tournamentNumber === badge.tournamentNumber
+      selectedBadge?.tournamentNumber === badge.tournamentNumber &&
+      badge.text === selectedBadge.text
     const hasError = savingError === badge.badgeName
     const badgeGroup = groupedBadges[badge?.badgeName]
 
@@ -203,7 +204,9 @@ const TournamentBadgeGallery = ({
                   >
                     {selectedBadgeGroup.badges.map((badge, index) => (
                       <MotionBox
-                        key={badge.tournamentNumber}
+                        key={
+                          badge.tournamentNumber + badge.badgeName + badge.text
+                        }
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
