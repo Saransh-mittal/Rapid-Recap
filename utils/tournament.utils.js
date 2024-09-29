@@ -1,3 +1,4 @@
+const mongoose = require('mongoose')
 const BADGE_CONFIG = require('../data/BADGE_CONFIG')
 const { getCategories } = require('../data/categories')
 const {
@@ -5,6 +6,7 @@ const {
   QuizSession,
 } = require('../model/tournamentRegistrationSchema')
 const User = require('../model/userSchema')
+const Tournament = require('../model/tournamentSchema')
 
 const getUserRegistrationDetails = async (userId, tournamentId, session) => {
   try {
@@ -166,44 +168,33 @@ async function updateTournamentPerformanceAndBadges(tournament) {
       const allBadges = overallBadge
         ? [overallBadge, ...categoryBadges]
         : categoryBadges
-
-      await User.updateOne(
-        { _id: entry.user },
-        {
-          $push: {
-            tournamentPerformance: {
-              tournament: tournament._id,
-              score: entry.totalScore,
-              rank: rank,
-              endDate: tournament.endDate,
-              tournamentNumber: tournament.tournamentNumber,
-              participantCnt: participantCount,
-            },
-          },
-          $set: {
-            displayedBadge: displayedBadge
-              ? {
-                  tournamentNumber: tournament.tournamentNumber,
-                  rank: rank,
-                  participantCnt: participantCount,
-                  badgeName: displayedBadge.name,
-                  text: displayedBadge.text,
-                }
-              : null,
-          },
-          $push: {
-            badges: {
-              $each: allBadges.map(badge => ({
-                rank: rank,
-                tournamentNumber: tournament.tournamentNumber,
-                badgeName: badge.name,
-                text: badge.text,
-                participantCnt: participantCount,
-              })),
-            },
-          },
-        },
-      )
+      const user = await User.findOne({
+        _id: entry.user,
+      })
+      if (!user) continue
+      user.displayedBadge = {
+        tournamentNumber: tournament.tournamentNumber,
+        rank: rank,
+        participantCnt: participantCount,
+        badgeName: displayedBadge.name,
+        text: displayedBadge.text,
+      }
+      user.badges = allBadges.map(badge => ({
+        rank: rank,
+        tournamentNumber: tournament.tournamentNumber,
+        badgeName: badge.name,
+        text: badge.text,
+        participantCnt: participantCount,
+      }))
+      user.tournamentPerformance.push({
+        tournament: tournament._id,
+        score: entry.totalScore,
+        rank: rank,
+        endDate: tournament.endDate,
+        tournamentNumber: tournament.tournamentNumber,
+        participantCnt: participantCount,
+      })
+      await user.save()
     }
 
     console.log('Tournament performance and badges updated successfully')

@@ -52,7 +52,13 @@ const userBadgeUpdate = async () => {
     const user = await User.findOne({ inGameName: 'saransh_1234' })
     user.badges = []
     user.displayedBadge = null
+    user.tournamentPerformance = []
     await user.save()
+    const u = await User.findOne({ inGameName: 'smash_deV' })
+    u.badges = []
+    u.displayedBadge = null
+    u.tournamentPerformance = []
+    await u.save()
     console.log('User badge updated successfully')
   } catch (error) {
     console.log(error)
