@@ -108,12 +108,23 @@ const initialState = {
   error: null,
   refetchLeaderBoard: false,
   status: null,
+  categoryAttempts: {},
+  completedCategories: [],
+  categoryScores: {},
 }
 
 const tournamentSlice = createSlice({
   name: 'tournament',
   initialState,
   reducers: {
+    updateCategoryStatus: (state, action) => {
+      const { category, attemptsLeft, isCompleted, score } = action.payload
+      state.categoryAttempts[category] = 2 - attemptsLeft
+      state.categoryScores[category] = score
+      if (isCompleted) {
+        state.completedCategories.push(category)
+      }
+    },
     setIsRegistered: (state, action) => {
       state.isRegistered = action.payload
     },
@@ -178,6 +189,7 @@ export const {
   setRefetchLeaderBoard,
   setStatus,
   setIsRegistered,
+  updateCategoryStatus,
 } = tournamentSlice.actions
 
 export default tournamentSlice.reducer

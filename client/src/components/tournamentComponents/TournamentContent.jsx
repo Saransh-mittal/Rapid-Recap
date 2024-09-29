@@ -92,6 +92,7 @@ const TournamentContent = React.memo(
     registerLoading,
     t,
   }) => {
+    // console.log(userRegistrationDetails)
     const currentTournamentNumber = useMemo(
       () =>
         tournamentData
@@ -195,6 +196,10 @@ const TournamentContent = React.memo(
                         }
                         onCategorySelect={handleCategorySelect}
                         tournamentId={tournamentData._id}
+                        categoryAttempts={
+                          userRegistrationDetails.categoryAttempts
+                        }
+                        tournamentStatus={tournamentData?.status}
                       />
                     </React.Suspense>
                   ) : (

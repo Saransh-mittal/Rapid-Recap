@@ -21,6 +21,7 @@ import FullScreenLoadingSpinner from './FullScreenLoadingSpinner'
 import {
   setCompletedCategories,
   setRefetchLeaderBoard,
+  updateCategoryStatus,
 } from '../../../redux/tournamentSlice'
 import i18n from 'i18next'
 
@@ -144,8 +145,17 @@ const TournamentQuiz = () => {
           timeTaken,
         })
         setResult(response.data)
+
+        dispatch(
+          updateCategoryStatus({
+            category: category,
+            attemptsLeft: response.data.attemptsLeft,
+            isCompleted: response.data.isCompleted,
+            score: response.data.RQM_score,
+          }),
+        )
         setSubmitted(true)
-        dispatch(setCompletedCategories([...completedCategories, category]))
+
         dispatch(
           setUser({
             ...user,
@@ -159,6 +169,7 @@ const TournamentQuiz = () => {
           label: category,
         })
       } catch (error) {
+        console.error('Error submitting quiz:', error)
         toast({
           title: t('QuizSubmissionFailed'),
           description: error.response?.data?.message || t('UnexpectedError'),

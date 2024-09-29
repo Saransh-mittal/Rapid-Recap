@@ -68,6 +68,7 @@ const Tournament = () => {
     selectedCategories: [],
     completedCategories: [],
     totalScore: 0,
+    categoryAttempts: {},
   })
 
   const toast = useToast()
@@ -75,8 +76,11 @@ const Tournament = () => {
   const fetchTournamentData = useCallback(async () => {
     setIsFetching(true)
     try {
+      // const currTournamentData = await axios.get(
+      //   `/api/tournament/latest?userId=${user?._id}`,
+      // )
       const currTournamentData = await axios.get(
-        `/api/tournament/latest?userId=${user?._id}`,
+        `/api/admin/tournament/test/latest?userId=${user?._id}`,
       )
       const prevTournamentData = await axios.get('/api/tournament/previous', {
         params: {
@@ -91,6 +95,7 @@ const Tournament = () => {
         selectedCategories: currTournamentData.data.selectedCategories || [],
         completedCategories: currTournamentData.data.completedCategories || [],
         totalScore: currTournamentData.data.totalScore || 0,
+        categoryAttempts: currTournamentData.data.categoryAttempts || {},
       })
       dispatch(
         setCompletedCategories(

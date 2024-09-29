@@ -50,6 +50,8 @@ const CategorySelection = ({
   isRegistration = false,
   registerLoading = false,
   tournamentId,
+  categoryAttempts,
+  tournamentStatus,
 }) => {
   const { t } = useTranslation('CategorySelection') // Translation hook
 
@@ -63,6 +65,14 @@ const CategorySelection = ({
     state => state.tournament,
   )
 
+  const getAttemptsLeft = useCallback(
+    category => {
+      if (completedQuizzes?.includes(category)) return 0
+      const attempts = categoryAttempts?.get(category) || 0
+      return 2 - attempts
+    },
+    [completedQuizzes, categoryAttempts],
+  )
   const handleCategorySelect = useCallback(
     category => {
       if (completedQuizzes.includes(category)) {
@@ -75,8 +85,8 @@ const CategorySelection = ({
         if (prevSelected.includes(category)) {
           // Allow deselection
           return prevSelected.filter(c => c !== category)
-        } else if (isRegistration && prevSelected.length < 5) {
-          // Allow selection up to 5 categories for registration
+        } else if (isRegistration && prevSelected.length < 3) {
+          // Allow selection up to 3 categories for registration
           return [...prevSelected, category]
         } else if (!isRegistration) {
           // For non-registration, only allow one selection
@@ -91,7 +101,7 @@ const CategorySelection = ({
   )
 
   const handleRandomPick = useCallback(() => {
-    const remainingCount = 5 - selectedCategories.length
+    const remainingCount = 3 - selectedCategories.length
     if (remainingCount <= 0) return
 
     const availableCategories = categoriesList.filter(
@@ -122,7 +132,7 @@ const CategorySelection = ({
 
   const handleSubmit = useCallback(() => {
     if (isRegistration) {
-      if (selectedCategories.length !== 5) {
+      if (selectedCategories.length !== 3) {
         toast({
           title: t('invalidSelectionTitle'),
           description: t('invalidSelectionDescription'),
@@ -214,7 +224,7 @@ const CategorySelection = ({
               fontSize="sm"
               // bg="transparent" // Dark background color
               bg={` ${
-                selectedCategories.length === 5 ? 'green.700' : 'gray.700'
+                selectedCategories.length === 3 ? 'green.700' : 'gray.700'
               }`}
               px={2}
               py={1}
@@ -223,7 +233,7 @@ const CategorySelection = ({
               {t('SelectCategoryNote')}{' '}
               <Box as="span" color="teal.300" fontSize={'xl'}>
                 {' '}
-                {5 - selectedCategories.length}
+                {3 - selectedCategories.length}
               </Box>
             </Badge>
           )}
@@ -238,6 +248,8 @@ const CategorySelection = ({
                   isSelected={selectedCategories.includes(category)}
                   onSelect={handleCategorySelect}
                   isCompleted={completedQuizzes.includes(category)}
+                  attemptsFromCategorySelection={categoryAttempts[category]}
+                  tournamentStatus={tournamentStatus}
                 />
               </Suspense>
             ))}
@@ -285,7 +297,7 @@ const CategorySelection = ({
             !isRegistration
               ? selectedCategories.length !== 1 ||
                 completedQuizzes.includes(selectedCategories[0])
-              : selectedCategories.length !== 5
+              : selectedCategories.length !== 3
           }
         >
           {isRegistration ? `Register` : t('startQuiz')}
