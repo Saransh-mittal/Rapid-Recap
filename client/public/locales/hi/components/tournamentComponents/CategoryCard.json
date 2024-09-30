@@ -13,5 +13,8 @@
   "food": "खाद्य",
   "lifestyle": "जीवन शैली",
   "tourism": "पर्यटन",
-  "current affairs": "वर्तमान मामले"
+  "current affairs": "वर्तमान मामले",
+  "twoAttemptsLeft": "2 प्रयास शेष",
+  "oneAttemptLeft": "1 प्रयास शेष",
+  "noAttemptsLeft": "कोई प्रयास शेष नहीं"
 }

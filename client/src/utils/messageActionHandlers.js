@@ -47,11 +47,14 @@ const messageActionHandlers = {
   VIEW_EXPERIENCE: setShowXpLevelModal => {
     setShowXpLevelModal(true)
   },
-  INBOX: (setSelectedNotificationId, payload) => {
-    console.log(payload)
+  INBOX: (setSelectedNotificationId, payload, actions, messageId, dispatch) => {
     if (payload && payload.weeklyReportId) {
       setSelectedNotificationId(payload.weeklyReportId)
     }
+    dispatch &&
+      actions &&
+      messageId &&
+      dispatch(actions.removeNoteMessageWithId(messageId))
   },
   VIEW_REPORT: () => {},
 
@@ -86,6 +89,9 @@ export const createHandleMessageAction = (dispatch, actions) => {
         messageActionHandlers[actionType](
           id => dispatch(actions.setSelectedNotificationId(id)),
           payload,
+          actions,
+          messageId,
+          dispatch,
         )
       } else {
         messageActionHandlers[actionType]()

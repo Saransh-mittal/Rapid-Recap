@@ -25,6 +25,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   removeNoteMessageWithId,
   setIsNotifDrawerOpen,
+  setSelectedNotificationId,
   setShowingSummaryForNoteMessages,
   setShowXpLevelModal,
 } from '../../redux/appSlice'
@@ -82,6 +83,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
         setShowingSummaryForNoteMessages,
         removeNoteMessageWithId,
         setShowXpLevelModal,
+        setSelectedNotificationId,
         setIsNotifDrawerOpen,
         navigateToProfile: id => navigate(`/profile/${id}`),
         navigateToTournament: () => navigate(`/tournament`),
@@ -114,8 +116,8 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   )
 
   const handleAction = useCallback(
-    (actionType, messageId) => {
-      handleMessageAction(actionType, messageId, user?.inGameName)
+    (actionType, messageId, payload) => {
+      handleMessageAction(actionType, messageId, user?.inGameName, payload)
     },
     [handleMessageAction, user?.inGameName],
   )
@@ -660,7 +662,11 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                             key={actionIndex}
                             actionType={action.actionType}
                             onClick={() =>
-                              handleAction(action.actionType, message.id)
+                              handleAction(
+                                action.actionType,
+                                message.id,
+                                action.payload,
+                              )
                             }
                             size="sm"
                             innerText={action.text}

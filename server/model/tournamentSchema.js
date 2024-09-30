@@ -37,6 +37,11 @@ const tournamentSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  tournamentType: {
+    type: String,
+    enum: ['normal', 'test'],
+    default: 'normal',
+  },
   isUnderMaintenance: {
     type: Boolean,
     default: false,

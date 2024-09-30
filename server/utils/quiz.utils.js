@@ -439,32 +439,47 @@ const generateQuestionsForHindiQuiz = async ({
 }
 
 const updatePercentilesOnQuizDeactivation = async ({ id }) => {
-  const attempts = await QuizAttempt.find({
-    article: id,
-  })
-  //console.log(id, "Attempts", attempts.length);
+  try {
+    const attempts = await QuizAttempt.find({
+      article: id,
+    })
+    //console.log(id, "Attempts", attempts.length);
 
-  // Calculate the total number of attempts
-  const totalAttempts = attempts.length
+    // Calculate the total number of attempts
+    const totalAttempts = attempts.length
+    // console.log('Total Attempts', totalAttempts)
+    // Sort attempts by RQM score
+    attempts.sort((a, b) => b.RQM_score - a.RQM_score)
 
-  // Sort attempts by RQM score
-  attempts.sort((a, b) => b.RQM_score - a.RQM_score)
+    // Update user percentile based on their position in the sorted array
+    //console.log("Total Attempts", totalAttempts);
+    // await Promise.all(
+    //   attempts.map(async (attempt, index) => {
+    //     if (!attempt || !attempt.article || !attempt.articleDifficulty) {
+    //       return // Skip this attempt
+    //     }
+    //     const percentile = ((totalAttempts - index) / totalAttempts) * 100
 
-  // Update user percentile based on their position in the sorted array
-  //console.log("Total Attempts", totalAttempts);
-  await Promise.all(
-    attempts.map(async (attempt, index) => {
+    //     const attemptQuiz = await QuizAttempt.findById(attempt._id)
+    //     attemptQuiz.userPercentile = percentile
+    //     // Save updated attempt
+    //     await attemptQuiz.save()
+    //   }),
+    // )
+
+    // Update user percentile based on their position in the sorted array
+    for (let index = 0; index < attempts.length; index++) {
+      const attempt = attempts[index]
       if (!attempt || !attempt.article || !attempt.articleDifficulty) {
-        return // Skip this attempt
+        continue // Skip this attempt
       }
       const percentile = ((totalAttempts - index) / totalAttempts) * 100
-
-      const attemptQuiz = await QuizAttempt.findById(attempt._id)
-      attemptQuiz.userPercentile = percentile
-      // Save updated attempt
-      await attemptQuiz.save()
-    }),
-  )
+      attempt.userPercentile = percentile
+      await attempt.save()
+    }
+  } catch (error) {
+    console.error('Error updating percentiles on quiz deactivation:', error)
+  }
 }
 
 const findQuizByLanguage = async ({ language, articleId }) => {
@@ -639,7 +654,10 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
     throw new Error('Category already completed')
   }
 
-  // Get questions for the selected category
+  // Get previously asked questions for this category
+  const askedQuestions = registration.askedQuestions.get(category) || []
+
+  // Get questions for the selected category, excluding previously asked questions
   const questions = await TournamentQuestion.aggregate([
     {
       $match: {
@@ -648,14 +666,21 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
           $gte: tournament.registrationStartDate,
           $lte: tournament.startDate,
         },
+        _id: { $nin: askedQuestions },
       },
     },
     { $sample: { size: 5 } },
   ])
 
   if (questions.length < 5) {
-    throw new Error('Not enough questions available for this category')
+    throw new Error('Not enough new questions available for this category')
   }
+
+  // Update the askedQuestions for this category
+  const newAskedQuestions = [...askedQuestions, ...questions.map(q => q._id)]
+  registration.askedQuestions.set(category, newAskedQuestions)
+
+  await registration.save()
 
   return questions
 }
