@@ -43,7 +43,7 @@ const TournamentBadgeGallery = ({
   // Group badges by badgeName
   const groupedBadges = useMemo(() => {
     const groups = {}
-    userBadges.forEach(badge => {
+    userBadges?.forEach(badge => {
       const key = badge.badgeName || 'Unnamed Badge'
       if (!groups[key]) {
         groups[key] = []
