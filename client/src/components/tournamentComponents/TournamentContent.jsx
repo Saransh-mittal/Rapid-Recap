@@ -15,6 +15,7 @@ import {
   HStack,
   Tab,
 } from '@chakra-ui/react'
+import { useSelector } from 'react-redux'
 
 const PreviousTournamentLeaderboard = React.lazy(() =>
   import('./PreviousTournamentLeaderboard'),
@@ -92,6 +93,7 @@ const TournamentContent = React.memo(
     registerLoading,
     t,
   }) => {
+    const { categoryAttempts } = useSelector(state => state.tournament)
     // console.log(userRegistrationDetails)
     const currentTournamentNumber = useMemo(
       () =>
@@ -196,9 +198,7 @@ const TournamentContent = React.memo(
                         }
                         onCategorySelect={handleCategorySelect}
                         tournamentId={tournamentData._id}
-                        categoryAttempts={
-                          userRegistrationDetails.categoryAttempts
-                        }
+                        categoryAttempts={categoryAttempts}
                         tournamentStatus={tournamentData?.status}
                       />
                     </React.Suspense>

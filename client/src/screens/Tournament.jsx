@@ -27,6 +27,7 @@ import {
   setCompletedCategories,
   setIsRegistered,
   setTournamentId,
+  updateCategoryStatus,
 } from '../redux/tournamentSlice'
 import { useTranslation } from 'react-i18next'
 import TournamentContent from '../components/tournamentComponents/TournamentContent'
@@ -97,6 +98,20 @@ const Tournament = () => {
         totalScore: currTournamentData.data.totalScore || 0,
         categoryAttempts: currTournamentData.data.categoryAttempts || {},
       })
+      for (
+        let i = 0;
+        i < Object.keys(currTournamentData.data.categoryScores).length;
+        i++
+      ) {
+        dispatch(
+          updateCategoryStatus({
+            category: Object.keys(currTournamentData.data.categoryScores)[i],
+            score: Object.values(currTournamentData.data.categoryScores)[i],
+            attemptsLeft:
+              2 - Object.values(currTournamentData.data.categoryAttempts)[i],
+          }),
+        )
+      }
       dispatch(
         setCompletedCategories(
           currTournamentData.data.completedCategories || [],

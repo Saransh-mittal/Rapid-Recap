@@ -60,6 +60,7 @@ const CategoryCard = ({
   onSelect,
   tournamentStatus,
   attemptsFromCategorySelection,
+  isCompletedFromStats,
 }) => {
   const { t } = useTranslation('CategoryCard')
   const attempts = useSelector(
@@ -125,10 +126,14 @@ const CategoryCard = ({
       borderWidth="1px"
       borderRadius="lg"
       borderColor={
-        isCompleted ? 'green.500' : isSelected ? 'pink.500' : 'gray.700'
+        isCompletedFromStats || isCompleted
+          ? 'green.500'
+          : isSelected
+          ? 'pink.500'
+          : 'gray.700'
       }
       bg={
-        isCompleted
+        isCompletedFromStats || isCompleted
           ? 'rgba(72, 187, 120, 0.1)'
           : isSelected
           ? 'rgba(237, 100, 166, 0.1)'
@@ -141,7 +146,7 @@ const CategoryCard = ({
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.2 }}
       boxShadow={
-        isCompleted
+        isCompletedFromStats || isCompleted
           ? '0 0 0 2px rgba(72, 187, 120, 0.6)'
           : isSelected
           ? '0 0 0 2px rgba(237, 100, 166, 0.6)'
@@ -153,7 +158,13 @@ const CategoryCard = ({
         <Suspense fallback={<Box size="32px" />}>
           <IconComponent
             size="32px"
-            color={isCompleted ? '#68D391' : isSelected ? '#ED64A6' : '#A0AEC0'}
+            color={
+              isCompletedFromStats || isCompleted
+                ? '#68D391'
+                : isSelected
+                ? '#ED64A6'
+                : '#A0AEC0'
+            }
           />
         </Suspense>
 
@@ -162,7 +173,11 @@ const CategoryCard = ({
           textAlign="center"
           fontSize="sm"
           color={
-            isCompleted ? 'green.400' : isSelected ? 'pink.400' : 'gray.300'
+            isCompletedFromStats || isCompleted
+              ? 'green.400'
+              : isSelected
+              ? 'pink.400'
+              : 'gray.300'
           }
           textTransform="capitalize"
         >

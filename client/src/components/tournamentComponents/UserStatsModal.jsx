@@ -18,6 +18,7 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 
 // Lazy load heavy components
 const QuizBG = lazy(() => import('./tournamentQuiz/QuizBG'))
@@ -28,7 +29,7 @@ const CategoryStatsCard = lazy(() => import('./CategoryStatsCard'))
 const UserStatsModal = ({ isOpen, onClose, userStats, t }) => {
   const statsRef = React.useRef(null)
   const navigate = useNavigate()
-
+  const { categoryAttempts } = useSelector(state => state.tournament)
   // Memoize category stats for better performance
   const categoryStats = useMemo(
     () => userStats?.categoryStats || [],
@@ -94,7 +95,7 @@ const UserStatsModal = ({ isOpen, onClose, userStats, t }) => {
                   </VStack>
                 </HStack>
                 <Badge fontSize={{ base: 'sm', md: 'lg' }}>
-                  {t('quizCount')} {userStats.completedCategories.length}
+                  {t('quizCount')} {Object.keys(categoryAttempts)?.length}
                 </Badge>
               </HStack>
             </Box>
@@ -112,7 +113,7 @@ const UserStatsModal = ({ isOpen, onClose, userStats, t }) => {
                     key={index}
                     stat={stat}
                     t={t}
-                    userStats={userStats}
+                    categoryAttempts={categoryAttempts}
                   />
                 ))}
               </SimpleGrid>

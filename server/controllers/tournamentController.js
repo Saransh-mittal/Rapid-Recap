@@ -14,7 +14,10 @@ const {
   startSession,
   endSession,
 } = require('../db/session')
-const { getUserRegistrationDetails } = require('../utils/tournament.utils')
+const {
+  getUserRegistrationDetails,
+  getTopLeadersForCategory,
+} = require('../utils/tournament.utils')
 const { activityTypes } = require('../data/activityTypes')
 const mongoose = require('mongoose')
 const authorizedInGameNames = require('../data/authorizedInGameNames')
@@ -85,6 +88,8 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     completedCategories: userRegistration
       ? userRegistration.completedCategories
       : [],
+    categoryScores: userRegistration ? userRegistration.categoryScores : {},
+    categoryAttempts: userRegistration ? userRegistration.categoryAttempts : {},
     totalScore: userRegistration ? userRegistration.totalScore : 0,
   }
 
@@ -161,6 +166,7 @@ const getLatestTestTournament = asyncHandler(async (req, res) => {
     completedCategories: userRegistration
       ? userRegistration.completedCategories
       : [],
+    categoryScores: userRegistration ? userRegistration.categoryScores : {},
     categoryAttempts: userRegistration ? userRegistration.categoryAttempts : {},
     totalScore: userRegistration ? userRegistration.totalScore : 0,
   }
@@ -936,51 +942,39 @@ const submitQuiz = asyncHandler(async (req, res) => {
           },
         },
         {
+          $sort: { RQM_score: -1 },
+        },
+        {
+          $group: {
+            _id: '$user',
+            bestScore: { $first: '$RQM_score' },
+            session: { $first: '$$ROOT' },
+          },
+        },
+        {
+          $sort: { bestScore: -1 },
+        },
+        {
+          $limit: 3,
+        },
+        {
           $lookup: {
             from: 'Users',
-            localField: 'user',
+            localField: '_id',
             foreignField: '_id',
             as: 'userDetails',
           },
         },
-        { $unwind: '$userDetails' },
         {
-          $project: {
-            inGameName: {
-              $ifNull: ['$userDetails.inGameName', 'Unknown Player'],
-            },
-            score: '$RQM_score',
-          },
-        },
-        { $sort: { score: -1 } },
-        { $limit: 3 },
-        {
-          $group: {
-            _id: null,
-            leaders: { $push: '$$ROOT' },
-            scores: { $push: '$score' },
-          },
+          $unwind: '$userDetails',
         },
         {
           $project: {
-            leaders: {
-              $map: {
-                input: '$leaders',
-                as: 'leader',
-                in: {
-                  inGameName: '$$leader.inGameName',
-                  score: '$$leader.score',
-                  rank: {
-                    $add: [{ $indexOfArray: ['$scores', '$$leader.score'] }, 1],
-                  },
-                },
-              },
-            },
+            inGameName: '$userDetails.inGameName',
+            score: '$bestScore',
+            userId: '$_id',
           },
         },
-        { $unwind: '$leaders' },
-        { $replaceRoot: { newRoot: '$leaders' } },
-        { $sort: { rank: 1 } },
       ]).session(session)
 
       await session.commitTransaction()
@@ -1047,20 +1041,21 @@ const getQuizSummary = asyncHandler(async (req, res) => {
   const { category, tournamentId, lang } = req.query
   const userId = req.user._id
 
-  const quizSession = await QuizSession.findOne({
+  // Find the best quiz session for this user, tournament, and category
+  const bestQuizSession = await QuizSession.findOne({
     user: userId,
     tournament: tournamentId,
     category: category,
     completed: true,
   })
+    .sort({ RQM_score: -1 }) // Sort by RQM score in descending order
     .populate('questions')
     .populate('user', 'inGameName')
-    .sort({ createdAt: -1 }) // Get the most recent completed session
     .lean()
 
-  if (!quizSession) {
+  if (!bestQuizSession) {
     res.status(404)
-    throw new Error('Quiz session not found')
+    throw new Error('No completed quiz session found')
   }
 
   const registration = await TournamentRegistration.findOne({
@@ -1073,77 +1068,25 @@ const getQuizSummary = asyncHandler(async (req, res) => {
     throw new Error('Tournament registration not found')
   }
 
-  const questions = quizSession.questions
+  const questions = bestQuizSession.questions
   const totalQuestions = questions.length
-  const score = quizSession.responses.filter(r => r.isCorrect).length
+  const score = bestQuizSession.responses.filter(r => r.isCorrect).length
   const quizDifficulty =
     questions.reduce((acc, q) => acc + parseFloat(q.difficulty), 0) /
     totalQuestions
   const quizDifficultyLevel =
     quizDifficulty < 0.5 ? 'easy' : quizDifficulty < 0.7 ? 'medium' : 'hard'
 
-  const topLeaders = await QuizSession.aggregate([
-    {
-      $match: {
-        tournament: new mongoose.Types.ObjectId(tournamentId),
-        category: category,
-        completed: true,
-      },
-    },
-    {
-      $lookup: {
-        from: 'Users',
-        localField: 'user',
-        foreignField: '_id',
-        as: 'userDetails',
-      },
-    },
-    { $unwind: '$userDetails' },
-    {
-      $project: {
-        inGameName: { $ifNull: ['$userDetails.inGameName', 'Unknown Player'] },
-        score: '$RQM_score',
-      },
-    },
-    { $sort: { score: -1 } },
-    { $limit: 3 },
-    {
-      $group: {
-        _id: null,
-        leaders: { $push: '$$ROOT' },
-        scores: { $push: '$score' },
-      },
-    },
-    {
-      $project: {
-        leaders: {
-          $map: {
-            input: '$leaders',
-            as: 'leader',
-            in: {
-              inGameName: '$$leader.inGameName',
-              score: '$$leader.score',
-              rank: {
-                $add: [{ $indexOfArray: ['$scores', '$$leader.score'] }, 1],
-              },
-            },
-          },
-        },
-      },
-    },
-    { $unwind: '$leaders' },
-    { $replaceRoot: { newRoot: '$leaders' } },
-    { $sort: { rank: 1 } },
-  ])
+  const topLeaders = await getTopLeadersForCategory(tournamentId, category)
 
   const summary = {
     score: `${score}/${totalQuestions}`,
-    RQM_score: quizSession.RQM_score,
+    RQM_score: bestQuizSession.RQM_score,
     quizDifficulty: quizDifficultyLevel,
-    timeTaken: quizSession.timeTaken,
+    timeTaken: bestQuizSession.timeTaken,
     totalTournamentScore: registration.totalScore,
     topLeaders: topLeaders,
-    result: quizSession.responses.map((response, index) => ({
+    result: bestQuizSession.responses.map((response, index) => ({
       question:
         lang === 'hi'
           ? questions[index].hindiQuestion
@@ -1180,15 +1123,28 @@ const getUserStats = asyncHandler(async (req, res) => {
       .json({ message: 'User not registered for this tournament' })
   }
 
-  // Fetch quiz sessions for the user in this tournament
-  const quizSessions = await QuizSession.find({
-    user: userId,
-    tournament: tournamentId,
-  })
+  // Fetch best quiz sessions for each category
+  const bestQuizSessions = await QuizSession.aggregate([
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(userId),
+        tournament: new mongoose.Types.ObjectId(tournamentId),
+      },
+    },
+    {
+      $group: {
+        _id: '$category',
+        bestSession: { $max: { RQM_score: '$RQM_score', session: '$$ROOT' } },
+      },
+    },
+    {
+      $replaceRoot: { newRoot: '$bestSession.session' },
+    },
+  ])
 
   // Calculate stats
   const categoryStats = await Promise.all(
-    quizSessions.map(async session => {
+    bestQuizSessions.map(async session => {
       const [{ rank }] = await QuizSession.aggregate([
         {
           $match: {
