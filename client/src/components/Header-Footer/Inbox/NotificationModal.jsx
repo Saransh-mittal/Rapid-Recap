@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react'
 import { useSelector } from 'react-redux'
 import rr from '/images/rrlogo.webp'
+import axios from 'axios'
 
 // Lazy load large components or sections if needed
 const LazyNotificationContent = React.lazy(() =>
@@ -24,18 +25,33 @@ const NotificationModal = ({
   setIsModalOpen,
   selectedNotification,
   setIsDrawerOpen,
+  handleNotifModalClose,
+  selectedNotificationId,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { user } = useSelector(state => state.auth)
 
   useEffect(() => {
+    setReadUpdate()
     onOpen()
   }, [onOpen])
 
+  const setReadUpdate = useCallback(async () => {
+    if (!selectedNotificationId) return
+    try {
+      await axios.put(
+        `/api/user/readUpdates?updateId=${selectedNotificationId}`,
+      )
+    } catch (error) {
+      console.log(error)
+    }
+  }, [])
+
   const handleModalClose = useCallback(() => {
-    setIsModalOpen(false)
-    setIsDrawerOpen(true)
+    setIsModalOpen && setIsModalOpen(false)
+    setIsDrawerOpen && setIsDrawerOpen(true)
     onClose()
+    handleNotifModalClose && handleNotifModalClose()
   }, [onClose, setIsModalOpen, setIsDrawerOpen])
 
   const formattedDate = useMemo(() => {

@@ -20,6 +20,7 @@ const {
   calculateWeeklyQuizCount,
   calculateWeeklyQuizDifficultyDistribution,
 } = require('../../utils/mail.utils')
+const ApplicationUpdates = require('../../model/applicationUpdatesSchema')
 
 const startRegistration = async () => {
   const startDate = moment().tz('Asia/Kolkata').startOf('day')
@@ -529,6 +530,22 @@ const endTournament = async () => {
         ...userData,
       }),
     })
+
+    const notificationTitle = 'Weekly Report'
+    const notificationText = userWeeklyReportInboxTemplate.html({
+      ...userData,
+    })
+
+    const newNotification = new ApplicationUpdates({
+      userId: user._id,
+      title: notificationTitle,
+      mainText: notificationText, // HTML template for the notification
+      img: '', // Optional image if needed
+      read: false,
+      type: 'weeklyReport',
+    })
+
+    await newNotification.save()
   }
 
   // make EligibleForTournament of users false

@@ -1,0 +1,10 @@
+{
+  "QuizFailed": "Quiz failed!",
+  "RetryError": "Please try again (Close the quiz and try refreshing the page)",
+  "QuizClosingError": "Quiz closing failed! Please try again.",
+  "ConfirmCloseMessage": "Clicking on Confirm will result in submission of the quiz with 0 score. Are you sure you want to submit the quiz?",
+  "XP Awarded For Quiz + Quin Boost": "XP Awarded For Quiz + Quin Boost",
+  "XP Awarded For Quiz": "XP Awarded For Quiz",
+  "Congratulations! Your Strek is Revived!": "Congratulations! Your Strek is Revived!",
+  "Revive your streak!": "Revive your streak!"
+}

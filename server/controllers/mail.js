@@ -1,4 +1,8 @@
+const {
+  userWeeklyReportInboxTemplate,
+} = require('../data/inboxNotificationsTemplates.js')
 const MailTemplates = require('../data/MailTemplates')
+const ApplicationUpdates = require('../model/applicationUpdatesSchema.js')
 const Article = require('../model/articleSchema')
 const DailyIQ = require('../model/dailyIQSchema.js')
 const QuizAttempt = require('../model/quizAttemptSchema.js')
@@ -42,9 +46,9 @@ const sendMailsToUsers = async (req, res) => {
     // })
     // get two users for testing saransh_1234 and mmadhavpareek
     const users = await User.find({
-      // inGameName: {
-      //   $in: ['smash_deV', 'saransh_1234', 'tailonjackron@gmail.com'],
-      // },
+      inGameName: {
+        $in: ['smash_deV'],
+      },
     })
 
     const latestTournament = await Tournament.findOne({
@@ -218,15 +222,31 @@ const sendMailsToUsers = async (req, res) => {
         categoryPerformance,
         participatedInTournament,
       }
-      const transporter = await mailTransporter()
-      await transporter.sendMail({
-        from: MailTemplates.userWeeklyReportTemplate.from,
-        to: user.email,
-        subject: MailTemplates.userWeeklyReportTemplate.subject,
-        html: MailTemplates.userWeeklyReportTemplate.html({
-          ...userData,
-        }),
+      // const transporter = await mailTransporter()
+      // await transporter.sendMail({
+      //   from: MailTemplates.userWeeklyReportTemplate.from,
+      //   to: user.email,
+      //   subject: MailTemplates.userWeeklyReportTemplate.subject,
+      //   html: MailTemplates.userWeeklyReportTemplate.html({
+      //     ...userData,
+      //   }),
+      // })
+
+      const notificationTitle = 'Weekly Report'
+      const notificationText = userWeeklyReportInboxTemplate.html({
+        ...userData,
       })
+
+      const newNotification = new ApplicationUpdates({
+        userId: user._id,
+        title: notificationTitle,
+        mainText: notificationText, // HTML template for the notification
+        img: '', // Optional image if needed
+        read: false,
+        type: 'weeklyReport',
+      })
+
+      await newNotification.save()
       updateProgress()
     }
     res.status(200).json({ message: 'Mails sent successfully' })

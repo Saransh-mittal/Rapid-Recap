@@ -148,7 +148,7 @@ const Navbar = () => {
   }, [unreadFriendRequests])
 
   useEffect(() => {
-    if (updates.length === 0) return
+    if (updates?.length === 0) return
     let count = 0
 
     updates?.forEach(update => {

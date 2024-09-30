@@ -15,6 +15,7 @@ import {
   setIsNotifDrawerOpen,
   setShowingSummaryForNoteMessages,
   setShowXpLevelModal,
+  setSelectedNotificationId,
 } from '../../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
@@ -54,6 +55,7 @@ const NoteMessage = ({
         removeNoteMessageWithId,
         setShowXpLevelModal,
         setIsNotifDrawerOpen,
+        setSelectedNotificationId,
         navigateToProfile: id => navigate(`/profile/${id}`),
         navigateToTournament: () => navigate(`/tournament`),
         handleSubmitFeedback: () =>
@@ -74,8 +76,8 @@ const NoteMessage = ({
 
   // Memoize handleAction to avoid recreating the function on every render
   const handleAction = useCallback(
-    actionType => {
-      handleMessageAction(actionType, messageId, user?.inGameName)
+    (actionType, payload) => {
+      handleMessageAction(actionType, messageId, user?.inGameName, payload)
       actionType !== 'VIEW_ALL' && handleClose()
     },
     [handleMessageAction, messageId, user?.inGameName],
@@ -154,7 +156,9 @@ const NoteMessage = ({
                       <ButtonFactory
                         key={index}
                         actionType={action.actionType}
-                        onClick={() => handleAction(action.actionType)}
+                        onClick={() =>
+                          handleAction(action.actionType, action?.payload)
+                        }
                         size="sm"
                         variant="outline"
                         colorScheme="blue"

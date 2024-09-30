@@ -36,6 +36,10 @@ const XPLevelModal = React.lazy(() =>
   import('./components/Header-Footer/navbarComponents/XPLevelModal.jsx'),
 )
 const Quiz = React.lazy(() => import('./screens/Quiz.jsx'))
+
+const NotificationModal = React.lazy(() =>
+  import('./components/Header-Footer/Inbox/NotificationModal.jsx'),
+)
 import {
   addNoteMessage,
   fetchUnreadNoteMessages,
@@ -43,6 +47,8 @@ import {
   setIsSigninOpen,
   setShowXpLevelModal,
   setSoundSettings,
+  setSelectedNotificationId,
+  setIsNotifInboxModalOpen,
 } from './redux/appSlice.js'
 import { setUser } from './redux/authSlice.js'
 import i18n from 'i18next'
@@ -64,14 +70,28 @@ const App = () => {
 
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
-  const { isRegisterOpen, isSigninOpen, showXpLevelModal } = useSelector(
-    state => state.app,
-  )
+  const {
+    isRegisterOpen,
+    isSigninOpen,
+    showXpLevelModal,
+    isNotifInboxModalOpen,
+    selectedNotificationId,
+  } = useSelector(state => state.app)
   const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
   const { tournamentId, status } = useSelector(state => state.tournament)
+  const { updates } = useSelector(state => state.app)
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
+  const handleNotifModalClose = useCallback(() => {
+    dispatch(setIsNotifInboxModalOpen(false))
+    dispatch(setSelectedNotificationId(null))
+  }, [dispatch])
+  useEffect(() => {
+    if (selectedNotificationId) {
+      dispatch(setIsNotifInboxModalOpen(true))
+    }
+  }, [selectedNotificationId, dispatch])
 
   const handleClose = useCallback(() => {
     setIsGuestLoggedin(false)
@@ -87,6 +107,21 @@ const App = () => {
     () => (isLoggedIn ? user?.inGameName : null),
     [isLoggedIn, user],
   )
+
+  const getLatestWeeklyReportUpdate = useCallback(() => {
+    if (updates && updates.length > 0) {
+      // get latest by date weekly report
+      const weeklyReportUpdates = updates.filter(
+        update => update.type === 'weeklyReport',
+      )
+      weeklyReportUpdates.sort((a, b) => {
+        return new Date(b.date) - new Date(a.date)
+      })
+
+      return weeklyReportUpdates[0]
+    }
+    return null
+  }, [updates])
 
   useEffect(() => {
     const token = isToken()
@@ -353,6 +388,16 @@ const App = () => {
           <Footer />
         </Suspense>
       )}
+
+      <Suspense fallback={null}>
+        {isNotifInboxModalOpen && (
+          <NotificationModal
+            handleNotifModalClose={handleNotifModalClose}
+            selectedNotificationId={selectedNotificationId}
+            selectedNotification={getLatestWeeklyReportUpdate()}
+          />
+        )}
+      </Suspense>
     </>
   )
 }

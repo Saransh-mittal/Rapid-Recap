@@ -47,14 +47,19 @@ const messageActionHandlers = {
   VIEW_EXPERIENCE: setShowXpLevelModal => {
     setShowXpLevelModal(true)
   },
-  INBOX: setIsNotifDrawerOpen => {
-    setIsNotifDrawerOpen(true)
+  INBOX: (setSelectedNotificationId, payload) => {
+    console.log(payload)
+    if (payload && payload.weeklyReportId) {
+      setSelectedNotificationId(payload.weeklyReportId)
+    }
   },
+  VIEW_REPORT: () => {},
+
   // Add more action handlers as needed
 }
 
 export const createHandleMessageAction = (dispatch, actions) => {
-  return (actionType, messageId, profileId) => {
+  return (actionType, messageId, profileId, payload) => {
     if (messageActionHandlers[actionType]) {
       if (actionType === 'VIEW_ALL') {
         messageActionHandlers[actionType](() =>
@@ -78,8 +83,9 @@ export const createHandleMessageAction = (dispatch, actions) => {
           dispatch(actions.setShowXpLevelModal(true)),
         )
       } else if (actionType === 'INBOX') {
-        messageActionHandlers[actionType](() =>
-          dispatch(actions.setIsNotifDrawerOpen(true)),
+        messageActionHandlers[actionType](
+          id => dispatch(actions.setSelectedNotificationId(id)),
+          payload,
         )
       } else {
         messageActionHandlers[actionType]()

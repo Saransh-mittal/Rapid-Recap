@@ -129,6 +129,12 @@ const ButtonFactory = ({
           {t('DISMISS')}
         </ChakraButton>
       )
+    case 'VIEW_REPORT':
+      return (
+        <ChakraButton colorScheme="blue" onClick={onClick} {...props}>
+          {t('VIEW_REPORT')}
+        </ChakraButton>
+      )
     default:
       return null
   }
