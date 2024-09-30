@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react'
-import { Flex, useToast, Box } from '@chakra-ui/react'
+import { Flex, useToast, Box, useDisclosure } from '@chakra-ui/react'
 import './Quiz.css'
 import ReactGA from 'react-ga4'
 import { useDispatch, useSelector } from 'react-redux'
@@ -92,6 +92,11 @@ const Quiz = () => {
   const [userEligibleForTournament, setUserEligibleForTournament] = useState(
     user.eligibleForTournament,
   )
+  const {
+    isOpen: isBackAlertOpen,
+    onOpen: onBackAlertOpen,
+    onClose: onBackAlertClose,
+  } = useDisclosure()
 
   useEffect(() => {
     const initialAnswers = Array(totalQuestions).fill('')
@@ -409,6 +414,11 @@ const Quiz = () => {
     handleClose,
   ])
 
+  const handleBackButtonConfirm = useCallback(async () => {
+    await handleConfirmClose()
+    onBackAlertClose()
+  }, [handleConfirmClose, onBackAlertClose])
+
   useEffect(() => {
     const handleBeforeUnload = event => {
       event.preventDefault()
@@ -421,6 +431,22 @@ const Quiz = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, [showInstruction])
+
+  useEffect(() => {
+    const handleBackButton = event => {
+      if (!showInstruction && !submitted) {
+        event.preventDefault()
+        onBackAlertOpen()
+      }
+    }
+
+    window.history.pushState(null, '', window.location.pathname)
+    window.addEventListener('popstate', handleBackButton)
+
+    return () => {
+      window.removeEventListener('popstate', handleBackButton)
+    }
+  }, [showInstruction, submitted, onBackAlertOpen])
 
   useEffect(() => {
     if (submitted && !load && (isBoosted || isQuinBoostAvailable)) {
@@ -629,6 +655,15 @@ const Quiz = () => {
           />
         </Suspense>
       )}
+      <Suspense fallback={null}>
+        <ConfirmationModal
+          bg={'black'}
+          isOpen={isBackAlertOpen}
+          onClose={onBackAlertClose}
+          onConfirm={handleBackButtonConfirm}
+          message={t('ConfirmCloseMessage')}
+        />
+      </Suspense>
     </>
   )
 }

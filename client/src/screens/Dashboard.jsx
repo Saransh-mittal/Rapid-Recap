@@ -42,6 +42,10 @@ const StoryFeedbackAnalysis = lazy(() =>
   import('../components/dashboardComponents/StoryFeedbackAnalysis'),
 )
 
+const TestTournamentManagement = lazy(() =>
+  import('../components/dashboardComponents/TestTournamentManagement'),
+)
+
 const Dashboard = () => {
   const [quizAttempts, setQuizAttempts] = useState([])
   const [notificationStatus, setNotificationStatus] = useState({
@@ -85,6 +89,11 @@ const Dashboard = () => {
     isOpen: isStoryFeedbackAnalysisOpen,
     onOpen: onStoryFeedbackAnalysisOpen,
     onClose: onStoryFeedbackAnalysisClose,
+  } = useDisclosure()
+  const {
+    isOpen: isTestTournamentManagementOpen,
+    onOpen: onTestTournamentManagementOpen,
+    onClose: onTestTournamentManagementClose,
   } = useDisclosure()
   const [isLoadingStatus, setIsLoadingStatus] = useState(true)
 
@@ -365,6 +374,10 @@ const Dashboard = () => {
               {renderModalButton('Manage Articles', onArticleManagementOpen)}
               {renderModalButton('Current Affairs', onCurrentAffairsOpen)}
               {renderModalButton('Story Feedback', onStoryFeedbackAnalysisOpen)}
+              {renderModalButton(
+                'Manage Test Tournament',
+                onTestTournamentManagementOpen,
+              )}
             </SimpleGrid>
           </VStack>
         </Flex>
@@ -483,6 +496,12 @@ const Dashboard = () => {
         <StoryFeedbackAnalysis
           isOpen={isStoryFeedbackAnalysisOpen}
           onClose={onStoryFeedbackAnalysisClose}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <TestTournamentManagement
+          isOpen={isTestTournamentManagementOpen}
+          onClose={onTestTournamentManagementClose}
         />
       </Suspense>
     </Box>

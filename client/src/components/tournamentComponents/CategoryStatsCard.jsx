@@ -18,16 +18,16 @@ const ClockSVG = React.lazy(() => import('../../assets/svg/ClockSVG'))
 const CategoryStatsCard = ({
   stat,
   t,
-  userStats,
   isProfile = false,
   setShowQuizSummary,
+  categoryAttempts = {},
 }) => {
   return (
     <Box>
       <Suspense fallback={<Spinner />}>
         <CategoryCard
           category={stat?.category}
-          isCompleted={userStats?.completedCategories.includes(stat?.category)}
+          isCompletedFromStats={categoryAttempts[stat?.category] >= 1}
           isSelected={false}
           onSelect={
             setShowQuizSummary

@@ -98,7 +98,7 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
           <Suspense fallback={<Skeleton height="200px" />}>
             <LeaderboardTable
               data={leaderboardData}
-              tournamentId={previousTournamentData._id}
+              tournamentId={previousTournamentData.tournamentId}
             />
           </Suspense>
         ) : (

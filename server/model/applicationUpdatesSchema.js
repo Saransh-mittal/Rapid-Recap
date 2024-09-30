@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 // Application Updates Schema
 const applicationUpdatesSchema = new mongoose.Schema({
@@ -17,17 +17,22 @@ const applicationUpdatesSchema = new mongoose.Schema({
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "USER",
+    ref: 'USER',
   },
   read: {
     type: Boolean,
     default: false,
   },
-});
+  type: {
+    type: String,
+    enum: ['weeklyReport', 'applicationUpdate'],
+    default: 'applicationUpdate',
+  },
+})
 
 const ApplicationUpdates = mongoose.model(
-  "APPLICATION_UPDATES",
-  applicationUpdatesSchema
-); // Application Updates model
+  'APPLICATION_UPDATES',
+  applicationUpdatesSchema,
+) // Application Updates model
 
-module.exports = ApplicationUpdates;
+module.exports = ApplicationUpdates

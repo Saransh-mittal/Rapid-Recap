@@ -27,6 +27,7 @@ import {
   setCompletedCategories,
   setIsRegistered,
   setTournamentId,
+  updateCategoryStatus,
 } from '../redux/tournamentSlice'
 import { useTranslation } from 'react-i18next'
 import TournamentContent from '../components/tournamentComponents/TournamentContent'
@@ -68,6 +69,7 @@ const Tournament = () => {
     selectedCategories: [],
     completedCategories: [],
     totalScore: 0,
+    categoryAttempts: {},
   })
 
   const toast = useToast()
@@ -78,6 +80,9 @@ const Tournament = () => {
       const currTournamentData = await axios.get(
         `/api/tournament/latest?userId=${user?._id}`,
       )
+      // const currTournamentData = await axios.get(
+      //   `/api/admin/tournament/test/latest?userId=${user?._id}`,
+      // )
       const prevTournamentData = await axios.get('/api/tournament/previous', {
         params: {
           userId: user?._id,
@@ -91,7 +96,22 @@ const Tournament = () => {
         selectedCategories: currTournamentData.data.selectedCategories || [],
         completedCategories: currTournamentData.data.completedCategories || [],
         totalScore: currTournamentData.data.totalScore || 0,
+        categoryAttempts: currTournamentData.data.categoryAttempts || {},
       })
+      for (
+        let i = 0;
+        i < Object.keys(currTournamentData.data.categoryScores).length;
+        i++
+      ) {
+        dispatch(
+          updateCategoryStatus({
+            category: Object.keys(currTournamentData.data.categoryScores)[i],
+            score: Object.values(currTournamentData.data.categoryScores)[i],
+            attemptsLeft:
+              2 - Object.values(currTournamentData.data.categoryAttempts)[i],
+          }),
+        )
+      }
       dispatch(
         setCompletedCategories(
           currTournamentData.data.completedCategories || [],

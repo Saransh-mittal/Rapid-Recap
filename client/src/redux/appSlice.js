@@ -7,9 +7,43 @@ import i18n from 'i18next'
 // Async thunks for fetching data
 export const fetchAppUpdates = createAsyncThunk(
   'app/fetchAppUpdates',
-  async () => {
-    const response = await axios.get(`/api/user/getUpdates`)
-    return response.data.updates
+  async (_, { getState, dispatch }) => {
+    const { auth } = getState()
+    const { user } = auth
+    try {
+      const response = await axios.get(`/api/user/getUpdates`)
+      // console.log('App updates:', response.data.updates)
+
+      const weeklyReportUpdates = response.data.updates.filter(
+        update => update.type === 'weeklyReport' && update.read === false,
+      )
+      weeklyReportUpdates.sort((a, b) => {
+        return new Date(b.date) - new Date(a.date)
+      })
+
+      const weeklyReport = weeklyReportUpdates[0]
+
+      weeklyReport &&
+        dispatch(
+          addNoteMessage({
+            title: 'Weekly Report', // Added translation
+            duration: 15000,
+            width: '350px',
+            content: 'Check out your weekly report to see how you did!', // Added translation
+            actions: [
+              {
+                text: 'View Report',
+                actionType: 'INBOX',
+                payload: { weeklyReportId: weeklyReport?._id },
+              },
+            ],
+          }),
+        )
+      return response.data.updates
+    } catch (error) {
+      console.error('Error fetching app updates:', error)
+      // Handle error (e.g., dispatch an error
+    }
   },
 )
 
@@ -45,6 +79,9 @@ export const fetchUnreadNoteMessages = createAsyncThunk(
   },
 )
 
+// export weeklyReportInboxNotifications = createAsyncThunk(
+//   'app/weeklyReportInboxNotifications',
+
 const initialState = {
   updates: [],
   streak: 0,
@@ -65,8 +102,10 @@ const initialState = {
   showXpLevelModal: false,
   isNotifDrawerOpen: false,
   isNotifModalOpen: false,
+  isNotifInboxModalOpen: false,
   soundSettings: DEFAULT_SOUND_SETTINGS,
   navigationCount: 0,
+  selectedNotificationId: null,
 }
 
 export const appSlice = createSlice({
@@ -94,6 +133,10 @@ export const appSlice = createSlice({
     },
     setIsNotifModalOpen: (state, action) => {
       state.isNotifModalOpen = action.payload
+    },
+
+    setIsNotifInboxModalOpen: (state, action) => {
+      state.isNotifInboxModalOpen = action.payload
     },
     setShowXpLevelModal: (state, action) => {
       state.showXpLevelModal = action.payload
@@ -146,6 +189,9 @@ export const appSlice = createSlice({
     },
     clearNoteMessageQueue: state => {
       state.noteMessageQueue = []
+    },
+    setSelectedNotificationId: (state, action) => {
+      state.selectedNotificationId = action.payload
     },
     setShowingSummaryForNoteMessages: (state, action) => {
       state.showingSummaryForNoteMessages = action.payload
@@ -279,6 +325,8 @@ export const {
   toggleSound,
   setSoundSettings,
   setNavigationCount,
+  setSelectedNotificationId,
+  setIsNotifInboxModalOpen,
   logout: logoutApp,
 } = appSlice.actions
 

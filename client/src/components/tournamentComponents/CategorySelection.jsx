@@ -50,6 +50,8 @@ const CategorySelection = ({
   isRegistration = false,
   registerLoading = false,
   tournamentId,
+  categoryAttempts,
+  tournamentStatus,
 }) => {
   const { t } = useTranslation('CategorySelection') // Translation hook
 
@@ -57,6 +59,7 @@ const CategorySelection = ({
   const [selectedCategories, setSelectedCategories] = useState([])
   const [quickPickedCategories, setQuickPickedCategories] = useState([])
   const [quickPickActive, setQuickPickActive] = useState(false)
+  const [viewReportButton, setViewReportButton] = useState(false)
   const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { completedCategories: completedQuizzes } = useSelector(
@@ -74,12 +77,19 @@ const CategorySelection = ({
       setSelectedCategories(prevSelected => {
         if (prevSelected.includes(category)) {
           // Allow deselection
+          setViewReportButton(false)
           return prevSelected.filter(c => c !== category)
-        } else if (isRegistration && prevSelected.length < 5) {
-          // Allow selection up to 5 categories for registration
+        } else if (isRegistration && prevSelected.length < 3) {
+          // Allow selection up to 3 categories for registration
+          setViewReportButton(false)
           return [...prevSelected, category]
         } else if (!isRegistration) {
           // For non-registration, only allow one selection
+          if (categoryAttempts[category] === 1) {
+            setViewReportButton(true)
+          } else {
+            setViewReportButton(false)
+          }
           return [category]
         }
         return prevSelected
@@ -87,11 +97,11 @@ const CategorySelection = ({
       // Remove the category from quickPickedCategories if it was there
       setQuickPickedCategories(prev => prev.filter(c => c !== category))
     },
-    [completedQuizzes, isRegistration],
+    [completedQuizzes, isRegistration, categoryAttempts],
   )
 
   const handleRandomPick = useCallback(() => {
-    const remainingCount = 5 - selectedCategories.length
+    const remainingCount = 3 - selectedCategories.length
     if (remainingCount <= 0) return
 
     const availableCategories = categoriesList.filter(
@@ -121,8 +131,9 @@ const CategorySelection = ({
   }, [quickPickActive, quickPickedCategories, handleRandomPick])
 
   const handleSubmit = useCallback(() => {
+    setViewReportButton(false)
     if (isRegistration) {
-      if (selectedCategories.length !== 5) {
+      if (selectedCategories.length !== 3) {
         toast({
           title: t('invalidSelectionTitle'),
           description: t('invalidSelectionDescription'),
@@ -214,7 +225,7 @@ const CategorySelection = ({
               fontSize="sm"
               // bg="transparent" // Dark background color
               bg={` ${
-                selectedCategories.length === 5 ? 'green.700' : 'gray.700'
+                selectedCategories.length === 3 ? 'green.700' : 'gray.700'
               }`}
               px={2}
               py={1}
@@ -223,7 +234,7 @@ const CategorySelection = ({
               {t('SelectCategoryNote')}{' '}
               <Box as="span" color="teal.300" fontSize={'xl'}>
                 {' '}
-                {5 - selectedCategories.length}
+                {3 - selectedCategories.length}
               </Box>
             </Badge>
           )}
@@ -238,6 +249,8 @@ const CategorySelection = ({
                   isSelected={selectedCategories.includes(category)}
                   onSelect={handleCategorySelect}
                   isCompleted={completedQuizzes.includes(category)}
+                  attemptsFromCategorySelection={categoryAttempts?.[category]}
+                  tournamentStatus={tournamentStatus}
                 />
               </Suspense>
             ))}
@@ -285,7 +298,7 @@ const CategorySelection = ({
             !isRegistration
               ? selectedCategories.length !== 1 ||
                 completedQuizzes.includes(selectedCategories[0])
-              : selectedCategories.length !== 5
+              : selectedCategories.length !== 3
           }
         >
           {isRegistration ? `Register` : t('startQuiz')}
@@ -295,6 +308,24 @@ const CategorySelection = ({
             ? ` : ${selectedCategories[0]}`
             : ''}
         </Button>
+        {tournamentStatus === 'ongoing' &&
+          selectedCategories.length === 1 &&
+          viewReportButton && (
+            <Button
+              colorScheme="pink"
+              onClick={() => setShowQuizSummary(true)}
+              size="lg"
+              fontWeight="bold"
+              boxShadow="0px 4px 10px rgba(237, 100, 166, 0.3)"
+              _hover={{
+                boxShadow: '0px 6px 15px rgba(237, 100, 166, 0.4)',
+                transform: 'translateY(-2px)',
+              }}
+              transition="all 0.2s"
+            >
+              {`View 1st Attempt: ${selectedCategories[0]}`}
+            </Button>
+          )}
         <Suspense fallback={<Box>{t('loadingModal')}</Box>}>
           <QuizConfirmationModal
             isOpen={isOpen}

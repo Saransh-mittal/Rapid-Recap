@@ -20,6 +20,7 @@ const {
   calculateWeeklyQuizCount,
   calculateWeeklyQuizDifficultyDistribution,
 } = require('../../utils/mail.utils')
+const ApplicationUpdates = require('../../model/applicationUpdatesSchema')
 
 const startRegistration = async () => {
   const startDate = moment().tz('Asia/Kolkata').startOf('day')
@@ -457,33 +458,44 @@ const endTournament = async () => {
         participatedInTournament = true
         tournamentScore = userTournamentRegistration.totalScore
 
-        // Fetch quiz sessions for this user in the current tournament
-        const quizSessions = await QuizSession.find({
-          user: user._id,
-          tournament: latestTournament._id,
-          completed: true,
-        })
+        // Fetch best quiz sessions for this user in the current tournament
+        const bestQuizSessions = await QuizSession.aggregate([
+          {
+            $match: {
+              user: user._id,
+              tournament: latestTournament._id,
+              completed: true,
+            },
+          },
+          {
+            $group: {
+              _id: '$category',
+              bestSession: {
+                $max: { RQM_score: '$RQM_score', session: '$$ROOT' },
+              },
+            },
+          },
+          {
+            $replaceRoot: { newRoot: '$bestSession.session' },
+          },
+        ])
 
         // Calculate category performance
         const categoryScores = {}
-        quizSessions.forEach(session => {
-          if (!categoryScores[session.category]) {
-            categoryScores[session.category] = {
-              totalScore: 0,
-              count: 0,
-            }
+        bestQuizSessions.forEach(session => {
+          categoryScores[session.category] = {
+            totalScore: session.RQM_score,
+            count: 1,
           }
-          categoryScores[session.category].totalScore += session.RQM_score
-          categoryScores[session.category].count++
         })
 
         // Calculate average scores and prepare categoryPerformance array
         const maxScore = Math.max(
-          ...Object.values(categoryScores).map(c => c.totalScore / c.count),
+          ...Object.values(categoryScores).map(c => c.totalScore),
         )
         categoryPerformance = Object.entries(categoryScores).map(
           ([name, data]) => {
-            const value = Math.round((data.totalScore / data.count) * 100) / 100 // Round to 2 decimal places
+            const value = Math.round(data.totalScore * 100) / 100 // Round to 2 decimal places
             const height = Math.round((value / maxScore) * 200) // Scale height to max 200
             return { name, value, height }
           },
@@ -525,6 +537,22 @@ const endTournament = async () => {
         ...userData,
       }),
     })
+
+    const notificationTitle = 'Weekly Report'
+    const notificationText = userWeeklyReportInboxTemplate.html({
+      ...userData,
+    })
+
+    const newNotification = new ApplicationUpdates({
+      userId: user._id,
+      title: notificationTitle,
+      mainText: notificationText, // HTML template for the notification
+      img: '', // Optional image if needed
+      read: false,
+      type: 'weeklyReport',
+    })
+
+    await newNotification.save()
   }
 
   // make EligibleForTournament of users false
