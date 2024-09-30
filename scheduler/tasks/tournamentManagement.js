@@ -334,7 +334,7 @@ const endTournament = async () => {
   }
 
   const tournament = currentTournament
-  updateTournamentPerformanceAndBadges(tournament)
+  await updateTournamentPerformanceAndBadges(tournament)
   const registeredUsers = await TournamentRegistration.find({
     tournament: tournament._id,
   }).populate('user')
@@ -528,10 +528,12 @@ const endTournament = async () => {
   }
 
   // make EligibleForTournament of users false
-  await User.updateMany(
+  const result = await User.updateMany(
     { eligibleForTournament: true },
     { $set: { eligibleForTournament: false } },
   )
+  console.log(`Updated ${result.modifiedCount} users`)
+  console.log('Eligible for tournament set to false')
 }
 
 module.exports = {
