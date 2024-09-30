@@ -654,7 +654,10 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
     throw new Error('Category already completed')
   }
 
-  // Get questions for the selected category
+  // Get previously asked questions for this category
+  const askedQuestions = registration.askedQuestions.get(category) || []
+
+  // Get questions for the selected category, excluding previously asked questions
   const questions = await TournamentQuestion.aggregate([
     {
       $match: {
@@ -663,14 +666,21 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
           $gte: tournament.registrationStartDate,
           $lte: tournament.startDate,
         },
+        _id: { $nin: askedQuestions },
       },
     },
     { $sample: { size: 5 } },
   ])
 
   if (questions.length < 5) {
-    throw new Error('Not enough questions available for this category')
+    throw new Error('Not enough new questions available for this category')
   }
+
+  // Update the askedQuestions for this category
+  const newAskedQuestions = [...askedQuestions, ...questions.map(q => q._id)]
+  registration.askedQuestions.set(category, newAskedQuestions)
+
+  await registration.save()
 
   return questions
 }

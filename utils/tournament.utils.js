@@ -46,17 +46,59 @@ async function getCategoryLeaders(tournamentId) {
   const categoryLeaders = {}
 
   for (const category of categories) {
-    const leaders = await QuizSession.aggregate([
-      { $match: { tournament: tournamentId, category: category } },
-      { $sort: { RQM_score: -1 } },
-      { $limit: 3 },
-      { $project: { user: 1 } },
-    ])
-
-    categoryLeaders[category] = leaders.map(leader => leader.user)
+    categoryLeaders[category] = await getTopLeadersForCategory(
+      tournamentId,
+      category,
+    )
   }
 
   return categoryLeaders
+}
+
+async function getTopLeadersForCategory(tournamentId, category) {
+  return await QuizSession.aggregate([
+    {
+      $match: {
+        tournament: mongoose.Types.ObjectId.createFromHexString(tournamentId),
+        category: category,
+        completed: true,
+      },
+    },
+    {
+      $sort: { RQM_score: -1 },
+    },
+    {
+      $group: {
+        _id: '$user',
+        bestScore: { $first: '$RQM_score' },
+        session: { $first: '$$ROOT' },
+      },
+    },
+    {
+      $sort: { bestScore: -1 },
+    },
+    {
+      $limit: 3,
+    },
+    {
+      $lookup: {
+        from: 'Users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'userDetails',
+      },
+    },
+    {
+      $unwind: '$userDetails',
+    },
+    {
+      $project: {
+        inGameName: '$userDetails.inGameName',
+        score: '$bestScore',
+        userId: '$_id',
+      },
+    },
+  ])
 }
 
 async function updateTournamentPerformanceAndBadges(tournament) {
@@ -206,4 +248,5 @@ async function updateTournamentPerformanceAndBadges(tournament) {
 module.exports = {
   getUserRegistrationDetails,
   updateTournamentPerformanceAndBadges,
+  getTopLeadersForCategory,
 }

@@ -24,6 +24,21 @@ const tournamentRegistrationSchema = new mongoose.Schema({
       default: [],
     },
   ],
+  categoryAttempts: {
+    type: Map,
+    of: Number,
+    default: {},
+  },
+  askedQuestions: {
+    type: Map,
+    of: [mongoose.Schema.Types.ObjectId],
+    default: {},
+  },
+  categoryScores: {
+    type: Map,
+    of: Number,
+    default: {},
+  },
   registrationDate: {
     type: Date,
     default: Date.now,
@@ -54,6 +69,12 @@ const quizSessionSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
+  },
+  attemptNumber: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 2,
   },
   questions: [
     {
@@ -101,9 +122,9 @@ const quizSessionSchema = new mongoose.Schema({
   },
 })
 
-// Add a unique compound index
+// Add a compound index that includes the attemptNumber
 quizSessionSchema.index(
-  { user: 1, tournament: 1, category: 1 },
+  { user: 1, tournament: 1, category: 1, attemptNumber: 1 },
   { unique: true },
 )
 const QuizSession = mongoose.model('QUIZ_SESSION', quizSessionSchema)

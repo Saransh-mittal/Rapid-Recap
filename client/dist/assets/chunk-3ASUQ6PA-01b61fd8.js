@@ -1,0 +1,1 @@
+import{S as t}from"./chunk-ZHMYA64R-869d2b90.js";import{at as o,t as s}from"./index-44fab738.js";var e=o((a,r)=>s.jsx(t,{align:"center",...a,direction:"row",ref:r}));e.displayName="HStack";export{e as H};

@@ -20,6 +20,10 @@ const {
   getQuestions,
   editQuestion,
   getTournamentParticipants,
+  createTestTournament,
+  getTestTournament,
+  updateTestTournament,
+  getLatestTestTournament,
 } = require('../controllers/tournamentController')
 const {
   getStoryFeedback,
@@ -29,6 +33,25 @@ const {
 } = require('../controllers/feedbackController')
 const router = express.Router()
 
+router.post(
+  '/tournament/test',
+  Authenticate,
+  adminMiddleware,
+  createTestTournament,
+)
+router.get('/tournament/test', Authenticate, adminMiddleware, getTestTournament)
+router.put(
+  '/tournament/test/:id',
+  Authenticate,
+  adminMiddleware,
+  updateTestTournament,
+)
+router.get(
+  '/tournament/test/latest',
+  Authenticate,
+  adminMiddleware,
+  getLatestTestTournament,
+)
 router.get('/verify-admin', Authenticate, adminMiddleware, (req, res) => {
   res.json({ isAdmin: true })
 })
