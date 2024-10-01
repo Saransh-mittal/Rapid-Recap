@@ -4,7 +4,7 @@ import axios from 'axios'
 
 export const checkTournamentRegistration = createAsyncThunk(
   'tournament/checkRegistration',
-  async (_, { getState, dispatch }) => {
+  async (t, { getState, dispatch }) => {
     const { auth } = getState()
     const { user } = auth
 
@@ -21,7 +21,7 @@ export const checkTournamentRegistration = createAsyncThunk(
         if (user.streak < 2 && !user.eligibleForTournament) {
           dispatch(
             addNoteMessage({
-              title: 'Keep Going!',
+              title: t('Keep Going!'),
               messageType: 'tournament',
               tournamentStatus: 'locked',
               tournamentName:
@@ -43,7 +43,7 @@ export const checkTournamentRegistration = createAsyncThunk(
         } else {
           dispatch(
             addNoteMessage({
-              title: 'Tournament Time!',
+              title: t('Tournament Time!'),
               duration: 10000,
               width: '300px',
               messageType: 'tournament',

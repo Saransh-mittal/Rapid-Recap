@@ -18,6 +18,7 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import Rank1 from '/images/rank_1.webp'
 
 const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
 const CalenderSVG = React.lazy(() => import('../../assets/svg/CalenderSVG'))
@@ -47,27 +48,42 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
         icon: TrophySVG,
         content: (
           <VStack spacing={4} align="stretch">
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              {t('page1.content1')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {t('page1.content2')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              {t('page1.content3')}
-            </MotionText>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {t('page1.content1')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {t('page1.content2')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {t('page1.content3')}
+              </MotionText>
+            </Flex>
           </VStack>
         ),
       },
@@ -76,27 +92,42 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
         icon: CalenderSVG,
         content: (
           <VStack spacing={4} align="stretch">
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              {t('page2.content1')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {t('page2.content2')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              {t('page2.content3')}
-            </MotionText>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {t('page2.content1')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {t('page2.content2')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {t('page2.content3')}
+              </MotionText>
+            </Flex>
           </VStack>
         ),
       },
@@ -105,27 +136,42 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
         icon: ClipboardList,
         content: (
           <VStack spacing={4} align="stretch">
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              {t('page3.content1')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {t('page3.content2')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              {t('page3.content3')}
-            </MotionText>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {t('page3.content1')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {t('page3.content2')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {t('page3.content3')}
+              </MotionText>
+            </Flex>
           </VStack>
         ),
       },
@@ -134,27 +180,42 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
         icon: ClockSVG,
         content: (
           <VStack spacing={4} align="stretch">
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              {t('page4.content1')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {t('page4.content2')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              {t('page4.content3')}
-            </MotionText>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {t('page4.content1')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {t('page4.content2')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {t('page4.content3')}
+              </MotionText>
+            </Flex>
           </VStack>
         ),
       },
@@ -163,64 +224,143 @@ const TournamentGuideModal = ({ isOpen, onClose }) => {
         icon: Medal,
         content: (
           <VStack spacing={4} align="stretch">
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              {t('page5.content1')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {t('page5.content2')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              {t('page5.content3')}
-            </MotionText>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {t('page5.content1')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {t('page5.content2')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {t('page5.content3')}
+              </MotionText>
+            </Flex>
           </VStack>
         ),
       },
       {
         title: t('page6.title'),
+        icon: () => <img src={Rank1} alt="Rank 1" width={50} />,
+        content: (
+          <VStack spacing={4} align="stretch">
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {t('page6.content1')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {t('page6.content2')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {t('page6.content3')}
+              </MotionText>
+            </Flex>
+          </VStack>
+        ),
+      },
+      {
+        title: t('page7.title'),
         icon: Globe,
         content: (
           <VStack spacing={4} align="stretch">
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              {t('page6.content1')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {t('page6.content2')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              {t('page6.content3')}
-            </MotionText>
-            <MotionText
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              fontWeight="bold"
-            >
-              {t('page6.content4')}
-            </MotionText>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {t('page7.content1')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {t('page7.content2')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {t('page7.content3')}
+              </MotionText>
+            </Flex>
+            <Flex>
+              <Flex mr={2} color={'#FFA500'}>
+                ➤
+              </Flex>
+              <MotionText
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                fontWeight="bold"
+              >
+                {t('page7.content4')}
+              </MotionText>
+            </Flex>
           </VStack>
         ),
       },

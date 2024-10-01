@@ -323,7 +323,8 @@ const CategorySelection = ({
               }}
               transition="all 0.2s"
             >
-              {`View 1st Attempt: ${selectedCategories[0]}`}
+              {/* {`View 1st Attempt: ${selectedCategories[0]}`} */}
+              {t('viewFirstAttempt')} {selectedCategories[0]}
             </Button>
           )}
         <Suspense fallback={<Box>{t('loadingModal')}</Box>}>
