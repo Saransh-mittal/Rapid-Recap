@@ -11,5 +11,6 @@
   "loadingModal": "मोडल लोड हो रहा है...",
   "loadingQuizReport": "क्विज़ रिपोर्ट लोड हो रही है...",
   "clearQuickPick": "चुनाई श्रेणियाँ हटाएं",
-  "SelectCategoryNote": "चुनने के लिए शेष श्रेणियाँ:"
+  "SelectCategoryNote": "चुनने के लिए शेष श्रेणियाँ:",
+  "viewFirstAttempt": "पहली कोशिश देखें: "
 }

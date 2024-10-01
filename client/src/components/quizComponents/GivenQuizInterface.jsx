@@ -11,6 +11,7 @@ import {
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import InfoButton, { InfoButtonProvider } from '../miscellaneous/InfoButton'
 
 const OptionButton = React.memo(
   ({
@@ -124,18 +125,34 @@ const GivenQuizInterface = ({
           exit={{ y: -20, opacity: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Text
-            fontSize={{ base: 'xl', md: '2xl' }}
-            fontWeight="bold"
-            mb={6}
-            color={getColor('purple.200', 'yellow.500')}
-            textAlign="center"
+          <Flex
+            w={'100%'}
+            justifyContent={'center'}
+            alignItems={'center'}
+            mb={4}
           >
-            {t('questionLabel', {
-              currentQuestionIndex: currentQuestionIndex + 1,
-              totalQuestions: quizGivenSummary.length,
-            })}
-          </Text>
+            <Text
+              fontSize={{ base: 'xl', md: '2xl' }}
+              fontWeight="bold"
+              mb={1}
+              color={getColor('purple.200', 'yellow.500')}
+              textAlign="center"
+            >
+              {t('questionLabel', {
+                currentQuestionIndex: currentQuestionIndex + 1,
+                totalQuestions: quizGivenSummary.length,
+              })}
+            </Text>
+            {isTournament && (
+              <InfoButtonProvider>
+                <InfoButton
+                  id="button1"
+                  // direction="right"
+                  text="Note: Option numbers in the quiz and summary may differ. Options were randomized during the quiz, but the summary shows the correct answer regardless of its original position."
+                />
+              </InfoButtonProvider>
+            )}
+          </Flex>
 
           <Flex width="100%" justifyContent="center" alignItems="center" mb={8}>
             <Progress

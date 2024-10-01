@@ -54,7 +54,7 @@ const MotionBox = motion(Box)
 const Tournament = () => {
   const [tournamentData, setTournamentData] = useState(null)
   const [previousTournamentData, setPreviousTournamentData] = useState(null)
-  const [isFetching, setIsFetching] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const dispatch = useDispatch()
   const [registerLoading, setRegisterLoading] = useState(false)
   const { user, loginCheckStatus, isAuthenticated } = useSelector(
@@ -75,7 +75,7 @@ const Tournament = () => {
   const toast = useToast()
 
   const fetchTournamentData = useCallback(async () => {
-    setIsFetching(true)
+    setIsLoading(true)
     try {
       const currTournamentData = await axios.get(
         `/api/tournament/latest?userId=${user?._id}`,
@@ -117,11 +117,11 @@ const Tournament = () => {
           currTournamentData.data.completedCategories || [],
         ),
       )
-      setIsFetching(false)
+      setIsLoading(false)
     } catch (error) {
       console.log(error)
       setTournamentData(null)
-      setIsFetching(false)
+      setIsLoading(false)
     }
   }, [dispatch, toast, user?._id])
 
@@ -257,6 +257,10 @@ const Tournament = () => {
       }
     : null
 
+  if (isLoading) {
+    return <FullScreenLoadingSpinner />
+  }
+
   return (
     <>
       <Helmet>
@@ -279,11 +283,11 @@ const Tournament = () => {
         )}
       </Helmet>
       <Box color="white" mt={{ base: 4, md: 8 }} minHeight="100vh">
-        {isFetching && <FullScreenLoadingSpinner />}
+        {isLoading && <FullScreenLoadingSpinner />}
         <Container maxW="container.xl" py={16} px={0}>
-          <Suspense fallback={<Skeleton height="40px" />}>
-            <TournamentHeader />
-          </Suspense>
+          {/* <Suspense fallback={<Skeleton height="40px" />}> */}
+          <TournamentHeader />
+          {/* </Suspense> */}
           <Flex direction={{ base: 'column', lg: 'row' }} gap={8}>
             <MotionBox
               flex={1}
@@ -298,7 +302,7 @@ const Tournament = () => {
               backdropFilter="blur(5px)"
             >
               <TournamentContent
-                isFetching={isFetching}
+                isFetching={isLoading}
                 tournamentData={tournamentData}
                 previousTournamentData={previousTournamentData}
                 userRegistrationDetails={userRegistrationDetails}
@@ -311,9 +315,9 @@ const Tournament = () => {
                 t={t}
               />
               {tournamentData?.status === 'completed' && (
-                <Suspense fallback={<Skeleton height="40px" />}>
-                  <LeaderboardSection tournamentData={tournamentData} />
-                </Suspense>
+                // <Suspense fallback={<Skeleton height="40px" />}>
+                <LeaderboardSection tournamentData={tournamentData} />
+                // </Suspense>
               )}
             </MotionBox>
             <MotionBox
@@ -329,13 +333,13 @@ const Tournament = () => {
               bgGradient="linear(to-br, rgba(26, 32, 44, 0.5), rgba(49, 10, 103, 0.5))"
             >
               {tournamentData?.status !== 'ongoing' ? (
-                <Suspense fallback={<Skeleton height="40px" />}>
-                  <EpicQuestGuide />
-                </Suspense>
+                // <Suspense fallback={<Skeleton height="40px" />}>
+                <EpicQuestGuide />
               ) : (
-                <Suspense fallback={<Skeleton height="40px" />}>
-                  <LeaderboardSection tournamentData={tournamentData} />
-                </Suspense>
+                // </Suspense>
+                // <Suspense fallback={<Skeleton height="40px" />}>
+                <LeaderboardSection tournamentData={tournamentData} />
+                // </Suspense>
               )}
             </MotionBox>
           </Flex>

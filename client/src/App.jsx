@@ -67,7 +67,7 @@ const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
   const location = useLocation()
   const { t } = useTranslation('App') // Initialize translation function
-
+  const { t: tournamentSliceTranslation } = useTranslation('tournamentSlice') // Added translation
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const {
@@ -190,7 +190,7 @@ const App = () => {
       setIsGuestLoggedin(true)
     }
     if (isAuthenticated && user.role !== 'guest') {
-      dispatch(checkTournamentRegistration())
+      dispatch(checkTournamentRegistration(tournamentSliceTranslation))
     }
   }, [isAuthenticated, user?.inGameName])
 
