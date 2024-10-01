@@ -212,6 +212,24 @@ const updatePercentilesForArticles = async uniqueArticleIds => {
   }
 }
 
+// Atomic update function
+const atomicUpdateUserScore = async (userId, newScore) => {
+  try {
+    const result = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: { userScore: newScore } },
+      { new: true, runValidators: true },
+    )
+    if (!result) {
+      console.warn(`User ${userId} not found during atomic update.`)
+    }
+    return result
+  } catch (error) {
+    console.error(`Error in atomic update for user ${userId}: ${error.message}`)
+    throw error
+  }
+}
+
 const calculateUserScores = async users => {
   const userScores = []
   let sumOfUserScores = 0
@@ -232,11 +250,12 @@ const calculateUserScores = async users => {
         `Error fetching quiz attempts for user ${user._id}: ${error.message}`,
       )
       console.error(`Stack trace: ${error.stack}`)
-      throw error
+      return { user, quizAttempts: [] }
     }
   })
 
   const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises)
+
   for (const { user, quizAttempts } of userQuizAttempts) {
     let userScore = user.baseUserScore || 0
 
@@ -245,27 +264,38 @@ const calculateUserScores = async users => {
         !attempt ||
         !attempt.article ||
         !attempt.article.quiz ||
-        !attempt.articleDifficulty
+        !attempt.articleDifficulty ||
+        typeof attempt.userPercentile !== 'number'
       ) {
-        console.error(`Invalid quiz attempt data for user ${user._id}.`)
+        console.warn(`Skipping invalid quiz attempt data for user ${user._id}.`)
         continue
       }
 
       const quizScore = attempt.articleDifficulty * attempt.userPercentile
+      if (isNaN(quizScore) || !isFinite(quizScore)) {
+        console.warn(
+          `Invalid quiz score calculated for user ${user._id}. Skipping this attempt.`,
+        )
+        continue
+      }
+
       userScore += quizScore
     }
-    if (user.inGameName === 'Bsahu4712') console.log(userScore)
-    userScore = typeof userScore === 'number' && userScore ? userScore : 0
+
+    userScore = Math.max(0, userScore) // Ensure non-negative score
+
     try {
-      const u = await User.findById(user._id)
-      u.userScore = userScore
-      await u.save()
+      // Use atomicUpdateUserScore here
+      const updatedUser = await atomicUpdateUserScore(user._id, userScore)
+      if (!updatedUser) {
+        console.warn(`User ${user._id} not found when updating score.`)
+      }
     } catch (error) {
       console.error(
-        `Error saving user score for user ${user._id}: ${error.message}`,
+        `Error updating user score for user ${user._id}: ${error.message}`,
       )
       console.error(`Stack trace: ${error.stack}`)
-      throw error
+      // Continue processing other users instead of throwing
     }
 
     sumOfUserScores += userScore
