@@ -133,7 +133,7 @@ const LeaderBoard = () => {
         >
           <VStack spacing={8} align="stretch">
             <Flex flexDirection={'column'}>
-              <Flex justifyContent="center" alignItems="center">
+              <Flex justifyContent="center" alignItems="center" px={'20px'}>
                 <Image
                   src={medalIcon}
                   alt="Rating"
@@ -142,7 +142,7 @@ const LeaderBoard = () => {
                   bg={'none'}
                 />
                 <ChakraHeading
-                  size="2xl"
+                  size={{ base: 'xl', md: '2xl' }}
                   bgGradient="linear(to-r, yellow.400, yellow.600)"
                   bgClip="text"
                   fontFamily="serif"
