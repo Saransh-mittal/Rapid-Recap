@@ -471,9 +471,9 @@ const updatePercentilesOnQuizDeactivation = async ({ id }) => {
 
     if (bulkOps.length > 0) {
       const result = await QuizAttempt.bulkWrite(bulkOps)
-      console.log(
-        `Updated ${result.modifiedCount} out of ${totalAttempts} attempts for quiz ${id}`,
-      )
+      // console.log(
+      //   `Updated ${result.modifiedCount} out of ${totalAttempts} attempts for quiz ${id}`,
+      // )
     } else {
       console.log(`No valid attempts to update for quiz ${id}`)
     }
