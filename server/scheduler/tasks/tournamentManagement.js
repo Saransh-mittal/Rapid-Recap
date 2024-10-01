@@ -389,11 +389,7 @@ const endTournament = async () => {
     })
   }
   // Sending weekly report to all users
-  const users = await User.find({
-    // inGameName: {
-    //   $in: ['smash_deV', 'saransh_1234', 'tailonjackron@gmail.com'],
-    // },
-  })
+  const users = await User.find({})
 
   let topPlayers = []
   let leaderboardData = []
@@ -560,10 +556,12 @@ const endTournament = async () => {
   }
 
   // make EligibleForTournament of users false
-  await User.updateMany(
+  const result = await User.updateMany(
     { eligibleForTournament: true },
     { $set: { eligibleForTournament: false } },
   )
+  console.log(`Updated ${result.modifiedCount} users`)
+  console.log('Eligible for tournament set to false')
 }
 
 module.exports = {

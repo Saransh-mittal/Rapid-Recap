@@ -179,7 +179,9 @@ const WiseWeb = ({
     requestNotif ? true : false,
   )
   const [isCheckingOnlineStatus, setIsCheckingOnlineStatus] = useState(false)
-  const { socket, user } = ChatState()
+  const chatState = ChatState()
+  const socket = chatState ? chatState.socket : null
+
   const toast = useToast()
 
   const friendListRef = useRef(null)

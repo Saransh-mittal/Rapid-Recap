@@ -32,8 +32,18 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
   const [newQuestion, setNewQuestion] = useState({
     question: '',
     hindiQuestion: '',
-    options: { a: '', b: '', c: '', d: '' },
-    hindiOptions: { a: '', b: '', c: '', d: '' },
+    options: {
+      a: { text: '' },
+      b: { text: '' },
+      c: { text: '' },
+      d: { text: '' },
+    },
+    hindiOptions: {
+      a: { text: '' },
+      b: { text: '' },
+      c: { text: '' },
+      d: { text: '' },
+    },
     correctAnswer: '',
     difficulty: '',
   })
@@ -55,7 +65,20 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
           headers: { Authorization: `Bearer ${token}` },
         },
       )
-      setQuestions(response.data)
+      // extract hindiOptions from options via for example options.a.hindiText
+      // console.log('response.data:', response.data)
+      const questions = response.data?.map(q => ({
+        ...q,
+        hindiOptions: q.hindiOptions
+          ? q.hindiOptions
+          : {
+              a: { text: q.options.a.hindiText },
+              b: { text: q.options.b.hindiText },
+              c: { text: q.options.c.hindiText },
+              d: { text: q.options.d.hindiText },
+            },
+      }))
+      setQuestions(questions)
     } catch (error) {
       console.error('Error fetching questions:', error)
       toast({
@@ -72,7 +95,10 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
     if (field === 'options' || field === 'hindiOptions') {
       setNewQuestion(prev => ({
         ...prev,
-        [field]: { ...prev[field], [name]: value },
+        [field]: {
+          ...prev[field],
+          [name]: { ...prev[field][name], text: value },
+        },
       }))
     } else {
       setNewQuestion(prev => ({ ...prev, [name]: value }))
@@ -93,11 +119,32 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
 
     try {
       const token = localStorage.getItem('token')
+      const questionData = {
+        question: newQuestion.question,
+        hindiQuestion: newQuestion.hindiQuestion,
+        options: {
+          a: { text: newQuestion.options.a.text },
+          b: { text: newQuestion.options.b.text },
+          c: { text: newQuestion.options.c.text },
+          d: { text: newQuestion.options.d.text },
+        },
+        hindiOptions: {
+          a: { text: newQuestion.hindiOptions.a.text },
+          b: { text: newQuestion.hindiOptions.b.text },
+          c: { text: newQuestion.hindiOptions.c.text },
+          d: { text: newQuestion.hindiOptions.d.text },
+        },
+        correctAnswer: newQuestion.correctAnswer,
+        difficulty: parseFloat(newQuestion.difficulty),
+      }
+
+      console.log('Submitting question data:', questionData)
+
+      let response
       if (editingQuestion) {
-        console.log('Editing question:', editingQuestion._id)
-        await axios.put(
+        response = await axios.put(
           `/api/tournament/questions/current-affairs/${editingQuestion._id}`,
-          newQuestion,
+          questionData,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -109,9 +156,9 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
           isClosable: true,
         })
       } else {
-        await axios.post(
+        response = await axios.post(
           '/api/tournament/questions/current-affairs',
-          newQuestion,
+          questionData,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -129,6 +176,7 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
       console.error('Error submitting question:', error)
       toast({
         title: 'Error submitting question',
+        description: error.response?.data?.message || 'Unknown error occurred',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -149,7 +197,38 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
 
   const handleEdit = question => {
     setEditingQuestion(question)
-    setNewQuestion(question)
+    setNewQuestion({
+      ...question,
+      options: {
+        a: { text: question.options.a.text, _id: question.options.a._id },
+        b: { text: question.options.b.text, _id: question.options.b._id },
+        c: { text: question.options.c.text, _id: question.options.c._id },
+        d: { text: question.options.d.text, _id: question.options.d._id },
+      },
+      hindiOptions: {
+        a: {
+          text: question.hindiOptions.a.text,
+          _id: question.hindiOptions.a._id,
+        },
+        b: {
+          text: question.hindiOptions.b.text,
+          _id: question.hindiOptions.b._id,
+        },
+        c: {
+          text: question.hindiOptions.c.text,
+          _id: question.hindiOptions.c._id,
+        },
+        d: {
+          text: question.hindiOptions.d.text,
+          _id: question.hindiOptions.d._id,
+        },
+      },
+      correctAnswer: Object.keys(question.options).find(
+        key =>
+          question.options[key]._id.toString() ===
+          question.correctAnswer.toString(),
+      ),
+    })
   }
 
   const handleDelete = async id => {
@@ -177,7 +256,7 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
   }
 
   const handleBulkSubmit = async () => {
-    setIsBulkLoading(true) // Show the spinner
+    setIsBulkLoading(true)
     try {
       const parsedQuestions = JSON.parse(bulkQuestions)
       const token = localStorage.getItem('token')
@@ -211,7 +290,7 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
         isClosable: true,
       })
     } finally {
-      setIsBulkLoading(false) // Hide the spinner after process is done
+      setIsBulkLoading(false)
     }
   }
 
@@ -232,8 +311,18 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
     setNewQuestion({
       question: '',
       hindiQuestion: '',
-      options: { a: '', b: '', c: '', d: '' },
-      hindiOptions: { a: '', b: '', c: '', d: '' },
+      options: {
+        a: { text: '' },
+        b: { text: '' },
+        c: { text: '' },
+        d: { text: '' },
+      },
+      hindiOptions: {
+        a: { text: '' },
+        b: { text: '' },
+        c: { text: '' },
+        d: { text: '' },
+      },
       correctAnswer: '',
       difficulty: '',
     })
@@ -275,7 +364,7 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
                   <FormLabel>Option {option.toUpperCase()} (English)</FormLabel>
                   <Input
                     name={option}
-                    value={newQuestion.options[option]}
+                    value={newQuestion.options[option].text}
                     onChange={e => handleInputChange(e, 'options')}
                   />
                 </FormControl>
@@ -283,7 +372,7 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
                   <FormLabel>Option {option.toUpperCase()} (Hindi)</FormLabel>
                   <Input
                     name={option}
-                    value={newQuestion.hindiOptions[option]}
+                    value={newQuestion.hindiOptions[option].text}
                     onChange={e => handleInputChange(e, 'hindiOptions')}
                   />
                 </FormControl>
@@ -331,7 +420,7 @@ const CurrentAffairsManagement = ({ isOpen, onClose }) => {
     "options": {"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"},
     "hindiOptions": {"a": "विकल्प A", "b": "विकल्प B", "c": "विकल्प C", "d": "विकल्प D"},
     "correctAnswer": "a",
-    "difficulty": "medium"
+    "difficulty": "0.5"
   }
 ]`}
               height="200px"

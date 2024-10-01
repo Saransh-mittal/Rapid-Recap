@@ -374,7 +374,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         </Flex>
         <Suspense fallback={<Spinner />}>
           <Flex mr={-4}>
-            {/* {selectedBadge && (
+            {selectedBadge && (
               <TournamentBadges
                 tournamentNumber={selectedBadge?.tournamentNumber}
                 rank={selectedBadge?.rank}
@@ -387,7 +387,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                   text: selectedBadge?.text,
                 }}
               />
-            )} */}
+            )}
           </Flex>
         </Suspense>
       </Flex>
@@ -452,7 +452,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             onSubmit={handleSubmitModal}
           />
         )}
-        {/* {isBadgeGalleryOpen && (
+        {isBadgeGalleryOpen && (
           <TournamentBadgeGallery
             isOpen={isBadgeGalleryOpen}
             onClose={() => setIsBadgeGalleryOpen(false)}
@@ -462,7 +462,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             userInGameName={leftProfileView?.inGameName}
             displayedBadge={selectedBadge}
           />
-        )} */}
+        )}
       </Suspense>
       <Suspense fallback={null}>
         <GuestLoginModal

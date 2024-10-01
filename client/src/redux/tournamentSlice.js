@@ -32,6 +32,12 @@ export const checkTournamentRegistration = createAsyncThunk(
               requiredStreak: 2,
               duration: 10000,
               width: '300px',
+              actions: [
+                {
+                  text: 'View Tournament',
+                  actionType: 'VIEW_TOURNAMENT',
+                },
+              ],
             }),
           )
         } else {
@@ -48,6 +54,12 @@ export const checkTournamentRegistration = createAsyncThunk(
               tournamentEndTime: tournament?.registrationEndDate,
               userStreak: user?.streak,
               requiredStreak: 2,
+              actions: [
+                {
+                  text: 'Register Tournament',
+                  actionType: 'REGISTER_TOURNAMENT',
+                },
+              ],
             }),
           )
         }

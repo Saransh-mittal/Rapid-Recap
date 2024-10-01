@@ -122,7 +122,7 @@ export const badgeConfig = {
   },
   ACE: {
     image: '/images/ace_category.webp',
-    textPosition: { x: -52, y: 165, bottom: '18%' },
+    textPosition: { x: -52, y: 130, bottom: '18%' },
     style: {
       background: 'linear-gradient(135deg, #FFD700, #FFA500)',
       color: '#000000',
@@ -138,7 +138,7 @@ export const badgeConfig = {
   },
   PRO: {
     image: '/images/pro_category.webp',
-    textPosition: { x: -52, y: 165, bottom: '18%' },
+    textPosition: { x: -52, y: 130, bottom: '18%' },
     style: {
       background: 'linear-gradient(135deg, #C0C0C0, #A9A9A9)',
       color: '#000000',
@@ -154,7 +154,7 @@ export const badgeConfig = {
   },
   CHAMP: {
     image: '/images/champ_category.webp',
-    textPosition: { x: -52, y: 165, bottom: '18%' },
+    textPosition: { x: -52, y: 130, bottom: '18%' },
     style: {
       background: 'linear-gradient(135deg, #CD7F32, #B8860B)',
       color: '#FFFFFF',

@@ -84,6 +84,7 @@ webpush.setVapidDetails(
 // require("./utils/update.utils/timeSpentIndexes");
 // require('./utils/update.utils/userBadge')
 // require('./utils/update.utils/tournamentScore')
+// require('./utils/update.utils/updateCurrAffairsTour')
 // ---------------------------
 
 // -----Bot utils-----
