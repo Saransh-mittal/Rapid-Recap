@@ -31,9 +31,17 @@ const OptionButton = React.memo(
           py={2}
         >
           <Flex alignItems="flex-start" width="100%">
-            <Text fontSize="md" fontWeight="bold" mr={2} mb={0} flexShrink={0}>
-              {optionKey.toUpperCase()}.
-            </Text>
+            {!isTournament && (
+              <Text
+                fontSize="md"
+                fontWeight="bold"
+                mr={2}
+                mb={0}
+                flexShrink={0}
+              >
+                {optionKey.toUpperCase()}.
+              </Text>
+            )}
             <Text fontSize="md" mb={0} textAlign="left" wordBreak="break-word">
               {optionText}
             </Text>

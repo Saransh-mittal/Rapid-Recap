@@ -135,17 +135,44 @@ Also get the hindi translated version of the questions and options .If the quest
 }
 
 const saveTournamentQuestions = async (category, response) => {
-  for (let question of response.questions) {
-    const newQuestion = new TournamentQuestion({
-      question: question.question,
-      hindiQuestion: question.hindiQuestion,
-      options: question.options,
-      hindiOptions: question.hindiOptions,
-      correctAnswer: question.correctAnswer,
-      difficulty: question.difficulty,
-      category: category,
-    })
-    await newQuestion.save()
+  try {
+    for (let questionData of response.questions) {
+      const newQuestion = new TournamentQuestion({
+        question: questionData.question,
+        hindiQuestion: questionData.hindiQuestion,
+        options: {
+          a: {
+            text: questionData.options.a,
+            hindiText: questionData.hindiOptions.a,
+          },
+          b: {
+            text: questionData.options.b,
+            hindiText: questionData.hindiOptions.b,
+          },
+          c: {
+            text: questionData.options.c,
+            hindiText: questionData.hindiOptions.c,
+          },
+          d: {
+            text: questionData.options.d,
+            hindiText: questionData.hindiOptions.d,
+          },
+        },
+
+        difficulty: parseFloat(questionData.difficulty),
+        category: category,
+      })
+
+      // Set the correctAnswer after the options are created
+      newQuestion.correctAnswer =
+        newQuestion.options[questionData.correctAnswer]._id
+
+      await newQuestion.save()
+      console.log(`Saved question: ${newQuestion._id}`)
+    }
+  } catch (error) {
+    console.error('Error saving tournament questions:', error)
+    throw error
   }
 }
 

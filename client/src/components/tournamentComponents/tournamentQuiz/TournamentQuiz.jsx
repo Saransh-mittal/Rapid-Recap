@@ -77,10 +77,26 @@ const TournamentQuiz = () => {
         category,
         lang: i18n.language,
       })
-      setQuizSession(response.data.quizSession)
-      setUserAnswers(
-        new Array(response.data.quizSession?.questions.length).fill(''),
+      // Transform the questions to match the existing frontend structure
+      const transformedQuestions = response.data.quizSession.questions.map(
+        q => ({
+          ...q,
+          options: q.options.reduce((acc, opt, index) => {
+            const key = ['a', 'b', 'c', 'd'][index]
+            acc[key] = {
+              text: opt.text,
+              id: opt.id,
+            }
+            return acc
+          }, {}),
+        }),
       )
+
+      setQuizSession({
+        ...response.data.quizSession,
+        questions: transformedQuestions,
+      })
+      setUserAnswers(new Array(transformedQuestions.length).fill(''))
       setShowGetSetGo(true)
     } catch (error) {
       if (error.response && error.response.status === 400) {
@@ -138,9 +154,15 @@ const TournamentQuiz = () => {
       setSubmitting(true)
       setStopTimer(true)
       try {
+        // Convert userAnswers back to the format expected by the backend
+        const convertedUserAnswers = userAnswers.map((answer, index) => {
+          const question = quizSession.questions[index]
+          return question.options[answer]?.id || ''
+        })
+
         const response = await axios.post('/api/tournament/quiz/submit', {
           quizSessionId: quizSession._id,
-          userResponses: userAnswers,
+          userResponses: convertedUserAnswers,
           questionsIds: quizSession.questions.map(question => question._id),
           timeTaken,
         })

@@ -1,5 +1,19 @@
 const mongoose = require('mongoose')
 
+const optionSchema = new mongoose.Schema(
+  {
+    text: {
+      type: String,
+      required: true,
+    },
+    hindiText: {
+      type: String,
+      required: true,
+    },
+  },
+  { _id: true },
+)
+
 const tournamentQuestionSchema = new mongoose.Schema({
   question: {
     type: String,
@@ -10,29 +24,30 @@ const tournamentQuestionSchema = new mongoose.Schema({
     required: true,
   },
   options: {
-    a: { type: String, required: true },
-    b: { type: String, required: true },
-    c: { type: String, required: true },
-    d: { type: String, required: true },
-  },
-  hindiOptions: {
-    a: { type: String, required: true },
-    b: { type: String, required: true },
-    c: { type: String, required: true },
-    d: { type: String, required: true },
+    a: { type: optionSchema, required: true },
+    b: { type: optionSchema, required: true },
+    c: { type: optionSchema, required: true },
+    d: { type: optionSchema, required: true },
   },
   correctAnswer: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
-    enum: ['a', 'b', 'c', 'd'],
+    validate: {
+      validator: function (v) {
+        return ['a', 'b', 'c', 'd'].some(key => this.options[key]._id.equals(v))
+      },
+      message: props => `${props.value} is not a valid option ID`,
+    },
   },
   category: {
     type: String,
     required: true,
   },
   difficulty: {
-    type: String,
+    type: Number,
     required: true,
+    min: 0,
+    max: 1,
   },
   createdAt: {
     type: Date,

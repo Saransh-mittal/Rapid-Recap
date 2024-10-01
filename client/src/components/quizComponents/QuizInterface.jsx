@@ -118,7 +118,7 @@ const QuizInterface = ({
               >
                 <OptionButton
                   optionKey={key}
-                  optionText={value}
+                  optionText={isTournament ? value.text : value}
                   isSelected={userAnswers[currentQuestionIndex] === key}
                   onSelect={handleOptionSelect}
                   isTournament={isTournament}

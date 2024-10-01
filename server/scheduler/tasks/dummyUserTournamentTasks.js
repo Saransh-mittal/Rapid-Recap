@@ -48,11 +48,11 @@ const registerDummyUsers = async () => {
         continue
       }
 
-      // Randomly select 5 categories
+      // Randomly select 3 categories
       const allCategories = getCategories()
       const selectedCategories = allCategories
         .sort(() => 0.5 - Math.random())
-        .slice(0, 5)
+        .slice(0, 3)
         .concat(['current affairs'])
 
       // Create tournament registration
@@ -123,9 +123,25 @@ const simulateBotQuizParticipation = async () => {
       )
       if (!incompleteCategory) continue
 
-      // Get questions for the category
+      // Get the current attempt number for this category
+      const currentAttempts = bot.categoryAttempts.get(incompleteCategory) || 0
+      const attemptNumber = currentAttempts + 1
+
+      if (attemptNumber > 2) continue // Skip if already attempted twice
+
+      // Get questions for the category, excluding previously asked questions
+      const askedQuestions = bot.askedQuestions.get(incompleteCategory) || []
       const questions = await TournamentQuestion.aggregate([
-        { $match: { category: incompleteCategory } },
+        {
+          $match: {
+            category: incompleteCategory,
+            createdAt: {
+              $gte: activeTournament.registrationStartDate,
+              $lte: activeTournament.startDate,
+            },
+            _id: { $nin: askedQuestions },
+          },
+        },
         { $sample: { size: 5 } },
       ]).session(session)
 
@@ -134,12 +150,13 @@ const simulateBotQuizParticipation = async () => {
         user: bot.user._id,
         tournament: activeTournament._id,
         category: incompleteCategory,
+        attemptNumber: attemptNumber,
         questions: questions.map(q => q._id),
         startTime: new Date(),
         endTime: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes from now
       })
 
-      // Simulate bot responses with the new probability distribution
+      // Simulate bot responses
       const correctAnswers = (() => {
         const rand = Math.random()
         if (rand < 0.3) return 0
@@ -154,11 +171,17 @@ const simulateBotQuizParticipation = async () => {
       const responses = questions.map((question, index) => {
         const isCorrect = index < correctAnswers
         if (isCorrect) score++
+
+        // Get a random incorrect answer
+        const incorrectAnswer = Object.keys(question.options).filter(
+          key => !question.options[key]._id.equals(question.correctAnswer),
+        )[Math.floor(Math.random() * 3)]
+
         return {
           questionId: question._id,
           userAnswer: isCorrect
             ? question.correctAnswer
-            : ['a', 'b', 'c', 'd'].find(opt => opt !== question.correctAnswer),
+            : question.options[incorrectAnswer]._id,
           isCorrect,
         }
       })
@@ -183,8 +206,25 @@ const simulateBotQuizParticipation = async () => {
       await quizSession.save({ session })
 
       // Update tournament registration
-      bot.completedCategories.push(incompleteCategory)
-      bot.totalScore += RQM_score
+      bot.categoryAttempts.set(incompleteCategory, attemptNumber)
+
+      const previousBestScore = bot.categoryScores.get(incompleteCategory) || 0
+      if (RQM_score >= previousBestScore) {
+        bot.categoryScores.set(incompleteCategory, RQM_score)
+        bot.totalScore = bot.totalScore - previousBestScore + RQM_score
+      }
+
+      // Update askedQuestions
+      const newAskedQuestions = [
+        ...(bot.askedQuestions.get(incompleteCategory) || []),
+        ...questions.map(q => q._id),
+      ]
+      bot.askedQuestions.set(incompleteCategory, newAskedQuestions)
+
+      if (attemptNumber >= 2) {
+        bot.completedCategories.push(incompleteCategory)
+      }
+
       await bot.save({ session })
     }
 

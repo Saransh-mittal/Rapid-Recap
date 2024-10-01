@@ -688,16 +688,30 @@ const addCurrentAffairsQuestion = asyncHandler(async (req, res) => {
   }
 
   // Create new question
-  const newQuestion = await TournamentQuestion.create({
+  const newQuestion = new TournamentQuestion({
     question,
     hindiQuestion,
-    options,
-    hindiOptions,
-    correctAnswer,
+    options: {
+      a: { text: options.a, hindiText: hindiOptions.a },
+      b: { text: options.b, hindiText: hindiOptions.b },
+      c: { text: options.c, hindiText: hindiOptions.c },
+      d: { text: options.d, hindiText: hindiOptions.d },
+    },
+
     category: 'current affairs',
-    difficulty,
+    difficulty: parseFloat(difficulty),
     isManuallyAdded: true,
   })
+
+  // Set the correctAnswer
+  if (newQuestion.options[correctAnswer]) {
+    newQuestion.correctAnswer = newQuestion.options[correctAnswer]._id
+  } else {
+    res.status(400)
+    throw new Error('Invalid correctAnswer')
+  }
+
+  await newQuestion.save()
 
   if (newQuestion) {
     res.status(201).json(newQuestion)
@@ -711,25 +725,73 @@ const addCurrentAffairsQuestion = asyncHandler(async (req, res) => {
 // @route  PUT /api/tournament/questions/current-affairs/:id
 // @access Private (Admin only)
 const updateCurrentAffairsQuestion = asyncHandler(async (req, res) => {
-  const question = await TournamentQuestion.findById(req.params.id)
+  const session = await mongoose.startSession()
+  session.startTransaction()
 
-  if (!question) {
-    res.status(404)
-    throw new Error('Question not found')
-  }
+  try {
+    const oldQuestion = await TournamentQuestion.findById(
+      req.params.id,
+    ).session(session)
 
-  if (question.category !== 'current affairs') {
+    if (!oldQuestion) {
+      throw new Error('Question not found')
+    }
+
+    if (oldQuestion.category !== 'current affairs') {
+      throw new Error('This is not a current affairs question')
+    }
+
+    const {
+      question: questionText,
+      hindiQuestion,
+      options,
+      hindiOptions,
+      correctAnswer,
+      difficulty,
+    } = req.body
+
+    // Create new question data
+    const newQuestionData = {
+      question: questionText || oldQuestion.question,
+      hindiQuestion: hindiQuestion || oldQuestion.hindiQuestion,
+      options: {
+        a: { text: options.a.text, hindiText: hindiOptions.a.text },
+        b: { text: options.b.text, hindiText: hindiOptions.b.text },
+        c: { text: options.c.text, hindiText: hindiOptions.c.text },
+        d: { text: options.d.text, hindiText: hindiOptions.d.text },
+      },
+      category: 'current affairs',
+      difficulty: parseFloat(difficulty) || oldQuestion.difficulty,
+      isManuallyAdded: true,
+    }
+
+    // Create new question
+    const newQuestion = new TournamentQuestion(newQuestionData)
+
+    // Set the correctAnswer
+    if (correctAnswer && newQuestion.options[correctAnswer]) {
+      newQuestion.correctAnswer = newQuestion.options[correctAnswer]._id
+    } else {
+      throw new Error('Invalid correctAnswer')
+    }
+
+    // Save the new question
+    await newQuestion.save({ session })
+
+    // Delete the old question
+    await TournamentQuestion.findByIdAndDelete(req.params.id).session(session)
+
+    // Commit the transaction
+    await session.commitTransaction()
+    session.endSession()
+
+    res.json(newQuestion)
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
     res.status(400)
-    throw new Error('This is not a current affairs question')
+    throw new Error(`Error updating question: ${error.message}`)
   }
-
-  const updatedQuestion = await TournamentQuestion.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true },
-  )
-
-  res.json(updatedQuestion)
 })
 
 // @desc   Delete a current affairs question
@@ -783,47 +845,73 @@ const startQuiz = asyncHandler(async (req, res) => {
       message: `Maximum number of quiz attempts (${quizCount}) for this category has been reached`,
     })
   }
+  // Check if a session already exists
+  const existingSession = await QuizSession.findOne({
+    user: userId,
+    tournament: tournamentId,
+    category: category,
+    completed: false,
+  })
 
-  try {
-    // Generate quiz questions
-    const questions = await generateCategoryQuiz(userId, tournamentId, category)
-    const attemptNumber = currentAttempts + 1
-    // Create a new quiz session
-    const quizSession = await QuizSession.create({
-      user: userId,
-      tournament: tournamentId,
-      category,
-      attemptNumber,
-      questions: questions.map(q => q._id),
-      startTime: new Date(),
-      endTime: new Date(Date.now() + 60000), // 60 seconds from now
-    })
-
-    // Update category attempts
-    registration.categoryAttempts.set(category, attemptNumber)
-    await registration.save()
-    // await registration.save()
-
-    // Remove sensitive information (like correct answer) before sending to client
-    const clientQuestions = questions.map(q => ({
-      _id: q._id,
-      question: lang === 'hi' ? q.hindiQuestion : q.question,
-      options: lang === 'hi' ? q.hindiOptions : q.options,
-    }))
-
-    res.json({
-      message: 'Quiz started',
-      quizSession: {
-        _id: quizSession._id,
-        category: quizSession.category,
-        startTime: quizSession.startTime,
-        endTime: quizSession.endTime,
-        questions: clientQuestions,
+  if (existingSession) {
+    return res.status(400).json({
+      message: 'A quiz session for this category is already in progress',
+      existingSession: {
+        _id: existingSession._id,
+        startTime: existingSession.startTime,
+        endTime: existingSession.endTime,
       },
     })
-  } catch (error) {
-    res.status(400).json({ message: error.message })
   }
+  const attemptNumber = currentAttempts + 1
+  // Generate quiz questions
+  const questions = await generateCategoryQuiz(userId, tournamentId, category)
+
+  // Create a new quiz session
+  const quizSession = await QuizSession.create({
+    user: userId,
+    tournament: tournamentId,
+    category,
+    attemptNumber,
+    questions: questions.map(q => q._id),
+    startTime: new Date(),
+    endTime: new Date(Date.now() + 60000), // 60 seconds from now
+  })
+  // Update category attempts
+  registration.categoryAttempts.set(category, attemptNumber)
+  await registration.save()
+
+  // Jumble options and remove sensitive information before sending to client
+  const clientQuestions = questions.map(q => {
+    const questionText = lang === 'hi' ? q.hindiQuestion : q.question
+    const options = q.options
+
+    // Create an array of option objects with id and text
+    const optionArray = Object.entries(options).map(([key, option]) => ({
+      id: option._id.toString(),
+      text: lang === 'hi' ? option.hindiText : option.text,
+    }))
+
+    // Shuffle the option array
+    const shuffledOptions = optionArray.sort(() => Math.random() - 0.5)
+
+    return {
+      _id: q._id,
+      question: questionText,
+      options: shuffledOptions,
+    }
+  })
+
+  res.json({
+    message: 'Quiz started',
+    quizSession: {
+      _id: quizSession._id,
+      category: quizSession.category,
+      startTime: quizSession.startTime,
+      endTime: quizSession.endTime,
+      questions: clientQuestions,
+    },
+  })
 })
 
 // @desc   Submit quiz answers
@@ -869,9 +957,10 @@ const submitQuiz = asyncHandler(async (req, res) => {
       let correctCount = 0
 
       const updatedResponses = userResponses.map((response, index) => {
-        const isCorrect =
-          questions.find(q => q._id.toString() === questionsIds[index])
-            .correctAnswer === response
+        const question = questions.find(
+          q => q._id.toString() === questionsIds[index],
+        )
+        const isCorrect = question.correctAnswer.toString() === response
         if (isCorrect) correctCount++
         return {
           questionId: questionsIds[index],
@@ -886,10 +975,12 @@ const submitQuiz = asyncHandler(async (req, res) => {
           (acc, question) => acc + parseFloat(question.difficulty),
           0,
         ) / questions.length
+
       const apparentTimeTaken =
         timeTaken <= 10
           ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
           : timeTaken
+
       const apparentScore =
         ((score / questions.length) * Math.log(score / questions.length + 1)) /
         Math.log(1.3)
@@ -916,7 +1007,7 @@ const submitQuiz = asyncHandler(async (req, res) => {
       const previousBestScore =
         registration.categoryScores.get(quizSession.category) || 0
 
-      if (RQM_score > previousBestScore) {
+      if (RQM_score >= previousBestScore) {
         registration.categoryScores.set(quizSession.category, RQM_score)
         registration.totalScore =
           registration.totalScore - previousBestScore + RQM_score
@@ -1079,6 +1170,33 @@ const getQuizSummary = asyncHandler(async (req, res) => {
 
   const topLeaders = await getTopLeadersForCategory(tournamentId, category)
 
+  // Helper function to find the key (a, b, c, d) for a given ObjectId or value
+  const findKeyByValue = (options, target) => {
+    for (const [key, value] of Object.entries(options)) {
+      if (typeof value === 'object' && value !== null) {
+        // New schema: compare ObjectId
+        if (value._id && value._id.toString() === target.toString()) {
+          return key
+        }
+      } else {
+        // Old schema: compare string values
+        if (key === target) {
+          return key
+        }
+      }
+    }
+    return null
+  }
+
+  // Helper function to get option text
+  const getOptionText = option => {
+    return typeof option === 'object' && option !== null
+      ? lang === 'hi'
+        ? option.hindiText
+        : option.text
+      : option
+  }
+
   const summary = {
     score: `${score}/${totalQuestions}`,
     RQM_score: bestQuizSession.RQM_score,
@@ -1086,20 +1204,24 @@ const getQuizSummary = asyncHandler(async (req, res) => {
     timeTaken: bestQuizSession.timeTaken,
     totalTournamentScore: registration.totalScore,
     topLeaders: topLeaders,
-    result: bestQuizSession.responses.map((response, index) => ({
-      question:
-        lang === 'hi'
-          ? questions[index].hindiQuestion
-          : questions[index].question,
-      options:
-        lang === 'hi'
-          ? questions[index].hindiOptions
-          : questions[index].options,
-      answer: questions[index].correctAnswer,
-      userAnswer: response.userAnswer,
-      isCorrect: response.isCorrect,
-      explanation: questions[index].explanation || 'No explanation provided',
-    })),
+    result: bestQuizSession.responses.map((response, index) => {
+      const question = questions[index]
+      const options = question.options
+
+      return {
+        question: lang === 'hi' ? question.hindiQuestion : question.question,
+        options: {
+          a: getOptionText(options.a),
+          b: getOptionText(options.b),
+          c: getOptionText(options.c),
+          d: getOptionText(options.d),
+        },
+        answer: findKeyByValue(options, question.correctAnswer),
+        userAnswer: findKeyByValue(options, response.userAnswer),
+        isCorrect: response.isCorrect,
+        explanation: question.explanation || 'No explanation provided',
+      }
+    }),
   }
 
   res.json(summary)
