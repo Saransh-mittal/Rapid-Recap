@@ -16,6 +16,19 @@ const {
   societyOrCircleUpgradeTemplate,
 } = require('../data/inboxNotificationsTemplates')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
+const { setTimeout } = require('timers/promises')
+
+const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation()
+    } catch (error) {
+      if (attempt === maxRetries) throw error
+      console.error(`Attempt ${attempt} failed: ${error.message}. Retrying...`)
+      await setTimeout(delay * attempt)
+    }
+  }
+}
 
 const findSocietyCircleByIQ = async (IQScore, user) => {
   const CircleAndSocietyData = await getCircleAndSocietyData(user) // Fetch data by calling the function
@@ -170,7 +183,7 @@ const fetchUniqueArticleIds = async () => {
 }
 
 const updatePercentilesForArticles = async uniqueArticleIds => {
-  const batchSize = 25 // Adjust this value based on your system's capabilities
+  const batchSize = 8500 // Adjust this value based on your system's capabilities
   const totalBatches = Math.ceil(uniqueArticleIds.length / batchSize)
 
   const processBatch = async (batch, batchIndex) => {
@@ -212,64 +225,84 @@ const updatePercentilesForArticles = async uniqueArticleIds => {
   }
 }
 
+// Atomic update function
+const atomicUpdateUserScore = async (userId, newScore) => {
+  try {
+    const result = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: { userScore: newScore } },
+      { new: true, runValidators: true },
+    )
+    if (!result) {
+      console.warn(`User ${userId} not found during atomic update.`)
+    }
+    return result
+  } catch (error) {
+    console.error(`Error in atomic update for user ${userId}: ${error.message}`)
+    throw error
+  }
+}
+
 const calculateUserScores = async users => {
   const userScores = []
   let sumOfUserScores = 0
   const currSeason = configService.getCurrentSeason()
 
-  const fetchQuizAttemptsPromises = users.map(async user => {
+  for (const user of users) {
     try {
-      const quizAttempts = await QuizAttempt.find({
-        user: user._id,
-        season: parseInt(currSeason, 10),
-      }).populate({
-        path: 'article',
-        populate: { path: 'quiz' },
+      const quizAttempts = await retryOperation(async () => {
+        return await QuizAttempt.find({
+          user: user._id,
+          season: parseInt(currSeason, 10),
+        }).populate({
+          path: 'article',
+          populate: { path: 'quiz' },
+        })
       })
-      return { user, quizAttempts }
-    } catch (error) {
-      console.error(
-        `Error fetching quiz attempts for user ${user._id}: ${error.message}`,
-      )
-      console.error(`Stack trace: ${error.stack}`)
-      throw error
-    }
-  })
 
-  const userQuizAttempts = await Promise.all(fetchQuizAttemptsPromises)
-  for (const { user, quizAttempts } of userQuizAttempts) {
-    let userScore = user.baseUserScore || 0
+      let userScore = user.baseUserScore || 0
 
-    for (const attempt of quizAttempts) {
-      if (
-        !attempt ||
-        !attempt.article ||
-        !attempt.article.quiz ||
-        !attempt.articleDifficulty
-      ) {
-        console.error(`Invalid quiz attempt data for user ${user._id}.`)
-        continue
+      for (const attempt of quizAttempts) {
+        if (
+          !attempt ||
+          !attempt.article ||
+          !attempt.article.quiz ||
+          !attempt.articleDifficulty ||
+          typeof attempt.userPercentile !== 'number'
+        ) {
+          console.warn(
+            `Skipping invalid quiz attempt data for user ${user._id}.`,
+          )
+          continue
+        }
+
+        const quizScore = attempt.articleDifficulty * attempt.userPercentile
+        if (isNaN(quizScore) || !isFinite(quizScore)) {
+          console.warn(
+            `Invalid quiz score calculated for user ${user._id}. Skipping this attempt.`,
+          )
+          continue
+        }
+
+        userScore += quizScore
       }
 
-      const quizScore = attempt.articleDifficulty * attempt.userPercentile
-      userScore += quizScore
-    }
-    if (user.inGameName === 'Bsahu4712') console.log(userScore)
-    userScore = typeof userScore === 'number' && userScore ? userScore : 0
-    try {
-      const u = await User.findById(user._id)
-      u.userScore = userScore
-      await u.save()
-    } catch (error) {
-      console.error(
-        `Error saving user score for user ${user._id}: ${error.message}`,
-      )
-      console.error(`Stack trace: ${error.stack}`)
-      throw error
-    }
+      userScore = Math.max(0, userScore) // Ensure non-negative score
 
-    sumOfUserScores += userScore
-    userScores.push({ user, userScore })
+      await retryOperation(async () => {
+        const updatedUser = await atomicUpdateUserScore(user._id, userScore)
+        if (!updatedUser) {
+          console.warn(`User ${user._id} not found when updating score.`)
+        }
+      })
+
+      sumOfUserScores += userScore
+      userScores.push({ user, userScore })
+    } catch (error) {
+      console.error(`Error processing user ${user._id}: ${error.message}`)
+      console.error(`Stack trace: ${error.stack}`)
+      // Continue processing other users instead of throwing
+    }
   }
 
   return { userScores, sumOfUserScores }
@@ -340,13 +373,13 @@ const dailyUserIQCalc = async () => {
     const users = await fetchUsersWithQuizAttempts()
     console.log('\nFetched users.\n')
 
-    console.log('\nFetching unique article IDs...\n')
-    const uniqueArticleIds = await fetchUniqueArticleIds()
-    console.log('\nFetched unique article IDs.\n')
+    // console.log('\nFetching unique article IDs...\n')
+    // const uniqueArticleIds = await fetchUniqueArticleIds()
+    // console.log('\nFetched unique article IDs.\n')
 
-    console.log('\nUpdating percentiles on quiz...\n')
-    await updatePercentilesForArticles(uniqueArticleIds)
-    console.log('\nUpdated percentiles on quiz.\n')
+    // console.log('\nUpdating percentiles on quiz...\n')
+    // await updatePercentilesForArticles(uniqueArticleIds)
+    // console.log('\nUpdated percentiles on quiz.\n')
 
     console.log('\nCalculating user scores...\n')
     const { userScores, sumOfUserScores } = await calculateUserScores(users)

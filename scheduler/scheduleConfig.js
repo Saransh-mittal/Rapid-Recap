@@ -220,11 +220,11 @@ let schedules = [
     cronPattern: convertISTtoUTCCron(11, 0, '2,3,4,5'), // At 11:00 AM on Tuesday, Wednesday, Thursday, and Friday
     task: inRegisterationPeriod,
   },
-  // {
-  //   name: 'registerDummyUsers',
-  //   cronPattern: convertISTtoUTCCron(12, 0, '1,2,3,4,5'), // At 12:00 PM on Monday, Tuesday, Wednesday, Thursday, and Friday
-  //   task: registerDummyUsers,
-  // },
+  {
+    name: 'registerDummyUsers',
+    cronPattern: convertISTtoUTCCron(12, 0, '1,2,3,4,5'), // At 12:00 PM on Monday, Tuesday, Wednesday, Thursday, and Friday
+    task: registerDummyUsers,
+  },
   // {
   //   name: 'botQuizParticipationSaturday',
   //   cronPattern: convertISTtoUTCCron(10, 0, '6'), // At 10:00 AM on Saturday

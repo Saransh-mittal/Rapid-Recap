@@ -9,12 +9,12 @@
     "title": "Eligibility and Registration",
     "content1": "To join the tournament mode, you need to have: a 2-day quiz streak, OR complete 3 quizzes under 30 minutes, OR complete 6 quizzes in a day, OR achieve an RQM score greater than 42 in 2 quizzes in a day. This ensures you're ready to compete!. It's like building your quiz power!",
     "content2": "Registration is open from Monday to Friday until 11 PM. Don't miss your chance to enter the arena of knowledge!",
-    "content3": "During registration, you'll choose 5 categories out of 15 exciting options. Plus, everyone gets to tackle the 'Current Affairs' category!"
+    "content3": "During registration, you'll choose 3 categories out of 15 exciting options. Plus, everyone gets to tackle the 'Current Affairs' category!"
   },
   "page3": {
     "title": "Tournament Structure",
     "content1": "The big event happens every Saturday and Sunday. You can participate at any time during these two days!",
-    "content2": "You'll face 5 questions from each of your chosen categories, plus 5 from Current Affairs. That's a total of 30 brain-teasing questions!",
+    "content2": "You'll face 5 questions from each of your chosen categories, plus 5 from Current Affairs. There will be 2 attempts for each category. That's a total of 40 brain-teasing questions!",
     "content3": "The Current Affairs questions come about global events from the last 5 days, keeping you in the loop!"
   },
   "page4": {
@@ -30,6 +30,12 @@
     "content3": "The leaderboard updates instantly, so you'll always know where you stand in the heat of the competition!"
   },
   "page6": {
+    "title": "Earn Badges for you!",
+    "content1": "Showcase your skills by earning badges in the Rapid Recap Tournament! Participants who rank 1st, 2nd, and 3rd overall will receive Hall of Fame badges, while category-specific top performers will earn Ace, Pro, and Champ badges.",
+    "content2": "Players in the top 5%, 10%, or 25% of the leaderboard will earn corresponding badges, and all other participants will receive the Quiz Warrior badge for their efforts.",
+    "content3": "Your badges will be displayed on your profile page and the main leaderboard, celebrating your accomplishments for all to see!"
+  },
+  "page7": {
     "title": "Final Tips and Good Luck!",
     "content1": "Stay curious and keep learning! The tournament is designed to be both fun and educational.",
     "content2": "Don't forget to brush up on current affairs. It might give you the edge you need to climb the leaderboard!",

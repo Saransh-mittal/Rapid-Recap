@@ -11,5 +11,6 @@
   "invalidSelectionDescription": "Please select exactly 5 categories.",
   "startQuiz": "Start Quiz",
   "loadingModal": "Loading modal...",
-  "loadingQuizReport": "Loading quiz report..."
+  "loadingQuizReport": "Loading quiz report...",
+  "viewFirstAttempt": "View First Attempt: "
 }

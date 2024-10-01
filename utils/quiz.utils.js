@@ -440,42 +440,42 @@ const generateQuestionsForHindiQuiz = async ({
 
 const updatePercentilesOnQuizDeactivation = async ({ id }) => {
   try {
-    const attempts = await QuizAttempt.find({
-      article: id,
-    })
-    //console.log(id, "Attempts", attempts.length);
+    const attempts = await QuizAttempt.find({ article: id }).lean()
 
-    // Calculate the total number of attempts
+    if (attempts.length === 0) {
+      console.log(`No attempts found for quiz with id: ${id}`)
+      return
+    }
+
     const totalAttempts = attempts.length
-    // console.log('Total Attempts', totalAttempts)
+
     // Sort attempts by RQM score
     attempts.sort((a, b) => b.RQM_score - a.RQM_score)
 
-    // Update user percentile based on their position in the sorted array
-    //console.log("Total Attempts", totalAttempts);
-    // await Promise.all(
-    //   attempts.map(async (attempt, index) => {
-    //     if (!attempt || !attempt.article || !attempt.articleDifficulty) {
-    //       return // Skip this attempt
-    //     }
-    //     const percentile = ((totalAttempts - index) / totalAttempts) * 100
+    // Calculate percentiles and prepare bulk update
+    const bulkOps = attempts
+      .map((attempt, index) => {
+        if (!attempt || !attempt.article || !attempt.articleDifficulty) {
+          return null // Skip invalid attempts
+        }
+        const percentile = ((totalAttempts - index) / totalAttempts) * 100
+        return {
+          updateOne: {
+            filter: { _id: attempt._id },
+            update: { $set: { userPercentile: percentile } },
+            upsert: false,
+          },
+        }
+      })
+      .filter(op => op !== null)
 
-    //     const attemptQuiz = await QuizAttempt.findById(attempt._id)
-    //     attemptQuiz.userPercentile = percentile
-    //     // Save updated attempt
-    //     await attemptQuiz.save()
-    //   }),
-    // )
-
-    // Update user percentile based on their position in the sorted array
-    for (let index = 0; index < attempts.length; index++) {
-      const attempt = attempts[index]
-      if (!attempt || !attempt.article || !attempt.articleDifficulty) {
-        continue // Skip this attempt
-      }
-      const percentile = ((totalAttempts - index) / totalAttempts) * 100
-      attempt.userPercentile = percentile
-      await attempt.save()
+    if (bulkOps.length > 0) {
+      const result = await QuizAttempt.bulkWrite(bulkOps)
+      // console.log(
+      //   `Updated ${result.modifiedCount} out of ${totalAttempts} attempts for quiz ${id}`,
+      // )
+    } else {
+      console.log(`No valid attempts to update for quiz ${id}`)
     }
   } catch (error) {
     console.error('Error updating percentiles on quiz deactivation:', error)

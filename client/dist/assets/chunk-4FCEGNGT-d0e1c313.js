@@ -1,1 +1,0 @@
-import{b as m,u}from"./chunk-JQMJHPZH-296621f9.js";import{at as d,au as i,t as p,X as x,ax as C}from"./index-44fab738.js";var M=d((s,o)=>{const{onClick:a,className:t,...l}=s,{onClose:e}=m(),n=i("chakra-modal__close-btn",t),c=u();return p.jsx(x,{ref:o,__css:c.closeButton,className:n,onClick:C(a,r=>{r.stopPropagation(),e()}),...l})});M.displayName="ModalCloseButton";export{M};

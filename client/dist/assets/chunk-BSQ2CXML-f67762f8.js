@@ -1,0 +1,1 @@
+import{at as r,t as s,av as e,au as o}from"./index-2a5c539c.js";var p=r(function(a,t){return s.jsx(e.div,{...a,ref:t,role:"group",className:o("chakra-stat__group",a.className),__css:{display:"flex",flexWrap:"wrap",justifyContent:"space-around",alignItems:"flex-start"}})});p.displayName="StatGroup";export{p as S};
