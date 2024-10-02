@@ -22,6 +22,8 @@ import {
 } from '../redux/quizSlice'
 import { setTotalUsersGivenQuiz } from '../redux/articleSlice'
 import i18n from 'i18next'
+import useNavigationWarning from '../customHooks/useNavigationWarning'
+import { useNavigate } from 'react-router-dom'
 
 // Lazy load components
 const ConfirmationModal = lazy(() =>
@@ -70,7 +72,7 @@ const Quiz = () => {
     i18n.language,
     onClose,
   )
-
+  const navigate = useNavigate()
   const totalQuestions = quizData ? quizData.questions.length : 0
   const toast = useToast()
   const { isBoosted } = useSelector(state => state.app)
@@ -81,7 +83,6 @@ const Quiz = () => {
   const [userAnswers, setUserAnswers] = useState([])
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
   const [showInstruction, setShowInstruction] = useState(true)
-
   const [showSubmittedInterface, setShowSubmittedInterface] = useState(false)
   const [showQuizSummary, setShowQuizSummary] = useState(false)
   const [result, setResult] = useState({})
@@ -97,6 +98,8 @@ const Quiz = () => {
     onOpen: onBackAlertOpen,
     onClose: onBackAlertClose,
   } = useDisclosure()
+  const shouldWarnBeforeLeaving = !showInstruction && !submitted
+  useNavigationWarning(shouldWarnBeforeLeaving)
 
   useEffect(() => {
     const initialAnswers = Array(totalQuestions).fill('')
@@ -335,7 +338,6 @@ const Quiz = () => {
         setQuizLeftToGetQuizBoost,
         dispatch: dispatchRedux,
       })
-
       handleSubmitQuiz({
         timeTaken,
         userAnswers,
@@ -343,55 +345,6 @@ const Quiz = () => {
         setMessageForTournament,
         setUserEligibleForTournament,
       })
-      dispatchRedux(
-        setUser({
-          ...user,
-          xp:
-            user.xp +
-            (result?.xpAwarded || 5) +
-            (result?.quinBoostUtilized ? 10 : 0),
-          todaysQuizCnt: user.todaysQuizCnt + 1,
-          revivalPeriodEnd:
-            user.todaysQuizCnt + 1 === 6 ? null : user.revivalPeriodEnd,
-        }),
-      )
-
-      result?.quinBoostUtilized
-        ? dispatchRedux(
-            addNoteMessage({
-              messageType: 'xpAward',
-              xpAwarded: result?.xpAwarded || 10,
-              title: t('XP Awarded For Quiz + Quin Boost'),
-              actions: [{ actionType: 'VIEW_EXPERIENCE' }],
-              width: '250px',
-              milestoneName: 'QUIN_BOOST',
-              isMilestone: true,
-              duration: null,
-              xpSource: 'QUIZ',
-            }),
-          )
-        : dispatchRedux(
-            addNoteMessage({
-              messageType: 'xpAward',
-              xpAwarded: result?.xpAwarded || 5,
-              title: t('XP Awarded For Quiz'),
-              actions: [{ actionType: 'VIEW_EXPERIENCE' }],
-              width: '250px',
-              xpSource: 'QUIZ',
-            }),
-          )
-      if (user?.quizAttempts.length % 3 === 0) {
-        dispatchRedux(
-          addNoteMessage({
-            messageType: 'quizFeedback',
-            title: t('Please rate us'),
-            duration: null,
-            width: '300px',
-            actions: [{ actionType: 'SUBMIT_QUIZ_FEEDBACK' }],
-            quizId: quizId,
-          }),
-        )
-      }
 
       setShowConfirmationModal(false)
     } catch (error) {
@@ -414,11 +367,6 @@ const Quiz = () => {
     handleClose,
   ])
 
-  const handleBackButtonConfirm = useCallback(async () => {
-    await handleConfirmClose()
-    onBackAlertClose()
-  }, [handleConfirmClose, onBackAlertClose])
-
   useEffect(() => {
     const handleBeforeUnload = event => {
       event.preventDefault()
@@ -433,20 +381,31 @@ const Quiz = () => {
   }, [showInstruction])
 
   useEffect(() => {
-    const handleBackButton = event => {
-      if (!showInstruction && !submitted) {
+    let lastPathName = window.location.pathname
+    const handlePopState = event => {
+      if (shouldWarnBeforeLeaving) {
         event.preventDefault()
-        onBackAlertOpen()
+        // Optionally, you can show a custom modal here instead of the browser's default
+        if (
+          window.confirm(
+            'Are you sure you want to leave? Your progress will be lost.',
+          )
+        ) {
+          // If confirmed, close the modal and navigate away
+          handleConfirmClose()
+        } else {
+          // If not confirmed, push a new state to remain on the current page
+          navigate(lastPathName)
+        }
       }
     }
 
-    window.history.pushState(null, '', window.location.pathname)
-    window.addEventListener('popstate', handleBackButton)
+    window.addEventListener('popstate', handlePopState)
 
     return () => {
-      window.removeEventListener('popstate', handleBackButton)
+      window.removeEventListener('popstate', handlePopState)
     }
-  }, [showInstruction, submitted, onBackAlertOpen])
+  }, [shouldWarnBeforeLeaving])
 
   useEffect(() => {
     if (submitted && !load && (isBoosted || isQuinBoostAvailable)) {
@@ -655,15 +614,17 @@ const Quiz = () => {
           />
         </Suspense>
       )}
-      <Suspense fallback={null}>
-        <ConfirmationModal
-          bg={'black'}
-          isOpen={isBackAlertOpen}
-          onClose={onBackAlertClose}
-          onConfirm={handleBackButtonConfirm}
-          message={t('ConfirmCloseMessage')}
-        />
-      </Suspense>
+      {/* {isBackAlertOpen && (
+        <Suspense fallback={null}>
+          <ConfirmationModal
+            bg={'black'}
+            isOpen={isBackAlertOpen}
+            onClose={onBackAlertClose}
+            onConfirm={handleBackButtonConfirm}
+            message={t('ConfirmCloseMessage')}
+          />
+        </Suspense>
+      )} */}
     </>
   )
 }

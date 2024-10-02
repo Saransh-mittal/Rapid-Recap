@@ -11,6 +11,7 @@ const TrackTime = ({ userId, articleId }) => {
   const lastSentTimeRef = useRef(0)
   const isTrackingRef = useRef(true)
   const sendingPromiseRef = useRef(null)
+  const lastXpAwardTimeRef = useRef(0)
   const { user } = useSelector(state => state.auth)
   const { t } = useTranslation('TrackTime')
 
@@ -52,7 +53,11 @@ const TrackTime = ({ userId, articleId }) => {
 
           const jsonData = await response.json()
           if (response.ok) {
-            if (jsonData.xpAwardedForTimeSpentMoreThan10Min) {
+            const XP_AWARD_COOLDOWN = 60 * 60 * 1000 // 1 hour in milliseconds
+            if (
+              jsonData.xpAwardedForTimeSpentMoreThan10Min &&
+              now - lastXpAwardTimeRef.current > XP_AWARD_COOLDOWN
+            ) {
               dispatch(setUser({ ...user, xp: user.xp + 10 }))
               dispatch(
                 addNoteMessage({
@@ -67,6 +72,7 @@ const TrackTime = ({ userId, articleId }) => {
                   xpSource: t('10 Min Article Read'),
                 }),
               )
+              lastXpAwardTimeRef.current = now
             }
             lastSentTimeRef.current = now
             accumulatedTimeRef.current = 0
@@ -83,7 +89,7 @@ const TrackTime = ({ userId, articleId }) => {
         startTimeRef.current = now
       }
     },
-    [userId, articleId],
+    [userId, articleId, dispatch, user],
   )
 
   const handleVisibilityChange = useCallback(() => {

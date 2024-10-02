@@ -143,7 +143,6 @@ const NoteMessageSummary = ({ messages, onClose }) => {
       message => message.messageType === 'storyFeedback',
     )
     if (feedbackMessage) {
-      // console.log(feedbackMessage)
       setStoryId(feedbackMessage.storyId)
     }
 
@@ -151,7 +150,6 @@ const NoteMessageSummary = ({ messages, onClose }) => {
       message => message.messageType === 'quizFeedback',
     )
     if (quizFeedbackMessage) {
-      console.log(quizFeedbackMessage)
       setQuizId(quizFeedbackMessage.quizId)
     }
   }, [messages])
