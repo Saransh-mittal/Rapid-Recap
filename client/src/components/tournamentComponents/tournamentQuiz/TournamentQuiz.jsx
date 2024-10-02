@@ -19,11 +19,11 @@ import useTimer from '../../../customHooks/useTimer'
 import useSound from '../../../customHooks/useSound'
 import FullScreenLoadingSpinner from './FullScreenLoadingSpinner'
 import {
-  setCompletedCategories,
   setRefetchLeaderBoard,
   updateCategoryStatus,
 } from '../../../redux/tournamentSlice'
 import i18n from 'i18next'
+import useNavigationWarning from '../../../customHooks/useNavigationWarning'
 
 // Lazy loaded components
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
@@ -64,6 +64,8 @@ const TournamentQuiz = () => {
   const [showGetSetGo, setShowGetSetGo] = useState(false)
   const [quizStarted, setQuizStarted] = useState(false)
   const [showCategoryQuizSummary, setShowCategoryQuizSummary] = useState(false)
+  const shouldWarnBeforeLeaving = !submitted
+  useNavigationWarning(shouldWarnBeforeLeaving)
 
   const { playClick } = useSound()
 
@@ -244,6 +246,33 @@ const TournamentQuiz = () => {
     dispatch(setTournamentQuiz(false))
     setShowConfirmationModal(false)
   }, [dispatch, timeTaken, userAnswers, handleSubmitQuiz])
+
+  useEffect(() => {
+    let lastPathName = window.location.pathname
+    const handlePopState = event => {
+      if (shouldWarnBeforeLeaving) {
+        event.preventDefault()
+        // Optionally, you can show a custom modal here instead of the browser's default
+        if (
+          window.confirm(
+            'Are you sure you want to leave? Your progress will be lost.',
+          )
+        ) {
+          // If confirmed, close the modal and navigate away
+          handleConfirmClose()
+        } else {
+          // If not confirmed, push a new state to remain on the current page
+          navigate(lastPathName)
+        }
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [shouldWarnBeforeLeaving])
 
   const handleAnimationComplete = useCallback(() => {
     setShowGetSetGo(false)

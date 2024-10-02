@@ -93,11 +93,6 @@ const Quiz = () => {
   const [userEligibleForTournament, setUserEligibleForTournament] = useState(
     user.eligibleForTournament,
   )
-  const {
-    isOpen: isBackAlertOpen,
-    onOpen: onBackAlertOpen,
-    onClose: onBackAlertClose,
-  } = useDisclosure()
   const shouldWarnBeforeLeaving = !showInstruction && !submitted
   useNavigationWarning(shouldWarnBeforeLeaving)
 
