@@ -60,6 +60,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   })
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
+  const { isUnderMaintenance } = useSelector(state => state.tournament)
   const [showConfetti, setShowConfetti] = useState(false)
   const [rating, setRating] = useState(0)
   const [quizRating, setQuizRating] = useState(0)
@@ -457,7 +458,7 @@ const NoteMessageSummary = ({ messages, onClose }) => {
             </Flex>
           )
         case 'tournament':
-          return (
+          return isUnderMaintenance ? null : (
             <Flex
               direction="column"
               align="center"
@@ -541,16 +542,18 @@ const NoteMessageSummary = ({ messages, onClose }) => {
                     <Text fontSize="md" fontWeight="bold" color="white">
                       {tournamentTranslate('TournamentNoteMessage.topLeaders')}
                     </Text>
-                    {message?.leaderboard?.map((leader, index) => (
-                      <LeaderboardItem
-                        key={leader.userId}
-                        rank={index + 1}
-                        name={leader.inGameName || leader.name}
-                        score={leader.score}
-                        pic={leader.pic}
-                        message={message}
-                      />
-                    ))}
+                    {message?.leaderboard?.map((leader, index) =>
+                      leader?.score ? (
+                        <LeaderboardItem
+                          key={leader.userId}
+                          rank={index + 1}
+                          name={leader.inGameName || leader.name}
+                          score={leader.score}
+                          pic={leader.pic}
+                          message={message}
+                        />
+                      ) : null,
+                    )}
                   </VStack>
                 )}
                 {(message?.leaderboard?.length === 0 ||

@@ -168,7 +168,6 @@ const saveTournamentQuestions = async (category, response) => {
         newQuestion.options[questionData.correctAnswer]._id
 
       await newQuestion.save()
-      console.log(`Saved question: ${newQuestion._id}`)
     }
   } catch (error) {
     console.error('Error saving tournament questions:', error)

@@ -1,25 +1,27 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Center } from '@chakra-ui/react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import ComingSoonTournament from './ComingSoonTournament'
 import Tournament from './Tournament'
 import ServiceScreen from './ServiceScreen'
 import FullScreenLoadingSpinner from '../components/tournamentComponents/tournamentQuiz/FullScreenLoadingSpinner'
+import { setIsUnderMaintenance } from '../redux/tournamentSlice'
 
 const TournamentWrapper = () => {
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [isUnderMaintenance, setIsUnderMaintenance] = useState(false)
-  const { user, loginCheckStatus } = useSelector(state => state.auth)
 
+  const { user, loginCheckStatus } = useSelector(state => state.auth)
+  const { isUnderMaintenance } = useSelector(state => state.tournament)
+  const dispatch = useDispatch()
   useEffect(() => {
     const checkAuthorization = async () => {
       if (user && user._id) {
         try {
           const response = await axios.get(`/api/tournament/authorize`)
           setIsAuthorized(response.data.isAuthorized)
-          setIsUnderMaintenance(response.data.isUnderMaintenance)
+          dispatch(setIsUnderMaintenance(response.data.isUnderMaintenance))
         } catch (error) {
           console.error('Error checking authorization:', error)
           setIsAuthorized(false)

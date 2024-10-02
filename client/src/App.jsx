@@ -80,7 +80,9 @@ const App = () => {
   const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
-  const { tournamentId, status } = useSelector(state => state.tournament)
+  const { tournamentId, status, isRegistered } = useSelector(
+    state => state.tournament,
+  )
   const { updates } = useSelector(state => state.app)
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
   const handleNotifModalClose = useCallback(() => {
@@ -180,8 +182,7 @@ const App = () => {
 
   useEffect(() => {
     if (tournamentId && status === 'ongoing') {
-      const currentDay = moment().day()
-      if (currentDay === 0) dispatch(getTopLeaderboard(tournamentId))
+      dispatch(getTopLeaderboard({ tournamentId, t }))
     }
   }, [tournamentId, status])
 

@@ -270,9 +270,6 @@ const calculateUserScores = async users => {
           !attempt.articleDifficulty ||
           typeof attempt.userPercentile !== 'number'
         ) {
-          console.warn(
-            `Skipping invalid quiz attempt data for user ${user._id}.`,
-          )
           continue
         }
 
@@ -373,13 +370,13 @@ const dailyUserIQCalc = async () => {
     const users = await fetchUsersWithQuizAttempts()
     console.log('\nFetched users.\n')
 
-    // console.log('\nFetching unique article IDs...\n')
-    // const uniqueArticleIds = await fetchUniqueArticleIds()
-    // console.log('\nFetched unique article IDs.\n')
+    console.log('\nFetching unique article IDs...\n')
+    const uniqueArticleIds = await fetchUniqueArticleIds()
+    console.log('\nFetched unique article IDs.\n')
 
-    // console.log('\nUpdating percentiles on quiz...\n')
-    // await updatePercentilesForArticles(uniqueArticleIds)
-    // console.log('\nUpdated percentiles on quiz.\n')
+    console.log('\nUpdating percentiles on quiz...\n')
+    await updatePercentilesForArticles(uniqueArticleIds)
+    console.log('\nUpdated percentiles on quiz.\n')
 
     console.log('\nCalculating user scores...\n')
     const { userScores, sumOfUserScores } = await calculateUserScores(users)
