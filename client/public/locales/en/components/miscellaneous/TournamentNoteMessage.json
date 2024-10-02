@@ -29,8 +29,14 @@
         "3": "Almost there! Just {{requiredStreak}} more day to unlock tournament access. Only 6 quizzes over two days. Register now and get ready to show your knowledge!"
       }
     },
-    "default": "Get ready to compete and win amazing prizes!"
+    "default": "Get ready to compete and win amazing prizes!",
+    "topLeaders": "Top leaders",
+    "tournamentLeaderboard": "Tournament Leaderboard"
   },
-  "topLeaders": "Top 3 leaders",
-  "tournamentLeaderboard": "Tournament Leaderboard"
+  "Embark on an epic journey! Join the tournament and rise to greatness.": "Embark on an epic journey! Join the tournament and rise to greatness.",
+  "Your quest continues! Push forward and claim your place among legends.": "Your quest continues! Push forward and claim your place among legends.",
+  "Your adventure awaits! Begin your first challenge and carve your path to glory.": "Your adventure awaits! Begin your first challenge and carve your path to glory.",
+  "A grand stage is set! Step into the arena and showcase your prowess.": "A grand stage is set! Step into the arena and showcase your prowess.",
+  "Tournament": "Tournament",
+  "Rank": "Rank"
 }

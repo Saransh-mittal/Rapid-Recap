@@ -64,6 +64,7 @@ export const checkTournamentRegistration = createAsyncThunk(
           )
         }
       }
+
       dispatch(setTournamentId(tournament?._id))
       dispatch(setStatus(tournament?.status))
       return { tournament, isRegistered }
@@ -76,31 +77,48 @@ export const checkTournamentRegistration = createAsyncThunk(
 
 export const getTopLeaderboard = createAsyncThunk(
   'tournament/getTopLeaderboard',
-  async (tournamentId, { dispatch }) => {
+  async ({ tournamentId, t }, { getState, dispatch }) => {
+    const { auth } = getState()
+    const userId = auth.user._id
     try {
       const response = await axios.get(`/api/tournament/leaderboard`, {
         params: {
           tournamentId,
           page: 1,
           limit: 3,
+          userId,
         },
       })
-      const { leaderboard, tournamentNumber } = response.data
-      dispatch(
-        addNoteMessage({
-          messageType: 'tournament',
-          tournamentName:
-            '#' + String(String(tournamentNumber).padStart(3, '0')),
-          duration: null,
-          width: '300px',
-          leaderboard,
-          actions: [
-            {
-              actionType: 'VIEW_TOURNAMENT',
-            },
-          ],
-        }),
-      )
+      const { leaderboard, tournamentNumber, userStanding } = response.data
+      userStanding && dispatch(setUserStanding(userStanding))
+      // check if no leader has score above 0 then dont show the message
+      if (leaderboard.length > 0) {
+        let showLeaderboardMessage = false
+        leaderboard.forEach(leader => {
+          if (leader.score > 0) {
+            showLeaderboardMessage = true
+          }
+        })
+        showLeaderboardMessage &&
+          dispatch(
+            addNoteMessage({
+              title: t('Ongoing Tournament'),
+              tournamentName:
+                '#' + String(String(tournamentNumber).padStart(3, '0')),
+              messageType: 'tournament',
+              tournamentStatus: 'ongoing',
+              duration: null,
+              width: '300px',
+              leaderboard,
+              actions: [
+                {
+                  text: t('View Tournament'),
+                  actionType: 'VIEW_TOURNAMENT',
+                },
+              ],
+            }),
+          )
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error)
       // Handle error (e.g., dispatch an error notification)
@@ -123,12 +141,20 @@ const initialState = {
   categoryAttempts: {},
   completedCategories: [],
   categoryScores: {},
+  isUnderMaintenance: false,
+  userStanding: null,
 }
 
 const tournamentSlice = createSlice({
   name: 'tournament',
   initialState,
   reducers: {
+    setUserStanding: (state, action) => {
+      state.userStanding = action.payload
+    },
+    setIsUnderMaintenance: (state, action) => {
+      state.isUnderMaintenance = action.payload
+    },
     updateCategoryStatus: (state, action) => {
       const { category, attemptsLeft, isCompleted, score } = action.payload
       state.categoryAttempts[category] = 2 - attemptsLeft
@@ -202,6 +228,8 @@ export const {
   setStatus,
   setIsRegistered,
   updateCategoryStatus,
+  setIsUnderMaintenance,
+  setUserStanding,
 } = tournamentSlice.actions
 
 export default tournamentSlice.reducer

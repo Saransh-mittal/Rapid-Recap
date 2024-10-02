@@ -7,11 +7,14 @@ import {
   Progress,
   HStack,
   Avatar,
+  Spinner,
 } from '@chakra-ui/react'
 import NoteMessage from '../NoteMessage'
 import { formatRemainingTime } from '../../../utils/helper.utils'
 import { useTranslation } from 'react-i18next'
 import { LockIcon } from '@chakra-ui/icons'
+import TournamentOngoingMessage from './TournamentMessagesSubComp/TournamentOngoingMessage'
+import { useSelector } from 'react-redux'
 
 const TrophySVG = lazy(() => import('../../../assets/svg/TrophySVG'))
 const CalenderSVG = lazy(() => import('../../../assets/svg/CalenderSVG'))
@@ -30,6 +33,7 @@ const TournamentNoteMessage = ({
   messageForTournamentEligibility,
 }) => {
   const { t } = useTranslation('TournamentNoteMessage')
+  const { isUnderMaintenance } = useSelector(state => state.tournament)
 
   const getIcon = () => {
     switch (tournamentStatus) {
@@ -117,6 +121,14 @@ const TournamentNoteMessage = ({
           >
             {tournamentName}
           </Text>
+          {tournamentStatus === 'ongoing' && (
+            <Suspense fallback={<Spinner />}>
+              <TournamentOngoingMessage
+                t={t}
+                tournamentNumber={tournamentName}
+              />
+            </Suspense>
+          )}
           {tournamentStatus === 'registration' && (
             <>
               <Text fontSize="md" fontWeight="medium" color="gray.300">
@@ -159,15 +171,17 @@ const TournamentNoteMessage = ({
               <Text fontSize="md" fontWeight="bold" color="white">
                 {t('TournamentNoteMessage.topLeaders')}
               </Text>
-              {leaderboard?.map((leader, index) => (
-                <LeaderboardItem
-                  key={leader.userId}
-                  rank={index + 1}
-                  name={leader.inGameName || leader.name}
-                  score={leader.score}
-                  pic={leader.pic}
-                />
-              ))}
+              {leaderboard?.map((leader, index) =>
+                leader?.score > 0 ? (
+                  <LeaderboardItem
+                    key={leader.userId}
+                    rank={index + 1}
+                    name={leader.inGameName || leader.name}
+                    score={leader.score}
+                    pic={leader.pic}
+                  />
+                ) : null,
+              )}
             </VStack>
           )}
           {(leaderboard.length === 0 || !leaderboard) && (
@@ -213,6 +227,8 @@ const TournamentNoteMessage = ({
         ]
     }
   }
+
+  if (isUnderMaintenance) return null
 
   return (
     <NoteMessage
