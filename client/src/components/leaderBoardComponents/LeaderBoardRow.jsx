@@ -1,283 +1,175 @@
-import React, { lazy, Suspense, useRef, useEffect, useState } from 'react'
-import { Td, Tr, Flex, Image, Text, Box } from '@chakra-ui/react'
-import { findSocietyAndCircle } from '../../utils/helper.utils'
-import { useTranslation } from 'react-i18next'
+import React, { useState } from 'react'
+import {
+  Box,
+  VStack,
+  HStack,
+  Text,
+  Avatar,
+  useColorModeValue,
+  Flex,
+  Grid,
+  GridItem,
+  useBreakpointValue,
+} from '@chakra-ui/react'
+import { motion } from 'framer-motion'
+import BadgeIcon from './BadgeIcon'
+import ScoreItem from './ScoreItem'
 
-const NameLightning = lazy(() => import('../miscellaneous/NameLightning'))
-const TournamentBadge = lazy(() =>
-  import('../tournamentComponents/TournamentBadges'),
-)
+const MotionBox = motion(Box)
 
-const LeaderBoardRow = React.memo(
-  ({
-    user,
-    index,
-    isMobile,
-    isDesktop,
-    isTablet,
-    navigate,
-    textColor,
-    accentColor,
-  }) => {
-    const { t } = useTranslation('LeaderBoardRow')
-    const urlInGameName = user?.inGameName?.replace(/\./g, '%2E')
-    const nameRef = useRef(null)
-    const [nameWidth, setNameWidth] = useState(0)
+const RankIcon = ({ rank }) => {
+  return (
+    <Text fontSize="lg" fontWeight="bold">
+      {rank}
+    </Text>
+  )
+}
 
-    useEffect(() => {
-      if (nameRef.current) {
-        setNameWidth(nameRef.current.offsetWidth)
-      }
-    }, [user.name])
+const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
+  const [isBadgeHovered, setIsBadgeHovered] = useState(false)
+  const [isBadgePopoverOpen, setIsBadgePopoverOpen] = useState(false)
 
-    const handleNavigate = e => {
-      navigate(`/profile/${urlInGameName}`)
-    }
+  const textColor = useColorModeValue('gray.100', 'gray.200')
+  const accentColor = 'pink.400'
 
-    const renderTournamentBadge = () => {
-      if (user?.displayedBadge) {
-        return (
-          <Suspense
-            fallback={
-              <Box
-                width={isMobile ? '40px' : '60px'}
-                height={isMobile ? '40px' : '60px'}
-              />
-            }
-          >
-            <Box
-              className="tournament-badge"
-              left={`calc(${nameWidth}px + ${isMobile ? '10px' : `80px`})`}
-              top="50%"
+  const handleBadgeHover = isHovered => {
+    setIsBadgeHovered(isHovered)
+  }
+
+  const handleBadgePopoverToggle = isOpen => {
+    setIsBadgePopoverOpen(isOpen)
+  }
+
+  const isHoverDisabled = isBadgeHovered || isBadgePopoverOpen
+
+  return (
+    <MotionBox
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      whileHover={isHoverDisabled ? {} : { scale: 1.02 }}
+      backgroundColor="rgba(15, 13, 21, 0.4)"
+      boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
+      p={{ base: 3, md: 4 }}
+      borderRadius="xl"
+      mb={4}
+      border="1px solid"
+      borderColor={isCurrentUser ? accentColor : 'transparent'}
+      onClick={isHoverDisabled ? undefined : onClick}
+      cursor={isHoverDisabled ? 'default' : 'pointer'}
+      position="relative"
+    >
+      <Grid
+        templateColumns={{ base: 'auto 1fr auto', md: 'auto 1fr auto' }}
+        gap={{ base: 3, md: 6 }}
+        alignItems="center"
+      >
+        <GridItem>
+          <HStack spacing={{ base: 1, md: 3 }}>
+            <Flex
+              w="36px"
+              h="36px"
+              align="center"
+              justify="center"
+              borderRadius="full"
             >
-              <TournamentBadge
-                tournamentNumber={user?.displayedBadge?.tournamentNumber}
-                rank={user?.displayedBadge?.rank}
-                name={user?.name}
-                inGameName={user?.inGameName}
-                participantCnt={user?.displayedBadge?.participantCnt}
-                size={isMobile ? 'sm' : 'md'}
-                badgeName={{
-                  name: user?.displayedBadge?.badgeName,
-                  text: user?.displayedBadge?.text,
-                }}
+              <RankIcon rank={rank} />
+            </Flex>
+            <Avatar
+              size={{ base: 'sm', md: 'md' }}
+              name={user.name}
+              src={
+                user.pic ||
+                `https://avatars.dicebear.com/api/initials/${user.name}.svg`
+              }
+            />
+          </HStack>
+        </GridItem>
+        <GridItem>
+          <VStack align="start" spacing={0}>
+            <Text
+              fontSize={{ base: 'sm', md: 'lg' }}
+              fontWeight="bold"
+              color={textColor}
+            >
+              {user.name}
+            </Text>
+            <Text
+              fontSize={{ base: 'xs', md: 'md' }}
+              color={accentColor}
+              fontWeight="semibold"
+            >
+              @{user.inGameName}
+            </Text>
+          </VStack>
+        </GridItem>
+        <GridItem justifySelf="end">
+          <HStack spacing={6} display={{ base: 'none', md: 'flex' }}>
+            <Box
+              onMouseEnter={() => handleBadgeHover(true)}
+              onMouseLeave={() => handleBadgeHover(false)}
+              onClick={e => e.stopPropagation()}
+            >
+              <BadgeIcon
+                user={user}
+                size={'60px'}
+                onPopoverToggle={handleBadgePopoverToggle}
               />
             </Box>
-          </Suspense>
-        )
-      }
-      return null
-    }
-
-    return (
-      <Tr
-        onClick={handleNavigate}
-        cursor="pointer"
-        _hover={{ bg: 'whiteAlpha.100' }}
-        transition="background 0.2s"
-        w={'100%'}
+            <ScoreItem
+              label="IQ Score"
+              value={user.IQ_score.toFixed(1)}
+              color={accentColor}
+            />
+            <ScoreItem label="Exp Level" value={user.level} color={textColor} />
+            <ScoreItem
+              label="Submissions"
+              value={user.quizSubmissions}
+              color={textColor}
+            />
+            <ScoreItem
+              label="Avg. RQM"
+              value={user.RQM_avg}
+              color={textColor}
+            />
+          </HStack>
+          <Flex justify="flex-end" display={{ base: 'flex', md: 'none' }}>
+            <Box
+              onMouseEnter={() => handleBadgeHover(true)}
+              onMouseLeave={() => handleBadgeHover(false)}
+              onClick={e => e.stopPropagation()}
+            >
+              <BadgeIcon
+                user={user}
+                size="48px"
+                onPopoverToggle={handleBadgePopoverToggle}
+              />
+            </Box>
+          </Flex>
+        </GridItem>
+      </Grid>
+      <Grid
+        mt={3}
+        templateColumns={{ base: 'repeat(4, 1fr)' }}
+        gap={2}
+        display={{ base: 'grid', md: 'none' }}
+        w={'85%'}
       >
-        {isMobile ? (
-          <>
-            <Td
-              textAlign="center"
-              flexDirection={'row'}
-              width={'70%'}
-              gap={3}
-              px={0}
-            >
-              <Flex
-                alignItems="center"
-                justifyContent="center"
-                gap={2}
-                position={'relative'}
-              >
-                <Box
-                  as="span"
-                  fontWeight="bold"
-                  fontSize={{ base: 'sm', md: 'md' }}
-                  color={index < 3 ? 'yellow.400' : textColor}
-                >
-                  {index + 1}
-                </Box>
+        <ScoreItem
+          label="IQ Score"
+          value={user.IQ_score.toFixed(1)}
+          color={accentColor}
+        />
+        <ScoreItem label="Exp Level" value={user.level} color={textColor} />
+        <ScoreItem
+          label="Submissions"
+          value={user.quizSubmissions}
+          color={textColor}
+        />
+        <ScoreItem label="Avg. RQM" value={user.RQM_avg} color={textColor} />
+      </Grid>
+    </MotionBox>
+  )
+}
 
-                <Flex alignItems="center" w={'fit-content'}>
-                  <Image
-                    src={user.pic}
-                    boxSize="40px"
-                    borderRadius="full"
-                    mr={3}
-                  />
-                  <Flex>
-                    <Flex direction="column" position="relative">
-                      <Flex
-                        ref={nameRef}
-                        fontWeight="bold"
-                        color={
-                          user.rankedInCurrentSeason
-                            ? findSocietyAndCircle(user.IQ_score)?.textColor
-                            : 'gray.400'
-                        }
-                        w={'fit-content'}
-                        paddingX={'0.25rem'}
-                        paddingY={'0.1rem'}
-                        position={'relative'}
-                        fontSize={{ base: 'xs', md: 'sm' }}
-                        justifyContent={'flex-start'}
-                        alignItems={'flex-start'}
-                      >
-                        <Text w={'100%'}>{user.name}</Text>
-                        {user.rankedInCurrentSeason && (
-                          <Suspense fallback={<span>⚡</span>}>
-                            <NameLightning
-                              boxShadow={
-                                findSocietyAndCircle(user.maxIQScore)?.boxShadow
-                              }
-                              MAX_IQ={user.maxIQScore}
-                            />
-                          </Suspense>
-                        )}
-                      </Flex>
-                      <Text
-                        mt={1}
-                        fontSize={{ base: 'xs', md: 'sm' }}
-                        color="gray.400"
-                        minW={'100px'}
-                        paddingX={'0.25rem'}
-                        paddingY={'0.1rem'}
-                        textAlign={'left'}
-                      >
-                        @{user.inGameName}
-                      </Text>
-
-                      <Text
-                        fontSize={{ base: 'xs', md: 'sm' }}
-                        color={accentColor}
-                        minW={'110px'}
-                        paddingX={'0.25rem'}
-                        textAlign={'left'}
-                      >
-                        {t('xpLevel')} {user.level}
-                      </Text>
-                    </Flex>
-                    <Flex position={'absolute'} right={-9}>
-                      {renderTournamentBadge()}
-                    </Flex>
-                  </Flex>
-                </Flex>
-              </Flex>
-            </Td>
-            <Td
-              width={'30%'}
-              textAlign="right"
-              fontWeight="bold"
-              color="cyan.300"
-              fontSize={{ base: 'sm', md: 'md' }}
-              px={4}
-            >
-              {user.IQ_score}
-            </Td>
-          </>
-        ) : (
-          <>
-            <Td width="10%" textAlign="center">
-              <Box
-                as="span"
-                fontWeight="bold"
-                fontSize={{ base: 'sm', md: 'md' }}
-                color={index < 3 ? 'yellow.400' : textColor}
-              >
-                {index + 1}
-              </Box>
-            </Td>
-            <Td width={isTablet ? '50%' : '25%'}>
-              <Flex gap={2} position={'relative'}>
-                <Flex alignItems="center">
-                  <Image
-                    src={user.pic}
-                    boxSize="40px"
-                    borderRadius="full"
-                    mr={3}
-                  />
-                  <Flex>
-                    <Flex direction="column" position="relative">
-                      <Flex
-                        ref={nameRef}
-                        fontWeight="bold"
-                        color={
-                          user.rankedInCurrentSeason
-                            ? findSocietyAndCircle(user.IQ_score)?.textColor
-                            : 'gray.400'
-                        }
-                        w={'fit-content'}
-                        paddingX={'0.5rem'}
-                        paddingY={'0.1rem'}
-                        position={'relative'}
-                        fontSize={{ base: 'xs', md: 'sm' }}
-                      >
-                        {user.name}
-                        {user.rankedInCurrentSeason && (
-                          <Suspense fallback={<span>⚡</span>}>
-                            <NameLightning
-                              boxShadow={
-                                findSocietyAndCircle(user.maxIQScore)?.boxShadow
-                              }
-                              MAX_IQ={user.maxIQScore}
-                            />
-                          </Suspense>
-                        )}
-                      </Flex>
-                      <Text
-                        mt={1}
-                        fontSize={{ base: 'xs', md: 'sm' }}
-                        color="gray.400"
-                        paddingX={'0.5rem'}
-                        paddingY={'0.1rem'}
-                      >
-                        @{user.inGameName}
-                      </Text>
-                      <Text
-                        fontSize={{ base: 'xs', md: 'sm' }}
-                        color={accentColor}
-                        minW={'110px'}
-                        paddingX={'0.25rem'}
-                        textAlign={'left'}
-                      >
-                        {t('xpLevel')} {user.level}
-                      </Text>
-                    </Flex>
-                    <Flex position={'absolute'} right={-9}>
-                      {renderTournamentBadge()}
-                    </Flex>
-                  </Flex>
-                </Flex>
-              </Flex>
-            </Td>
-            <Td
-              width={'15%'}
-              textAlign="center"
-              fontWeight="bold"
-              color="cyan.300"
-              fontSize={{ base: 'sm', md: 'md' }}
-            >
-              {user.IQ_score}
-            </Td>
-          </>
-        )}
-
-        {isDesktop && (
-          <>
-            <Td width="20%" textAlign="center">
-              {user.quizSubmissions}
-            </Td>
-            <Td width="15%" textAlign="center">
-              {user.RQM_avg}
-            </Td>
-          </>
-        )}
-      </Tr>
-    )
-  },
-)
-
-export default LeaderBoardRow
+export default LeaderboardRow

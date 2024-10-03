@@ -22,7 +22,6 @@ const fadeInScale = keyframes`
 `
 
 const TournamentBadge = ({
-  id,
   tournamentNumber,
   rank,
   name,
@@ -30,6 +29,7 @@ const TournamentBadge = ({
   participantCnt,
   size = 'md',
   badgeName = null,
+  onPopoverToggle,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [popoverStyle, setPopoverStyle] = useState({})
@@ -38,28 +38,22 @@ const TournamentBadge = ({
 
   const {
     image,
-    textPosition,
     style,
     icon: RankIcon,
     sizeValues,
   } = badgeConfig[badgeName?.name] || {}
 
-  const sizeValue = sizeValues ? sizeValues[size] || sizeValues?.md : null
-  const width = sizeValue?.width
-  const height = sizeValue?.height
-  const fontSize = sizeValue?.fontSize
+  const sizeValue = sizeValues ? sizeValues[size] || sizeValues.md : null
+  const { width, height, fontSize, textPosition, mr } = sizeValue || {}
 
-  // Responsive styles
-  const popoverWidth = useBreakpointValue({
-    base: '200px',
-    sm: '250px',
-    md: '300px',
-  })
   const iconSize = useBreakpointValue({ base: '32px', sm: '24px' })
 
   const handleClick = e => {
     e.stopPropagation()
     setIsOpen(!isOpen)
+    if (onPopoverToggle) {
+      onPopoverToggle(!isOpen)
+    }
   }
 
   const updatePopoverPosition = () => {
@@ -98,11 +92,17 @@ const TournamentBadge = ({
         !badgeRef.current.contains(event.target)
       ) {
         setIsOpen(false)
+        if (onPopoverToggle) {
+          onPopoverToggle(false)
+        }
       }
     }
 
     const handleScroll = () => {
       setIsOpen(false)
+      if (onPopoverToggle) {
+        onPopoverToggle(false)
+      }
     }
 
     const handleResize = () => {
@@ -120,7 +120,7 @@ const TournamentBadge = ({
       window.removeEventListener('scroll', handleScroll, true)
       window.removeEventListener('resize', handleResize)
     }
-  }, [isOpen])
+  }, [isOpen, onPopoverToggle])
 
   useEffect(() => {
     if (isOpen) {
@@ -144,6 +144,7 @@ const TournamentBadge = ({
           boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)',
           transform: 'scale(1.05)',
         }}
+        mr={mr ? mr : 0}
         onClick={handleClick}
       >
         <Image
@@ -156,9 +157,9 @@ const TournamentBadge = ({
         <Flex
           flexDirection="column"
           position="absolute"
-          bottom={textPosition?.bottom}
+          bottom={textPosition.bottom}
           left="50%"
-          transform={`translateX(${textPosition?.x}%) translateY(${textPosition?.y}%)`}
+          transform={`translateX(${textPosition.x}%) translateY(${textPosition.y}%)`}
           color="white"
           fontSize={fontSize}
           fontWeight="bold"

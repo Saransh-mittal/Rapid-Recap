@@ -7,7 +7,7 @@ const TournamentWrapper = lazy(() => import('../screens/TournamentWrapper'))
 const Home = lazy(() => import('../screens/Home'))
 const Article = lazy(() => import('../screens/Article'))
 const Profile = lazy(() => import('../screens/Profile'))
-const LeaderBoard = lazy(() => import('../screens/LeaderBoard'))
+const Leaderboard = lazy(() => import('../screens/Leaderboard'))
 const GetStarted = lazy(() => import('../screens/GetStarted'))
 const ChatPage = lazy(() => import('../screens/ChatPage'))
 const Dashboard = lazy(() => import('../screens/Dashboard'))
@@ -32,7 +32,7 @@ const AppRoutes = ({ isToken }) => (
       <Route path="/profile/:inGameName" element={<Profile />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/contact" element={<ContactLayout />} />
-      <Route path="/leaderboard" element={<LeaderBoard />} />
+      <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/tournament" element={<TournamentWrapper />} />
       <Route
         path="/dashboard"

@@ -44,7 +44,7 @@ const UserCard = ({ user, t }) => {
             <Text fontWeight="bold">{user.name}</Text>
             <Text color="gray.400">@{user.inGameName}</Text>
             <Text fontSize="xl" fontWeight="bold" color="pink.400">
-              {t('score')}: {user.IQ_score}
+              {t('IQ_Score')}: {user.IQ_score}
             </Text>
           </VStack>
         </HStack>
