@@ -1,1 +1,0 @@
-import{u as e}from"./chunk-GF2QC326-65f2bea5.js";import{av as r,t as x,ax as l,aw as c}from"./index-2ebee8ed.js";var m=r(function(t,a){const s=e();return x.jsx(l.dd,{ref:a,...t,className:c("chakra-stat__help-text",t.className),__css:s.helpText})});m.displayName="StatHelpText";export{m as S};
