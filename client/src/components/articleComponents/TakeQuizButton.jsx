@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Text } from '@chakra-ui/react'
+import { Box, Button, Text } from '@chakra-ui/react'
 import React from 'react'
 import Bubbles from '../miscellaneous/bubbles'
 import { useSelector } from 'react-redux'
@@ -8,22 +8,6 @@ const TakeQuizButton = ({ onClick, isQuinBoostAvailable }) => {
   const { t } = useTranslation('TakeQuizButton')
   const { isBoosted } = useSelector(state => state.app)
 
-  const buttonStyle = {
-    border: isBoosted ? 'yellow solid 3px' : 'none',
-  }
-  const keyframes = `
-    @keyframes shine {
-      0% {
-        box-shadow: 0 0 10px 0 rgba(255, 255, 0, 0.5);
-      }
-      50% {
-        box-shadow: 0 0 10px 0 rgba(255, 255, 0, 0);
-      }
-      100% {
-        box-shadow: 0 0 10px 0 rgba(255, 255, 0, 0.5);
-      }
-    }
-  `
   return (
     <Box m={4} width="100%">
       <Button

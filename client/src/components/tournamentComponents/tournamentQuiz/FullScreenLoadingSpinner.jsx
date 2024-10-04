@@ -4,11 +4,11 @@ import {
   Box,
   Flex,
   Text,
-  keyframes,
   useTheme,
   usePrefersReducedMotion,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { keyframes } from '@emotion/react'
 
 const FullScreenLoadingSpinner = React.memo(() => {
   const theme = useTheme()

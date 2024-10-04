@@ -1,6 +1,7 @@
 import React from 'react'
-import { Box, Heading, Text, VStack, keyframes } from '@chakra-ui/react'
+import { Box, Heading, Text, VStack } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { keyframes } from '@emotion/react'
 
 const gradientAnimation = keyframes`
   0% { background-position: 0% 50%; }

@@ -1,5 +1,5 @@
-import { CloseIcon } from "@chakra-ui/icons";
-import { Badge } from "@chakra-ui/layout";
+import { CloseIcon } from '@chakra-ui/icons'
+import { Badge } from '@chakra-ui/layout'
 
 const UserBadgeItem = ({ user, handleFunction, admin }) => {
   return (
@@ -20,7 +20,7 @@ const UserBadgeItem = ({ user, handleFunction, admin }) => {
       {/* {admin === user._id && <span> (Admin)</span>} */}
       <CloseIcon pl={1} />
     </Badge>
-  );
-};
+  )
+}
 
-export default UserBadgeItem;
+export default UserBadgeItem

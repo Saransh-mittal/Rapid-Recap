@@ -1,12 +1,9 @@
 import React, { useMemo, useCallback, Suspense } from 'react'
-import { VStack, Text, Box, Flex, Badge, keyframes } from '@chakra-ui/react'
+import { VStack, Text, Box, Flex } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import {
-  FaCheckCircle,
-  FaExclamationCircle,
-  FaTimesCircle,
-} from 'react-icons/fa'
+import { keyframes } from '@emotion/react'
+
 import CheckCircle from '../../assets/svg/CheckCircle'
 import ExclamationCircle from '../../assets/svg/ExclamationCircle'
 import TimesCircle from '../../assets/svg/TimesCircle'

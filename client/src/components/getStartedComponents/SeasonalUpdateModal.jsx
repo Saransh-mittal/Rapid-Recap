@@ -21,11 +21,11 @@ import {
   Tbody,
   Tr,
   Td,
-  keyframes,
   Spinner,
 } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion, AnimatePresence } from 'framer-motion'
+import { keyframes } from '@emotion/react'
 
 // Lazy-loaded components
 const Confetti = lazy(() => import('react-confetti'))

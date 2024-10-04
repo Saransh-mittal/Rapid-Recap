@@ -13,10 +13,8 @@ import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
-import moment from 'moment'
 
 const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
-const Footer = React.lazy(() => import('./components/Header-Footer/Footer.jsx'))
 const FixedBackground = React.lazy(() =>
   import('./components/miscellaneous/FixedBackground.jsx'),
 )
@@ -285,13 +283,6 @@ const App = () => {
     }
   }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
 
-  const shouldShowFooter = useMemo(
-    () =>
-      !location.pathname.includes('home') &&
-      (location.pathname === '/' || location.pathname === '/get-started'),
-    [location.pathname],
-  )
-
   return (
     <>
       <Helmet>
@@ -383,12 +374,6 @@ const App = () => {
           <AppRoutes isToken={isToken()} />
         </Suspense>
       </Box>
-
-      {shouldShowFooter && (
-        <Suspense fallback={null}>
-          <Footer />
-        </Suspense>
-      )}
 
       <Suspense fallback={null}>
         {isNotifInboxModalOpen && (

@@ -6,9 +6,9 @@ import {
   Flex,
   VStack,
   useBreakpointValue,
-  keyframes,
 } from '@chakra-ui/react'
 import { badgeConfig } from '../../models/badgeConfig'
+import { keyframes } from '@emotion/react'
 
 const fadeInScale = keyframes`
   0% {

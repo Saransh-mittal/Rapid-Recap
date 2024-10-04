@@ -1,7 +1,8 @@
 import React from 'react'
-import { Flex, Text, Circle, keyframes } from '@chakra-ui/react'
+import { Flex, Text, Circle } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import AwardSVG from '../../../assets/svg/AwardSVG'
+import { keyframes } from '@emotion/react'
 
 const pulseAnimation = keyframes`
   0% { transform: scale(1); }

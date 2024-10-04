@@ -1,4 +1,4 @@
-import { Flex, keyframes, Box, Text, Heading } from '@chakra-ui/react'
+import { Flex, Box, Text, Heading } from '@chakra-ui/react'
 import React from 'react'
 import ProfileButton from '../profileComponents/ProfileButton'
 import SecureProgressSVG from '../../assets/svg/SecureProgressSVG'
@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 
 import { setExportData, setIsRegisterOpen } from '../../redux/appSlice'
+import { keyframes } from '@emotion/react'
 
 const SecureYourProgress = ({ padding = 6 }) => {
   const { t } = useTranslation('SecureYourProgress')

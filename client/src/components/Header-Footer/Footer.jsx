@@ -8,7 +8,7 @@ const LinkedinSVG = lazy(() => import('../../assets/svg/LinkedinSVG'))
 
 const Footer = React.memo(({ onCloseMenu }) => {
   return (
-    <Box as="footer" pt={3}>
+    <Box as="footer" pt={3} w={'100%'}>
       <Flex
         as="ul"
         justify="center"

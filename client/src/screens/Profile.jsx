@@ -7,10 +7,11 @@ import {
   SkeletonCircle,
   SkeletonText,
   Container,
-  keyframes,
   useDisclosure,
   useToast,
 } from '@chakra-ui/react'
+import { keyframes } from '@emotion/react'
+
 import { SettingsIcon, ViewIcon } from '@chakra-ui/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'

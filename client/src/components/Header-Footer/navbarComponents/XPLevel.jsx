@@ -1,6 +1,6 @@
-import React from "react";
-import { Box, Flex, Image, Tooltip, keyframes } from "@chakra-ui/react";
-import levelImage from "../../../assets/level.webp"; // Make sure the path is correct
+import React from 'react'
+import { Box, Flex, Image, Tooltip } from '@chakra-ui/react'
+import levelImage from '../../../assets/level.webp' // Make sure the path is correct
 
 const XPLevel = ({ level, onClick, _hover, className }) => {
   return (
@@ -25,7 +25,7 @@ const XPLevel = ({ level, onClick, _hover, className }) => {
           width="40px"
           height="40px"
           style={{
-            position: "relative",
+            position: 'relative',
             zIndex: 1,
           }}
         />
@@ -42,7 +42,7 @@ const XPLevel = ({ level, onClick, _hover, className }) => {
         </Box>
       </Flex>
     </Tooltip>
-  );
-};
+  )
+}
 
-export default XPLevel;
+export default XPLevel

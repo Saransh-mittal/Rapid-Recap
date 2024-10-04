@@ -15,7 +15,6 @@ import {
   Text,
   Heading,
   Icon,
-  keyframes,
   useDisclosure,
   VStack,
   SimpleGrid,
@@ -35,6 +34,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import { keyframes } from '@emotion/react'
 
 const CategoryStatsCard = lazy(() =>
   import('../tournamentComponents/CategoryStatsCard'),

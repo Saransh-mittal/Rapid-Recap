@@ -1,43 +1,64 @@
-// /pages/GetStarted.jsx
-import React from 'react'
-import { Flex, Spinner } from '@chakra-ui/react'
-import { Suspense, useMemo, useCallback } from 'react'
+import React, { Suspense, useEffect } from 'react'
+import { Box, Spinner } from '@chakra-ui/react'
+import { ChakraProvider, extendTheme } from '@chakra-ui/react'
 
-const HeroSection = React.lazy(() =>
-  import('../components/getStartedComponents/heroSection'),
+const Hero = React.lazy(() => import('../components/getStartedComponents/Hero'))
+const Features = React.lazy(() =>
+  import('../components/getStartedComponents/Features'),
 )
-const WhyToUseSection = React.lazy(() =>
-  import('../components/getStartedComponents/whyToUseSection'),
-)
-const CommingSoonSection = React.lazy(() =>
-  import('../components/getStartedComponents/commingSoonSection'),
-)
+const theme = extendTheme({
+  styles: {
+    global: {
+      body: {
+        bg: 'gray.900',
+        color: 'white',
+      },
+    },
+  },
+  colors: {
+    brand: {
+      50: '#e6fffa',
+      100: '#b2f5ea',
+      500: '#4ecdc4',
+    },
+  },
+})
 
 const GetStarted = () => {
-  // Memoize the Flex container styles to prevent unnecessary re-renders.
-  const flexStyles = useMemo(
-    () => ({
-      mt: { base: '4rem', lg: '5rem' },
-      flexDirection: 'column',
-      overflow: 'hidden',
-      letterSpacing: '2px',
-    }),
-    [],
-  )
+  useEffect(() => {
+    const images = [
+      '/images/landingPage/featureBg.webp',
+      '/images/landingPage/featureBgMobile.webp',
+      '/images/landingPage/homeUI.webp',
+      '/images/landingPage/articleUI.webp',
+      '/images/landingPage/quizUI.webp',
+      '/images/landingPage/tournamentUI.webp',
+    ]
 
-  // Memoize the rendering of sections to prevent unnecessary re-renders.
-  const renderHeroSection = useCallback(() => <HeroSection />, [])
-  const renderWhyToUseSection = useCallback(() => <WhyToUseSection />, [])
-  const renderCommingSoonSection = useCallback(() => <CommingSoonSection />, [])
+    images.forEach(src => {
+      const img = new Image()
+      img.src = src
+    })
+  }, [])
 
   return (
-    <Flex {...flexStyles}>
-      <Suspense fallback={<Spinner />}>
-        {renderHeroSection()}
-        {renderWhyToUseSection()}
-        {renderCommingSoonSection()}
-      </Suspense>
-    </Flex>
+    <ChakraProvider theme={theme}>
+      <Box
+        bgImage={{
+          base: "url('/images/landingPage/featureBgMobile.webp')",
+          md: "url('/images/landingPage/featureBg.webp')",
+        }}
+        bgAttachment="fixed"
+        bgSize="cover"
+        bgPosition="center"
+        minHeight="100vh"
+      >
+        <Suspense fallback={<Spinner />}>
+          <Hero />
+          <Features />
+        </Suspense>
+      </Box>
+    </ChakraProvider>
   )
 }
 
