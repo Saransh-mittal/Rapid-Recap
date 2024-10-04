@@ -9,11 +9,12 @@ import {
   Flex,
   Grid,
   GridItem,
-  useBreakpointValue,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import BadgeIcon from './BadgeIcon'
 import ScoreItem from './ScoreItem'
+import NameLightning from '../miscellaneous/NameLightning'
+import { findSocietyAndCircle } from '../../utils/helper.utils'
 
 const MotionBox = motion(Box)
 
@@ -87,13 +88,23 @@ const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
         </GridItem>
         <GridItem>
           <VStack align="start" spacing={0}>
-            <Text
-              fontSize={{ base: 'sm', md: 'lg' }}
-              fontWeight="bold"
-              color={textColor}
-            >
-              {user.name}
-            </Text>
+            <Flex position={'relative'} px={2}>
+              <Text
+                fontSize={{ base: 'sm', md: 'lg' }}
+                fontWeight="bold"
+                color={
+                  user.rankedInCurrentSeason
+                    ? findSocietyAndCircle(user.IQ_score)?.textColor
+                    : 'gray.400'
+                }
+              >
+                {user.name}
+              </Text>
+              <NameLightning
+                boxShadow={findSocietyAndCircle(user.maxIQScore)?.boxShadow}
+                MAX_IQ={user.maxIQScore}
+              />
+            </Flex>
             <Text
               fontSize={{ base: 'xs', md: 'md' }}
               color={accentColor}
