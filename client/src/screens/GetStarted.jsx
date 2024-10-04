@@ -3,6 +3,9 @@ import { Box, Spinner } from '@chakra-ui/react'
 import { ChakraProvider, extendTheme } from '@chakra-ui/react'
 
 const Hero = React.lazy(() => import('../components/getStartedComponents/Hero'))
+const EnhancedBenefitsMap = React.lazy(() =>
+  import('../components/getStartedComponents/BenefitsMap'),
+)
 const Features = React.lazy(() =>
   import('../components/getStartedComponents/Features'),
 )
@@ -55,6 +58,7 @@ const GetStarted = () => {
       >
         <Suspense fallback={<Spinner />}>
           <Hero />
+          <EnhancedBenefitsMap />
           <Features />
         </Suspense>
       </Box>
