@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import useSound from '../../customHooks/useSound'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 const MotionHeading = motion(Heading)
@@ -12,10 +13,12 @@ const MotionText = motion(Text)
 const MotionButton = motion(Button)
 
 const Hero = () => {
+  const { t } = useTranslation('GetStarted')
   const { playClick } = useSound()
   const { user, isAuthenticated } = useSelector(state => state.auth)
   const navigate = useNavigate()
   const dispatch = useDispatch()
+
   return (
     <MotionBox
       height="100vh"
@@ -39,7 +42,7 @@ const Hero = () => {
           transition={{ duration: 0.5 }}
           fontSize={{ base: '4xl', md: '5xl', lg: '6xl' }}
         >
-          Turn News Into Knowledge with Rapid Recap
+          {t('Hero.title')}
         </MotionHeading>
         <MotionText
           initial={{ y: 20, opacity: 0 }}
@@ -47,7 +50,7 @@ const Hero = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           fontSize={{ base: 'xl', md: '2xl' }}
         >
-          Stay informed through friendly competition
+          {t('Hero.subtitle')}
         </MotionText>
         <MotionButton
           colorScheme="brand"
@@ -66,7 +69,7 @@ const Hero = () => {
             dispatch(setIsSigninOpen(true))
           }}
         >
-          Get Started
+          {t('Hero.getStartedButton')}
         </MotionButton>
       </VStack>
     </MotionBox>

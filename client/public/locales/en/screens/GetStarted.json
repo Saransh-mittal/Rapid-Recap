@@ -1,0 +1,69 @@
+{
+  "Hero": {
+    "title": "Turn News Into Knowledge with Rapid Recap",
+    "subtitle": "Stay informed through friendly competition",
+    "getStartedButton": "Get Started"
+  },
+  "BenefitsMap": {
+    "mainTitle": "Empowering Your Knowledge Journey",
+    "curatedNews": {
+      "title": "Curated News",
+      "description": "Access high-quality, tailored news content"
+    },
+    "activeLearning": {
+      "title": "Active Learning",
+      "description": "Engage with interactive quizzes"
+    },
+    "trackProgress": {
+      "title": "Track Progress",
+      "description": "Monitor your growing Information Quotient (IQ)"
+    },
+    "infoRetention": {
+      "title": "Why Information Retention Matters",
+      "description": "Retaining information enhances your critical thinking, decision-making, and problem-solving skills. It allows you to form connections between different topics, fostering creativity and innovation, ultimately leading to personal and professional growth."
+    },
+    "competitiveEdge": {
+      "title": "Competitive Edge",
+      "description": "Excel in your professional and academic pursuits"
+    },
+    "informedCitizen": {
+      "title": "Informed Citizen",
+      "description": "Contribute meaningfully to societal discussions"
+    },
+    "personalGrowth": {
+      "title": "Personal Growth",
+      "description": "Continuously expand your knowledge and capabilities"
+    }
+  },
+  "Features": {
+    "mainTitle": "Discover the Power of Rapid Recap",
+    "curatedNews": {
+      "title": "Curated News",
+      "description": "Stay updated with carefully selected news articles from trusted sources."
+    },
+    "interactiveQuizzes": {
+      "title": "Interactive Quizzes",
+      "description": "Test your knowledge with engaging quizzes based on the latest news."
+    },
+    "competeAndLearn": {
+      "title": "Compete & Learn",
+      "description": "Challenge friends and climb the leaderboard while expanding your knowledge."
+    },
+    "personalizedNewsFeed": {
+      "title": "Personalized News Feed",
+      "description": "Our intelligent algorithm curates a personalized news feed tailored to your interests and reading habits. Stay informed on topics that matter most to you."
+    },
+    "immersiveReading": {
+      "title": "Immersive Reading Experience",
+      "description": "Dive deep into articles with our clean, distraction-free reading interface. Enjoy a seamless experience that lets you focus on the content."
+    },
+    "engagingQuizzes": {
+      "title": "Engaging Quizzes",
+      "description": "Test your knowledge with our interactive quizzes. Each quiz is designed to reinforce your learning and help you retain information from the articles you've read."
+    },
+    "competitiveLearning": {
+      "title": "Competitive Learning",
+      "description": "Join our weekend tournaments to compete with friends and other users. Climb the leaderboard, earn badges, and showcase your knowledge while having fun!"
+    }
+  }
+}

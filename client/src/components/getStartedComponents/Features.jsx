@@ -14,54 +14,59 @@ import { ParallaxProvider, Parallax } from 'react-scroll-parallax'
 import Newspaper from '../../assets/svg/Newspaper'
 import { QuestionIcon } from '@chakra-ui/icons'
 import Trophy from '../../assets/svg/Trophy'
+import { useTranslation } from 'react-i18next'
 const Footer = React.lazy(() => import('../Header-Footer/Footer'))
 
 const MotionBox = motion(Box)
 
-const FeatureItem = ({ Icon, title, description, delay }) => (
-  <MotionBox
-    initial={{ y: 20, opacity: 0 }}
-    whileInView={{ y: 0, opacity: 1 }}
-    viewport={{ once: true, margin: '-50px' }}
-    transition={{ duration: 0.5, delay }}
-    bg="rgba(26, 32, 44, 0.8)"
-    p={6}
-    borderRadius="lg"
-    backdropFilter="blur(10px)"
-    display="flex"
-    flexDirection={{ base: 'column', md: 'row' }}
-    alignItems="center"
-    justifyContent="flex-start"
-    textAlign={{ base: 'center', md: 'left' }}
-    width="100%"
-  >
-    <Flex
-      w={{ base: '100%', md: 16 }}
-      h={{ base: '100%', md: 16 }}
-      mr={3}
-      mb={{ base: 4, md: 0 }}
-      justifyContent={'center'}
-      alignItems={'flex-start'}
+const FeatureItem = ({ Icon, titleKey, descriptionKey, delay }) => {
+  const { t } = useTranslation('GetStarted')
+  return (
+    <MotionBox
+      initial={{ y: 20, opacity: 0 }}
+      whileInView={{ y: 0, opacity: 1 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.5, delay }}
+      bg="rgba(26, 32, 44, 0.8)"
+      p={6}
+      borderRadius="lg"
+      backdropFilter="blur(10px)"
+      display="flex"
+      flexDirection={{ base: 'column', md: 'row' }}
+      alignItems="center"
+      justifyContent="flex-start"
+      textAlign={{ base: 'center', md: 'left' }}
+      width="100%"
     >
-      <Icon color="#4ecdc4" size={'28px'} fontSize={'28px'} fill="#4ecdc4" />
-    </Flex>
-    <Box>
-      <Heading size="md" mb={2}>
-        {title}
-      </Heading>
-      <Text fontSize="sm">{description}</Text>
-    </Box>
-  </MotionBox>
-)
+      <Flex
+        w={{ base: '100%', md: 16 }}
+        h={{ base: '100%', md: 16 }}
+        mr={3}
+        mb={{ base: 4, md: 0 }}
+        justifyContent={'center'}
+        alignItems={'flex-start'}
+      >
+        <Icon color="#4ecdc4" size={'28px'} fontSize={'28px'} fill="#4ecdc4" />
+      </Flex>
+      <Box>
+        <Heading size="md" mb={2}>
+          {t(titleKey)}
+        </Heading>
+        <Text fontSize="sm">{t(descriptionKey)}</Text>
+      </Box>
+    </MotionBox>
+  )
+}
 
 const UISection = ({
   imageSrc,
-  altText,
-  title,
-  description,
+  altTextKey,
+  titleKey,
+  descriptionKey,
   reverseLayout,
 }) => {
   const shouldReduceMotion = useReducedMotion()
+  const { t } = useTranslation('GetStarted')
 
   return (
     <Flex
@@ -80,9 +85,9 @@ const UISection = ({
           speed={-2}
         >
           <Heading as="h3" size="lg" mb={4} color="brand.500">
-            {title}
+            {t(titleKey)}
           </Heading>
-          <Text fontSize={{ base: 'md', lg: 'lg' }}>{description}</Text>
+          <Text fontSize={{ base: 'md', lg: 'lg' }}>{t(descriptionKey)}</Text>
         </Parallax>
       </Box>
       <Box width="100%" maxWidth={{ lg: '50%' }}>
@@ -92,7 +97,7 @@ const UISection = ({
         >
           <Image
             src={imageSrc}
-            alt={altText}
+            alt={t(altTextKey)}
             maxWidth="100%"
             maxHeight={{ base: '500px', lg: '100%' }}
             borderRadius="lg"
@@ -108,6 +113,7 @@ const UISection = ({
 
 const Features = () => {
   const shouldReduceMotion = useReducedMotion()
+  const { t } = useTranslation('GetStarted')
 
   return (
     <ParallaxProvider>
@@ -139,7 +145,7 @@ const Features = () => {
               fontWeight="bold"
               color="brand.500"
             >
-              Discover the Power of Rapid Recap
+              {t('Features.mainTitle')}
             </Heading>
           </Parallax>
 
@@ -151,20 +157,20 @@ const Features = () => {
           >
             <FeatureItem
               Icon={Newspaper}
-              title="Curated News"
-              description="Stay updated with carefully selected news articles from trusted sources."
+              titleKey="Features.curatedNews.title"
+              descriptionKey="Features.curatedNews.description"
               delay={0.2}
             />
             <FeatureItem
               Icon={QuestionIcon}
-              title="Interactive Quizzes"
-              description="Test your knowledge with engaging quizzes based on the latest news."
+              titleKey="Features.interactiveQuizzes.title"
+              descriptionKey="Features.interactiveQuizzes.description"
               delay={0.4}
             />
             <FeatureItem
               Icon={Trophy}
-              title="Compete & Learn"
-              description="Challenge friends and climb the leaderboard while expanding your knowledge."
+              titleKey="Features.competeAndLearn.title"
+              descriptionKey="Features.competeAndLearn.description"
               delay={0.6}
             />
           </HStack>
@@ -176,53 +182,53 @@ const Features = () => {
           >
             <FeatureItem
               Icon={Newspaper}
-              title="Curated News"
-              description="Stay updated with carefully selected news articles from trusted sources."
+              titleKey="Features.curatedNews.title"
+              descriptionKey="Features.curatedNews.description"
               delay={0.2}
             />
             <FeatureItem
               Icon={QuestionIcon}
-              title="Interactive Quizzes"
-              description="Test your knowledge with engaging quizzes based on the latest news."
+              titleKey="Features.interactiveQuizzes.title"
+              descriptionKey="Features.interactiveQuizzes.description"
               delay={0.4}
             />
             <FeatureItem
               Icon={Trophy}
-              title="Compete & Learn"
-              description="Challenge friends and climb the leaderboard while expanding your knowledge."
+              titleKey="Features.competeAndLearn.title"
+              descriptionKey="Features.competeAndLearn.description"
               delay={0.6}
             />
           </VStack>
 
           <UISection
             imageSrc="/images/landingPage/homeUI.webp"
-            altText="Home Page Interface"
-            title="Personalized News Feed"
-            description="Our intelligent algorithm curates a personalized news feed tailored to your interests and reading habits. Stay informed on topics that matter most to you."
+            altTextKey="Features.personalizedNewsFeed.altText"
+            titleKey="Features.personalizedNewsFeed.title"
+            descriptionKey="Features.personalizedNewsFeed.description"
             reverseLayout={false}
           />
 
           <UISection
             imageSrc="/images/landingPage/articleUI.webp"
-            altText="Article Page Interface"
-            title="Immersive Reading Experience"
-            description="Dive deep into articles with our clean, distraction-free reading interface. Enjoy a seamless experience that lets you focus on the content."
+            altTextKey="Features.immersiveReading.altText"
+            titleKey="Features.immersiveReading.title"
+            descriptionKey="Features.immersiveReading.description"
             reverseLayout={true}
           />
 
           <UISection
             imageSrc="/images/landingPage/quizUI.webp"
-            altText="Quiz Interface"
-            title="Engaging Quizzes"
-            description="Test your knowledge with our interactive quizzes. Each quiz is designed to reinforce your learning and help you retain information from the articles you've read."
+            altTextKey="Features.engagingQuizzes.altText"
+            titleKey="Features.engagingQuizzes.title"
+            descriptionKey="Features.engagingQuizzes.description"
             reverseLayout={false}
           />
 
           <UISection
             imageSrc="/images/landingPage/tournamentUI.webp"
-            altText="Tournament Interface"
-            title="Competitive Learning"
-            description="Join our weekend tournaments to compete with friends and other users. Climb the leaderboard, earn badges, and showcase your knowledge while having fun!"
+            altTextKey="Features.competitiveLearning.altText"
+            titleKey="Features.competitiveLearning.title"
+            descriptionKey="Features.competitiveLearning.description"
             reverseLayout={true}
           />
         </Container>

@@ -14,6 +14,7 @@ const namespaces = {
     'Tournament',
     'Quiz',
     'ComingSoonTournament',
+    'GetStarted',
   ],
   utils: ['formatDate'],
   categories: ['categories'],

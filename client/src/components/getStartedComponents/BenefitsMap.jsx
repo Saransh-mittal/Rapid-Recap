@@ -13,40 +13,44 @@ import {
 import { motion } from 'framer-motion'
 import { ArrowForwardIcon, ArrowDownIcon } from '@chakra-ui/icons'
 import { Parallax, ParallaxProvider } from 'react-scroll-parallax'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 
-const BenefitItem = ({ icon, title, description, index, speed }) => (
-  <Parallax speed={speed}>
-    <MotionBox
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      mb={8}
-      textAlign="center"
-      width="100%"
-    >
-      <Circle
-        size={{ base: '60px', md: '80px' }}
-        bg="rgba(78, 205, 196, 0.1)"
-        color="brand.500"
-        mb={4}
-        mx="auto"
-        borderWidth="2px"
-        borderColor="brand.500"
+const BenefitItem = ({ icon, titleKey, descriptionKey, index, speed }) => {
+  const { t } = useTranslation('GetStarted')
+  return (
+    <Parallax speed={speed}>
+      <MotionBox
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: index * 0.1 }}
+        mb={8}
+        textAlign="center"
+        width="100%"
       >
-        <Icon as={icon} boxSize={{ base: 8, md: 10 }} />
-      </Circle>
-      <Heading size="md" mb={2} color="brand.500">
-        {title}
-      </Heading>
-      <Text fontSize="sm" maxWidth="250px" mx="auto">
-        {description}
-      </Text>
-    </MotionBox>
-  </Parallax>
-)
+        <Circle
+          size={{ base: '60px', md: '80px' }}
+          bg="rgba(78, 205, 196, 0.1)"
+          color="brand.500"
+          mb={4}
+          mx="auto"
+          borderWidth="2px"
+          borderColor="brand.500"
+        >
+          <Icon as={icon} boxSize={{ base: 8, md: 10 }} />
+        </Circle>
+        <Heading size="md" mb={2} color="brand.500">
+          {t(titleKey)}
+        </Heading>
+        <Text fontSize="sm" maxWidth="250px" mx="auto">
+          {t(descriptionKey)}
+        </Text>
+      </MotionBox>
+    </Parallax>
+  )
+}
 
 const Arrow = ({ direction = 'right' }) => {
   const ArrowIcon = direction === 'down' ? ArrowDownIcon : ArrowForwardIcon
@@ -69,6 +73,7 @@ const Arrow = ({ direction = 'right' }) => {
 }
 
 const BenefitsMap = () => {
+  const { t } = useTranslation('GetStarted')
   const bgColor = useColorModeValue(
     'rgba(255, 255, 255, 0.8)',
     'rgba(0, 0, 0, 0.8)',
@@ -106,7 +111,7 @@ const BenefitsMap = () => {
               fontWeight="bold"
               letterSpacing="wide"
             >
-              Empowering Your Knowledge Journey
+              {t('BenefitsMap.mainTitle')}
             </Heading>
           </Parallax>
 
@@ -120,8 +125,8 @@ const BenefitsMap = () => {
                 icon={() => (
                   <Text fontSize={{ base: '3xl', md: '4xl' }}>📰</Text>
                 )}
-                title="Curated News"
-                description="Access high-quality, tailored news content"
+                titleKey="BenefitsMap.curatedNews.title"
+                descriptionKey="BenefitsMap.curatedNews.description"
                 index={0}
                 speed={2}
               />
@@ -136,8 +141,8 @@ const BenefitsMap = () => {
                 icon={() => (
                   <Text fontSize={{ base: '3xl', md: '4xl' }}>🧠</Text>
                 )}
-                title="Active Learning"
-                description="Engage with interactive quizzes"
+                titleKey="BenefitsMap.activeLearning.title"
+                descriptionKey="BenefitsMap.activeLearning.description"
                 index={1}
                 speed={3}
               />
@@ -152,8 +157,8 @@ const BenefitsMap = () => {
                 icon={() => (
                   <Text fontSize={{ base: '3xl', md: '4xl' }}>📊</Text>
                 )}
-                title="Track Progress"
-                description="Monitor your growing Information Quotient (IQ)"
+                titleKey="BenefitsMap.trackProgress.title"
+                descriptionKey="BenefitsMap.trackProgress.description"
                 index={2}
                 speed={2}
               />
@@ -178,7 +183,7 @@ const BenefitsMap = () => {
                     textAlign="center"
                     color="white"
                   >
-                    Why Information Retention Matters
+                    {t('BenefitsMap.infoRetention.title')}
                   </Heading>
                   <Text
                     fontSize={{ base: 'sm', md: 'md' }}
@@ -186,11 +191,7 @@ const BenefitsMap = () => {
                     color="white"
                     lineHeight="tall"
                   >
-                    Retaining information enhances your critical thinking,
-                    decision-making, and problem-solving skills. It allows you
-                    to form connections between different topics, fostering
-                    creativity and innovation, ultimately leading to personal
-                    and professional growth.
+                    {t('BenefitsMap.infoRetention.description')}
                   </Text>
                 </MotionBox>
               </Flex>
@@ -207,8 +208,8 @@ const BenefitsMap = () => {
                 icon={() => (
                   <Text fontSize={{ base: '3xl', md: '4xl' }}>🏆</Text>
                 )}
-                title="Competitive Edge"
-                description="Excel in your professional and academic pursuits"
+                titleKey="BenefitsMap.competitiveEdge.title"
+                descriptionKey="BenefitsMap.competitiveEdge.description"
                 index={3}
                 speed={2}
               />
@@ -223,8 +224,8 @@ const BenefitsMap = () => {
                 icon={() => (
                   <Text fontSize={{ base: '3xl', md: '4xl' }}>🌐</Text>
                 )}
-                title="Informed Citizen"
-                description="Contribute meaningfully to societal discussions"
+                titleKey="BenefitsMap.informedCitizen.title"
+                descriptionKey="BenefitsMap.informedCitizen.description"
                 index={4}
                 speed={3}
               />
@@ -239,8 +240,8 @@ const BenefitsMap = () => {
                 icon={() => (
                   <Text fontSize={{ base: '3xl', md: '4xl' }}>🚀</Text>
                 )}
-                title="Personal Growth"
-                description="Continuously expand your knowledge and capabilities"
+                titleKey="BenefitsMap.personalGrowth.title"
+                descriptionKey="BenefitsMap.personalGrowth.description"
                 index={5}
                 speed={2}
               />
