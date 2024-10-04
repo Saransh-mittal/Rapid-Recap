@@ -1,9 +1,10 @@
 import React from 'react'
 import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import useSound from '../../customHooks/useSound'
+import { useNavigate } from 'react-router-dom'
 
 const MotionBox = motion(Box)
 const MotionHeading = motion(Heading)
@@ -12,6 +13,8 @@ const MotionButton = motion(Button)
 
 const Hero = () => {
   const { playClick } = useSound()
+  const { user, isAuthenticated } = useSelector(state => state.auth)
+  const navigate = useNavigate()
   const dispatch = useDispatch()
   return (
     <MotionBox
@@ -55,6 +58,10 @@ const Hero = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => {
+            if (isAuthenticated && user) {
+              navigate('/home')
+              return
+            }
             playClick()
             dispatch(setIsSigninOpen(true))
           }}
