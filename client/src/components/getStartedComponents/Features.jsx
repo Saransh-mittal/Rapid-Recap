@@ -101,7 +101,6 @@ const UISection = ({
             maxWidth="100%"
             maxHeight={{ base: '500px', lg: '100%' }}
             borderRadius="lg"
-            boxShadow="2xl"
             loading="lazy"
             mx={'auto'}
           />
