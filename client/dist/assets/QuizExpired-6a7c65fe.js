@@ -1,0 +1,1 @@
+import{u as e,t as r}from"./index-571300a7.js";import{C as o}from"./container-dd9d3ffe.js";import{H as s}from"./heading-cac0ac6f.js";const x=({css:i})=>{const{t}=e("QuizExpired");return r.jsx(o,{css:i,margin:"5px",mb:5,height:"100px",children:r.jsx(s,{color:"red",children:t("quizExpired")})})};export{x as default};
