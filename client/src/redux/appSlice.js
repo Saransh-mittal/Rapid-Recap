@@ -106,6 +106,7 @@ const initialState = {
   soundSettings: DEFAULT_SOUND_SETTINGS,
   navigationCount: 0,
   selectedNotificationId: null,
+  isWeakDevice: false,
 }
 
 export const appSlice = createSlice({
@@ -169,6 +170,9 @@ export const appSlice = createSlice({
     },
     setExportData: (state, action) => {
       state.exportData = action.payload
+    },
+    setWeakMode: (state, action) => {
+      state.isWeakDevice = action.payload
     },
     addNoteMessage: (state, action) => {
       state.noteMessageQueue.push({
@@ -323,6 +327,7 @@ export const {
   setIsNotifDrawerOpen,
   setIsNotifModalOpen,
   toggleSound,
+  setWeakMode,
   setSoundSettings,
   setNavigationCount,
   setSelectedNotificationId,

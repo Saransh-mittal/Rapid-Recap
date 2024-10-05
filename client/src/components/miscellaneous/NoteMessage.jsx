@@ -16,6 +16,7 @@ import {
   setShowingSummaryForNoteMessages,
   setShowXpLevelModal,
   setSelectedNotificationId,
+  setWeakMode,
 } from '../../redux/appSlice'
 import { useNavigate } from 'react-router-dom'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
@@ -77,10 +78,18 @@ const NoteMessage = ({
   // Memoize handleAction to avoid recreating the function on every render
   const handleAction = useCallback(
     (actionType, payload) => {
-      handleMessageAction(actionType, messageId, user?.inGameName, payload)
+      if (actionType === 'SWITCH_TO_WEAK_MODE') {
+        dispatch(setWeakMode(true))
+        console.log('Switching to weak mode')
+      } else if (actionType === 'STAY_IN_NORMAL_MODE') {
+        dispatch(setWeakMode(false))
+        console.log('Staying in normal mode')
+      } else {
+        handleMessageAction(actionType, messageId, user?.inGameName, payload)
+      }
       actionType !== 'VIEW_ALL' && handleClose()
     },
-    [handleMessageAction, messageId, user?.inGameName],
+    [handleMessageAction, messageId, user?.inGameName, dispatch],
   )
 
   const { isOpen, onClose: closeDisclosure } = useDisclosure({

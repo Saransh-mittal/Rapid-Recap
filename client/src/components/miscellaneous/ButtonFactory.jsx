@@ -79,6 +79,18 @@ const ButtonFactory = ({
           {t('VIEW_TOURNAMENT')}
         </ElegantButton>
       )
+    case 'SWITCH_TO_WEAK_MODE':
+      return (
+        <ElegantButton onClick={onClick} innerText {...props}>
+          {innerText}
+        </ElegantButton>
+      )
+    case 'STAY_IN_NORMAL_MODE':
+      return (
+        <ElegantButton onClick={onClick} innerText {...props}>
+          {innerText}
+        </ElegantButton>
+      )
     case 'VIEW_EXPERIENCE':
       return (
         <ElegantButton onClick={onClick} {...props}>

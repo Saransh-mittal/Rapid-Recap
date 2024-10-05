@@ -28,6 +28,7 @@ import {
   setSelectedNotificationId,
   setShowingSummaryForNoteMessages,
   setShowXpLevelModal,
+  setWeakMode,
 } from '../../redux/appSlice'
 import { createHandleMessageAction } from '../../utils/messageActionHandlers'
 import { useNavigate } from 'react-router-dom'
@@ -118,7 +119,17 @@ const NoteMessageSummary = ({ messages, onClose }) => {
 
   const handleAction = useCallback(
     (actionType, messageId, payload) => {
-      handleMessageAction(actionType, messageId, user?.inGameName, payload)
+      if (actionType === 'SWITCH_TO_WEAK_MODE') {
+        dispatch(setWeakMode(true))
+        handleMessageAction('DISMISS', messageId, user?.inGameName, payload)
+        console.log('Switching to weak mode')
+      } else if (actionType === 'STAY_IN_NORMAL_MODE') {
+        dispatch(setWeakMode(false))
+        handleMessageAction('DISMISS', messageId, user?.inGameName, payload)
+        console.log('Staying in normal mode')
+      } else {
+        handleMessageAction(actionType, messageId, user?.inGameName, payload)
+      }
     },
     [handleMessageAction, user?.inGameName],
   )

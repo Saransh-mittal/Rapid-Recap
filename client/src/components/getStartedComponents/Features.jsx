@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import React, { Suspense, useMemo } from 'react'
 import {
   Box,
   Heading,
@@ -9,7 +9,7 @@ import {
   Image,
   Container,
 } from '@chakra-ui/react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { ParallaxProvider, Parallax } from 'react-scroll-parallax'
 import Newspaper from '../../assets/svg/Newspaper'
 import { QuestionIcon } from '@chakra-ui/icons'
@@ -19,14 +19,18 @@ const Footer = React.lazy(() => import('../Header-Footer/Footer'))
 
 const MotionBox = motion(Box)
 
-const FeatureItem = ({ Icon, titleKey, descriptionKey, delay }) => {
+const FeatureItem = ({
+  Icon,
+  titleKey,
+  descriptionKey,
+  delay,
+  isWeakDevice,
+}) => {
   const { t } = useTranslation('GetStarted')
+  const ItemWrapper = isWeakDevice ? Box : MotionBox
+
   return (
-    <MotionBox
-      initial={{ y: 20, opacity: 0 }}
-      whileInView={{ y: 0, opacity: 1 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.5, delay }}
+    <ItemWrapper
       bg="rgba(26, 32, 44, 0.8)"
       p={6}
       borderRadius="lg"
@@ -37,16 +41,25 @@ const FeatureItem = ({ Icon, titleKey, descriptionKey, delay }) => {
       justifyContent="flex-start"
       textAlign={{ base: 'center', md: 'left' }}
       width="100%"
+      height="100%"
+      {...(isWeakDevice
+        ? {}
+        : {
+            initial: { y: 20, opacity: 0 },
+            whileInView: { y: 0, opacity: 1 },
+            viewport: { once: true, margin: '-50px' },
+            transition: { duration: 0.5, delay },
+          })}
     >
       <Flex
         w={{ base: '100%', md: 16 }}
-        h={{ base: '100%', md: 16 }}
-        mr={3}
+        h={{ base: 16, md: 16 }}
+        mr={{ base: 0, md: 3 }}
         mb={{ base: 4, md: 0 }}
-        justifyContent={'center'}
-        alignItems={'flex-start'}
+        justifyContent="center"
+        alignItems="center"
       >
-        <Icon color="#4ecdc4" size={'28px'} fontSize={'28px'} fill="#4ecdc4" />
+        <Icon color="#4ecdc4" size="28px" fontSize="28px" fill="#4ecdc4" />
       </Flex>
       <Box>
         <Heading size="md" mb={2}>
@@ -54,7 +67,7 @@ const FeatureItem = ({ Icon, titleKey, descriptionKey, delay }) => {
         </Heading>
         <Text fontSize="sm">{t(descriptionKey)}</Text>
       </Box>
-    </MotionBox>
+    </ItemWrapper>
   )
 }
 
@@ -64,9 +77,10 @@ const UISection = ({
   titleKey,
   descriptionKey,
   reverseLayout,
+  isWeakDevice,
 }) => {
-  const shouldReduceMotion = useReducedMotion()
   const { t } = useTranslation('GetStarted')
+  const ContentWrapper = isWeakDevice ? Box : Parallax
 
   return (
     <Flex
@@ -80,20 +94,29 @@ const UISection = ({
       px={4}
     >
       <Box width="100%" mb={{ base: 8, lg: 0 }} maxWidth={{ lg: '45%' }}>
-        <Parallax
-          translateY={shouldReduceMotion ? [0, 0] : [-10, 10]}
-          speed={-2}
+        <ContentWrapper
+          {...(isWeakDevice
+            ? {}
+            : {
+                translateY: [-10, 10],
+                speed: -2,
+              })}
         >
           <Heading as="h3" size="lg" mb={4} color="brand.500">
             {t(titleKey)}
           </Heading>
           <Text fontSize={{ base: 'md', lg: 'lg' }}>{t(descriptionKey)}</Text>
-        </Parallax>
+        </ContentWrapper>
       </Box>
-      <Box width="100%" maxWidth={{ lg: '50%' }}>
-        <Parallax
-          translateY={shouldReduceMotion ? [0, 0] : [-15, 15]}
-          speed={2}
+
+      <Box maxWidth={{ lg: '50%' }}>
+        <ContentWrapper
+          {...(isWeakDevice
+            ? {}
+            : {
+                translateY: [-15, 15],
+                speed: 2,
+              })}
         >
           <Image
             src={imageSrc}
@@ -102,20 +125,79 @@ const UISection = ({
             maxHeight={{ base: '500px', lg: '100%' }}
             borderRadius="lg"
             loading="lazy"
-            mx={'auto'}
+            mx="auto"
           />
-        </Parallax>
+        </ContentWrapper>
       </Box>
     </Flex>
   )
 }
 
-const Features = () => {
-  const shouldReduceMotion = useReducedMotion()
+const Features = ({ isWeakDevice }) => {
   const { t } = useTranslation('GetStarted')
 
+  const featuresData = useMemo(
+    () => [
+      {
+        Icon: Newspaper,
+        titleKey: 'Features.curatedNews.title',
+        descriptionKey: 'Features.curatedNews.description',
+        delay: 0.2,
+      },
+      {
+        Icon: QuestionIcon,
+        titleKey: 'Features.interactiveQuizzes.title',
+        descriptionKey: 'Features.interactiveQuizzes.description',
+        delay: 0.4,
+      },
+      {
+        Icon: Trophy,
+        titleKey: 'Features.competeAndLearn.title',
+        descriptionKey: 'Features.competeAndLearn.description',
+        delay: 0.6,
+      },
+    ],
+    [],
+  )
+
+  const uiSectionsData = useMemo(
+    () => [
+      {
+        imageSrc: '/images/landingPage/homeUI.webp',
+        altTextKey: 'Features.personalizedNewsFeed.altText',
+        titleKey: 'Features.personalizedNewsFeed.title',
+        descriptionKey: 'Features.personalizedNewsFeed.description',
+        reverseLayout: false,
+      },
+      {
+        imageSrc: '/images/landingPage/articleUI.webp',
+        altTextKey: 'Features.immersiveReading.altText',
+        titleKey: 'Features.immersiveReading.title',
+        descriptionKey: 'Features.immersiveReading.description',
+        reverseLayout: true,
+      },
+      {
+        imageSrc: '/images/landingPage/quizUI.webp',
+        altTextKey: 'Features.engagingQuizzes.altText',
+        titleKey: 'Features.engagingQuizzes.title',
+        descriptionKey: 'Features.engagingQuizzes.description',
+        reverseLayout: false,
+      },
+      {
+        imageSrc: '/images/landingPage/tournamentUI.webp',
+        altTextKey: 'Features.competitiveLearning.altText',
+        titleKey: 'Features.competitiveLearning.title',
+        descriptionKey: 'Features.competitiveLearning.description',
+        reverseLayout: true,
+      },
+    ],
+    [],
+  )
+
+  const ContentWrapper = isWeakDevice ? Box : ParallaxProvider
+
   return (
-    <ParallaxProvider>
+    <ContentWrapper>
       <Box py={{ base: 10, md: 20 }} position="relative" overflow="hidden">
         <Box
           position="absolute"
@@ -132,112 +214,67 @@ const Features = () => {
           zIndex={1}
           px={{ base: 4, md: 6 }}
         >
-          <Parallax
-            translateY={shouldReduceMotion ? [0, 0] : [-10, 10]}
-            speed={-2}
-          >
-            <Heading
-              as="h2"
-              textAlign="center"
-              mb={{ base: 10, md: 16 }}
-              fontSize={{ base: '2xl', md: '3xl', lg: '4xl' }}
-              fontWeight="bold"
-              color="brand.500"
+          <Box mb={{ base: 10, md: 16 }}>
+            {isWeakDevice ? (
+              <Heading
+                as="h2"
+                textAlign="center"
+                fontSize={{ base: '2xl', md: '3xl', lg: '4xl' }}
+                fontWeight="bold"
+                color="brand.500"
+              >
+                {t('Features.mainTitle')}
+              </Heading>
+            ) : (
+              <Parallax translateY={[-10, 10]} speed={-2}>
+                <Heading
+                  as="h2"
+                  textAlign="center"
+                  fontSize={{ base: '2xl', md: '3xl', lg: '4xl' }}
+                  fontWeight="bold"
+                  color="brand.500"
+                >
+                  {t('Features.mainTitle')}
+                </Heading>
+              </Parallax>
+            )}
+          </Box>
+
+          <Box mb={{ base: 16, md: 32 }}>
+            <HStack
+              display={{ base: 'none', md: 'flex' }}
+              spacing={4}
+              alignItems="stretch"
             >
-              {t('Features.mainTitle')}
-            </Heading>
-          </Parallax>
+              {featuresData.map((feature, index) => (
+                <Box key={index} flex="1">
+                  <FeatureItem {...feature} isWeakDevice={isWeakDevice} />
+                </Box>
+              ))}
+            </HStack>
 
-          <HStack
-            display={{ base: 'none', md: 'flex' }}
-            spacing={4}
-            mb={{ base: 16, md: 32 }}
-            alignItems="stretch"
-          >
-            <FeatureItem
-              Icon={Newspaper}
-              titleKey="Features.curatedNews.title"
-              descriptionKey="Features.curatedNews.description"
-              delay={0.2}
-            />
-            <FeatureItem
-              Icon={QuestionIcon}
-              titleKey="Features.interactiveQuizzes.title"
-              descriptionKey="Features.interactiveQuizzes.description"
-              delay={0.4}
-            />
-            <FeatureItem
-              Icon={Trophy}
-              titleKey="Features.competeAndLearn.title"
-              descriptionKey="Features.competeAndLearn.description"
-              delay={0.6}
-            />
-          </HStack>
+            <VStack display={{ base: 'flex', md: 'none' }} spacing={6}>
+              {featuresData.map((feature, index) => (
+                <FeatureItem
+                  key={index}
+                  {...feature}
+                  isWeakDevice={isWeakDevice}
+                />
+              ))}
+            </VStack>
+          </Box>
 
-          <VStack
-            display={{ base: 'flex', md: 'none' }}
-            spacing={6}
-            mb={{ base: 16, md: 32 }}
-          >
-            <FeatureItem
-              Icon={Newspaper}
-              titleKey="Features.curatedNews.title"
-              descriptionKey="Features.curatedNews.description"
-              delay={0.2}
-            />
-            <FeatureItem
-              Icon={QuestionIcon}
-              titleKey="Features.interactiveQuizzes.title"
-              descriptionKey="Features.interactiveQuizzes.description"
-              delay={0.4}
-            />
-            <FeatureItem
-              Icon={Trophy}
-              titleKey="Features.competeAndLearn.title"
-              descriptionKey="Features.competeAndLearn.description"
-              delay={0.6}
-            />
-          </VStack>
-
-          <UISection
-            imageSrc="/images/landingPage/homeUI.webp"
-            altTextKey="Features.personalizedNewsFeed.altText"
-            titleKey="Features.personalizedNewsFeed.title"
-            descriptionKey="Features.personalizedNewsFeed.description"
-            reverseLayout={false}
-          />
-
-          <UISection
-            imageSrc="/images/landingPage/articleUI.webp"
-            altTextKey="Features.immersiveReading.altText"
-            titleKey="Features.immersiveReading.title"
-            descriptionKey="Features.immersiveReading.description"
-            reverseLayout={true}
-          />
-
-          <UISection
-            imageSrc="/images/landingPage/quizUI.webp"
-            altTextKey="Features.engagingQuizzes.altText"
-            titleKey="Features.engagingQuizzes.title"
-            descriptionKey="Features.engagingQuizzes.description"
-            reverseLayout={false}
-          />
-
-          <UISection
-            imageSrc="/images/landingPage/tournamentUI.webp"
-            altTextKey="Features.competitiveLearning.altText"
-            titleKey="Features.competitiveLearning.title"
-            descriptionKey="Features.competitiveLearning.description"
-            reverseLayout={true}
-          />
+          {uiSectionsData.map((section, index) => (
+            <UISection key={index} {...section} isWeakDevice={isWeakDevice} />
+          ))}
         </Container>
         <Suspense fallback={null}>
-          <Flex position={'absolute'} bottom={0} w={'100%'}>
+          <Flex position="absolute" bottom={0} w="100%">
             <Footer />
           </Flex>
         </Suspense>
       </Box>
-    </ParallaxProvider>
+    </ContentWrapper>
   )
 }
 

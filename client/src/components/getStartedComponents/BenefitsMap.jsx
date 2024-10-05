@@ -18,17 +18,31 @@ import { useTranslation } from 'react-i18next'
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 
-const BenefitItem = ({ icon, titleKey, descriptionKey, index, speed }) => {
+const BenefitItem = ({
+  icon,
+  titleKey,
+  descriptionKey,
+  index,
+  speed,
+  isWeakDevice,
+}) => {
   const { t } = useTranslation('GetStarted')
+  const ContentWrapper = isWeakDevice ? Box : Parallax
+  const ItemWrapper = isWeakDevice ? Box : MotionBox
+
   return (
-    <Parallax speed={speed}>
-      <MotionBox
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: index * 0.1 }}
+    <ContentWrapper {...(isWeakDevice ? {} : { speed })}>
+      <ItemWrapper
         mb={8}
         textAlign="center"
         width="100%"
+        {...(isWeakDevice
+          ? {}
+          : {
+              initial: { opacity: 0, y: 20 },
+              animate: { opacity: 1, y: 0 },
+              transition: { duration: 0.5, delay: index * 0.1 },
+            })}
       >
         <Circle
           size={{ base: '60px', md: '80px' }}
@@ -47,32 +61,38 @@ const BenefitItem = ({ icon, titleKey, descriptionKey, index, speed }) => {
         <Text fontSize="sm" maxWidth="250px" mx="auto">
           {t(descriptionKey)}
         </Text>
-      </MotionBox>
-    </Parallax>
+      </ItemWrapper>
+    </ContentWrapper>
   )
 }
 
-const Arrow = ({ direction = 'right' }) => {
+const Arrow = ({ direction = 'right', isWeakDevice }) => {
   const ArrowIcon = direction === 'down' ? ArrowDownIcon : ArrowForwardIcon
+  const ArrowWrapper = isWeakDevice ? Flex : MotionFlex
+
   return (
-    <MotionFlex
+    <ArrowWrapper
       justify="center"
       align="center"
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay: 0.5 }}
       my={2}
+      {...(isWeakDevice
+        ? {}
+        : {
+            initial: { opacity: 0, scale: 0 },
+            animate: { opacity: 1, scale: 1 },
+            transition: { duration: 0.5, delay: 0.5 },
+          })}
     >
       <ArrowIcon
         boxSize={6}
         color="brand.500"
         transform={direction === 'left' ? 'rotate(180deg)' : undefined}
       />
-    </MotionFlex>
+    </ArrowWrapper>
   )
 }
 
-const BenefitsMap = () => {
+const BenefitsMap = ({ isWeakDevice }) => {
   const { t } = useTranslation('GetStarted')
   const bgColor = useColorModeValue(
     'rgba(255, 255, 255, 0.8)',
@@ -80,20 +100,24 @@ const BenefitsMap = () => {
   )
   const isMobile = useBreakpointValue({ base: true, md: false })
 
+  const ContentWrapper = isWeakDevice ? Box : ParallaxProvider
+
   return (
-    <ParallaxProvider>
+    <ContentWrapper>
       <Box py={20} position="relative" overflow="hidden">
-        <Parallax speed={-5}>
-          <Box
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            bg={bgColor}
-            backdropFilter="blur(5px)"
-          />
-        </Parallax>
+        {!isWeakDevice && (
+          <Parallax speed={-5}>
+            <Box
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              bg={bgColor}
+              backdropFilter="blur(5px)"
+            />
+          </Parallax>
+        )}
         <Box
           maxWidth="1200px"
           margin="0 auto"
@@ -101,7 +125,7 @@ const BenefitsMap = () => {
           zIndex={1}
           px={4}
         >
-          <Parallax speed={-2}>
+          {isWeakDevice ? (
             <Heading
               as="h2"
               size={{ base: 'xl', md: '2xl' }}
@@ -113,8 +137,21 @@ const BenefitsMap = () => {
             >
               {t('BenefitsMap.mainTitle')}
             </Heading>
-          </Parallax>
-
+          ) : (
+            <Parallax speed={-2}>
+              <Heading
+                as="h2"
+                size={{ base: 'xl', md: '2xl' }}
+                textAlign="center"
+                mb={16}
+                color="brand.500"
+                fontWeight="bold"
+                letterSpacing="wide"
+              >
+                {t('BenefitsMap.mainTitle')}
+              </Heading>
+            </Parallax>
+          )}
           <VStack spacing={8} align="stretch">
             <Flex
               direction={{ base: 'column', md: 'row' }}
@@ -129,12 +166,13 @@ const BenefitsMap = () => {
                 descriptionKey="BenefitsMap.curatedNews.description"
                 index={0}
                 speed={2}
+                isWeakDevice={isWeakDevice}
               />
               {isMobile ? (
-                <Arrow direction="down" />
+                <Arrow direction="down" isWeakDevice={isWeakDevice} />
               ) : (
                 <Box width="5%" display="flex" justifyContent="center">
-                  <Arrow direction="right" />
+                  <Arrow direction="right" isWeakDevice={isWeakDevice} />
                 </Box>
               )}
               <BenefitItem
@@ -145,12 +183,13 @@ const BenefitsMap = () => {
                 descriptionKey="BenefitsMap.activeLearning.description"
                 index={1}
                 speed={3}
+                isWeakDevice={isWeakDevice}
               />
               {isMobile ? (
-                <Arrow direction="down" />
+                <Arrow direction="down" isWeakDevice={isWeakDevice} />
               ) : (
                 <Box width="5%" display="flex" justifyContent="center">
-                  <Arrow direction="right" />
+                  <Arrow direction="right" isWeakDevice={isWeakDevice} />
                 </Box>
               )}
               <BenefitItem
@@ -161,21 +200,19 @@ const BenefitsMap = () => {
                 descriptionKey="BenefitsMap.trackProgress.description"
                 index={2}
                 speed={2}
+                isWeakDevice={isWeakDevice}
               />
             </Flex>
 
-            <Arrow direction="down" />
+            <Arrow direction="down" isWeakDevice={isWeakDevice} />
 
-            <Parallax speed={5}>
+            {isWeakDevice ? (
               <Flex justify="center" align="center">
-                <MotionBox
+                <Box
                   bg="brand.500"
                   p={8}
                   borderRadius="lg"
                   width={{ base: '100%', md: '80%' }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
                 >
                   <Heading
                     size={{ base: 'md', md: 'lg' }}
@@ -193,11 +230,42 @@ const BenefitsMap = () => {
                   >
                     {t('BenefitsMap.infoRetention.description')}
                   </Text>
-                </MotionBox>
+                </Box>
               </Flex>
-            </Parallax>
+            ) : (
+              <Parallax speed={5}>
+                <Flex justify="center" align="center">
+                  <MotionBox
+                    bg="brand.500"
+                    p={8}
+                    borderRadius="lg"
+                    width={{ base: '100%', md: '80%' }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                  >
+                    <Heading
+                      size={{ base: 'md', md: 'lg' }}
+                      mb={4}
+                      textAlign="center"
+                      color="white"
+                    >
+                      {t('BenefitsMap.infoRetention.title')}
+                    </Heading>
+                    <Text
+                      fontSize={{ base: 'sm', md: 'md' }}
+                      textAlign="center"
+                      color="white"
+                      lineHeight="tall"
+                    >
+                      {t('BenefitsMap.infoRetention.description')}
+                    </Text>
+                  </MotionBox>
+                </Flex>
+              </Parallax>
+            )}
 
-            <Arrow direction="down" />
+            <Arrow direction="down" isWeakDevice={isWeakDevice} />
 
             <Flex
               direction={{ base: 'column', md: 'row' }}
@@ -212,12 +280,13 @@ const BenefitsMap = () => {
                 descriptionKey="BenefitsMap.competitiveEdge.description"
                 index={3}
                 speed={2}
+                isWeakDevice={isWeakDevice}
               />
               {isMobile ? (
-                <Arrow direction="down" />
+                <Arrow direction="down" isWeakDevice={isWeakDevice} />
               ) : (
                 <Box width="5%" display="flex" justifyContent="center">
-                  <Arrow direction="right" />
+                  <Arrow direction="right" isWeakDevice={isWeakDevice} />
                 </Box>
               )}
               <BenefitItem
@@ -228,12 +297,13 @@ const BenefitsMap = () => {
                 descriptionKey="BenefitsMap.informedCitizen.description"
                 index={4}
                 speed={3}
+                isWeakDevice={isWeakDevice}
               />
               {isMobile ? (
-                <Arrow direction="down" />
+                <Arrow direction="down" isWeakDevice={isWeakDevice} />
               ) : (
                 <Box width="5%" display="flex" justifyContent="center">
-                  <Arrow direction="right" />
+                  <Arrow direction="right" isWeakDevice={isWeakDevice} />
                 </Box>
               )}
               <BenefitItem
@@ -244,12 +314,13 @@ const BenefitsMap = () => {
                 descriptionKey="BenefitsMap.personalGrowth.description"
                 index={5}
                 speed={2}
+                isWeakDevice={isWeakDevice}
               />
             </Flex>
           </VStack>
         </Box>
       </Box>
-    </ParallaxProvider>
+    </ContentWrapper>
   )
 }
 
