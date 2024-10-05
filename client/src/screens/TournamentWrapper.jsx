@@ -48,7 +48,12 @@ const TournamentWrapper = () => {
     return <ServiceScreen />
   }
 
-  return <Box>{isAuthorized ? <Tournament /> : <ComingSoonTournament />}</Box>
+  // return <Box>{isAuthorized ? <Tournament /> : <ComingSoonTournament />}</Box>
+  return (
+    <Box>
+      <Tournament />
+    </Box>
+  )
 }
 
 export default TournamentWrapper

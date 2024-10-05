@@ -179,11 +179,9 @@ const getLatestTestTournament = asyncHandler(async (req, res) => {
 // @access Private
 const getActiveTournamentRegistration = asyncHandler(async (req, res) => {
   const userId = req.user._id
-  const currentDate = new Date()
+
   const tournament = await Tournament.findOne({
     isActive: true,
-    registrationStartDate: { $lte: currentDate },
-    registrationEndDate: { $gte: currentDate },
   })
 
   if (!tournament) {
