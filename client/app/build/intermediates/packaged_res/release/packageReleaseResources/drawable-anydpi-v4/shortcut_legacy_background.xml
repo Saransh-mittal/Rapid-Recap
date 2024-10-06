@@ -18,7 +18,7 @@
     android:inset="2dp">
     <aapt:attr name="android:drawable">
         <shape android:shape="oval">
-            <solid android:color="@color/shortcut_background" />
+            <solid android:color="@color/splash_background_color" />
             <size android:width="44dp" android:height="44dp" />
         </shape>
     </aapt:attr>
