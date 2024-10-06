@@ -59,7 +59,7 @@ async function getTopLeadersForCategory(tournamentId, category) {
   return await QuizSession.aggregate([
     {
       $match: {
-        tournament: mongoose.Types.ObjectId.createFromHexString(tournamentId),
+        tournament: tournamentId,
         category: category,
         completed: true,
       },
@@ -172,7 +172,7 @@ async function updateTournamentPerformanceAndBadges(tournament) {
       // Check for category leadership badges
       for (const category of entry.selectedCategories) {
         const categoryRank = categoryLeaders[category]?.findIndex(
-          leader => leader.toString() === entry.user.toString(),
+          leader => leader.userId.toString() === entry.user.toString(),
         )
         if (categoryRank === 0)
           categoryBadges.push({ ...BADGE_CONFIG.ACE, text: category })

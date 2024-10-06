@@ -65,5 +65,9 @@
       "title": "Competitive Learning",
       "description": "Join our weekend tournaments to compete with friends and other users. Climb the leaderboard, earn badges, and showcase your knowledge while having fun!"
     }
-  }
+  },
+  "performanceIssueDetected": "Performance Issue Detected",
+  "switchToWeakModePrompt": "We've noticed some performance issues. Would you like to switch to a simplified version for smoother Landing Page scroll?",
+  "switchToWeakMode": "Low Mode",
+  "stayInNormalMode": "Normal Mode"
 }

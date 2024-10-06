@@ -1311,6 +1311,7 @@ const getUserStats = asyncHandler(async (req, res) => {
   const userStats = {
     totalScore: registration.totalScore,
     completedCategories: registration.completedCategories,
+    categoryAttempts: registration.categoryAttempts,
     categoryStats,
   }
 

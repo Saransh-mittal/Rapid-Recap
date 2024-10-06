@@ -21,6 +21,9 @@ const {
   calculateWeeklyQuizDifficultyDistribution,
 } = require('../../utils/mail.utils')
 const ApplicationUpdates = require('../../model/applicationUpdatesSchema')
+const {
+  userWeeklyReportInboxTemplate,
+} = require('../../data/inboxNotificationsTemplates')
 
 const startRegistration = async () => {
   const startDate = moment().tz('Asia/Kolkata').startOf('day')

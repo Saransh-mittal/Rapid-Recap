@@ -1,1 +1,0 @@
-import{aD as o,t as r}from"./index-571300a7.js";import{S as s}from"./stack-e8e1a6ee.js";const c=o((a,t)=>r.jsx(s,{align:"center",...a,direction:"column",ref:t}));c.displayName="VStack";export{c as V};

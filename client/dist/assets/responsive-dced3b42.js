@@ -1,0 +1,1 @@
+import{aQ as a}from"./index-e380d3a9.js";const l=Object.freeze(["base","sm","md","lg","xl","2xl"]);function i(n,r){return Array.isArray(n)?n.map(t=>t===null?null:r(t)):a(n)?Object.keys(n).reduce((t,e)=>(t[e]=r(n[e]),t),{}):n!=null?r(n):null}function f(n,r=l){const t={};return n.forEach((e,s)=>{const u=r[s];e!=null&&(t[u]=e)}),t}export{f as a,l as b,i as m};
