@@ -1,0 +1,4 @@
+#Sun Oct 06 11:56:34 IST 2024
+base.0=/Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex
