@@ -116,7 +116,8 @@ const UserStatsModal = ({ isOpen, onClose, userStats, t }) => {
                     key={index}
                     stat={stat}
                     t={t}
-                    categoryAttempts={categoryAttempts}
+                    categoryAttempts={userStats.categoryAttempts}
+                    inGameName={userStats.inGameName}
                   />
                 ))}
               </SimpleGrid>

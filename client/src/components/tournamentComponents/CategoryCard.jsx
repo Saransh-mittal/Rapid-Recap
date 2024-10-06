@@ -58,8 +58,10 @@ const CategoryCard = ({
   tournamentStatus,
   attemptsFromCategorySelection,
   isCompletedFromStats,
+  userInGameName = null,
 }) => {
   const { t } = useTranslation('CategoryCard')
+  const inGameName = useSelector(state => state.auth.user.inGameName)
   const attempts = useSelector(
     state =>
       state.tournament.categoryAttempts[category] ||
@@ -181,7 +183,7 @@ const CategoryCard = ({
           {t(category)}
         </Text>
 
-        {attempts > 0 && !isCompleted && (
+        {attempts > 0 && !isCompleted && userInGameName === inGameName && (
           <Text fontSize="xs" color="gray.400">
             {t('bestScore')}: {score}
           </Text>

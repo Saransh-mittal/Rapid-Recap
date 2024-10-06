@@ -21,6 +21,7 @@ const CategoryStatsCard = ({
   isProfile = false,
   setShowQuizSummary,
   categoryAttempts = {},
+  inGameName,
 }) => {
   return (
     <Box>
@@ -36,6 +37,7 @@ const CategoryStatsCard = ({
                 }
               : () => {}
           }
+          userInGameName={inGameName}
         />
       </Suspense>
       <VStack
