@@ -1,5 +1,4 @@
 in.co.rapidrecap.www.twa
-anim fade_in
 attr alpha
 attr font
 attr fontProviderAuthority
@@ -117,7 +116,6 @@ id browser_actions_menu_item_icon
 id browser_actions_menu_item_text
 id browser_actions_menu_items
 id browser_actions_menu_view
-id center_reference
 id chronometer
 id dialog_button
 id forever
@@ -131,7 +129,6 @@ id normal
 id notification_background
 id notification_main_column
 id notification_main_column_container
-id rapid_recap_text
 id right_icon
 id right_side
 id tag_accessibility_actions
@@ -148,7 +145,6 @@ id time
 id title
 integer splashScreenFadeOutDuration
 integer status_bar_notification_info_maxnum
-layout activity_splash
 layout browser_actions_context_menu_page
 layout browser_actions_context_menu_row
 layout custom_dialog

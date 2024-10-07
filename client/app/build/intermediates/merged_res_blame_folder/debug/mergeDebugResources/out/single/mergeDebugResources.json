@@ -64,6 +64,10 @@
         "source": "/Users/saranshmittal/.gradle/daemon/8.8/in.co.rapidrecap.www.twa.app-main-9:/drawable-xxxhdpi/ic_notification_icon.png"
     },
     {
+        "merged": "in.co.rapidrecap.www.twa.app-debug-7:/drawable-anydpi_splash_screen.xml.flat",
+        "source": "in.co.rapidrecap.www.twa.app-main-9:/drawable-anydpi/splash_screen.xml"
+    },
+    {
         "merged": "/Users/saranshmittal/.gradle/daemon/8.8/in.co.rapidrecap.www.twa.app-debug-7:/mipmap-hdpi_ic_launcher.png.flat",
         "source": "/Users/saranshmittal/.gradle/daemon/8.8/in.co.rapidrecap.www.twa.app-main-9:/mipmap-hdpi/ic_launcher.png"
     },
@@ -78,10 +82,6 @@
     {
         "merged": "/Users/saranshmittal/.gradle/daemon/8.8/in.co.rapidrecap.www.twa.app-debug-7:/layout_activity_splash.xml.flat",
         "source": "/Users/saranshmittal/.gradle/daemon/8.8/in.co.rapidrecap.www.twa.app-main-9:/layout/activity_splash.xml"
-    },
-    {
-        "merged": "in.co.rapidrecap.www.twa.app-debug-7:/anim_fade_in.xml.flat",
-        "source": "in.co.rapidrecap.www.twa.app-main-9:/anim/fade_in.xml"
     },
     {
         "merged": "/Users/saranshmittal/.gradle/daemon/8.8/in.co.rapidrecap.www.twa.app-debug-7:/drawable-xhdpi_rapid_recap_text.png.flat",

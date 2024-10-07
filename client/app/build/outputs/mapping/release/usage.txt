@@ -1312,12 +1312,8 @@ com.google.androidbrowserhelper.trusted.PrefUtils:
     private static final java.lang.String KEY_HAS_REQUESTED_NOTIFICATION_PERMISSION
     private static final java.lang.String SHARED_PREFERENCES_NAME
     private void <init>()
-com.google.androidbrowserhelper.trusted.QualityEnforcer:
-    static final java.lang.String CRASH
-    static final java.lang.String KEY_CRASH_REASON
-    static final java.lang.String KEY_SUCCESS
-    private static final java.lang.String TAG
-    void <init>(com.google.androidbrowserhelper.trusted.QualityEnforcer$Delegate)
+com.google.androidbrowserhelper.trusted.QualityEnforcer$Delegate
+com.google.androidbrowserhelper.trusted.QualityEnforcer
 com.google.androidbrowserhelper.trusted.SharedPreferencesTokenStore:
     private static final java.lang.String KEY_TOKEN
     public void setVerifiedProvider(java.lang.String,android.content.pm.PackageManager)
@@ -1353,17 +1349,16 @@ com.google.androidbrowserhelper.trusted.splashscreens.SplashImageTransferTask:
     private static final java.lang.String PREF_LAST_UPDATE_TIME
     private static final java.lang.String TAG
 com.google.common.util.concurrent.ListenableFuture
-in.co.rapidrecap.www.twa.R$anim:
-    private void <init>()
 in.co.rapidrecap.www.twa.R$bool
 in.co.rapidrecap.www.twa.R$color
-in.co.rapidrecap.www.twa.R$drawable
-in.co.rapidrecap.www.twa.R$id:
-    public static int center_reference
+in.co.rapidrecap.www.twa.R$drawable:
+    public static int ic_notification_icon
+    public static int rapid_recap_text
+    public static int shortcut_legacy_background
+    public static int splash
+    public static int splash_background
     private void <init>()
 in.co.rapidrecap.www.twa.R$integer
-in.co.rapidrecap.www.twa.R$layout:
-    private void <init>()
 in.co.rapidrecap.www.twa.R$mipmap
 in.co.rapidrecap.www.twa.R$raw
 in.co.rapidrecap.www.twa.R$string

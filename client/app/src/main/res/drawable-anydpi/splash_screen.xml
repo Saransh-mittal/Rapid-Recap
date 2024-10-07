@@ -11,7 +11,7 @@
             android:tileMode="disabled" />
     </item>
 
-    <!-- Your logo moved upwards -->
+    <!-- Your logo -->
     <item android:gravity="center"
           android:top="-70dp">  <!-- Adjust this value to move the icon up -->
         <bitmap
@@ -19,4 +19,11 @@
             android:gravity="center" />
     </item>
 
+    <!-- Rapid Recap text -->
+    <item android:gravity="center"
+          android:top="120dp">  <!-- Adjust this value to position the text below the icon -->
+        <bitmap
+            android:src="@drawable/rapid_recap_text"
+            android:gravity="center" />
+    </item>
 </layer-list>

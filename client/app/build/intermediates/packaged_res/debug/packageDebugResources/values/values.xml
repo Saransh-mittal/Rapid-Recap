@@ -11,7 +11,7 @@
     <color name="splash_background_color">#0A0E17</color>
     <integer name="splashScreenFadeOutDuration">300</integer>
     <string name="appName" translatable="false">Rapid Recap</string>
-    <string name="assetStatements">
+    <string name="asset_statements">
     [{
         \"relation\": [\"delegate_permission/common.handle_all_urls\"],
         \"target\": {
@@ -19,8 +19,7 @@
             \"site\": \"https://www.rapidrecap.co.in\"
         }
     }]
-    
-  </string>
+</string>
     <string name="fallbackType" translatable="false">customtabs</string>
     <string name="fullScopeUrl" translatable="false">https://www.rapidrecap.co.in/</string>
     <string name="generatorApp" translatable="false">bubblewrap-cli</string>
