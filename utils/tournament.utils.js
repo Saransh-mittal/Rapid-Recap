@@ -221,13 +221,16 @@ async function updateTournamentPerformanceAndBadges(tournament) {
         badgeName: displayedBadge.name,
         text: displayedBadge.text,
       }
-      user.badges = allBadges.map(badge => ({
-        rank: rank,
-        tournamentNumber: tournament.tournamentNumber,
-        badgeName: badge.name,
-        text: badge.text,
-        participantCnt: participantCount,
-      }))
+      user.badges = [
+        ...user.badges,
+        ...allBadges.map(badge => ({
+          rank: rank,
+          tournamentNumber: tournament.tournamentNumber,
+          badgeName: badge.name,
+          text: badge.text,
+          participantCnt: participantCount,
+        })),
+      ]
       user.tournamentPerformance.push({
         tournament: tournament._id,
         score: entry.totalScore,
