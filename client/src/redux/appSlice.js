@@ -90,8 +90,11 @@ const initialState = {
   unreadFriendRequests: 0,
   error: null,
   updatesLoading: false,
+  updatesFetched: false,
   streakLoading: false,
+  streakFetched: false,
   friendRequestsLoading: false,
+  friendRequestsFetched: false,
   markingRequestsAsRead: false,
   isSigninOpen: false,
   isRegisterOpen: false,
@@ -206,10 +209,12 @@ export const appSlice = createSlice({
       .addCase(fetchAppUpdates.fulfilled, (state, action) => {
         state.updates = action.payload
         state.updatesLoading = false
+        state.updatesFetched = true
       })
       .addCase(fetchAppUpdates.rejected, (state, action) => {
         state.updatesLoading = false
         state.error = action.error.message
+        state.updatesFetched = true
       })
       .addCase(fetchDailyStreak.pending, state => {
         state.streakLoading = true
@@ -264,10 +269,12 @@ export const appSlice = createSlice({
         state.longestStreak = action.payload.longestStreak
         state.isBoosted = action.payload.isBoosted
         state.streakLoading = false
+        state.streakFetched = true
       })
       .addCase(fetchDailyStreak.rejected, (state, action) => {
         state.streakLoading = false
         state.error = action.error.message
+        state.streakFetched = true
       })
       .addCase(fetchUnreadFriendRequestsCount.pending, state => {
         state.friendRequestsLoading = true
@@ -275,10 +282,12 @@ export const appSlice = createSlice({
       .addCase(fetchUnreadFriendRequestsCount.fulfilled, (state, action) => {
         state.unreadFriendRequests = action.payload
         state.friendRequestsLoading = false
+        state.friendRequestsFetched = true
       })
       .addCase(fetchUnreadFriendRequestsCount.rejected, (state, action) => {
         state.friendRequestsLoading = false
         state.error = action.error.message
+        state.friendRequestsFetched = true
       })
       .addCase(markFriendRequestsAsRead.pending, state => {
         state.markingRequestsAsRead = true

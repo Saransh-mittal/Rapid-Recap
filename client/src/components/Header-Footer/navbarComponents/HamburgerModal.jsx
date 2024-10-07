@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useMemo } from 'react'
+import React, { lazy, useCallback, useMemo } from 'react'
 import {
   Avatar,
   Badge,
@@ -145,9 +145,8 @@ const HamburgerModal = ({
           display={'flex'}
           justifyContent={'space-between'}
         >
-          <Suspense fallback={<div>Loading...</div>}>
-            <NavBrand isHamburgerOpen={true} />
-          </Suspense>
+          <NavBrand isHamburgerOpen={true} />
+
           <ModalCloseButton
             position="static"
             bg={'white'}
@@ -215,23 +214,22 @@ const HamburgerModal = ({
                             {notification.length}
                           </Badge>
                         )}
-                      <Suspense fallback={<div>Loading...</div>}>
-                        <FaMessenger
-                          width={'25px'}
-                          height={'25px'}
-                          fill={'#fff'}
-                        />
-                      </Suspense>
-                    </Box>
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Inbox
-                        className={'inbox-button-lg'}
-                        onClick={handleInboxClick}
-                        notifyCont={notifyCont}
-                        h="25px"
-                        w="25px"
+
+                      <FaMessenger
+                        width={'25px'}
+                        height={'25px'}
+                        fill={'#fff'}
                       />
-                    </Suspense>
+                    </Box>
+
+                    <Inbox
+                      className={'inbox-button-lg'}
+                      onClick={handleInboxClick}
+                      notifyCont={notifyCont}
+                      h="25px"
+                      w="25px"
+                    />
+
                     <Flex
                       onClick={() => {
                         toast({
@@ -248,13 +246,12 @@ const HamburgerModal = ({
                       }}
                       position="relative"
                     >
-                      <Suspense fallback={<div>Loading...</div>}>
-                        <UserFriendsSVG
-                          width={'25px'}
-                          height={'25px'}
-                          fill={'#fff'}
-                        />
-                      </Suspense>
+                      <UserFriendsSVG
+                        width={'25px'}
+                        height={'25px'}
+                        fill={'#fff'}
+                      />
+
                       {unreadFriendRequests !== 0 && (
                         <Box
                           h="8px"
@@ -269,13 +266,12 @@ const HamburgerModal = ({
                     </Flex>
                     <Box onClick={handleUserSearchClick}>
                       <SearchIcon boxSize={6} color={'white'} />
-                      <Suspense fallback={<div>Loading...</div>}>
-                        <UserSearchDrawer
-                          isOpen={isOpenUserSearch}
-                          onClose={onCloseUserSearch}
-                          onSearchClick={onClose}
-                        />
-                      </Suspense>
+
+                      <UserSearchDrawer
+                        isOpen={isOpenUserSearch}
+                        onClose={onCloseUserSearch}
+                        onSearchClick={onClose}
+                      />
                     </Box>
                   </>
                 )}
@@ -297,16 +293,12 @@ const HamburgerModal = ({
 
             <VStack spacing={4} mb={8}>
               {notLogined ? (
-                <Suspense fallback={<div>Loading...</div>}>
-                  <GetStarted
-                    innerText={t('getStarted')}
-                    hamburgerOnClose={onClose}
-                  />
-                </Suspense>
+                <GetStarted
+                  innerText={t('getStarted')}
+                  hamburgerOnClose={onClose}
+                />
               ) : (
-                <Suspense fallback={<div>Loading...</div>}>
-                  <LogoutButton handleLogout={handleLogout} />
-                </Suspense>
+                <LogoutButton handleLogout={handleLogout} />
               )}
               <Footer onCloseMenu={onClose} />
             </VStack>
