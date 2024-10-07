@@ -23,7 +23,7 @@ layout activity_splash
 mipmap ic_launcher
 raw web_app_manifest
 string appName
-string assetStatements
+string asset_statements
 string fallbackType
 string fullScopeUrl
 string generatorApp

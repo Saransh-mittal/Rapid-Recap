@@ -36,7 +36,6 @@ const ComingSoonTournament = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             bg="rgba(0, 0, 0, 0.1)"
-            backdropFilter="blur(5px)"
           >
             <Center height="300px">
               <VStack spacing={6}>
@@ -66,8 +65,7 @@ const ComingSoonTournament = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            bg="rgba(0, 0, 0, 0.1)"
-            backdropFilter="blur(5px)"
+            bg="rgba(0, 0, 0, 0.3)"
             bgGradient="linear(to-br, rgba(26, 32, 44, 0.5), rgba(49, 10, 103, 0.5))"
           >
             <EpicQuestGuide />

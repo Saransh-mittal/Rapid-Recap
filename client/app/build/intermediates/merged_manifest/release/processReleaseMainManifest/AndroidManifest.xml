@@ -54,7 +54,7 @@
         android:theme="@android:style/Theme.Translucent.NoTitleBar" >
         <meta-data
             android:name="asset_statements"
-            android:resource="@string/assetStatements" />
+            android:resource="@string/asset_statements" />
         <meta-data
             android:name="web_manifest_url"
             android:value="@string/webManifestUrl" />
@@ -82,7 +82,7 @@
 
             <meta-data
                 android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                android:value="@string/launchUrl" />
+                android:value="https://www.rapidrecap.co.in" />
             <meta-data
                 android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
                 android:resource="@color/colorPrimary" />

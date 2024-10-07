@@ -100,7 +100,6 @@ const NotificationModal = ({
                 py={1}
                 mt={2}
                 css={{
-                  backdropFilter: 'blur(8px)',
                   border: '2px solid #4A5568', // Border color
                   padding: '10px 20px',
                   background: `linear-gradient(to right, #ff8a00, #e52e71)`,

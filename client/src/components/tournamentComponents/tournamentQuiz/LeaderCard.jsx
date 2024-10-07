@@ -47,7 +47,6 @@ const LeaderCard = ({ rank, inGameName, score }) => {
         justifyContent="space-between"
         boxShadow="xl"
         w="100%"
-        backdropFilter="blur(5px)"
         border="1px solid rgba(255,215,0,0.2)"
         animation={rank === 1 ? `${glowAnimation} 2s infinite` : 'none'}
       >

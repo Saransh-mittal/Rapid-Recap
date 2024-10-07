@@ -162,7 +162,7 @@ mipmap ic_launcher
 raw web_app_manifest
 string appName
 string app_name
-string assetStatements
+string asset_statements
 string copy_toast_msg
 string fallbackType
 string fallback_menu_item_copy_link

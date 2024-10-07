@@ -45,10 +45,12 @@
 
         <meta-data
             android:name="asset_statements"
-            android:resource="@string/assetStatements" />
+            android:resource="@string/asset_statements" />
 
 
-            <meta-data
+
+
+        <meta-data
                 android:name="web_manifest_url"
                 android:value="@string/webManifestUrl" />
 
@@ -79,8 +81,9 @@
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
     </intent-filter>
-            <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                android:value="@string/launchUrl" />
+            <meta-data
+                android:name="android.support.customtabs.trusted.DEFAULT_URL"
+                android:value="https://www.rapidrecap.co.in" />
 
             <meta-data
                 android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"

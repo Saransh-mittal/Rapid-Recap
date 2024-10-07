@@ -12,10 +12,9 @@ const CategoryLeaders = ({ leaders }) => {
       borderRadius="xl"
       p={6}
       mt={8}
-      bg="rgba(0,0,0,0.6)"
-      backdropFilter="blur(10px)"
+      bg="rgba(0,0,0,0.7)"
       border="1px solid rgba(255,215,0,0.3)"
-      boxShadow="0 0 20px rgba(255,215,0,0.2)"
+      boxShadow="0 0 20px rgba(255,215,0,0.3)"
     >
       <Text
         fontSize="2xl"

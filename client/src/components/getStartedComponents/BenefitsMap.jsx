@@ -91,7 +91,6 @@ const BenefitsMap = () => {
             right={0}
             bottom={0}
             bg={bgColor}
-            backdropFilter="blur(5px)"
           />
         </Parallax>
         <Box
