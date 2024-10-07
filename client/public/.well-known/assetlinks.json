@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.co.rapidrecap.www.twa",
+      "sha256_cert_fingerprints": [
+        "95:CE:70:34:C6:0C:33:25:78:5B:8E:CB:D2:D7:AD:5B:87:0B:02:7D:38:63:86:A9:F4:7F:96:85:33:F7:5C:6F"
+      ]
+    }
+  }
+]
