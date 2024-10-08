@@ -15,6 +15,7 @@ import BadgeIcon from './BadgeIcon'
 import ScoreItem from './ScoreItem'
 import NameLightning from '../miscellaneous/NameLightning'
 import { findSocietyAndCircle } from '../../utils/helper.utils'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
@@ -27,6 +28,7 @@ const RankIcon = ({ rank }) => {
 }
 
 const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
+  const { t } = useTranslation('LeaderBoardRow')
   const [isBadgeHovered, setIsBadgeHovered] = useState(false)
   const [isBadgePopoverOpen, setIsBadgePopoverOpen] = useState(false)
 
@@ -128,18 +130,22 @@ const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
               />
             </Box>
             <ScoreItem
-              label="IQ Score"
+              label={t('IQ Score')}
               value={user.IQ_score.toFixed(1)}
               color={accentColor}
             />
-            <ScoreItem label="Exp Level" value={user.level} color={textColor} />
             <ScoreItem
-              label="Submissions"
+              label={t('Exp Level')}
+              value={user.level}
+              color={textColor}
+            />
+            <ScoreItem
+              label={t('Submissions')}
               value={user.quizSubmissions}
               color={textColor}
             />
             <ScoreItem
-              label="Avg. RQM"
+              label={t('Avg. RQM')}
               value={user.RQM_avg}
               color={textColor}
             />
