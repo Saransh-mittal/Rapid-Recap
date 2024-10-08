@@ -31,6 +31,7 @@ import {
 } from '../../redux/articleSlice'
 import { useTranslation } from 'react-i18next'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
+import { useNavbar } from '../../contextAPI/NavbarContext'
 
 // Lazy load components
 const Categories = React.lazy(() => import('./Categories'))
@@ -48,12 +49,12 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
   )
   const dispatchRedux = useDispatch()
   const { category } = useSelector(state => state.content)
-
+  const { isVisibleRef } = useNavbar()
   const [swipeDisable, setSwipeDisable] = useState(false)
   const [isFixed, setIsFixed] = useState(false)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(true)
-
+  const categoryRef = useRef()
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
   const flexDirectionOfTimeline = useBreakpointValue({
     base: 'column',
@@ -82,6 +83,9 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
 
   const handleActiveCategory = useCallback(
     ({ category, shouldNavigateOrNot = true }) => {
+      if (shouldNavigateOrNot) {
+        navigate(`/home/${category.toLowerCase()}`)
+      }
       setLoad(true)
       setHasMoreItems(true)
       dispatchRedux(setCategory(category.toLowerCase()))
@@ -89,9 +93,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
       dispatchRedux(clearSearch())
       dispatchRedux(setSearchTerm(''))
       dispatchRedux(setItemsState([]))
-      if (shouldNavigateOrNot) {
-        navigate(`/home/${category.toLowerCase()}`)
-      }
     },
     [dispatchRedux, navigate, setLoad, setHasMoreItems],
   )
@@ -119,8 +120,11 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY
       if (isSmallerThan992) {
-        const notFix = prevScrollPos > currentScrollPos || currentScrollPos < 10
-        setIsFixed(!notFix)
+        if (categoryRef.current) {
+          categoryRef.current.style.transform = isVisibleRef.current
+            ? 'translateY(0)'
+            : 'translateY(-68%)'
+        }
       }
       if (currentScrollPos > prevScrollPos && currentScrollPos > 100) {
         setIsSearchBarVisible(false)
@@ -184,7 +188,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
       >
         <Flex
           zIndex={999}
-          transform={!isFixed ? 'translateY(0)' : 'translateY(-68%)'}
+          ref={categoryRef}
           transition="transform 0.3s ease-in-out"
           p={'1rem'}
           pb={isSearchBarVisible ? '2rem' : '1rem'}

@@ -49,8 +49,8 @@ const Categories = ({
             key={category.key}
             white={isActive}
             onClick={() => {
-              trackCategoryClick(category.key)
               handleActiveCategory({ category: category.key })
+              trackCategoryClick(category.key)
             }}
             display={
               notLoggedIn && category.key === 'all' ? 'none' : 'inline-flex'

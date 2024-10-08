@@ -35,9 +35,9 @@
 33-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:26:26-78
 34
 35    <queries>
-35-->[com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/d3335fbdff4200978ad121d7b141def7/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:26:5-34:15
+35-->[com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:26:5-34:15
 36        <intent>
-36-->[com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/d3335fbdff4200978ad121d7b141def7/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:27:9-33:18
+36-->[com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:27:9-33:18
 37            <action android:name="android.intent.action.VIEW" />
 37-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:150:17-68
 37-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:150:25-66
@@ -59,7 +59,7 @@
 47        android:allowBackup="true"
 47-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:37:9-35
 48        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-48-->[androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2144911bb09dce3a07f407e3b390637e/transformed/core-1.1.0/AndroidManifest.xml:24:18-86
+48-->[androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/AndroidManifest.xml:24:18-86
 49        android:extractNativeLibs="true"
 50        android:icon="@mipmap/ic_launcher"
 50-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:38:9-43

@@ -5,12 +5,12 @@ import {
   Box,
   Flex,
   ListItem,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
-  ModalOverlay,
+  Drawer,
+  DrawerBody,
+  DrawerCloseButton,
+  DrawerContent,
+  DrawerHeader,
+  DrawerOverlay,
   Text,
   Tooltip,
   UnorderedList,
@@ -23,7 +23,6 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import { ChatState } from '../../../contextAPI/ChatProvider'
-import FixedBackground from '../../miscellaneous/FixedBackground'
 import Footer from '../Footer'
 
 const LogoutButton = lazy(() => import('./LogoutButton'))
@@ -36,7 +35,7 @@ const UserSearchDrawer = lazy(() =>
 const FaMessenger = lazy(() => import('../../../assets/svg/FaMessenger'))
 const UserFriendsSVG = lazy(() => import('../../../assets/svg/UserFriendsSVG'))
 
-const HamburgerModal = ({
+const HamburgerDrawer = ({
   isOpen,
   onClose,
   navItems,
@@ -134,11 +133,10 @@ const HamburgerModal = ({
   ])
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="full">
-      <ModalOverlay />
-      <ModalContent>
-        <FixedBackground />
-        <ModalHeader
+    <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="full">
+      <DrawerOverlay />
+      <DrawerContent bg="rgba(15, 13, 21, 0.95)">
+        <DrawerHeader
           w={'100%'}
           alignItems={'center'}
           p={'20px'}
@@ -146,16 +144,9 @@ const HamburgerModal = ({
           justifyContent={'space-between'}
         >
           <NavBrand isHamburgerOpen={true} />
-
-          <ModalCloseButton
-            position="static"
-            bg={'white'}
-            color={'black'}
-            height={'35px'}
-            width={'40px'}
-          />
-        </ModalHeader>
-        <ModalBody p={0} w={'100%'}>
+          <DrawerCloseButton bg={'white'} color={'black'} size={'lg'} />
+        </DrawerHeader>
+        <DrawerBody p={0} w={'100%'}>
           <VStack
             spacing={4}
             align="stretch"
@@ -303,10 +294,10 @@ const HamburgerModal = ({
               <Footer onCloseMenu={onClose} />
             </VStack>
           </VStack>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+        </DrawerBody>
+      </DrawerContent>
+    </Drawer>
   )
 }
 
-export default HamburgerModal
+export default HamburgerDrawer

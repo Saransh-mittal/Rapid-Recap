@@ -42,6 +42,7 @@ import useSound from '../../customHooks/useSound'
 import Loading from '../miscellaneous/Loading'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
+import { useNavbar } from '../../contextAPI/NavbarContext'
 
 const LoadingContext = React.createContext()
 
@@ -109,6 +110,8 @@ const Navbar = ({ onNavbarLoad }) => {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false)
 
   const [visible, setVisible] = useState(true)
+  const { isVisibleRef } = useNavbar()
+  const navbarRef = useRef(null)
   const [prevScrollPos, setPrevScrollPos] = useState(0)
   const [notifyCont, setNotifyCnt] = useState(0)
   const [selectedNotification, setSelectedNotification] = useState(null)
@@ -282,33 +285,38 @@ const Navbar = ({ onNavbarLoad }) => {
     setIsLogoutConfirmationOpen(false)
     handleLogout()
   }
-
   useEffect(() => {
-    const checkIfHomePage = () => {
-      setIsHomePage(location.pathname.split('/')[1] === 'home')
-    }
     const handleScroll = () => {
       const currentScrollPos = window.scrollY
-      const shouldSetVisible =
+      const shouldBeVisible =
         prevScrollPos > currentScrollPos || currentScrollPos < 10
 
-      if ((isHomePage && isSmallerThan992) || !isHomePage) {
-        setVisible(shouldSetVisible)
+      isVisibleRef.current = shouldBeVisible
+      // Update navbar visibility using the ref
+      if (navbarRef.current) {
+        navbarRef.current.style.transform = shouldBeVisible
+          ? 'translateY(0)'
+          : 'translateY(-100%)'
       }
       setPrevScrollPos(currentScrollPos)
     }
 
     window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [prevScrollPos])
+  useEffect(() => {
+    const checkIfHomePage = () => {
+      setIsHomePage(location.pathname.split('/')[1] === 'home')
+    }
     window.addEventListener('popstate', checkIfHomePage)
     window.addEventListener('pushState', checkIfHomePage)
 
     checkIfHomePage()
     return () => {
-      window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('popstate', checkIfHomePage)
       window.removeEventListener('pushState', checkIfHomePage)
     }
-  }, [prevScrollPos, visible, location, isHomePage, isSmallerThan992])
+  }, [location])
 
   const getBackgroundColor = useCallback(({ heatLevel }) => {
     if (heatLevel <= 0.2) {
@@ -329,17 +337,18 @@ const Navbar = ({ onNavbarLoad }) => {
       {logoutLoader && <Loading />}
       <Box overflow={isHamburgerOpen ? 'hidden' : 'visible'} width="100vw">
         <Box
+          ref={navbarRef}
           className={`navbar navbar-expand-lg`}
           paddingX={{ base: '1.2rem', xl: '5rem' }}
           height={'5rem'}
           w={'100vw'}
           position={'fixed'}
           zIndex={'1000'}
-          transform={visible ? 'translateY(0)' : 'translateY(-100%)'}
-          transition="transform 0.3s ease-in-out"
           backgroundColor={'rgba(15, 13, 21, 0.4)'}
           borderBottom={'1px solid rgba(255, 255, 255, 0.1)'}
-          boxShadow={visible ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'}
+          boxShadow={
+            isVisibleRef.current ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
+          }
           style={{
             transition:
               'transform 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out',
@@ -352,9 +361,6 @@ const Navbar = ({ onNavbarLoad }) => {
           borderBottomStyle={'solid'}
           justifyContent={'center'}
         >
-          <Suspense fallback={<Spinner />}>
-            {isHamburgerOpen && <NavBrand isHamburgerOpen={isHamburgerOpen} />}
-          </Suspense>
           <Suspense fallback={<Spinner />}>
             {showDailyStreakModal && (
               <DailyStreakModal
@@ -371,26 +377,6 @@ const Navbar = ({ onNavbarLoad }) => {
               />
             )}
           </Suspense>
-
-          {isHamburgerOpen ? (
-            <Button
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarNav"
-              aria-controls="navbarNav"
-              aria-label="Toggle navigation"
-              display={{ base: 'flex', lg: 'none' }}
-              onClick={() => {
-                playClick()
-                setIsHamburgerOpen(false)
-              }}
-              height={'35px'}
-              width={'10px'}
-              marginLeft={'auto'}
-            >
-              <CloseIcon />
-            </Button>
-          ) : null}
 
           <Flex
             w={'100%'}
@@ -468,19 +454,18 @@ const Navbar = ({ onNavbarLoad }) => {
         </Box>
       </Box>
 
-      <Suspense fallback={null}>
-        <HamburgerModal
-          isOpen={isHamburgerOpen}
-          onClose={() => setIsHamburgerOpen(false)}
-          navItems={navItems}
-          notLogined={!isAuthenticated}
-          navLinkRefs={navLinkRefs}
-          notifyCont={notifyCont}
-          handleLogout={handleGuestLogout}
-          setIsDrawerOpen={val => dispatchRedux(setIsNotifDrawerOpen(val))}
-          onOpenWiseWeb={onOpenWiseWeb}
-        />
-      </Suspense>
+      <HamburgerModal
+        isOpen={isHamburgerOpen}
+        onClose={() => setIsHamburgerOpen(false)}
+        navItems={navItems}
+        notLogined={!isAuthenticated}
+        navLinkRefs={navLinkRefs}
+        notifyCont={notifyCont}
+        handleLogout={handleGuestLogout}
+        setIsDrawerOpen={val => dispatchRedux(setIsNotifDrawerOpen(val))}
+        onOpenWiseWeb={onOpenWiseWeb}
+      />
+
       <AlertDialog
         isOpen={isLogoutConfirmationOpen}
         leastDestructiveRef={cancelRef}

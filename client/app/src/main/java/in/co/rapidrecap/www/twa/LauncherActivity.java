@@ -8,13 +8,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import androidx.browser.customtabs.CustomTabsCallback;
 
 public class LauncherActivity
         extends com.google.androidbrowserhelper.trusted.LauncherActivity {
 
-    private View splashScreen;
+    private ImageView splashScreen;
     private boolean isTwaLoaded = false;
 
     @Override
@@ -37,9 +38,10 @@ public class LauncherActivity
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
-        // Create a view to hold the splash screen drawable
-        splashScreen = new View(this);
-        splashScreen.setBackground(getDrawable(R.drawable.splash_screen));
+        // Create an ImageView to hold the splash screen drawable
+        splashScreen = new ImageView(this);
+        splashScreen.setImageDrawable(getDrawable(R.drawable.splash_screen));
+        splashScreen.setScaleType(ImageView.ScaleType.CENTER);
         addContentView(splashScreen, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
@@ -65,8 +67,16 @@ public class LauncherActivity
 
     private void removeSplashScreen() {
         if (splashScreen != null && splashScreen.getParent() instanceof ViewGroup) {
-            ((ViewGroup) splashScreen.getParent()).removeView(splashScreen);
-            splashScreen = null;
+            splashScreen.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction(() -> {
+                        if (splashScreen.getParent() instanceof ViewGroup) {
+                            ((ViewGroup) splashScreen.getParent()).removeView(splashScreen);
+                        }
+                        splashScreen = null;
+                    })
+                    .start();
         }
     }
 
