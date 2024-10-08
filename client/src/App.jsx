@@ -60,12 +60,18 @@ import {
   checkTournamentRegistration,
   getTopLeaderboard,
 } from './redux/tournamentSlice.js'
+import LoadingScreen from './screens/LoadingScreen.jsx'
+import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
   const location = useLocation()
+  const { isLoading, overallProgress } = useSelector(
+    state => state.loadingProgress,
+  )
   const { t } = useTranslation('App') // Initialize translation function
   const { t: tournamentSliceTranslation } = useTranslation('tournamentSlice') // Added translation
+  const [navbarLoaded, setNavbarLoaded] = useState(false)
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const {
@@ -141,6 +147,7 @@ const App = () => {
     }
 
     if ('serviceWorker' in navigator) {
+      dispatch(setTaskProgress({ task: 'serviceWorker', progress: 50 }))
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('/sw.js').then(
           registration => {
@@ -153,6 +160,7 @@ const App = () => {
           err => console.log('ServiceWorker registration failed: ', err),
         )
       })
+      dispatch(setTaskProgress({ task: 'serviceWorker', progress: 100 }))
     }
 
     const refreshAtMidnightUTC = () => {
@@ -195,7 +203,6 @@ const App = () => {
 
   useEffect(() => {
     let timer
-    dispatch(fetchUnreadNoteMessages())
     if (isAuthenticated) {
       dispatch(isSubscribedChecker())
       dispatch(checkNotificationStatus())
@@ -220,7 +227,7 @@ const App = () => {
         }),
       )
     }
-
+    dispatch(setTaskProgress({ task: 'otherTasks', progress: 100 }))
     return () => clearTimeout(timer)
   }, [isAuthenticated])
 
@@ -238,6 +245,7 @@ const App = () => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
+      dispatch(setTaskProgress({ task: 'fetchUser', progress: 50 }))
       try {
         const response = await axios.get(`/api/user/loginCheck`)
         if (response.status === 201) {
@@ -246,6 +254,8 @@ const App = () => {
       } catch (error) {
         dispatch(setUser(null))
         console.log(error)
+      } finally {
+        dispatch(setTaskProgress({ task: 'fetchUser', progress: 100 }))
       }
     }
 
@@ -283,6 +293,20 @@ const App = () => {
     }
   }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
 
+  const handleNavbarLoad = useCallback(() => {
+    setNavbarLoaded(true)
+    dispatch(setTaskProgress({ task: 'navbarLoad', progress: 100 }))
+  }, [dispatch])
+
+  useEffect(() => {
+    if (navbarLoaded && overallProgress === 100) {
+      // dispatch after 500ms to ensure all components are loaded
+      setTimeout(() => {
+        dispatch(setIsLoading(false))
+      }, 500)
+    }
+  }, [navbarLoaded, overallProgress, dispatch])
+
   return (
     <>
       <Helmet>
@@ -310,6 +334,7 @@ const App = () => {
           )}
         />
       </Helmet>
+      {isLoading && <LoadingScreen progress={overallProgress} />}
 
       <Suspense fallback={null}>
         <FixedBackground />
@@ -320,7 +345,7 @@ const App = () => {
       </Suspense>
 
       <Suspense fallback={null}>
-        <Navbar />
+        <Navbar onNavbarLoad={handleNavbarLoad} />
       </Suspense>
 
       {showXpLevelModal && (

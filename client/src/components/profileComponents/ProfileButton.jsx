@@ -36,7 +36,6 @@ const ProfileButton = React.forwardRef(
                 right={'1.2rem'}
                 zIndex={1}
                 borderRadius="5px"
-                backdropFilter="blur(5px)"
               >
                 {Private ? t('hidden') : t('visible')}
               </Badge>

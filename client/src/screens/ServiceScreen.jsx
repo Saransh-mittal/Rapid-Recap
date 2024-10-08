@@ -22,8 +22,7 @@ const ServiceScreen = () => {
       overflow="hidden"
     >
       <Box
-        bg="rgba(26, 32, 44, 0.7)"
-        backdropFilter="blur(10px)"
+        bg="rgba(26, 32, 44, 0.8)"
         borderRadius="xl"
         p={12}
         boxShadow="0 8px 32px rgba(31, 38, 135, 0.37)"

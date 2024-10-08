@@ -43,6 +43,29 @@ import Loading from '../miscellaneous/Loading'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
 
+const LoadingContext = React.createContext()
+
+// HOC to wrap lazy components
+const withLoadTracking = (WrappedComponent, componentName) => {
+  return function WithLoadTracking(props) {
+    const { onComponentLoad } = React.useContext(LoadingContext)
+
+    useEffect(() => {
+      onComponentLoad(componentName)
+    }, [])
+
+    return <WrappedComponent {...props} />
+  }
+}
+
+// Lazy load components
+const getLazyComponent = (importFunc, componentName) => {
+  return React.lazy(() =>
+    importFunc().then(module => ({
+      default: withLoadTracking(module.default, componentName),
+    })),
+  )
+}
 // Lazy load components
 const NotificationDrawer = React.lazy(() =>
   import('./Inbox/NotificationDrawer'),
@@ -51,21 +74,26 @@ const DailyStreakModal = React.lazy(() =>
   import('../streakComponents/DailyStreakModal'),
 )
 const NotificationModal = React.lazy(() => import('./Inbox/NotificationModal'))
-const NavbarContent = React.lazy(() =>
-  import('./navbarComponents/NavbarContent'),
-)
-const OutsideNavbarContent = React.lazy(() =>
-  import('./navbarComponents/OutsideNavbarContent'),
-)
-const NavBrand = React.lazy(() => import('./navbarComponents/NavBrand'))
-const HamburgerModal = React.lazy(() =>
-  import('./navbarComponents/HamburgerModal'),
-)
 
 const IQScoreModal = React.lazy(() => import('./navbarComponents/IQScoreModal'))
 const WiseWeb = React.lazy(() => import('../profileComponents/WiseWeb'))
-
-const Navbar = () => {
+const OutsideNavbarContent = getLazyComponent(
+  () => import('./navbarComponents/OutsideNavbarContent'),
+  'OutsideNavbarContent',
+)
+const NavBrand = getLazyComponent(
+  () => import('./navbarComponents/NavBrand'),
+  'NavBrand',
+)
+const HamburgerModal = getLazyComponent(
+  () => import('./navbarComponents/HamburgerModal'),
+  'HamburgerModal',
+)
+const NavbarContent = getLazyComponent(
+  () => import('./navbarComponents/NavbarContent'),
+  'NavbarContent',
+)
+const Navbar = ({ onNavbarLoad }) => {
   const { t } = useTranslation('Navbar')
   const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
   const location = useLocation()
@@ -77,6 +105,7 @@ const Navbar = () => {
     useState(false)
   const cancelRef = React.useRef()
 
+  const [apiCallsComplete, setApiCallsComplete] = useState(false)
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false)
 
   const [visible, setVisible] = useState(true)
@@ -87,7 +116,7 @@ const Navbar = () => {
 
   const [showIQScoreModal, setShowIQScoreModal] = useState(false)
   const [logoutLoader, setLogoutLoader] = useState(false)
-
+  const [loadedComponents, setLoadedComponents] = useState({})
   const dispatchRedux = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const {
@@ -100,6 +129,9 @@ const Navbar = () => {
     isBoosted,
     isNotifDrawerOpen,
     isNotifModalOpen,
+    updatesFetched,
+    streakFetched,
+    friendRequestsFetched,
   } = useSelector(state => state.app)
 
   const {
@@ -107,6 +139,14 @@ const Navbar = () => {
     onOpen: onOpenWiseWeb,
     onClose: onCloseWiseWeb,
   } = useDisclosure()
+
+  const handleComponentLoad = useCallback(componentName => {
+    setLoadedComponents(prev => {
+      const newLoadedComponents = { ...prev, [componentName]: true }
+
+      return newLoadedComponents
+    })
+  }, [])
 
   const [isHomePage, setIsHomePage] = useState(
     location.pathname.split('/')[1] === 'home',
@@ -176,6 +216,19 @@ const Navbar = () => {
 
     dispatchRedux(verifyAdminStatus())
   }, [dispatchRedux, user])
+
+  useEffect(() => {
+    if (updatesFetched && streakFetched && friendRequestsFetched) {
+      setApiCallsComplete(true)
+    }
+  }, [updatesFetched, streakFetched, friendRequestsFetched])
+
+  useEffect(() => {
+    const allComponentsLoaded = Object.keys(loadedComponents).length === 4 // Adjust this number
+    if (allComponentsLoaded && apiCallsComplete) {
+      onNavbarLoad()
+    }
+  }, [loadedComponents, apiCallsComplete, onNavbarLoad])
 
   const handleLogout = useCallback(async () => {
     setLogoutLoader(true)
@@ -272,7 +325,7 @@ const Navbar = () => {
   }, [])
 
   return (
-    <>
+    <LoadingContext.Provider value={{ onComponentLoad: handleComponentLoad }}>
       {logoutLoader && <Loading />}
       <Box overflow={isHamburgerOpen ? 'hidden' : 'visible'} width="100vw">
         <Box
@@ -301,49 +354,53 @@ const Navbar = () => {
         >
           <Suspense fallback={<Spinner />}>
             {isHamburgerOpen && <NavBrand isHamburgerOpen={isHamburgerOpen} />}
-
+          </Suspense>
+          <Suspense fallback={<Spinner />}>
             {showDailyStreakModal && (
               <DailyStreakModal
                 setShowDailyStreakModal={setShowDailyStreakModal}
                 getBackgroundColor={getBackgroundColor}
               />
             )}
-
+          </Suspense>
+          <Suspense fallback={<Spinner />}>
             {showIQScoreModal && (
               <IQScoreModal
                 setShowIQScoreModal={setShowIQScoreModal}
                 isGuest={user?.role === 'guest'}
               />
             )}
+          </Suspense>
 
-            {isHamburgerOpen ? (
-              <Button
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarNav"
-                aria-controls="navbarNav"
-                aria-label="Toggle navigation"
-                display={{ base: 'flex', lg: 'none' }}
-                onClick={() => {
-                  playClick()
-                  setIsHamburgerOpen(false)
-                }}
-                height={'35px'}
-                width={'10px'}
-                marginLeft={'auto'}
-              >
-                <CloseIcon />
-              </Button>
-            ) : null}
-
-            <Flex
-              w={'100%'}
-              height={'100%'}
-              flexDirection={'row'}
-              display={isHamburgerOpen ? 'none' : 'flex'}
-              position={'relative'}
+          {isHamburgerOpen ? (
+            <Button
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarNav"
+              aria-controls="navbarNav"
+              aria-label="Toggle navigation"
+              display={{ base: 'flex', lg: 'none' }}
+              onClick={() => {
+                playClick()
+                setIsHamburgerOpen(false)
+              }}
+              height={'35px'}
+              width={'10px'}
+              marginLeft={'auto'}
             >
-              <NavBrand isHamburgerOpen={isHamburgerOpen} />
+              <CloseIcon />
+            </Button>
+          ) : null}
+
+          <Flex
+            w={'100%'}
+            height={'100%'}
+            flexDirection={'row'}
+            display={isHamburgerOpen ? 'none' : 'flex'}
+            position={'relative'}
+          >
+            <NavBrand isHamburgerOpen={isHamburgerOpen} />
+            <Suspense fallback={<Spinner />}>
               <NavbarContent
                 notifyCont={notifyCont}
                 isHamburgerOpen={isHamburgerOpen}
@@ -352,7 +409,8 @@ const Navbar = () => {
                 navLinkRefs={navLinkRefs}
                 navItems={navItems}
               />
-
+            </Suspense>
+            <Suspense fallback={<Spinner />}>
               <OutsideNavbarContent
                 setIsDrawerOpen={val =>
                   dispatchRedux(setIsNotifDrawerOpen(val))
@@ -372,7 +430,9 @@ const Navbar = () => {
                 profileNotif={profileNotif}
                 onOpenWiseWeb={onOpenWiseWeb}
               />
-            </Flex>
+            </Suspense>
+          </Flex>
+          <Suspense fallback={null}>
             {isNotifModalOpen && (
               <NotificationModal
                 selectedNotification={selectedNotification}
@@ -382,16 +442,17 @@ const Navbar = () => {
                 }
               />
             )}
-            {isNotifDrawerOpen && (
-              <NotificationDrawer
-                setIsHamburgerOpen={setIsHamburgerOpen}
-                setIsDrawerOpen={val =>
-                  dispatchRedux(setIsNotifDrawerOpen(val))
-                }
-                setIsModalOpen={val => dispatchRedux(setIsNotifModalOpen(val))}
-                setSelectedNotification={setSelectedNotification}
-              />
-            )}
+          </Suspense>
+
+          {isNotifDrawerOpen && (
+            <NotificationDrawer
+              setIsHamburgerOpen={setIsHamburgerOpen}
+              setIsDrawerOpen={val => dispatchRedux(setIsNotifDrawerOpen(val))}
+              setIsModalOpen={val => dispatchRedux(setIsNotifModalOpen(val))}
+              setSelectedNotification={setSelectedNotification}
+            />
+          )}
+          <Suspense fallback={null}>
             {isOpenWiseWeb && (
               <WiseWeb
                 isOpen={isOpenWiseWeb}
@@ -463,7 +524,7 @@ const Navbar = () => {
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
-    </>
+    </LoadingContext.Provider>
   )
 }
 

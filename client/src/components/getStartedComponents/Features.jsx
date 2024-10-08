@@ -34,7 +34,6 @@ const FeatureItem = ({
       bg="rgba(26, 32, 44, 0.8)"
       p={6}
       borderRadius="lg"
-      backdropFilter="blur(10px)"
       display="flex"
       flexDirection={{ base: 'column', md: 'row' }}
       alignItems="center"
@@ -206,7 +205,6 @@ const Features = ({ isWeakDevice }) => {
           right={0}
           bottom={0}
           bg="rgba(0, 0, 0, 0.7)"
-          backdropFilter="blur(5px)"
         />
         <Container
           maxWidth="1400px"

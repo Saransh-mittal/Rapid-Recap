@@ -114,7 +114,6 @@ const BenefitsMap = ({ isWeakDevice }) => {
               right={0}
               bottom={0}
               bg={bgColor}
-              backdropFilter="blur(5px)"
             />
           </Parallax>
         )}

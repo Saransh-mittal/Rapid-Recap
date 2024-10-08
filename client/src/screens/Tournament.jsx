@@ -1,20 +1,6 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  Suspense,
-  lazy,
-} from 'react'
+import React, { useState, useEffect, useCallback, useMemo, lazy } from 'react'
 import { Helmet } from 'react-helmet'
-import {
-  Box,
-  Container,
-  Flex,
-  Skeleton,
-  useToast,
-  useMediaQuery,
-} from '@chakra-ui/react'
+import { Box, Container, Flex, useToast, useMediaQuery } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 
 import axios from 'axios'
@@ -298,8 +284,7 @@ const Tournament = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              bg="rgba(0, 0, 0, 0.1)"
-              backdropFilter="blur(5px)"
+              bg="rgba(0, 0, 0, 0.5)"
             >
               <TournamentContent
                 isFetching={isLoading}
@@ -323,23 +308,18 @@ const Tournament = () => {
             <MotionBox
               flex={1}
               rounded="lg"
-              shadow="2xl"
+              shadow={{ base: 'none', lg: '2xl' }}
               p={6}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              bg="rgba(0, 0, 0, 0.1)"
-              backdropFilter="blur(5px)"
+              bg="rgba(0, 0, 0, 0.4)"
               bgGradient="linear(to-br, rgba(26, 32, 44, 0.5), rgba(49, 10, 103, 0.5))"
             >
               {tournamentData?.status !== 'ongoing' ? (
-                // <Suspense fallback={<Skeleton height="40px" />}>
                 <EpicQuestGuide />
               ) : (
-                // </Suspense>
-                // <Suspense fallback={<Skeleton height="40px" />}>
                 <LeaderboardSection tournamentData={tournamentData} />
-                // </Suspense>
               )}
             </MotionBox>
           </Flex>
