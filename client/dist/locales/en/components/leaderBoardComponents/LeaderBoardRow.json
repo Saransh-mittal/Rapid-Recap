@@ -1,3 +1,6 @@
 {
-  "xpLevel": "Experience Level:"
+  "IQ Score": "IQ Score",
+  "Exp Level": "Exp Level",
+  "Submissions": "Submissions",
+  "Avg. RQM": "Avg. RQM"
 }

@@ -1,1 +1,0 @@
-import{t}from"./index-fce079c3.js";const i=l=>t.jsx("svg",{width:"20px",height:"20px",viewBox:"0 0 48 48",xmlns:"http://www.w3.org/2000/svg",enableBackground:"new 0 0 48 48",...l,children:t.jsx("path",{fill:l.fill||"#F44336",d:"M37,43l-13-6l-13,6V9c0-2.2,1.8-4,4-4h18c2.2,0,4,1.8,4,4V43z"})});export{i as F};
