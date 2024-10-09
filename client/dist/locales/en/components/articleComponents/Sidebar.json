@@ -6,5 +6,7 @@
   "quizAlreadyOngoing": "Quiz is already ongoing in another tab or device",
   "minRead": "MIN READ",
   "articleImageAlt": "Article image",
-  "loadMore": "Load More"
+  "loadMore": "Load More",
+  "alreadyOnArticle": "You are already on this article",
+  "alreadyOnArticleDesc": "You are already on this article. Please navigate to another article."
 }

@@ -1,0 +1,1 @@
+import{aE as o,aR as r,aS as c,w as l,aP as k,aO as m}from"./index-ace4b7fe.js";const x=o(function(a,n){const e=r("Link",a),{className:t,isExternal:s,...i}=c(a);return l.jsx(k.a,{target:s?"_blank":void 0,rel:s?"noopener":void 0,ref:n,className:m("chakra-link",t),...i,__css:e})});x.displayName="Link";export{x as L};

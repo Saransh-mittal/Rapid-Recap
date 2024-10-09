@@ -6,5 +6,7 @@
   "quizAlreadyOngoing": "क्विज़ पहले से ही किसी अन्य टैब या डिवाइस में चल रही है",
   "minRead": "मिनट पढ़ें",
   "articleImageAlt": "लेख की छवि",
-  "loadMore": "और लोड करें"
+  "loadMore": "और लोड करें",
+  "alreadyOnArticle": "आप पहले से ही इस लेख पर हैं",
+  "alreadyOnArticleDesc": "आप पहले से ही इस लेख पर हैं। कृपया किसी अन्य लेख पर नेविगेट करें।"
 }
