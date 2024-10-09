@@ -76,7 +76,7 @@ ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidM
 		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:70:17-50
 	android:name
 		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:69:17-83
-activity#in.co.rapidrecap.www.twa.LauncherActivity
+activity#in.co.rapidrecap.www.twa.RapidRecapLauncherActivity
 ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:9-158:20
 	android:screenOrientation
 		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:77:13-52
@@ -89,7 +89,7 @@ ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidM
 	android:theme
 		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:75:9-43
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:19-50
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:19-61
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
 ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:80:13-83:21
 action#android.intent.action.MAIN

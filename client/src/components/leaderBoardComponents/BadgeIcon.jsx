@@ -1,11 +1,10 @@
 import React, { lazy, Suspense, useState } from 'react'
 import { Box } from '@chakra-ui/react'
-
-const TournamentBadge = lazy(() =>
-  import('../tournamentComponents/TournamentBadges'),
-)
+import { useTranslation } from 'react-i18next'
+import TournamentBadge from '../tournamentComponents/TournamentBadges'
 
 const BadgeIcon = ({ user, size, onPopoverToggle }) => {
+  const { t: TournamentBadgeTranslate } = useTranslation('TournamentBadge')
   const handlePopoverToggle = isOpen => {
     if (onPopoverToggle) {
       onPopoverToggle(isOpen)
@@ -14,21 +13,20 @@ const BadgeIcon = ({ user, size, onPopoverToggle }) => {
 
   if (user?.displayedBadge) {
     return (
-      <Suspense fallback={<Box w={size} h={size} />}>
-        <TournamentBadge
-          tournamentNumber={user.displayedBadge.tournamentNumber}
-          rank={user.displayedBadge.rank}
-          name={user.name}
-          inGameName={user.inGameName}
-          participantCnt={user.displayedBadge.participantCnt}
-          size={size === '60px' ? 'md' : 'sm'}
-          badgeName={{
-            name: user.displayedBadge.badgeName,
-            text: user.displayedBadge.text,
-          }}
-          onPopoverToggle={handlePopoverToggle}
-        />
-      </Suspense>
+      <TournamentBadge
+        tournamentNumber={user.displayedBadge.tournamentNumber}
+        rank={user.displayedBadge.rank}
+        name={user.name}
+        inGameName={user.inGameName}
+        participantCnt={user.displayedBadge.participantCnt}
+        size={size === '60px' ? 'md' : 'sm'}
+        badgeName={{
+          name: user.displayedBadge.badgeName,
+          text: user.displayedBadge.text,
+        }}
+        onPopoverToggle={handlePopoverToggle}
+        t={TournamentBadgeTranslate}
+      />
     )
   }
 

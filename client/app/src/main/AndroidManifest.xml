@@ -71,7 +71,7 @@
             </activity>
 
 
-        <activity android:name="LauncherActivity"
+        <activity android:name=".RapidRecapLauncherActivity"
         android:theme="@style/SplashTheme"
             android:alwaysRetainTaskState="true"
             android:screenOrientation="unspecified"

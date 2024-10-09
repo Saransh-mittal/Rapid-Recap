@@ -102,8 +102,8 @@
 69        </activity>
 70        <activity
 70-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:9-158:20
-71            android:name="in.co.rapidrecap.www.twa.LauncherActivity"
-71-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:19-50
+71            android:name="in.co.rapidrecap.www.twa.RapidRecapLauncherActivity"
+71-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:19-61
 72            android:alwaysRetainTaskState="true"
 72-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:76:13-49
 73            android:exported="true"

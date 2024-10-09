@@ -15,10 +15,13 @@ import {
   Box,
   Heading,
   useColorModeValue,
+  Flex,
+  Spinner,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft } from 'lucide-react'
 import TournamentBadge from '../../tournamentComponents/TournamentBadges'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 const MotionSimpleGrid = motion(SimpleGrid)
@@ -32,26 +35,28 @@ const TournamentBadgeGallery = ({
   userInGameName,
   displayedBadge,
 }) => {
+  const { t } = useTranslation('TournamentBadgeGallery')
+  const { t: TournamentBadgeTranslate } = useTranslation('TournamentBadges')
   const [selectedBadgeGroup, setSelectedBadgeGroup] = useState(null)
   const [selectedBadge, setSelectedBadge] = useState(displayedBadge)
   const [savingError, setSavingError] = useState(null)
+  const [clickedBadgeId, setClickedBadgeId] = useState(null)
   const toast = useToast()
 
   const bg = useColorModeValue('gray.900', 'gray.900')
   const cardBg = useColorModeValue('gray.800', 'gray.800')
 
-  // Group badges by badgeName
   const groupedBadges = useMemo(() => {
     const groups = {}
     userBadges?.forEach(badge => {
-      const key = badge.badgeName || 'Unnamed Badge'
+      const key = badge.badgeName || t('unnamedBadge')
       if (!groups[key]) {
         groups[key] = []
       }
       groups[key].push(badge)
     })
     return groups
-  }, [userBadges])
+  }, [userBadges, t])
 
   const handleBadgeClick = (badgeName, badge) => {
     if (groupedBadges[badgeName].length > 1) {
@@ -65,6 +70,9 @@ const TournamentBadgeGallery = ({
   }
 
   const handleSaveBadge = async badge => {
+    const uniqueBadgeId = `${badge.tournamentNumber}-${badge.badgeName}-${badge.text}`
+    setClickedBadgeId(uniqueBadgeId)
+
     try {
       await onBadgeSelect(badge.tournamentNumber, badge.badgeName, badge.text)
       setSelectedBadge(badge)
@@ -72,13 +80,14 @@ const TournamentBadgeGallery = ({
     } catch (error) {
       setSavingError(badge.tournamentNumber)
       toast({
-        title: 'Error',
-        description: 'Failed to update displayed badge. Please try again.',
+        title: t('errorTitle'),
+        description: t('errorMessage'),
         status: 'error',
         duration: 3000,
         isClosable: true,
       })
     }
+    setClickedBadgeId(null)
   }
 
   const BadgeItem = ({ badge, showCount = true }) => {
@@ -100,17 +109,21 @@ const TournamentBadgeGallery = ({
       ? 'red.400'
       : 'gray.600'
     const statusText = isSelected
-      ? 'Selected'
+      ? t('selected')
       : hasError
-      ? 'Error saving'
+      ? t('errorSaving')
       : showCount && badgeGroup.length > 1
-      ? 'Click to open'
-      : 'Click to select'
+      ? t('clickToOpen')
+      : t('clickToSelect')
     const statusColor = isSelected
       ? 'green.400'
       : hasError
       ? 'red.400'
       : 'gray.400'
+
+    const uniqueBadgeId = `${badge.tournamentNumber}-${badge.badgeName}-${badge.text}`
+    const isLoading =
+      clickedBadgeId === uniqueBadgeId && statusText === t('clickToSelect')
 
     return (
       <MotionBox
@@ -132,35 +145,58 @@ const TournamentBadgeGallery = ({
         borderColor={borderColor}
         _hover={{ borderColor: hoverBorderColor }}
       >
-        {showCount && badgeGroup.length > 1 && (
-          <Text
+        {isLoading && (
+          <Box
             position="absolute"
-            top={2}
-            right={2}
-            fontWeight="bold"
-            fontSize="xl"
-            color="gray.300"
+            top="0"
+            left="0"
+            right="0"
+            bottom="0"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            bg="rgba(0, 0, 0, 0.6)"
+            zIndex="1"
+            borderRadius="lg"
           >
-            {badgeGroup.length}
-          </Text>
+            <Spinner size="xl" color="white" />
+          </Box>
         )}
-        <VStack spacing={4}>
-          <TournamentBadge
-            tournamentNumber={badge.tournamentNumber}
-            name={userName}
-            inGameName={userInGameName}
-            participantCnt={badge.participantCnt}
-            size="lg"
-            badgeName={{
-              name: badge?.badgeName,
-              text: badge?.text,
-            }}
-          />
 
-          <Text color={statusColor} fontStyle="italic">
+        <Flex justifyContent={'center'} alignItems={'center'}>
+          {showCount && badgeGroup.length > 1 && (
+            <Text
+              position="absolute"
+              top={2}
+              right={2}
+              fontWeight="bold"
+              fontSize="xl"
+              color="gray.300"
+            >
+              {badgeGroup.length}
+            </Text>
+          )}
+          <VStack spacing={4} h={'7rem'}>
+            <TournamentBadge
+              tournamentNumber={badge.tournamentNumber}
+              name={userName}
+              inGameName={userInGameName}
+              participantCnt={badge.participantCnt}
+              size="lg"
+              badgeName={{
+                name: badge?.badgeName,
+                text: badge?.text,
+              }}
+              isBadgeGallery={true}
+              t={TournamentBadgeTranslate}
+            />
+          </VStack>
+        </Flex>
+        <Flex w={'100%'} justifyContent={'center'} mb={0}>
+          <Text color={statusColor} fontStyle="italic" textAlign={'center'}>
             {statusText}
           </Text>
-        </VStack>
+        </Flex>
       </MotionBox>
     )
   }
@@ -169,7 +205,11 @@ const TournamentBadgeGallery = ({
     <Modal isOpen={isOpen} onClose={onClose} size="full">
       <ModalOverlay />
       <ModalContent bg={bg} color="white">
-        <ModalHeader>Badge Gallery</ModalHeader>
+        <ModalHeader>
+          <Heading size="2xl" textAlign="center" mb={8}>
+            {t('badgeGallery')}
+          </Heading>
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Box minH="100vh" p={8}>
@@ -193,7 +233,7 @@ const TournamentBadgeGallery = ({
                     color={'white'}
                     _hover={{ bg: 'gray.700' }}
                   >
-                    Back to All Badges
+                    {t('backToAllBadges')}
                   </Button>
                   <Heading size="2xl" mb={8} textAlign="center">
                     {selectedBadgeGroup.name}
@@ -224,9 +264,6 @@ const TournamentBadgeGallery = ({
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Heading size="2xl" textAlign="center" mb={8}>
-                    Badge Collection
-                  </Heading>
                   <MotionSimpleGrid
                     columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
                     spacing={8}
@@ -239,7 +276,7 @@ const TournamentBadgeGallery = ({
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3, delay: index * 0.1 }}
                         >
-                          <BadgeItem badgeName={badgeName} badge={badges[0]} />
+                          <BadgeItem badge={badges[0]} />
                         </MotionBox>
                       ),
                     )}
@@ -249,11 +286,6 @@ const TournamentBadgeGallery = ({
             </AnimatePresence>
           </Box>
         </ModalBody>
-        <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Close
-          </Button>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   )

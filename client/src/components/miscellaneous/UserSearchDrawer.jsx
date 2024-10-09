@@ -27,7 +27,15 @@ import TournamentBadges from '../tournamentComponents/TournamentBadges'
 
 // New component for each search result item
 const SearchResultItem = React.memo(
-  ({ user, onItemClick, hoverBg, textColor, subTextColor, badgeBg }) => {
+  ({
+    user,
+    onItemClick,
+    hoverBg,
+    textColor,
+    subTextColor,
+    badgeBg,
+    TournamentBadgeTranslate,
+  }) => {
     const nameRef = React.useRef(null)
     const [badgeOffset, setBadgeOffset] = React.useState(0)
 
@@ -103,6 +111,7 @@ const SearchResultItem = React.memo(
                 name: user?.displayedBadge?.badgeName,
                 text: user?.displayedBadge?.text,
               }}
+              t={TournamentBadgeTranslate}
             />
           </Box>
         )}
@@ -135,6 +144,7 @@ const SearchResultItem = React.memo(
 
 const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
   const { t } = useTranslation('UserSearchDrawer')
+  const { t: TournamentBadgeTranslate } = useTranslation('TournamentBadge')
   const [searchResults, setSearchResults] = useState([])
   const [searchLoad, setSearchLoad] = useState(false)
   const toast = useToast()
@@ -217,6 +227,7 @@ const UserSearchDrawer = ({ isOpen, onClose, onSearchClick }) => {
             textColor={textColor}
             subTextColor={subTextColor}
             badgeBg={badgeBg}
+            TournamentBadgeTranslate={TournamentBadgeTranslate}
           />
         </React.Fragment>
       )),

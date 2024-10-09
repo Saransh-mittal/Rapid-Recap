@@ -5,91 +5,97 @@ import ButtonGradient from '../../assets/svg/ButtonGradient'
 import Button from '../miscellaneous/ButtonComponent'
 import { findCategoryIndex, getCategoryKey } from '../../assets/Categories'
 
-const Categories = ({
-  activeCategory,
-  handleActiveCategory,
-  categories,
-  categoryRefs,
-  trackCategoryClick,
-  notLoggedIn,
-}) => {
-  const { t } = useTranslation('categories')
+const Categories = React.memo(
+  ({
+    activeCategory,
+    handleActiveCategory,
+    categories,
+    categoryRefs,
+    trackCategoryClick,
+    notLoggedIn,
+  }) => {
+    const { t } = useTranslation('categories')
 
-  // Scroll into view when the active category changes
-  useEffect(() => {
-    if (activeCategory) {
-      const activeCategoryIndex = findCategoryIndex(activeCategory)
-      if (activeCategoryIndex !== -1) {
-        const activeCategoryRef = categoryRefs.current[activeCategoryIndex]
-        if (activeCategoryRef) {
-          activeCategoryRef.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-          })
+    // Scroll into view when the active category changes
+    useEffect(() => {
+      if (activeCategory) {
+        const activeCategoryIndex = findCategoryIndex(activeCategory)
+        if (activeCategoryIndex !== -1) {
+          const activeCategoryRef = categoryRefs?.current[activeCategoryIndex]
+          if (activeCategoryRef) {
+            activeCategoryRef.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            })
+          }
         }
       }
-    }
-  }, [activeCategory, categoryRefs])
+    }, [activeCategory, categoryRefs])
 
-  // Memoized categories buttons to avoid unnecessary re-renders
-  const categoryButtons = useMemo(
-    () =>
-      categories.map((category, idx) => {
-        // Ensure category is not undefined
-        if (!category) {
-          console.warn(`Category at index ${idx} is undefined`)
-          return null
-        }
+    const handleCategoryClick = useCallback(
+      category => {
+        handleActiveCategory({ category: category.key })
+        trackCategoryClick(category.key)
+      },
+      [handleActiveCategory, trackCategoryClick],
+    )
 
-        const isActive = getCategoryKey(activeCategory) === category.key
+    // Memoized categories buttons to avoid unnecessary re-renders
+    const categoryButtons = useMemo(
+      () =>
+        categories?.map((category, idx) => {
+          // Ensure category is not undefined
+          if (!category) {
+            console.warn(`Category at index ${idx} is undefined`)
+            return null
+          }
 
-        return (
-          <Button
-            ref={el => (categoryRefs.current[idx] = el)}
-            key={category.key}
-            white={isActive}
-            onClick={() => {
-              handleActiveCategory({ category: category.key })
-              trackCategoryClick(category.key)
-            }}
-            display={
-              notLoggedIn && category.key === 'all' ? 'none' : 'inline-flex'
-            }
-          >
-            {t(`categories.${category.key}`)}
-          </Button>
-        )
-      }),
-    [
-      categories,
-      activeCategory,
-      categoryRefs,
-      trackCategoryClick,
-      handleActiveCategory,
-      notLoggedIn,
-      t,
-    ],
-  )
+          const isActive = getCategoryKey(activeCategory) === category.key
 
-  return (
-    <Box
-      paddingInline={{ base: 0, lg: '10%' }}
-      paddingTop={{ base: '5%', lg: '15%' }}
-      className="categories-container"
-    >
-      <Flex
-        flexDirection={{ base: 'row', lg: 'column' }}
-        w={'100%'}
-        alignItems={'center'}
-        paddingBottom={{ base: '1.5rem', lg: '8rem' }}
+          return (
+            <Button
+              ref={el => (categoryRefs.current[idx] = el)}
+              key={category.key}
+              white={isActive}
+              onClick={() => handleCategoryClick(category)}
+              display={
+                notLoggedIn && category.key === 'all' ? 'none' : 'inline-flex'
+              }
+            >
+              {t(`categories.${category.key}`)}
+            </Button>
+          )
+        }),
+      [
+        categories,
+        activeCategory,
+        categoryRefs,
+        handleCategoryClick,
+        notLoggedIn,
+        t,
+      ],
+    )
+
+    return (
+      <Box
+        paddingInline={{ base: 0, lg: '10%' }}
+        paddingTop={{ base: '5%', lg: '15%' }}
+        className="categories-container"
       >
-        <ButtonGradient />
-        <Flex flexDirection={{ base: 'row', lg: 'column' }} gap={4}>
-          {categoryButtons}
+        <Flex
+          flexDirection={{ base: 'row', lg: 'column' }}
+          w={'100%'}
+          alignItems={'center'}
+          paddingBottom={{ base: '1.5rem', lg: '8rem' }}
+        >
+          <ButtonGradient />
+          <Flex flexDirection={{ base: 'row', lg: 'column' }} gap={4}>
+            {categoryButtons}
+          </Flex>
         </Flex>
-      </Flex>
-    </Box>
-  )
-}
+      </Box>
+    )
+  },
+)
 
-export default React.memo(Categories)
+export default Categories

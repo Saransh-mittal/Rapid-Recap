@@ -3,8 +3,8 @@
 # min_api: 19
 # common_typos_disable
 # {"id":"com.android.tools.r8.mapping","version":"2.2"}
-# pg_map_id: e738bef
-# pg_map_hash: SHA-256 e738bef0c380fa7678e785aea68329acf182ea4fb054e4efa02ba594db3fcd81
+# pg_map_id: 66395a9
+# pg_map_hash: SHA-256 66395a97edb14653f78be7fd51c7048d61c0f023f1db5451456d52611240dbd8
 android.support.customtabs.ICustomTabsCallback -> a.a:
 # {"id":"sourceFile","fileName":"ICustomTabsCallback.java"}
     void onPostMessage(java.lang.String,android.os.Bundle) -> c
@@ -2337,7 +2337,7 @@ com.google.androidbrowserhelper.trusted.DelegationService -> n.e:
 # {"id":"sourceFile","fileName":"DelegationService.java"}
     java.util.List mExtraCommandHandlers -> d
     com.google.androidbrowserhelper.trusted.SharedPreferencesTokenStore mTokenStore -> e
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/x;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/A;"}
     1:3:void <init>():40:40 -> <init>
     4:10:void <init>():37:37 -> <init>
     11:19:void <init>():41:41 -> <init>
@@ -2382,7 +2382,7 @@ com.google.androidbrowserhelper.trusted.LauncherActivity -> n.h:
     com.google.androidbrowserhelper.trusted.splashscreens.PwaWrapperSplashScreenStrategy mSplashScreenStrategy -> c
       # {"id":"com.android.tools.r8.residualsignature","signature":"Lo/c;"}
     com.google.androidbrowserhelper.trusted.TwaLauncher mTwaLauncher -> d
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/E;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/H;"}
     boolean sChromeVersionChecked -> e
     int sLauncherActivitiesAlive -> f
     1:4:void <init>():97:97 -> <init>
@@ -2397,14 +2397,14 @@ com.google.androidbrowserhelper.trusted.LauncherActivity -> n.h:
     30:34:void addShareDataIfPresent(androidx.browser.trusted.TrustedWebActivityIntentBuilder):275:275 -> b
     35:59:void addShareDataIfPresent(androidx.browser.trusted.TrustedWebActivityIntentBuilder):277:277 -> b
     1:6:com.google.androidbrowserhelper.trusted.TwaLauncher createTwaLauncher():250:250 -> c
-      # {"id":"com.android.tools.r8.residualsignature","signature":"()Ln/E;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"()Ln/H;"}
     1:5:int getColorCompat(int):302:302 -> d
-    androidx.browser.customtabs.CustomTabsCallback getCustomTabsCallback() -> e
+    1:6:androidx.browser.customtabs.CustomTabsCallback getCustomTabsCallback():246:246 -> e
       # {"id":"com.android.tools.r8.residualsignature","signature":"()Le/b;"}
     1:5:androidx.browser.trusted.TrustedWebActivityDisplayMode getDisplayMode():388:388 -> f
       # {"id":"com.android.tools.r8.residualsignature","signature":"()Lf/o;"}
     1:12:com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy getFallbackStrategy():373:373 -> g
-      # {"id":"com.android.tools.r8.residualsignature","signature":"()Ln/E$a;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"()Ln/H$a;"}
     13:15:com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy getFallbackStrategy():374:374 -> g
     16:18:com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy getFallbackStrategy():376:376 -> g
     android.net.Uri getLaunchingUrl() -> h
@@ -2812,7 +2812,44 @@ com.google.androidbrowserhelper.trusted.PrefUtils -> n.w:
     1:12:android.content.SharedPreferences getAppSharedPreferences(android.content.Context):34:34 -> a
     1:12:boolean hasRequestedNotificationPermission(android.content.Context):39:39 -> b
     1:19:void setHasRequestedNotificationPermission(android.content.Context):43:43 -> c
-com.google.androidbrowserhelper.trusted.SharedPreferencesTokenStore -> n.x:
+com.google.androidbrowserhelper.trusted.QualityEnforcer -> n.z:
+# {"id":"sourceFile","fileName":"QualityEnforcer.java"}
+    com.google.androidbrowserhelper.trusted.QualityEnforcer$Delegate mDelegate -> a
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/z$a;"}
+    1:3:void <init>():53:53 -> <init>
+    4:11:void <init>():54:54 -> <init>
+    3:12:android.os.Bundle extraCallbackWithResult(java.lang.String,android.os.Bundle):70:70 -> b
+    13:15:android.os.Bundle extraCallbackWithResult(java.lang.String,android.os.Bundle):71:71 -> b
+    16:20:android.os.Bundle extraCallbackWithResult(java.lang.String,android.os.Bundle):73:73 -> b
+    21:28:android.os.Bundle extraCallbackWithResult(java.lang.String,android.os.Bundle):74:74 -> b
+    29:34:android.os.Bundle extraCallbackWithResult(java.lang.String,android.os.Bundle):75:75 -> b
+    35:40:android.os.Bundle extraCallbackWithResult(java.lang.String,android.os.Bundle):76:76 -> b
+    1:1:void n.QualityEnforcer.$r8$lambda$2fFOwbGjei_7umXwon5vLjU2LWQ(java.lang.String):0:0 -> g
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void n.QualityEnforcer.$r8$lambda$VgysdV0V8bu89tZ6SnL06V-pnr0(java.lang.String):0:0 -> h
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:6:void lambda$new$0(java.lang.String):58:58 -> i
+    1:18:void lambda$new$1(java.lang.String):57:57 -> j
+com.google.androidbrowserhelper.trusted.QualityEnforcer$$ExternalSyntheticLambda0 -> n.x:
+# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
+# {"id":"com.android.tools.r8.synthesized"}
+    1:1:void n.QualityEnforcer$$ExternalSyntheticLambda0.<init>():0:0 -> <init>
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void n.QualityEnforcer$$ExternalSyntheticLambda0.crash(java.lang.String):0:0 -> a
+      # {"id":"com.android.tools.r8.synthesized"}
+com.google.androidbrowserhelper.trusted.QualityEnforcer$$ExternalSyntheticLambda1 -> n.y:
+# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
+# {"id":"com.android.tools.r8.synthesized"}
+    java.lang.String com.google.androidbrowserhelper.trusted.QualityEnforcer$$InternalSyntheticLambda$4$3b69d296e4617850fa0b4437bff84a5384ff1b0f4217de8559dce21e574c0196$0.f$0 -> a
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void n.QualityEnforcer$$ExternalSyntheticLambda1.<init>(java.lang.String):0:0 -> <init>
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void n.QualityEnforcer$$ExternalSyntheticLambda1.run():0:0 -> run
+      # {"id":"com.android.tools.r8.synthesized"}
+com.google.androidbrowserhelper.trusted.QualityEnforcer$Delegate -> n.z$a:
+# {"id":"sourceFile","fileName":"QualityEnforcer.java"}
+    void crash(java.lang.String) -> a
+com.google.androidbrowserhelper.trusted.SharedPreferencesTokenStore -> n.A:
 # {"id":"sourceFile","fileName":"SharedPreferencesTokenStore.java"}
     android.content.Context mContext -> a
     1:3:void <init>(android.content.Context):43:43 -> <init>
@@ -2830,7 +2867,7 @@ com.google.androidbrowserhelper.trusted.SharedPreferencesTokenStore -> n.x:
     7:17:androidx.browser.trusted.Token load():80:80 -> b
     18:21:androidx.browser.trusted.Token load():86:86 -> b
     22:26:androidx.browser.trusted.Token load():87:87 -> b
-com.google.androidbrowserhelper.trusted.SharingUtils -> n.y:
+com.google.androidbrowserhelper.trusted.SharingUtils -> n.B:
 # {"id":"sourceFile","fileName":"SharingUtils.java"}
     1:4:boolean isShareIntent(android.content.Intent):41:41 -> a
     5:25:boolean isShareIntent(android.content.Intent):42:42 -> a
@@ -2865,23 +2902,23 @@ com.google.androidbrowserhelper.trusted.SharingUtils -> n.y:
     36:39:androidx.browser.trusted.sharing.ShareData retrieveShareDataFromIntent(android.content.Intent):62:62 -> e
     40:49:androidx.browser.trusted.sharing.ShareData retrieveShareDataFromIntent(android.content.Intent):64:64 -> e
     50:57:androidx.browser.trusted.sharing.ShareData retrieveShareDataFromIntent(android.content.Intent):65:65 -> e
-com.google.androidbrowserhelper.trusted.TwaLauncher -> n.E:
+com.google.androidbrowserhelper.trusted.TwaLauncher -> n.H:
 # {"id":"sourceFile","fileName":"TwaLauncher.java"}
     android.content.Context mContext -> a
     java.lang.String mProviderPackage -> b
     int mLaunchMode -> c
     int mSessionId -> d
     com.google.androidbrowserhelper.trusted.TwaLauncher$TwaCustomTabsServiceConnection mServiceConnection -> e
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/E$b;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/H$b;"}
     androidx.browser.customtabs.CustomTabsSession mSession -> f
       # {"id":"com.android.tools.r8.residualsignature","signature":"Le/f;"}
     androidx.browser.trusted.TokenStore mTokenStore -> g
       # {"id":"com.android.tools.r8.residualsignature","signature":"Lf/m;"}
     boolean mDestroyed -> h
     com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy CCT_FALLBACK_STRATEGY -> i
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/E$a;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/H$a;"}
     com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy WEBVIEW_FALLBACK_STRATEGY -> j
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/E$a;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/H$a;"}
     1:7:void <clinit>():51:51 -> <clinit>
     8:15:void <clinit>():69:69 -> <clinit>
     1:1:void <init>(android.content.Context):111:111 -> <init>
@@ -2892,29 +2929,29 @@ com.google.androidbrowserhelper.trusted.TwaLauncher -> n.E:
     10:11:void <init>(android.content.Context,java.lang.String,int,androidx.browser.trusted.TokenStore):138:139 -> <init>
     1:1:void n.TwaLauncher.$r8$lambda$I30pPH0RZ6xjoJz1nd6AMQCL9lU(n.TwaLauncher,f.TrustedWebActivityIntentBuilder,o.SplashScreenStrategy,java.lang.Runnable):0:0 -> a
       # {"id":"com.android.tools.r8.synthesized"}
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;Lf/q;Lo/e;Ljava/lang/Runnable;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;Lf/q;Lo/e;Ljava/lang/Runnable;)V"}
     1:1:void n.TwaLauncher.$r8$lambda$JM1sXVlybaRtF2tkfmJAA4OgcwA(n.TwaLauncher,n.TwaLauncher$FallbackStrategy,f.TrustedWebActivityIntentBuilder,java.lang.Runnable):0:0 -> b
       # {"id":"com.android.tools.r8.synthesized"}
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;Ln/E$a;Lf/q;Ljava/lang/Runnable;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;Ln/H$a;Lf/q;Ljava/lang/Runnable;)V"}
     1:1:void n.TwaLauncher.$r8$lambda$TrHT6vacIiGyKe8fwH3CC8EhYhs(android.content.Context,f.TrustedWebActivityIntentBuilder,java.lang.String,java.lang.Runnable):0:0 -> c
       # {"id":"com.android.tools.r8.synthesized"}
       # {"id":"com.android.tools.r8.residualsignature","signature":"(Landroid/content/Context;Lf/q;Ljava/lang/String;Ljava/lang/Runnable;)V"}
     1:1:void n.TwaLauncher.$r8$lambda$c1jqEXrqsvA0UZa-cS6TQkDCPy4(n.TwaLauncher,f.TrustedWebActivityIntentBuilder,java.lang.Runnable):0:0 -> d
       # {"id":"com.android.tools.r8.synthesized"}
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;Lf/q;Ljava/lang/Runnable;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;Lf/q;Ljava/lang/Runnable;)V"}
     1:1:void n.TwaLauncher.$r8$lambda$nIkqbYj9s3BHFYj-9kMIC3ME1OA(android.content.Context,f.TrustedWebActivityIntentBuilder,java.lang.String,java.lang.Runnable):0:0 -> e
       # {"id":"com.android.tools.r8.synthesized"}
       # {"id":"com.android.tools.r8.residualsignature","signature":"(Landroid/content/Context;Lf/q;Ljava/lang/String;Ljava/lang/Runnable;)V"}
     1:3:android.content.Context access$100(com.google.androidbrowserhelper.trusted.TwaLauncher):46:46 -> f
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;)Landroid/content/Context;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;)Landroid/content/Context;"}
     1:3:java.lang.String access$200(com.google.androidbrowserhelper.trusted.TwaLauncher):46:46 -> g
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;)Ljava/lang/String;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;)Ljava/lang/String;"}
     1:3:androidx.browser.customtabs.CustomTabsSession access$300(com.google.androidbrowserhelper.trusted.TwaLauncher):46:46 -> h
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;)Le/f;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;)Le/f;"}
     1:3:androidx.browser.customtabs.CustomTabsSession access$302(com.google.androidbrowserhelper.trusted.TwaLauncher,androidx.browser.customtabs.CustomTabsSession):46:46 -> i
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;Le/f;)Le/f;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;Le/f;)Le/f;"}
     1:3:int access$400(com.google.androidbrowserhelper.trusted.TwaLauncher):46:46 -> j
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;)I"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;)I"}
     1:5:void destroy():284:284 -> k
     6:9:void destroy():287:287 -> k
     10:15:void destroy():288:288 -> k
@@ -2924,7 +2961,7 @@ com.google.androidbrowserhelper.trusted.TwaLauncher -> n.E:
     1:4:void lambda$launchTwa$2(androidx.browser.trusted.TrustedWebActivityIntentBuilder,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable):224:224 -> m
       # {"id":"com.android.tools.r8.residualsignature","signature":"(Lf/q;Lo/e;Ljava/lang/Runnable;)V"}
     1:8:void lambda$launchTwa$3(com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy,androidx.browser.trusted.TrustedWebActivityIntentBuilder,java.lang.Runnable):235:235 -> n
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E$a;Lf/q;Ljava/lang/Runnable;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H$a;Lf/q;Ljava/lang/Runnable;)V"}
     1:4:void lambda$launchWhenSessionEstablished$4(androidx.browser.trusted.TrustedWebActivityIntentBuilder,java.lang.Runnable):257:257 -> o
       # {"id":"com.android.tools.r8.residualsignature","signature":"(Lf/q;Ljava/lang/Runnable;)V"}
     1:6:void lambda$static$0(android.content.Context,androidx.browser.trusted.TrustedWebActivityIntentBuilder,java.lang.String,java.lang.Runnable):55:55 -> p
@@ -2940,7 +2977,7 @@ com.google.androidbrowserhelper.trusted.TwaLauncher -> n.E:
     13:17:void lambda$static$1(android.content.Context,androidx.browser.trusted.TrustedWebActivityIntentBuilder,java.lang.String,java.lang.Runnable):73:73 -> q
     18:21:void lambda$static$1(android.content.Context,androidx.browser.trusted.TrustedWebActivityIntentBuilder,java.lang.String,java.lang.Runnable):75:75 -> q
     1:4:void launch(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):174:174 -> r
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Lf/q;Le/b;Lo/e;Ljava/lang/Runnable;Ln/E$a;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Lf/q;Le/b;Lo/e;Ljava/lang/Runnable;Ln/H$a;)V"}
     5:8:void launch(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):178:178 -> r
     9:12:void launch(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):179:179 -> r
     13:19:void launch(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):182:182 -> r
@@ -2948,7 +2985,7 @@ com.google.androidbrowserhelper.trusted.TwaLauncher -> n.E:
     32:49:void launch(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):190:190 -> r
     50:57:void launch(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):175:175 -> r
     3:7:void launchTwa(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):220:220 -> s
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Lf/q;Le/b;Lo/e;Ljava/lang/Runnable;Ln/E$a;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Lf/q;Le/b;Lo/e;Ljava/lang/Runnable;Ln/H$a;)V"}
     8:12:void launchTwa(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):223:223 -> s
     13:16:void launchTwa(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):226:226 -> s
     17:20:void launchTwa(androidx.browser.trusted.TrustedWebActivityIntentBuilder,androidx.browser.customtabs.CustomTabsCallback,com.google.androidbrowserhelper.trusted.splashscreens.SplashScreenStrategy,java.lang.Runnable,com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy):227:227 -> s
@@ -2969,7 +3006,7 @@ com.google.androidbrowserhelper.trusted.TwaLauncher -> n.E:
     23:31:void launchWhenSplashScreenReady(androidx.browser.trusted.TrustedWebActivityIntentBuilder,java.lang.Runnable):272:272 -> u
     32:38:void launchWhenSplashScreenReady(androidx.browser.trusted.TrustedWebActivityIntentBuilder,java.lang.Runnable):273:273 -> u
     39:42:void launchWhenSplashScreenReady(androidx.browser.trusted.TrustedWebActivityIntentBuilder,java.lang.Runnable):276:276 -> u
-com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda0 -> n.z:
+com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda0 -> n.C:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda0.<init>():0:0 -> <init>
@@ -2977,7 +3014,7 @@ com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda0 ->
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda0.launch(android.content.Context,f.TrustedWebActivityIntentBuilder,java.lang.String,java.lang.Runnable):0:0 -> a
       # {"id":"com.android.tools.r8.synthesized"}
       # {"id":"com.android.tools.r8.residualsignature","signature":"(Landroid/content/Context;Lf/q;Ljava/lang/String;Ljava/lang/Runnable;)V"}
-com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda1 -> n.A:
+com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda1 -> n.D:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda1.<init>():0:0 -> <init>
@@ -2985,11 +3022,11 @@ com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda1 ->
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda1.launch(android.content.Context,f.TrustedWebActivityIntentBuilder,java.lang.String,java.lang.Runnable):0:0 -> a
       # {"id":"com.android.tools.r8.synthesized"}
       # {"id":"com.android.tools.r8.residualsignature","signature":"(Landroid/content/Context;Lf/q;Ljava/lang/String;Ljava/lang/Runnable;)V"}
-com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda2 -> n.B:
+com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda2 -> n.E:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
     com.google.androidbrowserhelper.trusted.TwaLauncher com.google.androidbrowserhelper.trusted.TwaLauncher$$InternalSyntheticLambda$3$d24b8e084a7d2f55c169bb96fa355584b63e8b3b4fa4e1f5c82aab7fb52fc48c$0.f$0 -> a
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/E;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/H;"}
       # {"id":"com.android.tools.r8.synthesized"}
     androidx.browser.trusted.TrustedWebActivityIntentBuilder com.google.androidbrowserhelper.trusted.TwaLauncher$$InternalSyntheticLambda$3$d24b8e084a7d2f55c169bb96fa355584b63e8b3b4fa4e1f5c82aab7fb52fc48c$0.f$1 -> b
       # {"id":"com.android.tools.r8.residualsignature","signature":"Lf/q;"}
@@ -3001,17 +3038,17 @@ com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda2 ->
       # {"id":"com.android.tools.r8.synthesized"}
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda2.<init>(n.TwaLauncher,f.TrustedWebActivityIntentBuilder,o.SplashScreenStrategy,java.lang.Runnable):0:0 -> <init>
       # {"id":"com.android.tools.r8.synthesized"}
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;Lf/q;Lo/e;Ljava/lang/Runnable;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;Lf/q;Lo/e;Ljava/lang/Runnable;)V"}
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda2.run():0:0 -> run
       # {"id":"com.android.tools.r8.synthesized"}
-com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda3 -> n.C:
+com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda3 -> n.F:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
     com.google.androidbrowserhelper.trusted.TwaLauncher com.google.androidbrowserhelper.trusted.TwaLauncher$$InternalSyntheticLambda$3$d24b8e084a7d2f55c169bb96fa355584b63e8b3b4fa4e1f5c82aab7fb52fc48c$1.f$0 -> a
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/E;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/H;"}
       # {"id":"com.android.tools.r8.synthesized"}
     com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy com.google.androidbrowserhelper.trusted.TwaLauncher$$InternalSyntheticLambda$3$d24b8e084a7d2f55c169bb96fa355584b63e8b3b4fa4e1f5c82aab7fb52fc48c$1.f$1 -> b
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/E$a;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/H$a;"}
       # {"id":"com.android.tools.r8.synthesized"}
     androidx.browser.trusted.TrustedWebActivityIntentBuilder com.google.androidbrowserhelper.trusted.TwaLauncher$$InternalSyntheticLambda$3$d24b8e084a7d2f55c169bb96fa355584b63e8b3b4fa4e1f5c82aab7fb52fc48c$1.f$2 -> c
       # {"id":"com.android.tools.r8.residualsignature","signature":"Lf/q;"}
@@ -3020,14 +3057,14 @@ com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda3 ->
       # {"id":"com.android.tools.r8.synthesized"}
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda3.<init>(n.TwaLauncher,n.TwaLauncher$FallbackStrategy,f.TrustedWebActivityIntentBuilder,java.lang.Runnable):0:0 -> <init>
       # {"id":"com.android.tools.r8.synthesized"}
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;Ln/E$a;Lf/q;Ljava/lang/Runnable;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;Ln/H$a;Lf/q;Ljava/lang/Runnable;)V"}
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda3.run():0:0 -> run
       # {"id":"com.android.tools.r8.synthesized"}
-com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda4 -> n.D:
+com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda4 -> n.G:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
     com.google.androidbrowserhelper.trusted.TwaLauncher com.google.androidbrowserhelper.trusted.TwaLauncher$$InternalSyntheticLambda$4$a0a04302483e3a3af79e1df8ddd61a3ffbdcf6bed9f2f9c77669c070994eb975$0.f$0 -> a
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/E;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/H;"}
       # {"id":"com.android.tools.r8.synthesized"}
     androidx.browser.trusted.TrustedWebActivityIntentBuilder com.google.androidbrowserhelper.trusted.TwaLauncher$$InternalSyntheticLambda$4$a0a04302483e3a3af79e1df8ddd61a3ffbdcf6bed9f2f9c77669c070994eb975$0.f$1 -> b
       # {"id":"com.android.tools.r8.residualsignature","signature":"Lf/q;"}
@@ -3036,23 +3073,23 @@ com.google.androidbrowserhelper.trusted.TwaLauncher$$ExternalSyntheticLambda4 ->
       # {"id":"com.android.tools.r8.synthesized"}
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda4.<init>(n.TwaLauncher,f.TrustedWebActivityIntentBuilder,java.lang.Runnable):0:0 -> <init>
       # {"id":"com.android.tools.r8.synthesized"}
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;Lf/q;Ljava/lang/Runnable;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;Lf/q;Ljava/lang/Runnable;)V"}
     1:1:void n.TwaLauncher$$ExternalSyntheticLambda4.run():0:0 -> run
       # {"id":"com.android.tools.r8.synthesized"}
-com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy -> n.E$a:
+com.google.androidbrowserhelper.trusted.TwaLauncher$FallbackStrategy -> n.H$a:
 # {"id":"sourceFile","fileName":"TwaLauncher.java"}
     void launch(android.content.Context,androidx.browser.trusted.TrustedWebActivityIntentBuilder,java.lang.String,java.lang.Runnable) -> a
       # {"id":"com.android.tools.r8.residualsignature","signature":"(Landroid/content/Context;Lf/q;Ljava/lang/String;Ljava/lang/Runnable;)V"}
-com.google.androidbrowserhelper.trusted.TwaLauncher$TwaCustomTabsServiceConnection -> n.E$b:
+com.google.androidbrowserhelper.trusted.TwaLauncher$TwaCustomTabsServiceConnection -> n.H$b:
 # {"id":"sourceFile","fileName":"TwaLauncher.java"}
     java.lang.Runnable mOnSessionCreatedRunnable -> b
     java.lang.Runnable mOnSessionCreationFailedRunnable -> c
     androidx.browser.customtabs.CustomTabsCallback mCustomTabsCallback -> d
       # {"id":"com.android.tools.r8.residualsignature","signature":"Le/b;"}
     com.google.androidbrowserhelper.trusted.TwaLauncher this$0 -> e
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/E;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"Ln/H;"}
     1:5:void <init>(com.google.androidbrowserhelper.trusted.TwaLauncher,androidx.browser.customtabs.CustomTabsCallback):307:307 -> <init>
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E;Le/b;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H;Le/b;)V"}
     6:8:void <init>(com.google.androidbrowserhelper.trusted.TwaLauncher,androidx.browser.customtabs.CustomTabsCallback):308:308 -> <init>
     1:2:void onCustomTabsServiceConnected(android.content.ComponentName,androidx.browser.customtabs.CustomTabsClient):320:320 -> a
       # {"id":"com.android.tools.r8.residualsignature","signature":"(Landroid/content/ComponentName;Le/c;)V"}
@@ -3068,11 +3105,11 @@ com.google.androidbrowserhelper.trusted.TwaLauncher$TwaCustomTabsServiceConnecti
     88:89:void onCustomTabsServiceConnected(android.content.ComponentName,androidx.browser.customtabs.CustomTabsClient):338:338 -> a
     90:92:void onCustomTabsServiceConnected(android.content.ComponentName,androidx.browser.customtabs.CustomTabsClient):339:339 -> a
     1:4:void access$000(com.google.androidbrowserhelper.trusted.TwaLauncher$TwaCustomTabsServiceConnection,java.lang.Runnable,java.lang.Runnable):302:302 -> c
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/E$b;Ljava/lang/Runnable;Ljava/lang/Runnable;)V"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Ln/H$b;Ljava/lang/Runnable;Ljava/lang/Runnable;)V"}
     1:2:void setSessionCreationRunnables(java.lang.Runnable,java.lang.Runnable):313:313 -> d
     3:5:void setSessionCreationRunnables(java.lang.Runnable,java.lang.Runnable):314:314 -> d
     1:7:void onServiceDisconnected(android.content.ComponentName):344:344 -> onServiceDisconnected
-com.google.androidbrowserhelper.trusted.TwaProviderPicker -> n.F:
+com.google.androidbrowserhelper.trusted.TwaProviderPicker -> n.I:
 # {"id":"sourceFile","fileName":"TwaProviderPicker.java"}
     java.lang.String sPackageNameForTesting -> a
     1:13:java.util.Map getLaunchModesForCustomTabsServices(android.content.pm.PackageManager):184:184 -> a
@@ -3086,7 +3123,7 @@ com.google.androidbrowserhelper.trusted.TwaProviderPicker -> n.F:
     70:73:java.util.Map getLaunchModesForCustomTabsServices(android.content.pm.PackageManager):203:203 -> a
     74:78:java.util.Map getLaunchModesForCustomTabsServices(android.content.pm.PackageManager):202:202 -> a
     1:7:com.google.androidbrowserhelper.trusted.TwaProviderPicker$Action pickProvider(android.content.pm.PackageManager):106:106 -> b
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Landroid/content/pm/PackageManager;)Ln/F$a;"}
+      # {"id":"com.android.tools.r8.residualsignature","signature":"(Landroid/content/pm/PackageManager;)Ln/I$a;"}
     8:13:com.google.androidbrowserhelper.trusted.TwaProviderPicker$Action pickProvider(android.content.pm.PackageManager):107:107 -> b
     14:17:com.google.androidbrowserhelper.trusted.TwaProviderPicker$Action pickProvider(android.content.pm.PackageManager):108:108 -> b
     18:30:com.google.androidbrowserhelper.trusted.TwaProviderPicker$Action pickProvider(android.content.pm.PackageManager):109:109 -> b
@@ -3108,21 +3145,21 @@ com.google.androidbrowserhelper.trusted.TwaProviderPicker -> n.F:
     210:215:com.google.androidbrowserhelper.trusted.TwaProviderPicker$Action pickProvider(android.content.pm.PackageManager):167:167 -> b
     216:235:com.google.androidbrowserhelper.trusted.TwaProviderPicker$Action pickProvider(android.content.pm.PackageManager):170:170 -> b
     236:241:com.google.androidbrowserhelper.trusted.TwaProviderPicker$Action pickProvider(android.content.pm.PackageManager):171:171 -> b
-com.google.androidbrowserhelper.trusted.TwaProviderPicker$Action -> n.F$a:
+com.google.androidbrowserhelper.trusted.TwaProviderPicker$Action -> n.I$a:
 # {"id":"sourceFile","fileName":"TwaProviderPicker.java"}
     int launchMode -> a
     java.lang.String provider -> b
     1:3:void <init>(int,java.lang.String):93:93 -> <init>
     4:5:void <init>(int,java.lang.String):94:94 -> <init>
     6:8:void <init>(int,java.lang.String):95:95 -> <init>
-com.google.androidbrowserhelper.trusted.TwaSharedPreferencesManager -> n.G:
+com.google.androidbrowserhelper.trusted.TwaSharedPreferencesManager -> n.J:
 # {"id":"sourceFile","fileName":"TwaSharedPreferencesManager.java"}
     android.content.SharedPreferences mSharedPreferences -> a
     1:3:void <init>(android.content.Context):16:16 -> <init>
     4:13:void <init>(android.content.Context):17:17 -> <init>
     1:10:java.lang.String readLastLaunchedProviderPackageName():32:32 -> a
     1:16:void writeLastLaunchedProviderPackageName(java.lang.String):24:24 -> b
-com.google.androidbrowserhelper.trusted.Utils -> n.J:
+com.google.androidbrowserhelper.trusted.Utils -> n.M:
 # {"id":"sourceFile","fileName":"Utils.java"}
     1:12:void addSystemUiVisibilityFlag(android.app.Activity,int):59:59 -> a
     13:17:void addSystemUiVisibilityFlag(android.app.Activity,int):60:60 -> a
@@ -3148,12 +3185,12 @@ com.google.androidbrowserhelper.trusted.Utils -> n.J:
     15:29:boolean shouldUseDarkIconsOnBackground(int):73:73 -> f
     30:52:boolean shouldUseDarkIconsOnBackground(int):74:74 -> f
     53:66:boolean shouldUseDarkIconsOnBackground(int):75:75 -> f
-com.google.androidbrowserhelper.trusted.Utils$$ExternalSyntheticApiModelOutline0 -> n.H:
+com.google.androidbrowserhelper.trusted.Utils$$ExternalSyntheticApiModelOutline0 -> n.K:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
     1:1:void n.Utils$$ExternalSyntheticApiModelOutline0.m(android.view.Window,int):0:0 -> a
       # {"id":"com.android.tools.r8.synthesized"}
-com.google.androidbrowserhelper.trusted.Utils$$ExternalSyntheticApiModelOutline1 -> n.I:
+com.google.androidbrowserhelper.trusted.Utils$$ExternalSyntheticApiModelOutline1 -> n.L:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
     1:1:void n.Utils$$ExternalSyntheticApiModelOutline1.m(android.view.Window,int):0:0 -> a
@@ -3236,7 +3273,7 @@ com.google.androidbrowserhelper.trusted.WebViewFallbackActivity -> com.google.an
     1:3:void onSaveInstanceState(android.os.Bundle):181:181 -> onSaveInstanceState
     4:7:void onSaveInstanceState(android.os.Bundle):182:182 -> onSaveInstanceState
     8:11:void onSaveInstanceState(android.os.Bundle):183:183 -> onSaveInstanceState
-com.google.androidbrowserhelper.trusted.WebViewFallbackActivity$$ExternalSyntheticApiModelOutline0 -> n.K:
+com.google.androidbrowserhelper.trusted.WebViewFallbackActivity$$ExternalSyntheticApiModelOutline0 -> n.N:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
     1:1:int n.WebViewFallbackActivity$$ExternalSyntheticApiModelOutline0.m(android.view.Window):0:0 -> a
@@ -3272,7 +3309,7 @@ com.google.androidbrowserhelper.trusted.WebViewFallbackActivity$1 -> com.google.
     72:91:boolean onRenderProcessGone(android.webkit.WebView,android.webkit.RenderProcessGoneDetail):218:218 -> onRenderProcessGone
     1:1:boolean shouldOverrideUrlLoading(android.webkit.WebView,java.lang.String):257:257 -> shouldOverrideUrlLoading
     2:2:boolean shouldOverrideUrlLoading(android.webkit.WebView,android.webkit.WebResourceRequest):263:263 -> shouldOverrideUrlLoading
-com.google.androidbrowserhelper.trusted.WebViewFallbackActivity$1$$ExternalSyntheticApiModelOutline0 -> n.L:
+com.google.androidbrowserhelper.trusted.WebViewFallbackActivity$1$$ExternalSyntheticApiModelOutline0 -> n.O:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}
     1:1:android.net.Uri n.WebViewFallbackActivity$1$$ExternalSyntheticApiModelOutline0.m(android.webkit.WebResourceRequest):0:0 -> a
@@ -3559,82 +3596,75 @@ in.co.rapidrecap.www.twa.DelegationService -> in.co.rapidrecap.www.twa.Delegatio
 # {"id":"sourceFile","fileName":"DelegationService.java"}
     1:4:void <init>():5:5 -> <init>
     1:4:void onCreate():9:9 -> onCreate
-in.co.rapidrecap.www.twa.LauncherActivity -> in.co.rapidrecap.www.twa.LauncherActivity:
-# {"id":"sourceFile","fileName":"LauncherActivity.java"}
-    android.widget.ImageView splashScreen -> g
-    boolean isTwaLoaded -> h
-    1:4:void <init>():15:15 -> <init>
-    5:7:void <init>():19:19 -> <init>
-    1:6:androidx.browser.customtabs.CustomTabsCallback getCustomTabsCallback():57:57 -> e
-      # {"id":"com.android.tools.r8.residualsignature","signature":"()Le/b;"}
-    1:7:android.net.Uri getLaunchingUrl():52:52 -> h
-    1:5:void onBackPressed():85:85 -> onBackPressed
-    6:9:void onBackPressed():88:88 -> onBackPressed
-    1:5:void onCreate(android.os.Bundle):23:23 -> onCreate
-    6:8:void onCreate(android.os.Bundle):24:24 -> onCreate
-    9:14:void onCreate(android.os.Bundle):26:26 -> onCreate
-    15:18:void onCreate(android.os.Bundle):27:27 -> onCreate
-    19:26:void onCreate(android.os.Bundle):28:28 -> onCreate
-    27:40:void onCreate(android.os.Bundle):31:31 -> onCreate
-    41:43:void onCreate(android.os.Bundle):39:39 -> onCreate
-    44:50:void onCreate(android.os.Bundle):42:42 -> onCreate
-    51:59:void onCreate(android.os.Bundle):43:43 -> onCreate
-    60:66:void onCreate(android.os.Bundle):44:44 -> onCreate
-    67:77:void onCreate(android.os.Bundle):45:45 -> onCreate
-    1:1:void $r8$lambda$3NEHkpR4k_NRoZqoCkNy3uRed6U(in.co.rapidrecap.www.twa.LauncherActivity):0:0 -> p
-      # {"id":"com.android.tools.r8.synthesized"}
-    1:3:boolean access$002(in.co.rapidrecap.www.twa.LauncherActivity,boolean):15:15 -> q
-    1:4:void access$100(in.co.rapidrecap.www.twa.LauncherActivity):15:15 -> r
-    1:10:void lambda$removeSplashScreen$0():74:74 -> s
-    11:24:void lambda$removeSplashScreen$0():75:75 -> s
-    25:27:void lambda$removeSplashScreen$0():77:77 -> s
-    1:12:void removeSplashScreen():69:69 -> t
-    13:19:void removeSplashScreen():70:70 -> t
-    20:25:void removeSplashScreen():71:71 -> t
-    26:34:void removeSplashScreen():72:72 -> t
-    35:38:void removeSplashScreen():73:73 -> t
-    39:42:void removeSplashScreen():79:79 -> t
-in.co.rapidrecap.www.twa.LauncherActivity$$ExternalSyntheticApiModelOutline0 -> p.a:
-# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
-# {"id":"com.android.tools.r8.synthesized"}
-    1:1:void p.LauncherActivity$$ExternalSyntheticApiModelOutline0.m(android.view.WindowManager$LayoutParams,int):0:0 -> a
-      # {"id":"com.android.tools.r8.synthesized"}
-in.co.rapidrecap.www.twa.LauncherActivity$$ExternalSyntheticApiModelOutline1 -> p.b:
-# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
-# {"id":"com.android.tools.r8.synthesized"}
-    1:1:android.graphics.drawable.Drawable p.LauncherActivity$$ExternalSyntheticApiModelOutline1.m(in.co.rapidrecap.www.twa.LauncherActivity,int):0:0 -> a
-      # {"id":"com.android.tools.r8.synthesized"}
-in.co.rapidrecap.www.twa.LauncherActivity$$ExternalSyntheticLambda2 -> p.c:
-# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
-# {"id":"com.android.tools.r8.synthesized"}
-    in.co.rapidrecap.www.twa.LauncherActivity in.co.rapidrecap.www.twa.LauncherActivity$$InternalSyntheticLambda$4$68cd89558ad3b5d0751f4ac6fbca08c8822a5d6856b673c2f9cc9fe2dc91d0af$0.f$0 -> a
-      # {"id":"com.android.tools.r8.synthesized"}
-    1:1:void p.LauncherActivity$$ExternalSyntheticLambda2.<init>(in.co.rapidrecap.www.twa.LauncherActivity):0:0 -> <init>
-      # {"id":"com.android.tools.r8.synthesized"}
-    1:1:void p.LauncherActivity$$ExternalSyntheticLambda2.run():0:0 -> run
-      # {"id":"com.android.tools.r8.synthesized"}
-in.co.rapidrecap.www.twa.LauncherActivity$1 -> in.co.rapidrecap.www.twa.LauncherActivity$a:
-# {"id":"sourceFile","fileName":"LauncherActivity.java"}
-    in.co.rapidrecap.www.twa.LauncherActivity this$0 -> a
-    1:6:void <init>(in.co.rapidrecap.www.twa.LauncherActivity):57:57 -> <init>
-    4:9:void onNavigationEvent(int,android.os.Bundle):61:61 -> d
-    10:20:void onNavigationEvent(int,android.os.Bundle):62:62 -> d
-    1:1:void $r8$lambda$AW_qALSciFRGAq0w9ZrOiBxIZq8(in.co.rapidrecap.www.twa.LauncherActivity$1):0:0 -> g
-      # {"id":"com.android.tools.r8.synthesized"}
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Lin/co/rapidrecap/www/twa/LauncherActivity$a;)V"}
-    1:6:void lambda$onNavigationEvent$0():62:62 -> h
-in.co.rapidrecap.www.twa.LauncherActivity$1$$ExternalSyntheticLambda0 -> in.co.rapidrecap.www.twa.a:
-# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
-# {"id":"com.android.tools.r8.synthesized"}
-    in.co.rapidrecap.www.twa.LauncherActivity$1 in.co.rapidrecap.www.twa.LauncherActivity$1$$InternalSyntheticLambda$3$82f1d9c8770c518e1938e483423628e204915b3e6b55d797694d03c315a576ab$0.f$0 -> a
-      # {"id":"com.android.tools.r8.residualsignature","signature":"Lin/co/rapidrecap/www/twa/LauncherActivity$a;"}
-      # {"id":"com.android.tools.r8.synthesized"}
-    1:1:void <init>(in.co.rapidrecap.www.twa.LauncherActivity$1):0:0 -> <init>
-      # {"id":"com.android.tools.r8.synthesized"}
-      # {"id":"com.android.tools.r8.residualsignature","signature":"(Lin/co/rapidrecap/www/twa/LauncherActivity$a;)V"}
-    1:1:void run():0:0 -> run
-      # {"id":"com.android.tools.r8.synthesized"}
-in.co.rapidrecap.www.twa.R$drawable -> p.d:
+in.co.rapidrecap.www.twa.R$drawable -> p.a:
     int splash_screen -> a
-in.co.rapidrecap.www.twa.R$style -> p.e:
-    int SplashTheme -> a
+in.co.rapidrecap.www.twa.RapidRecapLauncherActivity -> in.co.rapidrecap.www.twa.RapidRecapLauncherActivity:
+# {"id":"sourceFile","fileName":"RapidRecapLauncherActivity.java"}
+    android.view.View splashScreen -> g
+    long splashStartTime -> h
+    1:4:void <init>():14:14 -> <init>
+    1:7:android.net.Uri getLaunchingUrl():55:55 -> h
+    1:5:void onBackPressed():66:66 -> onBackPressed
+    6:9:void onBackPressed():69:69 -> onBackPressed
+    1:3:void onCreate(android.os.Bundle):22:22 -> onCreate
+    4:9:void onCreate(android.os.Bundle):25:25 -> onCreate
+    10:21:void onCreate(android.os.Bundle):26:26 -> onCreate
+    22:35:void onCreate(android.os.Bundle):30:30 -> onCreate
+    36:38:void onCreate(android.os.Bundle):38:38 -> onCreate
+    39:45:void onCreate(android.os.Bundle):41:41 -> onCreate
+    46:50:void onCreate(android.os.Bundle):42:42 -> onCreate
+    51:60:void onCreate(android.os.Bundle):43:43 -> onCreate
+    61:66:void onCreate(android.os.Bundle):47:47 -> onCreate
+    67:82:void onCreate(android.os.Bundle):50:50 -> onCreate
+    1:3:void onResume():60:60 -> onResume
+    4:7:void onResume():61:61 -> onResume
+    1:1:void $r8$lambda$AoZopUZp4YJvSJ1yimEkeiDBU8k(in.co.rapidrecap.www.twa.RapidRecapLauncherActivity):0:0 -> p
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void $r8$lambda$gQIgcMr2iAeJOKyunbg0FMDT7Ug(in.co.rapidrecap.www.twa.RapidRecapLauncherActivity):0:0 -> q
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void $r8$lambda$tHPeDdaCjqhobGLPLVzTjGZ1qzs(in.co.rapidrecap.www.twa.RapidRecapLauncherActivity):0:0 -> r
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:13:void checkAndRemoveSplashScreen():73:73 -> s
+    14:17:void checkAndRemoveSplashScreen():75:75 -> s
+    18:32:void checkAndRemoveSplashScreen():77:77 -> s
+    1:12:void lambda$removeSplashScreen$0():87:87 -> t
+    13:26:void lambda$removeSplashScreen$0():88:88 -> t
+    27:29:void lambda$removeSplashScreen$0():90:90 -> t
+    1:12:void removeSplashScreen():82:82 -> u
+    13:19:void removeSplashScreen():83:83 -> u
+    20:25:void removeSplashScreen():84:84 -> u
+    26:34:void removeSplashScreen():85:85 -> u
+    35:38:void removeSplashScreen():86:86 -> u
+    39:42:void removeSplashScreen():92:92 -> u
+in.co.rapidrecap.www.twa.RapidRecapLauncherActivity$$ExternalSyntheticApiModelOutline0 -> p.b:
+# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
+# {"id":"com.android.tools.r8.synthesized"}
+    1:1:void p.RapidRecapLauncherActivity$$ExternalSyntheticApiModelOutline0.m(android.view.WindowManager$LayoutParams,int):0:0 -> a
+      # {"id":"com.android.tools.r8.synthesized"}
+in.co.rapidrecap.www.twa.RapidRecapLauncherActivity$$ExternalSyntheticLambda1 -> p.c:
+# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
+# {"id":"com.android.tools.r8.synthesized"}
+    in.co.rapidrecap.www.twa.RapidRecapLauncherActivity in.co.rapidrecap.www.twa.RapidRecapLauncherActivity$$InternalSyntheticLambda$1$4d7cb7f19c5f4c1c10e2f1f5d784b30313c6cc7f1361c2717881fb3b4d720c5c$0.f$0 -> a
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void p.RapidRecapLauncherActivity$$ExternalSyntheticLambda1.<init>(in.co.rapidrecap.www.twa.RapidRecapLauncherActivity):0:0 -> <init>
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void p.RapidRecapLauncherActivity$$ExternalSyntheticLambda1.run():0:0 -> run
+      # {"id":"com.android.tools.r8.synthesized"}
+in.co.rapidrecap.www.twa.RapidRecapLauncherActivity$$ExternalSyntheticLambda2 -> p.d:
+# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
+# {"id":"com.android.tools.r8.synthesized"}
+    in.co.rapidrecap.www.twa.RapidRecapLauncherActivity in.co.rapidrecap.www.twa.RapidRecapLauncherActivity$$InternalSyntheticLambda$1$ef0bdf3441a14643c89f312067079260cac4321cc7fbfde0d03044da08d3240e$1.f$0 -> a
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void p.RapidRecapLauncherActivity$$ExternalSyntheticLambda2.<init>(in.co.rapidrecap.www.twa.RapidRecapLauncherActivity):0:0 -> <init>
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void p.RapidRecapLauncherActivity$$ExternalSyntheticLambda2.run():0:0 -> run
+      # {"id":"com.android.tools.r8.synthesized"}
+in.co.rapidrecap.www.twa.RapidRecapLauncherActivity$$ExternalSyntheticLambda3 -> p.e:
+# {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
+# {"id":"com.android.tools.r8.synthesized"}
+    in.co.rapidrecap.www.twa.RapidRecapLauncherActivity in.co.rapidrecap.www.twa.RapidRecapLauncherActivity$$InternalSyntheticLambda$2$37a1207c077352ae69d7c7a59fdb71da929764c2c4496ca44e879af1dc4ef006$0.f$0 -> a
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void p.RapidRecapLauncherActivity$$ExternalSyntheticLambda3.<init>(in.co.rapidrecap.www.twa.RapidRecapLauncherActivity):0:0 -> <init>
+      # {"id":"com.android.tools.r8.synthesized"}
+    1:1:void p.RapidRecapLauncherActivity$$ExternalSyntheticLambda3.run():0:0 -> run
+      # {"id":"com.android.tools.r8.synthesized"}

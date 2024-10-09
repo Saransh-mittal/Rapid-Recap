@@ -1,11 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useMemo,
-  useCallback,
-  Suspense,
-} from 'react'
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import {
   Flex,
   Skeleton,
@@ -33,7 +26,6 @@ import { useTranslation } from 'react-i18next'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
 import { useNavbar } from '../../contextAPI/NavbarContext'
 
-// Lazy load components
 const Categories = React.lazy(() => import('./Categories'))
 const GetStarted = React.lazy(() =>
   import('../Header-Footer/navbarComponents/GetStarted'),
@@ -51,29 +43,37 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
   const { category } = useSelector(state => state.content)
   const { isVisibleRef } = useNavbar()
   const [swipeDisable, setSwipeDisable] = useState(false)
-  const [isFixed, setIsFixed] = useState(false)
-  const [prevScrollPos, setPrevScrollPos] = useState(0)
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(true)
   const categoryRef = useRef()
-  const isSmallerThan992 = useMediaQuery('(max-width: 992px)')[0]
+  const [isSmallerThan992] = useMediaQuery('(max-width: 992px)')
   const flexDirectionOfTimeline = useBreakpointValue({
     base: 'column',
     lg: 'row',
   })
   const categoryRefs = useRef([])
+  const prevScrollPosRef = useRef(0)
 
   const notLoggedIn = !isAuthenticated
 
-  const handleLoadMore = () => {
+  const displayedData = useMemo(
+    () => (isSearching ? searchResults : data),
+    [isSearching, searchResults, data],
+  )
+
+  const handleLoadMore = useCallback(() => {
     if (isSearching) {
       const nextPage = Math.floor(searchResults.length / 10) + 1
       dispatchRedux(
         searchArticles({ query: searchTerm, page: nextPage, limit: 10 }),
       )
     }
-  }
-
-  const displayedData = isSearching ? searchResults : data
+  }, [
+    isSearching,
+    searchResults.length,
+    dispatchRedux,
+    searchArticles,
+    searchTerm,
+  ])
 
   const activeCategoryIndex = useMemo(() => {
     return categories?.findIndex(
@@ -93,6 +93,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
       dispatchRedux(clearSearch())
       dispatchRedux(setSearchTerm(''))
       dispatchRedux(setItemsState([]))
+      window.scrollTo(0, 0)
     },
     [dispatchRedux, navigate, setLoad, setHasMoreItems],
   )
@@ -113,32 +114,26 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
     },
     preventDefaultTouchmoveEvent: true,
     trackMouse: true,
-    delta: 100, // Increase this value to require a longer swipe
+    delta: 100,
   })
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY
-      if (isSmallerThan992) {
-        if (categoryRef.current) {
-          categoryRef.current.style.transform = isVisibleRef.current
-            ? 'translateY(0)'
-            : 'translateY(-68%)'
-        }
+      if (isSmallerThan992 && categoryRef.current) {
+        categoryRef.current.style.transform = isVisibleRef.current
+          ? 'translateY(0)'
+          : 'translateY(-68%)'
       }
-      if (currentScrollPos > prevScrollPos && currentScrollPos > 100) {
-        setIsSearchBarVisible(false)
-      } else {
-        setIsSearchBarVisible(true)
-      }
-      setPrevScrollPos(currentScrollPos)
+      setIsSearchBarVisible(
+        currentScrollPos <= 100 || currentScrollPos < prevScrollPosRef.current,
+      )
+      prevScrollPosRef.current = currentScrollPos
     }
 
     window.addEventListener('scroll', handleScroll)
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [prevScrollPos, isSmallerThan992])
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [isSmallerThan992, isVisibleRef])
 
   useEffect(() => {
     const pathCategory = location.pathname.split('/')[2] || 'all'
@@ -169,7 +164,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
         <Skeleton w="xs" h={{ base: '26rem', md: 'md' }} borderRadius="2xl" />
       </Flex>
     ))
-  }, [load])
+  }, [])
 
   const trackCategoryClick = useCallback(category => {
     ReactGA.send({
@@ -177,6 +172,33 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
       action: 'click',
     })
   }, [])
+
+  const renderCard = useCallback(
+    (item, id) => (
+      <Flex mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }} key={id}>
+        <Card
+          title={i18n.language === 'en' ? item?.title : item?.hindiTitle}
+          urlTitle={item?.title}
+          image={
+            (!blackListedImgUrls.find(url => url === item.imgURL) &&
+              item.imgURL) ||
+            rrImage
+          }
+          category={t(`categories.${item?.category.toLowerCase()}`)}
+          date={formatDate(item?.dateTime, i18n.language)}
+          readTime={item.avgReadTime}
+          id={item._id}
+          articleData={item}
+        />
+      </Flex>
+    ),
+    [i18n.language, t],
+  )
+
+  const memoizedCards = useMemo(
+    () => displayedData?.map(renderCard),
+    [displayedData, renderCard],
+  )
 
   return (
     <Flex flexDirection={'column'}>
@@ -232,24 +254,15 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
               scrollbarWidth: 'none',
             }}
           >
-            <Suspense
-              fallback={
-                <Skeleton
-                  width={{ base: '100%', lg: '15%' }}
-                  height={{ base: 'auto', lg: '100vh' }}
-                />
-              }
-            >
-              <Categories
-                trackCategoryClick={trackCategoryClick}
-                activeCategoryIndex={activeCategoryIndex}
-                activeCategory={category}
-                handleActiveCategory={handleActiveCategory}
-                categories={categories}
-                categoryRefs={categoryRefs}
-                notLoggedIn={notLoggedIn}
-              />
-            </Suspense>
+            <Categories
+              trackCategoryClick={trackCategoryClick}
+              activeCategoryIndex={activeCategoryIndex}
+              activeCategory={category}
+              handleActiveCategory={handleActiveCategory}
+              categories={categories}
+              categoryRefs={categoryRefs}
+              notLoggedIn={notLoggedIn}
+            />
           </Flex>
           <Flex
             width={{ base: '100%', lg: '82%' }}
@@ -298,7 +311,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
             ml={'auto'}
             mr={{ base: '0', lg: '1%' }}
             width={{ base: '100%', lg: '82%' }}
-            {...(!swipeDisable && swipeHandlers)}
+            {...swipeHandlers}
             justifyContent={'center'}
             alignItems="center"
           >
@@ -309,31 +322,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
               alignItems={'center'}
               mt={'2rem'}
             >
-              {displayedData?.map((item, id) => (
-                <Flex
-                  mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
-                  key={id}
-                >
-                  <Suspense fallback={<Skeleton key={id} mt="5rem" />} key={id}>
-                    <Card
-                      title={
-                        i18n.language === 'en' ? item?.title : item?.hindiTitle
-                      }
-                      urlTitle={item?.title}
-                      image={
-                        (!blackListedImgUrls.find(url => url === item.imgURL) &&
-                          item.imgURL) ||
-                        rrImage
-                      }
-                      category={t(`categories.${item?.category.toLowerCase()}`)}
-                      date={formatDate(item?.dateTime, i18n.language)}
-                      readTime={item.avgReadTime}
-                      id={item._id}
-                      articleData={item}
-                    />
-                  </Suspense>
-                </Flex>
-              ))}
+              {memoizedCards}
               {(load || searchLoading) && renderSkeletons}
             </Flex>
           </Flex>
@@ -371,21 +360,19 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
         </Flex>
       </Flex>
       {notLoggedIn && (
-        <Suspense fallback={<Skeleton height="6rem" width="100%" />}>
-          <Flex
-            marginTop="2rem"
-            height="6rem"
-            width="100%"
-            color="white"
-            justifyContent="center"
-            alignItems="center"
-            borderRadius="8px"
-            padding="1rem"
-            textAlign="center"
-          >
-            <GetStarted innerText={t('messages.loginToContinue')} />
-          </Flex>
-        </Suspense>
+        <Flex
+          marginTop="2rem"
+          height="6rem"
+          width="100%"
+          color="white"
+          justifyContent="center"
+          alignItems="center"
+          borderRadius="8px"
+          padding="1rem"
+          textAlign="center"
+        >
+          <GetStarted innerText={t('messages.loginToContinue')} />
+        </Flex>
       )}
       {!hasMoreItems && (user?.newAccount || user?.firstLogin) && (
         <Flex
@@ -423,4 +410,4 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
   )
 }
 
-export default Timeline
+export default React.memo(Timeline)

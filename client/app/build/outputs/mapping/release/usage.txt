@@ -1312,8 +1312,12 @@ com.google.androidbrowserhelper.trusted.PrefUtils:
     private static final java.lang.String KEY_HAS_REQUESTED_NOTIFICATION_PERMISSION
     private static final java.lang.String SHARED_PREFERENCES_NAME
     private void <init>()
-com.google.androidbrowserhelper.trusted.QualityEnforcer$Delegate
-com.google.androidbrowserhelper.trusted.QualityEnforcer
+com.google.androidbrowserhelper.trusted.QualityEnforcer:
+    static final java.lang.String CRASH
+    static final java.lang.String KEY_CRASH_REASON
+    static final java.lang.String KEY_SUCCESS
+    private static final java.lang.String TAG
+    void <init>(com.google.androidbrowserhelper.trusted.QualityEnforcer$Delegate)
 com.google.androidbrowserhelper.trusted.SharedPreferencesTokenStore:
     private static final java.lang.String KEY_TOKEN
     public void setVerifiedProvider(java.lang.String,android.content.pm.PackageManager)
@@ -1362,10 +1366,11 @@ in.co.rapidrecap.www.twa.R$integer
 in.co.rapidrecap.www.twa.R$mipmap
 in.co.rapidrecap.www.twa.R$raw
 in.co.rapidrecap.www.twa.R$string
-in.co.rapidrecap.www.twa.R$style:
-    private void <init>()
+in.co.rapidrecap.www.twa.R$style
 in.co.rapidrecap.www.twa.R$xml
 in.co.rapidrecap.www.twa.R
+in.co.rapidrecap.www.twa.RapidRecapLauncherActivity:
+    private static final long MIN_SPLASH_DURATION
 androidx.core.app.ActivityCompat$$InternalSyntheticThrowCCEIfNotNull$9$87f5f3ee39a507a821c0cac2c41ae97972cc2fd75bcf9c839fb098eb6d4675fb$0
 androidx.core.app.ActivityCompat$1$$InternalSyntheticThrowCCEIfNotNull$9$a4650200ea34729841d2251593f2c5754b8e758eca88770c25593bc1ba2598de$0
 androidx.core.app.ActivityCompat$1

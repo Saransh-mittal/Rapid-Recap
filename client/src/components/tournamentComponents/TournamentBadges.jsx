@@ -9,6 +9,8 @@ import {
 } from '@chakra-ui/react'
 import { badgeConfig } from '../../models/badgeConfig'
 import { keyframes } from '@emotion/react'
+import { useTranslation } from 'react-i18next'
+import { getTournamentCategories } from '../../assets/TournamentCategories' // Adjust the import path
 
 const fadeInScale = keyframes`
   0% {
@@ -30,7 +32,9 @@ const TournamentBadge = ({
   size = 'md',
   badgeName = null,
   onPopoverToggle,
+  isBadgeGallery = false,
 }) => {
+  const { t } = useTranslation('TournamentBadge')
   const [isOpen, setIsOpen] = useState(false)
   const [popoverStyle, setPopoverStyle] = useState({})
   const popoverRef = useRef(null)
@@ -128,6 +132,15 @@ const TournamentBadge = ({
     }
   }, [isOpen])
 
+  // Check if badgeName?.text matches any category key and assign the translated value
+  const categories = getTournamentCategories()
+  const matchedCategory = categories.find(
+    cat => cat.key === badgeName?.text.toLowerCase(),
+  )
+  const translatedBadgeName = matchedCategory
+    ? matchedCategory.label
+    : badgeName?.text
+
   if (!tournamentNumber || !badgeName?.name) return null
 
   return (
@@ -145,7 +158,7 @@ const TournamentBadge = ({
           transform: 'scale(1.05)',
         }}
         mr={mr ? mr : 0}
-        onClick={handleClick}
+        onClick={!isBadgeGallery && handleClick}
       >
         <Image
           src={image}
@@ -166,7 +179,7 @@ const TournamentBadge = ({
           textShadow="1px 1px 2px rgba(0,0,0,0.6)"
           textTransform="capitalize"
         >
-          <Flex>{badgeName?.text}</Flex>
+          <Flex>{translatedBadgeName}</Flex>
           <Flex justifyContent="center" mt={-1}>
             {'#' + tournamentNumber?.toString().padStart(3, '0')}
           </Flex>
@@ -230,7 +243,7 @@ const TournamentBadge = ({
               fontWeight="semibold"
               textAlign="center"
             >
-              Rank {rank} in Tournament #
+              {t('rank')} {rank} {t('inTournament')} #
               {String(tournamentNumber)?.padStart(3, '0')}
             </Text>
             <Text
@@ -238,7 +251,7 @@ const TournamentBadge = ({
               opacity={0.9}
               textAlign="center"
             >
-              Out of {participantCnt} participants
+              {t('outOf')} {participantCnt} {t('participants')}
             </Text>
           </VStack>
         </Box>

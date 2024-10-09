@@ -34,7 +34,7 @@ const UserCard = ({ user, t }) => {
               <Medal color="#ECC94B" size={'25px'} />
             </Flex>
             <VStack alignItems="flex-start" spacing={0}>
-              <Text fontWeight="bold">{t('Your Rank')}</Text>
+              <Text fontWeight="bold">{t('Your_Rank')}</Text>
               <Text fontSize="2xl" fontWeight="bold" color="pink.400">
                 #{user.rank}
               </Text>

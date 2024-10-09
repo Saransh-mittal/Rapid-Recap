@@ -70,7 +70,7 @@
                 android:value="@string/launchUrl" />
         </activity>
         <activity
-            android:name="in.co.rapidrecap.www.twa.LauncherActivity"
+            android:name="in.co.rapidrecap.www.twa.RapidRecapLauncherActivity"
             android:alwaysRetainTaskState="true"
             android:exported="true"
             android:label="@string/launcherName"

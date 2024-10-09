@@ -19,7 +19,7 @@ import { Helmet } from 'react-helmet'
 // Preserve the original UserCard
 import UserCard from '../components/leaderBoardComponents/UserCard'
 import SearchBar from '../components/leaderBoardComponents/SearchBar'
-import LeaderboardRow from '../components/leaderBoardComponents/LeaderboardRow'
+import LeaderboardRow from '../components/leaderBoardComponents/LeaderBoardRow'
 
 const Leaderboard = () => {
   const { t } = useTranslation('LeaderBoard')
@@ -125,7 +125,7 @@ const Leaderboard = () => {
             fontWeight="semibold"
             color={accentColor}
           >
-            Season 2
+            {t('tag')}
           </Text>
         </Box>
 
@@ -173,7 +173,7 @@ const Leaderboard = () => {
               <Spinner size="xl" color={accentColor} />
             </Flex>
           )}
-          <Box ref={ref} h="20px" />
+          <Box ref={ref} h="40px" />
         </Box>
       </VStack>
     </Box>

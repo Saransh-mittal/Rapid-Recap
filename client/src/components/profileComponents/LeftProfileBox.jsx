@@ -41,6 +41,8 @@ const TournamentBadgeGallery = React.lazy(() =>
 
 const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
   const { t } = useTranslation('LeftProfileBox')
+  const { t: TournamentBadgeTranslate } = useTranslation('TournamentBadge')
+
   const toast = useToast()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isBadgeGalleryOpen, setIsBadgeGalleryOpen] = useState(false)
@@ -386,6 +388,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
                   name: selectedBadge?.badgeName,
                   text: selectedBadge?.text,
                 }}
+                t={TournamentBadgeTranslate}
               />
             )}
           </Flex>
@@ -452,17 +455,6 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
             onSubmit={handleSubmitModal}
           />
         )}
-        {isBadgeGalleryOpen && (
-          <TournamentBadgeGallery
-            isOpen={isBadgeGalleryOpen}
-            onClose={() => setIsBadgeGalleryOpen(false)}
-            userBadges={leftProfileView?.badges}
-            onBadgeSelect={handleBadgeSelect}
-            userName={leftProfileView?.name}
-            userInGameName={leftProfileView?.inGameName}
-            displayedBadge={selectedBadge}
-          />
-        )}
       </Suspense>
       <Suspense fallback={null}>
         <GuestLoginModal
@@ -474,6 +466,19 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           onOpen={() => setIsGuestLoggedin(true)}
           t={GuestLoginModaltranslation}
         />
+      </Suspense>
+      <Suspense fallback={null}>
+        {isBadgeGalleryOpen && (
+          <TournamentBadgeGallery
+            isOpen={isBadgeGalleryOpen}
+            onClose={() => setIsBadgeGalleryOpen(false)}
+            userBadges={leftProfileView?.badges}
+            onBadgeSelect={handleBadgeSelect}
+            userName={leftProfileView?.name}
+            userInGameName={leftProfileView?.inGameName}
+            displayedBadge={selectedBadge}
+          />
+        )}
       </Suspense>
     </Flex>
   )

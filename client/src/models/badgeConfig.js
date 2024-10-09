@@ -32,8 +32,8 @@ export const badgeConfig = {
         textPosition: { x: -52, y: 185, bottom: '15%' },
       },
       lg: {
-        width: '80px',
-        height: '80px',
+        width: '70px',
+        height: '70px',
         fontSize: '12px',
         textPosition: { x: -52, y: 200, bottom: '15%' },
       },
@@ -68,8 +68,8 @@ export const badgeConfig = {
         textPosition: { x: -52, y: 185, bottom: '12%' },
       },
       lg: {
-        width: '80px',
-        height: '80px',
+        width: '70px',
+        height: '70px',
         fontSize: '12px',
         textPosition: { x: -52, y: 200, bottom: '12%' },
       },
@@ -78,6 +78,12 @@ export const badgeConfig = {
   RANK_3: {
     image: '/images/rank_3.webp',
     icon: Medal,
+    style: {
+      background: 'linear-gradient(135deg, #CD7F32, #8B4513)',
+      color: '#FFFFFF',
+      textShadow: '0 0 5px rgba(0, 0, 0, 0.5)',
+      boxShadow: '0 0 10px rgba(205, 127, 50, 0.5)',
+    },
     sizeValues: {
       base: {
         width: '40px',
@@ -98,8 +104,8 @@ export const badgeConfig = {
         textPosition: { x: -52, y: 185, bottom: '18%' },
       },
       lg: {
-        width: '80px',
-        height: '80px',
+        width: '70px',
+        height: '70px',
         fontSize: '12px',
         textPosition: { x: -52, y: 200, bottom: '18%' },
       },
@@ -245,8 +251,8 @@ export const badgeConfig = {
         mr: -1,
       },
       lg: {
-        width: '80px',
-        height: '80px',
+        width: '75px',
+        height: '75px',
         fontSize: '12px',
         textPosition: { x: -52, y: 115, bottom: '18%' },
       },
@@ -280,8 +286,8 @@ export const badgeConfig = {
         textPosition: { x: -52, y: 130, bottom: '27%' },
       },
       lg: {
-        width: '80px',
-        height: '80px',
+        width: '70px',
+        height: '70px',
         fontSize: '12px',
         textPosition: { x: -52, y: 140, bottom: '25%' },
       },
@@ -315,8 +321,8 @@ export const badgeConfig = {
         textPosition: { x: -52, y: 130, bottom: '25%' },
       },
       lg: {
-        width: '80px',
-        height: '80px',
+        width: '65px',
+        height: '65px',
         fontSize: '12px',
         textPosition: { x: -52, y: 140, bottom: '18%' },
       },
@@ -352,8 +358,8 @@ export const badgeConfig = {
         mr: -1,
       },
       lg: {
-        width: '80px',
-        height: '80px',
+        width: '70px',
+        height: '70px',
         fontSize: '12px',
         textPosition: { x: -52, y: 140, bottom: '18%' },
       },

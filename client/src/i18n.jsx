@@ -17,7 +17,7 @@ const namespaces = {
     'GetStarted',
   ],
   utils: ['formatDate'],
-  categories: ['categories'],
+  categories: ['categories', 'tournamentCategories'],
   articleComponents: [
     'ArticleHeader',
     'AuthorInfo',
@@ -53,6 +53,7 @@ const namespaces = {
     'QuizConfirmationModal',
     'ShutterAnimation',
     'TournamentQuiz',
+    'TournamentBadge',
   ],
   quizComponents: [
     'BoostedSubmittedQuizInterface',
@@ -146,6 +147,7 @@ const namespaces = {
     'TournamentSelectorDrawer',
     'TournamentModal',
     'LastTournamentRank',
+    'TournamentBadgeGallery',
   ],
   assets: ['Circles', 'Brains', 'CircleAndSocietyData'],
   main: ['App'],
