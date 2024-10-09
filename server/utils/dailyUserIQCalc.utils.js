@@ -46,9 +46,12 @@ const handleSocietyOrCircleUpgrade = async (
   currIQScore,
   previousIQForXp,
   awardableXpOrNot,
+  session = null,
 ) => {
   try {
-    const user = await User.findById(userId)
+    const userQuery = User.findById(userId)
+    const user = session ? await userQuery.session(session) : await userQuery
+
     if (!user) {
       console.error(`User not found for ID: ${userId}`)
       return
@@ -87,30 +90,21 @@ const handleSocietyOrCircleUpgrade = async (
         user.baseUpgradeIQ = currSocietyCircle.IQ_Lower
 
         if (awardableXpOrNot) {
-          await logActivity({
+          const activityParams = {
             userInGameName: user.inGameName,
             type: activityTypes.SOCIETY_OR_CIRCLE_UPGRADE.type,
             userIQ: currIQScore,
             previousIQ: previousIQForXp,
-          })
+          }
 
-          // ---- Create Inbox Notification ----
-          // const notificationTitle = localizedI18n.t('upgradeTitle')
-          // const notificationText = societyOrCircleUpgradeTemplate(
-          //   changedSocietyOrCircle === 'society'
-          //     ? currSocietyCircle.society
-          //     : currSocietyCircle.circle,
-          //   changedSocietyOrCircle,
-          // ) // Use the HTML template for society or circle upgrade
+          if (session) {
+            activityParams.session = session
+          }
 
-          // const newNotification = new ApplicationUpdates({
-          //   userId: user._id,
-          //   title: notificationTitle,
-          //   mainText: notificationText, // HTML content for the inbox notification
-          //   img: currSocietyCircle.img || '', // Optional image
-          //   read: false,
-          // })
-          // await newNotification.save()
+          await logActivity(activityParams)
+
+          // Commented out notification creation code
+          // ... (as in the original function)
         }
       } else {
         user.societyUpgradeMessage = ''
@@ -124,12 +118,25 @@ const handleSocietyOrCircleUpgrade = async (
     user.currentSociety = currSocietyCircle.society
     user.currentCircle = currSocietyCircle.circle
 
-    await user.save()
+    if (session) {
+      await user.save({ session })
+    } else {
+      await user.save()
+    }
+
+    return {
+      hasSocietyOrCircleChanged,
+      changedSocietyOrCircle,
+      isUpgrade,
+      newSociety: currSocietyCircle.society,
+      newCircle: currSocietyCircle.circle,
+    }
   } catch (error) {
     console.error(
       `Error in handleSocietyOrCircleUpgrade for user ${userId}: ${error.message}`,
     )
     console.error(`Stack trace: ${error.stack}`)
+    throw error
   }
 }
 
@@ -404,3 +411,4 @@ const dailyUserIQCalc = async () => {
 }
 
 module.exports = dailyUserIQCalc
+module.exports = { handleSocietyOrCircleUpgrade }
