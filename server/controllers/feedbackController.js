@@ -97,6 +97,9 @@ const getStoryFeedbackStats = asyncHandler(async (req, res) => {
   res.json(stats[0] || { averageRating: 0, totalFeedback: 0 })
 })
 
+// @desc  Create a new feedback for a quiz
+// @route POST /api/contact/feedback/quiz
+// @access Private
 const createQuizFeedback = asyncHandler(async (req, res) => {
   const { quizId, rating, message } = req.body
   const userId = req.user._id // Assuming you have user authentication middleware
@@ -132,7 +135,9 @@ const createQuizFeedback = asyncHandler(async (req, res) => {
 
   res.status(201).json(newFeedback)
 })
-
+// @desc   Get average rating and total feedback count for quizzes
+// @route  GET /api/admin/feedback/quiz/stats
+// @access Admin
 const getQuizFeedbackStats = asyncHandler(async (req, res) => {
   const { category } = req.query
 
@@ -153,6 +158,9 @@ const getQuizFeedbackStats = asyncHandler(async (req, res) => {
   res.json(stats[0] || { averageRating: 0, totalFeedback: 0 })
 })
 
+// @desc   Get feedback for a quiz
+// @route  GET /api/admin/feedback/quiz/:quizId
+// @access Admin
 const getQuizFeedback = async (req, res) => {
   try {
     const { quizId } = req.query

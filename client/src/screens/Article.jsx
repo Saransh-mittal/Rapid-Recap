@@ -67,6 +67,7 @@ const Article = () => {
   const [articleLoading, setArticleLoading] = useState(
     articleData ? false : true,
   )
+  const [loadingRealatedArticles, setLoadingRelatedArticles] = useState({})
   const [themedContent, setThemedContent] = useState(null)
   const [showQuiz, setShowQuiz] = useState(false)
   const [textHeight, setTextHeight] = useState(0)
@@ -147,6 +148,7 @@ const Article = () => {
   const fetchArticle = useCallback(async () => {
     if (loginCheckStatus === 'pending') return
     try {
+      // setLoadingRelatedArticles(prev => ({ ...prev, [id]: true }))
       const response = await axios.get(
         `/api/articles/article/${id}?lang=${
           user?.userLanguage ? user?.userLanguage : i18n.language
@@ -185,6 +187,11 @@ const Article = () => {
       })
     } finally {
       setArticleLoading(false)
+      setLoadingRelatedArticles(prev => ({ ...prev, [id]: false }))
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
     }
   }, [id, toast, loginCheckStatus, user, dispatch])
 
@@ -463,7 +470,8 @@ const Article = () => {
                 trackGenerateQuizClick={trackGenerateQuizClick}
                 setShowQuiz={setShowQuiz}
                 showQuiz={showQuiz}
-                // onOpen={onOpen}
+                loadingRealatedArticles={loadingRealatedArticles}
+                setLoadingRelatedArticles={setLoadingRelatedArticles}
                 totalUsersGivenQuiz={totalUsersGivenQuiz}
                 articleHeight={articleHeight}
                 article={article}
@@ -478,7 +486,7 @@ const Article = () => {
         <QuinBoostModal
           isOpen={isQuinBoostModalOpen}
           onClose={closeModal}
-          quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
+          currentQuizCount={user.todaysQuizCnt}
           isStateBoosted={isBoosted}
         />
         {user && <TrackTime userId={user?._id} articleId={id} />}

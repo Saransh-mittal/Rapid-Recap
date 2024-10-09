@@ -105,7 +105,7 @@ const mailForStreakBroken = async () => {
           localizedI18n.t(key, { ns: 'mail.utils', ...options })
         await sendNotification({
           userId: user._id,
-
+          url: '/home/all',
           title: t('streak_broken_notification_title'),
           body: t('streak_broken_notification_body', {
             name: user.name.split(' ')[0],
@@ -127,6 +127,7 @@ const mailForStreakBroken = async () => {
       } else if (streakBrokenDays % 7 === 0 && streakBrokenDays > 2) {
         await sendNotification({
           userId: user._id,
+          url: '/home/all',
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
           title: t('streak_seven_periodic_notification_title'),
@@ -150,6 +151,7 @@ const mailForStreakBroken = async () => {
       if (noLoginDaysSpent === 2) {
         await sendNotification({
           userId: user._id,
+          url: '/home/all',
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
           title: t('no_login_two_days_notification_title'),
@@ -169,6 +171,7 @@ const mailForStreakBroken = async () => {
       } else if (noLoginDaysSpent % 7 === 0 && noLoginDaysSpent > 2) {
         await sendNotification({
           userId: user._id,
+          url: '/home/all',
           image:
             'https://res.cloudinary.com/dxstsrnbs/image/upload/v1720262006/dailyStreakBroken-min_v1w1oo.png',
           title: t('no_login_seven_days_notification_title'),
@@ -212,6 +215,7 @@ const mailForMaintainStreakReminder = async ({ template }) => {
       if (streakBrokenDays === 1) {
         await sendNotification({
           userId: user._id,
+          url: '/home/all',
           ...template.notif({ name: user.name.split(' ')[0] }),
         })
         await transporter.sendMail({

@@ -4,10 +4,16 @@ import Bubbles from '../miscellaneous/bubbles'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
-const QuinBoost = ({ isBoosted }) => {
+const QuinBoost = ({ isBoosted, handleBoostClick }) => {
   const { t } = useTranslation('QuinBoost')
   return (
-    <Flex marginTop={'5px'} alignItems="center">
+    <Flex
+      marginTop={'5px'}
+      alignItems="center"
+      onClick={handleBoostClick}
+      // _hover={{ cursor: pointer }}
+      cursor={'pointer'}
+    >
       <Bubbles />
       <motion.div
         style={{

@@ -41,7 +41,9 @@ const TournamentManagement = lazy(() =>
 const StoryFeedbackAnalysis = lazy(() =>
   import('../components/dashboardComponents/StoryFeedbackAnalysis'),
 )
-
+const QuizFeedbackAnalysis = lazy(() =>
+  import('../components/dashboardComponents/QuizFeedbackAnalysis'),
+)
 const TestTournamentManagement = lazy(() =>
   import('../components/dashboardComponents/TestTournamentManagement'),
 )
@@ -89,6 +91,11 @@ const Dashboard = () => {
     isOpen: isStoryFeedbackAnalysisOpen,
     onOpen: onStoryFeedbackAnalysisOpen,
     onClose: onStoryFeedbackAnalysisClose,
+  } = useDisclosure()
+  const {
+    isOpen: isQuizFeedbackAnalysisOpen,
+    onOpen: onQuizFeedbackAnalysisOpen,
+    onClose: onQuizFeedbackAnalysisClose,
   } = useDisclosure()
   const {
     isOpen: isTestTournamentManagementOpen,
@@ -374,6 +381,7 @@ const Dashboard = () => {
               {renderModalButton('Manage Articles', onArticleManagementOpen)}
               {renderModalButton('Current Affairs', onCurrentAffairsOpen)}
               {renderModalButton('Story Feedback', onStoryFeedbackAnalysisOpen)}
+              {renderModalButton('Quiz Feedback', onQuizFeedbackAnalysisOpen)}
               {renderModalButton(
                 'Manage Test Tournament',
                 onTestTournamentManagementOpen,
@@ -496,6 +504,12 @@ const Dashboard = () => {
         <StoryFeedbackAnalysis
           isOpen={isStoryFeedbackAnalysisOpen}
           onClose={onStoryFeedbackAnalysisClose}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <QuizFeedbackAnalysis
+          isOpen={isQuizFeedbackAnalysisOpen}
+          onClose={onQuizFeedbackAnalysisClose}
         />
       </Suspense>
       <Suspense fallback={<Spinner />}>

@@ -35,7 +35,10 @@ const BoostSection = React.memo(
     return (
       <Flex mb={4} flexDirection="column">
         {isQuinBoostAvailable ? (
-          <QuinBoost isBoosted={isBoosted} />
+          <QuinBoost
+            isBoosted={isBoosted}
+            handleBoostClick={handleBoostClick}
+          />
         ) : (
           !isBoosted && (
             <Flex flexDirection={'column'}>

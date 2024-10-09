@@ -31,6 +31,7 @@ import { useTranslation } from 'react-i18next'
 import { setIsOpen } from '../../redux/quizSlice'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
 import rrImage from '/images/rrlogo_HD.webp'
+import { useNavigate } from 'react-router-dom'
 
 const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
 const QuizExpired = React.lazy(() => import('./QuizExpired'))
@@ -53,6 +54,8 @@ const Sidebar = ({
   id,
   isQuizGivenLoading,
   i18n,
+  loadingRealatedArticles,
+  setLoadingRelatedArticles,
 }) => {
   const { t } = useTranslation('Sidebar')
   const { t: formatDateTranslate } = useTranslation('formatDate')
@@ -66,6 +69,8 @@ const Sidebar = ({
   const [pageRelated, setPageRelated] = useState(1)
   const [loading, setLoading] = useState(false)
   const [latestNews, setLatestNews] = useState([])
+  // const [loadingArticles, setLoadingArticles] = useState({})
+  const navigate = useNavigate()
   const dispatchRedux = useDispatch()
 
   const isLoaded = useMemo(() => {
@@ -98,10 +103,11 @@ const Sidebar = ({
     setShowQuiz,
     showQuiz,
     dispatchRedux,
+    t,
   ])
 
   const handleRelatedArticleClick = useCallback(
-    (e, item) => {
+    async (e, item) => {
       if (notLoggedIn) {
         e.preventDefault()
         toast({
@@ -113,13 +119,44 @@ const Sidebar = ({
         })
         return
       }
+
       playClick()
-      window.location.href =
+
+      // cut after article id
+      const pathname = location.pathname.split('/').slice(0, 3).join('/')
+
+      if (
+        pathname === `/article/${item._id}/${slugify(item.title)}` ||
+        pathname === `/article/${item._id}/${slugify(item.title)}/` ||
+        pathname === `/article/${item._id}` ||
+        pathname === `/article/${item._id}/`
+      ) {
+        toast({
+          title: t('alreadyOnArticle'),
+          description: t('alreadyOnArticleDesc'),
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        })
+        return
+      }
+      // If the user is already on the article, give a toast message
+
+      setLoadingRelatedArticles(prev => ({ ...prev, [item._id]: true }))
+
+      const path =
         i18n.language === 'en'
           ? `/article/${item._id}/${slugify(item.title)}`
           : `/article/${item._id}/${slugify(item.hindiTitle)}`
+
+      navigate(path)
+
+      // Reset loading state after navigation
+      // setTimeout(() => {
+      //   setLoadingArticles(prev => ({ ...prev, [item._id]: false }))
+      // }, 1000)
     },
-    [notLoggedIn, playClick, toast],
+    [notLoggedIn, playClick, toast, navigate, i18n.language, t],
   )
 
   const fetchRelatedArticles = async () => {
@@ -137,6 +174,7 @@ const Sidebar = ({
       setLoading(false)
     }
   }
+
   const fetchRecommendedArticles = async () => {
     try {
       setLoading(true)
@@ -154,9 +192,11 @@ const Sidebar = ({
       setLoading(false)
     }
   }
+
   useEffect(() => {
     fetchRecommendedArticles()
   }, [])
+
   const renderArticles = () => {
     const articlesToShow = showRelated
       ? latestNews.filter(
@@ -190,7 +230,30 @@ const Sidebar = ({
         }}
         mb={3}
         flexDirection={'column'}
+        position="relative"
       >
+        {loadingRealatedArticles[item._id] && (
+          <Flex
+            position="absolute"
+            top="0"
+            left="0"
+            right="0"
+            bottom="0"
+            backgroundColor="rgba(0, 0, 0, 0.6)"
+            justifyContent="center"
+            alignItems="center"
+            borderRadius="xl"
+            zIndex={3}
+          >
+            <Spinner
+              thickness="4px"
+              speed="0.65s"
+              emptyColor="gray.200"
+              color="blue.500"
+              size="xl"
+            />
+          </Flex>
+        )}
         <Flex w="100%" justifyContent="space-between">
           <Text
             m={0}
@@ -200,7 +263,6 @@ const Sidebar = ({
             fontWeight="bold"
             letterSpacing="1px"
           >
-            {/* {item.date}, */}
             {formatDate(item?.dateTime, formatDateTranslate, i18n.language)}
           </Text>
           <Text
