@@ -3,8 +3,8 @@
 # min_api: 19
 # common_typos_disable
 # {"id":"com.android.tools.r8.mapping","version":"2.2"}
-# pg_map_id: 66395a9
-# pg_map_hash: SHA-256 66395a97edb14653f78be7fd51c7048d61c0f023f1db5451456d52611240dbd8
+# pg_map_id: 32f640f
+# pg_map_hash: SHA-256 32f640fda13ebca949396abdcddfcc513ceb6306004ed49e5cb463f318ba2c8e
 android.support.customtabs.ICustomTabsCallback -> a.a:
 # {"id":"sourceFile","fileName":"ICustomTabsCallback.java"}
     void onPostMessage(java.lang.String,android.os.Bundle) -> c
@@ -3602,40 +3602,52 @@ in.co.rapidrecap.www.twa.RapidRecapLauncherActivity -> in.co.rapidrecap.www.twa.
 # {"id":"sourceFile","fileName":"RapidRecapLauncherActivity.java"}
     android.view.View splashScreen -> g
     long splashStartTime -> h
-    1:4:void <init>():14:14 -> <init>
-    1:7:android.net.Uri getLaunchingUrl():55:55 -> h
-    1:5:void onBackPressed():66:66 -> onBackPressed
-    6:9:void onBackPressed():69:69 -> onBackPressed
-    1:3:void onCreate(android.os.Bundle):22:22 -> onCreate
-    4:9:void onCreate(android.os.Bundle):25:25 -> onCreate
-    10:21:void onCreate(android.os.Bundle):26:26 -> onCreate
-    22:35:void onCreate(android.os.Bundle):30:30 -> onCreate
-    36:38:void onCreate(android.os.Bundle):38:38 -> onCreate
-    39:45:void onCreate(android.os.Bundle):41:41 -> onCreate
-    46:50:void onCreate(android.os.Bundle):42:42 -> onCreate
-    51:60:void onCreate(android.os.Bundle):43:43 -> onCreate
-    61:66:void onCreate(android.os.Bundle):47:47 -> onCreate
-    67:82:void onCreate(android.os.Bundle):50:50 -> onCreate
-    1:3:void onResume():60:60 -> onResume
-    4:7:void onResume():61:61 -> onResume
+    1:4:void <init>():15:15 -> <init>
+    1:10:android.net.Uri getLaunchingUrl():56:56 -> h
+    11:23:android.net.Uri getLaunchingUrl():57:57 -> h
+    24:30:android.net.Uri getLaunchingUrl():60:60 -> h
+    1:5:void onBackPressed():88:88 -> onBackPressed
+    6:9:void onBackPressed():91:91 -> onBackPressed
+    1:3:void onCreate(android.os.Bundle):23:23 -> onCreate
+    4:9:void onCreate(android.os.Bundle):26:26 -> onCreate
+    10:13:void onCreate(android.os.Bundle):27:27 -> onCreate
+    14:21:void onCreate(android.os.Bundle):28:28 -> onCreate
+    22:35:void onCreate(android.os.Bundle):31:31 -> onCreate
+    36:38:void onCreate(android.os.Bundle):39:39 -> onCreate
+    39:45:void onCreate(android.os.Bundle):42:42 -> onCreate
+    46:50:void onCreate(android.os.Bundle):43:43 -> onCreate
+    51:60:void onCreate(android.os.Bundle):44:44 -> onCreate
+    61:66:void onCreate(android.os.Bundle):48:48 -> onCreate
+    67:82:void onCreate(android.os.Bundle):51:51 -> onCreate
+    1:3:void onNewIntent(android.content.Intent):65:65 -> onNewIntent
+    4:6:void onNewIntent(android.content.Intent):66:66 -> onNewIntent
+    7:12:void onNewIntent(android.content.Intent):67:67 -> onNewIntent
+    13:20:void onNewIntent(android.content.Intent):68:68 -> onNewIntent
+    1:3:void onResume():82:82 -> onResume
+    4:7:void onResume():83:83 -> onResume
     1:1:void $r8$lambda$AoZopUZp4YJvSJ1yimEkeiDBU8k(in.co.rapidrecap.www.twa.RapidRecapLauncherActivity):0:0 -> p
       # {"id":"com.android.tools.r8.synthesized"}
     1:1:void $r8$lambda$gQIgcMr2iAeJOKyunbg0FMDT7Ug(in.co.rapidrecap.www.twa.RapidRecapLauncherActivity):0:0 -> q
       # {"id":"com.android.tools.r8.synthesized"}
     1:1:void $r8$lambda$tHPeDdaCjqhobGLPLVzTjGZ1qzs(in.co.rapidrecap.www.twa.RapidRecapLauncherActivity):0:0 -> r
       # {"id":"com.android.tools.r8.synthesized"}
-    1:13:void checkAndRemoveSplashScreen():73:73 -> s
-    14:17:void checkAndRemoveSplashScreen():75:75 -> s
-    18:32:void checkAndRemoveSplashScreen():77:77 -> s
-    1:12:void lambda$removeSplashScreen$0():87:87 -> t
-    13:26:void lambda$removeSplashScreen$0():88:88 -> t
-    27:29:void lambda$removeSplashScreen$0():90:90 -> t
-    1:12:void removeSplashScreen():82:82 -> u
-    13:19:void removeSplashScreen():83:83 -> u
-    20:25:void removeSplashScreen():84:84 -> u
-    26:34:void removeSplashScreen():85:85 -> u
-    35:38:void removeSplashScreen():86:86 -> u
-    39:42:void removeSplashScreen():92:92 -> u
+    1:13:void checkAndRemoveSplashScreen():95:95 -> s
+    14:17:void checkAndRemoveSplashScreen():97:97 -> s
+    18:32:void checkAndRemoveSplashScreen():99:99 -> s
+    1:12:void lambda$removeSplashScreen$0():109:109 -> t
+    13:26:void lambda$removeSplashScreen$0():110:110 -> t
+    27:29:void lambda$removeSplashScreen$0():112:112 -> t
+    1:9:void launchTwa(android.net.Uri):73:73 -> u
+    10:14:void launchTwa(android.net.Uri):74:74 -> u
+    15:17:void launchTwa(android.net.Uri):75:75 -> u
+    18:20:void launchTwa(android.net.Uri):76:76 -> u
+    21:24:void launchTwa(android.net.Uri):77:77 -> u
+    1:12:void removeSplashScreen():104:104 -> v
+    13:19:void removeSplashScreen():105:105 -> v
+    20:25:void removeSplashScreen():106:106 -> v
+    26:34:void removeSplashScreen():107:107 -> v
+    35:38:void removeSplashScreen():108:108 -> v
+    39:42:void removeSplashScreen():114:114 -> v
 in.co.rapidrecap.www.twa.RapidRecapLauncherActivity$$ExternalSyntheticApiModelOutline0 -> p.b:
 # {"id":"sourceFile","fileName":"R8$$SyntheticClass"}
 # {"id":"com.android.tools.r8.synthesized"}

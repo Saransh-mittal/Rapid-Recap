@@ -1,5 +1,6 @@
 package in.co.rapidrecap.www.twa;
 
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Build;
@@ -23,8 +24,8 @@ public class RapidRecapLauncherActivity extends LauncherActivity {
 
         // Set up full-screen immersive mode
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            getWindow().getAttributes().layoutInDisplayCutoutMode =
-                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow()
+                    .getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
 
         getWindow().getDecorView().setSystemUiVisibility(
@@ -52,7 +53,28 @@ public class RapidRecapLauncherActivity extends LauncherActivity {
 
     @Override
     protected Uri getLaunchingUrl() {
+        Uri uri = getIntent().getData();
+        if (uri != null && uri.toString().startsWith("https://www.rapidrecap.co.in/article/")) {
+            return uri;
+        }
         return Uri.parse("https://www.rapidrecap.co.in");
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (intent.getData() != null) {
+            launchTwa(intent.getData());
+        }
+    }
+
+    private void launchTwa(Uri uri) {
+        Intent intent = new Intent(this, getClass());
+        intent.setData(uri);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     @Override
