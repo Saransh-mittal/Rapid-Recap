@@ -618,10 +618,7 @@ export default function Profile() {
               padding={{ xl: isLoading ? 0 : '20px', base: '0' }}
               borderRadius="10px"
               flexDirection={{ base: 'column', xl: 'row' }}
-              backgroundColor={{
-                base: 'transparent',
-                xl: 'rgba(15, 13, 21, 0.8)',
-              }}
+              backgroundColor="rgba(15, 13, 21, 0.8)"
               boxShadow={{
                 base: 'none',
                 xl: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',

@@ -3,17 +3,17 @@
     <!-- Background color -->
     <item android:drawable="@color/splash_background_color" />
 
-    <!-- Background image scaled to fill -->
+    <!-- Background image -->
     <item>
         <bitmap
             android:src="@drawable/splash_background"
-            android:gravity="fill_horizontal|fill_vertical"
+            android:gravity="center"
             android:tileMode="disabled" />
     </item>
 
     <!-- Your logo -->
     <item android:gravity="center"
-          android:top="-70dp">  <!-- Adjust this value to move the icon up -->
+          android:top="-70dp">
         <bitmap
             android:src="@drawable/splash"
             android:gravity="center" />
@@ -21,7 +21,7 @@
 
     <!-- Rapid Recap text -->
     <item android:gravity="center"
-          android:top="120dp">  <!-- Adjust this value to position the text below the icon -->
+          android:top="120dp">
         <bitmap
             android:src="@drawable/rapid_recap_text"
             android:gravity="center" />

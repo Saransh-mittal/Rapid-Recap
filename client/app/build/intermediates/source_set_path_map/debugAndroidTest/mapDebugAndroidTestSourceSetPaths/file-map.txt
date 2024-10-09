@@ -1,0 +1,4 @@
+in.co.rapidrecap.www.twa.test.app-androidTest-0 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/generated/res/resValues/androidTest/debug
+in.co.rapidrecap.www.twa.test.app-mergeDebugAndroidTestResources-1 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
+in.co.rapidrecap.www.twa.test.app-mergeDebugAndroidTestResources-2 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
+in.co.rapidrecap.www.twa.test.app-debugAndroidTest-3 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/merged_res/debugAndroidTest/mergeDebugAndroidTestResources

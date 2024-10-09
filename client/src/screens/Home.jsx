@@ -27,7 +27,7 @@ const UpgradeModal = lazy(() =>
 )
 
 const Home = () => {
-  const { t } = useTranslation('Home') // Use Home namespace for translations
+  const { t } = useTranslation('Home')
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
     state => state.auth,
   )
@@ -43,11 +43,11 @@ const Home = () => {
   const toast = useToast()
 
   const [items, setItems] = useState(stateItems)
-  const [page, setPage] = useState(1) // Always start from page 1
+  const [page, setPage] = useState(1)
   const [load, setLoad] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(true)
   const [hasMoreItems, setHasMoreItems] = useState(true)
-  const [prevCategory, setPrevCategory] = useState(stateCategory)
+  const prevCategoryRef = useRef(stateCategory)
   const currentCategoryRef = useRef(category)
   const cancelTokenSourceRef = useRef(null)
 
@@ -109,7 +109,7 @@ const Home = () => {
         } else {
           console.error(error.message)
           toast({
-            title: t('fetch_error'), // Use translation for error message
+            title: t('fetch_error'),
             status: 'error',
             duration: 5000,
             isClosable: true,
@@ -175,26 +175,38 @@ const Home = () => {
   }, [category, isAuthenticated, combinedScrollHandler, navigate])
 
   useEffect(() => {
-    if (category !== prevCategory) {
+    if (category !== prevCategoryRef.current) {
       setPage(1)
       setItems([])
       setHasMoreItems(true)
       dispatchRedux(
         setCategory(
-          category !== '' && category ? category.toLocaleLowerCase() : category,
+          category !== '' && category ? category.toLowerCase() : category,
         ),
       )
       currentCategoryRef.current = category
       fetchData(1, category)
       dispatchRedux(setPageRedux(0))
       dispatchRedux(setItemsState([]))
-      setPrevCategory(category)
-      // Reset scroll position when category changes
+      prevCategoryRef.current = category
       window.scrollTo(0, 0)
     } else {
       fetchData(page, category)
     }
-  }, [category, page, prevCategory, fetchData, dispatchRedux, loginCheckStatus])
+  }, [category, page, fetchData, dispatchRedux, loginCheckStatus])
+
+  const memoizedTimeline = useMemo(
+    () => (
+      <Timeline
+        setHasMoreItems={setHasMoreItems}
+        hasMoreItems={hasMoreItems}
+        data={items}
+        load={load}
+        setLoad={setLoad}
+      />
+    ),
+    [hasMoreItems, items, load],
+  )
 
   return (
     <Box marginTop={'4rem'} w={'100%'}>
@@ -210,17 +222,11 @@ const Home = () => {
           <UpgradeModal
             isOpen={showUpgradeModal}
             onClose={() => setShowUpgradeModal(false)}
-            title={t('upgrade_modal_title')} // Translation for modal title
-            content={t('upgrade_modal_content')} // Translation for modal content
+            title={t('upgrade_modal_title')}
+            content={t('upgrade_modal_content')}
           />
         )}
-        <Timeline
-          setHasMoreItems={setHasMoreItems}
-          hasMoreItems={hasMoreItems}
-          data={items}
-          load={load}
-          setLoad={setLoad}
-        />
+        {memoizedTimeline}
       </Suspense>
       <WiseWeb
         isOpen={isOpenWiseWeb}
@@ -232,4 +238,4 @@ const Home = () => {
   )
 }
 
-export default Home
+export default React.memo(Home)

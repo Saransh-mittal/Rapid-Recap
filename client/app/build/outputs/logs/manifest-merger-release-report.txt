@@ -1,282 +1,284 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:22:1-198:12
-INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:22:1-198:12
-INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:22:1-198:12
-INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:22:1-198:12
-MERGED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/d3335fbdff4200978ad121d7b141def7/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:17:1-36:12
-MERGED from [androidx.browser:browser:1.4.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/b511174c15fdde7dea3e957094b4390b/transformed/browser-1.4.0/AndroidManifest.xml:17:1-24:12
-MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2144911bb09dce3a07f407e3b390637e/transformed/core-1.1.0/AndroidManifest.xml:17:1-26:12
-MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2fd04857057ce230bd6016b4ac1ced40/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:17:1-27:12
-MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/b0650a412e26a3a2ee3caaa6aaf8b7f8/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.lifecycle:lifecycle-runtime:2.0.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/e807fb6701c5feba89b5db3fc097d290/transformed/lifecycle-runtime-2.0.0/AndroidManifest.xml:17:1-22:12
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:2:1-146:12
+INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:2:1-146:12
+INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:2:1-146:12
+INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:2:1-146:12
+MERGED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:17:1-36:12
+MERGED from [androidx.browser:browser:1.4.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f0abfc1a3891d4408403b376aae96b94/transformed/browser-1.4.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/AndroidManifest.xml:17:1-26:12
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/cb0a083732e91262327520d8934ddc3f/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/15e8ea78d6bf23911af6237a0dc507c3/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.0.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/8c8f075a23d7b08e31620d729b2b7c2f/transformed/lifecycle-runtime-2.0.0/AndroidManifest.xml:17:1-22:12
 	package
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:23:5-39
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:3:5-39
 		INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml
 	android:versionName
 		INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml
 	android:versionCode
 		INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml
 	xmlns:android
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:22:11-69
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:2:11-69
 uses-permission#android.permission.POST_NOTIFICATIONS
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:26:9-80
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:5:5-76
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:26:26-78
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:5:22-74
 application
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:35:5-197:19
-INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:35:5-197:19
-MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2144911bb09dce3a07f407e3b390637e/transformed/core-1.1.0/AndroidManifest.xml:24:5-89
-MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2144911bb09dce3a07f407e3b390637e/transformed/core-1.1.0/AndroidManifest.xml:24:5-89
-MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2fd04857057ce230bd6016b4ac1ced40/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:24:5-25:19
-MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2fd04857057ce230bd6016b4ac1ced40/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:24:5-25:19
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:7:5-145:19
+INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:7:5-145:19
+MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/AndroidManifest.xml:24:5-89
+MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/AndroidManifest.xml:24:5-89
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/cb0a083732e91262327520d8934ddc3f/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/cb0a083732e91262327520d8934ddc3f/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:24:5-25:19
 	android:extractNativeLibs
 		INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml
 	android:appComponentFactory
-		ADDED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2144911bb09dce3a07f407e3b390637e/transformed/core-1.1.0/AndroidManifest.xml:24:18-86
+		ADDED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/AndroidManifest.xml:24:18-86
 	android:supportsRtl
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:43:9-35
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:13:9-35
 	android:label
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:39:9-40
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:11:9-40
 	android:manageSpaceActivity
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:41:9-105
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:12:9-105
 	android:icon
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:38:9-43
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:10:9-43
 	android:allowBackup
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:37:9-35
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:9:9-35
 	android:theme
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:44:9-68
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:14:9-68
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:36:9-35
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:8:9-35
 meta-data#asset_statements
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:46:9-48:59
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:16:9-18:59
 	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:48:13-56
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:18:13-56
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:47:13-44
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:17:13-44
 meta-data#web_manifest_url
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:53:9-55:58
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:20:9-22:54
 	android:value
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:55:17-55
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:22:13-51
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:54:17-48
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:21:13-44
 meta-data#twa_generator
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:58:9-60:52
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:24:9-26:52
 	android:value
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:60:13-49
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:26:13-49
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:59:13-41
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:25:13-41
 activity#com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:67:13-71:24
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:28:9-32:20
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:67:23-104
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:28:19-100
 meta-data#android.support.customtabs.trusted.MANAGE_SPACE_URL
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:68:13-70:53
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:29:13-31:53
 	android:value
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:70:17-50
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:31:17-50
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:69:17-83
-activity#in.co.rapidrecap.www.twa.LauncherActivity
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:9-158:20
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:30:17-83
+activity#in.co.rapidrecap.www.twa.RapidRecapLauncherActivity
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:34:9-111:20
 	android:screenOrientation
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:77:13-52
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:37:13-52
 	android:label
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:78:13-49
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:38:13-49
 	android:exported
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:79:13-36
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:39:13-36
 	android:alwaysRetainTaskState
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:76:13-49
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:36:13-49
 	android:theme
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:75:9-43
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:35:13-47
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:19-50
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:34:19-61
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:80:13-83:21
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:40:13-43:29
 action#android.intent.action.MAIN
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:81:9-61
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:41:17-69
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:81:17-58
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:41:25-66
 category#android.intent.category.LAUNCHER
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:82:9-69
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:42:17-77
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:82:19-66
-meta-data#android.support.customtabs.trusted.DEFAULT_URL
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:84:13-86:64
-	android:value
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:86:17-61
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:85:17-78
-meta-data#android.support.customtabs.trusted.STATUS_BAR_COLOR
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:88:13-90:58
-	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:90:17-55
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:89:17-83
-meta-data#android.support.customtabs.trusted.STATUS_BAR_COLOR_DARK
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:92:13-94:62
-	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:94:17-59
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:93:17-88
-meta-data#android.support.customtabs.trusted.NAVIGATION_BAR_COLOR
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:96:13-98:61
-	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:98:17-58
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:97:17-87
-meta-data#android.support.customtabs.trusted.NAVIGATION_BAR_COLOR_DARK
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:100:13-102:65
-	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:102:17-62
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:101:17-92
-meta-data#androix.browser.trusted.NAVIGATION_BAR_DIVIDER_COLOR
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:104:13-106:68
-	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:106:17-65
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:105:17-84
-meta-data#androix.browser.trusted.NAVIGATION_BAR_DIVIDER_COLOR_DARK
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:108:13-110:72
-	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:110:17-69
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:109:17-89
-meta-data#android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:112:13-114:54
-	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:114:9-51
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:113:9-80
-meta-data#android.support.customtabs.trusted.SPLASH_SCREEN_FILL_TYPE
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:115:5-117:39
-	android:value
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:117:9-36
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:116:9-82
-meta-data#android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:122:13-123:71
-	android:value
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:123:17-69
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:122:24-105
-meta-data#android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:125:13-126:60
-	android:value
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:126:17-58
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:125:24-97
-meta-data#android.app.shortcuts
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:128:13-97
-	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:128:61-94
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:128:24-60
-meta-data#android.support.customtabs.trusted.FALLBACK_STRATEGY
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:130:13-131:56
-	android:value
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:131:17-53
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:130:24-91
-meta-data#android.support.customtabs.trusted.SCREEN_ORIENTATION
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:137:13-138:54
-	android:value
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:138:17-52
-	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:137:24-92
-intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:host:@string/hostName+data:scheme:https
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:149:13-155:29
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:42:27-74
+intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:host:www.rapidrecap.co.in+data:pathPrefix:/article/+data:scheme:https
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:46:13-54:29
 	android:autoVerify
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:149:28-53
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:46:28-53
 action#android.intent.action.VIEW
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:150:17-68
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:47:17-69
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:150:25-66
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:47:25-66
 category#android.intent.category.DEFAULT
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:151:17-76
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:48:17-76
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:151:27-73
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:48:27-73
 category#android.intent.category.BROWSABLE
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:152:17-77
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:49:17-78
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:152:27-75
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:49:27-75
 data
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:153:17-154:54
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:50:17-53:54
 	android:host
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:154:21-52
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:52:21-56
 	android:scheme
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:153:23-45
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:51:21-43
+	android:pathPrefix
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:53:21-51
+meta-data#android.support.customtabs.trusted.DEFAULT_URL
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:56:13-58:64
+	android:value
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:58:17-61
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:57:17-78
+meta-data#android.support.customtabs.trusted.STATUS_BAR_COLOR
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:60:13-62:58
+	android:resource
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:62:17-55
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:61:17-83
+meta-data#android.support.customtabs.trusted.STATUS_BAR_COLOR_DARK
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:64:13-66:62
+	android:resource
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:66:17-59
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:65:17-88
+meta-data#android.support.customtabs.trusted.NAVIGATION_BAR_COLOR
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:68:13-70:61
+	android:resource
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:70:17-58
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:69:17-87
+meta-data#android.support.customtabs.trusted.NAVIGATION_BAR_COLOR_DARK
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:72:13-74:65
+	android:resource
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:17-62
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:73:17-92
+meta-data#androix.browser.trusted.NAVIGATION_BAR_DIVIDER_COLOR
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:76:13-78:68
+	android:resource
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:78:17-65
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:77:17-84
+meta-data#androix.browser.trusted.NAVIGATION_BAR_DIVIDER_COLOR_DARK
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:80:13-82:72
+	android:resource
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:82:17-69
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:81:17-89
+meta-data#android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:84:13-86:62
+	android:resource
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:86:17-59
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:85:17-88
+meta-data#android.support.customtabs.trusted.SPLASH_SCREEN_FILL_TYPE
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:87:13-89:47
+	android:value
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:89:17-44
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:88:17-90
+meta-data#android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:91:13-93:71
+	android:value
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:93:17-69
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:92:17-98
+meta-data#android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:95:13-97:60
+	android:value
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:97:17-58
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:96:17-90
+meta-data#android.app.shortcuts
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:99:13-101:53
+	android:resource
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:101:17-50
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:100:17-53
+meta-data#android.support.customtabs.trusted.FALLBACK_STRATEGY
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:103:13-105:56
+	android:value
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:105:17-53
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:104:17-84
+meta-data#android.support.customtabs.trusted.SCREEN_ORIENTATION
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:107:13-109:54
+	android:value
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:109:17-52
+	android:name
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:108:17-85
 activity#com.google.androidbrowserhelper.trusted.FocusActivity
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:160:9-90
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:113:9-90
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:160:19-87
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:113:19-87
 activity#com.google.androidbrowserhelper.trusted.WebViewFallbackActivity
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:162:9-163:62
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:115:9-116:62
 	android:configChanges
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:163:13-59
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:116:13-59
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:162:19-97
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:115:19-97
 provider#androidx.core.content.FileProvider
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:165:9-173:20
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:118:9-126:20
 	android:grantUriPermissions
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:168:13-47
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:121:13-47
 	android:authorities
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:167:13-60
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:120:13-60
 	android:exported
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:169:13-37
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:122:13-37
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:166:13-62
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:119:13-62
 meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:170:13-172:53
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:123:13-125:53
 	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:172:17-50
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:125:17-50
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:171:17-67
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:124:17-67
 service#in.co.rapidrecap.www.twa.DelegationService
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:175:9-190:19
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:128:9-141:19
 	android:enabled
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:177:13-55
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:130:13-55
 	android:exported
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:178:13-56
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:131:13-56
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:176:13-46
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:129:13-46
 meta-data#android.support.customtabs.trusted.SMALL_ICON
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:181:17-183:73
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:133:13-135:69
 	android:resource
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:183:21-70
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:135:17-66
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:182:21-81
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:134:17-77
 intent-filter#action:name:android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE+category:name:android.intent.category.DEFAULT
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:186:13-189:29
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:137:13-140:29
 action#android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:187:17-105
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:138:17-105
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:187:25-103
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:138:25-103
 activity#com.google.androidbrowserhelper.trusted.NotificationPermissionRequestActivity
-ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:193:13-118
+ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:143:9-114
 	android:name
-		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:193:23-115
+		ADDED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:143:19-111
 uses-sdk
 INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml
 INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml
-MERGED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/d3335fbdff4200978ad121d7b141def7/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:22:5-24:41
-MERGED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/d3335fbdff4200978ad121d7b141def7/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:22:5-24:41
-MERGED from [androidx.browser:browser:1.4.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/b511174c15fdde7dea3e957094b4390b/transformed/browser-1.4.0/AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.browser:browser:1.4.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/b511174c15fdde7dea3e957094b4390b/transformed/browser-1.4.0/AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2144911bb09dce3a07f407e3b390637e/transformed/core-1.1.0/AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2144911bb09dce3a07f407e3b390637e/transformed/core-1.1.0/AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2fd04857057ce230bd6016b4ac1ced40/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/2fd04857057ce230bd6016b4ac1ced40/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/b0650a412e26a3a2ee3caaa6aaf8b7f8/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/b0650a412e26a3a2ee3caaa6aaf8b7f8/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.lifecycle:lifecycle-runtime:2.0.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/e807fb6701c5feba89b5db3fc097d290/transformed/lifecycle-runtime-2.0.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.lifecycle:lifecycle-runtime:2.0.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/e807fb6701c5feba89b5db3fc097d290/transformed/lifecycle-runtime-2.0.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:22:5-24:41
+MERGED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:22:5-24:41
+MERGED from [androidx.browser:browser:1.4.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f0abfc1a3891d4408403b376aae96b94/transformed/browser-1.4.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.browser:browser:1.4.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f0abfc1a3891d4408403b376aae96b94/transformed/browser-1.4.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/cb0a083732e91262327520d8934ddc3f/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/cb0a083732e91262327520d8934ddc3f/transformed/versionedparcelable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/15e8ea78d6bf23911af6237a0dc507c3/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/15e8ea78d6bf23911af6237a0dc507c3/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.0.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/8c8f075a23d7b08e31620d729b2b7c2f/transformed/lifecycle-runtime-2.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.0.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/8c8f075a23d7b08e31620d729b2b7c2f/transformed/lifecycle-runtime-2.0.0/AndroidManifest.xml:20:5-44
 	android:targetSdkVersion
 		INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml
 	android:minSdkVersion
 		INJECTED from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml
 queries
-ADDED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/d3335fbdff4200978ad121d7b141def7/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:26:5-34:15
+ADDED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:26:5-34:15
 intent#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+data:scheme:https
-ADDED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.8/transforms/d3335fbdff4200978ad121d7b141def7/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:27:9-33:18
+ADDED from [com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:27:9-33:18

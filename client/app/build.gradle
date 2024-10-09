@@ -51,6 +51,7 @@ def twaManifest = [
 ]
 
 android {
+    buildToolsVersion "34.0.0"
     compileSdkVersion 35
     namespace "in.co.rapidrecap.www.twa"
     defaultConfig {
@@ -203,7 +204,5 @@ repositories {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-
-        implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
-
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
 }

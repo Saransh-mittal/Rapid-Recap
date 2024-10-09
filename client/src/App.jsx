@@ -62,6 +62,7 @@ import {
 } from './redux/tournamentSlice.js'
 import LoadingScreen from './screens/LoadingScreen.jsx'
 import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
+import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -69,6 +70,7 @@ const App = () => {
   const { isLoading, overallProgress } = useSelector(
     state => state.loadingProgress,
   )
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true)
   const { t } = useTranslation('App') // Initialize translation function
   const { t: tournamentSliceTranslation } = useTranslation('tournamentSlice') // Added translation
   const [navbarLoaded, setNavbarLoaded] = useState(false)
@@ -128,6 +130,10 @@ const App = () => {
     }
     return null
   }, [updates])
+
+  useEffect(() => {
+    setShowLoadingScreen(true)
+  }, [])
 
   useEffect(() => {
     const token = isToken()
@@ -303,6 +309,7 @@ const App = () => {
       // dispatch after 500ms to ensure all components are loaded
       setTimeout(() => {
         dispatch(setIsLoading(false))
+        setShowLoadingScreen(false)
       }, 500)
     }
   }, [navbarLoaded, overallProgress, dispatch])
@@ -334,7 +341,7 @@ const App = () => {
           )}
         />
       </Helmet>
-      {isLoading && <LoadingScreen progress={overallProgress} />}
+      {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
 
       <Suspense fallback={null}>
         <FixedBackground />
@@ -342,10 +349,6 @@ const App = () => {
 
       <Suspense fallback={null}>
         <NoteMessageQueue />
-      </Suspense>
-
-      <Suspense fallback={null}>
-        <Navbar onNavbarLoad={handleNavbarLoad} />
       </Suspense>
 
       {showXpLevelModal && (
@@ -388,18 +391,21 @@ const App = () => {
           onClose={() => dispatch(setIsRegisterOpen(false))}
         />
       </Suspense>
-
-      <Box
-        position="relative"
-        minHeight="100vh"
-        zIndex={1}
-        overflowX={'hidden'}
-      >
+      <NavbarProvider>
         <Suspense fallback={null}>
-          <AppRoutes isToken={isToken()} />
+          <Navbar onNavbarLoad={handleNavbarLoad} />
         </Suspense>
-      </Box>
-
+        <Box
+          position="relative"
+          minHeight="100vh"
+          zIndex={1}
+          overflowX={'hidden'}
+        >
+          <Suspense fallback={null}>
+            <AppRoutes isToken={isToken()} />
+          </Suspense>
+        </Box>
+      </NavbarProvider>
       <Suspense fallback={null}>
         {isNotifInboxModalOpen && (
           <NotificationModal
