@@ -5,7 +5,10 @@ const STATS_KEY = 'user_scores_stats'
 const CACHE_EXPIRY = 3600000 // 1 hour in milliseconds
 
 const updateUserScoreCache = async () => {
-  const users = await User.find({ role: { $ne: 'guest' } }, 'userScore')
+  const users = await User.find(
+    { role: { $ne: 'guest' }, IQ_score: { $gt: 0 } },
+    'userScore',
+  )
   const userScores = {}
   let sumOfScores = 0
 
@@ -15,9 +18,6 @@ const updateUserScoreCache = async () => {
     userScores[userId] = score
     sumOfScores += score
   })
-  console.log(sumOfScores)
-  // console.log(userScores) length
-  console.log(Object.values(userScores).length)
   cache.put(CACHE_KEY, userScores, CACHE_EXPIRY)
 
   // Calculate and cache statistics
@@ -28,16 +28,15 @@ const updateUserScoreCache = async () => {
     0,
   )
   const standardDeviation = Math.sqrt(sumOfSquares / userCount)
-  console.log(meanScore)
-  console.log(standardDeviation)
+
   const stats = { meanScore, standardDeviation, userCount }
   cache.put(STATS_KEY, stats, CACHE_EXPIRY)
 }
 
-const getUserScoresFromCache = () => {
+const getUserScoresFromCache = async () => {
   let cachedScores = cache.get(CACHE_KEY)
   if (!cachedScores) {
-    updateUserScoreCache()
+    await updateUserScoreCache()
     cachedScores = cache.get(CACHE_KEY)
   }
   return cachedScores
@@ -53,8 +52,8 @@ const getScoreStatistics = async () => {
 }
 
 const updateSingleUserScore = async (userId, newScore) => {
-  const cachedScores = getUserScoresFromCache()
-  const oldScore = cachedScores[userId]
+  const cachedScores = await getUserScoresFromCache()
+  const oldScore = cachedScores[userId] || 0
   cachedScores[userId] = newScore
   cache.put(CACHE_KEY, cachedScores, CACHE_EXPIRY)
 

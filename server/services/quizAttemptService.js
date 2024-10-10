@@ -151,29 +151,39 @@ const saveQuizAttempt = async (
     todayAttemptsCount,
     session,
   )
-  const userPercentile = await calcUserPercentile({
-    userId,
-    articleId,
-    session,
-  })
-  console.log('userPercentile', userPercentile)
-  const newUserScore = user.userScore + articleDifficulty * userPercentile
-  console.log(user.userScore, newUserScore)
-  user.userScore = newUserScore
-  await user.save({ session })
-  const {
-    newIQScore,
-    prevIQScore,
-    awardableXpOrNot,
-    previousIQForXp,
-    hasSocietyOrCircleChanged,
-    changedSocietyOrCircle,
-    isUpgrade,
-    newSociety,
-    newCircle,
-  } = await calculateRealTimeIQ(userId, newUserScore, session)
+  let resultOfIQCalc = {}
+  if (!user.pauseRealTimeIQ) {
+    const userPercentile = await calcUserPercentile({
+      userId,
+      articleId,
+      session,
+    })
 
-  console.log(newIQScore, prevIQScore)
+    const newUserScore = user.userScore + articleDifficulty * userPercentile
+
+    user.userScore = newUserScore
+    await user.save({ session })
+    const {
+      newIQScore,
+      prevIQScore,
+      hasSocietyOrCircleChanged,
+      changedSocietyOrCircle,
+      isUpgrade,
+      newSociety,
+      newCircle,
+      societyUpgradeMessage,
+    } = await calculateRealTimeIQ(userId, newUserScore, session)
+    resultOfIQCalc = {
+      newIQScore,
+      prevIQScore,
+      hasSocietyOrCircleChanged,
+      changedSocietyOrCircle,
+      isUpgrade,
+      newSociety,
+      newCircle,
+      societyUpgradeMessage,
+    }
+  }
   const { messageForTournamentEligibility, userEligibleForTournament } =
     await checkTournamentEligibility(user, RQM_score, session)
 
@@ -227,13 +237,7 @@ const saveQuizAttempt = async (
     quinBoostUtilized,
     messageForTournamentEligibility,
     userEligibleForTournament,
-    newIQScore,
-    prevIQScore,
-    hasSocietyOrCircleChanged,
-    changedSocietyOrCircle,
-    isUpgrade,
-    newSociety,
-    newCircle,
+    ...resultOfIQCalc,
   }
 }
 

@@ -220,7 +220,21 @@ const LineGraph = ({
       </Flex>
     )
   }
-
+  if (chartData?.length === 0) {
+    return (
+      <>
+        {isLoading ? (
+          <Flex h="300px">
+            <LoadingSpinner />
+          </Flex>
+        ) : (
+          <Flex width={'100%'} h={'100%'}>
+            <NoDataMessage viewingHistory={viewingHistory} />
+          </Flex>
+        )}
+      </>
+    )
+  }
   return (
     <Flex
       w="100%"
@@ -231,19 +245,25 @@ const LineGraph = ({
         base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
       }}
     >
-      <GraphHeader
-        hoveredData={hoveredData}
-        loginedUserProfile={loginedUserProfile}
-        user={user}
-        t={t}
-        quantities={quantities} // Pass the dynamic quantities
-      />
-      <GraphBody
-        chartData={chartData}
-        responsiveChartWidth={responsiveChartWidth}
-        handleHover={handleHover}
-        graphwidth={graphwidth}
-      />
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <>
+          <GraphHeader
+            hoveredData={hoveredData}
+            loginedUserProfile={loginedUserProfile}
+            user={user}
+            t={t}
+            quantities={quantities} // Pass the dynamic quantities
+          />
+          <GraphBody
+            chartData={chartData}
+            responsiveChartWidth={responsiveChartWidth}
+            handleHover={handleHover}
+            graphwidth={graphwidth}
+          />
+        </>
+      )}
     </Flex>
   )
 }
