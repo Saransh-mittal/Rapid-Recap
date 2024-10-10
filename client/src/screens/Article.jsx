@@ -486,7 +486,7 @@ const Article = () => {
         <QuinBoostModal
           isOpen={isQuinBoostModalOpen}
           onClose={closeModal}
-          currentQuizCount={user.todaysQuizCnt}
+          currentQuizCount={user?.todaysQuizCnt}
           isStateBoosted={isBoosted}
         />
         {user && <TrackTime userId={user?._id} articleId={id} />}
