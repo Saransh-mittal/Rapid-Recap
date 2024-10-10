@@ -336,6 +336,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    pauseRealTimeIQ: {
+      type: Boolean,
+      default: false,
+    },
   },
   { collection: 'Users' },
 )

@@ -1,4 +1,5 @@
-const CircleAndSocietyData = require('./CircleAndSocietyData')
+const { CircleAndSocietyDataXP } = require('./CircleAndSocietyData')
+
 const activityTypes = {
   QUIZ_BONUS: { type: 'Extra opportunity quiz (bonus)', xp: 10 },
   RANDOM_QUIZ: {
@@ -40,6 +41,7 @@ const getXpForActivity = ({
     }
 
     let totalXp = 0
+    const CircleAndSocietyData = CircleAndSocietyDataXP
     for (let society of CircleAndSocietyData) {
       if (previousIQ < society.IQ_Lower && userIQ >= society.IQ_Lower) {
         totalXp += society.xp

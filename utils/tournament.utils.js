@@ -1,4 +1,3 @@
-const mongoose = require('mongoose')
 const BADGE_CONFIG = require('../data/BADGE_CONFIG')
 const { getCategories } = require('../data/categories')
 const {
@@ -6,7 +5,8 @@ const {
   QuizSession,
 } = require('../model/tournamentRegistrationSchema')
 const User = require('../model/userSchema')
-const Tournament = require('../model/tournamentSchema')
+const QuizAttempt = require('../model/quizAttemptSchema')
+const i18n = require('i18next')
 
 const getUserRegistrationDetails = async (userId, tournamentId, session) => {
   try {
@@ -248,8 +248,77 @@ async function updateTournamentPerformanceAndBadges(tournament) {
   }
 }
 
+const checkTournamentEligibility = async (user, RQM_score, session) => {
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+
+  const last30Min = new Date()
+  last30Min.setMinutes(last30Min.getMinutes() - 30)
+
+  const last30MinQuizAttempts = await QuizAttempt.countDocuments({
+    user: user._id,
+    createdAt: { $gte: last30Min },
+  }).session(session)
+
+  const todaysQuizAttempts = await QuizAttempt.countDocuments({
+    user: user._id,
+    createdAt: { $gte: today },
+    RQM_score: { $gt: 42 },
+  }).session(session)
+
+  if (last30MinQuizAttempts === 3 || todaysQuizAttempts === 2) {
+    user.eligibleForTournament = true
+  }
+
+  const localizedI18n = i18n.cloneInstance()
+  await localizedI18n.changeLanguage(user.userLanguage)
+  const t = (key, options) => localizedI18n.t(key, { ns: 'quiz', ...options })
+
+  let messageForTournamentEligibility = ''
+  if (!user.eligibleForTournament) {
+    if (RQM_score > 42 && todaysQuizAttempts < 2) {
+      messageForTournamentEligibility = t(
+        'Do one more quiz with RQM score > 42 to be eligible for tournament',
+      )
+    } else if (user.todaysQuizCnt >= 4) {
+      messageForTournamentEligibility = t(
+        'You have already attempted 4 quizzes today. Complete 2 more quizzes to be eligible for tournament',
+      )
+    } else if (last30MinQuizAttempts < 3) {
+      if (last30MinQuizAttempts === 1) {
+        messageForTournamentEligibility = t(
+          'Do 2 more quizzes under 30 minutes to be eligible for tournament',
+        )
+      } else {
+        const timeLeft =
+          30 -
+          Math.floor(
+            (new Date().getTime() -
+              user.quizAttempts[
+                user.quizAttempts.length - 2
+              ].createdAt.getTime()) /
+              60000,
+          )
+        messageForTournamentEligibility = t(
+          'Do 1 more quiz under 30 minutes to be eligible for tournament. Time left: {{min}} minutes',
+          { min: timeLeft },
+        )
+      }
+    } else {
+      messageForTournamentEligibility = t(
+        'You are not eligible for tournament. Play more quizzes to be eligible',
+      )
+    }
+  }
+
+  return {
+    messageForTournamentEligibility,
+    userEligibleForTournament: user.eligibleForTournament,
+  }
+}
 module.exports = {
   getUserRegistrationDetails,
   updateTournamentPerformanceAndBadges,
   getTopLeadersForCategory,
+  checkTournamentEligibility,
 }

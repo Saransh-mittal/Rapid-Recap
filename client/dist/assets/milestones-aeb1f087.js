@@ -1,1 +1,0 @@
-import{n}from"./index-ace4b7fe.js";const t={QUIN_BOOST:{nameKey:"milestones.QUIN_BOOST.name",descriptionKey:"milestones.QUIN_BOOST.description",xpReward:10}},o=s=>{const e=t[s]||null;return e?{name:n.t(e.nameKey,{ns:"milestones"}),description:n.t(e.descriptionKey,{ns:"milestones"}),xpReward:e.xpReward}:null};export{o as g};

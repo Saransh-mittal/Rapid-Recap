@@ -1,1 +1,0 @@
-import{w as o}from"./index-ace4b7fe.js";const t="/images/tourBGDark.webp",r=()=>o.jsx("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,backgroundImage:`url(${t})`,backgroundPosition:"center",backgroundRepeat:"no-repeat",backgroundSize:"cover",zIndex:-1}});export{r as default};
