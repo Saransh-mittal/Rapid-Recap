@@ -614,7 +614,7 @@ const updateUserStats = async (
   expiry.setUTCHours(0, 0, 0, 0)
   user.streakExpiry = expiry
 
-  if (todayAttemptsCount === 0) {
+  if (todayAttemptsCount === 1) {
     if (user.streak + 1 > user.longestStreak) {
       user.longestStreak = user.streak + 1
     }
