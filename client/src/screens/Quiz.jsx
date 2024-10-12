@@ -207,6 +207,9 @@ const Quiz = () => {
               user.xp +
               (result?.xpAwarded || 5) +
               (result?.quinBoostUtilized ? 10 : 0),
+            IQ_score: result?.newIQScore || user.IQ_score,
+            prevIQScore: result?.prevIQScore || user.prevIQScore,
+            societyUpgradeMessage: result?.societyUpgradeMessage,
             todaysQuizCnt: user.todaysQuizCnt + 1,
             revivalPeriodEnd:
               user.todaysQuizCnt + 1 === 6 ? null : user.revivalPeriodEnd,

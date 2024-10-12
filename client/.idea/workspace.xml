@@ -63,8 +63,12 @@
   &quot;keyToStringList&quot;: {
     &quot;ExportApk.BuildVariants&quot;: [
       &quot;release&quot;
+  &quot;keyToStringList&quot;: {
+    &quot;ExportApk.BuildVariants&quot;: [
+      &quot;release&quot;
     ]
   }
+}</component>
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">

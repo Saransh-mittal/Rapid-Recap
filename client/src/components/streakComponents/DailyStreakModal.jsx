@@ -1,22 +1,21 @@
 import React, { useEffect, useCallback, useMemo, Suspense, lazy } from 'react'
 import {
-  Button,
   Modal,
+  ModalContent,
   ModalBody,
   ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   Text,
+  Button,
+  Box,
+  Flex,
+  VStack,
   useDisclosure,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
-import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
+import useSound from '../../customHooks/useSound'
 
-// Lazy load heavy SVG and utility components
 const StreakSVG = lazy(() => import('./StreakSVG'))
 
 const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
@@ -29,42 +28,17 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
     onOpen()
   }, [onOpen])
 
-  // Memoize the conditions to avoid recalculating on every render
   const streakMessage = useMemo(() => {
     if (streak === 0 && longestStreak === 0) {
-      return (
-        <>
-          <Text
-            color="#d1c9e6"
-            fontSize="20px"
-            textAlign="center"
-            fontWeight="medium"
-            mb={4}
-          >
-            {t('welcome_message')}
-          </Text>
-          <Text
-            color="white"
-            fontSize="16px"
-            textAlign="center"
-            lineHeight="1.5"
-          >
-            {t('starting_streak')}
-          </Text>
-        </>
-      )
+      return {
+        title: t('embark_on_journey'),
+        message: t('first_step_greatness'),
+      }
     } else if (streak === 0 && longestStreak > 0) {
-      return (
-        <Text
-          color="white"
-          fontSize="20px"
-          textAlign="center"
-          fontWeight="medium"
-          mb={4}
-        >
-          {t('get_back_on_track')}
-        </Text>
-      )
+      return {
+        title: t('rekindle_flame'),
+        message: t('rise_again'),
+      }
     } else if (
       streak > 0 &&
       streak >= 4 &&
@@ -72,60 +46,35 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
       streak % 7 !== 0 &&
       longestStreak === streak
     ) {
-      return (
-        <Text
-          color="white"
-          fontSize="20px"
-          textAlign="center"
-          fontWeight="medium"
-          mb={4}
-        >
-          {t('maintaining_streak')}
-        </Text>
-      )
+      return {
+        title: t('forging_legacy'),
+        message: t('each_day_triumph'),
+      }
     } else if (
       streak > 0 &&
       streak % 7 < 5 &&
       streak % 7 !== 0 &&
       longestStreak > streak
     ) {
-      return (
-        <Text
-          color="white"
-          fontSize="20px"
-          textAlign="center"
-          fontWeight="medium"
-          mb={4}
-        >
-          {t('closer_to_longest_streak')}
-        </Text>
-      )
+      return {
+        title: t('ascending_heights'),
+        message: t('destiny_awaits'),
+      }
     } else if (streak > 0 && streak % 7 >= 5) {
-      return (
-        <Text
-          color="white"
-          fontSize="20px"
-          textAlign="center"
-          fontWeight="medium"
-          mb={4}
-        >
-          {t('milestone')}
-        </Text>
-      )
+      return {
+        title: t('pinnacle_achievement'),
+        message: t('legacy_unfolds'),
+      }
     } else if (isBoosted) {
-      return (
-        <Text
-          color="white"
-          fontSize="20px"
-          textAlign="center"
-          fontWeight="medium"
-          mb={4}
-        >
-          {t('special_reward')}
-        </Text>
-      )
+      return {
+        title: t('celestial_favor'),
+        message: t('transcend_limits'),
+      }
     } else {
-      return null
+      return {
+        title: t('unwavering_dedication'),
+        message: t('forge_ahead'),
+      }
     }
   }, [streak, longestStreak, isBoosted, t])
 
@@ -136,119 +85,135 @@ const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
   }, [playClick, onClose, setShowDailyStreakModal])
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<Box>Loading...</Box>}>
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <Modal isOpen={isOpen} onClose={handleClose} size={'4xl'}>
-              <ModalOverlay />
-              <ModalContent
-                initial={{ y: '-100vh' }}
-                animate={{ y: 0 }}
-                transition={{ type: 'spring', stiffness: 150 }}
-                background="linear-gradient(135deg, #1a1527 0%, #0e0c16 100%)"
-                borderRadius="10px"
-                boxShadow="0 4px 20px rgba(0, 0, 0, 0.3)"
-              >
-                <ModalHeader
-                  as="h3"
-                  size="lg"
-                  color="#a595c9"
-                  textAlign="center"
-                  fontWeight="bold"
-                  borderBottom="1px solid rgba(255,255,255,0.1)"
-                  pb={2}
-                  mb={4}
-                >
-                  {t('streak_insights')}
-                </ModalHeader>
-                <ModalCloseButton color="#a595c9" />
-                <ModalBody
-                  pb={4}
-                  display={'flex'}
-                  gap={4}
-                  flexDirection={'column'}
-                  p={1}
-                >
-                  {streakMessage}
-
-                  {longestStreak > 0 && (
-                    <>
-                      <Text
-                        color="white"
-                        fontSize="20px"
-                        textAlign="center"
-                        fontWeight="medium"
-                        mb={4}
-                      >
-                        {t('maintained_streak')}{' '}
-                        <Text
-                          as="span"
-                          color="#8b7daf"
-                          backgroundColor="rgba(255,255,255,0.1)"
-                          borderRadius="md"
-                          px={2}
-                          fontWeight="semibold"
-                          textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
-                        >
-                          {streak} {t('days')}{' '}
-                          <Suspense fallback={<div>Loading SVG...</div>}>
-                            <StreakSVG
-                              streak={streak}
-                              isBoosted={isBoosted}
-                              getBackgroundColor={getBackgroundColor}
-                            />
-                          </Suspense>
-                        </Text>{' '}
-                        {t('keep_it_up')}
-                      </Text>
-                      <Text
-                        color="white"
-                        fontSize="24px"
-                        textAlign="center"
-                        fontWeight="medium"
-                        mb={6}
-                      >
-                        {t('longest_streak_is')}{' '}
-                        <Text
-                          as="span"
-                          color="green.300"
-                          backgroundColor="rgba(255,255,255,0.1)"
-                          borderRadius="md"
-                          px={2}
-                          fontWeight="semibold"
-                          textShadow="1px 1px 2px rgba(0, 0, 0, 0.4)"
-                        >
-                          {longestStreak} {t('days')}{' '}
-                          <Suspense fallback={<div>Loading SVG...</div>}>
-                            <StreakSVG
-                              streak={longestStreak}
-                              isBoosted={isBoosted}
-                              getBackgroundColor={getBackgroundColor}
-                            />
-                          </Suspense>
-                        </Text>
-                      </Text>
-                    </>
-                  )}
-                </ModalBody>
-                <ModalFooter justifyContent="center">
-                  <Button
-                    bg="#4a3b78"
-                    color="#d1c9e6"
-                    _hover={{ bg: '#5d4b96' }}
-                    onClick={handleClose}
+          <Modal isOpen={isOpen} onClose={handleClose} size="md">
+            <ModalContent
+              as={motion.div}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 15, stiffness: 300 }}
+              bg="rgba(18, 18, 18, 0.95)"
+              borderRadius="xl"
+              borderWidth="1px"
+              borderColor="rgba(138, 43, 226, 0.3)"
+              boxShadow="0 0 20px rgba(138, 43, 226, 0.2)"
+              overflow="hidden"
+              maxWidth={{ base: '95vw', md: '90vw', lg: '80vw', xl: '70vw' }}
+              p={4}
+            >
+              <ModalCloseButton color="gray.400" size="sm" />
+              <ModalBody py={6}>
+                <VStack spacing={4} align="center">
+                  <Text
+                    fontSize="xl"
+                    fontWeight="bold"
+                    color="rgba(191, 163, 255, 0.9)"
+                    textAlign="center"
+                    letterSpacing="wide"
                   >
-                    {t('close')}
+                    {t('streak_odyssey')}
+                  </Text>
+
+                  <Box
+                    as={motion.div}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{
+                      type: 'spring',
+                      damping: 10,
+                      stiffness: 100,
+                      delay: 0.2,
+                    }}
+                  >
+                    <Suspense fallback={<Box>Loading SVG...</Box>}>
+                      <StreakSVG
+                        streak={streak}
+                        isBoosted={isBoosted}
+                        getBackgroundColor={getBackgroundColor}
+                        size="80px"
+                      />
+                    </Suspense>
+                  </Box>
+
+                  <VStack spacing={1}>
+                    <Text
+                      fontSize="2xl"
+                      fontWeight="bold"
+                      color="white"
+                      textAlign="center"
+                    >
+                      {streakMessage.title}
+                    </Text>
+                    <Text
+                      fontSize="md"
+                      color="gray.300"
+                      textAlign="center"
+                      fontStyle="italic"
+                    >
+                      "{streakMessage.message}"
+                    </Text>
+                  </VStack>
+
+                  <Flex justify="space-between" width="100%" mt={4}>
+                    <VStack spacing={0}>
+                      <Text color="gray.400" fontSize="xs">
+                        {t('current_streak')}
+                      </Text>
+                      <Text
+                        color="rgba(191, 163, 255, 0.9)"
+                        fontSize="4xl"
+                        fontWeight="bold"
+                        lineHeight="1"
+                      >
+                        {streak}
+                      </Text>
+                      <Text color="gray.400" fontSize="xs">
+                        {t('days')}
+                      </Text>
+                    </VStack>
+                    <VStack spacing={0}>
+                      <Text color="gray.400" fontSize="xs">
+                        {t('longest_streak')}
+                      </Text>
+                      <Text
+                        color="rgba(255, 215, 0, 0.9)"
+                        fontSize="4xl"
+                        fontWeight="bold"
+                        lineHeight="1"
+                      >
+                        {longestStreak}
+                      </Text>
+                      <Text color="gray.400" fontSize="xs">
+                        {t('days')}
+                      </Text>
+                    </VStack>
+                  </Flex>
+                </VStack>
+
+                <Flex justify="center" mt={6}>
+                  <Button
+                    onClick={handleClose}
+                    bg="rgba(138, 43, 226, 0.8)"
+                    color="white"
+                    _hover={{ bg: 'rgba(138, 43, 226, 0.9)' }}
+                    _active={{ bg: 'rgba(138, 43, 226, 1)' }}
+                    size="md"
+                    fontWeight="bold"
+                    px={6}
+                    py={2}
+                    borderRadius="full"
+                    boxShadow="0 0 10px rgba(138, 43, 226, 0.3)"
+                    transition="all 0.3s ease"
+                  >
+                    {t('continue_journey')}
                   </Button>
-                </ModalFooter>
-              </ModalContent>
-            </Modal>
-          </motion.div>
+                </Flex>
+              </ModalBody>
+            </ModalContent>
+          </Modal>
         )}
       </AnimatePresence>
     </Suspense>

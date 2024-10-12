@@ -17,7 +17,7 @@ const {
   makeFirstLoginFalse,
   getTheRevivalEndDay,
 } = require('../utils/user.utils')
-const dailyUserIQCalc = require('../utils/dailyUserIQCalc.utils')
+const { dailyUserIQCalc } = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 // const { progressBar } = require("../utils/progress.utils");
 const QuinBoost = require('../model/quinBoostSchema')

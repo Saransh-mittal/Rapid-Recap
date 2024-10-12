@@ -1,14 +1,14 @@
 import React from 'react'
 import { Box } from '@chakra-ui/react'
 
-const StreakSVG = ({ streak, isBoosted, getBackgroundColor }) => {
+const StreakSVG = ({ streak, isBoosted, getBackgroundColor, size }) => {
   return (
     <Box
       as="svg"
       xmlns="http://www.w3.org/2000/svg"
       viewBox={streak === 0 ? '0 0 18 18' : '0 0 24 24'}
-      width={{ base: '1rem', lg: '1.3em' }}
-      height={{ base: '1rem', lg: '1.3em' }}
+      width={size || { base: '1rem', lg: '1.3em' }}
+      height={size || { base: '1rem', lg: '1.3em' }}
       fill="currentColor"
       display={'inline-flex'}
       justifyContent={'center'}

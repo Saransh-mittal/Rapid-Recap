@@ -347,7 +347,53 @@ export default function Profile() {
           >
             <Suspense
               fallback={
-                <SkeletonText noOfLines={1} spacing="4" skeletonHeight="20px" />
+                <>
+                  <Container padding={0}>
+                    <Flex flexDirection="column" width="100%" h={'100%'} m={0}>
+                      <SkeletonText
+                        noOfLines={1}
+                        spacing="4"
+                        skeletonHeight="20px"
+                      />
+                      <Box
+                        display="flex"
+                        flexDirection="row"
+                        justifyContent={'space-between'}
+                        alignItems="center"
+                        mt={4}
+                      >
+                        <Flex
+                          justify="space-between"
+                          align="left"
+                          width="120px"
+                          flexDirection="column"
+                        >
+                          <Box>
+                            <Skeleton height="20px" width="100px" mb={2} />
+                          </Box>
+                          <Box position="relative" mb={4}>
+                            <Skeleton
+                              height="120px"
+                              width="120px"
+                              borderRadius="50%"
+                              startColor="gray.200"
+                              endColor="gray.400"
+                            />
+                          </Box>
+                          <Box textAlign="left">
+                            <Skeleton height="20px" width="100px" />
+                          </Box>
+                        </Flex>
+                        <Flex textAlign={'center'}>
+                          <Box>
+                            <Skeleton height="20px" width="150px" mb={2} />
+                            <Skeleton height="20px" width="150px" />
+                          </Box>
+                        </Flex>
+                      </Box>
+                    </Flex>
+                  </Container>
+                </>
               }
             >
               {isLoading ? (
@@ -485,12 +531,20 @@ export default function Profile() {
           </Suspense>
           <Suspense
             fallback={
-              <Skeleton
-                w={{ md: '85%', lg: '95%', base: '100%' }}
-                borderRadius="10px"
-                height="50px"
-                marginTop="12px"
-              />
+              <>
+                <Skeleton
+                  w={{ md: '85%', lg: '95%', base: '100%' }}
+                  borderRadius="10px"
+                  height="50px"
+                  marginTop="12px"
+                />
+                <Skeleton
+                  w={{ md: '85%', lg: '95%', base: '100%' }}
+                  borderRadius="10px"
+                  height="50px"
+                  marginTop="12px"
+                />
+              </>
             }
           >
             {isLoading ? (
@@ -664,7 +718,10 @@ export default function Profile() {
           </Suspense>
           <Suspense
             fallback={
-              <Skeleton height="150px" width="100%" borderRadius="10px" />
+              <>
+                <Skeleton height="150px" width="100%" borderRadius="10px" />
+                <Skeleton height="150px" width="100%" borderRadius="10px" />
+              </>
             }
           >
             <Flex

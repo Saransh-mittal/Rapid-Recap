@@ -9,15 +9,19 @@ const User = require('../model/userSchema')
 const notificationNews = async (req, res) => {
   try {
     // If you want to localize this message based on a specific user's language
-    const user = await User.findById('6613f4cece72abb1ce9abebb')
+    const user = await User.findById('65b1ebbc90ba2e3794e9696d')
     const localizedI18n = i18n.cloneInstance({ initImmediate: false })
     await localizedI18n.changeLanguage(user.userLanguage)
     const t = (key, options) =>
       localizedI18n.t(key, { ns: 'activity.utils', ...options })
 
-    console.log()
-
     // console.log(t('notifSentSuccess'))
+    await sendNotification({
+      title: `hello`,
+      body: t('sharedArticle'), // Localized text
+      url: `/`,
+      userId: user._id,
+    })
     res.status(200).json({ message: t('notifSentSuccess') })
   } catch (error) {
     res.status(500).json({ message: error.message })
