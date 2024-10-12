@@ -213,7 +213,7 @@ const saveQuizAttempt = async (
 
   await scheduleQuizEmails(user, quizzesToday)
 
-  const pastRQMs = await fetchTodaysPastRQMs({ userId })
+  const pastRQMs = await fetchTodaysPastRQMs({ userId, session })
 
   const articleDifficultyLevel =
     articleDifficulty < 0.5

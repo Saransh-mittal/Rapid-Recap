@@ -310,7 +310,7 @@ const checkTournamentEligibility = async (user, RQM_score, session) => {
       )
     }
   }
-
+  await user.save({ session })
   return {
     messageForTournamentEligibility,
     userEligibleForTournament: user.eligibleForTournament,
