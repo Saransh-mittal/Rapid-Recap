@@ -56,6 +56,8 @@ const Sidebar = ({
   i18n,
   loadingRealatedArticles,
   setLoadingRelatedArticles,
+  setShouldScrollToTop,
+  shouldScrollToTop,
 }) => {
   const { t } = useTranslation('Sidebar')
   const { t: formatDateTranslate } = useTranslation('formatDate')
@@ -141,7 +143,7 @@ const Sidebar = ({
         return
       }
       // If the user is already on the article, give a toast message
-
+      setShouldScrollToTop(true)
       setLoadingRelatedArticles(prev => ({ ...prev, [item._id]: true }))
 
       const path =
@@ -196,6 +198,16 @@ const Sidebar = ({
   useEffect(() => {
     fetchRecommendedArticles()
   }, [])
+
+  useEffect(() => {
+    if (loadingRealatedArticles[id] === false && shouldScrollToTop) {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
+      setShouldScrollToTop(false)
+    }
+  }, [loadingRealatedArticles])
 
   const renderArticles = () => {
     const articlesToShow = showRelated

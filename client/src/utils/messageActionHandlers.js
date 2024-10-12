@@ -42,6 +42,12 @@ const messageActionHandlers = {
       messageId &&
       dispatch(actions.removeNoteMessageWithId(messageId))
   },
+  SUBMIT_TOURNAMENT_FEEDBACK: (dispatch, actions, messageId) => {
+    actions.handleTournamentFeedback()
+    dispatch &&
+      messageId &&
+      dispatch(actions.removeNoteMessageWithId(messageId))
+  },
   SIGN_IN: () => {},
   GUEST: () => {},
   VIEW_EXPERIENCE: setShowXpLevelModal => {
@@ -78,6 +84,8 @@ export const createHandleMessageAction = (dispatch, actions) => {
       } else if (actionType === 'SUBMIT_STORY_FEEDBACK') {
         messageActionHandlers[actionType](dispatch, actions, messageId)
       } else if (actionType === 'SUBMIT_QUIZ_FEEDBACK') {
+        messageActionHandlers[actionType](dispatch, actions, messageId)
+      } else if (actionType === 'SUBMIT_TOURNAMENT_FEEDBACK') {
         messageActionHandlers[actionType](dispatch, actions, messageId)
       } else if (actionType === 'DISMISS') {
         messageActionHandlers[actionType](dispatch, actions, messageId)

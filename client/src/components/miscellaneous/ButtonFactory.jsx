@@ -109,6 +109,12 @@ const ButtonFactory = ({
           {t('SUBMIT_QUIZ_FEEDBACK')}
         </ElegantButton>
       )
+    case 'SUBMIT_TOURNAMENT_FEEDBACK':
+      return (
+        <ElegantButton onClick={onClick} {...props}>
+          {t('SUBMIT_TOURNAMENT_FEEDBACK')}
+        </ElegantButton>
+      )
     case 'INBOX':
       return (
         <ElegantButton onClick={onClick} {...props}>

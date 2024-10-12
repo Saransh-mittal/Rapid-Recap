@@ -60,10 +60,18 @@ const UnifiedFeedbackNoteMessage = ({
       width={width}
       actions={[
         {
-          actionType:
-            feedbackType === 'quiz'
-              ? 'SUBMIT_QUIZ_FEEDBACK'
-              : 'SUBMIT_STORY_FEEDBACK',
+          actionType: (() => {
+            switch (feedbackType) {
+              case 'quiz':
+                return 'SUBMIT_QUIZ_FEEDBACK'
+              case 'storytheme':
+                return 'SUBMIT_STORY_FEEDBACK'
+              case 'tournamentQuiz':
+                return 'SUBMIT_TOURNAMENT_FEEDBACK'
+              default:
+                return 'UNKNOWN_FEEDBACK_TYPE' // optional default case
+            }
+          })(),
         },
       ]}
       feedbackContent={{

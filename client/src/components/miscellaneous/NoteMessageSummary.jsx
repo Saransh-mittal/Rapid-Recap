@@ -37,6 +37,7 @@ import {
   formatRemainingTime,
   handleQuizFeedback,
   handleSubmitFeedback,
+  handleTournamentFeedback,
 } from '../../utils/helper.utils'
 import { useTranslation } from 'react-i18next' // Import useTranslation
 import { getMilestoneInfo } from './noteMessages/milestones'
@@ -69,6 +70,9 @@ const NoteMessageSummary = ({ messages, onClose }) => {
   const [quizFeedback, setQuizFeedback] = useState('')
   const [storyId, setStoryId] = useState(null)
   const [quizId, setQuizId] = useState(null)
+  const [tournamentQuizRating, setTournamentQuizRating] = useState(0)
+  const [tournamentQuizFeedback, setTournamentQuizFeedback] = useState('')
+  const [tournamentId, setTournamentId] = useState(null)
 
   // Initialize translation
   const { t } = useTranslation('NoteMessageSummary')
@@ -95,6 +99,13 @@ const NoteMessageSummary = ({ messages, onClose }) => {
         handleQuizFeedback: () => {
           handleQuizFeedback(quizRating, quizFeedback, quizId)
         },
+        handleTournamentFeedback: () => {
+          handleTournamentFeedback(
+            tournamentQuizRating,
+            tournamentQuizFeedback,
+            tournamentId,
+          )
+        },
       }),
     [
       dispatch,
@@ -106,6 +117,9 @@ const NoteMessageSummary = ({ messages, onClose }) => {
       quizRating,
       quizFeedback,
       quizId,
+      tournamentQuizRating,
+      tournamentQuizFeedback,
+      tournamentId,
     ],
   )
 
@@ -163,6 +177,12 @@ const NoteMessageSummary = ({ messages, onClose }) => {
     )
     if (quizFeedbackMessage) {
       setQuizId(quizFeedbackMessage.quizId)
+    }
+    const tournamentQuizFeedbackMessage = messages.find(
+      message => message.messageType === 'tournamentQuizFeedback',
+    )
+    if (tournamentQuizFeedbackMessage) {
+      setTournamentId(tournamentQuizFeedbackMessage.tournamentId)
     }
   }, [messages])
 
@@ -468,6 +488,42 @@ const NoteMessageSummary = ({ messages, onClose }) => {
               </VStack>
             </Flex>
           )
+        case 'tournamentQuizFeedback':
+          return (
+            <Flex
+              direction="column"
+              align="center"
+              w="100%"
+              position="relative"
+            >
+              <VStack spacing={4} align="center" w="100%">
+                <Text fontSize="lg" fontWeight="bold" color="purple.300">
+                  {UnifiedFeedbackTranslate('TournamentQuizBodyTitle')}
+                </Text>
+                <Suspense fallback={<Box h="40px" />}>
+                  <StarRating
+                    rating={tournamentQuizRating}
+                    onRatingChange={setTournamentQuizRating}
+                  />
+                </Suspense>
+                <Textarea
+                  placeholder={t('feedbackPlaceholder')}
+                  value={tournamentQuizFeedback}
+                  onChange={e => setTournamentQuizFeedback(e.target.value)}
+                  bg="gray.700"
+                  color="white"
+                  border="1px solid"
+                  borderColor="purple.500"
+                  _hover={{ borderColor: 'purple.400' }}
+                  _focus={{
+                    borderColor: 'purple.300',
+                    boxShadow: '0 0 0 1px #805AD5',
+                  }}
+                  resize="vertical"
+                />
+              </VStack>
+            </Flex>
+          )
         case 'tournament':
           return isUnderMaintenance ? null : (
             <Flex
@@ -608,6 +664,11 @@ const NoteMessageSummary = ({ messages, onClose }) => {
       quizFeedback,
       setQuizFeedback,
       storyId,
+      tournamentQuizRating,
+      setTournamentQuizRating,
+      tournamentQuizFeedback,
+      setTournamentQuizFeedback,
+      tournamentId,
     ],
   )
 

@@ -95,22 +95,22 @@ const handleSocietyOrCircleUpgrade = async (
           })
 
           // ---- Create Inbox Notification ----
-          // const notificationTitle = localizedI18n.t('upgradeTitle')
-          // const notificationText = societyOrCircleUpgradeTemplate(
-          //   changedSocietyOrCircle === 'society'
-          //     ? currSocietyCircle.society
-          //     : currSocietyCircle.circle,
-          //   changedSocietyOrCircle,
-          // ) // Use the HTML template for society or circle upgrade
+          const notificationTitle = localizedI18n.t('upgradeTitle')
+          const notificationText = societyOrCircleUpgradeTemplate(
+            changedSocietyOrCircle === 'society'
+              ? currSocietyCircle.society
+              : currSocietyCircle.circle,
+            changedSocietyOrCircle,
+          ) // Use the HTML template for society or circle upgrade
 
-          // const newNotification = new ApplicationUpdates({
-          //   userId: user._id,
-          //   title: notificationTitle,
-          //   mainText: notificationText, // HTML content for the inbox notification
-          //   img: currSocietyCircle.img || '', // Optional image
-          //   read: false,
-          // })
-          // await newNotification.save()
+          const newNotification = new ApplicationUpdates({
+            userId: user._id,
+            title: notificationTitle,
+            mainText: notificationText, // HTML content for the inbox notification
+            img: currSocietyCircle.img || '', // Optional image
+            read: false,
+          })
+          await newNotification.save()
         }
       } else {
         user.societyUpgradeMessage = ''

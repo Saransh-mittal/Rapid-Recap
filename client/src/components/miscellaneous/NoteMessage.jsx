@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next'
 import {
   handleQuizFeedback,
   handleSubmitFeedback,
+  handleTournamentFeedback,
 } from '../../utils/helper.utils'
 
 // Lazy load utilities and components
@@ -42,6 +43,7 @@ const NoteMessage = ({
   customContent,
   feedbackContent,
   quizFeedbackContent,
+  TourQuizFeedbackContent,
 }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -71,8 +73,20 @@ const NoteMessage = ({
             quizFeedbackContent.feedback,
             quizFeedbackContent.feedbackId,
           ),
+        handleTournamentFeedback: () =>
+          handleTournamentFeedback(
+            TourQuizFeedbackContent.rating,
+            TourQuizFeedbackContent.feedback,
+            TourQuizFeedbackContent.feedbackId,
+          ),
       }),
-    [dispatch, navigate, feedbackContent, quizFeedbackContent],
+    [
+      dispatch,
+      navigate,
+      feedbackContent,
+      quizFeedbackContent,
+      TourQuizFeedbackContent,
+    ],
   )
 
   // Memoize handleAction to avoid recreating the function on every render
