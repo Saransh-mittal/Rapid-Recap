@@ -24,7 +24,8 @@ async function getCircleAndSocietyData(user) {
       boxShadow: '0 0 10px 5px rgba(255, 215, 0, 0.8)',
       textColor: 'goldenrod',
       xp: 900,
-      upgradeMsg: t('titansUpgrade'),
+      CircleUpgradeMsg: t('titansCircleUpgrade'),
+      SocietyUpgradeMsg: t('titansSocietyUpgrade'),
     },
     {
       society: 'Mavericks Society',
@@ -34,7 +35,8 @@ async function getCircleAndSocietyData(user) {
       boxShadow: '0 0 10px 5px rgba(255, 100, 0, 0.7)',
       textColor: 'darkorange',
       xp: 320,
-      upgradeMsg: t('visionariesUpgrade'),
+      CircleUpgradeMsg: t('visionariesCircleUpgrade'),
+      SocietyUpgradeMsg: t('mavericksSocietyUpgrade'),
     },
     {
       society: 'Mavericks Society',
@@ -44,7 +46,8 @@ async function getCircleAndSocietyData(user) {
       boxShadow: '0 0 10px 5px rgba(255, 150, 0, 0.5)',
       textColor: 'darkorange',
       xp: 240,
-      upgradeMsg: t('pioneersUpgrade'),
+      CircleUpgradeMsg: t('pioneersCircleUpgrade'),
+      SocietyUpgradeMsg: t('mavericksSocietyUpgrade'),
     },
     {
       society: 'Elites Society',
@@ -54,7 +57,8 @@ async function getCircleAndSocietyData(user) {
       boxShadow: '0 0 10px 5px rgba(0, 255, 100, 0.5)',
       textColor: 'lightgreen',
       xp: 180,
-      upgradeMsg: t('scholarsUpgrade'),
+      CircleUpgradeMsg: t('scholarsCircleUpgrade'),
+      SocietyUpgradeMsg: t('elitesSocietyUpgrade'),
     },
     {
       society: 'Elites Society',
@@ -64,7 +68,8 @@ async function getCircleAndSocietyData(user) {
       boxShadow: '0 0 10px 5px rgba(0, 255, 100, 0.5)',
       textColor: 'lightgreen',
       xp: 120,
-      upgradeMsg: t('mastersUpgrade'),
+      CircleUpgradeMsg: t('mastersCircleUpgrade'),
+      SocietyUpgradeMsg: t('elitesSocietyUpgrade'),
     },
     {
       society: 'Strivers Society',
@@ -74,7 +79,8 @@ async function getCircleAndSocietyData(user) {
       boxShadow: null,
       textColor: 'cornflowerblue',
       xp: 60,
-      upgradeMsg: t('enthusiastsUpgrade'),
+      CircleUpgradeMsg: t('enthusiastsCircleUpgrade'),
+      SocietyUpgradeMsg: t('striversSocietyUpgrade'),
     },
     {
       society: 'Strivers Society',
@@ -84,7 +90,8 @@ async function getCircleAndSocietyData(user) {
       boxShadow: null,
       textColor: 'cornflowerblue',
       xp: 40,
-      upgradeMsg: t('achieversUpgrade'),
+      CircleUpgradeMsg: t('achieversCircleUpgrade'),
+      SocietyUpgradeMsg: t('striversSocietyUpgrade'),
     },
     {
       society: 'Strivers Society',
@@ -94,7 +101,8 @@ async function getCircleAndSocietyData(user) {
       boxShadow: null,
       textColor: 'cornflowerblue',
       xp: 20,
-      upgradeMsg: t('progressorsUpgrade'),
+      CircleUpgradeMsg: t('progressorsCircleUpgrade'),
+      SocietyUpgradeMsg: t('striversSocietyUpgrade'),
     },
     {
       society: 'Explorers Society',
@@ -104,7 +112,8 @@ async function getCircleAndSocietyData(user) {
       boxShadow: null,
       textColor: 'white',
       xp: 0,
-      upgradeMsg: t('explorersUpgrade'),
+      CircleUpgradeMsg: t('explorersCircleUpgrade'),
+      SocietyUpgradeMsg: t('explorersSocietyUpgrade'),
     },
   ]
 

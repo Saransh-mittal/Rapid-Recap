@@ -220,7 +220,7 @@ const Home = () => {
       <Suspense fallback={<Spinner />}>
         {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
           <UpgradeModal
-            isOpen={showUpgradeModal}
+            isOpen={showUpgradeModal || true}
             onClose={() => setShowUpgradeModal(false)}
             title={t('upgrade_modal_title')}
             content={t('upgrade_modal_content')}
