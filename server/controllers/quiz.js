@@ -7,12 +7,288 @@ const {
   endSession,
 } = require('../db/session.js')
 const { saveQuizAttempt } = require('../services/quizAttemptService.js')
+const Article = require('../model/articleSchema.js')
+const ArticleQuizSession = require('../model/articleQuizSessionSchem.js')
+const {
+  findQuizByLanguage,
+  generateQuestionsForHindiQuiz,
+  genQuiz,
+  generateQuestionsForQuiz,
+} = require('../utils/quiz.utils.js')
+const mongoose = require('mongoose')
 
-// @desc Save the quiz attempt
-// @route POST /api/quiz/saveAttempt
+// @desc   Get the quiz for the article
+// @route  GET /api/quiz/:articleId/:lang
+// @access Private
+const getQuiz = async (req, res) => {
+  const { articleId, lang } = req.params
+  const userId = req.user._id
+
+  try {
+    if (!articleId) {
+      throw new Error('No article provided')
+    }
+
+    const article = await Article.findById(articleId)
+    if (!article) {
+      throw new Error('Article not found')
+    }
+
+    const { title, author, mainText, hindiTitle, hindiAuthor, hindiMainText } =
+      article
+
+    if (
+      (lang === 'en' && (!title || !mainText)) ||
+      (lang === 'hi' && (!hindiTitle || !hindiMainText || !hindiAuthor))
+    ) {
+      throw new Error('Quiz cannot be generated for this article')
+    }
+
+    // Check if a session already exists for this user and article
+    let quizSession = await ArticleQuizSession.findOne({
+      user: userId,
+      article: articleId,
+    })
+
+    if (quizSession) {
+      if (quizSession.completed) {
+        return res.status(200).json({
+          message: 'Quiz already completed for this article',
+          status: 'completed',
+        })
+      } else if (quizSession.startTime) {
+        return res.status(200).json({
+          message: 'Quiz in progress. You can resume.',
+          quizSession,
+          status: 'in_progress',
+          canResume: true,
+        })
+      } else {
+        return res.status(200).json({
+          message: 'Existing quiz session found. You can start the quiz.',
+          quizSession,
+          status: 'ready',
+        })
+      }
+    }
+
+    // If no session exists, create a new one
+    let fullQuiz = await findQuizByLanguage({ language: lang, articleId })
+
+    if (!fullQuiz) {
+      fullQuiz =
+        lang === 'hi'
+          ? await generateQuestionsForHindiQuiz({
+              title: hindiTitle,
+              author: hindiAuthor,
+              mainText: hindiMainText,
+              articleId,
+            })
+          : await generateQuestionsForQuiz({
+              title,
+              author,
+              mainText,
+              articleId,
+            })
+    }
+
+    const quiz = await genQuiz({ fullQuiz, title })
+
+    if (quiz.questions.length <= 2) {
+      throw new Error('Article is too short for a quiz')
+    }
+
+    const timer = Math.min(5, quiz.questions.length) * 10
+
+    // Create a new quiz session with original order of options
+    quizSession = new ArticleQuizSession({
+      user: userId,
+      article: articleId,
+      questions: quiz.questions.map(q => ({
+        question: q.question,
+        options: {
+          a: { text: q.options.a, _id: new mongoose.Types.ObjectId() },
+          b: { text: q.options.b, _id: new mongoose.Types.ObjectId() },
+          c: { text: q.options.c, _id: new mongoose.Types.ObjectId() },
+          d: { text: q.options.d, _id: new mongoose.Types.ObjectId() },
+        },
+        answer: q.answer,
+        explanation: q.explanation,
+        difficulty: parseFloat(q.difficulty) || 0.5,
+        questionId: q._id,
+      })),
+      startTime: null,
+      endTime: null,
+      completed: false,
+      overAllDifficulty: {
+        [lang]: parseFloat(fullQuiz.overAllDifficulty) || 0.5,
+      },
+      RQM_score: { [lang]: null },
+      timeTaken: { [lang]: null },
+      language: lang,
+      responses: [],
+    })
+
+    // Improved Fisher-Yates shuffle algorithm
+    const shuffle = array => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[array[i], array[j]] = [array[j], array[i]]
+      }
+      return array
+    }
+
+    // Function to shuffle options and reassign keys
+    const shuffleOptions = options => {
+      const entries = Object.entries(options)
+      const shuffled = shuffle(entries)
+
+      // Reassign keys (a, b, c, d) to shuffled options
+      return Object.fromEntries(
+        shuffled.map(([_, value], index) => [
+          String.fromCharCode(97 + index), // 'a', 'b', 'c', 'd'
+          value,
+        ]),
+      )
+    }
+
+    // Shuffle options and update correct answer
+    quizSession.questions = quizSession.questions.map(question => {
+      const originalAnswer = question.answer
+      const originalOptionId = question.options[originalAnswer]._id
+      const shuffledOptions = shuffleOptions(question.options)
+
+      // Find new correct answer key
+      const newAnswer = Object.keys(shuffledOptions).find(
+        key =>
+          shuffledOptions[key]._id.toString() === originalOptionId.toString(),
+      )
+
+      return {
+        ...question,
+        options: shuffledOptions,
+        answer: newAnswer,
+      }
+    })
+
+    await quizSession.save()
+
+    // Log answer distribution for monitoring
+    const answerDistribution = quizSession.questions.reduce((acc, q) => {
+      acc[q.answer] = (acc[q.answer] || 0) + 1
+      return acc
+    }, {})
+    console.log('Answer distribution after shuffling:', answerDistribution)
+
+    return res.status(200).json({
+      message: 'New quiz session created successfully',
+      quizSession,
+      timer,
+      status: 'ready',
+    })
+  } catch (error) {
+    console.error('Error in getQuiz:', error)
+    res.status(400).json({ error: 'Something went wrong! Please try again' })
+  }
+}
+
+// @desc   Start the quiz
+// @route  POST /api/quiz/start/:sessionId
+// @access Private
+const startQuiz = async (req, res) => {
+  const { sessionId } = req.params
+  const userId = req.user._id
+  try {
+    const quizSession = await ArticleQuizSession.findOne({
+      _id: sessionId,
+      user: userId,
+    })
+
+    if (!quizSession) {
+      return res.status(404).json({ error: 'Quiz session not found' })
+    }
+
+    if (quizSession.completed) {
+      return res.status(400).json({ error: 'Quiz session already completed' })
+    }
+
+    if (quizSession.startTime) {
+      return res
+        .status(400)
+        .json({ error: 'Quiz already started. Use resume endpoint.' })
+    }
+
+    const timer = Math.min(5, quizSession.questions.length) * 10
+
+    quizSession.startTime = new Date()
+    quizSession.endTime = new Date(Date.now() + timer * 1000)
+    await quizSession.save()
+
+    res.status(200).json({
+      message: 'Quiz started successfully',
+      startTime: quizSession.startTime,
+      endTime: quizSession.endTime,
+      timer,
+    })
+  } catch (error) {
+    res.status(400).json({ error: 'Something went wrong! Please try again' })
+    console.log(error)
+  }
+}
+
+// @desc   Resume the quiz
+// @route  POST /api/quiz/resume/:sessionId
+// @access Private
+const resumeQuiz = async (req, res) => {
+  const { sessionId } = req.params
+  const userId = req.user._id
+
+  try {
+    const quizSession = await ArticleQuizSession.findOne({
+      _id: sessionId,
+      user: userId,
+    })
+
+    if (!quizSession) {
+      return res.status(404).json({ error: 'Quiz session not found' })
+    }
+
+    if (quizSession.completed) {
+      return res.status(400).json({ error: 'Quiz session already completed' })
+    }
+
+    if (!quizSession.startTime) {
+      return res
+        .status(400)
+        .json({ error: 'Quiz has not been started yet. Use start endpoint.' })
+    }
+
+    const now = new Date()
+    const remainingTime = Math.max(0, quizSession.endTime - now)
+
+    if (remainingTime === 0) {
+      quizSession.completed = true
+      await quizSession.save()
+      return res.status(400).json({ error: 'Quiz time has expired' })
+    }
+
+    res.status(200).json({
+      message: 'Quiz resumed successfully',
+      remainingTime: Math.ceil(remainingTime / 1000),
+      responses: quizSession.responses,
+      questions: quizSession.questions,
+    })
+  } catch (error) {
+    res.status(400).json({ error: 'Something went wrong! Please try again' })
+    console.log(error)
+  }
+}
+
+// @desc   Save the quiz attempt
+// @route  POST /api/quiz/saveAttempt
 // @access Private
 const saveAttempt = async (req, res) => {
-  const { articleId, userResponses, quizData, timeTaken, quizId } = req.body
+  const { articleId, userResponses, quizData, timeTaken, sessionId } = req.body
   const userId = req.user._id
   const MAX_RETRIES = 10
   const BASE_RETRY_DELAY_MS = 500
@@ -49,13 +325,45 @@ const saveAttempt = async (req, res) => {
     const result = await executeWithRetry(async () => {
       const session = await startSession()
       try {
+        const quizSession = await ArticleQuizSession.findOne({
+          _id: sessionId,
+          user: userId,
+          article: articleId,
+        }).session(session)
+
+        if (!quizSession) {
+          throw new Error('Quiz session not found')
+        }
+
+        if (quizSession.completed) {
+          throw new Error('Quiz session already completed')
+        }
+
+        // Map user responses to the original question order
+        console.log(quizSession.questions)
+        const mappedResponses = quizSession.questions.map((question, index) => {
+          return {
+            questionId: question.questionId,
+            userAnswer: userResponses[index],
+            isCorrect: userResponses[index] === question.answer,
+          }
+        })
+
+        // Update the quiz session
+        quizSession.responses = mappedResponses
+        quizSession.completed = true
+        quizSession.endTime = new Date()
+        await quizSession.save({ session })
+
+        // Call the existing saveQuizAttempt function with mapped responses
         const quizAttemptResult = await saveQuizAttempt(
           userId,
           articleId,
-          userResponses,
-          quizData,
+          mappedResponses,
+          quizSession.questions,
           timeTaken,
-          quizId,
+          quizSession._id,
+          quizSession,
           session,
         )
 
@@ -223,4 +531,12 @@ const getQuizSummary = async (req, res) => {
   }
 }
 
-module.exports = { saveAttempt, getPercentile, givenQuiz, getQuizSummary }
+module.exports = {
+  saveAttempt,
+  getPercentile,
+  givenQuiz,
+  getQuizSummary,
+  getQuiz,
+  startQuiz,
+  resumeQuiz,
+}

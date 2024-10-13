@@ -16,7 +16,6 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import QuizBG from '../tournamentComponents/tournamentQuiz/QuizBG'
 
-// Lazy load components and assets
 const Countdown = lazy(() => import('./Countdown'))
 const ArrowRightSVG = lazy(() => import('../../assets/svg/ArrowRightSVG'))
 
@@ -29,6 +28,7 @@ const ModalComponent = ({
   load,
   showInstruction,
   startQuiz,
+  resumeQuiz,
   handleNextQuestion,
   currentQuestionIndex,
   totalQuestions,
@@ -42,22 +42,27 @@ const ModalComponent = ({
   timer,
   setSubmitted,
   showGetSetGo,
+  quizStatus,
   size = { base: 'full', md: '2xl' },
   isTournament = false,
 }) => {
   const { t } = useTranslation('ModalComponent')
 
-  // Helper function to toggle between the default (purple) and tournament (gold) colors
   const getColor = (defaultColor, tournamentColor) =>
     isTournament ? tournamentColor : defaultColor
 
-  // Memoize the button text based on the state
   const buttonText = useMemo(() => {
     if (showInstruction) return t('StartQuiz')
     if (currentQuestionIndex < totalQuestions - 1 && !submitted)
       return t('NextQuestion')
     return t('FinishQuiz')
-  }, [showInstruction, currentQuestionIndex, totalQuestions, submitted])
+  }, [
+    showInstruction,
+    quizStatus,
+    currentQuestionIndex,
+    totalQuestions,
+    submitted,
+  ])
 
   const buttonAction = useCallback(() => {
     if (showInstruction) {
@@ -76,7 +81,9 @@ const ModalComponent = ({
     return handleNextQuestion
   }, [
     showInstruction,
+    quizStatus,
     startQuiz,
+    resumeQuiz,
     currentQuestionIndex,
     totalQuestions,
     submitted,
@@ -129,7 +136,7 @@ const ModalComponent = ({
                 <Countdown
                   timer={timer}
                   submitted={submitted}
-                  start={!showInstruction}
+                  start={!showInstruction && quizStatus === 'in_progress'}
                   isTournament={isTournament}
                 />
               </Suspense>
@@ -178,52 +185,64 @@ const ModalComponent = ({
               marginBottom={load ? '10px' : ''}
               w={'100%'}
             >
-              {totalQuestions && !showGetSetGo && (
-                <ModalFooter w={'100%'}>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Suspense fallback={null}>
-                      <Button
-                        borderRadius={'full'}
-                        color={'white'}
-                        rightIcon={
-                          <ArrowRightSVG
-                            height={'20px'}
-                            width={'20px'}
-                            fill={'#fff'}
-                          />
-                        }
-                        onClick={handleClick}
-                        isDisabled={showInstruction ? false : !isAnswered}
-                        size="lg"
-                        width={{ base: '100%', lg: '50%' }}
-                        bg={
-                          isAnswered || showInstruction
-                            ? getColor('purple.500', 'rgba(255, 215, 0, 0.5)')
-                            : 'rgba(255, 255, 255, 0.1)'
-                        }
-                        _hover={{
-                          bg:
-                            isAnswered || showInstruction
-                              ? getColor('purple.600', 'rgba(255, 215, 0, 0.6)')
-                              : 'rgba(255, 255, 255, 0.15)',
-                        }}
-                        isLoading={submitLoad}
-                      >
-                        {buttonText}
-                      </Button>
-                    </Suspense>
-                  </motion.div>
-                </ModalFooter>
-              )}
+              {(totalQuestions || quizStatus === 'in_progress') &&
+                !showGetSetGo && (
+                  <ModalFooter w={'100%'}>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Suspense fallback={null}>
+                        <Button
+                          borderRadius={'full'}
+                          color={'white'}
+                          rightIcon={
+                            <ArrowRightSVG
+                              height={'20px'}
+                              width={'20px'}
+                              fill={'#fff'}
+                            />
+                          }
+                          onClick={handleClick}
+                          isDisabled={
+                            showInstruction
+                              ? false
+                              : !isAnswered && quizStatus !== 'in_progress'
+                          }
+                          size="lg"
+                          width={{ base: '100%', lg: '50%' }}
+                          bg={
+                            isAnswered ||
+                            showInstruction ||
+                            quizStatus === 'in_progress'
+                              ? getColor('purple.500', 'rgba(255, 215, 0, 0.5)')
+                              : 'rgba(255, 255, 255, 0.1)'
+                          }
+                          _hover={{
+                            bg:
+                              isAnswered ||
+                              showInstruction ||
+                              quizStatus === 'in_progress'
+                                ? getColor(
+                                    'purple.600',
+                                    'rgba(255, 215, 0, 0.6)',
+                                  )
+                                : 'rgba(255, 255, 255, 0.15)',
+                          }}
+                          isLoading={submitLoad}
+                        >
+                          {buttonText}
+                        </Button>
+                      </Suspense>
+                    </motion.div>
+                  </ModalFooter>
+                )}
             </Skeleton>
           </Flex>
         )}

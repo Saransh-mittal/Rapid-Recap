@@ -4,9 +4,8 @@ import axios from 'axios'
 import { useToast } from '@chakra-ui/react'
 import useSound from './useSound'
 
-const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
+const useSubmitQuiz = ({ articleId, sessionId, setResult }) => {
   const [submitLoad, setSubmitLoad] = useState(false)
-
   const toast = useToast()
   const { playEndChime } = useSound()
 
@@ -21,14 +20,11 @@ const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
     setSubmitLoad(true)
     setSubmitted(true)
     try {
-      const userResponses = [...userAnswers]
-
       const response = await axios.post(`/api/quiz/attempt`, {
         articleId,
-        userResponses,
-        quizData,
+        userResponses: userAnswers,
         timeTaken: timeTaken === 0 ? 1 : timeTaken,
-        quizId,
+        sessionId,
       })
 
       toast({
@@ -39,14 +35,12 @@ const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
         isClosable: true,
         position: 'top',
       })
-      // console.log(response.data);
+
       if (response.data?.messageForTournamentEligibility) {
-        setMessageForTournament &&
-          setMessageForTournament(response.data.messageForTournamentEligibility)
+        setMessageForTournament(response.data.messageForTournamentEligibility)
       }
       if (response.data?.userEligibleForTournament) {
-        setUserEligibleForTournament &&
-          setUserEligibleForTournament(response.data.userEligibleForTournament)
+        setUserEligibleForTournament(response.data.userEligibleForTournament)
       }
       setResult(response.data)
 
@@ -55,7 +49,7 @@ const useSubmitQuiz = ({ articleId, quizData, quizId, setResult }) => {
       console.log(error)
       toast({
         title: 'Error',
-        description: error.response.data.error || 'Quiz submission failed!',
+        description: error.response?.data?.error || 'Quiz submission failed!',
         status: 'error',
         duration: 5000,
         isClosable: true,

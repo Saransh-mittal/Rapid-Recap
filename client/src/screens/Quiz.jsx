@@ -67,13 +67,9 @@ const Quiz = () => {
     state => state.tournament,
   )
   const articleId = article._id
-  const { quizData, load, quizId, setLoad } = useFetchQuiz(
-    articleId,
-    i18n.language,
-    onClose,
-  )
+
   const navigate = useNavigate()
-  const totalQuestions = quizData ? quizData.questions.length : 0
+
   const toast = useToast()
   const { isBoosted } = useSelector(state => state.app)
   const { user } = useSelector(state => state.auth)
@@ -93,6 +89,16 @@ const Quiz = () => {
   const [userEligibleForTournament, setUserEligibleForTournament] = useState(
     user.eligibleForTournament,
   )
+  const {
+    quizSession,
+    quizStatus,
+    load,
+    remainingTime,
+    setLoad,
+    startQuiz,
+    resumeQuiz,
+  } = useFetchQuiz(articleId, i18n.language, onClose, setShowInstruction)
+  const totalQuestions = quizSession ? quizSession.questions.length : 0
   const shouldWarnBeforeLeaving = !showInstruction && !submitted
   useNavigationWarning(shouldWarnBeforeLeaving)
 
@@ -103,8 +109,7 @@ const Quiz = () => {
 
   const { handleSubmitQuiz, submitLoad } = useSubmitQuiz({
     articleId,
-    quizData,
-    quizId,
+    sessionId: quizSession?._id,
     setResult,
   })
   const { timer, timeTaken } = useTimer(
@@ -133,6 +138,7 @@ const Quiz = () => {
   const handleAnswer = useCallback(
     selectedOption => {
       playClick()
+      console.log(selectedOption, currentQuestionIndex)
       setUserAnswers(prevAnswers => {
         const newAnswers = [...prevAnswers]
         newAnswers[currentQuestionIndex] = selectedOption
@@ -141,30 +147,6 @@ const Quiz = () => {
     },
     [playClick, currentQuestionIndex],
   )
-
-  const startQuiz = async () => {
-    setLoad(true)
-    try {
-      await axios.get(`/api/articles/startQuiz/${articleId}`)
-      localStorage.removeItem('isQuizGivenCalled')
-      setShowGetSetGo(true)
-    } catch (error) {
-      console.log(error)
-      toast({
-        title: t('QuizFailed'),
-        description: error.response?.data?.error || t('RetryError'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    } finally {
-      setLoad(false)
-      ReactGA.event({
-        category: 'Quiz',
-        action: 'Start Quiz Button Clicked',
-      })
-    }
-  }
 
   const handleAnimationComplete = useCallback(() => {
     setShowGetSetGo(false)
@@ -502,15 +484,15 @@ const Quiz = () => {
         userSelect={'none'}
         position={'relative'}
       >
-        {!submitted ? (
+        {!submitted && quizStatus === 'in_progress' ? (
           <Suspense fallback={null}>
             <QuizInterface
               load={load}
               currentQuestionIndex={currentQuestionIndex}
               totalQuestions={totalQuestions}
-              quizData={quizData}
               handleAnswer={handleAnswer}
               userAnswers={userAnswers}
+              quizSession={quizSession}
             />
           </Suspense>
         ) : isBoosted || isQuinBoostAvailable ? (
@@ -568,7 +550,6 @@ const Quiz = () => {
     load,
     currentQuestionIndex,
     totalQuestions,
-    quizData,
     handleAnswer,
     userAnswers,
     showSubmittedInterface,
@@ -599,6 +580,8 @@ const Quiz = () => {
           showGetSetGo={showGetSetGo}
           setMessageForTournament={setMessageForTournament}
           setUserEligibleForTournament={setUserEligibleForTournament}
+          resumeQuiz={resumeQuiz}
+          quizStatus={quizStatus}
         />
       </Suspense>
       {!showInstruction && showConfirmationModal && (

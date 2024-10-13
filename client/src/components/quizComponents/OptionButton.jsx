@@ -7,7 +7,8 @@ const OptionButton = React.memo(
     // Helper to switch between tournament and default colors
     const getColor = (defaultColor, tournamentColor) =>
       isTournament ? tournamentColor : defaultColor
-
+    console.log(optionKey, optionText)
+    console.log(isSelected)
     return (
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
         <Button

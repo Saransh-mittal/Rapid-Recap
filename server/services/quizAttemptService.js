@@ -27,12 +27,13 @@ const saveQuizAttempt = async (
   userId,
   articleId,
   userResponses,
-  quizData,
+  questions,
   timeTaken,
-  quizId,
+  sessionId,
+  quizSession,
   session,
 ) => {
-  if (!userId || !articleId || !userResponses || !quizData) {
+  if (!userId || !articleId || !userResponses || !questions) {
     throw new Error('Please provide all the details')
   }
 
@@ -45,36 +46,17 @@ const saveQuizAttempt = async (
     .session(session)
 
   const article = await Article.findById(articleId).session(session)
-  if (!article) {
-    throw new Error('Article not found')
-  }
 
-  if (!article.userQuizStatus) {
-    throw new Error('No quiz status found for this article')
-  }
-
-  const foundStatus = article.userQuizStatus.find(
-    status => status.userId.toString() === userId,
-  )
-  if (foundStatus) {
-    foundStatus.status = false
-  } else {
-    throw new Error('User never started the quiz')
-  }
-  await article.save({ session })
-
-  const quiz = await Quiz.findById(quizId)
   const existingAttempt = await QuizAttempt.findOne({
     user: userId,
     article: articleId,
-    quiz: quizId,
+    quiz: sessionId,
   }).session(session)
 
   if (existingAttempt) {
     throw new Error('User has already attempted the quiz for the article.')
   }
 
-  const questions = quizData.questions
   const correctAnswers = questions.map(question => question.answer)
   const score = calculateScore(userResponses, correctAnswers)
   const quizDifficulty = calculateQuizDifficulty(questions)
@@ -109,17 +91,14 @@ const saveQuizAttempt = async (
     boosted = true
   }
 
-  const articleDifficulty = quiz.overAllDifficulty
+  const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
+  console.log(userResponses)
 
   const newQuizAttempt = new QuizAttempt({
     user: userId,
     article: articleId,
-    quiz: quizId,
-    responses: userResponses.map((userAnswer, index) => ({
-      questionId: questions[index]._id,
-      userAnswer,
-      isCorrect: userAnswer === correctAnswers[index],
-    })),
+    quiz: sessionId,
+    responses: userResponses,
     RQM_score,
     articleDifficulty,
     timeTaken,
