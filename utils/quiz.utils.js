@@ -501,7 +501,7 @@ const findQuizByLanguage = async ({ language, articleId }) => {
   }
 }
 
-const fetchTodaysPastRQMs = async ({ userId }) => {
+const fetchTodaysPastRQMs = async ({ userId, session }) => {
   try {
     // fetch todays all quizAttempts RQMs in ascending sorted time order
     const today = new Date()
@@ -513,6 +513,7 @@ const fetchTodaysPastRQMs = async ({ userId }) => {
     })
       .sort({ createdAt: 1 })
       .select('RQM_score')
+      .session(session)
     const result = pastRQMs.map(attempt => attempt.RQM_score)
     return result
   } catch (error) {
