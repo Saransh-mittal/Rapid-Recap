@@ -598,17 +598,18 @@ const getTheRevivalEndDay = (streak, streakExpireAt) => {
   return revivalEndDay
 }
 
-const updateUserStats = async (
+const updateUserStats = async ({
   user,
   RQM_score,
   articleDifficulty,
   todayAttemptsCount,
   session,
-) => {
+  newQuizAttempt,
+}) => {
   let sumOfRQM = user.avgRQM * user.quizAttempts.length
   sumOfRQM += RQM_score
   user.avgRQM = sumOfRQM / (user.quizAttempts.length + 1)
-
+  user.quizAttempts.push(newQuizAttempt._id)
   const expiry = new Date()
   expiry.setUTCDate(expiry.getUTCDate() + 1)
   expiry.setUTCHours(0, 0, 0, 0)

@@ -144,13 +144,14 @@ const saveQuizAttempt = async (
     createdAt: { $gte: currentDate },
   }).session(session)
 
-  await updateUserStats(
+  await updateUserStats({
     user,
     RQM_score,
     articleDifficulty,
     todayAttemptsCount,
     session,
-  )
+    newQuizAttempt,
+  })
   let resultOfIQCalc = {}
   if (!user.pauseRealTimeIQ) {
     const userPercentile = await calcUserPercentile({
