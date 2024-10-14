@@ -22,9 +22,6 @@ import { markFriendRequestsAsRead } from '../redux/appSlice'
 import i18n from 'i18next'
 
 const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
-const UpgradeModal = lazy(() =>
-  import('../components/homeComponents/UpgradeModal'),
-)
 
 const Home = () => {
   const { t } = useTranslation('Home')
@@ -45,13 +42,12 @@ const Home = () => {
   const [items, setItems] = useState(stateItems)
   const [page, setPage] = useState(1)
   const [load, setLoad] = useState(true)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(true)
+
   const [hasMoreItems, setHasMoreItems] = useState(true)
   const prevCategoryRef = useRef(stateCategory)
   const currentCategoryRef = useRef(category)
   const cancelTokenSourceRef = useRef(null)
 
-  const USER_IQ = user?.IQ_score ?? null
   const notLoggedIn = !isAuthenticated
 
   const fetchData = useCallback(
@@ -217,17 +213,7 @@ const Home = () => {
         <meta property="og:title" content={t('title')} />
         <meta property="og:description" content={t('description')} />
       </Helmet>
-      <Suspense fallback={<Spinner />}>
-        {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
-          <UpgradeModal
-            isOpen={showUpgradeModal || true}
-            onClose={() => setShowUpgradeModal(false)}
-            title={t('upgrade_modal_title')}
-            content={t('upgrade_modal_content')}
-          />
-        )}
-        {memoizedTimeline}
-      </Suspense>
+      <Suspense fallback={<Spinner />}>{memoizedTimeline}</Suspense>
       <WiseWeb
         isOpen={isOpenWiseWeb}
         onClose={onCloseWiseWeb}

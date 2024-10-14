@@ -685,6 +685,72 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
 
   return questions
 }
+
+const calculateScore = (userResponses, correctAnswers) => {
+  return (
+    correctAnswers.reduce((acc, answer, index) => {
+      if (userResponses.length > index && answer === userResponses[index]) {
+        return acc + 1
+      }
+      return acc
+    }, 0) / correctAnswers.length
+  )
+}
+
+const calculateQuizDifficulty = questions => {
+  return (
+    questions.reduce(
+      (acc, question) => acc + parseFloat(question.difficulty),
+      0,
+    ) / questions.length
+  )
+}
+
+const calculateApparentTimeTaken = timeTaken => {
+  return timeTaken <= 10
+    ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
+    : timeTaken
+}
+
+const calculateRQMScore = (score, quizDifficulty, apparentTimeTaken) => {
+  const apparentScore = (score * Math.log(score + 1)) / Math.log(1.3)
+  return Math.ceil(
+    ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000,
+  )
+}
+
+const calcUserPercentile = async ({ userId, articleId, session }) => {
+  try {
+    const quizAttempt = await QuizAttempt.findOne({
+      user: userId,
+      article: articleId,
+    }).session(session)
+    if (quizAttempt) {
+      const quizAttempts = await QuizAttempt.find({
+        article: articleId,
+      }).session(session)
+      const sortedQuizAttempts = quizAttempts.sort(
+        (a, b) => b.RQM_score - a.RQM_score,
+      )
+      const userAttempt = sortedQuizAttempts.find(
+        attempt => attempt.user && attempt.user.toString() === userId,
+      )
+      if (!userAttempt) {
+        throw new Error('User has not attempted the quiz for the article.')
+      }
+      const userPosition = sortedQuizAttempts.indexOf(userAttempt)
+
+      const totalAttempts = sortedQuizAttempts.length
+      const userPercentile =
+        ((totalAttempts - userPosition) / totalAttempts) * 100
+      userAttempt.userPercentile = userPercentile
+      await userAttempt.save({ session })
+      return userPercentile
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
 module.exports = {
   genQuiz,
   generateQuestionsForQuiz,
@@ -695,4 +761,9 @@ module.exports = {
   fakeQuizAttemptCnt,
   sendMailsForQuizRemainingToReviveStreak,
   generateCategoryQuiz,
+  calculateScore,
+  calculateQuizDifficulty,
+  calculateApparentTimeTaken,
+  calculateRQMScore,
+  calcUserPercentile,
 }

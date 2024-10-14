@@ -1,4 +1,4 @@
-const dailyUserIQCalc = require('../../utils/dailyUserIQCalc.utils')
+const { dailyUserIQCalc } = require('../../utils/dailyUserIQCalc.utils')
 const updateBots = require('../../utils/bot.utils/updateBots')
 
 async function calculateUserIQScores(isCalculating) {

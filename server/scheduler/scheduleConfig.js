@@ -52,33 +52,6 @@ let schedules = [
   createSchedule('userIQScore', '00:01', () =>
     calculateUserIQScores(isCalculating),
   ),
-  createSchedule('userIQScore', '08:01', () =>
-    calculateUserIQScores(isCalculating),
-  ),
-  createSchedule('userIQScore', '10:01', () =>
-    calculateUserIQScores(isCalculating),
-  ),
-  createSchedule('userIQScore', '00:01', () =>
-    calculateUserIQScores(isCalculating),
-  ),
-  createSchedule('userIQScore', '12:01', () =>
-    calculateUserIQScores(isCalculating),
-  ),
-  createSchedule('userIQScore', '14:01', () =>
-    calculateUserIQScores(isCalculating),
-  ),
-  createSchedule('userIQScore', '16:01', () =>
-    calculateUserIQScores(isCalculating),
-  ),
-  createSchedule('userIQScore', '18:01', () =>
-    calculateUserIQScores(isCalculating),
-  ),
-  createSchedule('userIQScore', '20:01', () =>
-    calculateUserIQScores(isCalculating),
-  ),
-  createSchedule('userIQScore', '22:01', () =>
-    calculateUserIQScores(isCalculating),
-  ),
   createSchedule('incFakeQuizAttempts', '20:00', incFakeQuizAttempts),
   createSchedule(
     'recommendedNewsNotification11',

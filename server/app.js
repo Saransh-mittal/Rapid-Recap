@@ -105,9 +105,10 @@ webpush.setVapidDetails(
 // require("./scripts/generateCryptoKey");
 // require('./scripts/testArticleCat')
 // require("./scripts/chatStatus");
+// require('./scripts/checkUserScoreOfUser')
 // -------------------
 
-// const dailyUserIQCalc = require('./utils/dailyUserIQCalc.utils')
+// const { dailyUserIQCalc } = require('./utils/dailyUserIQCalc.utils')
 // dailyUserIQCalc()
 // const {
 //   generateTournamentQuestions,

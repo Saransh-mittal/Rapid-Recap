@@ -5,7 +5,7 @@ const QuizAttempt = require('../model/quizAttemptSchema')
 const User = require('../model/userSchema')
 const { updatePercentilesOnQuizDeactivation } = require('./quiz.utils')
 const rankUpdate = require('./update.utils/rank.update')
-const getCircleAndSocietyData = require('../data/CircleAndSocietyData')
+const { getCircleAndSocietyData } = require('../data/CircleAndSocietyData')
 const { logActivity } = require('./activity.utils')
 const { activityTypes, getXpForActivity } = require('../data/activityTypes')
 const configService = require('../configService')
@@ -46,16 +46,19 @@ const handleSocietyOrCircleUpgrade = async (
   currIQScore,
   previousIQForXp,
   awardableXpOrNot,
+  session = null,
 ) => {
   try {
-    const user = await User.findById(userId)
+    const userQuery = User.findById(userId)
+    const user = session ? await userQuery.session(session) : await userQuery
+
     if (!user) {
       console.error(`User not found for ID: ${userId}`)
       return
     }
 
-    const prevSocietyCircle = findSocietyCircleByIQ(prevIQScore)
-    const currSocietyCircle = findSocietyCircleByIQ(currIQScore)
+    const prevSocietyCircle = await findSocietyCircleByIQ(prevIQScore)
+    const currSocietyCircle = await findSocietyCircleByIQ(currIQScore)
     const localizedI18n = i18n.cloneInstance({ initImmediate: false })
 
     // Switch to user's language
@@ -90,30 +93,21 @@ const handleSocietyOrCircleUpgrade = async (
         user.baseUpgradeIQ = currSocietyCircle.IQ_Lower
 
         if (awardableXpOrNot) {
-          await logActivity({
+          const activityParams = {
             userInGameName: user.inGameName,
             type: activityTypes.SOCIETY_OR_CIRCLE_UPGRADE.type,
             userIQ: currIQScore,
             previousIQ: previousIQForXp,
-          })
+          }
 
-          // ---- Create Inbox Notification ----
-          const notificationTitle = localizedI18n.t('upgradeTitle')
-          const notificationText = societyOrCircleUpgradeTemplate(
-            changedSocietyOrCircle === 'society'
-              ? currSocietyCircle.society
-              : currSocietyCircle.circle,
-            changedSocietyOrCircle,
-          ) // Use the HTML template for society or circle upgrade
+          if (session) {
+            activityParams.session = session
+          }
 
-          const newNotification = new ApplicationUpdates({
-            userId: user._id,
-            title: notificationTitle,
-            mainText: notificationText, // HTML content for the inbox notification
-            img: currSocietyCircle.img || '', // Optional image
-            read: false,
-          })
-          await newNotification.save()
+          await logActivity(activityParams)
+
+          // Commented out notification creation code
+          // ... (as in the original function)
         }
       } else {
         user.societyUpgradeMessage = ''
@@ -127,17 +121,33 @@ const handleSocietyOrCircleUpgrade = async (
     user.currentSociety = currSocietyCircle.society
     user.currentCircle = currSocietyCircle.circle
 
-    await user.save()
+    if (session) {
+      await user.save({ session })
+    } else {
+      await user.save()
+    }
+
+    return {
+      societyUpgradeMessage: user.societyUpgradeMessage,
+      hasSocietyOrCircleChanged,
+      changedSocietyOrCircle,
+      isUpgrade,
+      newSociety: currSocietyCircle.society,
+      newCircle: currSocietyCircle.circle,
+    }
   } catch (error) {
     console.error(
       `Error in handleSocietyOrCircleUpgrade for user ${userId}: ${error.message}`,
     )
     console.error(`Stack trace: ${error.stack}`)
+    throw error
   }
 }
 
 const fetchUsersWithQuizAttempts = async () => {
   try {
+    // pause real time IQ of all users
+    await User.updateMany({}, { pauseRealTimeIQ: true })
     return await User.aggregate([
       {
         $match: {
@@ -159,7 +169,7 @@ const fetchUsersWithQuizAttempts = async () => {
       },
       {
         $match: {
-          distinctArticles: { $gte: 10 },
+          distinctArticles: { $gte: 1 },
         },
       },
     ])
@@ -193,7 +203,6 @@ const updatePercentilesForArticles = async uniqueArticleIds => {
     try {
       await Promise.all(
         batch.map(async doc => {
-          // console.log(doc.articleId._id)
           try {
             await updatePercentilesOnQuizDeactivation({
               id: doc.articleId._id.toString(),
@@ -371,7 +380,7 @@ const dailyUserIQCalc = async () => {
   try {
     console.log('\nFetching users...\n')
     const users = await fetchUsersWithQuizAttempts()
-    console.log('\nFetched users.\n')
+    console.log('\nFetched users.\n', users.length)
 
     console.log('\nFetching unique article IDs...\n')
     const uniqueArticleIds = await fetchUniqueArticleIds()
@@ -392,18 +401,26 @@ const dailyUserIQCalc = async () => {
     await rankUpdate()
     console.log('\nRank updated.\n')
 
+    console.log('\nUnpause real time IQ of all users\n')
+    await User.updateMany({}, { pauseRealTimeIQ: false })
+    console.log('\nUnpaused real time IQ of all users\n')
+
     console.log('\nClearing leaderboard cache...\n')
     const cacheKeys = cache.keys()
     cacheKeys.forEach(key => {
-      if (key.startsWith('leaderboard_')) {
+      if (
+        key.startsWith('leaderboard_') ||
+        key === 'user_scores' ||
+        key === 'user_scores_stats'
+      ) {
         cache.del(key)
       }
     })
-    console.log('\nLeaderboard cache cleared.\n')
+    console.log('\nLeaderboard and IQ realtime calc cache cleared.\n')
   } catch (error) {
     console.error(`Error in dailyUserIQCalc: ${error.message}`)
     console.error(`Stack trace: ${error.stack}`)
   }
 }
 
-module.exports = dailyUserIQCalc
+module.exports = { handleSocietyOrCircleUpgrade, dailyUserIQCalc }

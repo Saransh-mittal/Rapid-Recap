@@ -3,7 +3,6 @@ const Article = require('../../model/articleSchema')
 const QuizAttempt = require('../../model/quizAttemptSchema')
 const Quiz = require('../../model/quizSchema')
 const User = require('../../model/userSchema')
-const dailyUserIQCalc = require('../dailyUserIQCalc.utils')
 const { genQuiz } = require('../quiz.utils')
 const configService = require('../../configService')
 

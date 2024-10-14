@@ -155,23 +155,6 @@ const RankAndSociety = ({
         <Spinner />
       ) : (
         <>
-          <Flex
-            flexDirection="column"
-            h={'fit-content'}
-            ml={'auto'}
-            mt={-6}
-            mb={3}
-          >
-            {loginedUserProfile && (
-              <Tooltip label={t('tooltip.visibility')}>
-                <Badge colorScheme="green" m={0}>
-                  {user.profilePrivacy.society
-                    ? t('tooltip.hidden')
-                    : t('tooltip.visible')}
-                </Badge>
-              </Tooltip>
-            )}
-          </Flex>
           <Suspense fallback={<Spinner />}>
             <EnhancedSocietyCircle
               societyData={circleAndSociety}

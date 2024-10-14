@@ -147,7 +147,7 @@ const Leaderboard = () => {
 
         <Box
           overflowY="auto"
-          maxH={{ base: 'calc(100vh - 250px)', md: 'calc(100vh - 350px)' }}
+          maxH={{ base: 'calc(100vh - 200px)', md: 'calc(100vh - 240px)' }}
           css={{ '&::-webkit-scrollbar': { display: 'none' } }}
           px={{ base: 1, md: 5 }}
         >

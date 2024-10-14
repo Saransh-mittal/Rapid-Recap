@@ -24,5 +24,8 @@
   "badgeUpdateSuccess": "Badge updated successfully",
   "badgeUpdateError": "Error updating badge",
   "tournamentBadge": "T{{number}}",
-  "showBadges": "Show Badges"
+  "showBadges": "Show Badges",
+  "edit": "Edit",
+  "requestSent": "Request Sent",
+  "addFriend": "Add Friend"
 }

@@ -38,6 +38,9 @@ const Quiz = React.lazy(() => import('./screens/Quiz.jsx'))
 const NotificationModal = React.lazy(() =>
   import('./components/Header-Footer/Inbox/NotificationModal.jsx'),
 )
+const UpgradeModal = React.lazy(() =>
+  import('./components/homeComponents/UpgradeModal'),
+)
 import {
   addNoteMessage,
   fetchUnreadNoteMessages,
@@ -89,7 +92,9 @@ const App = () => {
   const { tournamentId, status, isRegistered } = useSelector(
     state => state.tournament,
   )
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const { updates } = useSelector(state => state.app)
+  const USER_IQ = user?.IQ_score ?? null
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
   const handleNotifModalClose = useCallback(() => {
     dispatch(setIsNotifInboxModalOpen(false))
@@ -133,6 +138,9 @@ const App = () => {
 
   useEffect(() => {
     setShowLoadingScreen(true)
+    setTimeout(() => {
+      setShowUpgradeModal(true)
+    }, 5000)
   }, [])
 
   useEffect(() => {
@@ -383,7 +391,16 @@ const App = () => {
           onClose={() => dispatch(setIsSigninOpen(false))}
         />
       </Suspense>
-
+      <Suspense fallback={null}>
+        {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
+          <UpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={() => setShowUpgradeModal(false)}
+            title={t('upgrade_modal_title')}
+            content={t('upgrade_modal_content')}
+          />
+        )}
+      </Suspense>
       <Suspense fallback={null}>
         <Register
           isOpen={isRegisterOpen}

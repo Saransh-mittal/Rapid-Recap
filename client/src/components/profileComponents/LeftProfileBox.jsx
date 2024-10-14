@@ -1,6 +1,6 @@
 import React, {
-  useEffect,
   useState,
+  useEffect,
   useMemo,
   useCallback,
   Suspense,
@@ -15,67 +15,63 @@ import {
   useToast,
   Spinner,
   Badge,
+  useColorModeValue,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatGroup,
+  VStack,
+  HStack,
 } from '@chakra-ui/react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { EditIcon, QuestionOutlineIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { setUser } from '../../redux/authSlice'
-import UserPlusSVG from '../../assets/svg/UserPlusSVG'
 import useSound from '../../customHooks/useSound'
 import CircleAndSocietyData from '../../assets/CircleAndSocietyData'
-import { QuestionOutlineIcon } from '@chakra-ui/icons'
-import { useTranslation } from 'react-i18next'
 
-// Lazy loading for components that are not needed immediately
+// Lazy loading components
 const EditProfileModal = React.lazy(() => import('./EditProfileModal'))
-const NameLightning = React.lazy(() => import('../miscellaneous/NameLightning'))
-const GuestLoginModal = React.lazy(() =>
-  import('../authComponents/GuestLoginModal'),
-)
 const TournamentBadges = React.lazy(() =>
   import('../tournamentComponents/TournamentBadges'),
 )
 const TournamentBadgeGallery = React.lazy(() =>
   import('./LeftProfileSubComponents/TournamentBadgeGallery'),
 )
+const GuestLoginModal = React.lazy(() =>
+  import('../authComponents/GuestLoginModal'),
+)
 
-const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
+const NameLightning = React.lazy(() => import('../miscellaneous/NameLightning'))
+
+const MotionBox = motion(Box)
+const MotionFlex = motion(Flex)
+const MotionImage = motion(Image)
+
+const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
   const { t } = useTranslation('LeftProfileBox')
   const { t: TournamentBadgeTranslate } = useTranslation('TournamentBadge')
-
+  const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
   const toast = useToast()
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isBadgeGalleryOpen, setIsBadgeGalleryOpen] = useState(false)
-  const { playClick } = useSound()
-  const { user } = useSelector(state => state.auth)
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const { playClick } = useSound()
+  const { user } = useSelector(state => state.auth)
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isBadgeGalleryOpen, setIsBadgeGalleryOpen] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [canSendRequest, setCanSendRequest] = useState(true)
-  const [requestSent, setRequestSent] = useState(false)
-  const [isFriend, setIsFriend] = useState(false)
+  const [friendStatus, setFriendStatus] = useState('none') // 'none', 'pending', 'friend'
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
-  const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
   const [selectedBadge, setSelectedBadge] = useState(
     leftProfileView.displayedBadge,
   )
 
-  const handleClose = () => {
-    setIsGuestLoggedin(false)
-  }
-
-  const profileData = useMemo(
-    () => ({
-      name: leftProfileView?.name,
-      pic:
-        leftProfileView?.pic ||
-        'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
-      bio: leftProfileView?.bio,
-      inGameName: user?.inGameName,
-      lastInGameNameChange: user?.lastInGameNameChange,
-    }),
-    [leftProfileView, user],
-  )
+  const textColor = useColorModeValue('white', 'gray.100')
+  const accentColor = useColorModeValue('purple.400', 'purple.300')
 
   const findSocietyAndCircle = useCallback(IQ => {
     for (let i = 0; i < CircleAndSocietyData.length; i++) {
@@ -87,14 +83,64 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     return null
   }, [])
 
-  const selectedDatafromMaxIQ = useMemo(
-    () => findSocietyAndCircle(MAX_IQ),
-    [MAX_IQ, findSocietyAndCircle],
-  )
   const selectedDatafromCurrIQ = useMemo(
     () => findSocietyAndCircle(CURR_IQ),
     [CURR_IQ, findSocietyAndCircle],
   )
+
+  const selectedDatafromMaxIQ = useMemo(
+    () => findSocietyAndCircle(MAX_IQ),
+    [MAX_IQ, findSocietyAndCircle],
+  )
+
+  const checkFriendStatus = useCallback(async () => {
+    if (!user || user?._id === leftProfileView?._id) {
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await axios.post('/api/friends/can-send-request', {
+        fromId: user?._id,
+        toId: leftProfileView?._id,
+      })
+
+      // Update friendStatus based on the response message
+      if (response.status === 200) {
+        if (response.data.message === 'Can send request') {
+          setFriendStatus('none') // Can send a friend request
+        }
+      } else if (response.status === 201) {
+        switch (response.data.message) {
+          case 'Cannot send another request within 10 days of rejection':
+          case 'Request already sent':
+            setFriendStatus('pending') // Request is pending
+            break
+          case 'Already friends':
+            setFriendStatus('friend') // Already friends
+            break
+          default:
+            setFriendStatus('none') // Fallback to 'none' if unknown
+        }
+      }
+    } catch (error) {
+      console.error('Error checking friend status:', error)
+      toast({
+        title: t('toast.statusErrorTitle'),
+        description: t('toast.statusErrorDescription'),
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+        position: 'top',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [user?._id, leftProfileView?._id, toast, t])
+
+  useEffect(() => {
+    checkFriendStatus()
+  }, [checkFriendStatus])
 
   const handleEditClick = useCallback(() => {
     playClick()
@@ -132,38 +178,6 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     },
     [dispatch, navigate, toast, user, t],
   )
-
-  const checkCanSendRequest = useCallback(async () => {
-    setLoading(true)
-    if (!user) return setLoading(false)
-    try {
-      const response = await axios.post('/api/friends/can-send-request', {
-        fromId: user?._id,
-        toId: leftProfileView?._id,
-      })
-      if (
-        response.status === 200 &&
-        response.data.message === 'Can send request'
-      ) {
-        setCanSendRequest(true)
-      } else {
-        if (response.data.friend === true) {
-          setIsFriend(true)
-        } else if (!response.data.allowed) setCanSendRequest(false)
-      }
-    } catch (error) {
-      toast({
-        title: t('toast.requestErrorTitle'),
-        description: t('toast.requestErrorDescription'),
-        status: 'error',
-        duration: 9000,
-        isClosable: true,
-        position: 'top',
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [leftProfileView?._id, toast, user, t])
 
   const handleBadgeSelect = useCallback(
     async (tournamentNumber, badgeName, text) => {
@@ -218,7 +232,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
         toId: leftProfileView?._id,
       })
       if (response.status === 200) {
-        setRequestSent(true)
+        setFriendStatus('pending')
         toast({
           title: t('toast.requestSuccessTitle'),
           description: t('toast.requestSuccessDescription'),
@@ -242,224 +256,291 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
     }
   }, [toast, user?._id, leftProfileView?._id, t])
 
-  useEffect(() => {
-    checkCanSendRequest()
-  }, [checkCanSendRequest])
-
-  const handleRequestClick = useCallback(async () => {
-    if (canSendRequest && !requestSent) {
-      await sendFriendRequest()
+  const renderFriendButton = () => {
+    if (loading) {
+      return <Spinner size="sm" />
     }
-  }, [canSendRequest, requestSent, sendFriendRequest])
 
-  const badgeOptions = useMemo(
-    () =>
-      leftProfileView?.tournamentPerformance
-        ?.filter(tournament => tournament.rank <= 3)
-        ?.map(tournament => ({
-          label: t('tournamentBadge', {
-            number: '#' + String(tournament.tournamentNumber).padStart(3, '0'),
-          }),
-          value: tournament.tournamentNumber,
-          rank: tournament.rank,
-        })) || [],
-    [leftProfileView?.tournamentPerformance, t],
-  )
+    if (friendStatus === 'friend') {
+      return (
+        <Flex h={'fit-content'}>
+          <Badge
+            colorScheme="green"
+            variant="solid"
+            borderRadius="full"
+            px={2}
+            py={1}
+          >
+            {t('friend')}
+          </Badge>
+        </Flex>
+      )
+    }
+
+    if (friendStatus === 'pending') {
+      return (
+        <Badge
+          colorScheme="yellow"
+          variant="solid"
+          borderRadius="full"
+          px={2}
+          py={1}
+        >
+          {t('requestSent')}
+        </Badge>
+      )
+    }
+
+    if (friendStatus === 'none') {
+      return (
+        <Button
+          size="sm"
+          colorScheme="blue"
+          onClick={sendFriendRequest}
+          isLoading={loading}
+        >
+          {t('addFriend')}
+        </Button>
+      )
+    }
+
+    return null
+  }
+
+  const isOwnProfile = user?._id === leftProfileView?._id
 
   return (
-    <Flex
-      className="left-profile-box"
-      flexDirection="column"
+    <MotionBox
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
       w="100%"
-      justifyContent="center"
-      alignItems="center"
-      p="5px"
+      borderRadius="xl"
+      overflow="hidden"
+      position="relative"
     >
-      <Flex w="100%" mb={5}>
-        <Image
-          src={
-            leftProfileView?.pic ||
-            'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg'
-          }
-          alt={t('alt.profileImage')}
-          borderRadius="10%"
-          width="80px"
-          height="80px"
-          marginRight="20px"
-        />
-        <Flex
-          margin="5px"
-          // position="relative"
-          flexDirection="column"
-        >
-          <Flex
-            justifyContent="center"
-            alignItems="center"
-            w="100%"
-            position="relative"
-            marginBottom="15px"
-          >
-            <Flex alignItems="center" position={'relative'}>
-              <Heading
-                as="h4"
-                size="sm"
-                marginY="2px"
+      <MotionFlex
+        direction="column"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Flex justifyContent={'space-between'}>
+          <Flex alignItems={'center'} gap={3}>
+            <MotionImage
+              src={
+                leftProfileView?.pic ||
+                'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg'
+              }
+              alt={t('alt.profileImage')}
+              borderRadius="full"
+              boxSize="80px"
+              border="3px solid"
+              borderColor={accentColor}
+              mb={4}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+            />
+            <VStack spacing={0} align="left" mb={3}>
+              <Flex
+                fontSize="xl"
+                fontWeight="bold"
                 color={selectedDatafromCurrIQ?.textColor}
+                mb={0}
+                position={'relative'}
               >
                 {leftProfileView?.name}
-              </Heading>
-              {user?.role === 'guest' &&
-                window.location.pathname.split('/').pop() ===
-                  user?.inGameName && (
-                  <Button
-                    w="20px"
-                    height="20px"
-                    bg="transparent"
-                    color="white"
-                    _hover={{ bg: 'transparent', color: 'white' }}
-                    onClick={() => setIsGuestLoggedin(true)}
-                  >
-                    <QuestionOutlineIcon w="auto" height="18px" />
-                  </Button>
-                )}
-            </Flex>
-            <Suspense fallback={<Spinner />}>
-              <NameLightning
-                boxShadow={selectedDatafromMaxIQ?.boxShadow}
-                MAX_IQ={MAX_IQ}
-              />
-            </Suspense>
-          </Flex>
-          <Heading as="h6" fontSize="12px">
-            {leftProfileView?.inGameName}
-          </Heading>
-          <Heading as="h6" fontSize="12px">
-            {t('rank')}{' '}
-            {user?.role === 'guest' ? t('na') : leftProfileView?.rank}
-          </Heading>
-        </Flex>
-        <Flex></Flex>
-        <Flex flexDirection="column" ml="auto">
-          {window.location.pathname.split('/').pop() !== user?.inGameName &&
-            user?.role !== 'guest' && (
-              <Flex marginLeft="1.5rem" paddingTop="10px">
-                {loading ? (
-                  <Spinner />
-                ) : !user ? null : isFriend ? (
-                  <Badge
-                    colorScheme="green"
-                    variant="solid"
-                    borderRadius="full"
-                    px={2}
-                    height="fit-content"
-                    py={1}
-                  >
-                    {t('friend')}
-                  </Badge>
-                ) : (
-                  <Flex
-                    h="fit-content"
-                    cursor={
-                      canSendRequest && !requestSent ? 'pointer' : 'not-allowed'
-                    }
-                    onClick={handleRequestClick}
-                  >
-                    <UserPlusSVG
-                      height="20px"
-                      width="20px"
-                      fill={!canSendRequest || requestSent ? 'grey' : 'white'}
-                    />
-                  </Flex>
-                )}
+                <Suspense fallback={<Spinner />}>
+                  <NameLightning
+                    boxShadow={selectedDatafromMaxIQ?.boxShadow}
+                    MAX_IQ={MAX_IQ}
+                  />
+                </Suspense>
               </Flex>
-            )}
-        </Flex>
-        <Suspense fallback={<Spinner />}>
-          <Flex mr={-4}>
-            {selectedBadge && (
-              <TournamentBadges
-                tournamentNumber={selectedBadge?.tournamentNumber}
-                rank={selectedBadge?.rank}
-                name={leftProfileView?.name}
-                inGameName={leftProfileView?.inGameName}
-                participantCnt={selectedBadge?.participantCnt}
-                size="lg"
-                badgeName={{
-                  name: selectedBadge?.badgeName,
-                  text: selectedBadge?.text,
-                }}
-                t={TournamentBadgeTranslate}
-              />
-            )}
+              <Text fontSize="sm" color={accentColor} mb={0}>
+                @{leftProfileView?.inGameName}
+              </Text>
+            </VStack>
           </Flex>
-        </Suspense>
-      </Flex>
-
-      <Box marginTop="10px" w={{ base: '100%', lg: '100%' }}>
-        <Flex mb={2}>
-          <Text align="justify">{leftProfileView?.bio}</Text>
+          <Flex>
+            <AnimatePresence>
+              {selectedBadge ? (
+                <MotionBox
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Suspense fallback={<Spinner size="sm" />}>
+                    <TournamentBadges
+                      tournamentNumber={selectedBadge?.tournamentNumber}
+                      rank={selectedBadge?.rank}
+                      name={leftProfileView?.name}
+                      inGameName={leftProfileView?.inGameName}
+                      participantCnt={selectedBadge?.participantCnt}
+                      size="lg"
+                      badgeName={{
+                        name: selectedBadge?.badgeName,
+                        text: selectedBadge?.text,
+                      }}
+                      t={TournamentBadgeTranslate}
+                    />
+                  </Suspense>
+                </MotionBox>
+              ) : (
+                <Flex>
+                  <Box
+                    w={'5rem'}
+                    h={'5rem'}
+                    bg="gray.700"
+                    borderRadius="full"
+                    overflow="hidden"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 100 100"
+                    >
+                      <defs>
+                        <linearGradient
+                          id="shieldGradient"
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="100%"
+                        >
+                          <stop offset="0%" stopColor="#2D3748" />
+                          <stop offset="100%" stopColor="#1A202C" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d="M50 5 L90 25 V60 C90 75 75 90 50 95 C25 90 10 75 10 60 V25 Z"
+                        fill="url(#shieldGradient)"
+                      />
+                      <path
+                        d="M50 15 L82 31 V58 C82 70 70 82 50 86 C30 82 18 70 18 58 V31 Z"
+                        fill="none"
+                        stroke="#A0AEC0"
+                        strokeWidth="2"
+                      />
+                      <text
+                        x="50"
+                        y="60"
+                        fontFamily="Arial, sans-serif"
+                        fontSize="12"
+                        fill="#A0AEC0"
+                        textAnchor="middle"
+                      >
+                        No Badge
+                      </text>
+                    </svg>
+                  </Box>
+                </Flex>
+              )}
+            </AnimatePresence>
+          </Flex>
         </Flex>
-        <Flex gap={2}>
-          {window.location.pathname.split('/').pop() === user?.inGameName && (
-            <Flex w="100%" justifyContent="center">
-              <Button
-                size="md"
-                height="35px"
-                width="100%"
-                border="5px"
-                borderColor="green.200"
-                backgroundColor="#F2D8D8"
-                color="#374259"
-                css={{
-                  '&:hover': {
-                    backgroundColor: '#316B83',
-                    color: '#11324D',
-                  },
-                }}
-                onClick={handleEditClick}
-              >
-                {t('editProfile')}
-              </Button>
+        <Flex justifyContent={'space-between'}>
+          <HStack w="100%" mb={3} gap={5} pl={3}>
+            <Flex flexDirection={'column'}>
+              <Flex color={textColor}>Rank</Flex>
+              <Flex color={accentColor} fontSize="2xl">
+                {user?.role === 'guest' ? t('na') : leftProfileView?.rank}
+              </Flex>
             </Flex>
-          )}
-          {window.location.pathname.split('/').pop() === user?.inGameName && (
+            <Flex flexDirection={'column'}>
+              <Flex color={textColor}>Avg. RQM</Flex>
+              <Flex color={accentColor} fontSize="2xl">
+                {leftProfileView?.avgRQM?.toFixed(2)}
+              </Flex>
+            </Flex>
+            <Flex flexDirection={'column'}>
+              <Flex color={textColor}>IQ score</Flex>
+              <Flex color={accentColor} fontSize="2xl">
+                {leftProfileView?.UserIQ?.toFixed(1)}
+              </Flex>
+            </Flex>
+          </HStack>
+
+          <Flex>
+            {user &&
+              user?._id !== leftProfileView?._id &&
+              user?.role !== 'guest' && (
+                <Flex marginLeft="1.5rem" paddingTop="10px">
+                  {renderFriendButton()}
+                </Flex>
+              )}
+          </Flex>
+        </Flex>
+
+        <Flex direction="column" borderRadius="md" pl={3}>
+          <Text color={textColor} fontSize="lg" fontWeight="bold" mb={0}>
+            Bio
+          </Text>
+          <Text color="gray.500" fontSize="md" noOfLines={4}>
+            {leftProfileView?.bio || 'No bio available.'}
+          </Text>
+        </Flex>
+
+        {isOwnProfile && (
+          <HStack mt={4} spacing={4} justify="center">
             <Button
-              size="md"
-              height="35px"
-              width="100%"
-              border="none"
-              background="linear-gradient(135deg, #2C3E50, #4CA1AF)"
-              color="white"
-              _hover={{
-                background: 'linear-gradient(135deg, #4CA1AF, #2C3E50)',
-              }}
-              _active={{
-                background: 'linear-gradient(135deg, #4CA1AF, #2C3E50)',
-              }}
-              boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
-              transition="all 0.3s ease"
+              size="sm"
+              colorScheme="blue"
+              onClick={handleEditClick}
+              leftIcon={<EditIcon />}
+            >
+              {t('edit')}
+            </Button>
+            <Button
+              size="sm"
+              colorScheme="purple"
               onClick={() => setIsBadgeGalleryOpen(true)}
             >
               {t('showBadges')}
             </Button>
-          )}
-        </Flex>
-      </Box>
-
-      <Suspense fallback={<Spinner />}>
-        {isEditModalOpen && (
-          <EditProfileModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            profileData={profileData}
-            onSubmit={handleSubmitModal}
-          />
+          </HStack>
         )}
+      </MotionFlex>
+
+      {user?.role === 'guest' && isOwnProfile && (
+        <Button
+          size="sm"
+          variant="outline"
+          colorScheme="blue"
+          onClick={() => setIsGuestLoggedin(true)}
+          position="absolute"
+          top={4}
+          right={4}
+          leftIcon={<QuestionOutlineIcon />}
+        >
+          {t('guestInfo')}
+        </Button>
+      )}
+
+      {/* Modals */}
+      <Suspense fallback={null}>
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          profileData={leftProfileView}
+          onSubmit={handleSubmitModal}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        <TournamentBadgeGallery
+          isOpen={isBadgeGalleryOpen}
+          onClose={() => setIsBadgeGalleryOpen(false)}
+          userBadges={leftProfileView?.badges}
+          onBadgeSelect={handleBadgeSelect}
+          userName={leftProfileView?.name}
+          userInGameName={leftProfileView?.inGameName}
+          displayedBadge={selectedBadge}
+        />
       </Suspense>
       <Suspense fallback={null}>
         <GuestLoginModal
           isOpen={isGuestLoggedin}
-          onClose={handleClose}
+          onClose={() => setIsGuestLoggedin(false)}
           guestName={user?.inGameName}
           guestPassword={user?.guestTempPassword}
           guestId={user?._id}
@@ -467,20 +548,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ }) => {
           t={GuestLoginModaltranslation}
         />
       </Suspense>
-      <Suspense fallback={null}>
-        {isBadgeGalleryOpen && (
-          <TournamentBadgeGallery
-            isOpen={isBadgeGalleryOpen}
-            onClose={() => setIsBadgeGalleryOpen(false)}
-            userBadges={leftProfileView?.badges}
-            onBadgeSelect={handleBadgeSelect}
-            userName={leftProfileView?.name}
-            userInGameName={leftProfileView?.inGameName}
-            displayedBadge={selectedBadge}
-          />
-        )}
-      </Suspense>
-    </Flex>
+    </MotionBox>
   )
 }
 

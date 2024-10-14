@@ -571,17 +571,6 @@ const currDayStreakCalulator = async userId => {
   }
 }
 
-const preQuinBoost = async userId => {
-  try {
-    const user = await User.findById(userId)
-    if (!user) {
-      throw new Error('User not found')
-    }
-  } catch (error) {
-    console.error(error)
-  }
-}
-
 const makeFirstLoginFalse = async userId => {
   try {
     await User.findByIdAndUpdate(userId, { firstLogin: false })
@@ -609,6 +598,39 @@ const getTheRevivalEndDay = (streak, streakExpireAt) => {
   return revivalEndDay
 }
 
+const updateUserStats = async (
+  user,
+  RQM_score,
+  articleDifficulty,
+  todayAttemptsCount,
+  session,
+) => {
+  let sumOfRQM = user.avgRQM * user.quizAttempts.length
+  sumOfRQM += RQM_score
+  user.avgRQM = sumOfRQM / (user.quizAttempts.length + 1)
+
+  const expiry = new Date()
+  expiry.setUTCDate(expiry.getUTCDate() + 1)
+  expiry.setUTCHours(0, 0, 0, 0)
+  user.streakExpiry = expiry
+
+  if (todayAttemptsCount === 1) {
+    if (user.streak + 1 > user.longestStreak) {
+      user.longestStreak = user.streak + 1
+    }
+    user.streak++
+  }
+
+  if (articleDifficulty < 0.5) user.easyQuizCount++
+  else if (articleDifficulty < 0.7) user.mediumQuizCount++
+  else user.hardQuizCount++
+
+  user.rankedInCurrentSeason = true
+  user.todaysQuizCnt++
+
+  await user.save({ session })
+}
+
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -616,7 +638,7 @@ module.exports = {
   getUserIQScoreHistory,
   currentTopPercentOfUser,
   getSolvedQuizzesCount,
-
+  updateUserStats,
   calculateUserRank,
   dailyStreakCalculator,
   longestStreakCalculator,

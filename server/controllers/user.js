@@ -17,7 +17,7 @@ const {
   makeFirstLoginFalse,
   getTheRevivalEndDay,
 } = require('../utils/user.utils')
-const dailyUserIQCalc = require('../utils/dailyUserIQCalc.utils')
+const { dailyUserIQCalc } = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 // const { progressBar } = require("../utils/progress.utils");
 const QuinBoost = require('../model/quinBoostSchema')
@@ -600,7 +600,7 @@ const leaderBoard = async (req, res) => {
       } = user
       return {
         _id,
-        RQM_avg: avgRQM?.toFixed(0),
+        RQM_avg: avgRQM?.toFixed(2),
         name,
         inGameName,
         IQ_score,
@@ -697,6 +697,8 @@ const profile = async (req, res) => {
         tournamentPerformance: user.tournamentPerformance,
         displayedBadge: user.displayedBadge,
         badges: user.badges,
+        avgRQM: user.avgRQM,
+        UserIQ: user.IQ_score,
       },
       experience: {
         level: user.level,

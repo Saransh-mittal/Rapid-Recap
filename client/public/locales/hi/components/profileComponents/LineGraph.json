@@ -10,5 +10,6 @@
   "noDataForGuest": "अतिथि उपयोगकर्ता के लिए कोई डेटा नहीं",
   "registerToViewStandings": "अपनी स्थिति देखने के लिए पंजीकरण करें",
   "unableToFetchIQ": "अपेक्षित IQ प्राप्त करने में असमर्थ। कृपया बाद में पुनः प्रयास करें।",
-  "anErrorOccurred": "एक त्रुटि हुई।"
+  "anErrorOccurred": "एक त्रुटि हुई।",
+  "giveQuizzes": "अनलॉक करने के लिए एक क्विज़ दें"
 }

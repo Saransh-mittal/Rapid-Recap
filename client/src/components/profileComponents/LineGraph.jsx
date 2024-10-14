@@ -68,20 +68,7 @@ const GraphHeader = React.memo(
   ({ hoveredData, loginedUserProfile, user, t, quantities }) => {
     return (
       <Flex justifyContent="space-between" position="relative">
-        {loginedUserProfile && (
-          <Tooltip label={t('visibilityToOthers')}>
-            <Badge
-              m={0}
-              position="absolute"
-              top={0}
-              right={0}
-              colorScheme="green"
-            >
-              {user.profilePrivacy.lineGraph ? t('hidden') : t('visible')}
-            </Badge>
-          </Tooltip>
-        )}
-        <Flex justifyContent="space-between" w="100%" marginTop="2rem">
+        <Flex justifyContent="space-between" w="100%">
           {quantities.map((quantity, index) => (
             <Flex flexDirection="column" key={index}>
               <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
@@ -137,7 +124,7 @@ const LineGraph = ({
     md: 300,
     lg: 400,
     xl: 300,
-    '2xl': 500,
+    '2xl': 390,
   })
   const dispatch = useDispatch()
   const [hoveredData, setHoveredData] = useState(null)
@@ -220,10 +207,25 @@ const LineGraph = ({
       </Flex>
     )
   }
-
+  if (chartData?.length === 0) {
+    return (
+      <>
+        {isLoading ? (
+          <Flex h="300px">
+            <LoadingSpinner />
+          </Flex>
+        ) : (
+          <Flex width={'100%'} h={'100%'}>
+            <NoDataMessage viewingHistory={viewingHistory} />
+          </Flex>
+        )}
+      </>
+    )
+  }
   return (
     <Flex
       w="100%"
+      p={2}
       justifyContent="space-between"
       flexDirection="column"
       boxShadow={{
@@ -231,19 +233,25 @@ const LineGraph = ({
         base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
       }}
     >
-      <GraphHeader
-        hoveredData={hoveredData}
-        loginedUserProfile={loginedUserProfile}
-        user={user}
-        t={t}
-        quantities={quantities} // Pass the dynamic quantities
-      />
-      <GraphBody
-        chartData={chartData}
-        responsiveChartWidth={responsiveChartWidth}
-        handleHover={handleHover}
-        graphwidth={graphwidth}
-      />
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <>
+          <GraphHeader
+            hoveredData={hoveredData}
+            loginedUserProfile={loginedUserProfile}
+            user={user}
+            t={t}
+            quantities={quantities} // Pass the dynamic quantities
+          />
+          <GraphBody
+            chartData={chartData}
+            responsiveChartWidth={responsiveChartWidth}
+            handleHover={handleHover}
+            graphwidth={graphwidth}
+          />
+        </>
+      )}
     </Flex>
   )
 }
