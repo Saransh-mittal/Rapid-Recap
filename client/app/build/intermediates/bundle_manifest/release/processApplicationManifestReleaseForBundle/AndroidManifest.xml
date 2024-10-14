@@ -54,7 +54,7 @@
         android:theme="@android:style/Theme.Translucent.NoTitleBar" >
         <meta-data
             android:name="asset_statements"
-            android:resource="@string/assetStatements" />
+            android:resource="@string/asset_statements" />
         <meta-data
             android:name="web_manifest_url"
             android:value="@string/webManifestUrl" />
@@ -68,13 +68,21 @@
                 android:value="@string/launchUrl" />
         </activity>
         <activity
-            android:name="in.co.rapidrecap.www.twa.LauncherActivity"
+            android:name="in.co.rapidrecap.www.twa.RapidRecapLauncherActivity"
             android:alwaysRetainTaskState="true"
             android:exported="true"
-            android:label="@string/launcherName" >
+            android:label="@string/launcherName"
+            android:screenOrientation="unspecified"
+            android:theme="@style/SplashTheme" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
             <meta-data
                 android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                android:value="@string/launchUrl" />
+                android:value="https://www.rapidrecap.co.in" />
             <meta-data
                 android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
                 android:resource="@color/colorPrimary" />
@@ -95,10 +103,14 @@
                 android:resource="@color/navigationDividerColorDark" />
             <meta-data
                 android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE"
-                android:resource="@drawable/splash" />
+                android:resource="@drawable/splash_screen" />
             <meta-data
-                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
-                android:resource="@color/backgroundColor" />
+                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FILL_TYPE"
+                android:value="scaleToFill" />
+
+            <!-- <meta-data android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR" -->
+            <!-- android:resource="@color/backgroundColor"/> -->
+
             <meta-data
                 android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
                 android:value="@integer/splashScreenFadeOutDuration" />
