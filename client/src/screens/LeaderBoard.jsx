@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Box,
   VStack,
@@ -13,51 +13,44 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
-import { useInView } from 'react-intersection-observer'
 import { Helmet } from 'react-helmet'
+import { FixedSizeList as List } from 'react-window'
+import AutoSizer from 'react-virtualized-auto-sizer'
 
-// Preserve the original UserCard
 import UserCard from '../components/leaderBoardComponents/UserCard'
 import SearchBar from '../components/leaderBoardComponents/SearchBar'
 import LeaderboardRow from '../components/leaderBoardComponents/LeaderBoardRow'
+
+const INITIAL_RENDER_COUNT = 500
+const RENDER_BATCH_SIZE = 500
+const RENDER_INTERVAL = 100 // ms
+const ROW_HEIGHT = 100 // Adjust based on your LeaderboardRow height
 
 const Leaderboard = () => {
   const { t } = useTranslation('LeaderBoard')
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const toast = useToast()
-  const { ref, inView } = useInView({
-    threshold: 0,
-    triggerOnce: false,
-  })
 
-  const [isLoading, setIsLoading] = useState(true)
   const [leaders, setLeaders] = useState([])
   const [searchResults, setSearchResults] = useState([])
   const [searchLoad, setSearchLoad] = useState(false)
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isInitialRenderComplete, setIsInitialRenderComplete] = useState(false)
   const textColor = useColorModeValue('gray.100', 'gray.200')
   const accentColor = 'pink.400'
 
+  const renderIndexRef = useRef(INITIAL_RENDER_COUNT)
+  const allLeadersRef = useRef([])
+  const renderTimeoutRef = useRef(null)
+
   const fetchLeaderboard = useCallback(async () => {
-    if (!hasMore) {
-      setIsLoading(false)
-      return
-    }
-    setIsLoading(true)
     try {
-      const response = await axios.get(
-        `/api/user/leaderboard?page=${page}&limit=20`,
-      )
-      const fetchedLeaders = response.data.users
-      if (fetchedLeaders.length === 0) {
-        setHasMore(false)
-        return
-      }
-      setLeaders(prevLeaders => [...prevLeaders, ...fetchedLeaders])
-      setPage(prevPage => prevPage + 1)
+      const response = await axios.get('/api/user/leaderboard?limit=500')
+      allLeadersRef.current = response.data.users
+      setLeaders(response.data.users.slice(0, INITIAL_RENDER_COUNT))
     } catch (error) {
+      console.error('Error fetching leaderboard:', error)
       toast({
         title: t('toastErrorTitle'),
         description: t('toastErrorDescription'),
@@ -69,21 +62,74 @@ const Leaderboard = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [hasMore, page, toast, t])
+  }, [toast, t])
 
   useEffect(() => {
     fetchLeaderboard()
-  }, [])
+    return () => {
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current)
+      }
+    }
+  }, [fetchLeaderboard])
 
   useEffect(() => {
-    if (inView && !isLoading && hasMore) {
-      fetchLeaderboard()
+    if (!isLoading && allLeadersRef.current.length > INITIAL_RENDER_COUNT) {
+      const renderNextBatch = () => {
+        if (renderIndexRef.current < allLeadersRef.current.length) {
+          setLeaders(prevLeaders => [
+            ...prevLeaders,
+            ...allLeadersRef.current.slice(
+              renderIndexRef.current,
+              renderIndexRef.current + RENDER_BATCH_SIZE,
+            ),
+          ])
+          renderIndexRef.current += RENDER_BATCH_SIZE
+          renderTimeoutRef.current = setTimeout(
+            renderNextBatch,
+            RENDER_INTERVAL,
+          )
+        } else {
+          // All leaders have been rendered
+          setIsInitialRenderComplete(true)
+        }
+      }
+      renderTimeoutRef.current = setTimeout(renderNextBatch, RENDER_INTERVAL)
+    } else if (
+      !isLoading &&
+      allLeadersRef.current.length <= INITIAL_RENDER_COUNT
+    ) {
+      // If all leaders fit in the initial render, mark as complete
+      setIsInitialRenderComplete(true)
     }
-  }, [inView, isLoading, hasMore, fetchLeaderboard])
+  }, [isLoading])
 
-  const handleRowClick = inGameName => {
-    navigate(`/profile/${inGameName}`)
-  }
+  const handleRowClick = useCallback(
+    inGameName => {
+      navigate(`/profile/${inGameName}`)
+    },
+    [navigate],
+  )
+
+  const Row = useCallback(
+    ({ index, style }) => {
+      const leader = (searchResults.length > 0 ? searchResults : leaders)[index]
+      return (
+        <Box style={style}>
+          <LeaderboardRow
+            user={leader}
+            rank={index + 1}
+            isCurrentUser={leader._id === user?._id}
+            onClick={() => handleRowClick(leader.inGameName)}
+          />
+        </Box>
+      )
+    },
+    [searchResults, leaders, user, handleRowClick],
+  )
+
+  const itemCount =
+    searchResults.length > 0 ? searchResults.length : leaders.length
 
   return (
     <Box
@@ -145,39 +191,30 @@ const Leaderboard = () => {
 
         <UserCard user={user} t={t} />
 
-        <Box
-          overflowY="auto"
-          maxH={{ base: 'calc(100vh - 250px)', md: 'calc(100vh - 350px)' }}
-          css={{ '&::-webkit-scrollbar': { display: 'none' } }}
-          px={{ base: 1, md: 5 }}
-        >
-          {searchLoad ? (
+        <Box height="calc(100vh - 350px)">
+          {isLoading || !isInitialRenderComplete ? (
             <Flex justify="center" my={4}>
               <Spinner size="xl" color={accentColor} />
             </Flex>
           ) : (
-            (searchResults.length > 0 ? searchResults : leaders).map(
-              (leader, index) => (
-                <LeaderboardRow
-                  key={leader._id}
-                  user={leader}
-                  rank={index + 1}
-                  isCurrentUser={leader._id === user?._id}
-                  onClick={() => handleRowClick(leader.inGameName)}
-                />
-              ),
-            )
+            <AutoSizer>
+              {({ height, width }) => (
+                <List
+                  height={height}
+                  itemCount={itemCount}
+                  itemSize={ROW_HEIGHT}
+                  width={width}
+                  itemData={searchResults.length > 0 ? searchResults : leaders}
+                >
+                  {Row}
+                </List>
+              )}
+            </AutoSizer>
           )}
-          {isLoading && !searchLoad && (
-            <Flex justify="center" my={4}>
-              <Spinner size="xl" color={accentColor} />
-            </Flex>
-          )}
-          <Box ref={ref} h="40px" />
         </Box>
       </VStack>
     </Box>
   )
 }
 
-export default Leaderboard
+export default React.memo(Leaderboard)

@@ -343,7 +343,8 @@ const userSchema = new mongoose.Schema(
   },
   { collection: 'Users' },
 )
-
+userSchema.index({ IQ_score: -1, inGameName: 1 })
+userSchema.index({ quizAttempts: 1 })
 userSchema.pre('save', async function (next) {
   if (this.isNew && this.isModified('rank')) {
     // Calculate the default rank as the number of existing users

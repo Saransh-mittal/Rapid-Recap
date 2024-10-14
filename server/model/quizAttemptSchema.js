@@ -63,7 +63,7 @@ const quizAttemptSchema = new mongoose.Schema({
 })
 quizAttemptSchema.index({ user: 1 })
 quizAttemptSchema.index({ createdAt: 1 })
-
+quizAttemptSchema.index({ season: 1 }) // Add this index
 const QuizAttempt = mongoose.model('QUIZ_ATTEMPT', quizAttemptSchema)
 
 module.exports = QuizAttempt
