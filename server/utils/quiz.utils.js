@@ -686,14 +686,14 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
   return questions
 }
 
-const calculateScore = (userResponses, correctAnswers) => {
+const calculateScore = userResponses => {
   return (
-    correctAnswers.reduce((acc, answer, index) => {
-      if (userResponses.length > index && answer === userResponses[index]) {
+    userResponses.reduce((acc, res, _) => {
+      if (res.isCorrect) {
         return acc + 1
       }
       return acc
-    }, 0) / correctAnswers.length
+    }, 0) / userResponses.length
   )
 }
 

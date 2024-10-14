@@ -89,15 +89,9 @@ const Quiz = () => {
   const [userEligibleForTournament, setUserEligibleForTournament] = useState(
     user.eligibleForTournament,
   )
-  const {
-    quizSession,
-    quizStatus,
-    load,
-    remainingTime,
-    setLoad,
-    startQuiz,
-    resumeQuiz,
-  } = useFetchQuiz(articleId, i18n.language, onClose, setShowInstruction)
+  const { quizSession, quizStatus, load, remainingTime, setLoad, startQuiz } =
+    useFetchQuiz(articleId, i18n.language, onClose, setShowInstruction)
+  const quizId = quizSession?._id
   const totalQuestions = quizSession ? quizSession.questions.length : 0
   const shouldWarnBeforeLeaving = !showInstruction && !submitted
   useNavigationWarning(shouldWarnBeforeLeaving)
@@ -580,7 +574,6 @@ const Quiz = () => {
           showGetSetGo={showGetSetGo}
           setMessageForTournament={setMessageForTournament}
           setUserEligibleForTournament={setUserEligibleForTournament}
-          resumeQuiz={resumeQuiz}
           quizStatus={quizStatus}
         />
       </Suspense>

@@ -16,6 +16,7 @@ const {
   generateQuestionsForQuiz,
 } = require('../utils/quiz.utils.js')
 const mongoose = require('mongoose')
+const User = require('../model/userSchema.js')
 
 // @desc   Get the quiz for the article
 // @route  GET /api/quiz/:articleId/:lang
@@ -58,10 +59,7 @@ const getQuiz = async (req, res) => {
         })
       } else if (quizSession.startTime) {
         return res.status(200).json({
-          message: 'Quiz in progress. You can resume.',
-          quizSession,
-          status: 'in_progress',
-          canResume: true,
+          message: 'Quiz is in progress.',
         })
       } else {
         return res.status(200).json({
@@ -173,13 +171,6 @@ const getQuiz = async (req, res) => {
 
     await quizSession.save()
 
-    // Log answer distribution for monitoring
-    const answerDistribution = quizSession.questions.reduce((acc, q) => {
-      acc[q.answer] = (acc[q.answer] || 0) + 1
-      return acc
-    }, {})
-    console.log('Answer distribution after shuffling:', answerDistribution)
-
     return res.status(200).json({
       message: 'New quiz session created successfully',
       quizSession,
@@ -213,9 +204,7 @@ const startQuiz = async (req, res) => {
     }
 
     if (quizSession.startTime) {
-      return res
-        .status(400)
-        .json({ error: 'Quiz already started. Use resume endpoint.' })
+      return res.status(400).json({ error: 'Quiz already started.' })
     }
 
     const timer = Math.min(5, quizSession.questions.length) * 10
@@ -229,54 +218,6 @@ const startQuiz = async (req, res) => {
       startTime: quizSession.startTime,
       endTime: quizSession.endTime,
       timer,
-    })
-  } catch (error) {
-    res.status(400).json({ error: 'Something went wrong! Please try again' })
-    console.log(error)
-  }
-}
-
-// @desc   Resume the quiz
-// @route  POST /api/quiz/resume/:sessionId
-// @access Private
-const resumeQuiz = async (req, res) => {
-  const { sessionId } = req.params
-  const userId = req.user._id
-
-  try {
-    const quizSession = await ArticleQuizSession.findOne({
-      _id: sessionId,
-      user: userId,
-    })
-
-    if (!quizSession) {
-      return res.status(404).json({ error: 'Quiz session not found' })
-    }
-
-    if (quizSession.completed) {
-      return res.status(400).json({ error: 'Quiz session already completed' })
-    }
-
-    if (!quizSession.startTime) {
-      return res
-        .status(400)
-        .json({ error: 'Quiz has not been started yet. Use start endpoint.' })
-    }
-
-    const now = new Date()
-    const remainingTime = Math.max(0, quizSession.endTime - now)
-
-    if (remainingTime === 0) {
-      quizSession.completed = true
-      await quizSession.save()
-      return res.status(400).json({ error: 'Quiz time has expired' })
-    }
-
-    res.status(200).json({
-      message: 'Quiz resumed successfully',
-      remainingTime: Math.ceil(remainingTime / 1000),
-      responses: quizSession.responses,
-      questions: quizSession.questions,
     })
   } catch (error) {
     res.status(400).json({ error: 'Something went wrong! Please try again' })
@@ -455,78 +396,63 @@ const givenQuiz = async (req, res) => {
 }
 
 const getQuizSummary = async (req, res) => {
-  //console.log("getQuizSummary");
   const articleId = req.params.articleId
   const userId = req.user._id
+
   try {
-    const quizAttempt = await QuizAttempt.findOne({
+    const user = await User.findById(userId).select('userLanguage')
+    if (!user) {
+      throw new Error('User not found')
+    }
+    const lang = user.userLanguage
+
+    const quizSession = await ArticleQuizSession.findOne({
       user: userId,
       article: articleId,
+      language: lang,
     })
-    const quiz = await Quiz.findById(quizAttempt.quiz)
-    if (!quizAttempt) {
+
+    if (!quizSession) {
       throw new Error('User has not attempted the quiz for the article.')
     }
-    const { responses } = quizAttempt
-    const result = []
-    let score = 0
-    for (let i = 0; i < responses.length; i++) {
-      const question = responses[i]
 
-      const { questionId, userAnswer } = question
-
-      // find question in the model Quiz in para1, para2 and para3 of the questionId
-      let found = false
-      let para = 1
-      let questionIndex = 0
-      let fullQuestion = {}
-      while (!found && para <= 3) {
-        const paraQuestions = quiz[`para${para}`].questions
-        //console.log(paraQuestions[0]._id.toString());
-        questionIndex = paraQuestions.findIndex(q => {
-          //console.log(questionId.toString());
-          //console.log(q._id.toString());
-
-          return q._id.toString() === questionId.toString()
-        })
-        if (questionIndex !== -1) {
-          fullQuestion = paraQuestions[questionIndex]
-          found = true
-        } else {
-          para++
-        }
+    const result = quizSession.questions.map((question, index) => {
+      const response = quizSession.responses[index]
+      return {
+        question: question.question,
+        options: {
+          a: question.options.a.text,
+          b: question.options.b.text,
+          c: question.options.c.text,
+          d: question.options.d.text,
+        },
+        answer: question.answer,
+        explanation: question.explanation,
+        userAnswer: response.userAnswer,
+        isCorrect: response.isCorrect,
       }
-      const { options, answer, explanation } = fullQuestion
-      // console.log(userAnswer);
-      // console.log(question.isCorrect);
-      // console.log(fullQuestion);
-      if (question.isCorrect) score++
-      result.push({
-        question: fullQuestion.question,
-        options,
-        answer,
-        explanation,
-        userAnswer,
-        isCorrect: question.isCorrect,
-      })
-    }
-    const articleDifficulty = quizAttempt.articleDifficulty
+    })
+
+    const score = quizSession.responses.filter(r => r.isCorrect).length
+    const totalQuestions = quizSession.questions.length
+    const articleDifficulty = quizSession.overAllDifficulty[lang]
     const articleDifficultyLevel =
       articleDifficulty < 0.5
         ? 'easy'
         : articleDifficulty >= 0.5 && articleDifficulty < 0.7
         ? 'medium'
         : 'hard'
-    const scoreString = `${score}/${result.length}`
+    const scoreString = `${score}/${totalQuestions}`
+
     res.status(200).json({
       result,
-      timeTaken: quizAttempt.timeTaken,
-      RQM_score: quizAttempt.RQM_score,
+      timeTaken: quizSession.timeTaken[lang],
+      RQM_score: quizSession.RQM_score[lang],
       quizDifficulty: articleDifficultyLevel,
       score: scoreString,
     })
   } catch (error) {
-    res.status(400).json({ error: error || 'Something went wrong' })
+    res.status(400).json({ error: error.message || 'Something went wrong' })
     console.error(error)
   }
 }
@@ -538,5 +464,4 @@ module.exports = {
   getQuizSummary,
   getQuiz,
   startQuiz,
-  resumeQuiz,
 }

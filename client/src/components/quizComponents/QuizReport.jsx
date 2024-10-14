@@ -32,6 +32,8 @@ const QuizReport = ({
 
   const fetchQuizSummary = useCallback(async () => {
     try {
+      console.log('fetchQuizSummary')
+      console.log(isTournament)
       const response = isTournament
         ? await axios.get(`/api/tournament/quiz/summary`, {
             params: {

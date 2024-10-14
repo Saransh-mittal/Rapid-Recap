@@ -57,8 +57,7 @@ const saveQuizAttempt = async (
     throw new Error('User has already attempted the quiz for the article.')
   }
 
-  const correctAnswers = questions.map(question => question.answer)
-  const score = calculateScore(userResponses, correctAnswers)
+  const score = calculateScore(userResponses)
   const quizDifficulty = calculateQuizDifficulty(questions)
   const apparentTimeTaken = calculateApparentTimeTaken(timeTaken)
   let RQM_score = calculateRQMScore(score, quizDifficulty, apparentTimeTaken)
@@ -112,7 +111,13 @@ const saveQuizAttempt = async (
     season: parseInt(configService.getCurrentSeason(), 10),
   })
   await newQuizAttempt.save({ session })
-
+  quizSession.RQM_score = {
+    [user.userLanguage]: RQM_score,
+  }
+  quizSession.timeTaken = {
+    [user.userLanguage]: timeTaken,
+  }
+  await quizSession.save({ session })
   article.quizAttemptCnt++
   await article.save({ session })
 
@@ -202,9 +207,7 @@ const saveQuizAttempt = async (
       ? 'medium'
       : 'hard'
 
-  const scoreString = `${score * quizData.questions.length}/${
-    quizData.questions.length
-  }`
+  const scoreString = `${score * questions.length}/${questions.length}`
 
   return {
     message: 'Attempt saved successfully',

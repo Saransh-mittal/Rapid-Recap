@@ -28,7 +28,7 @@ const ModalComponent = ({
   load,
   showInstruction,
   startQuiz,
-  resumeQuiz,
+
   handleNextQuestion,
   currentQuestionIndex,
   totalQuestions,
@@ -83,7 +83,7 @@ const ModalComponent = ({
     showInstruction,
     quizStatus,
     startQuiz,
-    resumeQuiz,
+
     currentQuestionIndex,
     totalQuestions,
     submitted,

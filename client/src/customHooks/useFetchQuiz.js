@@ -14,9 +14,11 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
     const fetchQuiz = async () => {
       setLoad(true)
       try {
-        const response = await axios.get(`/api/quiz/${articleId}/${language}`)
+        const response = await axios.get(
+          `/api/quiz/getQuiz/${articleId}/${language}`,
+        )
         const { quizSession, status, timer, message } = response.data
-        console.log(response.data)
+
         setQuizSession(quizSession)
         setQuizStatus(status)
         setRemainingTime(timer)
@@ -86,31 +88,6 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
     }
   }
 
-  const resumeQuiz = async () => {
-    try {
-      const response = await axios.post(`/api/quiz/resume/${quizSession._id}`)
-      setQuizStatus('in_progress')
-      setTimer(response.data.remainingTime)
-      toast({
-        title: 'Quiz Resumed',
-        description: 'Good luck!',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
-    } catch (error) {
-      toast({
-        title: 'Failed to Resume Quiz',
-        description: error.response?.data?.error || 'Please try again',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-        position: 'top',
-      })
-    }
-  }
-
   return {
     quizSession,
     quizStatus,
@@ -118,7 +95,6 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
     remainingTime,
     setLoad,
     startQuiz,
-    resumeQuiz,
   }
 }
 
