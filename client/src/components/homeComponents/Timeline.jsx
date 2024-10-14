@@ -25,8 +25,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
 import { useNavbar } from '../../contextAPI/NavbarContext'
-
-const Categories = React.lazy(() => import('./Categories'))
+import Categories from './Categories'
 const GetStarted = React.lazy(() =>
   import('../Header-Footer/navbarComponents/GetStarted'),
 )
