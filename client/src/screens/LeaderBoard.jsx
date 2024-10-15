@@ -8,6 +8,7 @@ import {
   Spinner,
   useToast,
   Heading,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
@@ -24,7 +25,6 @@ import LeaderboardRow from '../components/leaderBoardComponents/LeaderBoardRow'
 const INITIAL_RENDER_COUNT = 500
 const RENDER_BATCH_SIZE = 500
 const RENDER_INTERVAL = 100 // ms
-const ROW_HEIGHT = 100 // Adjust based on your LeaderboardRow height
 
 const Leaderboard = () => {
   const { t } = useTranslation('LeaderBoard')
@@ -43,6 +43,10 @@ const Leaderboard = () => {
   const renderIndexRef = useRef(INITIAL_RENDER_COUNT)
   const allLeadersRef = useRef([])
   const renderTimeoutRef = useRef(null)
+
+  // Responsive values for row height and gap
+  const ROW_HEIGHT = useBreakpointValue({ base: 140, md: 120, lg: 100 })
+  const ROW_GAP = useBreakpointValue({ base: 8, md: 12, lg: 16 })
 
   const fetchLeaderboard = useCallback(async () => {
     try {
@@ -90,7 +94,6 @@ const Leaderboard = () => {
             RENDER_INTERVAL,
           )
         } else {
-          // All leaders have been rendered
           setIsInitialRenderComplete(true)
         }
       }
@@ -99,7 +102,6 @@ const Leaderboard = () => {
       !isLoading &&
       allLeadersRef.current.length <= INITIAL_RENDER_COUNT
     ) {
-      // If all leaders fit in the initial render, mark as complete
       setIsInitialRenderComplete(true)
     }
   }, [isLoading])
@@ -115,7 +117,13 @@ const Leaderboard = () => {
     ({ index, style }) => {
       const leader = (searchResults.length > 0 ? searchResults : leaders)[index]
       return (
-        <Box style={style}>
+        <Box
+          style={{
+            ...style,
+            height: `${ROW_HEIGHT - ROW_GAP}px`,
+            top: `${parseFloat(style.top) + index * ROW_GAP}px`,
+          }}
+        >
           <LeaderboardRow
             user={leader}
             rank={index + 1}
@@ -125,7 +133,7 @@ const Leaderboard = () => {
         </Box>
       )
     },
-    [searchResults, leaders, user, handleRowClick],
+    [searchResults, leaders, user, handleRowClick, ROW_HEIGHT, ROW_GAP],
   )
 
   const itemCount =
