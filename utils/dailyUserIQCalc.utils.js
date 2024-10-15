@@ -85,8 +85,11 @@ const handleSocietyOrCircleUpgrade = async (
     const isUpgrade = currSocietyCircle.IQ_Lower >= prevSocietyCircle.IQ_Lower
 
     if (hasSocietyOrCircleChanged) {
-      if (isUpgrade) {
-        user.societyUpgradeMessage = currSocietyCircle.upgradeMsg
+      if (isUpgrade && changedSocietyOrCircle !== 'same') {
+        user.societyUpgradeMessage =
+          changedSocietyOrCircle === 'society'
+            ? currSocietyCircle.SocietyUpgradeMsg
+            : currSocietyCircle.CircleUpgradeMsg
         user.baseUpgradeIQ = currSocietyCircle.IQ_Lower
 
         if (awardableXpOrNot) {

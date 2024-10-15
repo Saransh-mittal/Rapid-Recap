@@ -30,6 +30,8 @@ const {
   getStoryFeedbackStats,
   getQuizFeedback,
   getQuizFeedbackStats,
+  getTournamentFeedback,
+  getTournamentFeedbackStats,
 } = require('../controllers/feedbackController')
 const router = express.Router()
 
@@ -126,6 +128,19 @@ router.get(
   Authenticate,
   adminMiddleware,
   getQuizFeedbackStats,
+)
+
+router.get(
+  '/feedback/tournamentQuiz/:tournamentId',
+  Authenticate,
+  adminMiddleware,
+  getTournamentFeedback,
+)
+router.get(
+  '/feedback/tournamentQuiz/stats',
+  Authenticate,
+  adminMiddleware,
+  getTournamentFeedbackStats,
 )
 router.get('/tournament/questions', Authenticate, adminMiddleware, getQuestions)
 router.put(

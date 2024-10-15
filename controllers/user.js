@@ -653,6 +653,8 @@ const profile = async (req, res) => {
         tournamentPerformance: user.tournamentPerformance,
         displayedBadge: user.displayedBadge,
         badges: user.badges,
+        avgRQM: user.avgRQM,
+        UserIQ: user.IQ_score,
       },
       experience: {
         level: user.level,

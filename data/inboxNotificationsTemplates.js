@@ -3,16 +3,155 @@
 // HTML template for society or circle upgrade notification
 const societyOrCircleUpgradeTemplate = (societyOrCircleName, type) => {
   return `
-    <div style="font-family: Arial, sans-serif; color: #333;">
-      <h2 style="color: #4CAF50;">Congratulations on Your ${
-        type.charAt(0).toUpperCase() + type.slice(1)
-      } Upgrade!</h2>
-      <p>You have successfully upgraded your <strong>${type}</strong> to <strong>${societyOrCircleName}</strong>.</p>
-      <p>Keep up the great work and continue advancing!</p>
-      <footer style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
-        <p style="color: #777;">Powered by Our App</p>
-      </footer>
+    <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 15px;
+            background-color: #1a1a1a;
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .email-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: linear-gradient(145deg, #2d2d2d, #212121);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: clamp(20px, 5vw, 40px) clamp(15px, 4vw, 30px);
+            text-align: center;
+        }
+
+        .header h2 {
+            color: #ffffff;
+            margin: 0;
+            font-size: clamp(22px, 4vw, 28px);
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .content {
+            padding: clamp(20px, 5vw, 40px) clamp(15px, 4vw, 30px);
+            color: #e0e0e0;
+        }
+
+        .upgrade-details {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: clamp(15px, 4vw, 20px);
+            margin: clamp(15px, 4vw, 20px) 0;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .highlight {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .footer {
+            background: #1a1a1a;
+            padding: clamp(15px, 4vw, 20px);
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer p {
+            color: #666;
+            margin: 0;
+            font-size: clamp(12px, 3.5vw, 14px);
+        }
+
+        .celebration-icon {
+            font-size: clamp(30px, 6vw, 40px);
+            margin-bottom: clamp(15px, 4vw, 20px);
+        }
+
+        .upgrade-name {
+            font-size: clamp(20px, 5vw, 24px);
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        p {
+            font-size: clamp(14px, 3.5vw, 16px);
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .email-container {
+                border-radius: 10px;
+            }
+
+            .upgrade-details {
+                border-left-width: 3px;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            p:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        @media (hover: hover) {
+            .email-container {
+                transition: transform 0.3s ease;
+            }
+
+            .email-container:hover {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="celebration-icon">🎉</div>
+            <h2>Achievement Unlocked</h2>
+        </div>
+        <div class="content">
+            <div class="upgrade-details">
+                <p>Congratulations on your advancement to</p>
+                <p class="upgrade-name highlight">${societyOrCircleName}</p>
+                <p>Your commitment to excellence has elevated your <span class="highlight">${type}</span> status to new heights. This achievement reflects your dedication and outstanding contributions.</p>
+            </div>
+            <p style="text-align: center;">Continue your journey of excellence and discover the exclusive benefits that await you.</p>
+        </div>
+        <div class="footer">
+            <p>Powered by Our App</p>
+        </div>
     </div>
+</body>
+</html>
   `
 }
 

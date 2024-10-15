@@ -1,0 +1,1 @@
+import{w as a,aF as e}from"./index-5db7b367.js";import{a as s}from"./modal-overlay-1c3a86b4.js";import{M as i}from"./modal-content-e13134d3.js";function m(t){const{leastDestructiveRef:o,...r}=t;return a.jsx(s,{...r,initialFocusRef:o})}const c=e((t,o)=>a.jsx(i,{ref:o,role:"alertdialog",...t}));export{m as A,c as a};

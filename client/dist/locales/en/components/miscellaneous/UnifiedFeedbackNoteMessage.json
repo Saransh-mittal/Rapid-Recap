@@ -5,5 +5,6 @@
   "submitFeedback": "Submit Feedback",
   "feedbackSubmitted": "Thank you for your feedback!",
   "StoryBodyTitle": "How is story theme feature?",
-  "QuizBodyTitle": "How are the quiz questions?"
+  "QuizBodyTitle": "How are the quiz questions?",
+  "TournamentQuizBodyTitle": "Tournament Feedback"
 }

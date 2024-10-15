@@ -6,5 +6,7 @@
   "circle": "{{circle}}",
   "upgradeMessage": "{{upgradeMessage}}",
   "journeyContinues": "आपकी कुशलता की यात्रा जारी है...",
-  "continueJourney": "अपनी यात्रा जारी रखें.."
+  "continueJourney": "अपनी यात्रा जारी रखें..",
+  "Circle": "वृत्त",
+  "iqRange": "आईक्यू श्रेणी:"
 }
