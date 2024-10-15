@@ -42,8 +42,6 @@ const NoteMessage = ({
   actions = [],
   customContent,
   feedbackContent,
-  quizFeedbackContent,
-  TourQuizFeedbackContent,
 }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -69,24 +67,18 @@ const NoteMessage = ({
           ),
         handleQuizFeedback: () =>
           handleQuizFeedback(
-            quizFeedbackContent.rating,
-            quizFeedbackContent.feedback,
-            quizFeedbackContent.feedbackId,
+            feedbackContent.rating,
+            feedbackContent.feedback,
+            feedbackContent.feedbackId,
           ),
         handleTournamentFeedback: () =>
           handleTournamentFeedback(
-            TourQuizFeedbackContent.rating,
-            TourQuizFeedbackContent.feedback,
-            TourQuizFeedbackContent.feedbackId,
+            feedbackContent.rating,
+            feedbackContent.feedback,
+            feedbackContent.feedbackId,
           ),
       }),
-    [
-      dispatch,
-      navigate,
-      feedbackContent,
-      quizFeedbackContent,
-      TourQuizFeedbackContent,
-    ],
+    [dispatch, navigate, feedbackContent],
   )
 
   // Memoize handleAction to avoid recreating the function on every render

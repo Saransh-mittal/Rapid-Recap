@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useToast } from '@chakra-ui/react'
 import useSound from './useSound'
 
-const useSubmitQuiz = ({ articleId, sessionId, setResult }) => {
+const useSubmitQuiz = ({ articleId, sessionId, setResult, setSubmitError }) => {
   const [submitLoad, setSubmitLoad] = useState(false)
   const toast = useToast()
   const { playEndChime } = useSound()
@@ -47,6 +47,7 @@ const useSubmitQuiz = ({ articleId, sessionId, setResult }) => {
       return response.data
     } catch (error) {
       console.log(error)
+      setSubmitError(true)
       toast({
         title: 'Error',
         description: error.response?.data?.error || 'Quiz submission failed!',

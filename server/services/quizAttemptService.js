@@ -91,7 +91,6 @@ const saveQuizAttempt = async (
   }
 
   const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
-  console.log(userResponses)
 
   const newQuizAttempt = new QuizAttempt({
     user: userId,

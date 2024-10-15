@@ -43,7 +43,7 @@ const ModalComponent = ({
   setSubmitted,
   showGetSetGo,
   quizStatus,
-  size = { base: 'full', md: '2xl' },
+  size = 'full',
   isTournament = false,
 }) => {
   const { t } = useTranslation('ModalComponent')

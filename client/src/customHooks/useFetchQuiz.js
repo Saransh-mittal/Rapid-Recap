@@ -9,7 +9,6 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
   const [load, setLoad] = useState(true)
   const [remainingTime, setRemainingTime] = useState(null)
   const toast = useToast()
-
   useEffect(() => {
     const fetchQuiz = async () => {
       setLoad(true)
@@ -18,11 +17,9 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
           `/api/quiz/getQuiz/${articleId}/${language}`,
         )
         const { quizSession, status, timer, message } = response.data
-
         setQuizSession(quizSession)
         setQuizStatus(status)
         setRemainingTime(timer)
-
         if (status === 'completed') {
           toast({
             title: 'Quiz Already Completed',
@@ -32,17 +29,9 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
             isClosable: true,
             position: 'top',
           })
-        } else {
-          toast({
-            title: 'Quiz Session Created',
-            description: message,
-            status: 'success',
-            duration: 5000,
-            isClosable: true,
-            position: 'top',
-          })
         }
       } catch (error) {
+        console.error(error)
         toast({
           title: 'Quiz Fetch Failed',
           description: error.response?.data?.error || 'Please try again later',
@@ -61,12 +50,12 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
   }, [articleId, language, toast, onClose])
 
   const startQuiz = async () => {
+    setLoad(true)
     try {
       const response = await axios.post(`/api/quiz/start/${quizSession._id}`)
 
       setQuizStatus('in_progress')
       setRemainingTime(response.data.timer)
-      setShowInstruction(false)
       setLoad(false)
       toast({
         title: 'Quiz Started',
@@ -77,6 +66,7 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
         position: 'top',
       })
     } catch (error) {
+      console.error(error)
       toast({
         title: 'Failed to Start Quiz',
         description: error.response?.data?.error || 'Please try again',
@@ -92,9 +82,8 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
     quizSession,
     quizStatus,
     load,
-    remainingTime,
-    setLoad,
     startQuiz,
+    remainingTime,
   }
 }
 

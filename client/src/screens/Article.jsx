@@ -112,11 +112,9 @@ const Article = () => {
 
   const fetchQuiz = useCallback(async () => {
     try {
-      const endpoint =
-        i18n.language === 'en'
-          ? `/api/articles/genQuiz/${id}`
-          : `/api/articles/genHindiQuiz/${id}`
-      await axios.put(endpoint)
+      const endpoint = `/api/quiz/getQuiz/${id}/${i18n.language}`
+
+      await axios.get(endpoint)
     } catch (error) {
       console.log(error.message)
     }

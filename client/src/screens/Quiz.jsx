@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react'
-import { Flex, useToast, Box, useDisclosure } from '@chakra-ui/react'
+import { Flex, useToast, Box } from '@chakra-ui/react'
 import './Quiz.css'
 import ReactGA from 'react-ga4'
 import { useDispatch, useSelector } from 'react-redux'
-import axios from 'axios'
+
 import useFetchQuiz from '../customHooks/useFetchQuiz'
 import useTimer from '../customHooks/useTimer'
 import useSubmitQuiz from '../customHooks/useSubmitQuiz'
@@ -89,9 +89,11 @@ const Quiz = () => {
   const [userEligibleForTournament, setUserEligibleForTournament] = useState(
     user.eligibleForTournament,
   )
-  const { quizSession, quizStatus, load, remainingTime, setLoad, startQuiz } =
+  const { quizSession, quizStatus, load, startQuiz, remainingTime } =
     useFetchQuiz(articleId, i18n.language, onClose, setShowInstruction)
-  const quizId = quizSession?._id
+  const quizId = quizSession?.quiz
+  const [submitError, setSubmitError] = useState(false)
+
   const totalQuestions = quizSession ? quizSession.questions.length : 0
   const shouldWarnBeforeLeaving = !showInstruction && !submitted
   useNavigationWarning(shouldWarnBeforeLeaving)
@@ -105,8 +107,10 @@ const Quiz = () => {
     articleId,
     sessionId: quizSession?._id,
     setResult,
+    setSubmitError,
   })
   const { timer, timeTaken } = useTimer(
+    remainingTime,
     isOpen,
     submitted,
     showInstruction,
@@ -132,7 +136,7 @@ const Quiz = () => {
   const handleAnswer = useCallback(
     selectedOption => {
       playClick()
-      console.log(selectedOption, currentQuestionIndex)
+
       setUserAnswers(prevAnswers => {
         const newAnswers = [...prevAnswers]
         newAnswers[currentQuestionIndex] = selectedOption
@@ -156,6 +160,10 @@ const Quiz = () => {
   }, [])
 
   const handleClose = async () => {
+    if (submitError) {
+      onClose()
+      return
+    }
     try {
       dispatchRedux(setStreakLoading(true))
       dispatchRedux(setTotalUsersGivenQuiz(totalUsersGivenQuiz + 1))
@@ -304,7 +312,10 @@ const Quiz = () => {
       console.log(error)
     }
   }
-
+  const handleStartQuiz = useCallback(async () => {
+    await startQuiz()
+    setShowGetSetGo(true)
+  }, [startQuiz, quizSession])
   const handleConfirmClose = useCallback(async () => {
     try {
       quinBoostChecker({
@@ -478,7 +489,7 @@ const Quiz = () => {
         userSelect={'none'}
         position={'relative'}
       >
-        {!submitted && quizStatus === 'in_progress' ? (
+        {!submitted ? (
           <Suspense fallback={null}>
             <QuizInterface
               load={load}
@@ -560,7 +571,7 @@ const Quiz = () => {
           renderModalBody={renderModalBody}
           load={load}
           showInstruction={showInstruction}
-          startQuiz={startQuiz}
+          startQuiz={handleStartQuiz}
           handleNextQuestion={handleNextQuestion}
           currentQuestionIndex={currentQuestionIndex}
           totalQuestions={totalQuestions}

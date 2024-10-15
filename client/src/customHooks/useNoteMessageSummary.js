@@ -15,21 +15,33 @@ import {
   handleQuizFeedback,
   handleTournamentFeedback,
 } from '../utils/helper.utils'
+import {
+  setFeedback,
+  setQuizFeedback,
+  setQuizRating,
+  setRating,
+  setTournamentQuizFeedback,
+  setTournamentQuizRating,
+} from '../redux/noteMessageSummarySlice'
 
 export const useNoteMessageSummary = (messages, closeDisclosure, onClose) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const [showConfetti, setShowConfetti] = useState(false)
-  const [rating, setRating] = useState(0)
-  const [quizRating, setQuizRating] = useState(0)
-  const [feedback, setFeedback] = useState('')
-  const [quizFeedback, setQuizFeedback] = useState('')
+
   const [storyId, setStoryId] = useState(null)
   const [quizId, setQuizId] = useState(null)
-  const [tournamentQuizRating, setTournamentQuizRating] = useState(0)
-  const [tournamentQuizFeedback, setTournamentQuizFeedback] = useState('')
+
   const [tournamentId, setTournamentId] = useState(null)
+  const {
+    rating,
+    quizRating,
+    tournamentQuizRating,
+    feedback,
+    quizFeedback,
+    tournamentQuizFeedback,
+  } = useSelector(state => state.noteMessageSummary)
 
   const handleMessageAction = useCallback(
     createHandleMessageAction(dispatch, {
@@ -131,16 +143,16 @@ export const useNoteMessageSummary = (messages, closeDisclosure, onClose) => {
     handleDismiss,
     handleAction,
     rating,
-    setRating,
+    setRating: val => dispatch(setRating(val)),
     quizRating,
-    setQuizRating,
+    setQuizRating: val => dispatch(setQuizRating(val)),
     feedback,
-    setFeedback,
+    setFeedback: val => dispatch(setFeedback(val)),
     quizFeedback,
-    setQuizFeedback,
+    setQuizFeedback: val => dispatch(setQuizFeedback(val)),
     tournamentQuizRating,
-    setTournamentQuizRating,
+    setTournamentQuizRating: val => dispatch(setTournamentQuizRating(val)),
     tournamentQuizFeedback,
-    setTournamentQuizFeedback,
+    setTournamentQuizFeedback: val => dispatch(setTournamentQuizFeedback(val)),
   }
 }

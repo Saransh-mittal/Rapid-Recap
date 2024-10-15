@@ -40,7 +40,7 @@ const QuizInterface = ({
     },
     [handleAnswer],
   )
-  console.log(quizSession)
+
   if (load || !quizSession || quizSession.questions.length === 0) {
     return (
       <Center height="100vh">

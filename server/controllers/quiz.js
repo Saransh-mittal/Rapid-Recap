@@ -19,7 +19,7 @@ const mongoose = require('mongoose')
 const User = require('../model/userSchema.js')
 
 // @desc   Get the quiz for the article
-// @route  GET /api/quiz/:articleId/:lang
+// @route  GET /api/quiz/getQuiz/:articleId/:lang
 // @access Private
 const getQuiz = async (req, res) => {
   const { articleId, lang } = req.params
@@ -46,28 +46,34 @@ const getQuiz = async (req, res) => {
     }
 
     // Check if a session already exists for this user and article
-    let quizSession = await ArticleQuizSession.findOne({
+    let quizSessions = await ArticleQuizSession.find({
       user: userId,
       article: articleId,
     })
+    let quizSession = quizSessions?.find(
+      session => session.language === lang && !session.completed,
+    )
+    // check if any of the existing sessions are in progress or completed
+    const inProgressSession = quizSessions?.find(
+      session => session.startTime && !session.completed,
+    )
+    const completedSession = quizSessions?.find(session => session.completed)
 
-    if (quizSession) {
-      if (quizSession.completed) {
-        return res.status(200).json({
-          message: 'Quiz already completed for this article',
-          status: 'completed',
-        })
-      } else if (quizSession.startTime) {
-        return res.status(200).json({
-          message: 'Quiz is in progress.',
-        })
-      } else {
-        return res.status(200).json({
-          message: 'Existing quiz session found. You can start the quiz.',
-          quizSession,
-          status: 'ready',
-        })
-      }
+    if (completedSession) {
+      return res.status(200).json({
+        message: 'Quiz already completed for this article',
+        status: 'completed',
+      })
+    } else if (inProgressSession) {
+      return res.status(200).json({
+        message: 'Quiz is in progress.',
+      })
+    } else if (quizSession) {
+      return res.status(200).json({
+        message: 'Existing quiz session found. You can start the quiz.',
+        quizSession,
+        status: 'ready',
+      })
     }
 
     // If no session exists, create a new one
@@ -100,6 +106,7 @@ const getQuiz = async (req, res) => {
 
     // Create a new quiz session with original order of options
     quizSession = new ArticleQuizSession({
+      quiz: fullQuiz._id,
       user: userId,
       article: articleId,
       questions: quiz.questions.map(q => ({
@@ -279,9 +286,6 @@ const saveAttempt = async (req, res) => {
         if (quizSession.completed) {
           throw new Error('Quiz session already completed')
         }
-
-        // Map user responses to the original question order
-        console.log(quizSession.questions)
         const mappedResponses = quizSession.questions.map((question, index) => {
           return {
             questionId: question.questionId,
@@ -320,6 +324,9 @@ const saveAttempt = async (req, res) => {
 
     res.status(201).json(result)
   } catch (error) {
+    // Delete the quiz session if the attempt fails
+    await ArticleQuizSession.deleteOne({ _id: sessionId, user: userId })
+
     console.error('Error in saveAttempt:', error)
     res.status(500).json({ error: 'Unable to save attempt. Please try again.' })
   }
@@ -334,10 +341,10 @@ const getPercentile = async (req, res) => {
       (a, b) => b.RQM_score - a.RQM_score,
     )
     const userAttempt = sortedQuizAttempts.find(
-      attempt => attempt.user.toString() === userId,
+      attempt => attempt?.user?.toString() === userId,
     )
     if (!userAttempt) {
-      throw new Error('User has not attempted the quiz for the article.')
+      return res.status(404).json({ error: 'User has not attempted the quiz' })
     }
     const userPosition = sortedQuizAttempts.indexOf(userAttempt)
 
