@@ -23,7 +23,7 @@ export const RightProfileSection = ({
 
   const renderProfileBox = (children, privacyKey) => {
     if (isLoading) {
-      return <Skeleton height="250px" width="420px" borderRadius="10px" />
+      return <Skeleton height="250px" width="100%" borderRadius="10px" />
     }
     return (
       <ProfileBox
@@ -57,11 +57,12 @@ export const RightProfileSection = ({
             w={'100%'}
             margin="10px"
             marginBottom="5px"
+            justifyContent="space-between"
             flexDirection={{ xl: 'row', base: 'column' }}
             gap={5}
           >
-            <Skeleton height="250px" width="420px" borderRadius="10px" />
-            <Skeleton height="250px" width="420px" borderRadius="10px" />
+            <Skeleton height="250px" width="100%" borderRadius="10px" />
+            <Skeleton height="250px" width="100%" borderRadius="10px" />
           </Flex>
         }
       >
@@ -70,6 +71,7 @@ export const RightProfileSection = ({
           margin="10px"
           marginBottom="5px"
           flexDirection={{ xl: 'row', base: 'column' }}
+          justifyContent="space-between"
           gap={5}
         >
           {renderProfileBox(
@@ -101,6 +103,29 @@ export const RightProfileSection = ({
       </Suspense>
       <Suspense
         fallback={
+          <>
+            <Flex
+              w={'100%'}
+              margin="10px"
+              marginBottom="5px"
+              flexDirection={{ xl: 'row', base: 'column' }}
+              justifyContent="space-between"
+              gap={5}
+            >
+              <Skeleton height="250px" width="100%" borderRadius="10px" />
+              <Skeleton height="250px" width="100%" borderRadius="10px" />
+            </Flex>
+            <Skeleton height="300px" width="100%" borderRadius="10px" />
+          </>
+        }
+      >
+        <Flex
+          flexDirection={'column'}
+          gap={'10px'}
+          w={'100%'}
+          justifyContent={'center'}
+          alignItems={'center'}
+        >
           <Flex
             w={'100%'}
             margin="10px"
@@ -109,49 +134,37 @@ export const RightProfileSection = ({
             justifyContent="space-between"
             gap={5}
           >
-            <Skeleton height="250px" width="420px" borderRadius="10px" />
-            <Skeleton height="250px" width="420px" borderRadius="10px" />
+            {renderProfileBox(
+              <SolvedQuizzes
+                privateSolvedQuiz={
+                  privacyProfileData?.solvedQuizzes && !loginedUserProfile
+                }
+                loginedUserProfile={loginedUserProfile}
+                solvedQuizzes={profile?.solvedQuizzes}
+                inGameName={inGameName}
+              />,
+              'solvedQuizzes',
+            )}
+            {renderProfileBox(
+              <RankAndSociety
+                privateSociety={privacyProfileData?.society}
+                loginedUserProfile={loginedUserProfile}
+                USER_IQ={profile?.barGraph?.USER_IQ}
+                isGuest={user?.role === 'guest'}
+              />,
+              'society',
+            )}
           </Flex>
-        }
-      >
-        <Flex
-          w={'100%'}
-          margin="10px"
-          marginBottom="5px"
-          flexDirection={{ xl: 'row', base: 'column' }}
-          justifyContent="space-between"
-          gap={5}
-        >
           {renderProfileBox(
-            <SolvedQuizzes
-              privateSolvedQuiz={
-                privacyProfileData?.solvedQuizzes && !loginedUserProfile
-              }
+            <TournamentSection
+              privateTournament={privacyProfileData?.tournamentAnalytics}
               loginedUserProfile={loginedUserProfile}
-              solvedQuizzes={profile?.solvedQuizzes}
-              inGameName={inGameName}
-            />,
-            'solvedQuizzes',
-          )}
-          {renderProfileBox(
-            <RankAndSociety
-              privateSociety={privacyProfileData?.society}
-              loginedUserProfile={loginedUserProfile}
-              USER_IQ={profile?.barGraph?.USER_IQ}
               isGuest={user?.role === 'guest'}
+              userId={profile?.userId}
             />,
-            'society',
+            'tournamentAnalytics',
           )}
         </Flex>
-        {renderProfileBox(
-          <TournamentSection
-            privateTournament={privacyProfileData?.tournamentAnalytics}
-            loginedUserProfile={loginedUserProfile}
-            isGuest={user?.role === 'guest'}
-            userId={profile?.userId}
-          />,
-          'tournamentAnalytics',
-        )}
       </Suspense>
     </Flex>
   )

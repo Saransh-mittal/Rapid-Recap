@@ -87,7 +87,7 @@ const RankAndSociety = ({
         h={'100%'}
         flexDirection="column"
         position="relative"
-        p={5}
+        py={5}
         justifyContent={'center'}
         alignItems={'center'}
         mt={-5}
@@ -127,7 +127,6 @@ const RankAndSociety = ({
       position="relative"
       justifyContent={'center'}
       alignItems={'center'}
-      px={5}
     >
       {privateSociety ? (
         <Flex

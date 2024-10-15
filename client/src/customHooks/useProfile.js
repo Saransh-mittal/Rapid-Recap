@@ -30,7 +30,7 @@ export const useProfile = () => {
 
   const fetchProfile = useCallback(async () => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 100000))
+      // await new Promise(resolve => setTimeout(resolve, 100000))
       const response = await axios.get(`/api/user/profile/${inGameName}`)
       setProfile(() => response.data)
       if (inGameName === user?.inGameName) {

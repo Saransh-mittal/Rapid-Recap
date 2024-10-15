@@ -70,9 +70,7 @@ export const LeftProfileSection = ({
     <Flex
       flexDirection={'column'}
       w={{
-        xl: '100%',
-        lg: '70%',
-        md: '80%',
+        lg: '45%',
         sm: '100%',
         base: '100%',
       }}
@@ -227,7 +225,6 @@ export const LeftProfileSection = ({
       <Suspense
         fallback={
           <Skeleton
-            // w={{ md: '85%', lg: '95%', base: '100%' }}
             w={'100%'}
             borderRadius="10px"
             height="50px"
@@ -238,7 +235,7 @@ export const LeftProfileSection = ({
         {isLoading ? (
           <>
             <Skeleton
-              w={{ md: '85%', lg: '95%', base: '100%' }}
+              w={'100%'}
               borderRadius="10px"
               height="50px"
               marginTop="12px"
@@ -253,7 +250,6 @@ export const LeftProfileSection = ({
                   py={'8px'}
                   borderRadius="10px"
                   flexDirection="column"
-                  // w={{ md: '85%', lg: '95%', base: '100%' }}
                   w={'100%'}
                   height="fit-content"
                   justifyContent={'center'}
@@ -305,13 +301,13 @@ export const LeftProfileSection = ({
         fallback={
           <>
             <Skeleton
-              w={{ md: '85%', lg: '95%', base: '100%' }}
+              w={'100%'}
               borderRadius="10px"
               height="50px"
               marginTop="12px"
             />
             <Skeleton
-              w={{ md: '85%', lg: '95%', base: '100%' }}
+              w={'100%'}
               borderRadius="10px"
               height="50px"
               marginTop="12px"
@@ -322,13 +318,13 @@ export const LeftProfileSection = ({
         {isLoading ? (
           <>
             <Skeleton
-              w={{ md: '85%', lg: '95%', base: '100%' }}
+              w={'100%'}
               borderRadius="10px"
               height="50px"
               marginTop="12px"
             />
             <Skeleton
-              w={{ md: '85%', lg: '95%', base: '100%' }}
+              w={'100%'}
               borderRadius="10px"
               height="50px"
               marginTop="12px"
@@ -341,13 +337,13 @@ export const LeftProfileSection = ({
                 fallback={
                   <>
                     <Skeleton
-                      w={{ md: '85%', lg: '95%', base: '100%' }}
+                      w={'100%'}
                       borderRadius="10px"
                       height="50px"
                       marginTop="12px"
                     />
                     <Skeleton
-                      w={{ md: '85%', lg: '95%', base: '100%' }}
+                      w={'100%'}
                       borderRadius="10px"
                       height="50px"
                       marginTop="12px"
@@ -358,7 +354,6 @@ export const LeftProfileSection = ({
                 <Flex
                   borderRadius="10px"
                   flexDirection="column"
-                  // w={{ md: '85%', lg: '95%', base: '100%' }}
                   w={'100%'}
                   height="fit-content"
                   justifyContent={'center'}
@@ -381,7 +376,6 @@ export const LeftProfileSection = ({
                 <Flex
                   borderRadius="10px"
                   flexDirection="column"
-                  // w={{ md: '85%', lg: '95%', base: '100%' }}
                   w={'100%'}
                   height="fit-content"
                   justifyContent={'center'}
