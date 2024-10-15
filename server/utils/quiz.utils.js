@@ -12,7 +12,7 @@ const {
 } = require('../model/tournamentRegistrationSchema')
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
 const Tournament = require('../model/tournamentSchema')
-const genQuiz = async ({ fullQuiz, title }) => {
+const genQuiz = async ({ fullQuiz, title, session }) => {
   const selectedQuestions = new Set() // Using a Set to ensure uniqueness
 
   // Loop through each paragraph
@@ -75,7 +75,7 @@ const genQuiz = async ({ fullQuiz, title }) => {
   }
   // Convert Set back to array
   const selectedQuestionsArray = Array.from(selectedQuestions)
-  const originalFullQuiz = await Quiz.findById(fullQuiz._id)
+  const originalFullQuiz = await Quiz.findById(fullQuiz._id).session(session)
   // Create the quiz object
   const quiz = {
     title: title,
@@ -104,6 +104,8 @@ const generateQuestionsForQuiz = async ({
   author,
   mainText,
   articleId,
+  emitProgress,
+  session,
 }) => {
   if (!title || !author || !mainText || !articleId) {
     throw new Error('Missing required parameters')
@@ -194,7 +196,7 @@ Instructions:
   ],
   "overAllDifficulty": ""
 }`
-
+    emitProgress(40)
     while (attempts-- > 0) {
       try {
         result = await openai.chat.completions.create({
@@ -243,7 +245,7 @@ Instructions:
 
       console.log(`Retrying... ${attempts} attempts left.`)
     }
-
+    emitProgress(70)
     if (!response) {
       throw new Error('Failed to generate quiz after multiple attempts')
     }
@@ -255,9 +257,9 @@ Instructions:
       para3: { questions: response.paragraphs[2].questions },
       overAllDifficulty: response.overAllDifficulty,
     })
-    await newQuiz.save()
+    await newQuiz.save({ session })
 
-    const article = await Article.findById(articleId)
+    const article = await Article.findById(articleId).session(session)
     if (!article) {
       throw new Error('Article not found')
     }
@@ -266,8 +268,8 @@ Instructions:
       article.quiz = []
     }
     article.quiz.push(newQuiz._id)
-    await article.save()
-
+    await article.save({ session })
+    emitProgress(80)
     return newQuiz
   } catch (error) {
     console.error('Error generating questions for quiz:', error)
@@ -280,6 +282,8 @@ const generateQuestionsForHindiQuiz = async ({
   author,
   mainText,
   articleId,
+  emitProgress,
+  session,
 }) => {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -357,6 +361,7 @@ const generateQuestionsForHindiQuiz = async ({
   },
   overAllDifficulty: ""
 }`
+  emitProgress(40)
   let result = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     response_format: { type: 'json_object' },
@@ -408,6 +413,7 @@ const generateQuestionsForHindiQuiz = async ({
     })
     response = JSON.parse(result.choices[0].message.content)
   }
+  emitProgress(70)
   if (
     !response ||
     !response.para1 ||
@@ -426,15 +432,15 @@ const generateQuestionsForHindiQuiz = async ({
     overAllDifficulty: response.overAllDifficulty,
     language: 'hi',
   })
-  await newQuiz.save()
-  const article = await Article.findById(articleId)
+  await newQuiz.save({ session })
+  const article = await Article.findById(articleId).session(session)
   if (!article.quiz) {
     article.quiz = []
-    await article.save()
+    await article.save({ session })
   }
   article.quiz.push(newQuiz._id)
-  await article.save()
-
+  await article.save({ session })
+  emitProgress(80)
   return newQuiz
 }
 
@@ -482,13 +488,13 @@ const updatePercentilesOnQuizDeactivation = async ({ id }) => {
   }
 }
 
-const findQuizByLanguage = async ({ language, articleId }) => {
+const findQuizByLanguage = async ({ language, articleId, session }) => {
   try {
-    const article = await Article.findById(articleId)
+    const article = await Article.findById(articleId).session(session)
     const quizzes = await Quiz.find({
       _id: { $in: article.quiz },
       language,
-    })
+    }).session(session)
 
     if (quizzes.length === 0) {
       return null
@@ -498,6 +504,7 @@ const findQuizByLanguage = async ({ language, articleId }) => {
     return fullQuiz
   } catch (error) {
     console.error('Error finding quiz by language:', error)
+    throw error // Propagate the error to be handled in the calling function
   }
 }
 

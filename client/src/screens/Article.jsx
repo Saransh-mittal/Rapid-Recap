@@ -263,15 +263,7 @@ const Article = () => {
     })
     fetchArticle()
 
-    quizFetchTimer.current = setTimeout(() => {
-      fetchQuiz()
-    }, 5000)
-
-    return () => {
-      if (quizFetchTimer.current) {
-        clearTimeout(quizFetchTimer.current)
-      }
-    }
+    fetchQuiz()
   }, [fetchArticle, fetchQuiz, loginCheckStatus])
 
   useEffect(() => {

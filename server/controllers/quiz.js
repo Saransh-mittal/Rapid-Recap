@@ -17,20 +17,55 @@ const {
 } = require('../utils/quiz.utils.js')
 const mongoose = require('mongoose')
 const User = require('../model/userSchema.js')
+const globalEmitter = require('../eventEmitter')
 
-// @desc   Get the quiz for the article
-// @route  GET /api/quiz/getQuiz/:articleId/:lang
-// @access Private
+const requestMap = new Map()
+
+const waitForRequest = key => {
+  return new Promise(resolve => {
+    const checkCompletion = () => {
+      if (!requestMap.has(key)) {
+        resolve()
+      } else {
+        setTimeout(checkCompletion, 100)
+      }
+    }
+    checkCompletion()
+  })
+}
+
 const getQuiz = async (req, res) => {
   const { articleId, lang } = req.params
   const userId = req.user._id
+  const requestKey = `${userId}-${articleId}-${lang}`
+
+  let session
+  let cancellationToken = { cancelled: false }
 
   try {
+    session = await mongoose.startSession()
+    session.startTransaction()
+
+    const emitProgress = progress => {
+      if (cancellationToken.cancelled) {
+        return
+      }
+      globalEmitter.emit('quiz_progress', { userId, progress })
+    }
+    emitProgress(5)
+    if (requestMap.has(requestKey)) {
+      // Cancel the previous request
+      requestMap.get(requestKey).cancelled = true
+      await waitForRequest(requestKey)
+    }
+
+    requestMap.set(requestKey, cancellationToken)
+
     if (!articleId) {
       throw new Error('No article provided')
     }
 
-    const article = await Article.findById(articleId)
+    const article = await Article.findById(articleId).session(session)
     if (!article) {
       throw new Error('Article not found')
     }
@@ -49,26 +84,37 @@ const getQuiz = async (req, res) => {
     let quizSessions = await ArticleQuizSession.find({
       user: userId,
       article: articleId,
-    })
+    }).session(session)
+
+    emitProgress(5)
+
     let quizSession = quizSessions?.find(
       session => session.language === lang && !session.completed,
     )
-    // check if any of the existing sessions are in progress or completed
     const inProgressSession = quizSessions?.find(
       session => session.startTime && !session.completed,
     )
     const completedSession = quizSessions?.find(session => session.completed)
 
     if (completedSession) {
+      emitProgress(100)
+      await session.commitTransaction()
+      session.endSession()
       return res.status(200).json({
         message: 'Quiz already completed for this article',
         status: 'completed',
       })
     } else if (inProgressSession) {
+      emitProgress(100)
+      await session.commitTransaction()
+      session.endSession()
       return res.status(200).json({
         message: 'Quiz is in progress.',
       })
     } else if (quizSession) {
+      emitProgress(100)
+      await session.commitTransaction()
+      session.endSession()
       return res.status(200).json({
         message: 'Existing quiz session found. You can start the quiz.',
         quizSession,
@@ -76,10 +122,16 @@ const getQuiz = async (req, res) => {
       })
     }
 
+    emitProgress(20)
     // If no session exists, create a new one
-    let fullQuiz = await findQuizByLanguage({ language: lang, articleId })
+    let fullQuiz = await findQuizByLanguage({
+      language: lang,
+      articleId,
+      session,
+    })
 
     if (!fullQuiz) {
+      emitProgress(30)
       fullQuiz =
         lang === 'hi'
           ? await generateQuestionsForHindiQuiz({
@@ -87,16 +139,23 @@ const getQuiz = async (req, res) => {
               author: hindiAuthor,
               mainText: hindiMainText,
               articleId,
+              emitProgress,
+              session,
             })
           : await generateQuestionsForQuiz({
               title,
               author,
               mainText,
               articleId,
+              emitProgress,
+              session,
             })
+
+      emitProgress(90)
     }
 
-    const quiz = await genQuiz({ fullQuiz, title })
+    const quiz = await genQuiz({ fullQuiz, title, session })
+    emitProgress(95)
 
     if (quiz.questions.length <= 2) {
       throw new Error('Article is too short for a quiz')
@@ -176,7 +235,11 @@ const getQuiz = async (req, res) => {
       }
     })
 
-    await quizSession.save()
+    await quizSession.save({ session })
+    emitProgress(100)
+
+    await session.commitTransaction()
+    session.endSession()
 
     return res.status(200).json({
       message: 'New quiz session created successfully',
@@ -185,8 +248,19 @@ const getQuiz = async (req, res) => {
       status: 'ready',
     })
   } catch (error) {
+    if (session) {
+      await session.abortTransaction()
+      session.endSession()
+    }
     console.error('Error in getQuiz:', error)
+    if (error.message === 'Request cancelled') {
+      return res
+        .status(409)
+        .json({ error: 'Request cancelled due to a new request' })
+    }
     res.status(400).json({ error: 'Something went wrong! Please try again' })
+  } finally {
+    requestMap.delete(requestKey)
   }
 }
 

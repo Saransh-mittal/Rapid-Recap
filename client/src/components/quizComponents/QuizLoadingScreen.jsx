@@ -30,17 +30,20 @@ const QuizLoadingScreen = ({ socket, isQuizGenerating }) => {
     }, 5000)
 
     return () => clearInterval(tipInterval)
-  }, [])
+  }, [tips])
 
   return (
     <Box
       height="100vh"
+      w={'100vw'}
       display="flex"
       flexDirection="column"
       justifyContent="center"
       alignItems="center"
-      bg="rgba(0, 0, 0, 0.8)"
+      bg="rgba(0, 0, 0, 1)"
       color="white"
+      position={'fixed'}
+      zIndex={10000}
     >
       <VStack spacing={8} width="80%">
         <motion.div

@@ -179,71 +179,61 @@ const ModalComponent = ({
                 {t('QuizIsGenerating')}
               </Text>
             )}
-            <Skeleton
-              isLoaded={!load}
-              borderRadius={'10px'}
-              marginBottom={load ? '10px' : ''}
-              w={'100%'}
-            >
-              {(totalQuestions || quizStatus === 'in_progress') &&
-                !showGetSetGo && (
-                  <ModalFooter w={'100%'}>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5 }}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Suspense fallback={null}>
-                        <Button
-                          borderRadius={'full'}
-                          color={'white'}
-                          rightIcon={
-                            <ArrowRightSVG
-                              height={'20px'}
-                              width={'20px'}
-                              fill={'#fff'}
-                            />
-                          }
-                          onClick={handleClick}
-                          isDisabled={
-                            showInstruction
-                              ? false
-                              : !isAnswered && quizStatus !== 'in_progress'
-                          }
-                          size="lg"
-                          width={{ base: '100%', lg: '50%' }}
-                          bg={
+            {(totalQuestions || quizStatus === 'in_progress') &&
+              !showGetSetGo && (
+                <ModalFooter w={'100%'}>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Suspense fallback={null}>
+                      <Button
+                        borderRadius={'full'}
+                        color={'white'}
+                        rightIcon={
+                          <ArrowRightSVG
+                            height={'20px'}
+                            width={'20px'}
+                            fill={'#fff'}
+                          />
+                        }
+                        onClick={handleClick}
+                        isDisabled={
+                          showInstruction
+                            ? false
+                            : !isAnswered && quizStatus !== 'in_progress'
+                        }
+                        size="lg"
+                        width={{ base: '100%', lg: '50%' }}
+                        bg={
+                          isAnswered ||
+                          showInstruction ||
+                          quizStatus === 'in_progress'
+                            ? getColor('purple.500', 'rgba(255, 215, 0, 0.5)')
+                            : 'rgba(255, 255, 255, 0.1)'
+                        }
+                        _hover={{
+                          bg:
                             isAnswered ||
                             showInstruction ||
                             quizStatus === 'in_progress'
-                              ? getColor('purple.500', 'rgba(255, 215, 0, 0.5)')
-                              : 'rgba(255, 255, 255, 0.1)'
-                          }
-                          _hover={{
-                            bg:
-                              isAnswered ||
-                              showInstruction ||
-                              quizStatus === 'in_progress'
-                                ? getColor(
-                                    'purple.600',
-                                    'rgba(255, 215, 0, 0.6)',
-                                  )
-                                : 'rgba(255, 255, 255, 0.15)',
-                          }}
-                          isLoading={submitLoad}
-                        >
-                          {buttonText}
-                        </Button>
-                      </Suspense>
-                    </motion.div>
-                  </ModalFooter>
-                )}
-            </Skeleton>
+                              ? getColor('purple.600', 'rgba(255, 215, 0, 0.6)')
+                              : 'rgba(255, 255, 255, 0.15)',
+                        }}
+                        isLoading={submitLoad || load}
+                      >
+                        {buttonText}
+                      </Button>
+                    </Suspense>
+                  </motion.div>
+                </ModalFooter>
+              )}
           </Flex>
         )}
       </ModalContent>

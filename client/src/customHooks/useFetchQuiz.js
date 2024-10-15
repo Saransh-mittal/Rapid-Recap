@@ -1,17 +1,23 @@
-// /hooks/useFetchQuiz.js
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useToast } from '@chakra-ui/react'
+import { useSocket } from './useSocket'
+import { useSelector } from 'react-redux'
 
 const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
   const [quizSession, setQuizSession] = useState(null)
   const [quizStatus, setQuizStatus] = useState(null)
   const [load, setLoad] = useState(true)
   const [remainingTime, setRemainingTime] = useState(null)
+  const [isQuizGenerating, setIsQuizGenerating] = useState(false)
   const toast = useToast()
+  const { socket, getSocket } = useSocket()
+  const { user } = useSelector(state => state.auth)
+
   useEffect(() => {
     const fetchQuiz = async () => {
       setLoad(true)
+      setIsQuizGenerating(true)
       try {
         const response = await axios.get(
           `/api/quiz/getQuiz/${articleId}/${language}`,
@@ -43,11 +49,30 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
         onClose()
       } finally {
         setLoad(false)
+        console.log('Quiz generation complete')
+        setTimeout(() => setIsQuizGenerating(false), 500)
       }
     }
 
     fetchQuiz()
   }, [articleId, language, toast, onClose])
+
+  useEffect(() => {
+    const currentSocket = getSocket()
+    if (currentSocket && user) {
+      currentSocket.emit('join quiz progress', user._id)
+      currentSocket.on('quiz_generation_progress', data => {
+        console.log('Quiz generation progress:', data.progress)
+        // You can update your state or perform any other actions here
+      })
+    }
+
+    return () => {
+      if (currentSocket) {
+        currentSocket.off('quiz_generation_progress')
+      }
+    }
+  }, [getSocket, user])
 
   const startQuiz = async () => {
     setLoad(true)
@@ -57,6 +82,7 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
       setQuizStatus('in_progress')
       setRemainingTime(response.data.timer)
       setLoad(false)
+      setIsQuizGenerating(false)
       toast({
         title: 'Quiz Started',
         description: 'Good luck!',
@@ -84,6 +110,8 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
     load,
     startQuiz,
     remainingTime,
+    isQuizGenerating,
+    socket,
   }
 }
 
