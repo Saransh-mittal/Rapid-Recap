@@ -89,16 +89,13 @@ const SolvedQuizzes = ({
   if (privateSolvedQuiz) {
     return (
       <Flex
-        h={'100%'}
+        h={'220px'}
         w={'100%'}
         justifyContent={'center'}
         alignItems={'center'}
       >
         <Text
           backgroundColor="#0f0d15"
-          m={0}
-          top={0}
-          right={10}
           color={'#9CAFAA'}
           display={'flex'}
           justifyContent={'center'}

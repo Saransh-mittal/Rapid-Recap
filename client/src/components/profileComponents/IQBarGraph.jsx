@@ -36,7 +36,7 @@ const LoadingSpinner = React.memo(() => (
 
 // HiddenGraphMessage Component
 const HiddenGraphMessage = React.memo(() => (
-  <Flex h="100%" w="100%" justifyContent="center" alignItems="center">
+  <Flex h="220px" w="100%" justifyContent="center" alignItems="center">
     <Text
       bg="#0f0d15"
       color="#9CAFAA"

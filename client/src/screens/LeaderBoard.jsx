@@ -47,7 +47,13 @@ const Leaderboard = () => {
   // Responsive values for row height and gap
   const ROW_HEIGHT = useBreakpointValue({ base: 140, md: 120, lg: 100 })
   const ROW_GAP = useBreakpointValue({ base: 8, md: 12, lg: 16 })
-
+  const scrollbarHiddenStyle = {
+    '::-webkit-scrollbar': {
+      display: 'none',
+    },
+    'scrollbar-width': 'none',
+    '-ms-overflow-style': 'none',
+  }
   const fetchLeaderboard = useCallback(async () => {
     try {
       const response = await axios.get('/api/user/leaderboard?limit=500')
@@ -121,7 +127,6 @@ const Leaderboard = () => {
           style={{
             ...style,
             height: `${ROW_HEIGHT - ROW_GAP}px`,
-            top: `${parseFloat(style.top) + index * ROW_GAP}px`,
           }}
         >
           <LeaderboardRow
@@ -201,8 +206,9 @@ const Leaderboard = () => {
 
         <Box
           height={{ base: 'calc(100vh - 200px)', md: 'calc(100vh - 240px)' }}
+          overflow="hidden" // Add this line to remove scrollbars
         >
-          {isLoading || !isInitialRenderComplete ? (
+          {isLoading || !isInitialRenderComplete || searchLoad ? (
             <Flex justify="center" my={4}>
               <Spinner size="xl" color={accentColor} />
             </Flex>
@@ -215,6 +221,8 @@ const Leaderboard = () => {
                   itemSize={ROW_HEIGHT}
                   width={width}
                   itemData={searchResults.length > 0 ? searchResults : leaders}
+                  overscanCount={5}
+                  style={scrollbarHiddenStyle} // Apply scrollbar hiding styles
                 >
                   {Row}
                 </List>

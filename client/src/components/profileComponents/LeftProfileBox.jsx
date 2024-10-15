@@ -360,6 +360,19 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
                 @{leftProfileView?.inGameName}
               </Text>
             </VStack>
+            {user?.role === 'guest' && isOwnProfile && (
+              <Flex
+                key={`guest-info-button-${leftProfileView?.inGameName}`}
+                size="sm"
+                onClick={() => setIsGuestLoggedin(true)}
+                // leftIcon={<QuestionOutlineIcon />}
+                _hover={{ cursor: 'pointer' }}
+                color={accentColor}
+                borderRadius={'full'}
+              >
+                <QuestionOutlineIcon />
+              </Flex>
+            )}
           </Flex>
           <Flex>
             <AnimatePresence mode="wait">
@@ -510,22 +523,6 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
           </HStack>
         )}
       </MotionFlex>
-
-      {user?.role === 'guest' && isOwnProfile && (
-        <Button
-          key={`guest-info-button-${leftProfileView?.inGameName}`}
-          size="sm"
-          variant="outline"
-          colorScheme="blue"
-          onClick={() => setIsGuestLoggedin(true)}
-          position="absolute"
-          top={4}
-          right={4}
-          leftIcon={<QuestionOutlineIcon />}
-        >
-          {t('guestInfo')}
-        </Button>
-      )}
 
       {/* Modals */}
       <Suspense fallback={null}>

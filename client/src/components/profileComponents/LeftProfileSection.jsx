@@ -7,7 +7,7 @@ import {
   useDisclosure,
   useColorModeValue,
 } from '@chakra-ui/react'
-import { ViewIcon, SettingsIcon } from '@chakra-ui/icons'
+import { SettingsIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
 import { keyframes } from '@emotion/react'
 
@@ -16,7 +16,9 @@ const LeftProfileBox = React.lazy(() => import('./LeftProfileBox'))
 const ProfileExperienceLevel = React.lazy(() =>
   import('./ProfileExperienceLevel'),
 )
-const ProfileButton = React.lazy(() => import('./ProfileButton'))
+const ProfileButtonWithModal = React.lazy(() =>
+  import('./ProfileButtonWithModal'),
+)
 const SeasonSelectorModal = React.lazy(() => import('./SeasonSelectorModal'))
 const Settings = React.lazy(() => import('./Settings'))
 const Bookmarks = React.lazy(() => import('./Bookmarks'))
@@ -37,21 +39,9 @@ export const LeftProfileSection = ({
 }) => {
   const { t } = useTranslation('Profile')
 
-  const {
-    isOpen: isOpenSeasonSelector,
-    onOpen: onOpenSeasonSelector,
-    onClose: onCloseSeasonSelector,
-  } = useDisclosure()
-  const {
-    isOpen: isOpenBookmarks,
-    onOpen: onOpenBookmarks,
-    onClose: onCloseBookmarks,
-  } = useDisclosure()
-  const {
-    isOpen: isOpenSettings,
-    onOpen: onOpenSettings,
-    onClose: onCloseSettings,
-  } = useDisclosure()
+  const seasonSelectorDisclosure = useDisclosure()
+  const bookmarksDisclosure = useDisclosure()
+  const settingsDisclosure = useDisclosure()
 
   const hoverAnimation = keyframes`
     0% { transform: scale(1); }
@@ -67,11 +57,7 @@ export const LeftProfileSection = ({
   return (
     <Flex
       flexDirection={'column'}
-      w={{
-        lg: '45%',
-        sm: '100%',
-        base: '100%',
-      }}
+      w={{ lg: '45%', sm: '100%', base: '100%' }}
       margin={'6px'}
     >
       <Flex
@@ -171,49 +157,33 @@ export const LeftProfileSection = ({
             {(!privacyProfileData.seasonAnalytics ||
               inGameName === user?.inGameName) &&
               user?.role !== 'guest' && (
-                <Flex
-                  py={'8px'}
-                  borderRadius="10px"
-                  flexDirection="column"
-                  w={'100%'}
-                  height="fit-content"
-                  justifyContent={'center'}
-                  alignItems={'center'}
-                  position={'relative'}
-                  className="season-analytics"
-                >
-                  <ProfileButton
-                    key={`season-analytics-${inGameName}`}
-                    buttonText={t('seasonAnalytics')}
-                    inGameName={inGameName}
-                    stateUserInGameName={user?.inGameName}
-                    Private={user?.profilePrivacy.seasonAnalytics}
-                    hoverAnimation={hoverAnimation}
-                    onClick={onOpenSeasonSelector}
-                    icon={
-                      <HistogramSVG
-                        width={'20px'}
-                        height={'20px'}
-                        fill={'#fff'}
-                      />
-                    }
-                    top={'0.9rem'}
-                  />
-
-                  <SeasonSelectorModal
-                    key={`season-selector-${inGameName}`}
-                    privateSeasonAnalytics={privacyProfileData.seasonAnalytics}
-                    currSeason={profile?.currentSeason}
-                    isOpen={isOpenSeasonSelector}
-                    onClose={onCloseSeasonSelector}
-                    isLoading={isLoading}
-                    profile={profile}
-                    privacyProfileData={privacyProfileData}
-                    loginedUserProfile={loginedUserProfile}
-                    inGameName={inGameName}
-                    seasons={profile?.seasons}
-                  />
-                </Flex>
+                <ProfileButtonWithModal
+                  buttonText={t('seasonAnalytics')}
+                  inGameName={inGameName}
+                  stateUserInGameName={user?.inGameName}
+                  isPrivate={user?.profilePrivacy.seasonAnalytics}
+                  hoverAnimation={hoverAnimation}
+                  icon={
+                    <HistogramSVG
+                      width={'20px'}
+                      height={'20px'}
+                      fill={'#fff'}
+                    />
+                  }
+                  modalComponent={SeasonSelectorModal}
+                  isModalOpen={seasonSelectorDisclosure.isOpen}
+                  onOpenModal={seasonSelectorDisclosure.onOpen}
+                  onCloseModal={seasonSelectorDisclosure.onClose}
+                  isLoading={isLoading}
+                  additionalProps={{
+                    privateSeasonAnalytics: privacyProfileData.seasonAnalytics,
+                    currSeason: profile?.currentSeason,
+                    profile,
+                    privacyProfileData,
+                    loginedUserProfile,
+                    seasons: profile?.seasons,
+                  }}
+                />
               )}
             {user?.role === 'guest' && (
               <Suspense fallback={null}>
@@ -260,63 +230,33 @@ export const LeftProfileSection = ({
         ) : (
           inGameName === user?.inGameName && (
             <>
-              <Flex
-                borderRadius="10px"
-                flexDirection="column"
-                w={'100%'}
-                height="fit-content"
-                justifyContent={'center'}
-                alignItems={'center'}
-                position={'relative'}
-              >
-                <ProfileButton
-                  key={`settings-${inGameName}`}
-                  buttonText={t('Settings')}
-                  inGameName={inGameName}
-                  stateUserInGameName={user?.inGameName}
-                  Private={true}
-                  hoverAnimation={hoverAnimation}
-                  onClick={onOpenSettings}
-                  icon={<SettingsIcon width={'20px'} height={'20px'} />}
-                />
+              <ProfileButtonWithModal
+                buttonText={t('Settings')}
+                inGameName={inGameName}
+                stateUserInGameName={user?.inGameName}
+                isPrivate={true}
+                hoverAnimation={hoverAnimation}
+                icon={<SettingsIcon width={'20px'} height={'20px'} />}
+                modalComponent={Settings}
+                isModalOpen={settingsDisclosure.isOpen}
+                onOpenModal={settingsDisclosure.onOpen}
+                onCloseModal={settingsDisclosure.onClose}
+              />
 
-                <Settings
-                  key={`settings-modal-${inGameName}`}
-                  isOpen={isOpenSettings}
-                  onClose={onCloseSettings}
-                />
-              </Flex>
-
-              <Flex
-                borderRadius="10px"
-                flexDirection="column"
-                w={'100%'}
-                height="fit-content"
-                justifyContent={'center'}
-                alignItems={'center'}
-                position={'relative'}
-                py={'8px'}
-              >
-                <ProfileButton
-                  key={`bookmarks-${inGameName}`}
-                  buttonText={t('bookmarks')}
-                  inGameName={inGameName}
-                  stateUserInGameName={user?.inGameName}
-                  Private={true}
-                  hoverAnimation={hoverAnimation}
-                  onClick={onOpenBookmarks}
-                  icon={<BookmarkSVG width={'20px'} height={'20px'} />}
-                />
-
-                <Bookmarks
-                  key={`bookmarks-modal-${inGameName}`}
-                  isOpen={isOpenBookmarks}
-                  onClose={onCloseBookmarks}
-                  isLoading={isLoading}
-                  profile={profile}
-                  inGameName={inGameName}
-                />
-              </Flex>
+              <ProfileButtonWithModal
+                buttonText={t('bookmarks')}
+                inGameName={inGameName}
+                stateUserInGameName={user?.inGameName}
+                isPrivate={true}
+                hoverAnimation={hoverAnimation}
+                icon={<BookmarkSVG width={'20px'} height={'20px'} />}
+                modalComponent={Bookmarks}
+                isModalOpen={bookmarksDisclosure.isOpen}
+                onOpenModal={bookmarksDisclosure.onOpen}
+                onCloseModal={bookmarksDisclosure.onClose}
+                isLoading={isLoading}
+                additionalProps={{ profile }}
+              />
             </>
           )
         )}

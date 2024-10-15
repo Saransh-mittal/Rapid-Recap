@@ -320,20 +320,27 @@ const TournamentSection = ({
     <>
       <Box w="full" mx="auto" p={{ base: 4, md: 6 }} borderRadius="lg">
         {privateTournament ? (
-          <Text
-            backgroundColor="#0f0d15"
-            m={0}
-            top={0}
-            right={10}
-            color="#9CAFAA"
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            w="60px"
-            height="30px"
+          <Flex
+            w={'100%'}
+            h={'400px'}
+            justifyContent={'center'}
+            alignItems={'center'}
           >
-            {translate('hidden')}
-          </Text>
+            <Text
+              backgroundColor="#0f0d15"
+              m={0}
+              top={0}
+              right={10}
+              color="#9CAFAA"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              w="60px"
+              height="30px"
+            >
+              {translate('hidden')}
+            </Text>
+          </Flex>
         ) : loading ? (
           <Spinner />
         ) : (

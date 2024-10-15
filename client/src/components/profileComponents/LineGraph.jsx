@@ -63,6 +63,22 @@ const NoDataMessage = React.memo(({ viewingHistory }) => {
   )
 })
 
+const HiddenGraphMessage = React.memo(() => (
+  <Flex h="220px" w="100%" justifyContent="center" alignItems="center">
+    <Text
+      bg="#0f0d15"
+      color="#9CAFAA"
+      w="60px"
+      h="30px"
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+    >
+      Hidden
+    </Text>
+  </Flex>
+))
+
 // GraphHeader Component
 const GraphHeader = React.memo(
   ({ hoveredData, loginedUserProfile, user, t, quantities }) => {
@@ -197,15 +213,7 @@ const LineGraph = ({
   }
 
   if (privateLineGraph) {
-    return (
-      <Flex h="300px">
-        {isLoading ? (
-          <LoadingSpinner />
-        ) : (
-          <NoDataMessage viewingHistory={viewingHistory} />
-        )}
-      </Flex>
-    )
+    return <HiddenGraphMessage />
   }
   if (chartData?.length === 0) {
     return (

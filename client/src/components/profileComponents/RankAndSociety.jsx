@@ -130,7 +130,7 @@ const RankAndSociety = ({
     >
       {privateSociety ? (
         <Flex
-          h={'100%'}
+          h={'220px'}
           w={'100%'}
           justifyContent={'center'}
           alignItems={'center'}
