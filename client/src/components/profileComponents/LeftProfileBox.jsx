@@ -9,17 +9,12 @@ import {
   Box,
   Button,
   Flex,
-  Heading,
   Image,
   Text,
   useToast,
   Spinner,
   Badge,
   useColorModeValue,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatGroup,
   VStack,
   HStack,
 } from '@chakra-ui/react'
@@ -44,7 +39,6 @@ const TournamentBadgeGallery = React.lazy(() =>
 const GuestLoginModal = React.lazy(() =>
   import('../authComponents/GuestLoginModal'),
 )
-
 const NameLightning = React.lazy(() => import('../miscellaneous/NameLightning'))
 
 const MotionBox = motion(Box)
@@ -66,12 +60,14 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
   const [loading, setLoading] = useState(true)
   const [friendStatus, setFriendStatus] = useState('none') // 'none', 'pending', 'friend'
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
-  const [selectedBadge, setSelectedBadge] = useState(
-    leftProfileView.displayedBadge,
-  )
+  const [selectedBadge, setSelectedBadge] = useState(null)
 
   const textColor = useColorModeValue('white', 'gray.100')
   const accentColor = useColorModeValue('purple.400', 'purple.300')
+
+  useEffect(() => {
+    setSelectedBadge(leftProfileView?.displayedBadge || null)
+  }, [leftProfileView])
 
   const findSocietyAndCircle = useCallback(IQ => {
     for (let i = 0; i < CircleAndSocietyData.length; i++) {
@@ -105,22 +101,21 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
         toId: leftProfileView?._id,
       })
 
-      // Update friendStatus based on the response message
       if (response.status === 200) {
         if (response.data.message === 'Can send request') {
-          setFriendStatus('none') // Can send a friend request
+          setFriendStatus('none')
         }
       } else if (response.status === 201) {
         switch (response.data.message) {
           case 'Cannot send another request within 10 days of rejection':
           case 'Request already sent':
-            setFriendStatus('pending') // Request is pending
+            setFriendStatus('pending')
             break
           case 'Already friends':
-            setFriendStatus('friend') // Already friends
+            setFriendStatus('friend')
             break
           default:
-            setFriendStatus('none') // Fallback to 'none' if unknown
+            setFriendStatus('none')
         }
       }
     } catch (error) {
@@ -189,7 +184,6 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
         })
         setSelectedBadge(response.data.badge)
 
-        // Update local storage
         const cachedProfile = localStorage.getItem('userProfile')
         if (cachedProfile) {
           const parsedProfile = JSON.parse(cachedProfile)
@@ -279,15 +273,17 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
 
     if (friendStatus === 'pending') {
       return (
-        <Badge
-          colorScheme="yellow"
-          variant="solid"
-          borderRadius="full"
-          px={2}
-          py={1}
-        >
-          {t('requestSent')}
-        </Badge>
+        <Flex h={'fit-content'}>
+          <Badge
+            colorScheme="yellow"
+            variant="solid"
+            borderRadius="full"
+            px={2}
+            py={1}
+          >
+            {t('requestSent')}
+          </Badge>
+        </Flex>
       )
     }
 
@@ -311,6 +307,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
 
   return (
     <MotionBox
+      key={`profile-box-${leftProfileView?.inGameName}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -328,6 +325,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
         <Flex justifyContent={'space-between'}>
           <Flex alignItems={'center'} gap={3}>
             <MotionImage
+              key={`profile-image-${leftProfileView?.inGameName}`}
               src={
                 leftProfileView?.pic ||
                 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg'
@@ -352,6 +350,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
                 {leftProfileView?.name}
                 <Suspense fallback={<Spinner />}>
                   <NameLightning
+                    key={`name-lightning-${leftProfileView?.inGameName}`}
                     boxShadow={selectedDatafromMaxIQ?.boxShadow}
                     MAX_IQ={MAX_IQ}
                   />
@@ -363,9 +362,10 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
             </VStack>
           </Flex>
           <Flex>
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {selectedBadge ? (
                 <MotionBox
+                  key={`badge-box-${leftProfileView?.inGameName}-${selectedBadge?.tournamentNumber}`}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
@@ -373,6 +373,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
                 >
                   <Suspense fallback={<Spinner size="sm" />}>
                     <TournamentBadges
+                      key={`tournament-badge-${leftProfileView?.inGameName}-${selectedBadge?.tournamentNumber}`}
                       tournamentNumber={selectedBadge?.tournamentNumber}
                       rank={selectedBadge?.rank}
                       name={leftProfileView?.name}
@@ -388,7 +389,13 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
                   </Suspense>
                 </MotionBox>
               ) : (
-                <Flex>
+                <MotionBox
+                  key={`no-badge-${leftProfileView?.inGameName}`}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.3 }}
+                >
                   <Box
                     w={'5rem'}
                     h={'5rem'}
@@ -434,7 +441,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
                       </text>
                     </svg>
                   </Box>
-                </Flex>
+                </MotionBox>
               )}
             </AnimatePresence>
           </Flex>
@@ -484,6 +491,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
         {isOwnProfile && (
           <HStack mt={4} spacing={4} justify="center">
             <Button
+              key={`edit-profile-button-${leftProfileView?.inGameName}`}
               size="sm"
               colorScheme="blue"
               onClick={handleEditClick}
@@ -492,6 +500,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
               {t('edit')}
             </Button>
             <Button
+              key={`show-badges-button-${leftProfileView?.inGameName}`}
               size="sm"
               colorScheme="purple"
               onClick={() => setIsBadgeGalleryOpen(true)}
@@ -504,6 +513,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
 
       {user?.role === 'guest' && isOwnProfile && (
         <Button
+          key={`guest-info-button-${leftProfileView?.inGameName}`}
           size="sm"
           variant="outline"
           colorScheme="blue"
@@ -520,6 +530,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
       {/* Modals */}
       <Suspense fallback={null}>
         <EditProfileModal
+          key={`edit-profile-modal-${leftProfileView?.inGameName}`}
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           profileData={leftProfileView}
@@ -528,6 +539,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
       </Suspense>
       <Suspense fallback={null}>
         <TournamentBadgeGallery
+          key={`badge-gallery-${leftProfileView?.inGameName}`}
           isOpen={isBadgeGalleryOpen}
           onClose={() => setIsBadgeGalleryOpen(false)}
           userBadges={leftProfileView?.badges}
@@ -539,6 +551,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
       </Suspense>
       <Suspense fallback={null}>
         <GuestLoginModal
+          key={`guest-login-modal-${leftProfileView?.inGameName}`}
           isOpen={isGuestLoggedin}
           onClose={() => setIsGuestLoggedin(false)}
           guestName={user?.inGameName}
