@@ -3,6 +3,7 @@ const {
   submitFeedback,
   createStoryFeedback,
   createQuizFeedback,
+  createTournamentFeedback,
 } = require('../controllers/feedbackController')
 const router = express.Router()
 const { Authenticate } = require('../middleware/authenticate')
@@ -11,5 +12,6 @@ const { Authenticate } = require('../middleware/authenticate')
 router.post('/submit', submitFeedback)
 router.post('/story', Authenticate, createStoryFeedback)
 router.post('/quiz', Authenticate, createQuizFeedback)
+router.post('/tournament', Authenticate, createTournamentFeedback)
 
 module.exports = router

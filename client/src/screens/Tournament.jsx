@@ -77,6 +77,7 @@ const Tournament = () => {
 
       setTournamentData(currTournamentData.data)
       setPreviousTournamentData(prevTournamentData.data)
+
       setUserRegistrationDetails({
         isRegistered: currTournamentData.data.isRegistered,
         selectedCategories: currTournamentData.data.selectedCategories || [],
@@ -84,14 +85,15 @@ const Tournament = () => {
         totalScore: currTournamentData.data.totalScore || 0,
         categoryAttempts: currTournamentData.data.categoryAttempts || {},
       })
+
       for (
         let i = 0;
-        i < Object.keys(currTournamentData.data.categoryScores).length;
+        i < Object.keys(currTournamentData.data.categoryAttempts).length;
         i++
       ) {
         dispatch(
           updateCategoryStatus({
-            category: Object.keys(currTournamentData.data.categoryScores)[i],
+            category: Object.keys(currTournamentData.data.categoryAttempts)[i],
             score: Object.values(currTournamentData.data.categoryScores)[i],
             attemptsLeft:
               2 - Object.values(currTournamentData.data.categoryAttempts)[i],
@@ -104,6 +106,19 @@ const Tournament = () => {
         ),
       )
       setIsLoading(false)
+      // if (
+      //   currTournamentData.data.completedCategories.length ===
+      //   currTournamentData.data.selectedCategories.length
+      // ) {
+      //   //make a note message to take feedback of the tournament
+      //   addNoteMessage({
+      //     messageType: 'feedback',
+      //     title: t('tournamentCompleted.title'),
+      //     description: t('tournamentCompleted.description'),
+      //     actions: [{ actionType: 'GIVE_FEEDBACK' }],
+      //     width: '250px',
+      //   })
+      // }
     } catch (error) {
       console.log(error)
       setTournamentData(null)

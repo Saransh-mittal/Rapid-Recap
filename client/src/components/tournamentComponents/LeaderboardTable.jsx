@@ -143,7 +143,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
               <Th
                 color="white"
                 fontSize={{ base: 'xs', md: 'lg' }}
-                px={{ base: 4, md: 6 }}
+                px={{ base: 4, md: 5 }}
                 textAlign={'center'}
               >
                 {t('Rank')} {/* Translate Rank */}
@@ -151,7 +151,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
               <Th
                 color="white"
                 fontSize={{ base: 'xs', md: 'lg' }}
-                px={6}
+                px={5}
                 textAlign={'center'}
               >
                 {t('Player')} {/* Translate Player */}
@@ -159,7 +159,7 @@ const LeaderboardTable = forwardRef(({ data, tournamentId }, ref) => {
               <Th
                 color="white"
                 fontSize={{ base: 'xs', md: 'lg' }}
-                px={6}
+                px={5}
                 textAlign={'center'}
                 isNumeric
               >

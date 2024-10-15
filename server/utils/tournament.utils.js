@@ -214,23 +214,27 @@ async function updateTournamentPerformanceAndBadges(tournament) {
         _id: entry.user,
       })
       if (!user) continue
-      user.displayedBadge = {
-        tournamentNumber: tournament.tournamentNumber,
-        rank: rank,
-        participantCnt: participantCount,
-        badgeName: displayedBadge.name,
-        text: displayedBadge.text,
-      }
-      user.badges = [
-        ...user.badges,
-        ...allBadges.map(badge => ({
-          rank: rank,
+
+      if (displayedBadge && displayedBadge.name)
+        user.displayedBadge = {
           tournamentNumber: tournament.tournamentNumber,
-          badgeName: badge.name,
-          text: badge.text,
+          rank: rank,
           participantCnt: participantCount,
-        })),
-      ]
+          badgeName: displayedBadge.name,
+          text: displayedBadge.text,
+        }
+
+      if (allBadges && allBadges.length > 0)
+        user.badges = [
+          ...user.badges,
+          ...allBadges.map(badge => ({
+            rank: rank,
+            tournamentNumber: tournament.tournamentNumber,
+            badgeName: badge.name,
+            text: badge.text,
+            participantCnt: participantCount,
+          })),
+        ]
       user.tournamentPerformance.push({
         tournament: tournament._id,
         score: entry.totalScore,

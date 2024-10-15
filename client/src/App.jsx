@@ -92,7 +92,7 @@ const App = () => {
   const { tournamentId, status, isRegistered } = useSelector(
     state => state.tournament,
   )
-  const [showUpgradeModal, setShowUpgradeModal] = useState(true)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const { updates } = useSelector(state => state.app)
   const USER_IQ = user?.IQ_score ?? null
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
@@ -138,6 +138,9 @@ const App = () => {
 
   useEffect(() => {
     setShowLoadingScreen(true)
+    setTimeout(() => {
+      setShowUpgradeModal(true)
+    }, 5000)
   }, [])
 
   useEffect(() => {

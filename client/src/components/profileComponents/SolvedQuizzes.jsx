@@ -113,18 +113,11 @@ const SolvedQuizzes = ({
   }
 
   return (
-    <Box borderRadius="lg" p={4} boxShadow="xl" w={'100%'}>
+    <Box borderRadius="lg" px={3} pb={2} boxShadow="xl" w={'100%'}>
       <Flex justify="space-between" align="center" mb={4}>
         <Text fontSize="lg" fontWeight="bold" color="gray.100">
           {t('solvedQuizzes')}
         </Text>
-        {loginedUserProfile && (
-          <Tooltip label={t('visibilityToOthers')}>
-            <Badge colorScheme="green">
-              {user.profilePrivacy.solvedQuizzes ? t('hidden') : t('visible')}
-            </Badge>
-          </Tooltip>
-        )}
       </Flex>
       {isLoading ? (
         <Flex justify="center" align="center" h="150px">

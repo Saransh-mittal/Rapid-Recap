@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import {
   Box,
   VStack,
@@ -19,15 +19,13 @@ import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
-const RankIcon = ({ rank }) => {
-  return (
-    <Text fontSize="lg" fontWeight="bold">
-      {rank}
-    </Text>
-  )
-}
+const RankIcon = React.memo(({ rank }) => (
+  <Text fontSize="lg" fontWeight="bold">
+    {rank}
+  </Text>
+))
 
-const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
+const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
   const { t } = useTranslation('LeaderBoardRow')
   const [isBadgeHovered, setIsBadgeHovered] = useState(false)
   const [isBadgePopoverOpen, setIsBadgePopoverOpen] = useState(false)
@@ -35,15 +33,72 @@ const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
   const textColor = useColorModeValue('gray.100', 'gray.200')
   const accentColor = 'pink.400'
 
-  const handleBadgeHover = isHovered => {
+  const handleBadgeHover = useCallback(isHovered => {
     setIsBadgeHovered(isHovered)
-  }
+  }, [])
 
-  const handleBadgePopoverToggle = isOpen => {
+  const handleBadgePopoverToggle = useCallback(isOpen => {
     setIsBadgePopoverOpen(isOpen)
-  }
+  }, [])
 
   const isHoverDisabled = isBadgeHovered || isBadgePopoverOpen
+
+  const societyAndCircle = useMemo(
+    () => findSocietyAndCircle(user.IQ_score),
+    [user.IQ_score],
+  )
+  const maxSocietyAndCircle = useMemo(
+    () => findSocietyAndCircle(user.maxIQScore),
+    [user.maxIQScore],
+  )
+
+  const handleClick = useCallback(
+    e => {
+      if (!isHoverDisabled) {
+        onClick(e)
+      }
+    },
+    [isHoverDisabled, onClick],
+  )
+
+  const badgeIconMemo = useMemo(
+    () => (
+      <BadgeIcon
+        user={user}
+        size={'60px'}
+        onPopoverToggle={handleBadgePopoverToggle}
+      />
+    ),
+    [user, handleBadgePopoverToggle],
+  )
+
+  const scoreItemsMemo = useMemo(
+    () => (
+      <>
+        <ScoreItem
+          label={t('IQ Score')}
+          value={user.IQ_score.toFixed(1)}
+          color={accentColor}
+        />
+        <ScoreItem
+          label={t('Exp Level')}
+          value={user.level}
+          color={textColor}
+        />
+        <ScoreItem
+          label={t('Submissions')}
+          value={user.quizSubmissions}
+          color={textColor}
+        />
+        <ScoreItem
+          label={t('Avg. RQM')}
+          value={user.RQM_avg}
+          color={textColor}
+        />
+      </>
+    ),
+    [user, t, accentColor, textColor],
+  )
 
   return (
     <MotionBox
@@ -58,7 +113,7 @@ const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
       mb={4}
       border="1px solid"
       borderColor={isCurrentUser ? accentColor : 'transparent'}
-      onClick={isHoverDisabled ? undefined : onClick}
+      onClick={handleClick}
       cursor={isHoverDisabled ? 'default' : 'pointer'}
       position="relative"
     >
@@ -96,14 +151,14 @@ const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
                 fontWeight="bold"
                 color={
                   user.rankedInCurrentSeason
-                    ? findSocietyAndCircle(user.IQ_score)?.textColor
+                    ? societyAndCircle?.textColor
                     : 'gray.400'
                 }
               >
                 {user.name}
               </Text>
               <NameLightning
-                boxShadow={findSocietyAndCircle(user.maxIQScore)?.boxShadow}
+                boxShadow={maxSocietyAndCircle?.boxShadow}
                 MAX_IQ={user.maxIQScore}
               />
             </Flex>
@@ -123,32 +178,9 @@ const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
               onMouseLeave={() => handleBadgeHover(false)}
               onClick={e => e.stopPropagation()}
             >
-              <BadgeIcon
-                user={user}
-                size={'60px'}
-                onPopoverToggle={handleBadgePopoverToggle}
-              />
+              {badgeIconMemo}
             </Box>
-            <ScoreItem
-              label={t('IQ Score')}
-              value={user.IQ_score.toFixed(1)}
-              color={accentColor}
-            />
-            <ScoreItem
-              label={t('Exp Level')}
-              value={user.level}
-              color={textColor}
-            />
-            <ScoreItem
-              label={t('Submissions')}
-              value={user.quizSubmissions}
-              color={textColor}
-            />
-            <ScoreItem
-              label={t('Avg. RQM')}
-              value={user.RQM_avg}
-              color={textColor}
-            />
+            {scoreItemsMemo}
           </HStack>
           <Flex justify="flex-end" display={{ base: 'flex', md: 'none' }}>
             <Box
@@ -172,21 +204,12 @@ const LeaderboardRow = ({ user, rank, isCurrentUser, onClick }) => {
         display={{ base: 'grid', md: 'none' }}
         w={'85%'}
       >
-        <ScoreItem
-          label="IQ Score"
-          value={user.IQ_score.toFixed(1)}
-          color={accentColor}
-        />
-        <ScoreItem label="Exp Level" value={user.level} color={textColor} />
-        <ScoreItem
-          label="Submissions"
-          value={user.quizSubmissions}
-          color={textColor}
-        />
-        <ScoreItem label="Avg. RQM" value={user.RQM_avg} color={textColor} />
+        {scoreItemsMemo}
       </Grid>
     </MotionBox>
   )
-}
+})
+
+LeaderboardRow.displayName = 'LeaderboardRow'
 
 export default LeaderboardRow

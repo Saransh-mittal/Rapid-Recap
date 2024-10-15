@@ -47,6 +47,10 @@ const tournamentRegistrationSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  sendTourFeedback: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const TournamentRegistration = mongoose.model(

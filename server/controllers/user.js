@@ -41,6 +41,7 @@ const { hindiConverter } = require('../utils/article.utils.js')
 const {
   quinBoostUnlockTemplate,
 } = require('../data/inboxNotificationsTemplates.js')
+const createIndexesIfNotExist = require('../scripts/createIndexesIfNotExist.js')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -452,6 +453,7 @@ const calculateUserIQScores = async (req, res) => {
 // @desc  Get leaderboard for the current season
 // @route GET /api/user/leaderboard
 // @access Public
+
 const leaderBoard = async (req, res) => {
   const currUserId = req.user ? req.user._id : null
   const { society, page = 1, limit = 10 } = req.query
@@ -459,11 +461,10 @@ const leaderBoard = async (req, res) => {
 
   // Try to get the cached result
   const cachedResult = cache.get(cacheKey)
-
   if (cachedResult) {
-    // If cached result exists, return it
     return res.status(200).json(cachedResult)
   }
+
   const societyConditions = {
     titans: { IQ_score: { $gte: 150 } },
     mavericks: { IQ_score: { $gte: 130, $lt: 150 } },
@@ -472,9 +473,11 @@ const leaderBoard = async (req, res) => {
     explorers: { IQ_score: { $gte: 0, $lt: 90 } },
   }
 
-  const condition = societyConditions[society?.toLowerCase()] || {}
-  condition.inGameName = { $exists: true, $ne: '' }
-  condition.IQ_score = { $ne: 0 } // Exclude users with IQ_score of 0
+  const condition = {
+    ...societyConditions[society?.toLowerCase()],
+    inGameName: { $exists: true, $ne: '' },
+    IQ_score: { $ne: 0 },
+  }
 
   const pageNumber = parseInt(page, 10)
   const limitNumber = parseInt(limit, 10)
@@ -482,7 +485,7 @@ const leaderBoard = async (req, res) => {
 
   try {
     const totalDocuments = await User.countDocuments(condition)
-    const maxUsers = Math.min(totalDocuments, 500) // Limit the total users to 500
+    const maxUsers = Math.min(totalDocuments, 500)
     const totalPages = Math.ceil(maxUsers / limitNumber)
 
     if (skipNumber >= maxUsers) {
@@ -494,129 +497,82 @@ const leaderBoard = async (req, res) => {
       })
     }
 
-    const usersPromise = User.aggregate([
-      { $match: condition },
-      {
-        $lookup: {
-          from: 'quiz_attempts',
-          localField: 'quizAttempts',
-          foreignField: '_id',
-          as: 'quizAttempts',
-        },
-      },
-      {
-        $addFields: {
-          quizAttemptsSeason2: {
-            $filter: {
-              input: '$quizAttempts',
-              as: 'attempt',
-              cond: { $eq: ['$$attempt.season', 2] },
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          quizAttemptsLength: { $size: '$quizAttemptsSeason2' },
-        },
-      },
-      {
-        $addFields: {
-          rankedInCurrentSeason: {
-            $cond: {
-              if: { $gte: ['$quizAttemptsLength', 1] },
-              then: true,
-              else: false,
-            },
-          },
-        },
-      },
-      {
-        $sort: {
-          IQ_score: -1,
-          quizAttemptsLength: -1,
-          avgRQM: -1,
-        },
-      },
-      {
-        $skip: skipNumber,
-      },
-      {
-        $limit: limitNumber,
-      },
-      {
-        $project: {
-          name: 1,
-          inGameName: 1,
-          IQ_score: 1,
-          pic: 1,
-          maxIQScore: 1,
-          rank: 1,
-          _id: 1,
-          avgRQM: 1,
-          quizAttemptsLength: 1,
-          level: 1,
-          xp: 1,
-          displayedBadge: 1,
-          rankedInCurrentSeason: 1,
-        },
-      },
+    // Step 1: Get all users sorted by IQ_score (for rank calculation)
+    const allUsers = await User.find(condition)
+      .sort({ IQ_score: -1, avgRQM: -1 })
+      .select('_id')
+      .lean()
+
+    // Step 2: Get paginated users with full details
+    const paginatedUsers = await User.find(condition)
+      .sort({ IQ_score: -1, avgRQM: -1 })
+      .skip(skipNumber)
+      .limit(limitNumber)
+      .lean()
+
+    // Step 3: Fetch quiz attempts for paginated users
+    const userIds = paginatedUsers.map(user => user._id)
+    const quizAttempts = await QuizAttempt.aggregate([
+      { $match: { user: { $in: userIds }, season: 2 } },
+      { $group: { _id: '$user', count: { $sum: 1 } } },
     ])
 
-    const currUserPromise = User.findById(currUserId)
-      .select('avgRQM quizAttempts displayedBadge')
-      .populate({
-        path: 'quizAttempts',
-        match: { season: 2 },
-        select: '_id',
-      })
+    // Step 4: Process and enrich user data
+    const enrichedUsers = paginatedUsers.map(user => {
+      const attempts = quizAttempts.find(a => a._id.equals(user._id))
+      const rank = allUsers.findIndex(u => u._id.equals(user._id)) + 1
+      return {
+        ...user,
+        quizAttemptsLength: attempts ? attempts.count : 0,
+        rankedInCurrentSeason: attempts ? attempts.count >= 1 : false,
+        rank: rank,
+      }
+    })
 
-    const [users, currUser] = await Promise.all([usersPromise, currUserPromise])
-
-    // Update ranks for users on the current page
-    const bulkOps = users.map((user, index) => ({
+    // Step 5: Update ranks in the database
+    const bulkOps = enrichedUsers.map(user => ({
       updateOne: {
         filter: { _id: user._id },
-        update: { $set: { rank: skipNumber + index + 1 } },
+        update: { $set: { rank: user.rank } },
       },
     }))
 
     await User.bulkWrite(bulkOps)
 
-    const result = users.map(user => {
-      const {
-        name,
-        inGameName,
-        IQ_score,
-        pic,
-        _id,
-        maxIQScore,
-        avgRQM,
-        quizAttemptsLength,
-        level,
-        xp,
-        rankedInCurrentSeason,
-        displayedBadge,
-      } = user
-      return {
-        _id,
-        RQM_avg: avgRQM?.toFixed(0),
-        name,
-        inGameName,
-        IQ_score,
-        pic,
-        quizSubmissions: quizAttemptsLength,
-        maxIQScore,
-        level,
-        xp,
-        rankedInCurrentSeason,
-        displayedBadge,
-      }
-    })
+    // Step 6: Format result for response
+    const result = enrichedUsers.map(user => ({
+      _id: user._id,
+      RQM_avg: user.avgRQM?.toFixed(0),
+      name: user.name,
+      inGameName: user.inGameName,
+      IQ_score: user.IQ_score,
+      pic: user.pic,
+      quizSubmissions: user.quizAttemptsLength,
+      maxIQScore: user.maxIQScore,
+      level: user.level,
+      xp: user.xp,
+      rankedInCurrentSeason: user.rankedInCurrentSeason,
+      displayedBadge: user.displayedBadge,
+      rank: user.rank,
+    }))
 
-    const currUserData = {
-      RQM_avg: currUser?.avgRQM.toFixed(0),
-      quizSubmissions: currUser?.quizAttempts.length,
+    // Step 7: Get current user data
+    let currUserData = {}
+    if (currUserId) {
+      const currUser = await User.findById(currUserId)
+        .select('avgRQM quizAttempts rank')
+        .populate({
+          path: 'quizAttempts',
+          match: { season: 2 },
+          select: '_id',
+        })
+        .lean()
+
+      currUserData = {
+        RQM_avg: currUser?.avgRQM?.toFixed(0),
+        quizSubmissions: currUser?.quizAttempts?.length || 0,
+        rank: currUser?.rank,
+      }
     }
 
     const responseData = {
@@ -626,13 +582,13 @@ const leaderBoard = async (req, res) => {
       currentPage: pageNumber,
     }
 
-    // Cache the result for 1 hour (3600000 milliseconds)
+    // Cache the result
     cache.put(cacheKey, responseData, 3600000)
 
     res.status(200).json(responseData)
   } catch (error) {
+    console.error('Error fetching the Leaderboard:', error)
     res.status(500).json({ error: 'Error fetching the Leaderboard' })
-    console.error(error)
   }
 }
 
@@ -697,6 +653,8 @@ const profile = async (req, res) => {
         tournamentPerformance: user.tournamentPerformance,
         displayedBadge: user.displayedBadge,
         badges: user.badges,
+        avgRQM: user.avgRQM,
+        UserIQ: user.IQ_score,
       },
       experience: {
         level: user.level,

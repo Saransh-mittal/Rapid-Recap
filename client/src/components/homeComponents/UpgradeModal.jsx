@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useSelector, useDispatch } from 'react-redux'
@@ -20,6 +20,7 @@ import { Star } from 'lucide-react'
 import { findSocietyAndCircle } from '../../utils/helper.utils'
 
 const UpgradeModal = ({ isOpen, onClose }) => {
+  // const [glowAnimation, setGlowAnimation] = useState(false)
   const { t } = useTranslation('UpgradeModal')
   const { t: tBrains } = useTranslation('Brains')
   const { t: tCircles } = useTranslation('Circles')
@@ -43,50 +44,81 @@ const UpgradeModal = ({ isOpen, onClose }) => {
     }
   }
 
+  const createStar = (orbitRadius, duration, delay) => (
+    <motion.div
+      style={{
+        position: 'absolute',
+        top: '0%',
+        left: '50%',
+        width: orbitRadius * 2,
+        height: orbitRadius * 2,
+        borderRadius: '50%',
+      }}
+      animate={{ rotate: 360 }}
+      transition={{
+        duration,
+        repeat: Infinity,
+        ease: 'linear',
+        delay,
+      }}
+    >
+      <motion.div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: '50%',
+          width: 0,
+          height: 0,
+        }}
+      >
+        <Star size={64} color="#9f7aea" opacity={0.6} />
+      </motion.div>
+    </motion.div>
+  )
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '2xl' }}>
-      <ModalOverlay backdropFilter="blur(5px)" />
+      <ModalOverlay backdropFilter={'blur(5px)'} />
       <ModalContent
-        bg="transparent"
-        boxShadow="none"
         color="white"
         display="flex"
         alignItems="center"
         justifyContent="center"
-        height="100vh"
+        bg={'transparent'}
       >
-        <ModalBody p={0}>
+        <ModalBody
+          py={0}
+          bg="linear-gradient(135deg, rgba(96, 18, 169, 0.9) 0%, rgba(35, 2, 59, 0.9) 100%)"
+          borderRadius={'2xl'}
+          boxShadow="0 0 40px rgba(138, 43, 226, 0.3)"
+        >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
             <Box
-              bg="rgba(30, 30, 40, 0.9)"
               borderRadius="2xl"
               overflow="hidden"
-              boxShadow="0 0 40px rgba(138, 43, 226, 0.3)"
               position="relative"
+              width="100%"
+              height="100%"
+              maxWidth="600px"
             >
+              {/* Revolving stars */}
               <Box
-                bg="linear-gradient(135deg, rgba(138, 43, 226, 0.2) 0%, rgba(75, 0, 130, 0.2) 100%)"
-                p={8}
-                textAlign="center"
+                position="absolute"
+                top="50%"
+                left="50%"
+                transform="translate(-50%, -50%)"
+                width="100%"
+                height="100%"
+                zIndex={0}
               >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 20,
-                    repeat: Infinity,
-                    ease: 'linear',
-                  }}
-                >
-                  <Star
-                    size={64}
-                    color="#9f7aea"
-                    style={{ marginBottom: '1rem' }}
-                  />
-                </motion.div>
+                {createStar(200, 20, 0)}
+              </Box>
+
+              <Box p={8} textAlign="center" position="relative" zIndex={1}>
                 <Text
                   fontSize="4xl"
                   fontWeight="bold"
@@ -101,19 +133,104 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                 </Text>
                 <Flex justify="center" align="center" mb={6}>
                   <Box textAlign="center" mr={8}>
-                    <Image
-                      src={prevSocietyOrCircle?.image}
-                      alt="Previous Level"
-                      boxSize="100px"
-                      mb={2}
-                    />
+                    {isCircleUpgraded ? (
+                      <>
+                        <Flex
+                          position="relative"
+                          textAlign="center"
+                          alignItems={'center'}
+                          justifyContent={'center'}
+                          w={'100%'}
+                        >
+                          <motion.div
+                            initial={{ scale: 0.9 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            <svg width="200" height="200" viewBox="0 0 120 120">
+                              <defs>
+                                <linearGradient
+                                  id="circleGradient"
+                                  x1="0%"
+                                  y1="0%"
+                                  x2="100%"
+                                  y2="100%"
+                                >
+                                  <stop
+                                    offset="0%"
+                                    stopColor={prevSocietyOrCircle?.textColor}
+                                    stopOpacity="0.2"
+                                  />
+                                  <stop
+                                    offset="100%"
+                                    stopColor={prevSocietyOrCircle?.textColor}
+                                    stopOpacity="0.8"
+                                  />
+                                </linearGradient>
+                              </defs>
+                              <motion.circle
+                                cx="60"
+                                cy="60"
+                                r="55"
+                                fill="transparent"
+                                stroke="url(#circleGradient)"
+                                strokeWidth="3"
+                                initial={{ pathLength: 0 }}
+                                animate={{ pathLength: 1 }}
+                                transition={{
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  repeatType: 'reverse',
+                                }}
+                              />
+                              <text
+                                x="60"
+                                y="40"
+                                textAnchor="middle"
+                                fill={prevSocietyOrCircle?.textColor}
+                                fontSize="14"
+                                fontWeight="bold"
+                              >
+                                {prevSocietyOrCircle?.circle}
+                              </text>
+                              <text
+                                x="60"
+                                y="60"
+                                textAnchor="middle"
+                                fill={prevSocietyOrCircle?.textColor}
+                                fontSize="12"
+                              >
+                                {t('Circle')}
+                              </text>
+                              <text
+                                x="60"
+                                y="80"
+                                textAnchor="middle"
+                                fill="#9CAFAA"
+                                fontSize="9"
+                              >
+                                {t('iqRange')} {prevSocietyOrCircle?.IQ_Lower} -{' '}
+                                {prevSocietyOrCircle?.IQ_Upper || 'Above'}
+                              </text>
+                            </svg>
+                          </motion.div>
+                        </Flex>
+                      </>
+                    ) : (
+                      <Image
+                        src={prevSocietyOrCircle?.image}
+                        alt="Previous Level"
+                        boxSize="100px"
+                        mb={2}
+                      />
+                    )}
+
                     <Text
                       fontWeight="bold"
                       color={prevSocietyOrCircle?.textColor}
                     >
-                      {isCircleUpgraded
-                        ? tCircles(`${prevSocietyOrCircle?.circle}.title`)
-                        : tBrains(`${prevSocietyOrCircle?.society}.society`)}
+                      {!isCircleUpgraded &&
+                        tBrains(`${prevSocietyOrCircle?.society}.society`)}
                     </Text>
                   </Box>
                   <Box
@@ -129,22 +246,113 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <Image
-                        src={upgradedSocietyOrCircle?.image}
-                        alt="New Level"
-                        boxSize="100px"
-                        mb={2}
-                      />
+                      {isCircleUpgraded ? (
+                        <>
+                          <Flex
+                            position="relative"
+                            textAlign="center"
+                            alignItems={'center'}
+                            justifyContent={'center'}
+                            w={'100%'}
+                          >
+                            <motion.div
+                              initial={{ scale: 0.9 }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.5 }}
+                            >
+                              <svg
+                                width="200"
+                                height="200"
+                                viewBox="0 0 120 120"
+                              >
+                                <defs>
+                                  <linearGradient
+                                    id="circleGradient"
+                                    x1="0%"
+                                    y1="0%"
+                                    x2="100%"
+                                    y2="100%"
+                                  >
+                                    <stop
+                                      offset="0%"
+                                      stopColor={
+                                        upgradedSocietyOrCircle?.textColor
+                                      }
+                                      stopOpacity="0.2"
+                                    />
+                                    <stop
+                                      offset="100%"
+                                      stopColor={
+                                        upgradedSocietyOrCircle?.textColor
+                                      }
+                                      stopOpacity="0.8"
+                                    />
+                                  </linearGradient>
+                                </defs>
+                                <motion.circle
+                                  cx="60"
+                                  cy="60"
+                                  r="55"
+                                  fill="transparent"
+                                  stroke="url(#circleGradient)"
+                                  strokeWidth="3"
+                                  initial={{ pathLength: 0 }}
+                                  animate={{ pathLength: 1 }}
+                                  transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    repeatType: 'reverse',
+                                  }}
+                                />
+                                <text
+                                  x="60"
+                                  y="40"
+                                  textAnchor="middle"
+                                  fill={upgradedSocietyOrCircle?.textColor}
+                                  fontSize="14"
+                                  fontWeight="bold"
+                                >
+                                  {upgradedSocietyOrCircle?.circle}
+                                </text>
+                                <text
+                                  x="60"
+                                  y="60"
+                                  textAnchor="middle"
+                                  fill={upgradedSocietyOrCircle?.textColor}
+                                  fontSize="12"
+                                >
+                                  {t('Circle')}
+                                </text>
+                                <text
+                                  x="60"
+                                  y="80"
+                                  textAnchor="middle"
+                                  fill="#9CAFAA"
+                                  fontSize="9"
+                                >
+                                  {t('iqRange')}{' '}
+                                  {upgradedSocietyOrCircle?.IQ_Lower} -{' '}
+                                  {upgradedSocietyOrCircle?.IQ_Upper || 'Above'}
+                                </text>
+                              </svg>
+                            </motion.div>
+                          </Flex>
+                        </>
+                      ) : (
+                        <Image
+                          src={upgradedSocietyOrCircle?.image}
+                          alt="Previous Level"
+                          boxSize="100px"
+                          mb={2}
+                        />
+                      )}
                     </motion.div>
                     <Text
                       fontWeight="bold"
                       color={upgradedSocietyOrCircle?.textColor}
                     >
-                      {isCircleUpgraded
-                        ? tCircles(`${upgradedSocietyOrCircle?.circle}.title`)
-                        : tBrains(
-                            `${upgradedSocietyOrCircle?.society}.society`,
-                          )}
+                      {!isCircleUpgraded &&
+                        tBrains(`${upgradedSocietyOrCircle?.society}.society`)}
                     </Text>
                   </Box>
                 </Flex>

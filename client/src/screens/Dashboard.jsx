@@ -12,17 +12,30 @@ import {
   Th,
   Td,
   VStack,
-  HStack,
-  Button,
-  Text,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  SimpleGrid,
   Alert,
   AlertIcon,
   Skeleton,
   useMediaQuery,
   useDisclosure,
   Spinner,
-  SimpleGrid,
+  Text,
+  Button,
+  Container,
+  useColorModeValue,
+  Icon,
+  StatGroup,
+  Stat,
+  StatLabel,
+  StatNumber,
 } from '@chakra-ui/react'
+import TournamentFeedbackAnalysis from '../components/dashboardComponents/TournamentFeedbackAnalysis'
+import { FaChartBar, FaCog, FaComments } from 'react-icons/fa'
 
 const ArticleManagement = lazy(() =>
   import('../components/dashboardComponents/ArticleManagement'),
@@ -64,28 +77,33 @@ const Dashboard = () => {
   const [selectedTables, setSelectedTables] = useState(['quizAttempts'])
   const [dateError, setDateError] = useState('')
   const [loading, setLoading] = useState(true)
-  const isScreenSmallerThen650px = useMediaQuery('(max-width: 650px)')[0]
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true)
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const {
-    isOpen: isTournamentManagementOpen,
-    onOpen: onTournamentManagementOpen,
-    onClose: onTournamentManagementClose,
-  } = useDisclosure()
+
+  const textColor = useColorModeValue('gray.200', 'gray.200')
+  const subtleTextColor = useColorModeValue('gray.400', 'gray.400')
+  const borderColor = useColorModeValue('gray.700', 'gray.700')
+  const buttonColorScheme = 'teal'
+
   const {
     isOpen: isNotificationStatusOpen,
     onOpen: onNotificationStatusOpen,
     onClose: onNotificationStatusClose,
   } = useDisclosure()
   const {
-    isOpen: isCurrentAffairsOpen,
-    onOpen: onCurrentAffairsOpen,
-    onClose: onCurrentAffairsClose,
+    isOpen: isTournamentManagementOpen,
+    onOpen: onTournamentManagementOpen,
+    onClose: onTournamentManagementClose,
   } = useDisclosure()
   const {
     isOpen: isArticleManagementOpen,
     onOpen: onArticleManagementOpen,
     onClose: onArticleManagementClose,
+  } = useDisclosure()
+  const {
+    isOpen: isCurrentAffairsOpen,
+    onOpen: onCurrentAffairsOpen,
+    onClose: onCurrentAffairsClose,
   } = useDisclosure()
   const {
     isOpen: isStoryFeedbackAnalysisOpen,
@@ -98,26 +116,15 @@ const Dashboard = () => {
     onClose: onQuizFeedbackAnalysisClose,
   } = useDisclosure()
   const {
+    isOpen: isTournamentFeedbackAnalysisOpen,
+    onOpen: onTournamentFeedbackAnalysisOpen,
+    onClose: onTournamentFeedbackAnalysisClose,
+  } = useDisclosure()
+  const {
     isOpen: isTestTournamentManagementOpen,
     onOpen: onTestTournamentManagementOpen,
     onClose: onTestTournamentManagementClose,
   } = useDisclosure()
-  const [isLoadingStatus, setIsLoadingStatus] = useState(true)
-
-  const renderModalButton = useCallback(
-    (label, onClickHandler) => (
-      <Button
-        onClick={onClickHandler}
-        backgroundColor="blue.500"
-        color="white"
-        size={isLargerThan768 ? 'md' : 'sm'}
-        width="100%"
-      >
-        {label}
-      </Button>
-    ),
-    [isLargerThan768],
-  )
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -204,14 +211,6 @@ const Dashboard = () => {
     fetchData()
   }, [startDate, endDate, lastLoginAfterDate, selectedTables])
 
-  const handleNotificationStatusClick = useCallback(() => {
-    onOpen()
-  }, [onOpen])
-
-  // const handleModalClick = useCallback(() => {
-  //   onModalOpen()
-  // }, [onModalOpen])
-
   const handleTableChange = useCallback(table => {
     setSelectedTables(prevSelectedTables => {
       if (prevSelectedTables.includes(table)) {
@@ -221,23 +220,6 @@ const Dashboard = () => {
       }
     })
   }, [])
-
-  const renderTableButton = useCallback(
-    (label, table) => (
-      <Button
-        onClick={() => handleTableChange(table)}
-        backgroundColor={
-          selectedTables.includes(table) ? 'blue.500' : 'gray.200'
-        }
-        color={selectedTables.includes(table) ? 'white' : 'black'}
-        size={isLargerThan768 ? 'md' : 'sm'}
-        width="100%"
-      >
-        {label}
-      </Button>
-    ),
-    [selectedTables, handleTableChange, isLargerThan768],
-  )
 
   const handleDateChange = useCallback(
     setter => event => {
@@ -315,163 +297,253 @@ const Dashboard = () => {
   const { data: mergedData, totals } = mergeData()
 
   return (
-    <Box margin={{ base: '5rem 0 0 0', lg: '5rem' }}>
-      <Heading textAlign={'center'} margin={'1rem'}>
-        Dashboard
-      </Heading>
-      <Flex
-        justifyContent={'space-between'}
-        mt={'-2rem'}
-        flexDirection={{ base: 'column' }}
-        w={'100%'}
-      >
-        <Flex
-          flexDirection={'column'}
-          alignItems={'center'}
-          mt={'4rem'}
-          mx={{ base: '0.75rem', md: '0' }}
-        >
-          <VStack spacing={4} align="stretch" mt={4}>
-            {(selectedTables.includes('quizAttempts') ||
-              selectedTables.includes('timeSpent')) && (
-              <SimpleGrid columns={[1, null, 2]} spacing={4}>
-                <Input
-                  type="date"
-                  value={startDate}
-                  max={new Date().toISOString().split('T')[0]}
-                  onChange={handleDateChange(setStartDate)}
-                  placeholder="Start Date"
-                />
-                <Input
-                  type="date"
-                  value={endDate}
-                  max={new Date().toISOString().split('T')[0]}
-                  onChange={handleDateChange(setEndDate)}
-                  placeholder="End Date"
-                />
-              </SimpleGrid>
-            )}
-            {selectedTables.includes('lastLogin') && (
-              <Input
-                type="date"
-                value={lastLoginAfterDate}
-                max={new Date().toISOString().split('T')[0]}
-                onChange={handleDateChange(setLastLoginAfterDate)}
-                placeholder="Last Login After Date"
-              />
-            )}
-            {dateError && (
-              <Alert status="error">
-                <AlertIcon />
-                {dateError}
-              </Alert>
-            )}
-            <SimpleGrid columns={[2, null, 3, 4]} spacing={4}>
-              {renderTableButton('Quiz Attempts', 'quizAttempts')}
-              {renderTableButton('Last Login Times', 'lastLogin')}
-              {renderTableButton('Time Spent', 'timeSpent')}
-              {renderModalButton(
-                'Notification Status',
-                onNotificationStatusOpen,
-              )}
-              {renderModalButton(
-                'Manage Tournaments',
-                onTournamentManagementOpen,
-              )}
-              {renderModalButton('Manage Articles', onArticleManagementOpen)}
-              {renderModalButton('Current Affairs', onCurrentAffairsOpen)}
-              {renderModalButton('Story Feedback', onStoryFeedbackAnalysisOpen)}
-              {renderModalButton('Quiz Feedback', onQuizFeedbackAnalysisOpen)}
-              {renderModalButton(
-                'Manage Test Tournament',
-                onTestTournamentManagementOpen,
-              )}
-            </SimpleGrid>
-          </VStack>
+    <Box minHeight="100vh" mt={'4.5rem'} px={isLargerThan768 ? '2rem' : '0rem'}>
+      <Container maxW="container.xl" py={8}>
+        <Flex direction="column" align="center" mb={8}>
+          <Heading
+            as="h1"
+            size={isLargerThan768 ? '2xl' : 'lg'}
+            mb={2}
+            p={2}
+            borderRadius="md"
+            color={textColor}
+            textAlign="center"
+          >
+            Dashboard
+          </Heading>
+          <Text fontSize={isLargerThan768 ? 'lg' : 'md'} color="gray.500">
+            Manage and analyze your application data
+          </Text>
         </Flex>
-        <Flex w="100%" mt="3rem">
-          {selectedTables.length > 0 && (
-            <VStack w="100%" justifyContent="space-between" p={4}>
-              <Table
-                variant="striped"
-                size="md"
-                w={{ base: '100%', md: '70%' }}
-              >
-                <Thead>
-                  <Tr bg="#363062">
-                    <Th
-                      colSpan={2}
-                      textAlign="center"
-                      color="white"
-                      fontSize="1rem"
+
+        <Tabs isFitted variant="soft-rounded" colorScheme={buttonColorScheme}>
+          <TabList mb="1em" mx={{ base: 0, md: '2rem' }}>
+            <Tab color={textColor}>Users Data</Tab>
+            <Tab color={textColor}>Management</Tab>
+            <Tab color={textColor}>Feedback</Tab>
+          </TabList>
+
+          <TabPanels>
+            {/* Data Filters Tab */}
+            <TabPanel>
+              <VStack spacing={6} align="stretch">
+                <Box p={6} borderRadius="lg" boxShadow="md">
+                  <Heading size={isLargerThan768 ? 'md' : 'sm'} mb={4}>
+                    Date Range Selection
+                  </Heading>
+                  {(selectedTables.includes('quizAttempts') ||
+                    selectedTables.includes('timeSpent')) && (
+                    <SimpleGrid columns={[1, null, 2]} spacing={4}>
+                      <Input
+                        type="date"
+                        value={startDate}
+                        max={new Date().toISOString().split('T')[0]}
+                        onChange={handleDateChange(setStartDate)}
+                        placeholder="Start Date"
+                      />
+                      <Input
+                        type="date"
+                        value={endDate}
+                        max={new Date().toISOString().split('T')[0]}
+                        onChange={handleDateChange(setEndDate)}
+                        placeholder="End Date"
+                      />
+                    </SimpleGrid>
+                  )}
+                  {selectedTables.includes('lastLogin') && (
+                    <Input
+                      type="date"
+                      value={lastLoginAfterDate}
+                      max={new Date().toISOString().split('T')[0]}
+                      onChange={handleDateChange(setLastLoginAfterDate)}
+                      placeholder="Last Login After Date"
+                      mt={4}
+                    />
+                  )}
+                  {dateError && (
+                    <Alert status="error" mt={4}>
+                      <AlertIcon />
+                      {dateError}
+                    </Alert>
+                  )}
+                </Box>
+
+                <Box p={6} borderRadius="lg" boxShadow="md">
+                  <Heading size={isLargerThan768 ? 'md' : 'sm'} mb={4}>
+                    Data Selection
+                  </Heading>
+                  <SimpleGrid columns={[1, null, 3]} spacing={4}>
+                    <Button
+                      onClick={() => handleTableChange('quizAttempts')}
+                      colorScheme={buttonColorScheme}
+                      variant={
+                        selectedTables.includes('quizAttempts')
+                          ? 'solid'
+                          : 'outline'
+                      }
                     >
+                      Quiz Attempts
+                    </Button>
+                    <Button
+                      onClick={() => handleTableChange('lastLogin')}
+                      colorScheme={buttonColorScheme}
+                      variant={
+                        selectedTables.includes('lastLogin')
+                          ? 'solid'
+                          : 'outline'
+                      }
+                    >
+                      Last Login Times
+                    </Button>
+                    <Button
+                      onClick={() => handleTableChange('timeSpent')}
+                      colorScheme={buttonColorScheme}
+                      variant={
+                        selectedTables.includes('timeSpent')
+                          ? 'solid'
+                          : 'outline'
+                      }
+                    >
+                      Time Spent
+                    </Button>
+                  </SimpleGrid>
+                </Box>
+
+                {/* User Stats */}
+                {selectedTables.length > 0 && (
+                  <Box p={6} borderRadius="lg" boxShadow="md">
+                    <Heading size={isLargerThan768 ? 'md' : 'sm'} mb={4}>
                       User Statistics
-                    </Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  <Tr>
-                    <Td bg="#818FB4" color="black" fontWeight={'bold'}>
-                      <Text fontSize={'1.15rem'}>Total Users:</Text>
-                    </Td>
-                    <Td bg="#818FB4" color="black" fontWeight={'bold'}>
-                      <Text fontSize={'1.15rem'}>{totals.totalUsers}</Text>
-                    </Td>
-                  </Tr>
-                  <Tr>
-                    <Td bg="#363062" color="black" fontWeight={'bold'}>
-                      <Text fontSize={'1.15rem'}>
-                        Total Quiz Attempts Users:
-                      </Text>
-                    </Td>
-                    <Td bg="#363062" color="black" fontWeight={'bold'}>
-                      <Text fontSize={'1.15rem'}>
-                        {totals.totalQuizAttemptsUsers}
-                      </Text>
-                    </Td>
-                  </Tr>
-                  <Tr>
-                    <Td bg="#818FB4" color="black" fontWeight={'bold'}>
-                      <Text fontSize={'1.15rem'}>Total Last Login Users:</Text>
-                    </Td>
-                    <Td bg="#818FB4" color="black" fontWeight={'bold'}>
-                      <Text fontSize={'1.15rem'}>
-                        {totals.totalLastLoginUsers}
-                      </Text>
-                    </Td>
-                  </Tr>
-                  <Tr>
-                    <Td bg="#363062" color="black" fontWeight={'bold'}>
-                      <Text fontSize={'1.15rem'}>Total Time Spent Users:</Text>
-                    </Td>
-                    <Td bg="#363062" color="black" fontWeight={'bold'}>
-                      <Text fontSize={'1.15rem'}>
-                        {totals.totalTimeSpentUsers}
-                      </Text>
-                    </Td>
-                  </Tr>
-                </Tbody>
-              </Table>
-            </VStack>
-          )}
-        </Flex>
-      </Flex>
-      {selectedTables.length > 0 && (
-        <Box mt={8}>
-          <Flex justifyContent={'center'}>
-            <Heading size="lg" mb={'1rem'}>
-              Merged Data
-            </Heading>
-          </Flex>
-          {loading ? (
-            <Skeleton height="200px" />
-          ) : (
-            <Suspense fallback={<Spinner />}>
-              <DataTable columns={getMergedColumns()} data={mergedData} />
-            </Suspense>
-          )}
-        </Box>
-      )}
+                    </Heading>
+                    <SimpleGrid columns={[2, null, 4]} spacing={4}>
+                      <Stat
+                        border="1px solid"
+                        borderColor={borderColor}
+                        borderRadius="md"
+                        p={4}
+                        boxShadow="sm"
+                      >
+                        <StatLabel>Total Users</StatLabel>
+                        <StatNumber>{totals.totalUsers}</StatNumber>
+                      </Stat>
+                      <Stat
+                        border="1px solid"
+                        borderColor={borderColor}
+                        borderRadius="md"
+                        p={4}
+                        boxShadow="sm"
+                      >
+                        <StatLabel>Quiz Attempts Users</StatLabel>
+                        <StatNumber>{totals.totalQuizAttemptsUsers}</StatNumber>
+                      </Stat>
+                      <Stat
+                        border="1px solid"
+                        borderColor={borderColor}
+                        borderRadius="md"
+                        p={4}
+                        boxShadow="sm"
+                      >
+                        <StatLabel>Last Login Users</StatLabel>
+                        <StatNumber>{totals.totalLastLoginUsers}</StatNumber>
+                      </Stat>
+                      <Stat
+                        border="1px solid"
+                        borderColor={borderColor}
+                        borderRadius="md"
+                        p={4}
+                        boxShadow="sm"
+                      >
+                        <StatLabel>Time Spent Users</StatLabel>
+                        <StatNumber>{totals.totalTimeSpentUsers}</StatNumber>
+                      </Stat>
+                    </SimpleGrid>
+                  </Box>
+                )}
+
+                {/* Merged Data Table */}
+                {selectedTables.length > 0 && (
+                  <Box py={6} borderRadius="lg" boxShadow="md">
+                    <Heading size={isLargerThan768 ? 'md' : 'sm'} mb={4}>
+                      Merged Data
+                    </Heading>
+                    {loading ? (
+                      <Skeleton height="200px" />
+                    ) : (
+                      <Suspense fallback={<Spinner />}>
+                        <DataTable
+                          columns={getMergedColumns()}
+                          data={mergedData}
+                        />
+                      </Suspense>
+                    )}
+                  </Box>
+                )}
+              </VStack>
+            </TabPanel>
+
+            {/* Management Tab */}
+            <TabPanel>
+              <SimpleGrid columns={[1, null, 3]} spacing={4}>
+                <Button
+                  colorScheme={buttonColorScheme}
+                  onClick={onNotificationStatusOpen}
+                >
+                  Notification Status
+                </Button>
+                <Button
+                  colorScheme={buttonColorScheme}
+                  onClick={onTournamentManagementOpen}
+                >
+                  Manage Tournaments
+                </Button>
+                <Button
+                  colorScheme={buttonColorScheme}
+                  onClick={onArticleManagementOpen}
+                >
+                  Manage Articles
+                </Button>
+                <Button
+                  colorScheme={buttonColorScheme}
+                  onClick={onCurrentAffairsOpen}
+                >
+                  Current Affairs
+                </Button>
+                <Button
+                  colorScheme={buttonColorScheme}
+                  onClick={onTestTournamentManagementOpen}
+                >
+                  Manage Test Tournament
+                </Button>
+              </SimpleGrid>
+            </TabPanel>
+
+            {/* Feedback Tab */}
+            <TabPanel>
+              <SimpleGrid columns={[1, null, 3]} spacing={4}>
+                <Button
+                  colorScheme={buttonColorScheme}
+                  onClick={onStoryFeedbackAnalysisOpen}
+                >
+                  Story Feedback
+                </Button>
+                <Button
+                  colorScheme={buttonColorScheme}
+                  onClick={onQuizFeedbackAnalysisOpen}
+                >
+                  Quiz Feedback
+                </Button>
+                <Button
+                  colorScheme={buttonColorScheme}
+                  onClick={onTournamentFeedbackAnalysisOpen}
+                >
+                  Tournament Feedback
+                </Button>
+              </SimpleGrid>
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+      </Container>
+
       <Suspense fallback={<Spinner />}>
         <NotificationStatus
           isOpen={isNotificationStatusOpen}
@@ -510,6 +582,12 @@ const Dashboard = () => {
         <QuizFeedbackAnalysis
           isOpen={isQuizFeedbackAnalysisOpen}
           onClose={onQuizFeedbackAnalysisClose}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <TournamentFeedbackAnalysis
+          isOpen={isTournamentFeedbackAnalysisOpen}
+          onClose={onTournamentFeedbackAnalysisClose}
         />
       </Suspense>
       <Suspense fallback={<Spinner />}>

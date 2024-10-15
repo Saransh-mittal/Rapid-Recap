@@ -164,7 +164,8 @@ const LeaderboardSection = ({ tournamentData }) => {
       {userStanding && (
         <Box
           bg="whiteAlpha.200"
-          p={4}
+          py={4}
+          px={3}
           borderRadius="md"
           boxShadow="md"
           cursor="pointer"

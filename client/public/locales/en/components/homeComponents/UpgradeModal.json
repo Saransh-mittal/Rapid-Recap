@@ -6,5 +6,7 @@
   "circle": "{{circle}}",
   "upgradeMessage": "{{upgradeMessage}}",
   "journeyContinues": "Your journey to mastery continues...",
-  "continueJourney": "Continue Your Journey.."
+  "continueJourney": "Continue Your Journey..",
+  "Circle": "Circle",
+  "iqRange": "IQ Range:"
 }

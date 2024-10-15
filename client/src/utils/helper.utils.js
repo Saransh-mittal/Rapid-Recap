@@ -129,3 +129,23 @@ export const handleQuizFeedback = async (rating, feedback, quizId) => {
     console.error('Error submitting quiz feedback:', error)
   }
 }
+
+export const handleTournamentFeedback = async (
+  rating,
+  feedback,
+  tournamentId,
+) => {
+  try {
+    if (tournamentId === null) {
+      console.error('Tournament ID is missing!')
+      return
+    }
+    await axios.post('/api/contact/feedback/tournament', {
+      tournamentId,
+      rating,
+      message: feedback,
+    })
+  } catch (error) {
+    console.error('Error submitting tournament feedback:', error)
+  }
+}
