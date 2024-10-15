@@ -121,7 +121,7 @@ const Leaderboard = () => {
           style={{
             ...style,
             height: `${ROW_HEIGHT - ROW_GAP}px`,
-            top: `${parseFloat(style.top) + index * ROW_GAP}px`,
+            // top: `${parseFloat(style.top) + index * ROW_GAP}px`,
           }}
         >
           <LeaderboardRow
