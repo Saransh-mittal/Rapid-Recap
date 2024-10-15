@@ -318,20 +318,7 @@ const TournamentSection = ({
 
   return (
     <>
-      <Box
-        w="full"
-        mt={10}
-        mx="auto"
-        p={{ base: 4, md: 6 }}
-        borderRadius="lg"
-        border="1px"
-        borderColor="gray.700"
-        style={{
-          backgroundColor: 'rgba(15, 13, 21, 0.8)',
-          boxShadow:
-            '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-        }}
-      >
+      <Box w="full" mx="auto" p={{ base: 4, md: 6 }} borderRadius="lg">
         {privateTournament ? (
           <Text
             backgroundColor="#0f0d15"
@@ -351,20 +338,6 @@ const TournamentSection = ({
           <Spinner />
         ) : (
           <>
-            <Flex flexDirection="column" h={'fit-content'} mt={-6} mb={3}>
-              {loginedUserProfile &&
-                user?.profilePrivacy?.tournamentAnalytics !== undefined && (
-                  <Flex w={'100%'} justifyContent={'flex-end'} mt={3}>
-                    <ChakraTooltip label={translate('visibilityTooltip')}>
-                      <Badge colorScheme="green" m={0} w={'fit-content'}>
-                        {user.profilePrivacy.tournamentAnalytics
-                          ? translate('hidden')
-                          : translate('visible')}
-                      </Badge>
-                    </ChakraTooltip>
-                  </Flex>
-                )}
-            </Flex>
             <VStack spacing={8} align="stretch">
               <Flex
                 direction={{ base: 'column', xl: 'row' }}

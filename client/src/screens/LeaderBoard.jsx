@@ -199,7 +199,9 @@ const Leaderboard = () => {
 
         <UserCard user={user} t={t} />
 
-        <Box height="calc(100vh - 350px)">
+        <Box
+          height={{ base: 'calc(100vh - 200px)', md: 'calc(100vh - 240px)' }}
+        >
           {isLoading || !isInitialRenderComplete ? (
             <Flex justify="center" my={4}>
               <Spinner size="xl" color={accentColor} />

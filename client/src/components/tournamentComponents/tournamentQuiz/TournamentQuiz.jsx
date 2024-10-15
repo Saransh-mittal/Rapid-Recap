@@ -46,9 +46,8 @@ const TournamentQuiz = () => {
 
   const { isOpen } = useSelector(state => state.quiz)
   const { user } = useSelector(state => state.auth)
-  const { tournamentId, category, completedCategories } = useSelector(
-    state => state.tournament,
-  )
+  const { tournamentId, category, completedCategories, categoryAttempts } =
+    useSelector(state => state.tournament)
 
   // Local states
   const [error, setError] = useState(null)
@@ -186,6 +185,19 @@ const TournamentQuiz = () => {
             xp: user.xp + 10,
           }),
         )
+
+        if (response.data.sendTourFeedback === true) {
+          dispatch(
+            addNoteMessage({
+              messageType: 'tournamentQuizFeedback',
+              title: t('Please rate us'),
+              duration: null,
+              width: '300px',
+              actions: [{ actionType: 'SUBMIT_TOURNAMENT_FEEDBACK' }],
+              tournamentId: tournamentId,
+            }),
+          )
+        }
 
         ReactGA.event({
           category: 'Tournament',

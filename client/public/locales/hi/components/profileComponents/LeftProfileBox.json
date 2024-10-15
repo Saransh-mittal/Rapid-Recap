@@ -24,5 +24,8 @@
   "badgeUpdateSuccess": "बैज सफलतापूर्वक अपडेट किया गया",
   "badgeUpdateError": "बैज अपडेट करने में त्रुटि",
   "tournamentBadge": "टूर्नामेंट {{number}}",
-  "showBadges": "बैज दिखाएं"
+  "showBadges": "बैज दिखाएं",
+  "edit": "संपादित करें",
+  "requestSent": "अनुरोध भेजा गया",
+  "addFriend": "मित्र जोड़ें"
 }

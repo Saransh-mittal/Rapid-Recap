@@ -87,7 +87,7 @@ const RankAndSociety = ({
         h={'100%'}
         flexDirection="column"
         position="relative"
-        p={5}
+        py={5}
         justifyContent={'center'}
         alignItems={'center'}
         mt={-5}
@@ -127,7 +127,6 @@ const RankAndSociety = ({
       position="relative"
       justifyContent={'center'}
       alignItems={'center'}
-      px={5}
     >
       {privateSociety ? (
         <Flex
@@ -155,23 +154,6 @@ const RankAndSociety = ({
         <Spinner />
       ) : (
         <>
-          <Flex
-            flexDirection="column"
-            h={'fit-content'}
-            ml={'auto'}
-            mt={-6}
-            mb={3}
-          >
-            {loginedUserProfile && (
-              <Tooltip label={t('tooltip.visibility')}>
-                <Badge colorScheme="green" m={0}>
-                  {user.profilePrivacy.society
-                    ? t('tooltip.hidden')
-                    : t('tooltip.visible')}
-                </Badge>
-              </Tooltip>
-            )}
-          </Flex>
           <Suspense fallback={<Spinner />}>
             <EnhancedSocietyCircle
               societyData={circleAndSociety}

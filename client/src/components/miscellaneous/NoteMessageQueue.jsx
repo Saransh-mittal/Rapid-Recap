@@ -19,6 +19,11 @@ const StoryFeedbackNoteMessage = lazy(() =>
 const QuizFeedbackNoteMessage = lazy(() =>
   import('./noteMessages/feedbackNoteMessages/QuizFeedbackNoteMessage'),
 )
+const TournamentQuizFeedbackNoteMessage = lazy(() =>
+  import(
+    './noteMessages/feedbackNoteMessages/TournamentQuizFeedbackNoteMessage'
+  ),
+)
 import { SOUND_TYPES } from '../../models/soundSettings'
 import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
@@ -180,6 +185,19 @@ const NoteMessageQueue = () => {
             width={message.width}
             onClose={handleClose}
             quizId={message.quizId}
+          />
+        </Suspense>
+      )
+    case 'tournamentQuizFeedback':
+      return (
+        <Suspense fallback={null}>
+          <TournamentQuizFeedbackNoteMessage
+            messageId={message.id}
+            title={message.title}
+            duration={message.duration}
+            width={message.width}
+            onClose={handleClose}
+            tournamentId={message.tournamentId}
           />
         </Suspense>
       )

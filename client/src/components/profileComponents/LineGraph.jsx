@@ -68,20 +68,7 @@ const GraphHeader = React.memo(
   ({ hoveredData, loginedUserProfile, user, t, quantities }) => {
     return (
       <Flex justifyContent="space-between" position="relative">
-        {loginedUserProfile && (
-          <Tooltip label={t('visibilityToOthers')}>
-            <Badge
-              m={0}
-              position="absolute"
-              top={0}
-              right={0}
-              colorScheme="green"
-            >
-              {user.profilePrivacy.lineGraph ? t('hidden') : t('visible')}
-            </Badge>
-          </Tooltip>
-        )}
-        <Flex justifyContent="space-between" w="100%" marginTop="2rem">
+        <Flex justifyContent="space-between" w="100%">
           {quantities.map((quantity, index) => (
             <Flex flexDirection="column" key={index}>
               <Text textAlign="left" color="#9CAFAA" p={0} m={0}>
@@ -137,7 +124,7 @@ const LineGraph = ({
     md: 300,
     lg: 400,
     xl: 300,
-    '2xl': 500,
+    '2xl': 390,
   })
   const dispatch = useDispatch()
   const [hoveredData, setHoveredData] = useState(null)
@@ -238,6 +225,7 @@ const LineGraph = ({
   return (
     <Flex
       w="100%"
+      p={2}
       justifyContent="space-between"
       flexDirection="column"
       boxShadow={{

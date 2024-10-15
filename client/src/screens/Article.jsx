@@ -68,6 +68,7 @@ const Article = () => {
     articleData ? false : true,
   )
   const [loadingRealatedArticles, setLoadingRelatedArticles] = useState({})
+  const [shouldScrollToTop, setShouldScrollToTop] = useState(false)
   const [themedContent, setThemedContent] = useState(null)
   const [showQuiz, setShowQuiz] = useState(false)
   const [textHeight, setTextHeight] = useState(0)
@@ -188,10 +189,10 @@ const Article = () => {
     } finally {
       setArticleLoading(false)
       setLoadingRelatedArticles(prev => ({ ...prev, [id]: false }))
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth',
-      })
+      // window.scrollTo({
+      //   top: 0,
+      //   behavior: 'smooth',
+      // })
     }
   }, [id, toast, loginCheckStatus, user, dispatch])
 
@@ -461,6 +462,8 @@ const Article = () => {
               />
 
               <Sidebar
+                setShouldScrollToTop={setShouldScrollToTop}
+                shouldScrollToTop={shouldScrollToTop}
                 givenQuiz={givenQuiz}
                 percentile={percentile}
                 RQM_score={RQM_score}

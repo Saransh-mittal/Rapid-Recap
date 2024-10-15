@@ -94,6 +94,7 @@ const TournamentContent = React.memo(
     t,
   }) => {
     const { categoryAttempts } = useSelector(state => state.tournament)
+    console.log(userRegistrationDetails.completedCategories.length)
     // console.log(userRegistrationDetails)
     const currentTournamentNumber = useMemo(
       () =>

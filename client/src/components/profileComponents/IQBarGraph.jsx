@@ -93,7 +93,7 @@ const IQBarGraph = ({
     md: 300,
     lg: 400,
     xl: 300,
-    '2xl': 400,
+    '2xl': 390,
   })
   const [hoveredData, setHoveredData] = useState({
     percentile: null,
@@ -194,7 +194,6 @@ const IQBarGraph = ({
   return (
     <Flex
       w="100%"
-      padding={'20px'}
       flexDirection="column"
       flex={1}
       justifyContent="center"
@@ -225,20 +224,6 @@ const IQBarGraph = ({
               {hoveredData.count} {t('users')}
             </Text>
           </Flex>
-        )}
-        {loginedUserProfile && (
-          <Tooltip label={t('visibilityToOthers')}>
-            <Badge
-              m={0}
-              top={0}
-              right={0}
-              colorScheme="green"
-              height={'fit-content'}
-              ml={'auto'}
-            >
-              {user.profilePrivacy.barGraph ? t('hidden') : t('visible')}
-            </Badge>
-          </Tooltip>
         )}
       </Flex>
       <Flex

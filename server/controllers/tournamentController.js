@@ -88,6 +88,7 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     completedCategories: userRegistration
       ? userRegistration.completedCategories
       : [],
+
     categoryScores: userRegistration ? userRegistration.categoryScores : {},
     categoryAttempts: userRegistration ? userRegistration.categoryAttempts : {},
     totalScore: userRegistration ? userRegistration.totalScore : 0,
@@ -615,6 +616,8 @@ const registerForTournament = asyncHandler(async (req, res) => {
       selectedCategories: [...selectedCategories, 'current affairs'],
     })
 
+    registration.sendTourFeedback = true
+
     // Add user to tournament participants
     tournament.participants.push(userId)
     await tournament.save({ session })
@@ -848,12 +851,14 @@ const startQuiz = asyncHandler(async (req, res) => {
     user: userId,
     tournament: tournamentId,
     category: category,
+    attemptNumber: { $gt: 1 },
     completed: false,
   })
 
   if (existingSession) {
     return res.status(400).json({
-      message: 'A quiz session for this category is already in progress',
+      message:
+        'A quiz for this category is already in progress or done. You cannot start a new quiz for this category',
       existingSession: {
         _id: existingSession._id,
         startTime: existingSession.startTime,
@@ -876,7 +881,17 @@ const startQuiz = asyncHandler(async (req, res) => {
     endTime: new Date(Date.now() + 60000), // 60 seconds from now
   })
   // Update category attempts
+  let ojectKeysLengthEquals3 = false
+  if (Object.keys(registration.categoryAttempts).length === 3)
+    ojectKeysLengthEquals3 = true
+
+  const isCategoryFirstAttempt =
+    attemptNumber === 1 && !registration.categoryAttempts[category]
   registration.categoryAttempts.set(category, attemptNumber)
+
+  if (isCategoryFirstAttempt && ojectKeysLengthEquals3) {
+    registration.sendTourFeedback = true
+  }
   await registration.save()
 
   // Jumble options and remove sensitive information before sending to client
@@ -1014,7 +1029,11 @@ const submitQuiz = asyncHandler(async (req, res) => {
       if (currentAttempts >= 2) {
         registration.completedCategories.push(quizSession.category)
       }
-
+      let sendTourFeedback = false
+      if (registration.sendTourFeedback) {
+        registration.sendTourFeedback = false
+        sendTourFeedback = true
+      }
       // registration.categoryAttempts.set(
       //   quizSession.category,
       //   currentAttempts + 1,
@@ -1091,6 +1110,7 @@ const submitQuiz = asyncHandler(async (req, res) => {
         topLeaders: topLeaders,
         attemptsLeft: 2 - currentAttempts,
         isCompleted: currentAttempts >= 2,
+        sendTourFeedback: sendTourFeedback,
       })
     } catch (error) {
       await session.abortTransaction()

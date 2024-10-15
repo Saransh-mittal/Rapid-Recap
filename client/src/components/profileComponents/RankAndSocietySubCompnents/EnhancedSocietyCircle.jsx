@@ -31,7 +31,8 @@ const EnhancedSocietyCircle = ({
     <Box
       bg={isTitans ? 'rgba(25, 25, 35, 0.9)' : 'rgba(25, 25, 35, 0.7)'}
       borderRadius="xl"
-      p={6}
+      py={6}
+      px={2}
       boxShadow={societyData.boxShadow || '0 4px 6px rgba(0, 0, 0, 0.1)'}
       w="100%"
       border={isTitans ? '1px solid rgba(255, 215, 0, 0.3)' : 'none'}

@@ -67,12 +67,12 @@ const ProgressBubble = ({ xp, level }) => {
   return (
     <Container
       maxW="container.sm"
-      p={6}
-      style={{
-        backgroundColor: 'rgba(15, 13, 21, 0.8)',
-        boxShadow:
-          '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-      }}
+      p={4}
+      // style={{
+      //   backgroundColor: 'rgba(15, 13, 21, 0.8)',
+      //   boxShadow:
+      //     '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+      // }}
     >
       <VStack spacing={8} align="stretch">
         <HStack justify="space-between" align="center">

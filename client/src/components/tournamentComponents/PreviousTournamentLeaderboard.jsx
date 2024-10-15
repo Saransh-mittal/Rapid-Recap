@@ -38,7 +38,7 @@ const PreviousTournamentLeaderboard = ({ previousTournamentData }) => {
   }, [previousTournamentData])
 
   return (
-    <MotionBox borderRadius="lg" py={6} px={4}>
+    <MotionBox borderRadius="lg" py={6} px={2}>
       <VStack spacing={4} align="stretch">
         <Heading size={'md'} display="flex" alignItems="center">
           <TrophySVG

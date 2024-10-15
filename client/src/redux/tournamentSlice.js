@@ -163,6 +163,7 @@ const tournamentSlice = createSlice({
         state.completedCategories.push(category)
       }
     },
+
     setIsRegistered: (state, action) => {
       state.isRegistered = action.payload
     },
