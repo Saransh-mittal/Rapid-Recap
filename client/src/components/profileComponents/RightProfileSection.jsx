@@ -27,6 +27,7 @@ export const RightProfileSection = ({
     }
     return (
       <ProfileBox
+        key={`${inGameName}-${privacyKey}`}
         loginedUserProfile={loginedUserProfile}
         user={user}
         privacyKey={privacyKey}
@@ -76,6 +77,7 @@ export const RightProfileSection = ({
         >
           {renderProfileBox(
             <LineGraph
+              key={`line-graph-${inGameName}`}
               lineGraph={profile?.lineGraph}
               privateLineGraph={privacyProfileData?.lineGraph}
               loginedUserProfile={loginedUserProfile}
@@ -91,6 +93,7 @@ export const RightProfileSection = ({
           )}
           {renderProfileBox(
             <IQBarGraph
+              key={`bar-graph-${inGameName}`}
               barGraph={profile?.barGraph}
               privateBarGraph={privacyProfileData?.lineGraph}
               loginedUserProfile={loginedUserProfile}
@@ -136,6 +139,7 @@ export const RightProfileSection = ({
           >
             {renderProfileBox(
               <SolvedQuizzes
+                key={`solved-quizzes-${inGameName}`}
                 privateSolvedQuiz={
                   privacyProfileData?.solvedQuizzes && !loginedUserProfile
                 }
@@ -147,6 +151,7 @@ export const RightProfileSection = ({
             )}
             {renderProfileBox(
               <RankAndSociety
+                key={`rank-society-${inGameName}`}
                 privateSociety={privacyProfileData?.society}
                 loginedUserProfile={loginedUserProfile}
                 USER_IQ={profile?.barGraph?.USER_IQ}
@@ -157,6 +162,7 @@ export const RightProfileSection = ({
           </Flex>
           {renderProfileBox(
             <TournamentSection
+              key={`tournament-${inGameName}`}
               privateTournament={privacyProfileData?.tournamentAnalytics}
               loginedUserProfile={loginedUserProfile}
               isGuest={user?.role === 'guest'}

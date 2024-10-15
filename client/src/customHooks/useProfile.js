@@ -14,7 +14,7 @@ export const useProfile = () => {
   const navigate = useNavigate()
   const toast = useToast()
 
-  const [profile, setProfile] = useState(userProfile)
+  const [profile, setProfile] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [privacyProfileData, setPrivacyProfileData] = useState({
     fullProfile: false,
@@ -29,24 +29,25 @@ export const useProfile = () => {
   const loginedUserProfile = inGameName === user?.inGameName
 
   const fetchProfile = useCallback(async () => {
+    console.log(`Fetching profile for ${inGameName}`)
     try {
-      // await new Promise(resolve => setTimeout(resolve, 100000))
       const response = await axios.get(`/api/user/profile/${inGameName}`)
-      setProfile(() => response.data)
-      if (inGameName === user?.inGameName) {
+      console.log(`Fetched profile for ${inGameName}:`, response.data)
+      setProfile(response.data)
+      if (loginedUserProfile) {
         dispatchRedux(setUserProfile(response.data))
         localStorage.setItem('userProfile', JSON.stringify(response.data))
       } else {
-        setPrivacyProfileData(() => response.data.profilePrivacy)
+        setPrivacyProfileData(response.data.profilePrivacy)
         dispatchRedux(
           setOtherUserProfiles([
-            ...otherUserProfiles,
+            ...otherUserProfiles.filter(p => p.inGameName !== inGameName),
             { profile: response.data, inGameName: inGameName },
           ]),
         )
       }
     } catch (error) {
-      console.log(error)
+      console.error(`Error fetching profile for ${inGameName}:`, error)
       if (error.response?.status === 404) {
         toast({
           title: 'User not found',
@@ -61,38 +62,52 @@ export const useProfile = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [dispatchRedux, inGameName, otherUserProfiles, user?.inGameName])
+  }, [
+    dispatchRedux,
+    inGameName,
+    otherUserProfiles,
+    loginedUserProfile,
+    navigate,
+    toast,
+  ])
 
   useEffect(() => {
-    document.title = `${user?.inGameName}'s Rapid Recap Profile | IQ Score: ${user?.USER_IQ}`
+    console.log(`Profile changed to ${inGameName}`)
+    setIsLoading(true)
+    setProfile(null)
 
-    const otherUserStored = otherUserProfiles?.find(
-      user => user?.inGameName === inGameName,
-    )
-
-    if (inGameName === user?.inGameName) {
-      const cachedProfile = localStorage.getItem('userProfile')
-      if (cachedProfile) {
-        const parsedProfile = JSON.parse(cachedProfile)
-        setProfile(parsedProfile)
-        setIsLoading(false)
-        fetchProfile()
-      } else if (userProfile) {
-        setProfile(userProfile)
-        setIsLoading(false)
+    const loadProfile = async () => {
+      if (loginedUserProfile) {
+        // Load user's own profile
+        const cachedProfile = localStorage.getItem('userProfile')
+        if (cachedProfile) {
+          const parsedProfile = JSON.parse(cachedProfile)
+          console.log(`Using cached profile for ${inGameName}`)
+          setProfile(parsedProfile)
+          setIsLoading(false)
+        }
+        // Always fetch to ensure up-to-date data
+        await fetchProfile()
       } else {
-        fetchProfile()
+        // Load other user's profile
+        const otherUserStored = otherUserProfiles?.find(
+          user => user?.inGameName === inGameName,
+        )
+        if (otherUserStored) {
+          console.log(`Using stored profile for ${inGameName}`)
+          setProfile(otherUserStored.profile)
+          setPrivacyProfileData(
+            otherUserStored.profile.profilePrivacy || privacyProfileData,
+          )
+          setIsLoading(false)
+        }
+        // Always fetch for other users to ensure data is up-to-date
+        await fetchProfile()
       }
-    } else if (otherUserStored) {
-      setProfile(otherUserStored.profile)
-      setPrivacyProfileData(
-        otherUserStored.profile.profilePrivacy || privacyProfileData,
-      )
-      setIsLoading(false)
-    } else {
-      fetchProfile()
     }
-  }, [inGameName, user, otherUserProfiles])
+
+    loadProfile()
+  }, [inGameName, user, otherUserProfiles, fetchProfile, loginedUserProfile])
 
   return {
     profile,

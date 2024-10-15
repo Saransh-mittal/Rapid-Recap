@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import React, { Suspense, useEffect } from 'react'
 import { Box, Flex, Skeleton } from '@chakra-ui/react'
 import { useProfile } from '../customHooks/useProfile'
 import { ProfileMetadata } from '../components/profileComponents/ProfileMetadata'
@@ -15,6 +15,12 @@ export default function Profile() {
     privacyProfileData,
     loginedUserProfile,
   } = useProfile()
+
+  useEffect(() => {
+    document.title = `${inGameName}'s Rapid Recap Profile${
+      profile ? ` | IQ Score: ${profile.USER_IQ}` : ''
+    }`
+  }, [inGameName, profile])
 
   return (
     <Box marginTop={'4.5rem'} w={'100%'}>
@@ -33,6 +39,7 @@ export default function Profile() {
       >
         <Suspense fallback={<Skeleton height="600px" width="100%" />}>
           <LeftProfileSection
+            key={`left-${inGameName}`}
             profile={profile}
             isLoading={isLoading}
             user={user}
@@ -43,6 +50,7 @@ export default function Profile() {
         </Suspense>
         <Suspense fallback={<Skeleton height="600px" width="100%" />}>
           <RightProfileSection
+            key={`right-${inGameName}`}
             profile={profile}
             isLoading={isLoading}
             user={user}
