@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "in.co.rapidrecap.www.twa",
       "sha256_cert_fingerprints": [
-        "95:CE:70:34:C6:0C:33:25:78:5B:8E:CB:D2:D7:AD:5B:87:0B:02:7D:38:63:86:A9:F4:7F:96:85:33:F7:5C:6F"
+        "95:CE:70:34:C6:0C:33:25:78:5B:8E:CB:D2:D7:AD:5B:87:0B:02:7D:38:63:86:A9:F4:7F:96:85:33:F7:5C:6F",
+        "A9:5C:FB:4A:DA:E1:29:52:1F:81:A5:A0:AD:79:2E:F5:B1:8A:98:7C:12:32:19:F9:A2:F0:05:C6:48:45:6D:78"
       ]
     }
   }
