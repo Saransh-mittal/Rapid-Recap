@@ -12,16 +12,28 @@ import { useTranslation } from 'react-i18next'
 import { keyframes } from '@emotion/react'
 
 // Lazy loaded components
-const LeftProfileBox = React.lazy(() => import('./LeftProfileBox'))
+const LeftProfileBox = React.lazy(() =>
+  import('./LeftProfileSectionComponents/LeftProfileBox'),
+)
 const ProfileExperienceLevel = React.lazy(() =>
-  import('./ProfileExperienceLevel'),
+  import('./LeftProfileSectionComponents/ProfileExperienceLevel'),
 )
 const ProfileButtonWithModal = React.lazy(() =>
-  import('./ProfileButtonWithModal'),
+  import(
+    './LeftProfileSectionComponents/ProfileButtonsComponents/ProfileButtonWithModal'
+  ),
 )
-const SeasonSelectorModal = React.lazy(() => import('./SeasonSelectorModal'))
-const Settings = React.lazy(() => import('./Settings'))
-const Bookmarks = React.lazy(() => import('./Bookmarks'))
+const SeasonSelectorModal = React.lazy(() =>
+  import(
+    './LeftProfileSectionComponents/SeasonButtonComponents/SeasonSelectorModal'
+  ),
+)
+const Settings = React.lazy(() =>
+  import('./LeftProfileSectionComponents/Settings'),
+)
+const Bookmarks = React.lazy(() =>
+  import('./LeftProfileSectionComponents/Bookmarks'),
+)
 const SecureYourProgress = React.lazy(() =>
   import('../miscellaneous/SecureYourProgress'),
 )

@@ -1,6 +1,6 @@
 import { Flex, Box, Text, Heading } from '@chakra-ui/react'
 import React from 'react'
-import ProfileButton from '../profileComponents/ProfileButton'
+import ProfileButton from './ProfileButton'
 import SecureProgressSVG from '../../assets/svg/SecureProgressSVG'
 
 import { useDispatch, useSelector } from 'react-redux'

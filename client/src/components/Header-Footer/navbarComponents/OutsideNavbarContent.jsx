@@ -25,9 +25,7 @@ import IconShimmerLoader from '../../miscellaneous/shimmerLoaders/IconShimmerLoa
 import { addNoteMessage, setShowXpLevelModal } from '../../../redux/appSlice'
 
 const StreakFire = React.lazy(() => import('./StreakFire'))
-const ProfileDropDownMenu = React.lazy(() =>
-  import('../../profileComponents/ProfileDropDownMenu'),
-)
+const ProfileDropDownMenu = React.lazy(() => import('./ProfileDropDownMenu'))
 const GetStarted = React.lazy(() => import('./GetStarted'))
 const XPLevel = React.lazy(() => import('./XPLevel'))
 const IQScore = React.lazy(() => import('./IQScore'))

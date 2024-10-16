@@ -17,7 +17,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setPageRedux } from '../redux/uiSlice'
 import { setCategory, setItemsState } from '../redux/contentSlice'
 import throttle from 'lodash.throttle'
-import WiseWeb from '../components/profileComponents/WiseWeb'
+import WiseWeb from '../components/Header-Footer/navbarComponents/WiseWeb'
 import { markFriendRequestsAsRead } from '../redux/appSlice'
 import i18n from 'i18next'
 

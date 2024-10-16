@@ -3,11 +3,21 @@ import { Flex, Skeleton, useColorModeValue } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 
 // Lazy loaded components
-const LineGraph = React.lazy(() => import('./LineGraph'))
-const IQBarGraph = React.lazy(() => import('./IQBarGraph'))
-const SolvedQuizzes = React.lazy(() => import('./SolvedQuizzes'))
-const RankAndSociety = React.lazy(() => import('./RankAndSociety'))
-const TournamentSection = React.lazy(() => import('./TournamentSection'))
+const LineGraph = React.lazy(() =>
+  import('./RightProfileSectionComponents/LineGraph'),
+)
+const IQBarGraph = React.lazy(() =>
+  import('./RightProfileSectionComponents/IQBarGraph'),
+)
+const SolvedQuizzes = React.lazy(() =>
+  import('./RightProfileSectionComponents/SolvedQuizzes'),
+)
+const RankAndSociety = React.lazy(() =>
+  import('./RightProfileSectionComponents/RankAndSociety'),
+)
+const TournamentSection = React.lazy(() =>
+  import('./RightProfileSectionComponents/TournamentSection'),
+)
 const ProfileBox = React.lazy(() => import('../miscellaneous/ProfileBox'))
 
 export const RightProfileSection = ({
