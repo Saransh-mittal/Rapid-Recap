@@ -185,7 +185,7 @@ const QuizLoadingScreen = React.memo(
             transition={{ duration: 0.5 }}
           >
             <Text
-              fontSize={{ base: '3xl', md: '4xl' }}
+              fontSize={{ base: '2xl', md: '4xl' }}
               fontWeight="bold"
               fontFamily="'Playfair Display', serif"
               bgGradient="linear(to-r, purple.400, pink.400)"
