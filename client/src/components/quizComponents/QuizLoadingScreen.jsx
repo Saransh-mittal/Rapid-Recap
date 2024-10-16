@@ -218,7 +218,7 @@ const QuizLoadingScreen = React.memo(
                   isReadOnly
                   colorScheme="purple"
                 >
-                  {step.label}
+                  {t(`submissionSteps.${step.id}`)}
                 </Checkbox>
               ))}
             </VStack>
