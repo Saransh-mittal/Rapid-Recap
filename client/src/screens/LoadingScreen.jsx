@@ -69,8 +69,9 @@ const AnimatedTip = React.memo(({ tip }) => (
 ))
 
 const LoadingScreen = React.memo(({ progress }) => {
-  const [currentTip, setCurrentTip] = useState('')
   const { t } = useTranslation('LoadingScreen')
+  const [currentTip, setCurrentTip] = useState('Tips will appear here')
+
   const shownTips = useRef(new Set())
 
   const tips = useMemo(() => t('tips', { returnObjects: true }), [t])
