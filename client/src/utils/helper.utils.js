@@ -74,7 +74,12 @@ export const formatSoundType = type => {
   return type.replace(/([A-Z])/g, ' $1').trim()
 }
 
-export const changeLanguage = async (lng, setLoading, setCurrentLanguage) => {
+export const changeLanguage = async (
+  lng,
+  setLoading,
+  setCurrentLanguage,
+  changeUserFrontendLanguage,
+) => {
   try {
     setLoading && setLoading(true) // Start loading
     await i18n.changeLanguage(lng)
@@ -82,7 +87,7 @@ export const changeLanguage = async (lng, setLoading, setCurrentLanguage) => {
 
     // Send request to the server to update user language
     await axios.post('/api/user/language', { language: lng })
-
+    changeUserFrontendLanguage(lng) // Update the Redux store
     setLoading && setLoading(false) // End loading
   } catch (error) {
     console.error('Error changing language:', error)

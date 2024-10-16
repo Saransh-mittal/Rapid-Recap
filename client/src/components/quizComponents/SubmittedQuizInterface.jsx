@@ -213,7 +213,11 @@ const SubmittedQuizInterface = ({
   return (
     <Box
       className="SubmittedQuizInterface"
-      w={isTournament ? { base: '100%', md: '75%' } : '100%'}
+      w={
+        isTournament
+          ? { base: '100%', md: '75%' }
+          : { base: '100%', md: '80%', lg: '50%' }
+      }
       margin="0 auto"
       padding={{ base: '10px', md: '20px', lg: '30px', xl: '40px' }}
       h={'100%'}

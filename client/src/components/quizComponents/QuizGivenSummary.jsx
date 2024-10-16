@@ -108,16 +108,7 @@ const QuizGivenSummary = ({
   )
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size={isTournament ? 'full' : { base: 'full', md: '3xl' }}
-    >
-      <ModalOverlay
-        bg="blackAlpha.300"
-        backdropFilter="blur(40px) hue-rotate(90deg)"
-      />
-
+    <Modal isOpen={isOpen} onClose={onClose} size={'full'}>
       <ModalContent
         bg={isTournament ? 'none' : 'rgba(26, 21, 39, 0.9)'}
         color={'white'}

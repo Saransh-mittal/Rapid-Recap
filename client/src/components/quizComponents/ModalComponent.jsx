@@ -106,12 +106,8 @@ const ModalComponent = ({
       size={size}
       closeOnOverlayClick={false}
     >
-      <ModalOverlay
-        bg="blackAlpha.300"
-        backdropFilter="blur(40px) hue-rotate(90deg)"
-      />
       <ModalContent
-        bg="rgba(26, 21, 39, 0.9)"
+        bg="rgba(26, 21, 39, 1)"
         bgPosition="center"
         bgSize="cover"
         bgRepeat="no-repeat"
@@ -204,11 +200,7 @@ const ModalComponent = ({
                           />
                         }
                         onClick={handleClick}
-                        isDisabled={
-                          showInstruction
-                            ? false
-                            : !isAnswered && quizStatus !== 'in_progress'
-                        }
+                        isDisabled={showInstruction ? false : !isAnswered}
                         size="lg"
                         width={{ base: '100%', lg: '50%' }}
                         bg={

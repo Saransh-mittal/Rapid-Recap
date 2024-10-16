@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { Box, Text, Select, Skeleton, Spinner } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
 import { changeLanguage } from './utils/helper.utils'
 import i18n from 'i18next'
+import { setUser } from './redux/authSlice'
 
 const MotionBox = motion(Box)
 const MotionSelect = motion(Select)
@@ -14,11 +15,21 @@ const LanguageSwitcher = () => {
   const { user } = useSelector(state => state.auth)
   const [currentLanguage, setCurrentLanguage] = useState(user?.userLanguage)
   const [loading, setLoading] = useState(false) // State to manage loading
+  const dispatch = useDispatch()
 
   useEffect(() => {
     // Sync the local state with the Redux store or i18next's language
     setCurrentLanguage(i18n.language)
   }, [i18n.language])
+
+  const changeUserFrontendLanguage = async lng => {
+    dispatch(
+      setUser({
+        ...user,
+        userLanguage: lng,
+      }),
+    )
+  }
 
   return (
     <MotionBox
@@ -47,7 +58,12 @@ const LanguageSwitcher = () => {
             <MotionSelect
               value={currentLanguage}
               onChange={e =>
-                changeLanguage(e.target.value, setLoading, setCurrentLanguage)
+                changeLanguage(
+                  e.target.value,
+                  setLoading,
+                  setCurrentLanguage,
+                  changeUserFrontendLanguage,
+                )
               }
               bg="whiteAlpha.200"
               color="white"

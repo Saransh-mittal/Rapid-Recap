@@ -29,10 +29,9 @@ export const useProfile = () => {
   const loginedUserProfile = inGameName === user?.inGameName
 
   const fetchProfile = useCallback(async () => {
-    console.log(`Fetching profile for ${inGameName}`)
     try {
       const response = await axios.get(`/api/user/profile/${inGameName}`)
-      console.log(`Fetched profile for ${inGameName}:`, response.data)
+
       setProfile(response.data)
       if (loginedUserProfile) {
         dispatchRedux(setUserProfile(response.data))
@@ -72,7 +71,6 @@ export const useProfile = () => {
   ])
 
   useEffect(() => {
-    console.log(`Profile changed to ${inGameName}`)
     setIsLoading(true)
     setProfile(null)
 
@@ -82,7 +80,6 @@ export const useProfile = () => {
         const cachedProfile = localStorage.getItem('userProfile')
         if (cachedProfile) {
           const parsedProfile = JSON.parse(cachedProfile)
-          console.log(`Using cached profile for ${inGameName}`)
           setProfile(parsedProfile)
           setIsLoading(false)
         }
@@ -94,7 +91,6 @@ export const useProfile = () => {
           user => user?.inGameName === inGameName,
         )
         if (otherUserStored) {
-          console.log(`Using stored profile for ${inGameName}`)
           setProfile(otherUserStored.profile)
           setPrivacyProfileData(
             otherUserStored.profile.profilePrivacy || privacyProfileData,
