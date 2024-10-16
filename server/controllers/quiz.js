@@ -310,10 +310,14 @@ const startQuiz = async (req, res) => {
 // @route  POST /api/quiz/saveAttempt
 // @access Private
 const saveAttempt = async (req, res) => {
-  const { articleId, userResponses, quizData, timeTaken, sessionId } = req.body
+  const { articleId, userResponses, timeTaken, sessionId } = req.body
   const userId = req.user._id
   const MAX_RETRIES = 10
   const BASE_RETRY_DELAY_MS = 500
+
+  const emitProgress = (stepId, progress) => {
+    globalEmitter.emit('quiz_submission_progress', { userId, stepId, progress })
+  }
 
   const executeWithRetry = async operation => {
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -347,6 +351,7 @@ const saveAttempt = async (req, res) => {
     const result = await executeWithRetry(async () => {
       const session = await startSession()
       try {
+        emitProgress('initializeCalculation', 50)
         const quizSession = await ArticleQuizSession.findOne({
           _id: sessionId,
           user: userId,
@@ -374,6 +379,7 @@ const saveAttempt = async (req, res) => {
         quizSession.endTime = new Date()
         await quizSession.save({ session })
 
+        emitProgress('initializeCalculation', 100)
         // Call the existing saveQuizAttempt function with mapped responses
         const quizAttemptResult = await saveQuizAttempt(
           userId,
@@ -384,9 +390,11 @@ const saveAttempt = async (req, res) => {
           quizSession._id,
           quizSession,
           session,
+          emitProgress,
         )
 
         await commitSession(session)
+        emitProgress('finalizeAttempt', 100)
         return quizAttemptResult
       } catch (error) {
         await abortSession(session)
