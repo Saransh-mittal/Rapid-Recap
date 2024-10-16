@@ -82,7 +82,7 @@ const handleSocietyOrCircleUpgrade = async (
         : 'circle'
       : 'same'
 
-    const isUpgrade = currSocietyCircle.IQ_Lower >= prevSocietyCircle.IQ_Lower
+    const isUpgrade = currSocietyCircle.IQ_Lower > prevSocietyCircle.IQ_Lower
 
     if (hasSocietyOrCircleChanged) {
       if (isUpgrade && changedSocietyOrCircle !== 'same') {
@@ -106,8 +106,6 @@ const handleSocietyOrCircleUpgrade = async (
 
           await logActivity(activityParams)
 
-          // Commented out notification creation code
-          // ... (as in the original function)
           const notificationTitle = localizedI18n.t('Achievement unlocked!')
           const notificationMainText = societyOrCircleUpgradeTemplate(
             changedSocietyOrCircle === 'society'
