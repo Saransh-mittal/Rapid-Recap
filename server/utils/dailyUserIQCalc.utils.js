@@ -17,6 +17,7 @@ const {
 } = require('../data/inboxNotificationsTemplates')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 const { setTimeout } = require('timers/promises')
+const { sendNotification } = require('../services/notificationService')
 
 const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -121,6 +122,17 @@ const handleSocietyOrCircleUpgrade = async (
             type: 'applicationUpdate',
           })
           await newNotification.save()
+
+          await sendNotification({
+            title: notificationTitle,
+            body: `Congratulations! You have been upgraded to ${
+              changedSocietyOrCircle === 'society'
+                ? currSocietyCircle?.society
+                : currSocietyCircle?.circle
+            } ${changedSocietyOrCircle}`, // Localized text
+            url: `/`,
+            userId: user._id,
+          })
         }
       } else {
         user.societyUpgradeMessage = ''
