@@ -19,23 +19,27 @@ const { checkTournamentEligibility } = require('../utils/tournament.utils')
 const User = require('../model/userSchema')
 const Article = require('../model/articleSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
-const Quiz = require('../model/quizSchema')
 const QuinBoost = require('../model/quinBoostSchema')
 const { calculateRealTimeIQ } = require('./iqCalculationService')
+const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
+const i18n = require('i18next')
 
 const saveQuizAttempt = async (
   userId,
   articleId,
   userResponses,
-  quizData,
+  questions,
   timeTaken,
-  quizId,
+  sessionId,
+  quizSession,
   session,
+  emitProgress,
 ) => {
-  if (!userId || !articleId || !userResponses || !quizData) {
+  if (!userId || !articleId || !userResponses || !questions) {
     throw new Error('Please provide all the details')
   }
 
+  emitProgress('calculateRQM', 50)
   const user = await User.findById(userId)
     .populate({
       path: 'quizAttempts',
@@ -44,39 +48,26 @@ const saveQuizAttempt = async (
     })
     .session(session)
 
-  const article = await Article.findById(articleId).session(session)
-  if (!article) {
-    throw new Error('Article not found')
-  }
+  const localizedI18n = i18n.cloneInstance({ initImmediate: false })
 
-  if (!article.userQuizStatus) {
-    throw new Error('No quiz status found for this article')
-  }
-
-  const foundStatus = article.userQuizStatus.find(
-    status => status.userId.toString() === userId,
+  // Switch to user's language
+  await localizedI18n.changeLanguage(
+    user?.userLanguage ? user.userLanguage : 'en',
   )
-  if (foundStatus) {
-    foundStatus.status = false
-  } else {
-    throw new Error('User never started the quiz')
-  }
-  await article.save({ session })
 
-  const quiz = await Quiz.findById(quizId)
+  const article = await Article.findById(articleId).session(session)
+
   const existingAttempt = await QuizAttempt.findOne({
     user: userId,
     article: articleId,
-    quiz: quizId,
+    quiz: sessionId,
   }).session(session)
 
   if (existingAttempt) {
     throw new Error('User has already attempted the quiz for the article.')
   }
 
-  const questions = quizData.questions
-  const correctAnswers = questions.map(question => question.answer)
-  const score = calculateScore(userResponses, correctAnswers)
+  const score = calculateScore(userResponses)
   const quizDifficulty = calculateQuizDifficulty(questions)
   const apparentTimeTaken = calculateApparentTimeTaken(timeTaken)
   let RQM_score = calculateRQMScore(score, quizDifficulty, apparentTimeTaken)
@@ -107,19 +98,28 @@ const saveQuizAttempt = async (
   } else if (user.todayBoost) {
     RQM_score = Math.ceil(RQM_score * 1.5)
     boosted = true
+
+    const notificationTitle = localizedI18n.t('Streak Surge day!')
+    const notificationMainText = streakSurgeTemplate(user.streak)
+
+    const newNotification = new ApplicationUpdates({
+      title: notificationTitle,
+      mainText: notificationMainText,
+      userId: userId,
+      type: 'applicationUpdate',
+    })
+    await newNotification.save()
   }
 
-  const articleDifficulty = quiz.overAllDifficulty
+  emitProgress('calculateRQM', 100)
+  emitProgress('saveAttempt', 50)
+  const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
 
   const newQuizAttempt = new QuizAttempt({
     user: userId,
     article: articleId,
-    quiz: quizId,
-    responses: userResponses.map((userAnswer, index) => ({
-      questionId: questions[index]._id,
-      userAnswer,
-      isCorrect: userAnswer === correctAnswers[index],
-    })),
+    quiz: sessionId,
+    responses: userResponses,
     RQM_score,
     articleDifficulty,
     timeTaken,
@@ -133,10 +133,18 @@ const saveQuizAttempt = async (
     season: parseInt(configService.getCurrentSeason(), 10),
   })
   await newQuizAttempt.save({ session })
-
+  quizSession.RQM_score = {
+    [user.userLanguage]: RQM_score,
+  }
+  quizSession.timeTaken = {
+    [user.userLanguage]: timeTaken,
+  }
+  await quizSession.save({ session })
   article.quizAttemptCnt++
   await article.save({ session })
 
+  emitProgress('saveAttempt', 100)
+  emitProgress('updateStats', 25)
   const currentDate = new Date()
   currentDate.setUTCHours(0, 0, 0, 0)
   const todayAttemptsCount = await QuizAttempt.countDocuments({
@@ -152,6 +160,8 @@ const saveQuizAttempt = async (
     session,
     newQuizAttempt,
   })
+
+  emitProgress('updateStats', 50)
   let resultOfIQCalc = {}
   if (!user.pauseRealTimeIQ) {
     const userPercentile = await calcUserPercentile({
@@ -185,6 +195,9 @@ const saveQuizAttempt = async (
       societyUpgradeMessage,
     }
   }
+
+  emitProgress('updateStats', 100)
+  emitProgress('checkTournament', 50)
   const { messageForTournamentEligibility, userEligibleForTournament } =
     await checkTournamentEligibility(user, RQM_score, session)
 
@@ -203,6 +216,8 @@ const saveQuizAttempt = async (
     })
   }
 
+  emitProgress('checkTournament', 100)
+  emitProgress('finalizeAttempt', 50)
   const quizzesToday = await currDayStreakCalulator(user._id)
 
   if (quizzesToday < 6) {
@@ -223,10 +238,9 @@ const saveQuizAttempt = async (
       ? 'medium'
       : 'hard'
 
-  const scoreString = `${score * quizData.questions.length}/${
-    quizData.questions.length
-  }`
+  const scoreString = `${score * questions.length}/${questions.length}`
 
+  emitProgress('finalizeAttempt', 90)
   return {
     message: 'Attempt saved successfully',
     RQM_score,

@@ -10,6 +10,10 @@ const quizAttemptSchema = new mongoose.Schema({
     ref: 'ARTICLE',
     required: true,
   },
+  articleQuizSession: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ARTICLE_QUIZ_SESSION',
+  },
   quiz: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'QUIZ',

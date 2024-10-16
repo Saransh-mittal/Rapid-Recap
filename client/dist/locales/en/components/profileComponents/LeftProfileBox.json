@@ -15,6 +15,9 @@
     "profileImage": "Profile Image"
   },
   "rank": "Rank",
+  "avgRQM": "Avg RQM",
+  "IQ score": "IQ score",
+  "bio": "Bio",
   "na": "N/A",
   "friend": "Friend",
   "editProfile": "Edit Profile",

@@ -270,7 +270,11 @@ const checkTournamentEligibility = async (user, RQM_score, session) => {
     RQM_score: { $gt: 42 },
   }).session(session)
 
-  if (last30MinQuizAttempts === 3 || todaysQuizAttempts === 2) {
+  if (
+    last30MinQuizAttempts === 3 ||
+    todaysQuizAttempts === 2 ||
+    user.streak >= 2
+  ) {
     user.eligibleForTournament = true
   }
 

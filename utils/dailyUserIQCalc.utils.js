@@ -17,6 +17,7 @@ const {
 } = require('../data/inboxNotificationsTemplates')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 const { setTimeout } = require('timers/promises')
+const { sendNotification } = require('../services/notificationService')
 
 const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -82,7 +83,7 @@ const handleSocietyOrCircleUpgrade = async (
         : 'circle'
       : 'same'
 
-    const isUpgrade = currSocietyCircle.IQ_Lower >= prevSocietyCircle.IQ_Lower
+    const isUpgrade = currSocietyCircle.IQ_Lower > prevSocietyCircle.IQ_Lower
 
     if (hasSocietyOrCircleChanged) {
       if (isUpgrade && changedSocietyOrCircle !== 'same') {
@@ -106,8 +107,32 @@ const handleSocietyOrCircleUpgrade = async (
 
           await logActivity(activityParams)
 
-          // Commented out notification creation code
-          // ... (as in the original function)
+          const notificationTitle = localizedI18n.t('Achievement unlocked!')
+          const notificationMainText = societyOrCircleUpgradeTemplate(
+            changedSocietyOrCircle === 'society'
+              ? currSocietyCircle.society
+              : currSocietyCircle.circle,
+            changedSocietyOrCircle,
+          )
+
+          const newNotification = new ApplicationUpdates({
+            title: notificationTitle,
+            mainText: notificationMainText,
+            userId: userId,
+            type: 'applicationUpdate',
+          })
+          await newNotification.save()
+
+          await sendNotification({
+            title: notificationTitle,
+            body: `Congratulations! You have been upgraded to ${
+              changedSocietyOrCircle === 'society'
+                ? currSocietyCircle?.society
+                : currSocietyCircle?.circle
+            } ${changedSocietyOrCircle}`, // Localized text
+            url: `/`,
+            userId: user._id,
+          })
         }
       } else {
         user.societyUpgradeMessage = ''

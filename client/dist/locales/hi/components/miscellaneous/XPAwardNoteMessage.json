@@ -8,5 +8,8 @@
   "totalXP": "कुल: +{{xp}} XP",
   "majorAchievementUnlocked": "प्रमुख उपलब्धि अनलॉक!",
   "achievementUnlocked": "उपलब्धि अनलॉक",
-  "viewExperience": "अनुभव देखें"
+  "viewExperience": "अनुभव देखें",
+  "epicLevelUp": "एपिक स्तर अप!",
+  "levelUpTitle": "अनुभव स्तर",
+  "epicLevelUpAchieved": "एपिक स्तर अप प्राप्त हुआ!"
 }

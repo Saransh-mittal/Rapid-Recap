@@ -8,5 +8,8 @@
   "totalXP": "Total: +{{xp}} XP",
   "majorAchievementUnlocked": "Major Achievement Unlocked!",
   "achievementUnlocked": "Achievement Unlocked",
-  "viewExperience": "View Experience"
+  "viewExperience": "View Experience",
+  "epicLevelUp": "Epic Level Up!",
+  "levelUpTitle": "Experience Level",
+  "epicLevelUpAchieved": "Epic Level Up Achieved!"
 }
