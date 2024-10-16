@@ -18,9 +18,9 @@ const QuizInterface = ({
   load,
   currentQuestionIndex,
   totalQuestions,
-  quizData,
   handleAnswer,
   userAnswers,
+  quizSession,
   isTournament = false,
 }) => {
   const { t } = useTranslation('QuizInterface')
@@ -30,8 +30,8 @@ const QuizInterface = ({
     isTournament ? tournamentColor : defaultColor
 
   const currentQuestion = useMemo(
-    () => quizData?.questions?.[currentQuestionIndex] || null,
-    [quizData, currentQuestionIndex],
+    () => quizSession?.questions[currentQuestionIndex] || null,
+    [quizSession, currentQuestionIndex],
   )
 
   const handleOptionSelect = useCallback(
@@ -41,7 +41,7 @@ const QuizInterface = ({
     [handleAnswer],
   )
 
-  if (load || !quizData || quizData.length === 0) {
+  if (load || !quizSession || quizSession.questions.length === 0) {
     return (
       <Center height="100vh">
         <Spinner size="xl" color={getColor('purple.500', 'yellow.500')} />
@@ -108,24 +108,20 @@ const QuizInterface = ({
             {currentQuestion.question}
           </Text>
 
-          <VStack spacing={2} align="stretch">
-            {Object.entries(currentQuestion.options).map(([key, value]) => (
-              <Suspense
-                fallback={
-                  <Button isLoading width="100%" height="auto" py={2} mb={4} />
-                }
-                key={key}
-              >
+          {currentQuestion && (
+            <VStack spacing={2} align="stretch">
+              {Object.entries(currentQuestion.options).map(([key, value]) => (
                 <OptionButton
+                  key={key}
                   optionKey={key}
-                  optionText={isTournament ? value.text : value}
+                  optionText={value.text}
                   isSelected={userAnswers[currentQuestionIndex] === key}
-                  onSelect={handleOptionSelect}
+                  onSelect={handleAnswer}
                   isTournament={isTournament}
                 />
-              </Suspense>
-            ))}
-          </VStack>
+              ))}
+            </VStack>
+          )}
         </motion.div>
       </AnimatePresence>
     </Box>

@@ -16,7 +16,6 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import QuizBG from '../tournamentComponents/tournamentQuiz/QuizBG'
 
-// Lazy load components and assets
 const Countdown = lazy(() => import('./Countdown'))
 const ArrowRightSVG = lazy(() => import('../../assets/svg/ArrowRightSVG'))
 
@@ -29,6 +28,7 @@ const ModalComponent = ({
   load,
   showInstruction,
   startQuiz,
+
   handleNextQuestion,
   currentQuestionIndex,
   totalQuestions,
@@ -42,22 +42,27 @@ const ModalComponent = ({
   timer,
   setSubmitted,
   showGetSetGo,
-  size = { base: 'full', md: '2xl' },
+  quizStatus,
+  size = 'full',
   isTournament = false,
 }) => {
   const { t } = useTranslation('ModalComponent')
 
-  // Helper function to toggle between the default (purple) and tournament (gold) colors
   const getColor = (defaultColor, tournamentColor) =>
     isTournament ? tournamentColor : defaultColor
 
-  // Memoize the button text based on the state
   const buttonText = useMemo(() => {
     if (showInstruction) return t('StartQuiz')
     if (currentQuestionIndex < totalQuestions - 1 && !submitted)
       return t('NextQuestion')
     return t('FinishQuiz')
-  }, [showInstruction, currentQuestionIndex, totalQuestions, submitted])
+  }, [
+    showInstruction,
+    quizStatus,
+    currentQuestionIndex,
+    totalQuestions,
+    submitted,
+  ])
 
   const buttonAction = useCallback(() => {
     if (showInstruction) {
@@ -76,7 +81,9 @@ const ModalComponent = ({
     return handleNextQuestion
   }, [
     showInstruction,
+    quizStatus,
     startQuiz,
+
     currentQuestionIndex,
     totalQuestions,
     submitted,
@@ -129,7 +136,7 @@ const ModalComponent = ({
                 <Countdown
                   timer={timer}
                   submitted={submitted}
-                  start={!showInstruction}
+                  start={!showInstruction && quizStatus === 'in_progress'}
                   isTournament={isTournament}
                 />
               </Suspense>
@@ -172,13 +179,8 @@ const ModalComponent = ({
                 {t('QuizIsGenerating')}
               </Text>
             )}
-            <Skeleton
-              isLoaded={!load}
-              borderRadius={'10px'}
-              marginBottom={load ? '10px' : ''}
-              w={'100%'}
-            >
-              {totalQuestions && !showGetSetGo && (
+            {(totalQuestions || quizStatus === 'in_progress') &&
+              !showGetSetGo && (
                 <ModalFooter w={'100%'}>
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -202,21 +204,29 @@ const ModalComponent = ({
                           />
                         }
                         onClick={handleClick}
-                        isDisabled={showInstruction ? false : !isAnswered}
+                        isDisabled={
+                          showInstruction
+                            ? false
+                            : !isAnswered && quizStatus !== 'in_progress'
+                        }
                         size="lg"
                         width={{ base: '100%', lg: '50%' }}
                         bg={
-                          isAnswered || showInstruction
+                          isAnswered ||
+                          showInstruction ||
+                          quizStatus === 'in_progress'
                             ? getColor('purple.500', 'rgba(255, 215, 0, 0.5)')
                             : 'rgba(255, 255, 255, 0.1)'
                         }
                         _hover={{
                           bg:
-                            isAnswered || showInstruction
+                            isAnswered ||
+                            showInstruction ||
+                            quizStatus === 'in_progress'
                               ? getColor('purple.600', 'rgba(255, 215, 0, 0.6)')
                               : 'rgba(255, 255, 255, 0.15)',
                         }}
-                        isLoading={submitLoad}
+                        isLoading={submitLoad || load}
                       >
                         {buttonText}
                       </Button>
@@ -224,7 +234,6 @@ const ModalComponent = ({
                   </motion.div>
                 </ModalFooter>
               )}
-            </Skeleton>
           </Flex>
         )}
       </ModalContent>

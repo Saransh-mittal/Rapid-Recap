@@ -8,6 +8,7 @@ import notificationReducer from './notificationSlice'
 import quizReducer from './quizSlice'
 import tournamentReducer from './tournamentSlice'
 import loadingProgressReducer from './loadingProgressSlice'
+import noteMessageSummaryReducer from './noteMessageSummarySlice'
 
 export const store = configureStore({
   reducer: {
@@ -20,5 +21,6 @@ export const store = configureStore({
     quiz: quizReducer,
     tournament: tournamentReducer,
     loadingProgress: loadingProgressReducer,
+    noteMessageSummary: noteMessageSummaryReducer,
   },
 })

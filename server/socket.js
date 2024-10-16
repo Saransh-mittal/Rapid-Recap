@@ -7,6 +7,7 @@ const {
   checkUserOnlineStatus,
   checkUserBatch,
 } = require('./utils/miscellaneous.utils')
+const globalEmitter = require('./eventEmitter')
 
 function initializeSocket(server) {
   const io = require('socket.io')(server, {
@@ -187,13 +188,22 @@ function initializeSocket(server) {
 
       socket.emit('online status response', onlineStatuses)
     })
+    // Add this new event listener for quiz progress
+    socket.on('join quiz progress', userId => {
+      socket.join(`quiz_progress_${userId}`)
+    })
     socket.off('setup', userData => {
       userOpenChats.delete(userData._id)
       socket.leave(userData._id)
       socket.broadcast.emit('user offline', userData._id)
     })
   })
-
+  // Bridge between custom emitter and Socket.IO
+  globalEmitter.on('quiz_progress', ({ userId, progress }) => {
+    io.to(`quiz_progress_${userId}`).emit('quiz_generation_progress', {
+      progress,
+    })
+  })
   // Set up periodic heartbeat checking
   const HEARTBEAT_CHECK_INTERVAL = 60000 // 1 minute
   const BATCH_SIZE = 1000

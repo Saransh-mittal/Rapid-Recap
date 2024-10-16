@@ -1,43 +1,46 @@
-// /hooks/useFetchQuiz.js
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useToast } from '@chakra-ui/react'
+import { useSocket } from './useSocket'
+import { useSelector } from 'react-redux'
 
-const useFetchQuiz = (articleId, language, onClose) => {
-  const [quizData, setQuizData] = useState(null)
+const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
+  const [quizSession, setQuizSession] = useState(null)
+  const [quizStatus, setQuizStatus] = useState(null)
   const [load, setLoad] = useState(true)
-  const [quizId, setQuizId] = useState(null)
+  const [remainingTime, setRemainingTime] = useState(null)
+  const [isQuizGenerating, setIsQuizGenerating] = useState(false)
   const toast = useToast()
+  const { socket, getSocket } = useSocket()
+  const { user } = useSelector(state => state.auth)
 
   useEffect(() => {
     const fetchQuiz = async () => {
       setLoad(true)
+      setIsQuizGenerating(true)
       try {
-        const response =
-          language === 'hi'
-            ? await axios.put(`/api/articles/genHindiQuiz/${articleId}`)
-            : await axios.put(`/api/articles/genQuiz/${articleId}`)
-        if (response.data.expired) {
-          throw new Error('Quiz is already expired.')
+        const response = await axios.get(
+          `/api/quiz/getQuiz/${articleId}/${language}`,
+        )
+        const { quizSession, status, timer, message } = response.data
+        setQuizSession(quizSession)
+        setQuizStatus(status)
+        setRemainingTime(timer)
+        if (status === 'completed') {
+          toast({
+            title: 'Quiz Already Completed',
+            description: message,
+            status: 'info',
+            duration: 5000,
+            isClosable: true,
+            position: 'top',
+          })
         }
-        if (!response.data.quiz || !response.data.quizId)
-          throw new Error('No Quiz data found!')
-        setQuizData(response.data.quiz)
-        setQuizId(response.data.quizId)
-        toast({
-          title: 'Quiz Generated Successfully!',
-          description: 'You can now attempt the quiz.',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-          position: 'top',
-        })
       } catch (error) {
+        console.error(error)
         toast({
-          title: 'Quiz Generation Failed!',
-          description: error.message
-            ? error.message
-            : 'Please try again Later (Server might be responding slow)',
+          title: 'Quiz Fetch Failed',
+          description: error.response?.data?.error || 'Please try again later',
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -46,13 +49,69 @@ const useFetchQuiz = (articleId, language, onClose) => {
         onClose()
       } finally {
         setLoad(false)
+        console.log('Quiz generation complete')
+        setTimeout(() => setIsQuizGenerating(false), 500)
       }
     }
 
     fetchQuiz()
-  }, [articleId, language, toast])
+  }, [articleId, language, toast, onClose])
 
-  return { quizData, load, quizId, setLoad }
+  useEffect(() => {
+    const currentSocket = getSocket()
+    if (currentSocket && user) {
+      currentSocket.emit('join quiz progress', user._id)
+      currentSocket.on('quiz_generation_progress', data => {
+        // You can update your state or perform any other actions here
+      })
+    }
+
+    return () => {
+      if (currentSocket) {
+        currentSocket.off('quiz_generation_progress')
+      }
+    }
+  }, [getSocket, user])
+
+  const startQuiz = async () => {
+    setLoad(true)
+    try {
+      const response = await axios.post(`/api/quiz/start/${quizSession._id}`)
+
+      setQuizStatus('in_progress')
+      setRemainingTime(response.data.timer)
+      setLoad(false)
+      setIsQuizGenerating(false)
+      toast({
+        title: 'Quiz Started',
+        description: 'Good luck!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+        position: 'top',
+      })
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Failed to Start Quiz',
+        description: error.response?.data?.error || 'Please try again',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+    }
+  }
+
+  return {
+    quizSession,
+    quizStatus,
+    load,
+    startQuiz,
+    remainingTime,
+    isQuizGenerating,
+    socket,
+  }
 }
 
 export default useFetchQuiz

@@ -29,12 +29,13 @@ const saveQuizAttempt = async (
   userId,
   articleId,
   userResponses,
-  quizData,
+  questions,
   timeTaken,
-  quizId,
+  sessionId,
+  quizSession,
   session,
 ) => {
-  if (!userId || !articleId || !userResponses || !quizData) {
+  if (!userId || !articleId || !userResponses || !questions) {
     throw new Error('Please provide all the details')
   }
 
@@ -54,38 +55,18 @@ const saveQuizAttempt = async (
   )
 
   const article = await Article.findById(articleId).session(session)
-  if (!article) {
-    throw new Error('Article not found')
-  }
 
-  if (!article.userQuizStatus) {
-    throw new Error('No quiz status found for this article')
-  }
-
-  const foundStatus = article.userQuizStatus.find(
-    status => status.userId.toString() === userId,
-  )
-  if (foundStatus) {
-    foundStatus.status = false
-  } else {
-    throw new Error('User never started the quiz')
-  }
-  await article.save({ session })
-
-  const quiz = await Quiz.findById(quizId)
   const existingAttempt = await QuizAttempt.findOne({
     user: userId,
     article: articleId,
-    quiz: quizId,
+    quiz: sessionId,
   }).session(session)
 
   if (existingAttempt) {
     throw new Error('User has already attempted the quiz for the article.')
   }
 
-  const questions = quizData.questions
-  const correctAnswers = questions.map(question => question.answer)
-  const score = calculateScore(userResponses, correctAnswers)
+  const score = calculateScore(userResponses)
   const quizDifficulty = calculateQuizDifficulty(questions)
   const apparentTimeTaken = calculateApparentTimeTaken(timeTaken)
   let RQM_score = calculateRQMScore(score, quizDifficulty, apparentTimeTaken)
@@ -129,17 +110,13 @@ const saveQuizAttempt = async (
     await newNotification.save()
   }
 
-  const articleDifficulty = quiz.overAllDifficulty
+  const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
 
   const newQuizAttempt = new QuizAttempt({
     user: userId,
     article: articleId,
-    quiz: quizId,
-    responses: userResponses.map((userAnswer, index) => ({
-      questionId: questions[index]._id,
-      userAnswer,
-      isCorrect: userAnswer === correctAnswers[index],
-    })),
+    quiz: sessionId,
+    responses: userResponses,
     RQM_score,
     articleDifficulty,
     timeTaken,
@@ -153,7 +130,13 @@ const saveQuizAttempt = async (
     season: parseInt(configService.getCurrentSeason(), 10),
   })
   await newQuizAttempt.save({ session })
-
+  quizSession.RQM_score = {
+    [user.userLanguage]: RQM_score,
+  }
+  quizSession.timeTaken = {
+    [user.userLanguage]: timeTaken,
+  }
+  await quizSession.save({ session })
   article.quizAttemptCnt++
   await article.save({ session })
 
@@ -243,9 +226,7 @@ const saveQuizAttempt = async (
       ? 'medium'
       : 'hard'
 
-  const scoreString = `${score * quizData.questions.length}/${
-    quizData.questions.length
-  }`
+  const scoreString = `${score * questions.length}/${questions.length}`
 
   return {
     message: 'Attempt saved successfully',

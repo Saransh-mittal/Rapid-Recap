@@ -38,6 +38,7 @@ app.use(
   }),
 )
 app.use(helmet())
+
 // Body parser middleware
 app.use(bodyParser.json())
 require('./db/conn')

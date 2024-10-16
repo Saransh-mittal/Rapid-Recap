@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 
 const useTimer = (
+  remainingTime,
   isOpen,
   submitted,
   showInstruction,
@@ -9,7 +10,7 @@ const useTimer = (
   onTimerEnd,
   setSubmitted,
 ) => {
-  const [timer, setTimer] = useState(50)
+  const [timer, setTimer] = useState(remainingTime || 50)
   const [timeTaken, setTimeTaken] = useState(0)
   const userAnswersRef = useRef(userAnswers)
 

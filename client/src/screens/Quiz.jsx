@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react'
-import { Flex, useToast, Box, useDisclosure } from '@chakra-ui/react'
+import { Flex, useToast, Box } from '@chakra-ui/react'
 import './Quiz.css'
 import ReactGA from 'react-ga4'
 import { useDispatch, useSelector } from 'react-redux'
-import axios from 'axios'
+
 import useFetchQuiz from '../customHooks/useFetchQuiz'
 import useTimer from '../customHooks/useTimer'
 import useSubmitQuiz from '../customHooks/useSubmitQuiz'
@@ -24,6 +24,7 @@ import { setTotalUsersGivenQuiz } from '../redux/articleSlice'
 import i18n from 'i18next'
 import useNavigationWarning from '../customHooks/useNavigationWarning'
 import { useNavigate } from 'react-router-dom'
+import QuizLoadingScreen from '../components/quizComponents/QuizLoadingScreen'
 
 // Lazy load components
 const ConfirmationModal = lazy(() =>
@@ -67,13 +68,9 @@ const Quiz = () => {
     state => state.tournament,
   )
   const articleId = article._id
-  const { quizData, load, quizId, setLoad } = useFetchQuiz(
-    articleId,
-    i18n.language,
-    onClose,
-  )
+
   const navigate = useNavigate()
-  const totalQuestions = quizData ? quizData.questions.length : 0
+
   const toast = useToast()
   const { isBoosted } = useSelector(state => state.app)
   const { user } = useSelector(state => state.auth)
@@ -93,6 +90,19 @@ const Quiz = () => {
   const [userEligibleForTournament, setUserEligibleForTournament] = useState(
     user.eligibleForTournament,
   )
+  const {
+    quizSession,
+    quizStatus,
+    load,
+    startQuiz,
+    remainingTime,
+    isQuizGenerating,
+    socket,
+  } = useFetchQuiz(articleId, i18n.language, onClose, setShowInstruction)
+  const quizId = quizSession?.quiz
+  const [submitError, setSubmitError] = useState(false)
+
+  const totalQuestions = quizSession ? quizSession.questions.length : 0
   const shouldWarnBeforeLeaving = !showInstruction && !submitted
   useNavigationWarning(shouldWarnBeforeLeaving)
 
@@ -103,11 +113,12 @@ const Quiz = () => {
 
   const { handleSubmitQuiz, submitLoad } = useSubmitQuiz({
     articleId,
-    quizData,
-    quizId,
+    sessionId: quizSession?._id,
     setResult,
+    setSubmitError,
   })
   const { timer, timeTaken } = useTimer(
+    remainingTime,
     isOpen,
     submitted,
     showInstruction,
@@ -133,6 +144,7 @@ const Quiz = () => {
   const handleAnswer = useCallback(
     selectedOption => {
       playClick()
+
       setUserAnswers(prevAnswers => {
         const newAnswers = [...prevAnswers]
         newAnswers[currentQuestionIndex] = selectedOption
@@ -141,30 +153,6 @@ const Quiz = () => {
     },
     [playClick, currentQuestionIndex],
   )
-
-  const startQuiz = async () => {
-    setLoad(true)
-    try {
-      await axios.get(`/api/articles/startQuiz/${articleId}`)
-      localStorage.removeItem('isQuizGivenCalled')
-      setShowGetSetGo(true)
-    } catch (error) {
-      console.log(error)
-      toast({
-        title: t('QuizFailed'),
-        description: error.response?.data?.error || t('RetryError'),
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    } finally {
-      setLoad(false)
-      ReactGA.event({
-        category: 'Quiz',
-        action: 'Start Quiz Button Clicked',
-      })
-    }
-  }
 
   const handleAnimationComplete = useCallback(() => {
     setShowGetSetGo(false)
@@ -180,6 +168,10 @@ const Quiz = () => {
   }, [])
 
   const handleClose = async () => {
+    if (submitError) {
+      onClose()
+      return
+    }
     try {
       dispatchRedux(setStreakLoading(true))
       dispatchRedux(setTotalUsersGivenQuiz(totalUsersGivenQuiz + 1))
@@ -328,7 +320,10 @@ const Quiz = () => {
       console.log(error)
     }
   }
-
+  const handleStartQuiz = useCallback(async () => {
+    await startQuiz()
+    setShowGetSetGo(true)
+  }, [startQuiz, quizSession])
   const handleConfirmClose = useCallback(async () => {
     try {
       quinBoostChecker({
@@ -508,9 +503,9 @@ const Quiz = () => {
               load={load}
               currentQuestionIndex={currentQuestionIndex}
               totalQuestions={totalQuestions}
-              quizData={quizData}
               handleAnswer={handleAnswer}
               userAnswers={userAnswers}
+              quizSession={quizSession}
             />
           </Suspense>
         ) : isBoosted || isQuinBoostAvailable ? (
@@ -553,6 +548,7 @@ const Quiz = () => {
     )
   }, [
     showInstruction,
+    isQuizGenerating,
     showGetSetGo,
     handleAnimationComplete,
     isQuinBoostAvailable,
@@ -568,39 +564,47 @@ const Quiz = () => {
     load,
     currentQuestionIndex,
     totalQuestions,
-    quizData,
     handleAnswer,
     userAnswers,
     showSubmittedInterface,
+    socket,
   ])
 
   return (
     <>
-      <Suspense fallback={null}>
-        <ModalComponent
-          setSubmitted={setSubmitted}
-          timer={timer}
-          isOpen={isOpen}
-          onClose={handleClose}
-          renderModalBody={renderModalBody}
-          load={load}
-          showInstruction={showInstruction}
-          startQuiz={startQuiz}
-          handleNextQuestion={handleNextQuestion}
-          currentQuestionIndex={currentQuestionIndex}
-          totalQuestions={totalQuestions}
-          submitted={submitted}
-          submitLoad={submitLoad}
-          timeTaken={timeTaken}
-          userAnswers={userAnswers}
-          handleSubmitQuiz={handleSubmitQuiz}
-          setShowInstruction={setShowInstruction}
-          isAnswered={isAnswered}
-          showGetSetGo={showGetSetGo}
-          setMessageForTournament={setMessageForTournament}
-          setUserEligibleForTournament={setUserEligibleForTournament}
+      {isQuizGenerating ? (
+        <QuizLoadingScreen
+          socket={socket}
+          isQuizGenerating={isQuizGenerating}
         />
-      </Suspense>
+      ) : (
+        <Suspense fallback={null}>
+          <ModalComponent
+            setSubmitted={setSubmitted}
+            timer={timer}
+            isOpen={isOpen}
+            onClose={handleClose}
+            renderModalBody={renderModalBody}
+            load={load}
+            showInstruction={showInstruction}
+            startQuiz={handleStartQuiz}
+            handleNextQuestion={handleNextQuestion}
+            currentQuestionIndex={currentQuestionIndex}
+            totalQuestions={totalQuestions}
+            submitted={submitted}
+            submitLoad={submitLoad}
+            timeTaken={timeTaken}
+            userAnswers={userAnswers}
+            handleSubmitQuiz={handleSubmitQuiz}
+            setShowInstruction={setShowInstruction}
+            isAnswered={isAnswered}
+            showGetSetGo={showGetSetGo}
+            setMessageForTournament={setMessageForTournament}
+            setUserEligibleForTournament={setUserEligibleForTournament}
+            quizStatus={quizStatus}
+          />
+        </Suspense>
+      )}
       {!showInstruction && showConfirmationModal && (
         <Suspense fallback={null}>
           <ConfirmationModal
