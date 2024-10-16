@@ -462,19 +462,19 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
         <Flex justifyContent={'space-between'}>
           <HStack w="100%" mb={3} gap={5} pl={3}>
             <Flex flexDirection={'column'}>
-              <Flex color={textColor}>Rank</Flex>
+              <Flex color={textColor}>{t('rank')}</Flex>
               <Flex color={accentColor} fontSize="2xl">
                 {user?.role === 'guest' ? t('na') : leftProfileView?.rank}
               </Flex>
             </Flex>
             <Flex flexDirection={'column'}>
-              <Flex color={textColor}>Avg. RQM</Flex>
+              <Flex color={textColor}>{t('avgRQM')}</Flex>
               <Flex color={accentColor} fontSize="2xl">
                 {leftProfileView?.avgRQM?.toFixed(2)}
               </Flex>
             </Flex>
             <Flex flexDirection={'column'}>
-              <Flex color={textColor}>IQ score</Flex>
+              <Flex color={textColor}>{t('IQ score')}</Flex>
               <Flex color={accentColor} fontSize="2xl">
                 {leftProfileView?.UserIQ?.toFixed(1)}
               </Flex>
@@ -494,7 +494,7 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
 
         <Flex direction="column" borderRadius="md" pl={3}>
           <Text color={textColor} fontSize="lg" fontWeight="bold" mb={0}>
-            Bio
+            {t('bio')}
           </Text>
           <Text color="gray.500" fontSize="md" noOfLines={4}>
             {leftProfileView?.bio || 'No bio available.'}

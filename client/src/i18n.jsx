@@ -118,6 +118,7 @@ const namespaces = {
     'DifficultyLegend',
     'NoteMessageQueue',
     'UnifiedFeedbackNoteMessage',
+    'ProfileBox',
   ],
   Notifications: ['NotificationSubscription'],
   streakComponents: ['DailyStreakModal'],

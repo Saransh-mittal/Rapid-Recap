@@ -108,6 +108,21 @@ const handleSocietyOrCircleUpgrade = async (
 
           // Commented out notification creation code
           // ... (as in the original function)
+          const notificationTitle = localizedI18n.t('Achievement unlocked!')
+          const notificationMainText = societyOrCircleUpgradeTemplate(
+            changedSocietyOrCircle === 'society'
+              ? currSocietyCircle.society
+              : currSocietyCircle.circle,
+            changedSocietyOrCircle,
+          )
+
+          const newNotification = new ApplicationUpdates({
+            title: notificationTitle,
+            mainText: notificationMainText,
+            userId: userId,
+            type: 'applicationUpdate',
+          })
+          await newNotification.save()
         }
       } else {
         user.societyUpgradeMessage = ''

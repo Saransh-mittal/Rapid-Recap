@@ -1,7 +1,9 @@
 import React from 'react'
 import { Flex, Badge, useColorModeValue } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 
 const ProfileBox = ({ loginedUserProfile, user, privacyKey, children }) => {
+  const { t } = useTranslation('ProfileBox')
   const bgColor = useColorModeValue(
     'rgba(26, 32, 44, 0.8)',
     'rgba(23, 25, 35, 0.8)',
@@ -21,7 +23,7 @@ const ProfileBox = ({ loginedUserProfile, user, privacyKey, children }) => {
       <Flex w={'100%'} justifyContent={'flex-end'}>
         {loginedUserProfile && (
           <Badge m={0} colorScheme="green">
-            {user.profilePrivacy[privacyKey] ? 'hidden' : 'visible'}
+            {user.profilePrivacy[privacyKey] ? t('hidden') : t('visible')}
           </Badge>
         )}
       </Flex>

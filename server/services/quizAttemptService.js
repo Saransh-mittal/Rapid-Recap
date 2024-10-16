@@ -22,6 +22,8 @@ const QuizAttempt = require('../model/quizAttemptSchema')
 const Quiz = require('../model/quizSchema')
 const QuinBoost = require('../model/quinBoostSchema')
 const { calculateRealTimeIQ } = require('./iqCalculationService')
+const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
+const i18n = require('i18next')
 
 const saveQuizAttempt = async (
   userId,
@@ -43,6 +45,13 @@ const saveQuizAttempt = async (
       match: { season: parseInt(configService.getCurrentSeason(), 10) },
     })
     .session(session)
+
+  const localizedI18n = i18n.cloneInstance({ initImmediate: false })
+
+  // Switch to user's language
+  await localizedI18n.changeLanguage(
+    user?.userLanguage ? user.userLanguage : 'en',
+  )
 
   const article = await Article.findById(articleId).session(session)
   if (!article) {
@@ -107,6 +116,17 @@ const saveQuizAttempt = async (
   } else if (user.todayBoost) {
     RQM_score = Math.ceil(RQM_score * 1.5)
     boosted = true
+
+    const notificationTitle = localizedI18n.t('Streak Surge day!')
+    const notificationMainText = streakSurgeTemplate(user.streak)
+
+    const newNotification = new ApplicationUpdates({
+      title: notificationTitle,
+      mainText: notificationMainText,
+      userId: userId,
+      type: 'applicationUpdate',
+    })
+    await newNotification.save()
   }
 
   const articleDifficulty = quiz.overAllDifficulty
