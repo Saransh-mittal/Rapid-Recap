@@ -90,6 +90,7 @@ const Quiz = () => {
   const [userEligibleForTournament, setUserEligibleForTournament] = useState(
     user.eligibleForTournament,
   )
+
   const {
     quizSession,
     quizStatus,
@@ -192,13 +193,20 @@ const Quiz = () => {
         onClose()
       } else {
         onClose()
+        const newXp =
+          user.xp +
+          (result?.xpAwarded || 5) +
+          (result?.quinBoostUtilized ? 10 : 0)
+        const xpBaseAtNextLevel = ((user.level + 1) * (user.level + 2) * 10) / 2
+        let isLevelUp = false
+        if (newXp >= xpBaseAtNextLevel) {
+          isLevelUp = true
+        }
         dispatchRedux(
           setUser({
             ...user,
-            xp:
-              user.xp +
-              (result?.xpAwarded || 5) +
-              (result?.quinBoostUtilized ? 10 : 0),
+            xp: newXp,
+            level: newXp >= xpBaseAtNextLevel ? user.level + 1 : user.level,
             IQ_score: result?.newIQScore || user.IQ_score,
             prevIQScore: result?.prevIQScore || user.prevIQScore,
             societyUpgradeMessage: result?.societyUpgradeMessage,
@@ -222,6 +230,7 @@ const Quiz = () => {
                 actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                 width: '250px',
                 milestoneName: 'QUIN_BOOST',
+                isLevelUp,
                 isMilestone: true,
                 duration: null,
                 xpSource: 'QUIZ',
@@ -235,6 +244,8 @@ const Quiz = () => {
                 actions: [{ actionType: 'VIEW_EXPERIENCE' }],
                 width: '250px',
                 xpSource: 'QUIZ',
+                isLevelUp,
+                duration: isLevelUp ? null : 7000,
               }),
             )
 

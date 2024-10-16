@@ -123,6 +123,7 @@ const NoteMessageQueue = () => {
             milestoneName={message.milestoneName}
             isMilestone={message.isMilestone}
             milestoneContent={message.milestoneContent}
+            isLevelUp={message.isLevelUp}
           />
         </Suspense>
       )

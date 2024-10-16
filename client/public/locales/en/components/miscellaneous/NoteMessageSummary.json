@@ -23,5 +23,8 @@
   "rateYourExperience": "How was your experience?",
   "feedbackPlaceholder": "Tell us more about your experience (optional)",
   "submitFeedback": "Submit Feedback",
-  "feedbackSubmitted": "Thank you for your feedback!"
+  "feedbackSubmitted": "Thank you for your feedback!",
+  "epicLevelUp": "Epic Level Up!",
+  "levelUpTitle": "Experience Level",
+  "epicLevelUpAchieved": "Epic Level Up Achieved!"
 }
