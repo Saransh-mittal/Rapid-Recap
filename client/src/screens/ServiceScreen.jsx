@@ -9,7 +9,15 @@ const gradientAnimation = keyframes`
   100% { background-position: 0% 50%; }
 `
 
-const ServiceScreen = () => {
+const ServiceScreen = ({
+  title,
+  description,
+  quote,
+  quoteAuthor,
+  titleColor = 'pink.400',
+  descriptionColor = 'gray.300',
+  quoteColor = 'pink.300',
+}) => {
   return (
     <Box
       height="100vh"
@@ -39,12 +47,12 @@ const ServiceScreen = () => {
             <Heading
               as="h1"
               size="2xl"
-              color="pink.400"
+              color={titleColor}
               textAlign="center"
               fontWeight="bold"
               letterSpacing="wide"
             >
-              Tournament Under Maintenance
+              {title}
             </Heading>
           </motion.div>
           <motion.div
@@ -54,32 +62,32 @@ const ServiceScreen = () => {
           >
             <Text
               fontSize="xl"
-              color="gray.300"
+              color={descriptionColor}
               textAlign="center"
               lineHeight="tall"
             >
-              We're enhancing our tournament system to provide you with an even
-              more thrilling gaming experience. Please check back soon to join
-              the action.
+              {description}
             </Text>
           </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <Text
-              fontSize="md"
-              color="pink.300"
-              textAlign="center"
-              fontStyle="italic"
-              mt={4}
+          {quote && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
             >
-              "The key is not the will to win… everybody has that. It is the
-              will to prepare to win that is important."
-              <br />- Bobby Knight
-            </Text>
-          </motion.div>
+              <Text
+                fontSize="md"
+                color={quoteColor}
+                textAlign="center"
+                fontStyle="italic"
+                mt={4}
+              >
+                "{quote}"
+                <br />
+                {quoteAuthor && `- ${quoteAuthor}`}
+              </Text>
+            </motion.div>
+          )}
         </VStack>
       </Box>
     </Box>

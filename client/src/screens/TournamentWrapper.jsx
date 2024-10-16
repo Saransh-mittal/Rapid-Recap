@@ -45,7 +45,14 @@ const TournamentWrapper = () => {
   }
 
   if (isUnderMaintenance) {
-    return <ServiceScreen />
+    return (
+      <ServiceScreen
+        title="Tournament Under Maintenance"
+        description="We're enhancing our tournament system to provide you with an even more thrilling gaming experience. Please check back soon to join the action."
+        quote="The key is not the will to win… everybody has that. It is the will to prepare to win that is important."
+        quoteAuthor="Bobby Knight"
+      />
+    )
   }
 
   // return <Box>{isAuthorized ? <Tournament /> : <ComingSoonTournament />}</Box>
