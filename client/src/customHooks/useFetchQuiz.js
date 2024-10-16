@@ -4,7 +4,7 @@ import { useToast } from '@chakra-ui/react'
 import { useSocket } from './useSocket'
 import { useSelector } from 'react-redux'
 
-const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
+const useFetchQuiz = (articleId, language, onClose) => {
   const [quizSession, setQuizSession] = useState(null)
   const [quizStatus, setQuizStatus] = useState(null)
   const [load, setLoad] = useState(true)

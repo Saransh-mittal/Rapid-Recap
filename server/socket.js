@@ -192,6 +192,11 @@ function initializeSocket(server) {
     socket.on('join quiz progress', userId => {
       socket.join(`quiz_progress_${userId}`)
     })
+
+    // Add this new event handler for quiz submission progress
+    socket.on('join quiz submission progress', userId => {
+      socket.join(`quiz_submission_progress_${userId}`)
+    })
     socket.off('setup', userData => {
       userOpenChats.delete(userData._id)
       socket.leave(userData._id)
@@ -204,6 +209,19 @@ function initializeSocket(server) {
       progress,
     })
   })
+  // Update this bridge for quiz submission progress
+  globalEmitter.on(
+    'quiz_submission_progress',
+    ({ userId, stepId, progress }) => {
+      io.to(`quiz_submission_progress_${userId}`).emit(
+        'quiz_submission_progress',
+        {
+          stepId,
+          progress,
+        },
+      )
+    },
+  )
   // Set up periodic heartbeat checking
   const HEARTBEAT_CHECK_INTERVAL = 60000 // 1 minute
   const BATCH_SIZE = 1000

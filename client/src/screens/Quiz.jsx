@@ -112,7 +112,7 @@ const Quiz = () => {
     setUserAnswers(initialAnswers)
   }, [totalQuestions])
 
-  const { handleSubmitQuiz, submitLoad } = useSubmitQuiz({
+  const { handleSubmitQuiz, submitLoad, submissionProgress } = useSubmitQuiz({
     articleId,
     sessionId: quizSession?._id,
     setResult,
@@ -583,10 +583,11 @@ const Quiz = () => {
 
   return (
     <>
-      {isQuizGenerating ? (
+      {isQuizGenerating || submitLoad ? (
         <QuizLoadingScreen
           socket={socket}
           isQuizGenerating={isQuizGenerating}
+          isSubmitting={submitLoad}
         />
       ) : (
         <Suspense fallback={null}>

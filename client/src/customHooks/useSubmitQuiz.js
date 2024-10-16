@@ -1,13 +1,33 @@
-// /hooks/useSubmitQuiz.js
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useToast } from '@chakra-ui/react'
 import useSound from './useSound'
+import { useSocket } from './useSocket'
+import { useSelector } from 'react-redux'
 
 const useSubmitQuiz = ({ articleId, sessionId, setResult, setSubmitError }) => {
   const [submitLoad, setSubmitLoad] = useState(false)
+  const [submissionProgress, setSubmissionProgress] = useState(0)
   const toast = useToast()
   const { playEndChime } = useSound()
+  const { socket, getSocket } = useSocket()
+  const { user } = useSelector(state => state.auth)
+
+  useEffect(() => {
+    const currentSocket = getSocket()
+    if (currentSocket && user) {
+      currentSocket.emit('join quiz submission progress', user._id)
+      currentSocket.on('quiz_submission_progress', data => {
+        setSubmissionProgress(data.progress)
+      })
+    }
+
+    return () => {
+      if (currentSocket) {
+        currentSocket.off('quiz_submission_progress')
+      }
+    }
+  }, [getSocket, user])
 
   const handleSubmitQuiz = async ({
     timeTaken,
@@ -19,6 +39,7 @@ const useSubmitQuiz = ({ articleId, sessionId, setResult, setSubmitError }) => {
     playEndChime()
     setSubmitLoad(true)
     setSubmitted(true)
+    setSubmissionProgress(0)
     try {
       const response = await axios.post(`/api/quiz/attempt`, {
         articleId,
@@ -57,11 +78,11 @@ const useSubmitQuiz = ({ articleId, sessionId, setResult, setSubmitError }) => {
         position: 'top',
       })
     } finally {
-      setSubmitLoad(false)
+      setTimeout(() => setSubmitLoad(false), 500)
     }
   }
 
-  return { handleSubmitQuiz, submitLoad }
+  return { handleSubmitQuiz, submitLoad, submissionProgress }
 }
 
 export default useSubmitQuiz

@@ -1,5 +1,6 @@
 {
   "preparingYourQuiz": "Preparing Your Quiz",
+  "submittingYourQuiz": "Submitting Your Quiz",
   "tips": [
     "Higher RQM scores reflect quicker, more accurate responses to challenging questions.",
     "Your RQM score is a measure of both speed and accuracy - aim for the perfect balance!",
@@ -31,5 +32,13 @@
     "Use the Pomodoro Technique: Read for 25 minutes, then take a 5-minute break to enhance focus.",
     "Highlight key points in the article, but be selective. Over-highlighting can reduce effectiveness.",
     "After reading, try to recall the main points without looking at the article to strengthen your memory."
-  ]
+  ],
+  "submissionSteps": {
+    "initializeCalculation": "🚀 Launching Brain Power",
+    "calculateRQM": "🧠 Measuring Rapid Quiz Mastery",
+    "saveAttempt": "💾 Preserving Your Brilliance",
+    "updateStats": "📊 Crunching Numbers & Updating Stats",
+    "checkTournament": "🏆 Assessing Tournament Eligibility",
+    "finalizeAttempt": "🎉 Wrapping Up Your Achievement"
+  }
 }

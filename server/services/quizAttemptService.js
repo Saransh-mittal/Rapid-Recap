@@ -19,7 +19,6 @@ const { checkTournamentEligibility } = require('../utils/tournament.utils')
 const User = require('../model/userSchema')
 const Article = require('../model/articleSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
-const Quiz = require('../model/quizSchema')
 const QuinBoost = require('../model/quinBoostSchema')
 const { calculateRealTimeIQ } = require('./iqCalculationService')
 const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
@@ -34,11 +33,13 @@ const saveQuizAttempt = async (
   sessionId,
   quizSession,
   session,
+  emitProgress,
 ) => {
   if (!userId || !articleId || !userResponses || !questions) {
     throw new Error('Please provide all the details')
   }
 
+  emitProgress('calculateRQM', 50)
   const user = await User.findById(userId)
     .populate({
       path: 'quizAttempts',
@@ -110,6 +111,8 @@ const saveQuizAttempt = async (
     await newNotification.save()
   }
 
+  emitProgress('calculateRQM', 100)
+  emitProgress('saveAttempt', 50)
   const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
 
   const newQuizAttempt = new QuizAttempt({
@@ -140,6 +143,8 @@ const saveQuizAttempt = async (
   article.quizAttemptCnt++
   await article.save({ session })
 
+  emitProgress('saveAttempt', 100)
+  emitProgress('updateStats', 25)
   const currentDate = new Date()
   currentDate.setUTCHours(0, 0, 0, 0)
   const todayAttemptsCount = await QuizAttempt.countDocuments({
@@ -155,6 +160,8 @@ const saveQuizAttempt = async (
     session,
     newQuizAttempt,
   })
+
+  emitProgress('updateStats', 50)
   let resultOfIQCalc = {}
   if (!user.pauseRealTimeIQ) {
     const userPercentile = await calcUserPercentile({
@@ -188,6 +195,9 @@ const saveQuizAttempt = async (
       societyUpgradeMessage,
     }
   }
+
+  emitProgress('updateStats', 100)
+  emitProgress('checkTournament', 50)
   const { messageForTournamentEligibility, userEligibleForTournament } =
     await checkTournamentEligibility(user, RQM_score, session)
 
@@ -206,6 +216,8 @@ const saveQuizAttempt = async (
     })
   }
 
+  emitProgress('checkTournament', 100)
+  emitProgress('finalizeAttempt', 50)
   const quizzesToday = await currDayStreakCalulator(user._id)
 
   if (quizzesToday < 6) {
@@ -228,6 +240,7 @@ const saveQuizAttempt = async (
 
   const scoreString = `${score * questions.length}/${questions.length}`
 
+  emitProgress('finalizeAttempt', 90)
   return {
     message: 'Attempt saved successfully',
     RQM_score,
