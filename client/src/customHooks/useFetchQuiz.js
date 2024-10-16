@@ -62,7 +62,6 @@ const useFetchQuiz = (articleId, language, onClose, setShowInstruction) => {
     if (currentSocket && user) {
       currentSocket.emit('join quiz progress', user._id)
       currentSocket.on('quiz_generation_progress', data => {
-        console.log('Quiz generation progress:', data.progress)
         // You can update your state or perform any other actions here
       })
     }
