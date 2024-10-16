@@ -1,0 +1,5 @@
+import{w as e,A as s,u as t,F as i,T as n}from"./index-3c2595f6.js";import{C as a}from"./circle-fda60647.js";const l=r=>e.jsxs("svg",{xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"#000000",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round",...r,children:[e.jsx("circle",{cx:12,cy:8,r:7}),e.jsx("polyline",{points:"8.21 13.89 7 23 12 20 17 23 15.79 13.88"})]}),x=s`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`,d=({rank:r})=>{const{t:o}=t("LastTournamentRank");return e.jsxs(i,{align:"center",justify:"center",bg:"rgba(128, 90, 213, 0.1)",borderRadius:"full",p:2,boxShadow:"0 0 10px rgba(128, 90, 213, 0.3)",border:"1px solid",borderColor:"purple.500",w:"fit-content",px:6,children:[e.jsx(a,{size:"40px",bg:"purple.600",mr:3,animation:`${x} 2s infinite`,children:e.jsx(l,{size:20,fill:"#F6E05E"})}),e.jsx(n,{color:"purple.100",fontSize:"md",fontWeight:"semibold",mr:2,children:o("lastTournamentRank")}),e.jsx(n,{color:"yellow.300",fontSize:"2xl",fontWeight:"bold",textShadow:"1px 1px 2px rgba(0,0,0,0.3)",children:r||o("notAvailable")})]})};export{d as default};
