@@ -1,1 +1,0 @@
-import{w as e}from"./index-3c2595f6.js";const o="/assets/hero-bg-22eeb1f0.webp",r=()=>e.jsx("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,backgroundImage:`url(${o})`,backgroundPosition:"center",backgroundRepeat:"no-repeat",backgroundSize:"cover",zIndex:-1}});export{r as default};
