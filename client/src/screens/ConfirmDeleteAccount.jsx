@@ -45,7 +45,7 @@ const ConfirmDeleteAccount = () => {
   }
 
   return (
-    <Box textAlign="center" py={10} px={6}>
+    <Box textAlign="center" py={10} px={6} mt={12}>
       <Heading as="h2" size="xl" mt={6} mb={2}>
         {isDeleted ? 'Account Deleted' : 'Error'}
       </Heading>

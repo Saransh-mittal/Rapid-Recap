@@ -22,13 +22,13 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSwipeable } from 'react-swipeable'
-import Brains from '../../../assets/Brains'
+import Brains from '../../../../assets/Brains'
 
 import { useTranslation } from 'react-i18next'
 import i18n, { use } from 'i18next'
 
 const NameLightning = React.lazy(() =>
-  import('../../miscellaneous/NameLightning'),
+  import('../../../miscellaneous/NameLightning'),
 )
 
 const BrainModal = ({

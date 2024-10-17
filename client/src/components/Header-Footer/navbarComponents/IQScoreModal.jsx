@@ -14,7 +14,9 @@ import {
 import { useTranslation } from 'react-i18next'
 
 // Lazy load components
-const LineGraph = React.lazy(() => import('../../profileComponents/LineGraph'))
+const LineGraph = React.lazy(() =>
+  import('../../profileComponents/RightProfileSectionComponents/LineGraph'),
+)
 const Heading = React.lazy(() => import('../../miscellaneous/HeadingComponent'))
 
 const IQScoreModal = ({ setShowIQScoreModal, isGuest }) => {

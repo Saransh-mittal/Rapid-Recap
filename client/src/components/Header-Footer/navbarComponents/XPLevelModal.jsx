@@ -11,7 +11,9 @@ import { useTranslation } from 'react-i18next'
 
 // Lazy loading the components
 const ProfileExperienceLevel = lazy(() =>
-  import('../../profileComponents/ProfileExperienceLevel'),
+  import(
+    '../../profileComponents/LeftProfileSectionComponents/ProfileExperienceLevel'
+  ),
 )
 const Heading = lazy(() => import('../../miscellaneous/HeadingComponent'))
 

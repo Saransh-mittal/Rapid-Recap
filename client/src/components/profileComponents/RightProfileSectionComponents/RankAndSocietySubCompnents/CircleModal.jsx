@@ -14,7 +14,7 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { useSwipeable } from 'react-swipeable'
 import { motion } from 'framer-motion'
-import Circles from '../../../assets/Circles'
+import Circles from '../../../../assets/Circles'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
 

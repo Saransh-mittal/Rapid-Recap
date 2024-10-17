@@ -8,10 +8,55 @@ import {
   useBreakpointValue,
   ListItem,
   UnorderedList,
+  Link,
+  Icon,
 } from '@chakra-ui/react'
+import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 const FormattedContent = ({ mainText, themedContent }) => {
   const content = themedContent || mainText
+  const formatURL = text => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    return text.split(urlRegex).map((part, index) => {
+      if (part.match(urlRegex)) {
+        // Extract the main website name from the URL
+        let websiteName = new URL(part).hostname.replace('www.', '')
+        websiteName = websiteName.charAt(0).toUpperCase() + websiteName.slice(1)
+
+        return (
+          <Link
+            key={index}
+            href={part}
+            isExternal
+            display="inline-flex"
+            alignItems="center"
+            px={2}
+            py={1}
+            mx={1}
+            fontSize="sm"
+            fontWeight="semibold"
+            color="blue.500"
+            bg="blue.50"
+            borderRadius="md"
+            boxShadow="sm"
+            _hover={{
+              bg: 'blue.100',
+              color: 'blue.600',
+              textDecoration: 'none',
+            }}
+            _active={{
+              bg: 'blue.200',
+            }}
+            transition="all 0.2s ease-in-out"
+          >
+            {websiteName}
+            <Icon as={ExternalLinkIcon} ml={1} boxSize={3} />
+          </Link>
+        )
+      }
+      return part
+    })
+  }
   const parseContent = text => {
     // Join the text if it's an array, otherwise use it as is
     const fullText = Array.isArray(text) ? text.join('\n') : text
@@ -61,7 +106,7 @@ const FormattedContent = ({ mainText, themedContent }) => {
             fontWeight="bold"
             align={'justify'}
           >
-            {part.slice(2, -2)}
+            {formatURL(part.slice(2, -2))}
           </Text>
         )
       } else if (part.startsWith('**')) {
@@ -73,7 +118,7 @@ const FormattedContent = ({ mainText, themedContent }) => {
             fontWeight="bold"
             align={'justify'}
           >
-            {part.slice(2)}
+            {formatURL(part.slice(2))}
           </Text>
         )
       } else if (part.endsWith('**')) {
@@ -85,13 +130,13 @@ const FormattedContent = ({ mainText, themedContent }) => {
             fontWeight="bold"
             align={'justify'}
           >
-            {part.slice(0, -2)}
+            {formatURL(part.slice(0, -2))}
           </Text>
         )
       }
       return (
         <Text as="span" key={index} display="inline" align={'justify'}>
-          {part}
+          {formatURL(part)}
         </Text>
       )
     })
@@ -108,7 +153,7 @@ const FormattedContent = ({ mainText, themedContent }) => {
           mb={2}
           align={'justify'}
         >
-          {header.slice(4)}
+          {formatURL(header.slice(4))}
         </Text>
       )
     }
@@ -122,7 +167,7 @@ const FormattedContent = ({ mainText, themedContent }) => {
             fontWeight="bold"
             align={'justify'}
           >
-            {part.slice(2, -2)}
+            {formatURL(part.slice(2, -2))}
           </Text>
         )
       } else if (part.startsWith('**')) {
@@ -134,7 +179,7 @@ const FormattedContent = ({ mainText, themedContent }) => {
             fontWeight="bold"
             align={'justify'}
           >
-            {part.slice(2)}
+            {formatURL(part.slice(2))}
           </Text>
         )
       } else if (part.endsWith('**')) {
@@ -146,13 +191,13 @@ const FormattedContent = ({ mainText, themedContent }) => {
             fontWeight="bold"
             align={'justify'}
           >
-            {part.slice(0, -2)}
+            {formatURL(part.slice(0, -2))}
           </Text>
         )
       }
       return (
         <Text as="span" key={index} display="inline" align={'justify'}>
-          {part}
+          {formatURL(part)}
         </Text>
       )
     })
