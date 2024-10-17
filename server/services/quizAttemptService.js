@@ -23,6 +23,7 @@ const QuinBoost = require('../model/quinBoostSchema')
 const { calculateRealTimeIQ } = require('./iqCalculationService')
 const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
 const i18n = require('i18next')
+const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 
 const saveQuizAttempt = async (
   userId,

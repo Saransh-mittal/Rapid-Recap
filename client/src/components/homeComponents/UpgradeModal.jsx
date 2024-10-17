@@ -15,6 +15,7 @@ import {
   Image,
   Text,
   Box,
+  useBreakpointValue,
 } from '@chakra-ui/react'
 import { Star } from 'lucide-react'
 import { findSocietyAndCircle } from '../../utils/helper.utils'
@@ -27,6 +28,10 @@ const UpgradeModal = ({ isOpen, onClose }) => {
   const { playClick } = useSound()
   const { user } = useSelector(state => state.auth)
   const dispatch = useDispatch()
+  const size = useBreakpointValue({
+    base: '100',
+    md: '200',
+  })
 
   const upgradedSocietyOrCircle = findSocietyAndCircle(user?.IQ_score)
   const prevSocietyOrCircle = findSocietyAndCircle(user?.prevIQScore)
@@ -120,7 +125,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
 
               <Box p={8} textAlign="center" position="relative" zIndex={1}>
                 <Text
-                  fontSize="4xl"
+                  fontSize={{ base: '2xl', md: '4xl' }}
                   fontWeight="bold"
                   mb={4}
                   bgGradient="linear(to-r, purple.300, pink.200)"
@@ -147,7 +152,11 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                             animate={{ scale: 1 }}
                             transition={{ duration: 0.5 }}
                           >
-                            <svg width="200" height="200" viewBox="0 0 120 120">
+                            <svg
+                              width={size}
+                              height={size}
+                              viewBox="0 0 120 120"
+                            >
                               <defs>
                                 <linearGradient
                                   id="circleGradient"
@@ -261,8 +270,8 @@ const UpgradeModal = ({ isOpen, onClose }) => {
                               transition={{ duration: 0.5 }}
                             >
                               <svg
-                                width="200"
-                                height="200"
+                                width={size}
+                                height={size}
                                 viewBox="0 0 120 120"
                               >
                                 <defs>

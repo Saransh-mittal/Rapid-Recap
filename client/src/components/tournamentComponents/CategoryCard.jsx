@@ -61,7 +61,7 @@ const CategoryCard = ({
   userInGameName = null,
 }) => {
   const { t } = useTranslation('CategoryCard')
-  const inGameName = useSelector(state => state.auth.user.inGameName)
+  const inGameName = useSelector(state => state.auth?.user?.inGameName)
   const attempts = useSelector(
     state =>
       state.tournament.categoryAttempts[category] ||
