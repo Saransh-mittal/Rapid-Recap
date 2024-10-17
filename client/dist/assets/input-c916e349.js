@@ -1,1 +1,0 @@
-import{aH as u,aT as m,aN as p,aI as l,w as f,aJ as I}from"./index-1cb1f061.js";import{b as x}from"./use-form-control-fae43bdc.js";const a=u(function(s,n){const{htmlSize:o,...t}=s,e=m("Input",t),i=p(t),r=x(i),c=l("chakra-input",s.className);return f.jsx(I.input,{size:o,...r,__css:e.field,ref:n,className:c})});a.displayName="Input";a.id="Input";export{a as I};

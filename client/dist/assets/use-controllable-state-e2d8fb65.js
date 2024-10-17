@@ -1,1 +1,0 @@
-import{r as p,a$ as r}from"./index-1cb1f061.js";function S(o,n){const t=typeof o<"u",a=t?o:n;return p.useMemo(()=>[t,a],[t,a])}function b(o){const{value:n,defaultValue:t,onChange:a,shouldUpdate:i=(e,f)=>e!==f}=o,c=r(a),d=r(i),[v,C]=p.useState(t),l=n!==void 0,s=l?n:v,h=r(e=>{const u=typeof e=="function"?e(s):e;d(s,u)&&(l||C(u),c(u))},[l,c,s,d]);return[s,h]}export{S as a,b as u};
