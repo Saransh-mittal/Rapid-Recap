@@ -1,4 +1,4 @@
-import React, { lazy, useCallback, useMemo } from 'react'
+import React, { lazy, Suspense, useCallback, useMemo } from 'react'
 import {
   Avatar,
   Badge,
@@ -17,6 +17,8 @@ import {
   useDisclosure,
   useToast,
   VStack,
+  useColorModeValue,
+  Spinner,
 } from '@chakra-ui/react'
 import { LockIcon, SearchIcon } from '@chakra-ui/icons'
 import { NavLink, useNavigate } from 'react-router-dom'
@@ -24,6 +26,7 @@ import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import Footer from '../Footer'
+import NameLightning from '../../miscellaneous/NameLightning'
 
 const LogoutButton = lazy(() => import('./LogoutButton'))
 const GetStarted = lazy(() => import('./GetStarted'))
@@ -52,6 +55,7 @@ const HamburgerDrawer = ({
   const { unreadFriendRequests } = useSelector(state => state.app)
 
   const chatState = ChatState()
+  const accentColor = useColorModeValue('purple.400', 'purple.300')
 
   const notification = chatState ? chatState.notification : []
   const openChat = chatState ? chatState.openChat : () => {}
@@ -170,18 +174,17 @@ const HamburgerDrawer = ({
                     w={'6rem'}
                     rounded={'50%'}
                   />
-                  <Text letterSpacing={'2px'} fontWeight={'bold'}>
-                    <span
-                      style={{
-                        background: '#5ac8fa',
-                        color: '#0f0d15',
-                        borderRadius: '10px',
-                        padding: '5px',
-                      }}
-                    >
-                      {user?.name}
-                    </span>
-                  </Text>
+
+                  <VStack spacing={0} align="center" mb={3}>
+                    <Flex fontSize="xl" fontWeight="bold" mb={0}>
+                      <Text textColor={'gray.200'}>{user?.name}</Text>
+
+                      <Suspense fallback={<Spinner />}></Suspense>
+                    </Flex>
+                    <Text fontSize="sm" color={accentColor} mb={0}>
+                      @{user?.inGameName}
+                    </Text>
+                  </VStack>
                 </Flex>
               )}
 
