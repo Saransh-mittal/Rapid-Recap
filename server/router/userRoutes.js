@@ -38,6 +38,8 @@ const {
   updateUserLanguage,
   updateDisplayedBadge,
   getUserTournamentData,
+  deleteAccount,
+  confirmDeleteAccount,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -85,8 +87,12 @@ router
   .route('/getUserTournamentData/:userId')
   .get(Authenticate, getUserTournamentData)
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
+router.post('/deleteAccount', Authenticate, deleteAccount)
+
+router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 
 // Guest routes
 router.route('/guestLogin').post(enhancedGuestLogin)
 router.route('/exportGuestData').post(Authenticate, exportGuestData)
+
 module.exports = router

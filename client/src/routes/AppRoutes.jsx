@@ -3,6 +3,8 @@ import { Route, Routes, Navigate } from 'react-router-dom'
 import Loading from '../components/miscellaneous/Loading'
 import AdminRoute from './AdminRoute'
 import ServiceScreen from '../screens/ServiceScreen'
+import ConfirmDeleteAccount from '../screens/ConfirmDeleteAccount'
+import DeleteAccount from '../screens/DeleteAccount'
 
 const TournamentWrapper = lazy(() => import('../screens/TournamentWrapper'))
 const Home = lazy(() => import('../screens/Home'))
@@ -53,6 +55,11 @@ const AppRoutes = ({ isToken }) => (
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/delete-account" element={<DeleteAccount />} />
+      <Route
+        path="/confirmDeleteAccount/:token"
+        element={<ConfirmDeleteAccount />}
+      />
     </Routes>
   </Suspense>
 )

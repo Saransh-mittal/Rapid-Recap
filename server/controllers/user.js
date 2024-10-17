@@ -42,6 +42,14 @@ const {
   quinBoostUnlockTemplate,
 } = require('../data/inboxNotificationsTemplates.js')
 const createIndexesIfNotExist = require('../scripts/createIndexesIfNotExist.js')
+const DailyIQ = require('../model/dailyIQSchema.js')
+const FriendRequest = require('../model/friendRequestSchema.js')
+const {
+  Recommendation,
+  NotifiedArticles,
+} = require('../model/recommendationSchema.js')
+const SeasonData = require('../model/seasonDataSchema.js')
+const TimeSpent = require('../model/timeSpentSchema.js')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -1610,6 +1618,81 @@ const updateDisplayedBadge = async (req, res) => {
   }
 }
 
+const deleteAccount = async (req, res) => {
+  try {
+    const { email, password } = req.body
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' })
+    }
+
+    // Generate a token for email confirmation
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.DELETE_ACCOUNT_SECRET,
+      { expiresIn: '1h' },
+    )
+
+    // Send confirmation email
+    const transporter = await mailTransporter()
+    await transporter.sendMail({
+      from: 'noreply@rapidrecap.com',
+      to: user.email,
+      subject: 'Confirm Account Deletion',
+      html: `
+        <p>Please click the link below to confirm your account deletion:</p>
+        <a href="${process.env.FRONTEND_URL}/confirmDeleteAccount/${token}">Confirm Account Deletion</a>
+        <p>This link will expire in 1 hour.</p>
+      `,
+    })
+
+    res
+      .status(200)
+      .json({ message: 'Confirmation email sent. Please check your inbox.' })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'An error occurred. Please try again.' })
+  }
+}
+
+const confirmDeleteAccount = async (req, res) => {
+  try {
+    const { token } = req.params
+    const decoded = jwt.verify(token, process.env.DELETE_ACCOUNT_SECRET)
+    const userId = decoded.userId
+
+    // Delete user and related data
+    await User.findByIdAndDelete(userId)
+    // Delete related data (adjust based on your data models)
+    await QuizAttempt.deleteMany({ user: userId })
+    await DailyIQ.deleteMany({ user: userId })
+    await Activity.deleteMany({ userId: userId })
+    await ApplicationUpdates.deleteMany({ userId: userId })
+    await FriendRequest.deleteMany({ $or: [{ from: userId }, { to: userId }] })
+    await QuinBoost.deleteMany({ user: userId })
+    await Recommendation.deleteMany({ user_id: userId })
+    await NotifiedArticles.deleteMany({ user_id: userId })
+    await SeasonData.deleteMany({ userId: userId })
+    await TimeSpent.deleteMany({ userId: userId })
+
+    res
+      .status(200)
+      .json({ message: 'Your account has been successfully deleted.' })
+  } catch (error) {
+    console.error(error)
+    res.status(400).json({
+      message:
+        'Invalid or expired token. Please try the deletion process again.',
+    })
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1648,4 +1731,6 @@ module.exports = {
   updateUserLanguage,
   updateDisplayedBadge,
   getUserTournamentData,
+  deleteAccount,
+  confirmDeleteAccount,
 }
