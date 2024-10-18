@@ -68,10 +68,16 @@ const saveQuizAttempt = async (
     throw new Error('User has already attempted the quiz for the article.')
   }
 
-  const score = calculateScore(userResponses)
-  const quizDifficulty = calculateQuizDifficulty(questions)
-  const apparentTimeTaken = calculateApparentTimeTaken(timeTaken)
-  let RQM_score = calculateRQMScore(score, quizDifficulty, apparentTimeTaken)
+  const {
+    RQM_score,
+    score,
+    quizDifficulty,
+    expectedTime,
+    apparentTimeTaken,
+    weightedScore,
+    timeFactor,
+    performanceBonus,
+  } = calculateRQMScore(userResponses, questions, timeTaken)
 
   let boosted = false
   let quinBoostUtilized = false
@@ -124,6 +130,7 @@ const saveQuizAttempt = async (
     RQM_score,
     articleDifficulty,
     timeTaken,
+    expectedTime,
     boost:
       quinBoostUtilized && user.todayBoost
         ? 1.75
