@@ -1,4 +1,5 @@
 {
   "questionLabel": "Question {{currentQuestionIndex}} of {{totalQuestions}}",
-  "noQuizData": "No quiz data available."
+  "noQuizData": "No quiz data available.",
+  "infoForOptions": "Option numbers in the quiz and summary may differ. Options were randomized during the quiz, but the summary shows the correct answer regardless of its original position."
 }

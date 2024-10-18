@@ -7,7 +7,10 @@ const {
 const User = require('../model/userSchema')
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
 const { logActivity } = require('../utils/activity.utils')
-const { generateCategoryQuiz } = require('../utils/quiz.utils')
+const {
+  generateCategoryQuiz,
+  calculateRQMScore,
+} = require('../utils/quiz.utils')
 const {
   commitSession,
   abortSession,
@@ -75,6 +78,36 @@ const getLatestTournament = asyncHandler(async (req, res) => {
       user: userId,
       tournament: tournament._id,
     })
+
+    if (userRegistration) {
+      const userRegistrationObj = userRegistration.toObject()
+      // console.log(userRegistrationObj)
+      // Check for categories with 2 attempts but not in completedCategories
+      for (const [
+        category,
+        attempts,
+      ] of userRegistrationObj.categoryAttempts.entries()) {
+        if (
+          attempts === 2 &&
+          !userRegistration.completedCategories.includes(category) &&
+          !userRegistration.categoryScores.has(category)
+        ) {
+          userRegistration.completedCategories.push(category)
+          userRegistration.categoryScores.set(category, 0)
+          await QuizSession.updateMany(
+            {
+              user: userId,
+              tournament: tournament._id,
+              category: category,
+            },
+            { $set: { completed: true } },
+          )
+        }
+      }
+
+      // Save the updated userRegistration
+      await userRegistration.save()
+    }
   }
 
   let result = {
@@ -89,7 +122,6 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     completedCategories: userRegistration
       ? userRegistration.completedCategories
       : [],
-
     categoryScores: userRegistration ? userRegistration.categoryScores : {},
     categoryAttempts: userRegistration ? userRegistration.categoryAttempts : {},
     totalScore: userRegistration ? userRegistration.totalScore : 0,
@@ -153,6 +185,35 @@ const getLatestTestTournament = asyncHandler(async (req, res) => {
         user: userId,
         tournament: tournament._id,
       })
+    }
+    if (userRegistration) {
+      const userRegistrationObj = userRegistration.toObject()
+      // console.log(userRegistrationObj)
+      // Check for categories with 2 attempts but not in completedCategories
+      for (const [
+        category,
+        attempts,
+      ] of userRegistrationObj.categoryAttempts.entries()) {
+        if (
+          attempts === 2 &&
+          !userRegistration.completedCategories.includes(category) &&
+          !userRegistration.categoryScores.has(category)
+        ) {
+          userRegistration.completedCategories.push(category)
+          userRegistration.categoryScores.set(category, 0)
+          await QuizSession.updateMany(
+            {
+              user: userId,
+              tournament: tournament._id,
+              category: category,
+            },
+            { $set: { completed: true } },
+          )
+        }
+      }
+
+      // Save the updated userRegistration
+      await userRegistration.save()
     }
   }
 
@@ -524,6 +585,7 @@ const getTestTournament = asyncHandler(async (req, res) => {
     res.status(404)
     throw new Error('No active test tournament found')
   }
+
   res.json(testTournament)
 })
 
@@ -1001,48 +1063,51 @@ const submitQuiz = asyncHandler(async (req, res) => {
         _id: { $in: quizSession.questions },
       }).session(session)
 
-      // Calculate score and RQM
-      let score = 0
-      let correctCount = 0
-
+      // Map user responses to include correctness
       const updatedResponses = userResponses.map((response, index) => {
         const question = questions.find(
           q => q._id.toString() === questionsIds[index],
         )
         const isCorrect = question.correctAnswer.toString() === response
-        if (isCorrect) correctCount++
         return {
           questionId: questionsIds[index],
           userAnswer: response,
           isCorrect,
         }
       })
-      score = correctCount
+      const alignedQuestionsWithResponses = userResponses.map(
+        (response, index) => {
+          const question = questions.find(
+            q => q._id.toString() === questionsIds[index],
+          )
+          return question
+        },
+      )
 
-      const quizDifficulty =
-        questions.reduce(
-          (acc, question) => acc + parseFloat(question.difficulty),
-          0,
-        ) / questions.length
-
-      const apparentTimeTaken =
-        timeTaken <= 10
-          ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
-          : timeTaken
-
-      const apparentScore =
-        ((score / questions.length) * Math.log(score / questions.length + 1)) /
-        Math.log(1.3)
-      let RQM_score = Math.ceil(
-        ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000,
+      // Calculate RQM score using the shared utility function
+      const {
+        RQM_score,
+        score,
+        quizDifficulty,
+        expectedTime,
+        apparentTimeTaken,
+        weightedScore,
+        adjustedScore,
+        timeFactor,
+        performanceBonus,
+      } = calculateRQMScore(
+        updatedResponses,
+        alignedQuestionsWithResponses,
+        timeTaken,
       )
 
       emitProgress('calculateRQM', 100)
       emitProgress('saveAttempt', 50)
       // Update quiz session
       quizSession.responses = updatedResponses
-      quizSession.score = score
+      quizSession.score = Math.round(score * questions.length) // Convert back to absolute score
       quizSession.RQM_score = RQM_score
+      quizSession.expectedTime = expectedTime
       quizSession.timeTaken = timeTaken
       quizSession.completed = true
       await quizSession.save({ session })
@@ -1141,7 +1206,7 @@ const submitQuiz = asyncHandler(async (req, res) => {
 
       res.json({
         message: 'Quiz submitted successfully',
-        score: `${score}/${questions.length}`,
+        score: `${score * questions.length}/${questions.length}`,
         RQM_score,
         quizDifficulty: quizDifficultyLevel,
         timeTaken,
@@ -1261,24 +1326,42 @@ const getQuizSummary = asyncHandler(async (req, res) => {
     timeTaken: bestQuizSession.timeTaken,
     totalTournamentScore: registration.totalScore,
     topLeaders: topLeaders,
-    result: bestQuizSession.responses.map((response, index) => {
-      const question = questions[index]
-      const options = question.options
+    result:
+      bestQuizSession.responses.length === 0
+        ? questions.map(q => {
+            return {
+              question: lang === 'hi' ? q.hindiQuestion : q.question,
+              options: {
+                a: getOptionText(q.options.a),
+                b: getOptionText(q.options.b),
+                c: getOptionText(q.options.c),
+                d: getOptionText(q.options.d),
+              },
+              answer: findKeyByValue(q.options, q.correctAnswer),
+              userAnswer: 'Not attempted',
+              isCorrect: false,
+              explanation: q.explanation || 'No explanation provided',
+            }
+          })
+        : bestQuizSession.responses.map((response, index) => {
+            const question = questions[index]
+            const options = question.options
 
-      return {
-        question: lang === 'hi' ? question.hindiQuestion : question.question,
-        options: {
-          a: getOptionText(options.a),
-          b: getOptionText(options.b),
-          c: getOptionText(options.c),
-          d: getOptionText(options.d),
-        },
-        answer: findKeyByValue(options, question.correctAnswer),
-        userAnswer: findKeyByValue(options, response.userAnswer),
-        isCorrect: response.isCorrect,
-        explanation: question.explanation || 'No explanation provided',
-      }
-    }),
+            return {
+              question:
+                lang === 'hi' ? question.hindiQuestion : question.question,
+              options: {
+                a: getOptionText(options.a),
+                b: getOptionText(options.b),
+                c: getOptionText(options.c),
+                d: getOptionText(options.d),
+              },
+              answer: findKeyByValue(options, question.correctAnswer),
+              userAnswer: findKeyByValue(options, response.userAnswer),
+              isCorrect: response.isCorrect,
+              explanation: question.explanation || 'No explanation provided',
+            }
+          }),
   }
 
   res.json(summary)

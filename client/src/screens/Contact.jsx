@@ -23,9 +23,6 @@ import {
 } from '@chakra-ui/react'
 import { Helmet } from 'react-helmet'
 import { useTranslation } from 'react-i18next'
-import InfoButton, {
-  InfoButtonProvider,
-} from '../components/miscellaneous/InfoButton'
 
 // Lazy load heavy or less frequently used components
 const ButtonGradient = lazy(() => import('../assets/svg/ButtonGradient'))
@@ -113,26 +110,6 @@ const Contact = () => {
                   <FormControl id="name" mb={3} isRequired>
                     <Flex alignItems={'center'}>
                       <FormLabel>{t('form_name')}</FormLabel>
-                      <InfoButtonProvider>
-                        {/* <Box p={8} bg="gray.900">
-                        <VStack spacing={4} align="start"> */}
-                        <InfoButton
-                          id="button1"
-                          direction="right"
-                          text="This popover appears to the right of the button."
-                        />
-                        {/* <InfoButton
-                        id="button2"
-                        direction="top"
-                        text="This popover appears above the button."
-                      />
-                      <InfoButton
-                        id="button3"
-                        text="This popover uses the default bottom placement."
-                      /> */}
-                        {/* </VStack>
-                      </Box> */}
-                      </InfoButtonProvider>
                     </Flex>
                     <Input
                       type="text"
