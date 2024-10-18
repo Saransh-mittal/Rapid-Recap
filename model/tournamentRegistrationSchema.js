@@ -120,6 +120,9 @@ const quizSessionSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  expectedTime: {
+    type: Number,
+  },
   completed: {
     type: Boolean,
     default: false,

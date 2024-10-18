@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon" href="/images/rrlogo_512.png" />
     <meta name="theme-color" content="#1a1527" />
     <link rel="icon" type="image/webp" href="/images/rrlogo_512.png" />
-    <link rel="preload" href="/assets/hero-bg-22eeb1f0.webp" as="image">
+    <link rel="preload" href="/src/assets/hero/hero-bg.webp" as="image">
     <link rel="preload" href="/images/tourBGDark.webp" as="image">
     <link rel="canonical" href="https://www.rapidrecap.co.in/" />
 
@@ -26,12 +26,6 @@
     <meta name="description" content="Stay informed with Rapid Recap's comprehensive news coverage and quizzes. Improve your Information Quotient (IQ) score across categories including top news, world, politics, business, technology, sports, health, science, environment, crime, education, entertainment, food, lifestyle, and tourism. Join intellectual societies and track your progress on our leaderboard.">
     <meta name="keywords" content="Rapid Recap, news, articles, quizzes, IQ score, leaderboard, Information Quotient, intellectual societies, user rankings, knowledge assessment, top news, general news, world news, politics, business, technology, sports, health, science, environment, crime, education, entertainment, food, lifestyle, tourism, wise, web, wise web">
 
-    <!-- Tournament Page Meta Tags -->
-    <title>Tournament - Rapid Recap</title>
-    <meta name="title" content="Rapid Recap Tournament - Test Your Knowledge and Win!">
-    <meta name="description" content="Compete in the Rapid Recap Tournament and challenge your knowledge with quizzes on various topics. Climb the leaderboard and win exciting prizes!">
-    <meta name="keywords" content="Rapid Recap Tournament, quiz competition, knowledge challenge, leaderboard, win prizes, test your knowledge, general knowledge tournament, quiz event">
-
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.rapidrecap.co.in/" />
@@ -39,11 +33,6 @@
     <meta property="og:description" content="Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
     <meta property="og:image" content="https://www.rapidrecap.co.in/images/rrlogo_512.png" />
 
-    <!-- Tournament Page Open Graph / Facebook -->
-    <meta property="og:url" content="https://www.rapidrecap.co.in/tournament" />
-    <meta property="og:title" content="Compete in Rapid Recap Tournament - Test Your Knowledge">
-    <meta property="og:description" content="Join our knowledge-based tournament and challenge others across various topics. Rise on the leaderboard and win exciting rewards.">
-    <meta property="og:image" content="https://www.rapidrecap.co.in/images/tourBGDark.webp" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
@@ -51,12 +40,6 @@
     <meta property="twitter:title" content="Rapid Recap - Stay Informed, Stay Ahead">
     <meta property="twitter:description" content="Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
     <meta property="twitter:image" content="https://www.rapidrecap.co.in/images/rrlogo_512.png" />
-
-    <!-- Tournament Page Twitter -->
-    <meta property="twitter:url" content="https://www.rapidrecap.co.in/tournament" />
-    <meta property="twitter:title" content="Rapid Recap Tournament - Test Your Knowledge">
-    <meta property="twitter:description" content="Challenge your knowledge with Rapid Recap's tournament, climb the leaderboard, and win big rewards!">
-    <meta property="twitter:image" content="https://www.rapidrecap.co.in/images/tourBGDark.webp" />
 
     <!-- Additional Meta Tags -->
     <meta name="robots" content="index, follow" />
@@ -173,8 +156,6 @@
         to { opacity: 1; transform: translateY(0); }
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-1bf3e17d.js"></script>
-    <link rel="stylesheet" href="/assets/index-2b16f4d1.css">
   </head>
   <body>
     <div id="splash-screen">
@@ -187,7 +168,7 @@
     <div id="root"></div>
     <div id="overlay"></div>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    
+    <script type="module" src="/src/main.jsx"></script>
     <script>
       window.addEventListener('load', function() {
         document.getElementById('splash-screen').style.display = 'none';

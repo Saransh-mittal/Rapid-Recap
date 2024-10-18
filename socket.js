@@ -188,7 +188,6 @@ function initializeSocket(server) {
 
       socket.emit('online status response', onlineStatuses)
     })
-
     // Add this new event listener for quiz progress
     socket.on('join quiz progress', userId => {
       socket.join(`quiz_progress_${userId}`)
@@ -197,6 +196,10 @@ function initializeSocket(server) {
     // Add this new event handler for quiz submission progress
     socket.on('join quiz submission progress', userId => {
       socket.join(`quiz_submission_progress_${userId}`)
+    })
+    // Add this new event handler for tournament quiz submission progress
+    socket.on('join tournament quiz submission progress', userId => {
+      socket.join(`tournament_quiz_submission_progress_${userId}`)
     })
     socket.off('setup', userData => {
       userOpenChats.delete(userData._id)
@@ -216,6 +219,19 @@ function initializeSocket(server) {
     ({ userId, stepId, progress }) => {
       io.to(`quiz_submission_progress_${userId}`).emit(
         'quiz_submission_progress',
+        {
+          stepId,
+          progress,
+        },
+      )
+    },
+  )
+  // Bridge between custom emitter and Socket.IO for tournament quiz submission progress
+  globalEmitter.on(
+    'tournament_quiz_submission_progress',
+    ({ userId, stepId, progress }) => {
+      io.to(`tournament_quiz_submission_progress_${userId}`).emit(
+        'tournament_quiz_submission_progress',
         {
           stepId,
           progress,

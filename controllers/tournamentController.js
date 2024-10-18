@@ -7,7 +7,10 @@ const {
 const User = require('../model/userSchema')
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
 const { logActivity } = require('../utils/activity.utils')
-const { generateCategoryQuiz } = require('../utils/quiz.utils')
+const {
+  generateCategoryQuiz,
+  calculateRQMScore,
+} = require('../utils/quiz.utils')
 const {
   commitSession,
   abortSession,
@@ -21,6 +24,7 @@ const {
 const { activityTypes } = require('../data/activityTypes')
 const mongoose = require('mongoose')
 const authorizedInGameNames = require('../data/authorizedInGameNames')
+const globalEmitter = require('../eventEmitter')
 
 // @desc   Get the latest tournament
 // @route  GET /api/tournament/latest
@@ -74,6 +78,36 @@ const getLatestTournament = asyncHandler(async (req, res) => {
       user: userId,
       tournament: tournament._id,
     })
+
+    if (userRegistration) {
+      const userRegistrationObj = userRegistration.toObject()
+      // console.log(userRegistrationObj)
+      // Check for categories with 2 attempts but not in completedCategories
+      for (const [
+        category,
+        attempts,
+      ] of userRegistrationObj.categoryAttempts.entries()) {
+        if (
+          attempts === 2 &&
+          !userRegistration.completedCategories.includes(category) &&
+          !userRegistration.categoryScores.has(category)
+        ) {
+          userRegistration.completedCategories.push(category)
+          userRegistration.categoryScores.set(category, 0)
+          await QuizSession.updateMany(
+            {
+              user: userId,
+              tournament: tournament._id,
+              category: category,
+            },
+            { $set: { completed: true } },
+          )
+        }
+      }
+
+      // Save the updated userRegistration
+      await userRegistration.save()
+    }
   }
 
   let result = {
@@ -88,7 +122,6 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     completedCategories: userRegistration
       ? userRegistration.completedCategories
       : [],
-
     categoryScores: userRegistration ? userRegistration.categoryScores : {},
     categoryAttempts: userRegistration ? userRegistration.categoryAttempts : {},
     totalScore: userRegistration ? userRegistration.totalScore : 0,
@@ -152,6 +185,35 @@ const getLatestTestTournament = asyncHandler(async (req, res) => {
         user: userId,
         tournament: tournament._id,
       })
+    }
+    if (userRegistration) {
+      const userRegistrationObj = userRegistration.toObject()
+      // console.log(userRegistrationObj)
+      // Check for categories with 2 attempts but not in completedCategories
+      for (const [
+        category,
+        attempts,
+      ] of userRegistrationObj.categoryAttempts.entries()) {
+        if (
+          attempts === 2 &&
+          !userRegistration.completedCategories.includes(category) &&
+          !userRegistration.categoryScores.has(category)
+        ) {
+          userRegistration.completedCategories.push(category)
+          userRegistration.categoryScores.set(category, 0)
+          await QuizSession.updateMany(
+            {
+              user: userId,
+              tournament: tournament._id,
+              category: category,
+            },
+            { $set: { completed: true } },
+          )
+        }
+      }
+
+      // Save the updated userRegistration
+      await userRegistration.save()
     }
   }
 
@@ -523,6 +585,7 @@ const getTestTournament = asyncHandler(async (req, res) => {
     res.status(404)
     throw new Error('No active test tournament found')
   }
+
   res.json(testTournament)
 })
 
@@ -821,110 +884,137 @@ const deleteCurrentAffairsQuestion = asyncHandler(async (req, res) => {
 // @access Private
 const startQuiz = asyncHandler(async (req, res) => {
   const { userId, tournamentId, category, lang } = req.body
+  const session = await mongoose.startSession()
 
-  const tournament = await Tournament.findById(tournamentId)
-  if (!tournament) {
-    res.status(404)
-    throw new Error('Tournament not found')
-  }
+  const maxRetries = 5
+  let retryCount = 0
+  let delay = 1000 // Start with 1 second delay
 
-  const registration = await TournamentRegistration.findOne({
-    user: userId,
-    tournament: tournamentId,
-  })
+  while (retryCount < maxRetries) {
+    try {
+      await session.withTransaction(async () => {
+        const tournament = await Tournament.findById(tournamentId).session(
+          session,
+        )
+        if (!tournament) {
+          throw new Error('Tournament not found')
+        }
 
-  if (!registration) {
-    res.status(404)
-    throw new Error('Tournament registration not found')
-  }
+        const registration = await TournamentRegistration.findOne({
+          user: userId,
+          tournament: tournamentId,
+        }).session(session)
 
-  const quizCount = 2
-  const currentAttempts = registration.categoryAttempts.get(category) || 0
+        if (!registration) {
+          throw new Error('Tournament registration not found')
+        }
 
-  if (currentAttempts >= quizCount) {
-    return res.status(400).json({
-      message: `Maximum number of quiz attempts (${quizCount}) for this category has been reached`,
-    })
-  }
-  // Check if a session already exists
-  const existingSession = await QuizSession.findOne({
-    user: userId,
-    tournament: tournamentId,
-    category: category,
-    attemptNumber: { $gt: 1 },
-    completed: false,
-  })
+        const quizCount = 2
+        const currentAttempts = registration.categoryAttempts.get(category) || 0
 
-  if (existingSession) {
-    return res.status(400).json({
-      message:
-        'A quiz for this category is already in progress or done. You cannot start a new quiz for this category',
-      existingSession: {
-        _id: existingSession._id,
-        startTime: existingSession.startTime,
-        endTime: existingSession.endTime,
-      },
-    })
-  }
-  const attemptNumber = currentAttempts + 1
-  // Generate quiz questions
-  const questions = await generateCategoryQuiz(userId, tournamentId, category)
+        if (currentAttempts >= quizCount) {
+          throw new Error(
+            `Maximum number of quiz attempts (${quizCount}) for this category has been reached`,
+          )
+        }
 
-  // Create a new quiz session
-  const quizSession = await QuizSession.create({
-    user: userId,
-    tournament: tournamentId,
-    category,
-    attemptNumber,
-    questions: questions.map(q => q._id),
-    startTime: new Date(),
-    endTime: new Date(Date.now() + 60000), // 60 seconds from now
-  })
-  // Update category attempts
-  let ojectKeysLengthEquals3 = false
-  if (Object.keys(registration.categoryAttempts).length === 3)
-    ojectKeysLengthEquals3 = true
+        const existingSession = await QuizSession.findOne({
+          user: userId,
+          tournament: tournamentId,
+          category: category,
+          attemptNumber: { $gt: 1 },
+          completed: false,
+        }).session(session)
 
-  const isCategoryFirstAttempt =
-    attemptNumber === 1 && !registration.categoryAttempts[category]
-  registration.categoryAttempts.set(category, attemptNumber)
+        if (existingSession) {
+          throw new Error(
+            'A quiz for this category is already in progress or done. You cannot start a new quiz for this category',
+          )
+        }
 
-  if (isCategoryFirstAttempt && ojectKeysLengthEquals3) {
-    registration.sendTourFeedback = true
-  }
-  await registration.save()
+        const attemptNumber = currentAttempts + 1
+        const questions = await generateCategoryQuiz({
+          userId,
+          tournamentId,
+          category,
+          session,
+        })
 
-  // Jumble options and remove sensitive information before sending to client
-  const clientQuestions = questions.map(q => {
-    const questionText = lang === 'hi' ? q.hindiQuestion : q.question
-    const options = q.options
+        const quizSession = await QuizSession.create(
+          [
+            {
+              user: userId,
+              tournament: tournamentId,
+              category,
+              attemptNumber,
+              questions: questions.map(q => q._id),
+              startTime: new Date(),
+              endTime: new Date(Date.now() + 60000), // 60 seconds from now
+            },
+          ],
+          { session },
+        )
 
-    // Create an array of option objects with id and text
-    const optionArray = Object.entries(options).map(([key, option]) => ({
-      id: option._id.toString(),
-      text: lang === 'hi' ? option.hindiText : option.text,
-    }))
+        let objectKeysLengthEquals3 =
+          Object.keys(registration.categoryAttempts).length === 3
+        const isCategoryFirstAttempt =
+          attemptNumber === 1 && !registration.categoryAttempts[category]
+        registration.categoryAttempts.set(category, attemptNumber)
 
-    // Shuffle the option array
-    const shuffledOptions = optionArray.sort(() => Math.random() - 0.5)
+        if (isCategoryFirstAttempt && objectKeysLengthEquals3) {
+          registration.sendTourFeedback = true
+        }
+        await registration.save({ session })
 
-    return {
-      _id: q._id,
-      question: questionText,
-      options: shuffledOptions,
+        const clientQuestions = questions.map(q => {
+          const questionText = lang === 'hi' ? q.hindiQuestion : q.question
+          const optionArray = Object.entries(q.options).map(
+            ([key, option]) => ({
+              id: option._id.toString(),
+              text: lang === 'hi' ? option.hindiText : option.text,
+            }),
+          )
+          const shuffledOptions = optionArray.sort(() => Math.random() - 0.5)
+
+          return {
+            _id: q._id,
+            question: questionText,
+            options: shuffledOptions,
+          }
+        })
+
+        res.json({
+          message: 'Quiz started',
+          quizSession: {
+            _id: quizSession[0]._id,
+            category: quizSession[0].category,
+            startTime: quizSession[0].startTime,
+            endTime: quizSession[0].endTime,
+            questions: clientQuestions,
+          },
+        })
+      })
+
+      // If we reach here, the transaction was successful
+      await session.endSession()
+      return // Exit the function
+    } catch (error) {
+      retryCount++
+      if (retryCount >= maxRetries) {
+        await session.endSession()
+        console.error(error)
+        res.status(500).json({
+          message: 'Failed to start quiz after multiple attempts',
+          error: error.message,
+        })
+        return
+      }
+
+      console.log(`Attempt ${retryCount} failed. Retrying in ${delay}ms...`)
+      await new Promise(resolve => setTimeout(resolve, delay))
+      delay *= 2 // Exponential backoff
     }
-  })
-
-  res.json({
-    message: 'Quiz started',
-    quizSession: {
-      _id: quizSession._id,
-      category: quizSession.category,
-      startTime: quizSession.startTime,
-      endTime: quizSession.endTime,
-      questions: clientQuestions,
-    },
-  })
+  }
 })
 
 // @desc   Submit quiz answers
@@ -932,17 +1022,23 @@ const startQuiz = asyncHandler(async (req, res) => {
 // @access Private
 const submitQuiz = asyncHandler(async (req, res) => {
   const { quizSessionId, userResponses, timeTaken, questionsIds } = req.body
-
+  const userId = req.user._id
   const maxRetries = 3
   let retryCount = 0
   let success = false
-
+  const emitProgress = (stepId, progress) => {
+    globalEmitter.emit('tournament_quiz_submission_progress', {
+      userId,
+      stepId,
+      progress,
+    })
+  }
   while (retryCount < maxRetries && !success) {
     const session = await mongoose.startSession()
 
     try {
       session.startTransaction()
-
+      emitProgress('initializeCalculation', 50)
       const quizSession = await QuizSession.findById(quizSessionId).session(
         session,
       )
@@ -960,55 +1056,63 @@ const submitQuiz = asyncHandler(async (req, res) => {
         return res.status(400).json({ error: 'Quiz time expired' })
       }
 
+      emitProgress('initializeCalculation', 100)
+      emitProgress('calculateRQM', 50)
       const user = await User.findById(quizSession.user).session(session)
       const questions = await TournamentQuestion.find({
         _id: { $in: quizSession.questions },
       }).session(session)
 
-      // Calculate score and RQM
-      let score = 0
-      let correctCount = 0
-
+      // Map user responses to include correctness
       const updatedResponses = userResponses.map((response, index) => {
         const question = questions.find(
           q => q._id.toString() === questionsIds[index],
         )
         const isCorrect = question.correctAnswer.toString() === response
-        if (isCorrect) correctCount++
         return {
           questionId: questionsIds[index],
           userAnswer: response,
           isCorrect,
         }
       })
-      score = correctCount
-
-      const quizDifficulty =
-        questions.reduce(
-          (acc, question) => acc + parseFloat(question.difficulty),
-          0,
-        ) / questions.length
-
-      const apparentTimeTaken =
-        timeTaken <= 10
-          ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
-          : timeTaken
-
-      const apparentScore =
-        ((score / questions.length) * Math.log(score / questions.length + 1)) /
-        Math.log(1.3)
-      let RQM_score = Math.ceil(
-        ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000,
+      const alignedQuestionsWithResponses = userResponses.map(
+        (response, index) => {
+          const question = questions.find(
+            q => q._id.toString() === questionsIds[index],
+          )
+          return question
+        },
       )
 
+      // Calculate RQM score using the shared utility function
+      const {
+        RQM_score,
+        score,
+        quizDifficulty,
+        expectedTime,
+        apparentTimeTaken,
+        weightedScore,
+        adjustedScore,
+        timeFactor,
+        performanceBonus,
+      } = calculateRQMScore(
+        updatedResponses,
+        alignedQuestionsWithResponses,
+        timeTaken,
+      )
+
+      emitProgress('calculateRQM', 100)
+      emitProgress('saveAttempt', 50)
       // Update quiz session
       quizSession.responses = updatedResponses
-      quizSession.score = score
+      quizSession.score = Math.round(score * questions.length) // Convert back to absolute score
       quizSession.RQM_score = RQM_score
+      quizSession.expectedTime = expectedTime
       quizSession.timeTaken = timeTaken
       quizSession.completed = true
       await quizSession.save({ session })
-
+      emitProgress('saveAttempt', 100)
+      emitProgress('updateStats', 50)
       // Update tournament registration
       const registration = await TournamentRegistration.findOne({
         user: quizSession.user,
@@ -1034,11 +1138,10 @@ const submitQuiz = asyncHandler(async (req, res) => {
         registration.sendTourFeedback = false
         sendTourFeedback = true
       }
-      // registration.categoryAttempts.set(
-      //   quizSession.category,
-      //   currentAttempts + 1,
-      // )
       await registration.save({ session })
+
+      emitProgress('updateStats', 100)
+      emitProgress('finalizeAttempt', 50)
 
       // Get top 3 leaders for the category
       const topLeaders = await QuizSession.aggregate([
@@ -1088,6 +1191,7 @@ const submitQuiz = asyncHandler(async (req, res) => {
       await session.commitTransaction()
       success = true
 
+      emitProgress('finalizeAttempt', 100)
       logActivity({
         userInGameName: user.inGameName,
         type: activityTypes.TOURNAMENT_QUIZ.type,
@@ -1102,7 +1206,7 @@ const submitQuiz = asyncHandler(async (req, res) => {
 
       res.json({
         message: 'Quiz submitted successfully',
-        score: `${score}/${questions.length}`,
+        score: `${score * questions.length}/${questions.length}`,
         RQM_score,
         quizDifficulty: quizDifficultyLevel,
         timeTaken,
@@ -1222,24 +1326,42 @@ const getQuizSummary = asyncHandler(async (req, res) => {
     timeTaken: bestQuizSession.timeTaken,
     totalTournamentScore: registration.totalScore,
     topLeaders: topLeaders,
-    result: bestQuizSession.responses.map((response, index) => {
-      const question = questions[index]
-      const options = question.options
+    result:
+      bestQuizSession.responses.length === 0
+        ? questions.map(q => {
+            return {
+              question: lang === 'hi' ? q.hindiQuestion : q.question,
+              options: {
+                a: getOptionText(q.options.a),
+                b: getOptionText(q.options.b),
+                c: getOptionText(q.options.c),
+                d: getOptionText(q.options.d),
+              },
+              answer: findKeyByValue(q.options, q.correctAnswer),
+              userAnswer: 'Not attempted',
+              isCorrect: false,
+              explanation: q.explanation || 'No explanation provided',
+            }
+          })
+        : bestQuizSession.responses.map((response, index) => {
+            const question = questions[index]
+            const options = question.options
 
-      return {
-        question: lang === 'hi' ? question.hindiQuestion : question.question,
-        options: {
-          a: getOptionText(options.a),
-          b: getOptionText(options.b),
-          c: getOptionText(options.c),
-          d: getOptionText(options.d),
-        },
-        answer: findKeyByValue(options, question.correctAnswer),
-        userAnswer: findKeyByValue(options, response.userAnswer),
-        isCorrect: response.isCorrect,
-        explanation: question.explanation || 'No explanation provided',
-      }
-    }),
+            return {
+              question:
+                lang === 'hi' ? question.hindiQuestion : question.question,
+              options: {
+                a: getOptionText(options.a),
+                b: getOptionText(options.b),
+                c: getOptionText(options.c),
+                d: getOptionText(options.d),
+              },
+              answer: findKeyByValue(options, question.correctAnswer),
+              userAnswer: findKeyByValue(options, response.userAnswer),
+              isCorrect: response.isCorrect,
+              explanation: question.explanation || 'No explanation provided',
+            }
+          }),
   }
 
   res.json(summary)
