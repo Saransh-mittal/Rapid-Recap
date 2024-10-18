@@ -1,1 +1,0 @@
-import{w as s}from"./index-b5fdede6.js";const a=()=>s.jsx("div",{className:"loading-overlay",children:s.jsx("div",{className:"spinner-container",children:s.jsx("div",{className:"loading-spinner"})})});export{a as default};
