@@ -207,8 +207,8 @@ const Quiz = () => {
             ...user,
             xp: newXp,
             level: newXp >= xpBaseAtNextLevel ? user.level + 1 : user.level,
-            IQ_score: result?.newIQScore || user.IQ_score,
-            prevIQScore: result?.prevIQScore || user.prevIQScore,
+            IQ_score: parseFloat(result?.newIQScore) || user.IQ_score,
+            prevIQScore: parseFloat(result?.prevIQScore) || user.prevIQScore,
             societyUpgradeMessage: result?.societyUpgradeMessage,
             todaysQuizCnt: user.todaysQuizCnt + 1,
             revivalPeriodEnd:
