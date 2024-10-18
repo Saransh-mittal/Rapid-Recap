@@ -21,6 +21,9 @@ import AutoSizer from 'react-virtualized-auto-sizer'
 import UserCard from '../components/leaderBoardComponents/UserCard'
 import SearchBar from '../components/leaderBoardComponents/SearchBar'
 import LeaderboardRow from '../components/leaderBoardComponents/LeaderBoardRow'
+import InfoButton, {
+  InfoButtonProvider,
+} from '../components/miscellaneous/InfoButton'
 
 const INITIAL_RENDER_COUNT = 500
 const RENDER_BATCH_SIZE = 500
@@ -170,24 +173,43 @@ const Leaderboard = () => {
         maxW="1200px"
         mx="auto"
       >
-        <Box textAlign="center">
-          <Heading
-            as="h1"
-            fontSize={{ base: 'xl', md: '2xl', lg: '4xl' }}
-            fontWeight="bold"
-            color={textColor}
-            letterSpacing="wide"
+        <Flex
+          width={'100%'}
+          justifyContent={'center'}
+          alignItems={'center'}
+          ml={5}
+        >
+          <Flex
+            justifyContent={'center'}
+            alignItems={'center'}
+            flexDirection={'column'}
           >
-            {t('title')}
-          </Heading>
-          <Text
-            fontSize={{ base: 'lg', md: 'xl' }}
-            fontWeight="semibold"
-            color={accentColor}
-          >
-            {t('tag')}
-          </Text>
-        </Box>
+            <Heading
+              as="h1"
+              fontSize={{ base: 'xl', md: '2xl', lg: '4xl' }}
+              fontWeight="bold"
+              color={textColor}
+              letterSpacing="wide"
+            >
+              {t('title')}
+            </Heading>
+            <Text
+              fontSize={{ base: 'lg', md: 'xl' }}
+              fontWeight="semibold"
+              color={accentColor}
+            >
+              {t('tag')}
+            </Text>
+          </Flex>
+          <Flex>
+            <InfoButtonProvider>
+              <InfoButton
+                id="leaderboardCacheInfo"
+                text={t('infoForLeaderboard')}
+              />
+            </InfoButtonProvider>
+          </Flex>
+        </Flex>
 
         <Flex justifyContent="center">
           <Box

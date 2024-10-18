@@ -150,7 +150,7 @@ const GivenQuizInterface = ({
                 <InfoButton
                   id="button1"
                   // direction="right"
-                  text="Note: Option numbers in the quiz and summary may differ. Options were randomized during the quiz, but the summary shows the correct answer regardless of its original position."
+                  text={t('infoForOptions')}
                 />
               </InfoButtonProvider>
             )}
