@@ -641,13 +641,18 @@ const sendMailsForQuizRemainingToReviveStreak = async (
   }
 }
 
-const generateCategoryQuiz = async (userId, tournamentId, category) => {
+const generateCategoryQuiz = async ({
+  userId,
+  tournamentId,
+  category,
+  session,
+}) => {
   // Verify user registration
   const registration = await TournamentRegistration.findOne({
     user: userId,
     tournament: tournamentId,
-  })
-  const tournament = await Tournament.findById(tournamentId)
+  }).session(session)
+  const tournament = await Tournament.findById(tournamentId).session(session)
   if (!registration) {
     throw new Error('User is not registered for this tournament')
   }
@@ -678,8 +683,7 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
       },
     },
     { $sample: { size: 5 } },
-  ])
-
+  ]).session(session)
   if (questions.length < 5) {
     throw new Error('Not enough new questions available for this category')
   }

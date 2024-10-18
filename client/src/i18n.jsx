@@ -34,6 +34,7 @@ const namespaces = {
     'TrackTime',
   ],
   tournamentComponents: [
+    'TournamentLoadingScreen',
     'EpicQuestGuide',
     'CategoryCard',
     'CategorySelection',

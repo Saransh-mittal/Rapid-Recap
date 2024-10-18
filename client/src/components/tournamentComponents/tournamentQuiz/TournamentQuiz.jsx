@@ -24,6 +24,7 @@ import {
 } from '../../../redux/tournamentSlice'
 import i18n from 'i18next'
 import useNavigationWarning from '../../../customHooks/useNavigationWarning'
+import { useSocket } from '../../../customHooks/useSocket'
 
 // Lazy loaded components
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
@@ -38,6 +39,9 @@ const QuizGivenSummary = lazy(() =>
   import('../../quizComponents/QuizGivenSummary'),
 )
 const ShutterAnimation = lazy(() => import('./ShutterAnimation'))
+const TournamentQuizSubmitLoadingScreen = lazy(() =>
+  import('./TournamentQuizSubmitLoadingScreen'),
+)
 
 const TournamentQuiz = () => {
   const { t } = useTranslation('TournamentQuiz')
@@ -65,7 +69,7 @@ const TournamentQuiz = () => {
   const [showCategoryQuizSummary, setShowCategoryQuizSummary] = useState(false)
   const shouldWarnBeforeLeaving = !submitted
   useNavigationWarning(shouldWarnBeforeLeaving)
-
+  const { socket, getSocket } = useSocket()
   const { playClick } = useSound()
 
   const startQuiz = useCallback(async () => {
@@ -221,6 +225,7 @@ const TournamentQuiz = () => {
   )
 
   const { timer, timeTaken } = useTimer(
+    50,
     quizStarted,
     stopTimer,
     false,
@@ -285,6 +290,20 @@ const TournamentQuiz = () => {
       window.removeEventListener('popstate', handlePopState)
     }
   }, [shouldWarnBeforeLeaving])
+
+  useEffect(() => {
+    const currentSocket = getSocket()
+    if (currentSocket && user) {
+      currentSocket.emit('join tournament quiz submission progress', user._id)
+      currentSocket.on('tournament_quiz_submission_progress', data => {})
+    }
+
+    return () => {
+      if (currentSocket) {
+        currentSocket.off('tournament_quiz_submission_progress')
+      }
+    }
+  }, [getSocket, user])
 
   const handleAnimationComplete = useCallback(() => {
     setShowGetSetGo(false)
@@ -355,7 +374,7 @@ const TournamentQuiz = () => {
               load={loading}
               currentQuestionIndex={currentQuestionIndex}
               totalQuestions={quizSession?.questions.length || 0}
-              quizData={quizSession}
+              quizSession={quizSession}
               handleAnswer={handleAnswer}
               userAnswers={userAnswers}
               isTournament={true}
@@ -387,29 +406,35 @@ const TournamentQuiz = () => {
 
   return (
     <>
-      <Suspense fallback={<div>{t('Loading')}</div>}>
-        <ModalComponent
-          isOpen={isOpen}
-          onClose={handleClose}
-          renderModalBody={renderModalBody}
-          handleNextQuestion={handleNextQuestion}
-          currentQuestionIndex={currentQuestionIndex}
-          totalQuestions={quizSession?.questions.length || 0}
-          submitted={submitted}
-          submitLoad={submitting}
-          userAnswers={userAnswers}
-          handleSubmitQuiz={handleSubmitQuiz}
-          isAnswered={userAnswers[currentQuestionIndex] !== ''}
-          timer={timer}
-          showInstruction={false}
-          setShowInstruction={() => {}}
-          startQuiz={startQuiz}
-          timeTaken={timeTaken}
-          showGetSetGo={showGetSetGo}
-          size={'full'}
-          isTournament={true}
-        />
-      </Suspense>
+      {submitting ? (
+        <Suspense fallback={<div>{t('Loading')}</div>}>
+          <TournamentQuizSubmitLoadingScreen socket={socket} />
+        </Suspense>
+      ) : (
+        <Suspense fallback={<div>{t('Loading')}</div>}>
+          <ModalComponent
+            isOpen={isOpen}
+            onClose={handleClose}
+            renderModalBody={renderModalBody}
+            handleNextQuestion={handleNextQuestion}
+            currentQuestionIndex={currentQuestionIndex}
+            totalQuestions={quizSession?.questions.length || 0}
+            submitted={submitted}
+            submitLoad={submitting}
+            userAnswers={userAnswers}
+            handleSubmitQuiz={handleSubmitQuiz}
+            isAnswered={userAnswers[currentQuestionIndex] !== ''}
+            timer={timer}
+            showInstruction={false}
+            setShowInstruction={() => {}}
+            startQuiz={startQuiz}
+            timeTaken={timeTaken}
+            showGetSetGo={showGetSetGo}
+            size={'full'}
+            isTournament={true}
+          />
+        </Suspense>
+      )}
       {showConfirmationModal && (
         <Suspense fallback={<div>{t('Loading')}</div>}>
           <ConfirmationModal
