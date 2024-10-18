@@ -68,7 +68,7 @@ const saveQuizAttempt = async (
     throw new Error('User has already attempted the quiz for the article.')
   }
 
-  const {
+  let {
     RQM_score,
     score,
     quizDifficulty,
