@@ -6,5 +6,6 @@
   "correct": "Correct",
   "wrong": "Wrong",
   "notAnswered": "Not Answered",
-  "errorFetchingQuiz": "Error fetching quiz summary"
+  "errorFetchingQuiz": "Error fetching quiz summary",
+  "quizError": "Quiz issue detected - possibly due to connection loss or system error. Cannot be reattempted. We apologize for the inconvenience."
 }

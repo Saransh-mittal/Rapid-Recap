@@ -130,20 +130,26 @@ const QuizGivenSummary = ({
               <Flex flexDirection={'column'}>
                 <Suspense fallback={null}>
                   <Heading
-                    title={t('totalTimeTaken', { timeTaken })}
+                    title={
+                      timeTaken === 0
+                        ? t('quizError')
+                        : t('totalTimeTaken', { timeTaken })
+                    }
                     tagMarginBottom={0}
-                    marginBottom="1rem"
+                    marginBottom={timeTaken === 0 ? 0 : '1rem'}
                     tagColor={
-                      !currentQuestion.userAnswer
+                      !currentQuestion?.userAnswer
                         ? getColor('blue', 'yellow')
                         : currentQuestion.isCorrect
                         ? getColor('green', 'lime')
                         : getColor('red', 'orange')
                     }
-                    marginTop="1rem"
+                    // marginTop="1rem"
                     tagFontSize="xl"
                     tagFontWeight="bold"
-                    color={getColor('red', 'orange')}
+                    color={timeTaken === 0 ? 'red' : getColor('red', 'orange')}
+                    marginTop={timeTaken === 0 ? '2.5rem' : '1rem'}
+                    titleSize={timeTaken === 0 ? 'xl' : '3xl'}
                   />
                 </Suspense>
               </Flex>

@@ -74,6 +74,36 @@ const getLatestTournament = asyncHandler(async (req, res) => {
       user: userId,
       tournament: tournament._id,
     })
+
+    if (userRegistration) {
+      const userRegistrationObj = userRegistration.toObject()
+      // console.log(userRegistrationObj)
+      // Check for categories with 2 attempts but not in completedCategories
+      for (const [
+        category,
+        attempts,
+      ] of userRegistrationObj.categoryAttempts.entries()) {
+        if (
+          attempts === 2 &&
+          !userRegistration.completedCategories.includes(category) &&
+          !userRegistration.categoryScores.has(category)
+        ) {
+          userRegistration.completedCategories.push(category)
+          userRegistration.categoryScores.set(category, 0)
+          await QuizSession.updateMany(
+            {
+              user: userId,
+              tournament: tournament._id,
+              category: category,
+            },
+            { $set: { completed: true } },
+          )
+        }
+      }
+
+      // Save the updated userRegistration
+      await userRegistration.save()
+    }
   }
 
   let result = {
@@ -88,7 +118,6 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     completedCategories: userRegistration
       ? userRegistration.completedCategories
       : [],
-
     categoryScores: userRegistration ? userRegistration.categoryScores : {},
     categoryAttempts: userRegistration ? userRegistration.categoryAttempts : {},
     totalScore: userRegistration ? userRegistration.totalScore : 0,
@@ -152,6 +181,35 @@ const getLatestTestTournament = asyncHandler(async (req, res) => {
         user: userId,
         tournament: tournament._id,
       })
+    }
+    if (userRegistration) {
+      const userRegistrationObj = userRegistration.toObject()
+      // console.log(userRegistrationObj)
+      // Check for categories with 2 attempts but not in completedCategories
+      for (const [
+        category,
+        attempts,
+      ] of userRegistrationObj.categoryAttempts.entries()) {
+        if (
+          attempts === 2 &&
+          !userRegistration.completedCategories.includes(category) &&
+          !userRegistration.categoryScores.has(category)
+        ) {
+          userRegistration.completedCategories.push(category)
+          userRegistration.categoryScores.set(category, 0)
+          await QuizSession.updateMany(
+            {
+              user: userId,
+              tournament: tournament._id,
+              category: category,
+            },
+            { $set: { completed: true } },
+          )
+        }
+      }
+
+      // Save the updated userRegistration
+      await userRegistration.save()
     }
   }
 
@@ -523,6 +581,7 @@ const getTestTournament = asyncHandler(async (req, res) => {
     res.status(404)
     throw new Error('No active test tournament found')
   }
+
   res.json(testTournament)
 })
 
@@ -1222,24 +1281,42 @@ const getQuizSummary = asyncHandler(async (req, res) => {
     timeTaken: bestQuizSession.timeTaken,
     totalTournamentScore: registration.totalScore,
     topLeaders: topLeaders,
-    result: bestQuizSession.responses.map((response, index) => {
-      const question = questions[index]
-      const options = question.options
+    result:
+      bestQuizSession.responses.length === 0
+        ? questions.map(q => {
+            return {
+              question: lang === 'hi' ? q.hindiQuestion : q.question,
+              options: {
+                a: getOptionText(q.options.a),
+                b: getOptionText(q.options.b),
+                c: getOptionText(q.options.c),
+                d: getOptionText(q.options.d),
+              },
+              answer: findKeyByValue(q.options, q.correctAnswer),
+              userAnswer: 'Not attempted',
+              isCorrect: false,
+              explanation: q.explanation || 'No explanation provided',
+            }
+          })
+        : bestQuizSession.responses.map((response, index) => {
+            const question = questions[index]
+            const options = question.options
 
-      return {
-        question: lang === 'hi' ? question.hindiQuestion : question.question,
-        options: {
-          a: getOptionText(options.a),
-          b: getOptionText(options.b),
-          c: getOptionText(options.c),
-          d: getOptionText(options.d),
-        },
-        answer: findKeyByValue(options, question.correctAnswer),
-        userAnswer: findKeyByValue(options, response.userAnswer),
-        isCorrect: response.isCorrect,
-        explanation: question.explanation || 'No explanation provided',
-      }
-    }),
+            return {
+              question:
+                lang === 'hi' ? question.hindiQuestion : question.question,
+              options: {
+                a: getOptionText(options.a),
+                b: getOptionText(options.b),
+                c: getOptionText(options.c),
+                d: getOptionText(options.d),
+              },
+              answer: findKeyByValue(options, question.correctAnswer),
+              userAnswer: findKeyByValue(options, response.userAnswer),
+              isCorrect: response.isCorrect,
+              explanation: question.explanation || 'No explanation provided',
+            }
+          }),
   }
 
   res.json(summary)

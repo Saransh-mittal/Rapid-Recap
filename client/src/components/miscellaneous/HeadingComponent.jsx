@@ -15,6 +15,7 @@ const Heading = ({
   tagFontSize,
   tagFontWeight,
   headingWeight = '',
+  titleSize = '3xl',
   marginTop = '0',
 }) => {
   return (
@@ -39,7 +40,7 @@ const Heading = ({
       )}
       {title && (
         <Flex fontWeight={headingWeight}>
-          <Text fontSize="3xl" color={color}>
+          <Text fontSize={titleSize} color={color}>
             {title}
           </Text>
         </Flex>
