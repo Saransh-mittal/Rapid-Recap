@@ -7,7 +7,7 @@ const MotionBox = motion(Box)
 const MotionText = motion(Text)
 const MotionFlex = motion(Flex)
 
-const IQScore = ({ user, score, _hover, onClick }) => {
+const IQScore = ({ user, score, _hover, onClick, isVisibleRef }) => {
   const societyData = findSocietyAndCircle(score)
   const { textColor, boxShadow } = societyData || {}
   const [displayScore, setDisplayScore] = useState(user?.IQ_score || 0)
@@ -16,7 +16,6 @@ const IQScore = ({ user, score, _hover, onClick }) => {
   const cloudControls = useAnimation()
   const componentRef = useRef(null)
 
-  // Convert textColor to a hex code if it's 'white'
   const animatableTextColor =
     textColor === 'white' ? '#FFFFFF' : textColor || '#00FFFF'
 
@@ -30,34 +29,32 @@ const IQScore = ({ user, score, _hover, onClick }) => {
 
     updateComponentRect()
     window.addEventListener('resize', updateComponentRect)
+    window.addEventListener('scroll', updateComponentRect)
 
-    return () => window.removeEventListener('resize', updateComponentRect)
+    return () => {
+      window.removeEventListener('resize', updateComponentRect)
+      window.removeEventListener('scroll', updateComponentRect)
+    }
   }, [])
 
   useEffect(() => {
     if (
       user?.prevIQScore !== undefined &&
       user?.IQ_score !== user?.prevIQScore &&
-      user?.IQ_score !== displayScore
+      displayScore !== user?.IQ_score
     ) {
-      console.log(
-        'Score change detected:',
-        user?.prevIQScore,
-        '->',
-        user?.IQ_score,
-      )
       animateScoreChange()
     }
   }, [user?.IQ_score, user?.prevIQScore, displayScore])
 
   const animateScoreChange = async () => {
     if (!componentRect) return
-    await new Promise(resolve => setTimeout(resolve, 10000))
-    console.log('Animating score change')
-    setShowIncrease(true)
 
-    const startY = componentRect.bottom + window.scrollY
-    const endY = componentRect.top + window.scrollY
+    setShowIncrease(true)
+    await new Promise(resolve => setTimeout(resolve, 10000))
+
+    const startY = componentRect.bottom
+    const endY = componentRect.top
 
     // Animate cloud appearing
     await cloudControls.start({
@@ -107,6 +104,7 @@ const IQScore = ({ user, score, _hover, onClick }) => {
     <Box position="relative" className="IQscore">
       <MotionBox
         ref={componentRef}
+        key={`IQscore-${isVisibleRef.current}`}
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -142,7 +140,7 @@ const IQScore = ({ user, score, _hover, onClick }) => {
             IQ
           </MotionText>
           <MotionText
-            key={displayScore} // Add key to force re-render on score change
+            key={displayScore}
             fontSize="1rem"
             fontWeight="bold"
             color="#9CAFAA"
@@ -170,7 +168,7 @@ const IQScore = ({ user, score, _hover, onClick }) => {
               initial={{ opacity: 0, scale: 0.5 }}
               animate={cloudControls}
               exit={{ opacity: 0, scale: 0.5 }}
-              zIndex={9999}
+              zIndex={999999}
               style={{
                 transformOrigin: 'center center',
                 pointerEvents: 'none',
@@ -192,8 +190,8 @@ const IQScore = ({ user, score, _hover, onClick }) => {
                   fontWeight="bold"
                   color={
                     formatScore(user?.IQ_score - user?.prevIQScore) < 0
-                      ? '#E53E3E' // red.500 in hex
-                      : '#38A169' // green.500 in hex
+                      ? '#E53E3E'
+                      : '#38A169'
                   }
                 >
                   {formatScore(user?.IQ_score - user?.prevIQScore) < 0

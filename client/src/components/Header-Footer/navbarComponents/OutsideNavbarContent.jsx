@@ -51,6 +51,7 @@ const OutsideNavbarContent = ({
   level,
   profileNotif,
   onOpenWiseWeb,
+  isVisibleRef,
 }) => {
   const { t } = useTranslation('OutsideNavbarContent')
   const { user, loginCheckStatus } = useSelector(state => state.auth)
@@ -198,6 +199,7 @@ const OutsideNavbarContent = ({
             user={user}
             setShowIQScoreModal={setShowIQScoreModal}
             playClick={playClick}
+            isVisibleRef={isVisibleRef}
           />
           <XPLevelComponent level={level} playClick={playClick} t={t} />
           <StreakFireComponent
@@ -298,7 +300,13 @@ const PendingLoginContent = ({ isSmallerThan992 }) => (
   </Flex>
 )
 
-const IQScoreComponent = ({ user, setShowIQScoreModal, playClick, t }) => {
+const IQScoreComponent = ({
+  user,
+  setShowIQScoreModal,
+  playClick,
+  t,
+  isVisibleRef,
+}) => {
   const dispatch = useDispatch()
   return (
     <>
@@ -319,6 +327,7 @@ const IQScoreComponent = ({ user, setShowIQScoreModal, playClick, t }) => {
         }
       >
         <IQScore
+          isVisibleRef={isVisibleRef}
           user={user}
           score={user?.IQ_score}
           _hover={{ cursor: 'pointer' }}

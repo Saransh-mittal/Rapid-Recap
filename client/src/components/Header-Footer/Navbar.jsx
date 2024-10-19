@@ -415,6 +415,7 @@ const Navbar = ({ onNavbarLoad }) => {
                 level={user?.level}
                 profileNotif={profileNotif}
                 onOpenWiseWeb={onOpenWiseWeb}
+                isVisibleRef={isVisibleRef}
               />
             </Suspense>
           </Flex>
