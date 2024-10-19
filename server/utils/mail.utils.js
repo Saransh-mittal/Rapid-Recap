@@ -70,6 +70,9 @@ const mailForStreakBroken = async () => {
       name: { $not: /^undefined\sundefined$/ },
     })
     const transporter = await mailTransporter()
+    // Translation function for specific namespace
+    const t = (key, options) =>
+      localizedI18n.t(key, { ns: 'mail.utils', ...options })
     //const updateProgress = progressBar(users.length);
     for (let user of users) {
       const streakBrokenDays = await streakBrokenDaysCalculator(user._id)
@@ -100,9 +103,6 @@ const mailForStreakBroken = async () => {
         // Switch to user's language
         await localizedI18n.changeLanguage(user.userLanguage)
 
-        // Translation function for specific namespace
-        const t = (key, options) =>
-          localizedI18n.t(key, { ns: 'mail.utils', ...options })
         await sendNotification({
           userId: user._id,
           url: '/home/all',
