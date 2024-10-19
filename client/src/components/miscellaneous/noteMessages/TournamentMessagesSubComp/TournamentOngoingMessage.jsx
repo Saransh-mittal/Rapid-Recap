@@ -15,7 +15,6 @@ const MotionBox = motion(Box)
 const MotionText = motion(Text)
 
 const TournamentOngoingMessage = ({ t, tournamentNumber }) => {
-  console.log(tournamentNumber)
   const { isAuthenticated } = useSelector(state => state.auth)
   const { isRegistered, userStanding } = useSelector(state => state.tournament)
 
