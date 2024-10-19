@@ -48,7 +48,11 @@ const useFetchQuiz = (articleId, language, onClose) => {
         })
         onClose()
       } finally {
+        setLoad(false)
         console.log('Quiz generation complete')
+        setTimeout(() => {
+          setIsQuizGenerating(false)
+        }, 500)
       }
     }
 
@@ -59,15 +63,7 @@ const useFetchQuiz = (articleId, language, onClose) => {
     const currentSocket = getSocket()
     if (currentSocket && user) {
       currentSocket.emit('join quiz progress', user._id)
-      currentSocket.on('quiz_generation_progress', data => {
-        // You can update your state or perform any other actions here
-        if (data.progress === 100) {
-          setTimeout(() => {
-            setLoad(false)
-            setIsQuizGenerating(false)
-          }, 1000)
-        }
-      })
+      currentSocket.on('quiz_generation_progress', data => {})
     }
 
     return () => {
@@ -75,7 +71,7 @@ const useFetchQuiz = (articleId, language, onClose) => {
         currentSocket.off('quiz_generation_progress')
       }
     }
-  }, [getSocket, user])
+  }, [getSocket, user, socket])
 
   const startQuiz = async () => {
     setLoad(true)

@@ -25,6 +25,7 @@ import {
 import i18n from 'i18next'
 import useNavigationWarning from '../../../customHooks/useNavigationWarning'
 import { useSocket } from '../../../customHooks/useSocket'
+import TournamentQuizSubmitLoadingScreen from './TournamentQuizSubmitLoadingScreen'
 
 // Lazy loaded components
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
@@ -39,9 +40,6 @@ const QuizGivenSummary = lazy(() =>
   import('../../quizComponents/QuizGivenSummary'),
 )
 const ShutterAnimation = lazy(() => import('./ShutterAnimation'))
-const TournamentQuizSubmitLoadingScreen = lazy(() =>
-  import('./TournamentQuizSubmitLoadingScreen'),
-)
 
 const TournamentQuiz = () => {
   const { t } = useTranslation('TournamentQuiz')
@@ -315,6 +313,9 @@ const TournamentQuiz = () => {
   }, [])
 
   const renderModalBody = useCallback(() => {
+    if (submitting) {
+      return <TournamentQuizSubmitLoadingScreen socket={socket} />
+    }
     if (showCategoryQuizSummary) {
       return (
         <Suspense fallback={null}>
@@ -406,35 +407,30 @@ const TournamentQuiz = () => {
 
   return (
     <>
-      {submitting ? (
-        <Suspense fallback={<div>{t('Loading')}</div>}>
-          <TournamentQuizSubmitLoadingScreen socket={socket} />
-        </Suspense>
-      ) : (
-        <Suspense fallback={<div>{t('Loading')}</div>}>
-          <ModalComponent
-            isOpen={isOpen}
-            onClose={handleClose}
-            renderModalBody={renderModalBody}
-            handleNextQuestion={handleNextQuestion}
-            currentQuestionIndex={currentQuestionIndex}
-            totalQuestions={quizSession?.questions.length || 0}
-            submitted={submitted}
-            submitLoad={submitting}
-            userAnswers={userAnswers}
-            handleSubmitQuiz={handleSubmitQuiz}
-            isAnswered={userAnswers[currentQuestionIndex] !== ''}
-            timer={timer}
-            showInstruction={false}
-            setShowInstruction={() => {}}
-            startQuiz={startQuiz}
-            timeTaken={timeTaken}
-            showGetSetGo={showGetSetGo}
-            size={'full'}
-            isTournament={true}
-          />
-        </Suspense>
-      )}
+      <Suspense fallback={<div>{t('Loading')}</div>}>
+        <ModalComponent
+          isOpen={isOpen}
+          onClose={handleClose}
+          renderModalBody={renderModalBody}
+          handleNextQuestion={handleNextQuestion}
+          currentQuestionIndex={currentQuestionIndex}
+          totalQuestions={quizSession?.questions.length || 0}
+          submitted={submitted}
+          submitLoad={submitting}
+          userAnswers={userAnswers}
+          handleSubmitQuiz={handleSubmitQuiz}
+          isAnswered={userAnswers[currentQuestionIndex] !== ''}
+          timer={timer}
+          showInstruction={false}
+          setShowInstruction={() => {}}
+          startQuiz={startQuiz}
+          timeTaken={timeTaken}
+          showGetSetGo={showGetSetGo}
+          size={'full'}
+          isTournament={true}
+        />
+      </Suspense>
+
       {showConfirmationModal && (
         <Suspense fallback={<div>{t('Loading')}</div>}>
           <ConfirmationModal

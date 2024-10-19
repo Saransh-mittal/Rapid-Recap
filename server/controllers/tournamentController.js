@@ -1133,8 +1133,13 @@ const submitQuiz = asyncHandler(async (req, res) => {
       if (currentAttempts >= 2) {
         registration.completedCategories.push(quizSession.category)
       }
+      // get number of currentAttempts keys
+      let objectKeysLength = Array.from(
+        registration.categoryAttempts.keys(),
+      ).length
+
       let sendTourFeedback = false
-      if (registration.sendTourFeedback) {
+      if (registration.sendTourFeedback && objectKeysLength === 4) {
         registration.sendTourFeedback = false
         sendTourFeedback = true
       }
