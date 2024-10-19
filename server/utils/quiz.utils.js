@@ -289,7 +289,7 @@ const generateQuestionsForHindiQuiz = async ({
     apiKey: process.env.OPENAI_API_KEY,
   })
   const combinedMainText = mainText.join(' ')
-  //console.log(title, author, mainText);
+
   const prompt = `शीर्षक: ${title}\nलेखक: ${author}\n\nमुख्य पाठ: ${combinedMainText}\n\n`
   const instructions = `निर्देश:
 1. लेख को 3 अनुच्छेदों में इस तरह विभाजित करें कि प्रत्येक अनुच्छेद से कम से कम 2 प्रश्न बनाए जा सकें। क्विज़ हिंदी भाषा में तैयार की जानी चाहिए क्योंकि लेख हिंदी में होगा और इसे सावधानीपूर्वक तैयार किया जाना चाहिए।
@@ -477,9 +477,6 @@ const updatePercentilesOnQuizDeactivation = async ({ id }) => {
 
     if (bulkOps.length > 0) {
       const result = await QuizAttempt.bulkWrite(bulkOps)
-      // console.log(
-      //   `Updated ${result.modifiedCount} out of ${totalAttempts} attempts for quiz ${id}`,
-      // )
     } else {
       console.log(`No valid attempts to update for quiz ${id}`)
     }
@@ -641,13 +638,18 @@ const sendMailsForQuizRemainingToReviveStreak = async (
   }
 }
 
-const generateCategoryQuiz = async (userId, tournamentId, category) => {
+const generateCategoryQuiz = async ({
+  userId,
+  tournamentId,
+  category,
+  session,
+}) => {
   // Verify user registration
   const registration = await TournamentRegistration.findOne({
     user: userId,
     tournament: tournamentId,
-  })
-  const tournament = await Tournament.findById(tournamentId)
+  }).session(session)
+  const tournament = await Tournament.findById(tournamentId).session(session)
   if (!registration) {
     throw new Error('User is not registered for this tournament')
   }
@@ -678,8 +680,7 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
       },
     },
     { $sample: { size: 5 } },
-  ])
-
+  ]).session(session)
   if (questions.length < 5) {
     throw new Error('Not enough new questions available for this category')
   }
@@ -693,14 +694,14 @@ const generateCategoryQuiz = async (userId, tournamentId, category) => {
   return questions
 }
 
+const BASELINE_TIME_PER_QUESTION = 10 // seconds
+const ALL_CORRECT_BONUS = 1.2 // 20% bonus for all correct
+const ONE_WRONG_BONUS = 1.1 // 10% bonus for only one wrong
+
 const calculateScore = userResponses => {
   return (
-    userResponses.reduce((acc, res, _) => {
-      if (res.isCorrect) {
-        return acc + 1
-      }
-      return acc
-    }, 0) / userResponses.length
+    userResponses.reduce((acc, res) => acc + (res.isCorrect ? 1 : 0), 0) /
+    userResponses.length
   )
 }
 
@@ -713,17 +714,71 @@ const calculateQuizDifficulty = questions => {
   )
 }
 
+const calculateExpectedTime = questions => {
+  const totalDifficultyFactor = questions.reduce(
+    (sum, question) => sum + parseFloat(question.difficulty),
+    0,
+  )
+  return Math.round(
+    BASELINE_TIME_PER_QUESTION *
+      questions.length *
+      (totalDifficultyFactor / questions.length),
+  )
+}
+
 const calculateApparentTimeTaken = timeTaken => {
   return timeTaken <= 10
     ? Math.ceil((timeTaken * timeTaken) / 2 - 10 * timeTaken + 60)
     : timeTaken
 }
 
-const calculateRQMScore = (score, quizDifficulty, apparentTimeTaken) => {
-  const apparentScore = (score * Math.log(score + 1)) / Math.log(1.3)
-  return Math.ceil(
-    ((apparentScore * quizDifficulty) / apparentTimeTaken) * 1000,
-  )
+const calculateRQMScore = (userResponses, questions, timeTaken) => {
+  const score = calculateScore(userResponses)
+  const quizDifficulty = calculateQuizDifficulty(questions)
+  const expectedTime = calculateExpectedTime(questions)
+  const apparentTimeTaken = calculateApparentTimeTaken(timeTaken)
+
+  // Calculate weighted score based on question difficulties
+  const weightedScore =
+    userResponses.reduce((acc, res, index) => {
+      if (res.isCorrect) {
+        return acc + parseFloat(questions[index].difficulty)
+      }
+      return acc
+    }, 0) / questions.length
+
+  // Adjust score based on difficulty
+  let adjustedScore = weightedScore * (1 + (quizDifficulty - 0.5))
+
+  // Apply bonus for exceptional performance
+  const correctCount = userResponses.filter(res => res.isCorrect).length
+  if (correctCount === questions.length) {
+    adjustedScore *= ALL_CORRECT_BONUS
+  } else if (correctCount === questions.length - 1) {
+    adjustedScore *= ONE_WRONG_BONUS
+  }
+
+  // Calculate time factor (compare to expected time)
+  const timeFactor = Math.min(expectedTime / apparentTimeTaken, 2) // Cap at 2x speed
+
+  // Calculate final RQM score
+  const RQM_score = Math.ceil((adjustedScore * timeFactor * 150) / 2)
+
+  return {
+    RQM_score,
+    score,
+    quizDifficulty,
+    expectedTime,
+    apparentTimeTaken,
+    weightedScore,
+    timeFactor,
+    performanceBonus:
+      correctCount === questions.length
+        ? ALL_CORRECT_BONUS
+        : correctCount === questions.length - 1
+        ? ONE_WRONG_BONUS
+        : 1,
+  }
 }
 
 const calcUserPercentile = async ({ userId, articleId, session }) => {
@@ -772,5 +827,6 @@ module.exports = {
   calculateQuizDifficulty,
   calculateApparentTimeTaken,
   calculateRQMScore,
+  calculateExpectedTime,
   calcUserPercentile,
 }
