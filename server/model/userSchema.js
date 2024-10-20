@@ -345,6 +345,7 @@ const userSchema = new mongoose.Schema(
         category: String,
         weight: Number,
         isInferred: { type: Boolean, default: false },
+        lastUpdated: { type: Date, default: Date.now },
       },
     ],
     needsOnboarding: {
