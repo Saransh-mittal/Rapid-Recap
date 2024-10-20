@@ -966,23 +966,59 @@ const startQuiz = asyncHandler(async (req, res) => {
         }
         await registration.save({ session })
 
+        // Improved Fisher-Yates shuffle algorithm
+        const shuffle = array => {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[array[i], array[j]] = [array[j], array[i]]
+          }
+          return array
+        }
+
+        // Function to shuffle options and reassign keys
+        const shuffleOptions = options => {
+          const entries = Object.entries(options)
+          const shuffled = shuffle(entries)
+
+          // Reassign keys (a, b, c, d) to shuffled options
+          return Object.fromEntries(
+            shuffled.map(([_, value], index) => [
+              String.fromCharCode(97 + index), // 'a', 'b', 'c', 'd'
+              value,
+            ]),
+          )
+        }
+
         const clientQuestions = questions.map(q => {
           const questionText = lang === 'hi' ? q.hindiQuestion : q.question
-          const optionArray = Object.entries(q.options).map(
-            ([key, option]) => ({
-              id: option._id.toString(),
-              text: lang === 'hi' ? option.hindiText : option.text,
-            }),
+          const optionsObject = Object.fromEntries(
+            Object.entries(q.options).map(([key, option]) => [
+              key,
+              {
+                _id: option._id,
+                text: lang === 'hi' ? option.hindiText : option.text,
+              },
+            ]),
           )
-          const shuffledOptions = optionArray.sort(() => Math.random() - 0.5)
-
+          const shuffledOptions = shuffleOptions(optionsObject)
+          // Find new correct answer key
+          const newAnswer = Object.keys(shuffledOptions).find(
+            key => shuffledOptions[key]._id.toString() === q.answer.toString(),
+          )
           return {
             _id: q._id,
             question: questionText,
             options: shuffledOptions,
+            answer: newAnswer, // Store the new answer key
           }
         })
+        // Update the quizSession with the shuffled questions and new answer keys
+        quizSession[0].questions = clientQuestions.map(q => ({
+          question: q._id,
+          shuffledAnswer: q.answer,
+        }))
 
+        await quizSession[0].save({ session })
         res.json({
           message: 'Quiz started',
           quizSession: {
@@ -990,7 +1026,11 @@ const startQuiz = asyncHandler(async (req, res) => {
             category: quizSession[0].category,
             startTime: quizSession[0].startTime,
             endTime: quizSession[0].endTime,
-            questions: clientQuestions,
+            questions: clientQuestions.map(({ _id, question, options }) => ({
+              _id,
+              question,
+              options,
+            })),
           },
         })
       })

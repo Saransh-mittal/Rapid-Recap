@@ -340,6 +340,17 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    preferredCategories: [
+      {
+        category: String,
+        weight: Number,
+        isInferred: { type: Boolean, default: false },
+      },
+    ],
+    needsOnboarding: {
+      type: Boolean,
+      default: true,
+    },
   },
   { collection: 'Users' },
 )

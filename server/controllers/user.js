@@ -30,6 +30,7 @@ const {
 } = require('../db/session.js')
 const {
   generateRecommendations,
+  updateRecommendations,
 } = require('../services/recommendationService.js')
 const Article = require('../model/articleSchema.js')
 const asyncHandler = require('express-async-handler')
@@ -1693,6 +1694,43 @@ const confirmDeleteAccount = async (req, res) => {
   }
 }
 
+// @desc  Complete onboarding process
+// @route POST /api/user/complete-onboarding
+// @access Private
+const completeOnboarding = asyncHandler(async (req, res) => {
+  const { categories } = req.body
+  const user = await User.findById(req.user._id)
+
+  if (!user) {
+    res.status(404)
+    throw new Error('User not found')
+  }
+
+  const initialPreferences = categories.map(category => ({
+    category,
+    weight: 1 / categories.length,
+    isInferred: false,
+  }))
+
+  user.needsOnboarding = false
+  user.preferredCategories = initialPreferences
+  await user.save()
+
+  // Trigger initial recommendations
+  await updateRecommendations(user._id)
+
+  res.status(200).json({
+    message: 'Onboarding completed successfully',
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      preferredCategories: user.preferredCategories,
+      // ... any other fields you want to send back
+    },
+  })
+})
+
 module.exports = {
   registerUser,
   loginUser,
@@ -1733,4 +1771,5 @@ module.exports = {
   getUserTournamentData,
   deleteAccount,
   confirmDeleteAccount,
+  completeOnboarding,
 }

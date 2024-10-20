@@ -40,6 +40,7 @@ const {
   getUserTournamentData,
   deleteAccount,
   confirmDeleteAccount,
+  completeOnboarding,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -90,6 +91,7 @@ router
 router.post('/deleteAccount', Authenticate, deleteAccount)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
+router.route('/complete-onboarding').post(Authenticate, completeOnboarding)
 
 // Guest routes
 router.route('/guestLogin').post(enhancedGuestLogin)

@@ -88,9 +88,13 @@ async function exportDataToCSV() {
   console.log('CSV files created successfully')
 }
 
-async function runPythonScript(pythonScriptPath, userId) {
+const runPythonScript = (scriptPath, userId, userPreferredCategories) => {
   return new Promise((resolve, reject) => {
-    const pythonProcess = spawn('python', [pythonScriptPath, userId])
+    const pythonProcess = spawn('python', [
+      scriptPath,
+      userId,
+      userPreferredCategories,
+    ])
 
     pythonProcess.stdout.on('data', data => {
       console.log(`Python script output: ${data}`)
@@ -104,9 +108,6 @@ async function runPythonScript(pythonScriptPath, userId) {
       if (code === 0) {
         resolve()
       } else {
-        console.error(
-          `Python script failed for user ${userId} with code ${code}`,
-        )
         reject(new Error(`Python script exited with code ${code}`))
       }
     })
@@ -123,49 +124,50 @@ async function generateRecommendations(userId) {
   await runPythonScript(pythonScriptPath, userId)
 }
 
-async function updateRecommendations(userId) {
+const updateRecommendations = async userId => {
   try {
-    const userRecommendations = await Recommendation.findOne({
-      user_id: userId,
-    })
-
-    if (userRecommendations && userRecommendations.isUpdating) {
-      return // Another process is already updating
+    const user = await User.findById(userId)
+    if (!user) {
+      throw new Error('User not found')
     }
 
-    await Recommendation.findOneAndUpdate(
-      { user_id: userId },
-      { $set: { isUpdating: true } },
-      { upsert: true },
+    const userPreferredCategories = user.preferredCategories.reduce(
+      (acc, pref) => {
+        acc[pref.category] = {
+          weight: pref.weight,
+          isInferred: pref.isInferred,
+        }
+        return acc
+      },
+      {},
     )
 
-    await generateRecommendations(userId)
-    // Clear all cached recommendations for this user
-    const cacheKeys = cache.keys()
-    const userCacheKeys = cacheKeys.filter(
-      key =>
-        key.startsWith(`user_recommendations_${userId}_`) ||
-        key.startsWith(`article_page_recommendations_${userId}_`),
+    const pythonScriptPath = path.join(
+      __dirname,
+      '..',
+      'scripts',
+      'recommender.py',
     )
-    userCacheKeys.forEach(key => cache.del(key))
+    await runPythonScript(
+      pythonScriptPath,
+      userId,
+      JSON.stringify(userPreferredCategories),
+    )
 
-    await Recommendation.findOneAndUpdate(
-      { user_id: userId },
-      { $set: { isUpdating: false, lastUpdated: new Date() } },
-    )
+    // Fetch and return the updated recommendations
+    const updatedRecommendations = await Recommendation.findOne({
+      user_id: userId,
+    })
+    return updatedRecommendations
   } catch (error) {
     console.error('Error in updateRecommendations:', error)
-    await Recommendation.findOneAndUpdate(
-      { user_id: userId },
-      { $set: { isUpdating: false } },
-    )
+    throw error
   }
 }
 
-async function getRecommendations(userId, page = 1, pageSize = 18, lang) {
+const getRecommendations = async (userId, page = 1, pageSize = 18) => {
   try {
     let userRecommendations = await Recommendation.findOne({ user_id: userId })
-
     const now = new Date()
     const updateThreshold = new Date(now.getTime() - 4 * 60 * 60 * 1000) // 4 hours ago
 
@@ -173,24 +175,18 @@ async function getRecommendations(userId, page = 1, pageSize = 18, lang) {
       !userRecommendations ||
       userRecommendations.lastUpdated < updateThreshold
     ) {
-      updateRecommendations(userId) // Trigger an update in the background
-    }
-
-    if (
-      !userRecommendations ||
-      userRecommendations.recommendations.length < pageSize
-    ) {
-      await new Promise(resolve => setTimeout(resolve, 5000)) // Wait for 10 seconds
-      userRecommendations = await Recommendation.findOne({ user_id: userId })
+      userRecommendations = await updateRecommendations(userId)
     }
 
     const startIndex = (page - 1) * pageSize
     const endIndex = startIndex + pageSize
 
-    const recommendationsToServe = userRecommendations.recommendations
-      .filter(rec => !rec.served)
-      .slice(startIndex, endIndex)
+    const recommendationsToServe = userRecommendations.recommendations.slice(
+      startIndex,
+      endIndex,
+    )
 
+    // Mark recommendations as served
     await Recommendation.updateOne(
       { user_id: userId },
       { $set: { 'recommendations.$[elem].served': true } },
