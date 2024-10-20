@@ -93,6 +93,7 @@ const App = () => {
     state => state.tournament,
   )
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const showNavbar = !location.pathname.includes('/onBoarding')
   const { updates } = useSelector(state => state.app)
   const USER_IQ = user?.IQ_score ?? null
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
@@ -313,7 +314,7 @@ const App = () => {
   }, [dispatch])
 
   useEffect(() => {
-    if (navbarLoaded && overallProgress === 100) {
+    if (overallProgress === 100) {
       // dispatch after 500ms to ensure all components are loaded
       setTimeout(() => {
         dispatch(setIsLoading(false))
@@ -409,9 +410,11 @@ const App = () => {
         />
       </Suspense>
       <NavbarProvider>
-        <Suspense fallback={null}>
-          <Navbar onNavbarLoad={handleNavbarLoad} />
-        </Suspense>
+        {showNavbar && (
+          <Suspense fallback={null}>
+            <Navbar onNavbarLoad={handleNavbarLoad} />
+          </Suspense>
+        )}
         <Box
           position="relative"
           minHeight="100vh"

@@ -17,6 +17,8 @@ const ContactLayout = lazy(() =>
   import('../components/contactComponents/ContactLayout'),
 )
 
+const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
+
 const AppRoutes = ({ isToken }) => (
   <Suspense fallback={<Loading />}>
     <Routes>
@@ -25,6 +27,7 @@ const AppRoutes = ({ isToken }) => (
         element={isToken ? <Navigate to="/home" /> : <GetStarted />}
       />
       <Route path="/get-started" element={<GetStarted />} />
+      <Route path="/onBoarding" element={<OnboardingProcess />} />
       <Route path="/contact/feedback" element={<ContactLayout />} />
       <Route path="/home/:category" element={<Home />} />
       <Route path="/home" element={<Home />} />
@@ -46,6 +49,7 @@ const AppRoutes = ({ isToken }) => (
       <Route path="/contact" element={<ContactLayout />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/tournament" element={<TournamentWrapper />} />
+
       <Route
         path="/dashboard"
         element={
