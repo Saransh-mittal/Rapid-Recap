@@ -352,6 +352,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    inactiveUserOnboarding: {
+      type: Boolean,
+      default: false,
+    },
   },
   { collection: 'Users' },
 )
