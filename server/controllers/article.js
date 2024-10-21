@@ -1015,6 +1015,81 @@ const getStory = asyncHandler(async (req, res) => {
   res.json(story)
 })
 
+// @desc Get a random onboarding article with one quiz question
+// @route GET /api/articles/onboarding
+// @access Private
+const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const { userLanguage } = await User.findById(userId).select('userLanguage')
+
+  // Get a random onboarding article
+  const article = await Article.aggregate([
+    { $match: { category: 'onBoardingArticle' } },
+    { $sample: { size: 1 } },
+    {
+      $project: {
+        _id: 1,
+        title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+        mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+        author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+        dateTime: 1,
+        imgURL: 1,
+        avgReadTime: 1,
+      },
+    },
+  ])
+
+  if (article.length === 0) {
+    return res.status(404).json({ message: 'No onboarding articles found' })
+  }
+
+  // Get the quiz for the article
+  const quiz = await Quiz.findOne({
+    article: article[0]._id,
+    language: userLanguage,
+  })
+
+  let quizQuestion = null
+  if (quiz) {
+    const allQuestions = [
+      ...(quiz?.para1?.questions || []),
+      ...(quiz?.para2?.questions || []),
+      ...(quiz?.para3?.questions || []),
+    ]
+
+    if (allQuestions.length > 0) {
+      quizQuestion =
+        allQuestions[Math.floor(Math.random() * allQuestions.length)]
+    }
+  }
+
+  // If no quiz found in user's language, try to get an English quiz
+  if (!quizQuestion) {
+    const englishQuiz = await Quiz.findOne({
+      article: article[0]._id,
+      language: 'en',
+    })
+    if (englishQuiz) {
+      const allQuestions = [
+        ...(englishQuiz?.para1?.questions || []),
+        ...(englishQuiz?.para2?.questions || []),
+        ...(englishQuiz?.para3?.questions || []),
+      ]
+      if (allQuestions.length > 0) {
+        quizQuestion =
+          allQuestions[Math.floor(Math.random() * allQuestions.length)]
+      }
+    }
+  }
+
+  // Combine article and quiz question
+  const result = {
+    ...article[0],
+    quizQuestion,
+  }
+
+  res.json(result)
+})
 module.exports = {
   allArticles,
   getArticle,
@@ -1037,4 +1112,5 @@ module.exports = {
   getRelatedArticles,
   createStory,
   getStory,
+  getRandomOnBoardingArticle,
 }

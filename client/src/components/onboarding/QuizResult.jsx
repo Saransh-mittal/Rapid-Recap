@@ -5,7 +5,7 @@ import { CheckIcon, CloseIcon } from '@chakra-ui/icons'
 
 const MotionBox = motion(Box)
 
-const QuizResult = ({ isCorrect, onNext }) => {
+const QuizResult = ({ isCorrect, onNext, quizQuestion }) => {
   return (
     <Box h="100vh" display="flex" alignItems="center" justifyContent="center">
       <MotionBox
@@ -40,7 +40,6 @@ const QuizResult = ({ isCorrect, onNext }) => {
             {isCorrect ? (
               <>
                 <CheckIcon color={'green'} />
-
                 <Text as="span" ml={3}>
                   {'Correct!'}
                 </Text>
@@ -55,9 +54,7 @@ const QuizResult = ({ isCorrect, onNext }) => {
             )}
           </Text>
           <Text fontSize="xl" color="white" textAlign="center">
-            {isCorrect
-              ? 'Wow! You have great knowledge about world capitals. Keep it up!'
-              : "Don't worry, we're here to learn together. Every question is an opportunity to grow."}
+            {quizQuestion.explanation}
           </Text>
           <Text fontSize="lg" color="white" textAlign="center">
             Next, we'll level up this quizzing experience. You'll read a short

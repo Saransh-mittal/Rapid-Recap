@@ -18,16 +18,16 @@ const genQuiz = async ({ fullQuiz, title, session }) => {
   // Loop through each paragraph
   const len = Math.min(
     5,
-    fullQuiz.para1.questions.length +
-      fullQuiz.para2.questions.length +
-      fullQuiz.para3.questions.length,
+    (fullQuiz?.para1?.questions?.length || 0) +
+      (fullQuiz?.para2?.questions?.length || 0) +
+      (fullQuiz?.para3?.questions?.length || 0),
   )
   const paraNames = []
   for (let paraName in fullQuiz) {
     if (paraName.startsWith('para')) {
       paraNames.push(paraName)
       const para = fullQuiz[paraName]
-      while (para.questions.length > 0) {
+      while (para && para.questions && para.questions.length > 0) {
         // Loop through each question in the paragraph
         // randomly select a question
         const question =
@@ -55,7 +55,12 @@ const genQuiz = async ({ fullQuiz, title, session }) => {
       paraNames[Math.floor(Math.random() * paraNames.length)]
     const para = fullQuiz[randomParaName]
 
-    while (para.questions.length > 0 && selectedQuestions.size < len) {
+    while (
+      para &&
+      para.questions &&
+      para.questions.length > 0 &&
+      selectedQuestions.size < len
+    ) {
       // Select a random question from the paragraph
       const randomIndex = Math.floor(Math.random() * para.questions.length)
       const randomQuestion = para.questions[randomIndex]

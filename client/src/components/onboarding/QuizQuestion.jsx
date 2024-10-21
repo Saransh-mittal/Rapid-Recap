@@ -54,21 +54,36 @@ const OptionButton = React.memo(
   },
 )
 
-const QuizQuestion = ({ onComplete }) => {
-  const [quizAnswer, setQuizAnswer] = useState('')
-  // const [showFeedback, setShowFeedback] = useState(false)
+const QuizQuestion = ({ onComplete, isArticleFetching, quizQuestion }) => {
+  const [selectedAnswer, setSelectedAnswer] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = () => {
     setIsLoading(true)
     setTimeout(() => {
-      onComplete(quizAnswer === 'paris')
+      onComplete(selectedAnswer === quizQuestion?.answer, quizQuestion)
       setIsLoading(false)
-    }, 2000)
+    }, 1000)
   }
 
   const handleSelect = optionKey => {
-    setQuizAnswer(optionKey)
+    setSelectedAnswer(optionKey)
+  }
+
+  if (isArticleFetching) {
+    return (
+      <Box
+        maxH="100vh"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        w="100%"
+        h="100vh"
+      >
+        <Spinner size="xl" color="purple.500" />
+      </Box>
+    )
   }
 
   return (
@@ -119,16 +134,16 @@ const QuizQuestion = ({ onComplete }) => {
               color="gray.100"
               wordBreak="break-word"
             >
-              What is the capital of France?
+              {quizQuestion?.question}
             </Text>
 
             <VStack spacing={2} align="stretch">
-              {['london', 'berlin', 'paris', 'madrid'].map(city => (
+              {Object.entries(quizQuestion?.options).map(([key, value]) => (
                 <OptionButton
-                  key={city}
-                  optionKey={city}
-                  optionText={city.charAt(0).toUpperCase() + city.slice(1)}
-                  isSelected={quizAnswer === city}
+                  key={key}
+                  optionKey={key}
+                  optionText={value}
+                  isSelected={selectedAnswer === key}
                   onSelect={handleSelect}
                 />
               ))}

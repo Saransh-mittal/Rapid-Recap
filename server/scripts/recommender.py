@@ -327,6 +327,10 @@ if __name__ == "__main__":
 
         user_id = sys.argv[1]
         user_preferred_categories = json.loads(sys.argv[2])
+        # Add a check to ensure user_preferred_categories is a list
+        if not isinstance(user_preferred_categories, list):
+            user_preferred_categories = []
+
         mongo_uri = os.getenv("DATABASE")
 
         articles_df, quiz_attempts_df, time_spent_df = load_data_from_db(mongo_uri, user_id)

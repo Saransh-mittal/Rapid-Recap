@@ -93,7 +93,7 @@ const App = () => {
     state => state.tournament,
   )
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const showNavbar = !location.pathname.includes('/onBoarding')
+  const showNavbar = !user?.needsOnboarding
   const { updates } = useSelector(state => state.app)
   const USER_IQ = user?.IQ_score ?? null
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
@@ -422,7 +422,10 @@ const App = () => {
           overflowX={'hidden'}
         >
           <Suspense fallback={null}>
-            <AppRoutes isToken={isToken()} />
+            <AppRoutes
+              isToken={isToken()}
+              needsOnboarding={user?.needsOnboarding}
+            />
           </Suspense>
         </Box>
       </NavbarProvider>

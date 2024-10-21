@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Box, Button, useToast } from '@chakra-ui/react'
@@ -19,6 +19,11 @@ import QuizQuestion from '../components/onboarding/QuizQuestion'
 import QuizResult from '../components/onboarding/QuizResult'
 import ArticleReading from '../components/onboarding/ArticleReading'
 import ArticleQuiz from '../components/onboarding/ArticleQuiz'
+import { setIsOpen } from '../redux/quizSlice'
+import useSound from '../customHooks/useSound'
+import axios from 'axios'
+import { setArticleData } from '../redux/articleSlice'
+import i18n from 'i18next'
 
 const MotionBox = motion(Box)
 
@@ -55,11 +60,14 @@ const OnboardingProcess = () => {
   const [selectedCategories, setSelectedCategories] = useState([])
   const [quizAnswer, setQuizAnswer] = useState('')
   const [initialQuizCorrect, setInitialQuizCorrect] = useState(false)
-
+  const { playClick } = useSound()
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const { user } = useSelector(state => state.auth)
+  const { isAuthenticated } = useSelector(state => state.auth)
+  const { onBoardingQuizSubmitted } = useSelector(state => state.quiz)
   const toast = useToast()
+  const [article, setArticle] = useState(null)
+  const [isArticleFetching, setIsArticleFetching] = useState(false)
 
   // Generate stars
   const stars = useMemo(
@@ -73,11 +81,35 @@ const OnboardingProcess = () => {
         })),
     [],
   )
+  const updateOnboardingProgress = async (currentStep, data = {}) => {
+    try {
+      await axios.post('/api/user/onboarding-progress', {
+        step: currentStep,
+        data,
+      })
+    } catch (error) {
+      console.error('Failed to update onboarding progress:', error)
+    }
+  }
 
-  const handleLanguageSelect = lang => {
-    setSelectedLanguage(lang)
-    // dispatch(setLanguage(lang))
-    setStep(1)
+  const handleLanguageSelect = async lang => {
+    try {
+      setSelectedLanguage(lang)
+      await i18n.changeLanguage(lang)
+      await handleNext({ language: lang })
+      fetchOnBoardingArticle()
+    } catch (error) {
+      console.error('Failed to update onboarding progress:', error)
+      toast({
+        title: 'Error',
+        description:
+          'Failed to update language in onboarding progress. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+        position: 'top',
+      })
+    }
   }
 
   const handleCategoryToggle = category => {
@@ -91,37 +123,106 @@ const OnboardingProcess = () => {
     })
   }
 
-  const handleNext = () => {
+  const handleNext = async ({ language }) => {
     if (step < 6) {
-      setStep(step + 1)
+      const nextStep = step + 1
+      let data = {}
+
+      switch (step) {
+        case 0:
+          data = { language }
+          break
+        case 2:
+          data = { categories: selectedCategories }
+          break
+        // Add more cases if needed for other steps
+      }
+
+      await updateOnboardingProgress(nextStep, data)
+      setStep(nextStep)
     }
   }
 
   const handleQuizComplete = isCorrect => {
     setInitialQuizCorrect(isCorrect)
-    setStep(4) // Move to QuizResult component
+    setStep(4)
   }
 
   const handleFinish = async () => {
     try {
-      // await updateUserPreferences(user._id, {
-      //   language: selectedLanguage,
-      //   preferredCategories: selectedCategories,
-      // })
-      // await completeOnboarding(user._id)
-      // dispatch(setOnboardingCompleted())
-      // dispatch(setPreferredCategories(selectedCategories))
+      await updateOnboardingProgress(7)
       navigate('/home/all')
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to save preferences. Please try again.',
+        description: 'Failed to complete onboarding. Please try again.',
         status: 'error',
         duration: 3000,
         isClosable: true,
       })
     }
   }
+
+  const fetchOnBoardingArticle = useCallback(async () => {
+    if (isArticleFetching) return
+    setIsArticleFetching(true)
+    try {
+      const response = await axios.get(`/api/articles/onboarding`)
+      setArticle(response.data)
+      dispatch(setArticleData(response.data))
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch article. Please try again later.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setIsArticleFetching(false)
+    }
+  }, [dispatch, toast])
+
+  const handleQuizButtonClick = useCallback(() => {
+    playClick()
+    if (!isAuthenticated) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to take the quiz.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
+    dispatch(setIsOpen(true))
+  }, [isAuthenticated, playClick, toast, dispatch])
+
+  useEffect(() => {
+    const fetchUserOnboardingProgress = async () => {
+      try {
+        const response = await axios.get('/api/user/onboarding-progress')
+        setStep(response.data.step)
+        if (response.data.step >= 1) {
+          setSelectedLanguage(response.data.language)
+        }
+        if (response.data.step >= 3) {
+          setSelectedCategories(response.data.categories)
+        }
+      } catch (error) {
+        console.error('Failed to fetch onboarding progress:', error)
+      }
+    }
+
+    fetchUserOnboardingProgress()
+  }, [])
+
+  useEffect(() => {
+    if (onBoardingQuizSubmitted) {
+      handleNext({ language: selectedLanguage })
+    }
+  }, [onBoardingQuizSubmitted])
 
   const steps = [
     <LanguageSelection onLanguageSelect={handleLanguageSelect} />,
@@ -130,9 +231,22 @@ const OnboardingProcess = () => {
       selectedCategories={selectedCategories}
       onCategoryToggle={handleCategoryToggle}
     />,
-    <QuizQuestion onComplete={handleQuizComplete} />,
-    <QuizResult isCorrect={initialQuizCorrect} onNext={handleNext} />,
-    <ArticleReading onNext={handleNext} />,
+    <QuizQuestion
+      isArticleFetching={isArticleFetching}
+      onComplete={handleQuizComplete}
+      quizQuestion={article?.quizQuestion}
+    />,
+    <QuizResult
+      isCorrect={initialQuizCorrect}
+      onNext={handleNext}
+      quizQuestion={article?.quizQuestion}
+    />,
+    <ArticleReading
+      onNext={handleQuizButtonClick}
+      article={article}
+      isArticleFetching={isArticleFetching}
+      fetchOnBoardingArticle={fetchOnBoardingArticle}
+    />,
     <ArticleQuiz onComplete={handleFinish} />,
   ]
 

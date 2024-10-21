@@ -1,4 +1,6 @@
-import React from 'react'
+// File: src/components/onboarding/ArticleReading.jsx
+
+import React, { useEffect } from 'react'
 import {
   Box,
   VStack,
@@ -10,24 +12,42 @@ import {
 import { motion } from 'framer-motion'
 import OnboardingQuizButton from './OnboardingQuizButton'
 import OnboardingArticleHeader from './OnboardingArticleHeader'
+import MajesticLoading from './MajesticLoading'
 import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
-const ArticleReading = ({ onNext }) => {
+const ArticleReading = ({
+  onNext,
+  article,
+  isArticleFetching,
+  fetchOnBoardingArticle,
+}) => {
   const { t } = useTranslation('ArticleReading')
-
-  const article = {
-    title: 'Discovering Paris',
-    author: 'Rapid Recap Team',
-    image: '/images/paris.jpg',
-    content: `Paris, the capital of France, is a global center for art, fashion, gastronomy, and culture. Its 19th-century cityscape is crisscrossed by wide boulevards and the River Seine. Beyond such landmarks as the Eiffel Tower and the 12th-century, Gothic Notre-Dame cathedral, the city is known for its cafe culture and designer boutiques along the Rue du Faubourg Saint-Honoré. The city's renowned museums include the Louvre and the Musée d'Orsay.`,
-    readTime: '5',
-  }
 
   const padding = useBreakpointValue({ base: 4, md: 8 })
   const maxWidth = useBreakpointValue({ base: '100%', md: '800px' })
   const fontSize = useBreakpointValue({ base: 'md', md: 'lg' })
+
+  useEffect(() => {
+    if (article === null && !isArticleFetching) fetchOnBoardingArticle()
+  }, [])
+
+  if (isArticleFetching) {
+    return (
+      <Box
+        maxH="100vh"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        w="100%"
+        h="100vh"
+      >
+        <MajesticLoading />
+      </Box>
+    )
+  }
 
   return (
     <Box
@@ -39,9 +59,9 @@ const ArticleReading = ({ onNext }) => {
     >
       <Box w="95%" maxW={maxWidth} mt={{ base: '0.5rem', md: '1.5rem' }}>
         <OnboardingArticleHeader
-          title={article.title}
-          author={article.author}
-          readTime={article.readTime}
+          title={article?.title}
+          author={article?.author}
+          readTime={article?.avgReadTime}
         />
         <MotionBox
           initial={{ opacity: 0, y: 20 }}
@@ -55,15 +75,15 @@ const ArticleReading = ({ onNext }) => {
         >
           <VStack spacing={6} align="stretch">
             <Image
-              src={article.image}
-              alt={article.title}
+              src={article?.image}
+              alt={article?.title}
               borderRadius="md"
               objectFit="cover"
               width="100%"
               height={{ base: '200px', md: '300px' }}
             />
             <Text fontSize={fontSize} color="white" lineHeight="1.8">
-              {article.content}
+              {article?.mainText}
             </Text>
             <Flex justifyContent="center" mt={4}>
               <OnboardingQuizButton onClick={onNext} />

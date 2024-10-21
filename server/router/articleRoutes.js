@@ -12,7 +12,7 @@ const {
   getWorldNews,
   extractNews,
   testNewsApi,
-  // getQuizTitan,
+  getRandomOnBoardingArticle,
   getArticleIds,
   getAvgRQMOnArticle,
   searchArticles,
@@ -38,5 +38,6 @@ router.route('/search').get(searchArticles)
 router.route('/related/:articleId').get(Authenticate, getRelatedArticles)
 router.route('/story').post(Authenticate, createStory)
 router.route('/story/:id').get(Authenticate, getStory)
+router.route('/onboarding').get(Authenticate, getRandomOnBoardingArticle)
 
 module.exports = router

@@ -19,53 +19,64 @@ const ContactLayout = lazy(() =>
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 
-const AppRoutes = ({ isToken }) => (
-  <Suspense fallback={<Loading />}>
-    <Routes>
-      <Route
-        path="/"
-        element={isToken ? <Navigate to="/home" /> : <GetStarted />}
-      />
-      <Route path="/get-started" element={<GetStarted />} />
-      <Route path="/onBoarding" element={<OnboardingProcess />} />
-      <Route path="/contact/feedback" element={<ContactLayout />} />
-      <Route path="/home/:category" element={<Home />} />
-      <Route path="/home" element={<Home />} />
-      <Route
-        path="/chats"
-        element={
-          <ServiceScreen
-            title="Chat Feature Under Maintainance"
-            description="We're working hard to bring you better version of our chat feature aka Wise Web. Stay tuned for updates!"
-            quote="The best way to predict the future is to create it."
-            quoteAuthor="Peter Drucker"
-          />
-        }
-      />
-      <Route path="/article/:id/:slug" element={<Article />} />
-      <Route path="/article/:id" element={<Article />} />
-      <Route path="/profile/:inGameName" element={<Profile />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/contact" element={<ContactLayout />} />
-      <Route path="/leaderboard" element={<Leaderboard />} />
-      <Route path="/tournament" element={<TournamentWrapper />} />
+const AppRoutes = ({ isToken, needsOnboarding }) => {
+  return (
+    <Suspense fallback={<Loading />}>
+      <Routes>
+        {needsOnboarding ? (
+          <>
+            <Route path="/" element={<OnboardingProcess />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        ) : (
+          <>
+            <Route
+              path="/"
+              element={isToken ? <Navigate to="/home" /> : <GetStarted />}
+            />
+            <Route path="/get-started" element={<GetStarted />} />
 
-      <Route
-        path="/dashboard"
-        element={
-          <AdminRoute>
-            <Dashboard />
-          </AdminRoute>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-      <Route path="/delete-account" element={<DeleteAccount />} />
-      <Route
-        path="/confirmDeleteAccount/:token"
-        element={<ConfirmDeleteAccount />}
-      />
-    </Routes>
-  </Suspense>
-)
+            <Route path="/contact/feedback" element={<ContactLayout />} />
+            <Route path="/home/:category" element={<Home />} />
+            <Route path="/home" element={<Home />} />
+            <Route
+              path="/chats"
+              element={
+                <ServiceScreen
+                  title="Chat Feature Under Maintainance"
+                  description="We're working hard to bring you better version of our chat feature aka Wise Web. Stay tuned for updates!"
+                  quote="The best way to predict the future is to create it."
+                  quoteAuthor="Peter Drucker"
+                />
+              }
+            />
+            <Route path="/article/:id/:slug" element={<Article />} />
+            <Route path="/article/:id" element={<Article />} />
+            <Route path="/profile/:inGameName" element={<Profile />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/contact" element={<ContactLayout />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/tournament" element={<TournamentWrapper />} />
+
+            <Route
+              path="/dashboard"
+              element={
+                <AdminRoute>
+                  <Dashboard />
+                </AdminRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/delete-account" element={<DeleteAccount />} />
+            <Route
+              path="/confirmDeleteAccount/:token"
+              element={<ConfirmDeleteAccount />}
+            />
+          </>
+        )}
+      </Routes>
+    </Suspense>
+  )
+}
 
 export default AppRoutes

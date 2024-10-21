@@ -131,16 +131,15 @@ const updateRecommendations = async userId => {
       throw new Error('User not found')
     }
 
-    const userPreferredCategories = user.preferredCategories.reduce(
-      (acc, pref) => {
-        acc[pref.category] = {
-          weight: pref.weight,
-          isInferred: pref.isInferred,
-        }
-        return acc
-      },
-      {},
-    )
+    // Convert the preferredCategories to an array of objects
+    const userPreferredCategories = user.preferredCategories
+      .filter(pref => !pref.isInferred)
+      .map(pref => ({
+        category: pref.category,
+        weight: pref.weight,
+        isInferred: pref.isInferred,
+        lastUpdated: pref.lastUpdated,
+      }))
 
     const pythonScriptPath = path.join(
       __dirname,

@@ -2,12 +2,16 @@ import React from 'react'
 import { VStack, Text, Button, SimpleGrid, Box } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { categories } from '../../assets/Categories'
+import i18n from 'i18next'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
 const CategorySelection = ({ selectedCategories, onCategoryToggle }) => {
+  const { t } = useTranslation('categories')
   return (
     <Box
+      key={i18n.language}
       h="100vh"
       display="flex"
       alignItems="center"
@@ -44,9 +48,9 @@ const CategorySelection = ({ selectedCategories, onCategoryToggle }) => {
           <SimpleGrid columns={{ base: 2, md: 3, lg: 5 }} spacing={6}>
             {categories.map(
               category =>
-                category.label !== 'all' && (
+                category.labelForBoarding !== 'all' && (
                   <Button
-                    key={category.key}
+                    key={`${category.key}-${i18n.language}`}
                     onClick={() => onCategoryToggle(category.key)}
                     bg={
                       selectedCategories.includes(category.key)
@@ -66,7 +70,7 @@ const CategorySelection = ({ selectedCategories, onCategoryToggle }) => {
                     transition="all 0.2s"
                     textTransform={'capitalize'}
                   >
-                    {category.label}
+                    {t(`categories.${category.labelForBoarding}`)}
                   </Button>
                 ),
             )}

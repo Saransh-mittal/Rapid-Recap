@@ -269,6 +269,7 @@ const getQuiz = async (req, res) => {
 // @access Private
 const startQuiz = async (req, res) => {
   const { sessionId } = req.params
+  const { onBoarding } = req.query
   const userId = req.user._id
   try {
     const quizSession = await ArticleQuizSession.findOne({
@@ -290,8 +291,10 @@ const startQuiz = async (req, res) => {
 
     const timer = Math.min(5, quizSession.questions.length) * 10
 
-    quizSession.startTime = new Date()
-    quizSession.endTime = new Date(Date.now() + timer * 1000)
+    if (!onBoarding) {
+      quizSession.startTime = new Date()
+      quizSession.endTime = new Date(Date.now() + timer * 1000)
+    }
     await quizSession.save()
 
     res.status(200).json({

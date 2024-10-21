@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs')
 const { generateOtp, mailTransporter } = require('../utils/mail.utils')
 const VerificationToken = require('../model/verificationToken')
 const { isValidObjectId } = require('mongoose')
+const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const {
   getUserIQScoreHistory,
@@ -462,7 +463,6 @@ const calculateUserIQScores = async (req, res) => {
 // @desc  Get leaderboard for the current season
 // @route GET /api/user/leaderboard
 // @access Public
-
 const leaderBoard = async (req, res) => {
   const currUserId = req.user ? req.user._id : null
   const { society, page = 1, limit = 10 } = req.query
@@ -1694,41 +1694,91 @@ const confirmDeleteAccount = async (req, res) => {
   }
 }
 
-// @desc  Complete onboarding process
-// @route POST /api/user/complete-onboarding
+// @desc   Update onboarding progress
+// @route  POST /api/user/onboarding-progress
 // @access Private
-const completeOnboarding = asyncHandler(async (req, res) => {
-  const { categories } = req.body
-  const user = await User.findById(req.user._id)
+const updateOnboardingProgress = asyncHandler(async (req, res) => {
+  const { step, data } = req.body
+  const userId = req.user._id
 
-  if (!user) {
-    res.status(404)
-    throw new Error('User not found')
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const user = await User.findById(userId).session(session)
+    if (!user) {
+      await session.abortTransaction()
+      session.endSession()
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    user.onboardingStep = step
+
+    switch (step) {
+      case 1:
+        user.userLanguage = data.language
+        break
+      case 2:
+        // Welcome step, no data to save
+        break
+      case 3:
+        user.preferredCategories = data.categories.map(category => ({
+          category,
+          weight: 1 / data.categories.length,
+          isInferred: false,
+        }))
+        break
+      case 4:
+        // Quiz question step, no data to save
+        break
+      case 5:
+        // Quiz result step, no data to save
+        break
+      case 6:
+        // Article reading step, no data to save
+        break
+      case 7:
+        user.needsOnboarding = false
+        break
+    }
+
+    await user.save({ session })
+    await session.commitTransaction()
+    session.endSession()
+
+    res.status(200).json({ message: 'Onboarding progress updated' })
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    res.status(500).json({
+      message: 'Error updating onboarding progress',
+      error: error.message,
+    })
   }
+})
 
-  const initialPreferences = categories.map(category => ({
-    category,
-    weight: 1 / categories.length,
-    isInferred: false,
-  }))
+const getOnboardingProgress = asyncHandler(async (req, res) => {
+  const userId = req.user._id
 
-  user.needsOnboarding = false
-  user.preferredCategories = initialPreferences
-  await user.save()
+  try {
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
 
-  // Trigger initial recommendations
-  await updateRecommendations(user._id)
-
-  res.status(200).json({
-    message: 'Onboarding completed successfully',
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      preferredCategories: user.preferredCategories,
-      // ... any other fields you want to send back
-    },
-  })
+    res.status(200).json({
+      step: user.onboardingStep,
+      language: user.userLanguage,
+      categories: user.preferredCategories
+        .filter(cat => !cat?.isInferred)
+        .map(cat => cat?.category),
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error fetching onboarding progress',
+      error: error.message,
+    })
+  }
 })
 
 module.exports = {
@@ -1771,5 +1821,6 @@ module.exports = {
   getUserTournamentData,
   deleteAccount,
   confirmDeleteAccount,
-  completeOnboarding,
+  updateOnboardingProgress,
+  getOnboardingProgress,
 }
