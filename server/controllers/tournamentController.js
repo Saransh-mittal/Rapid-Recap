@@ -110,11 +110,12 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     }
   }
 
+  const registeredCount = await TournamentRegistration.countDocuments({
+    tournament: tournament._id,
+  })
   let result = {
     ...tournament.toObject(),
-    registeredCount: await TournamentRegistration.countDocuments({
-      tournament: tournament._id,
-    }),
+    registeredCount,
     isRegistered: !!userRegistration,
     selectedCategories: userRegistration
       ? userRegistration.selectedCategories
