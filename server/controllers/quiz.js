@@ -105,10 +105,34 @@ const getQuiz = async (req, res) => {
         status: 'completed',
       })
     } else if (inProgressSession) {
-      emitProgress(100)
+      const currentTime = new Date()
+      const endTime = inProgressSession.endTime
+      if (currentTime > endTime) {
+        inProgressSession.completed = true
+        inProgressSession.responses = []
+        await inProgressSession.save({ session })
+        const quizAttemptResult = await saveQuizAttempt(
+          userId,
+          articleId,
+          [],
+          inProgressSession.questions,
+          0,
+          inProgressSession._id,
+          inProgressSession,
+          session,
+          emitProgress,
+        )
+        await session.commitTransaction()
+        session.endSession()
+        emitProgress(100)
+        return res.status(400).json({
+          message: 'Quiz session expired.',
+        })
+      }
       await session.commitTransaction()
       session.endSession()
-      return res.status(200).json({
+      emitProgress(100)
+      return res.status(400).json({
         message: 'Quiz is in progress.',
       })
     } else if (quizSession) {

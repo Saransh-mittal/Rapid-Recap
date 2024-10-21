@@ -12,6 +12,11 @@ const {
   getAdminArticleDetails,
   addAdminArticleDetails,
   deleteAdminArticleDetails,
+  addOnBoardingArticle,
+  getOnBoardingArticles,
+  // getOnBoardingArticle,
+  updateOnBoardingArticle,
+  deleteOnBoardingArticle,
 } = require('../controllers/article')
 
 const {
@@ -154,6 +159,40 @@ router.get(
   Authenticate,
   adminMiddleware,
   getTournamentParticipants,
+)
+router.post(
+  '/onboarding-article',
+  Authenticate,
+  adminMiddleware,
+  addOnBoardingArticle,
+)
+
+router.get(
+  '/onboarding-articles',
+  Authenticate,
+  adminMiddleware,
+  getOnBoardingArticles,
+)
+
+// router.get(
+//   '/onboarding-article/:id',
+//   Authenticate,
+//   adminMiddleware,
+//   getOnBoardingArticle,
+// )
+
+router.put(
+  '/onboarding-article/:id',
+  Authenticate,
+  adminMiddleware,
+  updateOnBoardingArticle,
+)
+
+router.delete(
+  '/onboarding-article/:id',
+  Authenticate,
+  adminMiddleware,
+  deleteOnBoardingArticle,
 )
 
 module.exports = router

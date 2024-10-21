@@ -1015,6 +1015,214 @@ const getStory = asyncHandler(async (req, res) => {
   res.json(story)
 })
 
+// @desc  Add onboarding article and quiz
+// @route POST /api/admin/onboarding-article
+// @access Admin
+// @desc  Add onboarding article and quiz
+// @route POST /api/admin/onboarding-article
+// @access Admin
+const addOnBoardingArticle = asyncHandler(async (req, res) => {
+  const { article: articleData, quizzes } = req.body
+
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    // Validate difficulty values
+    const validateDifficulty = difficulty => {
+      const difficultyNumber = parseFloat(difficulty)
+      if (
+        isNaN(difficultyNumber) ||
+        difficultyNumber <= 0 ||
+        difficultyNumber >= 1
+      ) {
+        throw new Error(
+          `Invalid difficulty value: ${difficulty}. Must be a number string between 0 and 1 (exclusive).`,
+        )
+      }
+    }
+    // Create and save the article
+    const article = new Article({
+      ...articleData,
+      category: 'onBoardingArticle', // Make sure this matches your frontend category
+    })
+    await article.save({ session })
+
+    // Create and save the quizzes
+    const savedQuizzes = []
+    for (const quizItem of quizzes) {
+      validateDifficulty(quizItem.overAllDifficulty)
+      const quiz = new Quiz({
+        article: article._id,
+        para1: quizItem.para1,
+        overAllDifficulty: quizItem.overAllDifficulty,
+        language: quizItem.language,
+      })
+      await quiz.save({ session })
+      savedQuizzes.push(quiz._id)
+
+      // Update the article with the quiz reference
+      article.quiz.push(quiz._id)
+    }
+
+    await article.save({ session })
+
+    // Commit the transaction
+    await session.commitTransaction()
+    session.endSession()
+
+    res.status(200).json({
+      success: true,
+      message: 'Onboarding article and quiz saved successfully',
+    })
+  } catch (error) {
+    // If an error occurred, abort the transaction and roll back any changes
+    await session.abortTransaction()
+    session.endSession()
+    console.error('Error saving onboarding article and quiz:', error)
+    // Handle the error appropriately
+    res.status(500).json({
+      success: false,
+      message: 'Error saving onboarding article and quiz',
+      error: error.message,
+    })
+  }
+})
+
+const getOnBoardingArticles = asyncHandler(async (req, res) => {
+  const articles = await Article.find({
+    category: 'onBoardingArticle',
+  }).populate('quiz')
+  res.status(200).json(articles)
+})
+
+// const getOnBoardingArticle = asyncHandler(async (req, res) => {
+//   const article = await Article.findOne({
+//     _id: req.params.id,
+//     category: 'onBoardingArticle',
+//   }).populate('quiz')
+//   if (article) {
+//     res.status(200).json(article)
+//   } else {
+//     res.status(404)
+//     throw new Error('Article not found')
+//   }
+// })
+
+const updateOnBoardingArticle = asyncHandler(async (req, res) => {
+  const { article: articleData, quizzes } = req.body
+
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const article = await Article.findOne({
+      _id: req.params.id,
+      category: 'onBoardingArticle',
+    })
+    if (!article) {
+      res.status(404)
+      throw new Error('Article not found')
+    }
+
+    // Update article
+    Object.assign(article, articleData)
+    await article.save({ session })
+
+    // Update quizzes
+    for (const quizItem of quizzes) {
+      if (quizItem._id) {
+        // Update existing quiz
+        await Quiz.findByIdAndUpdate(quizItem._id, quizItem, { session })
+      } else {
+        // Create new quiz
+        const newQuiz = new Quiz({
+          article: article._id,
+          ...quizItem,
+        })
+        await newQuiz.save({ session })
+        article.quiz.push(newQuiz._id)
+      }
+    }
+
+    await article.save({ session })
+
+    await session.commitTransaction()
+    session.endSession()
+
+    res.status(200).json({
+      success: true,
+      message: 'Onboarding article and quiz updated successfully',
+    })
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    res.status(500).json({
+      success: false,
+      message: 'Error updating onboarding article and quiz',
+      error: error.message,
+    })
+  }
+})
+
+const deleteOnBoardingArticle = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const articleId = req.params.id
+
+    const article = await Article.findOne({
+      _id: articleId,
+      category: 'onBoardingArticle',
+    }).session(session)
+
+    if (!article) {
+      console.log(`Article with ID ${articleId} not found`)
+      await session.abortTransaction()
+      session.endSession()
+      return res.status(404).json({
+        success: false,
+        message: 'Article not found',
+      })
+    }
+
+    const deleteQuizResult = await Quiz.deleteMany({
+      article: article._id,
+    }).session(session)
+
+    const deleteArticleResult = await Article.deleteOne({
+      _id: article._id,
+    }).session(session)
+
+    if (deleteArticleResult.deletedCount === 0) {
+      throw new Error('Failed to delete the article')
+    }
+
+    await session.commitTransaction()
+    console.log(
+      `Successfully deleted article ${articleId} and its associated quizzes`,
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Onboarding article and associated quizzes deleted successfully',
+    })
+  } catch (error) {
+    await session.abortTransaction()
+    console.error('Error in deleteOnBoardingArticle:', error)
+
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting onboarding article and quiz',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'production' ? '🥞' : error.stack,
+    })
+  } finally {
+    session.endSession()
+  }
+})
+
 module.exports = {
   allArticles,
   getArticle,
@@ -1037,4 +1245,9 @@ module.exports = {
   getRelatedArticles,
   createStory,
   getStory,
+  addOnBoardingArticle,
+  getOnBoardingArticles,
+  // getOnBoardingArticle,
+  updateOnBoardingArticle,
+  deleteOnBoardingArticle,
 }
