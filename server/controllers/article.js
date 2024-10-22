@@ -201,6 +201,7 @@ const getArticle = async (req, res) => {
     const newArticle = {
       category: article.category,
       title: article.title,
+      url: article.url,
       quizAttemptCnt: article.quizAttemptCnt,
       mainText: paragraphs,
       author: article.author,

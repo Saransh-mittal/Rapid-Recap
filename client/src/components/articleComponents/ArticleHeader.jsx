@@ -25,7 +25,6 @@ import {
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import ReactGA from 'react-ga4'
-import AuthorInfo from './articleHeaderComponents/AuthorInfo'
 import BoostSection from './articleHeaderComponents/BoostSection'
 import BookmarkIcon from './articleHeaderComponents/BookmarkIcon'
 import ShareButton from './ShareButton'
@@ -37,6 +36,7 @@ import { addNoteMessage, setIsSigninOpen } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
 import { formatDate } from '../../utils/helper.utils'
+import AITagLine from './articleHeaderComponents/AITagLine'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -247,7 +247,8 @@ const ArticleHeader = ({
               justifyContent={'flex-start'}
               w={'100%'}
             >
-              <AuthorInfo author={author} selectedLanguage={selectedLanguage} />
+              {/* <AuthorInfo author={author} selectedLanguage={selectedLanguage} /> */}
+              <AITagLine />
               {isAdmin && (
                 <>
                   <EditIcon
@@ -269,23 +270,12 @@ const ArticleHeader = ({
               )}
 
               <Flex mt={'-2'}>
-                {isLargerThan768 && (
-                  <BookmarkIcon
-                    bookmark={bookmark}
-                    onBookmarkClick={handleBookmarkClick}
-                    playClick={playClick}
-                  />
-                )}
-              </Flex>
-            </Flex>
-            <Flex mt={'-2'}>
-              {!isLargerThan768 && (
                 <BookmarkIcon
                   bookmark={bookmark}
                   onBookmarkClick={handleBookmarkClick}
                   playClick={playClick}
                 />
-              )}
+              </Flex>
             </Flex>
           </Flex>
 

@@ -12,6 +12,7 @@ import {
   Icon,
 } from '@chakra-ui/react'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
+import SourceLinkTag from './SourceLinkTag'
 
 const FormattedContent = ({ mainText, themedContent }) => {
   const content = themedContent || mainText
@@ -248,6 +249,7 @@ const MainArticleContent = ({
   articleRef,
   articleLoading,
   themedContent,
+  SourceURL,
 }) => {
   const [useAltImage, setUseAltImage] = useState(false)
 
@@ -303,6 +305,7 @@ const MainArticleContent = ({
             mainText={mainText[selectedLanguage]}
             themedContent={themedContent}
           />
+          <SourceLinkTag SourceURL={SourceURL} />
         </Box>
       </Skeleton>
     </Flex>
