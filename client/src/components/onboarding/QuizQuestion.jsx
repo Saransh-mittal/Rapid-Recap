@@ -9,10 +9,10 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const OptionButton = React.memo(
   ({ optionKey, optionText, isSelected, onSelect, isTournament = false }) => {
-    // Helper to switch between tournament and default colors
     const getColor = (defaultColor, tournamentColor) =>
       isTournament ? tournamentColor : defaultColor
 
@@ -57,6 +57,7 @@ const OptionButton = React.memo(
 const QuizQuestion = ({ onComplete, isArticleFetching, quizQuestion }) => {
   const [selectedAnswer, setSelectedAnswer] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const { t } = useTranslation('OnboardingProcess')
 
   const handleSubmit = () => {
     setIsLoading(true)
@@ -117,7 +118,7 @@ const QuizQuestion = ({ onComplete, isArticleFetching, quizQuestion }) => {
               color="purple.200"
               textAlign="center"
             >
-              Quick Knowledge Check
+              {t('quiz.title')}
             </Text>
 
             <Progress
@@ -138,15 +139,16 @@ const QuizQuestion = ({ onComplete, isArticleFetching, quizQuestion }) => {
             </Text>
 
             <VStack spacing={2} align="stretch">
-              {Object.entries(quizQuestion?.options).map(([key, value]) => (
-                <OptionButton
-                  key={key}
-                  optionKey={key}
-                  optionText={value}
-                  isSelected={selectedAnswer === key}
-                  onSelect={handleSelect}
-                />
-              ))}
+              {quizQuestion &&
+                Object.entries(quizQuestion?.options)?.map(([key, value]) => (
+                  <OptionButton
+                    key={key}
+                    optionKey={key}
+                    optionText={value}
+                    isSelected={selectedAnswer === key}
+                    onSelect={handleSelect}
+                  />
+                ))}
             </VStack>
 
             <Button
@@ -163,10 +165,10 @@ const QuizQuestion = ({ onComplete, isArticleFetching, quizQuestion }) => {
               }}
               transition="all 0.2s"
               isLoading={isLoading}
-              loadingText="Submitting"
+              loadingText={t('quiz.submitting')}
               spinner={<Spinner color="white" />}
             >
-              Submit Answer
+              {t('quiz.submitButton')}
             </Button>
           </motion.div>
         </AnimatePresence>

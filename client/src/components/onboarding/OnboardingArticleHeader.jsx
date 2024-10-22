@@ -1,10 +1,7 @@
 import React from 'react'
 import { Box, Flex, Text, useBreakpointValue } from '@chakra-ui/react'
-import { useTranslation } from 'react-i18next'
 
-const OnboardingArticleHeader = ({ title, author, readTime }) => {
-  const { t } = useTranslation('OnboardingArticleHeader')
-
+const OnboardingArticleHeader = ({ title, author, readTime, t }) => {
   const titleFontSize = useBreakpointValue({
     base: 'xl',
     md: '2xl',
@@ -37,14 +34,14 @@ const OnboardingArticleHeader = ({ title, author, readTime }) => {
         mt={2}
       >
         <Text fontSize={authorFontSize} color="whiteAlpha.900">
-          {t('by')} {author}
+          {t('articleReading.byAuthor')} {author}
         </Text>
         <Text
           fontSize={readTimeFontSize}
           color="whiteAlpha.800"
           mt={{ base: 1, md: 0 }}
         >
-          {readTime} {t('minRead')}
+          {readTime} {t('articleReading.minuteRead')}
         </Text>
       </Flex>
     </Box>

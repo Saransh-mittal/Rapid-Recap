@@ -2,10 +2,13 @@ import React from 'react'
 import { Box, VStack, Text, Button } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { CheckIcon, CloseIcon } from '@chakra-ui/icons'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
 const QuizResult = ({ isCorrect, onNext, quizQuestion }) => {
+  const { t } = useTranslation('OnboardingProcess')
+
   return (
     <Box h="100vh" display="flex" alignItems="center" justifyContent="center">
       <MotionBox
@@ -28,7 +31,9 @@ const QuizResult = ({ isCorrect, onNext, quizQuestion }) => {
             textShadow="2px 2px 4px rgba(0,0,0,0.4)"
             textAlign="center"
           >
-            {isCorrect ? 'Impressive Knowledge!' : 'Learning Opportunity!'}
+            {t(
+              isCorrect ? 'quizResult.successTitle' : 'quizResult.failureTitle',
+            )}
           </Text>
           <Text
             fontSize="xl"
@@ -41,14 +46,14 @@ const QuizResult = ({ isCorrect, onNext, quizQuestion }) => {
               <>
                 <CheckIcon color={'green'} />
                 <Text as="span" ml={3}>
-                  {'Correct!'}
+                  {t('quizResult.correctLabel')}
                 </Text>
               </>
             ) : (
               <>
                 <CloseIcon color={'red'} />
                 <Text as="span" ml={3}>
-                  {'Wrong!'}
+                  {t('quizResult.wrongLabel')}
                 </Text>
               </>
             )}
@@ -57,8 +62,7 @@ const QuizResult = ({ isCorrect, onNext, quizQuestion }) => {
             {quizQuestion.explanation}
           </Text>
           <Text fontSize="lg" color="white" textAlign="center">
-            Next, we'll level up this quizzing experience. You'll read a short
-            article and then answer some questions about it.
+            {t('quizResult.nextStepDescription')}
           </Text>
           <Button
             onClick={onNext}
@@ -72,7 +76,7 @@ const QuizResult = ({ isCorrect, onNext, quizQuestion }) => {
             }}
             transition="all 0.2s"
           >
-            Continue to Article
+            {t('quizResult.continueButton')}
           </Button>
         </VStack>
       </MotionBox>

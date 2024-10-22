@@ -1,0 +1,49 @@
+{
+  "selectInterests": "Select Your Interests",
+  "chooseCategories": "Choose 5 categories that interest you most. These will help us personalize your content.",
+  "recommendedArticlesInfo": "Pro tip: You'll find personalized article recommendations in the 'All' category, curated based on your selected interests!",
+  "languageSelection": {
+    "title": "Select Your Language",
+    "description": "Choose your preferred language to embark on an enchanting journey through Rapid Recap.",
+    "languages": {
+      "english": "English",
+      "hindi": "हिंदी"
+    }
+  },
+  "welcome": {
+    "title": "Welcome to Rapid Recap!",
+    "description": "Embark on a journey of knowledge and discovery. Stay informed, challenge yourself, and grow with every recap!",
+    "logoAlt": "Rapid Recap Logo"
+  },
+  "quiz": {
+    "title": "Quick Knowledge Check",
+    "submitting": "Submitting",
+    "submitButton": "Submit Answer",
+    "loading": "Loading Question..."
+  },
+  "quizResult": {
+    "successTitle": "Impressive Knowledge!",
+    "failureTitle": "Learning Opportunity!",
+    "correctLabel": "Correct!",
+    "wrongLabel": "Wrong!",
+    "nextStepDescription": "Next, we'll level up this quizzing experience. You'll read a short article and then answer some questions about it.",
+    "continueButton": "Continue to Article"
+  },
+  "articleReading": {
+    "byAuthor": "By",
+    "minuteRead": "min read",
+    "takeQuizButton": "Take the Quiz",
+    "loading": "Loading Article...",
+    "imageAlt": "Article Image",
+    "readMore": "Read More",
+    "noImage": "No image available"
+  },
+  "leaderboardOnboarding": {
+    "beginJourneyButton": "Begin Your Journey",
+    "beginJourneyAriaLabel": "Click to begin your Rapid Recap journey",
+    "leaderboardTitle": "Leaderboard Preview",
+    "leaderboardDescription": "See where you could rank among our community of learners",
+    "loadingLeaderboard": "Loading leaderboard...",
+    "competitionNote": "Compete with users worldwide and track your progress"
+  }
+}

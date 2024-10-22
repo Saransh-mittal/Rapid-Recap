@@ -3,27 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Box, Button, useToast } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-// import {
-//   setOnboardingCompleted,
-//   setLanguage,
-//   setPreferredCategories,
-// } from '../redux/authSlice'
-// import {
-//   updateUserPreferences,
-//   completeOnboarding,
-// } from '../services/userService'
 import LanguageSelection from '../components/onboarding/LanguageSelection'
 import Welcome from '../components/onboarding/Welcome'
 import CategorySelection from '../components/onboarding/CategorySelection'
 import QuizQuestion from '../components/onboarding/QuizQuestion'
 import QuizResult from '../components/onboarding/QuizResult'
 import ArticleReading from '../components/onboarding/ArticleReading'
-import ArticleQuiz from '../components/onboarding/ArticleQuiz'
+import LeaderboardOnboarding from '../components/onboarding/LeaderboardOnboarding'
 import { setIsOpen } from '../redux/quizSlice'
 import useSound from '../customHooks/useSound'
 import axios from 'axios'
 import { setArticleData } from '../redux/articleSlice'
 import i18n from 'i18next'
+import { setUser } from '../redux/authSlice'
 
 const MotionBox = motion(Box)
 
@@ -58,12 +50,11 @@ const OnboardingProcess = () => {
   const [step, setStep] = useState(0)
   const [selectedLanguage, setSelectedLanguage] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
-  const [quizAnswer, setQuizAnswer] = useState('')
   const [initialQuizCorrect, setInitialQuizCorrect] = useState(false)
   const { playClick } = useSound()
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const { isAuthenticated } = useSelector(state => state.auth)
+  const { isAuthenticated, user } = useSelector(state => state.auth)
   const { onBoardingQuizSubmitted } = useSelector(state => state.quiz)
   const toast = useToast()
   const [article, setArticle] = useState(null)
@@ -139,6 +130,11 @@ const OnboardingProcess = () => {
       }
 
       await updateOnboardingProgress(nextStep, data)
+      if (step === 2) {
+        axios.get(
+          `/api/recommendation?page=${1}&pageSize=18&lang=${i18n.language}`,
+        )
+      }
       setStep(nextStep)
     }
   }
@@ -151,6 +147,13 @@ const OnboardingProcess = () => {
   const handleFinish = async () => {
     try {
       await updateOnboardingProgress(7)
+      dispatch(
+        setUser({
+          ...user,
+          needsOnboarding: false,
+          onboardingStep: 7,
+        }),
+      )
       navigate('/home/all')
     } catch (error) {
       toast({
@@ -210,6 +213,7 @@ const OnboardingProcess = () => {
         if (response.data.step >= 3) {
           setSelectedCategories(response.data.categories)
         }
+        if (response.data.step === 3) fetchOnBoardingArticle()
       } catch (error) {
         console.error('Failed to fetch onboarding progress:', error)
       }
@@ -247,7 +251,7 @@ const OnboardingProcess = () => {
       isArticleFetching={isArticleFetching}
       fetchOnBoardingArticle={fetchOnBoardingArticle}
     />,
-    <ArticleQuiz onComplete={handleFinish} />,
+    <LeaderboardOnboarding onComplete={handleFinish} />,
   ]
 
   return (
@@ -295,11 +299,6 @@ const OnboardingProcess = () => {
               }
             >
               <Button
-                // display={
-                //   (step === 2 && selectedCategories.length === 5) || step === 1
-                //     ? 'block'
-                //     : 'none'
-                // }
                 onClick={step < 6 ? handleNext : handleFinish}
                 bg="purple.600"
                 color="white"

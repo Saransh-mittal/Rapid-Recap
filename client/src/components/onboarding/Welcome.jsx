@@ -9,10 +9,13 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
 const Welcome = () => {
+  const { t } = useTranslation('OnboardingProcess')
+
   const bgGradient = useColorModeValue(
     'linear(to-br, purple.500, indigo.600)',
     'linear(to-br, purple.700, indigo.800)',
@@ -47,6 +50,7 @@ const Welcome = () => {
                 boxSize={{ base: '150px', md: '200px' }}
                 mb={8}
                 filter="drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3))"
+                alt={t('welcome.logoAlt')}
               />
               <Heading
                 as="h1"
@@ -56,7 +60,7 @@ const Welcome = () => {
                 textShadow="2px 2px 4px rgba(0,0,0,0.4)"
                 textAlign="center"
               >
-                Welcome to Rapid Recap!
+                {t('welcome.title')}
               </Heading>
               <Text
                 fontSize={{ base: 'xl', md: '2xl' }}
@@ -66,8 +70,7 @@ const Welcome = () => {
                 lineHeight="1.6"
                 opacity={0.8}
               >
-                Embark on a journey of knowledge and discovery. Stay informed,
-                challenge yourself, and grow with every recap!
+                {t('welcome.description')}
               </Text>
             </VStack>
           </MotionBox>

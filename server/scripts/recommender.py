@@ -150,23 +150,36 @@ def calculate_preference_score(user_id, quiz_attempts_df, time_spent_df, article
 
         combined_categories = {}
         for category_info in user_preferred_categories:
-            category = category_info['category']
-            weight = category_info['weight']
-            is_inferred = category_info.get('isInferred', False)
-            last_updated = category_info.get('lastUpdated', current_date)
+            try:
+                category = category_info.get('category', '')
+                weight = float(category_info.get('weight', 0))
+                is_inferred = bool(category_info.get('isInferred', False))
 
-            days_since_update = (current_date - last_updated).days
-            time_factor = 1 - (days_since_update * 0.01)
+                # Convert string date to datetime
+                last_updated_str = category_info.get('lastUpdated')
+                if last_updated_str:
+                    try:
+                        last_updated = datetime.fromisoformat(last_updated_str.replace('Z', '+00:00'))
+                    except (ValueError, TypeError):
+                        last_updated = current_date
+                else:
+                    last_updated = current_date
 
-            if is_inferred:
-                adjusted_weight = weight * (1 + (interaction_factor * 0.5))
-            else:
-                adjusted_weight = weight * time_factor * (1 - (interaction_factor * 0.5))
+                days_since_update = (current_date - last_updated).days
+                time_factor = max(0, 1 - (days_since_update * 0.01))
 
-            combined_categories[category] = {
-                'weight': adjusted_weight,
-                'isInferred': is_inferred
-            }
+                if is_inferred:
+                    adjusted_weight = weight * (1 + (interaction_factor * 0.5))
+                else:
+                    adjusted_weight = weight * time_factor * (1 - (interaction_factor * 0.5))
+
+                combined_categories[category] = {
+                    'weight': adjusted_weight,
+                    'isInferred': is_inferred
+                }
+            except Exception as e:
+                logging.warning(f"Error processing category info: {str(e)}")
+                continue
 
         for category, score in inferred_categories.items():
             if category not in combined_categories:

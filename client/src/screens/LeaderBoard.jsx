@@ -153,6 +153,7 @@ const Leaderboard = () => {
       minH="100vh"
       p={{ base: 4, md: 8 }}
       mt={{ base: '20%', md: '6.5%', lg: '4.5%' }}
+      w={'100%'}
     >
       <Helmet>
         <title>{t('helmet.title')}</title>

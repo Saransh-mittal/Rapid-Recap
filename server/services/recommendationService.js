@@ -13,6 +13,7 @@ const { Parser } = require('json2csv')
 const path = require('path')
 const { hindiConverter } = require('../utils/article.utils')
 const cache = require('memory-cache')
+const { formatPreferredCategories } = require('../utils/user.utils')
 
 async function ensureDirectoryExistence(filePath) {
   const dirname = path.dirname(filePath)
@@ -132,14 +133,9 @@ const updateRecommendations = async userId => {
     }
 
     // Convert the preferredCategories to an array of objects
-    const userPreferredCategories = user.preferredCategories
-      .filter(pref => !pref.isInferred)
-      .map(pref => ({
-        category: pref.category,
-        weight: pref.weight,
-        isInferred: pref.isInferred,
-        lastUpdated: pref.lastUpdated,
-      }))
+    const userPreferredCategories = formatPreferredCategories(
+      user.preferredCategories,
+    )
 
     const pythonScriptPath = path.join(
       __dirname,
@@ -153,7 +149,6 @@ const updateRecommendations = async userId => {
       JSON.stringify(userPreferredCategories),
     )
 
-    // Fetch and return the updated recommendations
     const updatedRecommendations = await Recommendation.findOne({
       user_id: userId,
     })

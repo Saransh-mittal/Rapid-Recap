@@ -23,7 +23,7 @@ const ArticleReading = ({
   isArticleFetching,
   fetchOnBoardingArticle,
 }) => {
-  const { t } = useTranslation('ArticleReading')
+  const { t } = useTranslation('OnboardingProcess')
 
   const padding = useBreakpointValue({ base: 4, md: 8 })
   const maxWidth = useBreakpointValue({ base: '100%', md: '800px' })
@@ -62,6 +62,7 @@ const ArticleReading = ({
           title={article?.title}
           author={article?.author}
           readTime={article?.avgReadTime}
+          t={t}
         />
         <MotionBox
           initial={{ opacity: 0, y: 20 }}
@@ -86,7 +87,7 @@ const ArticleReading = ({
               {article?.mainText}
             </Text>
             <Flex justifyContent="center" mt={4}>
-              <OnboardingQuizButton onClick={onNext} />
+              <OnboardingQuizButton onClick={onNext} t={t} />
             </Flex>
           </VStack>
         </MotionBox>

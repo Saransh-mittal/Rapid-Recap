@@ -10,10 +10,13 @@ import {
   Container,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
 const LanguageSelection = ({ onLanguageSelect }) => {
+  const { t } = useTranslation('OnboardingProcess')
+
   const bgGradient = useColorModeValue(
     'linear(to-br, purple.500, indigo.600)',
     'linear(to-br, purple.700, indigo.800)',
@@ -46,7 +49,7 @@ const LanguageSelection = ({ onLanguageSelect }) => {
                 textShadow="2px 2px 4px rgba(0,0,0,0.4)"
                 letterSpacing="wider"
               >
-                Select Your Language
+                {t('languageSelection.title')}
               </Heading>
               <Text
                 fontSize={{ base: 'lg', md: 'xl' }}
@@ -55,18 +58,17 @@ const LanguageSelection = ({ onLanguageSelect }) => {
                 maxW="600px"
                 opacity={0.8}
               >
-                Choose your preferred language to embark on an enchanting
-                journey through Rapid Recap.
+                {t('languageSelection.description')}
               </Text>
               <Flex mt={8} justifyContent="center" flexWrap="wrap">
                 <LanguageButton
-                  language="English"
+                  language={t('languageSelection.languages.english')}
                   onClick={() => onLanguageSelect('en')}
                   mr={{ base: 0, md: 4 }}
                   mb={{ base: 4, md: 0 }}
                 />
                 <LanguageButton
-                  language="हिंदी"
+                  language={t('languageSelection.languages.hindi')}
                   onClick={() => onLanguageSelect('hi')}
                 />
               </Flex>

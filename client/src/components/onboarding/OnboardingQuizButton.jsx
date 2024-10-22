@@ -1,10 +1,7 @@
 import React from 'react'
 import { Box, Button, Text } from '@chakra-ui/react'
-import { useTranslation } from 'react-i18next'
 
-const OnboardingQuizButton = ({ onClick }) => {
-  const { t } = useTranslation('OnboardingQuizButton')
-
+const OnboardingQuizButton = ({ onClick, t }) => {
   return (
     <Box m={4} width="100%">
       <Button
@@ -34,7 +31,7 @@ const OnboardingQuizButton = ({ onClick }) => {
           py={2}
           fontFamily="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
         >
-          {t('takeQuiz')}
+          {t('articleReading.takeQuizButton')}
         </Text>
       </Button>
     </Box>
