@@ -9,6 +9,7 @@ import {
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { keyframes } from '@emotion/react'
+import FixedBackground from '../../miscellaneous/FixedBackground'
 
 const FullScreenLoadingSpinner = React.memo(() => {
   const theme = useTheme()
@@ -44,6 +45,7 @@ const FullScreenLoadingSpinner = React.memo(() => {
       justifyContent="center"
       flexDirection="column"
     >
+      <FixedBackground />
       <Box
         as={motion.div}
         width="100px"

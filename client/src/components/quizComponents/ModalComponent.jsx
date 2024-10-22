@@ -15,6 +15,7 @@ import {
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import QuizBG from '../tournamentComponents/tournamentQuiz/QuizBG'
+import FixedBackground from '../miscellaneous/FixedBackground'
 
 const Countdown = lazy(() => import('./Countdown'))
 const ArrowRightSVG = lazy(() => import('../../assets/svg/ArrowRightSVG'))
@@ -118,7 +119,7 @@ const ModalComponent = ({
         overflow="hidden"
         position="relative"
       >
-        {isTournament && <QuizBG />}
+        {isTournament ? <QuizBG /> : <FixedBackground starCount={15} />}
         {timer > 0 && (
           <SkeletonCircle
             color="red"

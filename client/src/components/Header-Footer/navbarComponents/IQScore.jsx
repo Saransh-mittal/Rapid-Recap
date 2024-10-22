@@ -104,7 +104,7 @@ const IQScore = ({ user, score, _hover, onClick, isVisibleRef }) => {
     <Box position="relative" className="IQscore">
       <MotionBox
         ref={componentRef}
-        key={`IQscore-${isVisibleRef.current}`}
+        // key={`IQscore-${isVisibleRef.current}`}
         display="flex"
         alignItems="center"
         justifyContent="center"

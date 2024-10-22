@@ -23,11 +23,6 @@ const LoadingSpinner = React.memo(() => (
     alignItems="center"
     flexDirection="column"
     position="relative"
-    backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-    boxShadow={{
-      xl: 'none',
-      base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-    }}
     height={'150px'}
   >
     <Spinner />
@@ -60,11 +55,6 @@ const NoDataMessage = React.memo(({ t }) => {
       alignItems="center"
       flexDirection="column"
       position="relative"
-      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-      boxShadow={{
-        xl: 'none',
-        base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-      }}
     >
       <Text m={0}>{t('giveQuizzesToUnlock')}</Text>
       <Image h="200px" w="200px" src={Lock} cursor="pointer" />
@@ -147,11 +137,6 @@ const IQBarGraph = ({
         justifyContent={'center'}
         alignItems={'center'}
         flexDirection={'column'}
-        backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-        boxShadow={{
-          xl: 'none',
-          base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-        }}
       >
         <Image
           h="200px"
@@ -198,11 +183,6 @@ const IQBarGraph = ({
       flex={1}
       justifyContent="center"
       alignItems="center"
-      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-      boxShadow={{
-        xl: 'none',
-        base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-      }}
       className="iq-bar-graph"
       position={'relative'}
     >

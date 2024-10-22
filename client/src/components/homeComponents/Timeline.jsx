@@ -216,31 +216,51 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
           width={{ base: '100%', lg: '15%' }}
           height={{ base: 'auto', lg: '100vh' }}
           position="fixed"
-          backgroundColor="rgba(15, 13, 21, 0.5)"
-          borderBottom="1px solid rgba(255, 255, 255, 0.1)"
-          boxShadow="0 2px 4px rgba(0, 0, 0, 0.3)"
-          style={{
-            borderImage:
-              'linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1',
-          }}
+          // backgroundColor="rgba(15, 13, 21, 0.5)"
+          // borderBottom="1px solid rgba(255, 255, 255, 0.1)"
+          // boxShadow="0 2px 4px rgba(0, 0, 0, 0.3)"
+          // style={{
+          //   borderImage:
+          //     'linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1',
+          // }}
           overflow="auto"
-          sx={{
-            '::-webkit-scrollbar': {
+          // sx={{
+          //   '::-webkit-scrollbar': {
+          //     width: '4px',
+          //     height: '10px',
+          //   },
+          //   '::-webkit-scrollbar-track': {
+          //     background: 'transparent',
+          //   },
+          //   '::-webkit-scrollbar-thumb': {
+          //     background: '#0f0d15',
+          //     borderRadius: '10px',
+          //   },
+          //   '::-webkit-scrollbar-thumb:hover': {
+          //     background: '#555',
+          //   },
+          //   scrollbarWidth: 'thin',
+          //   scrollbarColor: '#0f0d15 transparent',
+          // }}
+          bgGradient="linear(135deg, rgba(28, 20, 56, 0.85) 0%, rgba(15, 13, 21, 0.85) 100%)"
+          borderRight="1px solid rgba(255, 255, 255, 0.08)"
+          backdropFilter="blur(10px)"
+          boxShadow="4px 0 30px rgba(0, 0, 0, 0.1)"
+          // overflowY="auto"
+          css={{
+            '&::-webkit-scrollbar': {
               width: '4px',
-              height: '10px',
             },
-            '::-webkit-scrollbar-track': {
-              background: 'transparent',
+            '&::-webkit-scrollbar-track': {
+              background: 'rgba(15, 13, 21, 0.5)',
             },
-            '::-webkit-scrollbar-thumb': {
-              background: '#0f0d15',
-              borderRadius: '10px',
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(88, 65, 175, 0.5)',
+              borderRadius: '4px',
             },
-            '::-webkit-scrollbar-thumb:hover': {
-              background: '#555',
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: 'rgba(88, 65, 175, 0.7)',
             },
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#0f0d15 transparent',
           }}
         >
           <Flex
