@@ -30,14 +30,24 @@ const calculateRealTimeIQ = async (userId, newUserScore, session) => {
 
   // Update the cache with the new user score
   await updateSingleUserScore(userId, newUserScore)
-  const upgradeResult = await handleSocietyOrCircleUpgrade(
-    userId,
-    prevIQScore,
-    newIQScore,
-    previousIQForXp,
-    awardableXpOrNot,
-    session,
-  )
+  const upgradeResult =
+    user.role === 'guest'
+      ? {
+          societyUpgradeMessage: '',
+          hasSocietyOrCircleChanged: false,
+          changedSocietyOrCircle: false,
+          isUpgrade: false,
+          newSociety: '',
+          newCircle: '',
+        }
+      : await handleSocietyOrCircleUpgrade(
+          userId,
+          prevIQScore,
+          newIQScore,
+          previousIQForXp,
+          awardableXpOrNot,
+          session,
+        )
   return {
     newIQScore,
     prevIQScore,
