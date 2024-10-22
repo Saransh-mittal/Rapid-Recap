@@ -25,6 +25,7 @@ import {
   setIsQuinBoostAvailable,
   setQuizLeftToGetQuizBoost,
 } from '../redux/quizSlice'
+import ArticleFooter from '../components/articleComponents/ArticleFooter'
 
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
 
@@ -153,6 +154,7 @@ const Article = () => {
           user?.userLanguage ? user?.userLanguage : i18n.language
         }`,
       )
+      console.log(response.data)
       if (user?.userLanguage) {
         setSelectedLanguage(user?.userLanguage === 'hi' ? 'hindi' : 'english')
       }
@@ -430,25 +432,17 @@ const Article = () => {
               className="article-all-content"
             >
               <MainArticleContent
-                selectedLanguage={selectedLanguage}
-                title={title}
-                author={author}
-                mainText={mainText}
                 imgURL={
                   (!blackListedImgUrls.find(url => url === imgURL) && imgURL) ||
                   rrImage
                 }
-                alt_image={alt_image}
+                selectedLanguage={selectedLanguage}
+                mainText={mainText}
                 textRef={textRef}
                 articleRef={articleRef}
-                textHeight={textHeight}
-                handleLanguageChange={handleLanguageChange}
-                dateTime={dateTime}
-                avgTimeRead={avgTimeRead}
-                bookmark={bookmark}
-                bookmarkStatus={bookmarkStatus}
                 articleLoading={articleLoading}
                 themedContent={themedContent}
+                SourceURL={articleData?.url}
               />
 
               <Sidebar
@@ -473,6 +467,7 @@ const Article = () => {
                 i18n={i18n}
               />
             </Grid>
+            <ArticleFooter />
           </article>
         </Flex>
 

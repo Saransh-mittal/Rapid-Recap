@@ -201,6 +201,7 @@ const getArticle = async (req, res) => {
     const newArticle = {
       category: article.category,
       title: article.title,
+      url: article.url,
       quizAttemptCnt: article.quizAttemptCnt,
       mainText: paragraphs,
       author: article.author,
@@ -1015,8 +1016,8 @@ const getStory = asyncHandler(async (req, res) => {
   res.json(story)
 })
 
-// @desc  Add onboarding article and quiz
-// @route POST /api/admin/onboarding-article
+// @desc   Add onboarding article and quiz
+// @route  POST /api/admin/onboarding-article
 // @access Admin
 const addOnBoardingArticle = asyncHandler(async (req, res) => {
   const { article: articleData, quizzes } = req.body
@@ -1086,6 +1087,9 @@ const addOnBoardingArticle = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc  Get all onboarding articles
+// @route  GET /api/admin/onboarding-articles
+// @access Admin
 const getOnBoardingArticles = asyncHandler(async (req, res) => {
   const articles = await Article.find({
     category: 'onBoardingArticle',
@@ -1093,75 +1097,9 @@ const getOnBoardingArticles = asyncHandler(async (req, res) => {
   res.status(200).json(articles)
 })
 
-// const getOnBoardingArticle = asyncHandler(async (req, res) => {
-//   const article = await Article.findOne({
-//     _id: req.params.id,
-//     category: 'onBoardingArticle',
-//   }).populate('quiz')
-//   if (article) {
-//     res.status(200).json(article)
-//   } else {
-//     res.status(404)
-//     throw new Error('Article not found')
-//   }
-// })
-
-const updateOnBoardingArticle = asyncHandler(async (req, res) => {
-  const { article: articleData, quizzes } = req.body
-
-  const session = await mongoose.startSession()
-  session.startTransaction()
-
-  try {
-    const article = await Article.findOne({
-      _id: req.params.id,
-      category: 'onBoardingArticle',
-    })
-    if (!article) {
-      res.status(404)
-      throw new Error('Article not found')
-    }
-
-    // Update article
-    Object.assign(article, articleData)
-    await article.save({ session })
-
-    // Update quizzes
-    for (const quizItem of quizzes) {
-      if (quizItem._id) {
-        // Update existing quiz
-        await Quiz.findByIdAndUpdate(quizItem._id, quizItem, { session })
-      } else {
-        // Create new quiz
-        const newQuiz = new Quiz({
-          article: article._id,
-          ...quizItem,
-        })
-        await newQuiz.save({ session })
-        article.quiz.push(newQuiz._id)
-      }
-    }
-
-    await article.save({ session })
-
-    await session.commitTransaction()
-    session.endSession()
-
-    res.status(200).json({
-      success: true,
-      message: 'Onboarding article and quiz updated successfully',
-    })
-  } catch (error) {
-    await session.abortTransaction()
-    session.endSession()
-    res.status(500).json({
-      success: false,
-      message: 'Error updating onboarding article and quiz',
-      error: error.message,
-    })
-  }
-})
-
+// @desc   Delete an onboarding article and its associated quizzes
+// @route  DELETE /api/admin/onboarding-article/:id
+// @access Admin
 const deleteOnBoardingArticle = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession()
   session.startTransaction()
@@ -1220,26 +1158,9 @@ const deleteOnBoardingArticle = asyncHandler(async (req, res) => {
   }
 })
 
-const getOnBoardingArticles = asyncHandler(async (req, res) => {
-  const articles = await Article.find({
-    category: 'onBoardingArticle',
-  }).populate('quiz')
-  res.status(200).json(articles)
-})
-
-// const getOnBoardingArticle = asyncHandler(async (req, res) => {
-//   const article = await Article.findOne({
-//     _id: req.params.id,
-//     category: 'onBoardingArticle',
-//   }).populate('quiz')
-//   if (article) {
-//     res.status(200).json(article)
-//   } else {
-//     res.status(404)
-//     throw new Error('Article not found')
-//   }
-// })
-
+// @desc   Update an onboarding article and its associated quizzes
+// @route  PUT /api/admin/onboarding-article/:id
+// @access Admin
 const updateOnBoardingArticle = asyncHandler(async (req, res) => {
   const { article: articleData, quizzes } = req.body
 
@@ -1293,64 +1214,6 @@ const updateOnBoardingArticle = asyncHandler(async (req, res) => {
       message: 'Error updating onboarding article and quiz',
       error: error.message,
     })
-  }
-})
-
-const deleteOnBoardingArticle = asyncHandler(async (req, res) => {
-  const session = await mongoose.startSession()
-  session.startTransaction()
-
-  try {
-    const articleId = req.params.id
-
-    const article = await Article.findOne({
-      _id: articleId,
-      category: 'onBoardingArticle',
-    }).session(session)
-
-    if (!article) {
-      console.log(`Article with ID ${articleId} not found`)
-      await session.abortTransaction()
-      session.endSession()
-      return res.status(404).json({
-        success: false,
-        message: 'Article not found',
-      })
-    }
-
-    const deleteQuizResult = await Quiz.deleteMany({
-      article: article._id,
-    }).session(session)
-
-    const deleteArticleResult = await Article.deleteOne({
-      _id: article._id,
-    }).session(session)
-
-    if (deleteArticleResult.deletedCount === 0) {
-      throw new Error('Failed to delete the article')
-    }
-
-    await session.commitTransaction()
-    console.log(
-      `Successfully deleted article ${articleId} and its associated quizzes`,
-    )
-
-    res.status(200).json({
-      success: true,
-      message: 'Onboarding article and associated quizzes deleted successfully',
-    })
-  } catch (error) {
-    await session.abortTransaction()
-    console.error('Error in deleteOnBoardingArticle:', error)
-
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting onboarding article and quiz',
-      error: error.message,
-      stack: process.env.NODE_ENV === 'production' ? '🥞' : error.stack,
-    })
-  } finally {
-    session.endSession()
   }
 })
 
@@ -1454,7 +1317,6 @@ module.exports = {
   getRandomOnBoardingArticle,
   addOnBoardingArticle,
   getOnBoardingArticles,
-  // getOnBoardingArticle,
   updateOnBoardingArticle,
   deleteOnBoardingArticle,
 }
