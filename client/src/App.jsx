@@ -231,7 +231,11 @@ const App = () => {
     }
     if (isAuthenticated && user?.userLanguage) {
       i18n.changeLanguage(user?.userLanguage ? user.userLanguage : 'en')
-    } else if (isAuthenticated && !user?.userLanguage) {
+    } else if (
+      isAuthenticated &&
+      !user?.userLanguage &&
+      !user?.needsOnboarding
+    ) {
       changeLanguage('en', null, null)
       dispatch(
         addNoteMessage({

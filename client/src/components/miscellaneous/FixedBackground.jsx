@@ -30,7 +30,7 @@ const Star = React.memo(({ size, top, left }) => (
 ))
 const FixedBackground = ({ starCount = 25 }) => {
   // Generate stars
-  console.log(starCount)
+
   const stars = useMemo(
     () =>
       Array(starCount)

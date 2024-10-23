@@ -7,13 +7,13 @@ const SourceLinkTag = ({ SourceURL }) => {
     try {
       // Match domain name between // and next /
       const domainRegex = /^(?:https?:\/\/)?(?:www\.)?([^\/]+)/i
-      const match = url.match(domainRegex)
+      const match = url?.match(domainRegex)
 
       if (match && match[1]) {
         // Get the domain without .com/.org etc
         const domain = match[1].split('.')[0]
         // Capitalize first letter and format domain name
-        return domain.charAt(0).toUpperCase() + domain.slice(1)
+        return domain?.charAt(0)?.toUpperCase() + domain?.slice(1)
       }
       return 'Source Link' // Fallback text
     } catch (error) {

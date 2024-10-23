@@ -142,7 +142,7 @@ const ModalComponent = ({
         )}
         {!showGetSetGo && (
           <ModalCloseButton
-            zIndex={1}
+            zIndex={2}
             backgroundColor={getColor('purple.300', 'rgba(255, 215, 0, 0.8)')}
             style={{
               right: '10px',

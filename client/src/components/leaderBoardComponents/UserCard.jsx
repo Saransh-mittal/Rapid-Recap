@@ -14,7 +14,9 @@ import Medal from '../../assets/svg/Medal'
 
 const UserCard = ({ user, t }) => {
   const navigate = useNavigate()
-
+  if (user?.role === 'guest') {
+    return null
+  }
   return (
     user &&
     user.IQ_score && (
@@ -36,7 +38,10 @@ const UserCard = ({ user, t }) => {
             <VStack alignItems="flex-start" spacing={0}>
               <Text fontWeight="bold">{t('Your_Rank')}</Text>
               <Text fontSize="2xl" fontWeight="bold" color="pink.400">
-                #{user.rank}
+                #
+                {user?.needsOnboarding && user?.rank === 0
+                  ? ' ' + t('rankNA')
+                  : user.rank}
               </Text>
             </VStack>
           </HStack>

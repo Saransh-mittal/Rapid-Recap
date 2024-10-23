@@ -520,12 +520,10 @@ const getQuizSummary = async (req, res) => {
     if (!user) {
       throw new Error('User not found')
     }
-    const lang = user.userLanguage
 
     const quizSession = await ArticleQuizSession.findOne({
       user: userId,
       article: articleId,
-      language: lang,
     })
 
     if (!quizSession) {
@@ -551,7 +549,9 @@ const getQuizSummary = async (req, res) => {
 
     const score = quizSession.responses.filter(r => r.isCorrect).length
     const totalQuestions = quizSession.questions.length
-    const articleDifficulty = quizSession.overAllDifficulty[lang]
+    const articleDifficulty = Object.values(quizSession.overAllDifficulty).find(
+      d => d,
+    )
     const articleDifficultyLevel =
       articleDifficulty < 0.5
         ? 'easy'
@@ -562,8 +562,8 @@ const getQuizSummary = async (req, res) => {
 
     res.status(200).json({
       result,
-      timeTaken: quizSession.timeTaken[lang],
-      RQM_score: quizSession.RQM_score[lang],
+      timeTaken: Object.values(quizSession.timeTaken).find(t => t),
+      RQM_score: Object.values(quizSession.RQM_score).find(s => s),
       quizDifficulty: articleDifficultyLevel,
       score: scoreString,
     })

@@ -110,10 +110,9 @@ const QuizGivenSummary = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={'full'}>
       <ModalContent
-        bg={isTournament ? 'none' : 'rgba(26, 21, 39, 0.9)'}
+        bg={isTournament ? 'none' : 'transparent'}
         color={'white'}
         borderRadius="xl"
-        boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
       >
         {isTournament && <QuizBG />}
         {isLoading ? (

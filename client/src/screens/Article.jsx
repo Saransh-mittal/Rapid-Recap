@@ -154,7 +154,7 @@ const Article = () => {
           user?.userLanguage ? user?.userLanguage : i18n.language
         }`,
       )
-      console.log(response.data)
+
       if (user?.userLanguage) {
         setSelectedLanguage(user?.userLanguage === 'hi' ? 'hindi' : 'english')
       }

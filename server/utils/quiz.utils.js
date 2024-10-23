@@ -754,29 +754,25 @@ const calculateRQMScore = (userResponses, questions, timeTaken) => {
 
   // Adjust score based on difficulty
   let adjustedScore = weightedScore * (1 + (quizDifficulty - 0.5))
-
   // Apply bonus for exceptional performance
   const correctCount = userResponses.filter(res => res.isCorrect).length
+  // Calculate time factor (compare to expected time)
+  const timeFactor = Math.min(expectedTime / apparentTimeTaken, 2) // Cap at 2x speed
+
+  const baseRQM_score = Math.ceil((adjustedScore * timeFactor * 150) / 2)
   if (correctCount === questions.length) {
     adjustedScore *= ALL_CORRECT_BONUS
   } else if (correctCount === questions.length - 1) {
     adjustedScore *= ONE_WRONG_BONUS
   }
 
-  // Calculate time factor (compare to expected time)
-  const timeFactor = Math.min(expectedTime / apparentTimeTaken, 2) // Cap at 2x speed
-
   // Calculate final RQM score
   const RQM_score = Math.ceil((adjustedScore * timeFactor * 150) / 2)
-
   return {
+    baseRQM_score,
     RQM_score,
     score,
-    quizDifficulty,
     expectedTime,
-    apparentTimeTaken,
-    weightedScore,
-    timeFactor,
     performanceBonus:
       correctCount === questions.length
         ? ALL_CORRECT_BONUS

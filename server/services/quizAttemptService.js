@@ -68,20 +68,12 @@ const saveQuizAttempt = async (
     throw new Error('User has already attempted the quiz for the article.')
   }
 
-  let {
-    RQM_score,
-    score,
-    quizDifficulty,
-    expectedTime,
-    apparentTimeTaken,
-    weightedScore,
-    timeFactor,
-    performanceBonus,
-  } = calculateRQMScore(userResponses, questions, timeTaken)
+  let { baseRQM_score, RQM_score, score, expectedTime, performanceBonus } =
+    calculateRQMScore(userResponses, questions, timeTaken)
 
   let boosted = false
   let quinBoostUtilized = false
-
+  const nonBoostedRQM = RQM_score
   if (
     user.quinBoosts.length > 0 &&
     user.quinBoosts[user.quinBoosts.length - 1]?.boosted
@@ -121,7 +113,13 @@ const saveQuizAttempt = async (
   emitProgress('calculateRQM', 100)
   emitProgress('saveAttempt', 50)
   const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
-
+  const boost =
+    quinBoostUtilized && user.todayBoost
+      ? 1.75
+      : boosted || quinBoostUtilized
+      ? 1.5
+      : 1
+  const isBoosted = boosted || quinBoostUtilized
   const newQuizAttempt = new QuizAttempt({
     user: userId,
     article: articleId,
@@ -131,13 +129,8 @@ const saveQuizAttempt = async (
     articleDifficulty,
     timeTaken,
     expectedTime,
-    boost:
-      quinBoostUtilized && user.todayBoost
-        ? 1.75
-        : boosted || quinBoostUtilized
-        ? 1.5
-        : 1,
-    isBoosted: boosted || quinBoostUtilized,
+    boost,
+    isBoosted,
     season: parseInt(configService.getCurrentSeason(), 10),
   })
   await newQuizAttempt.save({ session })
@@ -252,6 +245,10 @@ const saveQuizAttempt = async (
   return {
     message: 'Attempt saved successfully',
     RQM_score,
+    nonBoostedRQM,
+    baseRQM_score,
+    boost,
+    isBoosted,
     quizDifficulty: articleDifficultyLevel,
     timeTaken,
     score: scoreString,
@@ -260,6 +257,8 @@ const saveQuizAttempt = async (
     quinBoostUtilized,
     messageForTournamentEligibility,
     userEligibleForTournament,
+    performanceBonus,
+    pauseRealTimeIQ: user.pauseRealTimeIQ,
     ...resultOfIQCalc,
   }
 }

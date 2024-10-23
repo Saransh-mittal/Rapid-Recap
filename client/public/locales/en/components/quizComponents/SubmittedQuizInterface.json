@@ -35,5 +35,21 @@
   "currentQuiz": "Current Quiz",
   "easy": "Easy",
   "medium": "Medium",
-  "hard": "Hard"
+  "hard": "Hard",
+  "masterfullyDone": "Masterfully done!",
+  "iqScore": "IQ Score",
+  "performanceBonus": "Performance Bonus (+{{bonus}}%)",
+  "quizBoost": "Quiz Boost (+{{boost}}%)",
+  "newSociety": "Welcome to {{society}}!",
+  "leaderboard": "Leaderboard",
+  "quizSummary": "Quiz Summary",
+  "level": "Level",
+  "time": "Time",
+  "progress": "Progress",
+  "iqPaused": "Updates Paused",
+  "guestMode": "Guest Mode",
+  "registerTooltip": "Register to track your real IQ progress",
+  "loginToTrackIQ": "Login to track your actual IQ progress",
+  "registerNote": "Register to convert this expected score into your starting IQ",
+  "expectedScore": "Expected Score"
 }

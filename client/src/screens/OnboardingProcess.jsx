@@ -135,6 +135,7 @@ const OnboardingProcess = () => {
           `/api/recommendation?page=${1}&pageSize=18&lang=${i18n.language}`,
         )
       }
+
       setStep(nextStep)
     }
   }
