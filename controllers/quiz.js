@@ -563,7 +563,7 @@ const getQuizSummary = async (req, res) => {
     res.status(200).json({
       result,
       timeTaken: Object.values(quizSession.timeTaken).find(t => t),
-      RQM_score: Object.values(quizSession.RQM_score).find(s => s),
+      RQM_score: Object.values(quizSession.RQM_score).find(s => s) || 0,
       quizDifficulty: articleDifficultyLevel,
       score: scoreString,
     })

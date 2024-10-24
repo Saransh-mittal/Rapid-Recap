@@ -1698,7 +1698,47 @@ const confirmDeleteAccount = async (req, res) => {
 // @route  POST /api/user/onboarding-progress
 // @access Private
 const updateOnboardingProgress = asyncHandler(async (req, res) => {
-  const { step, data } = req.body
+  function getStepId(step) {
+    const stepMap = {
+      1: 'language',
+      2: 'welcome',
+      3: 'categories',
+      4: 'quiz_question',
+      5: 'quiz_result',
+      6: 'article_reading',
+      7: 'leaderboard',
+    }
+    return stepMap[step] || 'language'
+  }
+  const {
+    step,
+    stepId,
+    language,
+    categories,
+    quizResult,
+    currentStep,
+    nextStep,
+    currentStepId,
+    nextStepId,
+    ...restData
+  } = req.body
+
+  // Handle the old format (using step number)
+  const isOldFormat = step !== undefined && !currentStep
+
+  // Normalize the data format
+  const normalizedData = {
+    currentStep: currentStep || step || 0,
+    nextStep: isOldFormat ? step + 1 : nextStep || currentStep + 1,
+    currentStepId: currentStepId || stepId || getStepId(step),
+    nextStepId: nextStepId || getStepId(isOldFormat ? step + 1 : nextStep),
+    data: {
+      language: language || restData.language,
+      categories: categories || restData.categories,
+      quizResult: quizResult || restData.quizResult,
+    },
+  }
+
   const userId = req.user._id
 
   const session = await mongoose.startSession()
@@ -1712,32 +1752,53 @@ const updateOnboardingProgress = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: 'User not found' })
     }
 
-    user.onboardingStep = step
+    // Update to the next step
+    user.onboardingStep = normalizedData.nextStep
 
-    switch (step) {
-      case 1:
-        user.userLanguage = data.language
+    // Process data based on the current step
+    switch (normalizedData.currentStepId) {
+      case 'language':
+        if (normalizedData.data.language) {
+          user.userLanguage = normalizedData.data.language
+        }
         break
-      case 2:
-        // Welcome step, no data to save
+
+      case 'welcome':
+        if (normalizedData.data.language) {
+          user.userLanguage = normalizedData.data.language
+        }
         break
-      case 3:
-        user.preferredCategories = data.categories.map(category => ({
-          category,
-          weight: 1 / data.categories.length,
-          isInferred: false,
-        }))
+
+      case 'categories':
+        if (
+          normalizedData.data.categories &&
+          Array.isArray(normalizedData.data.categories)
+        ) {
+          user.preferredCategories = normalizedData.data.categories.map(
+            category => ({
+              category,
+              weight: 1 / normalizedData.data.categories.length,
+              isInferred: false,
+            }),
+          )
+        }
         break
-      case 4:
+
+      case 'quiz_question':
         // Quiz question step, no data to save
         break
-      case 5:
-        // Quiz result step, no data to save
+
+      case 'quiz_result':
+        if (normalizedData.data.quizResult !== undefined) {
+          user.initialQuizResult = normalizedData.data.quizResult
+        }
         break
-      case 6:
+
+      case 'article_reading':
         // Article reading step, no data to save
         break
-      case 7:
+
+      case 'leaderboard':
         user.needsOnboarding = false
         break
     }
@@ -1746,10 +1807,17 @@ const updateOnboardingProgress = asyncHandler(async (req, res) => {
     await session.commitTransaction()
     session.endSession()
 
-    res.status(200).json({ message: 'Onboarding progress updated' })
+    res.status(200).json({
+      message: 'Onboarding progress updated',
+      currentStep: normalizedData.currentStep,
+      nextStep: normalizedData.nextStep,
+      currentStepId: normalizedData.currentStepId,
+      nextStepId: normalizedData.nextStepId,
+    })
   } catch (error) {
     await session.abortTransaction()
     session.endSession()
+    console.error('Error updating onboarding progress:', error)
     res.status(500).json({
       message: 'Error updating onboarding progress',
       error: error.message,
