@@ -119,7 +119,15 @@ const ModalComponent = ({
         overflow="hidden"
         position="relative"
       >
-        {isTournament ? <QuizBG /> : <FixedBackground starCount={15} />}
+        {isTournament ? (
+          <QuizBG />
+        ) : (
+          <FixedBackground
+            starCount={15}
+            reduced={true}
+            isModal={true} // This will trigger pausing the main animation
+          />
+        )}
         {timer > 0 && (
           <SkeletonCircle
             color="red"
