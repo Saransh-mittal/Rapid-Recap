@@ -120,6 +120,7 @@ const TournamentQuiz = () => {
           duration: 5000,
           isClosable: true,
         })
+        console.error('Error starting quiz:', error)
       }
       dispatch(setIsOpen(false))
     } finally {
