@@ -65,6 +65,31 @@ export const LeftProfileSection = ({
     'rgba(23, 25, 35, 0.8)',
   )
   const borderColor = useColorModeValue('gold', 'goldenrod')
+  const sharedBoxStyles = {
+    bgGradient: 'linear(to-b, rgba(28, 20, 56, 0.4), rgba(15, 13, 21, 0.4))',
+    border: '1px solid',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.2)',
+    backdropFilter: 'blur(12px)',
+    position: 'relative',
+    transition: 'all 0.2s ease-in-out',
+    _hover: {
+      bgGradient: 'linear(to-b, rgba(35, 25, 70, 0.4), rgba(20, 17, 28, 0.4))',
+      boxShadow: '0px 4px 25px rgba(0, 0, 0, 0.25)',
+    },
+    _before: {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      borderRadius: 'xl',
+      border: '1px solid',
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      pointerEvents: 'none',
+    },
+  }
 
   return (
     <Flex
@@ -73,15 +98,13 @@ export const LeftProfileSection = ({
       margin={'6px'}
     >
       <Flex
+        {...sharedBoxStyles}
         marginTop={'18px'}
         padding="10px"
         borderRadius="10px"
         flexDirection="column"
         w={'100%'}
         height="fit-content"
-        bg={bgColor}
-        border="1px solid"
-        borderColor={borderColor}
       >
         <Suspense fallback={<SkeletonCircle size="10" />}>
           {isLoading ? (
@@ -108,9 +131,7 @@ export const LeftProfileSection = ({
         flexDirection="column"
         w={'100%'}
         height="fit-content"
-        bg={bgColor}
-        border={'1px solid'}
-        borderColor={borderColor}
+        {...sharedBoxStyles}
       >
         <Suspense
           fallback={

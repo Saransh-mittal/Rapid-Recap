@@ -16,6 +16,7 @@ const namespaces = {
     'ComingSoonTournament',
     'GetStarted',
     'LoadingScreen',
+    'OnboardingProcess',
   ],
   utils: ['formatDate'],
   categories: ['categories', 'tournamentCategories'],

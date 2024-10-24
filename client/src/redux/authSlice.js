@@ -26,6 +26,8 @@ const initialState = {
   loginCheckStatus: 'pending',
   isAdmin: false,
   error: null,
+  onboardingCompleted: false,
+  preferredCategories: [],
 }
 
 export const authSlice = createSlice({
@@ -49,6 +51,12 @@ export const authSlice = createSlice({
     setVerifyEmail: (state, action) => {
       state.verifyEmail = action.payload
     },
+    setOnboardingCompleted: state => {
+      state.onboardingCompleted = true
+    },
+    setPreferredCategories: (state, action) => {
+      state.preferredCategories = action.payload
+    },
   },
   extraReducers: builder => {
     builder
@@ -71,6 +79,8 @@ export const {
   setForgotPassword,
   setVerifyEmail,
   setIsAdmin,
+  setOnboardingCompleted,
+  setPreferredCategories,
 } = authSlice.actions
 
 export default authSlice.reducer

@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import Footer from '../Footer'
 import NameLightning from '../../miscellaneous/NameLightning'
+import FixedBackground from '../../miscellaneous/FixedBackground'
 
 const LogoutButton = lazy(() => import('./LogoutButton'))
 const GetStarted = lazy(() => import('./GetStarted'))
@@ -139,7 +140,8 @@ const HamburgerDrawer = ({
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="full">
       <DrawerOverlay />
-      <DrawerContent bg="rgba(15, 13, 21, 0.95)">
+      <DrawerContent>
+        <FixedBackground starCount={15} />
         <DrawerHeader
           w={'100%'}
           alignItems={'center'}
@@ -150,7 +152,7 @@ const HamburgerDrawer = ({
           <NavBrand isHamburgerOpen={true} />
           <DrawerCloseButton bg={'white'} color={'black'} size={'lg'} />
         </DrawerHeader>
-        <DrawerBody p={0} w={'100%'}>
+        <DrawerBody p={0} w={'100%'} zIndex={1}>
           <VStack
             spacing={4}
             align="stretch"

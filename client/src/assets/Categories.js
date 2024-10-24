@@ -22,6 +22,7 @@ export const getCategories = () => {
   ].map(category => ({
     key: category,
     label: i18n.t(`categories:categories.${category}`),
+    labelForBoarding: category,
   }))
 }
 

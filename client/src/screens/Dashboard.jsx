@@ -36,6 +36,7 @@ import {
 } from '@chakra-ui/react'
 import TournamentFeedbackAnalysis from '../components/dashboardComponents/TournamentFeedbackAnalysis'
 import { FaChartBar, FaCog, FaComments } from 'react-icons/fa'
+import OnboardingArticleList from '../components/dashboardComponents/OnboardingArticleList'
 
 const ArticleManagement = lazy(() =>
   import('../components/dashboardComponents/ArticleManagement'),
@@ -124,6 +125,11 @@ const Dashboard = () => {
     isOpen: isTestTournamentManagementOpen,
     onOpen: onTestTournamentManagementOpen,
     onClose: onTestTournamentManagementClose,
+  } = useDisclosure()
+  const {
+    isOpen: isOnboardingArticleOpen,
+    onOpen: onOnboardingArticleOpen,
+    onClose: onOnboardingArticleClose,
   } = useDisclosure()
 
   useEffect(() => {
@@ -514,6 +520,12 @@ const Dashboard = () => {
                 >
                   Manage Test Tournament
                 </Button>
+                <Button
+                  colorScheme={buttonColorScheme}
+                  onClick={onOnboardingArticleOpen}
+                >
+                  Manage Onboarding Articles
+                </Button>
               </SimpleGrid>
             </TabPanel>
 
@@ -594,6 +606,12 @@ const Dashboard = () => {
         <TestTournamentManagement
           isOpen={isTestTournamentManagementOpen}
           onClose={onTestTournamentManagementClose}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <OnboardingArticleList
+          isOpen={isOnboardingArticleOpen}
+          onClose={onOnboardingArticleClose}
         />
       </Suspense>
     </Box>

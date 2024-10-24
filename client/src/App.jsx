@@ -50,6 +50,7 @@ import {
   setSoundSettings,
   setSelectedNotificationId,
   setIsNotifInboxModalOpen,
+  addNoteMessageIfAllowed,
 } from './redux/appSlice.js'
 import { setUser } from './redux/authSlice.js'
 import i18n from 'i18next'
@@ -93,6 +94,7 @@ const App = () => {
     state => state.tournament,
   )
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const showNavbar = !user?.needsOnboarding
   const { updates } = useSelector(state => state.app)
   const USER_IQ = user?.IQ_score ?? null
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
@@ -148,7 +150,7 @@ const App = () => {
 
     if (!token) {
       dispatch(
-        addNoteMessage({
+        addNoteMessageIfAllowed({
           title: t('Start using Rapid Recap'), // Added translation
           duration: 15000,
           width: '350px',
@@ -207,9 +209,6 @@ const App = () => {
   }, [tournamentId, status])
 
   useEffect(() => {
-    if (user?.newAccount) {
-      setIsGuestLoggedin(true)
-    }
     if (isAuthenticated && user.role !== 'guest') {
       dispatch(checkTournamentRegistration(tournamentSliceTranslation))
     }
@@ -230,10 +229,14 @@ const App = () => {
     }
     if (isAuthenticated && user?.userLanguage) {
       i18n.changeLanguage(user?.userLanguage ? user.userLanguage : 'en')
-    } else if (isAuthenticated && !user?.userLanguage) {
+    } else if (
+      isAuthenticated &&
+      !user?.userLanguage &&
+      !user?.needsOnboarding
+    ) {
       changeLanguage('en', null, null)
       dispatch(
-        addNoteMessage({
+        addNoteMessageIfAllowed({
           title: t('Please select your language from profile'), // Added translation
           duration: null,
           width: '300px',
@@ -279,7 +282,7 @@ const App = () => {
   useEffect(() => {
     if (guestModalJustClosed && user?.role === 'guest') {
       dispatch(
-        addNoteMessage({
+        addNoteMessageIfAllowed({
           title: t('You can view your credentials of guest account in profile'), // Added translation
           duration: 10000,
           width: '300px',
@@ -297,7 +300,7 @@ const App = () => {
       !user?.newAccount
     ) {
       dispatch(
-        addNoteMessage({
+        addNoteMessageIfAllowed({
           title: t('Register to Safeguard your progress'), // Added translation
           duration: 5000,
           width: '300px',
@@ -313,7 +316,7 @@ const App = () => {
   }, [dispatch])
 
   useEffect(() => {
-    if (navbarLoaded && overallProgress === 100) {
+    if (overallProgress === 100) {
       // dispatch after 500ms to ensure all components are loaded
       setTimeout(() => {
         dispatch(setIsLoading(false))
@@ -409,9 +412,11 @@ const App = () => {
         />
       </Suspense>
       <NavbarProvider>
-        <Suspense fallback={null}>
-          <Navbar onNavbarLoad={handleNavbarLoad} />
-        </Suspense>
+        {showNavbar && (
+          <Suspense fallback={null}>
+            <Navbar onNavbarLoad={handleNavbarLoad} />
+          </Suspense>
+        )}
         <Box
           position="relative"
           minHeight="100vh"
@@ -419,7 +424,11 @@ const App = () => {
           overflowX={'hidden'}
         >
           <Suspense fallback={null}>
-            <AppRoutes isToken={isToken()} />
+            <AppRoutes
+              isToken={isToken()}
+              needsOnboarding={user?.needsOnboarding}
+              setIsGuestLoggedin={setIsGuestLoggedin}
+            />
           </Suspense>
         </Box>
       </NavbarProvider>

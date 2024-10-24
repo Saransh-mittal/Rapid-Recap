@@ -76,7 +76,9 @@ const useFetchQuiz = (articleId, language, onClose) => {
   const startQuiz = async () => {
     setLoad(true)
     try {
-      const response = await axios.post(`/api/quiz/start/${quizSession._id}`)
+      const response = await axios.post(
+        `/api/quiz/start/${quizSession._id}?onBoarding=${user?.needsOnboarding}`,
+      )
 
       setQuizStatus('in_progress')
       setRemainingTime(response.data.timer)

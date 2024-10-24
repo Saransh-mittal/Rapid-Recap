@@ -4,6 +4,19 @@ import { v4 as uuidv4 } from 'uuid'
 import { DEFAULT_SOUND_SETTINGS } from '../models/soundSettings'
 import i18n from 'i18next'
 
+// Add this thunk to your existing thunks
+export const addNoteMessageIfAllowed = createAsyncThunk(
+  'app/addNoteMessageIfAllowed',
+  async (messageData, { getState, dispatch }) => {
+    const state = getState()
+    const needsOnboarding = state.auth.user?.needsOnboarding
+
+    if (!needsOnboarding) {
+      dispatch(addNoteMessage(messageData))
+    }
+    return null
+  },
+)
 // Async thunks for fetching data
 export const fetchAppUpdates = createAsyncThunk(
   'app/fetchAppUpdates',
@@ -25,7 +38,7 @@ export const fetchAppUpdates = createAsyncThunk(
 
       weeklyReport &&
         dispatch(
-          addNoteMessage({
+          addNoteMessageIfAllowed({
             title: 'Weekly Report', // Added translation
             duration: 15000,
             width: '350px',

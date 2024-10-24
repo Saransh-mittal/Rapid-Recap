@@ -17,51 +17,71 @@ const ContactLayout = lazy(() =>
   import('../components/contactComponents/ContactLayout'),
 )
 
-const AppRoutes = ({ isToken }) => (
-  <Suspense fallback={<Loading />}>
-    <Routes>
-      <Route
-        path="/"
-        element={isToken ? <Navigate to="/home" /> : <GetStarted />}
-      />
-      <Route path="/get-started" element={<GetStarted />} />
-      <Route path="/contact/feedback" element={<ContactLayout />} />
-      <Route path="/home/:category" element={<Home />} />
-      <Route path="/home" element={<Home />} />
-      <Route
-        path="/chats"
-        element={
-          <ServiceScreen
-            title="Chat Feature Under Maintainance"
-            description="We're working hard to bring you better version of our chat feature aka Wise Web. Stay tuned for updates!"
-            quote="The best way to predict the future is to create it."
-            quoteAuthor="Peter Drucker"
-          />
-        }
-      />
-      <Route path="/article/:id/:slug" element={<Article />} />
-      <Route path="/article/:id" element={<Article />} />
-      <Route path="/profile/:inGameName" element={<Profile />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/contact" element={<ContactLayout />} />
-      <Route path="/leaderboard" element={<Leaderboard />} />
-      <Route path="/tournament" element={<TournamentWrapper />} />
-      <Route
-        path="/dashboard"
-        element={
-          <AdminRoute>
-            <Dashboard />
-          </AdminRoute>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-      <Route path="/delete-account" element={<DeleteAccount />} />
-      <Route
-        path="/confirmDeleteAccount/:token"
-        element={<ConfirmDeleteAccount />}
-      />
-    </Routes>
-  </Suspense>
-)
+const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
+
+const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
+  return (
+    <Suspense fallback={<Loading />}>
+      <Routes>
+        {needsOnboarding ? (
+          <>
+            <Route
+              path="/"
+              element={
+                <OnboardingProcess setIsGuestLoggedin={setIsGuestLoggedin} />
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        ) : (
+          <>
+            <Route
+              path="/"
+              element={isToken ? <Navigate to="/home" /> : <GetStarted />}
+            />
+            <Route path="/get-started" element={<GetStarted />} />
+
+            <Route path="/contact/feedback" element={<ContactLayout />} />
+            <Route path="/home/:category" element={<Home />} />
+            <Route path="/home" element={<Home />} />
+            <Route
+              path="/chats"
+              element={
+                <ServiceScreen
+                  title="Chat Feature Under Maintainance"
+                  description="We're working hard to bring you better version of our chat feature aka Wise Web. Stay tuned for updates!"
+                  quote="The best way to predict the future is to create it."
+                  quoteAuthor="Peter Drucker"
+                />
+              }
+            />
+            <Route path="/article/:id/:slug" element={<Article />} />
+            <Route path="/article/:id" element={<Article />} />
+            <Route path="/profile/:inGameName" element={<Profile />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/contact" element={<ContactLayout />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/tournament" element={<TournamentWrapper />} />
+
+            <Route
+              path="/dashboard"
+              element={
+                <AdminRoute>
+                  <Dashboard />
+                </AdminRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/delete-account" element={<DeleteAccount />} />
+            <Route
+              path="/confirmDeleteAccount/:token"
+              element={<ConfirmDeleteAccount />}
+            />
+          </>
+        )}
+      </Routes>
+    </Suspense>
+  )
+}
 
 export default AppRoutes

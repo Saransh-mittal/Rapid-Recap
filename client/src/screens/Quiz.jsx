@@ -67,7 +67,7 @@ const Quiz = () => {
   const { isRegistered, currentTournament } = useSelector(
     state => state.tournament,
   )
-  const articleId = article._id
+  const articleId = article?._id
 
   const navigate = useNavigate()
 

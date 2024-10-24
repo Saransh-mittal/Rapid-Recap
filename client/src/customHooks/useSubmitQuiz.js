@@ -3,15 +3,17 @@ import axios from 'axios'
 import { useToast } from '@chakra-ui/react'
 import useSound from './useSound'
 import { useSocket } from './useSocket'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setOnBoardingQuizSubmitted } from '../redux/quizSlice'
 
 const useSubmitQuiz = ({ articleId, sessionId, setResult, setSubmitError }) => {
   const [submitLoad, setSubmitLoad] = useState(false)
   const [submissionProgress, setSubmissionProgress] = useState(0)
   const toast = useToast()
   const { playEndChime } = useSound()
-  const { socket, getSocket } = useSocket()
+  const { getSocket } = useSocket()
   const { user } = useSelector(state => state.auth)
+  const dispatch = useDispatch()
 
   useEffect(() => {
     const currentSocket = getSocket()
@@ -47,7 +49,9 @@ const useSubmitQuiz = ({ articleId, sessionId, setResult, setSubmitError }) => {
         timeTaken: timeTaken === 0 ? 1 : timeTaken,
         sessionId,
       })
-
+      if (user?.needsOnboarding) {
+        dispatch(setOnBoardingQuizSubmitted(true))
+      }
       toast({
         title: 'Quiz Submitted Successfully!',
         description: 'You can now view your score.',

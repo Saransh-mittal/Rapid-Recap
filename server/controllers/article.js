@@ -14,7 +14,10 @@ const {
   extractNewsUtilityFunc,
 } = require('../utils/article.utils')
 const { sendNotification } = require('../services/notificationService')
-const { formatDate } = require('../utils/miscellaneous.utils')
+const {
+  formatDate,
+  getFormattedImage,
+} = require('../utils/miscellaneous.utils')
 const Quiz = require('../model/quizSchema')
 const NewsAPI = require('newsapi')
 const asyncHandler = require('express-async-handler')
@@ -201,6 +204,7 @@ const getArticle = async (req, res) => {
     const newArticle = {
       category: article.category,
       title: article.title,
+      url: article.url,
       quizAttemptCnt: article.quizAttemptCnt,
       mainText: paragraphs,
       author: article.author,
@@ -601,13 +605,17 @@ const searchArticles = asyncHandler(async (req, res) => {
     const totalArticles = await Article.countDocuments({
       $text: { $search: query },
       ...filter,
+      category: { $ne: 'onBoardingArticle' },
     })
 
     const articles = await Article.find(
-      { $text: { $search: query }, ...filter },
+      {
+        $text: { $search: query },
+        ...filter,
+        category: { $ne: 'onBoardingArticle' },
+      },
       { score: { $meta: 'textScore' } },
     )
-      // .sort({ score: { $meta: 'textScore' }, dateTime: -1 }) // Sort by dateTime desc, then by relevance
       .sort({ score: { $meta: 'textScore' } }) // Sort by relevance
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
@@ -616,6 +624,7 @@ const searchArticles = asyncHandler(async (req, res) => {
       )
 
     articles.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+
     const processedArticles = await Promise.all(
       articles.map(async article => {
         const paragraphs = await breakArticleIntoParagraphs(article.mainText)
@@ -636,6 +645,7 @@ const searchArticles = asyncHandler(async (req, res) => {
         }
       }),
     )
+
     const totalPages = Math.ceil(totalArticles / limitNumber)
 
     res.json({
@@ -1015,6 +1025,283 @@ const getStory = asyncHandler(async (req, res) => {
   res.json(story)
 })
 
+// @desc   Add onboarding article and quiz
+// @route  POST /api/admin/onboarding-article
+// @access Admin
+const addOnBoardingArticle = asyncHandler(async (req, res) => {
+  const { article: articleData, quizzes } = req.body
+
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    // Validate difficulty values
+    const validateDifficulty = difficulty => {
+      const difficultyNumber = parseFloat(difficulty)
+      if (
+        isNaN(difficultyNumber) ||
+        difficultyNumber <= 0 ||
+        difficultyNumber >= 1
+      ) {
+        throw new Error(
+          `Invalid difficulty value: ${difficulty}. Must be a number string between 0 and 1 (exclusive).`,
+        )
+      }
+    }
+    // Create and save the article
+    const article = new Article({
+      ...articleData,
+      category: 'onBoardingArticle', // Make sure this matches your frontend category
+    })
+    await article.save({ session })
+
+    // Create and save the quizzes
+    const savedQuizzes = []
+    for (const quizItem of quizzes) {
+      validateDifficulty(quizItem.overAllDifficulty)
+      const quiz = new Quiz({
+        article: article._id,
+        para1: quizItem.para1,
+        overAllDifficulty: quizItem.overAllDifficulty,
+        language: quizItem.language,
+      })
+      await quiz.save({ session })
+      savedQuizzes.push(quiz._id)
+
+      // Update the article with the quiz reference
+      article.quiz.push(quiz._id)
+    }
+
+    await article.save({ session })
+
+    // Commit the transaction
+    await session.commitTransaction()
+    session.endSession()
+
+    res.status(200).json({
+      success: true,
+      message: 'Onboarding article and quiz saved successfully',
+    })
+  } catch (error) {
+    // If an error occurred, abort the transaction and roll back any changes
+    await session.abortTransaction()
+    session.endSession()
+    console.error('Error saving onboarding article and quiz:', error)
+    // Handle the error appropriately
+    res.status(500).json({
+      success: false,
+      message: 'Error saving onboarding article and quiz',
+      error: error.message,
+    })
+  }
+})
+
+// @desc  Get all onboarding articles
+// @route  GET /api/admin/onboarding-articles
+// @access Admin
+const getOnBoardingArticles = asyncHandler(async (req, res) => {
+  const articles = await Article.find({
+    category: 'onBoardingArticle',
+  }).populate('quiz')
+  res.status(200).json(articles)
+})
+
+// @desc   Delete an onboarding article and its associated quizzes
+// @route  DELETE /api/admin/onboarding-article/:id
+// @access Admin
+const deleteOnBoardingArticle = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const articleId = req.params.id
+
+    const article = await Article.findOne({
+      _id: articleId,
+      category: 'onBoardingArticle',
+    }).session(session)
+
+    if (!article) {
+      console.log(`Article with ID ${articleId} not found`)
+      await session.abortTransaction()
+      session.endSession()
+      return res.status(404).json({
+        success: false,
+        message: 'Article not found',
+      })
+    }
+
+    const deleteQuizResult = await Quiz.deleteMany({
+      article: article._id,
+    }).session(session)
+
+    const deleteArticleResult = await Article.deleteOne({
+      _id: article._id,
+    }).session(session)
+
+    if (deleteArticleResult.deletedCount === 0) {
+      throw new Error('Failed to delete the article')
+    }
+
+    await session.commitTransaction()
+    console.log(
+      `Successfully deleted article ${articleId} and its associated quizzes`,
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Onboarding article and associated quizzes deleted successfully',
+    })
+  } catch (error) {
+    await session.abortTransaction()
+    console.error('Error in deleteOnBoardingArticle:', error)
+
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting onboarding article and quiz',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'production' ? '🥞' : error.stack,
+    })
+  } finally {
+    session.endSession()
+  }
+})
+
+// @desc   Update an onboarding article and its associated quizzes
+// @route  PUT /api/admin/onboarding-article/:id
+// @access Admin
+const updateOnBoardingArticle = asyncHandler(async (req, res) => {
+  const { article: articleData, quizzes } = req.body
+
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const article = await Article.findOne({
+      _id: req.params.id,
+      category: 'onBoardingArticle',
+    })
+    if (!article) {
+      res.status(404)
+      throw new Error('Article not found')
+    }
+
+    // Update article
+    Object.assign(article, articleData)
+    await article.save({ session })
+
+    // Update quizzes
+    for (const quizItem of quizzes) {
+      if (quizItem._id) {
+        // Update existing quiz
+        await Quiz.findByIdAndUpdate(quizItem._id, quizItem, { session })
+      } else {
+        // Create new quiz
+        const newQuiz = new Quiz({
+          article: article._id,
+          ...quizItem,
+        })
+        await newQuiz.save({ session })
+        article.quiz.push(newQuiz._id)
+      }
+    }
+
+    await article.save({ session })
+
+    await session.commitTransaction()
+    session.endSession()
+
+    res.status(200).json({
+      success: true,
+      message: 'Onboarding article and quiz updated successfully',
+    })
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    res.status(500).json({
+      success: false,
+      message: 'Error updating onboarding article and quiz',
+      error: error.message,
+    })
+  }
+})
+
+// @desc Get a random onboarding article with one quiz question
+// @route GET /api/articles/onboarding
+// @access Private
+const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+  const { userLanguage } = await User.findById(userId).select('userLanguage')
+
+  // Get a random onboarding article
+  const article = await Article.aggregate([
+    { $match: { category: 'onBoardingArticle' } },
+    { $sample: { size: 1 } },
+    {
+      $project: {
+        _id: 1,
+        title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+        mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+        author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+        dateTime: 1,
+        imgURL: 1,
+        avgReadTime: 1,
+      },
+    },
+  ])
+
+  if (article.length === 0) {
+    return res.status(404).json({ message: 'No onboarding articles found' })
+  }
+
+  // Get the quiz for the article
+  const quiz = await Quiz.findOne({
+    article: article[0]._id,
+    language: userLanguage,
+  })
+
+  let quizQuestion = null
+  if (quiz) {
+    const allQuestions = [
+      ...(quiz?.para1?.questions || []),
+      ...(quiz?.para2?.questions || []),
+      ...(quiz?.para3?.questions || []),
+    ]
+
+    if (allQuestions.length > 0) {
+      quizQuestion =
+        allQuestions[Math.floor(Math.random() * allQuestions.length)]
+    }
+  }
+
+  // If no quiz found in user's language, try to get an English quiz
+  if (!quizQuestion) {
+    const englishQuiz = await Quiz.findOne({
+      article: article[0]._id,
+      language: 'en',
+    })
+    if (englishQuiz) {
+      const allQuestions = [
+        ...(englishQuiz?.para1?.questions || []),
+        ...(englishQuiz?.para2?.questions || []),
+        ...(englishQuiz?.para3?.questions || []),
+      ]
+      if (allQuestions.length > 0) {
+        quizQuestion =
+          allQuestions[Math.floor(Math.random() * allQuestions.length)]
+      }
+    }
+  }
+
+  // Combine article and quiz question
+  const result = {
+    ...article[0],
+    image: getFormattedImage(article[0].imgURL),
+    quizQuestion,
+  }
+
+  res.json(result)
+})
 module.exports = {
   allArticles,
   getArticle,
@@ -1037,4 +1324,9 @@ module.exports = {
   getRelatedArticles,
   createStory,
   getStory,
+  getRandomOnBoardingArticle,
+  addOnBoardingArticle,
+  getOnBoardingArticles,
+  updateOnBoardingArticle,
+  deleteOnBoardingArticle,
 }

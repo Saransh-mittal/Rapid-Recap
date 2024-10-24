@@ -106,16 +106,29 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       whileHover={isHoverDisabled ? {} : { scale: 1.02 }}
-      backgroundColor="rgba(15, 13, 21, 0.4)"
-      boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
+      // backgroundColor="rgba(15, 13, 21, 0.4)"
+      // boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
       p={{ base: 3, md: 4 }}
       borderRadius="xl"
-      mb={4}
       border="1px solid"
-      borderColor={isCurrentUser ? accentColor : 'transparent'}
+      // borderColor={isCurrentUser ? accentColor : 'transparent'}
       onClick={handleClick}
       cursor={isHoverDisabled ? 'default' : 'pointer'}
       position="relative"
+      bgGradient="linear(to-r, rgba(28, 20, 56, 0.4) 0%, rgba(35, 25, 70, 0.4) 50%, rgba(28, 20, 56, 0.4) 100%)"
+      _hover={{
+        bgGradient:
+          'linear(to-r, rgba(35, 25, 70, 0.5) 0%, rgba(45, 32, 89, 0.5) 50%, rgba(35, 25, 70, 0.5) 100%)',
+      }}
+      // boxShadow={
+      //   isCurrentUser
+      //     ? `0px 4px 20px rgba(255, 92, 152, 0.2),
+      //    inset 0px 0px 20px rgba(255, 92, 152, 0.1)`
+      //     : '0px 4px 20px rgba(0, 0, 0, 0.3)'
+      // }
+      borderColor={isCurrentUser ? accentColor : 'rgba(255, 255, 255, 0.05)'}
+      // backdropFilter="blur(12px)"
+      // transition="all 0.2s ease-in-out"
     >
       <Grid
         templateColumns={{ base: 'auto 1fr auto', md: 'auto 1fr auto' }}
