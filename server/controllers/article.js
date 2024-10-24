@@ -602,13 +602,17 @@ const searchArticles = asyncHandler(async (req, res) => {
     const totalArticles = await Article.countDocuments({
       $text: { $search: query },
       ...filter,
+      category: { $ne: 'onBoardingArticle' },
     })
 
     const articles = await Article.find(
-      { $text: { $search: query }, ...filter },
+      {
+        $text: { $search: query },
+        ...filter,
+        category: { $ne: 'onBoardingArticle' },
+      },
       { score: { $meta: 'textScore' } },
     )
-      // .sort({ score: { $meta: 'textScore' }, dateTime: -1 }) // Sort by dateTime desc, then by relevance
       .sort({ score: { $meta: 'textScore' } }) // Sort by relevance
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
@@ -617,6 +621,7 @@ const searchArticles = asyncHandler(async (req, res) => {
       )
 
     articles.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+
     const processedArticles = await Promise.all(
       articles.map(async article => {
         const paragraphs = await breakArticleIntoParagraphs(article.mainText)
@@ -637,6 +642,7 @@ const searchArticles = asyncHandler(async (req, res) => {
         }
       }),
     )
+
     const totalPages = Math.ceil(totalArticles / limitNumber)
 
     res.json({
