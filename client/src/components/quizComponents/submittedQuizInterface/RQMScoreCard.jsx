@@ -7,7 +7,7 @@ import CountingNumber from './CountingNumber.jsx'
 
 const MotionBox = motion(Box)
 
-const RQMScoreCard = ({ step, quizData, isTournament }) => {
+const RQMScoreCard = ({ step, quizData, isTournament, animationDelay }) => {
   const { t } = useTranslation('SubmittedQuizInterface')
   const [rqmStep, setRqmStep] = useState(0)
 
@@ -116,6 +116,7 @@ const RQMScoreCard = ({ step, quizData, isTournament }) => {
     <MotionBox
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: animationDelay }}
       bg="whiteAlpha.50"
       backdropFilter="blur(8px)"
       rounded="xl"

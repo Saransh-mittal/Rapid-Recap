@@ -125,7 +125,7 @@ const PreciseCountingNumber = ({
   )
 }
 
-const IQScoreCard = ({ step, quizData, isTournament }) => {
+const IQScoreCard = ({ step, quizData, isTournament, animationDelay }) => {
   const { t } = useTranslation('SubmittedQuizInterface')
   const [showAnimation, setShowAnimation] = useState(false)
   const { user } = useSelector(state => state.auth)
@@ -161,6 +161,7 @@ const IQScoreCard = ({ step, quizData, isTournament }) => {
     <MotionBox
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: animationDelay }}
       bg="whiteAlpha.50"
       backdropFilter="blur(8px)"
       rounded="xl"
