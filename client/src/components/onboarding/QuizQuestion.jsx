@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   VStack,
   Text,
@@ -54,7 +54,12 @@ const OptionButton = React.memo(
   },
 )
 
-const QuizQuestion = ({ onComplete, isArticleFetching, quizQuestion }) => {
+const QuizQuestion = ({
+  onComplete,
+  isArticleFetching,
+  quizQuestion,
+  fetchOnBoardingArticle,
+}) => {
   const [selectedAnswer, setSelectedAnswer] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const { t } = useTranslation('OnboardingProcess')
@@ -70,6 +75,12 @@ const QuizQuestion = ({ onComplete, isArticleFetching, quizQuestion }) => {
   const handleSelect = optionKey => {
     setSelectedAnswer(optionKey)
   }
+
+  useEffect(() => {
+    if (!quizQuestion) {
+      fetchOnBoardingArticle()
+    }
+  }, [])
 
   if (isArticleFetching) {
     return (

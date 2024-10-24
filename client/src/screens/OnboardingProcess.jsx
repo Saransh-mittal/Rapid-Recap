@@ -248,6 +248,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     try {
       const response = await axios.get(`/api/articles/onboarding`)
       setArticle(response.data)
+
       dispatch(setArticleData(response.data))
     } catch (error) {
       console.error(error)
@@ -326,6 +327,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         isArticleFetching={isArticleFetching}
         onComplete={handleQuizComplete}
         quizQuestion={article?.quizQuestion}
+        fetchOnBoardingArticle={fetchOnBoardingArticle}
       />
     ),
     [ONBOARDING_STEPS.QUIZ_RESULT]: (
