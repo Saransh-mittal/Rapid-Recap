@@ -713,6 +713,12 @@ const getTopThreeRecommendedArticles = async userId => {
 
     let cnt = 4
     const articlesForMail = []
+    if (
+      !userRecommendedArticles ||
+      !userRecommendedArticles.recommendations ||
+      userRecommendedArticles.recommendations.length === 0
+    )
+      return articlesForMail
     for (const article of userRecommendedArticles.recommendations) {
       if (cnt === 0) break
       const articleData = await Article.findById(article._id).select(

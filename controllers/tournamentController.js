@@ -110,11 +110,12 @@ const getLatestTournament = asyncHandler(async (req, res) => {
     }
   }
 
+  const registeredCount = await TournamentRegistration.countDocuments({
+    tournament: tournament._id,
+  })
   let result = {
     ...tournament.toObject(),
-    registeredCount: await TournamentRegistration.countDocuments({
-      tournament: tournament._id,
-    }),
+    registeredCount,
     isRegistered: !!userRegistration,
     selectedCategories: userRegistration
       ? userRegistration.selectedCategories
@@ -966,20 +967,53 @@ const startQuiz = asyncHandler(async (req, res) => {
         }
         await registration.save({ session })
 
+        // Improved Fisher-Yates shuffle algorithm
+        const shuffle = array => {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[array[i], array[j]] = [array[j], array[i]]
+          }
+          return array
+        }
+
+        // Function to shuffle options and reassign keys
+        const shuffleOptions = options => {
+          const entries = Object.entries(options)
+          const shuffled = shuffle(entries)
+
+          // Reassign keys (a, b, c, d) to shuffled options
+          return Object.fromEntries(
+            shuffled.map(([_, value], index) => [
+              String.fromCharCode(97 + index), // 'a', 'b', 'c', 'd'
+              value,
+            ]),
+          )
+        }
+
         const clientQuestions = questions.map(q => {
           const questionText = lang === 'hi' ? q.hindiQuestion : q.question
-          const optionArray = Object.entries(q.options).map(
-            ([key, option]) => ({
-              id: option._id.toString(),
-              text: lang === 'hi' ? option.hindiText : option.text,
-            }),
+          const optionsObject = Object.fromEntries(
+            Object.entries(q.options).map(([key, option]) => [
+              key,
+              {
+                id: option._id.toString(),
+                text: lang === 'hi' ? option.hindiText : option.text,
+              },
+            ]),
           )
-          const shuffledOptions = optionArray.sort(() => Math.random() - 0.5)
+
+          const shuffledOptions = shuffleOptions(optionsObject)
+          // Find new correct answer key
+          // convert shuffledOptions to array
+          const shuffledOptionsArray = Object.entries(shuffledOptions)
+          const requiredOptions = shuffledOptionsArray.map(
+            ([key, value]) => value,
+          )
 
           return {
             _id: q._id,
             question: questionText,
-            options: shuffledOptions,
+            options: requiredOptions,
           }
         })
 
@@ -990,7 +1024,11 @@ const startQuiz = asyncHandler(async (req, res) => {
             category: quizSession[0].category,
             startTime: quizSession[0].startTime,
             endTime: quizSession[0].endTime,
-            questions: clientQuestions,
+            questions: clientQuestions.map(({ _id, question, options }) => ({
+              _id,
+              question,
+              options,
+            })),
           },
         })
       })
@@ -1022,6 +1060,7 @@ const startQuiz = asyncHandler(async (req, res) => {
 // @access Private
 const submitQuiz = asyncHandler(async (req, res) => {
   const { quizSessionId, userResponses, timeTaken, questionsIds } = req.body
+
   const userId = req.user._id
   const maxRetries = 3
   let retryCount = 0
@@ -1090,11 +1129,8 @@ const submitQuiz = asyncHandler(async (req, res) => {
         score,
         quizDifficulty,
         expectedTime,
-        apparentTimeTaken,
-        weightedScore,
-        adjustedScore,
-        timeFactor,
         performanceBonus,
+        baseRQM_score,
       } = calculateRQMScore(
         updatedResponses,
         alignedQuestionsWithResponses,
@@ -1213,6 +1249,8 @@ const submitQuiz = asyncHandler(async (req, res) => {
         message: 'Quiz submitted successfully',
         score: `${score * questions.length}/${questions.length}`,
         RQM_score,
+        performanceBonus,
+        baseRQM_score,
         quizDifficulty: quizDifficultyLevel,
         timeTaken,
         totalTournamentScore: registration.totalScore,

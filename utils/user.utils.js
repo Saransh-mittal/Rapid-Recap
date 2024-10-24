@@ -632,6 +632,20 @@ const updateUserStats = async ({
   await user.save({ session })
 }
 
+const formatPreferredCategories = preferences => {
+  if (!preferences || !Array.isArray(preferences)) return []
+
+  return preferences
+    .filter(pref => !pref.isInferred)
+    .map(pref => ({
+      category: pref.category,
+      weight: pref.weight,
+      isInferred: !!pref.isInferred,
+      lastUpdated: pref.lastUpdated
+        ? pref.lastUpdated.toISOString()
+        : new Date().toISOString(),
+    }))
+}
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -648,4 +662,5 @@ module.exports = {
   currDayStreakCalulator,
   makeFirstLoginFalse,
   getTheRevivalEndDay,
+  formatPreferredCategories,
 }

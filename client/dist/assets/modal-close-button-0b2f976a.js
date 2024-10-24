@@ -1,1 +1,0 @@
-import{aK as m,aL as u,w as d,Z as i,aV as p}from"./index-946891ae.js";import{a as C,u as x}from"./modal-focus-6a0e3c6b.js";const M=m((s,o)=>{const{onClick:a,className:t,...l}=s,{onClose:e}=C(),n=u("chakra-modal__close-btn",t),c=x();return d.jsx(i,{ref:o,__css:c.closeButton,className:n,onClick:p(a,r=>{r.stopPropagation(),e()}),...l})});M.displayName="ModalCloseButton";export{M};

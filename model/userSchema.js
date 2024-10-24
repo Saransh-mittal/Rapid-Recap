@@ -340,6 +340,26 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    preferredCategories: [
+      {
+        category: String,
+        weight: Number,
+        isInferred: { type: Boolean, default: false },
+        lastUpdated: { type: Date, default: Date.now },
+      },
+    ],
+    needsOnboarding: {
+      type: Boolean,
+      default: true,
+    },
+    onboardingStep: {
+      type: Number,
+      default: 0,
+    },
+    inactiveUserOnboarding: {
+      type: Boolean,
+      default: false,
+    },
   },
   { collection: 'Users' },
 )

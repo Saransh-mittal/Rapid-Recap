@@ -18,16 +18,16 @@ const genQuiz = async ({ fullQuiz, title, session }) => {
   // Loop through each paragraph
   const len = Math.min(
     5,
-    fullQuiz.para1.questions.length +
-      fullQuiz.para2.questions.length +
-      fullQuiz.para3.questions.length,
+    (fullQuiz?.para1?.questions?.length || 0) +
+      (fullQuiz?.para2?.questions?.length || 0) +
+      (fullQuiz?.para3?.questions?.length || 0),
   )
   const paraNames = []
   for (let paraName in fullQuiz) {
     if (paraName.startsWith('para')) {
       paraNames.push(paraName)
       const para = fullQuiz[paraName]
-      while (para.questions.length > 0) {
+      while (para && para.questions && para.questions.length > 0) {
         // Loop through each question in the paragraph
         // randomly select a question
         const question =
@@ -55,7 +55,12 @@ const genQuiz = async ({ fullQuiz, title, session }) => {
       paraNames[Math.floor(Math.random() * paraNames.length)]
     const para = fullQuiz[randomParaName]
 
-    while (para.questions.length > 0 && selectedQuestions.size < len) {
+    while (
+      para &&
+      para.questions &&
+      para.questions.length > 0 &&
+      selectedQuestions.size < len
+    ) {
       // Select a random question from the paragraph
       const randomIndex = Math.floor(Math.random() * para.questions.length)
       const randomQuestion = para.questions[randomIndex]
@@ -749,29 +754,25 @@ const calculateRQMScore = (userResponses, questions, timeTaken) => {
 
   // Adjust score based on difficulty
   let adjustedScore = weightedScore * (1 + (quizDifficulty - 0.5))
-
   // Apply bonus for exceptional performance
   const correctCount = userResponses.filter(res => res.isCorrect).length
+  // Calculate time factor (compare to expected time)
+  const timeFactor = Math.min(expectedTime / apparentTimeTaken, 2) // Cap at 2x speed
+
+  const baseRQM_score = Math.ceil((adjustedScore * timeFactor * 150) / 2)
   if (correctCount === questions.length) {
     adjustedScore *= ALL_CORRECT_BONUS
   } else if (correctCount === questions.length - 1) {
     adjustedScore *= ONE_WRONG_BONUS
   }
 
-  // Calculate time factor (compare to expected time)
-  const timeFactor = Math.min(expectedTime / apparentTimeTaken, 2) // Cap at 2x speed
-
   // Calculate final RQM score
   const RQM_score = Math.ceil((adjustedScore * timeFactor * 150) / 2)
-
   return {
+    baseRQM_score,
     RQM_score,
     score,
-    quizDifficulty,
     expectedTime,
-    apparentTimeTaken,
-    weightedScore,
-    timeFactor,
     performanceBonus:
       correctCount === questions.length
         ? ALL_CORRECT_BONUS

@@ -105,10 +105,34 @@ const getQuiz = async (req, res) => {
         status: 'completed',
       })
     } else if (inProgressSession) {
-      emitProgress(100)
+      const currentTime = new Date()
+      const endTime = inProgressSession.endTime
+      if (currentTime > endTime) {
+        inProgressSession.completed = true
+        inProgressSession.responses = []
+        await inProgressSession.save({ session })
+        const quizAttemptResult = await saveQuizAttempt(
+          userId,
+          articleId,
+          [],
+          inProgressSession.questions,
+          0,
+          inProgressSession._id,
+          inProgressSession,
+          session,
+          emitProgress,
+        )
+        await session.commitTransaction()
+        session.endSession()
+        emitProgress(100)
+        return res.status(400).json({
+          message: 'Quiz session expired.',
+        })
+      }
       await session.commitTransaction()
       session.endSession()
-      return res.status(200).json({
+      emitProgress(100)
+      return res.status(400).json({
         message: 'Quiz is in progress.',
       })
     } else if (quizSession) {
@@ -269,6 +293,7 @@ const getQuiz = async (req, res) => {
 // @access Private
 const startQuiz = async (req, res) => {
   const { sessionId } = req.params
+  const { onBoarding } = req.query
   const userId = req.user._id
   try {
     const quizSession = await ArticleQuizSession.findOne({
@@ -290,8 +315,10 @@ const startQuiz = async (req, res) => {
 
     const timer = Math.min(5, quizSession.questions.length) * 10
 
-    quizSession.startTime = new Date()
-    quizSession.endTime = new Date(Date.now() + timer * 1000)
+    if (!onBoarding) {
+      quizSession.startTime = new Date()
+      quizSession.endTime = new Date(Date.now() + timer * 1000)
+    }
     await quizSession.save()
 
     res.status(200).json({
@@ -493,12 +520,10 @@ const getQuizSummary = async (req, res) => {
     if (!user) {
       throw new Error('User not found')
     }
-    const lang = user.userLanguage
 
     const quizSession = await ArticleQuizSession.findOne({
       user: userId,
       article: articleId,
-      language: lang,
     })
 
     if (!quizSession) {
@@ -524,7 +549,9 @@ const getQuizSummary = async (req, res) => {
 
     const score = quizSession.responses.filter(r => r.isCorrect).length
     const totalQuestions = quizSession.questions.length
-    const articleDifficulty = quizSession.overAllDifficulty[lang]
+    const articleDifficulty = Object.values(quizSession.overAllDifficulty).find(
+      d => d,
+    )
     const articleDifficultyLevel =
       articleDifficulty < 0.5
         ? 'easy'
@@ -535,8 +562,8 @@ const getQuizSummary = async (req, res) => {
 
     res.status(200).json({
       result,
-      timeTaken: quizSession.timeTaken[lang],
-      RQM_score: quizSession.RQM_score[lang],
+      timeTaken: Object.values(quizSession.timeTaken).find(t => t),
+      RQM_score: Object.values(quizSession.RQM_score).find(s => s),
       quizDifficulty: articleDifficultyLevel,
       score: scoreString,
     })

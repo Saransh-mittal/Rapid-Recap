@@ -1,1 +1,0 @@
-import{aZ as t}from"./index-946891ae.js";function o(e){return n(e)?.defaultView??window}function n(e){return t(e)?e.ownerDocument:document}function r(e){return e.view??window}function u(e){return n(e).activeElement}export{u as a,r as b,o as g};

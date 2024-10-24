@@ -1,0 +1,1 @@
+import{aM as c,aN as n,aP as f,w as m,aO as d}from"./index-566900fb.js";import{u as i}from"./modal-focus-6036dfef.js";const x=c((s,a)=>{const{className:e,...o}=s,t=n("chakra-modal__footer",e),r=i(),l=f({display:"flex",alignItems:"center",justifyContent:"flex-end",...r.footer});return m.jsx(d.footer,{ref:a,...o,__css:l,className:t})});x.displayName="ModalFooter";export{x as M};
