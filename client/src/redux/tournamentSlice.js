@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { addNoteMessage } from './appSlice'
+import { addNoteMessage, addNoteMessageIfAllowed } from './appSlice'
 import axios from 'axios'
 
 export const checkTournamentRegistration = createAsyncThunk(
@@ -20,7 +20,7 @@ export const checkTournamentRegistration = createAsyncThunk(
       ) {
         if (user.streak < 2 && !user.eligibleForTournament) {
           dispatch(
-            addNoteMessage({
+            addNoteMessageIfAllowed({
               title: t('Keep Going!'),
               messageType: 'tournament',
               tournamentStatus: 'locked',
@@ -42,7 +42,7 @@ export const checkTournamentRegistration = createAsyncThunk(
           )
         } else {
           dispatch(
-            addNoteMessage({
+            addNoteMessageIfAllowed({
               title: t('Tournament Time!'),
               duration: 10000,
               width: '300px',
@@ -101,7 +101,7 @@ export const getTopLeaderboard = createAsyncThunk(
         })
         showLeaderboardMessage &&
           dispatch(
-            addNoteMessage({
+            addNoteMessageIfAllowed({
               title: t('Ongoing Tournament'),
               tournamentName:
                 '#' + String(String(tournamentNumber).padStart(3, '0')),

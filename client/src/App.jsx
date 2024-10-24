@@ -50,6 +50,7 @@ import {
   setSoundSettings,
   setSelectedNotificationId,
   setIsNotifInboxModalOpen,
+  addNoteMessageIfAllowed,
 } from './redux/appSlice.js'
 import { setUser } from './redux/authSlice.js'
 import i18n from 'i18next'
@@ -149,7 +150,7 @@ const App = () => {
 
     if (!token) {
       dispatch(
-        addNoteMessage({
+        addNoteMessageIfAllowed({
           title: t('Start using Rapid Recap'), // Added translation
           duration: 15000,
           width: '350px',
@@ -208,9 +209,6 @@ const App = () => {
   }, [tournamentId, status])
 
   useEffect(() => {
-    if (user?.newAccount) {
-      setIsGuestLoggedin(true)
-    }
     if (isAuthenticated && user.role !== 'guest') {
       dispatch(checkTournamentRegistration(tournamentSliceTranslation))
     }
@@ -238,7 +236,7 @@ const App = () => {
     ) {
       changeLanguage('en', null, null)
       dispatch(
-        addNoteMessage({
+        addNoteMessageIfAllowed({
           title: t('Please select your language from profile'), // Added translation
           duration: null,
           width: '300px',
@@ -284,7 +282,7 @@ const App = () => {
   useEffect(() => {
     if (guestModalJustClosed && user?.role === 'guest') {
       dispatch(
-        addNoteMessage({
+        addNoteMessageIfAllowed({
           title: t('You can view your credentials of guest account in profile'), // Added translation
           duration: 10000,
           width: '300px',
@@ -302,7 +300,7 @@ const App = () => {
       !user?.newAccount
     ) {
       dispatch(
-        addNoteMessage({
+        addNoteMessageIfAllowed({
           title: t('Register to Safeguard your progress'), // Added translation
           duration: 5000,
           width: '300px',
@@ -429,6 +427,7 @@ const App = () => {
             <AppRoutes
               isToken={isToken()}
               needsOnboarding={user?.needsOnboarding}
+              setIsGuestLoggedin={setIsGuestLoggedin}
             />
           </Suspense>
         </Box>

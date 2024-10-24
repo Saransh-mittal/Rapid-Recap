@@ -46,7 +46,7 @@ const Star = React.memo(({ size, top, left }) => (
   />
 ))
 
-const OnboardingProcess = () => {
+const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   const [step, setStep] = useState(0)
   const [selectedLanguage, setSelectedLanguage] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
@@ -155,6 +155,7 @@ const OnboardingProcess = () => {
           onboardingStep: 7,
         }),
       )
+      if (user.role === 'guest') setIsGuestLoggedin(true)
       navigate('/home/all')
     } catch (error) {
       toast({

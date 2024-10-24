@@ -19,13 +19,18 @@ const ContactLayout = lazy(() =>
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 
-const AppRoutes = ({ isToken, needsOnboarding }) => {
+const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
         {needsOnboarding ? (
           <>
-            <Route path="/" element={<OnboardingProcess />} />
+            <Route
+              path="/"
+              element={
+                <OnboardingProcess setIsGuestLoggedin={setIsGuestLoggedin} />
+              }
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (
