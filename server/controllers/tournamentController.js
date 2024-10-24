@@ -995,30 +995,27 @@ const startQuiz = asyncHandler(async (req, res) => {
             Object.entries(q.options).map(([key, option]) => [
               key,
               {
-                _id: option._id,
+                id: option._id.toString(),
                 text: lang === 'hi' ? option.hindiText : option.text,
               },
             ]),
           )
+
           const shuffledOptions = shuffleOptions(optionsObject)
           // Find new correct answer key
-          const newAnswer = Object.keys(shuffledOptions).find(
-            key => shuffledOptions[key]._id.toString() === q.answer.toString(),
+          // convert shuffledOptions to array
+          const shuffledOptionsArray = Object.entries(shuffledOptions)
+          const requiredOptions = shuffledOptionsArray.map(
+            ([key, value]) => value,
           )
+
           return {
             _id: q._id,
             question: questionText,
-            options: shuffledOptions,
-            answer: newAnswer, // Store the new answer key
+            options: requiredOptions,
           }
         })
-        // Update the quizSession with the shuffled questions and new answer keys
-        quizSession[0].questions = clientQuestions.map(q => ({
-          question: q._id,
-          shuffledAnswer: q.answer,
-        }))
 
-        await quizSession[0].save({ session })
         res.json({
           message: 'Quiz started',
           quizSession: {
@@ -1062,6 +1059,7 @@ const startQuiz = asyncHandler(async (req, res) => {
 // @access Private
 const submitQuiz = asyncHandler(async (req, res) => {
   const { quizSessionId, userResponses, timeTaken, questionsIds } = req.body
+
   const userId = req.user._id
   const maxRetries = 3
   let retryCount = 0
@@ -1130,11 +1128,8 @@ const submitQuiz = asyncHandler(async (req, res) => {
         score,
         quizDifficulty,
         expectedTime,
-        apparentTimeTaken,
-        weightedScore,
-        adjustedScore,
-        timeFactor,
         performanceBonus,
+        baseRQM_score,
       } = calculateRQMScore(
         updatedResponses,
         alignedQuestionsWithResponses,
@@ -1253,6 +1248,8 @@ const submitQuiz = asyncHandler(async (req, res) => {
         message: 'Quiz submitted successfully',
         score: `${score * questions.length}/${questions.length}`,
         RQM_score,
+        performanceBonus,
+        baseRQM_score,
         quizDifficulty: quizDifficultyLevel,
         timeTaken,
         totalTournamentScore: registration.totalScore,

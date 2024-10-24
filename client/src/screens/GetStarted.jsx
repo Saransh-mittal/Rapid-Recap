@@ -36,7 +36,6 @@ const detectWeakDevice = () => {
     const navigator = window.navigator
     const hardwareConcurrency = navigator.hardwareConcurrency || 4
     const deviceMemory = navigator.deviceMemory || 4
-    console.log(hardwareConcurrency, navigator.deviceMemory)
     return hardwareConcurrency < 4 || deviceMemory < 4
   }
 
