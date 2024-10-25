@@ -5,15 +5,21 @@ import { motion } from 'framer-motion'
 import { Trophy, FileText } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setIsOpen } from '../../../redux/quizSlice'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 
 const ActionButton = React.memo(
-  ({ icon, label, iconColor, onClick, testId }) => (
+  ({ icon, label, iconColor, onClick, testId, t, dispatch }) => (
     <MotionButton
-      onClick={onClick}
+      onClick={() => {
+        onClick()
+        if (label === t('leaderboard')) {
+          dispatch(setIsOpen(false))
+        }
+      }}
       data-testid={testId}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -58,7 +64,7 @@ const ActionButtons = React.memo(
     const { t } = useTranslation('SubmittedQuizInterface')
     const navigate = useNavigate()
     const { user } = useSelector(state => state.auth)
-
+    const dispatch = useDispatch()
     if (step < 4) return null
 
     return (
@@ -82,6 +88,8 @@ const ActionButtons = React.memo(
               iconColor="yellow.300"
               onClick={() => navigate('/leaderboard')}
               testId="leaderboard-button"
+              t={t}
+              dispatch={dispatch}
             />
           )}
           <ActionButton
@@ -90,6 +98,8 @@ const ActionButtons = React.memo(
             iconColor="purple.300"
             onClick={onViewReport}
             testId="quiz-summary-button"
+            t={t}
+            dispatch={dispatch}
           />
         </Grid>
       </MotionBox>
