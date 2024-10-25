@@ -23,6 +23,7 @@ import {
   Switch,
 } from '@chakra-ui/react'
 import axios from 'axios'
+import { onBoardingArticlePlaceholder } from '../../assets/onBoardingArticlePlaceholder.js'
 
 const initialArticleState = {
   dateTime: new Date().toISOString(),
@@ -273,7 +274,7 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
               value={jsonData}
               onChange={handleJsonChange}
               height="500px"
-              placeholder="Paste your JSON here..."
+              placeholder={onBoardingArticlePlaceholder}
             />
           ) : (
             <VStack spacing={4} align="stretch">
