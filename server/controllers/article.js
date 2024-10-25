@@ -14,7 +14,10 @@ const {
   extractNewsUtilityFunc,
 } = require('../utils/article.utils')
 const { sendNotification } = require('../services/notificationService')
-const { formatDate } = require('../utils/miscellaneous.utils')
+const {
+  formatDate,
+  getFormattedImage,
+} = require('../utils/miscellaneous.utils')
 const Quiz = require('../model/quizSchema')
 const NewsAPI = require('newsapi')
 const asyncHandler = require('express-async-handler')
@@ -1293,6 +1296,7 @@ const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
   // Combine article and quiz question
   const result = {
     ...article[0],
+    image: getFormattedImage(article[0].imgURL),
     quizQuestion,
   }
 

@@ -29,4 +29,31 @@ const dailyStreakCheckerAndUpdater = async dispatch => {
   }
 }
 
-export { quinBoostChecker, dailyStreakCheckerAndUpdater }
+const parseQuizData = result => {
+  const [correct, total] = result?.score?.split('/').map(Number) || [0, 0]
+
+  return {
+    score: {
+      correct,
+      total,
+      percentage: (correct / total) * 100,
+    },
+    timeTaken: result?.timeTaken,
+    difficulty: result?.quizDifficulty,
+    baseRQM: result?.baseRQM_score,
+    finalRQM: result?.RQM_score,
+    performanceBonus: result?.performanceBonus,
+    boost: result?.boost,
+    isBoost: result?.isBoosted,
+    iqData: {
+      prevScore: result?.prevIQScore,
+      newScore: result?.newIQScore,
+      hasChange: result?.hasSocietyOrCircleChanged,
+      changeDetails: result?.changedSocietyOrCircle,
+      isUpgrade: result?.isUpgrade,
+      pauseRealTimeIQ: result?.pauseRealTimeIQ,
+    },
+  }
+}
+
+export { quinBoostChecker, dailyStreakCheckerAndUpdater, parseQuizData }

@@ -346,7 +346,6 @@ const Navbar = ({ onNavbarLoad }) => {
         bgGradient:
           'linear(180deg, rgba(13, 28, 40, 0.9) 0%, rgba(8, 17, 28, 0.8) 100%)',
         borderBottom: '1px solid rgba(102, 204, 204, 0.1)',
-        backdropFilter: 'blur(10px)',
         boxShadow: '0 4px 30px rgba(0, 0, 0, 0.2)',
         transition: 'all 0.3s ease-in-out',
         justifyContent: 'center',
@@ -380,7 +379,6 @@ const Navbar = ({ onNavbarLoad }) => {
         bgGradient:
           'linear(180deg, rgba(28, 20, 56, 0.95) 0%, rgba(15, 13, 21, 0.90) 100%)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        backdropFilter: 'blur(10px)',
         boxShadow: isVisibleRef.current
           ? '0 4px 30px rgba(0, 0, 0, 0.1)'
           : 'none',

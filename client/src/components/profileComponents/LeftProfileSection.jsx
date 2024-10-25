@@ -5,7 +5,6 @@ import {
   SkeletonCircle,
   SkeletonText,
   useDisclosure,
-  useColorModeValue,
 } from '@chakra-ui/react'
 import { SettingsIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
@@ -60,17 +59,11 @@ export const LeftProfileSection = ({
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
   `
-  const bgColor = useColorModeValue(
-    'rgba(26, 32, 44, 0.8)',
-    'rgba(23, 25, 35, 0.8)',
-  )
-  const borderColor = useColorModeValue('gold', 'goldenrod')
   const sharedBoxStyles = {
     bgGradient: 'linear(to-b, rgba(28, 20, 56, 0.4), rgba(15, 13, 21, 0.4))',
     border: '1px solid',
     borderColor: 'rgba(255, 255, 255, 0.05)',
     boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.2)',
-    backdropFilter: 'blur(12px)',
     position: 'relative',
     transition: 'all 0.2s ease-in-out',
     _hover: {

@@ -1,3 +1,4 @@
+// src/components/quizComponents/PageTitle.jsx
 import React from 'react'
 import { Box, Heading, Text } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
@@ -5,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
-const PageTitle = ({ isTournament = false }) => {
+const PageTitle = React.memo(({ isTournament = false }) => {
   const { t } = useTranslation('SubmittedQuizInterface')
 
   return (
@@ -41,6 +42,6 @@ const PageTitle = ({ isTournament = false }) => {
       </Text>
     </MotionBox>
   )
-}
+})
 
 export default PageTitle

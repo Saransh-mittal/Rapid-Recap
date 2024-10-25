@@ -3,23 +3,23 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Box, Button, useToast } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import axios from 'axios'
+import i18n from 'i18next'
+import useSound from '../customHooks/useSound'
 import LanguageSelection from '../components/onboarding/LanguageSelection'
-import Welcome from '../components/onboarding/Welcome'
 import CategorySelection from '../components/onboarding/CategorySelection'
+import Welcome from '../components/onboarding/Welcome'
 import QuizQuestion from '../components/onboarding/QuizQuestion'
 import QuizResult from '../components/onboarding/QuizResult'
 import ArticleReading from '../components/onboarding/ArticleReading'
 import LeaderboardOnboarding from '../components/onboarding/LeaderboardOnboarding'
-import { setIsOpen } from '../redux/quizSlice'
-import useSound from '../customHooks/useSound'
-import axios from 'axios'
-import { setArticleData } from '../redux/articleSlice'
-import i18n from 'i18next'
 import { setUser } from '../redux/authSlice'
+import { setArticleData } from '../redux/articleSlice'
+import { setIsOpen } from '../redux/quizSlice'
 
 const MotionBox = motion(Box)
 
-// Star component
+// Star component remains the same...
 const Star = React.memo(({ size, top, left }) => (
   <motion.div
     style={{
@@ -46,19 +46,42 @@ const Star = React.memo(({ size, top, left }) => (
   />
 ))
 
+// Define step constants
+const ONBOARDING_STEPS = {
+  LANGUAGE: 'language',
+  WELCOME: 'welcome',
+  CATEGORIES: 'categories',
+  QUIZ_QUESTION: 'quiz_question',
+  QUIZ_RESULT: 'quiz_result',
+  ARTICLE_READING: 'article_reading',
+  LEADERBOARD: 'leaderboard',
+}
+
+// Define step sequence
+const STEP_SEQUENCE = [
+  ONBOARDING_STEPS.LANGUAGE,
+  ONBOARDING_STEPS.WELCOME,
+  ONBOARDING_STEPS.CATEGORIES,
+  ONBOARDING_STEPS.QUIZ_QUESTION,
+  ONBOARDING_STEPS.QUIZ_RESULT,
+  ONBOARDING_STEPS.ARTICLE_READING,
+  ONBOARDING_STEPS.LEADERBOARD,
+]
+
 const OnboardingProcess = ({ setIsGuestLoggedin }) => {
-  const [step, setStep] = useState(0)
+  const [currentStepId, setCurrentStepId] = useState(ONBOARDING_STEPS.LANGUAGE)
   const [selectedLanguage, setSelectedLanguage] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
   const [initialQuizCorrect, setInitialQuizCorrect] = useState(false)
+  const [article, setArticle] = useState(null)
+  const [isArticleFetching, setIsArticleFetching] = useState(false)
+
   const { playClick } = useSound()
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { onBoardingQuizSubmitted } = useSelector(state => state.quiz)
   const toast = useToast()
-  const [article, setArticle] = useState(null)
-  const [isArticleFetching, setIsArticleFetching] = useState(false)
 
   // Generate stars
   const stars = useMemo(
@@ -72,14 +95,56 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         })),
     [],
   )
-  const updateOnboardingProgress = async (currentStep, data = {}) => {
+
+  const getNextStepId = useCallback(currentId => {
+    const currentIndex = STEP_SEQUENCE.indexOf(currentId)
+    return STEP_SEQUENCE[currentIndex + 1] || currentId
+  }, [])
+
+  const sanitizeData = (stepId, data) => {
+    // Sanitize data for the current step
+    switch (stepId) {
+      case ONBOARDING_STEPS.LANGUAGE:
+        return {
+          language: data.language,
+        }
+      case ONBOARDING_STEPS.CATEGORIES:
+        return {
+          categories: data.categories,
+        }
+      case ONBOARDING_STEPS.QUIZ_RESULT:
+        return {
+          quizResult: data.quizResult,
+        }
+      case ONBOARDING_STEPS.WELCOME:
+        return {
+          language: data.language,
+        }
+      default:
+        return {}
+    }
+  }
+
+  const updateOnboardingProgress = async (
+    currentStepId,
+    nextStepId,
+    rawData = {},
+  ) => {
     try {
-      await axios.post('/api/user/onboarding-progress', {
-        step: currentStep,
-        data,
-      })
+      // Sanitize data for the current step
+      const sanitizedData = sanitizeData(currentStepId, rawData)
+      const payload = {
+        currentStep: STEP_SEQUENCE.indexOf(currentStepId) + 1,
+        step: STEP_SEQUENCE.indexOf(nextStepId) + 1,
+        currentStepId,
+        nextStepId,
+        ...sanitizedData,
+      }
+
+      await axios.post('/api/user/onboarding-progress', payload)
     } catch (error) {
       console.error('Failed to update onboarding progress:', error)
+      throw error
     }
   }
 
@@ -87,14 +152,17 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     try {
       setSelectedLanguage(lang)
       await i18n.changeLanguage(lang)
-      await handleNext({ language: lang })
+      const nextStepId = ONBOARDING_STEPS.WELCOME
+      await updateOnboardingProgress(ONBOARDING_STEPS.LANGUAGE, nextStepId, {
+        language: lang,
+      })
+      setCurrentStepId(nextStepId)
       fetchOnBoardingArticle()
     } catch (error) {
-      console.error('Failed to update onboarding progress:', error)
+      console.error('Failed to update language:', error)
       toast({
         title: 'Error',
-        description:
-          'Failed to update language in onboarding progress. Please try again.',
+        description: 'Failed to update language. Please try again.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -103,56 +171,42 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     }
   }
 
-  const handleCategoryToggle = category => {
-    setSelectedCategories(prev => {
-      if (prev.includes(category)) {
-        return prev.filter(c => c !== category)
-      } else if (prev.length < 5) {
-        return [...prev, category]
+  const handleNext = async (rawData = {}) => {
+    try {
+      const nextStepId = getNextStepId(currentStepId)
+      if (nextStepId !== currentStepId) {
+        await updateOnboardingProgress(currentStepId, nextStepId, rawData)
+        setCurrentStepId(nextStepId)
+
+        if (nextStepId === ONBOARDING_STEPS.CATEGORIES) {
+          axios.get(
+            `/api/recommendation?page=${1}&pageSize=18&lang=${i18n.language}`,
+          )
+        }
       }
-      return prev
-    })
-  }
-
-  const handleNext = async ({ language }) => {
-    if (step < 6) {
-      const nextStep = step + 1
-      let data = {}
-
-      switch (step) {
-        case 0:
-          data = { language }
-          break
-        case 2:
-          data = { categories: selectedCategories }
-          break
-        // Add more cases if needed for other steps
-      }
-
-      await updateOnboardingProgress(nextStep, data)
-      if (step === 2) {
-        axios.get(
-          `/api/recommendation?page=${1}&pageSize=18&lang=${i18n.language}`,
-        )
-      }
-
-      setStep(nextStep)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to proceed to next step. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
     }
-  }
-
-  const handleQuizComplete = isCorrect => {
-    setInitialQuizCorrect(isCorrect)
-    setStep(4)
   }
 
   const handleFinish = async () => {
     try {
-      await updateOnboardingProgress(7)
+      await updateOnboardingProgress(
+        ONBOARDING_STEPS.LEADERBOARD,
+        ONBOARDING_STEPS.LEADERBOARD,
+        {},
+      )
       dispatch(
         setUser({
           ...user,
           needsOnboarding: false,
-          onboardingStep: 7,
+          onboardingStep: STEP_SEQUENCE.length,
         }),
       )
       if (user.role === 'guest') setIsGuestLoggedin(true)
@@ -168,12 +222,33 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     }
   }
 
+  const handleQuizComplete = isCorrect => {
+    setInitialQuizCorrect(isCorrect)
+    const nextStepId = ONBOARDING_STEPS.QUIZ_RESULT
+    updateOnboardingProgress(ONBOARDING_STEPS.QUIZ_QUESTION, nextStepId, {
+      quizResult: isCorrect,
+    })
+    setCurrentStepId(nextStepId)
+  }
+
+  const handleCategoryToggle = category => {
+    setSelectedCategories(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(c => c !== category)
+      } else if (prev.length < 5) {
+        return [...prev, category]
+      }
+      return prev
+    })
+  }
+
   const fetchOnBoardingArticle = useCallback(async () => {
     if (isArticleFetching) return
     setIsArticleFetching(true)
     try {
       const response = await axios.get(`/api/articles/onboarding`)
       setArticle(response.data)
+
       dispatch(setArticleData(response.data))
     } catch (error) {
       console.error(error)
@@ -187,7 +262,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     } finally {
       setIsArticleFetching(false)
     }
-  }, [dispatch, toast])
+  }, [dispatch, isArticleFetching, toast])
 
   const handleQuizButtonClick = useCallback(() => {
     playClick()
@@ -208,14 +283,19 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     const fetchUserOnboardingProgress = async () => {
       try {
         const response = await axios.get('/api/user/onboarding-progress')
-        setStep(response.data.step)
+        const stepId =
+          STEP_SEQUENCE[response.data.step - 1] || ONBOARDING_STEPS.LANGUAGE
+        setCurrentStepId(stepId)
+
         if (response.data.step >= 1) {
           setSelectedLanguage(response.data.language)
         }
         if (response.data.step >= 3) {
           setSelectedCategories(response.data.categories)
         }
-        if (response.data.step === 3) fetchOnBoardingArticle()
+        if (stepId === ONBOARDING_STEPS.QUIZ_QUESTION) {
+          fetchOnBoardingArticle()
+        }
       } catch (error) {
         console.error('Failed to fetch onboarding progress:', error)
       }
@@ -230,31 +310,45 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     }
   }, [onBoardingQuizSubmitted])
 
-  const steps = [
-    <LanguageSelection onLanguageSelect={handleLanguageSelect} />,
-    <Welcome />,
-    <CategorySelection
-      selectedCategories={selectedCategories}
-      onCategoryToggle={handleCategoryToggle}
-    />,
-    <QuizQuestion
-      isArticleFetching={isArticleFetching}
-      onComplete={handleQuizComplete}
-      quizQuestion={article?.quizQuestion}
-    />,
-    <QuizResult
-      isCorrect={initialQuizCorrect}
-      onNext={handleNext}
-      quizQuestion={article?.quizQuestion}
-    />,
-    <ArticleReading
-      onNext={handleQuizButtonClick}
-      article={article}
-      isArticleFetching={isArticleFetching}
-      fetchOnBoardingArticle={fetchOnBoardingArticle}
-    />,
-    <LeaderboardOnboarding onComplete={handleFinish} />,
-  ]
+  // Map steps to components
+  const stepComponents = {
+    [ONBOARDING_STEPS.LANGUAGE]: (
+      <LanguageSelection onLanguageSelect={handleLanguageSelect} />
+    ),
+    [ONBOARDING_STEPS.WELCOME]: <Welcome />,
+    [ONBOARDING_STEPS.CATEGORIES]: (
+      <CategorySelection
+        selectedCategories={selectedCategories}
+        onCategoryToggle={handleCategoryToggle}
+      />
+    ),
+    [ONBOARDING_STEPS.QUIZ_QUESTION]: (
+      <QuizQuestion
+        isArticleFetching={isArticleFetching}
+        onComplete={handleQuizComplete}
+        quizQuestion={article?.quizQuestion}
+        fetchOnBoardingArticle={fetchOnBoardingArticle}
+      />
+    ),
+    [ONBOARDING_STEPS.QUIZ_RESULT]: (
+      <QuizResult
+        isCorrect={initialQuizCorrect}
+        onNext={handleNext}
+        quizQuestion={article?.quizQuestion}
+      />
+    ),
+    [ONBOARDING_STEPS.ARTICLE_READING]: (
+      <ArticleReading
+        onNext={handleQuizButtonClick}
+        article={article}
+        isArticleFetching={isArticleFetching}
+        fetchOnBoardingArticle={fetchOnBoardingArticle}
+      />
+    ),
+    [ONBOARDING_STEPS.LEADERBOARD]: (
+      <LeaderboardOnboarding onComplete={handleFinish} />
+    ),
+  }
 
   return (
     <>
@@ -279,7 +373,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
       <Box w={'100vw'} h={'100vh'} zIndex={1}>
         <AnimatePresence mode="wait">
           <MotionBox
-            key={step}
+            key={currentStepId}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -288,24 +382,35 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
             position="relative"
             zIndex={1}
           >
-            {steps[step]}
+            {stepComponents[currentStepId]}
 
             <Box
               position="fixed"
               bottom="40px"
               right="40px"
               display={
-                (step === 2 && selectedCategories.length === 5) || step === 1
+                (currentStepId === ONBOARDING_STEPS.CATEGORIES &&
+                  selectedCategories.length === 5) ||
+                currentStepId === ONBOARDING_STEPS.WELCOME
                   ? 'block'
                   : 'none'
               }
             >
               <Button
-                onClick={step < 6 ? handleNext : handleFinish}
+                onClick={() => {
+                  const data = {
+                    categories: selectedCategories,
+                    language: selectedLanguage,
+                  }
+                  handleNext(data)
+                }}
                 bg="purple.600"
                 color="white"
                 size="lg"
-                isDisabled={step === 2 && selectedCategories.length !== 5}
+                isDisabled={
+                  currentStepId === ONBOARDING_STEPS.CATEGORIES &&
+                  selectedCategories.length !== 5
+                }
                 _hover={{
                   bg: 'purple.700',
                   transform: 'translateY(-5px)',
@@ -313,7 +418,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
                 }}
                 transition="all 0.2s"
               >
-                {step < 6 ? 'Next' : 'Get Started'}
+                Next
               </Button>
             </Box>
           </MotionBox>

@@ -207,6 +207,14 @@ function convertISTtoUTCCron(hour, minute, daysOfWeek) {
   return `${utcMinute} ${utcHour} * * ${daysOfWeek}`
 }
 
+const getFormattedImage = imgURL => {
+  if (!imgURL) return null
+  if (Array.isArray(imgURL)) {
+    return imgURL.length > 0 ? imgURL[0] : null
+  }
+  return imgURL
+}
+
 module.exports = {
   binarySearch,
   binarySearchForLeftRange,
@@ -223,4 +231,5 @@ module.exports = {
   isGuestUser,
   formatRemainingTime,
   convertISTtoUTCCron,
+  getFormattedImage,
 }

@@ -28,7 +28,6 @@ const ProfileBox = ({ loginedUserProfile, user, privacyKey, children }) => {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         pointerEvents: 'none',
       }}
-      backdropFilter="blur(12px)"
       flexDirection="column"
       transition="all 0.2s ease-in-out"
       _hover={{

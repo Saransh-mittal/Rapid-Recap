@@ -51,5 +51,6 @@
   "registerTooltip": "Register to track your real IQ progress",
   "loginToTrackIQ": "Login to track your actual IQ progress",
   "registerNote": "Register to convert this expected score into your starting IQ",
-  "expectedScore": "Expected Score"
+  "expectedScore": "Expected Score",
+  "maestroAchieved": "Maestro Achieved"
 }
