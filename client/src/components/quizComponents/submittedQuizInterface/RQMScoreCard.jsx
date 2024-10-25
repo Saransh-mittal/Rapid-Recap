@@ -27,7 +27,9 @@ const useScoreLabels = (baseScore, withPerformance, quizData, t) => {
     const performanceLabel =
       baseScore < withPerformance
         ? t('performanceBonus', {
-            bonus: Math.ceil((parseFloat(quizData.performanceBonus) - 1) * 100),
+            bonus: ((parseFloat(quizData.performanceBonus) - 1) * 100).toFixed(
+              0,
+            ),
           })
         : null
 
@@ -209,7 +211,6 @@ const RQMScoreCard = React.memo(
           ease: 'easeOut',
         }}
         bg="whiteAlpha.50"
-        backdropFilter="blur(8px)"
         rounded="xl"
         p={6}
         borderWidth={1}

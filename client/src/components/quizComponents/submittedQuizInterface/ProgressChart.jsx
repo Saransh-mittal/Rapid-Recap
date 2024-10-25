@@ -118,7 +118,6 @@ const ProgressChart = React.memo(
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         bg="whiteAlpha.50"
-        backdropFilter="blur(8px)"
         rounded="xl"
         p={4}
         borderWidth={1}

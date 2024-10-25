@@ -244,7 +244,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
           // }}
           bgGradient="linear(135deg, rgba(28, 20, 56, 0.85) 0%, rgba(15, 13, 21, 0.85) 100%)"
           borderRight="1px solid rgba(255, 255, 255, 0.08)"
-          backdropFilter="blur(10px)"
           boxShadow="4px 0 30px rgba(0, 0, 0, 0.1)"
           // overflowY="auto"
           css={{

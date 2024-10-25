@@ -26,11 +26,11 @@ const ScoreCard = React.memo(
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay }}
       bg="whiteAlpha.50"
-      backdropFilter="blur(8px)"
       rounded="xl"
       p={3}
       borderWidth={1}
       borderColor="whiteAlpha.100"
+      zIndex={2}
     >
       {isDifficultyCard ? (
         <Flex mb={5} color={color}>

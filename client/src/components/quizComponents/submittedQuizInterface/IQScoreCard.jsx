@@ -198,7 +198,6 @@ const IQScoreCard = React.memo(
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: animationDelay }}
         bg="whiteAlpha.50"
-        backdropFilter="blur(8px)"
         rounded="xl"
         p={6}
         borderWidth={1}

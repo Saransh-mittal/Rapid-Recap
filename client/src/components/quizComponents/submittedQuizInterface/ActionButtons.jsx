@@ -23,7 +23,6 @@ const ActionButton = React.memo(
       width="full"
       height="56px"
       bg="rgba(23, 25, 35, 0.5)"
-      backdropFilter="blur(8px)"
       border="1px solid"
       borderColor="whiteAlpha.100"
       rounded="xl"

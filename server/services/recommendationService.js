@@ -169,9 +169,12 @@ const getRecommendations = async (userId, page = 1, pageSize = 18) => {
       !userRecommendations ||
       userRecommendations.lastUpdated < updateThreshold
     ) {
-      userRecommendations = await updateRecommendations(userId)
+      updateRecommendations(userId)
     }
-
+    // return empry array if no recommendations
+    if (!userRecommendations) {
+      return []
+    }
     const startIndex = (page - 1) * pageSize
     const endIndex = startIndex + pageSize
 
