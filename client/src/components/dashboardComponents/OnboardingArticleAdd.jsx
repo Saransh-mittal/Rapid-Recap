@@ -248,24 +248,30 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      size="xl"
+      size={{ base: 'full', md: '5xl' }}
       scrollBehavior="inside"
     >
-      <ModalOverlay />
-      <ModalContent maxWidth="90vw" maxHeight="90vh">
-        <ModalHeader>
+      <ModalOverlay bg="blackAlpha.700" />
+      <ModalContent
+        bg="gray.800"
+        color="whiteAlpha.900"
+        maxWidth="90vw"
+        maxHeight="90vh"
+      >
+        <ModalHeader borderBottomWidth="1px" borderColor="whiteAlpha.200">
           {article ? 'Edit Onboarding Article' : 'Add Onboarding Article'}
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton color="whiteAlpha.800" />
         <ModalBody maxWidth="90vw" maxHeight="90vh">
           <FormControl display="flex" alignItems="center" mb={4}>
-            <FormLabel htmlFor="json-switch" mb="0">
+            <FormLabel htmlFor="json-switch" mb="0" color="whiteAlpha.900">
               Use JSON Input
             </FormLabel>
             <Switch
               id="json-switch"
               isChecked={useJsonInput}
               onChange={e => setUseJsonInput(e.target.checked)}
+              colorScheme="blue"
             />
           </FormControl>
 
@@ -275,51 +281,90 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
               onChange={handleJsonChange}
               height="500px"
               placeholder={onBoardingArticlePlaceholder}
+              w={'800px'}
+              bg="gray.700"
+              color="whiteAlpha.900"
+              borderColor="whiteAlpha.300"
+              _hover={{ borderColor: 'whiteAlpha.400' }}
+              _focus={{
+                borderColor: 'blue.300',
+              }}
             />
           ) : (
             <VStack spacing={4} align="stretch">
               <FormControl>
-                <FormLabel>Title</FormLabel>
+                <FormLabel color="whiteAlpha.900">Title</FormLabel>
                 <Input
                   name="title"
                   value={articleData.title}
                   onChange={handleArticleChange}
+                  w={'800px'}
+                  bg="gray.700"
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'whiteAlpha.400' }}
+                  _focus={{
+                    borderColor: 'blue.300',
+                  }}
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Hindi Title</FormLabel>
+                <FormLabel color="whiteAlpha.900">Hindi Title</FormLabel>
                 <Input
                   name="hindiTitle"
                   value={articleData.hindiTitle}
                   onChange={handleArticleChange}
+                  bg="gray.700"
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'whiteAlpha.400' }}
+                  _focus={{
+                    borderColor: 'blue.300',
+                  }}
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Author</FormLabel>
+                <FormLabel color="whiteAlpha.900">Author</FormLabel>
                 <Input
                   name="author"
                   value={articleData.author}
                   onChange={handleArticleChange}
+                  bg="gray.700"
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'whiteAlpha.400' }}
+                  _focus={{
+                    borderColor: 'blue.300',
+                  }}
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Hindi Author</FormLabel>
+                <FormLabel color="whiteAlpha.900">Hindi Author</FormLabel>
                 <Input
                   name="hindiAuthor"
                   value={articleData.hindiAuthor}
                   onChange={handleArticleChange}
+                  bg="gray.700"
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'whiteAlpha.400' }}
+                  _focus={{
+                    borderColor: 'blue.300',
+                  }}
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Main Text</FormLabel>
+                <FormLabel color="whiteAlpha.900">Main Text</FormLabel>
                 <Textarea
                   name="mainText"
                   value={articleData.mainText}
                   onChange={handleArticleChange}
+                  bg="gray.700"
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'whiteAlpha.400' }}
+                  _focus={{
+                    borderColor: 'blue.300',
+                  }}
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Hindi Main Text</FormLabel>
+                <FormLabel color="whiteAlpha.900">Hindi Main Text</FormLabel>
                 {articleData.hindiMainText.map((text, index) => (
                   <Textarea
                     key={index}
@@ -328,40 +373,76 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
                       handleHindiMainTextChange(index, e.target.value)
                     }
                     mb={2}
+                    bg="gray.700"
+                    borderColor="whiteAlpha.300"
+                    _hover={{ borderColor: 'whiteAlpha.400' }}
+                    _focus={{
+                      borderColor: 'blue.300',
+                    }}
                   />
                 ))}
-                <Button onClick={addHindiParagraph} size="sm">
+                <Button
+                  onClick={addHindiParagraph}
+                  size="sm"
+                  colorScheme="blue"
+                >
                   Add Paragraph
                 </Button>
               </FormControl>
               <FormControl>
-                <FormLabel>Image URL</FormLabel>
+                <FormLabel color="whiteAlpha.900">Image URL</FormLabel>
                 <Input
                   name="imgURL"
                   value={articleData.imgURL}
                   onChange={handleArticleChange}
+                  bg="gray.700"
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'whiteAlpha.400' }}
+                  _focus={{
+                    borderColor: 'blue.300',
+                  }}
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Average Read Time (minutes)</FormLabel>
+                <FormLabel color="whiteAlpha.900">
+                  Average Read Time (minutes)
+                </FormLabel>
                 <Input
                   name="avgReadTime"
                   type="number"
                   value={articleData.avgReadTime}
                   onChange={handleArticleChange}
+                  bg="gray.700"
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'whiteAlpha.400' }}
+                  _focus={{
+                    borderColor: 'blue.300',
+                  }}
                 />
               </FormControl>
 
-              <Tabs>
+              <Tabs variant="soft-rounded" colorScheme="blue">
                 <TabList>
-                  <Tab>English Quiz</Tab>
-                  <Tab>Hindi Quiz</Tab>
+                  <Tab
+                    color="whiteAlpha.800"
+                    _selected={{ bg: 'blue.500', color: 'white' }}
+                  >
+                    English Quiz
+                  </Tab>
+                  <Tab
+                    color="whiteAlpha.800"
+                    _selected={{ bg: 'blue.500', color: 'white' }}
+                  >
+                    Hindi Quiz
+                  </Tab>
                 </TabList>
                 <TabPanels>
                   {['en', 'hi'].map(lang => (
                     <TabPanel key={lang}>
                       <FormControl>
-                        <FormLabel>Overall Difficulty</FormLabel>
+                        <FormLabel color="whiteAlpha.900">
+                          Overall Difficulty
+                        </FormLabel>
                         <Input
                           type="number"
                           step="0.01"
@@ -374,6 +455,12 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
                           onChange={e =>
                             handleOverallDifficultyChange(lang, e.target.value)
                           }
+                          bg="gray.700"
+                          borderColor="whiteAlpha.300"
+                          _hover={{ borderColor: 'whiteAlpha.400' }}
+                          _focus={{
+                            borderColor: 'blue.300',
+                          }}
                         />
                       </FormControl>
                       {quizzes
@@ -385,9 +472,13 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
                             borderRadius="lg"
                             p={4}
                             mb={4}
+                            borderColor="whiteAlpha.300"
+                            bg="gray.700"
                           >
                             <FormControl>
-                              <FormLabel>Question {index + 1}</FormLabel>
+                              <FormLabel color="whiteAlpha.900">
+                                Question {index + 1}
+                              </FormLabel>
                               <Input
                                 value={question.question}
                                 onChange={e =>
@@ -398,11 +489,17 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
                                     e.target.value,
                                   )
                                 }
+                                bg="gray.700"
+                                borderColor="whiteAlpha.300"
+                                _hover={{ borderColor: 'whiteAlpha.400' }}
+                                _focus={{
+                                  borderColor: 'blue.300',
+                                }}
                               />
                             </FormControl>
                             {['a', 'b', 'c', 'd'].map(option => (
                               <FormControl key={option}>
-                                <FormLabel>
+                                <FormLabel color="whiteAlpha.900">
                                   Option {option.toUpperCase()}
                                 </FormLabel>
                                 <Input
@@ -415,11 +512,19 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
                                       e.target.value,
                                     )
                                   }
+                                  bg="gray.700"
+                                  borderColor="whiteAlpha.300"
+                                  _hover={{ borderColor: 'whiteAlpha.400' }}
+                                  _focus={{
+                                    borderColor: 'blue.300',
+                                  }}
                                 />
                               </FormControl>
                             ))}
                             <FormControl>
-                              <FormLabel>Answer</FormLabel>
+                              <FormLabel color="whiteAlpha.900">
+                                Answer
+                              </FormLabel>
                               <Input
                                 value={question.answer}
                                 onChange={e =>
@@ -430,10 +535,18 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
                                     e.target.value,
                                   )
                                 }
+                                bg="gray.700"
+                                borderColor="whiteAlpha.300"
+                                _hover={{ borderColor: 'whiteAlpha.400' }}
+                                _focus={{
+                                  borderColor: 'blue.300',
+                                }}
                               />
                             </FormControl>
                             <FormControl>
-                              <FormLabel>Explanation</FormLabel>
+                              <FormLabel color="whiteAlpha.900">
+                                Explanation
+                              </FormLabel>
                               <Textarea
                                 value={question.explanation}
                                 onChange={e =>
@@ -444,10 +557,18 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
                                     e.target.value,
                                   )
                                 }
+                                bg="gray.700"
+                                borderColor="whiteAlpha.300"
+                                _hover={{ borderColor: 'whiteAlpha.400' }}
+                                _focus={{
+                                  borderColor: 'blue.300',
+                                }}
                               />
                             </FormControl>
                             <FormControl>
-                              <FormLabel>Difficulty</FormLabel>
+                              <FormLabel color="whiteAlpha.900">
+                                Difficulty
+                              </FormLabel>
                               <Input
                                 type="number"
                                 step="0.01"
@@ -462,11 +583,20 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
                                     e.target.value,
                                   )
                                 }
+                                bg="gray.700"
+                                borderColor="whiteAlpha.300"
+                                _hover={{ borderColor: 'whiteAlpha.400' }}
+                                _focus={{
+                                  borderColor: 'blue.300',
+                                }}
                               />
                             </FormControl>
                           </Box>
                         ))}
-                      <Button onClick={() => addQuestion(lang)}>
+                      <Button
+                        onClick={() => addQuestion(lang)}
+                        colorScheme="blue"
+                      >
                         Add Question
                       </Button>
                     </TabPanel>
@@ -476,11 +606,19 @@ const OnboardingArticleAdd = ({ isOpen, onClose, article }) => {
             </VStack>
           )}
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter borderTopWidth="1px" borderColor="whiteAlpha.200">
           <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
             {article ? 'Update' : 'Save'}
           </Button>
-          <Button onClick={handleClose}>Cancel</Button>
+          <Button
+            variant="outline"
+            color="whiteAlpha.900"
+            borderColor="whiteAlpha.300"
+            _hover={{ bg: 'whiteAlpha.100' }}
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

@@ -23,15 +23,19 @@ import {
   Center,
 } from '@chakra-ui/react'
 import axios from 'axios'
-import OnboardingArticleAdd from './OnboardingArticleAdd'
 
-const OnboardingArticleList = ({ isOpen, onClose }) => {
-  const [articles, setArticles] = useState([])
+const OnboardingArticleList = ({
+  isOpen,
+  onClose,
+  setIsAddModalOpen,
+  setSelectedArticle,
+  articles,
+  fetchArticles,
+}) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredArticles, setFilteredArticles] = useState([])
   const [isSearching, setIsSearching] = useState(false)
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [selectedArticle, setSelectedArticle] = useState(null)
+
   const toast = useToast()
 
   useEffect(() => {
@@ -52,30 +56,15 @@ const OnboardingArticleList = ({ isOpen, onClose }) => {
       )
       setFilteredArticles(filtered)
       setIsSearching(false)
-    }, 300) // 300ms delay for debounce
+    }, 300)
 
     return () => clearTimeout(delayDebounceFn)
   }, [searchTerm, articles])
 
-  const fetchArticles = async () => {
-    try {
-      const response = await axios.get('/api/admin/onboarding-articles')
-      setArticles(response.data)
-      setFilteredArticles(response.data)
-    } catch (error) {
-      console.error('Error fetching articles:', error)
-      toast({
-        title: 'Error fetching articles',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-    }
-  }
-
   const handleEdit = article => {
     setSelectedArticle(article)
     setIsAddModalOpen(true)
+    onClose()
   }
 
   const handleDelete = async id => {
@@ -87,6 +76,9 @@ const OnboardingArticleList = ({ isOpen, onClose }) => {
           status: 'success',
           duration: 3000,
           isClosable: true,
+          position: 'top',
+          variant: 'solid',
+          bg: 'blue.500',
         })
         fetchArticles()
       } catch (error) {
@@ -96,6 +88,9 @@ const OnboardingArticleList = ({ isOpen, onClose }) => {
           status: 'error',
           duration: 3000,
           isClosable: true,
+          position: 'top',
+          variant: 'solid',
+          bg: 'red.500',
         })
       }
     }
@@ -105,59 +100,90 @@ const OnboardingArticleList = ({ isOpen, onClose }) => {
     setSearchTerm(e.target.value)
   }
 
-  const handleAddModalClose = () => {
-    setIsAddModalOpen(false)
-    setSelectedArticle(null)
-    fetchArticles()
-  }
-
   return (
-    <>
-      <Modal isOpen={isOpen} onClose={onClose} size="full">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Onboarding Articles</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4}>
-              <Button
-                onClick={() => {
-                  setSelectedArticle(null)
-                  setIsAddModalOpen(true)
-                }}
-              >
-                Add New Article
-              </Button>
-              <Input
-                placeholder="Search articles by title, Hindi title, author, or Hindi author..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-              {isSearching ? (
-                <Center py={8}>
-                  <Spinner size="xl" />
-                </Center>
-              ) : filteredArticles.length > 0 ? (
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '5xl' }}>
+      <ModalOverlay bg="blackAlpha.700" />
+      <ModalContent bg="gray.800" color="whiteAlpha.900">
+        <ModalHeader borderBottomWidth="1px" borderColor="whiteAlpha.200">
+          Onboarding Articles
+        </ModalHeader>
+        <ModalCloseButton color="whiteAlpha.800" />
+        <ModalBody>
+          <VStack spacing={4}>
+            <Button
+              onClick={() => {
+                setSelectedArticle(null)
+                setIsAddModalOpen(true)
+                onClose()
+              }}
+              colorScheme="blue"
+              size="md"
+              width="full"
+              maxW="200px"
+            >
+              Add New Article
+            </Button>
+            <Input
+              placeholder="Search articles by title, Hindi title, author, or Hindi author..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              bg="gray.700"
+              borderColor="whiteAlpha.300"
+              _hover={{ borderColor: 'whiteAlpha.400' }}
+              _focus={{
+                borderColor: 'blue.300',
+              }}
+              color="whiteAlpha.900"
+            />
+            {isSearching ? (
+              <Center py={8}>
+                <Spinner size="xl" color="blue.400" />
+              </Center>
+            ) : filteredArticles.length > 0 ? (
+              <Box overflowX="auto" width="100%">
                 <Table variant="simple">
                   <Thead>
                     <Tr>
-                      <Th>Title</Th>
-                      <Th>Hindi Title</Th>
-                      <Th>Author</Th>
-                      <Th>Actions</Th>
+                      <Th color="whiteAlpha.700" borderColor="whiteAlpha.200">
+                        Title
+                      </Th>
+                      <Th color="whiteAlpha.700" borderColor="whiteAlpha.200">
+                        Hindi Title
+                      </Th>
+                      <Th color="whiteAlpha.700" borderColor="whiteAlpha.200">
+                        Author
+                      </Th>
+                      <Th color="whiteAlpha.700" borderColor="whiteAlpha.200">
+                        Actions
+                      </Th>
                     </Tr>
                   </Thead>
                   <Tbody>
                     {filteredArticles.map(article => (
-                      <Tr key={article._id}>
-                        <Td>{article.title}</Td>
-                        <Td>{article.hindiTitle}</Td>
-                        <Td>{article.author}</Td>
-                        <Td>
-                          <Button onClick={() => handleEdit(article)} mr={2}>
+                      <Tr
+                        key={article._id}
+                        _hover={{ bg: 'gray.700' }}
+                        transition="background-color 0.2s"
+                      >
+                        <Td borderColor="whiteAlpha.200">{article.title}</Td>
+                        <Td borderColor="whiteAlpha.200">
+                          {article.hindiTitle}
+                        </Td>
+                        <Td borderColor="whiteAlpha.200">{article.author}</Td>
+                        <Td borderColor="whiteAlpha.200">
+                          <Button
+                            colorScheme="blue"
+                            size="sm"
+                            onClick={() => handleEdit(article)}
+                            mr={2}
+                          >
                             Edit
                           </Button>
-                          <Button onClick={() => handleDelete(article._id)}>
+                          <Button
+                            colorScheme="red"
+                            size="sm"
+                            onClick={() => handleDelete(article._id)}
+                          >
                             Delete
                           </Button>
                         </Td>
@@ -165,26 +191,35 @@ const OnboardingArticleList = ({ isOpen, onClose }) => {
                     ))}
                   </Tbody>
                 </Table>
-              ) : (
-                <Box>
-                  <Text>No articles found matching your search.</Text>
-                </Box>
-              )}
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <OnboardingArticleAdd
-        isOpen={isAddModalOpen}
-        onClose={handleAddModalClose}
-        article={selectedArticle}
-      />
-    </>
+              </Box>
+            ) : (
+              <Box
+                p={4}
+                bg="gray.700"
+                borderRadius="md"
+                width="100%"
+                textAlign="center"
+              >
+                <Text color="whiteAlpha.800">
+                  No articles found matching your search.
+                </Text>
+              </Box>
+            )}
+          </VStack>
+        </ModalBody>
+        <ModalFooter borderTopWidth="1px" borderColor="whiteAlpha.200">
+          <Button
+            variant="outline"
+            color="whiteAlpha.900"
+            borderColor="whiteAlpha.300"
+            _hover={{ bg: 'whiteAlpha.100' }}
+            onClick={onClose}
+          >
+            Close
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   )
 }
 

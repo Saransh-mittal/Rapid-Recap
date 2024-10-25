@@ -37,6 +37,7 @@ import {
 import TournamentFeedbackAnalysis from '../components/dashboardComponents/TournamentFeedbackAnalysis'
 import { FaChartBar, FaCog, FaComments } from 'react-icons/fa'
 import OnboardingArticleList from '../components/dashboardComponents/OnboardingArticleList'
+import OnboardingArticleAdd from '../components/dashboardComponents/OnboardingArticleAdd'
 
 const ArticleManagement = lazy(() =>
   import('../components/dashboardComponents/ArticleManagement'),
@@ -79,6 +80,9 @@ const Dashboard = () => {
   const [dateError, setDateError] = useState('')
   const [loading, setLoading] = useState(true)
   const [isLoadingStatus, setIsLoadingStatus] = useState(true)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [selectedArticle, setSelectedArticle] = useState(null)
+  const [articles, setArticles] = useState([])
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
 
   const textColor = useColorModeValue('gray.200', 'gray.200')
@@ -131,6 +135,29 @@ const Dashboard = () => {
     onOpen: onOnboardingArticleOpen,
     onClose: onOnboardingArticleClose,
   } = useDisclosure()
+
+  const handleAddModalClose = () => {
+    setIsAddModalOpen(false)
+    setSelectedArticle(null)
+    fetchArticles()
+    onOnboardingArticleOpen()
+  }
+
+  const fetchArticles = async () => {
+    try {
+      const response = await axios.get('/api/admin/onboarding-articles')
+      setArticles(response.data)
+      setFilteredArticles(response.data)
+    } catch (error) {
+      console.error('Error fetching articles:', error)
+      toast({
+        title: 'Error fetching articles',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -610,8 +637,19 @@ const Dashboard = () => {
       </Suspense>
       <Suspense fallback={<Spinner />}>
         <OnboardingArticleList
-          isOpen={isOnboardingArticleOpen}
+          isOpen={isOnboardingArticleOpen && !isAddModalOpen} // Only show list when add modal is closed
           onClose={onOnboardingArticleClose}
+          setIsAddModalOpen={setIsAddModalOpen}
+          setSelectedArticle={setSelectedArticle}
+          articles={articles}
+          fetchArticles={fetchArticles}
+        />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <OnboardingArticleAdd
+          isOpen={isAddModalOpen}
+          onClose={handleAddModalClose}
+          article={selectedArticle}
         />
       </Suspense>
     </Box>

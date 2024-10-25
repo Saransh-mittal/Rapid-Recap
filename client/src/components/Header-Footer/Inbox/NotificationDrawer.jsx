@@ -21,17 +21,24 @@ import {
   ModalBody,
   ModalCloseButton,
   useMediaQuery,
+  Badge,
+  Divider,
+  Icon,
+  VStack,
+  Spinner,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from '@chakra-ui/react'
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
-
-import Rapid_recap from '/images/rrlogo.webp'
-import { DeleteIcon } from '@chakra-ui/icons'
+import { DeleteIcon, BellIcon, TimeIcon } from '@chakra-ui/icons'
 import axios from 'axios'
-import parse from 'html-react-parser'
 import useSound from '../../../customHooks/useSound'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUpdates } from '../../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
+import Rapid_recap from '/images/rrlogo.webp'
 
 const NotificationDrawer = ({
   setIsDrawerOpen,
@@ -39,92 +46,185 @@ const NotificationDrawer = ({
   setSelectedNotification,
   setIsHamburgerOpen,
 }) => {
+  // Hooks
   const { t } = useTranslation('NotificationDrawer')
   const { playClick } = useSound()
   const dispatch = useDispatch()
   const { updates } = useSelector(state => state.app)
   const toast = useToast()
   const isScreenSmallerThan48em = useMediaQuery('(max-width: 48em)')[0]
-
-  const notificationData = useMemo(() => updates, [updates]) // Memoize notifications data
-
   const { isOpen, onOpen, onClose } = useDisclosure()
+
+  // State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [notificationToDelete, setNotificationToDelete] = useState(null)
   const [removeAllModalOpen, setRemoveAllModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  const handleNotificationClick = useCallback(
-    notification => {
-      setSelectedNotification(notification)
-      setIsModalOpen(true)
-      setIsDrawerOpen(false)
+  // Memoized Data
+  const notificationData = useMemo(() => updates, [updates])
+
+  // Text Extraction Function
+  const extractTextFromHtml = useCallback(html => {
+    try {
+      // Create a temporary div
+      const div = document.createElement('div')
+      div.innerHTML = html
+
+      // Remove script and style elements
+      const scripts = div.getElementsByTagName('script')
+      const styles = div.getElementsByTagName('style')
+      while (scripts[0]) scripts[0].parentNode.removeChild(scripts[0])
+      while (styles[0]) styles[0].parentNode.removeChild(styles[0])
+
+      // Get text content and clean it up
+      let text = div.textContent || div.innerText || ''
+
+      // Remove extra whitespace and clean up the text
+      text = text
+        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+        .replace(/^\s+|\s+$/g, '') // Trim start and end
+        .replace(/\n+/g, ' ') // Replace newlines with spaces
+
+      return text
+    } catch (error) {
+      console.error('Error extracting text:', error)
+      return ''
+    }
+  }, [])
+
+  // Error Handler
+  const handleError = useCallback(
+    (error, customMessage) => {
+      console.error(error)
+      setError(error.message)
+      toast({
+        title: t('error'),
+        description: customMessage || error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
     },
-    [setSelectedNotification, setIsModalOpen, setIsDrawerOpen],
+    [toast, t],
   )
 
-  const setReadUpdate = useCallback(
-    async updateId => {
+  // Click Handlers
+  const handleNotificationClick = useCallback(
+    notification => {
       try {
-        await axios.put(`/api/user/readUpdates?updateId=${updateId}`)
-        const updatedNotifications = notificationData.map(update =>
-          update._id === updateId ? { ...update, read: true } : update,
-        )
-        dispatch(setUpdates(updatedNotifications))
+        playClick()
+        setSelectedNotification(notification)
+        setIsModalOpen(true)
+        setIsDrawerOpen(false)
       } catch (error) {
-        toast({
-          title: t('error'),
-          description: t('markAsReadError'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-          position: 'top',
-        })
-        console.log(error)
+        handleError(error, t('errorOpeningNotification'))
       }
     },
-    [notificationData, dispatch, toast],
+    [
+      setSelectedNotification,
+      setIsModalOpen,
+      setIsDrawerOpen,
+      playClick,
+      handleError,
+      t,
+    ],
   )
 
   const handleDeleteClick = useCallback(
     notification => {
-      playClick()
-      setNotificationToDelete(notification)
-      setIsDeleteModalOpen(true)
+      try {
+        playClick()
+        setNotificationToDelete(notification)
+        setIsDeleteModalOpen(true)
+      } catch (error) {
+        handleError(error, t('errorDeletingNotification'))
+      }
     },
-    [playClick],
+    [playClick, handleError, t],
   )
 
   const handleRemoveAllClick = useCallback(() => {
-    playClick()
-    setRemoveAllModalOpen(true)
-  }, [playClick])
+    try {
+      playClick()
+      setRemoveAllModalOpen(true)
+    } catch (error) {
+      handleError(error, t('errorRemovingAll'))
+    }
+  }, [playClick, handleError, t])
+
+  // API Calls
+  const setReadUpdate = useCallback(
+    async updateId => {
+      try {
+        setIsLoading(true)
+        const response = await axios.put(
+          `/api/user/readUpdates?updateId=${updateId}`,
+        )
+
+        if (response.status === 200) {
+          const updatedNotifications = notificationData.map(update =>
+            update._id === updateId ? { ...update, read: true } : update,
+          )
+          dispatch(setUpdates(updatedNotifications))
+        } else {
+          throw new Error(t('markAsReadError'))
+        }
+      } catch (error) {
+        handleError(error, t('markAsReadError'))
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [notificationData, dispatch, handleError, t],
+  )
 
   const trashUpdate = useCallback(async () => {
-    playClick()
     try {
-      await axios.put(`/api/user/trashUpdates/${notificationToDelete._id}`)
-      const updatedNotificationData = notificationData.filter(
-        update => update._id !== notificationToDelete._id,
+      setIsLoading(true)
+      playClick()
+      const response = await axios.put(
+        `/api/user/trashUpdates/${notificationToDelete._id}`,
       )
-      dispatch(setUpdates(updatedNotificationData))
+
+      if (response.status === 200) {
+        const updatedNotificationData = notificationData.filter(
+          update => update._id !== notificationToDelete._id,
+        )
+        dispatch(setUpdates(updatedNotificationData))
+        toast({
+          title: t('success'),
+          description: t('deleteSuccess'),
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+          position: 'top',
+        })
+      } else {
+        throw new Error(t('deleteError'))
+      }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete update',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
-      console.log(error)
+      handleError(error, t('deleteError'))
     } finally {
+      setIsLoading(false)
       setIsDeleteModalOpen(false)
     }
-  }, [notificationToDelete, notificationData, dispatch, playClick, toast])
+  }, [
+    notificationToDelete,
+    notificationData,
+    dispatch,
+    playClick,
+    toast,
+    handleError,
+    t,
+  ])
 
   const removeAllNotifications = useCallback(async () => {
-    playClick()
     try {
+      setIsLoading(true)
+      playClick()
       const response = await axios.put('/api/user/trashAllUpdates')
 
       if (response.status === 200) {
@@ -138,38 +238,136 @@ const NotificationDrawer = ({
           position: 'top',
         })
       } else {
-        toast({
-          title: t('error'),
-          description: t('removeAllError'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-          position: 'top',
-        })
+        throw new Error(t('removeAllError'))
       }
     } catch (error) {
-      toast({
-        title: t('error'),
-        description: t('removeAllError'),
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
-      console.log(error)
+      handleError(error, t('removeAllError'))
     } finally {
+      setIsLoading(false)
       setRemoveAllModalOpen(false)
     }
-  }, [playClick, dispatch, toast])
+  }, [playClick, dispatch, toast, handleError, t])
 
+  // Effects
   useEffect(() => {
     onOpen()
   }, [onOpen])
 
+  // Render Helper Functions
+  const renderNotification = (update, index) => (
+    <Box
+      key={index}
+      w="full"
+      p={4}
+      cursor="pointer"
+      transition="all 0.2s"
+      _hover={{ bg: 'whiteAlpha.50' }}
+      onClick={() => {
+        setReadUpdate(update._id)
+        handleNotificationClick(update)
+      }}
+    >
+      <Flex gap={4}>
+        <Box flexShrink={0}>
+          <Image
+            src={Rapid_recap}
+            alt={t('notificationImage')}
+            boxSize="40px"
+            borderRadius="full"
+            border="2px solid"
+            borderColor="purple.400"
+            fallback={<Icon as={BellIcon} boxSize="40px" color="purple.400" />}
+          />
+        </Box>
+
+        <Box flex={1}>
+          <Flex justify="space-between" align="center" mb={2}>
+            <Heading size="sm" color={update.read ? 'whiteAlpha.700' : 'white'}>
+              {update.title}
+            </Heading>
+            <Badge
+              colorScheme={update.read ? 'gray' : 'purple'}
+              variant="subtle"
+              fontSize="xs"
+            >
+              {update.read ? t('read') : t('new')}
+            </Badge>
+          </Flex>
+
+          <Text
+            color={update.read ? 'whiteAlpha.700' : 'whiteAlpha.900'}
+            fontSize="sm"
+            noOfLines={2}
+            mb={2}
+            css={{
+              display: '-webkit-box',
+              WebkitLineClamp: '2',
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {extractTextFromHtml(update.mainText).substring(0, 120)}...
+          </Text>
+
+          <Flex justify="space-between" align="center">
+            <Flex align="center" gap={2} color="whiteAlpha.600">
+              <TimeIcon w={3} h={3} />
+              <Text fontSize="xs">
+                {new Date(update.date).toLocaleString()}
+              </Text>
+            </Flex>
+
+            <Button
+              size="sm"
+              variant="ghost"
+              colorScheme="red"
+              onClick={e => {
+                e.stopPropagation()
+                handleDeleteClick(update)
+              }}
+              isLoading={isLoading && notificationToDelete?._id === update._id}
+            >
+              <DeleteIcon />
+            </Button>
+          </Flex>
+        </Box>
+      </Flex>
+    </Box>
+  )
+
+  const renderError = () => (
+    <Alert status="error" variant="solid" borderRadius="md" m={4}>
+      <AlertIcon />
+      <Box>
+        <AlertTitle>{t('error')}</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Box>
+    </Alert>
+  )
+
+  const renderEmptyState = () => (
+    <Flex
+      direction="column"
+      align="center"
+      justify="center"
+      p={8}
+      textAlign="center"
+      color="whiteAlpha.700"
+    >
+      <Icon as={BellIcon} w={12} h={12} mb={4} />
+      <Text fontSize="lg" fontWeight="medium">
+        {t('noNotifications')}
+      </Text>
+      <Text fontSize="sm">{t('notificationsWillAppearHere')}</Text>
+    </Flex>
+  )
+
+  // Main Render
   return (
     <>
       <Drawer
-        size={{ base: 'full', lg: 'xs' }}
+        size={{ base: 'full', lg: 'sm' }}
         isOpen={isOpen}
         placement="right"
         onClose={() => {
@@ -177,157 +375,98 @@ const NotificationDrawer = ({
           setIsDrawerOpen(false)
           onClose()
         }}
-        backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-        boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
       >
-        <DrawerOverlay />
+        <DrawerOverlay backdropFilter="blur(4px)" />
         <DrawerContent
-          backgroundImage="linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)"
-          boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
-          color="white"
-          className="inbox-drawer"
+          bg="linear-gradient(180deg, #1E1533 0%, #0A0813 100%)"
+          // boxShadow="dark-lg"
+          borderLeft="1px solid"
+          borderColor="whiteAlpha.100"
         >
-          <DrawerCloseButton />
-          <DrawerHeader size="10px">
-            <span>{t('inbox')}</span>
-          </DrawerHeader>
-          <DrawerHeader size="10px">
-            {notificationData.length > 0 && (
-              <Button
-                color="white"
-                border={'2px solid white'}
-                background={'transparent'}
-                _hover={{ color: 'red', borderColor: 'red' }}
-                onClick={handleRemoveAllClick}
-              >
-                {t('removeAllNotifications')}
-              </Button>
-            )}
-          </DrawerHeader>
-          <DrawerBody
-            style={{
-              overflowY: 'auto',
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'black transparent',
-            }}
-          >
-            {notificationData.length > 0 &&
-              notificationData.map((update, index) => {
-                return (
-                  <Box
-                    color={update.read ? '#9CAFAA' : null}
-                    key={index}
-                    style={{
-                      marginBottom: '1rem',
-                      cursor: 'pointer',
-                      backgroundColor: '#0f0d15',
-                      backgroundImage:
-                        'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-                      boxShadow:
-                        '0px 4px 8px rgba(0, 0, 0, 0.9), 0px 8px 16px rgba(0, 0, 0, 0.9), 0px 12px 24px rgba(0, 0, 0, 0.9)',
-                    }}
-                    onClick={() => {
-                      setReadUpdate(update._id)
-                      handleNotificationClick(update)
-                    }}
-                    paddingBottom={'20px'}
-                    padding={'10px'}
-                  >
-                    <Flex
-                      flexDirection={'row'}
-                      justifyContent={'space-between'}
-                      gap={3}
-                    >
-                      <Flex
-                        w={'30%'}
-                        justifyContent={'center'}
-                        alignItems={'center'}
-                        height="50px"
-                        p={0}
-                        m={0}
-                      >
-                        <Image
-                          src={Rapid_recap}
-                          alt={t('notificationImage')}
-                          width="40px "
-                          height="40px"
-                          borderRadius="50%"
-                          objectFit="cover"
-                          objectPosition="center center"
-                        />
-                      </Flex>
-                      <Flex justifyContent={'center'} alignItems={'center'}>
-                        <Heading
-                          as={'h5'}
-                          size={'sm'}
-                          style={{ marginBottom: '0.5rem', textAlign: 'left' }}
-                        >
-                          {update.title}
-                        </Heading>
-                      </Flex>
-                    </Flex>
+          <DrawerCloseButton
+            color="whiteAlpha.700"
+            _hover={{ color: 'white' }}
+            size="lg"
+          />
 
-                    <Text style={{ textAlign: 'left' }}>
-                      {parse(update.mainText.substring(0, 60))}.....
-                    </Text>
-                    <Flex>
-                      <small>{new Date(update.date).toLocaleString()}</small>
-                      <small style={{ marginLeft: 'auto' }}>
-                        {update.read ? 'Read' : 'Unread'}
-                      </small>
-                    </Flex>
-                    <Flex
-                      width={'100%'}
-                      justifyContent={'center'}
-                      alignItems={'center'}
-                      marginTop={'10px'}
-                    >
-                      <small>
-                        <Button
-                          p={0}
-                          background={'transparent'}
-                          color={'white'}
-                          _hover={{ background: 'transparent', color: 'red' }}
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleDeleteClick(update)
-                          }}
-                        >
-                          <DeleteIcon />
-                        </Button>
-                      </small>
-                    </Flex>
-                  </Box>
-                )
-              })}
+          <DrawerHeader borderBottomWidth="1px" borderColor="whiteAlpha.100">
+            <Flex alignItems="center" mb={4} gap={3}>
+              <Flex alignItems="center" gap={3}>
+                <Icon as={BellIcon} w={6} h={6} color="purple.400" />
+                <Heading
+                  size="lg"
+                  bgGradient="linear(to-r, purple.400, pink.400)"
+                  bgClip="text"
+                >
+                  {t('inbox')}
+                </Heading>
+              </Flex>
+              {notificationData.length > 0 && (
+                <Button
+                  leftIcon={<DeleteIcon />}
+                  variant="outline"
+                  borderColor="whiteAlpha.200"
+                  color="whiteAlpha.900"
+                  _hover={{
+                    bg: 'whiteAlpha.50',
+                    borderColor: 'red.400',
+                    color: 'red.400',
+                  }}
+                  size="sm"
+                  onClick={handleRemoveAllClick}
+                  isLoading={isLoading}
+                >
+                  {t('removeAllNotifications')}
+                </Button>
+              )}
+            </Flex>
+          </DrawerHeader>
+
+          <DrawerBody p={0}>
+            {error && renderError()}
+            {isLoading && !error && (
+              <Flex justify="center" align="center" h="100px">
+                <Spinner color="purple.400" />
+              </Flex>
+            )}
+            {!isLoading && !error && (
+              <VStack
+                spacing={0}
+                divider={<Divider borderColor="whiteAlpha.50" />}
+              >
+                {notificationData.length > 0
+                  ? notificationData.map((update, index) =>
+                      renderNotification(update, index),
+                    )
+                  : renderEmptyState()}
+              </VStack>
+            )}
           </DrawerBody>
         </DrawerContent>
       </Drawer>
+
       <Modal
         isOpen={isDeleteModalOpen || removeAllModalOpen}
-        onClose={() =>
+        onClose={() => {
           isDeleteModalOpen
             ? setIsDeleteModalOpen(false)
             : setRemoveAllModalOpen(false)
-        }
+        }}
       >
-        <ModalOverlay />
+        <ModalOverlay backdropFilter="blur(4px)" />
         <ModalContent
-          backgroundImage={{
-            base: 'linear-gradient(-180deg, #1a1527, #0e0c16 88%, #0e0c16 99%)',
-          }}
-          backgroundColor={{ base: '#0f0d15', xl: 'transparent' }}
-          boxShadow={{
-            base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-          }}
-          color={'white'}
-          p={'3'}
+          bg="linear-gradient(180deg, #1E1533 0%, #0A0813 100%)"
+          border="1px solid"
+          borderColor="whiteAlpha.100"
+          // boxShadow="dark-lg"
+          color="white"
+          p={4}
         >
           <ModalHeader>
             {isDeleteModalOpen ? (
-              <b>{t('confirmRemove')}</b>
+              <Text fontWeight="bold">{t('confirmRemove')}</Text>
             ) : (
-              <b>{t('confirmRemoveAll')}</b>
+              <Text fontWeight="bold">{t('confirmRemoveAll')}</Text>
             )}
           </ModalHeader>
           <ModalCloseButton />
@@ -340,17 +479,21 @@ const NotificationDrawer = ({
             <Button
               colorScheme="red"
               mr={3}
+              variant="solid"
               onClick={isDeleteModalOpen ? trashUpdate : removeAllNotifications}
+              isLoading={isLoading}
             >
               {t('confirmDelete')}
             </Button>
             <Button
+              variant="outline"
               onClick={() => {
                 playClick()
                 isDeleteModalOpen
                   ? setIsDeleteModalOpen(false)
                   : setRemoveAllModalOpen(false)
               }}
+              isDisabled={isLoading}
             >
               {t('cancel')}
             </Button>
