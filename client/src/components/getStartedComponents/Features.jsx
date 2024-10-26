@@ -91,6 +91,7 @@ const UISection = ({
       justifyContent="space-between"
       mb={{ base: 16, lg: 32 }}
       px={4}
+      mx={'5%'}
     >
       <Box width="100%" mb={{ base: 8, lg: 0 }} maxWidth={{ lg: '45%' }}>
         <ContentWrapper
@@ -121,7 +122,7 @@ const UISection = ({
             src={imageSrc}
             alt={t(altTextKey)}
             maxWidth="100%"
-            maxHeight={{ base: '500px', lg: '100%' }}
+            maxHeight={{ base: '500px', lg: '575px' }}
             borderRadius="lg"
             loading="lazy"
             mx="auto"
