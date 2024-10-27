@@ -24,7 +24,7 @@ import IconShimmerLoader from '../../miscellaneous/shimmerLoaders/IconShimmerLoa
 import { addNoteMessage, setShowXpLevelModal } from '../../../redux/appSlice'
 
 //SSR images
-const levelImage = '../../../assets/level.webp'
+const levelImage = '/images/level.webp'
 
 const StreakFire = React.lazy(() => import('./StreakFire'))
 const ProfileDropDownMenu = React.lazy(() => import('./ProfileDropDownMenu'))

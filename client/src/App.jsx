@@ -123,14 +123,7 @@ const App = () => {
 
   useEffect(() => {
     if (isClient) {
-      import('react-ga4').then(ReactGA => {
-        ReactGA.initialize('G-ES5VQ8NW7Z')
-        ReactGA.send({
-          hitType: 'pageview',
-          page: location.pathname + location.search,
-          title: document.title,
-        })
-      })
+      ReactGA.initialize('G-ES5VQ8NW7Z')
 
       setShowLoadingScreen(true)
       const timerId = setTimeout(() => {
