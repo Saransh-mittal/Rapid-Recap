@@ -14,12 +14,10 @@ import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import { useDispatch, useSelector } from 'react-redux'
-import imageData from '../assets/AltNewsImage'
 import { quinBoostChecker } from '../utils/quiz.utils'
 import slugify from 'slugify'
 import i18n from 'i18next'
 import { blackListedImgUrls } from '../assets/blackListedImgUrls'
-import rrImage from '/images/rrlogo_HD.webp'
 import { setArticleData, setTotalUsersGivenQuiz } from '../redux/articleSlice'
 import {
   setIsQuinBoostAvailable,
@@ -27,8 +25,11 @@ import {
 } from '../redux/quizSlice'
 import ArticleFooter from '../components/articleComponents/ArticleFooter'
 
-const Loading = lazy(() => import('../components/miscellaneous/Loading'))
+//SSR images
+const rrImage = '/images/rrlogo_HD.webp'
 
+// Lazy load components
+const Loading = lazy(() => import('../components/miscellaneous/Loading'))
 const QuinBoostModal = lazy(() =>
   import('../components/articleComponents/QuinBoostModal'),
 )
@@ -57,7 +58,6 @@ const Article = () => {
   const dispatch = useDispatch()
   const { id } = useParams()
 
-  const [alt_image, setAlt_image] = useState(null)
   const [article, setArticle] = useState(articleData)
   const [imgURL, setImgURL] = useState(
     Array.isArray(articleData?.imgURL)
@@ -285,16 +285,6 @@ const Article = () => {
       setArticleHeight(articleRef.current.getBoundingClientRect().height)
     }
   }, [article, textHeight])
-
-  useEffect(() => {
-    setAlt_image(
-      imageData.find(
-        img =>
-          img?.category?.toLocaleLowerCase() ===
-          article?.category?.toLocaleLowerCase(),
-      )?.image,
-    )
-  }, [article?.category])
 
   useEffect(() => {
     // scroll to the top of the page

@@ -20,8 +20,11 @@ import {
 } from '@chakra-ui/react'
 import { ChatState } from '../contextAPI/ChatProvider'
 import { useNavigate } from 'react-router-dom'
-import chatBg from '../assets/hero/hero-bg.webp'
 
+//SSR images
+const chatBg = '/images/hero-bg.webp'
+
+// Lazy load components
 const UserChats = lazy(() => import('../components/chatComponent/userChats'))
 const UserChatBox = lazy(() =>
   import('../components/chatComponent/userChatBox'),

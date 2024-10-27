@@ -26,15 +26,15 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { keyframes } from '@emotion/react'
+import seasonGIF from '../../assets/gif/season.gif'
 
 // Lazy-loaded components
 const Confetti = lazy(() => import('react-confetti'))
 
-// Import images
-import seasonGIF from '/GIFs/season.gif'
-import decayImage from '/images/decay.webp'
-import arrowImage from '/images/arrow.webp'
-import decrease from '/images/decrease.webp'
+//SSR image imports
+const decayImage = '/images/decay.webp'
+const arrowImage = '/images/arrow.webp'
+const decrease = '/images/decrease.webp'
 
 const gradientAnimation = keyframes`
   0% { background-position: 0% 50%; }

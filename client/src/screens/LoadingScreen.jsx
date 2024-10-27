@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Box, Text, Flex, Progress, Image, VStack } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import rrlogo from '/images/rrlogo.webp'
+
+//SSR images
+const rrlogo = '/images/rrlogo.webp'
 
 const Star = React.memo(({ size, top, left }) => (
   <motion.div

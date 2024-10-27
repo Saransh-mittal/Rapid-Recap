@@ -19,7 +19,6 @@ import {
   Button,
 } from '@chakra-ui/react'
 import { LockIcon } from '@chakra-ui/icons'
-import Alt_img from '/images/rr.webp'
 import { useDispatch, useSelector } from 'react-redux'
 import useSound from '../../customHooks/useSound'
 import RelatedArticlesToggle from './RelatedArticlesToggle'
@@ -30,9 +29,13 @@ import { setIsSigninOpen } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 import { setIsOpen } from '../../redux/quizSlice'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
-import rrImage from '/images/rrlogo_HD.webp'
 import { useNavigate } from 'react-router-dom'
 
+//SSR image
+const Alt_img = '/images/rr.webp'
+const rrImage = '/images/rrlogo_HD.webp'
+
+// Lazy load components
 const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
 const QuizExpired = React.lazy(() => import('./QuizExpired'))
 const TakeQuizButton = React.lazy(() => import('./TakeQuizButton'))

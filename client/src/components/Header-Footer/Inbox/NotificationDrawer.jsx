@@ -33,7 +33,9 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setUpdates } from '../../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 import useSound from '../../../customHooks/useSound'
-import Rapid_recap from '/images/rrlogo.webp'
+
+//SSR image optimization
+const Rapid_recap = '/images/rrlogo.webp'
 
 // Notification item optimization with memo
 const NotificationItem = React.memo(

@@ -10,10 +10,11 @@ import {
 } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 
-import Lock from '/images/lock.webp'
-
 import SVGBarGraph from '../../../assets/svg/SVGBarGraph'
 import { addNoteMessage } from '../../../redux/appSlice'
+
+//SSR images
+const Lock = '/images/lock.webp'
 
 // LoadingSpinner Component
 const LoadingSpinner = React.memo(() => (

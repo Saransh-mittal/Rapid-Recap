@@ -9,9 +9,10 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import QuizReport from '../quizComponents/QuizReport'
-import medalIcon from '../../assets/medal.webp'
 import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
+
+const medalIcon = '../../assets/medal.webp'
 
 const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
