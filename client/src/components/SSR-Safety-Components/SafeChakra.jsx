@@ -1,22 +1,33 @@
-/**
- * SSR-safe Chakra UI component wrappers
- */
-
 import React from 'react'
-import { Box, Image, useColorMode } from '@chakra-ui/react'
+import { Box, Heading, Text, Button, Image } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { isServer } from '../utils/environment'
+import { isClient } from '../../utils/environment'
 
-// Safe motion components
-export const MotionBox = motion(Box)
-export const MotionImage = motion(Image)
+// Create motion components only on client side
+const MotionBox = isClient ? motion(Box) : Box
+const MotionHeading = isClient ? motion(Heading) : Heading
+const MotionText = isClient ? motion(Text) : Text
+const MotionButton = isClient ? motion(Button) : Button
+const MotionImage = isClient ? motion(Image) : Image
 
-// Safe color mode component
+// Export wrapped components
+export const SafeBox = props => <MotionBox {...props} />
+export const SafeHeading = props => <MotionHeading {...props} />
+export const SafeText = props => <MotionText {...props} />
+export const SafeButton = props => <MotionButton {...props} />
+export const SafeImage = props => <MotionImage {...props} />
+
+// Animation Presence wrapper
+export const SafeAnimatePresence = ({ children, ...props }) => {
+  if (!isClient) {
+    return <>{children}</>
+  }
+  return <AnimatePresence {...props}>{children}</AnimatePresence>
+}
+
+// Safe color mode wrapper
 export const SafeColorMode = ({ children }) => {
-  const { colorMode } = useColorMode()
-
-  // Prevent flash of wrong theme
-  if (isServer) {
+  if (!isClient) {
     return <>{children}</>
   }
 
@@ -27,60 +38,19 @@ export const SafeColorMode = ({ children }) => {
           transition: 'none !important',
         },
       }}
-      {...(colorMode === 'dark' ? { bg: 'gray.800', color: 'white' } : {})}
     >
       {children}
     </Box>
   )
 }
 
-// Safe animation wrapper
-export const SafeAnimatePresence = ({ children, ...props }) => {
-  if (isServer) {
-    return <>{children}</>
-  }
-
-  return <AnimatePresence {...props}>{children}</AnimatePresence>
-}
-
-// Safe image component
-export const SafeImage = ({ src, fallbackSrc, alt, ...props }) => {
-  if (isServer) {
-    // Return a simpler version during SSR
-    return <Box as="img" src={fallbackSrc || src} alt={alt} {...props} />
-  }
-
-  return (
-    <Image
-      src={src}
-      fallbackSrc={fallbackSrc}
-      alt={alt}
-      loading="lazy"
-      {...props}
-    />
-  )
-}
-
-// Safe modal component that prevents scroll on mount
-export const SafeModal = ({ children, isOpen, onClose, ...props }) => {
-  React.useEffect(() => {
-    if (isOpen && !isServer) {
-      document.body.style.overflow = 'hidden'
-    }
-    return () => {
-      if (!isServer) {
-        document.body.style.overflow = ''
-      }
-    }
-  }, [isOpen])
-
-  if (isServer) {
-    return null // Don't render modals during SSR
-  }
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} {...props}>
-      {children}
-    </Modal>
-  )
+// Default exports for named imports
+export default {
+  SafeBox,
+  SafeHeading,
+  SafeText,
+  SafeButton,
+  SafeImage,
+  SafeAnimatePresence,
+  SafeColorMode,
 }
