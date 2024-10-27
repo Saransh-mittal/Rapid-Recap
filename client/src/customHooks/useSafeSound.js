@@ -1,10 +1,51 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSound as useCustomSound } from 'use-sound'
-import { SOUND_FILES, SOUND_TYPES } from '../models/soundSettings'
 import { useSelector } from 'react-redux'
 import { isClient } from '../utils/environment'
 
+// Sound settings constants
+export const SOUND_TYPES = {
+  NOTE_MESSAGE: 'noteMessage',
+  MILESTONE: 'milestone',
+  CLICK: 'click',
+  QUIZ: 'quiz',
+}
+
+export const SOUND_FILES = {
+  [SOUND_TYPES.NOTE_MESSAGE]: '/sounds/notification.mp3',
+  [SOUND_TYPES.MILESTONE]: '/sounds/milestone.mp3',
+}
+
+// Shared AudioContext instance
 let sharedAudioContext
+
+// Dynamic import for use-sound
+let useCustomSound = () => [() => {}, {}]
+
+if (isClient) {
+  // Only import on client side
+  try {
+    const useSoundModule = require('use-sound')
+    useCustomSound = useSoundModule.default || useSoundModule
+  } catch (error) {
+    console.warn('use-sound import failed:', error)
+  }
+}
+
+const createSafeAudioContext = () => {
+  if (!isClient) return null
+  try {
+    if (!sharedAudioContext) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext
+      if (AudioContextClass) {
+        sharedAudioContext = new AudioContextClass()
+      }
+    }
+    return sharedAudioContext
+  } catch (error) {
+    console.warn('AudioContext creation failed:', error)
+    return null
+  }
+}
 
 const useSafeSound = (options = {}) => {
   const {
@@ -25,35 +66,20 @@ const useSafeSound = (options = {}) => {
   const gainNodeRef = useRef(null)
   const sourceNodeRef = useRef(null)
 
-  // Use the use-sound hook for predefined sound types only on client side
+  // Initialize predefined sounds only on client side
   const [playNoteMessage] = isClient
-    ? useCustomSound(SOUND_FILES[SOUND_TYPES.NOTE_MESSAGE])
+    ? useCustomSound(SOUND_FILES[SOUND_TYPES.NOTE_MESSAGE], { volume })
     : [() => {}]
   const [playMilestone] = isClient
-    ? useCustomSound(SOUND_FILES[SOUND_TYPES.MILESTONE])
+    ? useCustomSound(SOUND_FILES[SOUND_TYPES.MILESTONE], { volume })
     : [() => {}]
 
-  // Initialize audio context
   useEffect(() => {
     if (!isClient || !enabled || !soundEnabled) return
 
-    const createAudioContext = () => {
-      if (!isClient) return null
-      try {
-        if (!sharedAudioContext) {
-          sharedAudioContext = new (window.AudioContext ||
-            window.webkitAudioContext)()
-        }
-        return sharedAudioContext
-      } catch (error) {
-        console.warn('AudioContext not supported:', error)
-        return null
-      }
-    }
-
     const initAudio = () => {
       try {
-        audioContextRef.current = createAudioContext()
+        audioContextRef.current = createSafeAudioContext()
         if (audioContextRef.current) {
           gainNodeRef.current = audioContextRef.current.createGain()
           gainNodeRef.current.connect(audioContextRef.current.destination)
@@ -61,7 +87,7 @@ const useSafeSound = (options = {}) => {
           setIsReady(true)
         }
       } catch (err) {
-        console.error('Error initializing audio:', err)
+        console.error('Audio initialization failed:', err)
         setError(err)
         onError?.(err)
       }
@@ -71,17 +97,16 @@ const useSafeSound = (options = {}) => {
 
     return () => {
       try {
-        // Don't close shared context, just cleanup local refs
         gainNodeRef.current?.disconnect()
         sourceNodeRef.current?.disconnect()
       } catch (err) {
-        console.warn('Error cleaning up audio nodes:', err)
+        console.warn('Audio cleanup failed:', err)
       }
     }
   }, [enabled, soundEnabled, volume, onError])
 
-  const playSound = useCallback(
-    (frequency, duration) => {
+  const createAndPlayOscillator = useCallback(
+    (frequency, duration, type = 'sine', gain = 0.5) => {
       if (!isReady || !audioContextRef.current || !isClient) return
 
       try {
@@ -91,12 +116,12 @@ const useSafeSound = (options = {}) => {
         oscillator.connect(gainNode)
         gainNode.connect(audioContextRef.current.destination)
 
-        oscillator.type = 'sine'
+        oscillator.type = type
         oscillator.frequency.setValueAtTime(
           frequency,
           audioContextRef.current.currentTime,
         )
-        gainNode.gain.setValueAtTime(0.5, audioContextRef.current.currentTime)
+        gainNode.gain.setValueAtTime(gain, audioContextRef.current.currentTime)
 
         oscillator.start()
         setIsPlaying(true)
@@ -113,7 +138,7 @@ const useSafeSound = (options = {}) => {
           onEnd?.()
         }, duration * 1000)
       } catch (err) {
-        console.error('Error playing sound:', err)
+        console.error('Sound playback failed:', err)
         setError(err)
         onError?.(err)
       }
@@ -122,87 +147,33 @@ const useSafeSound = (options = {}) => {
   )
 
   const playClick = useCallback(() => {
-    if (!isReady || !isClient) return
-    const audio = audioContextRef.current
-    if (!audio) return
-
-    try {
-      const oscillator = audio.createOscillator()
-      const gainNode = audio.createGain()
-
-      oscillator.connect(gainNode)
-      gainNode.connect(audio.destination)
-
-      oscillator.type = 'sine'
-      oscillator.frequency.setValueAtTime(800, audio.currentTime)
-      gainNode.gain.setValueAtTime(0.3, audio.currentTime)
-
-      oscillator.start()
-      gainNode.gain.exponentialRampToValueAtTime(
-        0.00001,
-        audio.currentTime + 0.1,
-      )
-      oscillator.stop(audio.currentTime + 0.1)
-    } catch (err) {
-      console.error('Error playing click sound:', err)
-      setError(err)
-      onError?.(err)
-    }
-  }, [isReady, onError])
+    createAndPlayOscillator(800, 0.1, 'sine', 0.3)
+  }, [createAndPlayOscillator])
 
   const playEndChime = useCallback(() => {
     if (!isReady || !isClient) return
-    const audio = audioContextRef.current
-    if (!audio) return
 
-    try {
-      const notes = [523.25, 659.25, 783.99, 1046.5] // C5, E5, G5, C6
-      notes.forEach((freq, index) => {
-        const oscillator = audio.createOscillator()
-        const gainNode = audio.createGain()
+    const notes = [523.25, 659.25, 783.99, 1046.5] // C5, E5, G5, C6
+    notes.forEach((freq, index) => {
+      setTimeout(() => {
+        createAndPlayOscillator(freq, 0.5, 'sine', 0.4)
+      }, index * 100)
+    })
+  }, [isReady, createAndPlayOscillator])
 
-        oscillator.connect(gainNode)
-        gainNode.connect(audio.destination)
-
-        oscillator.type = 'sine'
-        oscillator.frequency.setValueAtTime(
-          freq,
-          audio.currentTime + index * 0.1,
-        )
-
-        gainNode.gain.setValueAtTime(0, audio.currentTime + index * 0.1)
-        gainNode.gain.linearRampToValueAtTime(
-          0.5,
-          audio.currentTime + index * 0.1 + 0.01,
-        )
-        gainNode.gain.exponentialRampToValueAtTime(
-          0.01,
-          audio.currentTime + index * 0.1 + 0.5,
-        )
-
-        oscillator.start(audio.currentTime + index * 0.1)
-        oscillator.stop(audio.currentTime + index * 0.1 + 0.5)
-      })
-    } catch (err) {
-      console.error('Error playing end chime:', err)
-      setError(err)
-      onError?.(err)
-    }
-  }, [isReady, onError])
-
-  const playGetSetGoSound = useCallback(
-    (frequency, duration) => {
-      if (!isReady || !isClient) return
-      playSound(frequency, duration)
-    },
-    [isReady, playSound],
+  const play30SecSound = useCallback(
+    () => createAndPlayOscillator(330, 0.3),
+    [createAndPlayOscillator],
+  )
+  const play20SecSound = useCallback(
+    () => createAndPlayOscillator(440, 0.3),
+    [createAndPlayOscillator],
+  )
+  const play10SecSound = useCallback(
+    () => createAndPlayOscillator(880, 0.2),
+    [createAndPlayOscillator],
   )
 
-  const play30SecSound = useCallback(() => playSound(330, 0.3), [playSound])
-  const play20SecSound = useCallback(() => playSound(440, 0.3), [playSound])
-  const play10SecSound = useCallback(() => playSound(880, 0.2), [playSound])
-
-  // Return all sound functions with sound settings checks
   return {
     isReady,
     isPlaying,
@@ -211,16 +182,23 @@ const useSafeSound = (options = {}) => {
       isClient && soundSettings?.['NoteMessage'] ? playNoteMessage : () => {},
     playMilestoneSound:
       isClient && soundSettings?.['Milestone'] ? playMilestone : () => {},
-    playClick: isClient && soundSettings?.['Click'] ? playClick : () => {},
+    playClick:
+      isClient && soundSettings?.['Click'] && isReady ? playClick : () => {},
     play30SecSound:
-      isClient && soundSettings?.['Quiz'] ? play30SecSound : () => {},
+      isClient && soundSettings?.['Quiz'] && isReady
+        ? play30SecSound
+        : () => {},
     play20SecSound:
-      isClient && soundSettings?.['Quiz'] ? play20SecSound : () => {},
+      isClient && soundSettings?.['Quiz'] && isReady
+        ? play20SecSound
+        : () => {},
     play10SecSound:
-      isClient && soundSettings?.['Quiz'] ? play10SecSound : () => {},
-    playEndChime: isClient && soundSettings?.['Quiz'] ? playEndChime : () => {},
-    playGetSetGoSound:
-      isClient && soundSettings?.['Quiz'] ? playGetSetGoSound : () => {},
+      isClient && soundSettings?.['Quiz'] && isReady
+        ? play10SecSound
+        : () => {},
+    playEndChime:
+      isClient && soundSettings?.['Quiz'] && isReady ? playEndChime : () => {},
+    playCustomSound: isClient && isReady ? createAndPlayOscillator : () => {},
   }
 }
 

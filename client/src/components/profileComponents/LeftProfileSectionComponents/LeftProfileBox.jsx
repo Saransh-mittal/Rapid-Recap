@@ -25,8 +25,9 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { setUser } from '../../../redux/authSlice'
-import useSound from '../../../customHooks/useSound'
 import CircleAndSocietyData from '../../../assets/CircleAndSocietyData'
+import { useFeatureDetection } from '../../../utils/featureDetection'
+import useSafeSound from '../../../customHooks/useSafeSound'
 
 // Lazy loading components
 const EditProfileModal = React.lazy(() =>
@@ -56,7 +57,11 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
   const toast = useToast()
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const { user } = useSelector(state => state.auth)
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)

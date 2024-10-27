@@ -10,13 +10,14 @@ import {
 import React, { useState, useMemo, useCallback, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
-import useSound from '../../../customHooks/useSound'
 import { NavLink } from 'react-router-dom'
 import { addNoteMessage } from '../../../redux/appSlice'
 import { LockIcon, QuestionIcon } from '@chakra-ui/icons'
 import UserSVG from '../../../assets/svg/UserSVG'
 import LogoutSVG from '../../../assets/svg/LogoutSVG'
 import { useTranslation } from 'react-i18next'
+import { useFeatureDetection } from '../../../utils/featureDetection'
+import useSafeSound from '../../../customHooks/useSafeSound'
 
 const Inbox = React.lazy(() => import('./Inbox'))
 const UserFriendsSVG = React.lazy(() =>
@@ -72,7 +73,11 @@ const ProfileDropDownMenu = ({
     [],
   )
 
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const { user, isAuthenticated } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
   const dispatch = useDispatch()

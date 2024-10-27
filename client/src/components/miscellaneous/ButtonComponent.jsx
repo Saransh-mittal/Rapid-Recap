@@ -1,7 +1,8 @@
 import { background, useBreakpointValue } from '@chakra-ui/react'
 import ButtonSvg from '../../assets/svg/ButtonSvg'
 import React from 'react'
-import useSound from '../../customHooks/useSound'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 const Button = React.forwardRef((props, ref) => {
   const {
@@ -49,7 +50,11 @@ const Button = React.forwardRef((props, ref) => {
     textTransform: 'uppercase',
   }
 
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   return (
     <button

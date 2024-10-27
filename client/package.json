@@ -23,6 +23,7 @@
     "@emotion/styled": "^11.11.5",
     "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.2.7",
+    "@swc/plugin-emotion": "^4.0.3",
     "axios": "^1.5.1",
     "chart.js": "^4.4.3",
     "chartjs-adapter-date-fns": "^3.0.0",

@@ -1,11 +1,16 @@
 import React from 'react'
 import { Box, Text, Button, VStack, HStack } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import useSound from '../../../../customHooks/useSound'
+import { useFeatureDetection } from '../../../../utils/featureDetection'
+import useSafeSound from '../../../../customHooks/useSafeSound'
 
 const MessageRequestComponent = ({ senderName, onAccept, onReject }) => {
   const { t } = useTranslation('MessageRequestComponent')
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   return (
     <Box

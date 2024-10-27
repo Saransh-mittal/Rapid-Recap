@@ -29,7 +29,6 @@ import {
   Text,
 } from '@chakra-ui/react'
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
-import useSound from '../customHooks/useSound'
 import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
 import FillEyeVisible from '../assets/svg/FillEyeVisible'
 import {
@@ -43,6 +42,8 @@ import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 import { setIsRegisterOpen, setIsSigninOpen } from '../redux/appSlice'
 const GuestLogin = lazy(() => import('../components/authComponents/GuestLogin'))
 import { useTranslation } from 'react-i18next'
+import { useFeatureDetection } from '../utils/featureDetection'
+import useSafeSound from '../customHooks/useSafeSound'
 
 // const Modal = lazy(() => import('./Modal'))
 const ResetPassword = lazy(() =>
@@ -56,7 +57,11 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   const { t } = useTranslation('Signin')
   const { t: GuestLoginTranslate } = useTranslation('GuestLogin')
   const toast = useToast()
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   const { forgotPassword, verifyEmail } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()

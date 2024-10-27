@@ -1,6 +1,7 @@
 import CircleAndSocietyData from '../assets/CircleAndSocietyData'
 import axios from 'axios'
 import i18n from 'i18next'
+import { isClient } from './environment'
 
 export const findSocietyAndCircle = IQ => {
   for (let i = 0; i < CircleAndSocietyData.length; i++) {
@@ -22,6 +23,7 @@ export const parseURL = url => {
 }
 
 export const getCategory = () => {
+  if (!isClient) return null
   const segments = parseURL(window.location.href)
   const homeIndex = segments.indexOf('home')
   if (homeIndex !== -1 && homeIndex < segments.length - 1) {

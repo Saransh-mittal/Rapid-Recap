@@ -13,7 +13,6 @@ import { HamburgerIcon, LockIcon, SearchIcon } from '@chakra-ui/icons'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
-import useSound from '../../../customHooks/useSound'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import FaMessenger from '../../../assets/svg/FaMessenger'
 import { motion } from 'framer-motion'
@@ -22,6 +21,8 @@ import ImageShimmerLoader from '../../miscellaneous/shimmerLoaders/ImageShimmerL
 import SVGShimmerLoader from '../../miscellaneous/shimmerLoaders/SVGShimmerLoader'
 import IconShimmerLoader from '../../miscellaneous/shimmerLoaders/IconShimmerLoader'
 import { addNoteMessage, setShowXpLevelModal } from '../../../redux/appSlice'
+import { useFeatureDetection } from '../../../utils/featureDetection'
+import useSafeSound from '../../../customHooks/useSafeSound'
 
 //SSR images
 const levelImage = '/images/level.webp'
@@ -58,7 +59,11 @@ const OutsideNavbarContent = ({
   const { t } = useTranslation('OutsideNavbarContent')
   const { user, loginCheckStatus } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const chatState = ChatState()
   const notification = chatState ? chatState.notification : []
   const navigate = useNavigate()

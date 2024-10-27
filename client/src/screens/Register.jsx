@@ -22,9 +22,7 @@ import {
   useDisclosure,
   Divider,
 } from '@chakra-ui/react'
-import { Helmet } from 'react-helmet-async'
-
-import useSound from '../customHooks/useSound'
+import { Helmet } from 'react-helmet'
 import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
 import FillEyeVisible from '../assets/svg/FillEyeVisible'
 import { useDispatch, useSelector } from 'react-redux'
@@ -38,6 +36,8 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
+import { useFeatureDetection } from '../utils/featureDetection'
+import useSafeSound from '../customHooks/useSafeSound'
 
 const EmailVerify = lazy(() =>
   import('../components/authComponents/EmailVerify'),
@@ -49,7 +49,11 @@ export default function Register({ isOpen, onClose, onOpenGuest }) {
   const { exportData } = useSelector(state => state.app)
 
   const toast = useToast()
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const dispatchRedux = useDispatch()
   const navigate = useNavigate()
 

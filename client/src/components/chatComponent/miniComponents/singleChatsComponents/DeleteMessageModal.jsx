@@ -9,12 +9,18 @@ import {
   ModalCloseButton,
   Button,
 } from '@chakra-ui/react'
-import useSound from '../../../../customHooks/useSound'
+
 import { useTranslation } from 'react-i18next'
+import { useFeatureDetection } from '../../../../utils/featureDetection'
+import useSafeSound from '../../../../customHooks/useSafeSound'
 
 const DeleteMessageModal = ({ isOpen, onClose, confirmDelete }) => {
   const { t } = useTranslation('DeleteMessageModal')
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>

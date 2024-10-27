@@ -1,9 +1,10 @@
 import React, { lazy, Suspense, useCallback, useMemo } from 'react'
 import { Flex, Image, ListItem, Text, UnorderedList } from '@chakra-ui/react'
 import { NavLink } from 'react-router-dom'
-import useSound from '../../../customHooks/useSound'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+import { useFeatureDetection } from '../../../utils/featureDetection'
+import useSafeSound from '../../../customHooks/useSafeSound'
 
 //SSR images
 const newBadge = '/images/newBadge.webp'
@@ -15,7 +16,11 @@ const NavbarContent = ({
   navItems,
   notLogined,
 }) => {
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const { isAdmin, isAuthenticated, user } = useSelector(state => state.auth)
 
   // console.log('isAdmin:', isAdmin)

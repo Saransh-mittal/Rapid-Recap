@@ -25,7 +25,6 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import useSound from '../../../../customHooks/useSound'
 import slugify from 'slugify'
 import { ICONS_ARTICLE_DIFFICULTY } from '../../../../models/articleDifficulty'
 import DifficultyLegend from '../../../miscellaneous/DIfficultyLegend'
@@ -36,7 +35,6 @@ const SolvedQuizHistory = ({ inGameName, setShowHistory }) => {
   const { t } = useTranslation('SolvedQuizHistory') // Added i18n namespace
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { playClick } = useSound()
   const [history, setHistory] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)

@@ -24,7 +24,6 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
 } from '@chakra-ui/react'
-import { CloseIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import { logoutAuth, verifyAdminStatus } from '../../redux/authSlice'
 import {
@@ -38,7 +37,6 @@ import {
   setIsNotifDrawerOpen,
   setIsNotifModalOpen,
 } from '../../redux/appSlice'
-import useSound from '../../customHooks/useSound'
 import Loading from '../miscellaneous/Loading'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
@@ -100,7 +98,7 @@ const Navbar = ({ onNavbarLoad }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const toast = useToast()
-  const { playClick } = useSound()
+
   const navLinkRefs = useRef([])
   const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] =
     useState(false)

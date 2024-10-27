@@ -1,3 +1,5 @@
+import { isClient } from './environment'
+
 export function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
@@ -31,7 +33,8 @@ export async function sendSubscriptionToBackend(subscription) {
   }
 }
 
-export const isSupported =
-  'Notification' in window &&
-  'serviceWorker' in navigator &&
-  'PushManager' in window
+export const isSupported = isClient
+  ? 'Notification' in window &&
+    'serviceWorker' in navigator &&
+    'PushManager' in window
+  : false

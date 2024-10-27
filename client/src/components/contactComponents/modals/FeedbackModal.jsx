@@ -29,13 +29,18 @@ import {
   getLabelForValue,
 } from './utils/formState'
 import { useSelector } from 'react-redux'
-import useSound from '../../../customHooks/useSound'
+import { useFeatureDetection } from '../../../utils/featureDetection'
+import useSafeSound from '../../../customHooks/useSafeSound'
 
 const FeedbackModal = ({ isOpen, onClose }) => {
   const { t } = useTranslation('FeedbackModal')
   const toast = useToast()
   const { isAuthenticated, user } = useSelector(state => state.auth)
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const loggedIn = isAuthenticated
   const [formState, setFormState] = useState(initialFormState)
   const [quizIssueAnswer, setQuizIssueAnswer] = useState('no')

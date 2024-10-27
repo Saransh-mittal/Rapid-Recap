@@ -5,7 +5,6 @@ import { Box, Button, useToast } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import i18n from 'i18next'
-import useSound from '../customHooks/useSound'
 import LanguageSelection from '../components/onboarding/LanguageSelection'
 import CategorySelection from '../components/onboarding/CategorySelection'
 import Welcome from '../components/onboarding/Welcome'
@@ -16,6 +15,8 @@ import LeaderboardOnboarding from '../components/onboarding/LeaderboardOnboardin
 import { setUser } from '../redux/authSlice'
 import { setArticleData } from '../redux/articleSlice'
 import { setIsOpen } from '../redux/quizSlice'
+import { useFeatureDetection } from '../utils/featureDetection'
+import useSafeSound from '../customHooks/useSafeSound'
 
 const MotionBox = motion(Box)
 
@@ -76,7 +77,11 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   const [article, setArticle] = useState(null)
   const [isArticleFetching, setIsArticleFetching] = useState(false)
 
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { isAuthenticated, user } = useSelector(state => state.auth)

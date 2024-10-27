@@ -29,7 +29,6 @@ import BoostSection from './articleHeaderComponents/BoostSection'
 import BookmarkIcon from './articleHeaderComponents/BookmarkIcon'
 import ShareButton from './ShareButton'
 import ShareChatModal from '../chatComponent/miniComponents/ShareChatModal'
-import useSound from '../../customHooks/useSound'
 import { EditIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import { addNoteMessage, setIsSigninOpen } from '../../redux/appSlice'
@@ -37,6 +36,8 @@ import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
 import { formatDate } from '../../utils/helper.utils'
 import AITagLine from './articleHeaderComponents/AITagLine'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -61,7 +62,11 @@ const ArticleHeader = ({
   const dispatchRedux = useDispatch()
   const { isBoosted } = useSelector(state => state.app)
   const notLoggedIn = !isAuthenticated
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const { isOpen, onOpen: onOpenShareModal, onClose } = useDisclosure()
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
   const toast = useToast()

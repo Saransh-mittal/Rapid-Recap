@@ -22,10 +22,11 @@ import {
 import axios from 'axios'
 import Loading from '../miscellaneous/Loading'
 import { motion } from 'framer-motion'
-import useSound from '../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
 import QuizBG from '../tournamentComponents/tournamentQuiz/QuizBG'
 import i18n from 'i18next'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 const GivenQuizInterface = lazy(() => import('./GivenQuizInterface'))
 const Heading = lazy(() => import('../miscellaneous/HeadingComponent'))
@@ -52,7 +53,11 @@ const QuizGivenSummary = ({
   )
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [timeTaken, setTimeTaken] = useState(timeTakenInitial)
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   const getColor = (defaultColor, tournamentColor) =>
     isTournament ? tournamentColor : defaultColor

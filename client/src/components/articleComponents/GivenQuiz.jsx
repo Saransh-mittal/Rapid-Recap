@@ -9,15 +9,21 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import QuizReport from '../quizComponents/QuizReport'
-import useSound from '../../customHooks/useSound'
+
 import { useTranslation } from 'react-i18next'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 const medalIcon = '../../assets/medal.webp'
 
 const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [showQuizSummary, setShowQuizSummary] = useState(false)
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const { t } = useTranslation('GivenQuiz')
 
   return (

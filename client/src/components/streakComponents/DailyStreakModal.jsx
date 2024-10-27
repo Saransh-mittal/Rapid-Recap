@@ -14,14 +14,19 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
-import useSound from '../../customHooks/useSound'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 const StreakSVG = lazy(() => import('./StreakSVG'))
 
 const DailyStreakModal = ({ setShowDailyStreakModal, getBackgroundColor }) => {
   const { t } = useTranslation('DailyStreakModal')
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const { streak, longestStreak, isBoosted } = useSelector(state => state.app)
 
   useEffect(() => {

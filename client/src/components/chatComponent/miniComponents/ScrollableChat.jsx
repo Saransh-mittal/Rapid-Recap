@@ -11,7 +11,6 @@ import { useDisclosure, useMediaQuery, Spinner, Flex } from '@chakra-ui/react'
 import ScrollableFeed from 'react-scrollable-feed'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import throttle from 'lodash.throttle'
-import useSound from '../../../customHooks/useSound'
 
 // Lazy load components
 const ContextMenu = lazy(() => import('./ContextMenu'))
@@ -26,6 +25,8 @@ import { groupMessagesByDate, formatTime } from '../../../utils/chat.utils'
 import { isMessageDeletedForUser } from '../config/ChatLogics'
 import i18n from 'i18next'
 import { useTranslation } from 'react-i18next'
+import { useFeatureDetection } from '../../../utils/featureDetection'
+import useSafeSound from '../../../customHooks/useSafeSound'
 
 const ScrollableChat = ({
   messages,
@@ -45,7 +46,11 @@ const ScrollableChat = ({
   const loadingRef = useRef(false)
   const isScrolling = useRef(false)
   const scrollTimeout = useRef(null)
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const { t: formatDateTranslate } = useTranslation('formatDate')
 
   const [contextMenu, setContextMenu] = useState({

@@ -197,18 +197,20 @@ const App = () => {
   }, [dispatch, isToken, isClient])
 
   useEffect(() => {
+    if (!isClient) return
     if (tournamentId && status === 'ongoing') {
       dispatch(getTopLeaderboard({ tournamentId, t }))
     }
-  }, [tournamentId, status])
+  }, [tournamentId, status, isClient])
 
   useEffect(() => {
-    if (isAuthenticated && user.role !== 'guest') {
+    if (isAuthenticated && user.role !== 'guest' && isClient) {
       dispatch(checkTournamentRegistration(tournamentSliceTranslation))
     }
-  }, [isAuthenticated, user?.inGameName])
+  }, [isAuthenticated, user?.inGameName, isClient])
 
   useEffect(() => {
+    if (!isClient) return
     let timer
     if (isAuthenticated) {
       dispatch(isSubscribedChecker())
@@ -240,7 +242,7 @@ const App = () => {
     }
     dispatch(setTaskProgress({ task: 'otherTasks', progress: 100 }))
     return () => clearTimeout(timer)
-  }, [isAuthenticated])
+  }, [isAuthenticated, isClient])
 
   useEffect(() => {
     if (!isClient) return
@@ -256,6 +258,7 @@ const App = () => {
   }, [location, getUserInGameName, isLoggedIn, isClient])
 
   useEffect(() => {
+    if (!isClient) return
     const fetchInitialData = async () => {
       dispatch(setTaskProgress({ task: 'fetchUser', progress: 50 }))
       try {
@@ -272,10 +275,10 @@ const App = () => {
     }
 
     fetchInitialData()
-  }, [dispatch])
+  }, [dispatch, isClient])
 
   useEffect(() => {
-    if (guestModalJustClosed && user?.role === 'guest') {
+    if (guestModalJustClosed && user?.role === 'guest' && isClient) {
       dispatch(
         addNoteMessageIfAllowed({
           title: t('You can view your credentials of guest account in profile'), // Added translation
@@ -285,9 +288,10 @@ const App = () => {
         }),
       )
     }
-  }, [guestModalJustClosed, user])
+  }, [guestModalJustClosed, user, isClient])
 
   useEffect(() => {
+    if (!isClient) return
     if (
       user?.role === 'guest' &&
       !guestModalJustClosed &&
@@ -303,7 +307,7 @@ const App = () => {
         }),
       )
     }
-  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
+  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch, isClient])
 
   const handleNavbarLoad = useCallback(() => {
     setNavbarLoaded(true)

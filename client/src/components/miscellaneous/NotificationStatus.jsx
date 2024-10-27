@@ -25,12 +25,17 @@ import {
   Spinner,
   Center,
 } from '@chakra-ui/react'
-import useSound from '../../customHooks/useSound'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 const NotificationStatus = ({ isOpen, onClose, data, isLoading }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [isMobile] = useMediaQuery('(max-width: 48em)')
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   const filteredUsers = useMemo(() => {
     if (!data) return []

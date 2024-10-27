@@ -20,7 +20,8 @@ import {
   Flex,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next' // Import useTranslation hook
-import useSound from '../../customHooks/useSound'
+import useSafeSound from '../../customHooks/useSafeSound'
+import { useFeatureDetection } from '../../utils/featureDetection'
 
 const ResetPassword = ({ email, isOpen, onClose }) => {
   const { t } = useTranslation('ResetPassword') // Initialize useTranslation
@@ -29,7 +30,11 @@ const ResetPassword = ({ email, isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const toast = useToast()
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   const handleResetPassword = useCallback(async () => {
     if (!email) {

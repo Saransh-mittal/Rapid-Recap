@@ -1,5 +1,6 @@
 const dotenv = require('dotenv')
 const bodyParser = require('body-parser')
+const createSSRMiddleware = require('./middleware/ssrMiddleware')
 dotenv.config({ path: './config.env' })
 const express = require('express')
 const userRoutes = require('./router/userRoutes')
@@ -25,9 +26,27 @@ const compression = require('compression')
 const helmet = require('helmet')
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
+const securityMiddleware = require('./middleware/securityMiddleware')
 
 const app = express()
-
+// CORS configuration - only needed in development
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:5173')
+    res.header(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, OPTIONS',
+    )
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    res.header('Access-Control-Allow-Credentials', true)
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200)
+    }
+    next()
+  })
+}
+// Apply security middleware first
+securityMiddleware(app)
 app.use(i18nMiddleware.handle(i18n))
 
 app.use(
@@ -149,8 +168,43 @@ authRouter.use('/chat', chatsRoutes)
 authRouter.use('/message', messageRoutes)
 authRouter.use('/friends', friendsRoutes)
 authRouter.use('/tournament', tournamentRoutes)
-app.use('/api', authRouter)
 
+// Serve static files
+if (process.env.NODE_ENV === 'production') {
+  app.use(
+    express.static(path.join(__dirname, 'client/dist/client'), {
+      index: false, // Don't serve index.html for SSR routes
+      setHeaders: (res, path) => {
+        // Set proper cache headers
+        if (path.endsWith('.js')) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000')
+        } else if (path.endsWith('.css')) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000')
+        } else if (path.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000')
+        }
+
+        // Set proper MIME types
+        if (path.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript')
+        } else if (path.endsWith('.css')) {
+          res.setHeader('Content-Type', 'text/css')
+        }
+      },
+    }),
+  )
+}
+// Initialize SSR middleware
+createSSRMiddleware(app).then(middleware => {
+  app.use(middleware)
+})
+app.use('/api', authRouter)
+// Catch-all route for client-side routing in production
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/dist/client/index.html'))
+  })
+}
 const server = app.listen(PORT, () => {
   console.log(`Listening to port no. ${PORT}`)
 })

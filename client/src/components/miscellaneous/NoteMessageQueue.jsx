@@ -24,17 +24,25 @@ const TournamentQuizFeedbackNoteMessage = lazy(() =>
     './noteMessages/feedbackNoteMessages/TournamentQuizFeedbackNoteMessage'
   ),
 )
-import { SOUND_TYPES } from '../../models/soundSettings'
-import useSound from '../../customHooks/useSound'
+
 import { useTranslation } from 'react-i18next'
 import TournamentNoteMessage from './noteMessages/TournamentNoteMessage'
+import useSafeSound from '../../customHooks/useSafeSound'
+import { useFeatureDetection } from '../../utils/featureDetection'
 const NoteMessageQueue = () => {
   const dispatch = useDispatch()
   const noteMessageQueue = useSelector(state => state.app.noteMessageQueue)
   const showingSummaryForNoteMessages = useSelector(
     state => state.app.showingSummaryForNoteMessages,
   )
-  const { playNoteMessageSound, playMilestoneSound } = useSound()
+
+  const features = useFeatureDetection()
+
+  const { playMilestoneSound, playNoteMessageSound, isReady } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    soundEnabled: true,
+    onerror: error => console.error('Error playing sound:', error),
+  })
   const { t } = useTranslation('NoteMessageQueue')
 
   // Memoize actions array to avoid recreating on each render
@@ -50,6 +58,7 @@ const NoteMessageQueue = () => {
   )
 
   useEffect(() => {
+    if (!isReady || !features.hasAudioSupport) return
     if (noteMessageQueue.length > 0) {
       const latestMessage = noteMessageQueue[noteMessageQueue.length - 1]
       switch (latestMessage.messageType) {

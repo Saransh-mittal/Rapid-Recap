@@ -20,7 +20,7 @@ import {
 } from '@chakra-ui/react'
 import { LockIcon } from '@chakra-ui/icons'
 import { useDispatch, useSelector } from 'react-redux'
-import useSound from '../../customHooks/useSound'
+
 import RelatedArticlesToggle from './RelatedArticlesToggle'
 import axios from 'axios'
 import { formatDate } from '../../utils/helper.utils'
@@ -30,6 +30,8 @@ import { useTranslation } from 'react-i18next'
 import { setIsOpen } from '../../redux/quizSlice'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
 import { useNavigate } from 'react-router-dom'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 //SSR image
 const Alt_img = '/images/rr.webp'
@@ -66,7 +68,11 @@ const Sidebar = ({
   const { t: formatDateTranslate } = useTranslation('formatDate')
   const { isAuthenticated } = useSelector(state => state.auth)
   const notLoggedIn = !isAuthenticated
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const toast = useToast()
   const [showRelated, setShowRelated] = useState(false)
   const [recommendedArticles, setRecommendedArticles] = useState([])

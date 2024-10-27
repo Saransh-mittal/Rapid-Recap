@@ -27,11 +27,16 @@ import {
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
-import useSound from '../../../../customHooks/useSound'
+import { useFeatureDetection } from '../../../../utils/featureDetection'
+import useSafeSound from '../../../../customHooks/useSafeSound'
 
 const EditProfileModal = ({ isOpen, onClose, profileData, onSubmit }) => {
   const { t } = useTranslation('EditProfileModal') // Hook for translation
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const [formData, setFormData] = useState(profileData)
   const [imageLoading, setImageLoading] = useState(false)
   const [picDisplay, setPicDisplay] = useState(profileData.pic)

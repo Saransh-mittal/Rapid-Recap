@@ -4,8 +4,9 @@ import { ParallaxProvider } from 'react-scroll-parallax'
 import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../redux/appSlice'
 import { useTranslation } from 'react-i18next'
+import { isClient } from '../utils/environment'
 
-const Hero = lazy(() => import('../components/getStartedComponents/Hero'))
+import Hero from '../components/getStartedComponents/Hero'
 const BenefitsMap = lazy(() =>
   import('../components/getStartedComponents/BenefitsMap'),
 )
@@ -31,7 +32,10 @@ const theme = extendTheme({
   },
 })
 
+// Move device detection to a separate utility
 const detectWeakDevice = () => {
+  if (!isClient) return false
+
   const isLowEndDevice = () => {
     const navigator = window.navigator
     const hardwareConcurrency = navigator.hardwareConcurrency || 4
@@ -69,6 +73,7 @@ const GetStarted = () => {
   const isMonitoring = useRef(true)
 
   const askForWeakMode = () => {
+    if (!isClient) return
     dispatch(
       addNoteMessage({
         title: t('performanceIssueDetected'),
@@ -84,6 +89,8 @@ const GetStarted = () => {
   }
 
   useEffect(() => {
+    if (!isClient) return
+
     const initialWeakDevice = detectWeakDevice()
     if (initialWeakDevice) {
       askForWeakMode()
@@ -130,21 +137,27 @@ const GetStarted = () => {
       bgPosition="center"
       minHeight="100vh"
     >
-      <Suspense fallback={<Spinner />}>
+      {isClient ? (
+        <>
+          <Hero isWeakDevice={weakDevice} />
+
+          <Suspense fallback={<Spinner />}>
+            <BenefitsMap isWeakDevice={weakDevice} />
+          </Suspense>
+          <Suspense fallback={<Spinner />}>
+            <Features isWeakDevice={weakDevice} />
+          </Suspense>
+        </>
+      ) : (
+        // Server-side render only Hero initially
         <Hero isWeakDevice={weakDevice} />
-      </Suspense>
-      <Suspense fallback={<Spinner />}>
-        <BenefitsMap isWeakDevice={weakDevice} />
-      </Suspense>
-      <Suspense fallback={<Spinner />}>
-        <Features isWeakDevice={weakDevice} />
-      </Suspense>
+      )}
     </Box>
   )
 
   return (
     <ChakraProvider theme={theme}>
-      {isWeakDevice ? (
+      {isWeakDevice || !isClient ? (
         renderContent(true)
       ) : (
         <ParallaxProvider>{renderContent(false)}</ParallaxProvider>

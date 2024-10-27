@@ -1,7 +1,8 @@
 import React from 'react'
 import { Flex, Badge, Tooltip } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import useSound from '../../customHooks/useSound'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 const ProfileButton = React.forwardRef(
   (
@@ -18,7 +19,11 @@ const ProfileButton = React.forwardRef(
     },
     ref,
   ) => {
-    const { playClick } = useSound()
+    const features = useFeatureDetection()
+    const { playClick } = useSafeSound({
+      enabled: features.hasAudioSupport,
+      volume: 0.5,
+    })
     const { t } = useTranslation('ProfileButton')
 
     return (

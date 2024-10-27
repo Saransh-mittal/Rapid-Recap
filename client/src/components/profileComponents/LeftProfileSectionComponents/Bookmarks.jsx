@@ -22,9 +22,10 @@ import {
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import useSound from '../../../customHooks/useSound'
 import slugify from 'slugify'
 import i18n from 'i18next'
+import { useFeatureDetection } from '../../../utils/featureDetection'
+import useSafeSound from '../../../customHooks/useSafeSound'
 
 const ArticleCard = React.lazy(() => import('../../miscellaneous/ArticleCard'))
 
@@ -38,7 +39,11 @@ const Bookmarks = ({ isOpen, onClose }) => {
   )
   const navigate = useNavigate()
   const toast = useToast()
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   const fetchBookmarks = useCallback(async () => {
     try {

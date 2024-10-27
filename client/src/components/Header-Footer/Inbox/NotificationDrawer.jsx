@@ -32,7 +32,8 @@ import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUpdates } from '../../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
-import useSound from '../../../customHooks/useSound'
+import useSafeSound from '../../../customHooks/useSafeSound'
+import { useFeatureDetection } from '../../../utils/featureDetection'
 
 //SSR image optimization
 const Rapid_recap = '/images/rrlogo.webp'
@@ -203,7 +204,11 @@ const NotificationDrawer = ({
   setIsHamburgerOpen,
 }) => {
   const { t } = useTranslation('NotificationDrawer')
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const dispatch = useDispatch()
   const toast = useToast()
   const isScreenSmallerThan48em = useMediaQuery('(max-width: 48em)')[0]

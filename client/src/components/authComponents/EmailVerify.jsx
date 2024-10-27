@@ -19,9 +19,11 @@ import {
 import { useToast } from '@chakra-ui/react'
 import throttle from 'lodash.throttle'
 import { useDispatch, useSelector } from 'react-redux'
-import useSound from '../../customHooks/useSound'
+
+import useSafeSound from '../../customHooks/useSafeSound'
 import { setVerifyEmail } from '../../redux/authSlice'
 import { useTranslation } from 'react-i18next'
+import { useFeatureDetection } from '../../utils/featureDetection'
 
 const EmailVerify = ({ email, isOpen, onClose }) => {
   const { t } = useTranslation('EmailVerify')
@@ -29,7 +31,11 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
   const dispatch = useDispatch()
   const { forgotPassword, user } = useSelector(state => state.auth)
   const [load, setLoad] = useState(false) //for loading spinner
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const [otp, setOtp] = useState({
     i1: '',
     i2: '',

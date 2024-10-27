@@ -1,7 +1,8 @@
 import { EmailIcon } from '@chakra-ui/icons'
 import { Badge, Button, Flex } from '@chakra-ui/react'
 import React, { useCallback } from 'react'
-import useSound from '../../../customHooks/useSound'
+import { useFeatureDetection } from '../../../utils/featureDetection'
+import useSafeSound from '../../../customHooks/useSafeSound'
 
 const Inbox = ({
   className,
@@ -12,7 +13,11 @@ const Inbox = ({
   h = '6',
   w = '6',
 }) => {
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   // Memoize the onClick handler to prevent unnecessary re-renders
   const handleClick = useCallback(() => {

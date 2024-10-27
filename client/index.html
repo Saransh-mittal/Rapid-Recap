@@ -1,178 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/images/rrlogo_512.png" />
-    <meta name="theme-color" content="#1a1527" />
-    <link rel="icon" type="image/webp" href="/images/rrlogo_512.png" />
-    <link rel="preload" href="/src/assets/hero/hero-bg.webp" as="image">
-    <link rel="preload" href="/images/tourBGDark.webp" as="image">
-    <link rel="canonical" href="https://www.rapidrecap.co.in/" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapid Recap - Stay Informed, Stay Ahead</title>
 
+  <!-- Preload resources -->
+  <link rel="preload" href="/src/assets/hero/hero-bg.webp" as="image">
+  <link rel="preload" href="/images/tourBGDark.webp" as="image">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/images/rrlogo_512.png">
+  <meta name="theme-color" content="#1a1527">
+  <link rel="icon" type="image/webp" href="/images/rrlogo_512.png">
 
-    <!-- Preconnect to Google Fonts -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <!-- DNS Prefetch -->
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <!-- Font preconnect -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
 
+  <!-- Splash screen styles -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
 
-    <!-- Primary Meta Tags -->
-    <title>Rapid Recap - Stay Informed, Stay Ahead</title>
-    <meta name="title" content="Rapid Recap - Stay Informed, Stay Ahead">
-    <meta name="description" content="Stay informed with Rapid Recap's comprehensive news coverage and quizzes. Improve your Information Quotient (IQ) score across categories including top news, world, politics, business, technology, sports, health, science, environment, crime, education, entertainment, food, lifestyle, and tourism. Join intellectual societies and track your progress on our leaderboard.">
-    <meta name="keywords" content="Rapid Recap, news, articles, quizzes, IQ score, leaderboard, Information Quotient, intellectual societies, user rankings, knowledge assessment, top news, general news, world news, politics, business, technology, sports, health, science, environment, crime, education, entertainment, food, lifestyle, tourism, wise, web, wise web">
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #000000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.rapidrecap.co.in/" />
-    <meta property="og:title" content="Rapid Recap - Stay Informed, Stay Ahead">
-    <meta property="og:description" content="Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
-    <meta property="og:image" content="https://www.rapidrecap.co.in/images/rrlogo_512.png" />
+    .splash-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
+    #splash-screen .logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite ease-in-out;
+    }
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://www.rapidrecap.co.in/" />
-    <meta property="twitter:title" content="Rapid Recap - Stay Informed, Stay Ahead">
-    <meta property="twitter:description" content="Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
-    <meta property="twitter:image" content="https://www.rapidrecap.co.in/images/rrlogo_512.png" />
+    #splash-screen .title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out 0.2s forwards;
+    }
 
-    <!-- Additional Meta Tags -->
-    <meta name="robots" content="index, follow" />
-    <meta name="author" content="Rapid Recap Team" />
+    #splash-screen .subtitle {
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 300;
+      color: #b3b3b3;
+      letter-spacing: 1px;
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out 0.5s forwards;
+    }
 
-    <!-- Structured Data -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "url": "https://www.rapidrecap.co.in/",
-        "name": "Rapid Recap",
-        "description": "Stay updated with the latest news and articles. Take quizzes and see your Information Quotient (IQ) score on Rapid Recap.",
-        "publisher": {
-          "@type": "Organization",
-          "name": "Rapid Recap",
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://www.rapidrecap.co.in/images/rrlogo_512.png",
-            "width": 112,
-            "height": 112
-          }
-        },
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": "https://www.rapidrecap.co.in/search?q={search_term_string}",
-          "query-input": "required name=search_term_string"
-        },
-        "sameAs": [
-          "https://www.linkedin.com/company/rrapidrecap/",
-          "https://www.instagram.com/rrapidrecap/"
-        ]
-      }
-    </script>
-    <!-- SiteNavigationElement Structured Data -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SiteNavigationElement",
-        "name": [
-          "Home",
-          "Top News",
-          "Leaderboard",
-          "Tournament",
-          "Contact"
-        ],
-        "url": [
-          "https://www.rapidrecap.co.in/home",
-          "https://www.rapidrecap.co.in/home/top",
-          "https://www.rapidrecap.co.in/leaderboard",
-          "https://www.rapidrecap.co.in/tournament",
-          "https://www.rapidrecap.co.in/contact"
-        ]
-      }
-    </script>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
 
-      #splash-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #000000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-      }
-
-      .splash-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      #splash-screen .logo {
-        width: 120px;
-        height: auto;
-        margin-bottom: 20px;
-        animation: pulse 2s infinite ease-in-out;
-      }
-
-      #splash-screen .title {
-        font-family: 'Poppins', sans-serif;
-        font-size: 28px;
-        font-weight: 600;
-        color: #ffffff;
-        margin-bottom: 8px;
-        letter-spacing: 2px;
-        opacity: 0;
-        animation: fadeIn 0.8s ease-out 0.2s forwards;
-      }
-
-      #splash-screen .subtitle {
-        font-family: 'Poppins', sans-serif;
-        font-size: 16px;
-        font-weight: 300;
-        color: #b3b3b3;
-        letter-spacing: 1px;
-        opacity: 0;
-        animation: fadeIn 0.8s ease-out 0.5s forwards;
-      }
-
-      @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-      }
-
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="splash-screen">
-      <div class="splash-content">
-        <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" class="logo" />
-        <div class="title">RAPID RECAP</div>
-        <div class="subtitle">Stay Informed, Stay Ahead</div>
-      </div>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div id="splash-screen">
+    <div class="splash-content">
+      <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" class="logo" />
+      <div class="title">RAPID RECAP</div>
+      <div class="subtitle">Stay Informed, Stay Ahead</div>
     </div>
-    <div id="root"></div>
-    <div id="overlay"></div>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <script type="module" src="/src/main.jsx"></script>
-    <script>
-      window.addEventListener('load', function() {
-        document.getElementById('splash-screen').style.display = 'none';
-      });
-    </script>
-  </body>
+  </div>
+
+  <!-- App Root -->
+  <div id="root"><!--ssr-outlet--></div>
+
+  <!-- Entry Point -->
+  <script type="module" src="/src/main.jsx"></script>
+</body>
 </html>

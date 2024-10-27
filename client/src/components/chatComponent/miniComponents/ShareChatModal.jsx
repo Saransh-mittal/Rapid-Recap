@@ -21,8 +21,10 @@ import {
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import { ChatState } from '../../../contextAPI/ChatProvider'
-import useSound from '../../../customHooks/useSound'
+
 import { CopyIcon } from '@chakra-ui/icons'
+import { useFeatureDetection } from '../../../utils/featureDetection'
+import useSafeSound from '../../../customHooks/useSafeSound'
 
 const socialPlatforms = [
   { name: 'whatsapp', logo: '/images/whatsapp-logo.png', color: '#25D366' },
@@ -42,7 +44,11 @@ const ShareChatModal = ({ isOpen, onClose, articleToShare, notLoggedIn }) => {
   const socket = chatState ? chatState.socket : null
 
   const toast = useToast()
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
 
   useEffect(() => {
     if (isOpen) {

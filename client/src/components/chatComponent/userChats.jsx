@@ -34,15 +34,21 @@ import axios from 'axios'
 import ButtonGradient from '../../assets/svg/ButtonGradient'
 import Button from '../miscellaneous/ButtonComponent'
 import { Search2Icon } from '@chakra-ui/icons'
-import useSound from '../../customHooks/useSound'
+
 import ChatLoading from './ChatLoading'
 import { useTranslation } from 'react-i18next'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 const ChatSideDrawer = lazy(() => import('./ChatSideDrawer'))
 
 const UserChats = ({ fetchAgain }) => {
   const { t } = useTranslation('userChats')
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const { user: loggedInUser } = useSelector(state => state.auth)
   const [loggedUser, setLoggedUser] = useState()
   const [showRequestsTab, setShowRequestsTab] = useState(false)

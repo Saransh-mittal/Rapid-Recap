@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useSelector, useDispatch } from 'react-redux'
 import { setUser } from '../../redux/authSlice'
-import useSound from '../../customHooks/useSound'
 import axios from 'axios'
 import {
   Modal,
@@ -19,13 +18,19 @@ import {
 } from '@chakra-ui/react'
 import { Star } from 'lucide-react'
 import { findSocietyAndCircle } from '../../utils/helper.utils'
+import useSafeSound from '../../customHooks/useSafeSound'
+import { useFeatureDetection } from '../../utils/featureDetection'
 
 const UpgradeModal = ({ isOpen, onClose }) => {
   // const [glowAnimation, setGlowAnimation] = useState(false)
   const { t } = useTranslation('UpgradeModal')
   const { t: tBrains } = useTranslation('Brains')
   const { t: tCircles } = useTranslation('Circles')
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const { user } = useSelector(state => state.auth)
   const dispatch = useDispatch()
   const size = useBreakpointValue({

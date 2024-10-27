@@ -12,7 +12,6 @@ import {
 } from '@chakra-ui/react'
 import { motion, useAnimation, useSpring, useTransform } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import useSound from '../../customHooks/useSound'
 import slugify from 'slugify'
 import { useDispatch } from 'react-redux'
 import { setArticleData } from '../../redux/articleSlice'
@@ -20,6 +19,8 @@ import { useTranslation } from 'react-i18next'
 import CalendarSVG from '../../assets/svg/CalenderSVG'
 import ClockSVG from '../../assets/svg/ClockSVG'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
+import { useFeatureDetection } from '../../utils/featureDetection'
+import useSafeSound from '../../customHooks/useSafeSound'
 
 const MotionBox = motion(Box)
 const MotionImage = motion(Image)
@@ -42,7 +43,11 @@ const Card = ({
   const cardRef = useRef(null)
   const navigate = useNavigate()
   const controls = useAnimation()
-  const { playClick } = useSound()
+  const features = useFeatureDetection()
+  const { playClick } = useSafeSound({
+    enabled: features.hasAudioSupport,
+    volume: 0.5,
+  })
   const dispatch = useDispatch()
 
   // Increase stiffness for faster response, and decrease damping for more fluid motion
