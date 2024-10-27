@@ -1,11 +1,5 @@
 import './App.css'
-import React, {
-  Suspense,
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-} from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
@@ -14,35 +8,20 @@ import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 
-const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
-const FixedBackground = React.lazy(() =>
-  import('./components/miscellaneous/FixedBackground.jsx'),
-)
-const AppRoutes = React.lazy(() => import('./routes/AppRoutes.jsx'))
-const GuestLoginModal = React.lazy(() =>
-  import('./components/authComponents/GuestLoginModal.jsx'),
-)
-const ButtonGradient = React.lazy(() =>
-  import('./assets/svg/ButtonGradient.jsx'),
-)
-const Signin = React.lazy(() => import('./screens/Signin.jsx'))
-const Register = React.lazy(() => import('./screens/Register.jsx'))
-const NoteMessageQueue = React.lazy(() =>
-  import('./components/miscellaneous/NoteMessageQueue.jsx'),
-)
-const XPLevelModal = React.lazy(() =>
-  import('./components/Header-Footer/navbarComponents/XPLevelModal.jsx'),
-)
-const Quiz = React.lazy(() => import('./screens/Quiz.jsx'))
+import Navbar from './components/Header-Footer/Navbar.jsx'
+import FixedBackground from './components/miscellaneous/FixedBackground.jsx'
+import AppRoutes from './routes/AppRoutes.jsx'
+import GuestLoginModal from './components/authComponents/GuestLoginModal.jsx'
+import ButtonGradient from './assets/svg/ButtonGradient.jsx'
+import Signin from './screens/Signin.jsx'
+import Register from './screens/Register.jsx'
+import NoteMessageQueue from './components/miscellaneous/NoteMessageQueue.jsx'
+import XPLevelModal from './components/Header-Footer/navbarComponents/XPLevelModal.jsx'
+import Quiz from './screens/Quiz.jsx'
+import NotificationModal from './components/Header-Footer/Inbox/NotificationModal.jsx'
+import UpgradeModal from './components/homeComponents/UpgradeModal'
 
-const NotificationModal = React.lazy(() =>
-  import('./components/Header-Footer/Inbox/NotificationModal.jsx'),
-)
-const UpgradeModal = React.lazy(() =>
-  import('./components/homeComponents/UpgradeModal'),
-)
 import {
-  addNoteMessage,
   fetchUnreadNoteMessages,
   setIsRegisterOpen,
   setIsSigninOpen,
@@ -67,9 +46,10 @@ import {
 import LoadingScreen from './screens/LoadingScreen.jsx'
 import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
+import { safeLocalStorage } from './utils/safeStorage.js'
+import { isClient } from './utils/environment.js'
 
 const App = () => {
-  ReactGA.initialize('G-ES5VQ8NW7Z')
   const location = useLocation()
   const { isLoading, overallProgress } = useSelector(
     state => state.loadingProgress,
@@ -117,7 +97,10 @@ const App = () => {
     () => isAuthenticated && user,
     [isAuthenticated, user],
   )
-  const isToken = useCallback(() => localStorage.getItem('token'), [])
+  const isToken = useCallback(() => {
+    if (!isClient) return null
+    return safeLocalStorage.getItem('token')
+  }, [])
   const getUserInGameName = useMemo(
     () => (isLoggedIn ? user?.inGameName : null),
     [isLoggedIn, user],
@@ -139,13 +122,27 @@ const App = () => {
   }, [updates])
 
   useEffect(() => {
-    setShowLoadingScreen(true)
-    setTimeout(() => {
-      setShowUpgradeModal(true)
-    }, 5000)
-  }, [])
+    if (isClient) {
+      import('react-ga4').then(ReactGA => {
+        ReactGA.initialize('G-ES5VQ8NW7Z')
+        ReactGA.send({
+          hitType: 'pageview',
+          page: location.pathname + location.search,
+          title: document.title,
+        })
+      })
+
+      setShowLoadingScreen(true)
+      const timerId = setTimeout(() => {
+        setShowUpgradeModal(true)
+      }, 5000)
+
+      return () => clearTimeout(timerId)
+    }
+  }, [isClient])
 
   useEffect(() => {
+    if (!isClient) return
     const token = isToken()
 
     if (!token) {
@@ -194,13 +191,17 @@ const App = () => {
       const timeout =
         timeUntilMidnight > 0 ? timeUntilMidnight : 86400000 + timeUntilMidnight
 
-      setTimeout(() => {
-        window.location.reload(true)
+      const timeoutId = setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.location.reload(true)
+        }
       }, timeout)
+
+      return () => clearTimeout(timeoutId)
     }
 
     refreshAtMidnightUTC()
-  }, [dispatch, isToken])
+  }, [dispatch, isToken, isClient])
 
   useEffect(() => {
     if (tournamentId && status === 'ongoing') {
@@ -249,6 +250,7 @@ const App = () => {
   }, [isAuthenticated])
 
   useEffect(() => {
+    if (!isClient) return
     ReactGA.set({
       'User Logged In': isLoggedIn ? t('Logged In') : t('Logged Out'), // Added translation
       'User InGameName': getUserInGameName ? getUserInGameName : t('anonymous'), // Added translation
@@ -258,7 +260,7 @@ const App = () => {
       page: location.pathname + location.search,
       title: document.title,
     })
-  }, [location, getUserInGameName, isLoggedIn])
+  }, [location, getUserInGameName, isLoggedIn, isClient])
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -318,10 +320,11 @@ const App = () => {
   useEffect(() => {
     if (overallProgress === 100) {
       // dispatch after 500ms to ensure all components are loaded
-      setTimeout(() => {
+      const timerId = setTimeout(() => {
         dispatch(setIsLoading(false))
         setShowLoadingScreen(false)
       }, 500)
+      return () => clearTimeout(timerId)
     }
   }, [navbarLoaded, overallProgress, dispatch])
 
@@ -354,93 +357,74 @@ const App = () => {
       </Helmet>
       {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
 
-      <Suspense fallback={null}>
-        <FixedBackground />
-      </Suspense>
+      <FixedBackground />
 
-      <Suspense fallback={null}>
-        <NoteMessageQueue />
-      </Suspense>
+      <NoteMessageQueue />
 
       {showXpLevelModal && (
-        <Suspense fallback={null}>
-          <XPLevelModal
-            setShowXPLevelModal={show => dispatch(setShowXpLevelModal(show))}
-          />
-        </Suspense>
+        <XPLevelModal
+          setShowXPLevelModal={show => dispatch(setShowXpLevelModal(show))}
+        />
       )}
 
-      <Suspense fallback={null}>
-        <ButtonGradient />
-      </Suspense>
-      <Suspense fallback={null}>
-        <GuestLoginModal
-          isOpen={isGuestLoggedin}
-          onClose={handleClose}
-          guestName={user?.inGameName}
-          guestPassword={user?.guestTempPassword}
-          guestId={user?._id}
-          onOpen={() => setIsGuestLoggedin(true)}
-          t={GuestLoginModaltranslation}
+      <ButtonGradient />
+
+      <GuestLoginModal
+        isOpen={isGuestLoggedin}
+        onClose={handleClose}
+        guestName={user?.inGameName}
+        guestPassword={user?.guestTempPassword}
+        guestId={user?._id}
+        onOpen={() => setIsGuestLoggedin(true)}
+        t={GuestLoginModaltranslation}
+      />
+
+      {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null}
+
+      <Signin
+        isOpen={isSigninOpen}
+        onOpen={() => dispatch(setIsSigninOpen(true))}
+        onClose={() => dispatch(setIsSigninOpen(false))}
+      />
+
+      {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          title={t('upgrade_modal_title')}
+          content={t('upgrade_modal_content')}
         />
-      </Suspense>
-      <Suspense fallback={null}>
-        {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null}
-      </Suspense>
-      <Suspense fallback={null}>
-        <Signin
-          isOpen={isSigninOpen}
-          onOpen={() => dispatch(setIsSigninOpen(true))}
-          onClose={() => dispatch(setIsSigninOpen(false))}
-        />
-      </Suspense>
-      <Suspense fallback={null}>
-        {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
-          <UpgradeModal
-            isOpen={showUpgradeModal}
-            onClose={() => setShowUpgradeModal(false)}
-            title={t('upgrade_modal_title')}
-            content={t('upgrade_modal_content')}
-          />
-        )}
-      </Suspense>
-      <Suspense fallback={null}>
-        <Register
-          isOpen={isRegisterOpen}
-          onOpen={() => dispatch(setIsRegisterOpen(true))}
-          onClose={() => dispatch(setIsRegisterOpen(false))}
-        />
-      </Suspense>
+      )}
+
+      <Register
+        isOpen={isRegisterOpen}
+        onOpen={() => dispatch(setIsRegisterOpen(true))}
+        onClose={() => dispatch(setIsRegisterOpen(false))}
+      />
+
       <NavbarProvider>
-        {showNavbar && (
-          <Suspense fallback={null}>
-            <Navbar onNavbarLoad={handleNavbarLoad} />
-          </Suspense>
-        )}
+        {showNavbar && <Navbar onNavbarLoad={handleNavbarLoad} />}
         <Box
           position="relative"
           minHeight="100vh"
           zIndex={1}
           overflowX={'hidden'}
         >
-          <Suspense fallback={null}>
-            <AppRoutes
-              isToken={isToken()}
-              needsOnboarding={user?.needsOnboarding}
-              setIsGuestLoggedin={setIsGuestLoggedin}
-            />
-          </Suspense>
+          <AppRoutes
+            isToken={isToken()}
+            needsOnboarding={user?.needsOnboarding}
+            setIsGuestLoggedin={setIsGuestLoggedin}
+          />
         </Box>
       </NavbarProvider>
-      <Suspense fallback={null}>
-        {isNotifInboxModalOpen && (
-          <NotificationModal
-            handleNotifModalClose={handleNotifModalClose}
-            selectedNotificationId={selectedNotificationId}
-            selectedNotification={getLatestWeeklyReportUpdate()}
-          />
-        )}
-      </Suspense>
+
+      {isNotifInboxModalOpen && (
+        <NotificationModal
+          handleNotifModalClose={handleNotifModalClose}
+          selectedNotificationId={selectedNotificationId}
+          selectedNotification={getLatestWeeklyReportUpdate()}
+        />
+      )}
     </>
   )
 }
