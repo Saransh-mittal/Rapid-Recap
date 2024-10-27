@@ -89,7 +89,10 @@ const GetStarted = () => {
   }
 
   useEffect(() => {
-    if (!isClient) return
+    if (!isClient) {
+      console.log('Client-side only')
+      return
+    }
 
     const initialWeakDevice = detectWeakDevice()
     if (initialWeakDevice) {

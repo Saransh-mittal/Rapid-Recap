@@ -1,3 +1,4 @@
+// entry-server.jsx
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import { StaticRouter } from 'react-router-dom/server'
@@ -32,18 +33,61 @@ const createInitialState = () => ({
     error: null,
   },
   app: {
-    isLoading: true,
+    isLoading: false,
     navigationCount: 0,
     noteMessageQueue: [],
     soundSettings: {},
     updatesLoading: false,
     updatesFetched: false,
+    isWeakDevice: false, // Add this for GetStarted component
   },
-  // Add other initial states as needed
+  ui: {
+    theme: 'dark',
+    language: 'en',
+  },
+  content: {},
+  articles: {
+    items: [],
+    loading: false,
+    error: null,
+  },
+  notifications: {
+    items: [],
+    unread: 0,
+  },
+  quiz: {
+    current: null,
+    history: [],
+  },
+  tournament: {
+    active: null,
+    history: [],
+  },
+  loadingProgress: {
+    progress: 0,
+    isLoading: false,
+  },
+  noteMessageSummary: {
+    messages: [],
+  },
 })
 
+// Preload critical assets for GetStarted
+const preloadAssets = () => {
+  return [
+    '/images/landingPage/featureBg.webp',
+    '/images/landingPage/featureBgMobile.webp',
+    '/images/landingPage/homeUI.webp',
+    '/images/landingPage/articleUI.webp',
+    '/images/landingPage/quizUI.webp',
+    '/images/landingPage/tournamentUI.webp',
+  ]
+}
+
 export async function render(url, options = {}) {
+  const { emotionCache } = options
   const helmetContext = {}
+  const initialState = createInitialState()
 
   // Create store with initial state
   const store = configureStore({
@@ -59,24 +103,18 @@ export async function render(url, options = {}) {
       loadingProgress: loadingProgressReducer,
       noteMessageSummary: noteMessageSummaryReducer,
     },
-    preloadedState: createInitialState(),
+    preloadedState: initialState,
   })
 
-  // Set language if provided
-  if (options.language) {
-    i18n.changeLanguage(options.language)
-  }
-
   try {
-    // Use renderToString with a simple error boundary
-    const html = ReactDOMServer.renderToString(
+    const RouterComponent = (
       <React.StrictMode>
         <Provider store={store}>
           <StaticRouter location={url}>
             <I18nextProvider i18n={i18n}>
               <ChakraProvider>
                 <HelmetProvider context={helmetContext}>
-                  <React.Suspense fallback="Loading...">
+                  <React.Suspense fallback={<div>Loading...</div>}>
                     <ErrorBoundary>
                       <App ssrMode={true} />
                     </ErrorBoundary>
@@ -86,24 +124,45 @@ export async function render(url, options = {}) {
             </I18nextProvider>
           </StaticRouter>
         </Provider>
-      </React.StrictMode>,
+      </React.StrictMode>
     )
 
-    const preloadedState = store.getState()
+    // Only perform full SSR for the root route
+    if (url === '/') {
+      const appHtml = ReactDOMServer.renderToString(RouterComponent)
+      const { helmet } = helmetContext
+      const preloadLinks = preloadAssets()
+        .map(
+          asset =>
+            `<link rel="preload" href="${asset}" as="image" type="image/webp">`,
+        )
+        .join('\n')
 
-    return { html, helmetContext, preloadedState }
+      return {
+        appHtml,
+        state: store.getState(),
+        error: null,
+        helmet,
+        preloadLinks,
+      }
+    } else {
+      // For other routes, return minimal HTML
+      return {
+        appHtml: '<div>Loading...</div>',
+        state: initialState,
+        error: null,
+      }
+    }
   } catch (error) {
     console.error('SSR Error:', error)
-    // Return a minimal fallback
     return {
-      html: '<div id="root">Loading...</div>',
-      helmetContext: {},
-      preloadedState: createInitialState(),
+      appHtml: '<div>Loading...</div>',
+      state: initialState,
+      error: error.message,
     }
   }
 }
 
-// Simple Error Boundary Component
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
@@ -122,7 +181,6 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return <div>Something went wrong.</div>
     }
-
     return this.props.children
   }
 }

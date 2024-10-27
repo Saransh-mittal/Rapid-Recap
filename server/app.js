@@ -1,6 +1,6 @@
 const dotenv = require('dotenv')
 const bodyParser = require('body-parser')
-const createSSRMiddleware = require('./middleware/ssrMiddleware')
+const { createSSRMiddleware } = require('./middleware/ssrMiddleware')
 dotenv.config({ path: './config.env' })
 const express = require('express')
 const userRoutes = require('./router/userRoutes')
@@ -194,17 +194,39 @@ if (process.env.NODE_ENV === 'production') {
     }),
   )
 }
-// Initialize SSR middleware
-createSSRMiddleware(app).then(middleware => {
-  app.use(middleware)
-})
 app.use('/api', authRouter)
+
+async function initializeApp() {
+  try {
+    const ssrMiddleware = await createSSRMiddleware(app)
+
+    // Apply SSR middleware after API routes but before static files
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/api/')) {
+        return next()
+      }
+      ssrMiddleware(req, res, next)
+    })
+  } catch (err) {
+    console.error('Failed to initialize SSR:', err)
+    // Fallback to CSR in case of SSR failure
+    app.use((req, res) => {
+      if (req.path.startsWith('/api/')) {
+        return next()
+      }
+      res.sendFile(path.join(__dirname, '../client/dist/index.html'))
+    })
+  }
+}
 // Catch-all route for client-side routing in production
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/dist/client/index.html'))
   })
 }
+initializeApp().catch(err => {
+  console.error('Failed to initialize app:', err)
+})
 const server = app.listen(PORT, () => {
   console.log(`Listening to port no. ${PORT}`)
 })

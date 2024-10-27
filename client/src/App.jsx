@@ -1,7 +1,7 @@
 import './App.css'
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
-import ReactGA from 'react-ga4'
+// import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -17,7 +17,7 @@ import Signin from './screens/Signin.jsx'
 import Register from './screens/Register.jsx'
 import NoteMessageQueue from './components/miscellaneous/NoteMessageQueue.jsx'
 import XPLevelModal from './components/Header-Footer/navbarComponents/XPLevelModal.jsx'
-import Quiz from './screens/Quiz.jsx'
+// import Quiz from './screens/Quiz.jsx'
 import NotificationModal from './components/Header-Footer/Inbox/NotificationModal.jsx'
 import UpgradeModal from './components/homeComponents/UpgradeModal'
 
@@ -38,7 +38,7 @@ import {
   checkNotificationStatus,
   isSubscribedChecker,
 } from './redux/notificationSlice.js'
-import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
+// import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
 import {
   checkTournamentRegistration,
   getTopLeaderboard,
@@ -121,18 +121,18 @@ const App = () => {
     return null
   }, [updates])
 
-  useEffect(() => {
-    if (isClient) {
-      ReactGA.initialize('G-ES5VQ8NW7Z')
+  // useEffect(() => {
+  //   if (isClient) {
+  //     ReactGA.initialize('G-ES5VQ8NW7Z')
 
-      setShowLoadingScreen(true)
-      const timerId = setTimeout(() => {
-        setShowUpgradeModal(true)
-      }, 5000)
+  //     setShowLoadingScreen(true)
+  //     const timerId = setTimeout(() => {
+  //       setShowUpgradeModal(true)
+  //     }, 5000)
 
-      return () => clearTimeout(timerId)
-    }
-  }, [isClient])
+  //     return () => clearTimeout(timerId)
+  //   }
+  // }, [isClient])
 
   useEffect(() => {
     if (!isClient) return
@@ -244,18 +244,18 @@ const App = () => {
     return () => clearTimeout(timer)
   }, [isAuthenticated, isClient])
 
-  useEffect(() => {
-    if (!isClient) return
-    ReactGA.set({
-      'User Logged In': isLoggedIn ? t('Logged In') : t('Logged Out'), // Added translation
-      'User InGameName': getUserInGameName ? getUserInGameName : t('anonymous'), // Added translation
-    })
-    ReactGA.send({
-      hitType: 'pageview',
-      page: location.pathname + location.search,
-      title: document.title,
-    })
-  }, [location, getUserInGameName, isLoggedIn, isClient])
+  // useEffect(() => {
+  //   if (!isClient) return
+  //   ReactGA.set({
+  //     'User Logged In': isLoggedIn ? t('Logged In') : t('Logged Out'), // Added translation
+  //     'User InGameName': getUserInGameName ? getUserInGameName : t('anonymous'), // Added translation
+  //   })
+  //   ReactGA.send({
+  //     hitType: 'pageview',
+  //     page: location.pathname + location.search,
+  //     title: document.title,
+  //   })
+  // }, [location, getUserInGameName, isLoggedIn, isClient])
 
   useEffect(() => {
     if (!isClient) return
@@ -376,7 +376,7 @@ const App = () => {
         t={GuestLoginModaltranslation}
       />
 
-      {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null}
+      {/* {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null} */}
 
       <Signin
         isOpen={isSigninOpen}

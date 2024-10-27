@@ -2,62 +2,10 @@ const helmet = require('helmet')
 const crypto = require('crypto')
 
 const securityMiddleware = app => {
-  // Different CSP configurations for development and production
-  const developmentCSP = {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "'unsafe-eval'",
-        'https://cdnjs.cloudflare.com',
-        (req, res) => `'nonce-${res.locals.nonce}'`,
-      ],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
-      connectSrc: ["'self'", 'ws:', 'wss:', 'http:', 'https:'],
-      frameSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      baseUri: ["'self'"],
-      formAction: ["'self'"],
-    },
-  }
-
-  const productionCSP = {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        'https://cdnjs.cloudflare.com',
-        (req, res) => `'nonce-${res.locals.nonce}'`,
-      ],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
-      connectSrc: ["'self'", 'wss:', 'https:'],
-      frameSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      baseUri: ["'self'"],
-      formAction: ["'self'"],
-      upgradeInsecureRequests: [],
-    },
-  }
-
-  // Apply helmet with environment-specific CSP
-  app.use(
-    helmet({
-      contentSecurityPolicy:
-        process.env.NODE_ENV === 'production' ? productionCSP : developmentCSP,
-      crossOriginEmbedderPolicy: false,
-    }),
-  )
-
-  // Generate nonce for each request
+  // Generate nonce middleware - must come before CSP middleware
   app.use((req, res, next) => {
     try {
-      const nonce = crypto.randomBytes(16).toString('base64')
-      res.locals.nonce = nonce
+      res.locals.nonce = crypto.randomBytes(16).toString('base64')
       next()
     } catch (error) {
       console.error('Error generating nonce:', error)
@@ -69,8 +17,79 @@ const securityMiddleware = app => {
     }
   })
 
-  // Development-specific middleware
-  if (process.env.NODE_ENV !== 'production') {
+  const isDev = process.env.NODE_ENV === 'development'
+
+  // Base CSP directives shared between environments
+  const baseDirectives = {
+    defaultSrc: ["'self'"],
+    scriptSrc: [
+      "'self'",
+      (req, res) => `'nonce-${res.locals.nonce}'`,
+      'https://cdnjs.cloudflare.com',
+    ],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+    connectSrc: ["'self'"],
+    frameSrc: ["'self'"],
+    objectSrc: ["'none'"],
+    baseUri: ["'self'"],
+    formAction: ["'self'"],
+    workerSrc: ["'self'", 'blob:'],
+    manifestSrc: ["'self'"],
+    mediaSrc: ["'self'"],
+  }
+
+  // Development-specific CSP additions
+  if (isDev) {
+    baseDirectives.scriptSrc.push("'unsafe-eval'") // Required for Vite/React development
+    baseDirectives.connectSrc.push(
+      'ws://localhost:*',
+      'wss://localhost:*',
+      'http://localhost:*',
+      'https://localhost:*',
+    )
+  } else {
+    // Production-specific additions
+    baseDirectives.upgradeInsecureRequests = []
+    baseDirectives.connectSrc.push('wss:', 'https:')
+  }
+
+  // Apply Helmet with configured CSP
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        useDefaults: false,
+        directives: baseDirectives,
+      },
+      crossOriginEmbedderPolicy: false, // Disabled to allow loading of external resources
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    }),
+  )
+
+  // Set additional security headers
+  app.use((req, res, next) => {
+    // Cache control
+    res.set('Cache-Control', 'no-store, max-age=0')
+
+    // Additional security headers
+    res.set('X-Content-Type-Options', 'nosniff')
+    res.set('X-Frame-Options', 'DENY')
+    res.set('X-XSS-Protection', '1; mode=block')
+
+    if (!isDev) {
+      res.set(
+        'Strict-Transport-Security',
+        'max-age=31536000; includeSubDomains',
+      )
+    }
+
+    next()
+  })
+
+  // Development-specific CORS configuration
+  if (isDev) {
     app.use((req, res, next) => {
       res.header('Access-Control-Allow-Origin', 'http://localhost:5173')
       res.header(

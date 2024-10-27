@@ -3,13 +3,15 @@ const path = require('path')
 const fs = require('fs').promises
 const express = require('express')
 const crypto = require('crypto')
-const { createEmotionServer } = require('@emotion/server/create-instance')
+const createEmotionServer = require('@emotion/server/create-instance').default
 const createCache = require('@emotion/cache').default
 
 async function createSSRMiddleware(app) {
   let vite
 
   try {
+    console.log('Initializing SSR middleware...')
+
     vite = await createViteServer({
       server: {
         middlewareMode: 'html',
@@ -56,7 +58,15 @@ async function createSSRMiddleware(app) {
       },
     })
 
-    // Static file handling
+    console.log('Vite server initialized successfully')
+
+    // Debugging middleware
+    app.use((req, res, next) => {
+      console.log(`[${new Date().toISOString()}] Request received:`, req.url)
+      next()
+    })
+
+    // Static file handling configuration remains the same...
     app.use(
       '/images',
       express.static(path.join(__dirname, '../../client/public/images'), {
@@ -86,7 +96,6 @@ async function createSSRMiddleware(app) {
       next()
     })
 
-    // Handle locale files
     app.use('/locales/:lang/:namespace.json', async (req, res) => {
       const { lang, namespace } = req.params
       const filePath = path.join(
@@ -97,27 +106,30 @@ async function createSSRMiddleware(app) {
         const content = await fs.readFile(filePath, 'utf-8')
         res.json(JSON.parse(content))
       } catch (error) {
+        console.error(`Error loading locale file: ${filePath}`, error)
         res.status(404).send('Not found')
       }
     })
 
     app.use(vite.middlewares)
 
-    // CSP Middleware configuration
+    // Updated CSP Middleware with more permissive style-src
     app.use((req, res, next) => {
+      console.log('Generating new nonce for request:', req.url)
       const nonce = crypto.randomBytes(16).toString('base64')
       res.locals.nonce = nonce
+      console.log('Generated nonce:', nonce)
 
       const isDev = process.env.NODE_ENV === 'development'
+      console.log('Environment:', isDev ? 'development' : 'production')
 
-      // Comprehensive CSP configuration
       const cspHeader = {
         'default-src': ["'self'", 'https:', 'http:'],
         'script-src': [
           "'self'",
           `'nonce-${nonce}'`,
           "'unsafe-eval'",
-          "'unsafe-inline'",
+          "'unsafe-inline'", // Added for development
           'https://cdnjs.cloudflare.com',
           isDev && 'http://localhost:*',
           isDev && 'ws://localhost:*',
@@ -126,6 +138,7 @@ async function createSSRMiddleware(app) {
           "'self'",
           "'unsafe-inline'",
           'https://fonts.googleapis.com',
+          'https://fonts.gstatic.com',
         ],
         'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
         'img-src': ["'self'", 'data:', 'https://*', 'blob:'],
@@ -138,7 +151,7 @@ async function createSSRMiddleware(app) {
         ].filter(Boolean),
         'worker-src': ["'self'", 'blob:'],
         'frame-src': ["'self'"],
-        'object-src': ["'self'", 'blob:'],
+        'object-src': ["'none'"],
         'base-uri': ["'self'"],
         'form-action': ["'self'"],
       }
@@ -147,7 +160,8 @@ async function createSSRMiddleware(app) {
         .map(([key, values]) => `${key} ${values.join(' ')}`)
         .join('; ')
 
-      // Set security headers
+      console.log('Setting CSP header:', cspString)
+
       res.setHeader('Content-Security-Policy', cspString)
       res.setHeader('X-Content-Type-Options', 'nosniff')
       res.setHeader('X-Frame-Options', 'DENY')
@@ -164,12 +178,15 @@ async function createSSRMiddleware(app) {
       next()
     })
 
+    // Main SSR handler
     return async function (req, res, next) {
       const url = req.originalUrl
       const nonce = res.locals.nonce
 
-      // Skip SSR for API and JSON requests
-      if (url.startsWith('/api/') || url.endsWith('.json')) {
+      console.log('Processing SSR request:', url)
+      console.log('Using nonce:', nonce)
+      // Skip SSR for non-root routes and API calls
+      if (url !== '/' || url.startsWith('/api/') || url.endsWith('.json')) {
         return next()
       }
 
@@ -179,10 +196,18 @@ async function createSSRMiddleware(app) {
           'utf-8',
         )
 
-        // Create Emotion cache and server
+        // Create Emotion cache
         const cache = createCache({ key: 'ssr' })
         const { extractCriticalToChunks, constructStyleTagsFromChunks } =
           createEmotionServer(cache)
+
+        // Add nonce to all script tags in the template
+        template = template.replace(/<script\b([^>]*)>/gi, (match, attrs) => {
+          if (attrs.includes('nonce=')) {
+            return match
+          }
+          return `<script nonce="${nonce}"${attrs}>`
+        })
 
         // Add portal containers
         template = template.replace(
@@ -198,7 +223,6 @@ async function createSSRMiddleware(app) {
 
         template = await vite.transformIndexHtml(url, template)
 
-        // Initial state setup
         const initialState = {
           app: {
             isLoading: false,
@@ -214,7 +238,11 @@ async function createSSRMiddleware(app) {
         const render = (await vite.ssrLoadModule('/src/entry-server.jsx'))
           .render
 
-        const { appHtml, state, error } = await render(url, {
+        const {
+          html: appHtml,
+          state,
+          error,
+        } = await render(url, {
           initialProps: {},
           emotionCache: cache,
         })
@@ -230,7 +258,7 @@ async function createSSRMiddleware(app) {
           console.warn('Emotion extraction failed:', e)
         }
 
-        // Update HTML template with state and Chakra UI requirements
+        // Update HTML template with nonce for all dynamic scripts
         let html = template
           .replace(
             '<div id="root">',
@@ -242,7 +270,7 @@ async function createSSRMiddleware(app) {
             `
               ${emotionTags}
               <script nonce="${nonce}">
-                window.__INITIAL_STATE__ = ${JSON.stringify(
+                window.__PRELOADED_STATE__ = ${JSON.stringify(
                   state || initialState,
                 )};
                 window.__EMOTION_CACHE_KEY__ = "ssr";
@@ -256,12 +284,20 @@ async function createSSRMiddleware(app) {
             `,
           )
 
+        // Ensure all remaining script tags have nonce
+        html = html.replace(/<script\b([^>]*)>/gi, (match, attrs) => {
+          if (attrs.includes('nonce=')) {
+            return match
+          }
+          return `<script nonce="${nonce}"${attrs}>`
+        })
+
         res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
       } catch (e) {
         vite?.ssrFixStacktrace(e)
         console.error('SSR error:', e)
 
-        // Fallback HTML
+        // Generate fallback HTML with nonce
         const html = `
           <!DOCTYPE html>
           <html>
@@ -270,7 +306,7 @@ async function createSSRMiddleware(app) {
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Rapid Recap</title>
               <script nonce="${nonce}">
-                window.__INITIAL_STATE__ = ${JSON.stringify({
+                window.__PRELOADED_STATE__ = ${JSON.stringify({
                   app: {
                     isLoading: false,
                     overallProgress: 100,
@@ -295,7 +331,7 @@ async function createSSRMiddleware(app) {
               <div id="chakra-modal-portal"></div>
               <div id="chakra-portal"></div>
               <div id="portal-root"></div>
-              <script type="module" nonce="${nonce}" src="/src/entry-client.jsx"></script>
+              <script type="module" nonce="${nonce}" src="/src/main.jsx"></script>
             </body>
           </html>
         `.trim()
