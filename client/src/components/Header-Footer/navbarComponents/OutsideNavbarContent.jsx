@@ -16,13 +16,15 @@ import { useTranslation } from 'react-i18next'
 import useSound from '../../../customHooks/useSound'
 import { ChatState } from '../../../contextAPI/ChatProvider'
 import FaMessenger from '../../../assets/svg/FaMessenger'
-import levelImage from '../../../assets/level.webp'
 import { motion } from 'framer-motion'
 
 import ImageShimmerLoader from '../../miscellaneous/shimmerLoaders/ImageShimmerLoader'
 import SVGShimmerLoader from '../../miscellaneous/shimmerLoaders/SVGShimmerLoader'
 import IconShimmerLoader from '../../miscellaneous/shimmerLoaders/IconShimmerLoader'
 import { addNoteMessage, setShowXpLevelModal } from '../../../redux/appSlice'
+
+//SSR images
+const levelImage = '../../../assets/level.webp'
 
 const StreakFire = React.lazy(() => import('./StreakFire'))
 const ProfileDropDownMenu = React.lazy(() => import('./ProfileDropDownMenu'))

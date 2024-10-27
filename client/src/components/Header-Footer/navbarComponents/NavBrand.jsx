@@ -1,10 +1,11 @@
 import { Flex, Image } from '@chakra-ui/react'
 import React, { Suspense } from 'react'
 import { NavLink } from 'react-router-dom'
-import RR from '/images/rrlogo.webp'
 import { useSelector } from 'react-redux'
 import useSound from '../../../customHooks/useSound'
 import { useTranslation } from 'react-i18next'
+
+const RR = '/images/rrlogo.webp'
 
 // Lazy load Heading component
 const Heading = React.lazy(() => import('../../miscellaneous/HeadingComponent'))

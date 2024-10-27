@@ -18,8 +18,10 @@ import {
 } from '@chakra-ui/react'
 import { BellIcon, TimeIcon } from '@chakra-ui/icons'
 import { useSelector } from 'react-redux'
-import rr from '/images/rrlogo.webp'
 import axios from 'axios'
+
+//SSR images
+const rr = '/images/rrlogo.webp'
 
 // Lazy load large components or sections if needed
 const LazyNotificationContent = React.lazy(() =>

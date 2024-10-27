@@ -11,8 +11,10 @@ import { useTranslation } from 'react-i18next' // Import i18next hook
 
 import CircleAndSocietyData from '../../../assets/CircleAndSocietyData'
 import { useDispatch, useSelector } from 'react-redux'
-import Lock from '/images/lock.webp'
 import { addNoteMessage } from '../../../redux/appSlice'
+
+//SSR images
+const Lock = '/images/lock.webp'
 
 // Lazy load components
 const BrainModal = lazy(() => import('./RankAndSocietySubCompnents/BrainModal'))

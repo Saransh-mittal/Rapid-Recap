@@ -3,8 +3,11 @@ import { Flex, IconButton, Image, Text } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
 import { getSenderFull } from '../../config/ChatLogics'
-import greaterThan from '/images/greaterThan.webp'
 
+// SSR image imports
+const greaterThan = '/images/greaterThan.webp'
+
+// Lazy load components
 const UpdateGroupChatModal = lazy(() => import('../UpdateGroupChatModal'))
 
 const ChatHeader = ({

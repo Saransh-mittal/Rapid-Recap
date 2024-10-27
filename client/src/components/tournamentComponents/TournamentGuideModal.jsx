@@ -18,8 +18,11 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import Rank1 from '/images/rank_1.webp'
 
+//SSR images
+const Rank1 = '/images/rank_1.webp'
+
+// Lazy load SVGs
 const TrophySVG = React.lazy(() => import('../../assets/svg/TrophySVG'))
 const CalenderSVG = React.lazy(() => import('../../assets/svg/CalenderSVG'))
 const ClipboardList = React.lazy(() => import('../../assets/svg/ClipboardList'))

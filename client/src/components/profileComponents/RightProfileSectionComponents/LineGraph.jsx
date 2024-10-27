@@ -10,7 +10,6 @@ import {
 } from '@chakra-ui/react'
 import moment from 'moment'
 
-import Lock from '/images/lock.webp'
 import { useDispatch, useSelector } from 'react-redux'
 
 import SVGIQLineGraph from '../../../assets/svg/SVGIQLineGraph'
@@ -18,6 +17,9 @@ import { addNoteMessage } from '../../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 import { formatDate } from '../../../utils/helper.utils'
 import i18n from 'i18next'
+
+//SSR images
+const Lock = '/images/lock.webp'
 
 // LoadingSpinner Component
 const LoadingSpinner = React.memo(() => (

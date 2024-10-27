@@ -1,6 +1,7 @@
 import React from 'react'
-import quizBg from '/images/tourBGDark.webp' // Adjust the path as necessary
 
+//SSR images
+const quizBg = '/images/tourBGDark.webp'
 const QuizBG = () => {
   return (
     <div

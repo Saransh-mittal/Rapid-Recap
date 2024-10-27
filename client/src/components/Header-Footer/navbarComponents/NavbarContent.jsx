@@ -5,7 +5,8 @@ import useSound from '../../../customHooks/useSound'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 
-const newBadge = lazy(() => import('/images/newBadge.webp'))
+//SSR images
+const newBadge = '/images/newBadge.webp'
 
 const NavbarContent = ({
   isHamburgerOpen,

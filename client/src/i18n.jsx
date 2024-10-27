@@ -91,11 +91,6 @@ const namespaces = {
     'SingleChat',
     'MessageInput',
   ],
-  getStartedComponents: [
-    'heroSection',
-    'whyToUseSection',
-    'commingSoonSection',
-  ],
   headerFooter: [
     'HamburgerModal',
     'NotificationDrawer',
@@ -187,8 +182,6 @@ i18n
             return `/locales/${lng}/components/contactComponents/${namespace}.json`
           case 'chatComponent':
             return `/locales/${lng}/components/chatComponent/${namespace}.json`
-          case 'getStartedComponents':
-            return `/locales/${lng}/components/getStartedComponents/${namespace}.json`
           case 'headerFooter':
             return `/locales/${lng}/components/headerFooter/${namespace}.json`
           case 'homeComponents':

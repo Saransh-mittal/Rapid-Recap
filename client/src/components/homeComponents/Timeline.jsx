@@ -13,7 +13,6 @@ import { setCategory, setItemsState } from '../../redux/contentSlice'
 import { setPageRedux } from '../../redux/uiSlice'
 import { useSwipeable } from 'react-swipeable'
 import Card from './Card'
-import rrImage from '/images/rrlogo_HD.webp'
 import { formatDate } from '../../utils/helper.utils'
 import ArticleSearchBar from './ArticleSearchBar'
 import Button from '../miscellaneous/ButtonComponent'
@@ -26,6 +25,11 @@ import { useTranslation } from 'react-i18next'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
 import { useNavbar } from '../../contextAPI/NavbarContext'
 import Categories from './Categories'
+
+//SSR images
+const rrImage = '/images/rrlogo_HD.webp'
+
+// Lazy load components
 const GetStarted = React.lazy(() =>
   import('../Header-Footer/navbarComponents/GetStarted'),
 )

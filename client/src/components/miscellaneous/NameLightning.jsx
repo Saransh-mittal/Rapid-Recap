@@ -1,7 +1,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import TitansFrame from '/images/TitansFrame.webp'
 import { Image } from '@chakra-ui/react'
+
+//SSR images
+const TitansFrame = '/images/TitansFrame.webp'
 
 const NameLightning = ({ boxShadow, MAX_IQ }) => {
   return (

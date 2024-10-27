@@ -1,8 +1,10 @@
-import Mavericks_Brain from '/images/Mavericks_Brain.webp'
-import Explorers_Brain from '/images/Explorers_Brain.webp'
-import Strivers_Brain from '/images/Strivers_Brain.webp'
-import Elites_Brain from '/images/Elites_Brain.webp'
-import Titans_Brain from '/images/Titans_Brain.webp'
+// SSR image imports
+const Mavericks_Brain = '/images/Mavericks_Brain.webp'
+const Explorers_Brain = '/images/Explorers_Brain.webp'
+const Strivers_Brain = '/images/Strivers_Brain.webp'
+const Elites_Brain = '/images/Elites_Brain.webp'
+const Titans_Brain = '/images/Titans_Brain.webp'
+
 const Brains = [
   {
     society: 'Explorers',
