@@ -1,210 +1,312 @@
-const path = require('path')
-const fs = require('fs')
 const { createServer: createViteServer } = require('vite')
-const accept = require('accept-language-parser')
-const compression = require('compression')
+const path = require('path')
+const fs = require('fs').promises
+const express = require('express')
 const crypto = require('crypto')
+const { createEmotionServer } = require('@emotion/server/create-instance')
+const createCache = require('@emotion/cache').default
 
-const isDev = process.env.NODE_ENV !== 'production'
-const HMR_PORT = 24678
-
-function generateHash(content) {
-  const hash = crypto.createHash('sha256')
-  hash.update(content)
-  return `'sha256-${hash.digest('base64')}'`
-}
-
-const createSSRMiddleware = async app => {
+async function createSSRMiddleware(app) {
   let vite
 
-  if (isDev) {
+  try {
     vite = await createViteServer({
-      root: path.join(process.cwd(), '../client'),
       server: {
-        middlewareMode: true,
+        middlewareMode: 'html',
         hmr: {
           protocol: 'ws',
           host: 'localhost',
-          port: HMR_PORT,
+          port: 24678,
+        },
+        watch: {
+          usePolling: true,
+          interval: 100,
         },
       },
       appType: 'custom',
+      root: path.join(__dirname, '../../client'),
+      plugins: [
+        {
+          name: 'handle-locales',
+          transform(code, id) {
+            if (id.includes('/locales/') && id.endsWith('.json')) {
+              return {
+                code: `export default ${code}`,
+                map: null,
+              }
+            }
+          },
+        },
+      ],
+      optimizeDeps: {
+        include: [
+          '@chakra-ui/react',
+          '@emotion/react',
+          '@emotion/styled',
+          'framer-motion',
+        ],
+      },
+      ssr: {
+        noExternal: [
+          '@chakra-ui/react',
+          '@emotion/react',
+          '@emotion/styled',
+          'framer-motion',
+        ],
+      },
     })
-    app.use(vite.middlewares)
-  }
 
-  app.use(compression())
+    // Static file handling
+    app.use(
+      '/images',
+      express.static(path.join(__dirname, '../../client/public/images'), {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('.webp')) {
+            res.setHeader('Content-Type', 'image/webp')
+          }
+        },
+        maxAge: '1d',
+      }),
+    )
 
-  app.use((req, res, next) => {
-    const nonce = crypto.randomBytes(16).toString('base64')
-    res.locals.nonce = nonce
+    app.use(
+      '/assets',
+      express.static(path.join(__dirname, '../../client/public/assets'), {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('.webp')) {
+            res.setHeader('Content-Type', 'image/webp')
+          }
+        },
+        maxAge: '1d',
+      }),
+    )
 
-    // Define inline scripts that will be used
-    const splashScreenScript = `
-      window.addEventListener('DOMContentLoaded', function() {
-        var splash = document.getElementById('splash-screen');
-        if (splash) { splash.style.display = 'none'; }
-      });
-    `
+    app.get('*.webp', (req, res, next) => {
+      res.type('image/webp')
+      next()
+    })
 
-    const viteClientScript = `
-      import RefreshRuntime from "/@react-refresh"
-      RefreshRuntime.injectIntoGlobalHook(window)
-      window.$RefreshReg$ = () => {}
-      window.$RefreshSig$ = () => (type) => type
-      window.__vite_plugin_react_preamble_installed__ = true
-    `
-
-    // Calculate hashes for inline scripts
-    const scriptHashes = [
-      generateHash(splashScreenScript.trim()),
-      // Add hash for Vite client script in dev mode
-      ...(isDev ? [generateHash(viteClientScript.trim())] : []),
-      // Known hashes for third-party scripts
-      "'sha256-ywyB+1podf2aKzzGdwf4udVnCgrZrL+zk7TbwEUwVzA='",
-      "'sha256-xk1PJmqU+C+oqKJc3DrSvUl4BSYFXJQwnqwakrYwE3E='",
-    ]
-
-    // Build CSP directives
-    const directivesMap = {
-      'default-src': ["'self'"],
-      'script-src': [
-        "'self'",
-        `'nonce-${nonce}'`,
-        "'unsafe-eval'",
-        'https://cdnjs.cloudflare.com',
-        ...scriptHashes,
-        ...(isDev
-          ? [`http://localhost:${HMR_PORT}`, `ws://localhost:${HMR_PORT}`]
-          : []),
-      ],
-      'style-src': [
-        "'self'",
-        "'unsafe-inline'",
-        'https://fonts.googleapis.com',
-      ],
-      'img-src': ["'self'", 'data:', 'https:', 'blob:'],
-      'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
-      'connect-src': [
-        "'self'",
-        ...(isDev
-          ? [
-              'ws:',
-              'wss:',
-              'http:',
-              'https:',
-              `ws://localhost:${HMR_PORT}`,
-              'http://localhost:*',
-            ]
-          : ['wss:', 'https:']),
-      ],
-      'object-src': ["'none'"],
-      'base-uri': ["'self'"],
-      'form-action': ["'self'"],
-    }
-
-    const csp = Object.entries(directivesMap)
-      .map(([key, values]) => `${key} ${values.join(' ')}`)
-      .join('; ')
-
-    res.setHeader('Content-Security-Policy', csp)
-    res.setHeader('X-Content-Type-Options', 'nosniff')
-    res.setHeader('X-Frame-Options', 'DENY')
-    res.setHeader('X-XSS-Protection', '1; mode=block')
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
-
-    if (!isDev) {
-      res.setHeader(
-        'Strict-Transport-Security',
-        'max-age=31536000; includeSubDomains',
+    // Handle locale files
+    app.use('/locales/:lang/:namespace.json', async (req, res) => {
+      const { lang, namespace } = req.params
+      const filePath = path.join(
+        __dirname,
+        `../../client/public/locales/${lang}/${namespace}.json`,
       )
-    }
+      try {
+        const content = await fs.readFile(filePath, 'utf-8')
+        res.json(JSON.parse(content))
+      } catch (error) {
+        res.status(404).send('Not found')
+      }
+    })
 
-    // Store the script content for later use
-    res.locals.scripts = {
-      splashScreenScript,
-      viteClientScript,
-    }
+    app.use(vite.middlewares)
 
-    next()
-  })
+    // CSP Middleware configuration
+    app.use((req, res, next) => {
+      const nonce = crypto.randomBytes(16).toString('base64')
+      res.locals.nonce = nonce
 
-  return async function ssrMiddleware(req, res, next) {
-    const url = req.originalUrl
-    const nonce = res.locals.nonce
-    const scripts = res.locals.scripts
+      const isDev = process.env.NODE_ENV === 'development'
 
-    if (!['/'].includes(url)) {
-      return next()
-    }
-
-    try {
-      let template, render
-
-      if (isDev) {
-        template = fs.readFileSync(
-          path.resolve(process.cwd(), '../client/index.html'),
-          'utf-8',
-        )
-        template = await vite.transformIndexHtml(url, template)
-        render = (await vite.ssrLoadModule('/src/entry-server.jsx')).render
-      } else {
-        template = fs.readFileSync(
-          path.resolve(process.cwd(), 'client/dist/client/index.html'),
-          'utf-8',
-        )
-        render = require(path.resolve(
-          process.cwd(),
-          'client/dist/server/entry-server.js',
-        )).render
+      // Comprehensive CSP configuration
+      const cspHeader = {
+        'default-src': ["'self'", 'https:', 'http:'],
+        'script-src': [
+          "'self'",
+          `'nonce-${nonce}'`,
+          "'unsafe-eval'",
+          "'unsafe-inline'",
+          'https://cdnjs.cloudflare.com',
+          isDev && 'http://localhost:*',
+          isDev && 'ws://localhost:*',
+        ].filter(Boolean),
+        'style-src': [
+          "'self'",
+          "'unsafe-inline'",
+          'https://fonts.googleapis.com',
+        ],
+        'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        'img-src': ["'self'", 'data:', 'https://*', 'blob:'],
+        'connect-src': [
+          "'self'",
+          isDev && 'ws://localhost:*',
+          isDev && 'wss://localhost:*',
+          'ws:',
+          'wss:',
+        ].filter(Boolean),
+        'worker-src': ["'self'", 'blob:'],
+        'frame-src': ["'self'"],
+        'object-src': ["'self'", 'blob:'],
+        'base-uri': ["'self'"],
+        'form-action': ["'self'"],
       }
 
-      const {
-        html: appHtml,
-        helmetContext,
-        preloadedState,
-      } = await render(url, {
-        language: accept.parse(req.headers['accept-language'])[0]?.code || 'en',
-      })
+      const cspString = Object.entries(cspHeader)
+        .map(([key, values]) => `${key} ${values.join(' ')}`)
+        .join('; ')
 
-      const { helmet } = helmetContext
+      // Set security headers
+      res.setHeader('Content-Security-Policy', cspString)
+      res.setHeader('X-Content-Type-Options', 'nosniff')
+      res.setHeader('X-Frame-Options', 'DENY')
+      res.setHeader('X-XSS-Protection', '1; mode=block')
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-      // Add nonced scripts exactly as they were hashed
-      const scriptTags = `
-        <script nonce="${nonce}">${scripts.splashScreenScript}</script>
-        <script nonce="${nonce}">
-          window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(
-            /</g,
-            '\\u003c',
-          )};
-        </script>
-        ${
-          isDev
-            ? `
-          <script type="module" nonce="${nonce}">${scripts.viteClientScript}</script>
-        `
-            : ''
-        }
-      `
-
-      // Inject all content
-      const finalHtml = template
-        .replace(
-          '</head>',
-          `${scriptTags}${helmet?.title.toString() || ''}${
-            helmet?.meta.toString() || ''
-          }</head>`,
+      if (!isDev) {
+        res.setHeader(
+          'Strict-Transport-Security',
+          'max-age=31536000; includeSubDomains',
         )
-        .replace('<!--ssr-outlet-->', appHtml)
+      }
 
-      res.setHeader('Cache-Control', isDev ? 'no-cache' : 'public, max-age=300')
-      res.setHeader('Content-Type', 'text/html; charset=utf-8')
-      res.status(200).end(finalHtml)
-    } catch (error) {
-      console.error('SSR Error:', error)
-      next(error)
+      next()
+    })
+
+    return async function (req, res, next) {
+      const url = req.originalUrl
+      const nonce = res.locals.nonce
+
+      // Skip SSR for API and JSON requests
+      if (url.startsWith('/api/') || url.endsWith('.json')) {
+        return next()
+      }
+
+      try {
+        let template = await fs.readFile(
+          path.resolve(__dirname, '../../client/index.html'),
+          'utf-8',
+        )
+
+        // Create Emotion cache and server
+        const cache = createCache({ key: 'ssr' })
+        const { extractCriticalToChunks, constructStyleTagsFromChunks } =
+          createEmotionServer(cache)
+
+        // Add portal containers
+        template = template.replace(
+          '<div id="root">',
+          `
+          <div id="root">
+          <div id="chakra-toast-portal"></div>
+          <div id="chakra-modal-portal"></div>
+          <div id="chakra-portal"></div>
+          <div id="portal-root"></div>
+          `,
+        )
+
+        template = await vite.transformIndexHtml(url, template)
+
+        // Initial state setup
+        const initialState = {
+          app: {
+            isLoading: false,
+            overallProgress: 100,
+            showLoadingScreen: false,
+          },
+          auth: {
+            isAuthenticated: false,
+            user: null,
+          },
+        }
+
+        const render = (await vite.ssrLoadModule('/src/entry-server.jsx'))
+          .render
+
+        const { appHtml, state, error } = await render(url, {
+          initialProps: {},
+          emotionCache: cache,
+        })
+
+        // Extract critical CSS
+        let emotionChunks = []
+        let emotionTags = ''
+
+        try {
+          emotionChunks = extractCriticalToChunks(appHtml)
+          emotionTags = constructStyleTagsFromChunks(emotionChunks)
+        } catch (e) {
+          console.warn('Emotion extraction failed:', e)
+        }
+
+        // Update HTML template with state and Chakra UI requirements
+        let html = template
+          .replace(
+            '<div id="root">',
+            `<div id="root" data-ssr="${!error ? 'true' : 'false'}">`,
+          )
+          .replace('<!--ssr-outlet-->', appHtml || '<div></div>')
+          .replace(
+            '</head>',
+            `
+              ${emotionTags}
+              <script nonce="${nonce}">
+                window.__INITIAL_STATE__ = ${JSON.stringify(
+                  state || initialState,
+                )};
+                window.__EMOTION_CACHE_KEY__ = "ssr";
+                window.__SSR_ERROR__ = ${JSON.stringify(error || null)};
+                window.__CHAKRA_CONFIG__ = {
+                  initialColorMode: 'dark',
+                  useSystemColorMode: false,
+                };
+              </script>
+              </head>
+            `,
+          )
+
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
+      } catch (e) {
+        vite?.ssrFixStacktrace(e)
+        console.error('SSR error:', e)
+
+        // Fallback HTML
+        const html = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Rapid Recap</title>
+              <script nonce="${nonce}">
+                window.__INITIAL_STATE__ = ${JSON.stringify({
+                  app: {
+                    isLoading: false,
+                    overallProgress: 100,
+                    showLoadingScreen: false,
+                  },
+                  auth: {
+                    isAuthenticated: false,
+                    user: null,
+                  },
+                })};
+                window.__CHAKRA_CONFIG__ = {
+                  initialColorMode: 'dark',
+                  useSystemColorMode: false,
+                };
+                window.__SSR_ERROR__ = ${JSON.stringify(e.message)};
+                window.__CLIENT_ONLY__ = true;
+              </script>
+            </head>
+            <body>
+              <div id="root" data-ssr="false"></div>
+              <div id="chakra-toast-portal"></div>
+              <div id="chakra-modal-portal"></div>
+              <div id="chakra-portal"></div>
+              <div id="portal-root"></div>
+              <script type="module" nonce="${nonce}" src="/src/entry-client.jsx"></script>
+            </body>
+          </html>
+        `.trim()
+
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
+      }
     }
+  } catch (e) {
+    console.error('Failed to create SSR middleware:', e)
+    throw e
   }
 }
 
-module.exports = createSSRMiddleware
+module.exports = { createSSRMiddleware }
