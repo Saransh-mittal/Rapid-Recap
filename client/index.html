@@ -19,26 +19,25 @@
   <meta name="theme-color" content="#1a1527">
   <link rel="icon" type="image/webp" href="/images/rrlogo_512.png">
 
-  <!-- Font preconnect -->
+  <!-- Preconnect to Google Fonts -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- DNS Prefetch -->
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
 
   <!-- Combined styles for splash screen and bot content -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
 
     /* Reset and base styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-
     body {
       background: linear-gradient(135deg, #1a2a6c, #2a4858, #0f2027);
       min-height: 100vh;
       color: white;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
     }
 
     /* Splash screen styles */
@@ -224,43 +223,12 @@
   </script>
 </head>
 <body>
-  <!-- Bot-specific content -->
+
+  <div id="splash"></div>
   <div class="bot-content">
-    <nav class="bot-nav">
-      <a href="/" class="bot-logo">
-        <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" width="40" height="40">
-        <span class="bot-logo-text">Rapid Recap</span>
-      </a>
-      <div class="bot-nav-links">
-        <a href="https://www.rapidrecap.co.in/home">HOME</a>
-        <a href="/tournament">TOURNAMENT</a>
-        <a href="/leaderboard">LEADERBOARD</a>
-      </div>
-      <a href="/get-started" class="bot-get-started">Get Started</a>
-    </nav>
-
-    <main class="bot-hero">
-      <h1>Turn News Into Knowledge with Rapid Recap</h1>
-      <p>Stay informed through friendly competition</p>
-      <a href="/get-started" class="bot-get-started">Get Started</a>
-    </main>
-
-    <section class="bot-features">
-      <div class="bot-feature">
-        <h3>Daily News Updates</h3>
-        <p>Get comprehensive coverage of current events across various categories, curated for quick understanding.</p>
-      </div>
-
-      <div class="bot-feature">
-        <h3>Interactive Quizzes</h3>
-        <p>Test your knowledge with our engaging quizzes and track your Information Quotient (IQ) score.</p>
-      </div>
-
-      <div class="bot-feature">
-        <h3>Competitive Leaderboard</h3>
-        <p>Compete with other users, showcase your knowledge, and climb the ranks on our global leaderboard.</p>
-      </div>
-    </section>
+    <div id="bot-navbar"></div>
+    <div id="bot-hero"></div>
+    <div id="bot-features"></div>
   </div>
 
   <!-- App Root for CSR -->
@@ -268,5 +236,17 @@
 
   <!-- Entry Point -->
   <script type="module" src="/src/entry-client.jsx"></script>
+  <script src="/bot/scripts/import-html.js"></script>
+  <!-- Splash Screen Handler -->
+  <script>
+    window.addEventListener('load', function() {
+      const splashScreen = document.getElementById('splash-screen');
+
+      // Hide splash screen and show content after a delay
+      setTimeout(() => {
+        splashScreen.style.display = 'none';
+      }, 2000); // 2 second delay
+    });
+  </script>
 </body>
 </html>
