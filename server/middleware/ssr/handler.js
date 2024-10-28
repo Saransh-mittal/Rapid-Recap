@@ -2,6 +2,31 @@
 const path = require('path')
 const fs = require('fs').promises
 
+function isBotChecker(userAgent) {
+  const knownBots = [
+    'Googlebot',
+    'Bingbot',
+    'Slurp', // Yahoo
+    'DuckDuckBot',
+    'Baiduspider',
+    'YandexBot',
+    'facebookexternalhit',
+    'LinkedInBot',
+    'Twitterbot',
+  ]
+
+  // Check for known bots
+  const isKnownBot = knownBots.some(bot =>
+    userAgent.toLowerCase().includes(bot.toLowerCase()),
+  )
+
+  // Additional checks for generic bot signatures
+  const isGenericBot =
+    /bot|crawler|spider|crawling/i.test(userAgent) &&
+    !/chrome|firefox|safari|opera|edge/i.test(userAgent)
+
+  return isKnownBot || isGenericBot
+}
 // server/middleware/ssr/handler.js
 function createSSRHandler(vite) {
   return async function (req, res, next) {
@@ -15,7 +40,7 @@ function createSSRHandler(vite) {
 
     try {
       const userAgent = req.headers['user-agent'] || ''
-      const isBot = /bot|crawler|spider|crawling/i.test(userAgent)
+      const isBot = isBotChecker(userAgent)
 
       // Read template
       let template = await fs.readFile(
