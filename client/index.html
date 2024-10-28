@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rapid Recap - Stay Informed, Stay Ahead</title>
 
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Stay updated with the latest news and articles. Test your knowledge with quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
+  <meta name="keywords" content="Rapid Recap, news, articles, quizzes, IQ score, leaderboard">
+  <meta property="og:title" content="Rapid Recap - Stay Informed, Stay Ahead">
+  <meta property="og:description" content="Stay updated with the latest news and articles. Test your knowledge with quizzes and see your Information Quotient (IQ) score on Rapid Recap.">
+
   <!-- Preload resources -->
   <link rel="preload" href="/src/assets/hero/hero-bg.webp" as="image">
   <link rel="preload" href="/images/tourBGDark.webp" as="image">
@@ -17,10 +23,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
 
-  <!-- Splash screen styles -->
+  <!-- Combined styles for splash screen and bot content -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
 
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a2a6c, #2a4858, #0f2027);
+      min-height: 100vh;
+      color: white;
+    }
+
+    /* Splash screen styles */
     #splash-screen {
       position: fixed;
       top: 0;
@@ -48,7 +69,6 @@
     }
 
     #splash-screen .title {
-      font-family: 'Poppins', sans-serif;
       font-size: 28px;
       font-weight: 600;
       color: #ffffff;
@@ -59,7 +79,6 @@
     }
 
     #splash-screen .subtitle {
-      font-family: 'Poppins', sans-serif;
       font-size: 16px;
       font-weight: 300;
       color: #b3b3b3;
@@ -68,6 +87,107 @@
       animation: fadeIn 0.8s ease-out 0.5s forwards;
     }
 
+    /* Bot content styles */
+    .bot-content {
+      display: none;
+      min-height: 100vh;
+      color: white;
+    }
+
+    .bot-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 5%;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .bot-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: white;
+    }
+
+    .bot-logo img {
+      width: 40px;
+      height: 40px;
+    }
+
+    .bot-logo-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .bot-nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .bot-nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .bot-get-started {
+      background: linear-gradient(135deg, #00b894, #00a884);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+
+    .bot-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: calc(100vh - 80px);
+      padding: 2rem;
+    }
+
+    .bot-hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+      max-width: 800px;
+    }
+
+    .bot-hero p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      color: #ccc;
+    }
+
+    .bot-features {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .bot-feature {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+    }
+
+    .bot-feature h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #00b894;
+    }
+
+    .bot-feature p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #e0e0e0;
+    }
+
+    /* Animations */
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.05); }
@@ -78,11 +198,72 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      .bot-hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .bot-nav-links {
+        display: none;
+      }
+
+      .bot-feature {
+        margin: 15px 0;
+      }
+    }
   </style>
+
+  <!-- Bot detection script -->
+  <script>
+    (function() {
+      window.__IS_BOT__ = false; // Will be set by server
+      document.documentElement.dataset.bot = window.__IS_BOT__;
+    })();
+  </script>
 </head>
 <body>
+  <!-- Bot-specific content -->
+  <div class="bot-content">
+    <nav class="bot-nav">
+      <a href="/" class="bot-logo">
+        <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" width="40" height="40">
+        <span class="bot-logo-text">Rapid Recap</span>
+      </a>
+      <div class="bot-nav-links">
+        <a href="https://www.rapidrecap.co.in/home">HOME</a>
+        <a href="/tournament">TOURNAMENT</a>
+        <a href="/leaderboard">LEADERBOARD</a>
+      </div>
+      <a href="/get-started" class="bot-get-started">Get Started</a>
+    </nav>
 
-  <!-- App Root -->
+    <main class="bot-hero">
+      <h1>Turn News Into Knowledge with Rapid Recap</h1>
+      <p>Stay informed through friendly competition</p>
+      <a href="/get-started" class="bot-get-started">Get Started</a>
+    </main>
+
+    <section class="bot-features">
+      <div class="bot-feature">
+        <h3>Daily News Updates</h3>
+        <p>Get comprehensive coverage of current events across various categories, curated for quick understanding.</p>
+      </div>
+
+      <div class="bot-feature">
+        <h3>Interactive Quizzes</h3>
+        <p>Test your knowledge with our engaging quizzes and track your Information Quotient (IQ) score.</p>
+      </div>
+
+      <div class="bot-feature">
+        <h3>Competitive Leaderboard</h3>
+        <p>Compete with other users, showcase your knowledge, and climb the ranks on our global leaderboard.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- App Root for CSR -->
   <div id="root"><!--ssr-outlet--></div>
 
   <!-- Entry Point -->

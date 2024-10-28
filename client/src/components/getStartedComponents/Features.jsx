@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import {
   Box,
   Heading,
@@ -15,8 +15,8 @@ import Newspaper from '../../assets/svg/Newspaper'
 import { QuestionIcon } from '@chakra-ui/icons'
 import Trophy from '../../assets/svg/Trophy'
 import { useTranslation } from 'react-i18next'
-const Footer = React.lazy(() => import('../Header-Footer/Footer'))
-
+// const Footer = React.lazy(() => import('../Header-Footer/Footer'))
+import Footer from '../Header-Footer/Footer'
 const MotionBox = motion(Box)
 
 const FeatureItem = ({
@@ -267,11 +267,10 @@ const Features = ({ isWeakDevice }) => {
             <UISection key={index} {...section} isWeakDevice={isWeakDevice} />
           ))}
         </Container>
-        <Suspense fallback={null}>
-          <Flex position="absolute" bottom={0} w="100%">
-            <Footer />
-          </Flex>
-        </Suspense>
+
+        <Flex position="absolute" bottom={0} w="100%">
+          <Footer />
+        </Flex>
       </Box>
     </ContentWrapper>
   )

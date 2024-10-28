@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { isClient } from '../../utils/environment'
 import { useFeatureDetection } from '../../utils/featureDetection'
-import SafeErrorBoundary from '../SSR-Safety-Components/SafeErrorBoundary'
 
 const Hero = ({ isWeakDevice }) => {
   const { t } = useTranslation('GetStarted')
@@ -68,43 +67,35 @@ const Hero = ({ isWeakDevice }) => {
     : {}
 
   return (
-    <SafeErrorBoundary>
+    <Box
+      height="100vh"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      position="relative"
+      {...animationProps}
+    >
       <Box
-        height="100vh"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        position="relative"
-        {...animationProps}
-      >
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bg="rgba(0,0,0,0.5)"
-        />
-        <VStack
-          spacing={8}
-          textAlign="center"
-          maxWidth="800px"
-          px={4}
-          zIndex={1}
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bg="rgba(0,0,0,0.5)"
+      />
+      <VStack spacing={8} textAlign="center" maxWidth="800px" px={4} zIndex={1}>
+        <Heading {...baseStyles.heading}>{t('Hero.title')}</Heading>
+        <Text {...baseStyles.text}>{t('Hero.subtitle')}</Text>
+        <Button
+          {...baseStyles.button}
+          onClick={isClient ? handleClick : undefined}
+          _hover={shouldAnimate ? { transform: 'scale(1.05)' } : undefined}
+          _active={shouldAnimate ? { transform: 'scale(0.95)' } : undefined}
         >
-          <Heading {...baseStyles.heading}>{t('Hero.title')}</Heading>
-          <Text {...baseStyles.text}>{t('Hero.subtitle')}</Text>
-          <Button
-            {...baseStyles.button}
-            onClick={isClient ? handleClick : undefined}
-            _hover={shouldAnimate ? { transform: 'scale(1.05)' } : undefined}
-            _active={shouldAnimate ? { transform: 'scale(0.95)' } : undefined}
-          >
-            {t('Hero.getStartedButton')}
-          </Button>
-        </VStack>
-      </Box>
-    </SafeErrorBoundary>
+          {t('Hero.getStartedButton')}
+        </Button>
+      </VStack>
+    </Box>
   )
 }
 

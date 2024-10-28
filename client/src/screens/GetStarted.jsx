@@ -1,5 +1,5 @@
-import React, { Suspense, useEffect, lazy, useRef } from 'react'
-import { Box, Spinner, ChakraProvider, extendTheme } from '@chakra-ui/react'
+import React, { useEffect, useRef } from 'react'
+import { Box, ChakraProvider, extendTheme } from '@chakra-ui/react'
 import { ParallaxProvider } from 'react-scroll-parallax'
 import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../redux/appSlice'
@@ -7,12 +7,8 @@ import { useTranslation } from 'react-i18next'
 import { isClient } from '../utils/environment'
 
 import Hero from '../components/getStartedComponents/Hero'
-const BenefitsMap = lazy(() =>
-  import('../components/getStartedComponents/BenefitsMap'),
-)
-const Features = lazy(() =>
-  import('../components/getStartedComponents/Features'),
-)
+import BenefitsMap from '../components/getStartedComponents/BenefitsMap'
+import Features from '../components/getStartedComponents/Features'
 
 const theme = extendTheme({
   styles: {
@@ -144,12 +140,9 @@ const GetStarted = () => {
         <>
           <Hero isWeakDevice={weakDevice} />
 
-          <Suspense fallback={<Spinner />}>
-            <BenefitsMap isWeakDevice={weakDevice} />
-          </Suspense>
-          <Suspense fallback={<Spinner />}>
-            <Features isWeakDevice={weakDevice} />
-          </Suspense>
+          <BenefitsMap isWeakDevice={weakDevice} />
+
+          <Features isWeakDevice={weakDevice} />
         </>
       ) : (
         // Server-side render only Hero initially

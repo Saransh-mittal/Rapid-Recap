@@ -3,7 +3,6 @@ import { Box, Text } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useFeatureDetection } from '../../utils/featureDetection'
 import useSafeSound from '../../hooks/useSafeSound'
-import SafeErrorBoundary from '../SSR-Safety-Components/SafeErrorBoundary'
 import { isClient } from '../../utils/environment'
 
 const MotionBox = isClient ? motion(Box) : Box
@@ -78,46 +77,44 @@ const GetSetGoAnimation = ({ onComplete }) => {
   }
 
   return (
-    <SafeErrorBoundary>
+    <Box
+      position="absolute"
+      top="0"
+      left="0"
+      right="0"
+      bottom="0"
+      alignItems="center"
+      justifyContent="center"
+      zIndex="overlay"
+      backdropFilter="blur(10px)"
+      display="flex"
+    >
       <Box
         position="absolute"
         top="0"
         left="0"
         right="0"
         bottom="0"
+        backdropFilter="blur(10px)"
+        pointerEvents="none"
         alignItems="center"
         justifyContent="center"
-        zIndex="overlay"
-        backdropFilter="blur(10px)"
         display="flex"
       >
-        <Box
-          position="absolute"
-          top="0"
-          left="0"
-          right="0"
-          bottom="0"
-          backdropFilter="blur(10px)"
-          pointerEvents="none"
-          alignItems="center"
-          justifyContent="center"
-          display="flex"
-        >
-          <AnimatePresence mode="wait">
-            <MotionBox key={step} {...getAnimationProps(step)}>
-              <Text
-                fontSize="7xl"
-                fontWeight="bold"
-                color="purple.500"
-                textShadow="2px 2px 4px rgba(0,0,0,0.5)"
-              >
-                {steps[step]}
-              </Text>
-            </MotionBox>
-          </AnimatePresence>
-        </Box>
+        <AnimatePresence mode="wait">
+          <MotionBox key={step} {...getAnimationProps(step)}>
+            <Text
+              fontSize="7xl"
+              fontWeight="bold"
+              color="purple.500"
+              textShadow="2px 2px 4px rgba(0,0,0,0.5)"
+            >
+              {steps[step]}
+            </Text>
+          </MotionBox>
+        </AnimatePresence>
       </Box>
-    </SafeErrorBoundary>
+    </Box>
   )
 }
 

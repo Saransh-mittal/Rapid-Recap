@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Box, Text } from '@chakra-ui/react'
 import { useFeatureDetection } from '../../utils/featureDetection'
 import useSafeSound from '../../hooks/useSafeSound'
-import SafeErrorBoundary from '../SSR-Safety-Components/SafeErrorBoundary'
 import { motion } from 'framer-motion'
 import { isClient } from '../../utils/environment'
 
@@ -82,55 +81,53 @@ const Countdown = ({ timer, submitted, isTournament = false }) => {
       : {}
 
   return (
-    <SafeErrorBoundary>
-      <MotionBox
-        position="relative"
-        width="80px"
-        height="80px"
-        mt={'1rem'}
-        animation={isFlashing ? 'flash 0.5s' : 'none'}
-        css={{
-          '@keyframes flash': {
-            '0%, 100%': { opacity: 1 },
-            '50%': { opacity: 0.5 },
-          },
-        }}
-        {...animations}
+    <MotionBox
+      position="relative"
+      width="80px"
+      height="80px"
+      mt={'1rem'}
+      animation={isFlashing ? 'flash 0.5s' : 'none'}
+      css={{
+        '@keyframes flash': {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: 0.5 },
+        },
+      }}
+      {...animations}
+    >
+      <svg viewBox="0 0 100 100" width="100%" height="100%">
+        <circle
+          cx="50"
+          cy="50"
+          r="45"
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.2)"
+          strokeWidth="10"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="45"
+          fill="none"
+          stroke={getColor()}
+          strokeWidth="10"
+          strokeDasharray="283"
+          strokeDashoffset={offset}
+          transform="rotate(-90 50 50)"
+        />
+      </svg>
+      <Text
+        position="absolute"
+        top="50%"
+        left="50%"
+        transform="translate(-50%, -50%)"
+        fontSize={timer > 9 ? '24px' : '20px'}
+        fontWeight="bold"
+        color={getColor()}
       >
-        <svg viewBox="0 0 100 100" width="100%" height="100%">
-          <circle
-            cx="50"
-            cy="50"
-            r="45"
-            fill="none"
-            stroke="rgba(255, 255, 255, 0.2)"
-            strokeWidth="10"
-          />
-          <circle
-            cx="50"
-            cy="50"
-            r="45"
-            fill="none"
-            stroke={getColor()}
-            strokeWidth="10"
-            strokeDasharray="283"
-            strokeDashoffset={offset}
-            transform="rotate(-90 50 50)"
-          />
-        </svg>
-        <Text
-          position="absolute"
-          top="50%"
-          left="50%"
-          transform="translate(-50%, -50%)"
-          fontSize={timer > 9 ? '24px' : '20px'}
-          fontWeight="bold"
-          color={getColor()}
-        >
-          {timer}
-        </Text>
-      </MotionBox>
-    </SafeErrorBoundary>
+        {timer}
+      </Text>
+    </MotionBox>
   )
 }
 
