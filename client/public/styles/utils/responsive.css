@@ -1,0 +1,73 @@
+@media (max-width: 768px) {
+  /* Typography */
+  h1 {
+      font-size: 2.5rem;
+  }
+
+  h2 {
+      font-size: 2rem;
+  }
+
+  /* Navigation */
+  .nav-links {
+      display: none;
+  }
+
+  /* Features */
+  .features-container {
+      flex-direction: column;
+      align-items: center;
+  }
+
+  .feature {
+      margin-bottom: var(--spacing-md);
+  }
+
+  .features-cards {
+      flex-direction: column;
+      align-items: center;
+  }
+
+  .feature-card {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: var(--spacing-sm);
+  }
+
+  /* Benefits */
+  .benefits-container {
+      flex-direction: column;
+      align-items: center;
+  }
+
+  .benefit {
+      margin-bottom: var(--spacing-md);
+  }
+
+  .arrow-icon {
+      transform: rotate(90deg);
+      margin: var(--spacing-sm) 0;
+  }
+
+  /* Sections */
+  .content-wrapper,
+  .content-wrapper.reverse {
+      flex-direction: column;
+  }
+
+  .text-content,
+  .image-content {
+      width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text {
+      font-size: 1.2rem;
+  }
+
+  .get-started-btn {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      font-size: 0.9rem;
+  }
+}

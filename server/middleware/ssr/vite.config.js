@@ -5,7 +5,7 @@ const path = require('path')
 async function createViteServer() {
   return await createServer({
     server: {
-      middlewareMode: 'html',
+      middlewareMode: 'ssr',
       hmr: {
         protocol: 'ws',
         host: 'localhost',
@@ -14,6 +14,11 @@ async function createViteServer() {
       watch: {
         usePolling: true,
         interval: 100,
+      },
+      // Configure CORS
+      cors: true,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
       },
     },
     appType: 'custom',
@@ -27,6 +32,24 @@ async function createViteServer() {
               code: `export default ${code}`,
               map: null,
             }
+          }
+        },
+      },
+      {
+        name: 'configure-server',
+        configureServer(server) {
+          return () => {
+            server.middlewares.use((req, res, next) => {
+              // Handle development-specific files
+              if (
+                req.url.includes('@vite/client') ||
+                req.url.includes('@react-refresh')
+              ) {
+                res.setHeader('Content-Type', 'application/javascript')
+                res.setHeader('Access-Control-Allow-Origin', '*')
+              }
+              next()
+            })
           }
         },
       },

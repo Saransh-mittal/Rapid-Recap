@@ -1,0 +1,26 @@
+.footer {
+    background: var(--dark-bg);
+    padding: var(--spacing-md);
+    text-align: center;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.social-links a {
+    color: var(--primary-color);
+    transition: opacity 0.3s;
+}
+
+.social-links a:hover {
+    opacity: 0.8;
+}
+
+.copyright {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
