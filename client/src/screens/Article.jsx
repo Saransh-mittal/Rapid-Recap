@@ -18,6 +18,7 @@ import { quinBoostChecker } from '../utils/quiz.utils'
 import slugify from 'slugify'
 import i18n from 'i18next'
 import { blackListedImgUrls } from '../assets/blackListedImgUrls'
+
 import { setArticleData, setTotalUsersGivenQuiz } from '../redux/articleSlice'
 import {
   setIsQuinBoostAvailable,
@@ -30,6 +31,7 @@ const rrImage = '/images/rrlogo_HD.webp'
 
 // Lazy load components
 const Loading = lazy(() => import('../components/miscellaneous/Loading'))
+
 const QuinBoostModal = lazy(() =>
   import('../components/articleComponents/QuinBoostModal'),
 )

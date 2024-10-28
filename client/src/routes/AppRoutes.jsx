@@ -7,7 +7,7 @@ import DeleteAccount from '../screens/DeleteAccount'
 
 import TournamentWrapper from '../screens/TournamentWrapper'
 import Home from '../screens/Home'
-// import Article from '../screens/Article'
+import Article from '../screens/Article'
 import Profile from '../screens/Profile'
 import Leaderboard from '../screens/Leaderboard'
 import GetStarted from '../screens/GetStarted'
@@ -50,8 +50,8 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               />
             }
           />
-          {/* <Route path="/article/:id/:slug" element={<Article />} />
-          <Route path="/article/:id" element={<Article />} /> */}
+          <Route path="/article/:id/:slug" element={<Article />} />
+          <Route path="/article/:id" element={<Article />} />
           <Route path="/profile/:inGameName" element={<Profile />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/contact" element={<ContactLayout />} />

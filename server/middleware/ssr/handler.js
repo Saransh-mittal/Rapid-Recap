@@ -34,13 +34,21 @@ function createSSRHandler(vite) {
     const nonce = res.locals.nonce
 
     // Skip SSR for non-root routes and API calls
-    if (url !== '/' || url.startsWith('/api/') || url.endsWith('.json')) {
+    if (url.startsWith('/api/') || url.endsWith('.json')) {
+      console.log('Skipping SSR for', url)
       return next()
     }
 
     try {
       const userAgent = req.headers['user-agent'] || ''
-      const isBot = isBotChecker(userAgent)
+
+      const isBot =
+        url === '/' ||
+        url.includes('/home') ||
+        url.includes('/article') ||
+        url.includes('/get-started')
+          ? isBotChecker(userAgent)
+          : false
 
       // Read template
       let template = await fs.readFile(

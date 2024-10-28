@@ -24,7 +24,7 @@ async function createSSRMiddleware(app) {
     setupCSPMiddleware(app)
     setupLocaleMiddleware(app)
 
-    // Add Vite middleware
+    // // Add Vite middleware
     app.use(vite.middlewares)
 
     // Return the main SSR handler
