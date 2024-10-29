@@ -2,7 +2,7 @@
 
 <div class="article-container">
   <div class="header">
-      <h1 class="title">{{title}}</h1>
+      <text class="title">{{title}}</text>
 
       <div class="top-bar">
           <div class="left-section">
@@ -44,8 +44,8 @@
       </div>
   </div>
 
-  <div class="content-wrapper">
-      <div class="main-content">
+  <div class="article-content-wrapper">
+      <div class="article-main-content">
           <div class="article-section">
             {{imageSection}}
 
@@ -54,48 +54,45 @@
                   <div class="source-citation">SOURCE: {{source}}</div>
               </div>
           </div>
-
-          <div class="sidebar">
-              <div class="quiz-section">
-                  <button class="take-quiz-btn">
-                      Take Quiz
-                      <span class="lock-icon">🔒</span>
-                  </button>
-
-                  <div class="stats-section">
-                      <h2 class="stats-title">Quiz Statistics:</h2>
-                      <div class="chart">
-                          <div class="bar" style="height: 80%;">
-                              <span class="bar-label">Attempted</span>
-                          </div>
-                          <div class="bar" style="height: 40%;">
-                              <span class="bar-label">Avg. Score</span>
-                          </div>
-                          <div class="bar" style="height: 0%;">
-                              <span class="bar-label">Your Score</span>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-
-              <div class="recommended-section">
-                  <div class="tabs">
-                      <button class="tab active">RECOMMENDED ARTICLES</button>
-                      <button class="tab">RELATED ARTICLES</button>
-                  </div>
-
-                  <div class="recommended-articles">
-
-                      <button class="load-more">
-                          <span class="lock-icon">🔒</span>
-                      </button>
-                  </div>
-              </div>
-          </div>
       </div>
+      <div class="sidebar">
+          <button class="take-quiz-btn">
+              Take Quiz
+              <span class="lock-icon">🔒</span>
+          </button>
 
-      <div class="disclaimer">
-          Disclaimer: Articles are AI-enhanced for educational purposes while maintaining factual accuracy
-      </div>
-  </div>
+            <div class="stats-section">
+                <text class="stats-title">Quiz Statistics:</text>
+                <div class="chart">
+                    <div class="bar" style="height: 80%;">
+                        <span class="bar-label">Attempted</span>
+                    </div>
+                    <div class="bar" style="height: 40%;">
+                        <span class="bar-label">Avg. Score</span>
+                    </div>
+                    <div class="bar" style="height: 0%;">
+                        <span class="bar-label">Your Score</span>
+                    </div>
+                </div>
+            </div>
+
+        <div class="recommended-section">
+            <div class="tabs">
+                <button class="tab active">RECOMMENDED ARTICLES</button>
+                <button class="tab">RELATED ARTICLES</button>
+            </div>
+
+            <div class="recommended-articles">
+
+                <button class="load-more">
+                    <span class="lock-icon">🔒</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="disclaimer">
+    Disclaimer: Articles are AI-enhanced for educational purposes while maintaining factual accuracy
+</div>
 </div>
