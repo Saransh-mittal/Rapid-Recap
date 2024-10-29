@@ -49,44 +49,38 @@ class ArticleService {
       .replace('{{source}}', articleData.source)
       .replace('{{readTime}}', articleData.readTime)
 
-    if (articleData.imgURL) {
-      // Set default dimensions that maintain a common aspect ratio
-      const defaultWidth = 800
-      const defaultHeight = 450 // 16:9 aspect ratio
+    // Get image metadata if image exists
+    const imageMetadata = articleData.imgURL
+      ? {
+          url: articleData.imgURL,
+          alt: articleData.title, // Use title as alt text for SEO
+          type: 'image',
+        }
+      : null
 
-      // Create an image section with explicit width and height
-      // Using loading="lazy" for better performance
-      // Using aspect-ratio CSS to maintain proportions
+    // Replace image section with semantic HTML and metadata
+    if (imageMetadata) {
       content = content.replace(
         '{{imageSection}}',
-        `<div class="image-container" style="aspect-ratio: ${defaultWidth}/${defaultHeight};">
-            <img
-              src="${articleData.imgURL}"
-              alt="${articleData.title}"
-              width="${defaultWidth}"
-              height="${defaultHeight}"
-              class="content-image"
-              loading="lazy"
-              style="width: 100%; height: 100%; object-fit: cover;"
-            >
-          </div>`,
+        `<figure class="image-container" style="aspect-ratio: 16/9; margin: 0;">
+          <img
+            src=""
+            alt="${imageMetadata.alt}"
+            width="800"
+            height="450"
+            class="content-image"
+            loading="lazy"
+            style="width: 100%; height: 100%; object-fit: cover;"
+          />
+          <!-- SEO metadata -->
+          <meta itemprop="image" content="${imageMetadata.url}">
+          <meta itemprop="thumbnailUrl" content="${imageMetadata.url}">
+          <meta itemprop="image:alt" content="${imageMetadata.alt}">
+        </figure>`,
       )
     } else {
-      // Placeholder with explicit dimensions
-      content = content.replace(
-        '{{imageSection}}',
-        `<div class="image-container" style="aspect-ratio: 16/9;">
-            <img
-              src="/placeholder-image.jpg"
-              alt="Content image placeholder"
-              width="800"
-              height="450"
-              class="content-image"
-              loading="lazy"
-              style="width: 100%; height: 100%; object-fit: cover;"
-            >
-          </div>`,
-      )
+      // If no image, remove the image section entirely
+      content = content.replace('{{imageSection}}', '')
     }
 
     return content
