@@ -1,73 +1,108 @@
 const path = require('path')
 const fs = require('fs').promises
 const cache = require('memory-cache')
+const ArticleService = require('../../services/articleService')
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
-// Function to read bot content from client files with caching
-async function getBotContent() {
+async function getBotContent(urlType, url) {
   try {
     // Check cache first
-    const cachedContent = cache.get('bot-content')
+    const cachedContent = cache.get(`bot-content-${urlType}`)
     if (cachedContent) {
       return cachedContent
     }
 
-    const [
-      navbarContent,
-      heroContent,
-      benefitsContent,
-      featuresContent,
-      footerContent,
-    ] = await Promise.all([
-      fs.readFile(
-        path.resolve(
-          __dirname,
-          '../../../client/public/bot/components/navbar.html',
-        ),
-        'utf-8',
-      ),
-      fs.readFile(
-        path.resolve(
-          __dirname,
-          '../../../client/public/bot/components/get-started/hero.html',
-        ),
-        'utf-8',
-      ),
-      fs.readFile(
-        path.resolve(
-          __dirname,
-          '../../../client/public/bot/components/get-started/benefits.html',
-        ),
-        'utf-8',
-      ),
-      fs.readFile(
-        path.resolve(
-          __dirname,
-          '../../../client/public/bot/components/get-started/features.html',
-        ),
-        'utf-8',
-      ),
-      fs.readFile(
-        path.resolve(
-          __dirname,
-          '../../../client/public/bot/components/footer.html',
-        ),
-        'utf-8',
-      ),
-    ])
+    let content = {}
 
-    const content = {
-      navbar: navbarContent,
-      hero: heroContent,
-      benefits: benefitsContent,
-      features: featuresContent,
-      footer: footerContent,
+    if (urlType === 'get-started') {
+      const [
+        navbarContent,
+        heroContent,
+        benefitsContent,
+        featuresContent,
+        footerContent,
+      ] = await Promise.all([
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../../client/public/bot/components/navbar.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../../client/public/bot/components/get-started/hero.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../../client/public/bot/components/get-started/benefits.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../../client/public/bot/components/get-started/features.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../../client/public/bot/components/footer.html',
+          ),
+          'utf-8',
+        ),
+      ])
+
+      content = {
+        navbar: navbarContent,
+        hero: heroContent,
+        benefits: benefitsContent,
+        features: featuresContent,
+        footer: footerContent,
+      }
+    } else {
+      const [navbarContent, articleTemplateContent] = await Promise.all([
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../../client/public/bot/components/navbar.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../../client/public/bot/components/article/article.html',
+          ),
+          'utf-8',
+        ),
+      ])
+
+      // Get article content
+      const articleId = ArticleService.extractArticleId(url)
+      const articleData = await ArticleService.getArticleContent(articleId)
+
+      // Replace placeholders in template with actual content
+      const articleContent = ArticleService.replaceArticleContent(
+        articleTemplateContent,
+        articleData,
+      )
+
+      content = {
+        navbar: navbarContent,
+        article: articleContent,
+      }
     }
 
     // Store in cache
-    cache.put('bot-content', content, CACHE_DURATION)
-
+    cache.put(`bot-content-${urlType}`, content, CACHE_DURATION)
     return content
   } catch (error) {
     console.error('Error reading bot content:', error)
@@ -77,6 +112,7 @@ async function getBotContent() {
       benefits: '',
       features: '',
       footer: '',
+      article: '',
     }
   }
 }
@@ -124,7 +160,6 @@ function createSSRHandler(vite) {
 
       // Check if we have a cached template
       let template = cache.get(templateCacheKey)
-
       if (!template) {
         // Read and transform template if not cached
         template = await fs.readFile(
@@ -151,8 +186,12 @@ function createSSRHandler(vite) {
           .replace('<html', `<html data-bot="${isBot}"`)
 
         if (isBot) {
-          const botContent = await getBotContent()
-          template = handleBotTemplate(template, botContent)
+          const urlType =
+            url.includes('get-started') || url === '/' || url === '/?bot=true'
+              ? 'get-started'
+              : 'article'
+          const botContent = await getBotContent(urlType, url)
+          template = handleBotTemplate(template, botContent, urlType)
         } else {
           const splashContent = await getSplashContent()
           template = handleUserTemplate(template, splashContent)
@@ -172,31 +211,42 @@ function createSSRHandler(vite) {
   }
 }
 
-function handleBotTemplate(template, botContent) {
-  return template
+function handleBotTemplate(template, botContent, urlType) {
+  let result = template
     .replace('<div id="root">', '<div id="root" style="display: none;">')
     .replace(
       '<div id="splash-screen">',
       '<div id="splash-screen" style="display: none;">',
     )
     .replace('<div id="bot-navbar"></div>', botContent.navbar)
-    .replace('<div id="bot-hero"></div>', botContent.hero)
-    .replace('<div id="bot-benefits"></div>', botContent.benefits)
-    .replace('<div id="bot-features"></div>', botContent.features)
-    .replace('<div id="bot-footer"></div>', botContent.footer)
-    .replace(
-      '<style>',
-      `<link rel="stylesheet" href="styles/utils/reset.css">
-<link rel="stylesheet" href="styles/utils/variables.css">
-<link rel="stylesheet" href="styles/main.css">
-<link rel="stylesheet" href="styles/components/css-navigation.css">
-<link rel="stylesheet" href="styles/components/css-hero.css">
-<link rel="stylesheet" href="styles/components/css-features.css">
-<link rel="stylesheet" href="styles/components/css-benefits.css">
-<link rel="stylesheet" href="styles/components/css-sections.css">
-<link rel="stylesheet" href="styles/components/css-footer.css">
-<link rel="stylesheet" href="styles/utils/responsive.css"> <style> `,
-    )
+
+  if (urlType === 'get-started') {
+    result = result
+      .replace('<div id="bot-hero"></div>', botContent.hero)
+      .replace('<div id="bot-benefits"></div>', botContent.benefits)
+      .replace('<div id="bot-features"></div>', botContent.features)
+      .replace('<div id="bot-footer"></div>', botContent.footer)
+  } else {
+    result = result.replace('<div id="bot-article"></div>', botContent.article)
+  }
+
+  result = result.replace(
+    '<style>',
+    `<link rel="stylesheet" href="/styles/utils/reset.css">
+<link rel="stylesheet" href="/styles/utils/variables.css">
+<link rel="stylesheet" href="/styles/main.css">
+<link rel="stylesheet" href="/styles/components/css-navigation.css">
+<link rel="stylesheet" href="/styles/components/css-article.css">
+<link rel="stylesheet" href="/styles/components/css-hero.css">
+<link rel="stylesheet" href="/styles/components/css-features.css">
+<link rel="stylesheet" href="/styles/components/css-benefits.css">
+<link rel="stylesheet" href="/styles/components/css-sections.css">
+<link rel="stylesheet" href="/styles/components/css-footer.css">
+<link rel="stylesheet" href="/styles/utils/responsive.css">
+<style>`,
+  )
+
+  return result
 }
 
 function handleUserTemplate(template, splashContent) {
@@ -206,23 +256,23 @@ function handleUserTemplate(template, splashContent) {
       `<div id="splash-screen">${splashContent}`,
     )
     .replace(
-      '<div id="bot-navbar">',
+      '<div id="bot-navbar"></div>',
       '<div id="bot-navbar" style="display: none;">',
     )
     .replace(
-      '<div id="bot-hero">',
+      '<div id="bot-hero"></div>',
       '<div id="bot-hero" style="display: none;">',
     )
     .replace(
-      '<div id="bot-benefits">',
+      '<div id="bot-benefits"></div>',
       '<div id="bot-benefits" style="display: none;">',
     )
     .replace(
-      '<div id="bot-features">',
+      '<div id="bot-features"></div>',
       '<div id="bot-features" style="display: none;">',
     )
     .replace(
-      '<div id="bot-footer">',
+      '<div id="bot-footer"></div>',
       '<div id="bot-footer" style="display: none;">',
     )
 }
