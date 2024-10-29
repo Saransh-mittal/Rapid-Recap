@@ -1,6 +1,109 @@
-// server/middleware/ssr/handler.js
 const path = require('path')
 const fs = require('fs').promises
+const cache = require('memory-cache')
+
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
+
+// Function to read bot content from client files with caching
+async function getBotContent() {
+  try {
+    // Check cache first
+    const cachedContent = cache.get('bot-content')
+    if (cachedContent) {
+      return cachedContent
+    }
+
+    const [
+      navbarContent,
+      heroContent,
+      benefitsContent,
+      featuresContent,
+      footerContent,
+    ] = await Promise.all([
+      fs.readFile(
+        path.resolve(
+          __dirname,
+          '../../../client/public/bot/components/navbar.html',
+        ),
+        'utf-8',
+      ),
+      fs.readFile(
+        path.resolve(
+          __dirname,
+          '../../../client/public/bot/components/get-started/hero.html',
+        ),
+        'utf-8',
+      ),
+      fs.readFile(
+        path.resolve(
+          __dirname,
+          '../../../client/public/bot/components/get-started/benefits.html',
+        ),
+        'utf-8',
+      ),
+      fs.readFile(
+        path.resolve(
+          __dirname,
+          '../../../client/public/bot/components/get-started/features.html',
+        ),
+        'utf-8',
+      ),
+      fs.readFile(
+        path.resolve(
+          __dirname,
+          '../../../client/public/bot/components/footer.html',
+        ),
+        'utf-8',
+      ),
+    ])
+
+    const content = {
+      navbar: navbarContent,
+      hero: heroContent,
+      benefits: benefitsContent,
+      features: featuresContent,
+      footer: footerContent,
+    }
+
+    // Store in cache
+    cache.put('bot-content', content, CACHE_DURATION)
+
+    return content
+  } catch (error) {
+    console.error('Error reading bot content:', error)
+    return {
+      navbar: '',
+      hero: '',
+      benefits: '',
+      features: '',
+      footer: '',
+    }
+  }
+}
+
+// Function to get splash content with caching
+async function getSplashContent() {
+  try {
+    // Check cache first
+    const cachedContent = cache.get('splash-content')
+    if (cachedContent) {
+      return cachedContent
+    }
+
+    const content = await fs.readFile(
+      path.resolve(__dirname, '../../../client/public/splash.html'),
+      'utf-8',
+    )
+
+    // Store in cache
+    cache.put('splash-content', content, CACHE_DURATION)
+
+    return content
+  } catch (error) {
+    console.error('Error reading splash content:', error)
+    return ''
+  }
+}
 
 function createSSRHandler(vite) {
   return async function (req, res, next) {
@@ -16,40 +119,49 @@ function createSSRHandler(vite) {
       const isBot =
         req.query.bot === 'true' || shouldHandleAsBot(url, userAgent)
 
-      // Read and transform template
-      let template = await fs.readFile(
-        path.resolve(__dirname, '../../../client/index.html'),
-        'utf-8',
-      )
+      // Cache key for the full page template
+      const templateCacheKey = `template-${isBot ? 'bot' : 'user'}-${url}`
 
-      // Transform with Vite and handle scripts
-      if (vite) {
-        template = await vite.transformIndexHtml(url, template)
+      // Check if we have a cached template
+      let template = cache.get(templateCacheKey)
+
+      if (!template) {
+        // Read and transform template if not cached
+        template = await fs.readFile(
+          path.resolve(__dirname, '../../../client/index.html'),
+          'utf-8',
+        )
+
+        if (vite) {
+          template = await vite.transformIndexHtml(url, template)
+        }
+
+        // Handle scripts and bot detection
+        template = template
+          .replace(/<script\b([^>]*)>/gi, (match, attrs) => {
+            if (attrs.includes('nonce=')) return match
+            const hasType = attrs.includes('type=')
+            const typeAttr = hasType ? '' : ' type="module"'
+            return `<script nonce="${nonce}"${typeAttr}${attrs}>`
+          })
+          .replace(
+            'window.__IS_BOT__ = false;',
+            `window.__IS_BOT__ = ${isBot};`,
+          )
+          .replace('<html', `<html data-bot="${isBot}"`)
+
+        if (isBot) {
+          const botContent = await getBotContent()
+          template = handleBotTemplate(template, botContent)
+        } else {
+          const splashContent = await getSplashContent()
+          template = handleUserTemplate(template, splashContent)
+        }
+
+        // Store the processed template in cache
+        cache.put(templateCacheKey, template, CACHE_DURATION)
       }
 
-      // Ensure proper script handling
-      template = template
-        .replace(/<script\b([^>]*)>/gi, (match, attrs) => {
-          // Don't duplicate nonce if it exists
-          if (attrs.includes('nonce=')) return match
-
-          // Add type="module" for ES modules
-          const hasType = attrs.includes('type=')
-          const typeAttr = hasType ? '' : ' type="module"'
-
-          return `<script nonce="${nonce}"${typeAttr}${attrs}>`
-        })
-        .replace('window.__IS_BOT__ = false;', `window.__IS_BOT__ = ${isBot};`)
-        .replace('<html', `<html data-bot="${isBot}"`)
-
-      // Bot-specific modifications
-      if (isBot) {
-        template = handleBotTemplate(template)
-      } else {
-        template = handleUserTemplate(template)
-      }
-
-      // Set proper headers
       res.setHeader('Content-Type', 'text/html; charset=utf-8')
       res.setHeader('Cache-Control', 'no-store, must-revalidate')
       res.status(200).end(template)
@@ -58,6 +170,61 @@ function createSSRHandler(vite) {
       next(e)
     }
   }
+}
+
+function handleBotTemplate(template, botContent) {
+  return template
+    .replace('<div id="root">', '<div id="root" style="display: none;">')
+    .replace(
+      '<div id="splash-screen">',
+      '<div id="splash-screen" style="display: none;">',
+    )
+    .replace('<div id="bot-navbar"></div>', botContent.navbar)
+    .replace('<div id="bot-hero"></div>', botContent.hero)
+    .replace('<div id="bot-benefits"></div>', botContent.benefits)
+    .replace('<div id="bot-features"></div>', botContent.features)
+    .replace('<div id="bot-footer"></div>', botContent.footer)
+    .replace(
+      '<style>',
+      `<link rel="stylesheet" href="styles/utils/reset.css">
+<link rel="stylesheet" href="styles/utils/variables.css">
+<link rel="stylesheet" href="styles/main.css">
+<link rel="stylesheet" href="styles/components/css-navigation.css">
+<link rel="stylesheet" href="styles/components/css-hero.css">
+<link rel="stylesheet" href="styles/components/css-features.css">
+<link rel="stylesheet" href="styles/components/css-benefits.css">
+<link rel="stylesheet" href="styles/components/css-sections.css">
+<link rel="stylesheet" href="styles/components/css-footer.css">
+<link rel="stylesheet" href="styles/utils/responsive.css"> <style> `,
+    )
+}
+
+function handleUserTemplate(template, splashContent) {
+  return template
+    .replace(
+      '<div id="splash-screen">',
+      `<div id="splash-screen">${splashContent}`,
+    )
+    .replace(
+      '<div id="bot-navbar">',
+      '<div id="bot-navbar" style="display: none;">',
+    )
+    .replace(
+      '<div id="bot-hero">',
+      '<div id="bot-hero" style="display: none;">',
+    )
+    .replace(
+      '<div id="bot-benefits">',
+      '<div id="bot-benefits" style="display: none;">',
+    )
+    .replace(
+      '<div id="bot-features">',
+      '<div id="bot-features" style="display: none;">',
+    )
+    .replace(
+      '<div id="bot-footer">',
+      '<div id="bot-footer" style="display: none;">',
+    )
 }
 
 function shouldHandleAsBot(url, userAgent) {
@@ -82,22 +249,6 @@ function shouldHandleAsBot(url, userAgent) {
     ) ||
     (/bot|crawler|spider|crawling/i.test(userAgent) &&
       !/chrome|firefox|safari|opera|edge/i.test(userAgent))
-  )
-}
-
-function handleBotTemplate(template) {
-  return template
-    .replace('<div id="root">', '<div id="root" style="display: none;">')
-    .replace(
-      '<div class="bot-content">',
-      '<div class="bot-content" style="display: block;">',
-    )
-}
-
-function handleUserTemplate(template) {
-  return template.replace(
-    '<div class="bot-content">',
-    '<div class="bot-content" style="display: none;">',
   )
 }
 

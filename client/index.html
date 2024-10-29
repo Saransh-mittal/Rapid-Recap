@@ -25,30 +25,8 @@
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
 
-  <link rel="stylesheet" href="styles/utils/reset.css">
-    <link rel="stylesheet" href="styles/utils/variables.css">
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/components/css-navigation.css">
-    <link rel="stylesheet" href="styles/components/css-hero.css">
-    <link rel="stylesheet" href="styles/components/css-features.css">
-    <link rel="stylesheet" href="styles/components/css-benefits.css">
-    <link rel="stylesheet" href="styles/components/css-sections.css">
-    <link rel="stylesheet" href="styles/components/css-footer.css">
-    <link rel="stylesheet" href="styles/utils/responsive.css">
-
-  <!-- Combined styles for splash screen and bot content -->
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
 
-    /* Reset and base styles */
-    body {
-      background: linear-gradient(135deg, #1a2a6c, #2a4858, #0f2027);
-      min-height: 100vh;
-      color: white;
-      margin: 0;
-      padding: 0;
-      font-family: 'Poppins', sans-serif;
-    }
 
     /* Splash screen styles */
     #splash-screen {
@@ -126,6 +104,7 @@
     <div id="bot-hero"></div>
     <div id="bot-benefits"></div>
     <div id="bot-features"></div>
+    <div id="bot-footer"></div>
 
 
 
@@ -134,7 +113,14 @@
 
   <!-- Entry Point -->
   <script type="module" src="/src/entry-client.jsx"></script>
-  <script src="/scripts/import-html.js"></script>
-
+<script>
+  window.addEventListener('load', function () {
+  const splashScreen = document.getElementById('splash-screen')
+  // Hide splash screen and show content after a delay
+  setTimeout(() => {
+    splashScreen.style.display = 'none'
+  }, 2000) // 2 second delay
+})
+</script>
 </body>
 </html>

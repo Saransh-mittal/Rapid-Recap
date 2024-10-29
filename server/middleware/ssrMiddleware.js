@@ -7,11 +7,11 @@ const { createSSRHandler } = require('./ssr/handler')
 
 async function createSSRMiddleware(app) {
   try {
-    console.log('Initializing SSR middleware...')
+    // console.log('Initializing SSR middleware...')
 
-    // Initialize Vite server
-    const vite = await createViteServer()
-    console.log('Vite server initialized successfully')
+    // // Initialize Vite server
+    // const vite = await createViteServer()
+    // console.log('Vite server initialized successfully')
 
     // Debug middleware
     // app.use((req, res, next) => {
@@ -25,10 +25,10 @@ async function createSSRMiddleware(app) {
     setupLocaleMiddleware(app)
 
     // // Add Vite middleware
-    app.use(vite.middlewares)
+    // app.use(vite.middlewares)
 
     // Return the main SSR handler
-    return createSSRHandler(vite)
+    return createSSRHandler(null)
   } catch (e) {
     console.error('Failed to create SSR middleware:', e)
     throw e

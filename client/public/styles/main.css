@@ -1,7 +1,21 @@
-body {
-  background: var(--background-gradient);
-  min-height: 100vh;
-  color: var(--text-white);
+@import url("https://fonts.googleapis.com/css2?family=Courier+Prime&family=Lato:wght@100;400;700&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@100&display=swap");
+/* @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap"); */
+@supports (-webkit-overflow-scrolling: touch) {
+  #root {
+    background-attachment: scroll;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--background) !important;
 }
 
 .get-started-btn {

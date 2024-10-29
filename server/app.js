@@ -26,7 +26,6 @@ const compression = require('compression')
 const helmet = require('helmet')
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
-const securityMiddleware = require('./middleware/securityMiddleware')
 
 const app = express()
 // CORS configuration - only needed in development
@@ -46,7 +45,7 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 // Apply security middleware first
-securityMiddleware(app)
+
 app.use(i18nMiddleware.handle(i18n))
 
 app.use(
