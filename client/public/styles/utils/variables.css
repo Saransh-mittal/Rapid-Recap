@@ -8,7 +8,7 @@
   --section-bg: rgba(0, 0, 0, 0.5);
 
   /* Gradients */
-  --background: linear-gradient(135deg, #1a2a6c, #2a4858);
+  --background: black;
   --button-gradient: linear-gradient(135deg, #00b894, #00a884);
 
   /* Text Colors */

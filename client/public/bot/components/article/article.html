@@ -1,0 +1,101 @@
+<!-- File Path: client/public/bot/components/article/article.html -->
+
+<div class="article-container">
+  <div class="header">
+      <h1 class="title">{{title}}</h1>
+
+      <div class="top-bar">
+          <div class="left-section">
+              <div class="ai-badge">
+                  Enhanced by Rapid Recap AI
+                  <div class="icon-group">
+                      <span>📝</span>
+                      <span>🔖</span>
+                  </div>
+              </div>
+          </div>
+          <div class="right-section">
+
+              <div class="quin-boost">
+                  Quin Boost
+                  <div class="quiz-counter">
+                      <span>5 QUIZ LEFT</span>
+                  </div>
+              </div>
+              <button class="lock-button">
+                  <span class="lock-icon">🔒</span>
+              </button>
+
+          </div>
+      </div>
+
+      <div class="controls">
+          <div class="left-controls">
+              <div class="dropdown">
+                  Original <span>▼</span>
+              </div>
+              <div class="feature-badge">FEATURE IN TESTING</div>
+          </div>
+          <div class="meta-info">
+              <span>{{readTime}} min read</span>
+              <span>•</span>
+              <span>{{dateTime}}</span>
+          </div>
+      </div>
+  </div>
+
+  <div class="content-wrapper">
+      <div class="main-content">
+          <div class="article-section">
+            {{imageSection}}
+
+              <div class="article-content">
+                  {{mainText}}
+                  <div class="source-citation">SOURCE: {{source}}</div>
+              </div>
+          </div>
+
+          <div class="sidebar">
+              <div class="quiz-section">
+                  <button class="take-quiz-btn">
+                      Take Quiz
+                      <span class="lock-icon">🔒</span>
+                  </button>
+
+                  <div class="stats-section">
+                      <h2 class="stats-title">Quiz Statistics:</h2>
+                      <div class="chart">
+                          <div class="bar" style="height: 80%;">
+                              <span class="bar-label">Attempted</span>
+                          </div>
+                          <div class="bar" style="height: 40%;">
+                              <span class="bar-label">Avg. Score</span>
+                          </div>
+                          <div class="bar" style="height: 0%;">
+                              <span class="bar-label">Your Score</span>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="recommended-section">
+                  <div class="tabs">
+                      <button class="tab active">RECOMMENDED ARTICLES</button>
+                      <button class="tab">RELATED ARTICLES</button>
+                  </div>
+
+                  <div class="recommended-articles">
+
+                      <button class="load-more">
+                          <span class="lock-icon">🔒</span>
+                      </button>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <div class="disclaimer">
+          Disclaimer: Articles are AI-enhanced for educational purposes while maintaining factual accuracy
+      </div>
+  </div>
+</div>
