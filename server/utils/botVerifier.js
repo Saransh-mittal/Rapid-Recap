@@ -6,134 +6,228 @@ const reverse = promisify(dns.reverse)
 const lookup = promisify(dns.lookup)
 
 class BotVerifier {
-  static get knownBots() {
-    return [
-      'Googlebot',
-      'Bingbot',
-      'Slurp',
-      'DuckDuckBot',
-      'Baiduspider',
-      'YandexBot',
-      'facebookexternalhit',
-      'LinkedInBot',
-      'Twitterbot',
-    ]
-  }
-
-  static get botDomains() {
+  // Known bot configurations
+  static get botConfigs() {
     return {
-      Googlebot: '.googlebot.com',
-      Bingbot: '.search.msn.com',
-      Slurp: '.slurp.inktomi.com',
-      DuckDuckBot: '.duckduckgo.com',
-      Baiduspider: '.baidu.com',
-      YandexBot: '.yandex.ru',
-      facebookexternalhit: '.facebook.com',
-      LinkedInBot: '.linkedin.com',
-      Twitterbot: '.twitter.com',
+      Googlebot: {
+        domains: ['.googlebot.com', '.google.com'],
+        ipRanges: ['66.249.', '64.68.', '72.14.', '74.125.', '216.239.'],
+        patterns: [
+          'Googlebot/',
+          'Googlebot-News',
+          'Googlebot-Image/',
+          'Googlebot-Video/',
+          'Googlebot-Mobile/',
+          'AdsBot-Google',
+          'Mediapartners-Google',
+          'APIs-Google',
+          'Google-Read-Aloud',
+          'Google-Site-Verification',
+        ],
+      },
+      Bingbot: {
+        domains: ['.search.msn.com'],
+        ipRanges: ['157.55.', '207.46.', '40.77.', '13.66.'],
+        patterns: ['bingbot/', 'BingPreview'],
+      },
+      Yandexbot: {
+        domains: ['.yandex.ru', '.yandex.com', '.yandex.net'],
+        ipRanges: ['100.43.', '37.9.', '37.140.'],
+        patterns: ['YandexBot/', 'YandexImages/', 'YandexMetrika/'],
+      },
+      DuckDuckBot: {
+        domains: ['.duckduckgo.com'],
+        ipRanges: ['50.16.', '54.208.'],
+        patterns: ['DuckDuckBot/'],
+      },
+      Baiduspider: {
+        domains: ['.baidu.com', '.baidu.jp'],
+        ipRanges: ['180.76.', '123.125.'],
+        patterns: ['Baiduspider/', 'Baiduspider-image/', 'Baiduspider-video/'],
+      },
+      // Social Media Bots
+      facebookexternalhit: {
+        domains: ['.facebook.com', '.fbsv.net'],
+        ipRanges: ['69.63.', '31.13.', '173.252.'],
+        patterns: ['facebookexternalhit/', 'FacebookBot'],
+      },
+      LinkedInBot: {
+        domains: ['.linkedin.com'],
+        ipRanges: ['108.174.', '104.215.'],
+        patterns: ['LinkedInBot/'],
+      },
+      Twitterbot: {
+        domains: ['.twitter.com', '.twimg.com'],
+        ipRanges: ['199.16.', '199.59.'],
+        patterns: ['Twitterbot/'],
+      },
     }
   }
 
-  static hasValidUserAgent(userAgent) {
-    return (
-      userAgent &&
-      /bot|crawler|spider/i.test(userAgent) &&
-      !/chrome|firefox|safari|opera|edge/i.test(userAgent)
+  static get knownBots() {
+    return Object.keys(this.botConfigs)
+  }
+
+  static getBotConfig(userAgent) {
+    const botName = this.knownBots.find(bot =>
+      this.botConfigs[bot].patterns.some(pattern =>
+        userAgent.toLowerCase().includes(pattern.toLowerCase()),
+      ),
     )
+    return botName ? this.botConfigs[botName] : null
+  }
+
+  static hasValidUserAgent(userAgent) {
+    if (!userAgent) return false
+
+    // Reject browsers pretending to be bots
+    if (/chrome|firefox|safari|opera|edge/i.test(userAgent)) {
+      return false
+    }
+
+    // Check if it matches any known bot pattern
+    return this.knownBots.some(bot =>
+      this.botConfigs[bot].patterns.some(pattern =>
+        userAgent.toLowerCase().includes(pattern.toLowerCase()),
+      ),
+    )
+  }
+
+  static isInIPRange(ip, botName) {
+    const config = this.botConfigs[botName]
+    if (!config?.ipRanges) return false
+
+    return config.ipRanges.some(range => ip.startsWith(range))
   }
 
   static async verifyBotIP(ip, userAgent) {
     try {
-      // Step 1: Reverse DNS lookup (PTR record)
-      const hostnames = await reverse(ip)
-      if (!hostnames || hostnames.length === 0) return false
-
-      const hostname = hostnames[0].toLowerCase()
-
       // Find which bot we're dealing with
       const botName = this.knownBots.find(bot =>
-        userAgent.toLowerCase().includes(bot.toLowerCase()),
+        this.botConfigs[bot].patterns.some(pattern =>
+          userAgent.toLowerCase().includes(pattern.toLowerCase()),
+        ),
       )
 
-      if (!botName) return false
+      if (!botName) {
+        this.log('verification-failed', {
+          reason: 'unknown-bot',
+          ip,
+          userAgent,
+        })
+        return false
+      }
 
-      const expectedDomain = this.botDomains[botName]
-      if (!hostname.endsWith(expectedDomain)) return false
+      // Quick IP range check
+      if (!this.isInIPRange(ip, botName)) {
+        this.log('verification-failed', {
+          reason: 'ip-range-mismatch',
+          ip,
+          userAgent,
+          botName,
+        })
+        return false
+      }
 
-      // Step 2: Forward DNS lookup
-      // This verifies that the hostname we got actually points back to the original IP
-      // This completes the forward-confirmed reverse DNS (FCrDNS) check
+      // Step 1: Reverse DNS lookup (PTR record)
+      const hostnames = await reverse(ip)
+      if (!hostnames?.length) {
+        this.log('verification-failed', {
+          reason: 'no-reverse-dns',
+          ip,
+          userAgent,
+          botName,
+        })
+        return false
+      }
+
+      const hostname = hostnames[0].toLowerCase()
+      const validDomain = this.botConfigs[botName].domains.some(domain =>
+        hostname.endsWith(domain),
+      )
+
+      if (!validDomain) {
+        this.log('verification-failed', {
+          reason: 'invalid-domain',
+          ip,
+          userAgent,
+          botName,
+          hostname,
+        })
+        return false
+      }
+
+      // Step 2: Forward DNS lookup (FCrDNS)
       const { address: resolvedIP } = await lookup(hostname)
 
-      // Compare the resolved IP with the original IP
-      // Some bots might use multiple IPs, so we check if it's in the same subnet
+      // Check if IPs are in the same subnet
       const originalIPParts = ip.split('.')
       const resolvedIPParts = resolvedIP.split('.')
-
-      // Check if first three octets match (same subnet)
       const sameSubnet =
         originalIPParts.slice(0, 3).join('.') ===
         resolvedIPParts.slice(0, 3).join('.')
 
-      return sameSubnet
+      if (!sameSubnet) {
+        this.log('verification-failed', {
+          reason: 'subnet-mismatch',
+          ip,
+          resolvedIP,
+          userAgent,
+          botName,
+        })
+        return false
+      }
+
+      this.log('verification-succeeded', { ip, userAgent, botName, hostname })
+      return true
     } catch (error) {
-      console.error('Bot IP verification failed:', error)
+      this.log('verification-error', { error: error.message, ip, userAgent })
       return false
     }
   }
 
   static async isLegitimateBot(req) {
     const userAgent = req.headers['user-agent'] || ''
-    const ip =
-      req.ip || req.connection.remoteAddress || req.socket.remoteAddress
+    const ip = (
+      req.ip ||
+      req.connection.remoteAddress ||
+      req.socket.remoteAddress
+    ).replace(/^::ffff:/, '') // Clean IPv6 mapped IPv4
 
-    // Clean up IP address if it includes IPv6 prefix
-    const cleanIP = ip.replace(/^::ffff:/, '')
-
-    // Development environment check
-    if (process.env.NODE_ENV !== 'production') {
-      const devResult = this.hasValidUserAgent(userAgent)
+    // Handle development environment
+    if (process.env.NODE_ENV === 'development') {
+      const isDev = req.query.bot === 'true'
+      const devResult = isDev && this.hasValidUserAgent(userAgent)
       if (devResult) {
-        console.log('[DEV] Bot verified through User-Agent only:', userAgent)
+        this.log('dev-verification', { userAgent, ip })
       }
       return devResult
     }
 
-    // Production environment checks
+    // Production checks
     if (!this.hasValidUserAgent(userAgent)) {
-      console.log('Invalid user agent format:', userAgent)
+      this.log('invalid-user-agent', { userAgent, ip })
       return false
     }
 
-    const isKnownBot = this.knownBots.some(bot =>
-      userAgent.toLowerCase().includes(bot.toLowerCase()),
-    )
-
-    if (!isKnownBot) {
-      console.log('Unknown bot user agent:', userAgent)
-      return false
-    }
-
-    const isVerified = await this.verifyBotIP(cleanIP, userAgent)
-
-    if (isVerified) {
-      console.log('Verified bot:', userAgent, 'from IP:', cleanIP)
-    } else {
-      console.log('Failed to verify bot:', userAgent, 'from IP:', cleanIP)
-    }
-
-    return isVerified
+    return await this.verifyBotIP(ip, userAgent)
   }
 
-  static logVerificationResult(isVerified, userAgent, ip) {
-    if (process.env.NODE_ENV === 'production') {
-      const timestamp = new Date().toISOString()
-      const logMessage = `[${timestamp}] Bot verification ${
-        isVerified ? 'succeeded' : 'failed'
-      } - UA: ${userAgent}, IP: ${ip}`
+  static log(event, data) {
+    const timestamp = new Date().toISOString()
+    const logData = {
+      timestamp,
+      event,
+      environment: process.env.NODE_ENV,
+      ...data,
+    }
 
-      // You might want to implement proper logging here
-      console.log(logMessage)
+    if (process.env.NODE_ENV === 'production') {
+      // In production, you might want to use a proper logging service
+      console.log(JSON.stringify(logData))
+    } else {
+      // In development, pretty print for readability
+      console.log(`[${timestamp}] Bot Verification:`, event, data)
     }
   }
 }

@@ -26,6 +26,7 @@ const compression = require('compression')
 const helmet = require('helmet')
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
+const { initBotTracking } = require('./utils/botTracker')
 
 const app = express()
 // CORS configuration - only needed in development
@@ -167,34 +168,9 @@ authRouter.use('/chat', chatsRoutes)
 authRouter.use('/message', messageRoutes)
 authRouter.use('/friends', friendsRoutes)
 authRouter.use('/tournament', tournamentRoutes)
-
-// Serve static files
-if (process.env.NODE_ENV === 'production') {
-  app.use(
-    express.static(path.join(__dirname, 'client/dist/client'), {
-      index: false, // Don't serve index.html for SSR routes
-      setHeaders: (res, path) => {
-        // Set proper cache headers
-        if (path.endsWith('.js')) {
-          res.setHeader('Cache-Control', 'public, max-age=31536000')
-        } else if (path.endsWith('.css')) {
-          res.setHeader('Cache-Control', 'public, max-age=31536000')
-        } else if (path.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-          res.setHeader('Cache-Control', 'public, max-age=31536000')
-        }
-
-        // Set proper MIME types
-        if (path.endsWith('.js')) {
-          res.setHeader('Content-Type', 'application/javascript')
-        } else if (path.endsWith('.css')) {
-          res.setHeader('Content-Type', 'text/css')
-        }
-      },
-    }),
-  )
-}
 app.use('/api', authRouter)
 
+initBotTracking()
 async function initializeApp() {
   try {
     const ssrMiddleware = await createSSRMiddleware(app)
@@ -216,12 +192,6 @@ async function initializeApp() {
       res.sendFile(path.join(__dirname, '../client/dist/index.html'))
     })
   }
-}
-// Catch-all route for client-side routing in production
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/dist/client/index.html'))
-  })
 }
 initializeApp().catch(err => {
   console.error('Failed to initialize app:', err)

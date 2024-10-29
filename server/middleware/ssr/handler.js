@@ -3,6 +3,7 @@ const fs = require('fs').promises
 const cache = require('memory-cache')
 const ArticleService = require('../../services/articleService')
 const BotVerifier = require('../../utils/botVerifier')
+const { trackBotVisit } = require('../../utils/botTracker')
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
@@ -144,15 +145,17 @@ async function getSplashContent() {
 
 function createSSRHandler(vite) {
   return async function (req, res, next) {
+    const startTime = Date.now()
     const url = req.originalUrl
     const nonce = res.locals.nonce
-
+    const userAgent = req.headers['user-agent'] || ''
     if (url.startsWith('/api/') || url.endsWith('.json')) {
       return next()
     }
-
+    const isBot = await shouldHandleAsBot(req)
     try {
-      const isBot = await shouldHandleAsBot(req)
+      let botName = null
+      let verified = false
 
       // Cache key for the full page template
       const templateCacheKey = `template-${isBot ? 'bot' : 'user'}-${url}`
@@ -185,6 +188,10 @@ function createSSRHandler(vite) {
           .replace('<html', `<html data-bot="${isBot}"`)
 
         if (isBot) {
+          botName =
+            BotVerifier.knownBots.find(bot =>
+              userAgent.toLowerCase().includes(bot.toLowerCase()),
+            ) || 'Unknown Bot'
           const urlType =
             url.includes('get-started') || url === '/' || url === '/?bot=true'
               ? 'get-started'
@@ -202,9 +209,32 @@ function createSSRHandler(vite) {
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8')
       res.setHeader('Cache-Control', 'no-store, must-revalidate')
+      if (isBot) {
+        const responseTime = Date.now() - startTime
+        await trackBotVisit({
+          botName,
+          userAgent,
+          url,
+          verified,
+          receivedSSR: true,
+          responseTime,
+        })
+      }
       res.status(200).end(template)
     } catch (e) {
       console.error('SSR error:', e)
+      if (isBot) {
+        const responseTime = Date.now() - startTime
+        await trackBotVisit({
+          botName,
+          userAgent,
+          url,
+          verified,
+          receivedSSR: false,
+          responseTime,
+        })
+      }
+
       next(e)
     }
   }
