@@ -1,9 +1,10 @@
 .knowledge-journey {
     padding: var(--spacing-lg) var(--spacing-md);
     text-align: center;
-    background: var(--light-bg);
+    background: var(--very-light-bg);
     display: flex;
     flex-direction: column;
+    height: fit-content;
 }
 
 .features-container {
@@ -22,7 +23,7 @@
     max-width: 300px;
 }
 
-.feature-icon {
+.feature-icon-border {
     width: 80px;
     height: 80px;
     background: var(--feature-icon-bg);
@@ -32,12 +33,12 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
+    font-size: 2rem;
 }
 
-.feature-icon img {
-    width: 40px;
-    height: 40px;
-}
+
+
+
 
 .info-box {
     background: var(--feature-icon-bg);
@@ -49,10 +50,11 @@
 }
 
 .features-highlight {
-    background: var(--section-bg);
+    background: var(--light-bg);
     padding: var(--spacing-lg) var(--spacing-md);
     display: flex;
     flex-direction: column;
+    height: fit-content;
 }
 
 .features-cards {
@@ -76,4 +78,11 @@
 .feature-card img {
     width: 40px;
     height: 40px;
+}
+
+.content-section {
+    padding: var(--spacing-lg) var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
 }

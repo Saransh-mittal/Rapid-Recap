@@ -5,6 +5,7 @@
     margin: var(--spacing-lg) auto;
     gap: var(--spacing-md);
     padding: 0 var(--spacing-md);
+    text-align: center;
 }
 
 .benefit {

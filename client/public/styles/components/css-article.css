@@ -98,6 +98,8 @@
 .content-wrapper {
   padding: 2rem 4rem;
   background: rgba(26, 15, 51, 0.5);
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content {
@@ -115,10 +117,16 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.content-image {
+.image-container {
   width: 100%;
-  border-radius: 0.5rem;
-  margin-bottom: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.content-image {
+  display: block;
+  max-width: 100%;
 }
 
 .article-content {
