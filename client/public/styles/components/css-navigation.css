@@ -3,7 +3,7 @@ nav {
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-sm) 5%;
-    background-color: var(--light-bg);
+    background-color: var(--dark-bg);
 }
 
 .logo {

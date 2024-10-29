@@ -6,6 +6,7 @@
     text-align: center;
     min-height: calc(100vh - 80px);
     padding: var(--spacing-md);
+    background: var(--light-bg);
 }
 
 .hero h1 {

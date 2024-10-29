@@ -2,13 +2,14 @@
   /* Colors */
   --primary-color: #4fd1c5;
   --secondary-color: #00b894;
-  --dark-bg: rgba(0, 0, 0, 0.8);
-  --light-bg: rgba(0, 0, 0, 0.1);
-  --card-bg: rgba(13, 25, 38, 0.8);
+  --dark-bg: rgba(0, 3, 22, 0.5);
+  --light-bg: linear-gradient(to right, rgba(21, 32, 49, 0.9), rgba(16, 34, 62, 0.95));  /* light-bg based */
+  --very-light-bg: rgba(11, 37, 76, 0.91);
+  --card-bg: rgba(13, 25, 38, 0.65);
   --section-bg: rgba(0, 0, 0, 0.5);
 
   /* Gradients */
-  --background: linear-gradient(135deg, #1a2a6c, #2a4858);
+  --background: linear-gradient(135deg, #192244, #153849);
   --button-gradient: linear-gradient(135deg, #00b894, #00a884);
 
   /* Text Colors */
