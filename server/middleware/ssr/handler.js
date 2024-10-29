@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs').promises
 const cache = require('memory-cache')
 const ArticleService = require('../../services/articleService')
+const BotVerifier = require('../../utils/botVerifier')
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
@@ -151,9 +152,7 @@ function createSSRHandler(vite) {
     }
 
     try {
-      const userAgent = req.headers['user-agent'] || ''
-      const isBot =
-        req.query.bot === 'true' || shouldHandleAsBot(url, userAgent)
+      const isBot = await shouldHandleAsBot(req)
 
       // Cache key for the full page template
       const templateCacheKey = `template-${isBot ? 'bot' : 'user'}-${url}`
@@ -185,7 +184,6 @@ function createSSRHandler(vite) {
           )
           .replace('<html', `<html data-bot="${isBot}"`)
 
-        console.log('isBot', url)
         if (isBot) {
           const urlType =
             url.includes('get-started') || url === '/' || url === '/?bot=true'
@@ -278,29 +276,22 @@ function handleUserTemplate(template, splashContent) {
     )
 }
 
-function shouldHandleAsBot(url, userAgent) {
-  const botRoutes = ['/', '/home', '/article', '/get-started']
-  if (!botRoutes.some(route => url.includes(route))) return false
+async function shouldHandleAsBot(req) {
+  const botRoutes = ['/', '/article', '/get-started']
+  const url = req.originalUrl
 
-  const knownBots = [
-    'Googlebot',
-    'Bingbot',
-    'Slurp',
-    'DuckDuckBot',
-    'Baiduspider',
-    'YandexBot',
-    'facebookexternalhit',
-    'LinkedInBot',
-    'Twitterbot',
-  ]
+  if (!botRoutes.some(route => url.includes(route))) {
+    return false
+  }
 
-  return (
-    knownBots.some(bot =>
-      userAgent.toLowerCase().includes(bot.toLowerCase()),
-    ) ||
-    (/bot|crawler|spider|crawling/i.test(userAgent) &&
-      !/chrome|firefox|safari|opera|edge/i.test(userAgent))
-  )
+  // Development specific routes for testing
+  if (process.env.NODE_ENV === 'development') {
+    if (req.query.bot === 'true') {
+      return true
+    }
+  }
+
+  return await BotVerifier.isLegitimateBot(req)
 }
 
 module.exports = { createSSRHandler }
