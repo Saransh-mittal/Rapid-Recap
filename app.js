@@ -141,6 +141,12 @@ if (process.env.NODE_ENV === 'development') {
 }
 app.set('trust proxy', true)
 app.use((req, res, next) => {
+  if (
+    userAgent.includes('Chrome-Lighthouse') ||
+    userAgent.includes('PageSpeed Insights')
+  ) {
+    console.log('PageSpeed Request Details')
+  }
   if (req.headers['user-agent']?.includes('Chrome-Lighthouse')) {
     console.log('PageSpeed Request Details:', {
       timestamp: new Date().toISOString(),
@@ -161,6 +167,7 @@ app.use(i18nMiddleware.handle(i18n))
 app.use(bodyParser.json())
 const connectDB = require('./db/conn')
 const { initializeSocket } = require('./socket')
+const BotVerifier = require('./utils/botVerifier')
 
 webpush.setVapidDetails(
   'mailto:rapidrecap2k23@gmail.com',
