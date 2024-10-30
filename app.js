@@ -140,25 +140,25 @@ if (process.env.NODE_ENV === 'development') {
   )
 }
 app.set('trust proxy', true)
-app.use((req, res, next) => {
-  const userAgent = req.headers['user-agent'] || ''
-  if (
-    userAgent.includes('Chrome-Lighthouse') ||
-    userAgent.includes('PageSpeed Insights')
-  ) {
-    console.log('pageSpeed request detected')
-    console.log('PageSpeed Request Details:', {
-      timestamp: new Date().toISOString(),
-      realIP: BotVerifier.getRealIP(req),
-      proxyHeaders: {
-        xForwardedFor: req.headers['x-forwarded-for'],
-        xRealIP: req.headers['x-real-ip'],
-      },
-      userAgent: req.headers['user-agent'],
-    })
-  }
-  next()
-})
+// app.use((req, res, next) => {
+//   const userAgent = req.headers['user-agent'] || ''
+//   if (
+//     userAgent.includes('Chrome-Lighthouse') ||
+//     userAgent.includes('PageSpeed Insights')
+//   ) {
+//     console.log('pageSpeed request detected')
+//     console.log('PageSpeed Request Details:', {
+//       timestamp: new Date().toISOString(),
+//       realIP: BotVerifier.getRealIP(req),
+//       proxyHeaders: {
+//         xForwardedFor: req.headers['x-forwarded-for'],
+//         xRealIP: req.headers['x-real-ip'],
+//       },
+//       userAgent: req.headers['user-agent'],
+//     })
+//   }
+//   next()
+// })
 app.use(cookieParser())
 app.use(i18nMiddleware.handle(i18n))
 
