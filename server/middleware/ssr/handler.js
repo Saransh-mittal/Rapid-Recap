@@ -11,7 +11,7 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 async function getBotContent(urlType, url) {
   try {
     // Check cache first
-    const cachedContent = cache.get(`bot-content-${urlType}`)
+    const cachedContent = cache.get(`bot-content-${url}`)
     if (cachedContent) {
       return cachedContent
     }
@@ -150,7 +150,11 @@ function createSSRHandler(vite) {
     const url = req.originalUrl
     const nonce = res.locals.nonce
     const userAgent = req.headers['user-agent'] || ''
-    if (url.startsWith('/api/') || url.endsWith('.json')) {
+    if (
+      url.startsWith('/api/') ||
+      url.endsWith('.json') ||
+      url.includes('src')
+    ) {
       return next()
     }
     const isBot = await shouldHandleAsBot(req)
@@ -163,6 +167,7 @@ function createSSRHandler(vite) {
 
       // Check if we have a cached template
       let template = cache.get(templateCacheKey)
+
       if (!template) {
         // Read and transform template if not cached
         template = await fs.readFile(
