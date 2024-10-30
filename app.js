@@ -139,21 +139,17 @@ if (process.env.NODE_ENV === 'development') {
     }),
   )
 }
-
+app.set('trust proxy', true)
 app.use((req, res, next) => {
-  const userAgent = req.headers['user-agent'] || ''
-  const ip = req.ip.replace(/^::ffff:/, '')
-
-  if (
-    userAgent.includes('Chrome-Lighthouse') ||
-    userAgent.includes('PageSpeed Insights')
-  ) {
-    console.log('PageSpeed Request:', {
+  if (req.headers['user-agent']?.includes('Chrome-Lighthouse')) {
+    console.log('PageSpeed Request Details:', {
       timestamp: new Date().toISOString(),
-      userAgent,
-      ip,
-      path: req.path,
-      headers: req.headers,
+      realIP: BotVerifier.getRealIP(req),
+      proxyHeaders: {
+        xForwardedFor: req.headers['x-forwarded-for'],
+        xRealIP: req.headers['x-real-ip'],
+      },
+      userAgent: req.headers['user-agent'],
     })
   }
   next()
