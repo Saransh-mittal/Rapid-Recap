@@ -140,6 +140,24 @@ if (process.env.NODE_ENV === 'development') {
   )
 }
 
+app.use((req, res, next) => {
+  const userAgent = req.headers['user-agent'] || ''
+  const ip = req.ip.replace(/^::ffff:/, '')
+
+  if (
+    userAgent.includes('Chrome-Lighthouse') ||
+    userAgent.includes('PageSpeed Insights')
+  ) {
+    console.log('PageSpeed Request:', {
+      timestamp: new Date().toISOString(),
+      userAgent,
+      ip,
+      path: req.path,
+      headers: req.headers,
+    })
+  }
+  next()
+})
 app.use(cookieParser())
 app.use(i18nMiddleware.handle(i18n))
 
