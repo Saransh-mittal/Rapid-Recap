@@ -4,6 +4,7 @@ const cache = require('memory-cache')
 const ArticleService = require('../../services/articleService')
 const BotVerifier = require('../../utils/botVerifier')
 const { trackBotVisit } = require('../../utils/botTracker')
+const { generateAndInjectSchemas } = require('../../utils/structuredData')
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
@@ -198,6 +199,19 @@ function createSSRHandler(vite) {
               : 'article'
           const botContent = await getBotContent(urlType, url)
           template = handleBotTemplate(template, botContent, urlType)
+          // Inject structured data
+          const baseUrl = `${req.protocol}://${req.get('host')}`
+          template = generateAndInjectSchemas({
+            template,
+            articleData:
+              urlType === 'article'
+                ? await ArticleService.getArticleContent(
+                    ArticleService.extractArticleId(url),
+                  )
+                : null,
+            url,
+            baseUrl,
+          })
         } else {
           const splashContent = await getSplashContent()
           template = handleUserTemplate(template, splashContent)

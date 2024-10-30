@@ -25,6 +25,7 @@ class ArticleService {
         .toUpperCase()
 
       return {
+        _id: article._id,
         title: article.title,
         mainText: article.mainText,
         dateTime: formattedDate,
