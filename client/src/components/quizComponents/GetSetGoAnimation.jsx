@@ -1,80 +1,39 @@
+// src/components/quizComponents/GetSetGoAnimation.js
+
 import React, { useState, useEffect } from 'react'
 import { Box, Text } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useFeatureDetection } from '../../utils/featureDetection'
-import useSafeSound from '../../hooks/useSafeSound'
-import { isClient } from '../../utils/environment'
+import useSound from '../../customHooks/useSound'
 
-const MotionBox = isClient ? motion(Box) : Box
+const MotionBox = motion(Box)
 
 const GetSetGoAnimation = ({ onComplete }) => {
   const [step, setStep] = useState(0)
   const steps = ['Get', 'Set', 'Go!']
-  const features = useFeatureDetection()
-
-  const { playGetSetGoSound, isReady } = useSafeSound({
-    enabled: features.hasAudioSupport,
-    soundEnabled: true,
-    onError: err => console.warn('Sound error in GetSetGo:', err),
-  })
+  const { playGetSetGoSound } = useSound()
 
   useEffect(() => {
-    if (!isClient || !isReady || !features.hasAudioSupport) return
-
-    try {
-      playGetSetGoSound(1000, 0.2)
-    } catch (err) {
-      console.warn('Error playing initial GetSetGo sound:', err)
-    }
-  }, [isReady, features.hasAudioSupport])
+    playGetSetGoSound(1000, 0.2)
+  }, [])
 
   useEffect(() => {
-    if (!isClient) return
-
     const timer = setTimeout(() => {
       if (step < steps.length - 1) {
         setStep(step + 1)
-        if (isReady && features.hasAudioSupport) {
-          try {
-            setTimeout(
-              () =>
-                step === 0
-                  ? playGetSetGoSound(1200, 0.4)
-                  : playGetSetGoSound(1400, 0.8),
-              400,
-            )
-          } catch (err) {
-            console.warn('Error playing step sound:', err)
-          }
-        }
+        setTimeout(
+          () =>
+            step === 0
+              ? playGetSetGoSound(1200, 0.4)
+              : playGetSetGoSound(1400, 0.8),
+          400,
+        )
       } else {
         onComplete()
       }
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [
-    step,
-    steps.length,
-    onComplete,
-    playGetSetGoSound,
-    isReady,
-    features.hasAudioSupport,
-  ])
-
-  const shouldAnimate =
-    isClient && features.hasAnimationSupport && !features.hasMotionReduction
-
-  const getAnimationProps = step => {
-    if (!shouldAnimate) return {}
-
-    return {
-      initial: { scale: 0, opacity: 0 },
-      animate: { scale: 1, opacity: 1 },
-      exit: { scale: 2, opacity: 0 },
-      transition: { duration: 0.5 },
-    }
-  }
+  }, [step, steps.length, onComplete])
 
   return (
     <Box
@@ -86,7 +45,7 @@ const GetSetGoAnimation = ({ onComplete }) => {
       alignItems="center"
       justifyContent="center"
       zIndex="overlay"
-      backdropFilter="blur(10px)"
+      backdropFilter="blur(10px)" // Apply blur effect to parent container
       display="flex"
     >
       <Box
@@ -95,14 +54,20 @@ const GetSetGoAnimation = ({ onComplete }) => {
         left="0"
         right="0"
         bottom="0"
-        backdropFilter="blur(10px)"
-        pointerEvents="none"
+        backdropFilter="blur(10px)" // Apply blur effect to parent container
+        pointerEvents="none" // Ensure this box doesn't interfere with user interactions
         alignItems="center"
         justifyContent="center"
-        display="flex"
+        display={'flex'}
       >
         <AnimatePresence mode="wait">
-          <MotionBox key={step} {...getAnimationProps(step)}>
+          <MotionBox
+            key={step}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 2, opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <Text
               fontSize="7xl"
               fontWeight="bold"

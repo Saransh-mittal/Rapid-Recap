@@ -16,6 +16,7 @@ import { setIsOpen, setTournamentQuiz } from '../../../redux/quizSlice'
 import { setUser } from '../../../redux/authSlice'
 import { addNoteMessage } from '../../../redux/appSlice'
 import useTimer from '../../../customHooks/useTimer'
+import useSound from '../../../customHooks/useSound'
 import FullScreenLoadingSpinner from './FullScreenLoadingSpinner'
 import {
   setRefetchLeaderBoard,
@@ -25,8 +26,6 @@ import i18n from 'i18next'
 import useNavigationWarning from '../../../customHooks/useNavigationWarning'
 import { useSocket } from '../../../customHooks/useSocket'
 import TournamentQuizSubmitLoadingScreen from './TournamentQuizSubmitLoadingScreen'
-import { useFeatureDetection } from '../../../utils/featureDetection'
-import useSafeSound from '../../../customHooks/useSafeSound'
 
 // Lazy loaded components
 const QuizInterface = lazy(() => import('../../quizComponents/QuizInterface'))
@@ -69,11 +68,7 @@ const TournamentQuiz = () => {
   const shouldWarnBeforeLeaving = !submitted
   useNavigationWarning(shouldWarnBeforeLeaving)
   const { socket, getSocket } = useSocket()
-  const features = useFeatureDetection()
-  const { playClick } = useSafeSound({
-    enabled: features.hasAudioSupport,
-    volume: 0.5,
-  })
+  const { playClick } = useSound()
 
   const startQuiz = useCallback(async () => {
     setLoading(true)

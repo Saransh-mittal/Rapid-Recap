@@ -29,35 +29,35 @@ async function getBotContent(urlType, url) {
         fs.readFile(
           path.resolve(
             __dirname,
-            '../../../client/public/bot/components/navbar.html',
+            '../../client/dist/bot/components/navbar.html',
           ),
           'utf-8',
         ),
         fs.readFile(
           path.resolve(
             __dirname,
-            '../../../client/public/bot/components/get-started/hero.html',
+            '../../client/dist/bot/components/get-started/hero.html',
           ),
           'utf-8',
         ),
         fs.readFile(
           path.resolve(
             __dirname,
-            '../../../client/public/bot/components/get-started/benefits.html',
+            '../../client/dist/bot/components/get-started/benefits.html',
           ),
           'utf-8',
         ),
         fs.readFile(
           path.resolve(
             __dirname,
-            '../../../client/public/bot/components/get-started/features.html',
+            '../../client/dist/bot/components/get-started/features.html',
           ),
           'utf-8',
         ),
         fs.readFile(
           path.resolve(
             __dirname,
-            '../../../client/public/bot/components/footer.html',
+            '../../client/dist/bot/components/footer.html',
           ),
           'utf-8',
         ),
@@ -75,14 +75,14 @@ async function getBotContent(urlType, url) {
         fs.readFile(
           path.resolve(
             __dirname,
-            '../../../client/public/bot/components/navbar.html',
+            '../../client/dist/bot/components/navbar.html',
           ),
           'utf-8',
         ),
         fs.readFile(
           path.resolve(
             __dirname,
-            '../../../client/public/bot/components/article/article.html',
+            '../../client/dist/bot/components/article/article.html',
           ),
           'utf-8',
         ),
@@ -130,10 +130,9 @@ async function getSplashContent() {
     }
 
     const content = await fs.readFile(
-      path.resolve(__dirname, '../../../client/public/splash.html'),
+      path.resolve(__dirname, '../../client/dist/splash.html'),
       'utf-8',
     )
-
     // Store in cache
     cache.put('splash-content', content, CACHE_DURATION)
 
@@ -147,16 +146,11 @@ async function getSplashContent() {
 function createSSRHandler(vite) {
   return async function (req, res, next) {
     const startTime = Date.now()
+
     const url = req.originalUrl
     const nonce = res.locals.nonce
     const userAgent = req.headers['user-agent'] || ''
-    if (
-      url.startsWith('/api/') ||
-      url.endsWith('.json') ||
-      url.includes('src')
-    ) {
-      return next()
-    }
+    // console.log('SSR handler called', url)
     const isBot = await shouldHandleAsBot(req)
     try {
       let botName = null
@@ -171,7 +165,7 @@ function createSSRHandler(vite) {
       if (!template) {
         // Read and transform template if not cached
         template = await fs.readFile(
-          path.resolve(__dirname, '../../../client/index.html'),
+          path.resolve(__dirname, '../../client/dist/index.html'),
           'utf-8',
         )
 
@@ -192,7 +186,6 @@ function createSSRHandler(vite) {
             `window.__IS_BOT__ = ${isBot};`,
           )
           .replace('<html', `<html data-bot="${isBot}"`)
-
         if (isBot) {
           botName =
             BotVerifier.knownBots.find(bot =>
@@ -218,8 +211,7 @@ function createSSRHandler(vite) {
             baseUrl,
           })
         } else {
-          const splashContent = await getSplashContent()
-          template = handleUserTemplate(template, splashContent)
+          template = await handleClientRendering()
         }
 
         // Store the processed template in cache
@@ -259,6 +251,27 @@ function createSSRHandler(vite) {
   }
 }
 
+async function handleClientRendering() {
+  // Preserve the root div for client-side React
+  let [splashContent, processedTemplate] = await Promise.all([
+    getSplashContent(),
+    fs.readFile(
+      path.resolve(__dirname, '../../client/dist/index.html'),
+      'utf-8',
+    ),
+  ])
+
+  processedTemplate = processedTemplate
+    .replace('<!--ssr-outlet-->', '') // Clear SSR outlet
+    .replace('<div id="splash-screen">', splashContent) // Show splash screen
+    .replace(
+      '<style>',
+      `<link rel="stylesheet" href="/styles/components/css-splash.css"><style>`,
+    )
+
+  return processedTemplate
+}
+
 function handleBotTemplate(template, botContent, urlType) {
   let result = template
     .replace('<div id="root">', '<div id="root" style="display: none;">')
@@ -295,34 +308,6 @@ function handleBotTemplate(template, botContent, urlType) {
   )
 
   return result
-}
-
-function handleUserTemplate(template, splashContent) {
-  return template
-    .replace(
-      '<div id="splash-screen">',
-      `<div id="splash-screen">${splashContent}`,
-    )
-    .replace(
-      '<div id="bot-navbar"></div>',
-      '<div id="bot-navbar" style="display: none;">',
-    )
-    .replace(
-      '<div id="bot-hero"></div>',
-      '<div id="bot-hero" style="display: none;">',
-    )
-    .replace(
-      '<div id="bot-benefits"></div>',
-      '<div id="bot-benefits" style="display: none;">',
-    )
-    .replace(
-      '<div id="bot-features"></div>',
-      '<div id="bot-features" style="display: none;">',
-    )
-    .replace(
-      '<div id="bot-footer"></div>',
-      '<div id="bot-footer" style="display: none;">',
-    )
 }
 
 async function shouldHandleAsBot(req) {

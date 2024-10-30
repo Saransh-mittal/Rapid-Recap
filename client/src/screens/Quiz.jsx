@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import useFetchQuiz from '../customHooks/useFetchQuiz'
 import useTimer from '../customHooks/useTimer'
 import useSubmitQuiz from '../customHooks/useSubmitQuiz'
+import useSound from '../customHooks/useSound'
 import {
   dailyStreakCheckerAndUpdater,
   quinBoostChecker,
@@ -24,8 +25,6 @@ import i18n from 'i18next'
 import useNavigationWarning from '../customHooks/useNavigationWarning'
 import { useNavigate } from 'react-router-dom'
 import QuizLoadingScreen from '../components/quizComponents/QuizLoadingScreen'
-import { useFeatureDetection } from '../utils/featureDetection'
-import useSafeSound from '../customHooks/useSafeSound'
 
 // Lazy load components
 const ConfirmationModal = lazy(() =>
@@ -85,11 +84,7 @@ const Quiz = () => {
   const [showQuizSummary, setShowQuizSummary] = useState(false)
   const [result, setResult] = useState({})
   const [isAnswered, setIsAnswered] = useState(false)
-  const features = useFeatureDetection()
-  const { playClick } = useSafeSound({
-    enabled: features.hasAudioSupport,
-    volume: 0.5,
-  })
+  const { playClick } = useSound()
   const [showGetSetGo, setShowGetSetGo] = useState(false)
   const [messageForTournament, setMessageForTournament] = useState('')
   const [userEligibleForTournament, setUserEligibleForTournament] = useState(

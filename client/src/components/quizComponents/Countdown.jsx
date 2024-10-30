@@ -1,29 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Box, Text } from '@chakra-ui/react'
-import { useFeatureDetection } from '../../utils/featureDetection'
-import useSafeSound from '../../hooks/useSafeSound'
-import { motion } from 'framer-motion'
-import { isClient } from '../../utils/environment'
-
-const MotionBox = isClient ? motion(Box) : Box
+import useSound from '../../customHooks/useSound'
 
 const Countdown = ({ timer, submitted, isTournament = false }) => {
   const [offset, setOffset] = useState(0)
   const [isFlashing, setIsFlashing] = useState(false)
   const initialTimer = 50
-  const features = useFeatureDetection()
-
-  const {
-    play30SecSound,
-    play20SecSound,
-    play10SecSound,
-    playEndSound,
-    isReady,
-  } = useSafeSound({
-    enabled: features.hasAudioSupport,
-    soundEnabled: true,
-    onError: err => console.warn('Sound error in Countdown:', err),
-  })
+  const { play30SecSound, play20SecSound, play10SecSound, playEndSound } =
+    useSound()
 
   // Helper to switch between default and tournament colors
   const getColor = useCallback(() => {
@@ -34,29 +18,23 @@ const Countdown = ({ timer, submitted, isTournament = false }) => {
   }, [timer, isTournament])
 
   useEffect(() => {
-    if (!isClient) return
-
     const percentage = (timer / initialTimer) * 100
     const newOffset = 283 - (283 * percentage) / 100
     setOffset(newOffset)
 
-    if (!submitted && isReady && features.hasAudioSupport) {
-      try {
-        if (timer === 30) {
-          play30SecSound()
-          setIsFlashing(true)
-          setTimeout(() => setIsFlashing(false), 1000)
-        } else if (timer === 20) {
-          play20SecSound()
-          setIsFlashing(true)
-          setTimeout(() => setIsFlashing(false), 1000)
-        } else if (timer <= 10 && timer > 0) {
-          play10SecSound()
-          setIsFlashing(true)
-          setTimeout(() => setIsFlashing(false), 200)
-        }
-      } catch (err) {
-        console.warn('Error playing countdown sound:', err)
+    if (!submitted) {
+      if (timer === 30) {
+        play30SecSound()
+        setIsFlashing(true)
+        setTimeout(() => setIsFlashing(false), 1000)
+      } else if (timer === 20) {
+        play20SecSound()
+        setIsFlashing(true)
+        setTimeout(() => setIsFlashing(false), 1000)
+      } else if (timer <= 10 && timer > 0) {
+        play10SecSound()
+        setIsFlashing(true)
+        setTimeout(() => setIsFlashing(false), 200)
       }
     }
   }, [
@@ -67,21 +45,10 @@ const Countdown = ({ timer, submitted, isTournament = false }) => {
     play10SecSound,
     playEndSound,
     submitted,
-    isReady,
-    features.hasAudioSupport,
   ])
 
-  const animations =
-    isClient && features.hasAnimationSupport
-      ? {
-          initial: { opacity: 0 },
-          animate: { opacity: 1 },
-          exit: { opacity: 0 },
-        }
-      : {}
-
   return (
-    <MotionBox
+    <Box
       position="relative"
       width="80px"
       height="80px"
@@ -93,7 +60,6 @@ const Countdown = ({ timer, submitted, isTournament = false }) => {
           '50%': { opacity: 0.5 },
         },
       }}
-      {...animations}
     >
       <svg viewBox="0 0 100 100" width="100%" height="100%">
         <circle
@@ -127,7 +93,7 @@ const Countdown = ({ timer, submitted, isTournament = false }) => {
       >
         {timer}
       </Text>
-    </MotionBox>
+    </Box>
   )
 }
 
