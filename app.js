@@ -61,6 +61,7 @@ if (process.env.NODE_ENV === 'development') {
   app.use(
     helmet({
       contentSecurityPolicy: {
+        useDefaults: false,
         directives: {
           defaultSrc: ["'self'"],
           scriptSrc: [
@@ -70,28 +71,51 @@ if (process.env.NODE_ENV === 'development') {
             'https://www.googletagmanager.com',
             'https://www.google-analytics.com',
           ],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            'https://fonts.googleapis.com',
+            'https://*.googleapis.com',
+          ],
+          fontSrc: [
+            "'self'",
+            'https://fonts.gstatic.com',
+            'https://*.gstatic.com',
+            'data:',
+          ],
           imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-          connectSrc: ["'self'", 'https://www.google-analytics.com'],
-          fontSrc: ["'self'", 'https:', 'data:'],
-          objectSrc: ["'none'"],
+          connectSrc: [
+            "'self'",
+            'https://fonts.googleapis.com',
+            'https://fonts.gstatic.com',
+            'https://www.google-analytics.com',
+            'ws:',
+            'wss:',
+          ],
           mediaSrc: ["'self'"],
           frameSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          manifestSrc: ["'self'"],
+          workerSrc: ["'self'", 'blob:'],
+          'style-src-elem': [
+            "'self'",
+            "'unsafe-inline'",
+            'https://fonts.googleapis.com',
+            'https://*.googleapis.com',
+          ],
+          'font-src-elem': [
+            "'self'",
+            'https://fonts.gstatic.com',
+            'https://*.gstatic.com',
+            'data:',
+          ],
         },
       },
-      // Other recommended security headers
-      crossOriginEmbedderPolicy: true,
+      crossOriginEmbedderPolicy: false,
       crossOriginResourcePolicy: { policy: 'cross-origin' },
       crossOriginOpenerPolicy: { policy: 'same-origin' },
-      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-      hidePoweredBy: true,
-      hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true,
-      },
-      noSniff: true,
-      xssFilter: true,
     }),
   )
 
@@ -135,7 +159,7 @@ app.use(express.json())
 app.use(errorHandler)
 
 // Scheduler
-// require('./scheduler/setupCronJobs')
+require('./scheduler/setupCronJobs')
 initBotTracking()
 
 // Setup routes and SSR
