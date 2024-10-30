@@ -141,13 +141,12 @@ if (process.env.NODE_ENV === 'development') {
 }
 app.set('trust proxy', true)
 app.use((req, res, next) => {
+  const userAgent = req.headers['user-agent'] || ''
   if (
     userAgent.includes('Chrome-Lighthouse') ||
     userAgent.includes('PageSpeed Insights')
   ) {
-    console.log('PageSpeed Request Details')
-  }
-  if (req.headers['user-agent']?.includes('Chrome-Lighthouse')) {
+    console.log('pageSpeed request detected')
     console.log('PageSpeed Request Details:', {
       timestamp: new Date().toISOString(),
       realIP: BotVerifier.getRealIP(req),
