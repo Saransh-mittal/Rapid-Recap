@@ -25,6 +25,31 @@ class BotVerifier {
           'Google-Site-Verification',
         ],
       },
+      PageSpeedInsights: {
+        // Separate config for PageSpeed
+        domains: ['.google.com', '.googleusercontent.com'],
+        ipRanges: [
+          '66.249.', // Google crawler IPs
+          '64.68.',
+          '72.14.',
+          '74.125.',
+          '216.239.',
+          '35.235.', // Google Cloud IPs
+          '35.192.',
+          '35.241.',
+          '35.190.', // Additional PageSpeed IPs
+          '130.211.',
+          '172.217.',
+          '172.253.',
+          '142.250.',
+          '108.177.',
+        ],
+        patterns: [
+          'Chrome-Lighthouse',
+          'PageSpeed Insights',
+          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko; Google Page Speed Insights) Chrome',
+        ],
+      },
       Bingbot: {
         domains: ['.search.msn.com'],
         ipRanges: ['157.55.', '207.46.', '40.77.', '13.66.'],

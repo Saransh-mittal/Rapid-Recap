@@ -5,7 +5,7 @@ const fs = require('fs')
 const { createSSRHandler } = require('./ssr/handler')
 async function createSSRMiddleware(app) {
   try {
-    console.log('Initializing SSR middleware...')
+    // console.log('Initializing SSR middleware...')
 
     // Setup static file handling first
     setupStaticHandling(app)
@@ -15,7 +15,7 @@ async function createSSRMiddleware(app) {
 
     return async (req, res, next) => {
       const url = req.originalUrl
-      console.log('Request URL:', url)
+      // console.log('Request URL:', url)
 
       // Handle CSS files specifically
       if (url.endsWith('.css')) {
@@ -44,8 +44,8 @@ async function createSSRMiddleware(app) {
 function handleCSSRequest(req, res, next) {
   const cssPath = path.join(__dirname, '../client/dist', req.path)
 
-  // Debug logging
-  console.log('Attempting to serve CSS file:', cssPath)
+  // // Debug logging
+  // console.log('Attempting to serve CSS file:', cssPath)
 
   // Check if file exists
   if (!fs.existsSync(cssPath)) {
