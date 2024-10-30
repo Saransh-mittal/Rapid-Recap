@@ -3,5 +3,11 @@
   "loading": "Loading...",
   "iqScoreHistoryTitle": "IQ Score History",
   "loadingHistory": "Loading IQ score history...",
-  "loadingChart": "Loading chart..."
+  "loadingChart": "Loading chart...",
+  "iqScore": "IQ Score",
+  "rank": "Rank",
+  "iqScoreHelpText": "Your IQ score represents your cognitive performance across various tests and challenges.",
+  "rankHelpText": "Your global ranking among all users currently in leaderboard. Keep it up!",
+  "societyAndCircleTitle": "Society & Circle",
+  "achievementBanner": "Impressive! Your IQ score of {{USER_IQ}} places you at rank {{USER_RANK}} globally. Keep challenging yourself to improve!"
 }

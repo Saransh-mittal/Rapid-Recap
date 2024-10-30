@@ -1,0 +1,59 @@
+@import url("https://fonts.googleapis.com/css2?family=Courier+Prime&family=Lato:wght@100;400;700&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@100&display=swap");
+/* @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap"); */
+@supports (-webkit-overflow-scrolling: touch) {
+  #root {
+    background-attachment: scroll;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--background) !important;
+}
+
+.get-started-btn {
+  background: var(--button-gradient);
+  color: var(--text-white);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  text-decoration: none;
+  transition: transform 0.3s;
+}
+
+.get-started-btn:hover {
+  transform: translateY(-2px);
+}
+
+h1, h2, h3 {
+  color: var(--primary-color);
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 3.5rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+h2 {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+h3 {
+  font-size: 2rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+p {
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-sm);
+}

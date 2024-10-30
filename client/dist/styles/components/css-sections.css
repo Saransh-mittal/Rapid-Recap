@@ -1,0 +1,26 @@
+.section {
+    /* background: var(--section-bg); */
+    padding: var(--spacing-lg) var(--spacing-md);
+}
+
+.content-wrapper {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: center;
+}
+
+.content-wrapper.reverse {
+    flex-direction: row-reverse;
+}
+
+.text-content {
+    flex: 1;
+}
+
+.text-content p {
+    font-size: 1.1rem;
+}
+
+

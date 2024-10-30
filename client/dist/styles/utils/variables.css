@@ -1,0 +1,38 @@
+:root {
+  /* Colors */
+  --primary-color: #4fd1c5;
+  --secondary-color: #00b894;
+  --dark-bg: rgba(0, 3, 22, 0.5);
+  --light-bg: linear-gradient(to right, rgba(21, 32, 49, 0.9), rgba(16, 34, 62, 0.95));  /* light-bg based */
+  --very-light-bg: rgba(11, 37, 76, 0.91);
+  --card-bg: rgba(13, 25, 38, 0.65);
+  --section-bg: rgba(0, 0, 0, 0.5);
+
+  /* Gradients */
+  --background: linear-gradient(135deg, #192244, #153849);
+  --button-gradient: linear-gradient(135deg, #00b894, #00a884);
+
+  /* Text Colors */
+  --text-light: #e2e8f0;
+  --text-muted: #ccc;
+  --text-white: #ffffff;
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 4rem;
+
+  /* Container */
+  --max-width: 1200px;
+
+  /* Feature Icons */
+  --feature-icon-bg: rgba(79, 209, 197, 0.1);
+  --feature-icon-border: 2px solid var(--primary-color);
+
+  /* Border Radius */
+  --border-radius-sm: 5px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 15px;
+  --border-radius-full: 50%;
+}

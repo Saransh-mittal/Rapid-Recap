@@ -1,0 +1,1 @@
+import{a as t}from"./is-element-f28edb5b.js";function o(e){return n(e)?.defaultView??window}function n(e){return t(e)?e.ownerDocument:document}function r(e){return e.view??window}function u(e){return n(e).activeElement}export{o as a,u as b,r as g};

@@ -1,1 +1,0 @@
-import{aM as l,r as m,aN as n,w as u,aO as y}from"./index-5f315841.js";import{a as f,u as x}from"./modal-focus-cf1b3d34.js";const M=l((a,o)=>{const{className:t,...e}=a,{bodyId:r,setBodyMounted:s}=f();m.useEffect(()=>(s(!0),()=>s(!1)),[s]);const d=n("chakra-modal__body",t),c=x();return u.jsx(y.div,{ref:o,className:d,id:r,...e,__css:c.body})});M.displayName="ModalBody";export{M};

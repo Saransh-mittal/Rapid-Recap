@@ -1,5 +1,6 @@
 const dotenv = require('dotenv')
 const bodyParser = require('body-parser')
+const { createSSRMiddleware } = require('./middleware/ssrMiddleware')
 dotenv.config({ path: './config.env' })
 const express = require('express')
 const userRoutes = require('./router/userRoutes')
@@ -17,34 +18,106 @@ const messageRoutes = require('./router/messageRoutes')
 const friendsRoutes = require('./router/friendsRoutes')
 const tournamentRoutes = require('./router/tournamentRoutes')
 const { errorHandler } = require('./middleware/errorMiddleware')
-const authRouter = express.Router()
 const webpush = require('web-push')
 const cookieParser = require('cookie-parser')
 const path = require('path')
 const http = require('http')
-// const compression = require('compression')
-// const helmet = require('helmet')
+const compression = require('compression')
+const helmet = require('helmet')
+const { initBotTracking } = require('./utils/botTracker')
 
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 
 const app = express()
-
-app.use(i18nMiddleware.handle(i18n))
-// app.use(
-//   compression({
-//     level: 6,
-//     threshold: 0,
-//     filter: () => true,
-//   }),
-// )
-// app.use(helmet())
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // limit each IP to 100 requests per windowMs
-// })
-// app.use(limiter)
 const server = http.createServer(app)
+if (process.env.NODE_ENV === 'development') {
+  // Development: Disable security features for easier development
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: false,
+      crossOriginOpenerPolicy: false,
+    }),
+  )
+  // CORS for development
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, OPTIONS',
+    )
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200)
+    }
+    next()
+  })
+} else {
+  // Production: Enable security and optimization features
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            'https://www.googletagmanager.com',
+            'https://www.google-analytics.com',
+          ],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+          connectSrc: ["'self'", 'https://www.google-analytics.com'],
+          fontSrc: ["'self'", 'https:', 'data:'],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'self'"],
+        },
+      },
+      // Other recommended security headers
+      crossOriginEmbedderPolicy: true,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginOpenerPolicy: { policy: 'same-origin' },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      hidePoweredBy: true,
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      },
+      noSniff: true,
+      xssFilter: true,
+    }),
+  )
+
+  // Production compression
+  app.use(
+    compression({
+      level: 6, // Balanced between compression and CPU usage
+      threshold: 1024, // Only compress responses bigger than 1KB
+      filter: (req, res) => {
+        // Don't compress responses with this header
+        if (req.headers['x-no-compression']) {
+          return false
+        }
+        // Use compression filter function
+        return compression.filter(req, res)
+      },
+      // Additional options for specific file types
+      windowBits: 15,
+      memLevel: 8,
+      strategy: 0,
+    }),
+  )
+}
+
+app.use(cookieParser())
+app.use(i18nMiddleware.handle(i18n))
 
 // Body parser middleware
 app.use(bodyParser.json())
@@ -61,53 +134,70 @@ app.use(express.json())
 // Error Handling middlewares
 app.use(errorHandler)
 
-const PORT = process.env.PORT
-authRouter.use(cookieParser())
-authRouter.use('/user', userRoutes)
-authRouter.use('/articles', articleRoutes)
-authRouter.use('/quiz', quizRoutes)
-authRouter.use('/subs', subscriptionRoutes)
-authRouter.use('/mail', mailRoutes)
-authRouter.use('/timeSpent', timeSpentRoutes)
-authRouter.use('/contact/feedback', feedbackRoutes)
-authRouter.use('/notify', notificationRoutes)
-authRouter.use('/admin', adminRoutes)
-authRouter.use('/recommendation', recommendationRoutes)
-authRouter.use('/chat', chatsRoutes)
-authRouter.use('/message', messageRoutes)
-authRouter.use('/friends', friendsRoutes)
-authRouter.use('/tournament', tournamentRoutes)
-app.use('/api', authRouter)
-
-// -----Production-----
-app.use(express.static(path.join(__dirname, './client/dist')))
-app.get('*', function (_, res) {
-  res.sendFile(
-    path.join(__dirname, './client/dist/index.html'),
-    function (err) {
-      res.status(500).send(err)
-    },
-  )
-})
-// ---------------------
-
 // Scheduler
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
+initBotTracking()
 
-initializeSocket(server)
-
-// Connect to the database before starting the server
-const startServer = async () => {
+// Setup routes and SSR
+async function initializeServer() {
   try {
+    app.use(
+      express.static(path.join(__dirname, 'client/dist'), {
+        index: false, // Prevent serving index.html directly
+      }),
+    )
+    // Initialize SSR middleware
+    const ssrMiddleware = await createSSRMiddleware(app)
+
+    // API Routes - Define before SSR middleware
+    const apiRouter = express.Router()
+    apiRouter.use('/user', userRoutes)
+    apiRouter.use('/articles', articleRoutes)
+    apiRouter.use('/quiz', quizRoutes)
+    apiRouter.use('/subs', subscriptionRoutes)
+    apiRouter.use('/mail', mailRoutes)
+    apiRouter.use('/timeSpent', timeSpentRoutes)
+    apiRouter.use('/contact/feedback', feedbackRoutes)
+    apiRouter.use('/notify', notificationRoutes)
+    apiRouter.use('/admin', adminRoutes)
+    apiRouter.use('/recommendation', recommendationRoutes)
+    apiRouter.use('/chat', chatsRoutes)
+    apiRouter.use('/message', messageRoutes)
+    apiRouter.use('/friends', friendsRoutes)
+    apiRouter.use('/tournament', tournamentRoutes)
+    app.use('/api', apiRouter)
+
+    // SSR Middleware - Handle all non-API routes
+    app.use((req, res, next) => {
+      // Skip SSR for API routes
+      if (req.path.startsWith('/api/')) {
+        return next()
+      }
+
+      // // Debug logging
+      // console.log('Request URL:', req.url)
+      // console.log('Request path:', req.path)
+      // console.log('Is XHR:', req.xhr)
+      // console.log('Accept header:', req.headers.accept)
+
+      return ssrMiddleware(req, res, next)
+    })
+
+    // Error handling middleware
+    app.use(errorHandler)
+
+    // Start server
+    const PORT = process.env.PORT || 3000
     await connectDB()
     server.listen(PORT, () => {
-      console.log(`Listening to port no. ${PORT}`)
+      console.log(`Server running on port ${PORT}`)
     })
   } catch (err) {
-    console.error('Failed to connect to MongoDB:', err)
+    console.error('Failed to initialize server:', err)
+    process.exit(1)
   }
 }
-
-startServer()
+initializeSocket(server)
+initializeServer()
 
 module.exports = { app, server }
