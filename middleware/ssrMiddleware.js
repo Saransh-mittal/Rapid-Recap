@@ -59,7 +59,6 @@ function isOAuthPath(url) {
     '/oauth2/v1/certs',
     '/gsi/client',
   ]
-
   return (
     oauthPaths.some(path => url.includes(path)) ||
     url.includes('oauth') ||

@@ -179,7 +179,7 @@ app.use(express.json())
 app.use(errorHandler)
 
 // Scheduler
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
 initBotTracking()
 
 // Setup routes and SSR
