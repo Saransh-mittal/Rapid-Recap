@@ -27,6 +27,10 @@ const Story = require('../model/storySchema')
 const User = require('../model/userSchema')
 const { generateStory } = require('../services/storyGenerateService')
 const LanguageDetect = require('langdetect')
+const ArticleHighlight = require('../model/articleHighlightSchema')
+const {
+  generateHighlightForArticle,
+} = require('../utils/article.highlight.utils')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general', lang } = req.query
@@ -75,6 +79,11 @@ const allArticles = async (req, res) => {
     const processedArticles = await Promise.all(
       articles.map(async article => {
         const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+        const highlights = await ArticleHighlight.findOne({
+          articleId: article._id,
+          processingStatus: 'completed',
+          language: lang ? lang : 'en',
+        })
         return {
           category: article.category,
           title: article.title,
@@ -89,6 +98,9 @@ const allArticles = async (req, res) => {
           date: formatDate(article.dateTime),
           dateTime: article.dateTime,
           _id: article._id,
+          // Add highlights if they exist
+          dictionary: highlights?.dictionary || [],
+          importantSentences: highlights?.importantSentences || [],
         }
       }),
     )
@@ -160,47 +172,67 @@ const getArticle = async (req, res) => {
     ) {
       return res.json({ quizExpired: false, newArticle: cachedArticle })
     }
-    const article = await Article.findById(id)
+
+    // Fetch article and highlights
+    const [article, highlights] = await Promise.all([
+      Article.findById(id),
+      ArticleHighlight.findOne({
+        articleId: id,
+        processingStatus: 'completed',
+        language: lang ? lang : 'en',
+      }),
+    ])
+
     if (!article) {
       throw new Error('Article not found')
     }
+    // console.log(highlights)
+    // If no highlights exist or they failed, trigger background processing
+    if (!highlights || highlights.processingStatus !== 'completed') {
+      try {
+        await generateHighlightForArticle({
+          articleId: id,
+          lang: lang ? lang : 'en',
+        })
+      } catch (error) {
+        console.error('Error generating highlights:', error)
+      }
+    }
 
+    // Handle Hindi conversion if needed
     if (
       lang === 'hi' &&
       (!article.hindiTitle || !article.hindiMainText || !article.hindiAuthor)
     ) {
       const response = await hindiConverter(article._id)
-      if (!article.hindiMainText) {
-        article.hindiMainText = []
-      }
       article.hindiTitle = response.hindiTitle
-
-      for (let key in response.hindiMainText) {
-        if (!response.hindiMainText[key]) continue
-        article.hindiMainText.push(response.hindiMainText[key])
-      }
+      article.hindiMainText = response.hindiMainText
       article.hindiAuthor = response.hindiAuthor
     }
 
     const paragraphs = await breakArticleIntoParagraphs(article.mainText)
-    const relatedArticles = []
-    for (let relatedArticleID of article.relatedArticles) {
-      const relatedArticleFetch = await Article.findById(
-        relatedArticleID,
-      ).select('_id title imgURL dateTime avgReadTime')
-      if (relatedArticleFetch) {
-        const relatedArticle = {
-          _id: relatedArticleFetch._id,
-          title: relatedArticleFetch.title,
-          imgURL: relatedArticleFetch.imgURL[0],
-          date: formatDate(relatedArticleFetch.dateTime),
-          dateTime: new Date(relatedArticleFetch.dateTime),
-          avgReadTime: relatedArticleFetch.avgReadTime,
+
+    // Process related articles
+    const relatedArticles = await Promise.all(
+      article.relatedArticles.map(async relatedArticleID => {
+        const relatedArticleFetch = await Article.findById(
+          relatedArticleID,
+        ).select('_id title imgURL dateTime avgReadTime')
+
+        if (relatedArticleFetch) {
+          return {
+            _id: relatedArticleFetch._id,
+            title: relatedArticleFetch.title,
+            imgURL: relatedArticleFetch.imgURL[0],
+            date: formatDate(relatedArticleFetch.dateTime),
+            dateTime: new Date(relatedArticleFetch.dateTime),
+            avgReadTime: relatedArticleFetch.avgReadTime,
+          }
         }
-        relatedArticles.push(relatedArticle)
-      }
-    }
-    relatedArticles.sort((a, b) => b.dateTime - a.dateTime)
+        return null
+      }),
+    )
+
     const newArticle = {
       category: article.category,
       title: article.title,
@@ -212,17 +244,22 @@ const getArticle = async (req, res) => {
       hindiTitle: article?.hindiTitle,
       hindiMainText: article?.hindiMainText,
       hindiAuthor: article?.hindiAuthor,
-      relatedArticles,
+      relatedArticles: relatedArticles
+        .filter(Boolean)
+        .sort((a, b) => b.dateTime - a.dateTime),
       avgReadTime: article?.avgReadTime,
       date: formatDate(article.dateTime),
       _id: article._id,
+      // Add highlights if they exist
+      dictionary: highlights?.dictionary || [],
+      importantSentences: highlights?.importantSentences || [],
     }
 
-    cache.put(cacheKey, newArticle, 3600000 * 24) // Cache for 24 hour
+    cache.put(cacheKey, newArticle, 3600000 * 24) // Cache for 24 hours
     res.status(201).send({ quizExpired: false, newArticle })
   } catch (error) {
-    res.status(400).json({ error: error || 'Something went wrong' })
-    console.log(error)
+    res.status(400).json({ error: error.message || 'Something went wrong' })
+    console.error(error)
   }
 }
 

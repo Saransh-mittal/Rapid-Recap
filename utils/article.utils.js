@@ -14,6 +14,7 @@ const {
 const { Recommendation } = require('../model/recommendationSchema')
 const newsClassifierService = require('../ml/services/newsClassifierService')
 const cache = require('memory-cache')
+const { generateHighlightForArticle } = require('./article.highlight.utils')
 
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
@@ -49,6 +50,8 @@ const hindiConverter = async articleId => {
                                 2. Break maintext in only 3 paragraphs.
                                 3. Make a JSON object containing hindiTitle, hindiAuthor, and hindiMainText.
                                 4. Ensure that all information from the original article mainText is retained
+                                5. Do not summarize the content.
+                                6. Preserve the original meaning of the text.
                                 5.  Return the JSON object which contains the translated text and looks like :
                                 {
                                   "hindiTitle": "translated title",
@@ -59,6 +62,8 @@ const hindiConverter = async articleId => {
                                     "para3": "translated paragraph3"
                                   }
                                 }
+
+                                CRITICAL: Dont cut sentences in between, translate the whole sentence. Keep all the information in the mainText. There should be no missing information that is there in the english mainText.
                                 `
 
     let result = await openai.chat.completions.create({
@@ -425,7 +430,18 @@ const processExtractedNews = async (news, category) => {
       const newArticle = new Article(res)
       await newArticle.save()
       hindiConverter(newArticle._id.toString())
-
+      generateHighlightForArticle({
+        articleId: newArticle._id.toString(),
+        lang: 'hi',
+      }).catch(error => {
+        console.error('Generation failed:', error)
+      })
+      generateHighlightForArticle({
+        articleId: newArticle._id.toString(),
+        lang: 'en',
+      }).catch(error => {
+        console.error('Generation failed:', error)
+      })
       processedOutput.push(newArticle)
     } catch (error) {
       console.error(
