@@ -41,6 +41,10 @@ const articleHighlightSchema = new mongoose.Schema(
       enum: ['pending', 'completed', 'failed'],
       default: 'pending',
     },
+    language: {
+      type: String,
+      default: 'en',
+    },
     error: {
       type: String,
       default: null,

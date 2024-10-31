@@ -5,45 +5,30 @@ const Article = require('../model/articleSchema')
 const ArticleHighlight = require('../model/articleHighlightSchema')
 const { decode } = require('html-entities')
 
-const generateHighlights = async articleId => {
+const generateHighlightForArticle = async ({ articleId, lang = 'en' }) => {
   try {
-    const [article, existingHighlights] = await Promise.all([
-      Article.findById(articleId),
-      ArticleHighlight.findOne({ articleId }),
-    ])
+    // console.log('\n=== Generating Highlights for Article ===\n')
 
+    const article = await Article.findById(articleId)
     if (!article) {
-      throw new Error('Article not found')
+      console.log('[ERROR] Article not found')
+      return
     }
 
-    if (
-      existingHighlights &&
-      existingHighlights.processingStatus === 'completed'
-    ) {
-      console.log(`Highlights already exist for article ${articleId}`)
-      return existingHighlights
-    }
-
-    let highlights =
-      existingHighlights ||
-      new ArticleHighlight({
-        articleId,
-        processingStatus: 'pending',
-      })
-
-    if (existingHighlights) {
-      highlights.processingStatus = 'pending'
-      highlights.lastUpdated = new Date()
-      await highlights.save()
-    } else {
-      await highlights.save()
-    }
+    // console.log('Processing Article:')
+    // console.log({
+    //   id: article._id,
+    //   title: article.title,
+    //   category: article.category,
+    //   dateTime: article.dateTime,
+    // })
 
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     })
 
     const instructions = `
+    give the output in the language of the article
       Analyze this news article and create two things:
 
       1. Important Sentences (4-6):
@@ -72,12 +57,16 @@ const generateHighlights = async articleId => {
       Copy and paste the exact text from the original.
     `
 
-    const decodedText = decode(article.mainText)
+    const decodedText = decode(
+      lang === 'hi' ? article.hindiMainText.join(' ') : article.mainText,
+    )
     const prompt = {
-      title: article.title,
+      title: lang === 'hi' ? article.hindiTitle : article.title,
       mainText: decodedText,
       category: article.category,
     }
+
+    // console.log('\nSending request to GPT...\n')
 
     const output = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -90,94 +79,50 @@ const generateHighlights = async articleId => {
 
     const highlightData = JSON.parse(output.choices[0].message.content)
 
-    // Verify the data
-    const verifyHighlights = (text, highlights) => {
-      return highlights.every(sentence => text.includes(sentence))
-    }
-
-    const verifyDictionary = (text, dictionary) => {
-      return dictionary.every(entry => text.includes(entry.word))
-    }
-
-    if (!verifyHighlights(decodedText, highlightData.importantSentences)) {
-      throw new Error('Generated sentences not found in original text')
-    }
-
-    if (!verifyDictionary(decodedText, highlightData.dictionary)) {
-      throw new Error('Generated dictionary terms not found in original text')
-    }
-
-    highlights.dictionary = highlightData.dictionary
-    highlights.importantSentences = highlightData.importantSentences
-    highlights.processingStatus = 'completed'
-    highlights.lastUpdated = new Date()
-    highlights.error = null
-
-    await highlights.save()
-    return highlights
-  } catch (error) {
-    console.error(
-      `Error generating highlights for article ${articleId}:`,
-      error,
-    )
-
-    if (highlights) {
-      highlights.processingStatus = 'failed'
-      highlights.error = error.message
-      highlights.lastUpdated = new Date()
-      await highlights.save()
-    }
-
-    throw error
-  }
-}
-
-const processArticlesForHighlights = async (batchSize = 10) => {
-  try {
-    const articles = await Article.find({
-      $or: [
-        { _id: { $nin: await ArticleHighlight.distinct('articleId') } },
-        {
-          _id: {
-            $in: await ArticleHighlight.distinct('articleId', {
-              $or: [
-                { processingStatus: 'failed' },
-                {
-                  processingStatus: 'pending',
-                  lastUpdated: { $lt: new Date(Date.now() - 1800000) },
-                },
-              ],
-            }),
-          },
-        },
-      ],
+    // Create highlight document
+    const highlight = new ArticleHighlight({
+      articleId: article._id,
+      dictionary: highlightData.dictionary,
+      importantSentences: highlightData.importantSentences,
+      createdAt: new Date(),
+      lastUpdated: new Date(),
+      processingStatus: 'completed',
+      language: lang,
+      error: null,
     })
-      .select('_id')
-      .limit(batchSize)
 
-    console.log(`Processing highlights for ${articles.length} articles`)
+    // Display stats
+    // console.log('Content Statistics:')
+    // console.log(`Original text length: ${decodedText.length} characters`)
+    // console.log(`Dictionary entries: ${highlightData.dictionary.length}`)
+    // console.log(
+    //   `Important sentences: ${highlightData.importantSentences.length}`,
+    // )
 
-    const results = await Promise.allSettled(
-      articles.map(article => generateHighlights(article._id)),
-    )
+    // Display generated data
+    // console.log('\nGenerated Dictionary:')
+    // highlightData.dictionary.forEach((entry, index) => {
+    //   console.log(`\n${index + 1}. Term: "${entry.word}"`)
+    //   console.log(`   Definition: ${entry.definition}`)
+    // })
 
-    return {
-      total: articles.length,
-      successful: results.filter(r => r.status === 'fulfilled').length,
-      failed: results.filter(r => r.status === 'rejected').length,
-      details: results.map((result, index) => ({
-        articleId: articles[index]._id,
-        status: result.status,
-        error: result.status === 'rejected' ? result.reason.message : null,
-      })),
-    }
+    // console.log('\nGenerated Important Sentences:')
+    // highlightData.importantSentences.forEach((sentence, index) => {
+    //   console.log(`\n${index + 1}. "${sentence}"`)
+    // })
+
+    // console.log('\nSaving highlight data...')
+    await highlight.save()
+    // console.log('Highlight data saved successfully')
+
+    // console.log('\n=== Generation Complete ===\n')
+    return highlight
   } catch (error) {
-    console.error('Error in batch processing highlights:', error)
+    console.error('\nError during highlight generation:', error)
     throw error
   }
 }
 
 module.exports = {
-  generateHighlights,
-  processArticlesForHighlights,
+  generateHighlightForArticle,
 }

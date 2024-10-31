@@ -28,7 +28,10 @@ const User = require('../model/userSchema')
 const { generateStory } = require('../services/storyGenerateService')
 const LanguageDetect = require('langdetect')
 const ArticleHighlight = require('../model/articleHighlightSchema')
-const { generateHighlights } = require('../utils/article.highlight.utils')
+const {
+  generateHighlights,
+  generateHighlightForArticle,
+} = require('../utils/article.highlight.utils')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general', lang } = req.query
@@ -77,6 +80,11 @@ const allArticles = async (req, res) => {
     const processedArticles = await Promise.all(
       articles.map(async article => {
         const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+        const highlights = await ArticleHighlight.findOne({
+          articleId: article._id,
+          processingStatus: 'completed',
+          language: lang ? lang : 'en',
+        })
         return {
           category: article.category,
           title: article.title,
@@ -91,6 +99,9 @@ const allArticles = async (req, res) => {
           date: formatDate(article.dateTime),
           dateTime: article.dateTime,
           _id: article._id,
+          // Add highlights if they exist
+          dictionary: highlights?.dictionary || [],
+          importantSentences: highlights?.importantSentences || [],
         }
       }),
     )
@@ -169,18 +180,24 @@ const getArticle = async (req, res) => {
       ArticleHighlight.findOne({
         articleId: id,
         processingStatus: 'completed',
+        language: lang ? lang : 'en',
       }),
     ])
 
     if (!article) {
       throw new Error('Article not found')
     }
-
+    // console.log(highlights)
     // If no highlights exist or they failed, trigger background processing
     if (!highlights || highlights.processingStatus !== 'completed') {
-      generateHighlights(id).catch(error => {
-        console.error(`Error generating highlights for article ${id}:`, error)
-      })
+      try {
+        await generateHighlightForArticle({
+          articleId: id,
+          lang: lang ? lang : 'en',
+        })
+      } catch (error) {
+        console.error('Error generating highlights:', error)
+      }
     }
 
     // Handle Hindi conversion if needed
