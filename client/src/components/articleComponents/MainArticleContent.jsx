@@ -46,7 +46,7 @@ const MainArticleContent = ({
   })
 
   return (
-    <Flex w={{ base: '95vw', sm: '90vw', md: '100%' }} overflow="hidden">
+    <Flex w={{ base: '90vw', sm: '90vw', md: '100%' }} overflow="hidden">
       <Skeleton isLoaded={!articleLoading} w="100%">
         <Box
           ref={articleRef}
@@ -68,12 +68,12 @@ const MainArticleContent = ({
                 mb={[2, 3, 4]}
                 width={{ base: '100%', sm: '100%', md: '80%', lg: '100%' }}
                 height="auto"
-                maxHeight={{
-                  base: '250px',
-                  sm: '300px',
-                  md: '400px',
-                  lg: '500px',
-                }}
+                // maxHeight={{
+                //   base: '250px',
+                //   sm: '300px',
+                //   md: '400px',
+                //   lg: '500px',
+                // }}
                 objectFit="contain"
                 onError={handleImageError}
                 loading="lazy"
