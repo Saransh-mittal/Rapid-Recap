@@ -127,6 +127,7 @@ webpush.setVapidDetails(
 // require("./scripts/chatStatus");
 // require('./scripts/checkUserScoreOfUser')
 // require('./scripts/googlePlayDummyUser')
+// require('./scripts/runHighlightTest.js')
 // -------------------
 
 // const { dailyUserIQCalc } = require('./utils/dailyUserIQCalc.utils')
