@@ -3,8 +3,6 @@ const { trackBotVisit } = require('../utils/botTracker')
 
 const searchConsoleMiddleware = async (req, res, next) => {
   const userAgent = req.headers['user-agent'] || ''
-
-  // Only process Google-related requests
   const isGoogleTool =
     userAgent.toLowerCase().includes('google') ||
     userAgent.toLowerCase().includes('lighthouse')
@@ -13,14 +11,16 @@ const searchConsoleMiddleware = async (req, res, next) => {
     const startTime = Date.now()
     const ip = BotVerifier.getRealIP(req)
 
-    // Identify the specific Google tool
+    // Enhanced tool type detection
     const toolType = userAgent.includes('Google-InspectionTool')
       ? 'Search Console Inspection'
-      : userAgent.includes('Googlebot')
+      : userAgent.includes('Googlebot/')
       ? 'Googlebot'
       : userAgent.includes('Chrome-Lighthouse')
       ? 'Lighthouse'
-      : 'Other Google Tool'
+      : userAgent.includes('GoogleOther')
+      ? 'Google Other'
+      : 'Unknown Google Tool'
 
     console.log(`\n🔍 ${toolType} Request:`, {
       url: req.originalUrl,
@@ -29,12 +29,27 @@ const searchConsoleMiddleware = async (req, res, next) => {
     })
 
     try {
-      // Verify the bot
-      const isLegitBot = await BotVerifier.isLegitimateBot(req)
-      const verificationTime = Date.now() - startTime
+      // Detailed verification checks
+      const validUA = BotVerifier.hasValidUserAgent(userAgent)
+      const ipRangeCheck = BotVerifier.isInIPRange(ip, 'Googlebot')
 
-      // Only log verification result
-      if (isLegitBot) {
+      // Perform DNS verification only if initial checks pass
+      let dnsVerified = false
+      let verificationError = null
+
+      if (validUA && ipRangeCheck) {
+        try {
+          const fullVerification = await BotVerifier.verifyBotIP(ip, userAgent)
+          dnsVerified = fullVerification
+        } catch (error) {
+          verificationError = error.message
+        }
+      }
+
+      const verificationTime = Date.now() - startTime
+      const isVerified = validUA && ipRangeCheck && dnsVerified
+
+      if (isVerified) {
         console.log('✅ Verified Google Tool:', {
           type: toolType,
           verificationTime: `${verificationTime}ms`,
@@ -43,13 +58,31 @@ const searchConsoleMiddleware = async (req, res, next) => {
       } else {
         console.log('❌ Unverified Google Tool:', {
           type: toolType,
-          reason: 'Verification failed',
+          reasons: {
+            userAgent: validUA ? 'valid' : 'invalid',
+            ipRange: ipRangeCheck ? 'valid' : 'invalid',
+            dnsCheck: dnsVerified ? 'valid' : 'failed',
+            error: verificationError,
+          },
           url: req.originalUrl,
         })
       }
 
-      // Track verified visits
-      if (isLegitBot) {
+      // Store detailed verification info
+      req.botInfo = {
+        isBot: true,
+        isVerified,
+        botName: toolType,
+        verificationDetails: {
+          userAgentValid: validUA,
+          ipRangeValid: ipRangeCheck,
+          dnsVerified,
+          verificationTime,
+        },
+      }
+
+      // Track only verified visits
+      if (isVerified) {
         await trackBotVisit({
           botName: toolType,
           userAgent,
@@ -59,16 +92,8 @@ const searchConsoleMiddleware = async (req, res, next) => {
           responseTime: verificationTime,
         })
       }
-
-      // Store verification result
-      req.botInfo = {
-        isBot: true,
-        isVerified: isLegitBot,
-        botName: toolType,
-        verificationTime,
-      }
     } catch (error) {
-      console.error('Error verifying Google tool:', {
+      console.error('Error in verification process:', {
         type: toolType,
         error: error.message,
         url: req.originalUrl,

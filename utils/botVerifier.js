@@ -23,6 +23,8 @@ class BotVerifier {
           'Google-Site-Verification',
           'Google-InspectionTool', // Added Google Inspection Tool pattern
           'compatible; Google-InspectionTool', // Added alternative pattern
+          'Android.*compatible; Googlebot/', // For mobile Googlebot
+          'compatible; GoogleOther', // Add this
         ],
       },
       PageSpeedInsights: {
@@ -167,6 +169,12 @@ class BotVerifier {
         ),
       )
 
+      if (
+        userAgent.includes('GoogleOther') ||
+        (userAgent.includes('Android') && userAgent.includes('Googlebot'))
+      ) {
+        return this.isInIPRange(ip, 'Googlebot')
+      }
       // Enhanced logging for PageSpeed
       if (
         userAgent.includes('Chrome-Lighthouse') ||
