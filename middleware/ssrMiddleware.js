@@ -196,7 +196,9 @@ function shouldSkipSSR(url) {
     url === '/robots.txt' ||
     url === '/sitemap.xml' ||
     url.includes('firebase-messaging-sw.js') ||
-    url.includes('service-worker.js')
+    url.includes('service-worker.js') ||
+    url.includes('sw.js') ||
+    url.includes('google-news-sitemap.xml')
   )
 }
 

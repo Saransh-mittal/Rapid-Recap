@@ -31,7 +31,7 @@ const i18n = require('./i18n')
 
 const app = express()
 const server = http.createServer(app)
-
+app.set('trust proxy', true)
 if (process.env.NODE_ENV === 'development') {
   // Development: Disable security features for easier development
   app.use(
@@ -59,66 +59,66 @@ if (process.env.NODE_ENV === 'development') {
   })
 } else {
   // Production: Enable security and optimization features
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        useDefaults: false,
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            "'unsafe-eval'",
-            'https://www.googletagmanager.com',
-            'https://www.google-analytics.com',
-          ],
-          styleSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            'https://fonts.googleapis.com',
-            'https://*.googleapis.com',
-          ],
-          fontSrc: [
-            "'self'",
-            'https://fonts.gstatic.com',
-            'https://*.gstatic.com',
-            'data:',
-          ],
-          imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-          connectSrc: [
-            "'self'",
-            'https://fonts.googleapis.com',
-            'https://fonts.gstatic.com',
-            'https://www.google-analytics.com',
-            'ws:',
-            'wss:',
-          ],
-          mediaSrc: ["'self'"],
-          frameSrc: ["'self'"],
-          objectSrc: ["'none'"],
-          baseUri: ["'self'"],
-          formAction: ["'self'"],
-          manifestSrc: ["'self'"],
-          workerSrc: ["'self'", 'blob:'],
-          'style-src-elem': [
-            "'self'",
-            "'unsafe-inline'",
-            'https://fonts.googleapis.com',
-            'https://*.googleapis.com',
-          ],
-          'font-src-elem': [
-            "'self'",
-            'https://fonts.gstatic.com',
-            'https://*.gstatic.com',
-            'data:',
-          ],
-        },
-      },
-      crossOriginEmbedderPolicy: false,
-      crossOriginResourcePolicy: { policy: 'cross-origin' },
-      crossOriginOpenerPolicy: { policy: 'same-origin' },
-    }),
-  )
+  // app.use(
+  //   helmet({
+  //     contentSecurityPolicy: {
+  //       useDefaults: false,
+  //       directives: {
+  //         defaultSrc: ["'self'"],
+  //         scriptSrc: [
+  //           "'self'",
+  //           "'unsafe-inline'",
+  //           "'unsafe-eval'",
+  //           'https://www.googletagmanager.com',
+  //           'https://www.google-analytics.com',
+  //         ],
+  //         styleSrc: [
+  //           "'self'",
+  //           "'unsafe-inline'",
+  //           'https://fonts.googleapis.com',
+  //           'https://*.googleapis.com',
+  //         ],
+  //         fontSrc: [
+  //           "'self'",
+  //           'https://fonts.gstatic.com',
+  //           'https://*.gstatic.com',
+  //           'data:',
+  //         ],
+  //         imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+  //         connectSrc: [
+  //           "'self'",
+  //           'https://fonts.googleapis.com',
+  //           'https://fonts.gstatic.com',
+  //           'https://www.google-analytics.com',
+  //           'ws:',
+  //           'wss:',
+  //         ],
+  //         mediaSrc: ["'self'"],
+  //         frameSrc: ["'self'"],
+  //         objectSrc: ["'none'"],
+  //         baseUri: ["'self'"],
+  //         formAction: ["'self'"],
+  //         manifestSrc: ["'self'"],
+  //         workerSrc: ["'self'", 'blob:'],
+  //         'style-src-elem': [
+  //           "'self'",
+  //           "'unsafe-inline'",
+  //           'https://fonts.googleapis.com',
+  //           'https://*.googleapis.com',
+  //         ],
+  //         'font-src-elem': [
+  //           "'self'",
+  //           'https://fonts.gstatic.com',
+  //           'https://*.gstatic.com',
+  //           'data:',
+  //         ],
+  //       },
+  //     },
+  //     crossOriginEmbedderPolicy: false,
+  //     crossOriginResourcePolicy: { policy: 'cross-origin' },
+  //     crossOriginOpenerPolicy: { policy: 'same-origin' },
+  //   }),
+  // )
   app.use(searchConsoleMiddleware)
   // Production compression
   app.use(
@@ -140,7 +140,7 @@ if (process.env.NODE_ENV === 'development') {
     }),
   )
 }
-app.set('trust proxy', true)
+
 // app.use((req, res, next) => {
 //   const userAgent = req.headers['user-agent'] || ''
 //   if (
