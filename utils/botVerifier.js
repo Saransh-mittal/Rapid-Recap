@@ -21,6 +21,8 @@ class BotVerifier {
           'APIs-Google',
           'Google-Read-Aloud',
           'Google-Site-Verification',
+          'Google-InspectionTool', // Added Google Inspection Tool pattern
+          'compatible; Google-InspectionTool', // Added alternative pattern
         ],
       },
       PageSpeedInsights: {
@@ -47,7 +49,42 @@ class BotVerifier {
           'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko; Google Page Speed Insights) Chrome',
         ],
       },
-      // ... rest of your bot configurations remain the same ...
+      Bingbot: {
+        domains: ['.search.msn.com'],
+        ipRanges: ['157.55.', '207.46.', '40.77.', '13.66.'],
+        patterns: ['bingbot/', 'BingPreview'],
+      },
+      Yandexbot: {
+        domains: ['.yandex.ru', '.yandex.com', '.yandex.net'],
+        ipRanges: ['100.43.', '37.9.', '37.140.'],
+        patterns: ['YandexBot/', 'YandexImages/', 'YandexMetrika/'],
+      },
+      DuckDuckBot: {
+        domains: ['.duckduckgo.com'],
+        ipRanges: ['50.16.', '54.208.'],
+        patterns: ['DuckDuckBot/'],
+      },
+      Baiduspider: {
+        domains: ['.baidu.com', '.baidu.jp'],
+        ipRanges: ['180.76.', '123.125.'],
+        patterns: ['Baiduspider/', 'Baiduspider-image/', 'Baiduspider-video/'],
+      },
+      // Social Media Bots
+      facebookexternalhit: {
+        domains: ['.facebook.com', '.fbsv.net'],
+        ipRanges: ['69.63.', '31.13.', '173.252.'],
+        patterns: ['facebookexternalhit/', 'FacebookBot'],
+      },
+      LinkedInBot: {
+        domains: ['.linkedin.com'],
+        ipRanges: ['108.174.', '104.215.'],
+        patterns: ['LinkedInBot/'],
+      },
+      Twitterbot: {
+        domains: ['.twitter.com', '.twimg.com'],
+        ipRanges: ['199.16.', '199.59.'],
+        patterns: ['Twitterbot/'],
+      },
     }
   }
 
@@ -81,7 +118,8 @@ class BotVerifier {
     // Special handling for PageSpeed Insights
     if (
       userAgent.includes('Chrome-Lighthouse') ||
-      userAgent.includes('PageSpeed Insights')
+      userAgent.includes('PageSpeed Insights') ||
+      userAgent.includes('Google-InspectionTool') // Added condition
     ) {
       return true
     }
@@ -89,7 +127,8 @@ class BotVerifier {
     // Reject browsers pretending to be bots, but allow Chrome-Lighthouse
     if (
       /chrome|firefox|safari|opera|edge/i.test(userAgent) &&
-      !userAgent.includes('Chrome-Lighthouse')
+      !userAgent.includes('Chrome-Lighthouse') &&
+      !userAgent.includes('Google-InspectionTool') // Added condition
     ) {
       return false
     }
@@ -131,13 +170,19 @@ class BotVerifier {
       // Enhanced logging for PageSpeed
       if (
         userAgent.includes('Chrome-Lighthouse') ||
-        userAgent.includes('PageSpeed Insights')
+        userAgent.includes('PageSpeed Insights') ||
+        userAgent.includes('Google-InspectionTool') // Added condition
       ) {
-        this.log('pagespeed-verification-attempt', {
+        this.log('google-tool-verification-attempt', {
           ip,
           userAgent,
           botName,
           ipRangeMatch: botName ? this.isInIPRange(ip, botName) : false,
+          tool: userAgent.includes('Google-InspectionTool')
+            ? 'InspectionTool'
+            : userAgent.includes('Chrome-Lighthouse')
+            ? 'Lighthouse'
+            : 'PageSpeed',
         })
       }
 
@@ -264,11 +309,11 @@ class BotVerifier {
       ...data,
     }
 
-    if (process.env.NODE_ENV === 'production') {
-      console.log(JSON.stringify(logData))
-    } else {
-      console.log(`[${timestamp}] Bot Verification:`, event, data)
-    }
+    // if (process.env.NODE_ENV === 'production') {
+    //   console.log(JSON.stringify(logData))
+    // } else {
+    //   console.log(`[${timestamp}] Bot Verification:`, event, data)
+    // }
   }
 }
 
