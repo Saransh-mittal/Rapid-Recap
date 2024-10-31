@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
-const QuizResult = ({ isCorrect, onNext, quizQuestion }) => {
+const QuizResult = ({ isCorrect, onNext, quizQuestion, isLoadingNext }) => {
   const { t } = useTranslation('OnboardingProcess')
 
   return (
@@ -74,6 +74,7 @@ const QuizResult = ({ isCorrect, onNext, quizQuestion }) => {
               transform: 'translateY(-2px)',
               boxShadow: 'lg',
             }}
+            isLoading={isLoadingNext}
             transition="all 0.2s"
           >
             {t('quizResult.continueButton')}

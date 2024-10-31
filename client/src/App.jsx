@@ -245,6 +245,9 @@ const App = () => {
         }),
       )
     }
+    if (isAuthenticated && user?.needsOnboarding) {
+      dispatch(setTaskProgress({ task: 'navbarLoad', progress: 100 }))
+    }
     dispatch(setTaskProgress({ task: 'otherTasks', progress: 100 }))
     return () => clearTimeout(timer)
   }, [isAuthenticated])

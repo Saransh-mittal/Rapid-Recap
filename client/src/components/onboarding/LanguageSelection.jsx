@@ -14,7 +14,11 @@ import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
-const LanguageSelection = ({ onLanguageSelect }) => {
+const LanguageSelection = ({
+  onLanguageSelect,
+  submittingSelectedLanguage,
+  selectedLanguage,
+}) => {
   const { t } = useTranslation('OnboardingProcess')
 
   const bgGradient = useColorModeValue(
@@ -63,13 +67,19 @@ const LanguageSelection = ({ onLanguageSelect }) => {
               <Flex mt={8} justifyContent="center" flexWrap="wrap">
                 <LanguageButton
                   language={t('languageSelection.languages.english')}
+                  languageCode="en"
                   onClick={() => onLanguageSelect('en')}
                   mr={{ base: 0, md: 4 }}
                   mb={{ base: 4, md: 0 }}
+                  submittingSelectedLanguage={submittingSelectedLanguage}
+                  selectedLanguage={selectedLanguage}
                 />
                 <LanguageButton
                   language={t('languageSelection.languages.hindi')}
+                  languageCode="hi"
                   onClick={() => onLanguageSelect('hi')}
+                  submittingSelectedLanguage={submittingSelectedLanguage}
+                  selectedLanguage={selectedLanguage}
                 />
               </Flex>
             </VStack>
@@ -80,7 +90,14 @@ const LanguageSelection = ({ onLanguageSelect }) => {
   )
 }
 
-const LanguageButton = ({ language, onClick, ...rest }) => (
+const LanguageButton = ({
+  language,
+  submittingSelectedLanguage,
+  onClick,
+  selectedLanguage,
+  languageCode,
+  ...rest
+}) => (
   <Button
     onClick={onClick}
     size="lg"
@@ -101,6 +118,8 @@ const LanguageButton = ({ language, onClick, ...rest }) => (
     borderRadius="full"
     px={8}
     py={6}
+    disabled={submittingSelectedLanguage}
+    isLoading={submittingSelectedLanguage && selectedLanguage === languageCode}
     {...rest}
   >
     {language}

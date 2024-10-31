@@ -88,7 +88,18 @@ const LoadingScreen = React.memo(({ progress }) => {
     } while (shownTips.current.has(newTip))
     return newTip
   }, [tips])
-
+  // In LoadingScreen.jsx - add this to your existing useEffect
+  useEffect(() => {
+    // Hide splash screen when LoadingScreen mounts
+    const splashScreen = document.getElementById('splash-screen')
+    if (splashScreen) {
+      splashScreen.style.opacity = '0'
+      splashScreen.style.transition = 'opacity 0.3s ease-out'
+      setTimeout(() => {
+        splashScreen.style.display = 'none'
+      }, 300)
+    }
+  }, []) // Empty dependency array means this runs once on mount
   useEffect(() => {
     const showNewTip = () => {
       const newTip = getRandomTip()
