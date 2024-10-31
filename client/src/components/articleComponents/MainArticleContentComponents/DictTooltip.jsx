@@ -67,7 +67,7 @@ const DictTooltip = ({ word, definition, position, onClose }) => {
   if (!position) return null
 
   const tooltipMaxWidth = isMobile ? 280 : isTablet ? 320 : 400
-  const tooltipPadding = isMobile ? 8 : 10
+  const tooltipPadding = isMobile ? 2 : 4
   let finalX = position.x
   const halfTooltipWidth = tooltipMaxWidth / 2
 
@@ -91,7 +91,8 @@ const DictTooltip = ({ word, definition, position, onClose }) => {
       top={`${finalY}px`}
       transform="translate(-50%, 0)"
       bg="rgba(38, 32, 54, 0.95)"
-      p={tooltipPadding}
+      px={tooltipPadding}
+      py={2}
       borderRadius="xl"
       boxShadow="dark-lg"
       border="1px solid"
