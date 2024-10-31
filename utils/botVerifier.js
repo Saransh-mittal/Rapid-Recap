@@ -25,6 +25,11 @@ class BotVerifier {
           'compatible; Google-InspectionTool', // Added alternative pattern
           'Android.*compatible; Googlebot/', // For mobile Googlebot
           'compatible; GoogleOther', // Add this
+          'compatible; Googlebot/2.1', // Added for standard Googlebot
+          'compatible; Googlebot-Mobile/2.1', // Added for mobile Googlebot
+          '(compatible; Googlebot/2.1; +http://www.google.com/bot.html)', // Added full signature
+          'Chrome.*Mobile.*compatible; Googlebot/', // Added for Chrome mobile
+          'Android.*compatible; Googlebot/', // Added for Android
         ],
       },
       PageSpeedInsights: {
@@ -121,11 +126,29 @@ class BotVerifier {
     if (
       userAgent.includes('Chrome-Lighthouse') ||
       userAgent.includes('PageSpeed Insights') ||
-      userAgent.includes('Google-InspectionTool') // Added condition
+      userAgent.includes('Google-InspectionTool') ||
+      userAgent.includes('compatible; Googlebot/') || // Added
+      (userAgent.includes('Android') &&
+        userAgent.includes('compatible; Googlebot/')) // Added
     ) {
       return true
     }
 
+    // Modified browser check
+    const isBrowser = /chrome|firefox|safari|opera|edge/i.test(userAgent)
+    const isGoogleBot =
+      userAgent.includes('Googlebot/') ||
+      userAgent.includes('compatible; Googlebot/')
+
+    // Allow if it's a Googlebot even if it contains browser strings
+    if (
+      isBrowser &&
+      !isGoogleBot &&
+      !userAgent.includes('Chrome-Lighthouse') &&
+      !userAgent.includes('Google-InspectionTool')
+    ) {
+      return false
+    }
     // Reject browsers pretending to be bots, but allow Chrome-Lighthouse
     if (
       /chrome|firefox|safari|opera|edge/i.test(userAgent) &&
@@ -168,6 +191,26 @@ class BotVerifier {
           userAgent.toLowerCase().includes(pattern.toLowerCase()),
         ),
       )
+      // Special handling for mobile Googlebot and other Google tools
+      const isMobileGooglebot =
+        userAgent.includes('Android') &&
+        userAgent.includes('compatible; Googlebot/')
+      const isGoogleOther = userAgent.includes('GoogleOther')
+
+      // For mobile Googlebot and GoogleOther, only check IP range
+      if (isMobileGooglebot || isGoogleOther) {
+        const ipValid = this.isInIPRange(ip, 'Googlebot')
+        if (ipValid) {
+          this.log('verification-succeeded', {
+            ip,
+            userAgent,
+            botName: 'Googlebot',
+            verifyMethod: 'ip-only',
+          })
+          return true
+        }
+        return false
+      }
 
       if (
         userAgent.includes('GoogleOther') ||
