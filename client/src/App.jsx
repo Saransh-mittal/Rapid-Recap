@@ -1,27 +1,48 @@
 import './App.css'
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import React, {
+  Suspense,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react'
 import { useLocation } from 'react-router-dom'
-// import ReactGA from 'react-ga4'
+import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 
-import Navbar from './components/Header-Footer/Navbar.jsx'
-import FixedBackground from './components/miscellaneous/FixedBackground.jsx'
-import AppRoutes from './routes/AppRoutes.jsx'
-import GuestLoginModal from './components/authComponents/GuestLoginModal.jsx'
-import ButtonGradient from './assets/svg/ButtonGradient.jsx'
-import Signin from './screens/Signin.jsx'
-import Register from './screens/Register.jsx'
-import NoteMessageQueue from './components/miscellaneous/NoteMessageQueue.jsx'
-import XPLevelModal from './components/Header-Footer/navbarComponents/XPLevelModal.jsx'
-// import Quiz from './screens/Quiz.jsx'
-import NotificationModal from './components/Header-Footer/Inbox/NotificationModal.jsx'
-import UpgradeModal from './components/homeComponents/UpgradeModal'
+const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
+const FixedBackground = React.lazy(() =>
+  import('./components/miscellaneous/FixedBackground.jsx'),
+)
+const AppRoutes = React.lazy(() => import('./routes/AppRoutes.jsx'))
+const GuestLoginModal = React.lazy(() =>
+  import('./components/authComponents/GuestLoginModal.jsx'),
+)
+const ButtonGradient = React.lazy(() =>
+  import('./assets/svg/ButtonGradient.jsx'),
+)
+const Signin = React.lazy(() => import('./screens/Signin.jsx'))
+const Register = React.lazy(() => import('./screens/Register.jsx'))
+const NoteMessageQueue = React.lazy(() =>
+  import('./components/miscellaneous/NoteMessageQueue.jsx'),
+)
+const XPLevelModal = React.lazy(() =>
+  import('./components/Header-Footer/navbarComponents/XPLevelModal.jsx'),
+)
+const Quiz = React.lazy(() => import('./screens/Quiz.jsx'))
 
+const NotificationModal = React.lazy(() =>
+  import('./components/Header-Footer/Inbox/NotificationModal.jsx'),
+)
+const UpgradeModal = React.lazy(() =>
+  import('./components/homeComponents/UpgradeModal'),
+)
 import {
+  addNoteMessage,
   fetchUnreadNoteMessages,
   setIsRegisterOpen,
   setIsSigninOpen,
@@ -38,7 +59,7 @@ import {
   checkNotificationStatus,
   isSubscribedChecker,
 } from './redux/notificationSlice.js'
-// import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
+import TournamentQuiz from './components/tournamentComponents/tournamentQuiz/TournamentQuiz.jsx'
 import {
   checkTournamentRegistration,
   getTopLeaderboard,
@@ -46,10 +67,9 @@ import {
 import LoadingScreen from './screens/LoadingScreen.jsx'
 import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
-import { safeLocalStorage } from './utils/safeStorage.js'
-import { isClient } from './utils/environment.js'
 
 const App = () => {
+  ReactGA.initialize('G-ES5VQ8NW7Z')
   const location = useLocation()
   const { isLoading, overallProgress } = useSelector(
     state => state.loadingProgress,
@@ -97,10 +117,7 @@ const App = () => {
     () => isAuthenticated && user,
     [isAuthenticated, user],
   )
-  const isToken = useCallback(() => {
-    if (!isClient) return null
-    return safeLocalStorage.getItem('token')
-  }, [])
+  const isToken = useCallback(() => localStorage.getItem('token'), [])
   const getUserInGameName = useMemo(
     () => (isLoggedIn ? user?.inGameName : null),
     [isLoggedIn, user],
@@ -121,21 +138,14 @@ const App = () => {
     return null
   }, [updates])
 
-  // useEffect(() => {
-  //   if (isClient) {
-  //     ReactGA.initialize('G-ES5VQ8NW7Z')
-
-  //     setShowLoadingScreen(true)
-  //     const timerId = setTimeout(() => {
-  //       setShowUpgradeModal(true)
-  //     }, 5000)
-
-  //     return () => clearTimeout(timerId)
-  //   }
-  // }, [isClient])
+  useEffect(() => {
+    setShowLoadingScreen(true)
+    setTimeout(() => {
+      setShowUpgradeModal(true)
+    }, 5000)
+  }, [])
 
   useEffect(() => {
-    if (!isClient) return
     const token = isToken()
 
     if (!token) {
@@ -148,6 +158,7 @@ const App = () => {
             { text: t('Sign-In'), actionType: 'SIGN_IN' }, // Added translation
             { text: t('Sign-In As Guest'), actionType: 'GUEST' }, // Added translation
           ],
+          isMileStone: true,
         }),
       )
     }
@@ -184,33 +195,27 @@ const App = () => {
       const timeout =
         timeUntilMidnight > 0 ? timeUntilMidnight : 86400000 + timeUntilMidnight
 
-      const timeoutId = setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.location.reload(true)
-        }
+      setTimeout(() => {
+        window.location.reload(true)
       }, timeout)
-
-      return () => clearTimeout(timeoutId)
     }
 
     refreshAtMidnightUTC()
-  }, [dispatch, isToken, isClient])
+  }, [dispatch, isToken])
 
   useEffect(() => {
-    if (!isClient) return
     if (tournamentId && status === 'ongoing') {
       dispatch(getTopLeaderboard({ tournamentId, t }))
     }
-  }, [tournamentId, status, isClient])
+  }, [tournamentId, status])
 
   useEffect(() => {
-    if (isAuthenticated && user.role !== 'guest' && isClient) {
+    if (isAuthenticated && user.role !== 'guest') {
       dispatch(checkTournamentRegistration(tournamentSliceTranslation))
     }
-  }, [isAuthenticated, user?.inGameName, isClient])
+  }, [isAuthenticated, user?.inGameName])
 
   useEffect(() => {
-    if (!isClient) return
     let timer
     if (isAuthenticated) {
       dispatch(isSubscribedChecker())
@@ -240,25 +245,26 @@ const App = () => {
         }),
       )
     }
+    if (isAuthenticated && user?.needsOnboarding) {
+      dispatch(setTaskProgress({ task: 'navbarLoad', progress: 100 }))
+    }
     dispatch(setTaskProgress({ task: 'otherTasks', progress: 100 }))
     return () => clearTimeout(timer)
-  }, [isAuthenticated, isClient])
-
-  // useEffect(() => {
-  //   if (!isClient) return
-  //   ReactGA.set({
-  //     'User Logged In': isLoggedIn ? t('Logged In') : t('Logged Out'), // Added translation
-  //     'User InGameName': getUserInGameName ? getUserInGameName : t('anonymous'), // Added translation
-  //   })
-  //   ReactGA.send({
-  //     hitType: 'pageview',
-  //     page: location.pathname + location.search,
-  //     title: document.title,
-  //   })
-  // }, [location, getUserInGameName, isLoggedIn, isClient])
+  }, [isAuthenticated])
 
   useEffect(() => {
-    if (!isClient) return
+    ReactGA.set({
+      'User Logged In': isLoggedIn ? t('Logged In') : t('Logged Out'), // Added translation
+      'User InGameName': getUserInGameName ? getUserInGameName : t('anonymous'), // Added translation
+    })
+    ReactGA.send({
+      hitType: 'pageview',
+      page: location.pathname + location.search,
+      title: document.title,
+    })
+  }, [location, getUserInGameName, isLoggedIn])
+
+  useEffect(() => {
     const fetchInitialData = async () => {
       dispatch(setTaskProgress({ task: 'fetchUser', progress: 50 }))
       try {
@@ -275,10 +281,10 @@ const App = () => {
     }
 
     fetchInitialData()
-  }, [dispatch, isClient])
+  }, [dispatch])
 
   useEffect(() => {
-    if (guestModalJustClosed && user?.role === 'guest' && isClient) {
+    if (guestModalJustClosed && user?.role === 'guest') {
       dispatch(
         addNoteMessageIfAllowed({
           title: t('You can view your credentials of guest account in profile'), // Added translation
@@ -288,10 +294,9 @@ const App = () => {
         }),
       )
     }
-  }, [guestModalJustClosed, user, isClient])
+  }, [guestModalJustClosed, user])
 
   useEffect(() => {
-    if (!isClient) return
     if (
       user?.role === 'guest' &&
       !guestModalJustClosed &&
@@ -307,7 +312,7 @@ const App = () => {
         }),
       )
     }
-  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch, isClient])
+  }, [user, guestModalJustClosed, isGuestLoggedin, dispatch])
 
   const handleNavbarLoad = useCallback(() => {
     setNavbarLoaded(true)
@@ -317,11 +322,10 @@ const App = () => {
   useEffect(() => {
     if (overallProgress === 100) {
       // dispatch after 500ms to ensure all components are loaded
-      const timerId = setTimeout(() => {
+      setTimeout(() => {
         dispatch(setIsLoading(false))
         setShowLoadingScreen(false)
       }, 500)
-      return () => clearTimeout(timerId)
     }
   }, [navbarLoaded, overallProgress, dispatch])
 
@@ -354,74 +358,93 @@ const App = () => {
       </Helmet>
       {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
 
-      <FixedBackground />
+      <Suspense fallback={null}>
+        <FixedBackground />
+      </Suspense>
 
-      <NoteMessageQueue />
+      <Suspense fallback={null}>
+        <NoteMessageQueue />
+      </Suspense>
 
       {showXpLevelModal && (
-        <XPLevelModal
-          setShowXPLevelModal={show => dispatch(setShowXpLevelModal(show))}
-        />
+        <Suspense fallback={null}>
+          <XPLevelModal
+            setShowXPLevelModal={show => dispatch(setShowXpLevelModal(show))}
+          />
+        </Suspense>
       )}
 
-      <ButtonGradient />
-
-      <GuestLoginModal
-        isOpen={isGuestLoggedin}
-        onClose={handleClose}
-        guestName={user?.inGameName}
-        guestPassword={user?.guestTempPassword}
-        guestId={user?._id}
-        onOpen={() => setIsGuestLoggedin(true)}
-        t={GuestLoginModaltranslation}
-      />
-
-      {/* {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null} */}
-
-      <Signin
-        isOpen={isSigninOpen}
-        onOpen={() => dispatch(setIsSigninOpen(true))}
-        onClose={() => dispatch(setIsSigninOpen(false))}
-      />
-
-      {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
-        <UpgradeModal
-          isOpen={showUpgradeModal}
-          onClose={() => setShowUpgradeModal(false)}
-          title={t('upgrade_modal_title')}
-          content={t('upgrade_modal_content')}
+      <Suspense fallback={null}>
+        <ButtonGradient />
+      </Suspense>
+      <Suspense fallback={null}>
+        <GuestLoginModal
+          isOpen={isGuestLoggedin}
+          onClose={handleClose}
+          guestName={user?.inGameName}
+          guestPassword={user?.guestTempPassword}
+          guestId={user?._id}
+          onOpen={() => setIsGuestLoggedin(true)}
+          t={GuestLoginModaltranslation}
         />
-      )}
-
-      <Register
-        isOpen={isRegisterOpen}
-        onOpen={() => dispatch(setIsRegisterOpen(true))}
-        onClose={() => dispatch(setIsRegisterOpen(false))}
-      />
-
+      </Suspense>
+      <Suspense fallback={null}>
+        {isOpen ? tournamentQuiz ? <TournamentQuiz /> : <Quiz /> : null}
+      </Suspense>
+      <Suspense fallback={null}>
+        <Signin
+          isOpen={isSigninOpen}
+          onOpen={() => dispatch(setIsSigninOpen(true))}
+          onClose={() => dispatch(setIsSigninOpen(false))}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        {isAuthenticated && USER_IQ > 90 && user.societyUpgradeMessage && (
+          <UpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={() => setShowUpgradeModal(false)}
+            title={t('upgrade_modal_title')}
+            content={t('upgrade_modal_content')}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        <Register
+          isOpen={isRegisterOpen}
+          onOpen={() => dispatch(setIsRegisterOpen(true))}
+          onClose={() => dispatch(setIsRegisterOpen(false))}
+        />
+      </Suspense>
       <NavbarProvider>
-        {showNavbar && <Navbar onNavbarLoad={handleNavbarLoad} />}
+        {showNavbar && (
+          <Suspense fallback={null}>
+            <Navbar onNavbarLoad={handleNavbarLoad} />
+          </Suspense>
+        )}
         <Box
           position="relative"
           minHeight="100vh"
           zIndex={1}
           overflowX={'hidden'}
         >
-          <AppRoutes
-            isToken={isToken()}
-            needsOnboarding={user?.needsOnboarding}
-            setIsGuestLoggedin={setIsGuestLoggedin}
-          />
+          <Suspense fallback={null}>
+            <AppRoutes
+              isToken={isToken()}
+              needsOnboarding={user?.needsOnboarding}
+              setIsGuestLoggedin={setIsGuestLoggedin}
+            />
+          </Suspense>
         </Box>
       </NavbarProvider>
-
-      {isNotifInboxModalOpen && (
-        <NotificationModal
-          handleNotifModalClose={handleNotifModalClose}
-          selectedNotificationId={selectedNotificationId}
-          selectedNotification={getLatestWeeklyReportUpdate()}
-        />
-      )}
+      <Suspense fallback={null}>
+        {isNotifInboxModalOpen && (
+          <NotificationModal
+            handleNotifModalClose={handleNotifModalClose}
+            selectedNotificationId={selectedNotificationId}
+            selectedNotification={getLatestWeeklyReportUpdate()}
+          />
+        )}
+      </Suspense>
     </>
   )
 }

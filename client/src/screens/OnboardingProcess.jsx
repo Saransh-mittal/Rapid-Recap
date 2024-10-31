@@ -76,7 +76,9 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   const [initialQuizCorrect, setInitialQuizCorrect] = useState(false)
   const [article, setArticle] = useState(null)
   const [isArticleFetching, setIsArticleFetching] = useState(false)
-
+  const [submittingSelectedLanguage, setSubmittingSelectedLanguage] =
+    useState(false)
+  const [isLoadingNext, setIsLoadingNext] = useState(false)
   const features = useFeatureDetection()
   const { playClick } = useSafeSound({
     enabled: features.hasAudioSupport,
@@ -154,6 +156,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   }
 
   const handleLanguageSelect = async lang => {
+    setSubmittingSelectedLanguage(true)
     try {
       setSelectedLanguage(lang)
       await i18n.changeLanguage(lang)
@@ -173,10 +176,13 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         isClosable: true,
         position: 'top',
       })
+    } finally {
+      setSubmittingSelectedLanguage(false)
     }
   }
 
   const handleNext = async (rawData = {}) => {
+    setIsLoadingNext(true)
     try {
       const nextStepId = getNextStepId(currentStepId)
       if (nextStepId !== currentStepId) {
@@ -197,6 +203,8 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         duration: 3000,
         isClosable: true,
       })
+    } finally {
+      setIsLoadingNext(false)
     }
   }
 
@@ -318,7 +326,11 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   // Map steps to components
   const stepComponents = {
     [ONBOARDING_STEPS.LANGUAGE]: (
-      <LanguageSelection onLanguageSelect={handleLanguageSelect} />
+      <LanguageSelection
+        onLanguageSelect={handleLanguageSelect}
+        submittingSelectedLanguage={submittingSelectedLanguage}
+        selectedLanguage={selectedLanguage}
+      />
     ),
     [ONBOARDING_STEPS.WELCOME]: <Welcome />,
     [ONBOARDING_STEPS.CATEGORIES]: (
@@ -340,6 +352,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         isCorrect={initialQuizCorrect}
         onNext={handleNext}
         quizQuestion={article?.quizQuestion}
+        isLoadingNext={isLoadingNext}
       />
     ),
     [ONBOARDING_STEPS.ARTICLE_READING]: (
@@ -416,6 +429,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
                   currentStepId === ONBOARDING_STEPS.CATEGORIES &&
                   selectedCategories.length !== 5
                 }
+                isLoading={isLoadingNext}
                 _hover={{
                   bg: 'purple.700',
                   transform: 'translateY(-5px)',

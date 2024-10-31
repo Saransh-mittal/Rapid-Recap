@@ -1,12 +1,10 @@
-// File Path: server/utils/botVerifier.js
-
 const dns = require('dns')
 const { promisify } = require('util')
 const reverse = promisify(dns.reverse)
 const lookup = promisify(dns.lookup)
 
 class BotVerifier {
-  // Known bot configurations
+  // Known bot configurations remain the same
   static get botConfigs() {
     return {
       Googlebot: {
@@ -23,6 +21,39 @@ class BotVerifier {
           'APIs-Google',
           'Google-Read-Aloud',
           'Google-Site-Verification',
+          'Google-InspectionTool', // Added Google Inspection Tool pattern
+          'compatible; Google-InspectionTool', // Added alternative pattern
+          'Android.*compatible; Googlebot/', // For mobile Googlebot
+          'compatible; GoogleOther', // Add this
+          'compatible; Googlebot/2.1', // Added for standard Googlebot
+          'compatible; Googlebot-Mobile/2.1', // Added for mobile Googlebot
+          '(compatible; Googlebot/2.1; +http://www.google.com/bot.html)', // Added full signature
+          'Chrome.*Mobile.*compatible; Googlebot/', // Added for Chrome mobile
+          'Android.*compatible; Googlebot/', // Added for Android
+        ],
+      },
+      PageSpeedInsights: {
+        domains: ['.google.com', '.googleusercontent.com'],
+        ipRanges: [
+          '66.249.', // Google crawler IPs
+          '64.68.',
+          '72.14.',
+          '74.125.',
+          '216.239.',
+          '35.235.', // Google Cloud IPs
+          '35.192.',
+          '35.241.',
+          '35.190.', // Additional PageSpeed IPs
+          '130.211.',
+          '172.217.',
+          '172.253.',
+          '142.250.',
+          '108.177.',
+        ],
+        patterns: [
+          'Chrome-Lighthouse',
+          'PageSpeed Insights',
+          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko; Google Page Speed Insights) Chrome',
         ],
       },
       Bingbot: {
@@ -68,6 +99,17 @@ class BotVerifier {
     return Object.keys(this.botConfigs)
   }
 
+  static getRealIP(req) {
+    // Enhanced IP detection for proxy environments
+    return (
+      req.headers['x-real-ip'] ||
+      req.headers['x-forwarded-for']?.split(',')[0] ||
+      req.ip ||
+      req.connection.remoteAddress ||
+      req.socket.remoteAddress
+    ).replace(/^::ffff:/, '')
+  }
+
   static getBotConfig(userAgent) {
     const botName = this.knownBots.find(bot =>
       this.botConfigs[bot].patterns.some(pattern =>
@@ -80,8 +122,39 @@ class BotVerifier {
   static hasValidUserAgent(userAgent) {
     if (!userAgent) return false
 
-    // Reject browsers pretending to be bots
-    if (/chrome|firefox|safari|opera|edge/i.test(userAgent)) {
+    // Special handling for PageSpeed Insights
+    if (
+      userAgent.includes('Chrome-Lighthouse') ||
+      userAgent.includes('PageSpeed Insights') ||
+      userAgent.includes('Google-InspectionTool') ||
+      userAgent.includes('compatible; Googlebot/') || // Added
+      (userAgent.includes('Android') &&
+        userAgent.includes('compatible; Googlebot/')) // Added
+    ) {
+      return true
+    }
+
+    // Modified browser check
+    const isBrowser = /chrome|firefox|safari|opera|edge/i.test(userAgent)
+    const isGoogleBot =
+      userAgent.includes('Googlebot/') ||
+      userAgent.includes('compatible; Googlebot/')
+
+    // Allow if it's a Googlebot even if it contains browser strings
+    if (
+      isBrowser &&
+      !isGoogleBot &&
+      !userAgent.includes('Chrome-Lighthouse') &&
+      !userAgent.includes('Google-InspectionTool')
+    ) {
+      return false
+    }
+    // Reject browsers pretending to be bots, but allow Chrome-Lighthouse
+    if (
+      /chrome|firefox|safari|opera|edge/i.test(userAgent) &&
+      !userAgent.includes('Chrome-Lighthouse') &&
+      !userAgent.includes('Google-InspectionTool') // Added condition
+    ) {
       return false
     }
 
@@ -97,7 +170,17 @@ class BotVerifier {
     const config = this.botConfigs[botName]
     if (!config?.ipRanges) return false
 
-    return config.ipRanges.some(range => ip.startsWith(range))
+    const isValid = config.ipRanges.some(range => ip.startsWith(range))
+
+    // Enhanced logging for IP range checks
+    this.log('ip-range-check', {
+      ip,
+      botName,
+      ranges: config.ipRanges,
+      matched: isValid,
+    })
+
+    return isValid
   }
 
   static async verifyBotIP(ip, userAgent) {
@@ -108,6 +191,51 @@ class BotVerifier {
           userAgent.toLowerCase().includes(pattern.toLowerCase()),
         ),
       )
+      // Special handling for mobile Googlebot and other Google tools
+      const isMobileGooglebot =
+        userAgent.includes('Android') &&
+        userAgent.includes('compatible; Googlebot/')
+      const isGoogleOther = userAgent.includes('GoogleOther')
+
+      // For mobile Googlebot and GoogleOther, only check IP range
+      if (isMobileGooglebot || isGoogleOther) {
+        const ipValid = this.isInIPRange(ip, 'Googlebot')
+        if (ipValid) {
+          this.log('verification-succeeded', {
+            ip,
+            userAgent,
+            botName: 'Googlebot',
+            verifyMethod: 'ip-only',
+          })
+          return true
+        }
+        return false
+      }
+
+      if (
+        userAgent.includes('GoogleOther') ||
+        (userAgent.includes('Android') && userAgent.includes('Googlebot'))
+      ) {
+        return this.isInIPRange(ip, 'Googlebot')
+      }
+      // Enhanced logging for PageSpeed
+      if (
+        userAgent.includes('Chrome-Lighthouse') ||
+        userAgent.includes('PageSpeed Insights') ||
+        userAgent.includes('Google-InspectionTool') // Added condition
+      ) {
+        this.log('google-tool-verification-attempt', {
+          ip,
+          userAgent,
+          botName,
+          ipRangeMatch: botName ? this.isInIPRange(ip, botName) : false,
+          tool: userAgent.includes('Google-InspectionTool')
+            ? 'InspectionTool'
+            : userAgent.includes('Chrome-Lighthouse')
+            ? 'Lighthouse'
+            : 'PageSpeed',
+        })
+      }
 
       if (!botName) {
         this.log('verification-failed', {
@@ -181,18 +309,28 @@ class BotVerifier {
       this.log('verification-succeeded', { ip, userAgent, botName, hostname })
       return true
     } catch (error) {
-      this.log('verification-error', { error: error.message, ip, userAgent })
+      this.log('verification-error', {
+        error: error.message,
+        ip,
+        userAgent,
+        stack: error.stack,
+      })
       return false
     }
   }
 
   static async isLegitimateBot(req) {
     const userAgent = req.headers['user-agent'] || ''
-    const ip = (
-      req.ip ||
-      req.connection.remoteAddress ||
-      req.socket.remoteAddress
-    ).replace(/^::ffff:/, '') // Clean IPv6 mapped IPv4
+    const ip = this.getRealIP(req)
+
+    // Debug logging
+    this.log('bot-check-started', {
+      detectedIP: ip,
+      originalIP: req.ip,
+      xForwardedFor: req.headers['x-forwarded-for'],
+      xRealIP: req.headers['x-real-ip'],
+      userAgent,
+    })
 
     // Handle development environment
     if (process.env.NODE_ENV === 'development') {
@@ -222,13 +360,11 @@ class BotVerifier {
       ...data,
     }
 
-    if (process.env.NODE_ENV === 'production') {
-      // In production, you might want to use a proper logging service
-      console.log(JSON.stringify(logData))
-    } else {
-      // In development, pretty print for readability
-      console.log(`[${timestamp}] Bot Verification:`, event, data)
-    }
+    // if (process.env.NODE_ENV === 'production') {
+    //   console.log(JSON.stringify(logData))
+    // } else {
+    //   console.log(`[${timestamp}] Bot Verification:`, event, data)
+    // }
   }
 }
 

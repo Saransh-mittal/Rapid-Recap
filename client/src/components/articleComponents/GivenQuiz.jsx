@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { useFeatureDetection } from '../../utils/featureDetection'
 import useSafeSound from '../../customHooks/useSafeSound'
 
-const medalIcon = '../../assets/medal.webp'
+const medalIcon = '/images/medal.webp'
 
 const GivenQuiz = ({ percentile, RQM_score, articleId, css }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
