@@ -1,12 +1,10 @@
-// middleware/ssrMiddleware.js
 const path = require('path')
 const express = require('express')
 const fs = require('fs')
 const { createSSRHandler } = require('./ssr/handler')
+
 async function createSSRMiddleware(app) {
   try {
-    // console.log('Initializing SSR middleware...')
-
     // Setup static file handling first
     setupStaticHandling(app)
 
@@ -15,7 +13,11 @@ async function createSSRMiddleware(app) {
 
     return async (req, res, next) => {
       const url = req.originalUrl
-      // console.log('Request URL:', url)
+
+      // Skip SSR for service-specific routes
+      if (shouldSkipService(url)) {
+        return next()
+      }
 
       // Handle CSS files specifically
       if (url.endsWith('.css')) {
@@ -41,11 +43,54 @@ async function createSSRMiddleware(app) {
   }
 }
 
+function shouldSkipService(url) {
+  return isOAuthPath(url) || isPushPath(url)
+}
+
+function isOAuthPath(url) {
+  const oauthPaths = [
+    '/auth/google',
+    '/api/user/google/callback',
+    '/oauth2/callback',
+    '/signin/oauth',
+    '/api/auth/google',
+    '/callback',
+    '/oauth2/v2/auth',
+    '/oauth2/v1/certs',
+    '/gsi/client',
+  ]
+
+  return (
+    oauthPaths.some(path => url.includes(path)) ||
+    url.includes('oauth') ||
+    url.includes('gsi') ||
+    url.includes('accounts.google.com')
+  )
+}
+
+function isPushPath(url) {
+  const pushPaths = [
+    '/api/push',
+    '/api/notifications',
+    '/api/notify',
+    '/service-worker.js',
+    '/sw.js',
+    '/firebase-messaging-sw.js',
+    '/push-manifest.json',
+  ]
+
+  return (
+    pushPaths.some(path => url.includes(path)) ||
+    url.includes('/push') ||
+    url.includes('/subscribe') ||
+    url.includes('/notifications') ||
+    url.endsWith('.js.map') ||
+    url.endsWith('-sw.js')
+  )
+}
+
 function handleCSSRequest(req, res, next) {
   const cssPath = path.join(__dirname, '../client/dist', req.path)
-
-  // // Debug logging
-  // console.log('Attempting to serve CSS file:', cssPath)
 
   // Check if file exists
   if (!fs.existsSync(cssPath)) {
@@ -101,7 +146,16 @@ function setupStaticHandling(app) {
       if (ext === '.css') {
         res.setHeader('Content-Type', 'text/css')
       }
-      res.setHeader('Cache-Control', 'public, max-age=31536000')
+      // Add special handling for service workers
+      if (
+        filePath.includes('-sw.js') ||
+        filePath.endsWith('service-worker.js')
+      ) {
+        res.setHeader('Service-Worker-Allowed', '/')
+        res.setHeader('Cache-Control', 'no-cache')
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=31536000')
+      }
     },
     index: false,
     maxAge: '1y',
@@ -138,7 +192,11 @@ function shouldSkipSSR(url) {
     url.startsWith('/assets/') ||
     url.startsWith('/images/') ||
     url.startsWith('/styles/') ||
-    url === '/manifest.json'
+    url === '/manifest.json' ||
+    url === '/robots.txt' ||
+    url === '/sitemap.xml' ||
+    url.includes('firebase-messaging-sw.js') ||
+    url.includes('service-worker.js')
   )
 }
 
