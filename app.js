@@ -25,7 +25,7 @@ const http = require('http')
 const compression = require('compression')
 const helmet = require('helmet')
 const { initBotTracking } = require('./utils/botTracker')
-
+const searchConsoleMiddleware = require('./middleware/searchConsoleMiddleware')
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 
@@ -167,8 +167,6 @@ app.use(i18nMiddleware.handle(i18n))
 app.use(bodyParser.json())
 const connectDB = require('./db/conn')
 const { initializeSocket } = require('./socket')
-const BotVerifier = require('./utils/botVerifier')
-const searchConsoleMiddleware = require('./middleware/searchConsoleMiddleware')
 
 webpush.setVapidDetails(
   'mailto:rapidrecap2k23@gmail.com',
