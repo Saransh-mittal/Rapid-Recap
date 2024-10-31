@@ -84,6 +84,9 @@ const Article = () => {
   const [onGoingQuiz, setOnGoingQuiz] = useState(null)
   const [quizExpired, setQuizExpired] = useState(null)
 
+  const [dictionary, setDictionary] = useState([])
+  const [importantSentences, setImportantSentences] = useState([])
+
   const [title, setTitle] = useState({
     english: articleData?.title || '',
     hindi: articleData?.hindiTitle || '',
@@ -150,7 +153,6 @@ const Article = () => {
   const fetchArticle = useCallback(async () => {
     if (loginCheckStatus === 'pending') return
     try {
-      // setLoadingRelatedArticles(prev => ({ ...prev, [id]: true }))
       const response = await axios.get(
         `/api/articles/article/${id}?lang=${
           user?.userLanguage ? user?.userLanguage : i18n.language
@@ -178,6 +180,8 @@ const Article = () => {
         english: articleData.mainText,
         hindi: articleData.hindiMainText,
       })
+      setDictionary(articleData.dictionary || [])
+      setImportantSentences(articleData.importantSentences || [])
       setQuizExpired(response.data.quizExpired)
     } catch (error) {
       toast({
@@ -191,10 +195,6 @@ const Article = () => {
     } finally {
       setArticleLoading(false)
       setLoadingRelatedArticles(prev => ({ ...prev, [id]: false }))
-      // window.scrollTo({
-      //   top: 0,
-      //   behavior: 'smooth',
-      // })
     }
   }, [id, toast, loginCheckStatus, user, dispatch])
 
@@ -435,6 +435,8 @@ const Article = () => {
                 articleLoading={articleLoading}
                 themedContent={themedContent}
                 SourceURL={articleData?.url}
+                dictionary={dictionary}
+                importantSentences={importantSentences}
               />
 
               <Sidebar
