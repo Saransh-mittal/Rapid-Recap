@@ -73,6 +73,7 @@ const applyDictionaryHighlights = (
             cursor="pointer"
             position="relative"
             transition="all 0.3s ease"
+            data-dictionary-word={word}
             _before={{
               content: '""',
               position: 'absolute',
@@ -91,8 +92,22 @@ const applyDictionaryHighlights = (
               boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
               color: 'purple.100',
             }}
-            onMouseEnter={e => onWordHover(word, e)}
-            onMouseLeave={closeTooltip}
+            onMouseEnter={e => {
+              if (!('ontouchstart' in window)) {
+                e.preventDefault()
+                onWordHover(word, e)
+              }
+            }}
+            onMouseLeave={() => {
+              if (!('ontouchstart' in window)) {
+                closeTooltip()
+              }
+            }}
+            // onClick={e => onWordHover(word, e)} // Changed from onMouseEnter to onClick
+            onTouchStart={e => {
+              e.preventDefault() // Prevent default touch behavior
+              onWordHover(word, e)
+            }}
           >
             {item}
           </Box>,

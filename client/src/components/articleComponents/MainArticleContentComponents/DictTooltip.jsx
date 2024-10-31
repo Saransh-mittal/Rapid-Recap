@@ -8,11 +8,26 @@ const DictTooltip = ({ word, definition, position, onClose }) => {
   const [placement, setPlacement] = useState('bottom')
   const [isMobile] = useMediaQuery('(max-width: 480px)')
   const [isTablet] = useMediaQuery('(max-width: 768px)')
+  const clickTimeoutRef = useRef(null)
 
   useEffect(() => {
     const handleClickOutside = event => {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
-        onClose()
+        // Clear any existing timeout to prevent race conditions
+        if (clickTimeoutRef.current) {
+          clearTimeout(clickTimeoutRef.current)
+        }
+
+        // Add a small delay before closing to allow new tooltip to open
+        clickTimeoutRef.current = setTimeout(() => {
+          // Check if the clicked element is a dictionary word
+          const isDictionaryWord = event.target.closest(
+            '[data-dictionary-word]',
+          )
+          if (!isDictionaryWord) {
+            onClose()
+          }
+        }, 50)
       }
     }
 
@@ -58,6 +73,9 @@ const DictTooltip = ({ word, definition, position, onClose }) => {
     window.addEventListener('scroll', handleScroll)
 
     return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current)
+      }
       window.removeEventListener('resize', updateTooltipSize)
       document.removeEventListener('mousedown', handleClickOutside)
       window.removeEventListener('scroll', handleScroll)

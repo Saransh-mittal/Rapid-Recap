@@ -18,6 +18,14 @@ const FormattedContent = ({
 
   const handleWordHover = (word, event) => {
     event.stopPropagation()
+    // If clicking the same word that's already selected, close the tooltip
+    if (word === selectedWord) {
+      setSelectedWord(null)
+      setTooltipPosition(null)
+      return
+    }
+
+    // Otherwise, show tooltip for the new word
     const rect = event.target.getBoundingClientRect()
     setTooltipPosition({
       x: rect.left + rect.width / 2,
