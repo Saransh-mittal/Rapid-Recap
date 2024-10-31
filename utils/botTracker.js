@@ -60,6 +60,9 @@ const generateReportHtml = stats => {
       </tr>
   `
 
+  // Store URL details for the detailed section
+  let urlDetails = ''
+
   stats.forEach((botStats, botName) => {
     totalVisits += botStats.visits
     const verifiedPercent = (
@@ -84,11 +87,31 @@ const generateReportHtml = stats => {
         <td style="border: 1px solid #ddd; padding: 8px;">${botStats.urls.size}</td>
       </tr>
     `
+
+    // Add URL details section for each bot
+    urlDetails += `
+      <div style="margin-top: 20px;">
+        <h3 style="color: #333;">${botName} - Crawled URLs</h3>
+        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+          <ol style="margin: 0; padding-left: 20px;">
+            ${Array.from(botStats.urls)
+              .sort()
+              .map(url => `<li style="margin: 5px 0;">${url}</li>`)
+              .join('')}
+          </ol>
+        </div>
+      </div>
+    `
   })
 
   emailContent += `
     </table>
     <p style="margin-top: 20px;">Total bot visits today: ${totalVisits}</p>
+
+    <div style="margin-top: 30px;">
+      <h2>Detailed URL Breakdown</h2>
+      ${urlDetails}
+    </div>
   `
 
   return emailContent

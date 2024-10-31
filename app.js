@@ -31,6 +31,7 @@ const i18n = require('./i18n')
 
 const app = express()
 const server = http.createServer(app)
+
 if (process.env.NODE_ENV === 'development') {
   // Development: Disable security features for easier development
   app.use(
@@ -118,7 +119,7 @@ if (process.env.NODE_ENV === 'development') {
       crossOriginOpenerPolicy: { policy: 'same-origin' },
     }),
   )
-
+  app.use(searchConsoleMiddleware)
   // Production compression
   app.use(
     compression({
@@ -167,6 +168,7 @@ app.use(bodyParser.json())
 const connectDB = require('./db/conn')
 const { initializeSocket } = require('./socket')
 const BotVerifier = require('./utils/botVerifier')
+const searchConsoleMiddleware = require('./middleware/searchConsoleMiddleware')
 
 webpush.setVapidDetails(
   'mailto:rapidrecap2k23@gmail.com',
