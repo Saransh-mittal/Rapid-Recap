@@ -1,5 +1,5 @@
-const BotVerifier = require('./utils/botVerifier')
-const { trackBotVisit } = require('./utils/botTracker')
+const BotVerifier = require('../utils/botVerifier')
+const { trackBotVisit } = require('../utils/botTracker')
 
 const searchConsoleMiddleware = async (req, res, next) => {
   const startTime = Date.now()
