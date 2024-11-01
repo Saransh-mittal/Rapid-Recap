@@ -158,7 +158,7 @@ const getArticle = async (req, res) => {
   const { id } = req.params
   const { lang } = req.query
   try {
-    const cacheKey = `article_${id}`
+    const cacheKey = `article_${lang ? lang : 'en'}_${id}`
     const cachedArticle = cache.get(cacheKey)
 
     if (
