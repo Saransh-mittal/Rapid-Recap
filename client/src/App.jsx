@@ -148,38 +148,51 @@ const App = () => {
   useEffect(() => {
     const token = isToken()
 
+    // Handle non-authenticated state
     if (!token) {
       dispatch(
         addNoteMessageIfAllowed({
-          title: t('Start using Rapid Recap'), // Added translation
+          title: t('Start using Rapid Recap'),
           duration: 15000,
           width: '350px',
           actions: [
-            { text: t('Sign-In'), actionType: 'SIGN_IN' }, // Added translation
-            { text: t('Sign-In As Guest'), actionType: 'GUEST' }, // Added translation
+            { text: t('Sign-In'), actionType: 'SIGN_IN' },
+            { text: t('Sign-In As Guest'), actionType: 'GUEST' },
           ],
           isMileStone: true,
         }),
       )
     }
 
+    // Enhanced Service Worker handling
     if ('serviceWorker' in navigator) {
       dispatch(setTaskProgress({ task: 'serviceWorker', progress: 50 }))
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js').then(
+
+      // Register service worker immediately instead of waiting for load event
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then(
           registration => {
             console.log(
-              'ServiceWorker registration successful with scope: ',
+              'ServiceWorker registration successful:',
               registration.scope,
             )
-            registration.update()
+
+            // Check for updates periodically (every 4 hours)
+            setInterval(() => {
+              registration.update()
+            }, 4 * 60 * 60 * 1000)
           },
-          err => console.log('ServiceWorker registration failed: ', err),
+          err => {
+            console.error('ServiceWorker registration failed:', err)
+          },
         )
-      })
-      dispatch(setTaskProgress({ task: 'serviceWorker', progress: 100 }))
+        .finally(() => {
+          dispatch(setTaskProgress({ task: 'serviceWorker', progress: 100 }))
+        })
     }
 
+    // Midnight refresh functionality
     const refreshAtMidnightUTC = () => {
       const now = new Date()
       const midnightUTC = new Date(
@@ -201,7 +214,17 @@ const App = () => {
     }
 
     refreshAtMidnightUTC()
-  }, [dispatch, isToken])
+
+    // Cleanup function
+    return () => {
+      // Clear any intervals if component unmounts
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+          clearInterval(registration.update)
+        })
+      }
+    }
+  }, [dispatch, isToken]) // Added t to dependencies for translations
 
   useEffect(() => {
     if (tournamentId && status === 'ongoing') {
