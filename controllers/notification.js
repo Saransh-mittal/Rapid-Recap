@@ -9,7 +9,7 @@ const User = require('../model/userSchema')
 const notificationNews = async (req, res) => {
   try {
     // If you want to localize this message based on a specific user's language
-    const user = await User.findById('65b1ebbc90ba2e3794e9696d')
+    const user = await User.findById('6613f495ce72abb1ce9abde3')
     const localizedI18n = i18n.cloneInstance({ initImmediate: false })
     await localizedI18n.changeLanguage(user.userLanguage)
     const t = (key, options) =>
