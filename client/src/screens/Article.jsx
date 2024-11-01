@@ -233,22 +233,6 @@ const Article = () => {
     }
   }, [id])
 
-  const handleLanguageChange = useCallback(() => {
-    if (i18n.language === 'hi') {
-      if (article.hindiTitle) {
-        setTitle(prevTitle => ({ ...prevTitle, hindi: article.hindiTitle }))
-        setAuthor(prevAuthor => ({
-          ...prevAuthor,
-          hindi: article.hindiAuthor,
-        }))
-        setMainText(prevMainText => ({
-          ...prevMainText,
-          hindi: article.hindiMainText,
-        }))
-      }
-    }
-  }, [article, id, toast])
-
   const trackGenerateQuizClick = useCallback(() => {
     ReactGA.send({
       hitType: 'event',

@@ -29,7 +29,6 @@ const { generateStory } = require('../services/storyGenerateService')
 const LanguageDetect = require('langdetect')
 const ArticleHighlight = require('../model/articleHighlightSchema')
 const {
-  generateHighlights,
   generateHighlightForArticle,
 } = require('../utils/article.highlight.utils')
 
@@ -168,8 +167,16 @@ const getArticle = async (req, res) => {
         lang === 'hi' &&
         (!cachedArticle.hindiTitle ||
           !cachedArticle.hindiMainText ||
-          !cachedArticle.hindiAuthor)
-      )
+          !cachedArticle.hindiAuthor ||
+          !cachedArticle.dictionary ||
+          !cachedArticle.importantSentences ||
+          cachedArticle.dictionary.length === 0 ||
+          cachedArticle.importantSentences.length === 0)
+      ) &&
+      cachedArticle.dictionary &&
+      cachedArticle.importantSentences &&
+      cachedArticle.dictionary.length > 0 &&
+      cachedArticle.importantSentences.length > 0
     ) {
       return res.json({ quizExpired: false, newArticle: cachedArticle })
     }
@@ -189,9 +196,10 @@ const getArticle = async (req, res) => {
     }
     // console.log(highlights)
     // If no highlights exist or they failed, trigger background processing
+    let newHighlights = highlights
     if (!highlights || highlights.processingStatus !== 'completed') {
       try {
-        await generateHighlightForArticle({
+        newHighlights = await generateHighlightForArticle({
           articleId: id,
           lang: lang ? lang : 'en',
         })
@@ -252,11 +260,11 @@ const getArticle = async (req, res) => {
       date: formatDate(article.dateTime),
       _id: article._id,
       // Add highlights if they exist
-      dictionary: highlights?.dictionary || [],
-      importantSentences: highlights?.importantSentences || [],
+      dictionary: newHighlights?.dictionary || [],
+      importantSentences: newHighlights?.importantSentences || [],
     }
 
-    cache.put(cacheKey, newArticle, 3600000 * 24) // Cache for 24 hours
+    cache.put(cacheKey, newArticle, 3600000 * 1) // Cache for 24 hours
     res.status(201).send({ quizExpired: false, newArticle })
   } catch (error) {
     res.status(400).json({ error: error.message || 'Something went wrong' })
