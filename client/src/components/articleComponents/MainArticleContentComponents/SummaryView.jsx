@@ -10,8 +10,7 @@ const SummaryView = ({
   importantSentences,
   dictionary,
   isMobile,
-  onWordHover,
-  onCloseTooltip,
+  stableRef = { stableRef },
 }) => {
   const processTextInOrder = text => {
     const withBoldText = processTextWithBold(text)
@@ -22,15 +21,17 @@ const SummaryView = ({
     return highlightKeywords(
       withImportantSentences,
       dictionary,
-      onWordHover,
-      onCloseTooltip,
+      null,
+      null,
+      stableRef,
     )
   }
 
   return (
-    <Box as="ul" styleType="none" pl={0} spacing={4}>
+    <Box as="ul" pl={0} spacing={4}>
       {importantSentences.map((sentence, index) => (
         <Box
+          key={`sentence-${index}`}
           fontSize={isMobile ? 'md' : 'xl'}
           color="yellow.100"
           textShadow="0 1px 2px rgba(0,0,0,0.2)"

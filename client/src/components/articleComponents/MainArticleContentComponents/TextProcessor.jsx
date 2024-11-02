@@ -1,5 +1,6 @@
 import React from 'react'
 import { Box } from '@chakra-ui/react'
+import { HighlightedWordsContext } from '../../../contextAPI/MainArticleProvider'
 
 const processTextWithBold = text => {
   if (!text) return text
@@ -31,6 +32,8 @@ const applyDictionaryHighlights = (
   dictionary,
   onWordHover,
   closeTooltip,
+  highlightedWords,
+  stableRef,
 ) => {
   if (!text || typeof text !== 'string') return text
 
@@ -40,86 +43,88 @@ const applyDictionaryHighlights = (
   )
 
   sortedDictionary.forEach(({ word }) => {
-    // Modified regex pattern to support Unicode characters including Hindi
-    const wordPattern = word
-      .split(' ')
-      .map(part => `(?:${part})`) // Remove word boundary and use non-capturing group
-      .join('\\s+')
-    const regex = new RegExp(`(${wordPattern})`, 'gui') // Added 'u' flag for Unicode support
+    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const wordPattern = `(?<=^|\\s)(${escapedWord})(?=\\s|$|\\.)`
+    const regex = new RegExp(wordPattern, 'gui')
 
     result = result.flatMap(segment => {
       if (typeof segment !== 'string') return [segment]
 
-      const parts = segment.split(regex)
+      const matches = segment.match(regex)
+      const wordLower = word.toLowerCase()
 
-      return parts.reduce((acc, item, index) => {
-        const isMatch = regex.test(item)
-        regex.lastIndex = 0
+      if (matches && !highlightedWords.has(wordLower)) {
+        highlightedWords.add(wordLower)
 
-        if (!isMatch) return [...acc, item]
+        const parts = segment.split(regex)
 
-        return [
-          ...acc,
-          <Box
-            key={`dict-${word}-${index}`}
-            as="span"
-            display="inline-block"
-            px={2}
-            py={1}
-            mx={1}
-            bg="linear-gradient(135deg, rgba(159, 122, 234, 0.15), rgba(159, 122, 234, 0.25))"
-            color="purple.200"
-            borderRadius="md"
-            boxShadow="0 2px 4px rgba(0,0,0,0.2)"
-            cursor="pointer"
-            position="relative"
-            transition="all 0.3s ease"
-            data-dictionary-word={word}
-            _before={{
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              borderRadius: 'md',
-              border: '1px solid',
-              borderColor: 'purple.400',
-              opacity: 0.3,
-            }}
-            _hover={{
-              transform: 'translateY(-1px)',
-              bg: 'linear-gradient(135deg, rgba(159, 122, 234, 0.25), rgba(159, 122, 234, 0.35))',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
-              color: 'purple.100',
-            }}
-            onMouseEnter={e => {
-              if (!('ontouchstart' in window)) {
-                e.preventDefault()
-                onWordHover(word, e)
-              }
-            }}
-            onMouseLeave={() => {
-              if (!('ontouchstart' in window)) {
-                closeTooltip()
-              }
-            }}
-            onTouchStart={e => {
-              e.preventDefault()
-              onWordHover(word, e)
-            }}
-          >
-            {item}
-          </Box>,
-        ]
-      }, [])
+        return parts.reduce((acc, part, index) => {
+          if (matches.includes(part)) {
+            // Use stable event handlers from ref
+            const { handleMouseEnter, handleMouseLeave, handleTouchStart } =
+              stableRef.current
+
+            return [
+              ...acc,
+              <Box
+                key={`dict-${word}-${index}-${part}`}
+                as="span"
+                display="inline-block"
+                px={2}
+                py={1}
+                mx={1}
+                bg="linear-gradient(135deg, rgba(159, 122, 234, 0.15), rgba(159, 122, 234, 0.25))"
+                color="purple.200"
+                borderRadius="md"
+                boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+                cursor="pointer"
+                position="relative"
+                transition="all 0.3s ease"
+                data-dictionary-word={word}
+                _before={{
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  borderRadius: 'md',
+                  border: '1px solid',
+                  borderColor: 'purple.400',
+                  opacity: 0.3,
+                }}
+                _hover={{
+                  transform: 'translateY(-1px)',
+                  bg: 'linear-gradient(135deg, rgba(159, 122, 234, 0.25), rgba(159, 122, 234, 0.35))',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+                  color: 'purple.100',
+                }}
+                onMouseEnter={e => handleMouseEnter(e, word)}
+                onMouseLeave={handleMouseLeave}
+                onTouchStart={e => handleTouchStart(e, word)}
+              >
+                {part}
+              </Box>,
+            ]
+          }
+          return [...acc, part]
+        }, [])
+      }
+      return [segment]
     })
   })
 
   return result.flat()
 }
 
-const highlightKeywords = (content, dictionary, onWordHover, closeTooltip) => {
+const highlightKeywords = (
+  content,
+  dictionary,
+  onWordHover,
+  closeTooltip,
+  stableRef,
+) => {
+  const { words: highlightedWords } = React.useContext(HighlightedWordsContext)
   const processNode = node => {
     if (React.isValidElement(node)) {
       return React.cloneElement(node, {
@@ -135,6 +140,8 @@ const highlightKeywords = (content, dictionary, onWordHover, closeTooltip) => {
         dictionary,
         onWordHover,
         closeTooltip,
+        highlightedWords,
+        stableRef,
       )
     }
     return node

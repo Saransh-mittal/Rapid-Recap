@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Box,
   Flex,
@@ -9,6 +9,7 @@ import {
 } from '@chakra-ui/react'
 import FormattedContent from './MainArticleContentComponents/FormattedContent'
 import SourceLinkTag from './MainArticleContentComponents/SourceLinkTag'
+import { HighlightedWordsProvider } from '../../contextAPI/MainArticleProvider'
 
 const MainArticleContent = ({
   imgURL,
@@ -24,6 +25,16 @@ const MainArticleContent = ({
 }) => {
   const [useAltImage, setUseAltImage] = useState(false)
   const [isMobile] = useMediaQuery('(max-width: 480px)')
+  // Memoize the content props
+  const contentProps = useMemo(
+    () => ({
+      mainText: mainText[selectedLanguage],
+      themedContent,
+      dictionary,
+      importantSentences,
+    }),
+    [mainText, selectedLanguage, themedContent, dictionary, importantSentences],
+  )
 
   const handleImageError = () => {
     if (!useAltImage) {
@@ -68,26 +79,15 @@ const MainArticleContent = ({
                 mb={[2, 3, 4]}
                 width={{ base: '100%', sm: '100%', md: '80%', lg: '100%' }}
                 height="auto"
-                // maxHeight={{
-                //   base: '250px',
-                //   sm: '300px',
-                //   md: '400px',
-                //   lg: '500px',
-                // }}
                 objectFit="contain"
                 onError={handleImageError}
                 loading="lazy"
               />
             </Flex>
           </Box>
-
-          <FormattedContent
-            mainText={mainText[selectedLanguage]}
-            themedContent={themedContent}
-            dictionary={dictionary}
-            importantSentences={importantSentences}
-          />
-
+          <HighlightedWordsProvider>
+            <FormattedContent {...contentProps} />
+          </HighlightedWordsProvider>
           <SourceLinkTag SourceURL={SourceURL} />
         </Box>
       </Skeleton>

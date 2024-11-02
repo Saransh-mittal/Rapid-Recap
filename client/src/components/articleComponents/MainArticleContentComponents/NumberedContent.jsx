@@ -10,8 +10,7 @@ const NumberedContent = ({
   text,
   dictionary,
   importantSentences,
-  onWordHover,
-  onCloseTooltip,
+  stableRef = { stableRef },
 }) => {
   const processTextInOrder = text => {
     const withBoldText = processTextWithBold(text)
@@ -22,8 +21,9 @@ const NumberedContent = ({
     return highlightKeywords(
       withImportantSentences,
       dictionary,
-      onWordHover,
-      onCloseTooltip,
+      null,
+      null,
+      stableRef,
     )
   }
 
