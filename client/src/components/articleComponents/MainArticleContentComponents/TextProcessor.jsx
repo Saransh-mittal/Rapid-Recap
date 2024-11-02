@@ -40,11 +40,12 @@ const applyDictionaryHighlights = (
   )
 
   sortedDictionary.forEach(({ word }) => {
+    // Modified regex pattern to support Unicode characters including Hindi
     const wordPattern = word
       .split(' ')
-      .map(part => `\\b${part}\\b`)
+      .map(part => `(?:${part})`) // Remove word boundary and use non-capturing group
       .join('\\s+')
-    const regex = new RegExp(`(${wordPattern})`, 'gi')
+    const regex = new RegExp(`(${wordPattern})`, 'gui') // Added 'u' flag for Unicode support
 
     result = result.flatMap(segment => {
       if (typeof segment !== 'string') return [segment]
@@ -103,9 +104,8 @@ const applyDictionaryHighlights = (
                 closeTooltip()
               }
             }}
-            // onClick={e => onWordHover(word, e)} // Changed from onMouseEnter to onClick
             onTouchStart={e => {
-              e.preventDefault() // Prevent default touch behavior
+              e.preventDefault()
               onWordHover(word, e)
             }}
           >

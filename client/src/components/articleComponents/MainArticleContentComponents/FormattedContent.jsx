@@ -42,8 +42,8 @@ const FormattedContent = ({
 
   const content = themedContent || mainText
   let processedContent
-  if (Array.isArray(content)) {
-    const joinedContent = content.join(' ')
+  if (content && Array.isArray(content)) {
+    const joinedContent = content?.join(' ')
     const numberedPattern =
       /(\d+\.\s*(?:\*\*[^*]+\*\*[^.]*\.|\s*[^.]*\*\*[^*]+\*\*[^.]*\.))/g
     if (joinedContent.match(numberedPattern)) {
