@@ -5,10 +5,12 @@ const ArticleService = require('../../services/articleService')
 const BotVerifier = require('../../utils/botVerifier')
 const { trackBotVisit } = require('../../utils/botTracker')
 const { generateAndInjectSchemas } = require('../../utils/structuredData')
+const { generateMetaTags } = require('../../utils/seoHelper')
+const { generateMetaAndSchema } = require('../../utils/landingPageSeo')
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
-async function getBotContent(urlType, url) {
+async function getBotContent(urlType, url, baseUrl) {
   try {
     // Check cache first
     const cachedContent = cache.get(`bot-content-${url}`)
@@ -101,6 +103,7 @@ async function getBotContent(urlType, url) {
       content = {
         navbar: navbarContent,
         article: articleContent,
+        seoMetaTags: generateMetaTags(articleData, baseUrl),
       }
     }
 
@@ -195,21 +198,22 @@ function createSSRHandler(vite) {
             url.includes('get-started') || url === '/' || url === '/?bot=true'
               ? 'get-started'
               : 'article'
-          const botContent = await getBotContent(urlType, url)
-          template = handleBotTemplate(template, botContent, urlType)
-          // Inject structured data
           const baseUrl = `${req.protocol}://${req.get('host')}`
-          template = generateAndInjectSchemas({
-            template,
-            articleData:
-              urlType === 'article'
-                ? await ArticleService.getArticleContent(
-                    ArticleService.extractArticleId(url),
-                  )
-                : null,
-            url,
-            baseUrl,
-          })
+          const botContent = await getBotContent(urlType, url, baseUrl)
+          template = handleBotTemplate(template, botContent, urlType, baseUrl)
+          // Inject structured data
+
+          if (urlType === 'article') {
+            const articleData = await ArticleService.getArticleContent(
+              ArticleService.extractArticleId(url),
+            )
+            template = generateAndInjectSchemas({
+              template,
+              articleData,
+              url,
+              baseUrl,
+            })
+          }
         } else {
           template = await handleClientRendering()
         }
@@ -272,42 +276,90 @@ async function handleClientRendering() {
   return processedTemplate
 }
 
-function handleBotTemplate(template, botContent, urlType) {
-  let result = template
-    .replace('<div id="root">', '<div id="root" style="display: none;">')
-    .replace(
-      '<div id="splash-screen">',
-      '<div id="splash-screen" style="display: none;">',
-    )
-    .replace('<div id="bot-navbar"></div>', botContent.navbar)
-
+function handleBotTemplate(template, botContent, urlType, baseUrl) {
   if (urlType === 'get-started') {
-    result = result
+    // First remove existing meta tags and any duplicates
+    template = template.replace(
+      /<meta[^>]*>|<title>.*?<\/title>|<link[^>]*>/g,
+      '',
+    )
+    const { metaTags, schema } = generateMetaAndSchema(baseUrl)
+    // Replace head content and add schema
+    template = template
+      .replace(
+        /<head>.*?<\/head>/s,
+        `<head>\n${metaTags}\n<script type="application/ld+json">${JSON.stringify(
+          schema,
+          null,
+          2,
+        )}</script>\n</head>`,
+      )
+      .replace('<div id="root">', '<div id="root" style="display: none;">')
+      .replace(
+        '<div id="splash-screen">',
+        '<div id="splash-screen" style="display: none;">',
+      )
+
+    // Add content
+    template = template
+      .replace('<div id="bot-navbar"></div>', botContent.navbar)
       .replace('<div id="bot-hero"></div>', botContent.hero)
       .replace('<div id="bot-benefits"></div>', botContent.benefits)
       .replace('<div id="bot-features"></div>', botContent.features)
       .replace('<div id="bot-footer"></div>', botContent.footer)
   } else {
-    result = result.replace('<div id="bot-article"></div>', botContent.article)
+    // Your existing article handling code
+    template = template
+      .replace(/<meta[^>]*>|<title>.*?<\/title>|<link[^>]*>/g, '')
+      .replace(/^\s*[\r\n]/gm, '')
+      .replace(/(\r\n|\n|\r){2,}/gm, '\n')
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/\s+$/gm, '')
+
+    template = template
+      .replace('<div id="root">', '<div id="root" style="display: none;">')
+      .replace(
+        '<div id="splash-screen">',
+        '<div id="splash-screen" style="display: none;">',
+      )
+      .replace('<div id="bot-navbar"></div>', botContent.navbar)
+
+    if (botContent.seoMetaTags) {
+      template = template.replace(
+        '<head>',
+        `<head>\n    ${botContent.seoMetaTags}`,
+      )
+    }
+
+    template = template.replace(
+      '<div id="bot-article"></div>',
+      botContent.article,
+    )
+
+    template = template.replace(
+      '<style>',
+      `<link rel="stylesheet" href="/styles/utils/reset.css">
+      <link rel="stylesheet" href="/styles/utils/variables.css">
+      <link rel="stylesheet" href="/styles/main.css">
+      <link rel="stylesheet" href="/styles/components/css-navigation.css">
+      <link rel="stylesheet" href="/styles/components/css-article.css">
+      <link rel="stylesheet" href="/styles/components/css-hero.css">
+      <link rel="stylesheet" href="/styles/components/css-features.css">
+      <link rel="stylesheet" href="/styles/components/css-benefits.css">
+      <link rel="stylesheet" href="/styles/components/css-sections.css">
+      <link rel="stylesheet" href="/styles/components/css-footer.css">
+      <link rel="stylesheet" href="/styles/utils/responsive.css">
+      <style>`,
+    )
   }
 
-  result = result.replace(
-    '<style>',
-    `<link rel="stylesheet" href="/styles/utils/reset.css">
-<link rel="stylesheet" href="/styles/utils/variables.css">
-<link rel="stylesheet" href="/styles/main.css">
-<link rel="stylesheet" href="/styles/components/css-navigation.css">
-<link rel="stylesheet" href="/styles/components/css-article.css">
-<link rel="stylesheet" href="/styles/components/css-hero.css">
-<link rel="stylesheet" href="/styles/components/css-features.css">
-<link rel="stylesheet" href="/styles/components/css-benefits.css">
-<link rel="stylesheet" href="/styles/components/css-sections.css">
-<link rel="stylesheet" href="/styles/components/css-footer.css">
-<link rel="stylesheet" href="/styles/utils/responsive.css">
-<style>`,
-  )
+  // Clean up any remaining multiple newlines and spaces
+  template = template
+    .replace(/(\r\n|\n|\r){2,}/gm, '\n')
+    .replace(/\s+$/gm, '')
+    .replace(/^\s+/gm, '')
 
-  return result
+  return template
 }
 
 async function shouldHandleAsBot(req) {

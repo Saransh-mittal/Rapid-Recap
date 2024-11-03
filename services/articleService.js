@@ -1,21 +1,25 @@
 // File Path: server/src/services/articleService.js
 
 const Article = require('../model/articleSchema')
+const cache = require('memory-cache')
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 class ArticleService {
   static async getArticleContent(articleId) {
     try {
+      const cacheKey = `article-${articleId}`
+      const cachedArticle = cache.get(cacheKey)
+      if (cachedArticle) return cachedArticle
+
       const article = await Article.findById(articleId)
       if (!article) {
         throw new Error('Article not found')
       }
 
-      // Extract domain from URL for source
       const source = article.url
         ? new URL(article.url).hostname.replace('www.', '')
         : 'rapidrecap.co.in'
 
-      // Format date
       const formattedDate = new Date(article.dateTime)
         .toLocaleDateString('en-US', {
           month: 'short',
@@ -24,63 +28,98 @@ class ArticleService {
         })
         .toUpperCase()
 
-      return {
+      const processedArticle = {
         _id: article._id,
         title: article.title,
         mainText: article.mainText,
-        dateTime: formattedDate,
+        dateTime: article.dateTime, // Keep original date for schema
+        displayDate: formattedDate, // Formatted date for display
         source,
-        readTime: article.avgReadTime || 3,
-        imgURL:
-          article.imgURL && article.imgURL.length > 0
-            ? article.imgURL[0]
-            : null,
+        category: article.category,
+        tags: article.tags,
+        avgReadTime: article.avgReadTime || 3,
+        imgURL: article.imgURL?.[0] || null,
+        url: article.url,
+        author: article.author,
       }
+
+      cache.put(cacheKey, processedArticle, CACHE_DURATION)
+      return processedArticle
     } catch (error) {
       console.error('Error fetching article:', error)
       throw error
     }
   }
 
+  static generateSEOMetaTags(articleData, baseUrl) {
+    const description = articleData.mainText.substring(0, 155) + '...'
+    const canonicalUrl = `${baseUrl}/article/${articleData._id}`
+
+    return `
+    <meta name="description" content="${description}">
+    <meta name="keywords" content="${articleData.category}, ${
+      articleData.tags?.join(', ') || 'news'
+    }, rapid recap">
+    <link rel="canonical" href="${canonicalUrl}">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="${articleData.title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:url" content="${canonicalUrl}">
+    <meta property="og:site_name" content="Rapid Recap">
+    <meta property="article:published_time" content="${articleData.dateTime}">
+    <meta property="article:section" content="${
+      articleData.category || 'News'
+    }">
+    ${
+      articleData.tags
+        ? `<meta property="article:tag" content="${articleData.tags.join(
+            ', ',
+          )}">`
+        : ''
+    }
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${articleData.title}">
+    <meta name="twitter:description" content="${description}">
+    ${
+      articleData.imgURL
+        ? `<meta name="twitter:image" content="${articleData.imgURL}">`
+        : ''
+    }`
+  }
+
   static replaceArticleContent(template, articleData) {
-    let content = template
+    // Add schema.org attributes without modifying visual structure
+    let content = `<div itemscope itemtype="https://schema.org/NewsArticle">
+      ${template}
+    </div>`
+
+    content = content
       .replace('{{title}}', articleData.title)
       .replace('{{mainText}}', articleData.mainText)
-      .replace('{{dateTime}}', articleData.dateTime)
+      .replace('{{dateTime}}', articleData.displayDate)
       .replace('{{source}}', articleData.source)
-      .replace('{{readTime}}', articleData.readTime)
+      .replace('{{readTime}}', articleData.avgReadTime)
 
-    // Get image metadata if image exists
-    const imageMetadata = articleData.imgURL
-      ? {
-          url: articleData.imgURL,
-          alt: articleData.title, // Use title as alt text for SEO
-          type: 'image',
-        }
-      : null
-
-    // Replace image section with semantic HTML and metadata
-    if (imageMetadata) {
+    // Handle image section
+    if (articleData.imgURL) {
       content = content.replace(
         '{{imageSection}}',
         `<figure class="image-container" style="aspect-ratio: 16/9; margin: 0;">
           <img
             src=""
-            alt="${imageMetadata.alt}"
+            alt="${articleData.title}"
             width="800"
             height="450"
             class="content-image"
             loading="lazy"
             style="width: 100%; height: 100%; object-fit: cover;"
           />
-          <!-- SEO metadata -->
-          <meta itemprop="image" content="${imageMetadata.url}">
-          <meta itemprop="thumbnailUrl" content="${imageMetadata.url}">
-          <meta itemprop="image:alt" content="${imageMetadata.alt}">
+          <meta itemprop="image" content="${articleData.imgURL}">
         </figure>`,
       )
     } else {
-      // If no image, remove the image section entirely
       content = content.replace('{{imageSection}}', '')
     }
 

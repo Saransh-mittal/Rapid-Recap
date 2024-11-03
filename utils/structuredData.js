@@ -8,7 +8,22 @@ const generatePublisher = baseUrl => ({
   name: 'Rapid Recap',
   logo: generateLogoObject(baseUrl),
 })
-
+const generateOrganizationSchema = baseUrl => ({
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Rapid Recap',
+  url: baseUrl,
+  logo: generateLogoObject(baseUrl),
+  sameAs: [
+    'https://www.linkedin.com/company/rrapidrecap/',
+    'https://www.instagram.com/rrapidrecap/',
+  ],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer service',
+    email: 'rapidrecap2k23@gmail.com',
+  },
+})
 const generateArticleSchema = ({ articleData, baseUrl }) => ({
   '@context': 'https://schema.org',
   '@type': 'NewsArticle',
@@ -20,15 +35,31 @@ const generateArticleSchema = ({ articleData, baseUrl }) => ({
     name: articleData.author || 'Rapid Recap Team',
   },
   publisher: generatePublisher(baseUrl),
-  image: articleData.imgURL?.[0] || `${baseUrl}/images/rrlogo_512.png`,
+  image: articleData.imgURL
+    ? {
+        '@type': 'ImageObject',
+        url: articleData.imgURL,
+        width: '800',
+        height: '450',
+      }
+    : generateLogoObject(baseUrl),
   articleSection: articleData.category,
+  articleBody: articleData.mainText, // Add full article content
+  wordCount: articleData.mainText.split(/\s+/).length, // Add word count
   timeRequired: `PT${articleData.avgReadTime || 3}M`,
-  isAccessibleForFree: 'True',
+  isAccessibleForFree: true, // Use boolean instead of string
   mainEntityOfPage: {
     '@type': 'WebPage',
     '@id': `${baseUrl}/article/${articleData._id}`,
   },
   description: articleData.mainText.substring(0, 150) + '...',
+  keywords: articleData.tags ? articleData.tags.join(',') : undefined, // Add if tags exist
+  inLanguage: 'en-US', // Add language specification
+  speakable: {
+    // Add speakable section for voice search
+    '@type': 'SpeakableSpecification',
+    cssSelector: ['.article-title', '.article-content'],
+  },
 })
 
 const generateWebsiteSchema = baseUrl => ({
@@ -155,39 +186,91 @@ const generateBreadcrumbSchema = ({ url, baseUrl }) => {
   }
 }
 
-const injectStructuredData = (template, structuredData) => {
+const generateAndInjectSchemas = ({ template, articleData, url, baseUrl }) => {
+  const schemas = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        name: 'Rapid Recap',
+        description:
+          'Stay informed through friendly competition - Latest news, quizzes, and knowledge enhancement platform',
+        url: baseUrl,
+      },
+      {
+        '@type': 'Organization',
+        name: 'Rapid Recap',
+        url: baseUrl,
+        logo: generateLogoObject(baseUrl),
+        sameAs: [
+          'https://www.linkedin.com/company/rrapidrecap/',
+          'https://www.instagram.com/rrapidrecap/',
+        ],
+        contactPoint: {
+          '@type': 'ContactPoint',
+          contactType: 'customer service',
+          email: 'rapidrecap2k23@gmail.com',
+        },
+      },
+    ],
+  }
+
+  if (articleData) {
+    schemas['@graph'].push({
+      '@type': 'NewsArticle',
+      headline: articleData.title,
+      datePublished: new Date(articleData.dateTime).toISOString(),
+      dateModified: new Date(articleData.dateTime).toISOString(),
+      author: {
+        '@type': 'Organization',
+        name: articleData.author || 'Rapid Recap Team',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Rapid Recap',
+        logo: generateLogoObject(baseUrl),
+      },
+      image: {
+        '@type': 'ImageObject',
+        url: articleData.imgURL,
+        width: '800',
+        height: '450',
+      },
+      articleSection: articleData.category,
+      articleBody: articleData.mainText,
+      wordCount: articleData.mainText.split(/\s+/).length,
+      timeRequired: `PT${articleData.avgReadTime || 3}M`,
+      isAccessibleForFree: true,
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': `${baseUrl}/article/${articleData._id}`,
+      },
+      description: articleData.mainText.substring(0, 155) + '...',
+      inLanguage: 'en-US',
+      speakable: {
+        '@type': 'SpeakableSpecification',
+        cssSelector: ['.article-title', '.article-content'],
+      },
+      award: 'Enhanced by AI', // For AI enhancement badge
+      editor: {
+        '@type': 'Organization',
+        name: 'Rapid Recap',
+      },
+    })
+  }
+
+  schemas['@graph'].push({
+    '@type': 'BreadcrumbList',
+    itemListElement: generateListItems(getPathSegments(url), baseUrl),
+  })
+
   const scriptTag = `<script type="application/ld+json">${JSON.stringify(
-    structuredData,
+    schemas,
+    null,
+    2,
   )}</script>`
   return template.replace('</head>', `${scriptTag}</head>`)
 }
-
-const generateAndInjectSchemas = ({ template, articleData, url, baseUrl }) => {
-  let updatedTemplate = template
-
-  // Generate and inject all schemas
-  const schemas = []
-
-  // Always include website schema
-  schemas.push(generateWebsiteSchema(baseUrl))
-
-  // Add article schema if article data exists
-  if (articleData) {
-    schemas.push(generateArticleSchema({ articleData, baseUrl }))
-  }
-
-  // Always include breadcrumb schema
-  schemas.push(generateBreadcrumbSchema({ url, baseUrl }))
-
-  // Inject all schemas at once
-  const scriptTag = `<script type="application/ld+json">${JSON.stringify(
-    schemas,
-  )}</script>`
-  updatedTemplate = template.replace('</head>', `${scriptTag}</head>`)
-
-  return updatedTemplate
-}
-
 module.exports = {
   generateAndInjectSchemas,
   // generateArticleSchema,
