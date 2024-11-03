@@ -117,6 +117,9 @@ const LeaderboardSection = ({ tournamentData }) => {
 
   useEffect(() => {
     fetchLeaderboard(true)
+  }, [])
+  useEffect(() => {
+    if (refetchLeaderBoard) fetchLeaderboard(true)
   }, [refetchLeaderBoard])
 
   useEffect(() => {
