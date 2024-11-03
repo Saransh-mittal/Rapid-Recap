@@ -6,6 +6,7 @@ import {
   highlightKeywords,
 } from './TextProcessor'
 
+// NumberedContent.js
 const NumberedContent = ({
   text,
   dictionary,
@@ -28,17 +29,58 @@ const NumberedContent = ({
   }
 
   const formatNumberedText = text => {
-    const numberedPattern =
-      /(\d+\.\s*(?:\*\*[^*]+\*\*[^.]*\.|\s*[^.]*\*\*[^*]+\*\*[^.]*\.))/g
+    // Updated regex to match both bolded and unbolded numbered points
+    const numberedPattern = /(?:\*\*\d+\.\s+[^*]+\*\*|\d+\.\s+[^.]+\.)/g
     const matches = text?.match(numberedPattern)
 
     if (!matches) return processTextInOrder(text)
 
-    const parts = text.split(numberedPattern)
+    const parts = []
+    let lastIndex = 0
+
+    matches.forEach(match => {
+      const index = text.indexOf(match, lastIndex)
+
+      // Add text before the numbered point
+      if (index > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: text.slice(lastIndex, index),
+        })
+      }
+
+      // Extract number and content
+      const numberMatch = match.match(/\d+/)
+      const number = numberMatch ? numberMatch[0] : ''
+      let content
+
+      if (match.startsWith('**')) {
+        // Handle bolded format
+        content = match.replace(/^\*\*\d+\.\s+/, '').replace(/\*\*$/, '')
+      } else {
+        // Handle unbolded format
+        content = match.replace(/^\d+\.\s+/, '').replace(/\.$/, '')
+      }
+
+      parts.push({
+        type: 'numbered',
+        number,
+        content,
+      })
+
+      lastIndex = index + match.length
+    })
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      parts.push({
+        type: 'text',
+        content: text.slice(lastIndex),
+      })
+    }
 
     return parts.map((part, index) => {
-      if (matches?.includes(part)) {
-        const [number] = part.match(/\d+/) || []
+      if (part.type === 'numbered') {
         return (
           <Box
             key={`numbered-${index}`}
@@ -61,15 +103,13 @@ const NumberedContent = ({
               mr={3}
               mt={1}
             >
-              {number}
+              {part.number}
             </Box>
-            <Box flex="1">
-              {processTextInOrder(part.replace(/^\d+\.\s*/, ''))}
-            </Box>
+            <Box flex="1">{processTextInOrder(part.content)}</Box>
           </Box>
         )
       }
-      return processTextInOrder(part)
+      return processTextInOrder(part.content)
     })
   }
 

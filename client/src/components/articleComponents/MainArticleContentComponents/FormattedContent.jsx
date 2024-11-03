@@ -60,9 +60,11 @@ const FormattedContent = React.memo(
       const content = themedContent || mainText
       if (content && Array.isArray(content)) {
         const joinedContent = content.join(' ')
-        const numberedPattern =
-          /(\d+\.\s*(?:\*\*[^*]+\*\*[^.]*\.|\s*[^.]*\*\*[^*]+\*\*[^.]*\.))/g
-        if (joinedContent.match(numberedPattern)) {
+        // Updated pattern to match numbered lists with or without bold markers
+        const numberedPattern = /(?:\d+\.\s+[^.]+\.)/g
+        const hasNumberedList =
+          joinedContent.match(numberedPattern)?.length >= 3 // Check if there are at least 3 numbered points
+        if (hasNumberedList) {
           return [joinedContent]
         }
         return content
