@@ -5,6 +5,8 @@ const DYNAMIC_CACHE = `dynamic-${VERSION}`
 
 const RapidRecapLogo = './images/rrlogo.webp'
 const RapidRecapBadge = './images/rrlogo_badge.png'
+const IS_DEVELOPMENT =
+  location.hostname === 'localhost' || location.hostname === '127.0.0.1'
 
 // Add list of domains that should never be cached
 const NEVER_CACHE_DOMAINS = [
@@ -409,6 +411,11 @@ const STATIC_ASSETS = [
 
 // Function to check if URL should be cached
 function shouldCache(url) {
+  // Immediately return false if in development mode
+  if (IS_DEVELOPMENT) {
+    console.log('Development mode: Caching disabled')
+    return false
+  }
   try {
     const requestURL = new URL(url)
 
@@ -434,7 +441,11 @@ function shouldCache(url) {
 // Modified installation handler with better error handling
 self.addEventListener('install', event => {
   console.log('Service Worker installing - Version', VERSION)
-
+  if (IS_DEVELOPMENT) {
+    // Skip caching in development mode
+    event.waitUntil(self.skipWaiting())
+    return
+  }
   event.waitUntil(
     (async () => {
       try {
@@ -478,23 +489,33 @@ self.addEventListener('install', event => {
 })
 
 // Activate event - clean up old caches
+// Modified activate event that clears caches in development
 self.addEventListener('activate', event => {
   console.log('Service Worker activating - Version', VERSION)
 
   event.waitUntil(
     Promise.all([
-      // Remove old caches
-      caches.keys().then(keys => {
-        return Promise.all(
-          keys.map(key => {
-            // If this is an old cache (doesn't include current version)
-            if (!key.includes(VERSION)) {
-              console.log('Deleting old cache:', key)
-              return caches.delete(key)
-            }
-          }),
-        )
-      }),
+      // In development mode, clear all caches
+      IS_DEVELOPMENT
+        ? caches.keys().then(keys =>
+            Promise.all(
+              keys.map(key => {
+                console.log('Development mode: Deleting cache:', key)
+                return caches.delete(key)
+              }),
+            ),
+          )
+        : caches.keys().then(keys =>
+            Promise.all(
+              keys.map(key => {
+                // If this is an old cache (doesn't include current version)
+                if (!key.includes(VERSION)) {
+                  console.log('Deleting old cache:', key)
+                  return caches.delete(key)
+                }
+              }),
+            ),
+          ),
       // Take control of all open pages
       clients.claim(),
     ]),
@@ -506,6 +527,10 @@ self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return
 
+  // In development mode, always go to network
+  if (IS_DEVELOPMENT) {
+    return
+  }
   // Check if request should be cached
   if (!shouldCache(event.request.url)) return
 
