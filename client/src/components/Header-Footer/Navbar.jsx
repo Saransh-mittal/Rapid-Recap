@@ -332,60 +332,26 @@ const Navbar = ({ onNavbarLoad }) => {
     }
   }, [])
 
-  const navbarStyle = onLandingPage
-    ? {
-        position: 'fixed',
-        w: '100vw',
-        h: '5rem',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        align: 'center',
-        bgGradient:
-          'linear(180deg, rgba(13, 28, 40, 0.9) 0%, rgba(8, 17, 28, 0.8) 100%)',
-        borderBottom: '1px solid rgba(102, 204, 204, 0.1)',
-        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.2)',
-        transition: 'all 0.3s ease-in-out',
-        justifyContent: 'center',
-        className: 'navbar',
-        _before: {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          bgGradient:
-            'linear(to-r, transparent, rgba(102, 204, 204, 0.05), transparent)',
-          pointerEvents: 'none',
-        },
-        _hover: {
-          bgGradient:
-            'linear(180deg, rgba(15, 32, 46, 0.95) 0%, rgba(10, 20, 32, 0.85) 100%)',
-        },
-      }
-    : {
-        px: { base: '1.2rem', xl: '5rem' },
-        height: '5rem',
-        w: '100vw',
-        position: 'fixed',
-        zIndex: 1000,
-        borderBottomWidth: '1px',
-        borderBottomStyle: 'solid',
-        justifyContent: 'center',
-        className: 'navbar',
-        bgGradient:
-          'linear(180deg, rgba(28, 20, 56, 0.95) 0%, rgba(15, 13, 21, 0.90) 100%)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: isVisibleRef.current
-          ? '0 4px 30px rgba(0, 0, 0, 0.1)'
-          : 'none',
-        transition: 'all 0.3s ease-in-out',
-        _hover: {
-          bgGradient:
-            'linear(180deg, rgba(35, 25, 70, 0.95) 0%, rgba(20, 17, 28, 0.90) 100%)',
-        },
-      }
+  const navbarStyle = {
+    px: { base: '1.2rem', xl: '5rem' },
+    height: '5rem',
+    w: '100vw',
+    position: 'fixed',
+    zIndex: 1000,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    justifyContent: 'center',
+    className: 'navbar',
+    bgGradient:
+      'linear(180deg, rgba(28, 20, 56, 0.95) 0%, rgba(15, 13, 21, 0.90) 100%)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: isVisibleRef.current ? '0 4px 30px rgba(0, 0, 0, 0.1)' : 'none',
+    transition: 'all 0.3s ease-in-out',
+    _hover: {
+      bgGradient:
+        'linear(180deg, rgba(35, 25, 70, 0.95) 0%, rgba(20, 17, 28, 0.90) 100%)',
+    },
+  }
 
   return (
     <LoadingContext.Provider value={{ onComponentLoad: handleComponentLoad }}>

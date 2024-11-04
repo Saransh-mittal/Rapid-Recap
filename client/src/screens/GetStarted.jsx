@@ -6,24 +6,57 @@ import { addNoteMessage } from '../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 import { isClient } from '../utils/environment'
 
-import Hero from '../components/getStartedComponents/Hero'
 import BenefitsMap from '../components/getStartedComponents/BenefitsMap'
 import Features from '../components/getStartedComponents/Features'
+import HeroV2 from '../components/getStartedComponents/HeroV2'
 
 const theme = extendTheme({
+  colors: {
+    brand: {
+      50: '#e6fffa',
+      100: '#b2f5ea',
+      200: '#81e6d9',
+      300: '#4fd1c5',
+      400: '#38b2ac',
+      500: '#4ecdc4',
+      600: '#319795',
+      700: '#2c7a7b',
+      800: '#285e61',
+      900: '#234e52',
+    },
+  },
+  components: {
+    Button: {
+      variants: {
+        solid: {
+          bg: 'brand.500',
+          color: 'white',
+          _hover: {
+            bg: 'brand.600',
+            transform: 'translateY(-2px)',
+            boxShadow: 'lg',
+          },
+        },
+      },
+    },
+    Badge: {
+      variants: {
+        brand: {
+          bg: 'rgba(78, 205, 196, 0.15)',
+          color: 'brand.500',
+          borderRadius: 'full',
+          px: 3,
+          py: 1,
+        },
+      },
+    },
+  },
   styles: {
     global: {
       body: {
         bg: 'gray.900',
         color: 'white',
       },
-    },
-  },
-  colors: {
-    brand: {
-      50: '#e6fffa',
-      100: '#b2f5ea',
-      500: '#4ecdc4',
     },
   },
 })
@@ -127,19 +160,18 @@ const GetStarted = () => {
 
   const renderContent = weakDevice => (
     <Box
-      bgImage={{
-        base: "url('/images/landingPage/featureBgMobile.webp')",
-        md: "url('/images/landingPage/featureBg.webp')",
-      }}
-      bgAttachment={weakDevice ? 'scroll' : 'fixed'}
-      bgSize="cover"
-      bgPosition="center"
+      // bgImage={{
+      //   base: "url('/images/landingPage/featureBgMobile.webp')",
+      //   md: "url('/images/landingPage/featureBg.webp')",
+      // }}
+      // bgAttachment={weakDevice ? 'scroll' : 'fixed'}
+      // bgSize="cover"
+      // bgPosition="center"
       minHeight="100vh"
     >
       {isClient ? (
         <>
-          <Hero isWeakDevice={weakDevice} />
-
+          <HeroV2 isWeakDevice={isWeakDevice} />
           <BenefitsMap isWeakDevice={weakDevice} />
 
           <Features isWeakDevice={weakDevice} />
@@ -152,13 +184,13 @@ const GetStarted = () => {
   )
 
   return (
-    <ChakraProvider theme={theme}>
+    <>
       {isWeakDevice || !isClient ? (
         renderContent(true)
       ) : (
         <ParallaxProvider>{renderContent(false)}</ParallaxProvider>
       )}
-    </ChakraProvider>
+    </>
   )
 }
 
