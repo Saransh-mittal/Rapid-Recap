@@ -6,7 +6,6 @@ import {
   highlightKeywords,
 } from './TextProcessor'
 
-// NumberedContent.js
 const NumberedContent = ({
   text,
   dictionary,
@@ -29,8 +28,10 @@ const NumberedContent = ({
   }
 
   const formatNumberedText = text => {
-    // Updated regex to match both bolded and unbolded numbered points
-    const numberedPattern = /(?:\*\*\d+\.\s+[^*]+\*\*|\d+\.\s+[^.]+\.)/g
+    // Updated regex to match only numbered points that start lines or follow line breaks
+    // It will match both bolded and unbolded numbered points while excluding years and other numbers
+    const numberedPattern =
+      /(?:^|\n|\r)(?:\*\*(\d+)\.\s+([^*]+)\*\*|(\d+)\.\s+([^.\n]+)\.)/g
     const matches = text?.match(numberedPattern)
 
     if (!matches) return processTextInOrder(text)
@@ -39,7 +40,9 @@ const NumberedContent = ({
     let lastIndex = 0
 
     matches.forEach(match => {
-      const index = text.indexOf(match, lastIndex)
+      // Remove any leading whitespace or newline characters when finding the index
+      const cleanMatch = match.trimLeft()
+      const index = text.indexOf(cleanMatch, lastIndex)
 
       // Add text before the numbered point
       if (index > lastIndex) {
@@ -50,16 +53,16 @@ const NumberedContent = ({
       }
 
       // Extract number and content
-      const numberMatch = match.match(/\d+/)
+      const numberMatch = cleanMatch.match(/\d+/)
       const number = numberMatch ? numberMatch[0] : ''
       let content
 
-      if (match.startsWith('**')) {
+      if (cleanMatch.startsWith('**')) {
         // Handle bolded format
-        content = match.replace(/^\*\*\d+\.\s+/, '').replace(/\*\*$/, '')
+        content = cleanMatch.replace(/^\*\*\d+\.\s+/, '').replace(/\*\*$/, '')
       } else {
         // Handle unbolded format
-        content = match.replace(/^\d+\.\s+/, '').replace(/\.$/, '')
+        content = cleanMatch.replace(/^\d+\.\s+/, '').replace(/\.$/, '')
       }
 
       parts.push({
