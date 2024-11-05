@@ -115,7 +115,7 @@ const LoadingScreen = React.memo(({ progress }) => {
 
   const stars = useMemo(
     () =>
-      Array(25)
+      Array(30)
         .fill()
         .map((_, i) => ({
           size: Math.random() * 3 + 1,

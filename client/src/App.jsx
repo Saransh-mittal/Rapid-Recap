@@ -382,7 +382,7 @@ const App = () => {
       {showLoadingScreen && <LoadingScreen progress={overallProgress} />}
 
       <Suspense fallback={null}>
-        <FixedBackground />
+        {!showLoadingScreen && <FixedBackground />}
       </Suspense>
 
       <Suspense fallback={null}>

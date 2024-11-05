@@ -59,7 +59,7 @@ const styles = `
 `
 
 const FixedBackground = ({
-  starCount = 25,
+  starCount = 50,
   reduced = false,
   forceRender = false,
   isModal = false,
