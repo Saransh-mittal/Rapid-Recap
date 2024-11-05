@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Box,
   VStack,
@@ -20,8 +20,11 @@ import {
   AspectRatio,
   Portal,
   SlideFade,
+  Stat,
+  StatNumber,
+  StatLabel,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Search2Icon } from '@chakra-ui/icons'
 import {
   Brain,
@@ -33,15 +36,18 @@ import {
   Award,
   Zap,
   ArrowRight,
+  Languages,
+  TrendingUp,
+  Clock,
 } from 'lucide-react'
 import { keyframes } from '@emotion/react'
 import learner from '/images/learner.png'
 
-// Constants for theme (same as before)
+// Constants
 const COLORS = {
   accent: '#ED64A6',
   secondary: '#805AD5',
-  darkBg: 'rgba(28, 25, 63, 0.7)',
+  darkBg: 'rgba(28, 25, 63, 0.9)',
   cardBorder: 'rgba(237, 100, 166, 0.2)',
 }
 
@@ -58,17 +64,20 @@ const float = keyframes`
   100% { transform: translateY(0px); }
 `
 
-// Modified StatsCard with hover effect
-const StatsCard = ({ icon: Icon, value, label }) => (
+// Enhanced StatsCard with animation and better visual hierarchy
+const StatsCard = ({ icon: Icon, value, label, subtext }) => (
   <Box
-    w={'100%'}
+    as={motion.div}
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.5 }}
+    w="100%"
     bg={COLORS.darkBg}
-    borderRadius="lg"
-    p={4}
+    borderRadius="xl"
+    p={3}
     border="1px solid"
     borderColor={COLORS.cardBorder}
-    textAlign="center"
-    transition="all 0.3s ease"
     _hover={{
       transform: 'translateY(-5px)',
       borderColor: COLORS.accent,
@@ -76,13 +85,20 @@ const StatsCard = ({ icon: Icon, value, label }) => (
     }}
   >
     <VStack spacing={2}>
-      <Icon size={20} color={COLORS.accent} />
-      <Text fontSize="2xl" fontWeight="bold" color="white">
-        {value}
-      </Text>
-      <Text fontSize="sm" color="whiteAlpha.800">
-        {label}
-      </Text>
+      <Icon size={24} color={COLORS.accent} />
+      <Stat textAlign="center">
+        <StatNumber fontSize="2xl" fontWeight="bold" color="white">
+          {value}
+        </StatNumber>
+        <StatLabel fontSize={'sm'} color="whiteAlpha.800">
+          {label}
+        </StatLabel>
+      </Stat>
+      {subtext && (
+        <Text mt={-3} fontSize="xs" color="whiteAlpha.600">
+          {subtext}
+        </Text>
+      )}
     </VStack>
   </Box>
 )
@@ -90,6 +106,7 @@ const StatsCard = ({ icon: Icon, value, label }) => (
 // Add this component definition in the same file, above the HeroV2 component
 const TournamentBanner = () => (
   <Box
+    mt={8}
     as={motion.div}
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -194,55 +211,80 @@ const TournamentBanner = () => (
   </Box>
 )
 
-// New component for floating CTA
-const FloatingCTA = () => (
-  <Portal>
-    <SlideFade in={true} offsetY="20px">
-      <Box
-        position="fixed"
-        bottom="20px"
-        right="20px"
-        zIndex={1000}
-        animation={`${float} 3s ease-in-out infinite`}
-      >
-        <Button
-          size="lg"
-          bg={COLORS.accent}
-          color="white"
-          px={8}
-          py={6}
-          fontSize="xl"
-          rightIcon={<ArrowRight />}
-          _hover={{
-            bg: 'pink.500',
-            transform: 'translateY(-2px) scale(1.05)',
-          }}
-        >
-          Start Your Journey
-        </Button>
-      </Box>
-    </SlideFade>
-  </Portal>
-)
+// Enhanced Smart CTA Component
+const SmartCTA = ({ isMainButtonVisible }) => {
+  const isMobile = useBreakpointValue({ base: true, md: false })
+
+  return (
+    <AnimatePresence>
+      {!isMainButtonVisible && (
+        <Portal>
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            transition={{ type: 'spring', stiffness: 100 }}
+          >
+            <Box
+              position="fixed"
+              bottom={4}
+              right={4}
+              zIndex={1000}
+              bg="rgba(28, 25, 63, 0.95)"
+              borderRadius="xl"
+              p={2}
+              backdropFilter="blur(8px)"
+              border="1px solid"
+              borderColor="rgba(237, 100, 166, 0.2)"
+              boxShadow="lg"
+            >
+              <Button
+                size="lg"
+                bg={COLORS.accent}
+                color="white"
+                px={8}
+                py={6}
+                fontSize={isMobile ? 'md' : 'xl'}
+                rightIcon={<TrendingUp />}
+                _hover={{
+                  bg: 'pink.500',
+                  transform: 'translateY(-2px) scale(1.02)',
+                  boxShadow: `0 0 20px ${COLORS.accent}33`,
+                }}
+                transition="all 0.3s ease"
+              >
+                Start Learning Free
+              </Button>
+            </Box>
+          </motion.div>
+        </Portal>
+      )}
+    </AnimatePresence>
+  )
+}
 
 const HeroV2 = () => {
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeUsers, setActiveUsers] = useState(37)
+  const [isMainButtonVisible, setIsMainButtonVisible] = useState(true)
+  const mainButtonRef = useRef(null)
   const isMobile = useBreakpointValue({ base: true, md: false })
-
-  // New scroll animation for stats
-  const [isVisible, setIsVisible] = useState(false)
   useEffect(() => {
-    const handleScroll = () => {
-      const scrolled = window.scrollY
-      if (scrolled > 100) {
-        setIsVisible(true)
-      }
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsMainButtonVisible(entry.isIntersecting)
+      },
+      {
+        threshold: 0.5,
+        rootMargin: '-100px',
+      },
+    )
 
+    if (mainButtonRef.current) {
+      observer.observe(mainButtonRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [])
   return (
     <Box minH="100vh" position="relative" py={8} mt={16}>
       <Container maxW="container.xl">
@@ -251,136 +293,146 @@ const HeroV2 = () => {
           gap={8}
           alignItems="center"
         >
-          {/* Left Section - Modified for better hierarchy */}
-          <VStack spacing={8} align="start">
-            <VStack align="start" spacing={4} maxW="800px">
-              <HStack
-                bg="rgba(237, 100, 166, 0.1)"
-                p={2}
-                borderRadius="full"
-                spacing={3}
-              >
-                <Badge
-                  color={COLORS.accent}
-                  bg="transparent"
-                  px={2}
-                  fontSize="sm"
-                >
-                  <HStack spacing={2}>
-                    <Users size={14} />
-                    <Text>{activeUsers} learners active now</Text>
-                  </HStack>
-                </Badge>
-                <Badge
-                  color="green.400"
-                  bg="green.400"
-                  opacity="0.2"
-                  px={2}
-                  borderRadius="full"
-                >
-                  Live
-                </Badge>
-              </HStack>
+          {/* Left Section */}
 
+          <VStack
+            align="start"
+            spacing={4}
+            alignItems={{ base: 'center', lg: 'flex-start' }}
+            w={'100%'}
+          >
+            {/* Language Badge */}
+            <HStack
+              bg="rgba(237, 100, 166, 0.1)"
+              p={2}
+              borderRadius="full"
+              spacing={3}
+            >
+              <Badge
+                color={COLORS.accent}
+                bg="transparent"
+                px={2}
+                fontSize="sm"
+              >
+                <HStack spacing={2}>
+                  <Languages size={14} />
+                  <Text>Available in English & हिंदी</Text>
+                </HStack>
+              </Badge>
+              <Badge color="green" px={2} borderRadius="full">
+                Live
+              </Badge>
+            </HStack>
+
+            {/* Main Heading with Social Proof */}
+            <Box>
               <Heading
-                fontSize={{ base: '2xl', md: '5xl' }}
+                fontSize={{ base: '4xl', md: '4xl', lg: '5xl' }}
                 fontWeight="bold"
                 bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
                 bgClip="text"
                 lineHeight="1.1"
-                maxW={'600px'}
-                w={{ base: 'full', md: '600px' }}
+                mb={4}
+                textAlign={{ base: 'center', lg: 'left' }}
               >
-                Turn News Into Knowledge
+                Turn News into Knowledge
               </Heading>
-
               <Text
-                fontSize={{ base: 'md', md: 'lg', lg: 'xl' }}
+                fontSize={{ base: 'lg', md: 'xl' }}
                 color="whiteAlpha.900"
+                maxW="600px"
+                textAlign={{ base: 'center', lg: 'left' }}
               >
-                Stay informed through friendly competition
+                Join 1000+ monthly active learners who stay ahead through
+                interactive news quizzes and competitive learning
               </Text>
+            </Box>
 
-              {/* Primary CTA moved up for better visibility */}
-              <Button
-                size="lg"
-                bg={COLORS.accent}
-                color="white"
-                px={12}
-                py={7}
-                fontSize="xl"
-                rightIcon={<ArrowRight />}
-                _hover={{
-                  bg: 'pink.500',
-                  transform: 'translateY(-2px) scale(1.05)',
-                }}
-                boxShadow={`0 0 30px ${COLORS.accent}33`}
-              >
-                Start Your Journey
-              </Button>
-
-              <Text color="whiteAlpha.700" fontSize="sm">
-                Free access to core features • No credit card required
-              </Text>
-
-              <InputGroup size="lg" maxW="500px" mt={4}>
-                <Input
-                  bg={COLORS.darkBg}
-                  border="1px solid"
-                  borderColor={COLORS.cardBorder}
-                  _hover={{ borderColor: COLORS.accent }}
-                  _focus={{
-                    borderColor: COLORS.accent,
-                    boxShadow: `0 0 0 1px ${COLORS.accent}`,
-                  }}
-                  placeholder="Search articles..."
+            {/* CTA Section */}
+            <VStack
+              align="start"
+              spacing={4}
+              w="100%"
+              mt={4}
+              alignItems={{
+                base: 'center',
+                lg: 'flex-start',
+              }}
+            >
+              <Box ref={mainButtonRef}>
+                <Button
                   size="lg"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-                <InputRightElement>
-                  <IconButton
-                    icon={<Search2Icon />}
-                    variant="ghost"
-                    color={COLORS.accent}
-                    _hover={{ bg: 'transparent' }}
-                  />
-                </InputRightElement>
-              </InputGroup>
+                  bg={COLORS.accent}
+                  color="white"
+                  px={12}
+                  py={7}
+                  fontSize="xl"
+                  rightIcon={<TrendingUp />}
+                  _hover={{
+                    bg: 'pink.500',
+                    transform: 'translateY(-2px) scale(1.05)',
+                  }}
+                  boxShadow={`0 0 30px ${COLORS.accent}33`}
+                >
+                  Start Learning Free
+                </Button>
+              </Box>
+
+              <HStack spacing={4} wrap="wrap">
+                <Badge variant="outline" colorScheme="pink">
+                  ✓ No credit card
+                </Badge>
+                <Badge variant="outline" colorScheme="pink">
+                  ✓ 120+ daily articles
+                </Badge>
+                <Badge variant="outline" colorScheme="pink">
+                  ✓ Weekly tournaments
+                </Badge>
+              </HStack>
             </VStack>
 
-            {/* Stats Section with animation */}
-            <Grid
-              templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }}
-              gap={4}
-              w="full"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
-              transition={{ duration: 0.5 }}
-            >
-              <StatsCard icon={BookOpen} value="5K+" label="Daily Quizzes" />
-              <StatsCard icon={Users} value="1K+" label="Active Users" />
-              <StatsCard icon={Award} value="500+" label="Elite Members" />
-              <StatsCard icon={Trophy} value="50+" label="Tournaments" />
-            </Grid>
+            {/* Search Bar */}
+            <InputGroup size="lg" maxW="500px" mt={4}>
+              <Input
+                bg={COLORS.darkBg}
+                border="1px solid"
+                borderColor={COLORS.cardBorder}
+                _hover={{ borderColor: COLORS.accent }}
+                _focus={{
+                  borderColor: COLORS.accent,
+                  boxShadow: `0 0 0 1px ${COLORS.accent}`,
+                }}
+                placeholder="Search from 120+ daily articles..."
+                size="lg"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+              <InputRightElement>
+                <IconButton
+                  icon={<Search2Icon />}
+                  variant="ghost"
+                  color={COLORS.accent}
+                  _hover={{ bg: 'transparent' }}
+                />
+              </InputRightElement>
+            </InputGroup>
           </VStack>
 
-          {/* Right Section - Modified for better visual appeal */}
+          {/* Right Section - Hero Image */}
           {!isMobile && (
             <Box
               position="relative"
               w="90%"
-              h="90%"
+              h="100%"
               display={{ base: 'none', lg: 'block' }}
             >
               <AspectRatio ratio={4 / 3}>
                 <Box
                   as="img"
                   src={learner}
-                  alt="Person using Rapid Recap"
+                  alt="Student using Rapid Recap for daily learning"
                   objectFit="cover"
                   borderRadius="2xl"
-                  // boxShadow={`0 0 40px ${COLORS.accent}33`}
                   filter="brightness(0.9)"
                   _hover={{
                     filter: 'brightness(1)',
@@ -390,7 +442,7 @@ const HeroV2 = () => {
                 />
               </AspectRatio>
 
-              {/* Floating elements around the image */}
+              {/* Floating Achievement Badges */}
               <Box
                 position="absolute"
                 top="10%"
@@ -400,7 +452,6 @@ const HeroV2 = () => {
                 borderRadius="xl"
                 border="1px solid"
                 borderColor={COLORS.cardBorder}
-                animation={`${float} 3s ease-in-out infinite`}
               >
                 <Trophy color={COLORS.accent} size={24} />
               </Box>
@@ -414,22 +465,46 @@ const HeroV2 = () => {
                 borderRadius="xl"
                 border="1px solid"
                 borderColor={COLORS.cardBorder}
-                animation={`${float} 3s ease-in-out infinite 1s`}
               >
                 <Brain color={COLORS.accent} size={24} />
               </Box>
             </Box>
           )}
         </Grid>
-
-        {/* Tournament Banner - Enhanced with animation */}
-        <Box mt={12}>
-          <TournamentBanner />
-        </Box>
+        <Grid
+          templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }}
+          gap={4}
+          w="full"
+          mt={8}
+        >
+          <StatsCard
+            icon={Users}
+            value="1000+"
+            label="Monthly Users"
+            subtext="Growing community"
+          />
+          <StatsCard
+            icon={Clock}
+            value="2500+"
+            label="Minutes Daily"
+            subtext="Learning time"
+          />
+          <StatsCard
+            icon={Trophy}
+            value="300+"
+            label="Tournament Players"
+            subtext="Monthly participants"
+          />
+          <StatsCard
+            icon={BookOpen}
+            value="120+"
+            label="Daily Articles"
+            subtext="Fresh content daily"
+          />
+        </Grid>
+        <TournamentBanner />
+        <SmartCTA isMainButtonVisible={isMainButtonVisible} />
       </Container>
-
-      {/* Floating CTA for mobile */}
-      {isMobile && <FloatingCTA />}
     </Box>
   )
 }
