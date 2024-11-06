@@ -124,7 +124,7 @@ const UISection = ({ image, title, description, isImageLeft }) => {
 
       <VStack
         w={{ base: 'full', lg: '50%' }}
-        align={{ base: 'center', lg: isImageLeft ? 'flex-start' : 'flex-end' }}
+        align={{ base: 'center', lg: 'flex-start' }}
         spacing={{ base: 4, md: 6 }}
         order={isMobile ? 1 : isImageLeft ? 1 : 0}
       >
