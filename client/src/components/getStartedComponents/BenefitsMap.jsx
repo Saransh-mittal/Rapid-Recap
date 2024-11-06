@@ -116,7 +116,7 @@ const BenefitCard = ({
 
       {isLarge && (
         <Badge
-          colorScheme="pink"
+          color={COLORS.accent}
           fontSize="sm"
           px={3}
           py={1}
@@ -220,7 +220,7 @@ const BenefitsMap = ({ isWeakDevice }) => {
             textAlign="center"
           >
             <Badge
-              colorScheme="pink"
+              color={COLORS.accent}
               px={3}
               py={1}
               mb={4}

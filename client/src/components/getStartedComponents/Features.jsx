@@ -270,6 +270,7 @@ const Features = ({ isWeakDevice = false }) => {
               display="flex"
               alignItems="center"
               gap={2}
+              fontSize="sm"
             >
               <TrendingUp size={12} />
               Discover Our Features
