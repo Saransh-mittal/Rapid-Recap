@@ -164,7 +164,7 @@ const ArticleSearch = ({ COLORS }) => {
               borderColor: COLORS.accent,
               boxShadow: `0 0 0 1px ${COLORS.accent}`,
             }}
-            placeholder="Search from 120+ daily articles..."
+            placeholder="Search thousands of news articles..."
             value={searchQuery}
             onChange={handleSearchChange}
             onFocus={() => searchQuery.trim() && onOpen()}

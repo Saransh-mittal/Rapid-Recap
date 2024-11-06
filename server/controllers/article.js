@@ -654,22 +654,110 @@ const searchArticles = asyncHandler(async (req, res) => {
       category: { $ne: 'onBoardingArticle' },
     })
 
-    const articles = await Article.find(
-      {
-        $text: { $search: query },
-        ...filter,
-        category: { $ne: 'onBoardingArticle' },
-      },
-      { score: { $meta: 'textScore' } },
-    )
-      .sort({ score: { $meta: 'textScore' } }) // Sort by relevance
-      .skip((pageNumber - 1) * limitNumber)
-      .limit(limitNumber)
-      .select(
-        'url dateTime author hindiAuthor title hindiTitle mainText hindiMainText imgURL quiz userQuizStatus category relatedArticles avgReadTime quizAttemptCnt _id',
-      )
+    // Get dates for time-based boosting
+    const now = new Date()
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000)
+    const threeDaysAgo = new Date(now - 3 * 24 * 60 * 60 * 1000)
+    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000)
 
-    articles.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+    const articles = await Article.aggregate([
+      // Initial match to filter articles
+      {
+        $match: {
+          $text: { $search: query },
+          ...filter,
+          category: { $ne: 'onBoardingArticle' },
+        },
+      },
+      // Add text score and parse date
+      {
+        $addFields: {
+          textScore: { $meta: 'textScore' },
+          dateObj: { $dateFromString: { dateString: '$dateTime' } },
+        },
+      },
+      // Calculate time-based boost and final score
+      {
+        $addFields: {
+          timeBoost: {
+            $switch: {
+              branches: [
+                // Last 24 hours: 5x boost
+                {
+                  case: { $gte: ['$dateObj', oneDayAgo] },
+                  then: 5,
+                },
+                // 1-3 days: 3x boost
+                {
+                  case: { $gte: ['$dateObj', threeDaysAgo] },
+                  then: 3,
+                },
+                // 3-7 days: 2x boost
+                {
+                  case: { $gte: ['$dateObj', sevenDaysAgo] },
+                  then: 2,
+                },
+                // Older than 7 days: no boost
+              ],
+              default: 1,
+            },
+          },
+          // Combine scores: recency (90%) + text relevance (10%)
+          finalScore: {
+            $add: [
+              // Time-based score (90% weight)
+              {
+                $multiply: [
+                  {
+                    $divide: [
+                      { $subtract: ['$dateObj', new Date(0)] },
+                      1000 * 60 * 60 * 24, // Convert to days
+                    ],
+                  },
+                  0.9,
+                ],
+              },
+              // Text relevance score (10% weight)
+              {
+                $multiply: [{ $meta: 'textScore' }, 0.1],
+              },
+            ],
+          },
+        },
+      },
+      // Multiply final score by time boost
+      {
+        $addFields: {
+          finalScore: { $multiply: ['$finalScore', '$timeBoost'] },
+        },
+      },
+      // Sort by final score
+      { $sort: { finalScore: -1 } },
+      // Pagination
+      { $skip: (pageNumber - 1) * limitNumber },
+      { $limit: limitNumber },
+      // Project needed fields
+      {
+        $project: {
+          url: 1,
+          dateTime: 1,
+          author: 1,
+          hindiAuthor: 1,
+          title: 1,
+          hindiTitle: 1,
+          mainText: 1,
+          hindiMainText: 1,
+          imgURL: 1,
+          quiz: 1,
+          userQuizStatus: 1,
+          category: 1,
+          relatedArticles: 1,
+          avgReadTime: 1,
+          quizAttemptCnt: 1,
+          _id: 1,
+        },
+      },
+    ])
 
     const processedArticles = await Promise.all(
       articles.map(async article => {
