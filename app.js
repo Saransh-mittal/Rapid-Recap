@@ -59,66 +59,71 @@ if (process.env.NODE_ENV === 'development') {
   })
 } else {
   // Production: Enable security and optimization features
-  // app.use(
-  //   helmet({
-  //     contentSecurityPolicy: {
-  //       useDefaults: false,
-  //       directives: {
-  //         defaultSrc: ["'self'"],
-  //         scriptSrc: [
-  //           "'self'",
-  //           "'unsafe-inline'",
-  //           "'unsafe-eval'",
-  //           'https://www.googletagmanager.com',
-  //           'https://www.google-analytics.com',
-  //         ],
-  //         styleSrc: [
-  //           "'self'",
-  //           "'unsafe-inline'",
-  //           'https://fonts.googleapis.com',
-  //           'https://*.googleapis.com',
-  //         ],
-  //         fontSrc: [
-  //           "'self'",
-  //           'https://fonts.gstatic.com',
-  //           'https://*.gstatic.com',
-  //           'data:',
-  //         ],
-  //         imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-  //         connectSrc: [
-  //           "'self'",
-  //           'https://fonts.googleapis.com',
-  //           'https://fonts.gstatic.com',
-  //           'https://www.google-analytics.com',
-  //           'ws:',
-  //           'wss:',
-  //         ],
-  //         mediaSrc: ["'self'"],
-  //         frameSrc: ["'self'"],
-  //         objectSrc: ["'none'"],
-  //         baseUri: ["'self'"],
-  //         formAction: ["'self'"],
-  //         manifestSrc: ["'self'"],
-  //         workerSrc: ["'self'", 'blob:'],
-  //         'style-src-elem': [
-  //           "'self'",
-  //           "'unsafe-inline'",
-  //           'https://fonts.googleapis.com',
-  //           'https://*.googleapis.com',
-  //         ],
-  //         'font-src-elem': [
-  //           "'self'",
-  //           'https://fonts.gstatic.com',
-  //           'https://*.gstatic.com',
-  //           'data:',
-  //         ],
-  //       },
-  //     },
-  //     crossOriginEmbedderPolicy: false,
-  //     crossOriginResourcePolicy: { policy: 'cross-origin' },
-  //     crossOriginOpenerPolicy: { policy: 'same-origin' },
-  //   }),
-  // )
+  // Production configuration
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        useDefaults: false,
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            'https://www.googletagmanager.com',
+            'https://www.google-analytics.com',
+          ],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            'https://fonts.googleapis.com',
+            'https://*.googleapis.com',
+          ],
+          fontSrc: [
+            "'self'",
+            'https://fonts.gstatic.com',
+            'https://*.gstatic.com',
+            'data:',
+          ],
+          imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+          connectSrc: [
+            "'self'",
+            'https://fonts.googleapis.com',
+            'https://fonts.gstatic.com',
+            'https://www.google-analytics.com',
+            'ws:',
+            'wss:',
+          ],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          manifestSrc: ["'self'"],
+          workerSrc: ["'self'", 'blob:'],
+          'style-src-elem': [
+            "'self'",
+            "'unsafe-inline'",
+            'https://fonts.googleapis.com',
+            'https://*.googleapis.com',
+          ],
+          'font-src-elem': [
+            "'self'",
+            'https://fonts.gstatic.com',
+            'https://*.gstatic.com',
+            'data:',
+          ],
+        },
+      },
+      // Configure COOP to allow postMessage
+      crossOriginOpenerPolicy: {
+        policy: 'unsafe-none', // Changed from 'same-origin' to allow postMessage
+      },
+      // Other security policies
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  )
   app.use(searchConsoleMiddleware)
   // Production compression
   app.use(
