@@ -10,19 +10,21 @@ import {
   Skeleton,
   HStack,
 } from '@chakra-ui/react'
-
 import { Book, Clock, Calendar } from 'lucide-react'
-
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 const MotionListItem = motion(ListItem)
 
 const ResultCard = React.memo(({ article, index, COLORS }) => {
   const navigate = useNavigate()
+  const { i18n } = useTranslation()
+  const currentLanguage = i18n.language
+
   return (
     <MotionListItem
-      layout // Add layout prop to handle smooth transitions
+      layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -63,7 +65,9 @@ const ResultCard = React.memo(({ article, index, COLORS }) => {
             _groupHover={{ color: COLORS.accent }}
             transition="color 0.2s"
           >
-            {article.title}
+            {currentLanguage === 'hi' && article.hindiTitle
+              ? article.hindiTitle
+              : article.title}
           </Text>
 
           <Flex gap={4} flexWrap="wrap">

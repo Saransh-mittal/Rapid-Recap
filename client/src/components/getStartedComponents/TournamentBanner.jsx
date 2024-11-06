@@ -1,4 +1,3 @@
-// src/components/getStartedComponents/TournamentBanner.jsx
 import React from 'react'
 import {
   Box,
@@ -27,8 +26,10 @@ import { useFeatureDetection } from '../../utils/featureDetection'
 import { useSelector } from 'react-redux'
 import CountdownDisplay from './CountdownDisplay'
 import { parseTimeString } from '../../utils/time.utils'
+import { useTranslation } from 'react-i18next'
 
 const MobileCountdown = ({ countdown, color }) => {
+  const { t } = useTranslation('GetStarted')
   return (
     <VStack spacing={2} width="100%">
       <HStack spacing={4} justify="center" width="100%">
@@ -37,7 +38,7 @@ const MobileCountdown = ({ countdown, color }) => {
             {countdown.days.toString().padStart(2, '0')}
           </Text>
           <Text fontSize="xs" color={color} opacity={0.8}>
-            days
+            {t('Tournament.countdown.days')}
           </Text>
         </Box>
         <Text color={color} fontSize="xl">
@@ -48,7 +49,7 @@ const MobileCountdown = ({ countdown, color }) => {
             {countdown.hours.toString().padStart(2, '0')}
           </Text>
           <Text fontSize="xs" color={color} opacity={0.8}>
-            hrs
+            {t('Tournament.countdown.hours')}
           </Text>
         </Box>
         <Text color={color} fontSize="xl">
@@ -59,7 +60,7 @@ const MobileCountdown = ({ countdown, color }) => {
             {countdown.minutes.toString().padStart(2, '0')}
           </Text>
           <Text fontSize="xs" color={color} opacity={0.8}>
-            min
+            {t('Tournament.countdown.minutes')}
           </Text>
         </Box>
       </HStack>
@@ -68,12 +69,16 @@ const MobileCountdown = ({ countdown, color }) => {
 }
 
 const StatusContent = ({ status, countDownToShow, isMobile, COLORS }) => {
+  const { t } = useTranslation('GetStarted')
+
   switch (status) {
     case 'upcoming':
       return (
         <HStack spacing={2}>
           <Clock size={16} color={COLORS.accent} />
-          <Text color="whiteAlpha.800">Starting Soon</Text>
+          <Text color="whiteAlpha.800">
+            {t('Tournament.statuses.startingSoon')}
+          </Text>
         </HStack>
       )
 
@@ -88,7 +93,9 @@ const StatusContent = ({ status, countDownToShow, isMobile, COLORS }) => {
       return (
         <HStack spacing={2}>
           <Users size={16} color={COLORS.accent} />
-          <Text color="whiteAlpha.800">Tournament in Progress</Text>
+          <Text color="whiteAlpha.800">
+            {t('Tournament.statuses.inProgress')}
+          </Text>
           <Badge
             colorScheme="green"
             variant="solid"
@@ -104,7 +111,9 @@ const StatusContent = ({ status, countDownToShow, isMobile, COLORS }) => {
       return (
         <HStack spacing={2}>
           <CheckCircle size={16} color={COLORS.accent} />
-          <Text color="whiteAlpha.800">Tournament Completed</Text>
+          <Text color="whiteAlpha.800">
+            {t('Tournament.statuses.completed')}
+          </Text>
         </HStack>
       )
 
@@ -114,36 +123,38 @@ const StatusContent = ({ status, countDownToShow, isMobile, COLORS }) => {
 }
 
 const getButtonConfig = status => {
+  const { t } = useTranslation('GetStarted')
   switch (status) {
     case 'upcoming':
       return {
-        text: 'View Details',
+        text: t('Tournament.buttons.viewDetails'),
         icon: Bell,
       }
     case 'registration':
       return {
-        text: 'Register Now',
+        text: t('Tournament.buttons.register'),
         icon: Users,
       }
     case 'ongoing':
       return {
-        text: 'View Tournament',
+        text: t('Tournament.buttons.viewTournament'),
         icon: Trophy,
       }
     case 'completed':
       return {
-        text: 'View Results',
+        text: t('Tournament.buttons.viewResults'),
         icon: Award,
       }
     default:
       return {
-        text: 'View Details',
+        text: t('Tournament.buttons.viewDetails'),
         icon: Star,
       }
   }
 }
 
 const TournamentBanner = ({ COLORS, shine }) => {
+  const { t } = useTranslation('GetStarted')
   const navigate = useNavigate()
   const features = useFeatureDetection()
   const { playClick } = useSafeSound({
@@ -218,12 +229,12 @@ const TournamentBanner = ({ COLORS, shine }) => {
                 color="white"
                 textAlign={{ base: 'center', md: 'left' }}
               >
-                Weekend Tournament{' '}
+                {t('Tournament.title')}{' '}
                 {status === 'ongoing'
-                  ? 'In Progress'
+                  ? t('Tournament.statuses.inProgress')
                   : status === 'completed'
-                  ? 'Completed'
-                  : 'Starting Soon'}
+                  ? t('Tournament.statuses.completed')
+                  : t('Tournament.statuses.startingSoon')}
               </Text>
             </VStack>
           </HStack>
@@ -248,8 +259,8 @@ const TournamentBanner = ({ COLORS, shine }) => {
             >
               <Star size={12} />
               {status === 'ongoing'
-                ? 'Watch live matches'
-                : 'Earn amazing badges'}
+                ? t('Tournament.badges.watchLive')
+                : t('Tournament.badges.earnBadges')}
             </Badge>
           )}
         </VStack>

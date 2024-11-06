@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react'
 import { Box, VStack, Text, List, Skeleton, Button } from '@chakra-ui/react'
 import ResultCard from './ResultCard'
+import { useTranslation } from 'react-i18next'
 
 const SearchResults = React.memo(
   ({ isSearching, searchResults, hasMore, loadMore, COLORS }) => {
+    const { t } = useTranslation('GetStarted')
     const listRef = useRef(null)
     const [isLoadingMore, setIsLoadingMore] = useState(false)
 
@@ -69,7 +71,7 @@ const SearchResults = React.memo(
                 colorScheme="pink"
                 size="sm"
               >
-                Load More Results
+                {t('SearchResults.loadMore')}
               </Button>
             </Box>
           )}
@@ -79,10 +81,11 @@ const SearchResults = React.memo(
 
     return (
       <Box p={4} textAlign="center">
-        <Text color="whiteAlpha.700">No results found</Text>
+        <Text color="whiteAlpha.700">{t('SearchResults.noResults')}</Text>
       </Box>
     )
   },
 )
+
 SearchResults.displayName = 'SearchResults'
 export default SearchResults

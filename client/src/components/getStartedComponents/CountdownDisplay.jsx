@@ -1,5 +1,6 @@
 import React from 'react'
 import { HStack, Text, Box } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 
 const TimeUnit = ({ value, unit, color = 'whiteAlpha.800' }) => (
   <Box
@@ -19,17 +20,34 @@ const TimeUnit = ({ value, unit, color = 'whiteAlpha.800' }) => (
 )
 
 const CountdownDisplay = ({ countdown, color }) => {
+  const { t } = useTranslation('GetStarted')
   const { days, hours, minutes, seconds } = countdown
 
   return (
     <HStack spacing={4}>
-      <TimeUnit value={days} unit="days" color={color} />
+      <TimeUnit
+        value={days}
+        unit={t('Tournament.countdown.days')}
+        color={color}
+      />
       <Text color={color}>:</Text>
-      <TimeUnit value={hours} unit="hrs" color={color} />
+      <TimeUnit
+        value={hours}
+        unit={t('Tournament.countdown.hours')}
+        color={color}
+      />
       <Text color={color}>:</Text>
-      <TimeUnit value={minutes} unit="min" color={color} />
+      <TimeUnit
+        value={minutes}
+        unit={t('Tournament.countdown.minutes')}
+        color={color}
+      />
       <Text color={color}>:</Text>
-      <TimeUnit value={seconds} unit="sec" color={color} />
+      <TimeUnit
+        value={seconds}
+        unit={t('Tournament.countdown.seconds')}
+        color={color}
+      />
     </HStack>
   )
 }

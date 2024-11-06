@@ -1,73 +1,155 @@
 {
-  "Hero": {
+  "Header": {
     "title": "Turn News Into Knowledge with Rapid Recap",
     "subtitle": "Stay informed through friendly competition",
-    "getStartedButton": "Get Started"
+    "getStartedButton": "Start Learning Free",
+    "searchPlaceholder": "Search thousands of news articles...",
+    "languageBadge": "Available in English & हिंदी",
+    "activeLearners": "Join 1000+ monthly active learners who stay ahead through interactive news quizzes and competitive learning",
+    "stats": {
+      "monthlyUsers": {
+        "value": "1000+",
+        "label": "Monthly Users",
+        "subtext": "Growing community"
+      },
+      "dailyMinutes": {
+        "value": "2500+",
+        "label": "Minutes Daily",
+        "subtext": "Learning time"
+      },
+      "tournamentPlayers": {
+        "value": "300+",
+        "label": "Tournament Players",
+        "subtext": "Monthly participants"
+      },
+      "dailyArticles": {
+        "value": "120+",
+        "label": "Daily Articles",
+        "subtext": "Fresh content daily"
+      }
+    },
+    "badges": {
+      "freeAccess": "✓ 100% Free Access",
+      "dailyArticles": "✓ 120+ daily articles",
+      "weeklyTournaments": "✓ Weekly tournaments"
+    }
   },
   "BenefitsMap": {
     "mainTitle": "Empowering Your Knowledge Journey",
-    "curatedNews": {
-      "title": "Curated News",
-      "description": "Access high-quality, tailored news content"
-    },
-    "activeLearning": {
-      "title": "Active Learning",
-      "description": "Engage with interactive quizzes"
-    },
-    "trackProgress": {
-      "title": "Track Progress",
-      "description": "Monitor your growing Information Quotient (IQ)"
-    },
-    "infoRetention": {
-      "title": "Why Information Retention Matters",
-      "description": "Retaining information enhances your critical thinking, decision-making, and problem-solving skills. It allows you to form connections between different topics, fostering creativity and innovation, ultimately leading to personal and professional growth."
-    },
-    "competitiveEdge": {
-      "title": "Competitive Edge",
-      "description": "Excel in your professional and academic pursuits"
-    },
-    "informedCitizen": {
-      "title": "Informed Citizen",
-      "description": "Contribute meaningfully to societal discussions"
-    },
-    "personalGrowth": {
-      "title": "Personal Growth",
-      "description": "Continuously expand your knowledge and capabilities"
+    "yourLearningJourney": "Your Learning Journey",
+    "benefits": {
+      "curatedNews": {
+        "title": "Curated News",
+        "description": "Access high-quality, tailored news content that matters to you"
+      },
+      "activeLearning": {
+        "title": "Active Learning",
+        "description": "Engage with interactive quizzes to reinforce your understanding"
+      },
+      "trackProgress": {
+        "title": "Track Progress",
+        "description": "Monitor your growth & information quotient (IQ)"
+      },
+      "infoRetention": {
+        "title": "Information Retention Mastery",
+        "description": "Transform how you consume and retain information through our scientifically-backed approach combining active recall and spaced repetition",
+        "badge": "Key Feature"
+      },
+      "competitiveEdge": {
+        "title": "Competitive Edge",
+        "description": "Excel in your professional and academic pursuits"
+      },
+      "informedCitizen": {
+        "title": "Informed Citizen",
+        "description": "Contribute meaningfully to societal discussions"
+      },
+      "personalGrowth": {
+        "title": "Personal Growth",
+        "description": "Continuously expand your knowledge and capabilities"
+      }
     }
   },
   "Features": {
-    "mainTitle": "Discover the Power of Rapid Recap",
-    "curatedNews": {
-      "title": "Curated News",
-      "description": "Stay updated with carefully selected news articles from trusted sources."
+    "mainTitle": "Everything You Need to Excel",
+    "subtitle": "Transform your learning journey with our comprehensive suite of features designed to make knowledge acquisition engaging and effective",
+    "discoverFeatures": "Discover Our Features",
+    "premiumFeature": "Premium Feature",
+    "features": {
+      "curatedNews": {
+        "title": "Curated Daily News",
+        "description": "Hand-picked articles covering the most important topics across multiple domains"
+      },
+      "interactiveLearning": {
+        "title": "Interactive Learning",
+        "description": "Engage with content through quizzes and challenges designed to enhance retention"
+      },
+      "competitiveEdge": {
+        "title": "Competitive Edge",
+        "description": "Participate in tournaments and climb the leaderboard while learning"
+      },
+      "skillMastery": {
+        "title": "Skill Mastery",
+        "description": "Track your progress and earn badges as you develop expertise in various topics"
+      }
     },
-    "interactiveQuizzes": {
-      "title": "Interactive Quizzes",
-      "description": "Test your knowledge with engaging quizzes based on the latest news."
-    },
-    "competeAndLearn": {
-      "title": "Compete & Learn",
-      "description": "Challenge friends and climb the leaderboard while expanding your knowledge."
-    },
-    "personalizedNewsFeed": {
-      "title": "Personalized News Feed",
-      "description": "Our intelligent algorithm curates a personalized news feed tailored to your interests and reading habits. Stay informed on topics that matter most to you."
-    },
-    "immersiveReading": {
-      "title": "Immersive Reading Experience",
-      "description": "Dive deep into articles with our clean, distraction-free reading interface. Enjoy a seamless experience that lets you focus on the content."
-    },
-    "engagingQuizzes": {
-      "title": "Engaging Quizzes",
-      "description": "Test your knowledge with our interactive quizzes. Each quiz is designed to reinforce your learning and help you retain information from the articles you've read."
-    },
-    "competitiveLearning": {
-      "title": "Competitive Learning",
-      "description": "Join our weekend tournaments to compete with friends and other users. Climb the leaderboard, earn badges, and showcase your knowledge while having fun!"
+    "uiSections": {
+      "newsFeed": {
+        "title": "Personalized News Feed",
+        "description": "Get news tailored to your interests and learning goals, all in one place"
+      },
+      "reading": {
+        "title": "Immersive Reading Experience",
+        "description": "Enjoy a clean, distraction-free interface designed for maximum comprehension"
+      },
+      "quiz": {
+        "title": "Engaging Quiz Interface",
+        "description": "Challenge yourself with interactive quizzes that make learning fun and effective"
+      },
+      "tournament": {
+        "title": "Tournament System",
+        "description": "Compete with others in weekly tournaments and showcase your knowledge"
+      },
+      "smartReading": {
+        "title": "Smart Reading Assistant",
+        "description": "Experience enhanced comprehension with AI-powered highlighting of key points and instant access to word definitions. Yellow highlights emphasize crucial information while purple-shaded words provide instant dictionary definitions on hover"
+      }
     }
   },
-  "performanceIssueDetected": "Performance Issue Detected",
-  "switchToWeakModePrompt": "We've noticed some performance issues. Would you like to switch to a simplified version for smoother Landing Page scroll?",
-  "switchToWeakMode": "Low Mode",
-  "stayInNormalMode": "Normal Mode"
+  "Tournament": {
+    "title": "Weekend Tournament",
+    "countdown": {
+      "days": "days",
+      "hours": "hrs",
+      "minutes": "min",
+      "seconds": "sec"
+    },
+    "statuses": {
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "startingSoon": "Starting Soon"
+    },
+    "badges": {
+      "watchLive": "Watch live matches",
+      "earnBadges": "Earn amazing badges"
+    },
+    "buttons": {
+      "viewDetails": "View Details",
+      "register": "Register Now",
+      "viewTournament": "View Tournament",
+      "viewResults": "View Results"
+    }
+  },
+  "Performance": {
+    "issueDetected": "Performance Issue Detected",
+    "weakModePrompt": "We've noticed some performance issues. Would you like to switch to a simplified version for smoother Landing Page scroll?",
+    "switchMode": "Low Mode",
+    "stayNormal": "Normal Mode"
+  },
+  "SearchResults": {
+    "noResults": "No results found",
+    "loadMore": "Load More Results",
+    "searchError": "Search Error",
+    "searchFailed": "Failed to search articles",
+    "searchArticles": "Search articles"
+  }
 }
