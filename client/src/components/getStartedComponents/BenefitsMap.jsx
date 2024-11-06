@@ -9,7 +9,6 @@ import {
   useBreakpointValue,
   Badge,
   Circle,
-  Divider,
   Icon,
   HStack,
 } from '@chakra-ui/react'
@@ -23,7 +22,7 @@ import {
   Trophy,
   Globe,
   Rocket,
-  ArrowRight,
+  ChevronDown,
 } from 'lucide-react'
 import { keyframes } from '@emotion/react'
 
@@ -38,11 +37,16 @@ const COLORS = {
   cardBorder: 'rgba(237, 100, 166, 0.2)',
 }
 
-// Pulse animation for icons
+// Animations
 const pulseAnimation = keyframes`
   0% { transform: scale(1); }
   50% { transform: scale(1.1); }
   100% { transform: scale(1); }
+`
+
+const bounceAnimation = keyframes`
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 `
 
 const BenefitCard = ({
@@ -56,7 +60,7 @@ const BenefitCard = ({
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
-    transition={{ duration: 0.5, delay: index * 0.1 }}
+    // transition={{ duration: 0.5, delay: index * 0.1 }}
     bg={COLORS.darkBg}
     p={6}
     borderRadius="xl"
@@ -67,11 +71,11 @@ const BenefitCard = ({
       transform: 'translateY(-5px)',
       boxShadow: `0 0 20px ${COLORS.accent}33`,
     }}
-    // transition="all 0.3s ease"
     height="100%"
     width="100%"
     position="relative"
     overflow="hidden"
+    transition="all 0.3s ease"
   >
     {/* Gradient overlay */}
     <Box
@@ -130,6 +134,26 @@ const BenefitCard = ({
   </MotionBox>
 )
 
+// Mobile Arrow Component
+const MobileArrow = () => (
+  <Box
+    display={{ base: 'flex', md: 'none' }}
+    justifyContent="center"
+    alignItems="center"
+    w="full"
+    py={2}
+  >
+    <Box
+      as={motion.div}
+      animation={`${bounceAnimation} 2s infinite ease-in-out`}
+      color={COLORS.accent}
+    >
+      <ChevronDown size={32} strokeWidth={2.5} />
+    </Box>
+  </Box>
+)
+
+// Desktop Connecting Line Component (unchanged)
 const ConnectingLine = ({ direction = 'right' }) => (
   <Flex
     justify="center"
@@ -237,7 +261,6 @@ const BenefitsMap = ({ isWeakDevice }) => {
               bgClip="text"
               fontWeight="bold"
               letterSpacing="tight"
-              mb={4}
             >
               Empowering Your Knowledge Journey
             </Heading>
@@ -255,10 +278,13 @@ const BenefitsMap = ({ isWeakDevice }) => {
                 <Box flex="1">
                   <BenefitCard {...benefit} index={index} />
                 </Box>
-                {index < benefits.length - 1 && !isMobile && (
-                  <ConnectingLine
-                    direction={index % 2 === 0 ? 'right' : 'left'}
-                  />
+                {index < benefits.length - 1 && (
+                  <>
+                    <MobileArrow />
+                    <ConnectingLine
+                      direction={index % 2 === 0 ? 'right' : 'left'}
+                    />
+                  </>
                 )}
               </React.Fragment>
             ))}
@@ -282,10 +308,13 @@ const BenefitsMap = ({ isWeakDevice }) => {
                 <Box flex="1">
                   <BenefitCard {...benefit} index={index + 4} />
                 </Box>
-                {index < bottomBenefits.length - 1 && !isMobile && (
-                  <ConnectingLine
-                    direction={index % 2 === 0 ? 'right' : 'left'}
-                  />
+                {index < bottomBenefits.length - 1 && (
+                  <>
+                    <MobileArrow />
+                    <ConnectingLine
+                      direction={index % 2 === 0 ? 'right' : 'left'}
+                    />
+                  </>
                 )}
               </React.Fragment>
             ))}
