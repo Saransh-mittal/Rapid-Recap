@@ -9,8 +9,9 @@ import {
   useBreakpointValue,
   Badge,
   Circle,
-  keyframes,
-  useMediaQuery,
+  Divider,
+  Icon,
+  HStack,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Parallax, ParallaxProvider } from 'react-scroll-parallax'
@@ -22,10 +23,12 @@ import {
   Trophy,
   Globe,
   Rocket,
-  ChevronDown,
+  ArrowRight,
 } from 'lucide-react'
+import { keyframes } from '@emotion/react'
 
 const MotionBox = motion(Box)
+const MotionFlex = motion(Flex)
 
 // Define color scheme to match hero
 const COLORS = {
@@ -42,113 +45,89 @@ const pulseAnimation = keyframes`
   100% { transform: scale(1); }
 `
 
-// Floating animation
-const floatAnimation = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-`
-
 const BenefitCard = ({
   icon: Icon,
   title,
   description,
   index,
   isLarge = false,
-}) => {
-  const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
-
-  return (
-    <MotionBox
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      bg={COLORS.darkBg}
-      p={{ base: 4, md: 6 }}
-      borderRadius="xl"
-      border="1px solid"
-      borderColor={COLORS.cardBorder}
-      _hover={{
-        borderColor: COLORS.accent,
-        transform: 'translateY(-5px)',
-        boxShadow: `0 0 20px ${COLORS.accent}33`,
-      }}
-      // transition="all 0.3s ease"
-      height="100%"
-      width="100%"
-      position="relative"
-      overflow="hidden"
-    >
-      {/* Gradient overlay */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        height="4px"
-        bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
-      />
-
-      <VStack spacing={4} align="center">
-        <Circle
-          size={{ base: '50px', md: isLarge ? '80px' : '60px' }}
-          bg="rgba(237, 100, 166, 0.1)"
-          color={COLORS.accent}
-          position="relative"
-          _hover={{
-            animation: `${pulseAnimation} 2s infinite`,
-          }}
-        >
-          <Icon size={isLargerThan768 ? (isLarge ? 32 : 24) : 20} />
-        </Circle>
-
-        <Heading
-          size={{ base: 'sm', md: isLarge ? 'lg' : 'md' }}
-          color="white"
-          fontWeight="bold"
-          textAlign="center"
-        >
-          {title}
-        </Heading>
-
-        <Text
-          color="whiteAlpha.800"
-          fontSize={{ base: 'xs', md: isLarge ? 'md' : 'sm' }}
-          textAlign="center"
-          lineHeight="tall"
-        >
-          {description}
-        </Text>
-
-        {isLarge && (
-          <Badge
-            colorScheme="pink"
-            fontSize={{ base: 'xs', md: 'sm' }}
-            px={3}
-            py={1}
-            borderRadius="full"
-            bg="rgba(237, 100, 166, 0.1)"
-          >
-            Key Feature
-          </Badge>
-        )}
-      </VStack>
-    </MotionBox>
-  )
-}
-
-const ConnectingArrow = () => (
-  <Box textAlign="center" py={2} display={{ base: 'block', md: 'none' }}>
-    <ChevronDown
-      size={24}
-      color={COLORS.accent}
-      style={{
-        animation: `${floatAnimation} 2s infinite`,
-        margin: '0 auto',
-      }}
+}) => (
+  <MotionBox
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.5, delay: index * 0.1 }}
+    bg={COLORS.darkBg}
+    p={6}
+    borderRadius="xl"
+    border="1px solid"
+    borderColor={COLORS.cardBorder}
+    _hover={{
+      borderColor: COLORS.accent,
+      transform: 'translateY(-5px)',
+      boxShadow: `0 0 20px ${COLORS.accent}33`,
+    }}
+    // transition="all 0.3s ease"
+    height="100%"
+    width="100%"
+    position="relative"
+    overflow="hidden"
+  >
+    {/* Gradient overlay */}
+    <Box
+      position="absolute"
+      top={0}
+      left={0}
+      right={0}
+      height="4px"
+      bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
     />
-  </Box>
+
+    <VStack spacing={4} align="center">
+      <Circle
+        size={isLarge ? '80px' : '60px'}
+        bg="rgba(237, 100, 166, 0.1)"
+        color={COLORS.accent}
+        position="relative"
+        _hover={{
+          animation: `${pulseAnimation} 2s infinite`,
+        }}
+      >
+        <Icon size={isLarge ? 32 : 24} />
+      </Circle>
+
+      <Heading
+        size={isLarge ? 'lg' : 'md'}
+        color="white"
+        fontWeight="bold"
+        textAlign="center"
+      >
+        {title}
+      </Heading>
+
+      <Text
+        color="whiteAlpha.800"
+        fontSize={isLarge ? 'md' : 'sm'}
+        textAlign="center"
+        lineHeight="tall"
+      >
+        {description}
+      </Text>
+
+      {isLarge && (
+        <Badge
+          colorScheme="pink"
+          fontSize="sm"
+          px={3}
+          py={1}
+          borderRadius="full"
+          bg="rgba(237, 100, 166, 0.1)"
+        >
+          Key Feature
+        </Badge>
+      )}
+    </VStack>
+  </MotionBox>
 )
 
 const ConnectingLine = ({ direction = 'right' }) => (
@@ -230,18 +209,14 @@ const BenefitsMap = ({ isWeakDevice }) => {
 
   return (
     <ContentWrapper>
-      <Box
-        py={{ base: 10, md: 20 }}
-        position="relative"
-        // background="linear-gradient(180deg, rgba(28, 25, 63, 0.95) 0%, rgba(28, 25, 63, 0.98) 100%)"
-      >
+      <Box py={20} position="relative">
         <Container maxW="1400px" px={{ base: 4, md: 8 }}>
           {/* Main Title */}
           <MotionBox
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            mb={{ base: 10, md: 16 }}
+            mb={16}
             textAlign="center"
           >
             <Badge
@@ -249,7 +224,7 @@ const BenefitsMap = ({ isWeakDevice }) => {
               px={3}
               py={1}
               mb={4}
-              fontSize={{ base: 'xs', md: 'sm' }}
+              fontSize="sm"
               borderRadius="full"
               bg="rgba(237, 100, 166, 0.1)"
             >
@@ -257,63 +232,64 @@ const BenefitsMap = ({ isWeakDevice }) => {
             </Badge>
             <Heading
               as="h2"
-              fontSize={{ base: '2xl', md: '4xl', lg: '5xl' }}
+              size="2xl"
               bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
               bgClip="text"
               fontWeight="bold"
               letterSpacing="tight"
-              px={{ base: 4, md: 0 }}
+              mb={4}
             >
               Empowering Your Knowledge Journey
             </Heading>
           </MotionBox>
 
           {/* Top Benefits */}
-          <VStack spacing={{ base: 4, md: 6 }} mb={{ base: 8, md: 12 }}>
+          <Flex
+            direction={{ base: 'column', md: 'row' }}
+            gap={6}
+            mb={12}
+            align="stretch"
+          >
             {benefits.map((benefit, index) => (
               <React.Fragment key={benefit.title}>
-                <Box width="100%">
+                <Box flex="1">
                   <BenefitCard {...benefit} index={index} />
                 </Box>
-                {index < benefits.length - 1 &&
-                  (isMobile ? (
-                    <ConnectingArrow />
-                  ) : (
-                    <ConnectingLine
-                      direction={index % 2 === 0 ? 'right' : 'left'}
-                    />
-                  ))}
+                {index < benefits.length - 1 && !isMobile && (
+                  <ConnectingLine
+                    direction={index % 2 === 0 ? 'right' : 'left'}
+                  />
+                )}
               </React.Fragment>
             ))}
-          </VStack>
+          </Flex>
 
           {/* Central Feature */}
-          <Box
-            width="100%"
-            mb={{ base: 8, md: 12 }}
-            px={{ base: 0, md: 8, lg: 16 }}
-          >
-            <BenefitCard {...centralFeature} isLarge={true} index={3} />
-          </Box>
+          <Flex justify="center" mb={12}>
+            <Box width={{ base: '100%', md: '80%' }}>
+              <BenefitCard {...centralFeature} isLarge={true} index={3} />
+            </Box>
+          </Flex>
 
           {/* Bottom Benefits */}
-          <VStack spacing={{ base: 4, md: 6 }}>
+          <Flex
+            direction={{ base: 'column', md: 'row' }}
+            gap={6}
+            align="stretch"
+          >
             {bottomBenefits.map((benefit, index) => (
               <React.Fragment key={benefit.title}>
-                <Box width="100%">
+                <Box flex="1">
                   <BenefitCard {...benefit} index={index + 4} />
                 </Box>
-                {index < bottomBenefits.length - 1 &&
-                  (isMobile ? (
-                    <ConnectingArrow />
-                  ) : (
-                    <ConnectingLine
-                      direction={index % 2 === 0 ? 'right' : 'left'}
-                    />
-                  ))}
+                {index < bottomBenefits.length - 1 && !isMobile && (
+                  <ConnectingLine
+                    direction={index % 2 === 0 ? 'right' : 'left'}
+                  />
+                )}
               </React.Fragment>
             ))}
-          </VStack>
+          </Flex>
         </Container>
       </Box>
     </ContentWrapper>
