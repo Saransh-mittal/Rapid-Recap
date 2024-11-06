@@ -24,11 +24,7 @@ const NavBrand = ({ isHamburgerOpen }) => {
   const notLoggedIn = !isAuthenticated
 
   return (
-    <NavLink
-      to={notLoggedIn ? '/' : '/get-started'}
-      className="navbar-brand"
-      onClick={playClick}
-    >
+    <NavLink to={'/'} className="navbar-brand" onClick={playClick}>
       <Flex position={!isHamburgerOpen ? 'absolute' : 'relative'}>
         <Image
           src={RR}
