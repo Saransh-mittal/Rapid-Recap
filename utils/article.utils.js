@@ -430,12 +430,18 @@ const processExtractedNews = async (news, category) => {
       const newArticle = new Article(res)
       await newArticle.save()
       hindiConverter(newArticle._id.toString())
-      generateHighlightForArticle({
-        articleId: newArticle._id.toString(),
-        lang: 'hi',
-      }).catch(error => {
-        console.error('Generation failed:', error)
-      })
+        .then(() =>
+          generateHighlightForArticle({
+            articleId: newArticle._id.toString(),
+            lang: 'hi',
+          }).catch(error => {
+            console.error('Generation failed:', error)
+          }),
+        )
+        .catch(error => {
+          console.error('Hindi conversion failed:', error)
+        })
+
       generateHighlightForArticle({
         articleId: newArticle._id.toString(),
         lang: 'en',
