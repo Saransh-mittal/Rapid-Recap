@@ -260,6 +260,7 @@ const Features = () => {
               display="flex"
               alignItems="center"
               gap={2}
+              fontSize="sm"
             >
               <TrendingUp size={12} />
               Discover Our Features

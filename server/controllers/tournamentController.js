@@ -240,10 +240,9 @@ const getLatestTestTournament = asyncHandler(async (req, res) => {
 
 // @desc   Get the active tournament registration details
 // @route  GET /api/tournament/active-registration
-// @access Private
+// @access Public
 const getActiveTournamentRegistration = asyncHandler(async (req, res) => {
-  const userId = req.user._id
-
+  const { userId } = req.query
   const tournament = await Tournament.findOne({
     isActive: true,
   })
@@ -251,7 +250,9 @@ const getActiveTournamentRegistration = asyncHandler(async (req, res) => {
   if (!tournament) {
     return res.json({ tournament: null, isRegistered: false })
   }
-
+  if (!userId || userId === 'undefined' || userId === 'null') {
+    return res.json({ tournament, isRegistered: false })
+  }
   const registration = await TournamentRegistration.findOne({
     user: userId,
     tournament: tournament._id,

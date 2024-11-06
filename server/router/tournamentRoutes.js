@@ -55,10 +55,6 @@ router.post('/quiz/start', Authenticate, startQuiz)
 router.post('/quiz/submit', Authenticate, submitQuiz)
 router.get('/quiz/summary', Authenticate, getQuizSummary)
 router.get('/user-stats/:tournamentId/:userId', getUserStats)
-router.get(
-  '/active-registration',
-  Authenticate,
-  getActiveTournamentRegistration,
-)
+router.get('/active-registration', getActiveTournamentRegistration)
 
 module.exports = router

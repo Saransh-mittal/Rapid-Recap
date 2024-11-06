@@ -40,7 +40,9 @@ export const authSlice = createSlice({
     setUser: (state, action) => {
       state.user = action.payload
       state.isAuthenticated = !!action.payload
-      state.loginCheckStatus = 'fulfilled'
+    },
+    setLoginCheckStatus: (state, action) => {
+      state.loginCheckStatus = action.payload
     },
     logout: () => {
       return initialState
@@ -81,6 +83,7 @@ export const {
   setIsAdmin,
   setOnboardingCompleted,
   setPreferredCategories,
+  setLoginCheckStatus,
 } = authSlice.actions
 
 export default authSlice.reducer

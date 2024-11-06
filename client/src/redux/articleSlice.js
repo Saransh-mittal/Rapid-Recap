@@ -52,6 +52,9 @@ const articleSlice = createSlice({
         state.error = null
       })
       .addCase(searchArticles.fulfilled, (state, action) => {
+        if (location.pathname === '/' || location.pathname === '/get-started') {
+          return
+        }
         state.searchLoading = false
         state.isSearching = true
         if (action.payload.currentPage === 1) {
