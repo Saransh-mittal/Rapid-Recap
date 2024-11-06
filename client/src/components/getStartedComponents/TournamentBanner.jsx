@@ -1,3 +1,4 @@
+// src/components/getStartedComponents/TournamentBanner.jsx
 import React from 'react'
 import {
   Box,
@@ -11,7 +12,15 @@ import {
   Divider,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { Trophy, Star } from 'lucide-react'
+import {
+  Trophy,
+  Star,
+  Clock,
+  Users,
+  Award,
+  CheckCircle,
+  Bell,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useSafeSound from '../../customHooks/useSafeSound'
 import { useFeatureDetection } from '../../utils/featureDetection'
@@ -19,7 +28,6 @@ import { useSelector } from 'react-redux'
 import CountdownDisplay from './CountdownDisplay'
 import { parseTimeString } from '../../utils/time.utils'
 
-// Mobile-optimized countdown component
 const MobileCountdown = ({ countdown, color }) => {
   return (
     <VStack spacing={2} width="100%">
@@ -59,6 +67,82 @@ const MobileCountdown = ({ countdown, color }) => {
   )
 }
 
+const StatusContent = ({ status, countDownToShow, isMobile, COLORS }) => {
+  switch (status) {
+    case 'upcoming':
+      return (
+        <HStack spacing={2}>
+          <Clock size={16} color={COLORS.accent} />
+          <Text color="whiteAlpha.800">Starting Soon</Text>
+        </HStack>
+      )
+
+    case 'registration':
+      return isMobile ? (
+        <MobileCountdown countdown={countDownToShow} color="whiteAlpha.800" />
+      ) : (
+        <CountdownDisplay countdown={countDownToShow} color="whiteAlpha.800" />
+      )
+
+    case 'ongoing':
+      return (
+        <HStack spacing={2}>
+          <Users size={16} color={COLORS.accent} />
+          <Text color="whiteAlpha.800">Tournament in Progress</Text>
+          <Badge
+            colorScheme="green"
+            variant="solid"
+            fontSize="xs"
+            borderRadius="full"
+          >
+            Live
+          </Badge>
+        </HStack>
+      )
+
+    case 'completed':
+      return (
+        <HStack spacing={2}>
+          <CheckCircle size={16} color={COLORS.accent} />
+          <Text color="whiteAlpha.800">Tournament Completed</Text>
+        </HStack>
+      )
+
+    default:
+      return null
+  }
+}
+
+const getButtonConfig = status => {
+  switch (status) {
+    case 'upcoming':
+      return {
+        text: 'View Details',
+        icon: Bell,
+      }
+    case 'registration':
+      return {
+        text: 'Register Now',
+        icon: Users,
+      }
+    case 'ongoing':
+      return {
+        text: 'View Tournament',
+        icon: Trophy,
+      }
+    case 'completed':
+      return {
+        text: 'View Results',
+        icon: Award,
+      }
+    default:
+      return {
+        text: 'View Details',
+        icon: Star,
+      }
+  }
+}
+
 const TournamentBanner = ({ COLORS, shine }) => {
   const navigate = useNavigate()
   const features = useFeatureDetection()
@@ -66,11 +150,12 @@ const TournamentBanner = ({ COLORS, shine }) => {
     enabled: features.hasAudioSupport,
     volume: 0.5,
   })
-  const { tournamentStartTime } = useSelector(state => state.tournament)
+  const { tournamentStartTime, status } = useSelector(state => state.tournament)
   const countDownToShow = parseTimeString(tournamentStartTime)
   const isMobile = useBreakpointValue({ base: true, md: false })
+  const buttonConfig = getButtonConfig(status)
 
-  if (!countDownToShow) return null
+  if (!countDownToShow && status === 'registration') return null
 
   return (
     <Box
@@ -133,38 +218,40 @@ const TournamentBanner = ({ COLORS, shine }) => {
                 color="white"
                 textAlign={{ base: 'center', md: 'left' }}
               >
-                Weekend Tournament Starting Soon
+                Weekend Tournament{' '}
+                {status === 'ongoing'
+                  ? 'In Progress'
+                  : status === 'completed'
+                  ? 'Completed'
+                  : 'Starting Soon'}
               </Text>
             </VStack>
           </HStack>
 
-          {isMobile ? (
-            <MobileCountdown
-              countdown={countDownToShow}
-              color="whiteAlpha.800"
-            />
-          ) : (
-            <HStack spacing={4}>
-              <CountdownDisplay
-                countdown={countDownToShow}
-                color="whiteAlpha.800"
-              />
-            </HStack>
-          )}
+          <StatusContent
+            status={status}
+            countDownToShow={countDownToShow}
+            isMobile={isMobile}
+            COLORS={COLORS}
+          />
 
-          <Badge
-            bg="rgba(237, 100, 166, 0.1)"
-            color={COLORS.accent}
-            px={3}
-            py={1}
-            borderRadius="full"
-            display="flex"
-            alignItems="center"
-            gap={2}
-          >
-            <Star size={12} />
-            Earn amazing badges
-          </Badge>
+          {status !== 'completed' && (
+            <Badge
+              bg="rgba(237, 100, 166, 0.1)"
+              color={COLORS.accent}
+              px={3}
+              py={1}
+              borderRadius="full"
+              display="flex"
+              alignItems="center"
+              gap={2}
+            >
+              <Star size={12} />
+              {status === 'ongoing'
+                ? 'Watch live matches'
+                : 'Earn amazing badges'}
+            </Badge>
+          )}
         </VStack>
 
         {isMobile && <Divider borderColor={COLORS.cardBorder} />}
@@ -177,7 +264,7 @@ const TournamentBanner = ({ COLORS, shine }) => {
             bg: 'rgba(237, 100, 166, 0.1)',
             transform: 'translateY(-2px)',
           }}
-          leftIcon={<Star size={16} />}
+          leftIcon={<buttonConfig.icon size={16} />}
           size={{ base: 'md', md: 'lg' }}
           px={6}
           width={{ base: '100%', md: 'auto' }}
@@ -187,7 +274,7 @@ const TournamentBanner = ({ COLORS, shine }) => {
             navigate('/tournament')
           }}
         >
-          View Details
+          {buttonConfig.text}
         </Button>
       </Stack>
 

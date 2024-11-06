@@ -1,278 +1,333 @@
 import React, { useMemo } from 'react'
 import {
   Box,
+  Container,
   Heading,
   Text,
   VStack,
   HStack,
+  Grid,
+  Badge,
+  AspectRatio,
   Flex,
-  Image,
-  Container,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { ParallaxProvider, Parallax } from 'react-scroll-parallax'
-import Newspaper from '../../assets/svg/Newspaper'
-import { QuestionIcon } from '@chakra-ui/icons'
-import Trophy from '../../assets/svg/Trophy'
-import { useTranslation } from 'react-i18next'
-// const Footer = React.lazy(() => import('../Header-Footer/Footer'))
-import Footer from '../Header-Footer/Footer'
+import {
+  Brain,
+  Trophy,
+  BookOpen,
+  Star,
+  TrendingUp,
+  Newspaper,
+  Award,
+  Sparkles,
+  BookOpenCheck,
+} from 'lucide-react'
+
+// Constants remain the same
+const COLORS = {
+  accent: '#ED64A6',
+  secondary: '#805AD5',
+  darkBg: 'rgba(28, 25, 63, 0.9)',
+  cardBorder: 'rgba(237, 100, 166, 0.2)',
+}
+
 const MotionBox = motion(Box)
 
-const FeatureItem = ({
-  Icon,
-  titleKey,
-  descriptionKey,
-  delay,
-  isWeakDevice,
-}) => {
-  const { t } = useTranslation('GetStarted')
-  const ItemWrapper = isWeakDevice ? Box : MotionBox
-
-  return (
-    <ItemWrapper
-      bg="rgba(26, 32, 44, 0.8)"
-      p={6}
-      borderRadius="lg"
-      display="flex"
-      flexDirection={{ base: 'column', md: 'row' }}
-      alignItems="center"
-      justifyContent="flex-start"
-      textAlign={{ base: 'center', md: 'left' }}
-      width="100%"
-      height="100%"
-      {...(isWeakDevice
-        ? {}
-        : {
-            initial: { y: 20, opacity: 0 },
-            whileInView: { y: 0, opacity: 1 },
-            viewport: { once: true, margin: '-50px' },
-            transition: { duration: 0.5, delay },
-          })}
-    >
-      <Flex
-        w={{ base: '100%', md: 16 }}
-        h={{ base: 16, md: 16 }}
-        mr={{ base: 0, md: 3 }}
-        mb={{ base: 4, md: 0 }}
-        justifyContent="center"
-        alignItems="center"
+// FeatureCard component remains the same
+const FeatureCard = ({ icon: Icon, title, description, delay, index }) => (
+  <MotionBox
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.5, delay: delay }}
+    bg={COLORS.darkBg}
+    borderRadius="xl"
+    p={6}
+    border="1px solid"
+    borderColor={COLORS.cardBorder}
+    _hover={{
+      transform: 'translateY(-5px)',
+      borderColor: COLORS.accent,
+      boxShadow: `0 0 20px ${COLORS.accent}33`,
+    }}
+    // transition="all 0.3s ease"
+    height="100%"
+  >
+    <VStack spacing={4} align="flex-start">
+      <Box
+        bg={`rgba(237, 100, 166, 0.1)`}
+        p={3}
+        borderRadius="lg"
+        color={COLORS.accent}
       >
-        <Icon color="#4ecdc4" size="28px" fontSize="28px" fill="#4ecdc4" />
-      </Flex>
-      <Box>
-        <Heading size="md" mb={2}>
-          {t(titleKey)}
-        </Heading>
-        <Text fontSize="sm">{t(descriptionKey)}</Text>
+        <Icon size={24} />
       </Box>
-    </ItemWrapper>
-  )
-}
+      <Heading size="md" color="white">
+        {title}
+      </Heading>
+      <Text color="whiteAlpha.800" fontSize="sm">
+        {description}
+      </Text>
+    </VStack>
+  </MotionBox>
+)
 
-const UISection = ({
-  imageSrc,
-  altTextKey,
-  titleKey,
-  descriptionKey,
-  reverseLayout,
-  isWeakDevice,
-}) => {
-  const { t } = useTranslation('GetStarted')
-  const ContentWrapper = isWeakDevice ? Box : Parallax
-
-  return (
-    <Flex
-      flexDirection={{
-        base: 'column',
-        lg: reverseLayout ? 'row-reverse' : 'row',
-      }}
+// Updated UISection component with proper alternating layout
+const UISection = ({ image, title, description, isImageLeft, delay }) => (
+  <MotionBox
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.7, delay }}
+    mb={20}
+  >
+    <Grid
+      templateColumns={{ base: '1fr', lg: '1fr 1fr' }}
+      gap={12}
       alignItems="center"
-      justifyContent="space-between"
-      mb={{ base: 16, lg: 32 }}
-      px={4}
-      mx={'5%'}
     >
-      <Box width="100%" mb={{ base: 8, lg: 0 }} maxWidth={{ lg: '45%' }}>
-        <ContentWrapper
-          {...(isWeakDevice
-            ? {}
-            : {
-                translateY: [-10, 10],
-                speed: -2,
-              })}
-        >
-          <Heading as="h3" size="lg" mb={4} color="brand.500">
-            {t(titleKey)}
-          </Heading>
-          <Text fontSize={{ base: 'md', lg: 'lg' }}>{t(descriptionKey)}</Text>
-        </ContentWrapper>
-      </Box>
-
-      <Box maxWidth={{ lg: '50%' }}>
-        <ContentWrapper
-          {...(isWeakDevice
-            ? {}
-            : {
-                translateY: [-15, 15],
-                speed: 2,
-              })}
-        >
-          <Image
-            src={imageSrc}
-            alt={t(altTextKey)}
-            maxWidth="100%"
-            maxHeight={{ base: '500px', lg: '575px' }}
-            borderRadius="lg"
-            loading="lazy"
-            mx="auto"
+      {/* Image Section */}
+      <Box
+        position="relative"
+        borderRadius="2xl"
+        overflow="hidden"
+        order={{
+          base: 0,
+          lg: isImageLeft ? 0 : 1,
+        }}
+      >
+        <AspectRatio ratio={16 / 9}>
+          <Box
+            as="img"
+            src={image}
+            alt={title}
+            objectFit="cover"
+            w="100%"
+            h="100%"
+            transition="transform 0.3s ease"
+            _hover={{ transform: 'scale(1.05)' }}
           />
-        </ContentWrapper>
+        </AspectRatio>
+        <Box
+          position="absolute"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)"
+          opacity={0.5}
+        />
       </Box>
-    </Flex>
-  )
-}
 
-const Features = ({ isWeakDevice }) => {
-  const { t } = useTranslation('GetStarted')
+      {/* Text Section */}
+      <VStack
+        align={isImageLeft ? 'flex-end' : 'flex-start'}
+        spacing={6}
+        order={{
+          base: 1,
+          lg: isImageLeft ? 1 : 0,
+        }}
+      >
+        <Badge
+          bg="rgba(237, 100, 166, 0.1)"
+          color={COLORS.accent}
+          px={3}
+          py={1}
+          borderRadius="full"
+          display="flex"
+          alignItems="center"
+          gap={2}
+        >
+          <Star size={12} />
+          Premium Feature
+        </Badge>
+        <Heading
+          fontSize={{ base: '2xl', md: '3xl' }}
+          bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
+          bgClip="text"
+          textAlign={{ base: 'center', lg: isImageLeft ? 'right' : 'left' }}
+        >
+          {title}
+        </Heading>
+        <Text
+          color="whiteAlpha.800"
+          fontSize={{ base: 'md', lg: 'lg' }}
+          textAlign={{ base: 'center', lg: isImageLeft ? 'right' : 'left' }}
+        >
+          {description}
+        </Text>
+      </VStack>
+    </Grid>
+  </MotionBox>
+)
 
-  const featuresData = useMemo(
+const Features = ({ isWeakDevice = false }) => {
+  // Features array remains the same
+  const features = useMemo(
     () => [
       {
-        Icon: Newspaper,
-        titleKey: 'Features.curatedNews.title',
-        descriptionKey: 'Features.curatedNews.description',
+        icon: Newspaper,
+        title: 'Curated Daily News',
+        description:
+          'Hand-picked articles covering the most important topics across multiple domains.',
         delay: 0.2,
       },
       {
-        Icon: QuestionIcon,
-        titleKey: 'Features.interactiveQuizzes.title',
-        descriptionKey: 'Features.interactiveQuizzes.description',
+        icon: Brain,
+        title: 'Interactive Learning',
+        description:
+          'Engage with content through quizzes and challenges designed to enhance retention.',
+        delay: 0.3,
+      },
+      {
+        icon: Trophy,
+        title: 'Competitive Edge',
+        description:
+          'Participate in tournaments and climb the leaderboard while learning.',
         delay: 0.4,
       },
       {
-        Icon: Trophy,
-        titleKey: 'Features.competeAndLearn.title',
-        descriptionKey: 'Features.competeAndLearn.description',
-        delay: 0.6,
+        icon: Award,
+        title: 'Skill Mastery',
+        description:
+          'Track your progress and earn badges as you develop expertise in various topics.',
+        delay: 0.5,
       },
     ],
     [],
   )
 
-  const uiSectionsData = useMemo(
+  // Updated uiSections with isImageLeft property
+  const uiSections = useMemo(
     () => [
       {
-        imageSrc: '/images/landingPage/homeUI.webp',
-        altTextKey: 'Features.personalizedNewsFeed.altText',
-        titleKey: 'Features.personalizedNewsFeed.title',
-        descriptionKey: 'Features.personalizedNewsFeed.description',
-        reverseLayout: false,
+        image: '/images/landingPage/homeUI.webp',
+        title: 'Personalized News Feed',
+        description:
+          'Get news tailored to your interests and learning goals, all in one place.',
+        isImageLeft: true,
+        delay: 0.3,
       },
       {
-        imageSrc: '/images/landingPage/articleUI.webp',
-        altTextKey: 'Features.immersiveReading.altText',
-        titleKey: 'Features.immersiveReading.title',
-        descriptionKey: 'Features.immersiveReading.description',
-        reverseLayout: true,
+        image: '/images/landingPage/articleUI.webp',
+        title: 'Immersive Reading Experience',
+        description:
+          'Enjoy a clean, distraction-free interface designed for maximum comprehension.',
+        isImageLeft: false,
+        delay: 0.4,
       },
       {
-        imageSrc: '/images/landingPage/quizUI.webp',
-        altTextKey: 'Features.engagingQuizzes.altText',
-        titleKey: 'Features.engagingQuizzes.title',
-        descriptionKey: 'Features.engagingQuizzes.description',
-        reverseLayout: false,
+        image: '/images/landingPage/quizUI.webp',
+        title: 'Engaging Quiz Interface',
+        description:
+          'Challenge yourself with interactive quizzes that make learning fun and effective.',
+        isImageLeft: true,
+        delay: 0.5,
       },
       {
-        imageSrc: '/images/landingPage/tournamentUI.webp',
-        altTextKey: 'Features.competitiveLearning.altText',
-        titleKey: 'Features.competitiveLearning.title',
-        descriptionKey: 'Features.competitiveLearning.description',
-        reverseLayout: true,
+        image: '/images/landingPage/tournamentUI.webp',
+        title: 'Tournament System',
+        description:
+          'Compete with others in weekly tournaments and showcase your knowledge.',
+        isImageLeft: false,
+        delay: 0.6,
+      },
+      {
+        image: '/images/landingPage/smartReading.jpg',
+        title: 'Smart Reading Assistant',
+        description:
+          'Experience enhanced comprehension with AI-powered highlighting of key points and instant access to word definitions. Yellow highlights emphasize crucial information while purple-shaded words provide instant dictionary definitions on hover.',
+        isImageLeft: true,
+        delay: 0.7,
+        // features: [
+        //   {
+        //     icon: Sparkles,
+        //     text: 'AI-powered highlighting of important sentences',
+        //   },
+        //   {
+        //     icon: BookOpenCheck,
+        //     text: 'Interactive dictionary with contextual definitions',
+        //   },
+        // ],
       },
     ],
     [],
   )
 
-  const ContentWrapper = isWeakDevice ? Box : ParallaxProvider
-
   return (
-    <ContentWrapper>
-      <Box py={{ base: 10, md: 20 }} position="relative" overflow="hidden">
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bg="rgba(0, 0, 0, 0.7)"
-        />
-        <Container
-          maxWidth="1400px"
-          position="relative"
-          zIndex={1}
-          px={{ base: 4, md: 6 }}
-        >
-          <Box mb={{ base: 10, md: 16 }}>
-            {isWeakDevice ? (
-              <Heading
-                as="h2"
-                textAlign="center"
-                fontSize={{ base: '2xl', md: '3xl', lg: '4xl' }}
-                fontWeight="bold"
-                color="brand.500"
-              >
-                {t('Features.mainTitle')}
-              </Heading>
-            ) : (
-              <Parallax translateY={[-10, 10]} speed={-2}>
-                <Heading
-                  as="h2"
-                  textAlign="center"
-                  fontSize={{ base: '2xl', md: '3xl', lg: '4xl' }}
-                  fontWeight="bold"
-                  color="brand.500"
-                >
-                  {t('Features.mainTitle')}
-                </Heading>
-              </Parallax>
-            )}
-          </Box>
-
-          <Box mb={{ base: 16, md: 32 }}>
-            <HStack
-              display={{ base: 'none', md: 'flex' }}
-              spacing={4}
-              alignItems="stretch"
+    <Box py={20} position="relative" overflow="hidden">
+      <Container maxW="container.xl">
+        <VStack spacing={16}>
+          {/* Header Section */}
+          <VStack spacing={4} textAlign="center">
+            <Badge
+              bg="rgba(237, 100, 166, 0.1)"
+              color={COLORS.accent}
+              px={3}
+              py={1}
+              borderRadius="full"
+              display="flex"
+              alignItems="center"
+              gap={2}
             >
-              {featuresData.map((feature, index) => (
-                <Box key={index} flex="1">
-                  <FeatureItem {...feature} isWeakDevice={isWeakDevice} />
-                </Box>
-              ))}
-            </HStack>
+              <TrendingUp size={12} />
+              Discover Our Features
+            </Badge>
+            <Heading
+              fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
+              bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
+              bgClip="text"
+              mb={4}
+            >
+              Everything You Need to Excel
+            </Heading>
+            <Text
+              fontSize={{ base: 'lg', md: 'xl' }}
+              color="whiteAlpha.900"
+              maxW="800px"
+            >
+              Transform your learning journey with our comprehensive suite of
+              features designed to make knowledge acquisition engaging and
+              effective.
+            </Text>
+          </VStack>
 
-            <VStack display={{ base: 'flex', md: 'none' }} spacing={6}>
-              {featuresData.map((feature, index) => (
-                <FeatureItem
-                  key={index}
-                  {...feature}
-                  isWeakDevice={isWeakDevice}
-                />
-              ))}
-            </VStack>
-          </Box>
+          {/* Features Grid */}
+          <Grid
+            templateColumns={{
+              base: '1fr',
+              md: 'repeat(2, 1fr)',
+              lg: 'repeat(4, 1fr)',
+            }}
+            gap={8}
+            w="full"
+          >
+            {features.map((feature, index) => (
+              <FeatureCard key={index} {...feature} index={index} />
+            ))}
+          </Grid>
 
-          {uiSectionsData.map((section, index) => (
-            <UISection key={index} {...section} isWeakDevice={isWeakDevice} />
-          ))}
-        </Container>
+          {/* UI Sections with alternating layout */}
+          <VStack spacing={20} w="full">
+            {uiSections.map((section, index) => (
+              <UISection key={index} {...section} />
+            ))}
+          </VStack>
+        </VStack>
+      </Container>
 
-        <Flex position="absolute" bottom={0} w="100%">
-          <Footer />
-        </Flex>
-      </Box>
-    </ContentWrapper>
+      {/* Background Element */}
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        bottom="0"
+        bgGradient={`radial(circle at 50% 50%, ${COLORS.accent}11 0%, transparent 70%)`}
+        zIndex="-1"
+      />
+    </Box>
   )
 }
 
