@@ -146,14 +146,14 @@ const UISection = ({ image, title, description, isImageLeft }) => {
           fontSize={{ base: 'xl', md: '2xl', lg: '3xl' }}
           bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
           bgClip="text"
-          textAlign={{ base: 'center', lg: isImageLeft ? 'left' : 'right' }}
+          textAlign={{ base: 'center', lg: 'left' }}
         >
           {title}
         </Heading>
         <Text
           color="whiteAlpha.800"
           fontSize={{ base: 'sm', md: 'md', lg: 'lg' }}
-          textAlign={{ base: 'center', lg: isImageLeft ? 'left' : 'right' }}
+          textAlign={{ base: 'center', lg: 'left' }}
           px={{ base: 4, md: 0 }}
         >
           {description}
