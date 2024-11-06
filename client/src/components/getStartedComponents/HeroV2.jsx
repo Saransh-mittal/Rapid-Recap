@@ -84,6 +84,7 @@ const HeroV2 = () => {
               spacing={4}
               w="full"
               justify={{ base: 'center', lg: 'flex-start' }}
+              display={{ base: 'none', md: 'flex' }}
             >
               <HStack
                 bg="rgba(237, 100, 166, 0.1)"
@@ -108,10 +109,39 @@ const HeroV2 = () => {
               </HStack>
               <LanguageSwitchButton COLORS={COLORS} />
             </HStack>
+            <VStack
+              spacing={4}
+              w="full"
+              justify={{ base: 'center', lg: 'flex-start' }}
+              display={{ base: 'flex', md: 'none' }}
+            >
+              <HStack
+                bg="rgba(237, 100, 166, 0.1)"
+                p={2}
+                borderRadius="full"
+                spacing={3}
+              >
+                <Badge
+                  color={COLORS.accent}
+                  bg="transparent"
+                  px={2}
+                  fontSize="sm"
+                >
+                  <HStack spacing={2}>
+                    <Languages size={14} />
+                    <Text>{t('Header.languageBadge')}</Text>
+                  </HStack>
+                </Badge>
+                <Badge color="green.400" px={2} borderRadius="full">
+                  Live
+                </Badge>
+              </HStack>
+              <LanguageSwitchButton COLORS={COLORS} />
+            </VStack>
             {/* Main Heading with Social Proof */}
             <Box>
               <Heading
-                fontSize={{ base: '4xl', md: '4xl', lg: '5xl' }}
+                fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
                 fontWeight="bold"
                 bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
                 bgClip="text"
@@ -122,7 +152,7 @@ const HeroV2 = () => {
                 {t('Header.title')}
               </Heading>
               <Text
-                fontSize={{ base: 'lg', md: 'xl' }}
+                fontSize={{ base: 'md', md: 'xl' }}
                 color="whiteAlpha.900"
                 maxW="600px"
                 textAlign={{ base: 'center', lg: 'left' }}

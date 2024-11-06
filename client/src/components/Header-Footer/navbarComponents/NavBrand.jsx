@@ -41,7 +41,10 @@ const NavBrand = ({ isHamburgerOpen }) => {
         />
         <Flex
           ml={3}
-          display={{ base: isHamburgerOpen ? 'flex' : 'none', md: 'block' }}
+          display={{
+            base: isHamburgerOpen || !isAuthenticated ? 'flex' : 'none',
+            md: 'block',
+          }}
           color="white"
         >
           <Suspense fallback={<div>Loading...</div>}>
