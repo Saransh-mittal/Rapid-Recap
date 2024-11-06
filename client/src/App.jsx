@@ -52,7 +52,7 @@ import {
   setIsNotifInboxModalOpen,
   addNoteMessageIfAllowed,
 } from './redux/appSlice.js'
-import { setUser } from './redux/authSlice.js'
+import { setLoginCheckStatus, setUser } from './redux/authSlice.js'
 import i18n from 'i18next'
 import { changeLanguage } from './utils/helper.utils.js'
 import {
@@ -67,6 +67,7 @@ import {
 import LoadingScreen from './screens/LoadingScreen.jsx'
 import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
+import useCountdown from './customHooks/useCountdown.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -79,7 +80,9 @@ const App = () => {
   const { t: tournamentSliceTranslation } = useTranslation('tournamentSlice') // Added translation
   const [navbarLoaded, setNavbarLoaded] = useState(false)
   const dispatch = useDispatch()
-  const { isAuthenticated, user } = useSelector(state => state.auth)
+  const { isAuthenticated, user, loginCheckStatus } = useSelector(
+    state => state.auth,
+  )
   const {
     isRegisterOpen,
     isSigninOpen,
@@ -90,9 +93,10 @@ const App = () => {
   const { isOpen, tournamentQuiz } = useSelector(state => state.quiz)
   const [isGuestLoggedin, setIsGuestLoggedin] = useState(false)
   const [guestModalJustClosed, setGuestModalJustClosed] = useState(false)
-  const { tournamentId, status, isRegistered } = useSelector(
+  const { tournamentId, status, tournamentStartTime } = useSelector(
     state => state.tournament,
   )
+  useCountdown({ timeString: tournamentStartTime })
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const showNavbar = !user?.needsOnboarding
   const { updates } = useSelector(state => state.app)
@@ -233,10 +237,10 @@ const App = () => {
   }, [tournamentId, status])
 
   useEffect(() => {
-    if (isAuthenticated && user.role !== 'guest') {
+    if (loginCheckStatus === 'fulfilled') {
       dispatch(checkTournamentRegistration(tournamentSliceTranslation))
     }
-  }, [isAuthenticated, user?.inGameName])
+  }, [loginCheckStatus])
 
   useEffect(() => {
     let timer
@@ -300,6 +304,7 @@ const App = () => {
         console.log(error)
       } finally {
         dispatch(setTaskProgress({ task: 'fetchUser', progress: 100 }))
+        dispatch(setLoginCheckStatus('fulfilled'))
       }
     }
 

@@ -33,6 +33,7 @@ import useSafeSound from '../../customHooks/useSafeSound'
 import { useDispatch } from 'react-redux'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import { useFeatureDetection } from '../../utils/featureDetection'
+import { motion } from 'framer-motion'
 
 // Constants
 const COLORS = {
@@ -159,7 +160,7 @@ const HeroV2 = () => {
 
               <HStack spacing={4} wrap="wrap">
                 <Badge variant="outline" colorScheme="pink">
-                  ✓ No credit card
+                  ✓ 100% Free Access
                 </Badge>
                 <Badge variant="outline" colorScheme="pink">
                   ✓ 120+ daily articles
@@ -184,18 +185,49 @@ const HeroV2 = () => {
             >
               <AspectRatio ratio={4 / 3}>
                 <Box
-                  as="img"
-                  src={learner}
-                  alt="Student using Rapid Recap for daily learning"
-                  objectFit="cover"
-                  borderRadius="2xl"
-                  filter="brightness(0.9)"
-                  _hover={{
-                    filter: 'brightness(1)',
-                    transform: 'scale(1.02)',
-                  }}
-                  transition="all 0.3s ease"
-                />
+                  as={motion.div}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                >
+                  <Box
+                    as="img"
+                    src={learner}
+                    alt="Student using Rapid Recap for daily learning"
+                    objectFit="cover"
+                    borderRadius="2xl"
+                    filter="brightness(0.9)"
+                    _hover={{
+                      filter: 'brightness(1)',
+                      transform: 'scale(1.02)',
+                    }}
+                    transition="all 0.3s ease"
+                  />
+
+                  {/* Optional: Add floating elements around the main image */}
+                  <Box
+                    position="absolute"
+                    top="-10%"
+                    right="-5%"
+                    width="100px"
+                    height="100px"
+                    bgGradient="radial(circle, rgba(237,100,166,0.5) 0%, rgba(237,100,166,0) 70%)"
+                    borderRadius="full"
+                    animation="pulse 2s infinite"
+                  />
+
+                  <Box
+                    position="absolute"
+                    bottom="-5%"
+                    left="-5%"
+                    width="150px"
+                    height="150px"
+                    bgGradient="radial(circle, rgba(128,90,213,0.5) 0%, rgba(128,90,213,0) 70%)"
+                    borderRadius="full"
+                    animation="pulse 2s infinite"
+                    style={{ animationDelay: '1s' }}
+                  />
+                </Box>
               </AspectRatio>
 
               {/* Floating Achievement Badges */}
