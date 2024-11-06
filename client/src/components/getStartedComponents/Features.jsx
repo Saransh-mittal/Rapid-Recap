@@ -5,26 +5,24 @@ import {
   Heading,
   Text,
   VStack,
-  HStack,
   Grid,
   Badge,
   AspectRatio,
-  Flex,
+  useBreakpointValue,
+  Stack,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
 import {
   Brain,
   Trophy,
-  BookOpen,
   Star,
   TrendingUp,
   Newspaper,
   Award,
+  BookOpen,
   Sparkles,
   BookOpenCheck,
 } from 'lucide-react'
 
-// Constants remain the same
 const COLORS = {
   accent: '#ED64A6',
   secondary: '#805AD5',
@@ -32,18 +30,11 @@ const COLORS = {
   cardBorder: 'rgba(237, 100, 166, 0.2)',
 }
 
-const MotionBox = motion(Box)
-
-// FeatureCard component remains the same
-const FeatureCard = ({ icon: Icon, title, description, delay, index }) => (
-  <MotionBox
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.5, delay: delay }}
+const FeatureCard = ({ icon: Icon, title, description }) => (
+  <Box
     bg={COLORS.darkBg}
     borderRadius="xl"
-    p={6}
+    p={{ base: 4, md: 6 }}
     border="1px solid"
     borderColor={COLORS.cardBorder}
     _hover={{
@@ -51,10 +42,10 @@ const FeatureCard = ({ icon: Icon, title, description, delay, index }) => (
       borderColor: COLORS.accent,
       boxShadow: `0 0 20px ${COLORS.accent}33`,
     }}
-    // transition="all 0.3s ease"
+    transition="all 0.3s ease"
     height="100%"
   >
-    <VStack spacing={4} align="flex-start">
+    <VStack spacing={{ base: 3, md: 4 }} align="center">
       <Box
         bg={`rgba(237, 100, 166, 0.1)`}
         p={3}
@@ -63,39 +54,58 @@ const FeatureCard = ({ icon: Icon, title, description, delay, index }) => (
       >
         <Icon size={24} />
       </Box>
-      <Heading size="md" color="white">
+      <Heading size={{ base: 'sm', md: 'md' }} color="white" textAlign="center">
         {title}
       </Heading>
-      <Text color="whiteAlpha.800" fontSize="sm">
+      <Text
+        color="whiteAlpha.800"
+        fontSize={{ base: 'xs', md: 'sm' }}
+        textAlign="center"
+      >
         {description}
       </Text>
     </VStack>
-  </MotionBox>
+  </Box>
 )
 
-// Updated UISection component with proper alternating layout
-const UISection = ({ image, title, description, isImageLeft, delay }) => (
-  <MotionBox
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.7, delay }}
-    mb={20}
-  >
-    <Grid
-      templateColumns={{ base: '1fr', lg: '1fr 1fr' }}
-      gap={12}
-      alignItems="center"
+const UISection = ({ image, title, description, isImageLeft }) => {
+  const isMobile = useBreakpointValue({ base: true, md: false })
+
+  return (
+    <Stack
+      direction={{ base: 'column', lg: 'row' }}
+      spacing={{ base: 6, lg: 12 }}
+      align="center"
+      w="full"
+      position="relative"
+      pb={{ base: 12, md: 20 }}
+      _after={{
+        content: '""',
+        position: 'absolute',
+        bottom: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: { base: '80%', md: '60%' },
+        height: '1px',
+        background: `linear-gradient(90deg,
+          transparent 0%,
+          ${COLORS.accent}33 15%,
+          ${COLORS.accent} 50%,
+          ${COLORS.accent}33 85%,
+          transparent 100%
+        )`,
+        opacity: 0.5,
+      }}
+      _last={{
+        pb: 0,
+        _after: {
+          display: 'none',
+        },
+      }}
     >
-      {/* Image Section */}
       <Box
-        position="relative"
-        borderRadius="2xl"
-        overflow="hidden"
-        order={{
-          base: 0,
-          lg: isImageLeft ? 0 : 1,
-        }}
+        w={{ base: 'full', lg: '50%' }}
+        order={isMobile ? 0 : isImageLeft ? 0 : 1}
       >
         <AspectRatio ratio={16 / 9}>
           <Box
@@ -105,29 +115,18 @@ const UISection = ({ image, title, description, isImageLeft, delay }) => (
             objectFit="cover"
             w="100%"
             h="100%"
+            borderRadius="2xl"
             transition="transform 0.3s ease"
             _hover={{ transform: 'scale(1.05)' }}
           />
         </AspectRatio>
-        <Box
-          position="absolute"
-          top="0"
-          left="0"
-          right="0"
-          bottom="0"
-          bg="linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)"
-          opacity={0.5}
-        />
       </Box>
 
-      {/* Text Section */}
       <VStack
-        align={isImageLeft ? 'flex-end' : 'flex-start'}
-        spacing={6}
-        order={{
-          base: 1,
-          lg: isImageLeft ? 1 : 0,
-        }}
+        w={{ base: 'full', lg: '50%' }}
+        align={{ base: 'center', lg: isImageLeft ? 'flex-start' : 'flex-end' }}
+        spacing={{ base: 4, md: 6 }}
+        order={isMobile ? 1 : isImageLeft ? 1 : 0}
       >
         <Badge
           bg="rgba(237, 100, 166, 0.1)"
@@ -138,32 +137,33 @@ const UISection = ({ image, title, description, isImageLeft, delay }) => (
           display="flex"
           alignItems="center"
           gap={2}
+          boxShadow={`0 0 10px ${COLORS.accent}33`}
         >
           <Star size={12} />
           Premium Feature
         </Badge>
         <Heading
-          fontSize={{ base: '2xl', md: '3xl' }}
+          fontSize={{ base: 'xl', md: '2xl', lg: '3xl' }}
           bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
           bgClip="text"
-          textAlign={{ base: 'center', lg: isImageLeft ? 'right' : 'left' }}
+          textAlign={{ base: 'center', lg: isImageLeft ? 'left' : 'right' }}
         >
           {title}
         </Heading>
         <Text
           color="whiteAlpha.800"
-          fontSize={{ base: 'md', lg: 'lg' }}
-          textAlign={{ base: 'center', lg: isImageLeft ? 'right' : 'left' }}
+          fontSize={{ base: 'sm', md: 'md', lg: 'lg' }}
+          textAlign={{ base: 'center', lg: isImageLeft ? 'left' : 'right' }}
+          px={{ base: 4, md: 0 }}
         >
           {description}
         </Text>
       </VStack>
-    </Grid>
-  </MotionBox>
-)
+    </Stack>
+  )
+}
 
-const Features = ({ isWeakDevice = false }) => {
-  // Features array remains the same
+const Features = () => {
   const features = useMemo(
     () => [
       {
@@ -171,34 +171,29 @@ const Features = ({ isWeakDevice = false }) => {
         title: 'Curated Daily News',
         description:
           'Hand-picked articles covering the most important topics across multiple domains.',
-        delay: 0.2,
       },
       {
         icon: Brain,
         title: 'Interactive Learning',
         description:
           'Engage with content through quizzes and challenges designed to enhance retention.',
-        delay: 0.3,
       },
       {
         icon: Trophy,
         title: 'Competitive Edge',
         description:
           'Participate in tournaments and climb the leaderboard while learning.',
-        delay: 0.4,
       },
       {
         icon: Award,
         title: 'Skill Mastery',
         description:
           'Track your progress and earn badges as you develop expertise in various topics.',
-        delay: 0.5,
       },
     ],
     [],
   )
 
-  // Updated uiSections with isImageLeft property
   const uiSections = useMemo(
     () => [
       {
@@ -207,7 +202,6 @@ const Features = ({ isWeakDevice = false }) => {
         description:
           'Get news tailored to your interests and learning goals, all in one place.',
         isImageLeft: true,
-        delay: 0.3,
       },
       {
         image: '/images/landingPage/articleUI.webp',
@@ -215,7 +209,6 @@ const Features = ({ isWeakDevice = false }) => {
         description:
           'Enjoy a clean, distraction-free interface designed for maximum comprehension.',
         isImageLeft: false,
-        delay: 0.4,
       },
       {
         image: '/images/landingPage/quizUI.webp',
@@ -223,7 +216,6 @@ const Features = ({ isWeakDevice = false }) => {
         description:
           'Challenge yourself with interactive quizzes that make learning fun and effective.',
         isImageLeft: true,
-        delay: 0.5,
       },
       {
         image: '/images/landingPage/tournamentUI.webp',
@@ -231,7 +223,6 @@ const Features = ({ isWeakDevice = false }) => {
         description:
           'Compete with others in weekly tournaments and showcase your knowledge.',
         isImageLeft: false,
-        delay: 0.6,
       },
       {
         image: '/images/landingPage/smartReading.jpg',
@@ -239,28 +230,27 @@ const Features = ({ isWeakDevice = false }) => {
         description:
           'Experience enhanced comprehension with AI-powered highlighting of key points and instant access to word definitions. Yellow highlights emphasize crucial information while purple-shaded words provide instant dictionary definitions on hover.',
         isImageLeft: true,
-        delay: 0.7,
-        // features: [
-        //   {
-        //     icon: Sparkles,
-        //     text: 'AI-powered highlighting of important sentences',
-        //   },
-        //   {
-        //     icon: BookOpenCheck,
-        //     text: 'Interactive dictionary with contextual definitions',
-        //   },
-        // ],
+        features: [
+          {
+            icon: Sparkles,
+            text: 'AI-powered highlighting of important sentences',
+          },
+          {
+            icon: BookOpenCheck,
+            text: 'Interactive dictionary with contextual definitions',
+          },
+        ],
       },
     ],
     [],
   )
 
   return (
-    <Box py={20} position="relative" overflow="hidden">
-      <Container maxW="container.xl">
-        <VStack spacing={16}>
+    <Box py={{ base: 10, md: 20 }} position="relative" overflow="hidden">
+      <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
+        <VStack spacing={{ base: 10, md: 16 }}>
           {/* Header Section */}
-          <VStack spacing={4} textAlign="center">
+          <VStack spacing={{ base: 3, md: 4 }} textAlign="center">
             <Badge
               bg="rgba(237, 100, 166, 0.1)"
               color={COLORS.accent}
@@ -275,17 +265,20 @@ const Features = ({ isWeakDevice = false }) => {
               Discover Our Features
             </Badge>
             <Heading
-              fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
+              fontSize={{ base: '2xl', md: '4xl', lg: '5xl' }}
               bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
               bgClip="text"
-              mb={4}
+              textAlign="center"
+              px={{ base: 4, md: 0 }}
             >
               Everything You Need to Excel
             </Heading>
             <Text
-              fontSize={{ base: 'lg', md: 'xl' }}
+              fontSize={{ base: 'sm', md: 'lg', lg: 'xl' }}
               color="whiteAlpha.900"
               maxW="800px"
+              textAlign="center"
+              px={{ base: 4, md: 0 }}
             >
               Transform your learning journey with our comprehensive suite of
               features designed to make knowledge acquisition engaging and
@@ -297,19 +290,19 @@ const Features = ({ isWeakDevice = false }) => {
           <Grid
             templateColumns={{
               base: '1fr',
-              md: 'repeat(2, 1fr)',
+              sm: 'repeat(2, 1fr)',
               lg: 'repeat(4, 1fr)',
             }}
-            gap={8}
+            gap={{ base: 4, md: 8 }}
             w="full"
           >
             {features.map((feature, index) => (
-              <FeatureCard key={index} {...feature} index={index} />
+              <FeatureCard key={index} {...feature} />
             ))}
           </Grid>
 
-          {/* UI Sections with alternating layout */}
-          <VStack spacing={20} w="full">
+          {/* UI Sections */}
+          <VStack spacing={{ base: 12, md: 20 }} w="full">
             {uiSections.map((section, index) => (
               <UISection key={index} {...section} />
             ))}
