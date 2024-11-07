@@ -166,7 +166,7 @@ if (process.env.NODE_ENV === 'development') {
     }),
   )
 
-  app.use(searchConsoleMiddleware)
+  // app.use(searchConsoleMiddleware)
 
   // Production compression
   app.use(
