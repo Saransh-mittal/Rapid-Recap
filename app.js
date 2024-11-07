@@ -96,7 +96,6 @@ if (process.env.NODE_ENV === 'development') {
             'https://accounts.google.com',
             'https://apis.google.com',
             'https://*.googleusercontent.com',
-            'https://storage.googleapis.com',
           ],
           frameSrc: [
             "'self'",
@@ -110,49 +109,59 @@ if (process.env.NODE_ENV === 'development') {
             'https://fonts.googleapis.com',
             'https://*.googleapis.com',
             'https://accounts.google.com',
-            'https://rapidrecap.co.in',
           ],
           fontSrc: [
             "'self'",
             'https://fonts.gstatic.com',
             'https://*.gstatic.com',
             'data:',
-            'https://rapidrecap.co.in',
           ],
-          imgSrc: ["'self'", 'data:', 'blob:', '*', 'https:', 'http:'],
+          imgSrc: [
+            "'self'",
+            'data:',
+            'blob:',
+            '*',
+            'https:',
+            'http:',
+            'https://*.githubusercontent.com',
+            'https://avatars.githubusercontent.com',
+          ],
           connectSrc: [
             "'self'",
+            'data:',
+            'blob:',
+            '*',
             'https://*',
-            'wss://*',
-            'ws://*',
             'http://*',
+            'ws:',
+            'wss:',
             `https://${process.env.RAILWAY_PUBLIC_DOMAIN || ''}`.trim(),
             `https://${process.env.RAILWAY_PRIVATE_DOMAIN || ''}`.trim(),
             'https://rapidrecap.co.in',
+            'https://avatars.githubusercontent.com',
+            'https://*.githubusercontent.com',
           ].filter(Boolean),
           mediaSrc: ["'self'", '*', 'data:', 'blob:', 'https:', 'http:'],
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
-          formAction: [
-            "'self'",
-            'https://accounts.google.com',
-            'https://rapidrecap.co.in',
-          ],
+          formAction: ["'self'", 'https://accounts.google.com'],
           manifestSrc: ["'self'"],
-          workerSrc: ["'self'", 'blob:', 'data:', 'https://rapidrecap.co.in'],
-          frameAncestors: ["'self'", 'https://rapidrecap.co.in'],
-          upgradeInsecureRequests: [],
+          workerSrc: [
+            "'self'",
+            'blob:',
+            '*',
+            `https://${process.env.RAILWAY_PUBLIC_DOMAIN || ''}`.trim(),
+          ].filter(Boolean),
+          frameAncestors: ["'self'"],
+          // Remove upgradeInsecureRequests to allow mixed content
+          // upgradeInsecureRequests: [],
         },
       },
+      // Disable restrictive cross-origin policies
       crossOriginOpenerPolicy: false,
       crossOriginEmbedderPolicy: false,
       crossOriginResourcePolicy: {
         policy: 'cross-origin',
-      },
-      hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true,
       },
     }),
   )
@@ -179,37 +188,47 @@ if (process.env.NODE_ENV === 'development') {
 
 // Enhanced headers for service workers, images, and media
 app.use((req, res, next) => {
-  // Service worker headers
+  // Special handling for service worker
   if (req.url.includes('service-worker.js') || req.url.includes('sw.js')) {
+    // Set CSP headers specifically for service worker
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *",
+    )
     res.setHeader('Service-Worker-Allowed', '/')
     res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-    res.setHeader('Access-Control-Allow-Credentials', 'true')
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, OPTIONS',
+    )
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    )
   }
 
-  // Media and image headers
-  if (
-    req.url.match(/\.(jpg|jpeg|png|gif|webp|svg|ico|mp4|webm|ogg|mp3|wav)$/i)
-  ) {
+  // Special handling for image requests
+  if (req.url.match(/\.(jpg|jpeg|png|gif|webp|svg|ico)$/i)) {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Range')
-  }
-
-  // Push notification headers in production
-  if (
-    process.env.NODE_ENV === 'production' &&
-    (req.url.includes('/api/notify') || req.url.includes('/api/push'))
-  ) {
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-    res.setHeader('Access-Control-Allow-Credentials', 'true')
   }
 
   next()
+})
+
+// Add this middleware for handling preflight requests
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+  )
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+  )
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.status(200).end()
 })
 
 // Setup web push
