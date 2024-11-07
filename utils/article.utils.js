@@ -15,6 +15,7 @@ const { Recommendation } = require('../model/recommendationSchema')
 const newsClassifierService = require('../ml/services/newsClassifierService')
 const cache = require('memory-cache')
 const { generateHighlightForArticle } = require('./article.highlight.utils')
+const { generateKeywordsAndDescription } = require('./seoHelper')
 
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
@@ -445,9 +446,15 @@ const processExtractedNews = async (news, category) => {
       generateHighlightForArticle({
         articleId: newArticle._id.toString(),
         lang: 'en',
-      }).catch(error => {
-        console.error('Generation failed:', error)
       })
+        .then(() => {
+          generateKeywordsAndDescription(newArticle._id.toString()).catch(
+            error => console.error('Generation failed:', error),
+          )
+        })
+        .catch(error => {
+          console.error('Generation failed:', error)
+        })
       processedOutput.push(newArticle)
     } catch (error) {
       console.error(
