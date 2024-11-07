@@ -103,7 +103,7 @@ async function getBotContent(urlType, url, baseUrl) {
       content = {
         navbar: navbarContent,
         article: articleContent,
-        seoMetaTags: generateMetaTags(articleData, baseUrl),
+        seoMetaTags: generateMetaTags(articleData, baseUrl, url),
       }
     }
 
