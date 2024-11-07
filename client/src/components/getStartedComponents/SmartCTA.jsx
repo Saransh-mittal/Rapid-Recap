@@ -12,9 +12,10 @@ import useSafeSound from '../../customHooks/useSafeSound'
 import { useFeatureDetection } from '../../utils/featureDetection'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import { useDispatch } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
-// Enhanced Smart CTA Component
 const SmartCTA = ({ isMainButtonVisible, COLORS }) => {
+  const { t } = useTranslation('GetStarted')
   const isMobile = useBreakpointValue({ base: true, md: false })
   const features = useFeatureDetection()
 
@@ -23,6 +24,7 @@ const SmartCTA = ({ isMainButtonVisible, COLORS }) => {
     volume: 0.5,
   })
   const dispatch = useDispatch()
+
   return (
     <AnimatePresence>
       <Portal>
@@ -65,7 +67,7 @@ const SmartCTA = ({ isMainButtonVisible, COLORS }) => {
                   dispatch(setIsSigninOpen(true))
                 }}
               >
-                Start Learning Free
+                {t('Header.getStartedButton')}
               </Button>
             </Box>
           </motion.div>

@@ -39,7 +39,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               path="/"
               element={isToken ? <Navigate to="/home" /> : <GetStarted />}
             />
-            <Route path="/get-started" element={<GetStarted />} />
+            {/* <Route path="/get-started" element={<GetStarted />} /> */}
 
             <Route path="/contact/feedback" element={<ContactLayout />} />
             <Route path="/home/:category" element={<Home />} />

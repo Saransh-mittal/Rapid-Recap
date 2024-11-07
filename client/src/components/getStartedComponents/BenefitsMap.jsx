@@ -29,7 +29,6 @@ import { keyframes } from '@emotion/react'
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 
-// Define color scheme to match hero
 const COLORS = {
   accent: '#ED64A6',
   secondary: '#805AD5',
@@ -37,7 +36,6 @@ const COLORS = {
   cardBorder: 'rgba(237, 100, 166, 0.2)',
 }
 
-// Animations
 const pulseAnimation = keyframes`
   0% { transform: scale(1); }
   50% { transform: scale(1.1); }
@@ -55,86 +53,88 @@ const BenefitCard = ({
   description,
   index,
   isLarge = false,
-}) => (
-  <MotionBox
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    // transition={{ duration: 0.5, delay: index * 0.1 }}
-    bg={COLORS.darkBg}
-    p={6}
-    borderRadius="xl"
-    border="1px solid"
-    borderColor={COLORS.cardBorder}
-    _hover={{
-      borderColor: COLORS.accent,
-      transform: 'translateY(-5px)',
-      boxShadow: `0 0 20px ${COLORS.accent}33`,
-    }}
-    height="100%"
-    width="100%"
-    position="relative"
-    overflow="hidden"
-    transition="all 0.3s ease"
-  >
-    {/* Gradient overlay */}
-    <Box
-      position="absolute"
-      top={0}
-      left={0}
-      right={0}
-      height="4px"
-      bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
-    />
+  badge,
+}) => {
+  const { t } = useTranslation('GetStarted')
 
-    <VStack spacing={4} align="center">
-      <Circle
-        size={isLarge ? '80px' : '60px'}
-        bg="rgba(237, 100, 166, 0.1)"
-        color={COLORS.accent}
-        position="relative"
-        _hover={{
-          animation: `${pulseAnimation} 2s infinite`,
-        }}
-      >
-        <Icon size={isLarge ? 32 : 24} />
-      </Circle>
+  return (
+    <MotionBox
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      bg={COLORS.darkBg}
+      p={6}
+      borderRadius="xl"
+      border="1px solid"
+      borderColor={COLORS.cardBorder}
+      _hover={{
+        borderColor: COLORS.accent,
+        transform: 'translateY(-5px)',
+        boxShadow: `0 0 20px ${COLORS.accent}33`,
+      }}
+      height="100%"
+      width="100%"
+      position="relative"
+      overflow="hidden"
+      transition="all 0.3s ease"
+    >
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        height="4px"
+        bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
+      />
 
-      <Heading
-        size={isLarge ? 'lg' : 'md'}
-        color="white"
-        fontWeight="bold"
-        textAlign="center"
-      >
-        {title}
-      </Heading>
-
-      <Text
-        color="whiteAlpha.800"
-        fontSize={isLarge ? 'md' : 'sm'}
-        textAlign="center"
-        lineHeight="tall"
-      >
-        {description}
-      </Text>
-
-      {isLarge && (
-        <Badge
-          color={COLORS.accent}
-          fontSize="sm"
-          px={3}
-          py={1}
-          borderRadius="full"
+      <VStack spacing={4} align="center">
+        <Circle
+          size={isLarge ? '80px' : '60px'}
           bg="rgba(237, 100, 166, 0.1)"
+          color={COLORS.accent}
+          position="relative"
+          _hover={{
+            animation: `${pulseAnimation} 2s infinite`,
+          }}
         >
-          Key Feature
-        </Badge>
-      )}
-    </VStack>
-  </MotionBox>
-)
+          <Icon size={isLarge ? 32 : 24} />
+        </Circle>
 
-// Mobile Arrow Component
+        <Heading
+          size={isLarge ? 'lg' : 'md'}
+          color="white"
+          fontWeight="bold"
+          textAlign="center"
+        >
+          {title}
+        </Heading>
+
+        <Text
+          color="whiteAlpha.800"
+          fontSize={isLarge ? 'md' : 'sm'}
+          textAlign="center"
+          lineHeight="tall"
+        >
+          {description}
+        </Text>
+
+        {isLarge && badge && (
+          <Badge
+            color={COLORS.accent}
+            fontSize="sm"
+            px={3}
+            py={1}
+            borderRadius="full"
+            bg="rgba(237, 100, 166, 0.1)"
+          >
+            {badge}
+          </Badge>
+        )}
+      </VStack>
+    </MotionBox>
+  )
+}
+
 const MobileArrow = () => (
   <Box
     display={{ base: 'flex', md: 'none' }}
@@ -153,7 +153,6 @@ const MobileArrow = () => (
   </Box>
 )
 
-// Desktop Connecting Line Component (unchanged)
 const ConnectingLine = ({ direction = 'right' }) => (
   <Flex
     justify="center"
@@ -189,45 +188,43 @@ const BenefitsMap = ({ isWeakDevice }) => {
   const benefits = [
     {
       icon: Newspaper,
-      title: 'Curated News',
-      description:
-        'Access high-quality, tailored news content that matters to you',
+      title: t('BenefitsMap.benefits.curatedNews.title'),
+      description: t('BenefitsMap.benefits.curatedNews.description'),
     },
     {
       icon: Brain,
-      title: 'Active Learning',
-      description:
-        'Engage with interactive quizzes to reinforce your understanding',
+      title: t('BenefitsMap.benefits.activeLearning.title'),
+      description: t('BenefitsMap.benefits.activeLearning.description'),
     },
     {
       icon: BarChart,
-      title: 'Track Progress',
-      description: 'Monitor your growth & information quotient (IQ)',
+      title: t('BenefitsMap.benefits.trackProgress.title'),
+      description: t('BenefitsMap.benefits.trackProgress.description'),
     },
   ]
 
   const centralFeature = {
     icon: Trophy,
-    title: 'Information Retention Mastery',
-    description:
-      'Transform how you consume and retain information through our scientifically-backed approach combining active recall and spaced repetition.',
+    title: t('BenefitsMap.benefits.infoRetention.title'),
+    description: t('BenefitsMap.benefits.infoRetention.description'),
+    badge: t('BenefitsMap.benefits.infoRetention.badge'),
   }
 
   const bottomBenefits = [
     {
       icon: Trophy,
-      title: 'Competitive Edge',
-      description: 'Excel in your professional and academic pursuits',
+      title: t('BenefitsMap.benefits.competitiveEdge.title'),
+      description: t('BenefitsMap.benefits.competitiveEdge.description'),
     },
     {
       icon: Globe,
-      title: 'Informed Citizen',
-      description: 'Contribute meaningfully to societal discussions',
+      title: t('BenefitsMap.benefits.informedCitizen.title'),
+      description: t('BenefitsMap.benefits.informedCitizen.description'),
     },
     {
       icon: Rocket,
-      title: 'Personal Growth',
-      description: 'Continuously expand your knowledge and capabilities',
+      title: t('BenefitsMap.benefits.personalGrowth.title'),
+      description: t('BenefitsMap.benefits.personalGrowth.description'),
     },
   ]
 
@@ -235,7 +232,6 @@ const BenefitsMap = ({ isWeakDevice }) => {
     <ContentWrapper>
       <Box py={20} position="relative">
         <Container maxW="1400px" px={{ base: 4, md: 8 }}>
-          {/* Main Title */}
           <MotionBox
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -252,7 +248,7 @@ const BenefitsMap = ({ isWeakDevice }) => {
               borderRadius="full"
               bg="rgba(237, 100, 166, 0.1)"
             >
-              Your Learning Journey
+              {t('BenefitsMap.yourLearningJourney')}
             </Badge>
             <Heading
               as="h2"
@@ -262,11 +258,10 @@ const BenefitsMap = ({ isWeakDevice }) => {
               fontWeight="bold"
               letterSpacing="tight"
             >
-              Empowering Your Knowledge Journey
+              {t('BenefitsMap.mainTitle')}
             </Heading>
           </MotionBox>
 
-          {/* Top Benefits */}
           <Flex
             direction={{ base: 'column', md: 'row' }}
             gap={6}
@@ -290,14 +285,12 @@ const BenefitsMap = ({ isWeakDevice }) => {
             ))}
           </Flex>
 
-          {/* Central Feature */}
           <Flex justify="center" mb={12}>
             <Box width={{ base: '100%', md: '80%' }}>
               <BenefitCard {...centralFeature} isLarge={true} index={3} />
             </Box>
           </Flex>
 
-          {/* Bottom Benefits */}
           <Flex
             direction={{ base: 'column', md: 'row' }}
             gap={6}

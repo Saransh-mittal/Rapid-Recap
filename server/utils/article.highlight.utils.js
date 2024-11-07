@@ -43,6 +43,7 @@ const generateHighlightForArticle = async ({ articleId, lang = 'en' }) => {
          - Select terms EXACTLY as they appear in the text
          - Maintain original capitalization
          - Include technical or domain-specific terms
+         - Include uncommon or specialized vocabulary or unique phrases or less known names or terms
          - Copy phrases exactly as written
          - Do not modify case or punctuation
          - Verify each term exists exactly in the text

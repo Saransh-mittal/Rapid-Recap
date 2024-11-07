@@ -26,6 +26,7 @@ import {
   BookOpenCheck,
   ChevronDown,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 const MotionStack = motion(Stack)
@@ -74,6 +75,7 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => (
 )
 
 const UISection = ({ image, title, description, isImageLeft, index }) => {
+  const { t } = useTranslation('GetStarted')
   const isMobile = useBreakpointValue({ base: true, md: false })
 
   return (
@@ -149,7 +151,7 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
           boxShadow={`0 0 10px ${COLORS.accent}33`}
         >
           <Star size={12} />
-          Premium Feature
+          {t('Features.premiumFeature')}
         </Badge>
         <Heading
           fontSize={{ base: 'xl', md: '2xl', lg: '3xl' }}
@@ -173,167 +175,153 @@ const UISection = ({ image, title, description, isImageLeft, index }) => {
 }
 
 const Features = ({ isWeakDevice }) => {
+  const { t } = useTranslation('GetStarted')
+
   const ContentWrapper = isWeakDevice ? Box : ParallaxProvider
 
   const features = useMemo(
     () => [
       {
         icon: Newspaper,
-        title: 'Curated Daily News',
-        description:
-          'Hand-picked articles covering the most important topics across multiple domains.',
+        title: t('Features.features.curatedNews.title'),
+        description: t('Features.features.curatedNews.description'),
       },
       {
         icon: Brain,
-        title: 'Interactive Learning',
-        description:
-          'Engage with content through quizzes and challenges designed to enhance retention.',
+        title: t('Features.features.interactiveLearning.title'),
+        description: t('Features.features.interactiveLearning.description'),
       },
       {
         icon: Trophy,
-        title: 'Competitive Edge',
-        description:
-          'Participate in tournaments and climb the leaderboard while learning.',
+        title: t('Features.features.competitiveEdge.title'),
+        description: t('Features.features.competitiveEdge.description'),
       },
       {
         icon: Award,
-        title: 'Skill Mastery',
-        description:
-          'Track your progress and earn badges as you develop expertise in various topics.',
+        title: t('Features.features.skillMastery.title'),
+        description: t('Features.features.skillMastery.description'),
       },
     ],
-    [],
+    [t],
   )
 
   const uiSections = useMemo(
     () => [
       {
         image: '/images/landingPage/homeUI.webp',
-        title: 'Personalized News Feed',
-        description:
-          'Get news tailored to your interests and learning goals, all in one place.',
+        title: t('Features.uiSections.newsFeed.title'),
+        description: t('Features.uiSections.newsFeed.description'),
         isImageLeft: true,
       },
       {
         image: '/images/landingPage/articleUI.webp',
-        title: 'Immersive Reading Experience',
-        description:
-          'Enjoy a clean, distraction-free interface designed for maximum comprehension.',
+        title: t('Features.uiSections.reading.title'),
+        description: t('Features.uiSections.reading.description'),
         isImageLeft: false,
       },
       {
         image: '/images/landingPage/quizUI.webp',
-        title: 'Engaging Quiz Interface',
-        description:
-          'Challenge yourself with interactive quizzes that make learning fun and effective.',
+        title: t('Features.uiSections.quiz.title'),
+        description: t('Features.uiSections.quiz.description'),
         isImageLeft: true,
       },
       {
         image: '/images/landingPage/tournamentUI.webp',
-        title: 'Tournament System',
-        description:
-          'Compete with others in weekly tournaments and showcase your knowledge.',
+        title: t('Features.uiSections.tournament.title'),
+        description: t('Features.uiSections.tournament.description'),
         isImageLeft: false,
       },
       {
         image: '/images/landingPage/smartReading.jpg',
-        title: 'Smart Reading Assistant',
-        description:
-          'Experience enhanced comprehension with AI-powered highlighting of key points and instant access to word definitions.',
+        title: t('Features.uiSections.smartReading.title'),
+        description: t('Features.uiSections.smartReading.description'),
         isImageLeft: true,
+        features: [
+          {
+            icon: Sparkles,
+            text: t('Features.uiSections.smartReading.features.highlighting'),
+          },
+          {
+            icon: BookOpenCheck,
+            text: t('Features.uiSections.smartReading.features.dictionary'),
+          },
+        ],
       },
     ],
-    [],
+    [t],
   )
 
   return (
-    <ContentWrapper>
-      <Box py={{ base: 10, md: 20 }} position="relative" overflow="hidden">
-        <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
-          <VStack spacing={{ base: 10, md: 16 }}>
-            {/* Header Section */}
-            <MotionBox
-              initial={{ opacity: 0, y: -20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+    <Box py={{ base: 10, md: 20 }} position="relative" overflow="hidden">
+      <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
+        <VStack spacing={{ base: 10, md: 16 }}>
+          <VStack spacing={{ base: 3, md: 4 }} textAlign="center">
+            <Badge
+              bg="rgba(237, 100, 166, 0.1)"
+              color={COLORS.accent}
+              px={3}
+              py={1}
+              borderRadius="full"
+              display="flex"
+              alignItems="center"
+              gap={2}
+              fontSize="sm"
+            >
+              <TrendingUp size={12} />
+              {t('Features.discoverFeatures')}
+            </Badge>
+            <Heading
+              fontSize={{ base: '2xl', md: '4xl', lg: '5xl' }}
+              bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
+              bgClip="text"
               textAlign="center"
+              px={{ base: 4, md: 0 }}
             >
-              <Badge
-                bg="rgba(237, 100, 166, 0.1)"
-                color={COLORS.accent}
-                px={3}
-                py={1}
-                borderRadius="full"
-                display="flex"
-                alignItems="center"
-                gap={2}
-                fontSize="sm"
-                mb={4}
-                mx="auto"
-                width="fit-content"
-              >
-                <TrendingUp size={12} />
-                Discover Our Features
-              </Badge>
-              <Heading
-                fontSize={{ base: '2xl', md: '4xl', lg: '5xl' }}
-                bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
-                bgClip="text"
-                textAlign="center"
-                px={{ base: 4, md: 0 }}
-                mb={4}
-              >
-                Everything You Need to Excel
-              </Heading>
-              <Text
-                fontSize={{ base: 'sm', md: 'lg', lg: 'xl' }}
-                color="whiteAlpha.900"
-                maxW="800px"
-                textAlign="center"
-                px={{ base: 4, md: 0 }}
-              >
-                Transform your learning journey with our comprehensive suite of
-                features designed to make knowledge acquisition engaging and
-                effective.
-              </Text>
-            </MotionBox>
-
-            {/* Features Grid */}
-            <Grid
-              templateColumns={{
-                base: '1fr',
-                sm: 'repeat(2, 1fr)',
-                lg: 'repeat(4, 1fr)',
-              }}
-              gap={{ base: 4, md: 8 }}
-              w="full"
+              {t('Features.mainTitle')}
+            </Heading>
+            <Text
+              fontSize={{ base: 'sm', md: 'lg', lg: 'xl' }}
+              color="whiteAlpha.900"
+              maxW="800px"
+              textAlign="center"
+              px={{ base: 4, md: 0 }}
             >
-              {features.map((feature, index) => (
-                <FeatureCard key={index} {...feature} index={index} />
-              ))}
-            </Grid>
-
-            {/* UI Sections */}
-            <VStack spacing={{ base: 12, md: 20 }} w="full">
-              {uiSections.map((section, index) => (
-                <UISection key={index} {...section} index={index} />
-              ))}
-            </VStack>
+              {t('Features.subtitle')}
+            </Text>
           </VStack>
-        </Container>
 
-        {/* Background Element */}
-        <Box
-          position="absolute"
-          top="0"
-          left="0"
-          right="0"
-          bottom="0"
-          bgGradient={`radial(circle at 50% 50%, ${COLORS.accent}11 0%, transparent 70%)`}
-          zIndex="-1"
-        />
-      </Box>
-    </ContentWrapper>
+          <Grid
+            templateColumns={{
+              base: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(4, 1fr)',
+            }}
+            gap={{ base: 4, md: 8 }}
+            w="full"
+          >
+            {features.map((feature, index) => (
+              <FeatureCard key={index} {...feature} index={index} />
+            ))}
+          </Grid>
+
+          <VStack spacing={{ base: 12, md: 20 }} w="full">
+            {uiSections.map((section, index) => (
+              <UISection key={index} {...section} index={index} />
+            ))}
+          </VStack>
+        </VStack>
+      </Container>
+
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        bottom="0"
+        bgGradient={`radial(circle at 50% 50%, ${COLORS.accent}11 0%, transparent 70%)`}
+        zIndex="-1"
+      />
+    </Box>
   )
 }
 

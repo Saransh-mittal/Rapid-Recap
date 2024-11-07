@@ -34,6 +34,8 @@ import { useDispatch } from 'react-redux'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import { useFeatureDetection } from '../../utils/featureDetection'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitchButton from './LanguageSwitchButton'
 
 // Constants
 const COLORS = {
@@ -43,13 +45,13 @@ const COLORS = {
   cardBorder: 'rgba(237, 100, 166, 0.2)',
 }
 
-// Existing animations and components remain the same
 const shine = keyframes`
   0% { background-position: 200% center; }
   100% { background-position: -200% center; }
 `
 
 const HeroV2 = () => {
+  const { t } = useTranslation('GetStarted')
   const isMobile = useBreakpointValue({ base: true, md: false })
   const { ref, inView } = useInView({
     threshold: 0.5,
@@ -61,6 +63,7 @@ const HeroV2 = () => {
     volume: 0.5,
   })
   const dispatch = useDispatch()
+
   return (
     <Box minH="100vh" position="relative" py={8} mt={16}>
       <Container maxW="container.xl">
@@ -70,7 +73,6 @@ const HeroV2 = () => {
           alignItems="center"
         >
           {/* Left Section */}
-
           <VStack
             align="start"
             spacing={4}
@@ -79,31 +81,67 @@ const HeroV2 = () => {
           >
             {/* Language Badge */}
             <HStack
-              bg="rgba(237, 100, 166, 0.1)"
-              p={2}
-              borderRadius="full"
-              spacing={3}
+              spacing={4}
+              w="full"
+              justify={{ base: 'center', lg: 'flex-start' }}
+              display={{ base: 'none', md: 'flex' }}
             >
-              <Badge
-                color={COLORS.accent}
-                bg="transparent"
-                px={2}
-                fontSize="sm"
+              <HStack
+                bg="rgba(237, 100, 166, 0.1)"
+                p={2}
+                borderRadius="full"
+                spacing={3}
               >
-                <HStack spacing={2}>
-                  <Languages size={14} />
-                  <Text>Available in English & हिंदी</Text>
-                </HStack>
-              </Badge>
-              <Badge color="green" px={2} borderRadius="full">
-                Live
-              </Badge>
+                <Badge
+                  color={COLORS.accent}
+                  bg="transparent"
+                  px={2}
+                  fontSize="sm"
+                >
+                  <HStack spacing={2}>
+                    <Languages size={14} />
+                    <Text>{t('Header.languageBadge')}</Text>
+                  </HStack>
+                </Badge>
+                <Badge color="green.400" px={2} borderRadius="full">
+                  Live
+                </Badge>
+              </HStack>
+              <LanguageSwitchButton COLORS={COLORS} />
             </HStack>
-
+            <VStack
+              spacing={4}
+              w="full"
+              justify={{ base: 'center', lg: 'flex-start' }}
+              display={{ base: 'flex', md: 'none' }}
+            >
+              <HStack
+                bg="rgba(237, 100, 166, 0.1)"
+                p={2}
+                borderRadius="full"
+                spacing={3}
+              >
+                <Badge
+                  color={COLORS.accent}
+                  bg="transparent"
+                  px={2}
+                  fontSize="sm"
+                >
+                  <HStack spacing={2}>
+                    <Languages size={14} />
+                    <Text>{t('Header.languageBadge')}</Text>
+                  </HStack>
+                </Badge>
+                <Badge color="green.400" px={2} borderRadius="full">
+                  Live
+                </Badge>
+              </HStack>
+              <LanguageSwitchButton COLORS={COLORS} />
+            </VStack>
             {/* Main Heading with Social Proof */}
             <Box>
               <Heading
-                fontSize={{ base: '4xl', md: '4xl', lg: '5xl' }}
+                fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
                 fontWeight="bold"
                 bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
                 bgClip="text"
@@ -111,19 +149,17 @@ const HeroV2 = () => {
                 mb={4}
                 textAlign={{ base: 'center', lg: 'left' }}
               >
-                Turn News into Knowledge
+                {t('Header.title')}
               </Heading>
               <Text
-                fontSize={{ base: 'lg', md: 'xl' }}
+                fontSize={{ base: 'md', md: 'xl' }}
                 color="whiteAlpha.900"
                 maxW="600px"
                 textAlign={{ base: 'center', lg: 'left' }}
               >
-                Join 1000+ monthly active learners who stay ahead through
-                interactive news quizzes and competitive learning
+                {t('Header.activeLearners')}
               </Text>
             </Box>
-
             {/* CTA Section */}
             <VStack
               align="start"
@@ -154,23 +190,22 @@ const HeroV2 = () => {
                     dispatch(setIsSigninOpen(true))
                   }}
                 >
-                  Start Learning Free
+                  {t('Header.getStartedButton')}
                 </Button>
               </Box>
 
               <HStack spacing={4} wrap="wrap">
                 <Badge variant="outline" colorScheme="pink">
-                  ✓ 100% Free Access
+                  {t('Header.badges.freeAccess')}
                 </Badge>
                 <Badge variant="outline" colorScheme="pink">
-                  ✓ 120+ daily articles
+                  {t('Header.badges.dailyArticles')}
                 </Badge>
                 <Badge variant="outline" colorScheme="pink">
-                  ✓ Weekly tournaments
+                  {t('Header.badges.weeklyTournaments')}
                 </Badge>
               </HStack>
             </VStack>
-
             {/* Search Bar */}
             <ArticleSearch COLORS={COLORS} />
           </VStack>
@@ -193,7 +228,7 @@ const HeroV2 = () => {
                   <Box
                     as="img"
                     src={learner}
-                    alt="Student using Rapid Recap for daily learning"
+                    alt={t('Header.title')}
                     objectFit="cover"
                     borderRadius="2xl"
                     filter="brightness(0.9)"
@@ -204,7 +239,6 @@ const HeroV2 = () => {
                     transition="all 0.3s ease"
                   />
 
-                  {/* Optional: Add floating elements around the main image */}
                   <Box
                     position="absolute"
                     top="-10%"
@@ -240,7 +274,7 @@ const HeroV2 = () => {
               <FloatingAchievementBadge
                 icon={Brain}
                 position={{ bottom: '25%', left: '-5%' }}
-                delay={1.5} // Add delay for staggered animation
+                delay={1.5}
                 COLORS={COLORS}
               />
             </Box>
@@ -254,31 +288,31 @@ const HeroV2 = () => {
         >
           <StatsCard
             icon={Users}
-            value="1000+"
-            label="Monthly Users"
-            subtext="Growing community"
+            value={t('Header.stats.monthlyUsers.value')}
+            label={t('Header.stats.monthlyUsers.label')}
+            subtext={t('Header.stats.monthlyUsers.subtext')}
             COLORS={COLORS}
           />
           <StatsCard
             icon={Clock}
-            value="2500+"
-            label="Minutes Daily"
-            subtext="Learning time"
+            value={t('Header.stats.dailyMinutes.value')}
+            label={t('Header.stats.dailyMinutes.label')}
+            subtext={t('Header.stats.dailyMinutes.subtext')}
             COLORS={COLORS}
           />
           <StatsCard
             icon={Trophy}
-            value="300+"
-            label="Tournament Players"
+            value={t('Header.stats.tournamentPlayers.value')}
+            label={t('Header.stats.tournamentPlayers.label')}
+            subtext={t('Header.stats.tournamentPlayers.subtext')}
             COLORS={COLORS}
-            subtext="Monthly participants"
           />
           <StatsCard
             icon={BookOpen}
-            value="120+"
-            label="Daily Articles"
+            value={t('Header.stats.dailyArticles.value')}
+            label={t('Header.stats.dailyArticles.label')}
+            subtext={t('Header.stats.dailyArticles.subtext')}
             COLORS={COLORS}
-            subtext="Fresh content daily"
           />
         </Grid>
         <TournamentBanner COLORS={COLORS} shine={shine} />

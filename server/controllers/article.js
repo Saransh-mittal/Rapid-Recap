@@ -194,10 +194,31 @@ const getArticle = async (req, res) => {
     if (!article) {
       throw new Error('Article not found')
     }
-    // console.log(highlights)
-    // If no highlights exist or they failed, trigger background processing
+    // Handle empty highlights
+    if (
+      highlights?.dictionary?.length === 0 &&
+      highlights?.importantSentences?.length === 0
+    ) {
+      // Use deleteOne instead of delete
+      try {
+        await ArticleHighlight.deleteOne({
+          articleId: id,
+          processingStatus: 'completed',
+          language: lang || 'en',
+        })
+      } catch (deleteError) {
+        console.error('Error deleting highlights:', deleteError)
+      }
+    }
+
+    // If no highlights exist or they failed, trigger processing
     let newHighlights = highlights
-    if (!highlights || highlights.processingStatus !== 'completed') {
+    if (
+      !highlights ||
+      highlights.processingStatus !== 'completed' ||
+      (highlights.dictionary.length === 0 &&
+        highlights.importantSentences.length === 0)
+    ) {
       try {
         newHighlights = await generateHighlightForArticle({
           articleId: id,
@@ -275,7 +296,7 @@ const getArticle = async (req, res) => {
 const getQuiz = async (req, res) => {
   const { articleId } = req.params
   const userId = req.user._id
-  //console.log(articleId);
+
   try {
     if (!articleId) {
       throw new Error('No article provided')
@@ -284,10 +305,9 @@ const getQuiz = async (req, res) => {
     if (!article) {
       throw new Error('Article not found')
     }
-    //console.log(article);
 
     const { title, author, mainText } = article
-    //console.log(title, author, mainText);
+
     if (!title || !mainText) {
       throw new Error('Please provide all the details')
     }

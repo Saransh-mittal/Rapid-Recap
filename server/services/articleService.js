@@ -41,6 +41,8 @@ class ArticleService {
         imgURL: article.imgURL?.[0] || null,
         url: article.url,
         author: article.author,
+        keywords: article?.keywords || [],
+        description: article?.description || '',
       }
 
       cache.put(cacheKey, processedArticle, CACHE_DURATION)

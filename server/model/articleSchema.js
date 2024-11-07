@@ -83,6 +83,17 @@ const articleSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    keywords: {
+      type: [
+        {
+          type: String,
+        },
+      ],
+      default: [],
+    },
+    description: {
+      type: String,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

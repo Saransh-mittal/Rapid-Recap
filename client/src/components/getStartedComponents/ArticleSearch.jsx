@@ -18,10 +18,12 @@ import { searchArticles } from '../../redux/articleSlice'
 import { motion, AnimatePresence } from 'framer-motion'
 import useScrollAwarePosition from '../../customHooks/useScrollAwarePosition'
 import SearchResults from './SearchResults'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
 const ArticleSearch = ({ COLORS }) => {
+  const { t, i18n } = useTranslation('GetStarted')
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState([])
@@ -35,6 +37,8 @@ const ArticleSearch = ({ COLORS }) => {
   const dispatch = useDispatch()
   const toast = useToast()
   const { top, left, width } = useScrollAwarePosition(searchRef)
+  const currentLanguage = i18n.language
+
   useEffect(() => {
     return () => {
       setSearchResults([])
@@ -54,6 +58,28 @@ const ArticleSearch = ({ COLORS }) => {
     },
   })
 
+  // Transform search results based on language
+  const transformSearchResults = useCallback(
+    articles => {
+      return articles.map(article => ({
+        ...article,
+        title:
+          currentLanguage === 'hi' && article.hindiTitle
+            ? article.hindiTitle
+            : article.title,
+        mainText:
+          currentLanguage === 'hi' && article.hindiMainText
+            ? article.hindiMainText
+            : article.mainText,
+        author:
+          currentLanguage === 'hi' && article.hindiAuthor
+            ? article.hindiAuthor
+            : article.author,
+      }))
+    },
+    [currentLanguage],
+  )
+
   const performSearch = useCallback(
     async (query, page = 1) => {
       if (!query.trim()) {
@@ -67,10 +93,12 @@ const ArticleSearch = ({ COLORS }) => {
           searchArticles({ query, page, limit: 5 }),
         ).unwrap()
 
+        const transformedArticles = transformSearchResults(result.articles)
+
         if (page === 1) {
-          setSearchResults(result.articles)
+          setSearchResults(transformedArticles)
         } else {
-          setSearchResults(prev => [...prev, ...result.articles])
+          setSearchResults(prev => [...prev, ...transformedArticles])
         }
 
         setTotalPages(result.totalPages)
@@ -78,8 +106,8 @@ const ArticleSearch = ({ COLORS }) => {
         setCurrentPage(result.currentPage)
       } catch (error) {
         toast({
-          title: 'Search Error',
-          description: error.message || 'Failed to search articles',
+          title: t('SearchResults.searchError'),
+          description: error.message || t('SearchResults.searchFailed'),
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -89,7 +117,7 @@ const ArticleSearch = ({ COLORS }) => {
         setIsSearching(false)
       }
     },
-    [dispatch, toast],
+    [dispatch, toast, t, transformSearchResults],
   )
 
   const debouncedSearch = useMemo(
@@ -102,6 +130,13 @@ const ArticleSearch = ({ COLORS }) => {
       debouncedSearch.cancel()
     }
   }, [debouncedSearch])
+
+  // Refresh search results when language changes
+  useEffect(() => {
+    if (searchQuery.trim() && searchResults.length > 0) {
+      performSearch(searchQuery, 1)
+    }
+  }, [currentLanguage])
 
   const handleSearchChange = useCallback(
     e => {
@@ -150,6 +185,7 @@ const ArticleSearch = ({ COLORS }) => {
     }),
     [COLORS.accent],
   )
+
   return (
     <Box position="relative" ref={searchRef} maxW="500px" w="100%">
       <form onSubmit={handleSearchSubmit}>
@@ -164,7 +200,7 @@ const ArticleSearch = ({ COLORS }) => {
               borderColor: COLORS.accent,
               boxShadow: `0 0 0 1px ${COLORS.accent}`,
             }}
-            placeholder="Search thousands of news articles..."
+            placeholder={t('Header.searchPlaceholder')}
             value={searchQuery}
             onChange={handleSearchChange}
             onFocus={() => searchQuery.trim() && onOpen()}
@@ -179,7 +215,7 @@ const ArticleSearch = ({ COLORS }) => {
                 color={COLORS.accent}
                 _hover={{ bg: 'transparent' }}
                 type="submit"
-                aria-label="Search articles"
+                aria-label={t('SearchResults.searchArticles')}
               />
             )}
           </InputRightElement>
