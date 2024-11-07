@@ -10,7 +10,10 @@ import {
   AspectRatio,
   useBreakpointValue,
   Stack,
+  Circle,
 } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
+import { Parallax, ParallaxProvider } from 'react-scroll-parallax'
 import {
   Brain,
   Trophy,
@@ -21,7 +24,11 @@ import {
   BookOpen,
   Sparkles,
   BookOpenCheck,
+  ChevronDown,
 } from 'lucide-react'
+
+const MotionBox = motion(Box)
+const MotionStack = motion(Stack)
 
 const COLORS = {
   accent: '#ED64A6',
@@ -30,8 +37,11 @@ const COLORS = {
   cardBorder: 'rgba(237, 100, 166, 0.2)',
 }
 
-const FeatureCard = ({ icon: Icon, title, description }) => (
-  <Box
+const FeatureCard = ({ icon: Icon, title, description, index }) => (
+  <MotionBox
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
     bg={COLORS.darkBg}
     borderRadius="xl"
     p={{ base: 4, md: 6 }}
@@ -46,14 +56,9 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
     height="100%"
   >
     <VStack spacing={{ base: 3, md: 4 }} align="center">
-      <Box
-        bg={`rgba(237, 100, 166, 0.1)`}
-        p={3}
-        borderRadius="lg"
-        color={COLORS.accent}
-      >
+      <Circle size="60px" bg="rgba(237, 100, 166, 0.1)" color={COLORS.accent}>
         <Icon size={24} />
-      </Box>
+      </Circle>
       <Heading size={{ base: 'sm', md: 'md' }} color="white" textAlign="center">
         {title}
       </Heading>
@@ -65,14 +70,18 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
         {description}
       </Text>
     </VStack>
-  </Box>
+  </MotionBox>
 )
 
-const UISection = ({ image, title, description, isImageLeft }) => {
+const UISection = ({ image, title, description, isImageLeft, index }) => {
   const isMobile = useBreakpointValue({ base: true, md: false })
 
   return (
-    <Stack
+    <MotionStack
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
       direction={{ base: 'column', lg: 'row' }}
       spacing={{ base: 6, lg: 12 }}
       align="center"
@@ -159,11 +168,13 @@ const UISection = ({ image, title, description, isImageLeft }) => {
           {description}
         </Text>
       </VStack>
-    </Stack>
+    </MotionStack>
   )
 }
 
-const Features = () => {
+const Features = ({ isWeakDevice }) => {
+  const ContentWrapper = isWeakDevice ? Box : ParallaxProvider
+
   const features = useMemo(
     () => [
       {
@@ -228,100 +239,101 @@ const Features = () => {
         image: '/images/landingPage/smartReading.jpg',
         title: 'Smart Reading Assistant',
         description:
-          'Experience enhanced comprehension with AI-powered highlighting of key points and instant access to word definitions. Yellow highlights emphasize crucial information while purple-shaded words provide instant dictionary definitions on hover.',
+          'Experience enhanced comprehension with AI-powered highlighting of key points and instant access to word definitions.',
         isImageLeft: true,
-        features: [
-          {
-            icon: Sparkles,
-            text: 'AI-powered highlighting of important sentences',
-          },
-          {
-            icon: BookOpenCheck,
-            text: 'Interactive dictionary with contextual definitions',
-          },
-        ],
       },
     ],
     [],
   )
 
   return (
-    <Box py={{ base: 10, md: 20 }} position="relative" overflow="hidden">
-      <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
-        <VStack spacing={{ base: 10, md: 16 }}>
-          {/* Header Section */}
-          <VStack spacing={{ base: 3, md: 4 }} textAlign="center">
-            <Badge
-              bg="rgba(237, 100, 166, 0.1)"
-              color={COLORS.accent}
-              px={3}
-              py={1}
-              borderRadius="full"
-              display="flex"
-              alignItems="center"
-              gap={2}
-              fontSize="sm"
-            >
-              <TrendingUp size={12} />
-              Discover Our Features
-            </Badge>
-            <Heading
-              fontSize={{ base: '2xl', md: '4xl', lg: '5xl' }}
-              bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
-              bgClip="text"
+    <ContentWrapper>
+      <Box py={{ base: 10, md: 20 }} position="relative" overflow="hidden">
+        <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
+          <VStack spacing={{ base: 10, md: 16 }}>
+            {/* Header Section */}
+            <MotionBox
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               textAlign="center"
-              px={{ base: 4, md: 0 }}
             >
-              Everything You Need to Excel
-            </Heading>
-            <Text
-              fontSize={{ base: 'sm', md: 'lg', lg: 'xl' }}
-              color="whiteAlpha.900"
-              maxW="800px"
-              textAlign="center"
-              px={{ base: 4, md: 0 }}
+              <Badge
+                bg="rgba(237, 100, 166, 0.1)"
+                color={COLORS.accent}
+                px={3}
+                py={1}
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                gap={2}
+                fontSize="sm"
+                mb={4}
+                mx="auto"
+                width="fit-content"
+              >
+                <TrendingUp size={12} />
+                Discover Our Features
+              </Badge>
+              <Heading
+                fontSize={{ base: '2xl', md: '4xl', lg: '5xl' }}
+                bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
+                bgClip="text"
+                textAlign="center"
+                px={{ base: 4, md: 0 }}
+                mb={4}
+              >
+                Everything You Need to Excel
+              </Heading>
+              <Text
+                fontSize={{ base: 'sm', md: 'lg', lg: 'xl' }}
+                color="whiteAlpha.900"
+                maxW="800px"
+                textAlign="center"
+                px={{ base: 4, md: 0 }}
+              >
+                Transform your learning journey with our comprehensive suite of
+                features designed to make knowledge acquisition engaging and
+                effective.
+              </Text>
+            </MotionBox>
+
+            {/* Features Grid */}
+            <Grid
+              templateColumns={{
+                base: '1fr',
+                sm: 'repeat(2, 1fr)',
+                lg: 'repeat(4, 1fr)',
+              }}
+              gap={{ base: 4, md: 8 }}
+              w="full"
             >
-              Transform your learning journey with our comprehensive suite of
-              features designed to make knowledge acquisition engaging and
-              effective.
-            </Text>
+              {features.map((feature, index) => (
+                <FeatureCard key={index} {...feature} index={index} />
+              ))}
+            </Grid>
+
+            {/* UI Sections */}
+            <VStack spacing={{ base: 12, md: 20 }} w="full">
+              {uiSections.map((section, index) => (
+                <UISection key={index} {...section} index={index} />
+              ))}
+            </VStack>
           </VStack>
+        </Container>
 
-          {/* Features Grid */}
-          <Grid
-            templateColumns={{
-              base: '1fr',
-              sm: 'repeat(2, 1fr)',
-              lg: 'repeat(4, 1fr)',
-            }}
-            gap={{ base: 4, md: 8 }}
-            w="full"
-          >
-            {features.map((feature, index) => (
-              <FeatureCard key={index} {...feature} />
-            ))}
-          </Grid>
-
-          {/* UI Sections */}
-          <VStack spacing={{ base: 12, md: 20 }} w="full">
-            {uiSections.map((section, index) => (
-              <UISection key={index} {...section} />
-            ))}
-          </VStack>
-        </VStack>
-      </Container>
-
-      {/* Background Element */}
-      <Box
-        position="absolute"
-        top="0"
-        left="0"
-        right="0"
-        bottom="0"
-        bgGradient={`radial(circle at 50% 50%, ${COLORS.accent}11 0%, transparent 70%)`}
-        zIndex="-1"
-      />
-    </Box>
+        {/* Background Element */}
+        <Box
+          position="absolute"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bgGradient={`radial(circle at 50% 50%, ${COLORS.accent}11 0%, transparent 70%)`}
+          zIndex="-1"
+        />
+      </Box>
+    </ContentWrapper>
   )
 }
 
