@@ -1,0 +1,1 @@
+import{L as o,S as D,a}from"./StarIcon-dd54189f.js";const I={EASY:"easy",MEDIUM:"medium",HARD:"hard"},A={[I.EASY]:o,[I.MEDIUM]:D,[I.HARD]:a},E={[I.EASY]:"green",[I.MEDIUM]:"yellow",[I.HARD]:"red"};export{E as D,A as I};
