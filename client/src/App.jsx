@@ -153,7 +153,7 @@ const App = () => {
     const token = isToken()
 
     // Handle non-authenticated state
-    if (!token) {
+    if (!token && !location.pathname.includes('/article')) {
       dispatch(
         addNoteMessageIfAllowed({
           title: t('Start using Rapid Recap'),

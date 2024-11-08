@@ -9,7 +9,7 @@ import React, {
   useCallback,
 } from 'react'
 import axios from 'axios'
-import { Flex, useToast, Grid, useMediaQuery } from '@chakra-ui/react'
+import { Flex, useToast, Grid, useMediaQuery, Box } from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
@@ -25,6 +25,9 @@ import {
   setQuizLeftToGetQuizBoost,
 } from '../redux/quizSlice'
 import ArticleFooter from '../components/articleComponents/ArticleFooter'
+import { useReadingProgress } from '../customHooks/useReadingProgress'
+import PremiumCTA from '../components/articleComponents/PremiumCTA'
+import PremiumValueBanner from '../components/articleComponents/PremiumValueBanner'
 
 //SSR images
 const rrImage = '/images/rrlogo_HD.webp'
@@ -83,7 +86,7 @@ const Article = () => {
   const [RQM_score, setRQM_score] = useState(null)
   const [onGoingQuiz, setOnGoingQuiz] = useState(null)
   const [quizExpired, setQuizExpired] = useState(null)
-
+  const readProgress = useReadingProgress()
   const [dictionary, setDictionary] = useState([])
   const [importantSentences, setImportantSentences] = useState([])
 
@@ -399,6 +402,11 @@ const Article = () => {
                 />
               </header>
             </Flex>
+            {!isAuthenticated && (
+              <Box px={{ base: 4, md: 6 }}>
+                <PremiumValueBanner />
+              </Box>
+            )}
             <Grid
               templateColumns={isLargerThan821 ? 'minmax(0, 9fr) 5fr' : '1fr'}
               gap={10}
@@ -445,6 +453,7 @@ const Article = () => {
                 i18n={i18n}
               />
             </Grid>
+            <PremiumCTA readProgress={readProgress} />
             <ArticleFooter />
           </article>
         </Flex>
