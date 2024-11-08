@@ -9,7 +9,13 @@ import Loading from '../miscellaneous/Loading'
 import { setIsSigninOpen } from '../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 
-const GuestLogin = ({ width, onClick, t }) => {
+const GuestLogin = ({
+  width,
+  onClick,
+  t,
+  premiumCTA = false,
+  premiumCTAText = '',
+}) => {
   const toast = useToast()
   const navigate = useNavigate()
   const dispatchRedux = useDispatch()
@@ -69,16 +75,35 @@ const GuestLogin = ({ width, onClick, t }) => {
   return (
     <>
       {loading && <Loading />}
-      <Button
-        onClick={() => {
-          onClick && onClick()
-          handleGuestLogin()
-        }}
-        className="get-started-button"
-        width={width || `auto`}
-      >
-        {t('buttonText')}
-      </Button>
+      {premiumCTA ? (
+        <Button
+          variant="ghost"
+          color="whiteAlpha.800"
+          _hover={{
+            bg: 'whiteAlpha.100',
+          }}
+          size="lg"
+          onClick={() => {
+            onClick && onClick()
+            handleGuestLogin()
+          }}
+          isLoading={loading}
+        >
+          {premiumCTAText || t('buttonText')}
+        </Button>
+      ) : (
+        <Button
+          onClick={() => {
+            onClick && onClick()
+            handleGuestLogin()
+          }}
+          className="get-started-button"
+          width={width || `auto`}
+          isLoading={loading}
+        >
+          {t('buttonText')}
+        </Button>
+      )}
     </>
   )
 }

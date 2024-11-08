@@ -151,5 +151,46 @@
     "searchError": "Search Error",
     "searchFailed": "Failed to search articles",
     "searchArticles": "Search articles"
+  },
+  "premiumCTA": {
+    "guestUser": "Continue as Guest",
+    "initial": {
+      "title": "Ready to Test Your Knowledge?",
+      "subtitle": "Create account to unlock interactive quizzes and much more",
+      "buttonText": "Create Free Account"
+    },
+    "engaged": {
+      "title": "Enjoying the Article?",
+      "subtitle": "Join 1000+ monthly users tracking their progress",
+      "buttonText": "Join the Community"
+    },
+    "completion": {
+      "title": "Quiz Available!",
+      "subtitle": "Test your understanding & earn points",
+      "buttonText": "Unlock Quiz Now"
+    }
+  },
+  "premiumValue": {
+    "title": "Unlock Premium Features",
+    "features": {
+      "iqSystem": {
+        "title": "IQ System",
+        "description": "Track your knowledge growth",
+        "stats": "1000+ monthly active users",
+        "badge": "POPULAR"
+      },
+      "tournaments": {
+        "title": "Weekly Tournaments",
+        "description": "Compete & win rewards",
+        "stats": "500+ participants monthly",
+        "badge": "NEW"
+      },
+      "analytics": {
+        "title": "Smart Analytics",
+        "description": "Track learning progress",
+        "stats": "Real-time updates",
+        "badge": "COOL"
+      }
+    }
   }
 }
