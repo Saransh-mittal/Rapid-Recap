@@ -2,7 +2,9 @@ import React, { useMemo, useState } from 'react'
 import {
   Box,
   Flex,
+  Icon,
   Image,
+  Link,
   Skeleton,
   useBreakpointValue,
   useMediaQuery,
@@ -10,6 +12,7 @@ import {
 import FormattedContent from './MainArticleContentComponents/FormattedContent'
 import SourceLinkTag from './MainArticleContentComponents/SourceLinkTag'
 import { HighlightedWordsProvider } from '../../contextAPI/MainArticleProvider'
+import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 const MainArticleContent = ({
   imgURL,
@@ -88,6 +91,35 @@ const MainArticleContent = ({
           <HighlightedWordsProvider>
             <FormattedContent {...contentProps} />
           </HighlightedWordsProvider>
+          <Link
+            // key={index}
+            // href={part}
+            // isExternal
+            display="inline-flex"
+            alignItems="center"
+            px={2}
+            py={1}
+            mx={1}
+            fontSize="sm"
+            fontWeight="semibold"
+            color="blue.500"
+            bg="blue.50"
+            borderRadius="md"
+            boxShadow="sm"
+            _hover={{
+              bg: 'blue.100',
+              color: 'blue.600',
+              textDecoration: 'none',
+            }}
+            _active={{
+              bg: 'blue.200',
+            }}
+            transition="all 0.2s ease-in-out"
+          >
+            {/* {websiteName} */}
+            Read More
+            <Icon as={ExternalLinkIcon} ml={1} boxSize={3} />
+          </Link>
           <SourceLinkTag SourceURL={SourceURL} />
         </Box>
       </Skeleton>

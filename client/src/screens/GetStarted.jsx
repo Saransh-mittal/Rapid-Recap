@@ -9,6 +9,7 @@ import { isClient } from '../utils/environment'
 import BenefitsMap from '../components/getStartedComponents/BenefitsMap'
 import Features from '../components/getStartedComponents/Features'
 import HeroV2 from '../components/getStartedComponents/HeroV2'
+import Footer from '../components/Header-Footer/Footer'
 
 const theme = extendTheme({
   colors: {
@@ -175,6 +176,7 @@ const GetStarted = () => {
           <BenefitsMap isWeakDevice={weakDevice} />
 
           <Features isWeakDevice={weakDevice} />
+          <Footer />
         </>
       ) : (
         // Server-side render only Hero initially
