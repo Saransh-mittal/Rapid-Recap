@@ -82,7 +82,7 @@ Output format (json_object) :
     const res = JSON.parse(output.choices[0].message.content)
     articleData.keywords = res.keywords
     articleData.description = res.description
-    await articleData.save()
+    await articleData.save({ validateBeforeSave: false })
   } catch (error) {
     console.error(error)
   }
