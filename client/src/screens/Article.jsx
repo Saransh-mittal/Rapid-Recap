@@ -453,7 +453,7 @@ const Article = () => {
                 i18n={i18n}
               />
             </Grid>
-            <PremiumCTA readProgress={readProgress} />
+            {!isAuthenticated && <PremiumCTA readProgress={readProgress} />}
             <ArticleFooter />
           </article>
         </Flex>
