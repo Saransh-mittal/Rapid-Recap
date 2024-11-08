@@ -10,7 +10,10 @@ import {
   AspectRatio,
   useBreakpointValue,
   Stack,
+  Circle,
 } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
+import { Parallax, ParallaxProvider } from 'react-scroll-parallax'
 import {
   Brain,
   Trophy,
@@ -21,8 +24,12 @@ import {
   BookOpen,
   Sparkles,
   BookOpenCheck,
+  ChevronDown,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
+const MotionBox = motion(Box)
+const MotionStack = motion(Stack)
 
 const COLORS = {
   accent: '#ED64A6',
@@ -31,8 +38,11 @@ const COLORS = {
   cardBorder: 'rgba(237, 100, 166, 0.2)',
 }
 
-const FeatureCard = ({ icon: Icon, title, description }) => (
-  <Box
+const FeatureCard = ({ icon: Icon, title, description, index }) => (
+  <MotionBox
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
     bg={COLORS.darkBg}
     borderRadius="xl"
     p={{ base: 4, md: 6 }}
@@ -47,14 +57,9 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
     height="100%"
   >
     <VStack spacing={{ base: 3, md: 4 }} align="center">
-      <Box
-        bg={`rgba(237, 100, 166, 0.1)`}
-        p={3}
-        borderRadius="lg"
-        color={COLORS.accent}
-      >
+      <Circle size="60px" bg="rgba(237, 100, 166, 0.1)" color={COLORS.accent}>
         <Icon size={24} />
-      </Box>
+      </Circle>
       <Heading size={{ base: 'sm', md: 'md' }} color="white" textAlign="center">
         {title}
       </Heading>
@@ -66,15 +71,19 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
         {description}
       </Text>
     </VStack>
-  </Box>
+  </MotionBox>
 )
 
-const UISection = ({ image, title, description, isImageLeft }) => {
+const UISection = ({ image, title, description, isImageLeft, index }) => {
   const { t } = useTranslation('GetStarted')
   const isMobile = useBreakpointValue({ base: true, md: false })
 
   return (
-    <Stack
+    <MotionStack
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
       direction={{ base: 'column', lg: 'row' }}
       spacing={{ base: 6, lg: 12 }}
       align="center"
@@ -161,12 +170,14 @@ const UISection = ({ image, title, description, isImageLeft }) => {
           {description}
         </Text>
       </VStack>
-    </Stack>
+    </MotionStack>
   )
 }
 
-const Features = () => {
+const Features = ({ isWeakDevice }) => {
   const { t } = useTranslation('GetStarted')
+
+  const ContentWrapper = isWeakDevice ? Box : ParallaxProvider
 
   const features = useMemo(
     () => [
@@ -289,13 +300,13 @@ const Features = () => {
             w="full"
           >
             {features.map((feature, index) => (
-              <FeatureCard key={index} {...feature} />
+              <FeatureCard key={index} {...feature} index={index} />
             ))}
           </Grid>
 
           <VStack spacing={{ base: 12, md: 20 }} w="full">
             {uiSections.map((section, index) => (
-              <UISection key={index} {...section} />
+              <UISection key={index} {...section} index={index} />
             ))}
           </VStack>
         </VStack>
