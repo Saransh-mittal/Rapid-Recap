@@ -18,7 +18,7 @@ const FormattedContent = React.memo(
     const [showOnlySummary, setShowOnlySummary] = useState(false)
     const [isMobile] = useMediaQuery('(max-width: 480px)')
     const { reset: resetHighlightedWords } = useContext(HighlightedWordsContext)
-    // Create a stable ref for event handlers
+
     const stableRef = useRef({
       handleMouseEnter: (e, word) => {
         if (!('ontouchstart' in window)) {
@@ -50,27 +50,47 @@ const FormattedContent = React.memo(
       },
     })
 
-    // Fixed toggleSummary with proper dependency
     const toggleSummary = useCallback(() => {
       resetHighlightedWords()
       setShowOnlySummary(prev => !prev)
     }, [resetHighlightedWords])
 
-    const processedContent = useMemo(() => {
+    const { mainContent, bookingLine } = useMemo(() => {
       const content = themedContent || mainText
-      if (content && Array.isArray(content)) {
-        const joinedContent = content.join(' ')
-        // Updated pattern to match numbered lists with or without bold markers
-        const numberedPattern = /(?:\d+\.\s+[^.]+\.)/g
-        const hasNumberedList =
-          joinedContent.match(numberedPattern)?.length >= 3 // Check if there are at least 3 numbered points
-        if (hasNumberedList) {
-          return [joinedContent]
-        }
-        return content
+      if (!content || !Array.isArray(content)) {
+        return { mainContent: [content], bookingLine: null }
       }
-      return [content]
+
+      const mainContentArr = []
+      let bookingText = null
+
+      content.forEach(item => {
+        if (item.includes('Visit to book your tickets now:')) {
+          // Extract just the "Visit to book your tickets now:" part
+          bookingText = 'Visit to book your tickets now:'
+        } else {
+          mainContentArr.push(item)
+        }
+      })
+
+      return { mainContent: mainContentArr, bookingLine: bookingText }
     }, [themedContent, mainText])
+
+    const processedContent = useMemo(() => {
+      if (!mainContent) return []
+
+      const joinedContent = Array.isArray(mainContent)
+        ? mainContent.join(' ')
+        : mainContent
+      const numberedPattern = /(?:\d+\.\s+[^.]+\.)/g
+      const hasNumberedList = joinedContent.match(numberedPattern)?.length >= 3
+
+      if (hasNumberedList) {
+        return [joinedContent]
+      }
+
+      return Array.isArray(mainContent) ? mainContent : [mainContent]
+    }, [mainContent])
 
     return (
       <Box position="relative">
@@ -109,16 +129,29 @@ const FormattedContent = React.memo(
               stableRef={stableRef}
             />
           ) : (
-            processedContent.map((paragraph, index) => (
-              <Box key={index} mb={6}>
-                <MemoizedNumberedContent
-                  text={paragraph}
-                  dictionary={dictionary}
-                  importantSentences={importantSentences}
-                  stableRef={stableRef}
-                />
-              </Box>
-            ))
+            <>
+              {processedContent.map((paragraph, index) => (
+                <Box key={index} mb={6}>
+                  <MemoizedNumberedContent
+                    text={paragraph}
+                    dictionary={dictionary}
+                    importantSentences={importantSentences}
+                    stableRef={stableRef}
+                  />
+                </Box>
+              ))}
+
+              {bookingLine && (
+                <Box mt={6} pt={4}>
+                  <MemoizedNumberedContent
+                    text={bookingLine}
+                    dictionary={dictionary}
+                    importantSentences={importantSentences}
+                    stableRef={stableRef}
+                  />
+                </Box>
+              )}
+            </>
           )}
 
           {selectedWord && (

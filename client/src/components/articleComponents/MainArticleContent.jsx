@@ -14,6 +14,26 @@ import SourceLinkTag from './MainArticleContentComponents/SourceLinkTag'
 import { HighlightedWordsProvider } from '../../contextAPI/MainArticleProvider'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 
+const extractWebsiteInfo = text => {
+  if (!text) return null
+  // Look for URL in the format "Visit to book your tickets now: URL"
+  const urlMatch = text.match(/(?:.*:\s*)(https?:\/\/[^\s]+)$/)
+  if (!urlMatch) return null
+
+  const fullUrl = urlMatch[1]
+  // Extract domain name without protocol and path
+  const domainMatch = fullUrl.match(/^https?:\/\/(?:www\.)?([^\/]+)/)
+  if (!domainMatch) return null
+
+  // Get the first part of the domain (e.g., "easyjet" from "easyjet.com")
+  const websiteName = domainMatch[1].split('.')[0]
+
+  return {
+    websiteName: websiteName.charAt(0).toUpperCase() + websiteName.slice(1), // Capitalize first letter
+    fullUrl,
+  }
+}
+
 const MainArticleContent = ({
   imgURL,
   selectedLanguage,
@@ -28,6 +48,16 @@ const MainArticleContent = ({
 }) => {
   const [useAltImage, setUseAltImage] = useState(false)
   const [isMobile] = useMediaQuery('(max-width: 480px)')
+
+  const websiteInfo = useMemo(() => {
+    if (!mainText || !mainText[selectedLanguage]) return null
+    const textArray = mainText[selectedLanguage]
+    const lastElement = Array.isArray(textArray)
+      ? textArray[textArray.length - 1]
+      : textArray
+    return extractWebsiteInfo(lastElement)
+  }, [mainText, selectedLanguage])
+
   // Memoize the content props
   const contentProps = useMemo(
     () => ({
@@ -91,35 +121,36 @@ const MainArticleContent = ({
           <HighlightedWordsProvider>
             <FormattedContent {...contentProps} />
           </HighlightedWordsProvider>
-          <Link
-            // key={index}
-            // href={part}
-            // isExternal
-            display="inline-flex"
-            alignItems="center"
-            px={2}
-            py={1}
-            mx={1}
-            fontSize="sm"
-            fontWeight="semibold"
-            color="blue.500"
-            bg="blue.50"
-            borderRadius="md"
-            boxShadow="sm"
-            _hover={{
-              bg: 'blue.100',
-              color: 'blue.600',
-              textDecoration: 'none',
-            }}
-            _active={{
-              bg: 'blue.200',
-            }}
-            transition="all 0.2s ease-in-out"
-          >
-            {/* {websiteName} */}
-            Read More
-            <Icon as={ExternalLinkIcon} ml={1} boxSize={3} />
-          </Link>
+
+          {websiteInfo && (
+            <Link
+              href={websiteInfo.fullUrl}
+              isExternal
+              display="inline-flex"
+              alignItems="center"
+              px={2}
+              py={1}
+              mx={1}
+              fontSize="sm"
+              fontWeight="semibold"
+              color="blue.500"
+              bg="blue.50"
+              borderRadius="md"
+              boxShadow="sm"
+              _hover={{
+                bg: 'blue.100',
+                color: 'blue.600',
+                textDecoration: 'none',
+              }}
+              _active={{
+                bg: 'blue.200',
+              }}
+              transition="all 0.2s ease-in-out"
+            >
+              {websiteInfo.websiteName}
+              <Icon as={ExternalLinkIcon} ml={1} boxSize={3} />
+            </Link>
+          )}
           <SourceLinkTag SourceURL={SourceURL} />
         </Box>
       </Skeleton>

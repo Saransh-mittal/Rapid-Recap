@@ -3,18 +3,16 @@ import {
   Box,
   Container,
   Flex,
-  Grid,
   Heading,
   Link,
-  Text,
-  VStack,
   Icon,
+  Text,
   useColorModeValue,
-  Divider,
   chakra,
+  Divider,
 } from '@chakra-ui/react'
 import { NavLink } from 'react-router-dom'
-import { FaInstagram, FaLinkedin, FaEnvelope } from 'react-icons/fa'
+import { FaInstagram, FaLinkedin } from 'react-icons/fa'
 
 const SocialLink = chakra(Link, {
   baseStyle: {
@@ -23,37 +21,48 @@ const SocialLink = chakra(Link, {
     justifyContent: 'center',
     rounded: 'full',
     transition: 'all 0.3s ease',
-    w: '40px',
-    h: '40px',
+    w: '36px',
+    h: '36px',
+    backdropFilter: 'blur(8px)',
     _hover: {
       transform: 'translateY(-2px)',
+      bg: 'rgba(255, 255, 255, 0.15)',
     },
   },
 })
 
 const Footer = React.memo(({ onCloseMenu }) => {
-  const currentYear = new Date().getFullYear()
   const bgGradient = useColorModeValue(
-    'linear(to-r, gray.900, purple.900, gray.900)',
-    'linear(to-r, gray.900, purple.900, gray.900)',
+    'linear(to-r, purple.900, gray.900)',
+    'linear(to-r, purple.900, gray.900)',
   )
   const borderColor = useColorModeValue('whiteAlpha.300', 'whiteAlpha.300')
   const textColor = useColorModeValue('whiteAlpha.900', 'whiteAlpha.900')
   const subTextColor = useColorModeValue('whiteAlpha.700', 'whiteAlpha.700')
-  const hoverColor = useColorModeValue('purple.400', 'purple.400')
+  const glowColor = useColorModeValue('purple.400', 'purple.400')
 
   return (
     <Box
       as="footer"
-      bgGradient={bgGradient}
+      bg="gray.900"
       color={textColor}
       borderTop="1px solid"
       borderColor={borderColor}
-      py={12}
+      py={6}
       position="relative"
       overflow="hidden"
+      _before={{
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        bgGradient: bgGradient,
+        opacity: 0.8,
+      }}
     >
-      {/* Elegant background overlay */}
+      {/* Glassmorphism overlay */}
       <Box
         position="absolute"
         top="0"
@@ -61,114 +70,80 @@ const Footer = React.memo(({ onCloseMenu }) => {
         right="0"
         bottom="0"
         bgGradient="radial(circle at top right, whiteAlpha.100 0%, transparent 70%)"
+        backdropFilter="blur(20px)"
       />
 
       <Container maxW="7xl" position="relative">
-        <Grid
-          templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}
-          gap={8}
-          mb={12}
-        >
-          {/* Brand Section */}
-          <VStack align="flex-start" spacing={4}>
+        <Flex direction="column" gap={4} px={4}>
+          {/* Top Row with Logo and Social Icons */}
+          <Flex align="center" gap={8}>
+            {/* Brand Section */}
             <Heading
-              size="lg"
+              size="md"
               bgGradient="linear(to-r, purple.400, pink.400)"
               bgClip="text"
               fontWeight="bold"
+              letterSpacing="wide"
+              textShadow={`0 0 20px ${glowColor}`}
             >
               RapidRecap
             </Heading>
-            <Text color={subTextColor} fontSize="md" maxW="sm">
-              Transforming the way you stay informed. Delivering concise,
-              impactful insights for the modern professional.
-            </Text>
-          </VStack>
 
-          {/* Quick Links */}
-          <VStack align="flex-start" spacing={4}>
-            <Heading size="sm" textTransform="uppercase" letterSpacing="wider">
-              Quick Links
-            </Heading>
-            <VStack align="flex-start" spacing={2}>
-              {[
-                { text: 'About Us', path: '/about' },
-                { text: 'Our Services', path: '/services' },
-                { text: 'Contact', path: '/contact' },
-                { text: 'Privacy Policy', path: '/privacy' },
-              ].map(link => (
-                <Link
-                  key={link.text}
-                  as={NavLink}
-                  to={link.path}
-                  color={subTextColor}
-                  _hover={{ color: hoverColor, textDecoration: 'none' }}
-                  onClick={onCloseMenu}
-                  fontSize="sm"
-                >
-                  {link.text}
-                </Link>
-              ))}
-            </VStack>
-          </VStack>
+            {/* Vertical Divider */}
+            <Box h="24px" w="1px" bg="whiteAlpha.300" mx={2} />
 
-          {/* Social Links */}
-          <VStack align={{ base: 'flex-start', md: 'flex-end' }} spacing={4}>
-            <Heading size="sm" textTransform="uppercase" letterSpacing="wider">
-              Connect With Us
-            </Heading>
-            <Flex gap={4}>
+            {/* Social Links */}
+            <Flex gap={4} align="center">
               <SocialLink
                 href="https://www.instagram.com/rrapidrecap/"
                 target="_blank"
                 rel="noopener noreferrer"
                 bg="whiteAlpha.100"
-                _hover={{ bg: 'purple.500' }}
                 aria-label="Instagram"
               >
-                <Icon as={FaInstagram} boxSize={5} />
+                <Icon as={FaInstagram} boxSize={4} />
               </SocialLink>
               <SocialLink
                 href="https://www.linkedin.com/company/rrapidrecap/"
                 target="_blank"
                 rel="noopener noreferrer"
                 bg="whiteAlpha.100"
-                _hover={{ bg: 'purple.500' }}
                 aria-label="LinkedIn"
               >
-                <Icon as={FaLinkedin} boxSize={5} />
+                <Icon as={FaLinkedin} boxSize={4} />
               </SocialLink>
-              <SocialLink
+              <Link
                 as={NavLink}
                 to="/contact"
-                bg="whiteAlpha.100"
-                _hover={{ bg: 'purple.500' }}
+                color={subTextColor}
+                fontSize="sm"
+                fontWeight="medium"
+                transition="all 0.3s ease"
+                _hover={{
+                  color: 'purple.400',
+                  textDecoration: 'none',
+                  textShadow: '0 0 8px rgba(168, 85, 247, 0.4)',
+                }}
                 onClick={onCloseMenu}
-                aria-label="Contact Us"
+                ml={2}
               >
-                <Icon as={FaEnvelope} boxSize={5} />
-              </SocialLink>
+                Contact Us
+              </Link>
             </Flex>
-          </VStack>
-        </Grid>
-
-        <Divider borderColor={borderColor} opacity={0.3} />
-
-        {/* Copyright Section */}
-        <Flex
-          direction={{ base: 'column', md: 'row' }}
-          justify="space-between"
-          align="center"
-          mt={8}
-          fontSize="sm"
-          color={subTextColor}
-          textAlign="center"
-        >
-          <Text>© {currentYear} RapidRecap. All rights reserved.</Text>
-          <Flex gap={6} mt={{ base: 4, md: 0 }}>
-            <Link _hover={{ color: hoverColor }}>Terms of Service</Link>
-            <Link _hover={{ color: hoverColor }}>Cookie Policy</Link>
           </Flex>
+
+          {/* Subtle Divider */}
+          <Divider borderColor="whiteAlpha.200" />
+
+          {/* Bottom Row with Reserved Text */}
+          <Text
+            color={subTextColor}
+            fontSize="xs"
+            fontWeight="medium"
+            letterSpacing="wider"
+          >
+            2024, All rights reserved
+          </Text>
         </Flex>
       </Container>
     </Box>
