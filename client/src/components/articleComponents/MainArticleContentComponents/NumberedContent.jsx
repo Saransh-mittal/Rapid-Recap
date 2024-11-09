@@ -30,8 +30,7 @@ const NumberedContent = ({
   const formatNumberedText = text => {
     // Updated regex to match only numbered points that start lines or follow line breaks
     // It will match both bolded and unbolded numbered points while excluding years and other numbers
-    const numberedPattern =
-      /(?:^|\n|\r)(?:\*\*(\d+)\.\s+([^*]+)\*\*|(\d+)\.\s+([^.\n]+)\.)/g
+    const numberedPattern = /(?:\*\*\d+\*\*|\d+)\.\s+\*\*[^*]+\*\*\s*-[^.]+\./g
     const matches = text?.match(numberedPattern)
 
     if (!matches) return processTextInOrder(text)
