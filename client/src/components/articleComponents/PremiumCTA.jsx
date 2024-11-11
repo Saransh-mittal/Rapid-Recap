@@ -43,9 +43,11 @@ const PremiumCTA = ({ readProgress }) => {
   }, [])
 
   useEffect(() => {
-    if (readProgress > 40 && readProgress <= 70) {
+    if (readProgress > 30 && readProgress <= 50) {
       setCtaVariant('engaged')
-    } else if (readProgress > 70) {
+    } else if (readProgress > 50 && readProgress <= 75) {
+      setCtaVariant('quiz')
+    } else if (readProgress > 80) {
       setCtaVariant('completion')
     }
   }, [readProgress])
@@ -62,6 +64,12 @@ const PremiumCTA = ({ readProgress }) => {
       subtitle: t('premiumCTA.engaged.subtitle'),
       icon: StarIcon,
       buttonText: t('premiumCTA.engaged.buttonText'),
+    },
+    quiz: {
+      title: t('premiumCTA.quiz.title'),
+      subtitle: t('premiumCTA.quiz.subtitle'),
+      icon: LockIcon,
+      buttonText: t('premiumCTA.quiz.buttonText'),
     },
     completion: {
       title: t('premiumCTA.completion.title'),

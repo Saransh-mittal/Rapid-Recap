@@ -164,10 +164,15 @@
       "subtitle": "Join 1000+ monthly users tracking their progress",
       "buttonText": "Join the Community"
     },
-    "completion": {
+    "quiz": {
       "title": "Quiz Available!",
       "subtitle": "Test your understanding & earn points",
       "buttonText": "Unlock Quiz Now"
+    },
+    "completion": {
+      "title": "Remove the blur",
+      "subtitle": "Unlock the full article to continue reading",
+      "buttonText": "Unlock Full Article"
     }
   },
   "premiumValue": {
