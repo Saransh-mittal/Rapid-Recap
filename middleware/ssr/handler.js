@@ -155,8 +155,8 @@ function createSSRHandler(vite) {
     const userAgent = req.headers['user-agent'] || ''
     // console.log('SSR handler called', url)
     const isBot = await shouldHandleAsBot(req)
+    let botName = null
     try {
-      let botName = null
       let verified = false
 
       // Cache key for the full page template

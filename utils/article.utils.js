@@ -328,6 +328,7 @@ const processExtractedNews = async (news, category) => {
        - Add relevant statistics or data from public sources
        - Include industry expert perspectives
        - Connect to related industry trends
+       - If needed Rewrite a good title according to the content that will also help in SEO
 
     3. Structure Requirements:
        - Keep content between 800-1800 characters
@@ -335,6 +336,7 @@ const processExtractedNews = async (news, category) => {
        - Vary sentence patterns
        - Add subsections with unique angles
        - If you want to make a phrase or a word bold, use the markdown syntax ** on both sides of the word or phrase without space in between.
+       - If the original content is numbered, then keep the similar numbering in the new content.
 
     4. Enhancement Guidelines:
        - Add relevant background information
@@ -415,16 +417,24 @@ const processExtractedNews = async (news, category) => {
         let lenOfInitialOutput = res.mainText.length
         const summarizationInstructions = `
     You are a summarizer summarize the news between 800 chars to 1800chars. Try to retain all the important information. Right now its ${lenOfInitialOutput} chars
+    if needed - Rewrite a good title according to the content that will also help in SEO
+
+    Critical: Ensure that the returned JSON object includes :
+      {
+        title: "new title",
+        mainText: "new mainText"
+      }
   `
         output = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
+          response_format: { type: 'json_object' },
           messages: [
             { role: 'system', content: summarizationInstructions },
             { role: 'user', content: res.mainText },
           ],
         })
 
-        let mainText = output.choices[0].message.content
+        const result = JSON.parse(output.choices[0].message.content)
 
         res = {
           url: res.url || newsItem.url,
@@ -434,8 +444,8 @@ const processExtractedNews = async (news, category) => {
             (Array.isArray(newsItem.author)
               ? newsItem.author[0]
               : newsItem.author),
-          title: res.title || decodedTitle,
-          mainText: mainText || decodedText,
+          title: result.title || res.title || decodedTitle,
+          mainText: result.mainText || decodedText,
           imgURL: res.imgURL || [newsItem.image],
           category: res.category || category,
         }
@@ -464,14 +474,17 @@ const processExtractedNews = async (news, category) => {
       const newArticle = new Article(res)
       await newArticle.save()
       hindiConverter(newArticle._id.toString())
-        .then(() =>
+        .then(() => {
           generateHighlightForArticle({
             articleId: newArticle._id.toString(),
             lang: 'hi',
           }).catch(error => {
             console.error('Generation failed:', error)
-          }),
-        )
+          })
+          generateKeywordsAndDescription(newArticle._id.toString()).catch(
+            error => console.error('Generation failed:', error),
+          )
+        })
         .catch(error => {
           console.error('Hindi conversion failed:', error)
         })
@@ -479,15 +492,9 @@ const processExtractedNews = async (news, category) => {
       generateHighlightForArticle({
         articleId: newArticle._id.toString(),
         lang: 'en',
+      }).catch(error => {
+        console.error('Generation failed:', error)
       })
-        .then(() => {
-          generateKeywordsAndDescription(newArticle._id.toString()).catch(
-            error => console.error('Generation failed:', error),
-          )
-        })
-        .catch(error => {
-          console.error('Generation failed:', error)
-        })
       processedOutput.push(newArticle)
     } catch (error) {
       console.error(
