@@ -1,1 +1,0 @@
-import{j as l}from"./index-f96a52bc.js";import{k as c,l as i,n}from"./text-04fd2351.js";const w=c((o,a)=>{const{overflow:r,overflowX:e,className:s,...t}=o;return l.jsx(i.div,{ref:a,className:n("chakra-table__container",s),...t,__css:{display:"block",whiteSpace:"nowrap",WebkitOverflowScrolling:"touch",overflowX:r??e??"auto",overflowY:"hidden",maxWidth:"100%"}})});export{w as T};
