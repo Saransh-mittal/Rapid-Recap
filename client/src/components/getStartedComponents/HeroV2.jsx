@@ -173,7 +173,7 @@ const HeroV2 = () => {
             >
               <Box ref={ref}>
                 <Button
-                  size="lg"
+                  size={{ base: 'md', md: 'lg' }}
                   bg={COLORS.accent}
                   color="white"
                   px={12}
