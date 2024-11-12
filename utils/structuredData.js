@@ -245,7 +245,12 @@ const generateAndInjectSchemas = ({ template, articleData, url, baseUrl }) => {
         '@type': 'WebPage',
         '@id': `${baseUrl}/article/${articleData._id}`,
       },
-      description: articleData.mainText.substring(0, 155) + '...',
+      description:
+        articleData.description ||
+        articleData.mainText.substring(0, 155) + '...',
+      keywords:
+        articleData.keywords.join(', ') ||
+        `${articleData.category}, news, rapid recap`,
       inLanguage: 'en-US',
       speakable: {
         '@type': 'SpeakableSpecification',
