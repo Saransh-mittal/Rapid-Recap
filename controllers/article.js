@@ -1403,7 +1403,23 @@ const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
       },
     },
   ])
+  let articleHighlights = await ArticleHighlight.findOne({
+    articleId: article[0]._id,
+    language: userLanguage,
+  })
 
+  if (
+    !articleHighlights?.dictionary ||
+    !articleHighlights?.importantSentences ||
+    articleHighlights?.dictionary.length === 0 ||
+    articleHighlights?.importantSentences.length === 0
+  ) {
+    console.log('Generating highlights for onboarding article')
+    articleHighlights = await generateHighlightForArticle({
+      articleId: article[0]._id,
+      lang: userLanguage,
+    })
+  }
   if (article.length === 0) {
     return res.status(404).json({ message: 'No onboarding articles found' })
   }
@@ -1450,6 +1466,8 @@ const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
   // Combine article and quiz question
   const result = {
     ...article[0],
+    dictionary: articleHighlights?.dictionary || [],
+    importantSentences: articleHighlights?.importantSentences || [],
     image: getFormattedImage(article[0].imgURL),
     quizQuestion,
   }

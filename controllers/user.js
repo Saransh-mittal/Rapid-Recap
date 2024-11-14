@@ -1825,6 +1825,9 @@ const updateOnboardingProgress = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc  Get onboarding progress
+// @route GET /api/user/onboarding-progress
+// @access Private
 const getOnboardingProgress = asyncHandler(async (req, res) => {
   const userId = req.user._id
 
