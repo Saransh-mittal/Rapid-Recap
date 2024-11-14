@@ -242,7 +242,7 @@ webpush.setVapidDetails(
 initBotTracking()
 
 // Load scheduler
-// require('./scheduler/setupCronJobs')
+require('./scheduler/setupCronJobs')
 
 // Setup routes and SSR
 async function initializeServer() {
