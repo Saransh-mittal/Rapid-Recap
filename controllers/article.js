@@ -1385,24 +1385,43 @@ const updateOnBoardingArticle = asyncHandler(async (req, res) => {
 // @access Private
 const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
   const userId = req.user._id
+  const articleId = req.query.articleId
   const { userLanguage } = await User.findById(userId).select('userLanguage')
 
-  // Get a random onboarding article
-  const article = await Article.aggregate([
-    { $match: { category: 'onBoardingArticle' } },
-    { $sample: { size: 1 } },
-    {
-      $project: {
-        _id: 1,
-        title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
-        mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
-        author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
-        dateTime: 1,
-        imgURL: 1,
-        avgReadTime: 1,
-      },
-    },
-  ])
+  const article =
+    articleId !== 'undefined' && articleId !== 'null'
+      ? await Article.aggregate([
+          { $match: { _id: new mongoose.Types.ObjectId(articleId) } },
+          {
+            $project: {
+              _id: 1,
+              title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+              mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+              author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+              dateTime: 1,
+              imgURL: 1,
+              avgReadTime: 1,
+              description: 1,
+            },
+          },
+        ])
+      : await Article.aggregate([
+          { $match: { category: 'onBoardingArticle' } },
+          { $sample: { size: 1 } },
+          {
+            $project: {
+              _id: 1,
+              title: userLanguage === 'hi' ? '$hindiTitle' : '$title',
+              mainText: userLanguage === 'hi' ? '$hindiMainText' : '$mainText',
+              author: userLanguage === 'hi' ? '$hindiAuthor' : '$author',
+              dateTime: 1,
+              imgURL: 1,
+              avgReadTime: 1,
+              description: 1,
+            },
+          },
+        ])
+
   let articleHighlights = await ArticleHighlight.findOne({
     articleId: article[0]._id,
     language: userLanguage,
@@ -1414,7 +1433,6 @@ const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
     articleHighlights?.dictionary.length === 0 ||
     articleHighlights?.importantSentences.length === 0
   ) {
-    console.log('Generating highlights for onboarding article')
     articleHighlights = await generateHighlightForArticle({
       articleId: article[0]._id,
       lang: userLanguage,
