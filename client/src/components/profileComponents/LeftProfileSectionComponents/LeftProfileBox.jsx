@@ -301,7 +301,18 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
         <Button
           size="sm"
           colorScheme="blue"
-          onClick={sendFriendRequest}
+          onClick={() => {
+            toast({
+              title: `Under Maintenance`,
+              description: `This feature is currently under maintenance.`,
+              status: 'info',
+              duration: 9000,
+              isClosable: true,
+              position: 'top',
+            })
+            return
+            sendFriendRequest()
+          }}
           isLoading={loading}
         >
           {t('addFriend')}

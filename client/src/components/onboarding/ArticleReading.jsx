@@ -1,19 +1,11 @@
-// File: src/components/onboarding/ArticleReading.jsx
-
 import React, { useEffect } from 'react'
-import {
-  Box,
-  VStack,
-  Text,
-  Image,
-  Flex,
-  useBreakpointValue,
-} from '@chakra-ui/react'
+import { Box, VStack, Flex, useBreakpointValue } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import OnboardingQuizButton from './OnboardingQuizButton'
 import OnboardingArticleHeader from './OnboardingArticleHeader'
 import MajesticLoading from './MajesticLoading'
 import { useTranslation } from 'react-i18next'
+import MainArticleContent from '../articleComponents/MainArticleContent'
 
 const MotionBox = motion(Box)
 
@@ -24,7 +16,7 @@ const ArticleReading = ({
   fetchOnBoardingArticle,
 }) => {
   const { t } = useTranslation('OnboardingProcess')
-
+  const articleRef = React.useRef()
   const padding = useBreakpointValue({ base: 4, md: 8 })
   const maxWidth = useBreakpointValue({ base: '100%', md: '800px' })
   const fontSize = useBreakpointValue({ base: 'md', md: 'lg' })
@@ -75,17 +67,15 @@ const ArticleReading = ({
           overflowY="auto"
         >
           <VStack spacing={6} align="stretch">
-            <Image
-              src={article?.image}
-              alt={article?.title}
-              borderRadius="md"
-              objectFit="cover"
-              width="100%"
-              height={{ base: '200px', md: '300px' }}
+            <MainArticleContent
+              imgURL={article?.image}
+              mainText={article?.mainText}
+              articleRef={articleRef}
+              articleLoading={isArticleFetching}
+              themedContent={''}
+              dictionary={article?.dictionary}
+              importantSentences={article?.importantSentences}
             />
-            <Text fontSize={fontSize} color="white" lineHeight="1.8">
-              {article?.mainText}
-            </Text>
             <Flex justifyContent="center" mt={4}>
               <OnboardingQuizButton onClick={onNext} t={t} />
             </Flex>

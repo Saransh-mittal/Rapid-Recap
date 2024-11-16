@@ -17,6 +17,9 @@ import { setArticleData } from '../redux/articleSlice'
 import { setIsOpen } from '../redux/quizSlice'
 import { useFeatureDetection } from '../utils/featureDetection'
 import useSafeSound from '../customHooks/useSafeSound'
+import { getVisitedArticle } from '../utils/article.utils'
+import ArticleSelection from '../components/onboarding/ArticleSelection'
+import TimeIndicatorBadge from '../components/onboarding/TimeIndicatorBadge'
 
 const MotionBox = motion(Box)
 
@@ -52,6 +55,7 @@ const ONBOARDING_STEPS = {
   LANGUAGE: 'language',
   WELCOME: 'welcome',
   CATEGORIES: 'categories',
+  ARTICLE_SELECTION: 'article_selection',
   QUIZ_QUESTION: 'quiz_question',
   QUIZ_RESULT: 'quiz_result',
   ARTICLE_READING: 'article_reading',
@@ -63,6 +67,7 @@ const STEP_SEQUENCE = [
   ONBOARDING_STEPS.LANGUAGE,
   ONBOARDING_STEPS.WELCOME,
   ONBOARDING_STEPS.CATEGORIES,
+  ONBOARDING_STEPS.ARTICLE_SELECTION,
   ONBOARDING_STEPS.QUIZ_QUESTION,
   ONBOARDING_STEPS.QUIZ_RESULT,
   ONBOARDING_STEPS.ARTICLE_READING,
@@ -75,6 +80,9 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   const [selectedCategories, setSelectedCategories] = useState([])
   const [initialQuizCorrect, setInitialQuizCorrect] = useState(false)
   const [article, setArticle] = useState(null)
+  const [visitedArticle, setVisitedArticle] = useState(null)
+  const [isVisitedArticleFetching, setIsVisitedArticleFetching] =
+    useState(false)
   const [isArticleFetching, setIsArticleFetching] = useState(false)
   const [submittingSelectedLanguage, setSubmittingSelectedLanguage] =
     useState(false)
@@ -104,6 +112,12 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
   )
 
   const getNextStepId = useCallback(currentId => {
+    if (
+      !getVisitedArticle() &&
+      currentId === ONBOARDING_STEPS.ARTICLE_SELECTION
+    ) {
+      return ONBOARDING_STEPS.QUIZ_QUESTION
+    }
     const currentIndex = STEP_SEQUENCE.indexOf(currentId)
     return STEP_SEQUENCE[currentIndex + 1] || currentId
   }, [])
@@ -166,6 +180,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
       })
       setCurrentStepId(nextStepId)
       fetchOnBoardingArticle()
+      if (getVisitedArticle()) fetchVisitedArticle(getVisitedArticle()?.id)
     } catch (error) {
       console.error('Failed to update language:', error)
       toast({
@@ -255,27 +270,58 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
     })
   }
 
-  const fetchOnBoardingArticle = useCallback(async () => {
-    if (isArticleFetching) return
-    setIsArticleFetching(true)
-    try {
-      const response = await axios.get(`/api/articles/onboarding`)
-      setArticle(response.data)
+  const fetchVisitedArticle = useCallback(
+    async articleId => {
+      if (isVisitedArticleFetching) return
+      setIsVisitedArticleFetching(true)
+      try {
+        const response = await axios.get(
+          `/api/articles/onboarding?articleId=${articleId}`,
+        )
 
-      dispatch(setArticleData(response.data))
-    } catch (error) {
-      console.error(error)
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch article. Please try again later.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-    } finally {
-      setIsArticleFetching(false)
-    }
-  }, [dispatch, isArticleFetching, toast])
+        setVisitedArticle(response.data)
+      } catch (error) {
+        console.error(error)
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch article. Please try again later.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      } finally {
+        setIsVisitedArticleFetching(false)
+      }
+    },
+    [dispatch, isVisitedArticleFetching, toast],
+  )
+  const fetchOnBoardingArticle = useCallback(
+    async articleId => {
+      if (isArticleFetching) return
+      setIsArticleFetching(true)
+
+      try {
+        const response = await axios.get(
+          `/api/articles/onboarding?articleId=${articleId}`,
+        )
+        setArticle(response.data)
+
+        dispatch(setArticleData(response.data))
+      } catch (error) {
+        console.error(error)
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch article. Please try again later.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        })
+      } finally {
+        setIsArticleFetching(false)
+      }
+    },
+    [dispatch, isArticleFetching, toast],
+  )
 
   const handleQuizButtonClick = useCallback(() => {
     playClick()
@@ -298,13 +344,25 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         const response = await axios.get('/api/user/onboarding-progress')
         const stepId =
           STEP_SEQUENCE[response.data.step - 1] || ONBOARDING_STEPS.LANGUAGE
-        setCurrentStepId(stepId)
+        // Skip article selection if user didn't come from an article page
+        if (
+          stepId === ONBOARDING_STEPS.ARTICLE_SELECTION &&
+          !getVisitedArticle()
+        ) {
+          setCurrentStepId(ONBOARDING_STEPS.QUIZ_QUESTION)
+        } else {
+          setCurrentStepId(stepId)
+        }
 
         if (response.data.step >= 1) {
           setSelectedLanguage(response.data.language)
         }
         if (response.data.step >= 3) {
           setSelectedCategories(response.data.categories)
+        }
+        if (stepId === ONBOARDING_STEPS.ARTICLE_SELECTION) {
+          fetchVisitedArticle(getVisitedArticle()?.id)
+          fetchOnBoardingArticle()
         }
         if (stepId === ONBOARDING_STEPS.QUIZ_QUESTION) {
           fetchOnBoardingArticle()
@@ -339,6 +397,18 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         onCategoryToggle={handleCategoryToggle}
       />
     ),
+    [ONBOARDING_STEPS.ARTICLE_SELECTION]: (
+      <ArticleSelection
+        onArticleSelect={selectedArticle => {
+          fetchOnBoardingArticle(selectedArticle?.id || selectedArticle?._id)
+          handleNext()
+        }}
+        randomArticle={article}
+        visitedArticle={visitedArticle}
+        isArticleFetching={isArticleFetching}
+        isVisitedArticleFetching={isVisitedArticleFetching}
+      />
+    ),
     [ONBOARDING_STEPS.QUIZ_QUESTION]: (
       <QuizQuestion
         isArticleFetching={isArticleFetching}
@@ -370,6 +440,10 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
 
   return (
     <>
+      <TimeIndicatorBadge
+        currentStep={currentStepId}
+        STEP_SEQUENCE={STEP_SEQUENCE}
+      />
       <div
         style={{
           position: 'fixed',

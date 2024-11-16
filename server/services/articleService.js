@@ -110,7 +110,7 @@ class ArticleService {
         '{{imageSection}}',
         `<figure class="image-container" style="aspect-ratio: 16/9; margin: 0;">
           <img
-            src=""
+            src="${articleData.imgURL}"
             alt="${articleData.title}"
             width="800"
             height="450"
