@@ -2,52 +2,54 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HStack, Text, Box, Flex, Tooltip, IconButton } from '@chakra-ui/react'
 import { Sparkles, Timer, X } from 'lucide-react'
-
-const STEP_CONFIG = {
-  language: {
-    time: '10 sec',
-    message: 'Choose your preferred language',
-  },
-  welcome: {
-    time: '10 sec',
-    message: 'Begin your journey',
-  },
-  categories: {
-    time: '45 sec',
-    message: 'Discover your interests',
-  },
-  article_selection: {
-    time: '30 sec',
-    message: 'Find your perfect read',
-  },
-  quiz_question: {
-    time: '20 sec',
-    message: 'Challenge your mind',
-  },
-  quiz_result: {
-    time: '20 sec',
-    message: 'Celebrate your achievement',
-  },
-  article_reading: {
-    time: '2 min',
-    message: 'Immerse yourself',
-  },
-  leaderboard: {
-    time: '30 sec',
-    message: 'View your rankings',
-  },
-}
+import { useTranslation } from 'react-i18next'
 
 const TimeIndicatorBadge = ({ currentStep, STEP_SEQUENCE }) => {
+  const { t } = useTranslation('OnboardingProcess')
   const [isVisible, setIsVisible] = useState(true)
   const [autoHideTimer, setAutoHideTimer] = useState(null)
 
   const currentStepIndex = STEP_SEQUENCE.indexOf(currentStep) + 1
   const totalSteps = STEP_SEQUENCE.length
 
+  const STEP_CONFIG = {
+    language: {
+      time: '10 sec',
+      message: t('timeIndicator.steps.language'),
+    },
+    welcome: {
+      time: '10 sec',
+      message: t('timeIndicator.steps.welcome'),
+    },
+    categories: {
+      time: '45 sec',
+      message: t('timeIndicator.steps.categories'),
+    },
+    article_selection: {
+      time: '30 sec',
+      message: t('timeIndicator.steps.articleSelection'),
+    },
+    quiz_question: {
+      time: '20 sec',
+      message: t('timeIndicator.steps.quizQuestion'),
+    },
+    quiz_result: {
+      time: '20 sec',
+      message: t('timeIndicator.steps.quizResult'),
+    },
+    article_reading: {
+      time: '2 min',
+      message: t('timeIndicator.steps.articleReading'),
+    },
+    leaderboard: {
+      time: '30 sec',
+      message: t('timeIndicator.steps.leaderboard'),
+    },
+  }
+
   const stepInfo = STEP_CONFIG[currentStep] || {
     time: '1 min',
-    message: 'Processing',
+    message: t('timeIndicator.processing'),
   }
 
   const getEstimatedTime = () => {
@@ -74,7 +76,7 @@ const TimeIndicatorBadge = ({ currentStep, STEP_SEQUENCE }) => {
 
     const timer = setTimeout(() => {
       setIsVisible(false)
-    }, 3000)
+    }, 4000)
 
     setAutoHideTimer(timer)
 
@@ -148,7 +150,7 @@ const TimeIndicatorBadge = ({ currentStep, STEP_SEQUENCE }) => {
               <HStack spacing={4} px={5} py={2.5}>
                 {/* Time Estimation Display */}
                 <Tooltip
-                  label="Estimated time to complete remaining steps - may vary based on your pace"
+                  label={t('timeIndicator.tooltipText')}
                   placement="bottom"
                   hasArrow
                 >
@@ -163,7 +165,7 @@ const TimeIndicatorBadge = ({ currentStep, STEP_SEQUENCE }) => {
                         {getEstimatedTime()}
                       </Text>
                       <Text color="whiteAlpha.700" fontSize="sm">
-                        estimated
+                        {t('timeIndicator.estimated')}
                       </Text>
                     </HStack>
                   </Flex>
@@ -180,7 +182,10 @@ const TimeIndicatorBadge = ({ currentStep, STEP_SEQUENCE }) => {
                 <HStack spacing={2.5}>
                   <Sparkles size={16} color="#F0ABFC" />
                   <Text color="white" fontSize="sm" fontWeight="semibold">
-                    Step {currentStepIndex} of {totalSteps}
+                    {t('timeIndicator.stepProgress', {
+                      current: currentStepIndex,
+                      total: totalSteps,
+                    })}
                   </Text>
                 </HStack>
               </HStack>

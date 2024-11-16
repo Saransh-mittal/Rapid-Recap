@@ -45,5 +45,30 @@
     "leaderboardDescription": "See where you could rank among our community of learners",
     "loadingLeaderboard": "Loading leaderboard...",
     "competitionNote": "Compete with users worldwide and track your progress"
+  },
+  "articleSelection": {
+    "title": "Choose Your Starting Article",
+    "subtitle": "Select your preferred article to begin your journey",
+    "previouslyViewed": "Previously Viewed",
+    "recommended": "Recommended",
+    "minuteRead": "{{minutes}} min read",
+    "continueReading": "Continue reading",
+    "beginnerFriendly": "Beginner friendly"
+  },
+  "timeIndicator": {
+    "tooltipText": "Estimated time to complete remaining steps - may vary based on your pace",
+    "estimated": "estimated",
+    "stepProgress": "Step {{current}} of {{total}}",
+    "processing": "Processing",
+    "steps": {
+      "language": "Choose your preferred language",
+      "welcome": "Begin your journey",
+      "categories": "Discover your interests",
+      "articleSelection": "Find your perfect read",
+      "quizQuestion": "Challenge your mind",
+      "quizResult": "Celebrate your achievement",
+      "articleReading": "Immerse yourself",
+      "leaderboard": "View your rankings"
+    }
   }
 }

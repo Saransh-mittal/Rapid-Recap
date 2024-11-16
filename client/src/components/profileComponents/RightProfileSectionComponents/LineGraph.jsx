@@ -50,11 +50,6 @@ const NoDataMessage = React.memo(({ viewingHistory }) => {
       alignItems="center"
       flexDirection="column"
       position="relative"
-      backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-      boxShadow={{
-        xl: 'none',
-        base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-      }}
     >
       <Text m={0}>
         {viewingHistory ? t('noDataAvailable') : t('giveQuizzes')}
@@ -181,11 +176,6 @@ const LineGraph = ({
         alignItems={'center'}
         flexDirection={'column'}
         zIndex={1001}
-        backgroundColor={{ base: 'rgba(15, 13, 21, 0.8)', xl: 'transparent' }}
-        boxShadow={{
-          xl: 'none',
-          base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-        }}
       >
         <Image
           h="200px"

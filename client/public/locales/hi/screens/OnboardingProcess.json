@@ -45,5 +45,30 @@
     "leaderboardDescription": "देखें कि आप हमारे सीखने वाले समुदाय में कहाँ रैंक कर सकते हैं",
     "loadingLeaderboard": "लीडरबोर्ड लोड हो रहा है...",
     "competitionNote": "दुनिया भर के उपयोगकर्ताओं के साथ प्रतिस्पर्धा करें और अपनी प्रगति को ट्रैक करें"
+  },
+  "articleSelection": {
+    "title": "अपना प्रारंभिक लेख चुनें",
+    "subtitle": "अपनी यात्रा शुरू करने के लिए अपना पसंदीदा लेख चुनें",
+    "previouslyViewed": "पहले देखा गया",
+    "recommended": "अनुशंसित",
+    "minuteRead": "{{minutes}} मिनट का पढ़ना",
+    "continueReading": "पढ़ना जारी रखें",
+    "beginnerFriendly": "शुरुआती के लिए उपयुक्त"
+  },
+  "timeIndicator": {
+    "tooltipText": "शेष चरणों को पूरा करने का अनुमानित समय - आपकी गति के आधार पर भिन्न हो सकता है",
+    "estimated": "अनुमानित",
+    "stepProgress": "चरण {{current}} / {{total}}",
+    "processing": "प्रसंस्करण",
+    "steps": {
+      "language": "अपनी पसंदीदा भाषा चुनें",
+      "welcome": "अपनी यात्रा शुरू करें",
+      "categories": "अपनी रुचियों की खोज करें",
+      "articleSelection": "अपना सही लेख खोजें",
+      "quizQuestion": "अपने दिमाग को चुनौती दें",
+      "quizResult": "अपनी उपलब्धि का जश्न मनाएं",
+      "articleReading": "खुद को डुबोएं",
+      "leaderboard": "अपनी रैंकिंग देखें"
+    }
   }
 }

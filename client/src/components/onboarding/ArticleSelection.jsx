@@ -12,6 +12,7 @@ import {
   Icon,
 } from '@chakra-ui/react'
 import { BookOpen, Star, Clock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import MajesticLoading from './MajesticLoading'
 import { getVisitedArticle } from '../../utils/article.utils'
 
@@ -22,24 +23,21 @@ const ArticleCard = ({
   setSelectedId,
   imgFallback = '/images/placeholder.jpg',
 }) => {
+  const { t } = useTranslation('OnboardingProcess')
   const isPreviouslyViewed = type === 'visited'
   const badgeConfig = isPreviouslyViewed
     ? {
         color: '#fff',
-        // More opaque background
         bg: 'rgba(139, 92, 246, 0.4)',
         borderColor: 'purple.400',
-        text: 'Previously Viewed',
-        // Darker glow
+        text: t('articleSelection.previouslyViewed'),
         glowColor: 'rgba(139, 92, 246, 0.6)',
       }
     : {
         color: '#fff',
-        // More opaque background
         bg: 'rgba(236, 72, 153, 0.4)',
         borderColor: 'pink.400',
-        text: 'Recommended',
-        // Darker glow
+        text: t('articleSelection.recommended'),
         glowColor: 'rgba(236, 72, 153, 0.6)',
       }
 
@@ -78,7 +76,6 @@ const ArticleCard = ({
         }}
         onClick={() => setSelectedId(type)}
       >
-        {/* Image Section */}
         <Box position="relative" h="260px">
           <Image
             src={article?.imgURL || imgFallback}
@@ -108,7 +105,6 @@ const ArticleCard = ({
             )`}
           />
 
-          {/* Badge */}
           <HStack
             position="absolute"
             top={4}
@@ -123,7 +119,6 @@ const ArticleCard = ({
             py={2}
             spacing={2}
             boxShadow={`0 4px 20px ${badgeConfig.glowColor}`}
-            // Added styles for better visibility
             fontWeight="semibold"
             letterSpacing="0.5px"
           >
@@ -134,7 +129,6 @@ const ArticleCard = ({
           </HStack>
         </Box>
 
-        {/* Content Section */}
         <VStack
           align="stretch"
           p={8}
@@ -169,7 +163,7 @@ const ArticleCard = ({
               noOfLines={3}
               lineHeight="tall"
             >
-              {article?.description || article?.mainText}
+              {article?.mainText}
             </Text>
           </VStack>
 
@@ -189,7 +183,9 @@ const ArticleCard = ({
                   fontSize="sm"
                   whiteSpace="nowrap"
                 >
-                  {article?.avgReadTime} min read
+                  {t('articleSelection.minuteRead', {
+                    minutes: article?.avgReadTime,
+                  })}
                 </Text>
               </HStack>
 
@@ -205,8 +201,8 @@ const ArticleCard = ({
                   whiteSpace="nowrap"
                 >
                   {isPreviouslyViewed
-                    ? 'Continue reading'
-                    : 'Beginner friendly'}
+                    ? t('articleSelection.continueReading')
+                    : t('articleSelection.beginnerFriendly')}
                 </Text>
               </HStack>
             </HStack>
@@ -224,6 +220,7 @@ const ArticleSelection = ({
   isArticleFetching,
   isVisitedArticleFetching,
 }) => {
+  const { t } = useTranslation('OnboardingProcess')
   const [selectedId, setSelectedId] = useState(null)
   const columns = useBreakpointValue({ base: 1, md: 2 })
   const spacing = useBreakpointValue({ base: 6, md: 10 })
@@ -258,6 +255,9 @@ const ArticleSelection = ({
   if (!getVisitedArticle()) {
     onArticleSelect(randomArticle)
   }
+  if (!visitedArticle) {
+    return null
+  }
 
   return (
     <Container maxW="8xl" minH="100vh" display="flex" alignItems="center">
@@ -277,7 +277,7 @@ const ArticleSelection = ({
               letterSpacing="tight"
               textShadow="0 2px 20px rgba(167, 139, 250, 0.2)"
             >
-              Choose Your Starting Article
+              {t('articleSelection.title')}
             </Text>
 
             <Text
@@ -288,7 +288,7 @@ const ArticleSelection = ({
               px={4}
               letterSpacing="wide"
             >
-              Select your preferred article to begin your journey
+              {t('articleSelection.subtitle')}
             </Text>
           </VStack>
         </motion.div>
