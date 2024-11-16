@@ -1480,7 +1480,8 @@ const getRandomOnBoardingArticle = asyncHandler(async (req, res) => {
       }
     }
   }
-
+  if (!quizQuestion)
+    return res.status(404).json({ message: 'No quiz found for the article' })
   // Combine article and quiz question
   const result = {
     ...article[0],
