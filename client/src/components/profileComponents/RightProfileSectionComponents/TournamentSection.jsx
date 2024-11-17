@@ -313,7 +313,32 @@ const TournamentSection = ({
   }
 
   if (tournamentData.length === 0) {
-    return null
+    return (
+      <Flex
+        w="full"
+        mt={10}
+        mx="auto"
+        p={{ base: 4, md: 6 }}
+        justifyContent="center"
+        alignItems="center"
+        flexDirection="column"
+        borderRadius="lg"
+        border="1px"
+        borderColor="gray.700"
+        style={{
+          backgroundColor: 'rgba(15, 13, 21, 0.8)',
+          boxShadow:
+            '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
+        }}
+      >
+        <Icon boxSize={8} color="purple.400" mb={4}>
+          <HistogramSVG width="20px" height="20px" fill="#9F7AEA" />
+        </Icon>
+        <Text color="gray.400" fontSize="lg" textAlign="center">
+          {translate('noTournamentData')}
+        </Text>
+      </Flex>
+    )
   }
 
   return (
