@@ -27,6 +27,52 @@ const processTextWithBold = text => {
   })
 }
 
+const DictionaryWord = React.memo(({ word, part, stableRef }) => {
+  const { handleMouseEnter, handleMouseLeave, handleTouchStart } =
+    stableRef.current
+
+  return (
+    <Box
+      as="span"
+      display="inline-block"
+      px={2}
+      py={1}
+      mx={1}
+      bg="linear-gradient(135deg, rgba(159, 122, 234, 0.15), rgba(159, 122, 234, 0.25))"
+      color="purple.200"
+      borderRadius="md"
+      boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+      cursor="pointer"
+      position="relative"
+      transition="all 0.3s ease"
+      data-dictionary-word={word}
+      _before={{
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 'md',
+        border: '1px solid',
+        borderColor: 'purple.400',
+        opacity: 0.3,
+      }}
+      _hover={{
+        transform: 'translateY(-1px)',
+        bg: 'linear-gradient(135deg, rgba(159, 122, 234, 0.25), rgba(159, 122, 234, 0.35))',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+        color: 'purple.100',
+      }}
+      onMouseEnter={e => handleMouseEnter(e, word)}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={e => handleTouchStart(e, word)}
+    >
+      {part}
+    </Box>
+  )
+})
+
 const applyDictionaryHighlights = (
   text,
   dictionary,
@@ -60,51 +106,14 @@ const applyDictionaryHighlights = (
 
         return parts.reduce((acc, part, index) => {
           if (matches.includes(part)) {
-            // Use stable event handlers from ref
-            const { handleMouseEnter, handleMouseLeave, handleTouchStart } =
-              stableRef.current
-
             return [
               ...acc,
-              <Box
+              <DictionaryWord
                 key={`dict-${word}-${index}-${part}`}
-                as="span"
-                display="inline-block"
-                px={2}
-                py={1}
-                mx={1}
-                bg="linear-gradient(135deg, rgba(159, 122, 234, 0.15), rgba(159, 122, 234, 0.25))"
-                color="purple.200"
-                borderRadius="md"
-                boxShadow="0 2px 4px rgba(0,0,0,0.2)"
-                cursor="pointer"
-                position="relative"
-                transition="all 0.3s ease"
-                data-dictionary-word={word}
-                _before={{
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  borderRadius: 'md',
-                  border: '1px solid',
-                  borderColor: 'purple.400',
-                  opacity: 0.3,
-                }}
-                _hover={{
-                  transform: 'translateY(-1px)',
-                  bg: 'linear-gradient(135deg, rgba(159, 122, 234, 0.25), rgba(159, 122, 234, 0.35))',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
-                  color: 'purple.100',
-                }}
-                onMouseEnter={e => handleMouseEnter(e, word)}
-                onMouseLeave={handleMouseLeave}
-                onTouchStart={e => handleTouchStart(e, word)}
-              >
-                {part}
-              </Box>,
+                word={word}
+                part={part}
+                stableRef={stableRef}
+              />,
             ]
           }
           return [...acc, part]
@@ -117,6 +126,37 @@ const applyDictionaryHighlights = (
   return result.flat()
 }
 
+const HighlightedContent = React.memo(({ content, dictionary, stableRef }) => {
+  const { words: highlightedWords } = React.useContext(HighlightedWordsContext)
+
+  const processNode = React.useCallback(
+    node => {
+      if (React.isValidElement(node)) {
+        return React.cloneElement(node, {
+          children: processNode(node.props.children),
+        })
+      }
+      if (Array.isArray(node)) {
+        return node.map((item, index) => processNode(item))
+      }
+      if (typeof node === 'string') {
+        return applyDictionaryHighlights(
+          node,
+          dictionary,
+          null,
+          null,
+          highlightedWords,
+          stableRef,
+        )
+      }
+      return node
+    },
+    [dictionary, stableRef, highlightedWords],
+  )
+
+  return processNode(content)
+})
+
 const highlightKeywords = (
   content,
   dictionary,
@@ -124,34 +164,13 @@ const highlightKeywords = (
   closeTooltip,
   stableRef,
 ) => {
-  const { words: highlightedWords } = React.useContext(HighlightedWordsContext)
-
-  const processNode = React.useMemo(() => {
-    const process = node => {
-      if (React.isValidElement(node)) {
-        return React.cloneElement(node, {
-          children: process(node.props.children),
-        })
-      }
-      if (Array.isArray(node)) {
-        return node.map((item, index) => process(item))
-      }
-      if (typeof node === 'string') {
-        return applyDictionaryHighlights(
-          node,
-          dictionary,
-          onWordHover,
-          closeTooltip,
-          highlightedWords, // Create new Set to avoid mutation of context
-          stableRef,
-        )
-      }
-      return node
-    }
-    return process
-  }, [dictionary, onWordHover, closeTooltip, stableRef]) // Exclude highlightedWords
-
-  return processNode(content)
+  return (
+    <HighlightedContent
+      content={content}
+      dictionary={dictionary}
+      stableRef={stableRef}
+    />
+  )
 }
 
 const processImportantSentences = (content, importantSentences) => {

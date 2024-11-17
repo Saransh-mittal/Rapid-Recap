@@ -88,7 +88,7 @@ const MainArticleContent = ({
   // Memoize the content props
   const contentProps = useMemo(
     () => ({
-      mainText: mainText[selectedLanguage],
+      mainText: selectedLanguage ? mainText[selectedLanguage] : mainText,
       themedContent,
       dictionary,
       importantSentences,
@@ -163,7 +163,7 @@ const MainArticleContent = ({
                   '&::after': {
                     content: '""',
                     position: 'absolute',
-                    top: '35%', // Match your first blur layer
+                    top: '45%', // Match your first blur layer
                     left: 0,
                     right: 0,
                     bottom: 0,
@@ -215,7 +215,7 @@ const MainArticleContent = ({
 
                   <Box
                     position="absolute"
-                    top="35%"
+                    top="45%"
                     left={0}
                     right={0}
                     bottom={0}
@@ -226,7 +226,7 @@ const MainArticleContent = ({
                   />
                   <Box
                     position="absolute"
-                    top="60%"
+                    top="70%"
                     left={0}
                     right={0}
                     bottom={0}
@@ -237,7 +237,7 @@ const MainArticleContent = ({
                   />
                   <Box
                     position="absolute"
-                    top="80%"
+                    top="85%"
                     left={0}
                     right={0}
                     bottom={0}
@@ -251,38 +251,40 @@ const MainArticleContent = ({
             </Box>
 
             {/* Source Link */}
-            <Box position="relative" zIndex={2} mt={4}>
-              {websiteInfo && (
-                <Link
-                  href={websiteInfo.fullUrl}
-                  isExternal
-                  display="inline-flex"
-                  alignItems="center"
-                  px={2}
-                  py={1}
-                  mx={1}
-                  fontSize="sm"
-                  fontWeight="semibold"
-                  color="blue.500"
-                  bg="blue.50"
-                  borderRadius="md"
-                  boxShadow="sm"
-                  _hover={{
-                    bg: 'blue.100',
-                    color: 'blue.600',
-                    textDecoration: 'none',
-                  }}
-                  _active={{
-                    bg: 'blue.200',
-                  }}
-                  transition="all 0.2s ease-in-out"
-                >
-                  {websiteInfo.websiteName}
-                  <Icon as={ExternalLinkIcon} ml={1} boxSize={3} />
-                </Link>
-              )}
-              <SourceLinkTag SourceURL={SourceURL} />
-            </Box>
+            {SourceURL && (
+              <Box position="relative" zIndex={2} mt={4}>
+                {websiteInfo && (
+                  <Link
+                    href={websiteInfo.fullUrl}
+                    isExternal
+                    display="inline-flex"
+                    alignItems="center"
+                    px={2}
+                    py={1}
+                    mx={1}
+                    fontSize="sm"
+                    fontWeight="semibold"
+                    color="blue.500"
+                    bg="blue.50"
+                    borderRadius="md"
+                    boxShadow="sm"
+                    _hover={{
+                      bg: 'blue.100',
+                      color: 'blue.600',
+                      textDecoration: 'none',
+                    }}
+                    _active={{
+                      bg: 'blue.200',
+                    }}
+                    transition="all 0.2s ease-in-out"
+                  >
+                    {websiteInfo.websiteName}
+                    <Icon as={ExternalLinkIcon} ml={1} boxSize={3} />
+                  </Link>
+                )}
+                <SourceLinkTag SourceURL={SourceURL} />
+              </Box>
+            )}
 
             {/* Premium Content Card */}
             {!isAuthenticated && (

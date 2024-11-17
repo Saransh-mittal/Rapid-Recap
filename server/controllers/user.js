@@ -1703,10 +1703,11 @@ const updateOnboardingProgress = asyncHandler(async (req, res) => {
       1: 'language',
       2: 'welcome',
       3: 'categories',
-      4: 'quiz_question',
-      5: 'quiz_result',
-      6: 'article_reading',
-      7: 'leaderboard',
+      4: 'article_selection',
+      5: 'quiz_question',
+      6: 'quiz_result',
+      7: 'article_reading',
+      8: 'leaderboard',
     }
     return stepMap[step] || 'language'
   }
@@ -1825,6 +1826,9 @@ const updateOnboardingProgress = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc  Get onboarding progress
+// @route GET /api/user/onboarding-progress
+// @access Private
 const getOnboardingProgress = asyncHandler(async (req, res) => {
   const userId = req.user._id
 

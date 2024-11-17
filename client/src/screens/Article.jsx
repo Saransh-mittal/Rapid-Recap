@@ -28,6 +28,7 @@ import ArticleFooter from '../components/articleComponents/ArticleFooter'
 import { useReadingProgress } from '../customHooks/useReadingProgress'
 import PremiumCTA from '../components/articleComponents/PremiumCTA'
 import PremiumValueBanner from '../components/articleComponents/PremiumValueBanner'
+import { saveVisitedArticle } from '../utils/article.utils'
 
 //SSR images
 const rrImage = '/images/rrlogo_HD.webp'
@@ -169,6 +170,7 @@ const Article = () => {
 
       dispatch(setArticleData(articleData))
       setArticle(articleData)
+      saveVisitedArticle(articleData)
       dispatch(setTotalUsersGivenQuiz(articleData.quizAttemptCnt))
 
       const image = Array.isArray(articleData.imgURL)
@@ -222,7 +224,7 @@ const Article = () => {
     } finally {
       setIsQuizGivenLoading(false)
     }
-  }, [id, user?._id, givenQuiz])
+  }, [id, user, givenQuiz])
 
   const checkOnGoingQuiz = useCallback(async () => {
     try {

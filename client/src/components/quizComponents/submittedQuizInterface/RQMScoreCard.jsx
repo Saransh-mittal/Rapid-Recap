@@ -176,7 +176,7 @@ const RQMScoreCard = React.memo(
             <CountingNumber
               from={withPerformance}
               to={finalScore}
-              duration={2}
+              duration={3}
               label={boostLabel}
               color="blue.400"
             />

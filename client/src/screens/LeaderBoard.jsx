@@ -137,7 +137,10 @@ const Leaderboard = () => {
             user={leader}
             rank={index + 1}
             isCurrentUser={leader._id === user?._id}
-            onClick={() => handleRowClick(leader.inGameName)}
+            onClick={() => {
+              if (user.needsOnboarding) return
+              handleRowClick(leader.inGameName)
+            }}
           />
         </Box>
       )

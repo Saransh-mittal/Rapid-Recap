@@ -58,7 +58,7 @@ const TrackTime = ({ userId, articleId }) => {
               jsonData.xpAwardedForTimeSpentMoreThan10Min &&
               now - lastXpAwardTimeRef.current > XP_AWARD_COOLDOWN
             ) {
-              dispatch(setUser({ ...user, xp: user.xp + 10, hasChanged: true }))
+              dispatch(setUser({ ...user, xp: user.xp + 10 }))
               dispatch(
                 addNoteMessage({
                   messageType: 'xpAward',

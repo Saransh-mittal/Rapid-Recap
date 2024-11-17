@@ -205,7 +205,6 @@ const Quiz = () => {
         dispatchRedux(
           setUser({
             ...user,
-            hasChanged: true,
             xp: newXp,
             level: newXp >= xpBaseAtNextLevel ? user.level + 1 : user.level,
             IQ_score: parseFloat(result?.newIQScore) || user.IQ_score,
