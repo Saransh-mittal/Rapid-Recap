@@ -68,6 +68,7 @@ import LoadingScreen from './screens/LoadingScreen.jsx'
 import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
 import useCountdown from './customHooks/useCountdown.js'
+import ModernNavbar from './components/Header-Footer/ModernNavbar.jsx'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -446,7 +447,8 @@ const App = () => {
       <NavbarProvider>
         {showNavbar && (
           <Suspense fallback={null}>
-            <Navbar onNavbarLoad={handleNavbarLoad} />
+            {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
+            <ModernNavbar />
           </Suspense>
         )}
         <Box
