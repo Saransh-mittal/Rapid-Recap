@@ -49,7 +49,7 @@ const SmartCTA = ({ isMainButtonVisible, COLORS }) => {
               boxShadow="lg"
             >
               <Button
-                size="lg"
+                size={{ base: 'md', md: 'lg' }}
                 bg={COLORS.accent}
                 color="white"
                 px={8}

@@ -58,7 +58,7 @@ const TrackTime = ({ userId, articleId }) => {
               jsonData.xpAwardedForTimeSpentMoreThan10Min &&
               now - lastXpAwardTimeRef.current > XP_AWARD_COOLDOWN
             ) {
-              dispatch(setUser({ ...user, xp: user.xp + 10 }))
+              dispatch(setUser({ ...user, xp: user.xp + 10, hasChanged: true }))
               dispatch(
                 addNoteMessage({
                   messageType: 'xpAward',
@@ -89,7 +89,7 @@ const TrackTime = ({ userId, articleId }) => {
         startTimeRef.current = now
       }
     },
-    [userId, articleId, dispatch, user],
+    [userId, articleId, dispatch, user?._id],
   )
 
   const handleVisibilityChange = useCallback(() => {

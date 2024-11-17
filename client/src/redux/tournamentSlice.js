@@ -71,19 +71,21 @@ export const checkTournamentRegistration = createAsyncThunk(
       dispatch(setTournamentId(tournament?._id))
       dispatch(setStatus(tournament?.status))
       // calculate tournament start time in days hrs mins from tournament.startDate
-      const startDate = new Date(tournament?.startDate)
-      const currentDate = new Date()
-      const diff = startDate - currentDate
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-      const hours = Math.floor(
-        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-      )
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-      // get days and hours in a string format to display
-      const daysHours = `${days}days ${hours}hrs ${minutes}mins ${seconds}secs`
+      if (!user?.inGameName || !user) {
+        const startDate = new Date(tournament?.startDate)
+        const currentDate = new Date()
+        const diff = startDate - currentDate
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+        const hours = Math.floor(
+          (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+        )
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+        // get days and hours in a string format to display
+        const daysHours = `${days}days ${hours}hrs ${minutes}mins ${seconds}secs`
 
-      dispatch(setTournamentStartTime(daysHours))
+        dispatch(setTournamentStartTime(daysHours))
+      }
       return { tournament, isRegistered }
     } catch (error) {
       console.error('Error checking tournament registration:', error)

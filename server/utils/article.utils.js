@@ -311,19 +311,49 @@ const extractNewsFromLink = async (query, apiKey) => {
 
 const processExtractedNews = async (news, category) => {
   const initialInstructions = `
-    You are a text checker and analyzer.
-    1. Remove any irrelevant content or lines from the mainText that are not related to the article or title. This includes sections like "Also read," "Loading...," "Share to Facebook," "Share to Twitter," "Share to LinkedIn," "All rights reserved" "terms of use" "HT" "Any other news websites name or nav items related to those websites" and unanswered questions.
-    2. Do not summarize the content if the mainText is 2500 characters or less.
-    4. If Article is incomplete then either complete it to your knowledge or remove it.
-    3. If the mainText exceeds 2500 characters, summarize it to more than 800 characters but less than 2500 characters, keeping the most important information.
-    4. Rewrite the  mainText and title to be more engaging
-    5. Ensure that the returned JSON object includes all original fields.
-  `
+   You are a professional news analyst and writer.
 
-  const summarizationInstructions = `
-    You are a summarizer.
-    Summarize the mainText to more than 800 characters but less than 2500 characters, retaining the most important information.
-    Ensure that the returned JSON object includes all original fields.
+    Key Instructions:
+    1. Create original analysis by combining insights from multiple viewpoints:
+       - Local implications
+       - Industry impact
+       - Market trends
+       - Historical context
+       - Future implications
+       - Dont include outdated information or irrelevant information
+
+    2. Content Guidelines:
+       - Use only 1-2 short factual quotes from the source (with attribution)
+       - Focus on broader context and implications
+       - Add relevant statistics or data from public sources
+       - Include industry expert perspectives
+       - Connect to related industry trends
+       - If needed Rewrite a good title according to the content that will also help in SEO
+
+    3. Structure Requirements:
+       - Keep content between 800-1800 characters
+       - Use unique phrasing and structure
+       - Vary sentence patterns
+       - Add subsections with unique angles
+       - If you want to make a phrase or a word bold, use the markdown syntax ** on both sides of the word or phrase without space in between.
+       - If the original content is numbered, then keep the similar numbering in the new content.
+
+    4. Enhancement Guidelines:
+       - Add relevant background information
+       - Connect to broader industry trends
+       - Discuss potential future impacts
+       - Include market analysis where relevant
+       - Connect to local or regional implications
+
+    5. Remove irrelevant content like:
+       - Social media share buttons
+       - Advertisement text
+       - Navigation elements
+       - Website-specific elements
+       - Unnecessary formatting
+       - any irrelevant content or lines from the mainText that are not related to the article or title. This includes sections like "Also read," "Loading...," "Share to Facebook," "Share to Twitter," "Share to LinkedIn," "All rights reserved" "terms of use" "HT" "Any other news websites name or nav items related to those websites" and unanswered questions.
+
+       Critical : The new article length should be same or less than the original article.Ensure that the returned JSON object includes all original fields.
   `
 
   const openai = new OpenAI({
@@ -368,6 +398,7 @@ const processExtractedNews = async (news, category) => {
       })
 
       let res = JSON.parse(output.choices[0].message.content)
+
       res = {
         url: res.url || newsItem.url,
         dateTime: res.dateTime || newsItem.publish_date,
@@ -382,17 +413,29 @@ const processExtractedNews = async (news, category) => {
         category: res.category || category,
       }
 
-      if (res.mainText.length > 2500) {
+      if (res.mainText.length > 2000) {
+        let lenOfInitialOutput = res.mainText.length
+        const summarizationInstructions = `
+    You are a summarizer summarize the news between 800 chars to 1800chars. Try to retain all the important information. Right now its ${lenOfInitialOutput} chars
+    if needed - Rewrite a good title according to the content that will also help in SEO
+
+    Critical: Ensure that the returned JSON object includes :
+      {
+        title: "new title",
+        mainText: "new mainText"
+      }
+  `
         output = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           response_format: { type: 'json_object' },
           messages: [
             { role: 'system', content: summarizationInstructions },
-            { role: 'user', content: JSON.stringify(res) },
+            { role: 'user', content: res.mainText },
           ],
         })
 
-        res = JSON.parse(output.choices[0].message.content)
+        const result = JSON.parse(output.choices[0].message.content)
+
         res = {
           url: res.url || newsItem.url,
           dateTime: res.dateTime || newsItem.publish_date,
@@ -401,8 +444,8 @@ const processExtractedNews = async (news, category) => {
             (Array.isArray(newsItem.author)
               ? newsItem.author[0]
               : newsItem.author),
-          title: res.title || decodedTitle,
-          mainText: res.mainText || decodedText,
+          title: result.title || res.title || decodedTitle,
+          mainText: result.mainText || decodedText,
           imgURL: res.imgURL || [newsItem.image],
           category: res.category || category,
         }
@@ -431,14 +474,17 @@ const processExtractedNews = async (news, category) => {
       const newArticle = new Article(res)
       await newArticle.save()
       hindiConverter(newArticle._id.toString())
-        .then(() =>
+        .then(() => {
           generateHighlightForArticle({
             articleId: newArticle._id.toString(),
             lang: 'hi',
           }).catch(error => {
             console.error('Generation failed:', error)
-          }),
-        )
+          })
+          generateKeywordsAndDescription(newArticle._id.toString()).catch(
+            error => console.error('Generation failed:', error),
+          )
+        })
         .catch(error => {
           console.error('Hindi conversion failed:', error)
         })
@@ -446,15 +492,9 @@ const processExtractedNews = async (news, category) => {
       generateHighlightForArticle({
         articleId: newArticle._id.toString(),
         lang: 'en',
+      }).catch(error => {
+        console.error('Generation failed:', error)
       })
-        .then(() => {
-          generateKeywordsAndDescription(newArticle._id.toString()).catch(
-            error => console.error('Generation failed:', error),
-          )
-        })
-        .catch(error => {
-          console.error('Generation failed:', error)
-        })
       processedOutput.push(newArticle)
     } catch (error) {
       console.error(

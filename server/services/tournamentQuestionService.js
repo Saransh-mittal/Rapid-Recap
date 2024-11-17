@@ -41,7 +41,7 @@ c) Mark Zuckerberg
 d) Tim Berners-Lee
 Correct answer: d) Tim Berners-Lee
 
-Also get the hindi translated version of the questions and options .If the question requires remembering numerical data, specific dates, or names(except author names and small names.), assign a higher difficulty level between 0.55 to 0.99 . Give These things higher priority while assigning difficulty. Use the following format:
+Also get the hindi translated version of the questions and options .If the question requires remembering numerical data, specific dates, names (except author names and short names), or options and question are longer to read under 10 seconds then assign a higher difficulty level between 0.55 to 0.99. Give these things higher priority while assigning difficulty. Use the following format:
 
   Article: "${textForOpenAI}"
 

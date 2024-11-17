@@ -71,8 +71,7 @@ const mailForStreakBroken = async () => {
     })
     const transporter = await mailTransporter()
     // Translation function for specific namespace
-    const t = (key, options) =>
-      localizedI18n.t(key, { ns: 'mail.utils', ...options })
+    const today = new Date()
     //const updateProgress = progressBar(users.length);
     for (let user of users) {
       const streakBrokenDays = await streakBrokenDaysCalculator(user._id)
@@ -80,6 +79,11 @@ const mailForStreakBroken = async () => {
       const articlesForMail = await getTopThreeRecommendedArticles(
         user._id.toString(),
       )
+      const localizedI18n = i18n.cloneInstance({ initImmediate: false })
+      const t = (key, options) =>
+        localizedI18n.t(key, { ns: 'mail.utils', ...options })
+      // Switch to user's language
+      await localizedI18n.changeLanguage(user.userLanguage)
       if (streakBrokenDays === 2) {
         let remainingTimeBeforeRevival = null
         if (user.streak >= 5) {
@@ -98,10 +102,6 @@ const mailForStreakBroken = async () => {
           }
           await user.save()
         }
-        const localizedI18n = i18n.cloneInstance()
-
-        // Switch to user's language
-        await localizedI18n.changeLanguage(user.userLanguage)
 
         await sendNotification({
           userId: user._id,

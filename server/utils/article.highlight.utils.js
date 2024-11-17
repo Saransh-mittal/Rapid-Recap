@@ -44,6 +44,7 @@ const generateHighlightForArticle = async ({ articleId, lang = 'en' }) => {
          - Maintain original capitalization
          - Include technical or domain-specific terms
          - Include uncommon or specialized vocabulary or unique phrases or less known names or terms
+         - Include hard vocabulary or terms that may be unfamiliar to readers
          - Copy phrases exactly as written
          - Do not modify case or punctuation
          - Verify each term exists exactly in the text

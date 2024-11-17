@@ -139,7 +139,7 @@ Instructions:
 6. Double-check that the correct answer and explanation are consistent with each other and the article's content.
 7. Ensure all questions are derived from the provided text.
 8. Assign a difficulty level between 0.01 and 0.99 for each question (with two decimal accuracy). This field is mandatory.
-9. If the question requires remembering numerical data, specific dates, or names (except author names and short names), assign a higher difficulty level between 0.55 to 0.99. Give these things higher priority while assigning difficulty.
+9. If the question requires remembering numerical data, specific dates, names (except author names and short names), or options and question are longer to read under 10 seconds then assign a higher difficulty level between 0.55 to 0.99. Give these things higher priority while assigning difficulty.
 10. Evaluate the article's overall difficulty considering factors such as vocabulary complexity, sentence structure, clarity, coherence, information density, length, and reader engagement. If the article involves a significant amount of numerical or name-based information, assign a higher overall difficulty rating.
 11. Provide an overall difficulty rating between 0.01 and 0.99 (with two decimal accuracy).
 12. Return the response in the following JSON format:
@@ -306,7 +306,7 @@ const generateQuestionsForHindiQuiz = async ({
 7. दिए गए लेख के बाहर कुछ भी नहीं होना चाहिए (महत्वपूर्ण)।
 8. प्रत्येक प्रश्न अद्वितीय होना चाहिए।
 9. प्रत्येक प्रश्न को 0 से 1 के बीच एक कठिनाई स्तर दें (यह 0 या 1 नहीं हो सकता, यह 0 से 1 के बीच दशमलव में होना चाहिए (दो दशमलव सटीकता के साथ))। **यह फ़ील्ड अनिवार्य है**।
-10. यदि प्रश्न में संख्यात्मक डेटा, विशिष्ट तिथियों, या नामों (लेखक के नाम और छोटे नामों को छोड़कर) को याद रखने की आवश्यकता है, तो 0.55 से 0.99 के बीच एक उच्च कठिनाई स्तर असाइन करें। कठिनाई असाइन करते समय इन चीजों को उच्च प्राथमिकता दें।
+10. यदि प्रश्न में संख्यात्मक डेटा, विशिष्ट तिथियों, नामों (लेखक के नाम और छोटे नामों को छोड़कर) को याद रखने की आवश्यकता हो, या यदि विकल्प और प्रश्न को पढ़ने में 10 सेकंड से अधिक समय लगता है, तो कठिनाई स्तर को 0.55 से 0.99 के बीच अधिक निर्धारित करें। कठिनाई निर्धारित करते समय इन बातों को उच्च प्राथमिकता दें।
 11. लेख के समग्र कठिनाई स्तर का मूल्यांकन करें, जिसमें शब्दावली की जटिलता, वाक्य संरचना, अवधारणात्मक कठिनाई, विश्लेषण की गहराई, आवश्यक पृष्ठभूमि ज्ञान, स्पष्टता और सुसंगतता, सूचना की सघनता, भाषा शैली, लेख की लंबाई और पाठक की रुचि जैसे कारकों पर विचार करें। प्रत्येक मानदंड का मूल्यांकन करके लेख की कठिनाई रेटिंग 0 से 1 के पैमाने पर निर्धारित करें, जहां 0 कम कठिनाई और 1 उच्च कठिनाई का प्रतिनिधित्व करता है। इन मूल्यांकनों को समेकित करके एक समग्र कठिनाई स्तर निकालें जो लेख की जटिलता और विभिन्न प्रवीणता स्तरों के पाठकों के लिए उपयुक्तता को दर्शाता हो (यह 0 या 1 नहीं हो सकता, यह 0 से 1 के बीच दशमलव में होना चाहिए (दो दशमलव सटीकता के साथ))। **यह फ़ील्ड अनिवार्य है**।
 12. सही उत्तरों को विकल्पों में निम्नलिखित संभावनाओं के साथ वितरित करें:
     - विकल्प 'd': 40% संभावना
@@ -699,7 +699,7 @@ const generateCategoryQuiz = async ({
   return questions
 }
 
-const BASELINE_TIME_PER_QUESTION = 10 // seconds
+const BASELINE_TIME_PER_QUESTION = 15 // seconds
 const ALL_CORRECT_BONUS = 1.2 // 20% bonus for all correct
 const ONE_WRONG_BONUS = 1.1 // 10% bonus for only one wrong
 

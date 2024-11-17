@@ -125,27 +125,31 @@ const highlightKeywords = (
   stableRef,
 ) => {
   const { words: highlightedWords } = React.useContext(HighlightedWordsContext)
-  const processNode = node => {
-    if (React.isValidElement(node)) {
-      return React.cloneElement(node, {
-        children: processNode(node.props.children),
-      })
+
+  const processNode = React.useMemo(() => {
+    const process = node => {
+      if (React.isValidElement(node)) {
+        return React.cloneElement(node, {
+          children: process(node.props.children),
+        })
+      }
+      if (Array.isArray(node)) {
+        return node.map((item, index) => process(item))
+      }
+      if (typeof node === 'string') {
+        return applyDictionaryHighlights(
+          node,
+          dictionary,
+          onWordHover,
+          closeTooltip,
+          highlightedWords, // Create new Set to avoid mutation of context
+          stableRef,
+        )
+      }
+      return node
     }
-    if (Array.isArray(node)) {
-      return node.map((item, index) => processNode(item))
-    }
-    if (typeof node === 'string') {
-      return applyDictionaryHighlights(
-        node,
-        dictionary,
-        onWordHover,
-        closeTooltip,
-        highlightedWords,
-        stableRef,
-      )
-    }
-    return node
-  }
+    return process
+  }, [dictionary, onWordHover, closeTooltip, stableRef]) // Exclude highlightedWords
 
   return processNode(content)
 }

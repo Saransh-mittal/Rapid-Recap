@@ -199,7 +199,7 @@ const Article = () => {
       setArticleLoading(false)
       setLoadingRelatedArticles(prev => ({ ...prev, [id]: false }))
     }
-  }, [id, toast, loginCheckStatus, user, dispatch])
+  }, [id, toast, loginCheckStatus, user?.userLanguage, dispatch])
 
   const isQuizGiven = useCallback(async () => {
     const userId = user?._id
@@ -222,7 +222,7 @@ const Article = () => {
     } finally {
       setIsQuizGivenLoading(false)
     }
-  }, [id, user, givenQuiz])
+  }, [id, user?._id, givenQuiz])
 
   const checkOnGoingQuiz = useCallback(async () => {
     try {
@@ -453,7 +453,7 @@ const Article = () => {
                 i18n={i18n}
               />
             </Grid>
-            <PremiumCTA readProgress={readProgress} />
+            {!isAuthenticated && <PremiumCTA readProgress={readProgress} />}
             <ArticleFooter />
           </article>
         </Flex>
