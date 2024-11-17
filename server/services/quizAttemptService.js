@@ -25,6 +25,20 @@ const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
 const i18n = require('i18next')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 
+const hasStreakSurgeNotificationToday = async userId => {
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+
+  const notification = await ApplicationUpdates.findOne({
+    userId: userId,
+    type: 'applicationUpdate',
+    title: { $regex: /Streak Surge/, $options: 'i' },
+    createdAt: { $gte: today },
+  })
+
+  return !!notification
+}
+
 const saveQuizAttempt = async (
   userId,
   articleId,
@@ -98,16 +112,21 @@ const saveQuizAttempt = async (
     RQM_score = Math.ceil(RQM_score * 1.5)
     boosted = true
 
-    const notificationTitle = localizedI18n.t('Streak Surge day!')
-    const notificationMainText = streakSurgeTemplate(user.streak)
+    // Check if notification has already been sent today
+    const hasNotification = await hasStreakSurgeNotificationToday(userId)
 
-    const newNotification = new ApplicationUpdates({
-      title: notificationTitle,
-      mainText: notificationMainText,
-      userId: userId,
-      type: 'applicationUpdate',
-    })
-    await newNotification.save()
+    if (!hasNotification) {
+      const notificationTitle = localizedI18n.t('Streak Surge day!')
+      const notificationMainText = streakSurgeTemplate(user.streak)
+
+      const newNotification = new ApplicationUpdates({
+        title: notificationTitle,
+        mainText: notificationMainText,
+        userId: userId,
+        type: 'applicationUpdate',
+      })
+      await newNotification.save()
+    }
   }
 
   emitProgress('calculateRQM', 100)
