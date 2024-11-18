@@ -36,7 +36,9 @@ const XPLevelModal = React.lazy(() =>
 const Quiz = React.lazy(() => import('./screens/Quiz.jsx'))
 
 const NotificationModal = React.lazy(() =>
-  import('./components/Header-Footer/Inbox/NotificationModal.jsx'),
+  import(
+    './components/Header-Footer/modernNavbarComponents/modals/NotificationModal.jsx'
+  ),
 )
 const UpgradeModal = React.lazy(() =>
   import('./components/homeComponents/UpgradeModal'),
@@ -295,6 +297,7 @@ const App = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       dispatch(setTaskProgress({ task: 'fetchUser', progress: 50 }))
+      dispatch(setLoginCheckStatus('pending'))
       try {
         const response = await axios.get(`/api/user/loginCheck`)
         if (response.status === 201) {
@@ -448,7 +451,7 @@ const App = () => {
         {showNavbar && (
           <Suspense fallback={null}>
             {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
-            <ModernNavbar />
+            <ModernNavbar onNavbarLoad={handleNavbarLoad} />
           </Suspense>
         )}
         <Box

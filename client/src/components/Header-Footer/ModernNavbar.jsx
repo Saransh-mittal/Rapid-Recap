@@ -1,32 +1,29 @@
 // ModernNavbar.js
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  Badge,
   Box,
   Button,
   Flex,
   HStack,
-  Image,
-  Text,
+  useDisclosure,
   useMediaQuery,
+  useToast,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  Brain,
-  Flame,
-  Star,
-  Search,
-  MessageCircle,
-  Bell,
-  Menu,
-} from 'lucide-react'
+import { Brain, Star, Search, MessageCircle, Bell, Menu } from 'lucide-react'
 import StatItem from './modernNavbarComponents/StatItem'
 import { IconButton } from './modernNavbarComponents/IconButton'
 import { findSocietyAndCircle } from '../../utils/helper.utils'
 import { useNavbar } from '../../contextAPI/NavbarContext'
 import {
+  fetchAppUpdates,
   fetchDailyStreak,
+  logoutApp,
+  resetAllState,
+  resetLoadingFlags,
   setIsNotifDrawerOpen,
   setIsSigninOpen,
   setShowDailyStreakModal,
@@ -38,18 +35,29 @@ import Navigation from './modernNavbarComponents/Navigation'
 import ProfileMenu from './modernNavbarComponents/ProfileMenu'
 import StreakIcon, { getStreakColor } from './modernNavbarComponents/StreakIcon'
 import NavbarModalManager from './modernNavbarComponents/NavbarModalManager'
+import axios from 'axios'
+import { logoutAuth } from '../../redux/authSlice'
+import i18n from 'i18next'
 
 const MotionBox = motion(Box)
-const MotionFlex = motion(Flex)
 
-const ModernNavbar = () => {
+const ModernNavbar = ({ onNavbarLoad }) => {
   const dispatch = useDispatch()
   const location = useLocation()
   const navigate = useNavigate()
+  const toast = useToast()
   const [isMobile] = useMediaQuery('(max-width: 992px)')
   const { isMenuOpen, setIsMenuOpen } = useNavbar()
-
-  const { isAuthenticated, user } = useSelector(state => state.auth)
+  const {
+    isOpen: isOpenUserSearch,
+    onOpen: onOpenUserSearch,
+    onClose: onCloseUserSearch,
+  } = useDisclosure()
+  const [notifyCont, setNotifyCnt] = useState(0)
+  const { isAuthenticated, user, loginCheckStatus } = useSelector(
+    state => state.auth,
+  )
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { level } = user ? user : {}
   const {
     updates,
@@ -58,6 +66,9 @@ const ModernNavbar = () => {
     isBoosted,
     streak,
     streakLoading,
+    updatesLoading,
+    updatesFetched,
+    streakFetched,
   } = useSelector(state => state.app)
 
   const streakColor = streak ? getStreakColor(streak) : '#FF5733'
@@ -83,19 +94,76 @@ const ModernNavbar = () => {
     [navigate, setIsMenuOpen],
   )
 
-  const handleNotificationClick = useCallback(() => {
-    dispatch(setIsNotifDrawerOpen(true))
-  }, [dispatch])
+  const handleLogout = useCallback(async () => {
+    setIsLoggingOut(true)
+    try {
+      const response = await axios.post('/api/user/logout')
+      if (response.status === 201) {
+        await i18n.changeLanguage('en')
+        dispatch(setIsNotifDrawerOpen(false))
 
-  const checkStreak = useCallback(() => {
+        setIsMenuOpen(false)
+        localStorage.removeItem('token')
+        localStorage.removeItem('role')
+
+        dispatch(logoutAuth())
+        dispatch(logoutApp())
+        dispatch(resetLoadingFlags())
+        dispatch(resetAllState())
+        toast({
+          title: 'Logout Successful',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+
+        navigate('/')
+      } else {
+        throw new Error('Logout Failed')
+      }
+    } catch (error) {
+      toast({
+        title: 'Logout Failed',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+      console.error(error.message)
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }, [dispatch, navigate, toast])
+
+  const checkStreakAndFetchUpdates = useCallback(() => {
+    if (!updatesLoading && loginCheckStatus === 'fulfilled') {
+      dispatch(fetchAppUpdates())
+    }
     if (!streakLoading) {
       dispatch(fetchDailyStreak())
     }
-  }, [streakLoading, user, dispatch])
+  }, [streakLoading, loginCheckStatus, dispatch])
 
   useEffect(() => {
-    checkStreak()
-  }, [user, dispatch])
+    checkStreakAndFetchUpdates()
+  }, [loginCheckStatus, dispatch])
+  useEffect(() => {
+    if (updates?.length === 0) return
+    let count = 0
+
+    updates?.forEach(update => {
+      if (!update.read) {
+        count++
+      }
+    })
+    setNotifyCnt(count)
+  }, [updates])
+  useEffect(() => {
+    if (updatesFetched && streakFetched) {
+      onNavbarLoad()
+    }
+  }, [updatesFetched, streakFetched, onNavbarLoad])
 
   const renderNavContent = () => {
     if (!isAuthenticated) {
@@ -103,6 +171,7 @@ const ModernNavbar = () => {
         <Button
           onClick={() => dispatch(setIsSigninOpen(true))}
           colorScheme="purple"
+          display={isMobile ? 'none' : 'block'}
         >
           Get Started
         </Button>
@@ -134,7 +203,7 @@ const ModernNavbar = () => {
         <HStack spacing={5} display={isMobile ? 'none' : 'flex'}>
           <IconButton
             icon={<Search size={20} />}
-            onClick={() => navigate('/search')}
+            onClick={() => onOpenUserSearch()}
           />
           <IconButton
             icon={<MessageCircle size={20} />}
@@ -142,16 +211,40 @@ const ModernNavbar = () => {
             notificationCount={notification?.length}
             onClick={() => navigate('/chats')}
           />
-          <IconButton
-            icon={<Bell size={20} />}
-            hasNotification={unreadFriendRequests > 0}
-            notificationCount={updates?.filter(u => !u.read).length}
-            onClick={handleNotificationClick}
-          />
+          <Box position={'relative'}>
+            {notifyCont > 0 && (
+              <Badge
+                borderRadius="50%"
+                h={'15px'}
+                w={'15px'}
+                display={'flex'}
+                justifyContent={'center'}
+                alignItems={'center'}
+                backgroundColor="red"
+                color="white"
+                fontSize="sm"
+                position="absolute"
+                top="-10px"
+                right="-10px"
+              >
+                {notifyCont}
+              </Badge>
+            )}
+            <IconButton
+              icon={<Bell size={20} />}
+              hasNotification={unreadFriendRequests > 0}
+              notificationCount={updates?.filter(u => !u.read).length}
+              onClick={() => dispatch(setIsNotifDrawerOpen(true))}
+            />
+          </Box>
         </HStack>
 
         <Box display={isMobile ? 'none' : 'flex'}>
-          <ProfileMenu user={user} />
+          <ProfileMenu
+            user={user}
+            handleLogout={handleLogout}
+            isLoggingOut={isLoggingOut}
+          />
         </Box>
       </Flex>
     )
@@ -181,7 +274,10 @@ const ModernNavbar = () => {
         justify={'space-between'}
         gap={4}
       >
-        <Logo onNavigate={() => handleNavigation('/')} />
+        <Logo
+          onNavigate={() => handleNavigation('/')}
+          isAuthenticated={isAuthenticated}
+        />
 
         {!isMobile && (
           <Navigation
@@ -193,16 +289,35 @@ const ModernNavbar = () => {
 
         {renderNavContent()}
         {isMobile && (
-          <IconButton
-            icon={<Menu size={24} />}
-            onClick={() => setIsMenuOpen(true)}
-            _hover={{ color: 'white' }}
-          />
+          <Box position="relative">
+            {(unreadFriendRequests > 0 ||
+              (Array.isArray(notification) && notification.length > 0) ||
+              notifyCont !== 0) && (
+              <Box
+                h="8px"
+                w="8px"
+                bg={'red'}
+                borderRadius={'50%'}
+                position={'absolute'}
+                right={'-0.3rem'}
+                top={'-0.3rem'}
+                zIndex={2}
+              />
+            )}
+            <IconButton
+              icon={<Menu size={24} />}
+              onClick={() => setIsMenuOpen(true)}
+              _hover={{ color: 'white' }}
+            />
+          </Box>
         )}
       </Flex>
       <NavbarModalManager
         isHamburgerOpen={isMenuOpen}
         setIsHamburgerOpen={setIsMenuOpen}
+        isOpenUserSearch={isOpenUserSearch}
+        onCloseUserSearch={onCloseUserSearch}
+        handleLogout={handleLogout}
       />
     </MotionBox>
   )

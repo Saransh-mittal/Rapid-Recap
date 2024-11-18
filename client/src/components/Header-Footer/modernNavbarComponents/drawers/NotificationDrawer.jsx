@@ -200,7 +200,7 @@ const ConfirmationModal = React.memo(
 const NotificationDrawer = ({
   setIsDrawerOpen,
   setIsModalOpen,
-
+  setSelectedNotification,
   setIsHamburgerOpen,
 }) => {
   const { t } = useTranslation('NotificationDrawer')
@@ -259,7 +259,7 @@ const NotificationDrawer = ({
   const handleNotificationClick = useCallback(
     notification => {
       playClick()
-
+      setSelectedNotification(notification)
       setIsModalOpen(true)
       setIsDrawerOpen(false)
     },
@@ -290,7 +290,7 @@ const NotificationDrawer = ({
         await apiCall(`/api/user/readUpdates?updateId=${updateId}`)
         dispatch(
           setUpdates(
-            updates.map(update =>
+            updates?.map(update =>
               update._id === updateId ? { ...update, read: true } : update,
             ),
           ),
@@ -311,7 +311,7 @@ const NotificationDrawer = ({
       )
       dispatch(
         setUpdates(
-          updates.filter(
+          updates?.filter(
             update => update._id !== modalState.notificationToDelete._id,
           ),
         ),
@@ -388,7 +388,6 @@ const NotificationDrawer = ({
           borderLeft="1px solid"
           borderColor="whiteAlpha.100"
           transform={drawerMounted ? 'translateX(0)' : 'translateX(100%)'}
-          transition="transform 0.3s ease-in-out"
         >
           <DrawerCloseButton
             color="whiteAlpha.700"
@@ -406,7 +405,7 @@ const NotificationDrawer = ({
               >
                 {t('inbox')}
               </Heading>
-              {updates.length > 0 && (
+              {updates?.length > 0 && (
                 <Button
                   leftIcon={<DeleteIcon />}
                   variant="outline"
@@ -428,13 +427,13 @@ const NotificationDrawer = ({
           </DrawerHeader>
 
           <DrawerBody p={0} ref={notificationListRef}>
-            {isLoading && !updates.length && (
+            {isLoading && !updates?.length && (
               <Flex justify="center" align="center" h="100px">
                 <Spinner color="purple.400" />
               </Flex>
             )}
 
-            {!isLoading && !updates.length ? (
+            {!isLoading && !updates?.length ? (
               <Flex
                 direction="column"
                 align="center"
@@ -454,20 +453,21 @@ const NotificationDrawer = ({
                 spacing={0}
                 divider={<Divider borderColor="whiteAlpha.50" />}
               >
-                {updates.map(update => (
-                  <NotificationItem
-                    key={update._id}
-                    update={update}
-                    onNotificationClick={notification => {
-                      setReadUpdate(notification._id)
-                      handleNotificationClick(notification)
-                    }}
-                    onDeleteClick={handleDeleteClick}
-                    isLoading={isLoading}
-                    notificationToDelete={modalState.notificationToDelete}
-                    t={t}
-                  />
-                ))}
+                {updates &&
+                  updates?.map(update => (
+                    <NotificationItem
+                      key={update._id}
+                      update={update}
+                      onNotificationClick={notification => {
+                        setReadUpdate(notification._id)
+                        handleNotificationClick(notification)
+                      }}
+                      onDeleteClick={handleDeleteClick}
+                      isLoading={isLoading}
+                      notificationToDelete={modalState.notificationToDelete}
+                      t={t}
+                    />
+                  ))}
               </VStack>
             )}
           </DrawerBody>

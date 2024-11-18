@@ -12,7 +12,6 @@ import {
   DrawerHeader,
   DrawerOverlay,
   Text,
-  Tooltip,
   UnorderedList,
   useDisclosure,
   useToast,
@@ -20,14 +19,15 @@ import {
   useColorModeValue,
   Spinner,
 } from '@chakra-ui/react'
-import { LockIcon, SearchIcon } from '@chakra-ui/icons'
+import { SearchIcon } from '@chakra-ui/icons'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import { ChatState } from '../../../../contextAPI/ChatProvider'
 import Footer from '../../Footer'
 import FixedBackground from '../../../miscellaneous/FixedBackground'
-
+import { ChevronRight } from 'lucide-react'
+import { motion } from 'framer-motion'
 const LogoutButton = lazy(() => import('../LogoutButton'))
 const GetStarted = lazy(() => import('../GetStarted'))
 const Logo = lazy(() => import('../Logo'))
@@ -39,7 +39,7 @@ const FaMessenger = lazy(() => import('../../../../assets/svg/FaMessenger'))
 const UserFriendsSVG = lazy(() =>
   import('../../../../assets/svg/UserFriendsSVG'),
 )
-
+const MotionChevron = motion(ChevronRight)
 const HamburgerDrawer = ({
   isOpen,
   onClose,
@@ -53,7 +53,7 @@ const HamburgerDrawer = ({
 }) => {
   const { t } = useTranslation('HamburgerModal')
   const toast = useToast()
-  const { user, isAdmin, isAuthenticated } = useSelector(state => state.auth)
+  const { user, isAuthenticated } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
 
   const chatState = ChatState()
@@ -88,57 +88,73 @@ const HamburgerDrawer = ({
     onOpenUserSearch()
   }, [onOpenUserSearch])
 
-  const showDashboard = isAdmin && isAuthenticated && user
+  const showDashboard = isAuthenticated && user && user.role === 'admin'
   const memoizedNavItems = useMemo(() => {
     return navItems.map((item, index) => {
+      const isLinkActive = window.location.pathname.includes(
+        item.path.toLocaleLowerCase(),
+      )
+
       if (item.label === 'Dashboard' && !showDashboard) return null
       return (
         <ListItem
+          position="relative"
           className="nav-item"
           key={index}
           onClick={onClose}
-          display={'flex'}
-          justifyContent={'center'}
-          alignItems={'center'}
-          gap={'0.25rem'}
-          color={'white'}
-          textTransform={'uppercase'}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          gap="0.25rem"
+          textTransform="uppercase"
+          fontWeight={isLinkActive ? '600' : '500'}
+          color={isLinkActive ? 'white' : 'whiteAlpha.800'}
+          sx={{
+            '&:hover .nav-arrow': {
+              opacity: isLinkActive ? 1 : 0.5,
+              transform: 'translateX(0)',
+            },
+          }}
         >
-          <Tooltip
-            label={t('leaderboardLocked')}
-            isDisabled={!(notLogined && item.label === 'Leaderboard')}
-            placement="bottom"
-            hasArrow
+          {/* Animated Arrow Indicator */}
+          <Box
+            position="absolute"
+            left="-24px"
+            height="100%"
+            display="flex"
+            alignItems="center"
+            pointerEvents="none"
           >
-            <NavLink
-              to={item.path}
-              className={`nav-link ${
-                notLogined && item.label === 'Leaderboard' ? 'locked' : ''
-              }`}
-              onClick={e =>
-                notLogined && item.label === 'Leaderboard'
-                  ? e.preventDefault()
-                  : null
-              }
-              ref={ref => (navLinkRefs.current[index] = ref)}
-            >
-              {item.label}
-            </NavLink>
-          </Tooltip>
-          {notLogined && item.label === 'Leaderboard' && <LockIcon />}
+            <MotionChevron
+              className="nav-arrow"
+              size={16}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{
+                opacity: isLinkActive ? 1 : 0,
+                x: isLinkActive ? 0 : -10,
+              }}
+              transition={{
+                duration: 0.3,
+                ease: 'easeOut',
+              }}
+              style={{
+                color: 'white',
+                filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.3))',
+              }}
+            />
+          </Box>
+
+          <NavLink
+            to={item.path}
+            className={`nav-link`}
+            ref={ref => (navLinkRefs.current[index] = ref)}
+          >
+            {item.label}
+          </NavLink>
         </ListItem>
       )
     })
-  }, [
-    navItems,
-    notLogined,
-    onClose,
-    navLinkRefs,
-    isAdmin,
-    isAuthenticated,
-    user,
-    t,
-  ])
+  }, [navItems, notLogined, onClose, navLinkRefs, isAuthenticated, user, t])
 
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="full">
@@ -152,7 +168,13 @@ const HamburgerDrawer = ({
           display={'flex'}
           justifyContent={'space-between'}
         >
-          <Logo isHamburgerOpen={true} />
+          <Logo
+            isHamburgerOpen={true}
+            onNavigate={() => {
+              navigate('/')
+              onClose()
+            }}
+          />
           <DrawerCloseButton bg={'white'} color={'black'} size={'lg'} />
         </DrawerHeader>
         <DrawerBody p={0} w={'100%'} zIndex={1}>

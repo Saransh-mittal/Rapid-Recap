@@ -33,6 +33,7 @@ import FillEyeInvisible from '../assets/svg/FillEyeInvisible'
 import FillEyeVisible from '../assets/svg/FillEyeVisible'
 import {
   setForgotPassword,
+  setLoginCheckStatus,
   setUser,
   verifyAdminStatus,
 } from '../redux/authSlice'
@@ -148,6 +149,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
   const handleSubmit = async e => {
     e.preventDefault()
     playClick()
+    dispatchRedux(setLoginCheckStatus('pending'))
     try {
       setLoad({ submitLoad: true, forgotLoad: false })
       const response = await axios.post(`/api/user/login`, {
@@ -203,6 +205,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
       console.error(error)
       console.log(error.response.data.error)
     } finally {
+      dispatchRedux(setLoginCheckStatus('fulfilled'))
       setLoad({ submitLoad: false, forgotLoad: false })
     }
   }
@@ -416,6 +419,7 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                               ...prevData,
                               credentialResponse,
                             }))
+                            dispatchRedux(setLoginCheckStatus('pending'))
                             try {
                               const response = await axios.post(
                                 '/api/user/handleGoogleLogin',
@@ -446,6 +450,8 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                                 isClosable: true,
                                 position: 'top',
                               })
+                            } finally {
+                              dispatchRedux(setLoginCheckStatus('fulfilled'))
                             }
                           }}
                           onError={() => {

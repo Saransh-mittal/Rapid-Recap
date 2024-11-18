@@ -1,5 +1,5 @@
 // ProfileMenu.js
-import React, { memo, useState, useCallback } from 'react'
+import React, { memo } from 'react'
 import {
   Box,
   Image,
@@ -12,22 +12,22 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useDispatch } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { User, LogOut, Settings, HelpCircle } from 'lucide-react'
+import { User, LogOut, HelpCircle, LayoutDashboard } from 'lucide-react'
 
 const MotionBox = motion(Box)
 
 const MenuItem = memo(
-  ({ icon: Icon, label, onClick, color = 'whiteAlpha.900' }) => (
+  ({ icon: Icon, label, isHidden, onClick, color = 'whiteAlpha.900' }) => (
     <MotionBox
-      display="flex"
+      display={isHidden ? 'none' : 'flex'}
       alignItems="center"
       gap={3}
       px={4}
       py={2.5}
       cursor="pointer"
-      whileHover={{ x: 4, color: 'white' }}
+      whileHover={{ x: 4, color: '#ffffff' }}
       color={color}
       onClick={onClick}
       role="button"
@@ -40,25 +40,12 @@ const MenuItem = memo(
 
 MenuItem.displayName = 'MenuItem'
 
-const ProfileMenu = memo(({ user }) => {
-  const dispatch = useDispatch()
+const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
   const navigate = useNavigate()
   const { isOpen, onToggle, onClose } = useDisclosure()
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  const handleLogout = useCallback(async () => {
-    try {
-      setIsLoggingOut(true)
-      // Your existing logout logic here
-      await dispatch(/* your logout action */)
-      navigate('/')
-    } catch (error) {
-      console.error('Logout failed:', error)
-    } finally {
-      setIsLoggingOut(false)
-      onClose()
-    }
-  }, [dispatch, navigate, onClose])
+  const { isAuthenticated } = useSelector(state => state.auth)
+  const showDashboard = isAuthenticated && user && user.role === 'admin'
 
   const menuItems = [
     {
@@ -70,18 +57,19 @@ const ProfileMenu = memo(({ user }) => {
       },
     },
     {
-      icon: Settings,
-      label: 'Settings',
+      icon: LayoutDashboard,
+      label: 'Dashboard',
       onClick: () => {
-        navigate('/settings')
+        navigate('/dashboard')
         onClose()
       },
+      isHidden: !showDashboard,
     },
     {
       icon: HelpCircle,
       label: 'Help',
       onClick: () => {
-        navigate('/help')
+        navigate('/contact')
         onClose()
       },
     },
@@ -135,7 +123,7 @@ const ProfileMenu = memo(({ user }) => {
         border="1px solid"
         borderColor="whiteAlpha.100"
         borderRadius="xl"
-        width="200px"
+        width="fit-content"
         overflow="hidden"
       >
         <PopoverBody p={0}>

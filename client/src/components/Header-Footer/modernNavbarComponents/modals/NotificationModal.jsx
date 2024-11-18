@@ -17,15 +17,16 @@ import {
   Badge,
 } from '@chakra-ui/react'
 import { BellIcon, TimeIcon } from '@chakra-ui/icons'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
+import { setUpdates } from '../../../../redux/appSlice'
 
 //SSR images
 const rr = '/images/rrlogo.webp'
 
 // Lazy load large components or sections if needed
 const LazyNotificationContent = React.lazy(() =>
-  import('./LazyNotificationContent'),
+  import('../../Inbox/LazyNotificationContent'),
 )
 
 const NotificationModal = ({
@@ -37,7 +38,8 @@ const NotificationModal = ({
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { user } = useSelector(state => state.auth)
-
+  const updates = useSelector(state => state.app.updates)
+  const dispatch = useDispatch()
   useEffect(() => {
     setReadUpdate()
     onOpen()
@@ -48,6 +50,16 @@ const NotificationModal = ({
     try {
       await axios.put(
         `/api/user/readUpdates?updateId=${selectedNotificationId}`,
+      )
+
+      dispatch(
+        setUpdates(
+          updates.map(update =>
+            update._id === selectedNotificationId
+              ? { ...update, read: true }
+              : update,
+          ),
+        ),
       )
     } catch (error) {
       console.log(error)
