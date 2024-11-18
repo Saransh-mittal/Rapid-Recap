@@ -264,7 +264,9 @@ const ModernNavbar = ({ onNavbarLoad }) => {
       transition={{ duration: 0.3 }}
     >
       <Flex
-        bg="rgba(14, 12, 22, 0.97)"
+        bgGradient="linear(180deg, rgba(28, 20, 56, 0.95) 0%, rgba(15, 13, 21, 0.90) 100%)"
+        borderBottom="1px solid rgba(255, 255, 255, 0.08)"
+        boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
         backdropFilter="blur(8px)"
         borderRadius={isMobile ? '2xl' : 'full'}
         py={2.5}

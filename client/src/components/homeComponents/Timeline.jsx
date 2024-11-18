@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import {
+  Box,
   Flex,
   Skeleton,
   useBreakpointValue,
@@ -25,6 +26,7 @@ import { useTranslation } from 'react-i18next'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
 import { useNavbar } from '../../contextAPI/NavbarContext'
 import Categories from './Categories'
+import ModernCategories from './ModernCategories'
 
 //SSR images
 const rrImage = '/images/rrlogo_HD.webp'
@@ -160,10 +162,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
 
   const renderSkeletons = useMemo(() => {
     return Array.from({ length: 27 }).map((_, index) => (
-      <Flex
-        mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }}
-        key={index}
-      >
+      <Flex mt={{ lg: '4rem' }} key={index}>
         <Skeleton w="xs" h={{ base: '26rem', md: 'md' }} borderRadius="2xl" />
       </Flex>
     ))
@@ -178,7 +177,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
 
   const renderCard = useCallback(
     (item, id) => (
-      <Flex mt={{ base: '6rem', md: '5rem', lg: '4rem', xl: '3rem' }} key={id}>
+      <Flex mt={{ lg: '4rem' }} key={id}>
         <Card
           title={i18n.language === 'en' ? item?.title : item?.hindiTitle}
           urlTitle={item?.title}
@@ -204,108 +203,37 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
   )
 
   return (
-    <Flex flexDirection={'column'}>
+    <Flex flexDirection={'column'} position={'relative'}>
+      <Box
+        position="fixed"
+        top="0"
+        left="0"
+        right="0"
+        height="120px" // Adjust based on your navbar height + some extra space
+        background="linear-gradient(to bottom, rgba(14, 12, 22, 1) 0%, rgba(14, 12, 22, 0.95) 40%, rgba(14, 12, 22, 0) 100%)"
+        pointerEvents="none"
+        zIndex={998} // Just below the navbar
+        sx={{
+          maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, black 20%, transparent 100%)',
+        }}
+      />
       <Flex
         flexDirection={flexDirectionOfTimeline}
         gap="2%"
         position="relative"
         overflow="hidden"
       >
-        <Flex
-          zIndex={999}
-          ref={categoryRef}
-          transition="transform 0.3s ease-in-out"
-          p={'1rem'}
-          pb={isSearchBarVisible ? '2rem' : '1rem'}
-          width={{ base: '100%', lg: '15%' }}
-          height={{ base: 'auto', lg: '100vh' }}
-          position="fixed"
-          // backgroundColor="rgba(15, 13, 21, 0.5)"
-          // borderBottom="1px solid rgba(255, 255, 255, 0.1)"
-          // boxShadow="0 2px 4px rgba(0, 0, 0, 0.3)"
-          // style={{
-          //   borderImage:
-          //     'linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)) 1',
-          // }}
-          overflow="auto"
-          // sx={{
-          //   '::-webkit-scrollbar': {
-          //     width: '4px',
-          //     height: '10px',
-          //   },
-          //   '::-webkit-scrollbar-track': {
-          //     background: 'transparent',
-          //   },
-          //   '::-webkit-scrollbar-thumb': {
-          //     background: '#0f0d15',
-          //     borderRadius: '10px',
-          //   },
-          //   '::-webkit-scrollbar-thumb:hover': {
-          //     background: '#555',
-          //   },
-          //   scrollbarWidth: 'thin',
-          //   scrollbarColor: '#0f0d15 transparent',
-          // }}
-          bgGradient="linear(135deg, rgba(28, 20, 56, 0.85) 0%, rgba(15, 13, 21, 0.85) 100%)"
-          borderRight="1px solid rgba(255, 255, 255, 0.08)"
-          boxShadow="4px 0 30px rgba(0, 0, 0, 0.1)"
-          // overflowY="auto"
-          css={{
-            '&::-webkit-scrollbar': {
-              width: '4px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: 'rgba(15, 13, 21, 0.5)',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: 'rgba(88, 65, 175, 0.5)',
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              background: 'rgba(88, 65, 175, 0.7)',
-            },
-          }}
-        >
-          <Flex
-            w={'100%'}
-            overflow={'auto'}
-            sx={{
-              '&::-webkit-scrollbar': {
-                display: 'none',
-              },
-              scrollbarWidth: 'none',
-            }}
-          >
-            <Categories
-              trackCategoryClick={trackCategoryClick}
-              activeCategoryIndex={activeCategoryIndex}
-              activeCategory={category}
-              handleActiveCategory={handleActiveCategory}
-              categories={categories}
-              categoryRefs={categoryRefs}
-              notLoggedIn={notLoggedIn}
-            />
-          </Flex>
-          <Flex
-            width={{ base: '100%', lg: '82%' }}
-            justifyContent={'center'}
-            alignItems={'center'}
-            right={0}
-            bottom={2}
-            position={'absolute'}
-            mr={{ base: '0', lg: '1%' }}
-            px={{ base: 3, lg: 1 }}
-            zIndex={999}
-            display={{ base: 'flex', lg: 'none' }}
-            transform={
-              isSearchBarVisible ? 'translateY(0)' : 'translateY(100%)'
-            }
-            transition="opacity 0.2s ease-in-out, transform 0.2s ease-in-out"
-            opacity={isSearchBarVisible ? 1 : 0}
-          >
-            <ArticleSearchBar />
-          </Flex>
-        </Flex>
+        <ModernCategories
+          trackCategoryClick={trackCategoryClick}
+          activeCategoryIndex={activeCategoryIndex}
+          activeCategory={category}
+          handleActiveCategory={handleActiveCategory}
+          categories={categories}
+          categoryRefs={categoryRefs}
+          notLoggedIn={notLoggedIn}
+        />
 
         <Flex flexDirection={'column'} position={'relative'}>
           <Flex
@@ -313,7 +241,7 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
             justifyContent={'center'}
             alignItems={'center'}
             position={'fixed'}
-            mt={'2rem'}
+            mt={'0.25rem'}
             right={0}
             mr={{ base: '0', lg: '1%' }}
             px={{ base: 3, lg: 1 }}
@@ -329,7 +257,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
           </Flex>
           <Flex
             px={{ base: 3, lg: 1 }}
-            mt={{ base: '2rem', md: '4.5rem', lg: '1rem' }}
             ml={'auto'}
             mr={{ base: '0', lg: '1%' }}
             width={{ base: '100%', lg: '82%' }}
@@ -342,7 +269,6 @@ const Timeline = ({ data, load, hasMoreItems, setHasMoreItems, setLoad }) => {
               justifyContent={'center'}
               gap={{ base: '1rem', md: '4rem', lg: '2rem', xl: '1rem' }}
               alignItems={'center'}
-              mt={'2rem'}
             >
               {memoizedCards}
               {(load || searchLoading) && renderSkeletons}
