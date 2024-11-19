@@ -1,37 +1,26 @@
-import React, {
-  lazy,
-  Suspense,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  useRef,
-} from 'react'
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { useNavigate, useParams } from 'react-router-dom'
-import debounce from 'lodash.debounce'
 import { useToast, Box, Spinner, useDisclosure } from '@chakra-ui/react'
 import { Helmet } from 'react-helmet'
 import { useDispatch, useSelector } from 'react-redux'
 import { setPageRedux } from '../redux/uiSlice'
 import { setCategory, setItemsState } from '../redux/contentSlice'
-import throttle from 'lodash.throttle'
-import WiseWeb from '../components/Header-Footer/navbarComponents/WiseWeb'
 import { markFriendRequestsAsRead } from '../redux/appSlice'
 import i18n from 'i18next'
+import { categoryCache } from '../services/categoryCache'
 
-const Timeline = lazy(() => import('../components/homeComponents/Timeline'))
+const Timeline = React.lazy(() =>
+  import('../components/homeComponents/Timeline'),
+)
+const WiseWeb = React.lazy(() =>
+  import('../components/Header-Footer/navbarComponents/WiseWeb'),
+)
 
 const Home = () => {
   const { t } = useTranslation('Home')
-  const { isAuthenticated, user, loginCheckStatus } = useSelector(
-    state => state.auth,
-  )
-
-  const { items: stateItems, category: stateCategory } = useSelector(
-    state => state.content,
-  )
+  const { isAuthenticated, loginCheckStatus } = useSelector(state => state.auth)
   const { unreadFriendRequests } = useSelector(state => state.app)
   const { isSearching } = useSelector(state => state.articles)
   const dispatchRedux = useDispatch()
@@ -39,70 +28,80 @@ const Home = () => {
   const { category } = useParams()
   const toast = useToast()
 
-  const [items, setItems] = useState(stateItems)
+  const [items, setItems] = useState([])
   const [page, setPage] = useState(1)
   const [load, setLoad] = useState(true)
-
   const [hasMoreItems, setHasMoreItems] = useState(true)
-  const prevCategoryRef = useRef(stateCategory)
+  const loadingRef = useRef(false)
   const currentCategoryRef = useRef(category)
-  const cancelTokenSourceRef = useRef(null)
+  const initialLoadDoneRef = useRef(false)
 
   const notLoggedIn = !isAuthenticated
 
   const fetchData = useCallback(
     async (pageNum, cat) => {
-      if (loginCheckStatus === 'pending' || !hasMoreItems) return
+      if (
+        !hasMoreItems ||
+        loadingRef.current ||
+        !cat ||
+        loginCheckStatus === 'pending'
+      )
+        return
 
-      if (cancelTokenSourceRef.current) {
-        cancelTokenSourceRef.current.cancel(
-          'Operation canceled due to new request.',
-        )
-      }
-
-      cancelTokenSourceRef.current = axios.CancelToken.source()
+      loadingRef.current = true
+      setLoad(true)
 
       try {
-        const response =
-          (cat === 'all' || !cat) && !notLoggedIn
-            ? await axios.get(
-                `/api/recommendation?page=${pageNum}&pageSize=18&lang=${i18n.language}`,
-                {
-                  cancelToken: cancelTokenSourceRef.current.token,
-                },
-              )
-            : await axios.get(
-                `/api/articles?page=${pageNum}&pageSize=18&category=${
-                  notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
-                }&lang=${i18n.language}`,
-                { cancelToken: cancelTokenSourceRef.current.token },
-              )
+        // Check cache first
+        const cachedData = categoryCache.get(cat, pageNum)
+        if (cachedData && !categoryCache.isStale(cat, pageNum)) {
+          if (pageNum === 1) {
+            setItems(cachedData.data)
+            dispatchRedux(setItemsState(cachedData.data))
+          } else {
+            const updatedItems = [...items, ...cachedData.data]
+            setItems(updatedItems)
+            dispatchRedux(setItemsState(updatedItems))
+          }
 
-        if (cat !== currentCategoryRef.current) {
+          // Prefetch next page
+          if (hasMoreItems) {
+            categoryCache.prefetchCategory(cat, pageNum + 1, i18n.language)
+          }
+
+          setLoad(false)
+          loadingRef.current = false
           return
         }
 
+        const endpoint =
+          (cat === 'all' || !cat) && !notLoggedIn
+            ? `/api/recommendation?page=${pageNum}&pageSize=18&lang=${i18n.language}`
+            : `/api/articles?page=${pageNum}&pageSize=18&category=${
+                notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
+              }&lang=${i18n.language}`
+
+        const response = await axios.get(endpoint)
+
+        if (cat !== currentCategoryRef.current) return
+
         const newItems = response.data
-        if (newItems.length === 0) {
+        if (!Array.isArray(newItems) || newItems.length === 0) {
           setHasMoreItems(false)
         } else {
           if (pageNum === 1) {
             setItems(newItems)
             dispatchRedux(setItemsState(newItems))
           } else {
-            setItems(prevItems => {
-              const updatedItems = [...prevItems, ...newItems]
-              dispatchRedux(setItemsState(updatedItems))
-              return updatedItems
-            })
+            const updatedItems = [...items, ...newItems]
+            setItems(updatedItems)
+            dispatchRedux(setItemsState(updatedItems))
           }
+          categoryCache.set(cat, pageNum, newItems)
           dispatchRedux(setPageRedux(pageNum))
         }
-        setLoad(false)
       } catch (error) {
-        if (axios.isCancel(error)) {
-          console.log('Request canceled', error.message)
-        } else {
+        if (!axios.isCancel(error)) {
           console.error(error.message)
           toast({
             title: t('fetch_error'),
@@ -112,114 +111,113 @@ const Home = () => {
             position: 'top',
           })
         }
+      } finally {
+        loadingRef.current = false
+        setLoad(false)
       }
     },
-    [loginCheckStatus, hasMoreItems, notLoggedIn, dispatchRedux, toast, t],
+    [
+      loginCheckStatus,
+      hasMoreItems,
+      notLoggedIn,
+      items,
+      dispatchRedux,
+      toast,
+      t,
+    ],
   )
 
-  const handleScroll = useCallback(() => {
-    if (isSearching) return
+  useEffect(() => {
+    if (!category || loginCheckStatus !== 'fulfilled') return
+
+    const handleCategoryChange = async () => {
+      if (
+        !initialLoadDoneRef.current ||
+        currentCategoryRef.current !== category
+      ) {
+        setPage(1)
+        setItems([])
+        setHasMoreItems(true)
+        loadingRef.current = false
+        currentCategoryRef.current = category
+        dispatchRedux(setCategory(category.toLowerCase()))
+
+        if (!initialLoadDoneRef.current) {
+          initialLoadDoneRef.current = true
+        }
+
+        await fetchData(1, category)
+
+        // Prefetch adjacent categories
+        categoryCache.prefetchAdjacentCategories(category, i18n.language)
+      } else if (page > 1) {
+        await fetchData(page, category)
+      }
+    }
+
+    handleCategoryChange()
+  }, [category, page, loginCheckStatus])
+
+  useEffect(() => {
     if (
-      !notLoggedIn &&
-      window.innerHeight + document.documentElement.scrollTop + 1000 >
-        document.documentElement.scrollHeight &&
-      hasMoreItems &&
-      !load
+      loginCheckStatus === 'fulfilled' &&
+      !initialLoadDoneRef.current &&
+      category
     ) {
-      setLoad(true)
-      setPage(prevPage => prevPage + 1)
-    }
-  }, [hasMoreItems, notLoggedIn, isSearching, load])
-
-  const debouncedHandleScroll = useMemo(
-    () => debounce(handleScroll, 300),
-    [handleScroll],
-  )
-
-  const throttledHandleScroll = useMemo(
-    () => throttle(handleScroll, 300),
-    [handleScroll],
-  )
-
-  const combinedScrollHandler = useCallback(() => {
-    throttledHandleScroll()
-    debouncedHandleScroll()
-  }, [throttledHandleScroll, debouncedHandleScroll])
-
-  const {
-    isOpen: isOpenWiseWeb,
-    onOpen: onOpenWiseWeb,
-    onClose: onCloseWiseWeb,
-  } = useDisclosure()
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const wiseweb = params.get('wiseweb')
-
-    if (wiseweb) {
-      onOpenWiseWeb()
-    }
-  }, [location, onOpenWiseWeb])
-
-  useEffect(() => {
-    if (!category || category === '') {
-      navigate('/home/all')
-    }
-    window.addEventListener('scroll', combinedScrollHandler)
-
-    return () => window.removeEventListener('scroll', combinedScrollHandler)
-  }, [category, isAuthenticated, combinedScrollHandler, navigate])
-
-  useEffect(() => {
-    if (category !== prevCategoryRef.current) {
       setPage(1)
       setItems([])
       setHasMoreItems(true)
-      dispatchRedux(
-        setCategory(
-          category !== '' && category ? category.toLowerCase() : category,
-        ),
-      )
+      loadingRef.current = false
       currentCategoryRef.current = category
+      dispatchRedux(setCategory(category.toLowerCase()))
+      initialLoadDoneRef.current = true
       fetchData(1, category)
-      dispatchRedux(setPageRedux(0))
-      dispatchRedux(setItemsState([]))
-      prevCategoryRef.current = category
-      window.scrollTo(0, 0)
-    } else {
-      fetchData(page, category)
     }
-  }, [category, page, fetchData, dispatchRedux, loginCheckStatus])
+  }, [loginCheckStatus, category, fetchData, dispatchRedux])
 
-  const memoizedTimeline = useMemo(
-    () => (
-      <Timeline
-        setHasMoreItems={setHasMoreItems}
-        hasMoreItems={hasMoreItems}
-        data={items}
-        load={load}
-        setLoad={setLoad}
-      />
-    ),
-    [hasMoreItems, items, load],
-  )
+  useEffect(() => {
+    return () => {
+      initialLoadDoneRef.current = false
+      loadingRef.current = false
+      setItems([])
+      setPage(1)
+      setHasMoreItems(true)
+    }
+  }, [])
+
+  const handleLoadMore = useCallback(() => {
+    console.log('handleLoadMore')
+    if (!loadingRef.current && hasMoreItems) {
+      setPage(prev => prev + 1)
+    }
+  }, [hasMoreItems])
 
   return (
-    <Box marginTop={'4rem'} w={'100%'}>
+    <Box marginTop={'4rem'} w={'100%'} overflow={'hidden'} maxH="92vh">
       <Helmet>
         <title>{t('title')}</title>
         <meta name="description" content={t('description')} />
         <meta name="keywords" content={t('keywords')} />
-        <meta property="og:title" content={t('title')} />
-        <meta property="og:description" content={t('description')} />
       </Helmet>
-      <Suspense fallback={<Spinner />}>{memoizedTimeline}</Suspense>
-      <WiseWeb
-        isOpen={isOpenWiseWeb}
-        onClose={onCloseWiseWeb}
-        requestNotif={unreadFriendRequests > 0}
-        markRequestAsRead={() => dispatchRedux(markFriendRequestsAsRead())}
-      />
+      <React.Suspense fallback={<Spinner />}>
+        <Timeline
+          data={items}
+          load={load}
+          hasMoreItems={hasMoreItems}
+          setHasMoreItems={setHasMoreItems}
+          setLoad={setLoad}
+          onLoadMore={handleLoadMore}
+          fetchData={fetchData}
+          page={page}
+          setPage={setPage}
+        />
+        {/* <WiseWeb
+          isOpen={isOpenWiseWeb}
+          onClose={onCloseWiseWeb}
+          requestNotif={unreadFriendRequests > 0}
+          markRequestAsRead={() => dispatchRedux(markFriendRequestsAsRead())}
+        /> */}
+      </React.Suspense>
     </Box>
   )
 }

@@ -35,7 +35,8 @@ const ModernCategories = ({
 
   const renderCategory = (category, idx) => {
     if (!category) return null
-    const isActive = category.key.toLowerCase() === activeCategory.toLowerCase()
+    const isActive =
+      category?.key?.toLowerCase() === activeCategory?.toLowerCase()
     const Component = isMobile ? MobileCategory : DesktopCategory
 
     return (
@@ -132,7 +133,7 @@ const ModernCategories = ({
       top="65px"
       left={2}
       zIndex={900}
-      maxH="calc(100vh - 100px)"
+      maxH="calc(100vh - 80px)"
       overflowY="hidden"
     >
       <MotionBox
@@ -150,7 +151,7 @@ const ModernCategories = ({
         overflow="hidden"
       >
         <Box
-          maxH="calc(100vh - 120px)"
+          maxH="calc(100vh - 80px)"
           overflowY="auto"
           py={2}
           css={{

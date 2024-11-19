@@ -54,6 +54,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
     onClose: onCloseUserSearch,
   } = useDisclosure()
   const [notifyCont, setNotifyCnt] = useState(0)
+  const [scrollOpacity, setScrollOpacity] = useState(0.95)
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
     state => state.auth,
   )
@@ -164,6 +165,16 @@ const ModernNavbar = ({ onNavbarLoad }) => {
       onNavbarLoad()
     }
   }, [updatesFetched, streakFetched, onNavbarLoad])
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY
+      const newOpacity = Math.min(0.95, 0.85 + scrollPosition / 500)
+      setScrollOpacity(newOpacity)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const renderNavContent = () => {
     if (!isAuthenticated) {
@@ -263,6 +274,27 @@ const ModernNavbar = ({ onNavbarLoad }) => {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
+      {/* Add fade overlay */}
+      <Box
+        position="absolute"
+        top="-2rem" // Offset to account for the top={2} on parent
+        left="50%"
+        transform="translateX(-50%)"
+        width="100vw"
+        height="120px"
+        background={`linear-gradient(to bottom,
+          rgba(14, 12, 22, ${scrollOpacity}) 0%,
+          rgba(14, 12, 22, ${scrollOpacity * 0.8}) 40%,
+          rgba(14, 12, 22, 0) 100%)`}
+        pointerEvents="none"
+        zIndex={-1}
+        transition="background 0.2s ease-out"
+        sx={{
+          maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, black 20%, transparent 100%)',
+        }}
+      />
       <Flex
         bgGradient="linear(180deg, rgba(28, 20, 56, 0.95) 0%, rgba(15, 13, 21, 0.90) 100%)"
         borderBottom="1px solid rgba(255, 255, 255, 0.08)"
@@ -275,6 +307,21 @@ const ModernNavbar = ({ onNavbarLoad }) => {
         align="center"
         justify={'space-between'}
         gap={4}
+        position="relative"
+        _before={{
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: 'inherit',
+          bgGradient:
+            'linear(180deg, rgba(28, 20, 56, 0.95) 0%, rgba(15, 13, 21, 0.90) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+          zIndex: -1,
+        }}
       >
         <Logo
           onNavigate={() => handleNavigation('/')}

@@ -290,7 +290,7 @@ const Article = () => {
       <Flex w={'100vw'}>
         <Flex
           className="article-page"
-          marginTop={'4.5rem'}
+          marginTop={'2.75rem'}
           flexDirection={'column'}
           w={'100vw'}
           overflow={'hidden'}

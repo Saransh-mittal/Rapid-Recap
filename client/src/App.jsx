@@ -308,6 +308,7 @@ const App = () => {
         console.log(error)
       } finally {
         dispatch(setTaskProgress({ task: 'fetchUser', progress: 100 }))
+
         dispatch(setLoginCheckStatus('fulfilled'))
       }
     }
