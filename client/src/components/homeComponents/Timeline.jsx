@@ -13,15 +13,10 @@ import {
   searchArticles,
   setSearchTerm,
 } from '../../redux/articleSlice'
-
-import Button from '../miscellaneous/ButtonComponent'
 import VirtualizedGrid from './VirtualizedGrid'
 import ArticleSearchBar from './ArticleSearchBar'
 import ModernCategories from './ModernCategories'
-
-const GetStarted = React.lazy(() =>
-  import('../Header-Footer/navbarComponents/GetStarted'),
-)
+import FloatingActionButtons from './FloatingActionButtons'
 
 const Timeline = ({
   data,
@@ -34,7 +29,7 @@ const Timeline = ({
   const { t } = useTranslation(['Timeline', 'formatDate'])
   const navigate = useNavigate()
   const dispatchRedux = useDispatch()
-
+  const [showGetsStarted, setShowGetStarted] = useState(false)
   const { isAuthenticated, user } = useSelector(state => state.auth)
   const { searchResults, isSearching, searchLoading, searchTerm } = useSelector(
     state => state.articles,
@@ -147,6 +142,20 @@ const Timeline = ({
 
   return (
     <Flex flexDirection={'column'} position={'relative'} overflow={'hidden'}>
+      <FloatingActionButtons
+        showClearSearch={isSearching && searchResults.length > 0}
+        showLoadMore={
+          isSearching &&
+          searchResults.length % 10 === 0 &&
+          searchResults.length !== 0
+        }
+        onClearSearch={() => dispatchRedux(clearSearch())}
+        onLoadMore={handleLoadMore}
+        t={t}
+        notLoggedIn={notLoggedIn}
+        showGetsStarted={showGetsStarted}
+      />
+
       <Flex
         flexDirection={flexDirectionOfTimeline}
         gap="2%"
@@ -193,7 +202,7 @@ const Timeline = ({
                 isSearchBarVisible ? 'translateY(0)' : 'translateY(-100%)'
               }
               transition="opacity 0.2s ease-in-out, transform 0.2s ease-in-out"
-              display={{ base: 'none', lg: 'flex' }}
+              display={'flex'}
               backdropFilter="blur(8px)"
             >
               <ArticleSearchBar />
@@ -213,60 +222,12 @@ const Timeline = ({
                 loading={load || searchLoading}
                 onLoadMore={onLoadMore}
                 hasMore={hasMoreItems}
+                setShowGetStarted={setShowGetStarted}
               />
             </Box>
           </Flex>
-
-          {/* Search Controls */}
-          <Flex
-            width={{ base: '100%', lg: '82%' }}
-            justifyContent={'center'}
-            alignItems={'center'}
-            mt={'2rem'}
-            right={0}
-            ml={'auto'}
-            px={{ base: 3, lg: 1 }}
-            zIndex={999}
-            gap={'2rem'}
-            mb={'2rem'}
-          >
-            {isSearching && searchResults.length > 0 && (
-              <Flex justifyContent="center" mt="2rem">
-                <Button onClick={() => dispatchRedux(clearSearch())}>
-                  {t('buttons.clearSearch')}
-                </Button>
-              </Flex>
-            )}
-
-            {isSearching &&
-              searchResults.length % 10 === 0 &&
-              searchResults.length !== 0 && (
-                <Flex justifyContent="center" mt="2rem">
-                  <Button onClick={handleLoadMore}>
-                    {t('buttons.loadMore')}
-                  </Button>
-                </Flex>
-              )}
-          </Flex>
         </Flex>
       </Flex>
-
-      {/* Status Messages */}
-      {notLoggedIn && (
-        <Flex
-          marginTop="2rem"
-          height="6rem"
-          width="100%"
-          color="white"
-          justifyContent="center"
-          alignItems="center"
-          borderRadius="8px"
-          padding="1rem"
-          textAlign="center"
-        >
-          <GetStarted innerText={t('messages.loginToContinue')} />
-        </Flex>
-      )}
 
       {!hasMoreItems && (user?.newAccount || user?.firstLogin) && (
         <Flex

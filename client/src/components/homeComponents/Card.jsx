@@ -187,6 +187,7 @@ const Card = React.memo(
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+            textAlign={'left'}
           >
             {title}
           </MotionHeading>

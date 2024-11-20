@@ -10,7 +10,7 @@ const InitialLoadingGrid = React.memo(
     const columns = getOptimalColumns(width)
     const cardWidth = (width - GAP * (columns + 1)) / columns
     const totalRowWidth = cardWidth * columns + GAP * (columns - 1)
-    const leftPadding = (width - totalRowWidth) / 2
+    const leftPadding = (width - totalRowWidth) / 4
     const skeletonRows = Math.ceil(SKELETON_COUNT / columns)
 
     return (

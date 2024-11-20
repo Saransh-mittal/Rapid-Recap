@@ -12,7 +12,13 @@ import InitialLoadingGrid from './VirtualizedGrid/InitialLoadingGrid'
 import { Global } from '@emotion/react'
 import { customScrollbarStyles } from './VirtualizedGrid/scrollbar-styles'
 
-const VirtualizedGrid = ({ items, loading, onLoadMore, hasMore }) => {
+const VirtualizedGrid = ({
+  items,
+  loading,
+  onLoadMore,
+  hasMore,
+  setShowGetStarted,
+}) => {
   const { i18n } = useTranslation(['Timeline', 'formatDate'])
   const getOptimalColumns = useColumnCalculation()
   const getRowData = useRowData(getOptimalColumns)
@@ -22,7 +28,6 @@ const VirtualizedGrid = ({ items, loading, onLoadMore, hasMore }) => {
     <Box
       width="100%"
       height="calc(100vh - 100px)"
-      paddingTop="24px"
       position="relative"
       className="virtualized-grid-container"
     >
@@ -69,6 +74,13 @@ const VirtualizedGrid = ({ items, loading, onLoadMore, hasMore }) => {
                     rows.length * ROW_HEIGHT - scrollOffset < ROW_HEIGHT * 5
                   ) {
                     onLoadMore()
+                  }
+
+                  if (
+                    rows.length * ROW_HEIGHT - scrollOffset <
+                    ROW_HEIGHT * 3
+                  ) {
+                    setShowGetStarted(true)
                   }
                 }}
                 overscanCount={2}

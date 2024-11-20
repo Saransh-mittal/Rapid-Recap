@@ -204,11 +204,10 @@ const Home = () => {
   }, [])
 
   const handleLoadMore = useCallback(() => {
-    console.log('handleLoadMore')
-    if (!loadingRef.current && hasMoreItems) {
+    if (!loadingRef.current && hasMoreItems && !isSearching && !notLoggedIn) {
       setPage(prev => prev + 1)
     }
-  }, [hasMoreItems])
+  }, [hasMoreItems, isSearching, notLoggedIn])
 
   return (
     <Box marginTop={'4rem'} w={'100%'} overflow={'hidden'} maxH="92vh">
