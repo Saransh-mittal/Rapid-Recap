@@ -80,7 +80,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
 
   const navItems = useMemo(
     () => [
-      { label: 'Home', path: '/home/all' },
+      { label: 'Home', path: '/home' },
       { label: 'Tournament', path: '/tournament' },
       { label: 'Leaderboard', path: '/leaderboard' },
     ],

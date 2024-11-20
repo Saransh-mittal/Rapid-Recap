@@ -71,7 +71,7 @@ const NavbarModalManager = memo(
     }
 
     const navItems = [
-      { label: 'Home', path: '/home/all' },
+      { label: 'Home', path: '/home' },
       { label: 'Dashboard', path: '/dashboard' },
       { label: 'Tournament', path: '/tournament' },
       { label: 'Leaderboard', path: '/leaderboard' },

@@ -1,114 +1,72 @@
-import React, { useCallback, useMemo } from 'react'
+import React from 'react'
 import { FixedSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import { Box, Flex, Skeleton } from '@chakra-ui/react'
+import { Box, useMediaQuery } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import { formatDate } from '../../utils/helper.utils'
 import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
-import Card from './Card'
+import { ROW_HEIGHT, DEFAULT_IMAGE } from './VirtualizedGrid/constants'
+import { useColumnCalculation, useRowData } from './VirtualizedGrid/hooks'
+import GridRow from './VirtualizedGrid/GridRow'
+import InitialLoadingGrid from './VirtualizedGrid/InitialLoadingGrid'
+import { css, Global } from '@emotion/react'
 
-const rrImage = '/images/rrlogo_HD.webp'
+// Define scrollbar styles
+const customScrollbarStyles = css`
+  .custom-scrollbar {
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+      background-color: transparent;
+    }
 
-const BREAKPOINTS = {
-  base: { width: 0, columns: 1 },
-  md: { width: 768, columns: 2 },
-  lg: { width: 1024, columns: 3 },
-}
+    &::-webkit-scrollbar-track {
+      background: rgba(30, 41, 59, 0.2);
+      border-radius: 4px;
+      margin: 2px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(
+        135deg,
+        rgba(147, 51, 234, 0.6) 0%,
+        rgba(236, 72, 153, 0.6) 100%
+      );
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      min-height: 40px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(
+        135deg,
+        rgba(147, 51, 234, 0.8) 0%,
+        rgba(236, 72, 153, 0.8) 100%
+      );
+    }
+
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(236, 72, 153, 0.6) rgba(30, 41, 59, 0.2);
+  }
+
+  @media (max-width: 991px) {
+    .custom-scrollbar {
+      &::-webkit-scrollbar {
+        width: 0;
+        display: none;
+      }
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+  }
+`
 
 const VirtualizedGrid = ({ items, loading, onLoadMore, hasMore }) => {
   const { i18n } = useTranslation(['Timeline', 'formatDate'])
-
-  const MIN_CARD_WIDTH = 320
-  const GAP = 0
-  const ROW_HEIGHT = 480
-
-  // Calculate optimal columns based on width
-  const getOptimalColumns = useCallback(width => {
-    const maxPossibleColumns = Math.floor(
-      (width + GAP) / (MIN_CARD_WIDTH + GAP),
-    )
-
-    // Find the appropriate breakpoint
-    let breakpointColumns = BREAKPOINTS.base.columns
-    Object.entries(BREAKPOINTS).forEach(([_, breakpoint]) => {
-      if (width >= breakpoint.width) {
-        breakpointColumns = breakpoint.columns
-      }
-    })
-
-    return Math.min(maxPossibleColumns, breakpointColumns)
-  }, [])
-
-  const getRowData = useCallback(
-    (items, width) => {
-      const columns = getOptimalColumns(width)
-      const rows = []
-
-      for (let i = 0; i < items.length; i += columns) {
-        rows.push({
-          items: items.slice(i, i + columns),
-          columns,
-          width,
-        })
-      }
-
-      return { rows, columns }
-    },
-    [getOptimalColumns],
-  )
-
-  const Row = useCallback(
-    ({ index, style, data }) => {
-      const { rows } = data
-      const rowData = rows[index]
-      const cardWidth =
-        (rowData.width - GAP * (rowData.columns + 1)) / rowData.columns
-
-      // Calculate total row width
-      const totalRowWidth = cardWidth * rowData.columns
-      // Calculate left padding to center the row
-      const leftPadding = (rowData.width - totalRowWidth) / 2
-
-      return (
-        <Flex
-          style={{
-            ...style,
-            left: `${leftPadding}px`, // Add left padding for centering
-            width: `${totalRowWidth}px`, // Set exact row width
-          }}
-          gap={GAP}
-          justifyContent="center"
-          alignItems="stretch"
-        >
-          {rowData.items.map(item => (
-            <Box
-              key={item._id}
-              width={`${cardWidth}px`}
-              minWidth={`${cardWidth}px`}
-              maxWidth={`${cardWidth}px`}
-              align="center"
-            >
-              <Card
-                title={i18n.language === 'en' ? item?.title : item?.hindiTitle}
-                urlTitle={item?.title}
-                image={
-                  (!blackListedImgUrls.find(url => url === item.imgURL) &&
-                    item.imgURL) ||
-                  rrImage
-                }
-                category={item?.category}
-                date={formatDate(item?.dateTime, i18n.language)}
-                readTime={item.avgReadTime}
-                id={item._id}
-                articleData={item}
-              />
-            </Box>
-          ))}
-        </Flex>
-      )
-    },
-    [i18n.language],
-  )
+  const getOptimalColumns = useColumnCalculation()
+  const getRowData = useRowData(getOptimalColumns)
+  const [isLargerThan992] = useMediaQuery('(min-width: 992px)')
 
   return (
     <Box
@@ -116,65 +74,71 @@ const VirtualizedGrid = ({ items, loading, onLoadMore, hasMore }) => {
       height="calc(100vh - 100px)"
       paddingTop="24px"
       position="relative"
+      className="virtualized-grid-container"
     >
+      <Global styles={customScrollbarStyles} />
       <AutoSizer>
         {({ height, width }) => {
-          const { rows, columns } = getRowData(items, width)
-          // Calculate loading row styles
-          const loadingRowWidth =
-            ((width - GAP * (columns + 1)) / columns) * columns
-          const loadingRowLeftPadding = (width - loadingRowWidth) / 2
+          const scrollbarWidth = isLargerThan992 ? 8 : 0
+          const effectiveWidth = width - scrollbarWidth
+
+          if (!items.length && loading) {
+            return (
+              <InitialLoadingGrid
+                width={effectiveWidth}
+                height={height}
+                getOptimalColumns={getOptimalColumns}
+              />
+            )
+          }
+
+          const { rows, columns } = getRowData(items, effectiveWidth, loading)
 
           return (
-            <List
-              height={height}
-              itemCount={rows.length + (loading ? 1 : 0)}
-              itemSize={ROW_HEIGHT}
+            <Box
               width={width}
-              itemData={{ rows, columns, width }}
-              onScroll={({ scrollOffset, scrollHeight, clientHeight }) => {
-                if (
-                  !loading &&
-                  hasMore &&
-                  rows.length * ROW_HEIGHT - scrollOffset < ROW_HEIGHT * 5
-                ) {
-                  console.log('Loading more...')
-                  onLoadMore()
-                }
+              height={height}
+              position="relative"
+              className="list-container"
+              sx={{
+                '& > div': {
+                  className: 'custom-scrollbar !important',
+                },
               }}
-              overscanCount={2}
-              style={{ overflow: 'auto' }}
             >
-              {({ index, style, data }) => {
-                if (loading && index === rows.length) {
-                  return (
-                    <Flex
-                      gap={GAP}
-                      width={`${loadingRowWidth}px`}
-                      style={{
-                        ...style,
-                        left: `${loadingRowLeftPadding}px`,
-                      }}
-                      justify="flex-start"
-                    >
-                      {Array(data.columns)
-                        .fill(null)
-                        .map((_, i) => (
-                          <Box
-                            key={`skeleton-${i}`}
-                            width={`${
-                              (width - GAP * (data.columns + 1)) / data.columns
-                            }px`}
-                          >
-                            <Skeleton height="420px" borderRadius="xl" />
-                          </Box>
-                        ))}
-                    </Flex>
-                  )
-                }
-                return <Row index={index} style={style} data={data} />
-              }}
-            </List>
+              <List
+                height={height}
+                itemCount={rows.length}
+                itemSize={ROW_HEIGHT}
+                width={width}
+                itemData={{ rows, columns, width: effectiveWidth }}
+                onScroll={({ scrollOffset }) => {
+                  if (
+                    !loading &&
+                    hasMore &&
+                    rows.length * ROW_HEIGHT - scrollOffset < ROW_HEIGHT * 5
+                  ) {
+                    onLoadMore()
+                  }
+                }}
+                overscanCount={2}
+                style={{
+                  overflow: 'overlay',
+                  scrollbarGutter: 'stable',
+                }}
+                className="custom-scrollbar"
+              >
+                {props => (
+                  <GridRow
+                    {...props}
+                    i18n={i18n}
+                    formatDate={formatDate}
+                    blackListedImgUrls={blackListedImgUrls}
+                    defaultImage={DEFAULT_IMAGE}
+                  />
+                )}
+              </List>
+            </Box>
           )
         }}
       </AutoSizer>

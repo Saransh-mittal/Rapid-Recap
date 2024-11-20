@@ -176,6 +176,24 @@ const Home = () => {
   }, [loginCheckStatus, category, fetchData, dispatchRedux])
 
   useEffect(() => {
+    const locationpathname = window.location.pathname
+
+    if (
+      isAuthenticated &&
+      locationpathname === '/home' &&
+      loginCheckStatus === 'fulfilled'
+    ) {
+      navigate('/home/all')
+    } else if (
+      !isAuthenticated &&
+      locationpathname === '/home' &&
+      loginCheckStatus === 'fulfilled'
+    ) {
+      navigate('/home/top')
+    }
+  }, [isAuthenticated, loginCheckStatus])
+
+  useEffect(() => {
     return () => {
       initialLoadDoneRef.current = false
       loadingRef.current = false
