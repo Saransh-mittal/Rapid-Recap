@@ -45,7 +45,7 @@ export const authSlice = createSlice({
       state.loginCheckStatus = action.payload
     },
     logout: () => {
-      return initialState
+      return { ...initialState, loginCheckStatus: 'fulfilled' }
     },
     setForgotPassword: (state, action) => {
       state.forgotPassword = action.payload

@@ -283,7 +283,7 @@ const Tournament = () => {
           </script>
         )}
       </Helmet>
-      <Box color="white" mt={{ base: 4, md: 8 }} minHeight="100vh">
+      <Box color="white" minHeight="100vh">
         {isLoading && <FullScreenLoadingSpinner />}
         <Container maxW="container.xl" py={16} px={0}>
           {/* <Suspense fallback={<Skeleton height="40px" />}> */}

@@ -3,9 +3,25 @@
   "home": "Home",
   "contact": "Contact Us",
   "leaderboard": "Leaderboard",
+  "dashboard": "Dashboard",
   "confirm": "Confirm Logout!!!",
   "confirmMessage": "As a guest user, your progress and account may be lost if you logout. Are you sure you want to proceed?",
   "cancel": "Cancel",
   "ConrfirmLogout": "Confirm Logout",
-  "tournament": "Tournament"
+  "tournament": "Tournament",
+  "profileMenu": {
+    "title": "Profile",
+    "dashboard": "Dashboard",
+    "leaderboard": "Leaderboard",
+    "help": "Help",
+    "leaderboardLocked": "You need to sign in to access this page",
+    "profile": {
+      "title": "Profile"
+    },
+    "getStarted": "Get Started",
+    "logout": {
+      "loading": "Logging out...",
+      "default": "Logout"
+    }
+  }
 }

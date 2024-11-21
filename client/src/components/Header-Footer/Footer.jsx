@@ -10,6 +10,7 @@ import {
   useColorModeValue,
   chakra,
   Divider,
+  Stack,
 } from '@chakra-ui/react'
 import { NavLink } from 'react-router-dom'
 import { FaInstagram, FaLinkedin } from 'react-icons/fa'
@@ -21,8 +22,8 @@ const SocialLink = chakra(Link, {
     justifyContent: 'center',
     rounded: 'full',
     transition: 'all 0.3s ease',
-    w: '36px',
-    h: '36px',
+    w: { base: '32px', sm: '36px' },
+    h: { base: '32px', sm: '36px' },
     backdropFilter: 'blur(8px)',
     _hover: {
       transform: 'translateY(-2px)',
@@ -31,7 +32,7 @@ const SocialLink = chakra(Link, {
   },
 })
 
-const Footer = React.memo(({ onCloseMenu }) => {
+const Footer = React.memo(({ onCloseMenu, refFooter }) => {
   const bgGradient = useColorModeValue(
     'linear(to-r, purple.900, gray.900)',
     'linear(to-r, purple.900, gray.900)',
@@ -43,12 +44,14 @@ const Footer = React.memo(({ onCloseMenu }) => {
 
   return (
     <Box
+      ref={refFooter}
       as="footer"
       bg="gray.900"
+      w={'100%'}
       color={textColor}
       borderTop="1px solid"
       borderColor={borderColor}
-      py={6}
+      py={{ base: 4, sm: 6 }}
       position="relative"
       overflow="hidden"
       _before={{
@@ -74,26 +77,40 @@ const Footer = React.memo(({ onCloseMenu }) => {
       />
 
       <Container maxW="7xl" position="relative">
-        <Flex direction="column" gap={4} px={4}>
-          {/* Top Row with Logo and Social Icons */}
-          <Flex align="center" gap={8}>
-            {/* Brand Section */}
-            <Heading
-              size="md"
-              bgGradient="linear(to-r, purple.400, pink.400)"
-              bgClip="text"
-              fontWeight="bold"
-              letterSpacing="wide"
-              textShadow={`0 0 20px ${glowColor}`}
-            >
-              RapidRecap
-            </Heading>
+        <Stack
+          direction={{ base: 'column', sm: 'row' }}
+          spacing={{ base: 4, sm: 8 }}
+          px={4}
+          align={{ base: 'center', sm: 'flex-start' }}
+        >
+          {/* Brand Section */}
+          <Heading
+            size={{ base: 'sm', sm: 'md' }}
+            bgGradient="linear(to-r, purple.400, pink.400)"
+            bgClip="text"
+            fontWeight="bold"
+            letterSpacing="wide"
+            textShadow={`0 0 20px ${glowColor}`}
+          >
+            Rapid Recap
+          </Heading>
 
-            {/* Vertical Divider */}
-            <Box h="24px" w="1px" bg="whiteAlpha.300" mx={2} />
+          {/* Vertical Divider - Hidden on mobile */}
+          <Box
+            display={{ base: 'none', sm: 'block' }}
+            h="24px"
+            w="1px"
+            bg="whiteAlpha.300"
+          />
 
-            {/* Social Links */}
-            <Flex gap={4} align="center">
+          {/* Social Links and Contact */}
+          <Flex
+            gap={4}
+            align="center"
+            direction={{ base: 'column', sm: 'row' }}
+            w={{ base: 'full', sm: 'auto' }}
+          >
+            <Flex gap={4} justify={{ base: 'center', sm: 'flex-start' }}>
               <SocialLink
                 href="https://www.instagram.com/rrapidrecap/"
                 target="_blank"
@@ -101,7 +118,7 @@ const Footer = React.memo(({ onCloseMenu }) => {
                 bg="whiteAlpha.100"
                 aria-label="Instagram"
               >
-                <Icon as={FaInstagram} boxSize={4} />
+                <Icon as={FaInstagram} boxSize={{ base: 3.5, sm: 4 }} />
               </SocialLink>
               <SocialLink
                 href="https://www.linkedin.com/company/rrapidrecap/"
@@ -110,41 +127,47 @@ const Footer = React.memo(({ onCloseMenu }) => {
                 bg="whiteAlpha.100"
                 aria-label="LinkedIn"
               >
-                <Icon as={FaLinkedin} boxSize={4} />
+                <Icon as={FaLinkedin} boxSize={{ base: 3.5, sm: 4 }} />
               </SocialLink>
-              <Link
-                as={NavLink}
-                to="/contact"
-                color={subTextColor}
-                fontSize="sm"
-                fontWeight="medium"
-                transition="all 0.3s ease"
-                _hover={{
-                  color: 'purple.400',
-                  textDecoration: 'none',
-                  textShadow: '0 0 8px rgba(168, 85, 247, 0.4)',
-                }}
-                onClick={onCloseMenu}
-                ml={2}
-              >
-                Contact Us
-              </Link>
             </Flex>
+            <Link
+              as={NavLink}
+              to="/contact"
+              color={subTextColor}
+              fontSize={{ base: 'xs', sm: 'sm' }}
+              fontWeight="medium"
+              transition="all 0.3s ease"
+              _hover={{
+                color: 'purple.400',
+                textDecoration: 'none',
+                textShadow: '0 0 8px rgba(168, 85, 247, 0.4)',
+              }}
+              onClick={onCloseMenu}
+            >
+              Contact Us
+            </Link>
           </Flex>
+        </Stack>
 
-          {/* Subtle Divider */}
-          <Divider borderColor="whiteAlpha.200" />
+        {/* Divider */}
+        <Divider
+          borderColor="whiteAlpha.200"
+          my={{ base: 3, sm: 4 }}
+          mx="auto"
+          w="95%"
+        />
 
-          {/* Bottom Row with Reserved Text */}
-          <Text
-            color={subTextColor}
-            fontSize="xs"
-            fontWeight="medium"
-            letterSpacing="wider"
-          >
-            2024, All rights reserved
-          </Text>
-        </Flex>
+        {/* Copyright Text */}
+        <Text
+          color={subTextColor}
+          fontSize="xs"
+          fontWeight="medium"
+          letterSpacing="wider"
+          textAlign={{ base: 'center', sm: 'left' }}
+          px={4}
+        >
+          2024, All rights reserved
+        </Text>
       </Container>
     </Box>
   )

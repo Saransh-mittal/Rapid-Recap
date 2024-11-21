@@ -36,7 +36,9 @@ const XPLevelModal = React.lazy(() =>
 const Quiz = React.lazy(() => import('./screens/Quiz.jsx'))
 
 const NotificationModal = React.lazy(() =>
-  import('./components/Header-Footer/Inbox/NotificationModal.jsx'),
+  import(
+    './components/Header-Footer/modernNavbarComponents/modals/NotificationModal.jsx'
+  ),
 )
 const UpgradeModal = React.lazy(() =>
   import('./components/homeComponents/UpgradeModal'),
@@ -68,6 +70,7 @@ import LoadingScreen from './screens/LoadingScreen.jsx'
 import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
 import useCountdown from './customHooks/useCountdown.js'
+import ModernNavbar from './components/Header-Footer/ModernNavbar.jsx'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -294,6 +297,7 @@ const App = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       dispatch(setTaskProgress({ task: 'fetchUser', progress: 50 }))
+      dispatch(setLoginCheckStatus('pending'))
       try {
         const response = await axios.get(`/api/user/loginCheck`)
         if (response.status === 201) {
@@ -304,6 +308,7 @@ const App = () => {
         console.log(error)
       } finally {
         dispatch(setTaskProgress({ task: 'fetchUser', progress: 100 }))
+
         dispatch(setLoginCheckStatus('fulfilled'))
       }
     }
@@ -446,7 +451,8 @@ const App = () => {
       <NavbarProvider>
         {showNavbar && (
           <Suspense fallback={null}>
-            <Navbar onNavbarLoad={handleNavbarLoad} />
+            {/* <Navbar onNavbarLoad={handleNavbarLoad} /> */}
+            <ModernNavbar onNavbarLoad={handleNavbarLoad} />
           </Suspense>
         )}
         <Box

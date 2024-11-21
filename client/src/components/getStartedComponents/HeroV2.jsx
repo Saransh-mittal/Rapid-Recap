@@ -50,13 +50,14 @@ const shine = keyframes`
   100% { background-position: -200% center; }
 `
 
-const HeroV2 = () => {
+const HeroV2 = ({ inViewFooter }) => {
   const { t } = useTranslation('GetStarted')
   const isMobile = useBreakpointValue({ base: true, md: false })
   const { ref, inView } = useInView({
     threshold: 0.5,
     rootMargin: '-100px',
   })
+
   const features = useFeatureDetection()
   const { playClick } = useSafeSound({
     enabled: features.hasAudioSupport,
@@ -316,7 +317,10 @@ const HeroV2 = () => {
           />
         </Grid>
         <TournamentBanner COLORS={COLORS} shine={shine} />
-        <SmartCTA isMainButtonVisible={!inView} COLORS={COLORS} />
+        <SmartCTA
+          isMainButtonVisible={!inView && !inViewFooter}
+          COLORS={COLORS}
+        />
       </Container>
     </Box>
   )

@@ -5,62 +5,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addNoteMessage } from '../redux/appSlice'
 import { useTranslation } from 'react-i18next'
 import { isClient } from '../utils/environment'
-
+import { useInView } from 'react-intersection-observer'
 import BenefitsMap from '../components/getStartedComponents/BenefitsMap'
 import Features from '../components/getStartedComponents/Features'
 import HeroV2 from '../components/getStartedComponents/HeroV2'
 import Footer from '../components/Header-Footer/Footer'
-
-const theme = extendTheme({
-  colors: {
-    brand: {
-      50: '#e6fffa',
-      100: '#b2f5ea',
-      200: '#81e6d9',
-      300: '#4fd1c5',
-      400: '#38b2ac',
-      500: '#4ecdc4',
-      600: '#319795',
-      700: '#2c7a7b',
-      800: '#285e61',
-      900: '#234e52',
-    },
-  },
-  components: {
-    Button: {
-      variants: {
-        solid: {
-          bg: 'brand.500',
-          color: 'white',
-          _hover: {
-            bg: 'brand.600',
-            transform: 'translateY(-2px)',
-            boxShadow: 'lg',
-          },
-        },
-      },
-    },
-    Badge: {
-      variants: {
-        brand: {
-          bg: 'rgba(78, 205, 196, 0.15)',
-          color: 'brand.500',
-          borderRadius: 'full',
-          px: 3,
-          py: 1,
-        },
-      },
-    },
-  },
-  styles: {
-    global: {
-      body: {
-        bg: 'gray.900',
-        color: 'white',
-      },
-    },
-  },
-})
 
 // Move device detection to a separate utility
 const detectWeakDevice = () => {
@@ -101,7 +50,7 @@ const GetStarted = () => {
   const dispatch = useDispatch()
   const { isWeakDevice } = useSelector(state => state.app)
   const isMonitoring = useRef(true)
-
+  const { ref: refFooter, inView: inViewFooter } = useInView()
   const askForWeakMode = () => {
     if (!isClient) return
     dispatch(
@@ -172,11 +121,11 @@ const GetStarted = () => {
     >
       {isClient ? (
         <>
-          <HeroV2 isWeakDevice={isWeakDevice} />
+          <HeroV2 isWeakDevice={isWeakDevice} inViewFooter={inViewFooter} />
           <BenefitsMap isWeakDevice={weakDevice} />
 
           <Features isWeakDevice={weakDevice} />
-          <Footer />
+          <Footer refFooter={refFooter} />
         </>
       ) : (
         // Server-side render only Hero initially
