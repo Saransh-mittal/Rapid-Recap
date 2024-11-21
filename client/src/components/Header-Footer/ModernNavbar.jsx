@@ -38,6 +38,7 @@ import NavbarModalManager from './modernNavbarComponents/NavbarModalManager'
 import axios from 'axios'
 import { logoutAuth } from '../../redux/authSlice'
 import i18n from 'i18next'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
@@ -45,6 +46,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
   const dispatch = useDispatch()
   const location = useLocation()
   const navigate = useNavigate()
+  const { t } = useTranslation('Navbar')
   const toast = useToast()
   const [isMobile] = useMediaQuery('(max-width: 992px)')
   const { isMenuOpen, setIsMenuOpen } = useNavbar()
@@ -80,11 +82,11 @@ const ModernNavbar = ({ onNavbarLoad }) => {
 
   const navItems = useMemo(
     () => [
-      { label: 'Home', path: '/home' },
-      { label: 'Tournament', path: '/tournament' },
-      { label: 'Leaderboard', path: '/leaderboard' },
+      { label: t('home'), path: '/home' },
+      { label: t('tournament'), path: '/tournament' },
+      { label: t('leaderboard'), path: '/leaderboard' },
     ],
-    [],
+    [t],
   )
 
   const handleNavigation = useCallback(

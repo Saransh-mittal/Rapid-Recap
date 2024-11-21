@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { User, LogOut, HelpCircle, LayoutDashboard } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
@@ -42,6 +43,7 @@ MenuItem.displayName = 'MenuItem'
 
 const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
   const navigate = useNavigate()
+  const { t } = useTranslation('Navbar')
   const { isOpen, onToggle, onClose } = useDisclosure()
 
   const { isAuthenticated } = useSelector(state => state.auth)
@@ -50,7 +52,7 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
   const menuItems = [
     {
       icon: User,
-      label: 'Profile',
+      label: t('profileMenu.profile.title'),
       onClick: () => {
         navigate(`/profile/${user?.inGameName}`)
         onClose()
@@ -58,7 +60,7 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
     },
     {
       icon: LayoutDashboard,
-      label: 'Dashboard',
+      label: t('profileMenu.dashboard'),
       onClick: () => {
         navigate('/dashboard')
         onClose()
@@ -67,7 +69,7 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
     },
     {
       icon: HelpCircle,
-      label: 'Help',
+      label: t('profileMenu.help'),
       onClick: () => {
         navigate('/contact')
         onClose()
@@ -75,7 +77,9 @@ const ProfileMenu = memo(({ user, handleLogout, isLoggingOut }) => {
     },
     {
       icon: LogOut,
-      label: isLoggingOut ? 'Logging out...' : 'Logout',
+      label: isLoggingOut
+        ? t('profileMenu.logout.loading')
+        : t('profileMenu.logout.default'),
       onClick: handleLogout,
       color: 'red.400',
     },

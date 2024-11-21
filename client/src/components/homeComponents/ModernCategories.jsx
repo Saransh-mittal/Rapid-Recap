@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Box, HStack, VStack, Text, useMediaQuery } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const MotionBox = motion(Box)
 
@@ -16,7 +17,7 @@ const ModernCategories = ({
   const scrollContainerRef = useRef(null)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [maxScroll, setMaxScroll] = useState(0)
-
+  const { t } = useTranslation('categories')
   const handleScroll = () => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } =
@@ -42,7 +43,7 @@ const ModernCategories = ({
     return (
       <Component
         key={category.key}
-        category={category.key.toUpperCase()}
+        category={t(`categories.${category.key}`).toUpperCase()}
         isActive={isActive}
         onClick={() => {
           handleActiveCategory({ category: category.key })

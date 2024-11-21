@@ -1,5 +1,5 @@
-import React, { memo, Suspense, useState } from 'react'
-import { Flex, Spinner, useToast } from '@chakra-ui/react'
+import React, { memo, Suspense, useMemo, useState } from 'react'
+import { Flex, Spinner } from '@chakra-ui/react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   markFriendRequestsAsRead,
@@ -9,6 +9,7 @@ import {
   setShowIQScoreModal,
   setShowXpLevelModal,
 } from '../../../redux/appSlice'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load all modals and drawers
 const NotificationDrawer = React.lazy(() =>
@@ -51,7 +52,9 @@ const NavbarModalManager = memo(
   }) => {
     const dispatch = useDispatch()
     const [selectedNotification, setSelectedNotification] = useState(null)
-    const toast = useToast()
+
+    const { t } = useTranslation('Navbar')
+
     // Get all necessary state from Redux
     const {
       isNotifDrawerOpen,
@@ -69,13 +72,15 @@ const NavbarModalManager = memo(
     const handleCloseXPModal = () => {
       dispatch(setShowXpLevelModal(false))
     }
-
-    const navItems = [
-      { label: 'Home', path: '/home' },
-      { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Tournament', path: '/tournament' },
-      { label: 'Leaderboard', path: '/leaderboard' },
-    ]
+    const navItems = useMemo(
+      () => [
+        { key: 'Home', label: t('home'), path: '/home' },
+        { key: 'Dashboard', label: t('dashboard'), path: '/dashboard' },
+        { key: 'Tournament', label: t('tournament'), path: '/tournament' },
+        { key: 'Leaderboard', label: t('leaderboard'), path: '/leaderboard' },
+      ],
+      [t],
+    )
     return (
       <>
         {/* Notification Drawer */}

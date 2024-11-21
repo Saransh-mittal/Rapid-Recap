@@ -95,7 +95,7 @@ const HamburgerDrawer = ({
         item.path.toLocaleLowerCase(),
       )
 
-      if (item.label === 'Dashboard' && !showDashboard) return null
+      if (item.key === 'Dashboard' && !showDashboard) return null
       return (
         <ListItem
           position="relative"
