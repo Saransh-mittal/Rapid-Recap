@@ -33,6 +33,7 @@ const StreakIcon = memo(({ streak = 0, isBoosted = false, size = 21 }) => {
       alignItems="center"
       borderRadius="50%"
       padding="2px"
+      mr={isBoosted ? '6px' : '0'}
       style={{
         boxShadow: isBoosted
           ? '0 0 10px 0 rgba(0, 150, 255, 0.7), 0 4px 8px 0 rgba(0, 150, 255, 0.3), 0 8px 20px 0 rgba(0, 150, 255, 0.2)'
