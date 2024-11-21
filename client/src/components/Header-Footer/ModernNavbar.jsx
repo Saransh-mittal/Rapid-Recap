@@ -39,6 +39,7 @@ import axios from 'axios'
 import { logoutAuth } from '../../redux/authSlice'
 import i18n from 'i18next'
 import { useTranslation } from 'react-i18next'
+import ExperienceLevelIcon from './modernNavbarComponents/ExperienceLevelIcon'
 
 const MotionBox = motion(Box)
 
@@ -74,7 +75,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
     streakFetched,
   } = useSelector(state => state.app)
 
-  const streakColor = streak ? getStreakColor(streak) : '#FF5733'
+  const streakColor = streak ? getStreakColor(streak) : '#fff'
   const societyData = useMemo(
     () => findSocietyAndCircle(user?.IQ_score || 0),
     [user?.IQ_score],
@@ -209,7 +210,21 @@ const ModernNavbar = ({ onNavbarLoad }) => {
             />
           </Box>
           <Box onClick={() => dispatch(setShowXpLevelModal(true))}>
-            <StatItem icon={<Star size={21} />} value={level} color="#4299E1" />
+            <StatItem
+              icon={<ExperienceLevelIcon level={level} size={18} />}
+              value={level}
+              color={
+                level >= 100
+                  ? '#DC143C'
+                  : level >= 61
+                  ? '#9D5CFF'
+                  : level >= 31
+                  ? '#FF7F50'
+                  : level >= 11
+                  ? '#00FA9A'
+                  : '#87CEFA'
+              }
+            />
           </Box>
         </HStack>
 
