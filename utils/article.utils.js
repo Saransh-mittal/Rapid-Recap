@@ -352,6 +352,7 @@ const processExtractedNews = async (news, category) => {
        - Website-specific elements
        - Unnecessary formatting
        - any irrelevant content or lines from the mainText that are not related to the article or title. This includes sections like "Also read," "Loading...," "Share to Facebook," "Share to Twitter," "Share to LinkedIn," "All rights reserved" "terms of use" "HT" "Any other news websites name or nav items related to those websites" and unanswered questions.
+       - As there is no video content, remove any reference to video content for example remove "Watch, video, etc.
 
        Critical : The new article length should be same or less than the original article.Ensure that the returned JSON object includes all original fields.
   `

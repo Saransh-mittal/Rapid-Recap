@@ -1,1 +1,0 @@
-import{r as c}from"./index-206d647a.js";import{u as f}from"./use-callback-ref-e346b1e7.js";function m(e,n,s,o){const r=f(s);return c.useEffect(()=>{const u=typeof e=="function"?e():e??document;if(!(!s||!u))return u.addEventListener(n,r,o),()=>{u.removeEventListener(n,r,o)}},[n,e,o,r,s]),()=>{(typeof e=="function"?e():e??document)?.removeEventListener(n,r,o)}}export{m as u};

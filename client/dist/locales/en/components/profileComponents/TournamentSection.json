@@ -13,5 +13,6 @@
   },
   "visibilityTooltip": "Visibility to others",
   "hidden": "HIDDEN",
-  "visible": "VISIBLE"
+  "visible": "VISIBLE",
+  "noTournamentData": "No tournament data available"
 }

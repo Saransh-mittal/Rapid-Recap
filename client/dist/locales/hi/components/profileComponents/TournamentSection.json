@@ -13,5 +13,6 @@
   },
   "visibilityTooltip": "दूसरों के लिए दृश्यता",
   "hidden": "छिपा हुआ",
-  "visible": "दृश्यमान"
+  "visible": "दृश्यमान",
+  "noTournamentData": "कोई टूर्नामेंट डेटा उपलब्ध नहीं है"
 }

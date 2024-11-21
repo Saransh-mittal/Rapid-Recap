@@ -5,6 +5,7 @@ const {
   getUsersWithLastLoginAfter,
   getTimeSpentByUsers,
   getNotificationStatus,
+  getNewUsers,
 } = require('../controllers/stats')
 const {
   updateArticle,
@@ -194,5 +195,6 @@ router.delete(
   adminMiddleware,
   deleteOnBoardingArticle,
 )
+router.get('/new-users', Authenticate, adminMiddleware, getNewUsers)
 
 module.exports = router

@@ -55,24 +55,27 @@ const userRecommendations = asyncHandler(async (req, res) => {
     }
 
   const processedArticles = await Promise.all(
-    articles.map(async article => {
-      const paragraphs = await breakArticleIntoParagraphs(article.mainText)
-      return {
-        category: article.category,
-        title: article.title,
-        quizAttemptCnt: article.quizAttemptCnt,
-        mainText: paragraphs,
-        author: article.author,
-        imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
-        hindiTitle: article?.hindiTitle,
-        hindiMainText: article?.hindiMainText,
-        hindiAuthor: article?.hindiAuthor,
-        avgReadTime: article?.avgReadTime,
-        date: formatDate(article.dateTime),
-        dateTime: article.dateTime,
-        _id: article._id,
-      }
-    }),
+    articles
+      .filter(article => article.category !== 'onBoardingArticle')
+      .map(async article => {
+        const paragraphs = await breakArticleIntoParagraphs(article.mainText)
+
+        return {
+          category: article.category,
+          title: article.title,
+          quizAttemptCnt: article.quizAttemptCnt,
+          mainText: paragraphs,
+          author: article.author,
+          imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
+          hindiTitle: article?.hindiTitle,
+          hindiMainText: article?.hindiMainText,
+          hindiAuthor: article?.hindiAuthor,
+          avgReadTime: article?.avgReadTime,
+          date: formatDate(article.dateTime),
+          dateTime: article.dateTime,
+          _id: article._id,
+        }
+      }),
   )
 
   // Cache the processed articles for 1 hour (3600000 milliseconds)
