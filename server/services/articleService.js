@@ -13,7 +13,7 @@ class ArticleService {
 
       const article = await Article.findById(articleId)
       if (!article) {
-        throw new Error('Article not found')
+        throw new Error(`Article not found : articleId=${articleId}`)
       }
 
       const source = article.url
@@ -130,7 +130,7 @@ class ArticleService {
 
   static extractArticleId(url) {
     try {
-      const matches = url.match(/\/article\/([^/]+)/)
+      const matches = url.match(/\/article\/([^/?]+)(?:\/[^?]*)?(?:\?.*)?$/)
       return matches ? matches[1] : null
     } catch (error) {
       console.error('Error extracting article ID:', error)

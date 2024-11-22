@@ -31,19 +31,23 @@ import {
   useMediaQuery,
 } from '@chakra-ui/react'
 import axios from 'axios'
-import { ChatState } from '../../../contextAPI/ChatProvider'
+import { ChatState } from '../../../../contextAPI/ChatProvider'
 import { useTranslation } from 'react-i18next'
 
 // Lazy load SVGs and other components
-const UserPlusSVG = React.lazy(() => import('../../../assets/svg/UserPlusSVG'))
+const UserPlusSVG = React.lazy(() =>
+  import('../../../../assets/svg/UserPlusSVG'),
+)
 const UserFriendsSVG = React.lazy(() =>
-  import('../../../assets/svg/UserFriendsSVG'),
+  import('../../../../assets/svg/UserFriendsSVG'),
 )
 
 // Lazy load FriendItem and FriendRequestItem
-const FriendItem = React.lazy(() => import('./WiseSwebComponents/FriendItem'))
+const FriendItem = React.lazy(() =>
+  import('../../navbarComponents/WiseSwebComponents/FriendItem'),
+)
 const FriendRequestItem = React.lazy(() =>
-  import('./WiseSwebComponents/FriendRequestItem'),
+  import('../../navbarComponents/WiseSwebComponents/FriendRequestItem'),
 )
 
 const FriendList = forwardRef(

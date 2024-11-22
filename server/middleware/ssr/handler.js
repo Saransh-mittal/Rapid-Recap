@@ -156,9 +156,8 @@ function createSSRHandler(vite) {
     // console.log('SSR handler called', url)
     const isBot = await shouldHandleAsBot(req)
     let botName = null
+    let verified = false
     try {
-      let verified = false
-
       // Cache key for the full page template
       const templateCacheKey = `template-${isBot ? 'bot' : 'user'}-${url}`
 

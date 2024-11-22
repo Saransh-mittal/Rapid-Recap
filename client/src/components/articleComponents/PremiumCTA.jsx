@@ -174,10 +174,10 @@ const PremiumCTA = ({ readProgress }) => {
                 </Button>
               </Box>
 
-              <GuestLogin
+              {/* <GuestLogin
                 premiumCTA={true}
                 premiumCTAText={t('premiumCTA.guestUser')}
-              />
+              /> */}
             </VStack>
           </Box>
         </MotionBox>

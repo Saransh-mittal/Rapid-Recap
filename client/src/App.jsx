@@ -156,20 +156,20 @@ const App = () => {
     const token = isToken()
 
     // Handle non-authenticated state
-    if (!token && !location.pathname.includes('/article')) {
-      dispatch(
-        addNoteMessageIfAllowed({
-          title: t('Start using Rapid Recap'),
-          duration: 15000,
-          width: '350px',
-          actions: [
-            { text: t('Sign-In'), actionType: 'SIGN_IN' },
-            { text: t('Sign-In As Guest'), actionType: 'GUEST' },
-          ],
-          isMileStone: true,
-        }),
-      )
-    }
+    // if (!token && !location.pathname.includes('/article')) {
+    //   dispatch(
+    //     addNoteMessageIfAllowed({
+    //       title: t('Start using Rapid Recap'),
+    //       duration: 15000,
+    //       width: '350px',
+    //       actions: [
+    //         { text: t('Sign-In'), actionType: 'SIGN_IN' },
+    //         { text: t('Sign-In As Guest'), actionType: 'GUEST' },
+    //       ],
+    //       isMileStone: true,
+    //     }),
+    //   )
+    // }
 
     // Enhanced Service Worker handling
     if ('serviceWorker' in navigator) {
