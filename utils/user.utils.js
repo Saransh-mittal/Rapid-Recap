@@ -646,6 +646,31 @@ const formatPreferredCategories = preferences => {
         : new Date().toISOString(),
     }))
 }
+
+function calculateLoginStreak(user, today) {
+  // Default streak for first login
+  if (!user.lastLogin) {
+    return { streak: 1 }
+  }
+
+  const lastLoginDate = new Date(user.lastLogin)
+  lastLoginDate.setUTCHours(0, 0, 0, 0)
+
+  const dayDiff = Math.floor(
+    (today.getTime() - lastLoginDate.getTime()) / (24 * 60 * 60 * 1000),
+  )
+
+  // Initialize streak if undefined
+  const currentStreak = user.loginStreak || 0
+
+  if (dayDiff === 0) {
+    return { streak: currentStreak } // Same day login
+  }
+  if (dayDiff === 1) {
+    return { streak: currentStreak + 1 } // Consecutive day
+  }
+  return { streak: 1 } // Reset streak
+}
 module.exports = {
   calculateTopPercent,
   calculateLabelsAndData,
@@ -663,4 +688,5 @@ module.exports = {
   makeFirstLoginFalse,
   getTheRevivalEndDay,
   formatPreferredCategories,
+  calculateLoginStreak,
 }

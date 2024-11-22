@@ -23,7 +23,11 @@ const userRecommendations = asyncHandler(async (req, res) => {
   const cacheKey = `user_recommendations_${userId}_${lang}_${page}_${pageSize}`
   const cachedRecommendations = cache.get(cacheKey)
 
-  if (cachedRecommendations) {
+  if (
+    cachedRecommendations &&
+    Array.isArray(cachedRecommendations) &&
+    cachedRecommendations.length > 0
+  ) {
     return res.send(cachedRecommendations)
   }
 
