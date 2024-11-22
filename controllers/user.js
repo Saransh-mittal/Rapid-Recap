@@ -275,7 +275,7 @@ const loginCheck = asyncHandler(async (req, res) => {
     },
   )
 
-  res.status(200).json(updatedUser) // Changed to 200 as this is not creating a new resource
+  res.status(201).json(updatedUser) // Changed to 200 as this is not creating a new resource
 })
 
 const verifyUser = async (req, res) => {
