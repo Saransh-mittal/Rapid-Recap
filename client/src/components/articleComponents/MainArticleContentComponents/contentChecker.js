@@ -1,11 +1,13 @@
 import { boldNumberedChecker } from './checkers/boldNumberedChecker'
 import { consecutiveNumberedChecker } from './checkers/consecutiveNumberedChecker'
+import { generalNumberedListChecker } from './checkers/generalNumberedListChecker'
 import { stepsNumberedChecker } from './checkers/stepsNumberedChecker'
 
 export const defaultCheckers = [
   boldNumberedChecker,
   consecutiveNumberedChecker,
   stepsNumberedChecker,
+  generalNumberedListChecker,
 ]
 
 export const checkContent = (text, checkers = defaultCheckers) => {

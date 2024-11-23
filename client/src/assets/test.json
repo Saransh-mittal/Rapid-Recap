@@ -1,0 +1,434 @@
+[
+  {
+    "question": "Which honor did PM Modi recently receive from Nigeria?",
+    "hindiQuestion": "पीएम मोदी को हाल ही में नाइजीरिया से कौन सा सम्मान मिला?",
+    "options": {
+      "a": "Grammy Award",
+      "b": "Nobel Prize",
+      "c": "High civilian honor from Nigeria",
+      "d": "Noble Peace Prize"
+    },
+    "hindiOptions": {
+      "a": "ग्राम्मी पुरस्कार",
+      "b": "नोबेल पुरस्कार",
+      "c": "नाइजीरिया से उच्च नागरिक सम्मान",
+      "d": "नोबेल शांति पुरस्कार"
+    },
+    "correctAnswer": "c",
+    "difficulty": "0.75"
+  },
+  {
+    "question": "What significant announcement was made by Telangana regarding electric vehicles?",
+    "hindiQuestion": "तेलंगाना ने इलेक्ट्रिक वाहनों के बारे में कौन सी महत्वपूर्ण घोषणा की?",
+    "options": {
+      "a": "100% tax exemption",
+      "b": "New charging stations",
+      "c": "Subsidy for purchases",
+      "d": "Increased registration fees"
+    },
+    "hindiOptions": {
+      "a": "100% कर छूट",
+      "b": "नए चार्जिंग स्टेशन",
+      "c": "खरीद के लिए सब्सिडी",
+      "d": "पंजीकरण शुल्क में वृद्धि"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.65"
+  },
+  {
+    "question": "Which Indian coastal villages were recognized as 'Tsunami Ready' by UNESCO?",
+    "hindiQuestion": "कौन से भारतीय तटीय गांवों को यूनेस्को द्वारा 'सुनामी तैयार' के रूप में मान्यता दी गई?",
+    "options": {
+      "a": "Odisha",
+      "b": "Karnataka",
+      "c": "Maharashtra",
+      "d": "Gujarat"
+    },
+    "hindiOptions": {
+      "a": "उड़ीसा",
+      "b": "कर्नाटक",
+      "c": "महाराष्ट्र",
+      "d": "गुजरात"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.70"
+  },
+  {
+    "question": "What is the focus of the global maritime conference hosted by India on November 18-19?",
+    "hindiQuestion": "भारत द्वारा 18-19 नवंबर को आयोजित वैश्विक समुद्री सम्मेलन का फोकस क्या है?",
+    "options": {
+      "a": "Maritime cooperation",
+      "b": "Climate change",
+      "c": "'Blue Economy'",
+      "d": "'Sustainable Fishing'"
+    },
+    "hindiOptions": {
+      "a": "'समुद्री सहयोग'",
+      "b": "'जलवायु परिवर्तन'",
+      "c": "'नीली अर्थव्यवस्था'",
+      "d": "'सतत मछली पकड़ना'"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.80"
+  },
+  {
+    "question": "What recent event caused Honasa Consumer's shares to drop significantly?",
+    "hindiQuestion": "किस हालिया घटना ने होनासा कंज्यूमर के शेयरों में भारी गिरावट का कारण बनी?",
+    "options": {
+      "a": "New product launch",
+      "b": "First reported loss in five quarters",
+      "c": "Acquisition of a competitor",
+      "d": "Management change"
+    },
+    "hindiOptions": {
+      "a": "नया उत्पाद लॉन्च",
+      "b": "पांच तिमाहियों में पहली बार नुकसान",
+      "c": "प्रतिस्पर्धी का अधिग्रहण",
+      "d": "प्रबंधन परिवर्तन"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.85"
+  },
+  {
+    "question": "Where is the 55th International Film Festival of India (IFFI) being held this year?",
+    "hindiQuestion": "इस वर्ष 55वां अंतर्राष्ट्रीय फिल्म महोत्सव (IFFI) कहाँ आयोजित किया जा रहा है?",
+    "options": {
+      "a": "Mumbai",
+      "b": "Goa",
+      "c": "Delhi",
+      "d": "Kolkata"
+    },
+    "hindiOptions": {
+      "a": "मुंबई",
+      "b": "गोवा",
+      "c": "दिल्ली",
+      "d": "कोलकाता"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.50"
+  },
+  {
+    "question": "Who is the new Secretary General of Interpol elected recently?",
+    "hindiQuestion": "हाल ही में इंटरपोल के नए महासचिव कौन चुने गए हैं?",
+    "options": {
+      "a": "Waldesi Urquiza",
+      "b": "Antonio Guterres",
+      "c": "Tedros Adhanom",
+      "d": "Rafael Grossi"
+    },
+    "hindiOptions": {
+      "a": "वाल्डेसी उरकिज़ा",
+      "b": "एंटोनियो गुटेरेस",
+      "c": "टेड्रोस अधानॉम",
+      "d": "राफेल ग्रॉसी"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.75"
+  },
+  {
+    "question": "Which wildlife sanctuary in Karnataka is gaining attention for its conservation efforts?",
+    "hindiQuestion": "कर्नाटक का कौन सा वन्यजीव अभयारण्य अपने संरक्षण प्रयासों के लिए ध्यान आकर्षित कर रहा है?",
+    "options": {
+      "a": "Bandipur National Park",
+      "b": "Nugu Wildlife Sanctuary",
+      "c": "Bannerghatta National Park",
+      "d": "Anshi National Park"
+    },
+    "hindiOptions": {
+      "a": "बंदिपुर राष्ट्रीय उद्यान",
+      "b": "नुगू वन्यजीव अभयारण्य",
+      "c": "बैनरघट्टा राष्ट्रीय उद्यान",
+      "d": "अंशी राष्ट्रीय उद्यान"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.60"
+  },
+  {
+    "question": "Which country recently launched the 'Global Energy Efficiency Alliance'?",
+    "hindiQuestion": "किस देश ने हाल ही में 'वैश्विक ऊर्जा दक्षता गठबंधन' लॉन्च किया?",
+    "options": {
+      "a": "UAE",
+      "b": "India",
+      "c": "USA",
+      "d": "China"
+    },
+    "hindiOptions": {
+      "a": "यूएई",
+      "b": "भारत",
+      "c": "अमेरिका",
+      "d": "चीन"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.65"
+  },
+  {
+    "question": "What was the significant event involving SpaceX and ISRO recently?",
+    "hindiQuestion": "हाल ही में स्पेसएक्स और इसरो के बीच महत्वपूर्ण घटना क्या थी?",
+    "options": {
+      "a": "Launch of GSAT-20 satellite",
+      "b": "Collaboration on Mars mission",
+      "c": "Development of new rocket technology",
+      "d": "Satellite repair mission"
+    },
+    "hindiOptions": {
+      "a": "GSAT-20 उपग्रह का प्रक्षेपण",
+      "b": "मार्स मिशन पर सहयोग",
+      "c": "नई रॉकेट तकनीक का विकास",
+      "d": "उपग्रह मरम्मत मिशन"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.70"
+  },
+  {
+    "question": "Which Indian tennis star recently announced retirement?",
+    "hindiQuestion": "कौन सा भारतीय टेनिस स्टार ने हाल ही में रिटायरमेंट की घोषणा की?",
+    "options": {
+      "a": "Prajnesh Gunneswaran",
+      "b": "Leander Paes",
+      "c": "Mahesh Bhupathi",
+      "d": "Somdev Devvarman"
+    },
+    "hindiOptions": {
+      "a": "प्रज्ञानेश गुणेश्वरन",
+      "b": "लींडर पेस",
+      "c": "महेश भूपति",
+      "d": "सोमदेव देववर्मन"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.75"
+  },
+  {
+    "question": "Who caused a stir with a recent podcast revelation?",
+    "hindiQuestion": "किसने हाल ही में एक पॉडकास्ट के खुलासे से हलचल मचाई?",
+    "options": {
+      "a": "Rosanna Pansino",
+      "b": "Joe Rogan",
+      "c": "Oprah Winfrey",
+      "d": "Ellen DeGeneres"
+    },
+    "hindiOptions": {
+      "a": "रोसाना पैंसिनो",
+      "b": "जो रोगन",
+      "c": "ओपरा विनफ्रे",
+      "d": "एलेन डीजेनर्स"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.60"
+  },
+  {
+    "question": "Which country recently canceled multimillion-dollar deals with Indian tycoon Gautam Adani?",
+    "hindiQuestion": "किस देश ने हाल ही में भारतीय उद्योगपति गौतम अडानी के साथ करोड़ों डॉलर के सौदों को रद्द किया?",
+    "options": {
+      "a": "Kenya",
+      "b": "Nigeria",
+      "c": "Bangladesh",
+      "d": "Nepal"
+    },
+    "hindiOptions": {
+      "a": "केन्या",
+      "b": "नाइजीरिया",
+      "c": "बांग्लादेश",
+      "d": "नेपाल"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.75"
+  },
+  {
+    "question": "What significant milestone did Armenia achieve recently?",
+    "hindiQuestion": "हाल ही में आर्मेनिया ने कौन सा महत्वपूर्ण मील का पत्थर हासिल किया?",
+    "options": {
+      "a": "104th member of the International Solar Alliance",
+      "b": "First country to adopt solar energy",
+      "c": "Member of the G20",
+      "d": "Host of COP29"
+    },
+    "hindiOptions": {
+      "a": "अंतर्राष्ट्रीय सौर गठबंधन का 104वां सदस्य",
+      "b": "सौर ऊर्जा अपनाने वाला पहला देश",
+      "c": "G20 का सदस्य",
+      "d": "COP29 का मेज़बान"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.50"
+  },
+  {
+    "question": "Which significant agreement did Tata Power sign with ADB recently?",
+    "hindiQuestion": "टाटा पावर ने हाल ही में ADB के साथ कौन सा महत्वपूर्ण समझौता किया?",
+    "options": {
+      "a": "$4.25 billion for clean energy projects",
+      "b": "$1 billion for coal projects",
+      "c": "$2 billion for gas projects",
+      "d": "$3 billion for hydro projects"
+    },
+    "hindiOptions": {
+      "a": "$4.25 अरब स्वच्छ ऊर्जा परियोजनाओं के लिए",
+      "b": "$1 अरब कोयला परियोजनाओं के लिए",
+      "c": "$2 अरब गैस परियोजनाओं के लिए",
+      "d": "$3 अरब जल परियोजनाओं के लिए"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.70"
+  },
+  {
+    "question": "What recent achievement did India accomplish in its export sector for October 2024?",
+    "hindiQuestion": "भारत ने अक्टूबर 2024 में अपने निर्यात क्षेत्र में कौन सी हालिया उपलब्धि हासिल की?",
+    "options": {
+      "a": "Exports surged by 27.7%",
+      "b": "Exports fell by 10%",
+      "c": "Exports remained stable",
+      "d": "Exports doubled"
+    },
+    "hindiOptions": {
+      "a": "निर्यात में 27.7% की वृद्धि हुई",
+      "b": "निर्यात में 10% की गिरावट आई",
+      "c": "निर्यात स्थिर रहा",
+      "d": "निर्यात दोगुना हुआ"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.50"
+  },
+  {
+    "question": "What significant event involved PM Modi concluding his G-20 Brazil visit?",
+    "hindiQuestion": "इस घटना में क्या महत्वपूर्ण था?",
+    "options": {
+      "a": "Talks with Guyana President",
+      "b": "Visit to Brazil",
+      "c": "G20 Summit discussions",
+      "d": "Meeting with US officials"
+    },
+    "hindiOptions": {
+      "a": "गुयाना के राष्ट्रपति के साथ बातचीत",
+      "b": "ब्राजील की यात्रा",
+      "c": "जी20 शिखर सम्मेलन की चर्चाएँ",
+      "d": "अमेरिकी अधिकारियों के साथ बैठक"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.50"
+  },
+  {
+    "question": "What was a key discussion topic during PM Modi's address to the Indian community in Abuja?",
+    "hindiQuestion": "अबुजा में भारतीय समुदाय को पीएम मोदी के संबोधन के दौरान कौन सा मुख्य चर्चा विषय था?",
+    "options": {
+      "a": "India's development goals",
+      "b": "Cultural ties with Africa",
+      "c": "Economic cooperation initiatives",
+      "d": "Environmental sustainability efforts"
+    },
+    "hindiOptions": {
+      "a": "भारत के विकास लक्ष्य",
+      "b": "अफ्रीका के साथ सांस्कृतिक संबंध",
+      "c": "आर्थिक सहयोग पहलों",
+      "d": "पर्यावरणीय स्थिरता प्रयास"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.60"
+  },
+  {
+    "question": "What major sporting event is taking place this week involving Indian athletes?",
+    "hindiQuestion": "इस सप्ताह भारतीय एथलीटों से संबंधित कौन सा प्रमुख खेल आयोजन हो रहा है?",
+    "options": {
+      "a": "Asian Champions Trophy hockey semifinals",
+      "b": "Cricket series against Australia",
+      "c": "Badminton World Championships",
+      "d": "Football league finals"
+    },
+    "hindiOptions": {
+      "a": "एशियाई चैंपियंस ट्रॉफी हॉकी सेमीफाइनल",
+      "b": "ऑस्ट्रेलिया के खिलाफ क्रिकेट श्रृंखला",
+      "c": "बैडमिंटन विश्व चैंपियनशिप",
+      "d": "फुटबॉल लीग फाइनल्स"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.50"
+  },
+  {
+    "question": "What notable achievement did Indian aviation reach recently?",
+    "hindiQuestion": "हाल ही में भारतीय विमानन ने कौन सी उल्लेखनीय उपलब्धि हासिल की?",
+    "options": {
+      "a": "Five lakh passengers in a single day",
+      "b": "Record low emissions achieved",
+      "c": "Expansion of international routes",
+      "d": "Introduction of new aircraft models"
+    },
+    "hindiOptions": {
+      "a": "एक ही दिन में पांच लाख यात्री",
+      "b": "रिकॉर्ड कम उत्सर्जन हासिल किया गया",
+      "c": "अंतरराष्ट्रीय मार्गों का विस्तार",
+      "d": "नए विमान मॉडल का परिचय दिया गया"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.70"
+  },
+  {
+    "question": "What is the focus of the Global Freight Summit held in Dubai from November 18 to November 20, 2024?",
+    "hindiQuestion": "दुबई में 18 से 20 नवंबर, 2024 तक आयोजित वैश्विक माल शिखर सम्मेलन का ध्यान किस पर है?",
+    "options": {
+      "a": "Industry collaboration",
+      "b": "Sustainable transport",
+      "c": "Digital logistics",
+      "d": "Global trade policies"
+    },
+    "hindiOptions": {
+      "a": "उद्योग सहयोग",
+      "b": "सतत परिवहन",
+      "c": "डिजिटल लॉजिस्टिक्स",
+      "d": "वैश्विक व्यापार नीतियां"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.60"
+  },
+  {
+    "question": "Which Indian Army Chief was recently honored as Honorary General of the Nepali Army?",
+    "hindiQuestion": "कौन से भारतीय सेना प्रमुख को हाल ही में नेपाली सेना का मानद जनरल सम्मानित किया गया?",
+    "options": {
+      "a": "General Upendra Dwivedi",
+      "b": "General Manoj Mukund Naravane",
+      "c": "General Bipin Rawat",
+      "d": "General Dalbir Singh Suhag"
+    },
+    "hindiOptions": {
+      "a": "जनरल उपेंद्र द्विवेदी",
+      "b": "जनरल मनोज मुकुंद नरवाने",
+      "c": "जनरल बिपिन रावत",
+      "d": "जनरल दलबीर सिंह सुहाग"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.70"
+  },
+  {
+    "question": "What recent environmental concern has been linked to a surge in dengue cases worldwide?",
+    "hindiQuestion": "हाल ही में विश्व स्तर पर डेंगू मामलों में वृद्धि को किस पर्यावरणीय चिंता से जोड़ा गया है?",
+    "options": {
+      "a": "Climate change",
+      "b": "Deforestation",
+      "c": "Urbanization",
+      "d": "Pollution"
+    },
+    "hindiOptions": {
+      "a": "जलवायु परिवर्तन",
+      "b": "वनों की कटाई",
+      "c": "शहरीकरण",
+      "d": "प्रदूषण"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.60"
+  },
+  {
+    "question": "What significant discovery was made regarding a new species of bioluminescent sea slug?",
+    "hindiQuestion": "एक नई प्रजाति की बायोलुमिनेसेंट समुद्री स्लग के बारे में कौन सी महत्वपूर्ण खोज की गई?",
+    "options": {
+      "a": "Bathydevius caudactylus",
+      "b": "Aplysia californica",
+      "c": "Nudibranchia",
+      "d": "Dendronotus iris"
+    },
+    "hindiOptions": {
+      "a": "बैथीडेवियस काउडैक्टिलस",
+      "b": "एप्लिसिया कैलिफोर्निका",
+      "c": "न्यूडिब्रांचिया",
+      "d": "डेंड्रोनोटस आइस"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.60"
+  }
+]

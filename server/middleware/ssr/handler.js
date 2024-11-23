@@ -72,6 +72,29 @@ async function getBotContent(urlType, url, baseUrl) {
         features: featuresContent,
         footer: footerContent,
       }
+    } else if (urlType === '410') {
+      const [navbarContent, errorContent] = await Promise.all([
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../client/dist/bot/components/navbar.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../client/dist/bot/components/error/410.html',
+          ),
+          'utf-8',
+        ),
+      ])
+
+      content = {
+        navbar: navbarContent,
+        error: errorContent,
+        statusCode: 410,
+      }
     } else {
       const [navbarContent, articleTemplateContent] = await Promise.all([
         fs.readFile(
@@ -92,7 +115,16 @@ async function getBotContent(urlType, url, baseUrl) {
 
       // Get article content
       const articleId = ArticleService.extractArticleId(url)
-      const articleData = await ArticleService.getArticleContent(articleId)
+      let articleData
+      try {
+        articleData = await ArticleService.getArticleContent(articleId)
+      } catch (error) {
+        if (error.message.includes('Article not found')) {
+          // Return 410 content
+          return getBotContent('410', url, baseUrl)
+        }
+        throw error
+      }
 
       // Replace placeholders in template with actual content
       const articleContent = ArticleService.replaceArticleContent(
@@ -104,6 +136,7 @@ async function getBotContent(urlType, url, baseUrl) {
         navbar: navbarContent,
         article: articleContent,
         seoMetaTags: generateMetaTags(articleData, baseUrl, url),
+        articleData,
       }
     }
 
@@ -153,10 +186,11 @@ function createSSRHandler(vite) {
     const url = req.originalUrl
     const nonce = res.locals.nonce
     const userAgent = req.headers['user-agent'] || ''
-    // console.log('SSR handler called', url)
+
     const isBot = await shouldHandleAsBot(req)
     let botName = null
     let verified = false
+    let statusCode = 200
     try {
       // Cache key for the full page template
       const templateCacheKey = `template-${isBot ? 'bot' : 'user'}-${url}`
@@ -199,13 +233,24 @@ function createSSRHandler(vite) {
               : 'article'
           const baseUrl = `${req.protocol}://${req.get('host')}`
           const botContent = await getBotContent(urlType, url, baseUrl)
-          template = handleBotTemplate(template, botContent, urlType, baseUrl)
+          // Set status code if present
+          if (botContent.statusCode) {
+            statusCode = botContent.statusCode
+          }
+          template = handleBotTemplate(
+            template,
+            botContent,
+            botContent?.error ? '410' : urlType,
+            baseUrl,
+          )
           // Inject structured data
 
-          if (urlType === 'article') {
-            const articleData = await ArticleService.getArticleContent(
-              ArticleService.extractArticleId(url),
-            )
+          if (urlType === 'article' && !botContent?.error) {
+            const articleData = botContent?.articleData
+              ? botContent.articleData
+              : await ArticleService.getArticleContent(
+                  ArticleService.extractArticleId(url),
+                )
             template = generateAndInjectSchemas({
               template,
               articleData,
@@ -234,7 +279,11 @@ function createSSRHandler(vite) {
           responseTime,
         })
       }
-      res.status(200).end(template)
+      if (statusCode == 410) {
+        // delete the cache if the status code is 410
+        cache.del(templateCacheKey)
+      }
+      res.status(statusCode).end(template)
     } catch (e) {
       console.error('SSR error:', e)
       if (isBot) {
@@ -276,6 +325,13 @@ async function handleClientRendering() {
 }
 
 function handleBotTemplate(template, botContent, urlType, baseUrl) {
+  // Add status code if present
+  if (botContent.statusCode) {
+    template = template.replace(
+      '<head>',
+      `<head>\n<meta name="robots" content="noindex">`,
+    )
+  }
   if (urlType === 'get-started') {
     // First remove existing meta tags and any duplicates
     template = template.replace(
@@ -306,6 +362,24 @@ function handleBotTemplate(template, botContent, urlType, baseUrl) {
       .replace('<div id="bot-benefits"></div>', botContent.benefits)
       .replace('<div id="bot-features"></div>', botContent.features)
       .replace('<div id="bot-footer"></div>', botContent.footer)
+  } else if (urlType === '410') {
+    template = template
+      .replace('<div id="root">', '<div id="root" style="display: none;">')
+      .replace(
+        '<div id="splash-screen">',
+        '<div id="splash-screen" style="display: none;">',
+      )
+      .replace('<div id="bot-navbar"></div>', botContent.navbar)
+      .replace('<div id="bot-article"></div>', botContent.error)
+      .replace(
+        '<style>',
+        `<link rel="stylesheet" href="/styles/utils/reset.css">
+        <link rel="stylesheet" href="/styles/utils/variables.css">
+        <link rel="stylesheet" href="/styles/main.css">
+        <link rel="stylesheet" href="/styles/components/css-navigation.css">
+        <link rel="stylesheet" href="/styles/components/css-error.css">
+        <style>`,
+      )
   } else {
     // Your existing article handling code
     template = template

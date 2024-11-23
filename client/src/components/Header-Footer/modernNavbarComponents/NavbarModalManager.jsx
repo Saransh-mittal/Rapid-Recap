@@ -1,4 +1,4 @@
-import React, { memo, Suspense, useMemo, useState } from 'react'
+import React, { memo, Suspense, useEffect, useMemo, useState } from 'react'
 import { Flex, Spinner } from '@chakra-ui/react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -10,20 +10,26 @@ import {
   setShowXpLevelModal,
 } from '../../../redux/appSlice'
 import { useTranslation } from 'react-i18next'
+import { createPreloadableComponents } from '../../../utils/lazyLoading'
 
 // Lazy load all modals and drawers
-const NotificationDrawer = React.lazy(() =>
-  import('./drawers/NotificationDrawer'),
-)
-const NotificationModal = React.lazy(() => import('./modals/NotificationModal'))
-const XPLevelModal = React.lazy(() => import('./modals/XPLevelModal'))
-const DailyStreakModal = React.lazy(() => import('./modals/DailyStreakModal'))
-const IQScoreModal = React.lazy(() => import('./modals/IQScoreModal'))
 const WiseWeb = React.lazy(() => import('./modals/WiseWeb'))
-const HamburgerDrawer = React.lazy(() => import('./drawers/HamburgerDrawer'))
 const UserSearchDrawer = React.lazy(() =>
   import('../../miscellaneous/UserSearchDrawer'),
 )
+const modalComponents = {
+  NotificationModal: () => import('./modals/NotificationModal'),
+  XPLevelModal: () => import('./modals/XPLevelModal'),
+  DailyStreakModal: () => import('./modals/DailyStreakModal'),
+  IQScoreModal: () => import('./modals/IQScoreModal'),
+}
+const drawerComponents = {
+  NotificationDrawer: () => import('./drawers/NotificationDrawer'),
+  HamburgerDrawer: () => import('./drawers/HamburgerDrawer'),
+}
+
+const LazyDrawers = createPreloadableComponents(drawerComponents)
+const LazyModals = createPreloadableComponents(modalComponents)
 
 // Loading fallback component
 const ModalLoader = () => (
@@ -81,12 +87,26 @@ const NavbarModalManager = memo(
       ],
       [t],
     )
+    useEffect(() => {
+      // Immediately preload the most commonly used modals
+      LazyModals.IQScoreModal.preload()
+      LazyModals.XPLevelModal.preload()
+      LazyDrawers.HamburgerDrawer.preload()
+      LazyModals.DailyStreakModal.preload()
+      // Preload other modals during idle time
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          LazyModals.NotificationModal.preload()
+          LazyDrawers.NotificationDrawer.preload()
+        })
+      }
+    }, [])
     return (
       <>
         {/* Notification Drawer */}
         {isNotifDrawerOpen && (
           <Suspense fallback={<ModalLoader />}>
-            <NotificationDrawer
+            <LazyDrawers.NotificationDrawer
               setIsHamburgerOpen={setIsHamburgerOpen}
               setIsDrawerOpen={val => dispatch(setIsNotifDrawerOpen(val))}
               setIsModalOpen={val => dispatch(setIsNotifModalOpen(val))}
@@ -99,7 +119,7 @@ const NavbarModalManager = memo(
           /* Notification Modal */
           isNotifModalOpen && (
             <Suspense fallback={<ModalLoader />}>
-              <NotificationModal
+              <LazyModals.NotificationModal
                 selectedNotification={selectedNotification}
                 setIsModalOpen={val => dispatch(setIsNotifModalOpen(val))}
                 setIsDrawerOpen={val => dispatch(setIsNotifDrawerOpen(val))}
@@ -122,8 +142,8 @@ const NavbarModalManager = memo(
 
         {/* XP Level Modal */}
         {showXpLevelModal && (
-          <Suspense fallback={<ModalLoader />}>
-            <XPLevelModal
+          <Suspense fallback={null}>
+            <LazyModals.XPLevelModal
               xp={user?.xp}
               level={user?.level}
               onClose={handleCloseXPModal}
@@ -133,8 +153,8 @@ const NavbarModalManager = memo(
 
         {/* Daily Streak Modal */}
         {showDailyStreakModal && (
-          <Suspense fallback={<ModalLoader />}>
-            <DailyStreakModal
+          <Suspense fallback={null}>
+            <LazyModals.DailyStreakModal
               setShowDailyStreakModal={val =>
                 dispatch(setShowDailyStreakModal(val))
               }
@@ -144,8 +164,8 @@ const NavbarModalManager = memo(
 
         {/* IQ Score Modal */}
         {showIQScoreModal && (
-          <Suspense fallback={<ModalLoader />}>
-            <IQScoreModal
+          <Suspense fallback={null}>
+            <LazyModals.IQScoreModal
               setShowIQScoreModal={val => dispatch(setShowIQScoreModal(val))}
               isGuest={user?.role === 'guest'}
             />
@@ -166,8 +186,8 @@ const NavbarModalManager = memo(
       )} */}
         {/* Hamburger Drawer */}
         {isHamburgerOpen && (
-          <Suspense fallback={<ModalLoader />}>
-            <HamburgerDrawer
+          <Suspense fallback={null}>
+            <LazyDrawers.HamburgerDrawer
               isOpen={isHamburgerOpen}
               onClose={() => setIsHamburgerOpen(false)}
               navItems={navItems}

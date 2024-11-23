@@ -89,7 +89,9 @@ const FormattedContent = React.memo(
         return [joinedContent]
       }
 
-      return Array.isArray(mainContent) ? mainContent : [mainContent]
+      return Array.isArray(mainContent)
+        ? [mainContent.join(' ')]
+        : [mainContent]
     }, [mainContent])
 
     return (

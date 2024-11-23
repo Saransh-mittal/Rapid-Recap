@@ -1,10 +1,6 @@
 import React from 'react'
 import { Box } from '@chakra-ui/react'
-import {
-  processTextWithBold,
-  processImportantSentences,
-  highlightKeywords,
-} from './TextProcessor'
+import { processImportantSentences, highlightKeywords } from './TextProcessor'
 
 const SummaryView = ({
   importantSentences,
@@ -13,9 +9,8 @@ const SummaryView = ({
   stableRef = { stableRef },
 }) => {
   const processTextInOrder = text => {
-    const withBoldText = processTextWithBold(text)
     const withImportantSentences = processImportantSentences(
-      withBoldText,
+      text,
       importantSentences,
     )
     return highlightKeywords(

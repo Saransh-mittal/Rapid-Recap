@@ -17,6 +17,7 @@ const {
   currDayStreakCalulator,
   makeFirstLoginFalse,
   getTheRevivalEndDay,
+  calculateLoginStreak,
 } = require('../utils/user.utils')
 const { dailyUserIQCalc } = require('../utils/dailyUserIQCalc.utils')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
@@ -232,10 +233,50 @@ const logoutUser = async (req, res) => {
   }
 }
 
-const loginCheck = async (req, res) => {
+const loginCheck = asyncHandler(async (req, res) => {
+  // Use projection for better query performance
   const user = await User.findById(req.user._id)
-  res.status(201).send(user)
-}
+    .select('loginStreak lastLogin inGameName')
+    .lean() // Use lean() for better performance when we don't need a full Mongoose document
+
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' })
+  }
+
+  // Get today's date at UTC midnight once
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+
+  // Calculate new login streak
+  const newStreakData = calculateLoginStreak(user, today)
+
+  // Check if we need to log the activity
+  if (newStreakData.streak % 5 === 0 && newStreakData.streak > 0) {
+    // Fire and forget activity logging - don't await
+    logActivity({
+      userInGameName: user.inGameName,
+      type: activityTypes.FIVE_DAY_LOGIN_STREAK.type,
+      date: today,
+    }).catch(err => console.error('Activity logging failed:', err))
+  }
+
+  // Update user in a single operation
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        loginStreak: newStreakData.streak,
+        lastLogin: today,
+      },
+    },
+    {
+      new: true,
+      select: '-password -cpassword -googleId',
+    },
+  )
+
+  res.status(201).json(updatedUser) // Changed to 200 as this is not creating a new resource
+})
 
 const verifyUser = async (req, res) => {
   const { otp, email } = req.body

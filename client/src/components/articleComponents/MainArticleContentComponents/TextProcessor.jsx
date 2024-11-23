@@ -2,30 +2,51 @@ import React from 'react'
 import { Box } from '@chakra-ui/react'
 import { HighlightedWordsContext } from '../../../contextAPI/MainArticleProvider'
 
-const processTextWithBold = text => {
-  if (!text) return text
-  if (typeof text !== 'string') return text
+// const processTextWithBold = text => {
+//   if (!text) return text
+//   if (typeof text !== 'string') return text
 
-  const parts = text.split(/(\*\*[^*]+\*\*|#\w+)/)
+//   // First get all matches to preserve their positions
+//   const matches = [...text.matchAll(/(\*\*[^*]+\*\*|#\w+)/g)]
+//   if (!matches.length) return text
 
-  return parts.map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return (
-        <Box as="span" key={`bold-${index}`} fontWeight="bold" color="white">
-          {part.slice(2, -2)}
-        </Box>
-      )
-    }
-    if (part.startsWith('#')) {
-      return (
-        <Box as="span" key={`hash-${index}`} fontWeight="bold" color="white">
-          {part.slice(1)}
-        </Box>
-      )
-    }
-    return part
-  })
-}
+//   const result = []
+//   let lastIndex = 0
+
+//   matches.forEach((match, index) => {
+//     const [fullMatch] = match
+//     const startIndex = match.index
+
+//     // Add text before the match
+//     if (startIndex > lastIndex) {
+//       result.push(text.slice(lastIndex, startIndex))
+//     }
+
+//     // Add the formatted element
+//     if (fullMatch.startsWith('**')) {
+//       result.push(
+//         <Box as="span" key={`bold-${index}`} fontWeight="bold" color="white">
+//           {fullMatch.slice(2, -2)}
+//         </Box>,
+//       )
+//     } else if (fullMatch.startsWith('#')) {
+//       result.push(
+//         <Box as="span" key={`hash-${index}`} fontWeight="bold" color="white">
+//           {fullMatch.slice(1)}
+//         </Box>,
+//       )
+//     }
+
+//     lastIndex = startIndex + fullMatch.length
+//   })
+
+//   // Add remaining text
+//   if (lastIndex < text.length) {
+//     result.push(text.slice(lastIndex))
+//   }
+
+//   return result
+// }
 
 const DictionaryWord = React.memo(({ word, part, stableRef }) => {
   const { handleMouseEnter, handleMouseLeave, handleTouchStart } =
@@ -176,87 +197,131 @@ const highlightKeywords = (
 const processImportantSentences = (content, importantSentences) => {
   if (!content || !importantSentences.length) return content
 
-  const processNode = node => {
-    if (!node) return node
+  let result = content
+  let components = []
+  let lastIndex = 0
 
-    if (React.isValidElement(node)) {
-      return React.cloneElement(node, {
-        children: processNode(node.props.children),
+  // Normalize by removing extra spaces and trimming
+  const normalizeText = text => text.replace(/\s+/g, ' ').trim()
+
+  // Get clean versions for comparison
+  const contentNormalized = normalizeText(result)
+  const sentencesNormalized = importantSentences.map(s => normalizeText(s))
+
+  const matches = []
+  sentencesNormalized.forEach((sentence, idx) => {
+    let index = contentNormalized.indexOf(sentence)
+    if (index !== -1) {
+      matches.push({
+        start: index,
+        end: index + sentence.length,
+        text: result.substring(index, index + sentence.length),
       })
     }
+  })
 
-    if (Array.isArray(node)) {
-      return node.map(processNode)
+  // Sort matches by position
+  matches.sort((a, b) => a.start - b.start)
+
+  // Build components with highlighted sections
+  matches.forEach((match, index) => {
+    if (match.start > lastIndex) {
+      // Process non-highlighted text for bold
+      components.push(
+        processTextWithBold(result.substring(lastIndex, match.start)),
+      )
     }
 
-    if (typeof node !== 'string') return node
-
-    let result = node
-    let components = []
-    let lastIndex = 0
-
-    const sortedImportantSentences = [...importantSentences].sort(
-      (a, b) => b?.length - a?.length,
+    // Process highlighted text for bold while maintaining the highlight
+    components.push(
+      <Box
+        key={`important-${index}`}
+        as="span"
+        display="inline-block"
+        px={3}
+        py={1}
+        my={1}
+        mx={1}
+        bg="linear-gradient(135deg, rgba(236, 201, 75, 0.08), rgba(236, 201, 75, 0.15))"
+        borderRadius="lg"
+        position="relative"
+        _before={{
+          content: '""',
+          position: 'absolute',
+          left: 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: '3px',
+          height: '70%',
+          bg: 'linear-gradient(to bottom, #F6E05E, #D69E2E)',
+          borderRadius: '2px',
+        }}
+      >
+        {processTextWithBold(match.text)}
+      </Box>,
     )
 
-    const matches = []
-    sortedImportantSentences.forEach(important => {
-      let index = result.indexOf(important)
-      if (index !== -1) {
-        matches.push({
-          start: index,
-          end: index + important?.length,
-          text: important,
-        })
-      }
-    })
+    lastIndex = match.end
+  })
 
-    matches.sort((a, b) => a.start - b.start)
-
-    matches.forEach((match, index) => {
-      if (match.start > lastIndex) {
-        components.push(result.substring(lastIndex, match.start))
-      }
-
-      components.push(
-        <Box
-          key={`important-${index}`}
-          as="span"
-          display="inline-block"
-          px={3}
-          py={1}
-          my={1}
-          mx={1}
-          bg="linear-gradient(135deg, rgba(236, 201, 75, 0.08), rgba(236, 201, 75, 0.15))"
-          borderRadius="lg"
-          position="relative"
-          _before={{
-            content: '""',
-            position: 'absolute',
-            left: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: '3px',
-            height: '70%',
-            bg: 'linear-gradient(to bottom, #F6E05E, #D69E2E)',
-            borderRadius: '2px',
-          }}
-        >
-          {match.text}
-        </Box>,
-      )
-
-      lastIndex = match.end
-    })
-
-    if (lastIndex < result.length) {
-      components.push(result.substring(lastIndex))
-    }
-
-    return components
+  if (lastIndex < result.length) {
+    // Process remaining text for bold
+    components.push(processTextWithBold(result.substring(lastIndex)))
   }
 
-  return processNode(content)
+  return components
+}
+
+const processTextWithBold = text => {
+  if (!text) return text
+  if (typeof text !== 'string') return text
+
+  const parts = []
+  let lastIndex = 0
+  const boldRegex = /(\*\*[^*]+\*\*|#\w+)/g
+  let match
+
+  while ((match = boldRegex.exec(text)) !== null) {
+    // Add text before the bold/hash
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index))
+    }
+
+    // Process bold/hash text
+    const [fullMatch] = match
+    if (fullMatch.startsWith('**')) {
+      parts.push(
+        <Box
+          as="span"
+          key={`bold-${match.index}`}
+          fontWeight="bold"
+          color="white"
+        >
+          {fullMatch.slice(2, -2)}
+        </Box>,
+      )
+    } else if (fullMatch.startsWith('#')) {
+      parts.push(
+        <Box
+          as="span"
+          key={`hash-${match.index}`}
+          fontWeight="bold"
+          color="white"
+        >
+          {fullMatch.slice(1)}
+        </Box>,
+      )
+    }
+
+    lastIndex = match.index + fullMatch.length
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex))
+  }
+
+  return parts
 }
 
 export {
