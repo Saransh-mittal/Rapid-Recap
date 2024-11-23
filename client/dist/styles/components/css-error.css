@@ -1,0 +1,44 @@
+/* File: client/dist/styles/components/css-error.css */
+.error-container {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.error-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.error-content h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #1a1a1a;
+}
+
+.error-content p {
+  font-size: 1.125rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.error-actions {
+  margin-top: 2rem;
+}
+
+.primary-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.primary-button:hover {
+  background-color: #0056b3;
+}
