@@ -121,6 +121,7 @@ async function getBotContent(urlType, url, baseUrl) {
       } catch (error) {
         if (error.message.includes('Article not found')) {
           // Return 410 content
+          console.log('Error occured on the url:', url)
           return getBotContent('410', url, baseUrl)
         }
         throw error
