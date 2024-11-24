@@ -53,6 +53,10 @@ const {
 } = require('../model/recommendationSchema.js')
 const SeasonData = require('../model/seasonDataSchema.js')
 const TimeSpent = require('../model/timeSpentSchema.js')
+const {
+  updateUserWithRetry,
+  logActivityWithRetry,
+} = require('../utils/dbOperations.js')
 
 const registerUser = async (req, res) => {
   // console.log(req.body);
@@ -236,8 +240,9 @@ const logoutUser = async (req, res) => {
 const loginCheck = asyncHandler(async (req, res) => {
   // Use projection for better query performance
   const user = await User.findById(req.user._id)
-    .select('loginStreak lastLogin inGameName')
-    .lean() // Use lean() for better performance when we don't need a full Mongoose document
+    .select('-password -cpassword -googleId')
+    .lean()
+    .exec()
 
   if (!user) {
     return res.status(404).json({ message: 'User not found' })
@@ -250,32 +255,40 @@ const loginCheck = asyncHandler(async (req, res) => {
   // Calculate new login streak
   const newStreakData = calculateLoginStreak(user, today)
 
-  // Check if we need to log the activity
-  if (newStreakData.streak % 5 === 0 && newStreakData.streak > 0) {
-    // Fire and forget activity logging - don't await
-    logActivity({
-      userInGameName: user.inGameName,
-      type: activityTypes.FIVE_DAY_LOGIN_STREAK.type,
-      date: today,
-    }).catch(err => console.error('Activity logging failed:', err))
+  // Create optimistically updated user object for immediate response
+  const optimisticUser = {
+    ...user,
+    loginStreak: newStreakData.streak,
+    lastLogin: today,
   }
 
-  // Update user in a single operation
-  const updatedUser = await User.findByIdAndUpdate(
-    req.user._id,
-    {
-      $set: {
-        loginStreak: newStreakData.streak,
-        lastLogin: today,
-      },
-    },
-    {
-      new: true,
-      select: '-password -cpassword -googleId',
-    },
-  )
+  // Send immediate response to frontend
+  res.status(200).json(optimisticUser)
 
-  res.status(201).json(updatedUser) // Changed to 200 as this is not creating a new resource
+  // Perform background operations with retries
+  Promise.all([
+    // Update user data
+    updateUserWithRetry(req.user._id, {
+      loginStreak: newStreakData.streak,
+      lastLogin: today,
+    }),
+
+    // Log activity if needed
+    newStreakData.streak % 5 === 0 && newStreakData.streak > 0
+      ? logActivityWithRetry({
+          userInGameName: user.inGameName,
+          type: activityTypes.FIVE_DAY_LOGIN_STREAK.type,
+          date: today,
+        })
+      : Promise.resolve(),
+  ]).catch(error => {
+    // Log error for monitoring
+    console.error('Background operations failed after all retries:', {
+      userId: req.user._id,
+      error: error.message,
+      stack: error.stack,
+    })
+  })
 })
 
 const verifyUser = async (req, res) => {
@@ -654,7 +667,7 @@ const profile = async (req, res) => {
       })
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' })
+      return res.status(410).json({ error: 'User not found' })
     }
     const seasons = user.previousSeasonData.map(season => season.season)
     const {
@@ -1049,14 +1062,18 @@ const profilePrivacy = async (req, res) => {
   }
 }
 
-// Get all application updates
+// @desc   GET all application updates
+// @route  GET /api/user/getUpdates
+// @access Private
 const getUpdates = async (req, res) => {
   const userId = req.user._id
-  //console.log(userId);
   try {
-    const updates = await ApplicationUpdates.find({ userId: userId }).sort({
-      date: -1,
-    })
+    const updates = await ApplicationUpdates.find({ userId: userId })
+      .sort({
+        date: -1,
+      })
+      .lean()
+      .exec()
     res.status(200).json({ updates })
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' })
