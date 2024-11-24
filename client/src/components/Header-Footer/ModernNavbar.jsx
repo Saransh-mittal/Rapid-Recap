@@ -164,10 +164,10 @@ const ModernNavbar = ({ onNavbarLoad }) => {
     setNotifyCnt(count)
   }, [updates])
   useEffect(() => {
-    if (updatesFetched && streakFetched) {
+    if (updatesFetched) {
       onNavbarLoad()
     }
-  }, [updatesFetched, streakFetched, onNavbarLoad])
+  }, [updatesFetched, onNavbarLoad])
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY

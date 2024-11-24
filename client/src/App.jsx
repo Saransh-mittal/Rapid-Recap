@@ -300,7 +300,7 @@ const App = () => {
       dispatch(setLoginCheckStatus('pending'))
       try {
         const response = await axios.get(`/api/user/loginCheck`)
-        if (response.status === 201) {
+        if (response.status === 200) {
           dispatch(setUser(response.data))
         }
       } catch (error) {

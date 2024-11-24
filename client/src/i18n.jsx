@@ -18,6 +18,7 @@ const namespaces = {
     'LoadingScreen',
     'OnboardingProcess',
   ],
+  redux: ['tournamentSlice'],
   utils: ['formatDate'],
   categories: ['categories', 'tournamentCategories'],
   articleComponents: [
@@ -114,7 +115,6 @@ const namespaces = {
     'TournamentNoteMessage',
     'XPAwardNoteMessage',
     'DifficultyLegend',
-    'NoteMessageQueue',
     'UnifiedFeedbackNoteMessage',
     'ProfileBox',
   ],
@@ -168,6 +168,8 @@ i18n
         switch (category) {
           case 'screens':
             return `/locales/${lng}/screens/${namespace}.json`
+          case 'redux':
+            return `/locales/${lng}/redux/${namespace}.json`
           case 'utils':
             return `/locales/${lng}/utils/${namespace}.json`
           case 'articleComponents':

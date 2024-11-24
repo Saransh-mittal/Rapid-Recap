@@ -73,7 +73,7 @@ const QuizLoadingScreen = React.memo(
     useEffect(() => {
       if (socket && user) {
         if (isQuizGenerating) {
-          socket.emit('join quiz progress', user._id)
+          // socket.emit('join quiz progress', user._id)
           socket.on('quiz_generation_progress', data => {
             setProgress(data.progress)
           })

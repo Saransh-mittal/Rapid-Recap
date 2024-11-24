@@ -47,7 +47,7 @@ export const useProfile = () => {
       }
     } catch (error) {
       console.error(`Error fetching profile for ${inGameName}:`, error)
-      if (error.response?.status === 404) {
+      if (error.response?.status === 404 || error.response?.status === 410) {
         toast({
           title: 'User not found',
           description: 'The user you are looking for does not exist',
