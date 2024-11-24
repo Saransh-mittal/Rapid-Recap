@@ -436,10 +436,14 @@ function handleBotTemplate(template, botContent, urlType, baseUrl) {
 }
 
 async function shouldHandleAsBot(req) {
-  const botRoutes = ['/', '/article', '/get-started']
+  const botRoutes = ['/article', '/get-started']
   const url = req.originalUrl
 
-  if (!botRoutes.some(route => url.includes(route))) {
+  if (
+    !botRoutes.some(route => url.includes(route)) &&
+    url !== '/' &&
+    url !== '/?bot=true'
+  ) {
     return false
   }
 
