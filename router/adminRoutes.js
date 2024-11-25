@@ -19,6 +19,7 @@ const {
   updateOnBoardingArticle,
   deleteOnBoardingArticle,
 } = require('../controllers/article')
+const { sendCurrentBotReport } = require('../controllers/mail')
 
 const {
   getAllTournaments,
@@ -196,5 +197,11 @@ router.delete(
   deleteOnBoardingArticle,
 )
 router.get('/new-users', Authenticate, adminMiddleware, getNewUsers)
+router.get(
+  '/bot-analytics/report',
+  Authenticate,
+  adminMiddleware,
+  sendCurrentBotReport,
+)
 
 module.exports = router
