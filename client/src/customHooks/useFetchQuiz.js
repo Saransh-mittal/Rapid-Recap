@@ -16,7 +16,7 @@ const useFetchQuiz = (articleId, language, onClose) => {
   const [isSocketConnected, setIsSocketConnected] = useState(false)
 
   useEffect(() => {
-    if (!isSocketConnected) return
+    // if (!isSocketConnected) return
     const fetchQuiz = async () => {
       setLoad(true)
       setIsQuizGenerating(true)
@@ -59,7 +59,13 @@ const useFetchQuiz = (articleId, language, onClose) => {
     }
 
     fetchQuiz()
-  }, [articleId, language, toast, onClose, isSocketConnected])
+  }, [
+    articleId,
+    language,
+    toast,
+    onClose,
+    // isSocketConnected
+  ])
 
   useEffect(() => {
     const currentSocket = getSocket()

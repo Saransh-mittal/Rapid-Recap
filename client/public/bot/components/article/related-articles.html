@@ -1,0 +1,26 @@
+<!-- File: client/dist/bot/components/article/related-articles.html -->
+<div class="related-articles-section">
+  <h2 class="related-title">Related Articles</h2>
+  <div class="related-grid">
+    {{relatedArticlesContent}}
+  </div>
+</div>
+
+<!-- Template for each related article card -->
+<template id="related-article-card">
+  <article class="related-article-card" itemprop="isRelatedTo" itemscope itemtype="https://schema.org/NewsArticle">
+    <a href="{{articleUrl}}" class="card-link">
+      <div class="card-image">
+        <img src="{{imgURL}}" alt="{{title}}" loading="lazy" itemprop="image">
+      </div>
+      <div class="card-content">
+        <h3 class="card-title" itemprop="headline">{{title}}</h3>
+        <div class="card-meta">
+          <span class="card-date" itemprop="datePublished">{{dateTime}}</span>
+          <span class="card-category">{{category}}</span>
+        </div>
+        <p class="card-excerpt" itemprop="description">{{description}}</p>
+      </div>
+    </a>
+  </article>
+</template>

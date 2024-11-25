@@ -13,6 +13,7 @@ const {
 } = require('../model/tournamentRegistrationSchema.js')
 const Tournament = require('../model/tournamentSchema.js')
 const User = require('../model/userSchema')
+const { sendDailyReport } = require('../utils/botTracker.js')
 const {
   mailForStreakBroken,
   mailTransporter,
@@ -24,6 +25,7 @@ const {
   calculateWeeklyQuizDifficultyDistribution,
 } = require('../utils/mail.utils')
 const { progressBar } = require('../utils/progress.utils.js')
+const asyncHandler = require('express-async-handler')
 
 const streakBroken = async (req, res) => {
   try {
@@ -257,4 +259,20 @@ const sendMailsToUsers = async (req, res) => {
   }
 }
 
-module.exports = { streakBroken, sendMailsToUsers }
+/**
+ * @desc    Get current bot analytics report and send via email
+ * @route   GET /api/admin/bot-analytics/report
+ * @access  Admin
+ */
+const sendCurrentBotReport = asyncHandler(async (req, res) => {
+  const { email } = await User.findById(req.user._id)
+  const reportAvailable = await sendDailyReport(email)
+
+  res.status(200).json({
+    success: true,
+    message: 'Bot analytics report sent successfully',
+    reportAvailable,
+  })
+})
+
+module.exports = { streakBroken, sendMailsToUsers, sendCurrentBotReport }

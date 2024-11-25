@@ -118,29 +118,31 @@ const generateReportHtml = stats => {
 }
 
 // Send daily report
-const sendDailyReport = async () => {
+const sendDailyReport = async email => {
   try {
     const transporter = await mailTransporter()
     const stats = statsTracker.getStats()
 
     if (stats.size === 0) {
       console.log('No bot visits to report today')
-      return
+      return false
     }
 
     const emailContent = generateReportHtml(stats)
 
     await transporter.sendMail({
       from: 'rapidrecap2k23@gmail.com',
-      to: '20ucs174@lnmiit.ac.in',
+      to: email || '20ucs174@lnmiit.ac.in',
       subject: `Bot Analytics Report - ${new Date().toLocaleDateString()}`,
       html: emailContent,
     })
 
     console.log('Daily bot report sent successfully')
     statsTracker.reset()
+    return true
   } catch (error) {
     console.error('Error sending daily report:', error)
+    return false
   }
 }
 
@@ -166,4 +168,5 @@ module.exports = {
   trackBotVisit,
   initBotTracking,
   sendDailyReport, // Exported for manual triggering in development
+  statsTracker,
 }
