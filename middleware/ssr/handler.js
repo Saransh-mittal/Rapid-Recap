@@ -73,7 +73,7 @@ async function getBotContent(urlType, url, baseUrl) {
         footer: footerContent,
       }
     } else if (urlType === '410') {
-      const [navbarContent, errorContent] = await Promise.all([
+      const [navbarContent, errorContent, footerContent] = await Promise.all([
         fs.readFile(
           path.resolve(
             __dirname,
@@ -88,30 +88,46 @@ async function getBotContent(urlType, url, baseUrl) {
           ),
           'utf-8',
         ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../../client/dist/bot/components/footer.html',
+          ),
+          'utf-8',
+        ),
       ])
 
       content = {
         navbar: navbarContent,
         error: errorContent,
+        footer: footerContent,
         statusCode: 410,
       }
     } else {
-      const [navbarContent, articleTemplateContent] = await Promise.all([
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/navbar.html',
+      const [navbarContent, articleTemplateContent, footerContent] =
+        await Promise.all([
+          fs.readFile(
+            path.resolve(
+              __dirname,
+              '../../client/dist/bot/components/navbar.html',
+            ),
+            'utf-8',
           ),
-          'utf-8',
-        ),
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/article/article.html',
+          fs.readFile(
+            path.resolve(
+              __dirname,
+              '../../client/dist/bot/components/article/article.html',
+            ),
+            'utf-8',
           ),
-          'utf-8',
-        ),
-      ])
+          fs.readFile(
+            path.resolve(
+              __dirname,
+              '../../client/dist/bot/components/footer.html',
+            ),
+            'utf-8',
+          ),
+        ])
 
       // Get article content
       const articleId = ArticleService.extractArticleId(url)
@@ -136,6 +152,7 @@ async function getBotContent(urlType, url, baseUrl) {
       content = {
         navbar: navbarContent,
         article: articleContent,
+        footer: footerContent,
         seoMetaTags: generateMetaTags(articleData, baseUrl, url),
         articleData,
       }
@@ -381,6 +398,7 @@ function handleBotTemplate(template, botContent, urlType, baseUrl) {
         <link rel="stylesheet" href="/styles/components/css-error.css">
         <style>`,
       )
+      .replace('<div id="bot-footer"></div>', botContent.footer)
   } else {
     // Your existing article handling code
     template = template
@@ -405,10 +423,9 @@ function handleBotTemplate(template, botContent, urlType, baseUrl) {
       )
     }
 
-    template = template.replace(
-      '<div id="bot-article"></div>',
-      botContent.article,
-    )
+    template = template
+      .replace('<div id="bot-article"></div>', botContent.article)
+      .replace('<div id="bot-footer"></div>', botContent.footer)
 
     template = template.replace(
       '<style>',
@@ -422,6 +439,7 @@ function handleBotTemplate(template, botContent, urlType, baseUrl) {
       <link rel="stylesheet" href="/styles/components/css-benefits.css">
       <link rel="stylesheet" href="/styles/components/css-sections.css">
       <link rel="stylesheet" href="/styles/components/css-footer.css">
+      <link rel="stylesheet" href="/styles/components/css-related-articles.css">
       <link rel="stylesheet" href="/styles/utils/responsive.css">
       <style>`,
     )
