@@ -32,16 +32,16 @@ import { blackListedImgUrls } from '../../assets/blackListedImgUrls'
 import { useNavigate } from 'react-router-dom'
 import { useFeatureDetection } from '../../utils/featureDetection'
 import useSafeSound from '../../customHooks/useSafeSound'
-
+import QuizSkeletonWrapper from './loaders/QuizSkeletonWrapper'
+import GivenQuiz from './GivenQuiz'
+import QuizExpired from './QuizExpired'
+import TakeQuizButton from './TakeQuizButton'
+import TotalUserAttempted from './TotalUserAttempted'
+import QuizStatisticsSkeleton from './loaders/QuizStatisticsSkeleton'
+import ArticleListSkeleton from './loaders/ArticleListSkeleton'
 //SSR image
 const Alt_img = '/images/rr.webp'
 const rrImage = '/images/rrlogo_HD.webp'
-
-// Lazy load components
-const GivenQuiz = React.lazy(() => import('./GivenQuiz'))
-const QuizExpired = React.lazy(() => import('./QuizExpired'))
-const TakeQuizButton = React.lazy(() => import('./TakeQuizButton'))
-const TotalUserAttempted = React.lazy(() => import('./TotalUserAttempted'))
 
 const Sidebar = ({
   givenQuiz,
@@ -329,114 +329,46 @@ const Sidebar = ({
   }
 
   return (
-    <Skeleton isLoaded={isLoaded}>
-      <Box
-        boxShadow={'0 100px 200px rgba(1, 1, 1, 1.1)'}
-        borderRadius={'15px'}
-        p={1.5}
-        w={{ base: '90vw', md: '100%' }}
-      >
-        <Suspense fallback={<Spinner />}>
-          {givenQuiz ? (
-            <GivenQuiz
-              articleId={id}
-              percentile={percentile}
-              RQM_score={RQM_score}
+    // <Skeleton isLoaded={isLoaded}>
+    <Box
+      boxShadow={'0 100px 200px rgba(1, 1, 1, 1.1)'}
+      borderRadius={'15px'}
+      p={1.5}
+      w={{ base: '90vw', md: '100%' }}
+    >
+      {isQuizGivenLoading ? (
+        <QuizSkeletonWrapper />
+      ) : givenQuiz ? (
+        <GivenQuiz
+          articleId={id}
+          percentile={percentile}
+          RQM_score={RQM_score}
+        />
+      ) : onGoingQuiz ? (
+        <Heading size="md" margin={'5px'} mb={5} height={'100px'} color={'red'}>
+          {t('quizAlreadyOngoing')}
+        </Heading>
+      ) : quizExpired ? (
+        <QuizExpired />
+      ) : (
+        <Box position={'relative'}>
+          <Box
+            style={
+              notLoggedIn
+                ? { filter: 'blur(5px)', userSelect: 'none' }
+                : { userSelect: 'text' }
+            }
+            display={'flex'}
+            justifyContent={'center'}
+            alignItems={'center'}
+          >
+            <TakeQuizButton
+              onClick={handleQuizButtonClick}
+              isQuinBoostAvailable={isQuinBoostAvailable}
             />
-          ) : onGoingQuiz ? (
-            <Heading
-              size="md"
-              margin={'5px'}
-              mb={5}
-              height={'100px'}
-              color={'red'}
-            >
-              {t('quizAlreadyOngoing')}
-            </Heading>
-          ) : quizExpired ? (
-            <QuizExpired />
-          ) : (
-            <Box position={'relative'}>
-              <Box
-                style={
-                  notLoggedIn
-                    ? { filter: 'blur(5px)', userSelect: 'none' }
-                    : { userSelect: 'text' }
-                }
-                display={'flex'}
-                justifyContent={'center'}
-                alignItems={'center'}
-              >
-                {isQuizGivenLoading ? (
-                  <Spinner />
-                ) : (
-                  <TakeQuizButton
-                    onClick={handleQuizButtonClick}
-                    isQuinBoostAvailable={isQuinBoostAvailable}
-                  />
-                )}
-              </Box>
-              {notLoggedIn && (
-                <Tooltip label={t('loginToGiveQuiz')} placement="top">
-                  <LockIcon
-                    position="absolute"
-                    top="50%"
-                    left="50%"
-                    transform="translate(-50%, -50%)"
-                    color="white"
-                    boxSize={8}
-                    zIndex={2}
-                    onClick={() => dispatchRedux(setIsSigninOpen(true))}
-                    cursor={'pointer'}
-                  />
-                </Tooltip>
-              )}
-            </Box>
-          )}
-        </Suspense>
-        <Suspense fallback={<Spinner />}>
-          <TotalUserAttempted
-            totalUsersGivenQuiz={totalUsersGivenQuiz}
-            notLoggedIn={notLoggedIn}
-            RQM_score={RQM_score}
-            articleId={id}
-          />
-        </Suspense>
-        <Flex justifyContent="center" alignItems="center" mb={4}>
-          <RelatedArticlesToggle
-            showRelated={showRelated}
-            onToggle={() => {
-              if (!showRelated && pageRelated === 1) fetchRelatedArticles()
-              setShowRelated(!showRelated)
-            }}
-          />
-        </Flex>
-        <SimpleGrid
-          columns={1}
-          marginTop={5}
-          display="flex"
-          flexDirection="column"
-          alignItems="flex-start"
-          position="relative"
-        >
-          {renderArticles()}
-          {loading && <Spinner />}
-          {!loading && recommendedArticles.length > 0 && (
-            <Flex justifyContent="center" w="100%">
-              <Button
-                onClick={() =>
-                  showRelated
-                    ? fetchRelatedArticles()
-                    : fetchRecommendedArticles()
-                }
-                mt={4}
-              >
-                {t('loadMore')}
-              </Button>
-            </Flex>
-          )}
+          </Box>
           {notLoggedIn && (
-            <Tooltip label={t('loginToNavigate')} placement="top">
+            <Tooltip label={t('loginToGiveQuiz')} placement="top">
               <LockIcon
                 position="absolute"
                 top="50%"
@@ -450,9 +382,69 @@ const Sidebar = ({
               />
             </Tooltip>
           )}
-        </SimpleGrid>
-      </Box>
-    </Skeleton>
+        </Box>
+      )}
+      {isQuizGivenLoading ? (
+        <QuizStatisticsSkeleton />
+      ) : (
+        <TotalUserAttempted
+          totalUsersGivenQuiz={totalUsersGivenQuiz}
+          notLoggedIn={notLoggedIn}
+          RQM_score={RQM_score}
+          articleId={id}
+        />
+      )}
+      <Flex justifyContent="center" alignItems="center" mb={4}>
+        <RelatedArticlesToggle
+          showRelated={showRelated}
+          onToggle={() => {
+            if (!showRelated && pageRelated === 1) fetchRelatedArticles()
+            setShowRelated(!showRelated)
+          }}
+        />
+      </Flex>
+      <SimpleGrid
+        columns={1}
+        marginTop={5}
+        display="flex"
+        flexDirection="column"
+        alignItems="flex-start"
+        position="relative"
+      >
+        {renderArticles()}
+        {loading && <ArticleListSkeleton count={5} />}
+        {!loading && recommendedArticles.length > 0 && (
+          <Flex justifyContent="center" w="100%">
+            <Button
+              onClick={() =>
+                showRelated
+                  ? fetchRelatedArticles()
+                  : fetchRecommendedArticles()
+              }
+              mt={4}
+            >
+              {t('loadMore')}
+            </Button>
+          </Flex>
+        )}
+        {notLoggedIn && (
+          <Tooltip label={t('loginToNavigate')} placement="top">
+            <LockIcon
+              position="absolute"
+              top="50%"
+              left="50%"
+              transform="translate(-50%, -50%)"
+              color="white"
+              boxSize={8}
+              zIndex={2}
+              onClick={() => dispatchRedux(setIsSigninOpen(true))}
+              cursor={'pointer'}
+            />
+          </Tooltip>
+        )}
+      </SimpleGrid>
+    </Box>
+    // </Skeleton>
   )
 }
 

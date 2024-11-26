@@ -66,6 +66,15 @@ webpush.setVapidDetails(
   process.env.PUBLIC_VAPID_KEY,
   process.env.PRIVATE_VAPID_KEY,
 )
+
+// Add a pseado middleware to delay responses by 500ms to mimic real-world conditions of far away servers
+
+// app.use((req, res, next) => {
+//   setTimeout(() => {
+//     next()
+//   }, 5000)
+// })
+
 // -----Testings-----
 //require("./test/conn.test");
 //require("./test/index");

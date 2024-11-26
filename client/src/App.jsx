@@ -159,7 +159,6 @@ const App = () => {
         navigationEntries[0].type === 'reload'
       ) {
         setIsReload(true)
-        if (!location.pathname.includes('/article')) setShowLoadingScreen(true)
 
         // You can dispatch this to Redux if needed
         const splashScreen = document.getElementById('splash-screen')
@@ -169,17 +168,15 @@ const App = () => {
 
           splashScreen.style.display = 'none'
         }
-        console.log('Application was reloaded')
       } else {
         setIsReload(false)
         setShowLoadingScreen(true)
-        console.log('Fresh application start')
       }
     } else {
       // Fallback for browsers that don't support Performance API
       if (sessionStorage.getItem('app_session_id')) {
         setIsReload(true)
-        if (!location.pathname.includes('/article')) setShowLoadingScreen(true)
+
         const splashScreen = document.getElementById('splash-screen')
         if (splashScreen) {
           splashScreen.style.opacity = '0'
@@ -187,12 +184,10 @@ const App = () => {
 
           splashScreen.style.display = 'none'
         }
-        console.log('Application was reloaded (fallback detection)')
       } else {
         setIsReload(false)
         setShowLoadingScreen(true)
         sessionStorage.setItem('app_session_id', Date.now().toString())
-        console.log('Fresh application start (fallback detection)')
       }
     }
 

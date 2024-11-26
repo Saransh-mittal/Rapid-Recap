@@ -2,6 +2,7 @@
 import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { userCacheService } from '../services/userCache'
+import { articleCacheService } from '../services/articleCache'
 
 export const useUserCache = () => {
   const user = useSelector(state => state.auth.user)
@@ -29,4 +30,14 @@ export const useUserCache = () => {
     window.addEventListener('beforeunload', handleUnload)
     return () => window.removeEventListener('beforeunload', handleUnload)
   }, [user])
+
+  useEffect(() => {
+    const initializeCaches = async () => {
+      if ('indexedDB' in window) {
+        await articleCacheService.cleanExpiredArticles()
+      }
+    }
+
+    initializeCaches()
+  }, []) // Run once on mount
 }

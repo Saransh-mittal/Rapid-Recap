@@ -38,6 +38,7 @@ import { formatDate } from '../../utils/helper.utils'
 import AITagLine from './articleHeaderComponents/AITagLine'
 import { useFeatureDetection } from '../../utils/featureDetection'
 import useSafeSound from '../../customHooks/useSafeSound'
+import ArticleHeaderSkeleton from './loaders/ArticleHeaderSkeleton'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -46,6 +47,7 @@ const ArticleForm = React.lazy(() =>
 const ArticleHeader = ({
   title,
   author,
+  articleLoading,
   selectedLanguage,
   bookmark,
   avgTimeRead,
@@ -219,7 +221,9 @@ const ArticleHeader = ({
       }
     }
   }, [])
-
+  if (articleLoading) {
+    return <ArticleHeaderSkeleton />
+  }
   return (
     <Skeleton isLoaded={!!title[selectedLanguage]} w={'100%'} mb={[3, 4, 5]}>
       <Flex

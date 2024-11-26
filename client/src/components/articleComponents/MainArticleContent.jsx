@@ -60,65 +60,71 @@ const extractWebsiteInfo = text => {
   }
 }
 
-const MainArticleContent = ({
-  imgURL,
-  selectedLanguage,
-  mainText,
-  textRef,
-  articleRef,
-  articleLoading,
-  themedContent,
-  SourceURL,
-  dictionary = [],
-  importantSentences = [],
-}) => {
-  const { isAuthenticated } = useSelector(state => state.auth)
-  const [useAltImage, setUseAltImage] = useState(false)
-  const [isMobile] = useMediaQuery('(max-width: 480px)')
+const MainArticleContent = React.memo(
+  ({
+    imgURL,
+    selectedLanguage,
+    mainText,
+    textRef,
+    articleRef,
 
-  const websiteInfo = useMemo(() => {
-    if (!mainText || !mainText[selectedLanguage]) return null
-    const textArray = mainText[selectedLanguage]
-    const lastElement = Array.isArray(textArray)
-      ? textArray[textArray.length - 1]
-      : textArray
-    return extractWebsiteInfo(lastElement)
-  }, [mainText, selectedLanguage])
+    themedContent,
+    SourceURL,
+    dictionary = [],
+    importantSentences = [],
+  }) => {
+    const { isAuthenticated } = useSelector(state => state.auth)
+    const [useAltImage, setUseAltImage] = useState(false)
+    const [isMobile] = useMediaQuery('(max-width: 480px)')
 
-  // Memoize the content props
-  const contentProps = useMemo(
-    () => ({
-      mainText: selectedLanguage ? mainText[selectedLanguage] : mainText,
-      themedContent,
-      dictionary,
-      importantSentences,
-    }),
-    [mainText, selectedLanguage, themedContent, dictionary, importantSentences],
-  )
+    const websiteInfo = useMemo(() => {
+      if (!mainText || !mainText[selectedLanguage]) return null
+      const textArray = mainText[selectedLanguage]
+      const lastElement = Array.isArray(textArray)
+        ? textArray[textArray.length - 1]
+        : textArray
+      return extractWebsiteInfo(lastElement)
+    }, [mainText, selectedLanguage])
 
-  const handleImageError = () => {
-    if (!useAltImage) {
-      setUseAltImage(true)
+    // Memoize the content props
+    const contentProps = useMemo(
+      () => ({
+        mainText: selectedLanguage ? mainText[selectedLanguage] : mainText,
+        themedContent,
+        dictionary,
+        importantSentences,
+      }),
+      [
+        mainText,
+        selectedLanguage,
+        themedContent,
+        dictionary,
+        importantSentences,
+      ],
+    )
+
+    const handleImageError = () => {
+      if (!useAltImage) {
+        setUseAltImage(true)
+      }
     }
-  }
 
-  const fontSize = useBreakpointValue({
-    base: '1rem',
-    sm: '1.1rem',
-    md: '1.2rem',
-    lg: '1.25rem',
-  })
+    const fontSize = useBreakpointValue({
+      base: '1rem',
+      sm: '1.1rem',
+      md: '1.2rem',
+      lg: '1.25rem',
+    })
 
-  const padding = useBreakpointValue({
-    base: 2,
-    sm: 3,
-    md: 4,
-    lg: 6,
-  })
+    const padding = useBreakpointValue({
+      base: 2,
+      sm: 3,
+      md: 4,
+      lg: 6,
+    })
 
-  return (
-    <Flex w={{ base: '90vw', sm: '90vw', md: '100%' }} overflow="hidden">
-      <Skeleton isLoaded={!articleLoading} w="100%">
+    return (
+      <Flex w={{ base: '90vw', sm: '90vw', md: '100%' }} overflow="hidden">
         <Box
           ref={articleRef}
           px={padding}
@@ -330,9 +336,9 @@ const MainArticleContent = ({
             )}
           </Box>
         </Box>
-      </Skeleton>
-    </Flex>
-  )
-}
+      </Flex>
+    )
+  },
+)
 
 export default MainArticleContent

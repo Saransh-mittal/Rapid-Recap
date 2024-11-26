@@ -8,5 +8,8 @@ export const CACHE_CONFIG = {
   KEYS: {
     UNLOAD_CACHE: 'user_unload_cache',
   },
+  EXPIRY: {
+    ARTICLE: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+  },
   VERSION: 1,
 }
