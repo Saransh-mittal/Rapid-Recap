@@ -40,6 +40,7 @@ import { logoutAuth } from '../../redux/authSlice'
 import i18n from 'i18next'
 import { useTranslation } from 'react-i18next'
 import ExperienceLevelIcon from './modernNavbarComponents/ExperienceLevelIcon'
+import { userCacheService } from '../../lib/cache'
 
 const MotionBox = motion(Box)
 
@@ -104,6 +105,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
       const response = await axios.post('/api/user/logout')
       if (response.status === 201) {
         await i18n.changeLanguage('en')
+        await userCacheService.deleteUser()
         dispatch(setIsNotifDrawerOpen(false))
 
         setIsMenuOpen(false)

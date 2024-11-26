@@ -71,6 +71,7 @@ import { setIsLoading, setTaskProgress } from './redux/loadingProgressSlice.js'
 import { NavbarProvider } from './contextAPI/NavbarContext.jsx'
 import useCountdown from './customHooks/useCountdown.js'
 import ModernNavbar from './components/Header-Footer/ModernNavbar.jsx'
+import { userCacheService, useUserCache } from './lib/cache/index.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -78,7 +79,7 @@ const App = () => {
   const { isLoading, overallProgress } = useSelector(
     state => state.loadingProgress,
   )
-  const [showLoadingScreen, setShowLoadingScreen] = useState(true)
+  const [showLoadingScreen, setShowLoadingScreen] = useState(false)
   const { t } = useTranslation('App') // Initialize translation function
   const { t: tournamentSliceTranslation } = useTranslation('tournamentSlice') // Added translation
   const [navbarLoaded, setNavbarLoaded] = useState(false)
@@ -99,6 +100,7 @@ const App = () => {
   const { tournamentId, status, tournamentStartTime } = useSelector(
     state => state.tournament,
   )
+  const [isReload, setIsReload] = useState(false)
   useCountdown({ timeString: tournamentStartTime })
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const showNavbar = !user?.needsOnboarding
@@ -146,10 +148,60 @@ const App = () => {
   }, [updates])
 
   useEffect(() => {
-    setShowLoadingScreen(true)
+    // setShowLoadingScreen(true)
     setTimeout(() => {
       setShowUpgradeModal(true)
     }, 5000)
+    if (window.performance) {
+      const navigationEntries = performance.getEntriesByType('navigation')
+      if (
+        navigationEntries.length > 0 &&
+        navigationEntries[0].type === 'reload'
+      ) {
+        setIsReload(true)
+        if (!location.pathname.includes('/article')) setShowLoadingScreen(true)
+
+        // You can dispatch this to Redux if needed
+        const splashScreen = document.getElementById('splash-screen')
+        if (splashScreen) {
+          splashScreen.style.opacity = '0'
+          splashScreen.style.transition = 'opacity 0.3s ease-out'
+
+          splashScreen.style.display = 'none'
+        }
+        console.log('Application was reloaded')
+      } else {
+        setIsReload(false)
+        setShowLoadingScreen(true)
+        console.log('Fresh application start')
+      }
+    } else {
+      // Fallback for browsers that don't support Performance API
+      if (sessionStorage.getItem('app_session_id')) {
+        setIsReload(true)
+        if (!location.pathname.includes('/article')) setShowLoadingScreen(true)
+        const splashScreen = document.getElementById('splash-screen')
+        if (splashScreen) {
+          splashScreen.style.opacity = '0'
+          splashScreen.style.transition = 'opacity 0.3s ease-out'
+
+          splashScreen.style.display = 'none'
+        }
+        console.log('Application was reloaded (fallback detection)')
+      } else {
+        setIsReload(false)
+        setShowLoadingScreen(true)
+        sessionStorage.setItem('app_session_id', Date.now().toString())
+        console.log('Fresh application start (fallback detection)')
+      }
+    }
+
+    // Clean up function
+    return () => {
+      if (!isReload) {
+        sessionStorage.removeItem('app_session_id')
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -294,27 +346,37 @@ const App = () => {
     })
   }, [location, getUserInGameName, isLoggedIn])
 
+  useUserCache()
+
+  // Modified fetchInitialData
   useEffect(() => {
     const fetchInitialData = async () => {
-      dispatch(setTaskProgress({ task: 'fetchUser', progress: 50 }))
-      dispatch(setLoginCheckStatus('pending'))
-      try {
-        const response = await axios.get(`/api/user/loginCheck`)
-        if (response.status === 200) {
-          dispatch(setUser(response.data))
-        }
-      } catch (error) {
-        dispatch(setUser(null))
-        console.log(error)
-      } finally {
-        dispatch(setTaskProgress({ task: 'fetchUser', progress: 100 }))
-
-        dispatch(setLoginCheckStatus('fulfilled'))
-      }
+      await userCacheService.fetchAndCacheUser(dispatch)
     }
 
     fetchInitialData()
   }, [dispatch])
+  // useEffect(() => {
+  //   const fetchInitialData = async () => {
+  //     dispatch(setTaskProgress({ task: 'fetchUser', progress: 50 }))
+  //     dispatch(setLoginCheckStatus('pending'))
+  //     try {
+  //       const response = await axios.get(`/api/user/loginCheck`)
+  //       if (response.status === 200) {
+  //         dispatch(setUser(response.data))
+  //       }
+  //     } catch (error) {
+  //       dispatch(setUser(null))
+  //       console.log(error)
+  //     } finally {
+  //       dispatch(setTaskProgress({ task: 'fetchUser', progress: 100 }))
+
+  //       dispatch(setLoginCheckStatus('fulfilled'))
+  //     }
+  //   }
+
+  //   fetchInitialData()
+  // }, [dispatch])
 
   useEffect(() => {
     if (guestModalJustClosed && user?.role === 'guest') {
