@@ -315,7 +315,7 @@ const Article = () => {
     if (loginCheckStatus === 'fulfilled') {
       isQuizGiven()
     }
-  }, [loginCheckStatus])
+  }, [loginCheckStatus, totalUsersGivenQuiz])
 
   useEffect(() => {
     if (textRef.current) {

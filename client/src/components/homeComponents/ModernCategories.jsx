@@ -14,10 +14,17 @@ const ModernCategories = ({
   notLoggedIn,
 }) => {
   const [isMobile] = useMediaQuery('(max-width: 992px)')
+  const [isClient, setIsClient] = useState(false)
   const scrollContainerRef = useRef(null)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [maxScroll, setMaxScroll] = useState(0)
   const { t } = useTranslation('categories')
+
+  // Set isClient to true after initial render
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   const handleScroll = () => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } =
@@ -51,6 +58,18 @@ const ModernCategories = ({
         }}
         ref={el => (categoryRefs.current[idx] = el)}
         display={notLoggedIn && category.key === 'all' ? 'none' : undefined}
+      />
+    )
+  }
+
+  // Don't render anything until we know if we're on client-side
+  if (!isClient) {
+    return (
+      <Box
+        position="fixed"
+        width="220px"
+        height="calc(100vh - 80px)"
+        visibility="hidden"
       />
     )
   }
@@ -144,11 +163,9 @@ const ModernCategories = ({
         bgGradient="linear(135deg, rgba(28, 20, 56, 0.85) 0%, rgba(15, 13, 21, 0.85) 100%)"
         borderRight="1px solid rgba(255, 255, 255, 0.08)"
         boxShadow="4px 0 30px rgba(0, 0, 0, 0.1)"
-        // bg="rgba(8, 6, 15, 0.98)"
         borderRadius="2xl"
         width="220px"
         backdropFilter="blur(8px)"
-        // boxShadow="0 4px 20px rgba(0, 0, 0, 0.2)"
         overflow="hidden"
       >
         <Box
