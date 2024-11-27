@@ -73,31 +73,31 @@ const QuizLoadingScreen = React.memo(
     useEffect(() => {
       if (socket && user) {
         if (isQuizGenerating) {
-          // socket.emit('join quiz progress', user._id)
-          socket.on('quiz_generation_progress', data => {
+          socket?.emit('join quiz progress', user._id)
+          socket?.on('quiz_generation_progress', data => {
             setProgress(data.progress)
           })
         } else if (isSubmitting) {
-          socket.emit('join quiz submission progress', user._id)
-          socket.on('quiz_submission_progress', data => {
+          socket?.emit('join quiz submission progress', user._id)
+          socket?.on('quiz_submission_progress', data => {
             setStepProgress(prev => ({ ...prev, [data.stepId]: data.progress }))
           })
         }
 
         return () => {
-          socket.off('quiz_generation_progress')
-          socket.off('quiz_submission_progress')
+          socket?.off('quiz_generation_progress')
+          socket?.off('quiz_submission_progress')
         }
       }
     }, [socket, isQuizGenerating, isSubmitting, user])
 
     useEffect(() => {
       if (isSubmitting) {
-        const totalWeight = submissionSteps.reduce(
-          (sum, step) => sum + step.weight,
+        const totalWeight = submissionSteps?.reduce(
+          (sum, step) => sum + step?.weight,
           0,
         )
-        const weightedProgress = submissionSteps.reduce((sum, step) => {
+        const weightedProgress = submissionSteps?.reduce((sum, step) => {
           const stepProgressValue = stepProgress[step.id] || 0
           return sum + (stepProgressValue * step.weight) / 100
         }, 0)
@@ -108,7 +108,7 @@ const QuizLoadingScreen = React.memo(
     useEffect(() => {
       const getRandomTip = () => {
         if (shownTips.current.size === tips.length) {
-          shownTips.current.clear()
+          shownTips?.current?.clear()
         }
         let newTip
         do {
@@ -211,7 +211,7 @@ const QuizLoadingScreen = React.memo(
 
           {isSubmitting && (
             <VStack align="start" spacing={2} width="100%">
-              {submissionSteps.map(step => (
+              {submissionSteps?.map(step => (
                 <Checkbox
                   key={step.id}
                   isChecked={stepProgress[step.id] === 100}

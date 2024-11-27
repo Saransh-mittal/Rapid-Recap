@@ -13,10 +13,8 @@ const useFetchQuiz = (articleId, language, onClose) => {
   const toast = useToast()
   const { socket, getSocket } = useSocket()
   const { user } = useSelector(state => state.auth)
-  const [isSocketConnected, setIsSocketConnected] = useState(false)
 
   useEffect(() => {
-    // if (!isSocketConnected) return
     const fetchQuiz = async () => {
       setLoad(true)
       setIsQuizGenerating(true)
@@ -59,28 +57,20 @@ const useFetchQuiz = (articleId, language, onClose) => {
     }
 
     fetchQuiz()
-  }, [
-    articleId,
-    language,
-    toast,
-    onClose,
-    // isSocketConnected
-  ])
+  }, [articleId, language, toast, onClose])
 
   useEffect(() => {
     const currentSocket = getSocket()
     if (currentSocket && user) {
       currentSocket.emit('join quiz progress', user._id)
-      currentSocket.on('quiz_generation_progress', data => {
-        setIsSocketConnected(true)
-      })
+      currentSocket.on('quiz_generation_progress', data => {})
     }
 
-    // return () => {
-    //   if (currentSocket) {
-    //     currentSocket.off('quiz_generation_progress')
-    //   }
-    // }
+    return () => {
+      if (currentSocket) {
+        currentSocket.off('quiz_generation_progress')
+      }
+    }
   }, [getSocket, user, socket])
 
   const startQuiz = async () => {
