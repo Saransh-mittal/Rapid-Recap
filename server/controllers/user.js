@@ -14,7 +14,7 @@ const {
   calculateUserRank,
   dailyStreakCalculator,
   longestStreakCalculator,
-  currDayStreakCalulator,
+
   makeFirstLoginFalse,
   getTheRevivalEndDay,
   calculateLoginStreak,
@@ -25,15 +25,7 @@ const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 const QuinBoost = require('../model/quinBoostSchema')
 const MailTemplates = require('../data/MailTemplates.js')
 const { isValidEmail, formatDate } = require('../utils/miscellaneous.utils.js')
-const {
-  startSession,
-  commitSession,
-  abortSession,
-} = require('../db/session.js')
-const {
-  generateRecommendations,
-  updateRecommendations,
-} = require('../services/recommendationService.js')
+
 const Article = require('../model/articleSchema.js')
 const asyncHandler = require('express-async-handler')
 const { logActivity } = require('../utils/activity.utils.js')
@@ -44,7 +36,7 @@ const { hindiConverter } = require('../utils/article.utils.js')
 const {
   quinBoostUnlockTemplate,
 } = require('../data/inboxNotificationsTemplates.js')
-const createIndexesIfNotExist = require('../scripts/createIndexesIfNotExist.js')
+
 const DailyIQ = require('../model/dailyIQSchema.js')
 const FriendRequest = require('../model/friendRequestSchema.js')
 const {
@@ -59,51 +51,46 @@ const {
 } = require('../utils/dbOperations.js')
 
 const registerUser = async (req, res) => {
-  // console.log(req.body);
   const { name, email, pic, password, cpassword, inGameName } = req.body
+  const session = await mongoose.startSession()
 
-  if (!name || !email || !pic || !password || !cpassword || !inGameName) {
-    return res.status(422).json({ error: 'Please fill the required field' })
-  }
-
-  if (!isValidEmail(email)) {
-    return res.status(422).json({ error: 'Invalid Email' })
-  }
-
-  if (isValidEmail(inGameName)) {
-    return res
-      .status(422)
-      .json({ error: 'Email cannot be used as an In-Game Name' })
-  }
-
-  // InGameName cannot be greater than 16 characters
-  if (inGameName.length > 16) {
-    return res
-      .status(422)
-      .json({ error: 'In Game Name cannot be greater than 16 characters' })
-  }
-  if (name.length > 16) {
-    return res
-      .status(422)
-      .json({ error: 'Name cannot be greater than 16 characters' })
-  }
-
-  if (inGameName.includes(' ')) {
-    return res.status(422).json({ error: 'In Game Name cannot have spaces' })
-  }
-
-  const session = await startSession()
   try {
-    const response = await User.findOne({ email }).session(session)
-    const response2 = await User.findOne({ inGameName }).session(session)
+    session.startTransaction()
 
-    if (response) {
-      return res.status(422).json({ error: 'Email already exists' })
+    if (!name || !email || !pic || !password || !cpassword || !inGameName) {
+      return res.status(422).json({ error: 'Please fill the required field' })
     }
-    if (response2) {
-      return res
-        .status(422)
-        .json({ error: 'This In Game Name is already taken' })
+
+    if (!isValidEmail(email)) {
+      throw new Error('Invalid Email')
+    }
+
+    if (isValidEmail(inGameName)) {
+      throw new Error('Email cannot be used as an In-Game Name')
+    }
+
+    if (inGameName.length > 16) {
+      throw new Error('In Game Name cannot be greater than 16 characters')
+    }
+
+    if (name.length > 16) {
+      throw new Error('Name cannot be greater than 16 characters')
+    }
+
+    if (inGameName.includes(' ')) {
+      throw new Error('In Game Name cannot have spaces')
+    }
+
+    const existingEmail = await User.findOne({ email }).session(session)
+    if (existingEmail) {
+      throw new Error('Email already exists')
+    }
+
+    const existingInGameName = await User.findOne({ inGameName }).session(
+      session,
+    )
+    if (existingInGameName) {
+      throw new Error('This In Game Name is already taken')
     }
 
     if (password.length < 8) {
@@ -111,9 +98,7 @@ const registerUser = async (req, res) => {
     }
 
     if (password !== cpassword) {
-      return res
-        .status(422)
-        .json({ error: 'Password and confirm password do not match' })
+      throw new Error('Password and confirm password do not match')
     }
 
     const user = new User({
@@ -146,13 +131,13 @@ const registerUser = async (req, res) => {
       html: MailTemplates.OTP.html(OTP),
     })
 
-    await commitSession()
-    generateRecommendations(user._id.toString())
+    await session.commitTransaction()
     return res.status(201).json({ message: 'Registered Successfully' })
   } catch (err) {
-    await abortSession(session)
-    res.status(500).send('Internal Server Error')
-    console.log(err)
+    await session.abortTransaction()
+    return res.status(422).json({ error: err.message })
+  } finally {
+    session.endSession()
   }
 }
 
