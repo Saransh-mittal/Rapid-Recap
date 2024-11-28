@@ -129,7 +129,8 @@ const updateRecommendations = async userId => {
   try {
     const user = await User.findById(userId)
     if (!user) {
-      throw new Error('User not found')
+      console.error('User not found')
+      return
     }
 
     // Convert the preferredCategories to an array of objects
