@@ -189,7 +189,7 @@ const saveQuizAttempt = async (
       articleId,
       session,
     })
-
+    const prevUserScore = user.userScore
     const newUserScore = user.userScore + articleDifficulty * userPercentile
 
     user.userScore = newUserScore
@@ -203,7 +203,22 @@ const saveQuizAttempt = async (
       newSociety,
       newCircle,
       societyUpgradeMessage,
-    } = await calculateRealTimeIQ(userId, newUserScore, session)
+      globalMeanUserScore,
+      globalStandardDeviation,
+      finalUserScore,
+      boostMultiplier,
+      originalIncrement,
+      boostedIncrement,
+      additionalScore,
+    } = await calculateRealTimeIQ(userId, newUserScore, RQM_score, session)
+    newQuizAttempt.globalMeanUserScore = globalMeanUserScore
+    newQuizAttempt.globalStandardDeviation = globalStandardDeviation
+    newQuizAttempt.prevIQScore = prevIQScore
+    newQuizAttempt.newIQScore = newIQScore
+    newQuizAttempt.prevUserScore = prevUserScore
+    newQuizAttempt.newUserScore = finalUserScore
+    await newQuizAttempt.save({ session })
+
     resultOfIQCalc = {
       newIQScore,
       prevIQScore,
@@ -213,6 +228,10 @@ const saveQuizAttempt = async (
       newSociety,
       newCircle,
       societyUpgradeMessage,
+      boostMultiplier,
+      originalIncrement,
+      boostedIncrement,
+      additionalScore,
     }
   }
 
