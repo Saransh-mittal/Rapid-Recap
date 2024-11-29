@@ -1,0 +1,138 @@
+{
+  "top": {
+    "name": "Dr. Alexander Mitchell",
+    "title": "Chief News Editor",
+    "experience": "Leading journalist with expertise in global current affairs",
+    "expertise": "Breaking News and Global Analysis",
+    "education": "Ph.D. in Mass Communication from Columbia University",
+    "yearsInField": "20"
+  },
+  "general": {
+    "name": "Victoria Hayes",
+    "title": "Executive Editor",
+    "experience": "Multi-award winning journalist covering diverse topics",
+    "expertise": "General News and Current Affairs",
+    "education": "Master's in Journalism from Northwestern University",
+    "yearsInField": "15"
+  },
+  "world": {
+    "name": "Dr. Emily Thompson",
+    "title": "Global Affairs Correspondent",
+    "experience": "Former UN correspondent with expertise in international relations",
+    "expertise": "International Politics and Diplomacy",
+    "education": "Ph.D. in International Relations from London School of Economics",
+    "yearsInField": "15"
+  },
+  "politics": {
+    "name": "Robert Sullivan",
+    "title": "Senior Political Analyst",
+    "experience": "Former political advisor and congressional correspondent",
+    "expertise": "Domestic and International Politics",
+    "education": "Master's in Political Science from Georgetown University",
+    "yearsInField": "18"
+  },
+  "business": {
+    "name": "Michael Chen, CFA",
+    "title": "Financial Markets Analyst",
+    "experience": "Former Wall Street analyst specializing in market analysis",
+    "expertise": "Financial Markets and Economic Policy",
+    "education": "MBA from Wharton School of Business",
+    "yearsInField": "12"
+  },
+  "technology": {
+    "name": "Dr. Sarah Ramirez",
+    "title": "Technology Editor",
+    "experience": "Silicon Valley tech journalist and researcher",
+    "expertise": "Emerging Technologies and Digital Innovation",
+    "education": "Ph.D. in Computer Science from Stanford University",
+    "yearsInField": "10"
+  },
+  "sports": {
+    "name": "James Anderson",
+    "title": "Senior Sports Analyst",
+    "experience": "Former athlete and sports broadcaster",
+    "expertise": "International Sports and Athletics",
+    "education": "Master's in Sports Management",
+    "yearsInField": "18"
+  },
+  "health": {
+    "name": "Dr. Rachel Kim",
+    "title": "Health and Medical Editor",
+    "experience": "Former medical researcher and health policy advisor",
+    "expertise": "Public Health and Medical Science",
+    "education": "M.D. from Johns Hopkins University",
+    "yearsInField": "14"
+  },
+  "science": {
+    "name": "Dr. David Foster",
+    "title": "Science Editor",
+    "experience": "Research scientist turned science communicator",
+    "expertise": "Scientific Research and Discovery",
+    "education": "Ph.D. in Physics from MIT",
+    "yearsInField": "16"
+  },
+  "environment": {
+    "name": "Dr. Maria Garcia",
+    "title": "Environmental Science Editor",
+    "experience": "Climate scientist and environmental policy expert",
+    "expertise": "Climate Change and Environmental Policy",
+    "education": "Ph.D. in Environmental Science from UC Berkeley",
+    "yearsInField": "13"
+  },
+  "crime": {
+    "name": "Marcus Bennett",
+    "title": "Crime and Justice Editor",
+    "experience": "Former criminal investigator and legal correspondent",
+    "expertise": "Criminal Justice and Law Enforcement",
+    "education": "Master's in Criminal Justice from John Jay College",
+    "yearsInField": "17"
+  },
+  "education": {
+    "name": "Dr. Patricia Lewis",
+    "title": "Education Editor",
+    "experience": "Former education policy advisor and academic researcher",
+    "expertise": "Educational Policy and Development",
+    "education": "Ph.D. in Education from Harvard University",
+    "yearsInField": "15"
+  },
+  "entertainment": {
+    "name": "Sophie Turner",
+    "title": "Entertainment Editor",
+    "experience": "Entertainment industry insider and cultural critic",
+    "expertise": "Film, Television, and Popular Culture",
+    "education": "Master's in Film Studies from USC",
+    "yearsInField": "11"
+  },
+  "food": {
+    "name": "Chef Daniel Wright",
+    "title": "Food and Culinary Editor",
+    "experience": "Professional chef and culinary journalist",
+    "expertise": "Culinary Arts and Food Culture",
+    "education": "Culinary Degree from Le Cordon Bleu",
+    "yearsInField": "16"
+  },
+  "lifestyle": {
+    "name": "Isabella Romano",
+    "title": "Lifestyle Editor",
+    "experience": "Lifestyle journalist and trend analyst",
+    "expertise": "Contemporary Culture and Social Trends",
+    "education": "Master's in Social Anthropology from NYU",
+    "yearsInField": "12"
+  },
+  "tourism": {
+    "name": "Nathan Parker",
+    "title": "Travel and Tourism Editor",
+    "experience": "Travel writer and tourism industry expert",
+    "expertise": "Global Tourism and Travel Industry",
+    "education": "Master's in Tourism Management from Cornell University",
+    "yearsInField": "14"
+  },
+  "default": {
+    "name": "Rapid Recap Editorial Team",
+    "title": "Senior Editor",
+    "experience": "Extensive experience in digital journalism",
+    "expertise": "General News and Current Affairs",
+    "education": "Advanced Degree in Journalism",
+    "yearsInField": "15"
+  }
+}
