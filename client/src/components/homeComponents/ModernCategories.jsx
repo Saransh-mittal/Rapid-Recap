@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Box, HStack, VStack, Text, useMediaQuery } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
 
 const MotionBox = motion(Box)
 
@@ -19,6 +20,7 @@ const ModernCategories = ({
   const [scrollProgress, setScrollProgress] = useState(0)
   const [maxScroll, setMaxScroll] = useState(0)
   const { t } = useTranslation('categories')
+  const { isAuthenticated } = useSelector(state => state.auth)
 
   // Set isClient to true after initial render
   useEffect(() => {
@@ -150,7 +152,7 @@ const ModernCategories = ({
   return (
     <Box
       position="fixed"
-      top="65px"
+      top={!isAuthenticated ? '75px' : '65px'}
       left={2}
       zIndex={900}
       maxH="calc(100vh - 80px)"

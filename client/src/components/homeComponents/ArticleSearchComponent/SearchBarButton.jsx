@@ -1,20 +1,44 @@
 import React from 'react'
-import SeachIcon from '../../../assets/svg/SearchIcon'
+import { IconButton } from '@chakra-ui/react'
+import { Search, X } from 'lucide-react'
 
-const SearchBarButton = React.memo(({ handleSearch }) => (
-  <button
-    onClick={handleSearch}
-    style={{
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      borderRadius: '9999px',
-      padding: '8px',
-      marginLeft: '8px',
-      border: 'none',
-      cursor: 'pointer',
-    }}
-  >
-    <SeachIcon width={'20px'} height={'20px'} />
-  </button>
-))
+const SearchBarButton = React.memo(
+  ({ handleSearch, handleClearSearch, isHovered, searchTerm }) => (
+    <IconButton
+      onClick={searchTerm ? handleClearSearch : handleSearch}
+      aria-label={searchTerm ? 'Clear search' : 'Search'}
+      icon={
+        searchTerm ? (
+          <X
+            size={18}
+            style={{
+              transition: 'all 0.3s',
+              transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+            }}
+          />
+        ) : (
+          <Search
+            size={18}
+            style={{
+              transition: 'all 0.3s',
+              transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+            }}
+          />
+        )
+      }
+      ml={2}
+      mr={1}
+      bg="whiteAlpha.100"
+      _hover={{ bg: 'whiteAlpha.200' }}
+      _active={{ bg: 'whiteAlpha.300' }}
+      borderRadius="full"
+      w="36px"
+      h="36px"
+      color="white"
+      transition="all 0.3s"
+      transform={isHovered ? 'translateY(-1px)' : 'translateY(0)'}
+    />
+  ),
+)
 
 export default SearchBarButton

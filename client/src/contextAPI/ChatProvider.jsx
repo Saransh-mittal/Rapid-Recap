@@ -63,7 +63,7 @@ const ChatProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    getInitialNotificationCnt()
+    if (loggedInUser) getInitialNotificationCnt()
     setUser(loggedInUser)
 
     getSocket()

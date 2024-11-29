@@ -143,13 +143,14 @@ const ModernNavbar = ({ onNavbarLoad }) => {
   }, [dispatch, navigate, toast])
 
   const checkStreakAndFetchUpdates = useCallback(() => {
+    if (!isAuthenticated) return
     if (!updatesLoading && loginCheckStatus === 'fulfilled') {
       dispatch(fetchAppUpdates())
     }
     if (!streakLoading) {
       dispatch(fetchDailyStreak())
     }
-  }, [streakLoading, loginCheckStatus, dispatch])
+  }, [streakLoading, loginCheckStatus, isAuthenticated, dispatch])
 
   useEffect(() => {
     checkStreakAndFetchUpdates()
@@ -296,14 +297,14 @@ const ModernNavbar = ({ onNavbarLoad }) => {
       {/* Add fade overlay */}
       <Box
         position="absolute"
-        top="-2rem" // Offset to account for the top={2} on parent
+        top="-2rem"
         left="50%"
         transform="translateX(-50%)"
         width="100vw"
         height="120px"
         background={`linear-gradient(to bottom,
-          rgba(14, 12, 22, ${scrollOpacity}) 0%,
-          rgba(14, 12, 22, ${scrollOpacity * 0.8}) 40%,
+          rgba(28, 24, 50, ${scrollOpacity}) 0%,
+          rgba(22, 19, 40, ${scrollOpacity * 0.8}) 40%,
           rgba(14, 12, 22, 0) 100%)`}
         pointerEvents="none"
         zIndex={-1}
@@ -315,7 +316,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
         }}
       />
       <Flex
-        bgGradient="linear(180deg, rgba(28, 20, 56, 0.95) 0%, rgba(15, 13, 21, 0.90) 100%)"
+        bg="rgba(22, 19, 40, 0.85)"
         borderBottom="1px solid rgba(255, 255, 255, 0.08)"
         boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
         backdropFilter="blur(8px)"
@@ -335,8 +336,8 @@ const ModernNavbar = ({ onNavbarLoad }) => {
           right: 0,
           bottom: 0,
           borderRadius: 'inherit',
-          bgGradient:
-            'linear(180deg, rgba(28, 20, 56, 0.95) 0%, rgba(15, 13, 21, 0.90) 100%)',
+          // Simplified pseudo-element background
+          bg: 'rgba(22, 19, 40, 0.85)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
           zIndex: -1,
