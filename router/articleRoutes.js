@@ -19,6 +19,7 @@ const {
   getRelatedArticles,
   createStory,
   getStory,
+  getBotRelatedArticles,
 } = require('../controllers/article')
 const { Authenticate } = require('../middleware/authenticate')
 
@@ -39,5 +40,6 @@ router.route('/related/:articleId').get(Authenticate, getRelatedArticles)
 router.route('/story').post(Authenticate, createStory)
 router.route('/story/:id').get(Authenticate, getStory)
 router.route('/onboarding').get(Authenticate, getRandomOnBoardingArticle)
+router.route('/bot-related/:articleId').get(getBotRelatedArticles)
 
 module.exports = router

@@ -31,6 +31,7 @@ const ArticleHighlight = require('../model/articleHighlightSchema')
 const {
   generateHighlightForArticle,
 } = require('../utils/article.highlight.utils')
+const ArticleService = require('../services/articleService')
 
 const allArticles = async (req, res) => {
   const { page = 1, pageSize = 9, category = 'general', lang } = req.query
@@ -1102,6 +1103,22 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
   })
 })
 
+// @desc   Get related articles for bot
+// @route  GET /api/articles/bot-related/:articleId
+// @access Public
+const getBotRelatedArticles = asyncHandler(async (req, res) => {
+  const { articleId } = req.params
+  const relatedArticles = await ArticleService.getRelatedArticles(articleId)
+
+  if (!relatedArticles) {
+    return res.status(404).send('')
+  }
+
+  const relatedHTML =
+    ArticleService.generateRelatedArticlesHTML(relatedArticles)
+  res.send(relatedHTML)
+})
+
 // @desc   Create a story from an article
 // @route  POST /api/articles/story
 // @access Protected
@@ -1520,4 +1537,5 @@ module.exports = {
   getOnBoardingArticles,
   updateOnBoardingArticle,
   deleteOnBoardingArticle,
+  getBotRelatedArticles,
 }

@@ -1,5 +1,3 @@
-// File: server/src/services/articleService.js
-
 const Article = require('../model/articleSchema')
 const cache = require('memory-cache')
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
@@ -7,23 +5,33 @@ const slugify = require('slugify')
 const AuthorProfileService = require('./authorProfileService')
 
 class ArticleService {
-  static async getArticleContent(articleId) {
+  static async getArticleContent(articleId, includeRelated = false) {
     try {
-      const cacheKey = `article-${articleId}`
+      const cacheKey = `article-${articleId}${
+        includeRelated ? '-with-related' : ''
+      }`
       const cachedArticle = cache.get(cacheKey)
       if (cachedArticle) return cachedArticle
 
-      const article = await Article.findById(articleId).populate(
-        'relatedArticles',
+      const query = Article.findById(articleId).select(
+        'title mainText dateTime category imgURL url author tags keywords description',
       )
+      if (includeRelated) {
+        query.populate({
+          path: 'relatedArticles',
+          select: 'title description dateTime category imgURL mainText',
+        })
+      }
+      const article = await query
 
       if (!article) {
         throw new Error(`Article not found : articleId=${articleId}`)
       }
-      // Generate author profile based on article category
+
       const authorProfile = await AuthorProfileService.generateAuthorProfile(
         article.category,
       )
+
       const source = article.url
         ? new URL(article.url).hostname.replace('www.', '')
         : 'rapidrecap.co.in'
@@ -35,24 +43,6 @@ class ArticleService {
           year: 'numeric',
         })
         .toUpperCase()
-
-      // Format related articles
-      const relatedArticles = article.relatedArticles.map(related => ({
-        _id: related._id,
-        title: related.title,
-        description:
-          related.description || related.mainText.substring(0, 155) + '...',
-        dateTime: new Date(related.dateTime)
-          .toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })
-          .toUpperCase(),
-        category: related.category,
-        imgURL: related.imgURL?.[0] || null,
-        slugifiedTitle: slugify(related.title),
-      }))
 
       const processedArticle = {
         _id: article._id,
@@ -70,10 +60,31 @@ class ArticleService {
         author: article.author,
         keywords: article?.keywords || [],
         description: article?.description || '',
-        relatedArticles,
+      }
+
+      if (includeRelated && article.relatedArticles) {
+        processedArticle.relatedArticles = article.relatedArticles.map(
+          related => ({
+            _id: related._id,
+            title: related.title,
+            description:
+              related.description || related.mainText.substring(0, 155) + '...',
+            dateTime: new Date(related.dateTime)
+              .toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })
+              .toUpperCase(),
+            category: related.category,
+            imgURL: related.imgURL?.[0] || null,
+            slugifiedTitle: slugify(related.title),
+          }),
+        )
       }
 
       cache.put(cacheKey, processedArticle, CACHE_DURATION)
+
       return processedArticle
     } catch (error) {
       console.error('Error fetching article:', error)
@@ -81,12 +92,50 @@ class ArticleService {
     }
   }
 
-  static replaceArticleContent(template, articleData) {
-    // Add schema.org attributes without modifying visual structure
+  static async getRelatedArticles(articleId) {
+    try {
+      const cacheKey = `related-${articleId}`
+      const cachedRelated = cache.get(cacheKey)
+      if (cachedRelated) return cachedRelated
+
+      const article = await Article.findById(articleId).populate({
+        path: 'relatedArticles',
+        select: 'title description dateTime category imgURL mainText',
+      })
+
+      if (!article?.relatedArticles) return null
+
+      const relatedArticles = article.relatedArticles.map(related => ({
+        _id: related._id,
+        title: related.title,
+        description:
+          related.description || related.mainText.substring(0, 155) + '...',
+        dateTime: new Date(related.dateTime)
+          .toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })
+          .toUpperCase(),
+        category: related.category,
+        imgURL: related.imgURL?.[0] || null,
+        slugifiedTitle: slugify(related.title),
+      }))
+
+      cache.put(cacheKey, relatedArticles, CACHE_DURATION)
+      return relatedArticles
+    } catch (error) {
+      console.error('Error fetching related articles:', error)
+      return null
+    }
+  }
+
+  static replaceArticleContent(template, articleData, includeRelated = false) {
     let content = `<div itemscope itemtype="https://schema.org/NewsArticle">
       ${template}
     </div>`
-    // Add author section
+
+    // Generate author section
     const authorSection = `
       <div class="author-section" itemscope itemtype="https://schema.org/Person">
         <div class="author-info">
@@ -100,19 +149,10 @@ class ArticleService {
         </div>
       </div>
     `
-    content = content
-      .replace('{{authorSection}}', authorSection)
-      .replace('{{title}}', articleData.title)
-      .replace('{{mainText}}', articleData.mainText)
-      .replace('{{dateTime}}', articleData.displayDate)
-      .replace('{{source}}', articleData.source)
-      .replace('{{readTime}}', articleData.avgReadTime)
 
-    // Handle image section
-    if (articleData.imgURL) {
-      content = content.replace(
-        '{{imageSection}}',
-        `<figure class="image-container" style="aspect-ratio: 16/9; margin: 0;">
+    // Generate image section
+    const imageSection = articleData.imgURL
+      ? `<figure class="image-container" style="aspect-ratio: 16/9; margin: 0;">
           <img
             src="${articleData.imgURL}"
             alt="${articleData.title}"
@@ -123,23 +163,30 @@ class ArticleService {
             style="width: 100%; height: 100%; object-fit: cover;"
           />
           <meta itemprop="image" content="${articleData.imgURL}">
-        </figure>`,
-      )
-    } else {
-      content = content.replace('{{imageSection}}', '')
-    }
+        </figure>`
+      : ''
 
-    // Add related articles if available
-    if (articleData.relatedArticles && articleData.relatedArticles.length > 0) {
-      const relatedArticlesHTML = this.generateRelatedArticlesHTML(
-        articleData.relatedArticles,
-      )
+    // Replace main content first
+    content = content
+      .replace('{{authorSection}}', authorSection)
+      .replace('{{title}}', articleData.title)
+      .replace('{{mainText}}', articleData.mainText)
+      .replace('{{dateTime}}', articleData.displayDate)
+      .replace('{{source}}', articleData.source)
+      .replace('{{readTime}}', articleData.avgReadTime)
+      .replace('{{imageSection}}', imageSection)
+
+    // Handle related articles section
+    if (includeRelated && articleData.relatedArticles) {
       content = content.replace(
         '{{relatedArticlesSection}}',
-        relatedArticlesHTML,
+        this.generateRelatedArticlesHTML(articleData.relatedArticles),
       )
     } else {
-      content = content.replace('{{relatedArticlesSection}}', '')
+      content = content.replace(
+        '{{relatedArticlesSection}}',
+        '<div id="related-articles-placeholder"></div>',
+      )
     }
 
     return content
