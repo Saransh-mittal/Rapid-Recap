@@ -223,16 +223,7 @@ const LineGraph = ({
     )
   }
   return (
-    <Flex
-      w="100%"
-      p={2}
-      justifyContent="space-between"
-      flexDirection="column"
-      boxShadow={{
-        xl: 'none',
-        base: '0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)',
-      }}
-    >
+    <Flex w="100%" p={2} justifyContent="space-between" flexDirection="column">
       {isLoading ? (
         <LoadingSpinner />
       ) : (

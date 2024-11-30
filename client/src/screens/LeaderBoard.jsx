@@ -51,11 +51,11 @@ const Leaderboard = () => {
   const ROW_HEIGHT = useBreakpointValue({ base: 140, md: 120, lg: 100 })
   const ROW_GAP = useBreakpointValue({ base: 8, md: 12, lg: 16 })
   const scrollbarHiddenStyle = {
-    '::-webkit-scrollbar': {
+    '::WebkitScrollbar': {
       display: 'none',
     },
-    'scrollbar-width': 'none',
-    '-ms-overflow-style': 'none',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
   }
   const fetchLeaderboard = useCallback(async () => {
     try {

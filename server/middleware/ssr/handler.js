@@ -135,12 +135,8 @@ async function getBotContent(urlType, url, baseUrl) {
       try {
         articleData = await ArticleService.getArticleContent(articleId)
       } catch (error) {
-        if (error.message.includes('Article not found')) {
-          // Return 410 content
-          console.log('Error occured on the url:', url)
-          return getBotContent('410', url, baseUrl)
-        }
-        throw error
+        console.log('Error occured on the url:', url)
+        return getBotContent('410', url, baseUrl)
       }
 
       // Replace placeholders in template with actual content
@@ -275,6 +271,27 @@ function createSSRHandler(vite) {
               url,
               baseUrl,
             })
+            // Add script to load related articles
+            template = template.replace(
+              '</body>',
+              `
+            <script nonce="${nonce}">
+              (async function loadRelatedArticles() {
+                try {
+                  const response = await fetch('/api/articles/bot-related/${articleData._id}');
+                  const relatedHTML = await response.text();
+                  const placeholder = document.getElementById('related-articles-placeholder');
+                  if (placeholder) {
+                    placeholder.innerHTML = relatedHTML;
+                  }
+                } catch (error) {
+                  console.error('Error loading related articles:', error);
+                }
+              })();
+            </script>
+            </body>
+          `,
+            )
           }
         } else {
           template = await handleClientRendering()

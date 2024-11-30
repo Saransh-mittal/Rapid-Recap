@@ -460,7 +460,7 @@ const processExtractedNews = async (news, category) => {
 
       const avgReadTime = averageReadTime(res.mainText)
       res.avgReadTime = avgReadTime
-      if (res.category !== 'top')
+      if (res.category !== 'top' && res.category !== 'crime')
         try {
           const predictedCategory = await newsClassifierService.classifyNews(
             res.mainText,
