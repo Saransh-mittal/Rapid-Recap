@@ -1,4 +1,4 @@
-# The proguard configuration file for the following section is /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/aapt_proguard_file/release/processReleaseResources/aapt_rules.txt
+# The proguard configuration file for the following section is /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/intermediates/aapt_proguard_file/release/processReleaseResources/aapt_rules.txt
 -keep class androidx.core.app.CoreComponentFactory { <init>(); }
 -keep class androidx.core.content.FileProvider { <init>(); }
 -keep class com.google.androidbrowserhelper.trusted.FocusActivity { <init>(); }
@@ -11,8 +11,8 @@
 -keep class androidx.browser.browseractions.BrowserActionsFallbackMenuView { <init>(android.content.Context, android.util.AttributeSet); }
 
 
-# End of content from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/aapt_proguard_file/release/processReleaseResources/aapt_rules.txt
-# The proguard configuration file for the following section is /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/default_proguard_files/global/proguard-android.txt-8.7.0
+# End of content from /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/intermediates/aapt_proguard_file/release/processReleaseResources/aapt_rules.txt
+# The proguard configuration file for the following section is /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/intermediates/default_proguard_files/global/proguard-android.txt-8.7.0
 # This is a configuration file for ProGuard.
 # http://proguard.sourceforge.net/index.html#manual/usage.html
 #
@@ -109,7 +109,7 @@
 # These classes are duplicated between android.jar and core-lambda-stubs.jar.
 -dontnote java.lang.invoke.**
 
-# End of content from /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/default_proguard_files/global/proguard-android.txt-8.7.0
+# End of content from /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/intermediates/default_proguard_files/global/proguard-android.txt-8.7.0
 # The proguard configuration file for the following section is /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/proguard.txt
 # aapt2 is not (yet) keeping FQCNs defined in the appComponentFactory <application> attribute
 -keep class androidx.core.app.CoreComponentFactory

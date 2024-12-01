@@ -143,7 +143,6 @@ const ModernNavbar = ({ onNavbarLoad }) => {
   }, [dispatch, navigate, toast])
 
   const checkStreakAndFetchUpdates = useCallback(() => {
-    if (!isAuthenticated) return
     if (!updatesLoading && loginCheckStatus === 'fulfilled') {
       dispatch(fetchAppUpdates())
     }

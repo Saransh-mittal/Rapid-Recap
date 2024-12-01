@@ -52,6 +52,7 @@
         android:label="@string/appName"
         android:manageSpaceActivity="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
         android:supportsRtl="true"
+        android:testOnly="true"
         android:theme="@android:style/Theme.Translucent.NoTitleBar" >
         <meta-data
             android:name="asset_statements"

@@ -21,39 +21,20 @@
                     }
                 },
                 {
-                    "source": "/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/res/values/styles.xml",
+                    "source": "/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/generated/res/resValues/debug/values/gradleResValues.xml",
                     "from": {
-                        "startLines": "1",
-                        "startColumns": "4",
-                        "startOffsets": "16",
-                        "endLines": "9",
-                        "endColumns": "12",
-                        "endOffsets": "613"
+                        "startLines": "6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "154,242,338,425,516,606,700,797,898,1000,1109,1222,1354,1471,1590,1719,1833,1942,2087",
+                        "endColumns": "47,55,46,50,49,53,56,60,61,68,72,91,76,78,88,73,68,104,106",
+                        "endOffsets": "197,293,380,471,561,655,752,853,955,1064,1177,1309,1426,1545,1674,1788,1897,2042,2189"
                     },
                     "to": {
-                        "startLines": "122",
-                        "startColumns": "4",
-                        "startOffsets": "7413",
-                        "endLines": "130",
-                        "endColumns": "12",
-                        "endOffsets": "8010"
-                    }
-                },
-                {
-                    "source": "/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/res/values/colors.xml",
-                    "from": {
-                        "startLines": "16",
-                        "startColumns": "4",
-                        "startOffsets": "647",
-                        "endColumns": "57",
-                        "endOffsets": "700"
-                    },
-                    "to": {
-                        "startLines": "18",
-                        "startColumns": "4",
-                        "startOffsets": "992",
-                        "endColumns": "57",
-                        "endOffsets": "1045"
+                        "startLines": "2,3,8,9,10,11,12,13,91,93,105,109,110,111,112,113,117,118,121",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,103,408,455,506,556,610,667,5412,5544,5997,6285,6377,6454,6533,6622,6969,7038,7306",
+                        "endColumns": "47,55,46,50,49,53,56,60,61,68,72,91,76,78,88,73,68,104,106",
+                        "endOffsets": "98,154,450,501,551,605,662,723,5469,5608,6065,6372,6449,6528,6617,6691,7033,7138,7408"
                     }
                 },
                 {
@@ -76,6 +57,42 @@
                     }
                 },
                 {
+                    "source": "/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/res/values/strings.xml",
+                    "from": {
+                        "startLines": "25",
+                        "startColumns": "4",
+                        "startOffsets": "988",
+                        "endLines": "33",
+                        "endColumns": "9",
+                        "endOffsets": "1239"
+                    },
+                    "to": {
+                        "startLines": "95",
+                        "startColumns": "4",
+                        "startOffsets": "5673",
+                        "endLines": "103",
+                        "endColumns": "9",
+                        "endOffsets": "5924"
+                    }
+                },
+                {
+                    "source": "/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/res/values/colors.xml",
+                    "from": {
+                        "startLines": "16",
+                        "startColumns": "4",
+                        "startOffsets": "647",
+                        "endColumns": "57",
+                        "endOffsets": "700"
+                    },
+                    "to": {
+                        "startLines": "18",
+                        "startColumns": "4",
+                        "startOffsets": "992",
+                        "endColumns": "57",
+                        "endOffsets": "1045"
+                    }
+                },
+                {
                     "source": "/Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/res/values/values.xml",
                     "from": {
                         "startLines": "2,3,4,5,6",
@@ -93,39 +110,22 @@
                     }
                 },
                 {
-                    "source": "/Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/generated/res/resValues/debug/values/gradleResValues.xml",
+                    "source": "/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/res/values/styles.xml",
                     "from": {
-                        "startLines": "6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "154,242,338,425,516,606,700,797,898,1000,1109,1222,1354,1471,1590,1719,1833,1942,2087",
-                        "endColumns": "47,55,46,50,49,53,56,60,61,68,72,91,76,78,88,73,68,104,106",
-                        "endOffsets": "197,293,380,471,561,655,752,853,955,1064,1177,1309,1426,1545,1674,1788,1897,2042,2189"
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endLines": "9",
+                        "endColumns": "12",
+                        "endOffsets": "613"
                     },
                     "to": {
-                        "startLines": "2,3,8,9,10,11,12,13,91,93,105,109,110,111,112,113,117,118,121",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,103,408,455,506,556,610,667,5412,5544,5997,6285,6377,6454,6533,6622,6969,7038,7306",
-                        "endColumns": "47,55,46,50,49,53,56,60,61,68,72,91,76,78,88,73,68,104,106",
-                        "endOffsets": "98,154,450,501,551,605,662,723,5469,5608,6065,6372,6449,6528,6617,6691,7033,7138,7408"
-                    }
-                },
-                {
-                    "source": "/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/res/values/strings.xml",
-                    "from": {
-                        "startLines": "25",
+                        "startLines": "122",
                         "startColumns": "4",
-                        "startOffsets": "988",
-                        "endLines": "33",
-                        "endColumns": "9",
-                        "endOffsets": "1239"
-                    },
-                    "to": {
-                        "startLines": "95",
-                        "startColumns": "4",
-                        "startOffsets": "5673",
-                        "endLines": "103",
-                        "endColumns": "9",
-                        "endOffsets": "5924"
+                        "startOffsets": "7413",
+                        "endLines": "130",
+                        "endColumns": "12",
+                        "endOffsets": "8010"
                     }
                 }
             ]

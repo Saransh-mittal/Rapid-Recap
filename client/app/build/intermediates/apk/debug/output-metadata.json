@@ -5,7 +5,7 @@
     "kind": "Directory"
   },
   "applicationId": "in.co.rapidrecap.www.twa",
-  "variantName": "release",
+  "variantName": "debug",
   "elements": [
     {
       "type": "SINGLE",
@@ -13,9 +13,9 @@
       "attributes": [],
       "versionCode": 2,
       "versionName": "1.1",
-      "outputFile": "app-release.apk"
+      "outputFile": "app-debug.apk"
     }
   ],
   "elementType": "File",
-  "minSdkVersionForDexing": 19
+  "minSdkVersionForDexing": 24
 }

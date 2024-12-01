@@ -1,4 +1,4 @@
-const VERSION = 'v7.8'
+const VERSION = 'v7.9'
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -438,40 +438,72 @@ function shouldCache(url) {
   }
 }
 
-// Modified installation handler with better error handling
+// Modified installation handler with cache busting
 self.addEventListener('install', event => {
   console.log('Service Worker installing - Version', VERSION)
   if (IS_DEVELOPMENT) {
-    // Skip caching in development mode
     event.waitUntil(self.skipWaiting())
     return
   }
+
   event.waitUntil(
     (async () => {
       try {
+        // Delete old caches first
+        const keys = await caches.keys()
+        await Promise.all(
+          keys.map(key => {
+            if (key !== ASSETS_CACHE) {
+              return caches.delete(key)
+            }
+          }),
+        )
+
+        // Open new cache
         const cache = await caches.open(ASSETS_CACHE)
 
-        // Cache files one by one with error handling
-        for (const asset of STATIC_ASSETS) {
+        // Add cache busting parameter to static assets
+        const assetsWithVersion = STATIC_ASSETS.map(asset => {
+          const url = new URL(asset, self.location)
+          url.searchParams.set('v', VERSION)
+          return url.toString()
+        })
+
+        // Cache files with network-first strategy
+        for (const asset of assetsWithVersion) {
           try {
-            await cache.add(asset)
-            // console.log('Cached asset:', asset)
+            const response = await fetch(asset, {
+              cache: 'reload',
+              headers: {
+                'Cache-Control': 'no-cache',
+              },
+            })
+            if (response.ok) {
+              await cache.put(asset, response)
+            }
           } catch (error) {
             console.warn(`Failed to cache asset ${asset}:`, error)
-            // Continue with other assets even if one fails
           }
         }
 
-        // Get image files with error handling
+        // Handle image files
         try {
           const imageFiles = await getFilesFromPublicDirectory()
           for (const imageFile of imageFiles) {
             try {
-              await cache.add(imageFile)
-              // console.log('Cached image:', imageFile)
+              const imageUrl = new URL(imageFile, self.location)
+              imageUrl.searchParams.set('v', VERSION)
+              const response = await fetch(imageUrl.toString(), {
+                cache: 'reload',
+                headers: {
+                  'Cache-Control': 'no-cache',
+                },
+              })
+              if (response.ok) {
+                await cache.put(imageFile, response)
+              }
             } catch (error) {
               console.warn(`Failed to cache image ${imageFile}:`, error)
-              // Continue with other images even if one fails
             }
           }
         } catch (error) {
@@ -482,107 +514,111 @@ self.addEventListener('install', event => {
         console.log('Service Worker installed successfully')
       } catch (error) {
         console.error('Service Worker installation failed:', error)
-        throw error // Rethrow to mark installation as failed
+        throw error
       }
     })(),
   )
 })
 
-// Activate event - clean up old caches
-// Modified activate event that clears caches in development
+// Modified activate event with proper cache cleanup
 self.addEventListener('activate', event => {
   console.log('Service Worker activating - Version', VERSION)
 
   event.waitUntil(
     Promise.all([
-      // In development mode, clear all caches
-      IS_DEVELOPMENT
-        ? caches.keys().then(keys =>
-            Promise.all(
-              keys.map(key => {
-                console.log('Development mode: Deleting cache:', key)
-                return caches.delete(key)
-              }),
-            ),
-          )
-        : caches.keys().then(keys =>
-            Promise.all(
-              keys.map(key => {
-                // If this is an old cache (doesn't include current version)
-                if (!key.includes(VERSION)) {
-                  console.log('Deleting old cache:', key)
-                  return caches.delete(key)
-                }
-              }),
-            ),
-          ),
-      // Take control of all open pages
+      // Clear old caches
+      caches.keys().then(keys =>
+        Promise.all(
+          keys.map(key => {
+            if (!key.includes(VERSION)) {
+              console.log('Deleting old cache:', key)
+              return caches.delete(key)
+            }
+          }),
+        ),
+      ),
+      // Take control of all clients
       clients.claim(),
+      // Force reload all clients to ensure they get fresh content
+      clients.matchAll().then(clients => {
+        clients.forEach(client => client.navigate(client.url))
+      }),
     ]),
   )
 })
 
-// Fetch event - handle asset caching and network requests
+// Modified fetch event with stale-while-revalidate strategy
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests
   if (event.request.method !== 'GET') return
-
-  // In development mode, always go to network
-  if (IS_DEVELOPMENT) {
-    return
-  }
-  // Check if request should be cached
+  if (IS_DEVELOPMENT) return
   if (!shouldCache(event.request.url)) return
 
-  // Handle asset requests
   if (
     event.request.destination === 'style' ||
     event.request.destination === 'script' ||
     event.request.destination === 'image'
   ) {
     event.respondWith(
-      caches
-        .match(event.request)
-        .then(cachedResponse => {
-          // Return cached response if found
-          if (cachedResponse) {
-            return cachedResponse
-          }
+      (async () => {
+        // Try cache first
+        const cache = await caches.open(ASSETS_CACHE)
+        const cachedResponse = await caches.match(event.request)
 
-          // Otherwise fetch from network
-          return fetch(event.request)
-            .then(networkResponse => {
-              // Cache the response for future
-              if (networkResponse.ok) {
-                const responseToCache = networkResponse.clone()
-                caches
-                  .open(DYNAMIC_CACHE)
-                  .then(cache => {
-                    try {
-                      cache.put(event.request, responseToCache)
-                    } catch (err) {
-                      console.error('Error caching response:', err)
-                    }
-                  })
-                  .catch(err => {
-                    console.error('Error opening cache:', err)
-                  })
-              }
-              return networkResponse
-            })
-            .catch(err => {
-              console.error('Network fetch failed:', err)
-              // Return offline fallback if available
-              return caches.match('/offline.html')
-            })
+        // Fetch new version in background
+        const fetchPromise = fetch(event.request, {
+          cache: 'reload',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
         })
-        .catch(err => {
-          console.error('Cache match failed:', err)
-          return fetch(event.request)
-        }),
+          .then(async networkResponse => {
+            if (networkResponse.ok) {
+              // Update cache with new version
+              await cache.put(event.request, networkResponse.clone())
+            }
+            return networkResponse
+          })
+          .catch(error => {
+            console.error('Network fetch failed:', error)
+            return cachedResponse || caches.match('/offline.html')
+          })
+
+        // Return cached version immediately if available
+        return cachedResponse || fetchPromise
+      })(),
     )
   }
 })
+
+// Add periodic cache validation
+const CACHE_VALIDATION_INTERVAL = 60 * 60 * 1000 // 1 hour
+
+setInterval(() => {
+  if (!IS_DEVELOPMENT) {
+    caches.keys().then(keys => {
+      keys.forEach(key => {
+        if (key.includes(VERSION)) {
+          caches.open(key).then(cache => {
+            cache.keys().then(requests => {
+              requests.forEach(request => {
+                fetch(request, {
+                  cache: 'reload',
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                  },
+                }).then(response => {
+                  if (response.ok) {
+                    cache.put(request, response)
+                  }
+                })
+              })
+            })
+          })
+        }
+      })
+    })
+  }
+}, CACHE_VALIDATION_INTERVAL)
 
 // Push notification handling
 self.addEventListener('push', event => {
