@@ -196,7 +196,10 @@ const RQMThermometer = React.memo(
             spacing={1}
             align="center"
             justifyContent={'center'}
-            w={{ base: 'full', md: 'fit-content' }}
+            w={{
+              base: fromProfile ? 'fit-content' : 'full',
+              md: 'fit-content',
+            }}
             cursor="pointer"
             onClick={handleClick}
             _hover={{ opacity: 0.9 }}

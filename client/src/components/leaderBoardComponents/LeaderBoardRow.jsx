@@ -148,7 +148,10 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
         </GridItem>
         <GridItem>
           <VStack align="start" spacing={0}>
-            <Flex position={'relative'} px={2}>
+            <Flex
+              position={'relative'}
+              px={!maxSocietyAndCircle?.boxShadow ? 0.25 : 2}
+            >
               <Text
                 fontSize={{ base: 'sm', md: 'lg' }}
                 fontWeight="bold"
@@ -169,6 +172,8 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
               fontSize={{ base: 'xs', md: 'md' }}
               color={accentColor}
               fontWeight="semibold"
+              mt={!maxSocietyAndCircle?.boxShadow ? 0 : 2}
+              mb={!maxSocietyAndCircle?.boxShadow ? 0 : -2}
             >
               @{user.inGameName}
             </Text>

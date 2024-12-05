@@ -35,7 +35,7 @@ const NoteMessageQueue = () => {
     state => state.app.showingSummaryForNoteMessages,
   )
   const { playNoteMessageSound, playMilestoneSound } = useSound()
-  const { t } = useTranslation('NoteMessageSummary')
+  const { t } = useTranslation('NoteMessageQueue')
 
   // Memoize actions array to avoid recreating on each render
   const actions = useMemo(
@@ -87,7 +87,7 @@ const NoteMessageQueue = () => {
       <Suspense fallback={null}>
         <NoteMessage
           messageId={uuidv4()}
-          title={t('newMessages', { number: noteMessageQueue.length })}
+          title={t('newMessage', { number: noteMessageQueue.length })}
           actions={actions}
           onClose={handleClose}
           duration={null}

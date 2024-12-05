@@ -71,7 +71,7 @@ const ArticleSearchBar = () => {
 
   return (
     <Flex
-      width={{ base: '100%', lg: '50%' }}
+      width={{ base: '100%', lg: '75%' }}
       position="relative"
       bg={isFocused ? 'rgba(26, 21, 39, 0.95)' : 'rgba(26, 21, 39, 0.7)'}
       borderRadius="full"

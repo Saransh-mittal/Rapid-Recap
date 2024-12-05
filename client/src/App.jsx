@@ -351,27 +351,6 @@ const App = () => {
 
     fetchInitialData()
   }, [dispatch])
-  // useEffect(() => {
-  //   const fetchInitialData = async () => {
-  //     dispatch(setTaskProgress({ task: 'fetchUser', progress: 50 }))
-  //     dispatch(setLoginCheckStatus('pending'))
-  //     try {
-  //       const response = await axios.get(`/api/user/loginCheck`)
-  //       if (response.status === 200) {
-  //         dispatch(setUser(response.data))
-  //       }
-  //     } catch (error) {
-  //       dispatch(setUser(null))
-  //       console.log(error)
-  //     } finally {
-  //       dispatch(setTaskProgress({ task: 'fetchUser', progress: 100 }))
-
-  //       dispatch(setLoginCheckStatus('fulfilled'))
-  //     }
-  //   }
-
-  //   fetchInitialData()
-  // }, [dispatch])
 
   useEffect(() => {
     if (guestModalJustClosed && user?.role === 'guest') {

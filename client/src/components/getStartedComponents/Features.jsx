@@ -252,7 +252,7 @@ const Features = ({ isWeakDevice }) => {
   )
 
   return (
-    <Box py={{ base: 10, md: 20 }} position="relative" overflow="hidden">
+    <Box py={10} position="relative" overflow="hidden">
       <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
         <VStack spacing={{ base: 10, md: 16 }}>
           <VStack spacing={{ base: 3, md: 4 }} textAlign="center">

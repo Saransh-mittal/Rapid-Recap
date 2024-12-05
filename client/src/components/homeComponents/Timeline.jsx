@@ -186,10 +186,13 @@ const Timeline = ({
             ml={'auto'}
             mr={{ base: '0', lg: '2rem' }} // Added explicit right margin
             overflow={'hidden'}
+            justifyContent={'center'}
+            alignItems={'center'}
           >
             {/* Search Bar */}
             <Flex
-              width="100%"
+              width={{ base: '100%', lg: '80%' }}
+              className="search-bar"
               justifyContent={'center'}
               alignItems={'center'}
               position={'sticky'}

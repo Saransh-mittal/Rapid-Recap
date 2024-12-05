@@ -109,6 +109,7 @@ const namespaces = {
     'UserSearchDrawer',
     'SecureYourProgress',
     'NoteMessageSummary',
+    'NoteMessageQueue',
     'ButtonFactory',
     'milestones',
     'StreakNoteMessage',

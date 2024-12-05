@@ -188,6 +188,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
           onClick={() => dispatch(setIsSigninOpen(true))}
           colorScheme="purple"
           display={isMobile ? 'none' : 'block'}
+          size={'sm'}
         >
           Get Started
         </Button>
