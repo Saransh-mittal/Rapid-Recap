@@ -32,87 +32,48 @@ const {
   generateHighlightForArticle,
 } = require('../utils/article.highlight.utils')
 const ArticleService = require('../services/articleService')
+const CACHE_CONFIG = require('../config/cacheConfig')
+const {
+  processArticles,
+} = require('../services/articleServicesForEndUsers/articleProcessingService')
+const {
+  getOrSetCache,
+} = require('../services/articleServicesForEndUsers/articleCacheService')
+const {
+  queryArticles,
+} = require('../services/articleServicesForEndUsers/articleQueryService')
+const {
+  getOrGenerateHighlights,
+} = require('../services/articleServicesForEndUsers/articleHighlightService')
+const {
+  processDetailedArticle,
+} = require('../services/articleServicesForEndUsers/articleDetailService')
 
-const allArticles = async (req, res) => {
-  const { page = 1, pageSize = 9, category = 'general', lang } = req.query
-  const cacheKey = `articles_${category}_${lang}_${page}_${pageSize}`
-  const cachedArticles = cache.get(cacheKey)
-
-  if (cachedArticles) {
-    return res.send(cachedArticles)
-  }
+async function allArticles(req, res) {
+  const {
+    page = 1,
+    pageSize = CACHE_CONFIG.defaults.PAGE_SIZE,
+    category = 'general',
+    lang,
+  } = req.query
 
   try {
-    const articles = await Article.find({
-      category: { $regex: new RegExp('^' + category, 'i') },
-    })
-      .sort({
-        dateTime: -1,
-        'sentiments.compound': -1,
-      })
-      .skip((page - 1) * pageSize)
-      .limit(pageSize)
-
-    if (!articles || articles.length === 0) {
-      throw new Error('No articles found')
-    }
-    if (lang === 'hi')
-      for (let article of articles) {
-        if (
-          !article.hindiTitle ||
-          !article.hindiMainText ||
-          !article.hindiAuthor
-        ) {
-          const response = await hindiConverter(article._id)
-          if (!article.hindiMainText) {
-            article.hindiMainText = []
-          }
-          article.hindiTitle = response.hindiTitle
-
-          for (let key in response.hindiMainText) {
-            if (!response.hindiMainText[key]) continue
-            article.hindiMainText.push(response.hindiMainText[key])
-          }
-          article.hindiAuthor = response.hindiAuthor
-        }
-      }
-
-    const processedArticles = await Promise.all(
-      articles.map(async article => {
-        const paragraphs = await breakArticleIntoParagraphs(article.mainText)
-        const highlights = await ArticleHighlight.findOne({
-          articleId: article._id,
-          processingStatus: 'completed',
-          language: lang ? lang : 'en',
-        })
-        return {
-          category: article.category,
-          title: article.title,
-          quizAttemptCnt: article.quizAttemptCnt,
-          mainText: paragraphs,
-          author: article.author,
-          imgURL: Array.isArray(article.imgURL) ? article.imgURL[0] : '',
-          hindiTitle: article?.hindiTitle,
-          hindiMainText: article?.hindiMainText,
-          hindiAuthor: article?.hindiAuthor,
-          avgReadTime: article?.avgReadTime,
-          date: formatDate(article.dateTime),
-          dateTime: article.dateTime,
-          _id: article._id,
-          // Add highlights if they exist
-          dictionary: highlights?.dictionary || [],
-          importantSentences: highlights?.importantSentences || [],
-        }
-      }),
+    const cacheKey = CACHE_CONFIG.keys.articlesList(
+      category,
+      lang,
+      page,
+      pageSize,
     )
 
-    // Cache the processed articles for 1 hour (3600000 milliseconds)
-    cache.put(cacheKey, processedArticles, 3600000)
+    const processedArticles = await getOrSetCache(cacheKey, async () => {
+      const articles = await queryArticles({ category, page, pageSize })
+      return processArticles(articles, lang)
+    })
 
     res.send(processedArticles)
   } catch (error) {
+    console.error('Error in allArticles:', error)
     res.status(400).json({ error: error.message || 'Something went wrong' })
-    console.error(error)
   }
 }
 
@@ -155,142 +116,35 @@ const getArticleIds = asyncHandler(async (req, res) => {
 // @desc  Get article details
 // @route GET /api/articles/article/:id
 // @access Public
-const getArticle = async (req, res) => {
+async function getArticle(req, res) {
   const { id } = req.params
   const { lang } = req.query
+
   try {
-    const cacheKey = `article_${lang ? lang : 'en'}_${id}`
-    const cachedArticle = cache.get(cacheKey)
+    const cacheKey = CACHE_CONFIG.keys.userArticle(lang || 'en', id)
 
-    if (
-      cachedArticle &&
-      !(
-        lang === 'hi' &&
-        (!cachedArticle.hindiTitle ||
-          !cachedArticle.hindiMainText ||
-          !cachedArticle.hindiAuthor ||
-          !cachedArticle.dictionary ||
-          !cachedArticle.importantSentences ||
-          cachedArticle.dictionary.length === 0 ||
-          cachedArticle.importantSentences.length === 0)
-      ) &&
-      cachedArticle.dictionary &&
-      cachedArticle.importantSentences &&
-      cachedArticle.dictionary.length > 0 &&
-      cachedArticle.importantSentences.length > 0
-    ) {
-      return res.json({ quizExpired: false, newArticle: cachedArticle })
-    }
+    const articleData = await getOrSetCache(
+      cacheKey,
+      async () => {
+        // Fetch article and highlights
+        const [article, highlights] = await Promise.all([
+          Article.findById(id),
+          getOrGenerateHighlights(id, lang),
+        ])
 
-    // Fetch article and highlights
-    const [article, highlights] = await Promise.all([
-      Article.findById(id),
-      ArticleHighlight.findOne({
-        articleId: id,
-        processingStatus: 'completed',
-        language: lang ? lang : 'en',
-      }),
-    ])
-
-    if (!article) {
-      throw new Error('Article not found')
-    }
-    // Handle empty highlights
-    if (
-      highlights?.dictionary?.length === 0 &&
-      highlights?.importantSentences?.length === 0
-    ) {
-      // Use deleteOne instead of delete
-      try {
-        await ArticleHighlight.deleteOne({
-          articleId: id,
-          processingStatus: 'completed',
-          language: lang || 'en',
-        })
-      } catch (deleteError) {
-        console.error('Error deleting highlights:', deleteError)
-      }
-    }
-
-    // If no highlights exist or they failed, trigger processing
-    let newHighlights = highlights
-    if (
-      !highlights ||
-      highlights.processingStatus !== 'completed' ||
-      (highlights.dictionary.length === 0 &&
-        highlights.importantSentences.length === 0)
-    ) {
-      try {
-        newHighlights = await generateHighlightForArticle({
-          articleId: id,
-          lang: lang ? lang : 'en',
-        })
-      } catch (error) {
-        console.error('Error generating highlights:', error)
-      }
-    }
-
-    // Handle Hindi conversion if needed
-    if (
-      lang === 'hi' &&
-      (!article.hindiTitle || !article.hindiMainText || !article.hindiAuthor)
-    ) {
-      const response = await hindiConverter(article._id)
-      article.hindiTitle = response.hindiTitle
-      article.hindiMainText = response.hindiMainText
-      article.hindiAuthor = response.hindiAuthor
-    }
-
-    const paragraphs = await breakArticleIntoParagraphs(article.mainText)
-
-    // Process related articles
-    const relatedArticles = await Promise.all(
-      article.relatedArticles.map(async relatedArticleID => {
-        const relatedArticleFetch = await Article.findById(
-          relatedArticleID,
-        ).select('_id title imgURL dateTime avgReadTime')
-
-        if (relatedArticleFetch) {
-          return {
-            _id: relatedArticleFetch._id,
-            title: relatedArticleFetch.title,
-            imgURL: relatedArticleFetch.imgURL[0],
-            date: formatDate(relatedArticleFetch.dateTime),
-            dateTime: new Date(relatedArticleFetch.dateTime),
-            avgReadTime: relatedArticleFetch.avgReadTime,
-          }
+        if (!article) {
+          throw new Error('Article not found')
         }
-        return null
-      }),
+
+        return processDetailedArticle(article, highlights, lang)
+      },
+      CACHE_CONFIG.durations.USER_ARTICLE,
     )
 
-    const newArticle = {
-      category: article.category,
-      title: article.title,
-      url: article.url,
-      quizAttemptCnt: article.quizAttemptCnt,
-      mainText: paragraphs,
-      author: article.author,
-      imgURL: article.imgURL[0],
-      hindiTitle: article?.hindiTitle,
-      hindiMainText: article?.hindiMainText,
-      hindiAuthor: article?.hindiAuthor,
-      relatedArticles: relatedArticles
-        .filter(Boolean)
-        .sort((a, b) => b.dateTime - a.dateTime),
-      avgReadTime: article?.avgReadTime,
-      date: formatDate(article.dateTime),
-      _id: article._id,
-      // Add highlights if they exist
-      dictionary: newHighlights?.dictionary || [],
-      importantSentences: newHighlights?.importantSentences || [],
-    }
-
-    cache.put(cacheKey, newArticle, 3600000 * 1) // Cache for 24 hours
-    res.status(201).send({ quizExpired: false, newArticle })
+    res.json({ quizExpired: false, newArticle: articleData })
   } catch (error) {
+    console.error('Error in getArticle:', error)
     res.status(400).json({ error: error.message || 'Something went wrong' })
-    console.error(error)
   }
 }
 

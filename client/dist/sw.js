@@ -1,4 +1,4 @@
-const VERSION = 'v8'
+const VERSION = 'v7.9'
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -41,13 +41,6 @@ const getFilesFromPublicDirectory = async () => {
     return []
   }
 }
-const SPLASH_ASSETS = [
-  './splash.html',
-  './styles/components/css-splash.css',
-  './images/rrlogo_512.png',
-]
-
-const SPLASH_CACHE = `splash-${VERSION}`
 // Assets that should be cached immediately
 const STATIC_ASSETS = [
   // Original paths
@@ -466,31 +459,6 @@ self.addEventListener('install', event => {
           }),
         )
 
-        // Open splash cache first
-        const splashCache = await caches.open(SPLASH_CACHE)
-
-        // Cache splash assets with highest priority
-        await Promise.all(
-          SPLASH_ASSETS.map(async asset => {
-            const url = new URL(asset, self.location)
-            url.searchParams.set('v', VERSION)
-            try {
-              const response = await fetch(url.toString(), {
-                cache: 'reload',
-                headers: {
-                  'Cache-Control': 'no-cache',
-                },
-              })
-              if (response.ok) {
-                await splashCache.put(asset, response)
-              }
-            } catch (error) {
-              console.warn(`Failed to cache splash asset ${asset}:`, error)
-            }
-          }),
-        )
-
-        // Continue with rest of your existing installation logic...
         // Open new cache
         const cache = await caches.open(ASSETS_CACHE)
 
@@ -584,44 +552,7 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return
   if (IS_DEVELOPMENT) return
   if (!shouldCache(event.request.url)) return
-  // Check if this is a splash asset
-  const isSplashAsset = SPLASH_ASSETS.some(asset =>
-    event.request.url.includes(asset.replace('./', '')),
-  )
 
-  if (isSplashAsset) {
-    event.respondWith(
-      (async () => {
-        // Try splash cache first
-        const splashCache = await caches.open(SPLASH_CACHE)
-        const cachedResponse = await splashCache.match(event.request)
-
-        if (cachedResponse) {
-          // Return cached version immediately
-          return cachedResponse
-        }
-
-        // If not in splash cache, try normal caches
-        const normalCacheResponse = await caches.match(event.request)
-        if (normalCacheResponse) {
-          return normalCacheResponse
-        }
-
-        // If not in any cache, fetch from network
-        try {
-          const networkResponse = await fetch(event.request)
-          // Cache the response for next time
-          if (networkResponse.ok) {
-            await splashCache.put(event.request, networkResponse.clone())
-          }
-          return networkResponse
-        } catch (error) {
-          console.error('Network fetch failed for splash asset:', error)
-          return caches.match('/offline.html')
-        }
-      })(),
-    )
-  }
   if (
     event.request.destination === 'style' ||
     event.request.destination === 'script' ||
