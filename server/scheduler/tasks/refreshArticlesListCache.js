@@ -1,24 +1,22 @@
 // src/tasks/refreshArticlesListCache.js
 const {
-  queryArticles,
-} = require('../../services/articleServicesForEndUsers/articleProcessingService')
-const {
   processArticles,
 } = require('../../services/articleServicesForEndUsers/articleProcessingService')
 const {
   getOrSetCache,
 } = require('../../services/articleServicesForEndUsers/articleCacheService')
+const {
+  queryArticles,
+} = require('../../services/articleServicesForEndUsers/articleQueryService')
 const CACHE_CONFIG = require('../../config/cacheConfig')
 
-async function refreshArticlesListCache(
-  categories = CACHE_CONFIG.defaults.CATEGORIES,
-  languages = CACHE_CONFIG.defaults.LANGUAGES,
-) {
+async function refreshArticlesListCache() {
+  const categories = CACHE_CONFIG.defaults.CATEGORIES
+  const languages = CACHE_CONFIG.defaults.LANGUAGES
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(
     sevenDaysAgo.getDate() - CACHE_CONFIG.defaults.CACHE_DAYS,
   )
-
   try {
     for (const category of categories) {
       for (const lang of languages) {

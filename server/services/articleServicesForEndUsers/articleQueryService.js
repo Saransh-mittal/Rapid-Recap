@@ -18,7 +18,8 @@ async function queryArticles({ category, page, pageSize, dateFilter = null }) {
     .limit(pageSize)
 
   if (!articles || articles.length === 0) {
-    throw new Error('No articles found')
+    console.log('No articles found for query:', query)
+    return null
   }
 
   return articles

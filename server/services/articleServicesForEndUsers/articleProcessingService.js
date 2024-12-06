@@ -6,6 +6,7 @@ const {
 } = require('../../utils/article.utils')
 
 async function processArticles(articles, lang) {
+  if (!articles) return null
   if (lang === 'hi') {
     for (let article of articles) {
       if (

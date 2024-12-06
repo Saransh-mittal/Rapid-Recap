@@ -12,7 +12,7 @@ async function getOrSetCache(
   }
 
   const freshData = await fetchData()
-  cache.put(key, freshData, duration)
+  if (freshData) cache.put(key, freshData, duration)
   return freshData
 }
 
