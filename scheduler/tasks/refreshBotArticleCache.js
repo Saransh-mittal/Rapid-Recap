@@ -28,7 +28,7 @@ async function refreshRecentBotArticlesCache() {
   sevenDaysAgo.setDate(
     sevenDaysAgo.getDate() - CACHE_CONFIG.defaults.CACHE_DAYS,
   )
-  console.log('Refreshing bot articles cache for the past 7 days...')
+
   try {
     const recentArticles = await Article.find({
       dateTime: { $gte: sevenDaysAgo.toISOString() },

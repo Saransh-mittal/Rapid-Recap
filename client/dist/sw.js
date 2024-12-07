@@ -5,8 +5,8 @@ const DYNAMIC_CACHE = `dynamic-${VERSION}`
 
 const RapidRecapLogo = './images/rrlogo.webp'
 const RapidRecapBadge = './images/rrlogo_badge.png'
-const IS_DEVELOPMENT = false
-// location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+const IS_DEVELOPMENT =
+  location.hostname === 'localhost' || location.hostname === '127.0.0.1'
 
 // Add list of domains that should never be cached
 const NEVER_CACHE_DOMAINS = [
