@@ -9,7 +9,7 @@ const useFetchQuiz = (articleId, language, onClose) => {
   const [quizStatus, setQuizStatus] = useState(null)
   const [load, setLoad] = useState(true)
   const [remainingTime, setRemainingTime] = useState(null)
-  const [isQuizGenerating, setIsQuizGenerating] = useState(false)
+  const [isQuizGenerating, setIsQuizGenerating] = useState(true)
   const toast = useToast()
   const { socket, getSocket } = useSocket()
   const { user } = useSelector(state => state.auth)

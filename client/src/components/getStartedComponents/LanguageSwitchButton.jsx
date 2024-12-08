@@ -54,14 +54,14 @@ const LanguageSwitchButton = ({ COLORS }) => {
             right={0}
           />
         </HStack>
-        <Box
+        {/* <Box
           position="absolute"
           top={0}
           left={0}
           right={0}
           h="2px"
           bgGradient={`linear(to-r, ${COLORS.accent}, ${COLORS.secondary})`}
-        />
+        /> */}
       </MotionButton>
     </Box>
   )

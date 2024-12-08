@@ -1,10 +1,10 @@
 in.co.rapidrecap.www.twa.app-core-1.1.0-0 /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/res
 in.co.rapidrecap.www.twa.app-browser-1.4.0-1 /Users/saranshmittal/.gradle/caches/8.9/transforms/f0abfc1a3891d4408403b376aae96b94/transformed/browser-1.4.0/res
 in.co.rapidrecap.www.twa.app-androidbrowserhelper-2.5.0-2 /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/res
-in.co.rapidrecap.www.twa.app-pngs-3 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/generated/res/pngs/release
-in.co.rapidrecap.www.twa.app-resValues-4 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/generated/res/resValues/release
-in.co.rapidrecap.www.twa.app-packageReleaseResources-5 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/incremental/release/packageReleaseResources/merged.dir
-in.co.rapidrecap.www.twa.app-packageReleaseResources-6 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
-in.co.rapidrecap.www.twa.app-release-7 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/build/intermediates/merged_res/release/mergeReleaseResources
-in.co.rapidrecap.www.twa.app-main-8 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/res
-in.co.rapidrecap.www.twa.app-release-9 /Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/release/res
+in.co.rapidrecap.www.twa.app-pngs-3 /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/generated/res/pngs/release
+in.co.rapidrecap.www.twa.app-resValues-4 /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/generated/res/resValues/release
+in.co.rapidrecap.www.twa.app-packageReleaseResources-5 /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/intermediates/incremental/release/packageReleaseResources/merged.dir
+in.co.rapidrecap.www.twa.app-packageReleaseResources-6 /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
+in.co.rapidrecap.www.twa.app-release-7 /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/build/intermediates/merged_res/release/mergeReleaseResources
+in.co.rapidrecap.www.twa.app-main-8 /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/res
+in.co.rapidrecap.www.twa.app-release-9 /Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/release/res

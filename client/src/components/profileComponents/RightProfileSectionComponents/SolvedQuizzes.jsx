@@ -7,8 +7,6 @@ import {
   VStack,
   HStack,
   Spinner,
-  Badge,
-  Tooltip,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import ProfileButton from '../../miscellaneous/ProfileButton'

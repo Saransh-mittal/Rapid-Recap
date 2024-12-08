@@ -261,15 +261,15 @@ const ArticleSelection = ({
 
   return (
     <Container maxW="8xl" minH="100vh" display="flex" alignItems="center">
-      <VStack spacing={16} w="full">
+      <VStack spacing={8} w="full">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <VStack spacing={6}>
+          <VStack spacing={6} mt={4}>
             <Text
-              fontSize={{ base: '4xl', md: '6xl' }}
+              fontSize={{ base: '3xl', md: '6xl' }}
               fontWeight="bold"
               textAlign="center"
               bgGradient="linear(to-r, purple.200, pink.200)"
@@ -279,20 +279,18 @@ const ArticleSelection = ({
             >
               {t('articleSelection.title')}
             </Text>
-
-            <Text
-              fontSize={{ base: 'lg', md: 'xl' }}
-              color="whiteAlpha.800"
-              textAlign="center"
-              maxW="2xl"
-              px={4}
-              letterSpacing="wide"
-            >
-              {t('articleSelection.subtitle')}
-            </Text>
           </VStack>
         </motion.div>
-
+        <Text
+          fontSize={{ base: 'lg', md: 'xl' }}
+          color="whiteAlpha.800"
+          textAlign="center"
+          maxW="2xl"
+          px={4}
+          letterSpacing="wide"
+        >
+          {t('articleSelection.subtitle')}
+        </Text>
         <Grid
           templateColumns={`repeat(${columns}, 1fr)`}
           gap={spacing}

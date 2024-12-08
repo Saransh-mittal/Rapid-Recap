@@ -52,7 +52,7 @@ const getQuiz = async (req, res) => {
       }
       globalEmitter.emit('quiz_progress', { userId, progress })
     }
-    emitProgress(5)
+    emitProgress(20)
     if (requestMap.has(requestKey)) {
       // Cancel the previous request
       requestMap.get(requestKey).cancelled = true
@@ -86,7 +86,7 @@ const getQuiz = async (req, res) => {
       article: articleId,
     }).session(session)
 
-    emitProgress(5)
+    emitProgress(20)
 
     let quizSession = quizSessions?.find(
       session => session.language === lang && !session.completed,

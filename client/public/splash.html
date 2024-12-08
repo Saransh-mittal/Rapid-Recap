@@ -1,7 +1,26 @@
 <div id="splash-screen">
+  <div class="stars">
+    <!-- Stars will be added via JavaScript -->
+  </div>
   <div class="splash-content">
-    <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" class="logo" />
+    <div class="logo-container">
+      <div class="glow-effect"></div>
+      <img src="/images/rrlogo_512.png" alt="Rapid Recap Logo" class="logo" />
+    </div>
     <div class="title">RAPID RECAP</div>
     <div class="subtitle">Stay Informed, Stay Ahead</div>
   </div>
 </div>
+
+<script>
+// Add random stars
+const starsContainer = document.querySelector('.stars');
+for (let i = 0; i < 50; i++) {
+  const star = document.createElement('div');
+  star.className = 'star';
+  star.style.left = `${Math.random() * 100}%`;
+  star.style.top = `${Math.random() * 100}%`;
+  star.style.animationDelay = `${Math.random() * 2}s`;
+  starsContainer.appendChild(star);
+}
+</script>

@@ -47,7 +47,7 @@ export const useProfile = () => {
       }
     } catch (error) {
       console.error(`Error fetching profile for ${inGameName}:`, error)
-      if (error.response?.status === 404) {
+      if (error.response?.status === 404 || error.response?.status === 410) {
         toast({
           title: 'User not found',
           description: 'The user you are looking for does not exist',
@@ -71,7 +71,6 @@ export const useProfile = () => {
   ])
 
   useEffect(() => {
-    setIsLoading(true)
     setProfile(null)
 
     const loadProfile = async () => {
@@ -82,10 +81,11 @@ export const useProfile = () => {
           const parsedProfile = JSON.parse(cachedProfile)
           setProfile(parsedProfile)
           setIsLoading(false)
-        }
+        } else setIsLoading(true)
         // Always fetch to ensure up-to-date data
         await fetchProfile()
       } else {
+        setIsLoading(true)
         // Load other user's profile
         const otherUserStored = otherUserProfiles?.find(
           user => user?.inGameName === inGameName,
@@ -97,13 +97,14 @@ export const useProfile = () => {
           )
           setIsLoading(false)
         }
+
         // Always fetch for other users to ensure data is up-to-date
         await fetchProfile()
       }
     }
 
     loadProfile()
-  }, [inGameName, user])
+  }, [inGameName, user?._id])
 
   return {
     profile,

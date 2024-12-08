@@ -87,15 +87,15 @@ const EmailVerify = ({ email, isOpen, onClose }) => {
           toast({
             title: t('toastResetSuccess'),
             status: 'success',
-            duration: 5000,
+            duration: 9000,
             isClosable: true,
             position: 'top',
           })
         } else {
           toast({
-            title: t('toastVerifySuccess'),
+            title: 'Email Verified now you can login',
             status: 'success',
-            duration: 5000,
+            duration: 9000,
             isClosable: true,
             position: 'top',
           })

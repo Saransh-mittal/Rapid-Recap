@@ -1,13 +1,6 @@
 // /pages/Article.jsx
 
-import React, {
-  lazy,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-} from 'react'
+import React, { lazy, useEffect, useRef, useState, useCallback } from 'react'
 import axios from 'axios'
 import { Flex, useToast, Grid, useMediaQuery, Box } from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
@@ -29,25 +22,17 @@ import { useReadingProgress } from '../customHooks/useReadingProgress'
 import PremiumCTA from '../components/articleComponents/PremiumCTA'
 import PremiumValueBanner from '../components/articleComponents/PremiumValueBanner'
 import { saveVisitedArticle } from '../utils/article.utils'
-
+import { articleCacheService } from '../lib/cache/services/articleCache'
+import MainArticleContent from '../components/articleComponents/MainArticleContent'
+import Sidebar from '../components/articleComponents/Sidebar'
+import ArticleHeader from '../components/articleComponents/ArticleHeader'
+import TrackTime from '../components/articleComponents/TrackTime'
+import MainArticleContentSkeleton from '../components/articleComponents/loaders/MainArticleContentSkeleton'
 //SSR images
 const rrImage = '/images/rrlogo_HD.webp'
 
-// Lazy load components
-const Loading = lazy(() => import('../components/miscellaneous/Loading'))
-
 const QuinBoostModal = lazy(() =>
   import('../components/articleComponents/QuinBoostModal'),
-)
-const MainArticleContent = lazy(() =>
-  import('../components/articleComponents/MainArticleContent'),
-)
-const Sidebar = lazy(() => import('../components/articleComponents/Sidebar'))
-const ArticleHeader = lazy(() =>
-  import('../components/articleComponents/ArticleHeader'),
-)
-const TrackTime = lazy(() =>
-  import('../components/articleComponents/TrackTime'),
 )
 const Article = () => {
   const toast = useToast()
@@ -71,9 +56,7 @@ const Article = () => {
       : articleData?.imgURL,
   )
 
-  const [articleLoading, setArticleLoading] = useState(
-    articleData ? false : true,
-  )
+  const [articleLoading, setArticleLoading] = useState(true)
   const [loadingRealatedArticles, setLoadingRelatedArticles] = useState({})
   const [shouldScrollToTop, setShouldScrollToTop] = useState(false)
   const [themedContent, setThemedContent] = useState(null)
@@ -112,7 +95,7 @@ const Article = () => {
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
   const [isLargerThan821] = useMediaQuery('(min-width: 821px)')
   const [bookmark, setBookmark] = useState(false)
-  const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(null)
+  const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(true)
   const quizFetchTimer = useRef(null)
 
   const notLoggedIn = !isAuthenticated
@@ -156,17 +139,63 @@ const Article = () => {
 
   const fetchArticle = useCallback(async () => {
     if (loginCheckStatus === 'pending') return
+
+    // Try to get from cache first
+    const cachedResponse = await articleCacheService.getArticle(id)
+    if (cachedResponse) {
+      // Use cached data
+      const articleData = cachedResponse.newArticle
+
+      if (user?.userLanguage) {
+        setSelectedLanguage(user?.userLanguage === 'hi' ? 'hindi' : 'english')
+      }
+      dispatch(setArticleData(articleData))
+      setArticle(articleData)
+      saveVisitedArticle(articleData)
+      dispatch(setTotalUsersGivenQuiz(articleData.quizAttemptCnt))
+
+      const image = Array.isArray(articleData.imgURL)
+        ? articleData.imgURL[0]
+        : articleData.imgURL
+      setImgURL(image)
+      setDateTime(articleData.date)
+      setAvgTimeRead(articleData.avgReadTime)
+      setTitle({
+        english: articleData.title,
+        hindi: articleData.hindiTitle,
+      })
+      setAuthor({
+        english: articleData.author,
+        hindi: articleData.hindiAuthor,
+      })
+      setMainText({
+        english: articleData.mainText,
+        hindi: articleData.hindiMainText,
+      })
+      setDictionary(articleData.dictionary || [])
+      setImportantSentences(articleData.importantSentences || [])
+      setQuizExpired(cachedResponse.quizExpired) // Using from full response
+      setArticleLoading(false)
+      setLoadingRelatedArticles(prev => ({ ...prev, [id]: false }))
+    }
+
     try {
+      // Always fetch fresh data
       const response = await axios.get(
         `/api/articles/article/${id}?lang=${
           user?.userLanguage ? user?.userLanguage : i18n.language
         }`,
       )
 
+      // Cache the full response data
+      articleCacheService.cacheArticle(id, response.data)
+
+      const articleData = response.data.newArticle
+
+      // Update UI with fresh data
       if (user?.userLanguage) {
         setSelectedLanguage(user?.userLanguage === 'hi' ? 'hindi' : 'english')
       }
-      const articleData = response.data.newArticle
 
       dispatch(setArticleData(articleData))
       setArticle(articleData)
@@ -185,18 +214,36 @@ const Article = () => {
         english: articleData.mainText,
         hindi: articleData.hindiMainText,
       })
-      setDictionary(articleData.dictionary || [])
-      setImportantSentences(articleData.importantSentences || [])
-      setQuizExpired(response.data.quizExpired)
+
+      if (
+        !cachedResponse ||
+        !cachedResponse?.newArticle ||
+        !cachedResponse?.newArticle?.dictionary
+      ) {
+        setDictionary(articleData.dictionary || [])
+      }
+
+      if (
+        !cachedResponse ||
+        !cachedResponse?.newArticle ||
+        !cachedResponse?.newArticle?.importantSentences
+      ) {
+        setImportantSentences(articleData.importantSentences || [])
+      }
+      setQuizExpired(response.data.quizExpired) // Using from full response
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: error.response.data.error || 'Error fetching article',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-      })
+      // Only show error if we don't have cached data
+      if (!cachedResponse) {
+        toast({
+          title: 'Error',
+          description: error?.response?.data?.error || 'Error fetching article',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+          position: 'top',
+        })
+      }
+      console.error(error)
     } finally {
       setArticleLoading(false)
       setLoadingRelatedArticles(prev => ({ ...prev, [id]: false }))
@@ -205,7 +252,7 @@ const Article = () => {
 
   const isQuizGiven = useCallback(async () => {
     const userId = user?._id
-    if (!userId || !id) {
+    if ((!userId || !id) && loginCheckStatus === 'fulfilled') {
       setGivenQuiz(false)
       setIsQuizGivenLoading(false)
       return
@@ -224,7 +271,7 @@ const Article = () => {
     } finally {
       setIsQuizGivenLoading(false)
     }
-  }, [id, user, givenQuiz])
+  }, [id, user, givenQuiz, loginCheckStatus])
 
   const checkOnGoingQuiz = useCallback(async () => {
     try {
@@ -265,8 +312,10 @@ const Article = () => {
   }, [notLoggedIn, checkOnGoingQuiz, bookmarkStatus])
 
   useEffect(() => {
-    isQuizGiven()
-  }, [givenQuiz, isQuizGiven])
+    if (loginCheckStatus === 'fulfilled') {
+      isQuizGiven()
+    }
+  }, [loginCheckStatus, totalUsersGivenQuiz])
 
   useEffect(() => {
     if (textRef.current) {
@@ -280,79 +329,85 @@ const Article = () => {
   useEffect(() => {
     // scroll to the top of the page
     window.scrollTo(0, 0)
+    if (articleData) {
+      setArticleLoading(false)
+    }
+    return () => {
+      // clear articleData in redux
+      dispatch(setArticleData(null))
+    }
   }, [])
 
   const handleThemeChange = useCallback(newThemedContent => {
     setThemedContent(newThemedContent)
   }, [])
   return (
-    <Suspense fallback={<Loading />}>
-      <Flex w={'100vw'}>
-        <Flex
-          className="article-page"
-          marginTop={'2.75rem'}
-          flexDirection={'column'}
-          w={'100vw'}
-          overflow={'hidden'}
-          minH={'100vh'}
-        >
-          <Helmet>
-            <title>{`${title[selectedLanguage]} | Rapid Recap`}</title>
-            <meta
-              name="description"
-              content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
-            />
-            <meta
-              name="keywords"
-              content={`${article?.category}, news, current events, ${title[
-                selectedLanguage
-              ]
-                ?.toLowerCase()
-                ?.split(' ')
-                ?.join(', ')}`}
-            />
-            <meta
-              property="og:title"
-              content={`${title[selectedLanguage]} | Rapid Recap`}
-            />
-            <meta
-              property="og:description"
-              content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
-            />
-            <meta property="og:image" content={imgURL} />
-            <meta property="og:type" content="article" />
-            <meta
-              property="og:url"
-              content={`https://www.rapidrecap.co.in/article/${id}/${slugify(
-                title['english'],
-              )}`}
-            />
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta
-              name="twitter:title"
-              content={`${title[selectedLanguage]} | Rapid Recap`}
-            />
-            <meta
-              name="twitter:description"
-              content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
-            />
-            <meta name="twitter:image" content={imgURL} />
-            <link
-              rel="canonical"
-              href={`https://www.rapidrecap.co.in/article/${id}/${slugify(
-                title['english'],
-              )}`}
-            />
-            <script type="application/ld+json">
-              {`
+    <Flex w={'100vw'}>
+      <Flex
+        className="article-page"
+        marginTop={'2.75rem'}
+        flexDirection={'column'}
+        w={'100vw'}
+        overflow={'hidden'}
+        minH={'100vh'}
+      >
+        <Helmet>
+          <title>{`${title[selectedLanguage]} | Rapid Recap`}</title>
+          <meta
+            name="description"
+            content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
+          />
+          <meta
+            name="keywords"
+            content={`${article?.category}, news, current events, ${title[
+              selectedLanguage
+            ]
+              ?.toLowerCase()
+              ?.split(' ')
+              ?.join(', ')}`}
+          />
+          <meta
+            property="og:title"
+            content={`${title[selectedLanguage]} | Rapid Recap`}
+          />
+          <meta
+            property="og:description"
+            content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
+          />
+          <meta property="og:image" content={imgURL} />
+          <meta property="og:type" content="article" />
+          <meta
+            property="og:url"
+            content={`https://www.rapidrecap.co.in/article/${id}/${slugify(
+              title['english'],
+            )}`}
+          />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta
+            name="twitter:title"
+            content={`${title[selectedLanguage]} | Rapid Recap`}
+          />
+          <meta
+            name="twitter:description"
+            content={mainText[selectedLanguage]?.[0]?.substring(0, 160)}
+          />
+          <meta name="twitter:image" content={imgURL} />
+          <link
+            rel="canonical"
+            href={`https://www.rapidrecap.co.in/article/${id}/${slugify(
+              title['english'],
+            )}`}
+          />
+          <script type="application/ld+json">
+            {`
     {
       "@context": "https://schema.org",
       "@type": "NewsArticle",
       "mainEntityOfPage": {
         "@type": "WebPage",
         "@id": "https://www.rapidrecap.co.in/article/${id}/${slugify(
-                title['english'],
-              )}"
+              title['english'],
+            )}"
       },
       "headline": "${title[selectedLanguage]}",
       "image": ["${imgURL}"],
@@ -373,50 +428,54 @@ const Article = () => {
       "description": "${mainText[selectedLanguage]?.[0]?.substring(0, 160)}"
     }
     `}
-            </script>
-          </Helmet>
-          <article>
-            <Flex
-              justifyContent={'center'}
-              mt={5}
-              px={{ base: '20px', md: '50px' }}
-              w={'100%'}
+          </script>
+        </Helmet>
+        <article>
+          <Flex
+            justifyContent={'center'}
+            mt={5}
+            px={{ base: '20px', md: '50px' }}
+            w={'100%'}
+          >
+            <header
+              style={{
+                height: '100%',
+                width: '100%',
+              }}
             >
-              <header
-                style={{
-                  height: '100%',
-                  width: '100%',
-                }}
-              >
-                <ArticleHeader
-                  title={title}
-                  author={author}
-                  selectedLanguage={selectedLanguage}
-                  bookmark={bookmark}
-                  avgTimeRead={avgTimeRead}
-                  dateTime={dateTime}
-                  bookmarkStatus={bookmarkStatus}
-                  article={article}
-                  isQuinBoostAvailable={isQuinBoostAvailable}
-                  quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
-                  openModal={openModal}
-                  onThemeChange={handleThemeChange}
-                />
-              </header>
-            </Flex>
-            {!isAuthenticated && (
-              <Box px={{ base: 4, md: 6 }}>
-                <PremiumValueBanner />
-              </Box>
-            )}
-            <Grid
-              templateColumns={isLargerThan821 ? 'minmax(0, 9fr) 5fr' : '1fr'}
-              gap={10}
-              minH={'85vh'}
-              px={{ base: '20px', md: '50px' }}
-              marginTop={0}
-              className="article-all-content"
-            >
+              <ArticleHeader
+                title={title}
+                author={author}
+                selectedLanguage={selectedLanguage}
+                bookmark={bookmark}
+                articleLoading={articleLoading}
+                avgTimeRead={avgTimeRead}
+                dateTime={dateTime}
+                bookmarkStatus={bookmarkStatus}
+                article={article}
+                isQuinBoostAvailable={isQuinBoostAvailable}
+                quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
+                openModal={openModal}
+                onThemeChange={handleThemeChange}
+              />
+            </header>
+          </Flex>
+          {!isAuthenticated && loginCheckStatus === 'fulfilled' && (
+            <Box px={{ base: 4, md: 6 }}>
+              <PremiumValueBanner />
+            </Box>
+          )}
+          <Grid
+            templateColumns={isLargerThan821 ? 'minmax(0, 9fr) 5fr' : '1fr'}
+            gap={10}
+            minH={'85vh'}
+            px={{ base: '20px', md: '50px' }}
+            marginTop={0}
+            className="article-all-content"
+          >
+            {articleLoading ? (
+              <MainArticleContentSkeleton />
+            ) : (
               <MainArticleContent
                 imgURL={
                   (!blackListedImgUrls.find(url => url === imgURL) && imgURL) ||
@@ -432,43 +491,45 @@ const Article = () => {
                 dictionary={dictionary}
                 importantSentences={importantSentences}
               />
+            )}
 
-              <Sidebar
-                setShouldScrollToTop={setShouldScrollToTop}
-                shouldScrollToTop={shouldScrollToTop}
-                givenQuiz={givenQuiz}
-                percentile={percentile}
-                RQM_score={RQM_score}
-                onGoingQuiz={onGoingQuiz}
-                quizExpired={quizExpired}
-                isQuinBoostAvailable={isQuinBoostAvailable}
-                trackGenerateQuizClick={trackGenerateQuizClick}
-                setShowQuiz={setShowQuiz}
-                showQuiz={showQuiz}
-                loadingRealatedArticles={loadingRealatedArticles}
-                setLoadingRelatedArticles={setLoadingRelatedArticles}
-                totalUsersGivenQuiz={totalUsersGivenQuiz}
-                articleHeight={articleHeight}
-                article={article}
-                id={id}
-                isQuizGivenLoading={isQuizGivenLoading}
-                i18n={i18n}
-              />
-            </Grid>
-            {!isAuthenticated && <PremiumCTA readProgress={readProgress} />}
-            <ArticleFooter />
-          </article>
-        </Flex>
-
-        <QuinBoostModal
-          isOpen={isQuinBoostModalOpen}
-          onClose={closeModal}
-          currentQuizCount={user?.todaysQuizCnt}
-          isStateBoosted={isBoosted}
-        />
-        {user && <TrackTime userId={user?._id} articleId={id} />}
+            <Sidebar
+              setShouldScrollToTop={setShouldScrollToTop}
+              shouldScrollToTop={shouldScrollToTop}
+              givenQuiz={givenQuiz}
+              percentile={percentile}
+              RQM_score={RQM_score}
+              onGoingQuiz={onGoingQuiz}
+              quizExpired={quizExpired}
+              isQuinBoostAvailable={isQuinBoostAvailable}
+              trackGenerateQuizClick={trackGenerateQuizClick}
+              setShowQuiz={setShowQuiz}
+              showQuiz={showQuiz}
+              loadingRealatedArticles={loadingRealatedArticles}
+              setLoadingRelatedArticles={setLoadingRelatedArticles}
+              totalUsersGivenQuiz={totalUsersGivenQuiz}
+              articleHeight={articleHeight}
+              article={article}
+              id={id}
+              isQuizGivenLoading={isQuizGivenLoading}
+              i18n={i18n}
+            />
+          </Grid>
+          {!isAuthenticated && loginCheckStatus === 'fulfilled' && (
+            <PremiumCTA readProgress={readProgress} />
+          )}
+          <ArticleFooter />
+        </article>
       </Flex>
-    </Suspense>
+
+      <QuinBoostModal
+        isOpen={isQuinBoostModalOpen}
+        onClose={closeModal}
+        currentQuizCount={user?.todaysQuizCnt}
+        isStateBoosted={isBoosted}
+      />
+      {user && <TrackTime userId={user?._id} articleId={id} />}
+    </Flex>
   )
 }
 

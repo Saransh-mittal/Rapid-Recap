@@ -11,7 +11,10 @@ import {
   TabPanels,
   Tab,
   TabPanel,
+  Button,
+  useToast,
 } from '@chakra-ui/react'
+import { RiRobot2Line } from 'react-icons/ri'
 
 // Component Imports
 import DashboardHeader from '../components/dashboardComponents/DashboardHeader'
@@ -77,6 +80,8 @@ const Dashboard = () => {
   const [selectedArticle, setSelectedArticle] = useState(null)
   const [articles, setArticles] = useState([])
   const [filteredArticles, setFilteredArticles] = useState([])
+  const toast = useToast()
+  const [isSendingReport, setIsSendingReport] = useState(false)
 
   // Media query hook
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)')
@@ -379,11 +384,67 @@ const Dashboard = () => {
   const { data: mergedData, totals } = mergeData()
   const columns = getMergedColumns()
 
+  const handleSendBotReport = async () => {
+    try {
+      setIsSendingReport(true)
+
+      const response = await axios.get('/api/admin/bot-analytics/report')
+      if (response.data.reportAvailable)
+        toast({
+          title: 'Report Sent!',
+          description: `Bot analytics report has been sent to your email address.`,
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+          position: 'top-right',
+        })
+      else {
+        toast({
+          title: 'No Report Available',
+          description: `No bot visits to report today.`,
+          status: 'info',
+          duration: 5000,
+          isClosable: true,
+          position: 'top-right',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description:
+          error.response?.data?.message ||
+          'Failed to send bot analytics report',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top-right',
+      })
+    } finally {
+      setIsSendingReport(false)
+    }
+  }
+
   return (
     <Box minHeight="100vh" mt={'4.5rem'} px={isLargerThan768 ? '2rem' : '0rem'}>
       <Container maxW="container.xl" py={8}>
         <DashboardHeader />
-
+        <Box display="flex" justifyContent="center" mb={4} w={'100%'}>
+          <Button
+            leftIcon={<RiRobot2Line />}
+            colorScheme="purple"
+            size="md"
+            isLoading={isSendingReport}
+            loadingText="Sending..."
+            onClick={handleSendBotReport}
+            _hover={{
+              transform: 'translateY(-2px)',
+              boxShadow: 'lg',
+            }}
+            transition="all 0.2s"
+          >
+            Send Bot Analytics Report
+          </Button>
+        </Box>
         <Tabs isFitted variant="soft-rounded" colorScheme="teal">
           <TabList mb="1em" mx={{ base: 0, md: '2rem' }}>
             <Tab color="gray.200">Users Data</Tab>

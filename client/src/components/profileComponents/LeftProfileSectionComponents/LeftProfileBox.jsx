@@ -28,6 +28,7 @@ import { setUser } from '../../../redux/authSlice'
 import CircleAndSocietyData from '../../../assets/CircleAndSocietyData'
 import { useFeatureDetection } from '../../../utils/featureDetection'
 import useSafeSound from '../../../customHooks/useSafeSound'
+import RQMThermometer from '../../leaderBoardComponents/RQMThermometer'
 
 // Lazy loading components
 const EditProfileModal = React.lazy(() =>
@@ -488,17 +489,17 @@ const LeftProfileBox = ({ leftProfileView, CURR_IQ, MAX_IQ, avgRQMScore }) => {
               </Flex>
             </Flex>
             <Flex flexDirection={'column'}>
-              <Flex color={textColor}>{t('avgRQM')}</Flex>
-              <Flex color={accentColor} fontSize="2xl">
-                {leftProfileView?.avgRQM?.toFixed(2)}
-              </Flex>
-            </Flex>
-            <Flex flexDirection={'column'}>
               <Flex color={textColor}>{t('IQ score')}</Flex>
               <Flex color={accentColor} fontSize="2xl">
                 {leftProfileView?.UserIQ?.toFixed(1)}
               </Flex>
             </Flex>
+            <RQMThermometer
+              rqm={leftProfileView?.avgRQM.toFixed(2)}
+              fontSize="md"
+              rqmFontSize="lg"
+              fromProfile={true}
+            />
           </HStack>
 
           <Flex>

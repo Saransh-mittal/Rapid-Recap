@@ -35,20 +35,17 @@ import {
   Legend,
 } from 'chart.js'
 import { keyframes } from '@emotion/react'
+import TournamentSectionSkeleton from './TournamentSectionSkeleton'
+import CategoryStatsCard from '../../tournamentComponents/CategoryStatsCard'
+import ProfileButton from '../../miscellaneous/ProfileButton'
+import LastTournamentRank from './TournamentSectionComponent/LastTournamentRank'
+import HistogramSVG from '../../../assets/svg/HistogramSVG'
+import TrophySVG from '../../../assets/svg/TrophySVG'
 
-const CategoryStatsCard = lazy(() =>
-  import('../../tournamentComponents/CategoryStatsCard'),
-)
-const ProfileButton = lazy(() => import('../../miscellaneous/ProfileButton'))
 const TournamentSelectorDrawer = lazy(() =>
   import('./TournamentSectionComponent/TournamentSelectorDrawer'),
 )
 const QuizReport = lazy(() => import('../../quizComponents/QuizReport'))
-const LastTournamentRank = lazy(() =>
-  import('./TournamentSectionComponent/LastTournamentRank'),
-)
-const HistogramSVG = lazy(() => import('../../../assets/svg/HistogramSVG'))
-const TrophySVG = lazy(() => import('../../../assets/svg/TrophySVG'))
 
 ChartJS.register(
   CategoryScale,
@@ -274,16 +271,7 @@ const TournamentSection = ({
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }`
 
-  if (loading)
-    return (
-      <Spinner
-        size="xl"
-        thickness="4px"
-        speed="0.65s"
-        emptyColor="gray.700"
-        color="purple.500"
-      />
-    )
+  if (loading) return <TournamentSectionSkeleton />
   if (error) return <Text color="red.400">{error}</Text>
 
   if (isGuest) {
@@ -367,7 +355,7 @@ const TournamentSection = ({
             </Text>
           </Flex>
         ) : loading ? (
-          <Spinner />
+          <TournamentSectionSkeleton />
         ) : (
           <>
             <VStack spacing={8} align="stretch">
@@ -493,19 +481,20 @@ const TournamentSection = ({
         )}
       </Box>
 
-      <TournamentSelectorDrawer
-        isOpen={isOpen}
-        onClose={onClose}
-        hoverAnimation={hoverAnimation}
-        data={data}
-        userStats={userStats}
-        categoryStats={categoryStats}
-        setTournamentId={setTournamentId}
-        tournamentId={tournamentId}
-        tournamentData={tournamentData}
-        loginedUserProfile={loginedUserProfile}
-      />
-
+      <Suspense fallback={null}>
+        <TournamentSelectorDrawer
+          isOpen={isOpen}
+          onClose={onClose}
+          hoverAnimation={hoverAnimation}
+          data={data}
+          userStats={userStats}
+          categoryStats={categoryStats}
+          setTournamentId={setTournamentId}
+          tournamentId={tournamentId}
+          tournamentData={tournamentData}
+          loginedUserProfile={loginedUserProfile}
+        />
+      </Suspense>
       {showProfileQuizSummary && (
         <Suspense fallback={null}>
           <QuizReport

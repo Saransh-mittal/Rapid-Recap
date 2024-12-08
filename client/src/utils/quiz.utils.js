@@ -46,12 +46,16 @@ const parseQuizData = result => {
     boost: result?.boost,
     isBoost: result?.isBoosted,
     iqData: {
-      prevScore: result?.prevIQScore,
-      newScore: result?.newIQScore,
+      prevIQScore: result?.prevIQScore,
+      newIQScore: result?.newIQScore,
       hasChange: result?.hasSocietyOrCircleChanged,
       changeDetails: result?.changedSocietyOrCircle,
       isUpgrade: result?.isUpgrade,
       pauseRealTimeIQ: result?.pauseRealTimeIQ,
+      boostMultiplier: result?.boostMultiplier,
+      originalIncrement: result?.originalIncrement,
+      boostedIncrement: result?.boostedIncrement,
+      additionalScore: result?.additionalScore,
     },
   }
 }

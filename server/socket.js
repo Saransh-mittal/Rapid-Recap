@@ -191,6 +191,7 @@ function initializeSocket(server) {
     // Add this new event listener for quiz progress
     socket.on('join quiz progress', userId => {
       socket.join(`quiz_progress_${userId}`)
+      socket.emit('quiz_generation_progress', { progress: 5 })
     })
 
     // Add this new event handler for quiz submission progress

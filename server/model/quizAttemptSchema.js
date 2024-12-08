@@ -63,6 +63,24 @@ const quizAttemptSchema = new mongoose.Schema({
     required: true,
     deafult: 1,
   },
+  prevIQScore: {
+    type: Number,
+  },
+  newIQScore: {
+    type: Number,
+  },
+  prevUserScore: {
+    type: Number,
+  },
+  newUserScore: {
+    type: Number,
+  },
+  globalMeanUserScore: {
+    type: Number,
+  },
+  globalStandardDeviation: {
+    type: Number,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

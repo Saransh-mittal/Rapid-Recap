@@ -137,7 +137,7 @@ export default function Register({ isOpen, onClose, onOpenGuest }) {
       if (response.status === 201) {
         onEmailVerifyOpen()
         toast({
-          title: t('register_success'),
+          title: 'Registered Successfully!',
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -148,7 +148,7 @@ export default function Register({ isOpen, onClose, onOpenGuest }) {
       }
     } catch (error) {
       toast({
-        title: t('logout_failed'),
+        title: 'Registration Failed',
         description: error.response?.data?.error || error.message,
         status: 'error',
         duration: 5000,

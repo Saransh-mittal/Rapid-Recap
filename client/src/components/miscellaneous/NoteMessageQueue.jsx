@@ -87,7 +87,7 @@ const NoteMessageQueue = () => {
       <Suspense fallback={null}>
         <NoteMessage
           messageId={uuidv4()}
-          title={t('newMessages', { number: noteMessageQueue.length })}
+          title={t('newMessage', { number: noteMessageQueue.length })}
           actions={actions}
           onClose={handleClose}
           duration={null}

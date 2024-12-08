@@ -10,6 +10,7 @@ const { hindiConverter } = require('../utils/article.utils')
 const { breakArticleIntoParagraphs } = require('../utils/article.utils')
 const { formatDate } = require('../utils/miscellaneous.utils')
 const cache = require('memory-cache')
+const ArticleHighlight = require('../model/articleHighlightSchema')
 
 // @desc    Get user recommendations
 // @route   GET /api/recommendation
@@ -23,7 +24,11 @@ const userRecommendations = asyncHandler(async (req, res) => {
   const cacheKey = `user_recommendations_${userId}_${lang}_${page}_${pageSize}`
   const cachedRecommendations = cache.get(cacheKey)
 
-  if (cachedRecommendations) {
+  if (
+    cachedRecommendations &&
+    Array.isArray(cachedRecommendations) &&
+    cachedRecommendations.length > 0
+  ) {
     return res.send(cachedRecommendations)
   }
 
@@ -59,7 +64,11 @@ const userRecommendations = asyncHandler(async (req, res) => {
       .filter(article => article.category !== 'onBoardingArticle')
       .map(async article => {
         const paragraphs = await breakArticleIntoParagraphs(article.mainText)
-
+        const highlights = await ArticleHighlight.findOne({
+          articleId: article._id,
+          processingStatus: 'completed',
+          language: lang ? lang : 'en',
+        })
         return {
           category: article.category,
           title: article.title,
@@ -74,6 +83,9 @@ const userRecommendations = asyncHandler(async (req, res) => {
           date: formatDate(article.dateTime),
           dateTime: article.dateTime,
           _id: article._id,
+          // Add highlights if they exist
+          dictionary: highlights?.dictionary || [],
+          importantSentences: highlights?.importantSentences || [],
         }
       }),
   )

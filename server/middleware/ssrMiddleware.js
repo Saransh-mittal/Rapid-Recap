@@ -142,10 +142,19 @@ function setupStaticHandling(app) {
   const staticOptions = {
     setHeaders: (res, filePath) => {
       const ext = path.extname(filePath)
+
+      // Special handling for locale files
+      if (filePath.includes('/locales/')) {
+        res.setHeader('Cache-Control', 'no-store, must-revalidate')
+        res.setHeader('Pragma', 'no-cache')
+        res.setHeader('Expires', '0')
+        return
+      }
+
       if (ext === '.css') {
         res.setHeader('Content-Type', 'text/css')
       }
-      // Add special handling for service workers
+
       if (
         filePath.includes('-sw.js') ||
         filePath.endsWith('service-worker.js')
@@ -160,6 +169,19 @@ function setupStaticHandling(app) {
     maxAge: '1y',
   }
 
+  // Add specific handler for locales before other static routes
+  app.use(
+    '/locales',
+    express.static(path.join(distPath, 'locales'), {
+      ...staticOptions,
+      setHeaders: res => {
+        res.setHeader('Content-Type', 'application/json')
+        res.setHeader('Cache-Control', 'no-store, must-revalidate')
+        res.setHeader('Pragma', 'no-cache')
+        res.setHeader('Expires', '0')
+      },
+    }),
+  )
   // Serve styles directory specifically
   app.use(
     '/styles',

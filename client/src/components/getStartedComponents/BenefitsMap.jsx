@@ -230,7 +230,7 @@ const BenefitsMap = ({ isWeakDevice }) => {
 
   return (
     <ContentWrapper>
-      <Box py={20} position="relative">
+      <Box py={10} position="relative">
         <Container maxW="1400px" px={{ base: 4, md: 8 }}>
           <MotionBox
             initial={{ opacity: 0, y: -20 }}

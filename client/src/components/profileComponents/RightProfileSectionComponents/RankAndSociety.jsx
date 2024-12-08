@@ -1,18 +1,11 @@
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-  lazy,
-  Suspense,
-} from 'react'
-import { Flex, Image, Tooltip, Text, Spinner, Badge } from '@chakra-ui/react'
+import React, { useState, useMemo, useCallback, lazy, Suspense } from 'react'
+import { Flex, Image, Text, Spinner } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next' // Import i18next hook
 
 import CircleAndSocietyData from '../../../assets/CircleAndSocietyData'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { addNoteMessage } from '../../../redux/appSlice'
-
+import EnhancedSocietyCircle from './RankAndSocietySubCompnents/EnhancedSocietyCircle'
 //SSR images
 const Lock = '/images/lock.webp'
 
@@ -20,9 +13,6 @@ const Lock = '/images/lock.webp'
 const BrainModal = lazy(() => import('./RankAndSocietySubCompnents/BrainModal'))
 const CircleModal = lazy(() =>
   import('./RankAndSocietySubCompnents/CircleModal'),
-)
-const EnhancedSocietyCircle = lazy(() =>
-  import('./RankAndSocietySubCompnents/EnhancedSocietyCircle'),
 )
 
 const RankAndSociety = ({
@@ -33,8 +23,6 @@ const RankAndSociety = ({
   isGuest,
 }) => {
   const { t } = useTranslation('RankAndSociety') // Initialize translation hook
-  const { user } = useSelector(state => state.auth)
-  const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isCircleModalOpen, setIsCircleModalOpen] = useState(false)
   const [showBrainModal, setShowBrainModal] = useState(false)
@@ -53,10 +41,6 @@ const RankAndSociety = ({
       CircleAndSocietyData[CircleAndSocietyData.length - 1]
     )
   }, [USER_IQ])
-
-  useEffect(() => {
-    setIsLoading(false)
-  }, [])
 
   // Memoized event handlers
   const handleBrainClick = useCallback(() => {
@@ -152,18 +136,12 @@ const RankAndSociety = ({
             {t('privateSociety.hidden')}
           </Text>
         </Flex>
-      ) : isLoading ? (
-        <Spinner />
       ) : (
-        <>
-          <Suspense fallback={<Spinner />}>
-            <EnhancedSocietyCircle
-              societyData={circleAndSociety}
-              handleBrainClick={handleBrainClick}
-              handleCircleClick={handleCircleClick}
-            />
-          </Suspense>
-        </>
+        <EnhancedSocietyCircle
+          societyData={circleAndSociety}
+          handleBrainClick={handleBrainClick}
+          handleCircleClick={handleCircleClick}
+        />
       )}
       {/* Modals */}
       <Suspense fallback={<Spinner />}>

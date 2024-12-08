@@ -63,8 +63,8 @@ const TimeIndicatorBadge = ({ currentStep, STEP_SEQUENCE }) => {
     })
 
     return totalSecs <= 60
-      ? `~${totalSecs} sec`
-      : `~${Math.ceil(totalSecs / 60)} min`
+      ? `${totalSecs} sec`
+      : `${Math.ceil(totalSecs / 60)} min`
   }
 
   useEffect(() => {

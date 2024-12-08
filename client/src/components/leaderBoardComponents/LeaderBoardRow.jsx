@@ -16,6 +16,7 @@ import ScoreItem from './ScoreItem'
 import NameLightning from '../miscellaneous/NameLightning'
 import { findSocietyAndCircle } from '../../utils/helper.utils'
 import { useTranslation } from 'react-i18next'
+import RQMThermometer from './RQMThermometer'
 
 const MotionBox = motion(Box)
 
@@ -90,11 +91,12 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
           value={user.quizSubmissions}
           color={textColor}
         />
-        <ScoreItem
+        {/* <ScoreItem
           label={t('Avg. RQM')}
           value={user.RQM_avg}
           color={textColor}
-        />
+        /> */}
+        <RQMThermometer rqm={parseInt(user?.RQM_avg)} userId={user?._id} />
       </>
     ),
     [user, t, accentColor, textColor],
@@ -105,13 +107,9 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      whileHover={isHoverDisabled ? {} : { scale: 1.02 }}
-      // backgroundColor="rgba(15, 13, 21, 0.4)"
-      // boxShadow="0px 4px 8px rgba(0, 0, 0, 0.3), 0px 8px 16px rgba(0, 0, 0, 0.3), 0px 12px 24px rgba(0, 0, 0, 0.3)"
       p={{ base: 3, md: 4 }}
       borderRadius="xl"
       border="1px solid"
-      // borderColor={isCurrentUser ? accentColor : 'transparent'}
       onClick={handleClick}
       cursor={isHoverDisabled ? 'default' : 'pointer'}
       position="relative"
@@ -120,15 +118,7 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
         bgGradient:
           'linear(to-r, rgba(35, 25, 70, 0.5) 0%, rgba(45, 32, 89, 0.5) 50%, rgba(35, 25, 70, 0.5) 100%)',
       }}
-      // boxShadow={
-      //   isCurrentUser
-      //     ? `0px 4px 20px rgba(255, 92, 152, 0.2),
-      //    inset 0px 0px 20px rgba(255, 92, 152, 0.1)`
-      //     : '0px 4px 20px rgba(0, 0, 0, 0.3)'
-      // }
       borderColor={isCurrentUser ? accentColor : 'rgba(255, 255, 255, 0.05)'}
-      // backdropFilter="blur(12px)"
-      // transition="all 0.2s ease-in-out"
     >
       <Grid
         templateColumns={{ base: 'auto 1fr auto', md: 'auto 1fr auto' }}
@@ -158,7 +148,10 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
         </GridItem>
         <GridItem>
           <VStack align="start" spacing={0}>
-            <Flex position={'relative'} px={2}>
+            <Flex
+              position={'relative'}
+              px={!maxSocietyAndCircle?.boxShadow ? 0.25 : 2}
+            >
               <Text
                 fontSize={{ base: 'sm', md: 'lg' }}
                 fontWeight="bold"
@@ -179,6 +172,8 @@ const LeaderboardRow = React.memo(({ user, rank, isCurrentUser, onClick }) => {
               fontSize={{ base: 'xs', md: 'md' }}
               color={accentColor}
               fontWeight="semibold"
+              mt={!maxSocietyAndCircle?.boxShadow ? 0 : 2}
+              mb={!maxSocietyAndCircle?.boxShadow ? 0 : -2}
             >
               @{user.inGameName}
             </Text>

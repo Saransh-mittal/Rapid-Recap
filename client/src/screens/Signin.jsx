@@ -461,19 +461,19 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                       </GoogleOAuthProvider>
                     </Button>
                   </Flex>
-                  <Flex w={'100%'} justifyContent={'center'} mb={4}>
+                  {/* <Flex w={'100%'} justifyContent={'center'} mb={4}>
                     <Text color={'gray.400'} fontWeight={'bold'}>
                       {t('or_text')}
                     </Text>
-                  </Flex>
-                  <Suspense fallback={<Spinner />}>
+                  </Flex> */}
+                  {/* <Suspense fallback={<Spinner />}>
                     <Flex w={'100%'} justifyContent={'center'}>
                       <GuestLogin
                         hamburgerOnClose={hamburgerOnClose}
                         t={GuestLoginTranslate}
                       />
                     </Flex>
-                  </Suspense>
+                  </Suspense> */}
                 </>
               ) : (
                 <>

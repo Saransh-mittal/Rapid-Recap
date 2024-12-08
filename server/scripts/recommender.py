@@ -334,6 +334,7 @@ def recommend_articles(user_id, articles_df, sig, quiz_attempts_df, time_spent_d
         logging.error(f"Error recommending articles: {str(e)}")
         raise
 
+pd.set_option('future.no_silent_downcasting', True)
 def recommend_trending_articles(articles_df, quiz_attempts_df, time_spent_df, user_preferred_categories=None, num_recommendations=270):
     """
     Recommend trending articles with category preferences consideration.
@@ -373,9 +374,10 @@ def recommend_trending_articles(articles_df, quiz_attempts_df, time_spent_df, us
             how='left'
         )
 
-        # Fill NaN values with explicit type conversion to avoid warning
-        trending_df['attempt_count'] = pd.to_numeric(trending_df['attempt_count'].fillna(0), downcast='float')
-        trending_df['total_time_spent'] = pd.to_numeric(trending_df['total_time_spent'].fillna(0), downcast='float')
+        # Convert columns to float and fill NaN values
+        # Initialize columns as float type before filling NaN
+        trending_df['attempt_count'] = trending_df['attempt_count'].astype('float64').fillna(0)
+        trending_df['total_time_spent'] = trending_df['total_time_spent'].astype('float64').fillna(0)
 
         # Calculate normalized scores
         max_attempts = trending_df['attempt_count'].max()
@@ -386,17 +388,15 @@ def recommend_trending_articles(articles_df, quiz_attempts_df, time_spent_df, us
 
         trending_df['trending_score'] = (trending_df['normalized_attempts'] + trending_df['normalized_time']) / 2
 
-        # Ensure datetime is timezone aware
+        # Rest of the function remains the same...
         trending_df['dateTime'] = pd.to_datetime(trending_df['dateTime'])
         if trending_df['dateTime'].dt.tz is None:
             trending_df['dateTime'] = trending_df['dateTime'].dt.tz_localize('UTC')
 
         now = pd.Timestamp.now(tz='UTC')
         trending_df['days_old'] = (now - trending_df['dateTime']).dt.days
-
         trending_df['time_decay'] = 1 / (1 + 0.1 * trending_df['days_old'])
 
-        # Apply category boost if user has preferred categories
         if user_preferred_categories:
             category_weights = {cat_info['category']: float(cat_info.get('weight', 0))
                               for cat_info in user_preferred_categories}
@@ -405,12 +405,10 @@ def recommend_trending_articles(articles_df, quiz_attempts_df, time_spent_df, us
                 trending_df['category_boost'] = trending_df['category'].map(
                     lambda x: category_weights.get(x, 0)
                 )
-                # Normalize category boost
                 max_boost = trending_df['category_boost'].max()
                 if max_boost > 0:
                     trending_df['category_boost'] = trending_df['category_boost'] / max_boost
 
-                # Combine scores with category boost
                 trending_df['final_score'] = (trending_df['trending_score'] * 0.4 +
                                             trending_df['category_boost'] * 0.6) * trending_df['time_decay']
             else:
@@ -418,21 +416,15 @@ def recommend_trending_articles(articles_df, quiz_attempts_df, time_spent_df, us
         else:
             trending_df['final_score'] = trending_df['trending_score'] * trending_df['time_decay']
 
-        # Get recommendations
         if user_preferred_categories:
-            # Get preferred categories
             preferred_categories = {cat_info['category'] for cat_info in user_preferred_categories}
-
-            # Select 80% from preferred categories
             preferred_count = int(num_recommendations * 0.8)
             other_count = num_recommendations - preferred_count
 
-            # Get recommendations from preferred categories
             preferred_recommendations = trending_df[
                 trending_df['category'].isin(preferred_categories)
             ].nlargest(preferred_count, 'final_score')
 
-            # Get recommendations from other categories
             other_recommendations = trending_df[
                 ~trending_df['category'].isin(preferred_categories)
             ].nlargest(other_count, 'final_score')
@@ -441,7 +433,6 @@ def recommend_trending_articles(articles_df, quiz_attempts_df, time_spent_df, us
         else:
             recommended_articles = trending_df.nlargest(num_recommendations, 'final_score')
 
-        # Shuffle recommendations for variety
         recommended_articles = recommended_articles.sample(frac=1).reset_index(drop=True)
 
         return recommended_articles['_id'].astype(str).tolist()

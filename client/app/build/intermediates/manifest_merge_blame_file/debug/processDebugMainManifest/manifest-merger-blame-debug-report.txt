@@ -31,280 +31,281 @@
 31        android:targetSdkVersion="35" />
 32
 33    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-33-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:26:5-76
-33-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:26:22-74
+33-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:26:5-76
+33-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:26:22-74
 34
 35    <queries>
 35-->[com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:26:5-34:15
 36        <intent>
 36-->[com.google.androidbrowserhelper:androidbrowserhelper:2.5.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/f720fa769390a4f424fd297a5a849671/transformed/androidbrowserhelper-2.5.0/AndroidManifest.xml:27:9-33:18
 37            <action android:name="android.intent.action.VIEW" />
-37-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:150:17-68
-37-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:150:25-66
+37-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:150:17-68
+37-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:150:25-66
 38
 39            <category android:name="android.intent.category.BROWSABLE" />
-39-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:152:17-77
-39-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:152:27-75
+39-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:152:17-77
+39-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:152:27-75
 40
 41            <data android:scheme="https" />
-41-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:153:17-154:54
-41-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:153:23-45
+41-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:153:17-154:54
+41-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:153:23-45
 42        </intent>
 43    </queries>
 44
 45    <application
-45-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:35:5-197:19
+45-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:35:5-197:19
 46        android:name="in.co.rapidrecap.www.twa.Application"
-46-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:36:9-35
+46-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:36:9-35
 47        android:allowBackup="true"
-47-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:37:9-35
+47-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:37:9-35
 48        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 48-->[androidx.core:core:1.1.0] /Users/saranshmittal/.gradle/caches/8.9/transforms/624a26c73b66840d0d82d63bc3c7f8b0/transformed/core-1.1.0/AndroidManifest.xml:24:18-86
 49        android:debuggable="true"
 50        android:extractNativeLibs="true"
 51        android:icon="@mipmap/ic_launcher"
-51-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:38:9-43
+51-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:38:9-43
 52        android:label="@string/appName"
-52-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:39:9-40
+52-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:39:9-40
 53        android:manageSpaceActivity="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
-53-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:41:9-105
+53-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:41:9-105
 54        android:supportsRtl="true"
-54-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:43:9-35
-55        android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-55-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:44:9-68
-56        <meta-data
-56-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:46:9-48:59
-57            android:name="asset_statements"
-57-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:47:13-44
-58            android:resource="@string/asset_statements" />
-58-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:48:13-56
-59        <meta-data
-59-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:53:9-55:54
-60            android:name="web_manifest_url"
-60-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:54:13-44
-61            android:value="@string/webManifestUrl" />
-61-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:55:13-51
-62        <meta-data
-62-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:58:9-60:52
-63            android:name="twa_generator"
-63-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:59:13-41
-64            android:value="@string/generatorApp" />
-64-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:60:13-49
-65
-66        <activity android:name="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity" >
-66-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:67:9-71:20
-66-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:67:19-100
-67            <meta-data
-67-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:68:13-70:53
-68                android:name="android.support.customtabs.trusted.MANAGE_SPACE_URL"
-68-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:69:17-83
-69                android:value="@string/launchUrl" />
-69-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:70:17-50
-70        </activity>
-71        <activity
-71-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:9-158:20
-72            android:name="in.co.rapidrecap.www.twa.RapidRecapLauncherActivity"
-72-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:74:19-61
-73            android:alwaysRetainTaskState="true"
-73-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:76:13-49
-74            android:exported="true"
-74-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:79:13-36
-75            android:label="@string/launcherName"
-75-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:78:13-49
-76            android:screenOrientation="unspecified"
-76-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:77:13-52
-77            android:theme="@style/SplashTheme" >
-77-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:75:13-47
-78            <intent-filter>
-78-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:80:13-83:29
-79                <action android:name="android.intent.action.MAIN" />
-79-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:81:17-69
-79-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:81:25-66
-80
-81                <category android:name="android.intent.category.LAUNCHER" />
-81-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:82:17-77
-81-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:82:27-74
-82            </intent-filter>
-83
-84            <meta-data
-84-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:84:13-86:64
-85                android:name="android.support.customtabs.trusted.DEFAULT_URL"
-85-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:85:17-78
-86                android:value="https://www.rapidrecap.co.in" />
-86-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:86:17-61
-87            <meta-data
-87-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:88:13-90:58
-88                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
-88-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:89:17-83
-89                android:resource="@color/colorPrimary" />
-89-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:90:17-55
-90            <meta-data
-90-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:92:13-94:62
-91                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR_DARK"
-91-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:93:17-88
-92                android:resource="@color/colorPrimaryDark" />
-92-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:94:17-59
-93            <meta-data
-93-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:96:13-98:61
-94                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
-94-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:97:17-87
-95                android:resource="@color/navigationColor" />
-95-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:98:17-58
-96            <meta-data
-96-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:100:13-102:65
-97                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR_DARK"
-97-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:101:17-92
-98                android:resource="@color/navigationColorDark" />
-98-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:102:17-62
-99            <meta-data
-99-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:104:13-106:68
-100                android:name="androix.browser.trusted.NAVIGATION_BAR_DIVIDER_COLOR"
-100-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:105:17-84
-101                android:resource="@color/navigationDividerColor" />
-101-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:106:17-65
-102            <meta-data
-102-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:108:13-110:72
-103                android:name="androix.browser.trusted.NAVIGATION_BAR_DIVIDER_COLOR_DARK"
-103-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:109:17-89
-104                android:resource="@color/navigationDividerColorDark" />
-104-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:110:17-69
-105            <meta-data
-105-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:112:13-114:62
-106                android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE"
-106-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:113:17-88
-107                android:resource="@drawable/splash_screen" />
-107-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:114:17-59
-108            <meta-data
-108-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:115:13-117:47
-109                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FILL_TYPE"
-109-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:116:17-90
-110                android:value="scaleToFill" />
-110-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:117:17-44
-111
-112            <!-- <meta-data android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR" -->
-113            <!-- android:resource="@color/backgroundColor"/> -->
-114
-115            <meta-data
-115-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:122:13-123:71
-116                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
-116-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:122:24-105
-117                android:value="@integer/splashScreenFadeOutDuration" />
-117-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:123:17-69
-118            <meta-data
-118-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:125:13-126:60
-119                android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
-119-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:125:24-97
-120                android:value="@string/providerAuthority" />
-120-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:126:17-58
-121            <meta-data
-121-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:128:13-97
-122                android:name="android.app.shortcuts"
-122-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:128:24-60
-123                android:resource="@xml/shortcuts" />
-123-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:128:61-94
-124            <meta-data
-124-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:130:13-131:56
-125                android:name="android.support.customtabs.trusted.FALLBACK_STRATEGY"
-125-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:130:24-91
-126                android:value="@string/fallbackType" />
-126-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:131:17-53
-127            <meta-data
-127-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:137:13-138:54
-128                android:name="android.support.customtabs.trusted.SCREEN_ORIENTATION"
-128-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:137:24-92
-129                android:value="@string/orientation" />
-129-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:138:17-52
-130
-131            <intent-filter>
-131-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:80:13-83:29
-132                <action android:name="android.intent.action.MAIN" />
-132-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:81:17-69
-132-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:81:25-66
-133
-134                <category android:name="android.intent.category.LAUNCHER" />
-134-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:82:17-77
-134-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:82:27-74
-135            </intent-filter>
-136            <intent-filter android:autoVerify="true" >
-136-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:149:13-155:29
-136-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:149:28-53
-137                <action android:name="android.intent.action.VIEW" />
-137-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:150:17-68
-137-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:150:25-66
-138
-139                <category android:name="android.intent.category.DEFAULT" />
-139-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:151:17-76
-139-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:151:27-73
-140                <category android:name="android.intent.category.BROWSABLE" />
-140-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:152:17-77
-140-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:152:27-75
-141
-142                <data
-142-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:153:17-154:54
-143                    android:host="@string/hostName"
-143-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:154:21-52
-144                    android:scheme="https" />
-144-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:153:23-45
-145            </intent-filter>
-146        </activity>
-147        <activity android:name="com.google.androidbrowserhelper.trusted.FocusActivity" />
-147-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:160:9-90
-147-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:160:19-87
-148        <activity
-148-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:162:9-163:62
-149            android:name="com.google.androidbrowserhelper.trusted.WebViewFallbackActivity"
-149-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:162:19-97
-150            android:configChanges="orientation|screenSize" />
-150-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:163:13-59
-151
-152        <provider
-152-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:165:9-173:20
-153            android:name="androidx.core.content.FileProvider"
-153-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:166:13-62
-154            android:authorities="@string/providerAuthority"
-154-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:167:13-60
-155            android:exported="false"
-155-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:169:13-37
-156            android:grantUriPermissions="true" >
-156-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:168:13-47
-157            <meta-data
-157-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:170:13-172:53
-158                android:name="android.support.FILE_PROVIDER_PATHS"
-158-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:171:17-67
-159                android:resource="@xml/filepaths" />
-159-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:172:17-50
-160        </provider>
-161
-162        <service
-162-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:175:9-190:19
-163            android:name="in.co.rapidrecap.www.twa.DelegationService"
-163-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:176:13-46
-164            android:enabled="@bool/enableNotification"
-164-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:177:13-55
-165            android:exported="@bool/enableNotification" >
-165-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:178:13-56
-166            <meta-data
-166-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:181:13-183:69
-167                android:name="android.support.customtabs.trusted.SMALL_ICON"
-167-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:182:17-77
-168                android:resource="@drawable/ic_notification_icon" />
-168-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:183:17-66
-169
-170            <intent-filter>
-170-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:186:13-189:29
-171                <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
-171-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:187:17-105
-171-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:187:25-103
-172
-173                <category android:name="android.intent.category.DEFAULT" />
-173-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:151:17-76
-173-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:151:27-73
-174            </intent-filter>
-175        </service>
-176
-177        <activity android:name="com.google.androidbrowserhelper.trusted.NotificationPermissionRequestActivity" />
-177-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:193:9-114
-177-->/Users/saranshmittal/Desktop/Rapid-Recap/client/app/src/main/AndroidManifest.xml:193:19-111
-178    </application>
-179
-180</manifest>
+54-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:43:9-35
+55        android:testOnly="true"
+56        android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+56-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:44:9-68
+57        <meta-data
+57-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:46:9-48:59
+58            android:name="asset_statements"
+58-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:47:13-44
+59            android:resource="@string/asset_statements" />
+59-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:48:13-56
+60        <meta-data
+60-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:53:9-55:54
+61            android:name="web_manifest_url"
+61-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:54:13-44
+62            android:value="@string/webManifestUrl" />
+62-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:55:13-51
+63        <meta-data
+63-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:58:9-60:52
+64            android:name="twa_generator"
+64-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:59:13-41
+65            android:value="@string/generatorApp" />
+65-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:60:13-49
+66
+67        <activity android:name="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity" >
+67-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:67:9-71:20
+67-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:67:19-100
+68            <meta-data
+68-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:68:13-70:53
+69                android:name="android.support.customtabs.trusted.MANAGE_SPACE_URL"
+69-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:69:17-83
+70                android:value="@string/launchUrl" />
+70-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:70:17-50
+71        </activity>
+72        <activity
+72-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:74:9-158:20
+73            android:name="in.co.rapidrecap.www.twa.RapidRecapLauncherActivity"
+73-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:74:19-61
+74            android:alwaysRetainTaskState="true"
+74-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:76:13-49
+75            android:exported="true"
+75-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:79:13-36
+76            android:label="@string/launcherName"
+76-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:78:13-49
+77            android:screenOrientation="unspecified"
+77-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:77:13-52
+78            android:theme="@style/SplashTheme" >
+78-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:75:13-47
+79            <intent-filter>
+79-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:80:13-83:29
+80                <action android:name="android.intent.action.MAIN" />
+80-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:81:17-69
+80-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:81:25-66
+81
+82                <category android:name="android.intent.category.LAUNCHER" />
+82-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:82:17-77
+82-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:82:27-74
+83            </intent-filter>
+84
+85            <meta-data
+85-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:84:13-86:64
+86                android:name="android.support.customtabs.trusted.DEFAULT_URL"
+86-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:85:17-78
+87                android:value="https://www.rapidrecap.co.in" />
+87-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:86:17-61
+88            <meta-data
+88-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:88:13-90:58
+89                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
+89-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:89:17-83
+90                android:resource="@color/colorPrimary" />
+90-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:90:17-55
+91            <meta-data
+91-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:92:13-94:62
+92                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR_DARK"
+92-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:93:17-88
+93                android:resource="@color/colorPrimaryDark" />
+93-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:94:17-59
+94            <meta-data
+94-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:96:13-98:61
+95                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
+95-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:97:17-87
+96                android:resource="@color/navigationColor" />
+96-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:98:17-58
+97            <meta-data
+97-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:100:13-102:65
+98                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR_DARK"
+98-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:101:17-92
+99                android:resource="@color/navigationColorDark" />
+99-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:102:17-62
+100            <meta-data
+100-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:104:13-106:68
+101                android:name="androix.browser.trusted.NAVIGATION_BAR_DIVIDER_COLOR"
+101-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:105:17-84
+102                android:resource="@color/navigationDividerColor" />
+102-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:106:17-65
+103            <meta-data
+103-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:108:13-110:72
+104                android:name="androix.browser.trusted.NAVIGATION_BAR_DIVIDER_COLOR_DARK"
+104-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:109:17-89
+105                android:resource="@color/navigationDividerColorDark" />
+105-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:110:17-69
+106            <meta-data
+106-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:112:13-114:62
+107                android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE"
+107-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:113:17-88
+108                android:resource="@drawable/splash_screen" />
+108-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:114:17-59
+109            <meta-data
+109-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:115:13-117:47
+110                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FILL_TYPE"
+110-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:116:17-90
+111                android:value="scaleToFill" />
+111-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:117:17-44
+112
+113            <!-- <meta-data android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR" -->
+114            <!-- android:resource="@color/backgroundColor"/> -->
+115
+116            <meta-data
+116-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:122:13-123:71
+117                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
+117-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:122:24-105
+118                android:value="@integer/splashScreenFadeOutDuration" />
+118-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:123:17-69
+119            <meta-data
+119-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:125:13-126:60
+120                android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
+120-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:125:24-97
+121                android:value="@string/providerAuthority" />
+121-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:126:17-58
+122            <meta-data
+122-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:128:13-97
+123                android:name="android.app.shortcuts"
+123-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:128:24-60
+124                android:resource="@xml/shortcuts" />
+124-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:128:61-94
+125            <meta-data
+125-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:130:13-131:56
+126                android:name="android.support.customtabs.trusted.FALLBACK_STRATEGY"
+126-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:130:24-91
+127                android:value="@string/fallbackType" />
+127-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:131:17-53
+128            <meta-data
+128-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:137:13-138:54
+129                android:name="android.support.customtabs.trusted.SCREEN_ORIENTATION"
+129-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:137:24-92
+130                android:value="@string/orientation" />
+130-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:138:17-52
+131
+132            <intent-filter>
+132-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:80:13-83:29
+133                <action android:name="android.intent.action.MAIN" />
+133-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:81:17-69
+133-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:81:25-66
+134
+135                <category android:name="android.intent.category.LAUNCHER" />
+135-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:82:17-77
+135-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:82:27-74
+136            </intent-filter>
+137            <intent-filter android:autoVerify="true" >
+137-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:149:13-155:29
+137-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:149:28-53
+138                <action android:name="android.intent.action.VIEW" />
+138-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:150:17-68
+138-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:150:25-66
+139
+140                <category android:name="android.intent.category.DEFAULT" />
+140-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:151:17-76
+140-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:151:27-73
+141                <category android:name="android.intent.category.BROWSABLE" />
+141-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:152:17-77
+141-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:152:27-75
+142
+143                <data
+143-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:153:17-154:54
+144                    android:host="@string/hostName"
+144-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:154:21-52
+145                    android:scheme="https" />
+145-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:153:23-45
+146            </intent-filter>
+147        </activity>
+148        <activity android:name="com.google.androidbrowserhelper.trusted.FocusActivity" />
+148-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:160:9-90
+148-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:160:19-87
+149        <activity
+149-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:162:9-163:62
+150            android:name="com.google.androidbrowserhelper.trusted.WebViewFallbackActivity"
+150-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:162:19-97
+151            android:configChanges="orientation|screenSize" />
+151-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:163:13-59
+152
+153        <provider
+153-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:165:9-173:20
+154            android:name="androidx.core.content.FileProvider"
+154-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:166:13-62
+155            android:authorities="@string/providerAuthority"
+155-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:167:13-60
+156            android:exported="false"
+156-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:169:13-37
+157            android:grantUriPermissions="true" >
+157-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:168:13-47
+158            <meta-data
+158-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:170:13-172:53
+159                android:name="android.support.FILE_PROVIDER_PATHS"
+159-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:171:17-67
+160                android:resource="@xml/filepaths" />
+160-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:172:17-50
+161        </provider>
+162
+163        <service
+163-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:175:9-190:19
+164            android:name="in.co.rapidrecap.www.twa.DelegationService"
+164-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:176:13-46
+165            android:enabled="@bool/enableNotification"
+165-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:177:13-55
+166            android:exported="@bool/enableNotification" >
+166-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:178:13-56
+167            <meta-data
+167-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:181:13-183:69
+168                android:name="android.support.customtabs.trusted.SMALL_ICON"
+168-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:182:17-77
+169                android:resource="@drawable/ic_notification_icon" />
+169-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:183:17-66
+170
+171            <intent-filter>
+171-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:186:13-189:29
+172                <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
+172-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:187:17-105
+172-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:187:25-103
+173
+174                <category android:name="android.intent.category.DEFAULT" />
+174-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:151:17-76
+174-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:151:27-73
+175            </intent-filter>
+176        </service>
+177
+178        <activity android:name="com.google.androidbrowserhelper.trusted.NotificationPermissionRequestActivity" />
+178-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:193:9-114
+178-->/Users/saranshmittal/Desktop/Rapid-Recap-main/client/app/src/main/AndroidManifest.xml:193:19-111
+179    </application>
+180
+181</manifest>

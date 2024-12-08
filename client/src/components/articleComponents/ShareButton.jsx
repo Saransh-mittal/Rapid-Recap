@@ -55,7 +55,6 @@ const ShareButton = ({ onClick, isDisabled, onOpenSignin, user }) => {
       >
         <Button
           onClick={() => {
-            console.log('Share button clicked')
             user?.role !== 'guest'
               ? onClick()
               : dispatch(
