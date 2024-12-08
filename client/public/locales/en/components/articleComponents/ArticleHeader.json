@@ -19,5 +19,6 @@
   "loginRequiredTitleWithRealAccount": "Login Required",
   "loginRequiredDescriptionWithRealAccount": "Please log in with a real account to use this feature.",
   "themeChangeErrorTitle": "Theme Change Error",
-  "themeChangeErrorDescription": "An error occurred while changing the theme. Please try again."
+  "themeChangeErrorDescription": "An error occurred while changing the theme. Please try again.",
+  "Enhanced by Rapid Recap AI": "Enhanced by Rapid Recap AI"
 }
