@@ -155,7 +155,7 @@ const Leaderboard = () => {
     <Box
       minH="100vh"
       p={{ base: 4, md: 8 }}
-      mt={{ base: '20%', md: '6.5%', lg: '4.5%' }}
+      mt={{ base: '13%', md: '4.5%', lg: '2.5%' }}
       w={'100%'}
     >
       <Helmet>

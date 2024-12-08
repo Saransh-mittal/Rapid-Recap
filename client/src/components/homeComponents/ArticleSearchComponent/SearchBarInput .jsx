@@ -36,6 +36,7 @@ const SearchBarInput = React.memo(
               border: 'none',
               color: 'white',
               cursor: 'pointer',
+              zIndex: 1,
             }}
           >
             ✕

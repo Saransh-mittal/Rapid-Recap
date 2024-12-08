@@ -123,12 +123,20 @@ const initialState = {
   navigationCount: 0,
   selectedNotificationId: null,
   isWeakDevice: false,
+  showIQScoreModal: false,
+  showDailyStreakModal: false,
 }
 
 export const appSlice = createSlice({
   name: 'app',
   initialState,
   reducers: {
+    setShowDailyStreakModal: (state, action) => {
+      state.showDailyStreakModal = action.payload
+    },
+    setShowIQScoreModal: (state, action) => {
+      state.showIQScoreModal = action.payload
+    },
     setStreakLoading: (state, action) => {
       state.streakLoading = action.payload
     },
@@ -354,6 +362,8 @@ export const {
   setNavigationCount,
   setSelectedNotificationId,
   setIsNotifInboxModalOpen,
+  setShowIQScoreModal,
+  setShowDailyStreakModal,
   logout: logoutApp,
 } = appSlice.actions
 

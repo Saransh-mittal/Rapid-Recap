@@ -36,6 +36,7 @@ const articleSlice = createSlice({
       state.totalUsersGivenQuiz = action.payload?.quizAttemptCnt || 0
     },
     clearSearch: state => {
+      state.searchTerm = ''
       state.searchResults = []
       state.isSearching = false
       state.hasMore = true
