@@ -11,5 +11,6 @@
   "failedToLoadChats": "Failed to load chats",
   "failedToShareArticle": "Failed to share article",
   "noChatsSelected": "No chats selected",
-  "selectAtLeastOneChat": "Please select at least one chat"
+  "selectAtLeastOneChat": "Please select at least one chat",
+  "share": "Share"
 }

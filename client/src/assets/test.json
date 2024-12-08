@@ -1,470 +1,434 @@
 [
   {
-    "question": "What major political shift occurred in Maharashtra with the transfer of DGP Rashmi Shukla?",
-    "hindiQuestion": "महाराष्ट्र में डीजीपी राश्मी शुक्ला के स्थानांतरण के साथ कौन सा बड़ा राजनीतिक परिवर्तन हुआ?",
+    "question": "Which state launched Mission Arun Himveer?",
+    "hindiQuestion": "किस राज्य ने मिशन अरुण हिमवीर शुरू किया?",
     "options": {
-      "c": "Bypolls Rescheduled",
-      "d": "New Assembly Elections Announced",
-      "a": "Election Commission Transferred DGP",
-      "b": "New Chief Minister Appointed"
+      "a": "Himachal Pradesh",
+      "b": "Uttarakhand",
+      "c": "Sikkim",
+      "d": "Arunachal Pradesh"
     },
     "hindiOptions": {
-      "a": "निर्वाचन आयोग डीजीपी स्थानांतरित",
-      "b": "नया मुख्यमंत्री नियुक्त",
-      "c": "बाईपोल की पुनर्निर्धारण",
-      "d": "नए विधानसभा चुनाव की घोषणा"
+      "a": "हिमाचल प्रदेश",
+      "b": "उत्तराखंड",
+      "c": "सिक्किम",
+      "d": "अरुणाचल प्रदेश"
     },
-    "correctAnswer": "a",
-    "difficulty": "0.8"
-  },
-  {
-    "question": "How many people were injured in the grenade attack near Srinagar's Tourist Reception Centre?",
-    "hindiQuestion": "श्रीनगर के पर्यटक स्वागत केंद्र के पास ग्रेनेड हमले में कितने लोग घायल हुए?",
-    "options": {
-      "b": "12",
-      "d": "8",
-      "a": "10",
-      "c": "15"
-    },
-    "hindiOptions": {
-      "a": "10",
-      "b": "12",
-      "c": "15",
-      "d": "8"
-    },
-    "correctAnswer": "b",
-    "difficulty": "0.7"
-  },
-  {
-    "question": "What natural disaster did Mount Lewotobi experience, resulting in casualties?",
-    "hindiQuestion": "माउंट लेवोटोबी ने किस प्राकृतिक आपदा का अनुभव किया, जिससे जनहानि हुई?",
-    "options": {
-      "b": "Volcanic Eruption",
-      "d": "Tsunami",
-      "a": "Earthquake",
-      "c": "Flood"
-    },
-    "hindiOptions": {
-      "a": "भूकंप",
-      "b": "ज्वालामुखी विस्फोट",
-      "c": "बाढ़",
-      "d": "सुनामी"
-    },
-    "correctAnswer": "b",
-    "difficulty": "0.95"
-  },
-  {
-    "question": "What did Trump suggest about reporters, mentioning violence?",
-    "hindiQuestion": "ट्रंप ने पत्रकारों के बारे में क्या सुझाव दिया, जिसमें हिंसा का उल्लेख किया?",
-    "options": {
-      "a": "They face violence",
-      "b": "They should be protected",
-      "c": "They are important for democracy",
-      "d": "They are misleading people"
-    },
-    "hindiOptions": {
-      "a": "वे हिंसा का सामना करते हैं",
-      "b": "उन्हें संरक्षित किया जाना चाहिए",
-      "c": "वे लोकतंत्र के लिए महत्वपूर्ण हैं",
-      "d": "वे लोगों को भ्रामक करते हैं"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.85"
-  },
-  {
-    "question": "Which country canceled its longstanding agreement with the UN regarding Palestinian refugees?",
-    "hindiQuestion": "कौन सा देश UN के साथ फिलिस्तीनी शरणार्थियों के संबंध में अपने लंबे समय के समझौते को रद्द कर दिया?",
-    "options": {
-      "d": "Lebanon",
-      "c": "Egypt",
-      "b": "Israel",
-      "a": "Jordan"
-    },
-    "hindiOptions": {
-      "a": "जॉर्डन",
-      "b": "इज़राइल",
-      "c": "मिस्र",
-      "d": "लेबनान"
-    },
-    "correctAnswer": "b",
+    "correctAnswer": "d",
     "difficulty": "0.6"
   },
   {
-    "question": "What major decision did the BJP make regarding laws in Jharkhand?",
-    "hindiQuestion": "BJP ने झारखंड में कानूनों के संबंध में कौन सा बड़ा निर्णय लिया?",
+    "question": "What movie will PM Modi watch on December 2, 2024?",
+    "hindiQuestion": "पीएम मोदी 2 दिसंबर 2024 को कौन सी फिल्म देखेंगे?",
     "options": {
-      "d": "Regulate Mining",
-      "c": "Develop Infrastructure",
-      "a": "Implement Uniform Civil Code",
-      "b": "Introduce New Education Policy"
+      "a": "Gandhi",
+      "b": "Lagaan",
+      "c": "Sholay",
+      "d": "The Sabarmati Report"
     },
     "hindiOptions": {
-      "a": "सामान्य नागरिक संहिता लागू करें",
-      "b": "नई शिक्षा नीति लागू करें",
-      "c": "अवसंरचना विकसित करें",
-      "d": "खनन को विनियमित करें"
+      "a": "गांधी",
+      "b": "लगान",
+      "c": "शोले",
+      "d": "द सबरमती रिपोर्ट"
+    },
+    "correctAnswer": "d",
+    "difficulty": "0.5"
+  },
+  {
+    "question": "When is National Pollution Control Day celebrated?",
+    "hindiQuestion": "राष्ट्रीय प्रदूषण नियंत्रण दिवस कब मनाया जाता है?",
+    "options": {
+      "a": "December 2",
+      "b": "January 12",
+      "c": "September 5",
+      "d": "November 15"
+    },
+    "hindiOptions": {
+      "a": "2 दिसंबर",
+      "b": "12 जनवरी",
+      "c": "5 सितंबर",
+      "d": "15 नवंबर"
     },
     "correctAnswer": "a",
-    "difficulty": "0.75"
+    "difficulty": "0.6"
   },
   {
-    "question": "How many casualties were reported due to the recent eruption of Mount Lewotobi?",
-    "hindiQuestion": "माउंट लेवोटोबी के हालिया विस्फोट के कारण कितने हताहत हुए?",
+    "question": "Which country is hosting UNCCD COP16 in December 2024?",
+    "hindiQuestion": "दिसंबर 2024 में UNCCD COP16 की मेज़बानी कौन सा देश कर रहा है?",
     "options": {
-      "c": "12",
-      "a": "6",
-      "b": "9",
-      "d": "5"
+      "a": "India",
+      "b": "Saudi Arabia",
+      "c": "Japan",
+      "d": "USA"
     },
     "hindiOptions": {
-      "a": "6",
-      "b": "9",
-      "c": "12",
-      "d": "5"
+      "a": "भारत",
+      "b": "सऊदी अरब",
+      "c": "जापान",
+      "d": "अमेरिका"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.7"
+  },
+  {
+    "question": "Which state's GDP growth decreased to 5.4% in FY25?",
+    "hindiQuestion": "किस राज्य की जीडीपी वृद्धि FY25 में 5.4% तक घट गई?",
+    "options": {
+      "a": "Bangladesh",
+      "b": "India",
+      "c": "USA",
+      "d": "China"
+    },
+    "hindiOptions": {
+      "a": "बांग्लादेश",
+      "b": "भारत",
+      "c": "अमेरिका",
+      "d": "चीन"
     },
     "correctAnswer": "b",
-    "difficulty": "0.99"
+    "difficulty": "0.8"
   },
   {
-    "question": "What significant award was given to Prime Minister Narendra Modi during his visit to Guyana for the India-CARICOM Summit?",
-    "hindiQuestion": "प्रधान मंत्री नरेंद्र मोदी को गुयाना में भारत-कारिकॉम शिखर सम्मेलन के दौरान कौन सा महत्वपूर्ण पुरस्कार दिया गया?",
+    "question": "Who is the youngest president of ICC?",
+    "hindiQuestion": "ICC के सबसे युवा अध्यक्ष कौन हैं?",
     "options": {
-      "a": "Dominica's highest honour",
-      "b": "Nobel Peace Prize",
-      "c": "Gandhi Peace Prize",
-      "d": "UNESCO World Heritage Award"
+      "a": "Jay Shah",
+      "b": "Sourav Ganguly",
+      "c": "N. Srinivasan",
+      "d": "Shane Warne"
     },
     "hindiOptions": {
-      "a": "डोमिनिका का सर्वोच्च सम्मान",
-      "b": "नोबेल शांति पुरस्कार",
-      "c": "गांधी शांति पुरस्कार",
-      "d": "यूनेस्को विश्व धरोहर पुरस्कार"
+      "a": "जय शाह",
+      "b": "सौरव गांगुली",
+      "c": "एन. श्रीनिवासन",
+      "d": "शेन वॉर्न"
     },
     "correctAnswer": "a",
     "difficulty": "0.5"
   },
   {
-    "question": "Which country has extended visa-free entry for Indian nationals indefinitely as of November 2024?",
-    "hindiQuestion": "नवंबर 2024 में भारतीय नागरिकों के लिए किस देश ने बिना वीजा प्रवेश को अनिश्चितकाल के लिए बढ़ा दिया?",
+    "question": "Nepal PM Oli embarks on a four-day China visit on which date?",
+    "hindiQuestion": "नेपाल के पीएम ओली ने चार दिवसीय चीन यात्रा कब शुरू की?",
     "options": {
-      "a": "Thailand",
-      "b": "Nepal",
-      "c": "Bangladesh",
-      "d": "Sri Lanka"
+      "a": "December 2, 2024",
+      "b": "November 30, 2024",
+      "c": "December 1, 2024",
+      "d": "December 3, 2024"
     },
     "hindiOptions": {
-      "a": "थाईलैंड",
-      "b": "नेपाल",
-      "c": "बांग्लादेश",
-      "d": "श्रीलंका"
+      "a": "2 दिसंबर, 2024",
+      "b": "30 नवंबर, 2024",
+      "c": "1 दिसंबर, 2024",
+      "d": "3 दिसंबर, 2024"
     },
     "correctAnswer": "a",
-    "difficulty": "0.3"
+    "difficulty": "0.7"
   },
   {
-    "question": "What was the outcome of the recent COP29 deal that India criticized?",
-    "hindiQuestion": "हाल ही में भारत द्वारा आलोचना किए गए COP29 सौदे का परिणाम क्या था?",
+    "question": "What was the significant weather event affecting Tamil Nadu on December 2, 2024?",
+    "hindiQuestion": "2 दिसंबर, 2024 को तमिलनाडु को प्रभावित करने वाली महत्वपूर्ण मौसम घटना क्या थी?",
     "options": {
-      "a": "Climate finance package rejected",
-      "b": "Global warming agreement accepted",
-      "c": "Renewable energy targets set",
-      "d": "Biodiversity treaty signed"
+      "a": "Cyclone",
+      "b": "Floods",
+      "c": "Drought",
+      "d": "Heatwave"
     },
     "hindiOptions": {
-      "a": "जलवायु वित्त पैकेज अस्वीकृत",
-      "b": "वैश्विक तापमान समझौता स्वीकार किया गया",
-      "c": "नवीकरणीय ऊर्जा लक्ष्य निर्धारित किए गए",
-      "d": "जैव विविधता संधि पर हस्ताक्षर किए गए"
+      "a": "चक्रवात",
+      "b": "बाढ़",
+      "c": "सूखा",
+      "d": "गर्मी की लहर"
+    },
+    "correctAnswer": "b",
+    "difficulty": "0.6"
+  },
+  {
+    "question": "What is the new direct flight inaugurated from Rajahmundry to Mumbai?",
+    "hindiQuestion": "राजमहेंद्रवरम से मुंबई के लिए कौन सी नई सीधी उड़ान शुरू की गई?",
+    "options": {
+      "a": "IndiGo",
+      "b": "Air India",
+      "c": "SpiceJet",
+      "d": "Vistara"
+    },
+    "hindiOptions": {
+      "a": "इंडिगो",
+      "b": "एयर इंडिया",
+      "c": "स्पाइसजेट",
+      "d": "विस्तारा"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.5"
+  },
+  {
+    "question": "What is the significance of the $1.17 billion worth helicopter equipment sale approved by the US to India?",
+    "hindiQuestion": "अमेरिका द्वारा भारत को स्वीकृत $1.17 बिलियन के हेलीकॉप्टर उपकरण बिक्री का क्या महत्व है?",
+    "options": {
+      "a": "Defense cooperation",
+      "b": "Trade agreement",
+      "c": "Cultural exchange",
+      "d": "Tourism promotion"
+    },
+    "hindiOptions": {
+      "a": "रक्षा सहयोग",
+      "b": "व्यापार समझौता",
+      "c": "संस्कृति विनिमय",
+      "d": "पर्यटन प्रचार"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.7"
+  },
+  {
+    "question": "What major international news involved Donald Trump this week?",
+    "hindiQuestion": "इस सप्ताह डोनाल्ड ट्रम्प से संबंधित कौन सी प्रमुख अंतरराष्ट्रीय खबर थी?",
+    "options": {
+      "a": "Demands release of Israeli hostages",
+      "b": "Announces new sanctions on Iran",
+      "c": "Visits UK",
+      "d": "Meets with NATO leaders"
+    },
+    "hindiOptions": {
+      "a": "इजरायली बंधकों की रिहाई की मांग",
+      "b": "ईरान पर नए प्रतिबंधों की घोषणा",
+      "c": "यूके का दौरा",
+      "d": "नाटो नेताओं से मिलते हैं"
     },
     "correctAnswer": "a",
     "difficulty": "0.6"
   },
   {
-    "question": "Which Indian state is facing extremely heavy rainfall and has issued alerts as of November 27, 2024?",
-    "hindiQuestion": "27 नवंबर 2024 तक, किस भारतीय राज्य में अत्यधिक भारी बारिश हो रही है और चेतावनियाँ जारी की गई हैं?",
+    "question": "Who has been nominated as the ambassador to France by US President-elect Trump?",
+    "hindiQuestion": "यूएस राष्ट्रपति-चुनाव द्वारा फ्रांस के लिए किसे राजदूत के रूप में नामित किया गया है?",
     "options": {
-      "a": "Tamil Nadu",
-      "b": "Kerala",
-      "c": "Maharashtra",
-      "d": "Uttar Pradesh"
+      "a": "Charles Kushner",
+      "b": "Jared Kushner",
+      "c": "Donald Trump Jr.",
+      "d": "Ivanka Trump"
     },
     "hindiOptions": {
-      "a": "तमिलनाडु",
-      "b": "केरल",
-      "c": "महाराष्ट्र",
-      "d": "उत्तर प्रदेश"
+      "a": "चार्ल्स कुश्नर",
+      "b": "जैरेड कुश्नर",
+      "c": "डोनाल्ड ट्रम्प जूनियर",
+      "d": "इवांका ट्रम्प"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.5"
+  },
+  {
+    "question": "What is the current Air Quality Index (AQI) in Delhi that has been reported as 'very poor'?",
+    "hindiQuestion": "दिल्ली में वर्तमान वायु गुणवत्ता सूचकांक (AQI) क्या है जो 'बहुत खराब' के रूप में रिपोर्ट किया गया है?",
+    "options": {
+      "a": "329",
+      "b": "250",
+      "c": "400",
+      "d": "300"
+    },
+    "hindiOptions": {
+      "a": "329",
+      "b": "250",
+      "c": "400",
+      "d": "300"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.7"
+  },
+  {
+    "question": "Which country is India conducting a joint military exercise called 'Harimau Shakti' with?",
+    "hindiQuestion": "'हरिमाऊ शक्ति' नामक संयुक्त सैन्य अभ्यास भारत किस देश के साथ कर रहा है?",
+    "options": {
+      "a": "Malaysia",
+      "b": "Singapore",
+      "c": "Sri Lanka",
+      "d": "Bangladesh"
+    },
+    "hindiOptions": {
+      "a": "मलेशिया",
+      "b": "सिंगापुर",
+      "c": "श्रीलंका",
+      "d": "बांग्लादेश"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.6"
+  },
+  {
+    "question": "'Uber Shikara', a new water transport service, has been launched in which city?",
+    "hindiQuestion": "'उबर शिकारा', एक नई जल परिवहन सेवा, किस शहर में शुरू की गई है?",
+    "options": {
+      "a": "Srinagar",
+      "b": "Mumbai",
+      "c": "Kolkata",
+      "d": "Delhi"
+    },
+    "hindiOptions": {
+      "a": "श्रीनगर",
+      "b": "मुंबई",
+      "c": "कोलकाता",
+      "d": "दिल्ली"
     },
     "correctAnswer": "a",
     "difficulty": "0.4"
   },
   {
-    "question": "What significant conference did EAM Jaishankar attend where he advocated for a ceasefire and a two-state solution?",
-    "hindiQuestion": "ईएएम जयशंकर किस महत्वपूर्ण सम्मेलन में शामिल हुए जहाँ उन्होंने संघर्ष विराम और दो-राज्य समाधान का समर्थन किया?",
+    "question": "What significant event occurred in Tamil Nadu's Tiruvannamalai recently?",
+    "hindiQuestion": "हाल ही में तमिलनाडु के तिरुवन्नामलाई में कौन सा महत्वपूर्ण घटना हुई?",
     "options": {
-      "a": "MED Mediterranean Dialogues Conference",
-      "b": "UN Climate Change Conference",
-      "c": "G20 Summit",
-      "d": "SAARC Conference"
+      "a": "Landslide claiming 7 lives",
+      "b": "Earthquake",
+      "c": "Flood",
+      "d": "Fire accident"
     },
     "hindiOptions": {
-      "a": "MED भूमध्य सागर संवाद सम्मेलन",
-      "b": "संयुक्त राष्ट्र जलवायु परिवर्तन सम्मेलन",
-      "c": "जी20 शिखर सम्मेलन",
-      "d": "दक्षिण एशियाई क्षेत्रीय सहयोग संघ सम्मेलन"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.7"
-  },
-  {
-    "question": "Which Indian city is set to open the 186-year-old Rashtrapati Ashiyana to the public in April 2024?",
-    "hindiQuestion": "कौन सा भारतीय शहर अप्रैल 2024 में 186 वर्ष पुराना राष्ट्रपति आशियाना जनता के लिए खोलेगा?",
-    "options": {
-      "a": "Dehradun",
-      "b": "Delhi",
-      "c": "Mumbai",
-      "d": "Kolkata"
-    },
-    "hindiOptions": {
-      "a": "देहरादून",
-      "b": "दिल्ली",
-      "c": "मुंबई",
-      "d": "कोलकाता"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.5"
-  },
-  {
-    "question": "What major sporting event did India submit an official bid for in November 2024?",
-    "hindiQuestion": "भारत ने नवंबर 2024 में किस प्रमुख खेल आयोजन के लिए आधिकारिक बोली प्रस्तुत की?",
-    "options": {
-      "a": "2036 Olympics",
-      "b": "2028 Olympics",
-      "c": "2024 FIFA World Cup",
-      "d": "2023 Cricket World Cup"
-    },
-    "hindiOptions": {
-      "a": "2036 ओलंपिक",
-      "b": "2028 ओलंपिक",
-      "c": "2024 फीफा विश्व कप",
-      "d": "2023 क्रिकेट विश्व कप"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.6"
-  },
-  {
-    "question": "Who was appointed as Maharashtra's new Director General of Police (DGP) in November 2024?",
-    "hindiQuestion": "नवंबर 2024 में महाराष्ट्र के नए पुलिस महानिदेशक (डीजीपी) के रूप में किसे नियुक्त किया गया?",
-    "options": {
-      "a": "Verma",
-      "b": "Rashmi Shukla",
-      "c": "Amit Shah",
-      "d": "Ajit Pawar"
-    },
-    "hindiOptions": {
-      "a": "वर्मा",
-      "b": "रश्मि शुक्ला",
-      "c": "अमित शाह",
-      "d": "अजीत पवार"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.5"
-  },
-  {
-    "question": "What is the duration of the curbs in Delhi-NCR as per the Supreme Court?",
-    "hindiQuestion": "दिल्ली-एनसीआर में सुप्रीम कोर्ट के अनुसार प्रतिबंध की अवधि क्या है?",
-    "options": {
-      "a": "Till Jan 1",
-      "b": "Till Dec 2",
-      "c": "Till March 1",
-      "d": "Till Feb 15"
-    },
-    "hindiOptions": {
-      "a": "1 जनवरी तक",
-      "b": "2 दिसंबर तक",
-      "c": "1 मार्च तक",
-      "d": "15 फरवरी तक"
-    },
-    "correctAnswer": "b",
-    "difficulty": "0.5"
-  },
-  {
-    "question": "When is the Vande Bharat Sleeper train expected to start between New Delhi and Srinagar?",
-    "hindiQuestion": "न्यू दिल्ली और श्रीनगर के बीच वंदे भारत स्लीपर ट्रेन कब शुरू होने की उम्मीद है?",
-    "options": {
-      "a": "March 2025",
-      "b": "January 2025",
-      "c": "February 2025",
-      "d": "December 2024"
-    },
-    "hindiOptions": {
-      "a": "मार्च 2025",
-      "b": "जनवरी 2025",
-      "c": "फरवरी 2025",
-      "d": "दिसंबर 2024"
-    },
-    "correctAnswer": "b",
-    "difficulty": "0.7"
-  },
-  {
-    "question": "Which state has a green hydrogen fuelling station established?",
-    "hindiQuestion": "किस राज्य में ग्रीन हाइड्रोजन ईंधन स्टेशन स्थापित किया गया है?",
-    "options": {
-      "a": "Haryana",
-      "b": "Maharashtra",
-      "c": "Ladakh",
-      "d": "Karnataka"
-    },
-    "hindiOptions": {
-      "a": "हरियाणा",
-      "b": "महाराष्ट्र",
-      "c": "लद्दाख",
-      "d": "कर्नाटका"
-    },
-    "correctAnswer": "c",
-    "difficulty": "0.6"
-  },
-  {
-    "question": "Who has been banned for four years by the National Anti-Doping Agency?",
-    "hindiQuestion": "नेशनल एंटी-डोपिंग एजेंसी द्वारा चार साल के लिए किसे प्रतिबंधित किया गया है?",
-    "options": {
-      "a": "Deepak Punia",
-      "b": "Sakshi Malik",
-      "c": "Bajrang Punia",
-      "d": "Vinesh Phogat"
-    },
-    "hindiOptions": {
-      "a": "दीपक पूनिया",
-      "b": "साक्षी मलिक",
-      "c": "बजरंग पूनिया",
-      "d": "विनेश फोगट"
+      "a": "भूस्खलन जिसमें 7 लोगों की जान गई",
+      "b": "भूकंप",
+      "c": "बाढ़",
+      "d": "आग का हादसा"
     },
     "correctAnswer": "a",
     "difficulty": "0.8"
   },
   {
-    "question": "When is the Aviation Safety Awareness Week observed in India?",
-    "hindiQuestion": "भारत में एविएशन सेफ्टी अवेयरनेस वीक कब मनाया जाता है?",
+    "question": "What historic move did Spain implement regarding workers' rights recently?",
+    "hindiQuestion": "हाल ही में स्पेन ने श्रमिकों के अधिकारों के संबंध में कौन सा ऐतिहासिक कदम उठाया?",
     "options": {
-      "a": "First week of December",
-      "b": "Last week of November",
-      "c": "First week of November",
-      "d": "Last week of December"
+      "a": "Paid climate leave",
+      "b": "Minimum wage increase",
+      "c": "Extended maternity leave",
+      "d": "Work-from-home policy"
     },
     "hindiOptions": {
-      "a": "दिसंबर के पहले सप्ताह",
-      "b": "नवंबर के अंतिम सप्ताह",
-      "c": "नवंबर के पहले सप्ताह",
-      "d": "दिसंबर के अंतिम सप्ताह"
+      "a": "भुगतान किया गया जलवायु अवकाश",
+      "b": "न्यूनतम वेतन वृद्धि",
+      "c": "लंबी मातृत्व छुट्टी",
+      "d": "घर से काम करने की नीति"
     },
-    "correctAnswer": "b",
+    "correctAnswer": "a",
+    "difficulty": "0.7"
+  },
+  {
+    "question": "Which organization conducted a significant mission called Proba-3 recently?",
+    "hindiQuestion": "हाल ही में प्रोबा-3 नामक एक महत्वपूर्ण मिशन किस संगठन ने संचालित किया?",
+    "options": {
+      "a": "ESA",
+      "b": "NASA",
+      "c": "ISRO",
+      "d": "JAXA"
+    },
+    "hindiOptions": {
+      "a": "ईएसए",
+      "b": "नासा",
+      "c": "इसरो",
+      "d": "जैक्सा"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.8"
+  },
+  {
+    "question": "Where is the World Maritime Conference 2024 being held?",
+    "hindiQuestion": "विश्व समुद्री सम्मेलन 2024 कहाँ आयोजित किया जा रहा है?",
+    "options": {
+      "a": "Chennai",
+      "b": "Mumbai",
+      "c": "Goa",
+      "d": "Kolkata"
+    },
+    "hindiOptions": {
+      "a": "चेन्नई",
+      "b": "मुंबई",
+      "c": "गोवा",
+      "d": "कोलकाता"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.6"
+  },
+  {
+    "question": "What percentage is GST expected to be increased to on products like cigarettes?",
+    "hindiQuestion": "सिगरेट जैसे उत्पादों पर जीएसटी को किस प्रतिशत तक बढ़ाने की उम्मीद है?",
+    "options": {
+      "a": "35%",
+      "b": "28%",
+      "c": "40%",
+      "d": "30%"
+    },
+    "hindiOptions": {
+      "a": "35%",
+      "b": "28%",
+      "c": "40%",
+      "d": "30%"
+    },
+    "correctAnswer": "a",
+    "difficulty": "0.7"
+  },
+  {
+    "question": "Who won the gold medal in the Syed Modi International Badminton Tournament?",
+    "hindiQuestion": "सैयद मोदी अंतरराष्ट्रीय बैडमिंटन टूर्नामेंट में स्वर्ण पदक किसने जीता?",
+    "options": {
+      "a": "PV Sindhu",
+      "b": "Saina Nehwal",
+      "c": "K Srikanth",
+      "d": "Ajay Jayaram"
+    },
+    "hindiOptions": {
+      "a": "पीवी सिंधु",
+      "b": "साइना नेहवाल",
+      "c": "के श्रीकांत",
+      "d": "अजय जयाराम"
+    },
+    "correctAnswer": "a",
     "difficulty": "0.5"
   },
   {
-    "question": "What significant event occurred in Lucknow recently?",
-    "hindiQuestion": "हाल ही में लखनऊ में कौन सा महत्वपूर्ण कार्यक्रम हुआ?",
+    "question": "Which Indian state has been declared as the top destination for heritage tourism by UNESCO?",
+    "hindiQuestion": "किस भारतीय राज्य को यूनेस्को द्वारा विरासत पर्यटन के लिए शीर्ष गंतव्य घोषित किया गया है?",
     "options": {
-      "a": "Syed Modi International Badminton Competition",
-      "b": "National Youth Festival",
-      "c": "International Film Festival",
-      "d": "Cultural Exchange Program"
+      "a": "West Bengal",
+      "b": "Madhya Pradesh",
+      "c": "Rajasthan",
+      "d": "Uttar Pradesh"
     },
     "hindiOptions": {
-      "a": "सैयद मोदी अंतरराष्ट्रीय बैडमिंटन प्रतियोगिता",
-      "b": "राष्ट्रीय युवा महोत्सव",
-      "c": "अंतरराष्ट्रीय फिल्म महोत्सव",
-      "d": "संस्कृतिक आदान-प्रदान कार्यक्रम"
+      "a": "पश्चिम बंगाल",
+      "b": "मध्य प्रदेश",
+      "c": "राजस्थान",
+      "d": "उत्तर प्रदेश"
     },
     "correctAnswer": "a",
     "difficulty": "0.6"
   },
   {
-    "question": "Who co-chaired the first round of the India-Japan economic security dialogue in Tokyo?",
-    "hindiQuestion": "टोक्यो में भारत-जापान आर्थिक सुरक्षा संवाद के पहले दौर की सह-आध्यक्षता किसने की?",
+    "question": "Where did India and Egypt recently hold their Foreign Office Consultations?",
+    "hindiQuestion": "भारत और मिस्र ने हाल ही में अपने विदेश कार्यालय परामर्श कहां आयोजित किए?",
     "options": {
-      "a": "Vikram Misri",
-      "b": "Sushma Swaraj",
-      "c": "Narendra Modi",
-      "d": "Jaishankar"
+      "a": "New Delhi",
+      "b": "Cairo",
+      "c": "Mumbai",
+      "d": "Chennai"
     },
     "hindiOptions": {
-      "a": "विक्रम मिस्री",
-      "b": "सुषमा स्वराज",
-      "c": "नरेंद्र मोदी",
-      "d": "जयशंकर"
+      "a": "नई दिल्ली",
+      "b": "काहिरा",
+      "c": "मुंबई",
+      "d": "चेन्नई"
     },
     "correctAnswer": "a",
-    "difficulty": "0.7"
+    "difficulty": "0.5"
   },
   {
-    "question": "What recent claim did Union Minister Kiren Rijiju make regarding Waqf properties?",
-    "hindiQuestion": "केंद्रीय मंत्री किरेन रिजिजू ने वक्फ संपत्तियों के संबंध में क्या हालिया दावा किया?",
+    "question": "Who was fatally shot outside a hotel in Manhattan?",
+    "hindiQuestion": "मैनहट्टन में एक होटल के बाहर किसे गोली मारकर हत्या कर दी गई?",
     "options": {
-      "a": "Over 59,000 properties are being encroached upon",
-      "b": "Waqf properties are being developed",
-      "c": "Waqf properties are under government control",
-      "d": "No encroachment on Waqf properties"
+      "a": "Brian Thompson",
+      "b": "John Doe",
+      "c": "Michael Smith",
+      "d": "David Johnson"
     },
     "hindiOptions": {
-      "a": "59,000 से अधिक संपत्तियाँ अतिक्रमण की जा रही हैं",
-      "b": "वक्फ संपत्तियों का विकास किया जा रहा है",
-      "c": "वक्फ संपत्तियाँ सरकारी नियंत्रण में हैं",
-      "d": "वक्फ संपत्तियों पर कोई अतिक्रमण नहीं"
+      "a": "ब्रायन थॉम्पसन",
+      "b": "जॉन डो",
+      "c": "माइकल स्मिथ",
+      "d": "डेविड जॉनसन"
     },
     "correctAnswer": "a",
-    "difficulty": "0.6"
-  },
-  {
-    "question": "What significant decision did the Supreme Court make regarding digital arrests?",
-    "hindiQuestion": "सुप्रीम कोर्ट ने डिजिटल गिरफ्तारी के संबंध में कौन सा महत्वपूर्ण निर्णय लिया?",
-    "options": {
-      "a": "To regulate digital arrests",
-      "b": "To ban digital arrests",
-      "c": "To review digital arrest procedures",
-      "d": "To promote digital arrests"
-    },
-    "hindiOptions": {
-      "a": "डिजिटल गिरफ्तारी को विनियमित करने के लिए",
-      "b": "डिजिटल गिरफ्तारी पर प्रतिबंध लगाने के लिए",
-      "c": "डिजिटल गिरफ्तारी प्रक्रियाओं की समीक्षा करने के लिए",
-      "d": "डिजिटल गिरफ्तारी को बढ़ावा देने के लिए"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.7"
-  },
-  {
-    "question": "How many years have passed since cricketer Phillip Hughes passed away?",
-    "hindiQuestion": "क्रिकेटर फिलिप ह्यूजेस की मृत्यु को कितने वर्ष हो चुके हैं?",
-    "options": {
-      "a": "10 years",
-      "b": "5 years",
-      "c": "15 years",
-      "d": "20 years"
-    },
-    "hindiOptions": {
-      "a": "10 वर्ष",
-      "b": "5 वर्ष",
-      "c": "15 वर्ष",
-      "d": "20 वर्ष"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.6"
-  },
-  {
-    "question": "What is the main focus of the newly launched online platform by Indian Army named Eklavya?",
-    "hindiQuestion": "भारतीय सेना द्वारा लॉन्च किए गए नए ऑनलाइन प्लेटफॉर्म एकलव्य का मुख्य फोकस क्या है?",
-    "options": {
-      "a": "Officers' training",
-      "b": "Recruitment process",
-      "c": "Civilian training",
-      "d": "Skill development"
-    },
-    "hindiOptions": {
-      "a": "अधिकारी प्रशिक्षण",
-      "b": "भर्ती प्रक्रिया",
-      "c": "नागरिक प्रशिक्षण",
-      "d": "कौशल विकास"
-    },
-    "correctAnswer": "a",
-    "difficulty": "0.7"
+    "difficulty": "0.8"
   }
 ]

@@ -1,27 +1,12 @@
 import React, { Suspense } from 'react'
-import {
-  Flex,
-  Skeleton,
-  SkeletonCircle,
-  SkeletonText,
-  useDisclosure,
-} from '@chakra-ui/react'
+import { Flex, useDisclosure } from '@chakra-ui/react'
 import { SettingsIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
 import { keyframes } from '@emotion/react'
-
+import LeftProfileBox from './LeftProfileSectionComponents/LeftProfileBox'
+import ProfileExperienceLevel from './LeftProfileSectionComponents/ProfileExperienceLevel'
+import ProfileButtonWithModal from './LeftProfileSectionComponents/ProfileButtonsComponents/ProfileButtonWithModal'
 // Lazy loaded components
-const LeftProfileBox = React.lazy(() =>
-  import('./LeftProfileSectionComponents/LeftProfileBox'),
-)
-const ProfileExperienceLevel = React.lazy(() =>
-  import('./LeftProfileSectionComponents/ProfileExperienceLevel'),
-)
-const ProfileButtonWithModal = React.lazy(() =>
-  import(
-    './LeftProfileSectionComponents/ProfileButtonsComponents/ProfileButtonWithModal'
-  ),
-)
 const SeasonSelectorModal = React.lazy(() =>
   import(
     './LeftProfileSectionComponents/SeasonButtonComponents/SeasonSelectorModal'
@@ -42,7 +27,6 @@ import BookmarkSVG from '../../assets/svg/BookmarkSVG'
 
 export const LeftProfileSection = ({
   profile,
-  isLoading,
   user,
   inGameName,
   privacyProfileData,
@@ -99,21 +83,12 @@ export const LeftProfileSection = ({
         w={'100%'}
         height="fit-content"
       >
-        <Suspense fallback={<SkeletonCircle size="10" />}>
-          {isLoading ? (
-            <>
-              <SkeletonCircle size="10" />
-              <SkeletonText mt="4" noOfLines={4} spacing="4" />
-            </>
-          ) : (
-            <LeftProfileBox
-              key={`left-profile-box-${inGameName}`}
-              leftProfileView={profile?.leftProfileView}
-              CURR_IQ={profile?.USER_IQ}
-              MAX_IQ={profile?.maxIQScore}
-            />
-          )}
-        </Suspense>
+        <LeftProfileBox
+          key={`left-profile-box-${inGameName}`}
+          leftProfileView={profile?.leftProfileView}
+          CURR_IQ={profile?.USER_IQ}
+          MAX_IQ={profile?.maxIQScore}
+        />
       </Flex>
 
       <Flex
@@ -126,167 +101,73 @@ export const LeftProfileSection = ({
         height="fit-content"
         {...sharedBoxStyles}
       >
-        <Suspense
-          fallback={
-            <>
-              <SkeletonText noOfLines={1} spacing="4" skeletonHeight="20px" />
-              <Skeleton
-                height="120px"
-                width="120px"
-                borderRadius="50%"
-                mt={4}
-              />
-              <Skeleton height="20px" width="150px" mt={2} />
-            </>
-          }
-        >
-          {isLoading ? (
-            <>
-              <SkeletonText noOfLines={1} spacing="4" skeletonHeight="20px" />
-              <Skeleton
-                height="120px"
-                width="120px"
-                borderRadius="50%"
-                mt={4}
-              />
-              <Skeleton height="20px" width="150px" mt={2} />
-            </>
-          ) : (
-            <ProfileExperienceLevel
-              key={`profile-experience-${inGameName}`}
-              xp={profile?.experience?.xp}
-              level={profile?.experience?.level}
-            />
-          )}
-        </Suspense>
+        <ProfileExperienceLevel
+          key={`profile-experience-${inGameName}`}
+          xp={profile?.experience?.xp}
+          level={profile?.experience?.level}
+        />
       </Flex>
 
-      <Suspense
-        fallback={
-          <Skeleton
-            w={'100%'}
-            borderRadius="10px"
-            height="50px"
-            marginTop="12px"
+      {(!privacyProfileData.seasonAnalytics ||
+        inGameName === user?.inGameName) &&
+        user?.role !== 'guest' && (
+          <ProfileButtonWithModal
+            buttonText={t('seasonAnalytics')}
+            inGameName={inGameName}
+            stateUserInGameName={user?.inGameName}
+            isPrivate={user?.profilePrivacy.seasonAnalytics}
+            hoverAnimation={hoverAnimation}
+            icon={<HistogramSVG width={'20px'} height={'20px'} fill={'#fff'} />}
+            modalComponent={SeasonSelectorModal}
+            isModalOpen={seasonSelectorDisclosure.isOpen}
+            onOpenModal={seasonSelectorDisclosure.onOpen}
+            onCloseModal={seasonSelectorDisclosure.onClose}
+            additionalProps={{
+              privateSeasonAnalytics: privacyProfileData.seasonAnalytics,
+              currSeason: profile?.currentSeason,
+              profile,
+              privacyProfileData,
+              loginedUserProfile,
+              seasons: profile?.seasons,
+            }}
           />
-        }
-      >
-        {isLoading ? (
-          <Skeleton
-            w={'100%'}
-            borderRadius="10px"
-            height="50px"
-            marginTop="12px"
+        )}
+      {user?.role === 'guest' && (
+        <Suspense fallback={null}>
+          <SecureYourProgress key={`secure-progress-${inGameName}`} />
+        </Suspense>
+      )}
+
+      {inGameName === user?.inGameName && (
+        <>
+          <ProfileButtonWithModal
+            buttonText={t('Settings')}
+            inGameName={inGameName}
+            stateUserInGameName={user?.inGameName}
+            isPrivate={true}
+            hoverAnimation={hoverAnimation}
+            icon={<SettingsIcon width={'20px'} height={'20px'} />}
+            modalComponent={Settings}
+            isModalOpen={settingsDisclosure.isOpen}
+            onOpenModal={settingsDisclosure.onOpen}
+            onCloseModal={settingsDisclosure.onClose}
           />
-        ) : (
-          <>
-            {(!privacyProfileData.seasonAnalytics ||
-              inGameName === user?.inGameName) &&
-              user?.role !== 'guest' && (
-                <ProfileButtonWithModal
-                  buttonText={t('seasonAnalytics')}
-                  inGameName={inGameName}
-                  stateUserInGameName={user?.inGameName}
-                  isPrivate={user?.profilePrivacy.seasonAnalytics}
-                  hoverAnimation={hoverAnimation}
-                  icon={
-                    <HistogramSVG
-                      width={'20px'}
-                      height={'20px'}
-                      fill={'#fff'}
-                    />
-                  }
-                  modalComponent={SeasonSelectorModal}
-                  isModalOpen={seasonSelectorDisclosure.isOpen}
-                  onOpenModal={seasonSelectorDisclosure.onOpen}
-                  onCloseModal={seasonSelectorDisclosure.onClose}
-                  isLoading={isLoading}
-                  additionalProps={{
-                    privateSeasonAnalytics: privacyProfileData.seasonAnalytics,
-                    currSeason: profile?.currentSeason,
-                    profile,
-                    privacyProfileData,
-                    loginedUserProfile,
-                    seasons: profile?.seasons,
-                  }}
-                />
-              )}
-            {user?.role === 'guest' && (
-              <Suspense fallback={null}>
-                <SecureYourProgress key={`secure-progress-${inGameName}`} />
-              </Suspense>
-            )}
-          </>
-        )}
-      </Suspense>
 
-      <Suspense
-        fallback={
-          <>
-            <Skeleton
-              w={'100%'}
-              borderRadius="10px"
-              height="50px"
-              marginTop="12px"
-            />
-            <Skeleton
-              w={'100%'}
-              borderRadius="10px"
-              height="50px"
-              marginTop="12px"
-            />
-          </>
-        }
-      >
-        {isLoading ? (
-          <>
-            <Skeleton
-              w={'100%'}
-              borderRadius="10px"
-              height="50px"
-              marginTop="12px"
-            />
-            <Skeleton
-              w={'100%'}
-              borderRadius="10px"
-              height="50px"
-              marginTop="12px"
-            />
-          </>
-        ) : (
-          inGameName === user?.inGameName && (
-            <>
-              <ProfileButtonWithModal
-                buttonText={t('Settings')}
-                inGameName={inGameName}
-                stateUserInGameName={user?.inGameName}
-                isPrivate={true}
-                hoverAnimation={hoverAnimation}
-                icon={<SettingsIcon width={'20px'} height={'20px'} />}
-                modalComponent={Settings}
-                isModalOpen={settingsDisclosure.isOpen}
-                onOpenModal={settingsDisclosure.onOpen}
-                onCloseModal={settingsDisclosure.onClose}
-              />
-
-              <ProfileButtonWithModal
-                buttonText={t('bookmarks')}
-                inGameName={inGameName}
-                stateUserInGameName={user?.inGameName}
-                isPrivate={true}
-                hoverAnimation={hoverAnimation}
-                icon={<BookmarkSVG width={'20px'} height={'20px'} />}
-                modalComponent={Bookmarks}
-                isModalOpen={bookmarksDisclosure.isOpen}
-                onOpenModal={bookmarksDisclosure.onOpen}
-                onCloseModal={bookmarksDisclosure.onClose}
-                isLoading={isLoading}
-                additionalProps={{ profile }}
-              />
-            </>
-          )
-        )}
-      </Suspense>
+          <ProfileButtonWithModal
+            buttonText={t('bookmarks')}
+            inGameName={inGameName}
+            stateUserInGameName={user?.inGameName}
+            isPrivate={true}
+            hoverAnimation={hoverAnimation}
+            icon={<BookmarkSVG width={'20px'} height={'20px'} />}
+            modalComponent={Bookmarks}
+            isModalOpen={bookmarksDisclosure.isOpen}
+            onOpenModal={bookmarksDisclosure.onOpen}
+            onCloseModal={bookmarksDisclosure.onClose}
+            additionalProps={{ profile }}
+          />
+        </>
+      )}
     </Flex>
   )
 }

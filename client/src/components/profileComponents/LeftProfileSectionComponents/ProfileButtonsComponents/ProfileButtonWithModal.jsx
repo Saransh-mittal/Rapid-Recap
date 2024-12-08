@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react'
-import { Flex, Skeleton } from '@chakra-ui/react'
+import React from 'react'
+import { Flex } from '@chakra-ui/react'
 import ProfileButton from '../../../miscellaneous/ProfileButton'
 
 const ProfileButtonWithModal = ({
@@ -13,7 +13,7 @@ const ProfileButtonWithModal = ({
   isModalOpen,
   onOpenModal,
   onCloseModal,
-  isLoading,
+
   additionalProps = {},
 }) => {
   return (
@@ -37,15 +37,12 @@ const ProfileButtonWithModal = ({
         icon={icon}
       />
 
-      <Suspense fallback={<Skeleton height="200px" width="100%" />}>
-        <ModalComponent
-          isOpen={isModalOpen}
-          onClose={onCloseModal}
-          isLoading={isLoading}
-          inGameName={inGameName}
-          {...additionalProps}
-        />
-      </Suspense>
+      <ModalComponent
+        isOpen={isModalOpen}
+        onClose={onCloseModal}
+        inGameName={inGameName}
+        {...additionalProps}
+      />
     </Flex>
   )
 }

@@ -39,6 +39,7 @@ import AITagLine from './articleHeaderComponents/AITagLine'
 import { useFeatureDetection } from '../../utils/featureDetection'
 import useSafeSound from '../../customHooks/useSafeSound'
 import ArticleHeaderSkeleton from './loaders/ArticleHeaderSkeleton'
+import SocialShareComponent from './articleHeaderComponents/SocialShareComponent'
 
 const ArticleForm = React.lazy(() =>
   import('../dashboardComponents/ArticleManageComponents/ArticleForm'),
@@ -396,7 +397,7 @@ const ArticleHeader = ({
             </Badge>
           </Flex>
         </Flex>
-        <ShareChatModal
+        <SocialShareComponent
           isOpen={isOpen}
           onClose={onClose}
           articleToShare={article}

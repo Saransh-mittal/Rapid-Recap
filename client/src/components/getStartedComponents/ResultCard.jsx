@@ -44,8 +44,19 @@ const ResultCard = React.memo(({ article, index, COLORS }) => {
         }}
         transition="all 0.2s"
         role="group"
+        flexDirection={['column', 'row']}
       >
-        <Box flexShrink={0} w="100px" h="100px" position="relative">
+        <Badge
+          colorScheme="pink"
+          variant="subtle"
+          px={2}
+          py={1}
+          borderRadius="full"
+          w={'fit-content'}
+        >
+          {article.category}
+        </Badge>
+        <Box flexShrink={0} w="100%" h="100px" position="relative">
           <Image
             src={article.imgURL || '/images/placeholder.jpg'}
             alt={article.title}
@@ -84,16 +95,6 @@ const ResultCard = React.memo(({ article, index, COLORS }) => {
               <Text fontSize="sm">{article.quizAttemptCnt} attempts</Text>
             </HStack>
           </Flex>
-
-          <Badge
-            colorScheme="pink"
-            variant="subtle"
-            px={2}
-            py={1}
-            borderRadius="full"
-          >
-            {article.category}
-          </Badge>
         </VStack>
       </Flex>
     </MotionListItem>

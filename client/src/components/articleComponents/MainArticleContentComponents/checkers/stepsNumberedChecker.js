@@ -9,7 +9,6 @@ export const stepsNumberedChecker = {
     // First find if we have a steps introduction
     const stepsIntroIndex = text.toLowerCase().indexOf('steps:')
     if (stepsIntroIndex === -1) {
-      console.log('No steps introduction found')
       return null
     }
 

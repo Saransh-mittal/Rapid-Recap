@@ -2,11 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Flex,
   Text,
-  Tooltip,
   Image,
   Spinner,
   useBreakpointValue,
-  Badge,
 } from '@chakra-ui/react'
 import moment from 'moment'
 

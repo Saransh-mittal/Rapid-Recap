@@ -394,55 +394,59 @@ const Sidebar = ({
           articleId={id}
         />
       )}
-      <Flex justifyContent="center" alignItems="center" mb={4}>
-        <RelatedArticlesToggle
-          showRelated={showRelated}
-          onToggle={() => {
-            if (!showRelated && pageRelated === 1) fetchRelatedArticles()
-            setShowRelated(!showRelated)
-          }}
-        />
-      </Flex>
-      <SimpleGrid
-        columns={1}
-        marginTop={5}
-        display="flex"
-        flexDirection="column"
-        alignItems="flex-start"
-        position="relative"
-      >
-        {renderArticles()}
-        {loading && <ArticleListSkeleton count={5} />}
-        {!loading && recommendedArticles.length > 0 && (
-          <Flex justifyContent="center" w="100%">
-            <Button
-              onClick={() =>
-                showRelated
-                  ? fetchRelatedArticles()
-                  : fetchRecommendedArticles()
-              }
-              mt={4}
-            >
-              {t('loadMore')}
-            </Button>
-          </Flex>
-        )}
-        {notLoggedIn && (
-          <Tooltip label={t('loginToNavigate')} placement="top">
-            <LockIcon
-              position="absolute"
-              top="50%"
-              left="50%"
-              transform="translate(-50%, -50%)"
-              color="white"
-              boxSize={8}
-              zIndex={2}
-              onClick={() => dispatchRedux(setIsSigninOpen(true))}
-              cursor={'pointer'}
+      {isAuthenticated && (
+        <>
+          <Flex justifyContent="center" alignItems="center" mb={4}>
+            <RelatedArticlesToggle
+              showRelated={showRelated}
+              onToggle={() => {
+                if (!showRelated && pageRelated === 1) fetchRelatedArticles()
+                setShowRelated(!showRelated)
+              }}
             />
-          </Tooltip>
-        )}
-      </SimpleGrid>
+          </Flex>
+          <SimpleGrid
+            columns={1}
+            marginTop={5}
+            display="flex"
+            flexDirection="column"
+            alignItems="flex-start"
+            position="relative"
+          >
+            {renderArticles()}
+            {loading && <ArticleListSkeleton count={5} />}
+            {!loading && recommendedArticles.length > 0 && (
+              <Flex justifyContent="center" w="100%">
+                <Button
+                  onClick={() =>
+                    showRelated
+                      ? fetchRelatedArticles()
+                      : fetchRecommendedArticles()
+                  }
+                  mt={4}
+                >
+                  {t('loadMore')}
+                </Button>
+              </Flex>
+            )}
+            {notLoggedIn && (
+              <Tooltip label={t('loginToNavigate')} placement="top">
+                <LockIcon
+                  position="absolute"
+                  top="50%"
+                  left="50%"
+                  transform="translate(-50%, -50%)"
+                  color="white"
+                  boxSize={8}
+                  zIndex={2}
+                  onClick={() => dispatchRedux(setIsSigninOpen(true))}
+                  cursor={'pointer'}
+                />
+              </Tooltip>
+            )}
+          </SimpleGrid>
+        </>
+      )}
     </Box>
     // </Skeleton>
   )

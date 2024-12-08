@@ -104,7 +104,7 @@ export const useProfile = () => {
     }
 
     loadProfile()
-  }, [inGameName, user._id])
+  }, [inGameName, user?._id])
 
   return {
     profile,

@@ -5,6 +5,8 @@ import { ProfileMetadata } from '../components/profileComponents/ProfileMetadata
 import { LeftProfileSection } from '../components/profileComponents/LeftProfileSection'
 import { RightProfileSection } from '../components/profileComponents/RightProfileSection'
 import { findSocietyAndCircle } from '../utils/helper.utils'
+import LeftProfileSectionSkeleton from '../components/profileComponents/LeftProfileSectionSkeleton'
+import RightProfileSectionSkeleton from '../components/profileComponents/RightProfileSectionSkeleton'
 
 export default function Profile() {
   const {
@@ -37,28 +39,31 @@ export default function Profile() {
         className="profile-info"
         gap={'3rem'}
       >
-        <Suspense fallback={<Skeleton height="600px" width="100%" />}>
+        {isLoading ? (
+          <LeftProfileSectionSkeleton />
+        ) : (
           <LeftProfileSection
             key={`left-${inGameName}`}
             profile={profile}
-            isLoading={isLoading}
             user={user}
             inGameName={inGameName}
             privacyProfileData={privacyProfileData}
             loginedUserProfile={loginedUserProfile}
           />
-        </Suspense>
-        <Suspense fallback={<Skeleton height="600px" width="100%" />}>
+        )}
+
+        {isLoading ? (
+          <RightProfileSectionSkeleton />
+        ) : (
           <RightProfileSection
             key={`right-${inGameName}`}
             profile={profile}
-            isLoading={isLoading}
             user={user}
             inGameName={inGameName}
             privacyProfileData={privacyProfileData}
             loginedUserProfile={loginedUserProfile}
           />
-        </Suspense>
+        )}
       </Flex>
     </Box>
   )

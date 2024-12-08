@@ -44,8 +44,8 @@ const Inbox = ({
         {notifyCont > 0 && (
           <Badge
             borderRadius="50%"
-            h={'15px'}
-            w={'15px'}
+            h={'18px'}
+            w={'18px'}
             display={'flex'}
             justifyContent={'center'}
             alignItems={'center'}
@@ -53,8 +53,8 @@ const Inbox = ({
             color="white"
             fontSize="sm"
             position="absolute"
-            top="-5px"
-            right="0"
+            top="-12px"
+            right="-12px"
             pb={'2px'}
             pr={'5px'}
           >

@@ -115,6 +115,16 @@ const Leaderboard = () => {
     }
   }, [isLoading])
 
+  useEffect(() => {
+    // select body element
+    const body = document.querySelector('body')
+    body.style.overflow = 'hidden'
+
+    return () => {
+      body.style.overflow = 'auto'
+    }
+  }, [])
+
   const handleRowClick = useCallback(
     inGameName => {
       navigate(`/profile/${inGameName}`)
@@ -155,7 +165,11 @@ const Leaderboard = () => {
     <Box
       minH="100vh"
       p={{ base: 4, md: 8 }}
-      mt={{ base: '13%', md: '4.5%', lg: '2.5%' }}
+      mt={{
+        base: user?.needsOnboarding ? '18%' : '13%',
+        md: user?.needsOnboarding ? '6.5%' : '4.5%',
+        lg: user?.needsOnboarding ? '4.5%' : '2.5%',
+      }}
       w={'100%'}
     >
       <Helmet>
@@ -232,7 +246,7 @@ const Leaderboard = () => {
         <UserCard user={user} t={t} />
 
         <Box
-          height={{ base: 'calc(100vh - 200px)', md: 'calc(100vh - 240px)' }}
+          height={{ base: 'calc(100vh - 150px)', md: 'calc(100vh - 190px)' }}
           overflow="hidden" // Add this line to remove scrollbars
         >
           {isLoading || !isInitialRenderComplete || searchLoad ? (
@@ -249,7 +263,10 @@ const Leaderboard = () => {
                   width={width}
                   itemData={searchResults.length > 0 ? searchResults : leaders}
                   overscanCount={5}
-                  style={scrollbarHiddenStyle} // Apply scrollbar hiding styles
+                  style={{
+                    ...scrollbarHiddenStyle,
+                  }} // Apply scrollbar hiding styles
+                  className="leaderboard-list"
                 >
                   {Row}
                 </List>
