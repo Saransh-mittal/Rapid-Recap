@@ -1,6 +1,6 @@
 const Article = require('../model/articleSchema')
 const cache = require('memory-cache')
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+const CACHE_DURATION = 24 * 60 * 60 * 1000 // 5 minutes
 const slugify = require('slugify')
 const AuthorProfileService = require('./authorProfileService')
 
