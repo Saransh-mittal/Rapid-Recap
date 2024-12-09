@@ -199,7 +199,7 @@ const loginUser = async (req, res) => {
     // console.log(token);
     if (findUser.verified && findUser.inGameName)
       res.cookie('jwtoken', token, {
-        expires: new Date(Date.now() + 2592000000),
+        expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         httpOnly: true,
       })
 

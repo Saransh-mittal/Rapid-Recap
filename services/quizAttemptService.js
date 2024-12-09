@@ -8,9 +8,6 @@ const {
 const {
   fetchTodaysPastRQMs,
   sendMailsForQuizRemainingToReviveStreak,
-  calculateScore,
-  calculateQuizDifficulty,
-  calculateApparentTimeTaken,
   calculateRQMScore,
   calcUserPercentile,
 } = require('../utils/quiz.utils')
@@ -25,18 +22,8 @@ const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
 const i18n = require('i18next')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
 
-const hasStreakSurgeNotificationToday = async userId => {
-  const today = new Date()
-  today.setUTCHours(0, 0, 0, 0)
-
-  const notification = await ApplicationUpdates.findOne({
-    userId: userId,
-    type: 'applicationUpdate',
-    title: { $regex: /Streak Surge/, $options: 'i' },
-    createdAt: { $gte: today },
-  })
-
-  return !!notification
+const hasStreakSurgeNotificationToday = async user => {
+  return user.todaysQuizCnt > 0
 }
 
 const saveQuizAttempt = async (
@@ -113,7 +100,7 @@ const saveQuizAttempt = async (
     boosted = true
 
     // Check if notification has already been sent today
-    const hasNotification = await hasStreakSurgeNotificationToday(userId)
+    const hasNotification = await hasStreakSurgeNotificationToday(user)
 
     if (!hasNotification) {
       const notificationTitle = localizedI18n.t('Streak Surge day!')
