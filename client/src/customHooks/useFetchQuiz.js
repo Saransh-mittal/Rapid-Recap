@@ -39,7 +39,7 @@ const useFetchQuiz = (articleId, language, onClose) => {
       } catch (error) {
         console.error(error)
         toast({
-          title: 'Quiz Fetch Failed',
+          title: error?.response?.data?.message || 'Quiz Fetch Failed',
           description: error.response?.data?.error || 'Please try again later',
           status: 'error',
           duration: 5000,
@@ -81,6 +81,7 @@ const useFetchQuiz = (articleId, language, onClose) => {
       )
 
       setQuizStatus('in_progress')
+      setQuizSession(response.data.quizSession)
       setRemainingTime(response.data.timer)
       setLoad(false)
       setIsQuizGenerating(false)

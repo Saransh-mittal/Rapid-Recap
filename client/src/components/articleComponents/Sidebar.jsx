@@ -41,7 +41,7 @@ import QuizStatisticsSkeleton from './loaders/QuizStatisticsSkeleton'
 import ArticleListSkeleton from './loaders/ArticleListSkeleton'
 //SSR image
 const Alt_img = '/images/rr.webp'
-const rrImage = '/images/rrlogo_HD.webp'
+const fallback_news_image = '/images/fallback_news_image.webp'
 
 const Sidebar = ({
   givenQuiz,
@@ -308,7 +308,7 @@ const Sidebar = ({
             src={
               (!blackListedImgUrls.find(url => url === item?.imgURL?.[0]) &&
                 item?.imgURL?.[0]) ||
-              rrImage
+              fallback_news_image
             }
             alt={t('articleImageAlt')}
             onError={e => {

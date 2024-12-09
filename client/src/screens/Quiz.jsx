@@ -103,7 +103,7 @@ const Quiz = () => {
   const quizId = quizSession?.quiz
   const [submitError, setSubmitError] = useState(false)
 
-  const totalQuestions = quizSession ? quizSession.questions.length : 0
+  const totalQuestions = quizSession ? quizSession?.questions?.length : 0
   const shouldWarnBeforeLeaving = !showInstruction && !submitted
   useNavigationWarning(shouldWarnBeforeLeaving)
 
@@ -614,6 +614,7 @@ const Quiz = () => {
             setMessageForTournament={setMessageForTournament}
             setUserEligibleForTournament={setUserEligibleForTournament}
             quizStatus={quizStatus}
+            showQuizSummary={showQuizSummary}
           />
         </Suspense>
       )}

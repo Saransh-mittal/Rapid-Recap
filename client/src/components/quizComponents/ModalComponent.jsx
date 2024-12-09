@@ -29,7 +29,7 @@ const ModalComponent = ({
   load,
   showInstruction,
   startQuiz,
-
+  showQuizSummary,
   handleNextQuestion,
   currentQuestionIndex,
   totalQuestions,
@@ -148,7 +148,7 @@ const ModalComponent = ({
             )}
           </SkeletonCircle>
         )}
-        {!showGetSetGo && (
+        {!showGetSetGo && !showQuizSummary && (
           <ModalCloseButton
             zIndex={2}
             backgroundColor={getColor('purple.300', 'rgba(255, 215, 0, 0.8)')}
@@ -184,7 +184,9 @@ const ModalComponent = ({
                 {t('QuizIsGenerating')}
               </Text>
             )}
-            {(totalQuestions || quizStatus === 'in_progress') &&
+            {(totalQuestions ||
+              quizStatus === 'in_progress' ||
+              quizStatus === 'ready') &&
               !showGetSetGo && (
                 <ModalFooter w={'100%'}>
                   <motion.div

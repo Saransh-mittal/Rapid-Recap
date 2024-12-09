@@ -1,4 +1,4 @@
-const VERSION = 'v8.2'
+const VERSION = 'v8.3'
 const CACHE_NAME = `rapid-recap-${VERSION}`
 const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
@@ -647,7 +647,7 @@ self.addEventListener('push', event => {
       icon: data.icon || RapidRecapLogo,
       image: data.image || null,
       data: { url: data.url },
-      badge: RapidRecapLogo,
+      badge: RapidRecapBadge,
       vibrate: [200, 100, 200],
       tag: data.messageId, // Add tag for notification management
     }

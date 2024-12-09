@@ -124,6 +124,7 @@ const QuizReport = ({
       isOpen={isOpen}
       isTournament={isTournament}
       size={isTournament ? 'full' : { base: 'full', md: '2xl' }}
+      showQuizSummary={showQuizSummary}
     />
   )
 }
