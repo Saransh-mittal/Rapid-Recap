@@ -201,7 +201,15 @@ function setupStaticHandling(app) {
   )
   app.use(
     '/images',
-    express.static(path.join(distPath, 'images'), staticOptions),
+    express.static(path.join(distPath, 'images'), {
+      ...staticOptions,
+      setHeaders: res => {
+        res.setHeader('Content-Type', 'application/json')
+        res.setHeader('Cache-Control', 'no-store, must-revalidate')
+        res.setHeader('Pragma', 'no-cache')
+        res.setHeader('Expires', '0')
+      },
+    }),
   )
 }
 
