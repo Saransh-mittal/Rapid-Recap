@@ -44,8 +44,8 @@ const Logo = memo(
           <Image
             src="/images/rrlogo.webp"
             alt="Rapid Recap"
-            height={isHamburgerOpen ? '50px' : '32px'}
-            width={isHamburgerOpen ? '50px' : '32px'}
+            height={isHamburgerOpen ? '50px' : '40px'}
+            width={isHamburgerOpen ? '50px' : '40px'}
             objectFit="contain"
             loading="eager"
             priority="high"

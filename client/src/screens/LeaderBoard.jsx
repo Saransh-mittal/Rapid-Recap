@@ -166,9 +166,9 @@ const Leaderboard = () => {
       minH="100vh"
       p={{ base: 4, md: 8 }}
       mt={{
-        base: user?.needsOnboarding ? '18%' : '13%',
-        md: user?.needsOnboarding ? '6.5%' : '4.5%',
-        lg: user?.needsOnboarding ? '4.5%' : '2.5%',
+        base: user?.needsOnboarding ? '18%' : '16%',
+        md: user?.needsOnboarding ? '6.5%' : '5.5%',
+        lg: user?.needsOnboarding ? '4.5%' : '3.5%',
       }}
       w={'100%'}
     >

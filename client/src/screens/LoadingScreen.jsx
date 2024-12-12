@@ -171,7 +171,7 @@ const LoadingScreen = React.memo(({ progress }) => {
           transition={{ duration: 0.5 }}
         >
           <Flex gap={2} alignItems="center">
-            <Image src={rrlogo} width={'40px'} height={'50px'} />
+            <Image src={rrlogo} width={'50px'} height={'50px'} />
             <Text fontSize="4xl" fontWeight="bold" color="white">
               Rapid Recap
             </Text>
