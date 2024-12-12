@@ -1,0 +1,1 @@
+import{j as m}from"./index-c6f02d71.js";import{p,t as u,v as l,am as f,s as I,q as x}from"./text-5ce6c5c1.js";const a=p(function(s,n){const{htmlSize:o,...t}=s,e=u("Input",t),i=l(t),r=f(i),c=I("chakra-input",s.className);return m.jsx(x.input,{size:o,...r,__css:e.field,ref:n,className:c})});a.displayName="Input";a.id="Input";export{a as I};
