@@ -137,6 +137,7 @@ webpush.setVapidDetails(
 // require('./scripts/checkUserScoreOfUser')
 // require('./scripts/googlePlayDummyUser')
 // require('./scripts/runHighlightTest.js')
+// require('./scripts/vectorizeArticles')
 // -------------------
 
 // const { dailyUserIQCalc } = require('./utils/dailyUserIQCalc.utils')
