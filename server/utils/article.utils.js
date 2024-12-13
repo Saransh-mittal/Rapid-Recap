@@ -16,6 +16,7 @@ const newsClassifierService = require('../ml/services/newsClassifierService')
 const cache = require('memory-cache')
 const { generateHighlightForArticle } = require('./article.highlight.utils')
 const { generateKeywordsAndDescription } = require('./seoHelper')
+const { findDuplicateArticles } = require('../services/duplicateCheckService')
 
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
@@ -369,9 +370,6 @@ const processExtractedNews = async (news, category) => {
         throw new Error('Invalid news item structure')
       }
 
-      const existingArticle = await Article.findOne({ title: newsItem.title })
-      if (existingArticle) continue
-
       if (newsItem.text.length < 800) throw new Error('Text is too short')
 
       const decodedText = decode(newsItem.text)
@@ -455,9 +453,25 @@ const processExtractedNews = async (news, category) => {
       if (res.mainText.length < 800)
         throw new Error(`Text is too short : ${res.mainText.length} characters`)
 
-      const articleCheck = await Article.findOne({ title: res.title })
-      if (articleCheck) continue
+      // Check for duplicates using vector similarity
+      const { isDuplicate, contentVector, duplicateArticles } =
+        await findDuplicateArticles({
+          title: res.title,
+          mainText: res.mainText,
+          keywords: res.keywords || [],
+        })
 
+      if (isDuplicate) {
+        console.log(
+          `Duplicate article found for "${res.title}". Similar articles:`,
+          duplicateArticles.map(a => ({ title: a.title, score: a.score })),
+        )
+        continue
+      }
+
+      // Add the generated vector to the article
+      res.contentVector = contentVector
+      res.vectorized = true
       const avgReadTime = averageReadTime(res.mainText)
       res.avgReadTime = avgReadTime
       if (res.category !== 'top' && res.category !== 'crime')

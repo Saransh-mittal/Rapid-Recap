@@ -1,11 +1,8 @@
 // services/embeddingService.js
 
-const { OpenAI } = require('openai')
+const OpenAI = require('openai')
 
 // Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
 
 /**
  * Generates embedding vector for given text using OpenAI's API
@@ -13,6 +10,9 @@ const openai = new OpenAI({
  * @returns {Promise<number[]>} Array of vector embeddings
  */
 const generateEmbedding = async text => {
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
   try {
     const response = await openai.embeddings.create({
       model: 'text-embedding-3-small',

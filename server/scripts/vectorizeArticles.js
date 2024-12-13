@@ -12,19 +12,15 @@ async function vectorizeArticles() {
     cutoffDate.setMonth(cutoffDate.getMonth() - 6)
     const lastDate = new Date()
     lastDate.setMonth(lastDate.getMonth() - 7)
-    console.log(cutoffDate, lastDate)
+    // console.log(cutoffDate, lastDate)
     const articles = await Article.find({
-      dateTime: {
-        $lt: cutoffDate.toISOString(),
-        $gte: lastDate.toISOString(),
-      },
       vectorized: { $ne: true },
     })
       .select('_id title mainText keywords')
-      .sort({ dateTime: 1 })
-      .limit(20)
+      .sort({ dateTime: -1 })
+      .limit(1)
 
-    console.log(cutoffDate.toISOString(), lastDate.toISOString())
+    // console.log(cutoffDate.toISOString(), lastDate.toISOString())
     console.log(`Found ${articles.length} articles to vectorize`)
 
     let successCount = 0
@@ -105,13 +101,30 @@ async function revertVectorization() {
     // )
 
     // console.log(`Successfully devectorized ${result.modifiedCount} articles`)
-    await Article.updateMany(
-      { vectorized: true },
-      {
+    // await Article.updateMany(
+    //   { vectorized: true },
+    //   {
+    //     $unset: { contentVector: '' },
+    //     $set: { vectorized: false },
+    //   },
+    // )
+
+    // unset all contentVector fields for the only 1000 vectorized oldest articles to test
+    console.log('Devectorizing all articles...')
+    const oldestArticles = await Article.find({
+      vectorized: true,
+    })
+      .select('_id')
+      .sort({ dateTime: 1 })
+      .limit(1000)
+
+    for (const article of oldestArticles) {
+      await Article.findByIdAndUpdate(article._id, {
         $unset: { contentVector: '' },
         $set: { vectorized: false },
-      },
-    )
+      })
+    }
+
     console.log('Successfully devectorized all articles')
   } catch (error) {
     console.error('Error in devectorization process:', error)
@@ -184,139 +197,6 @@ async function testVectorSearch() {
 // Run the test
 // testVectorSearch()
 
-async function updateVectorSubtypes() {
-  try {
-    // Get all vectorized articles
-    const articles = await Article.find({ vectorized: true })
-    console.log(`Found ${articles.length} articles to update`)
-
-    for (const article of articles) {
-      if (article.contentVector) {
-        // Convert existing binary data to Float32Array
-        const base64Data = article.contentVector.buffer.toString('base64')
-        const buffer = Buffer.from(base64Data, 'base64')
-        const vector = Array.from(
-          new Float32Array(buffer.buffer.slice(0, 1536 * 4)),
-        )
-
-        // Convert back to binary with correct subtype
-        const newVector = new mongoose.Types.Buffer(
-          Buffer.from(new Float32Array(vector).buffer),
-          9, // vector subtype
-        )
-
-        // Update the document
-        await Article.findByIdAndUpdate(article._id, {
-          contentVector: newVector,
-        })
-
-        console.log(`Updated article: ${article._id}`)
-      }
-    }
-
-    console.log('Vector subtype update completed')
-  } catch (error) {
-    console.error('Error updating vectors:', error)
-  }
-}
-
-// Run the update
-// updateVectorSubtypes()
-
-async function rebuildVectorIndex() {
-  const ATLAS_API_KEY = process.env.ATLAS_API_KEY
-  const ATLAS_PROJECT_ID = process.env.ATLAS_PROJECT_ID
-  const CLUSTER_NAME = process.env.CLUSTER_NAME
-
-  try {
-    // 1. Delete existing index
-    const deleteResponse = await fetch(
-      `https://cloud.mongodb.com/api/atlas/v1.0/groups/${ATLAS_PROJECT_ID}/clusters/${CLUSTER_NAME}/fts/indexes/contentVector_1`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${ATLAS_API_KEY}`,
-        },
-      },
-    )
-
-    if (!deleteResponse.ok) {
-      throw new Error(`Failed to delete index: ${deleteResponse.statusText}`)
-    }
-
-    // 2. Create new index
-    const createResponse = await fetch(
-      `https://cloud.mongodb.com/api/atlas/v1.0/groups/${ATLAS_PROJECT_ID}/clusters/${CLUSTER_NAME}/fts/indexes`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${ATLAS_API_KEY}`,
-        },
-        body: JSON.stringify({
-          name: 'contentVector_1',
-          database: 'your_database_name',
-          collectionName: 'Articles',
-          mappings: {
-            dynamic: true,
-            fields: {
-              contentVector: {
-                type: 'vector',
-                dimensions: 1536,
-                similarity: 'cosine',
-              },
-            },
-          },
-        }),
-      },
-    )
-
-    if (!createResponse.ok) {
-      throw new Error(`Failed to create index: ${createResponse.statusText}`)
-    }
-
-    console.log('Vector search index rebuilt successfully')
-  } catch (error) {
-    console.error('Error rebuilding vector index:', error)
-    throw error
-  }
-}
-
-// Combined function to maintain vectors and rebuild index
-async function maintainVectorStorage() {
-  try {
-    // 1. Find cutoff date for latest 10000 articles
-    const cutoffArticle = await Article.find()
-      .sort({ dateTime: -1 })
-      .skip(10000)
-      .limit(1)
-
-    const cutoffDate = cutoffArticle[0]?.dateTime
-
-    // 2. Remove vectors from older articles
-    const result = await Article.updateMany(
-      {
-        dateTime: { $lt: cutoffDate },
-        vectorized: true,
-      },
-      {
-        $unset: { contentVector: '' },
-        $set: { vectorized: false },
-      },
-    )
-
-    console.log(`Removed vectors from ${result.modifiedCount} old articles`)
-
-    // 3. Rebuild the index
-    await rebuildVectorIndex()
-  } catch (error) {
-    console.error('Error in vector maintenance:', error)
-  }
-}
-
-// maintainVectorStorage()
-
 async function run() {
   try {
     // define your Atlas Vector Search index
@@ -366,8 +246,24 @@ const dropSearchIndexFunction = async () => {
   try {
     console.log('Dropping search index...')
     await Article.dropSearchIndex('vector_index')
-    console.log('Search index dropped successfully')
 
+    let isDeleted = false
+    while (!isDeleted) {
+      const cursor = await Article.listSearchIndexes()
+      let isIndexPresent = false
+      // check if the index is still present
+      for await (const index of cursor) {
+        if (index.name === 'vector_index') {
+          isIndexPresent = true
+          console.log('Index still present. Waiting for it to be deleted...')
+          await new Promise(resolve => setTimeout(resolve, 5000))
+        }
+      }
+      if (!isIndexPresent) {
+        isDeleted = true
+        console.log('Index deleted successfully')
+      }
+    }
     console.log('Dropping search index...')
     await Article.collection.dropIndex('contentVector_1')
     console.log('Search index dropped successfully')
