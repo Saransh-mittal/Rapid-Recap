@@ -94,6 +94,17 @@ const articleSchema = new mongoose.Schema(
     description: {
       type: String,
     },
+    // Add the embedding vector field
+    contentVector: {
+      type: [Number],
+      index: true,
+      required: false,
+    },
+    // Optional: track vectorization status
+    vectorized: {
+      type: Boolean,
+      default: false,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

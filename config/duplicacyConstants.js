@@ -1,0 +1,6 @@
+const DUPLICACY_SETTINGS = {
+  SIMILARITY_THRESHOLD: 0.94,
+  TIME_WINDOW: 48, // 48 hours (2 days)
+}
+
+module.exports = DUPLICACY_SETTINGS
