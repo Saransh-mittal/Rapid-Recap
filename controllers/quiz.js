@@ -61,7 +61,7 @@ const getQuiz = async (req, res) => {
 
     requestMap.set(requestKey, cancellationToken)
 
-    if (!articleId) {
+    if (!articleId || articleId === 'undefined') {
       throw new Error('No article provided')
     }
 

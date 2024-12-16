@@ -4,7 +4,7 @@ const ASSETS_CACHE = `assets-${VERSION}`
 const DYNAMIC_CACHE = `dynamic-${VERSION}`
 
 const RapidRecapLogo = './images/rrlogo.webp'
-const RRBadge = './images/rrlogo_badge.png'
+const RRBadge = './images/rrlogo_notif_badge.png'
 const IS_DEVELOPMENT =
   location.hostname === 'localhost' || location.hostname === '127.0.0.1'
 
