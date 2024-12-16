@@ -465,8 +465,8 @@ export default function Signin({ isOpen, onOpen, onClose, hamburgerOnClose }) {
                     <Text color={'gray.400'} fontWeight={'bold'}>
                       {t('or_text')}
                     </Text>
-                  </Flex> */}
-                  {/* <Suspense fallback={<Spinner />}>
+                  </Flex>
+                  <Suspense fallback={<Spinner />}>
                     <Flex w={'100%'} justifyContent={'center'}>
                       <GuestLogin
                         hamburgerOnClose={hamburgerOnClose}

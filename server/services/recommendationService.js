@@ -1,93 +1,14 @@
 const { spawn } = require('child_process')
-const fs = require('fs').promises
-const mongoose = require('mongoose')
 const User = require('../model/userSchema')
 const Article = require('../model/articleSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
-const TimeSpent = require('../model/timeSpentSchema')
 const {
   Recommendation,
   NotifiedArticles,
 } = require('../model/recommendationSchema')
-const { Parser } = require('json2csv')
 const path = require('path')
 const { hindiConverter } = require('../utils/article.utils')
-const cache = require('memory-cache')
 const { formatPreferredCategories } = require('../utils/user.utils')
-
-async function ensureDirectoryExistence(filePath) {
-  const dirname = path.dirname(filePath)
-  try {
-    await fs.access(dirname)
-  } catch (err) {
-    await fs.mkdir(dirname, { recursive: true })
-  }
-}
-
-function convertToCSV(data) {
-  const json2csvParser = new Parser()
-  return json2csvParser.parse(data)
-}
-
-async function exportDataToCSV() {
-  const articlesPromise = Article.aggregate([
-    {
-      $match: {
-        dateTime: { $gte: '2024-04-01T00:00:00' },
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        author: 1,
-        title: 1,
-        mainText: 1,
-        category: 1,
-        dateTime: 1,
-      },
-    },
-  ])
-
-  const quizAttemptsPromise = QuizAttempt.find(
-    {
-      createdAt: { $gte: '2024-04-01T00:00:00' },
-    },
-    {
-      _id: 1,
-      user: 1,
-      article: 1,
-      RQM_score: 1,
-      userPercentile: 1,
-      createdAt: 1,
-    },
-  ).lean()
-
-  const timeSpentPromise = TimeSpent.find({}).lean()
-
-  const [articles, quizAttempts, timeSpent] = await Promise.all([
-    articlesPromise,
-    quizAttemptsPromise,
-    timeSpentPromise,
-  ])
-
-  const filePaths = [
-    path.join(__dirname, '..', 'data', 'csv', 'articles.csv'),
-    path.join(__dirname, '..', 'data', 'csv', 'quiz_attempts.csv'),
-    path.join(__dirname, '..', 'data', 'csv', 'time_spent.csv'),
-  ]
-
-  await Promise.all(
-    filePaths.map(filePath => ensureDirectoryExistence(filePath)),
-  )
-
-  await Promise.all([
-    fs.writeFile(filePaths[0], convertToCSV(articles)),
-    fs.writeFile(filePaths[1], convertToCSV(quizAttempts)),
-    fs.writeFile(filePaths[2], convertToCSV(timeSpent)),
-  ])
-
-  console.log('CSV files created successfully')
-}
 
 const runPythonScript = (scriptPath, userId, userPreferredCategories) => {
   return new Promise((resolve, reject) => {
@@ -360,7 +281,6 @@ async function getRecommendationsForNotification(userId, topN = 20) {
 module.exports = {
   getRecommendations,
   updateRecommendations,
-  exportDataToCSV,
   generateRecommendations,
   getRecommendationsForNotification,
   getArticlePageRecommendations,

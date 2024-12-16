@@ -1,61 +1,64 @@
 import sys
 import json
-import pandas as pd
 import numpy as np
+import pandas as pd
 from datetime import datetime, timedelta
 import pytz
 from bson import ObjectId
 import pymongo
 from dotenv import load_dotenv
 import os
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import sigmoid_kernel
-import pickle
 import logging
-from scipy.sparse import csr_matrix
+import random
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def load_data_from_db(mongo_uri, user_id):
     """
-    Load data from MongoDB with proper handling of empty results.
+    Load data from MongoDB with content vectors.
     Returns DataFrames with correct columns even when no data exists.
     """
     try:
         client = pymongo.MongoClient(mongo_uri)
         db = client.get_database("RapidRecap0")
-
+        logging.info("Connected to database")
         articles_collection = db.get_collection("Articles")
         quiz_attempts_collection = db.get_collection("quiz_attempts")
         time_spent_collection = db.get_collection("timespents")
 
         start_date = datetime.now(pytz.UTC) - timedelta(days=30)
-
+        logging.info(f"Loading data for user {user_id} since {start_date}")
         pipeline = [
             {
                 "$match": {
-                    "$or": [
-                        {"dateTime": {"$gte": start_date.strftime("%Y-%m-%dT%H:%M:%SZ")}},
-                        {"dateTime": {"$gte": start_date.strftime("%Y-%m-%d %H:%M:%S")}}
+                    "$and": [
+                        {
+                            "$or": [
+                                {"dateTime": {"$gte": start_date.strftime("%Y-%m-%dT%H:%M:%SZ")}},
+                                {"dateTime": {"$gte": start_date.strftime("%Y-%m-%d %H:%M:%S")}}
+                            ]
+                        },
+                        {"contentVector": {"$exists": True}},
+                        {"vectorized": True},
+                        {"category": {"$ne": "onBoardingArticle"}}  # Exclude onBoardingArticle articles
                     ]
                 }
             },
             {
                 "$project": {
                     "_id": {"$toString": "$_id"},
-                    "author": 1,
-                    "title": 1,
-                    "mainText": 1,
                     "category": 1,
-                    "dateTime": {"$toDate": "$dateTime"},  # Convert to date object
+                    "dateTime": {"$toDate": "$dateTime"},
                 }
             }
         ]
 
+        logging.info("Starting articles aggregation pipeline")
         articles = list(articles_collection.aggregate(pipeline))
         articles_df = pd.DataFrame(articles)
-
+        logging.info(f"Found {len(articles_df)} articles")
         # Create empty DataFrames with correct columns if no data exists
         quiz_attempts = list(quiz_attempts_collection.find(
             {"user": ObjectId(user_id), "createdAt": {"$gte": start_date}},
@@ -68,41 +71,32 @@ def load_data_from_db(mongo_uri, user_id):
             {"_id": 1, "userId": 1, "articleId": {"$toString": "$articleId"}, "timeSpent": 1, "date": 1}
         ))
         time_spent_df = pd.DataFrame(time_spent) if time_spent else pd.DataFrame(columns=['_id', 'userId', 'articleId', 'timeSpent', 'date'])
-
-        # logging.info(f"Loaded data shapes: articles_df={articles_df.shape}, quiz_attempts_df={quiz_attempts_df.shape}, time_spent_df={time_spent_df.shape}")
-
+        logging.info(f"Found {len(quiz_attempts_df)} quiz attempts and {len(time_spent_df)} time spent records")
         return articles_df, quiz_attempts_df, time_spent_df
 
     except Exception as e:
         logging.error(f"Error loading data from database: {str(e)}")
         raise
 
-def load_tfidf():
-    try:
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(base_path, '..', 'model', 'tfidf_models')
-
-        with open(os.path.join(model_path, 'tfv.pkl'), 'rb') as f:
-            tfv = pickle.load(f)
-        with open(os.path.join(model_path, 'tfv_matrix.pkl'), 'rb') as f:
-            tfv_matrix = pickle.load(f)
-
-        return tfv, tfv_matrix
-    except Exception as e:
-        logging.error(f"Error loading TF-IDF model: {str(e)}")
-        raise
-
 def calculate_preference_score(user_id, quiz_attempts_df, time_spent_df, articles_df, user_preferred_categories):
     """
-    Calculate user preference scores with proper handling of empty DataFrames.
-    Returns preference DataFrame and updated categories.
+    Calculate user preference scores with dynamic category weighting and enhanced time-based recency
     """
     try:
-        # If both quiz_attempts and time_spent are empty, return empty preference df but keep categories
+        logging.info("\nStarting Enhanced Preference Score Calculation")
+
+        # Time windows and weights for recency
+        time_weights = {
+            1: 2.0,     # Last 24 hours: 200% weight
+            3: 1.5,     # 2-3 days ago: 150% weight
+            7: 1.2,     # 4-7 days ago: 120% weight
+            14: 1.0,    # 8-14 days ago: normal weight
+            30: 0.8     # 15-30 days ago: 80% weight
+        }
+
+        # If no interaction data, return original preferences
         if quiz_attempts_df.empty and time_spent_df.empty:
-            # logging.info("No user interaction data found")
-            # Return empty DataFrame but preserve user categories
-            return pd.DataFrame(columns=['_id', 'category', 'article', 'preference_score']), {
+            return pd.DataFrame(columns=['_id', 'category', 'article', 'preference_score', 'recency_weight']), {
                 cat_info['category']: {
                     'weight': float(cat_info.get('weight', 0)),
                     'isInferred': bool(cat_info.get('isInferred', False))
@@ -111,58 +105,76 @@ def calculate_preference_score(user_id, quiz_attempts_df, time_spent_df, article
             }
 
         user_id_obj = ObjectId(user_id)
-        current_date = datetime.now(pytz.utc)
-        last_7_days = current_date - timedelta(days=7)
-        last_3_days = current_date - timedelta(days=3)
-
+        current_date = datetime.now(pytz.UTC)
         recent_article_ids = set(articles_df['_id'].astype(str))
-        # logging.info(f"Number of recent articles: {len(recent_article_ids)}")
 
-        # Initialize empty DataFrames for preferences
-        quiz_preference = pd.DataFrame(columns=['article', 'preference_score'])
-        time_preference = pd.DataFrame(columns=['article', 'preference_score'])
-
-        # Process quiz attempts if they exist
+        # Process quiz attempts with enhanced recency weighting
+        quiz_preference = pd.DataFrame(columns=['article', 'preference_score', 'date', 'time_weight'])
         if not quiz_attempts_df.empty:
             user_quiz_attempts = quiz_attempts_df[
                 (quiz_attempts_df['user'] == user_id_obj) &
                 (quiz_attempts_df['article'].astype(str).isin(recent_article_ids))
             ].copy()
-            # logging.info(f"Number of user quiz attempts: {len(user_quiz_attempts)}")
 
             if not user_quiz_attempts.empty:
+                # Ensure timezone awareness for createdAt
                 user_quiz_attempts['createdAt'] = pd.to_datetime(user_quiz_attempts['createdAt']).dt.tz_localize(pytz.UTC)
-                user_quiz_attempts['preference_score'] = user_quiz_attempts['RQM_score'].astype(float)
 
-                user_quiz_attempts.loc[user_quiz_attempts['createdAt'] >= last_7_days, 'preference_score'] *= 1.5
-                user_quiz_attempts.loc[user_quiz_attempts['createdAt'] >= last_3_days, 'preference_score'] *= 2
+                # Calculate days ago
+                user_quiz_attempts['days_ago'] = (current_date - user_quiz_attempts['createdAt']).dt.days
 
-                quiz_preference = user_quiz_attempts[['article', 'preference_score']]
+                # Apply time weights
+                user_quiz_attempts['time_weight'] = user_quiz_attempts['days_ago'].apply(
+                    lambda x: next((w for d, w in sorted(time_weights.items(), reverse=True) if x <= d), 0.5)
+                )
 
-        # Process time spent if they exist
+                # Enhanced scoring that considers both RQM score and time weight
+                user_quiz_attempts['preference_score'] = (
+                    user_quiz_attempts['RQM_score'].astype(float) *
+                    user_quiz_attempts['time_weight']
+                )
+
+                quiz_preference = user_quiz_attempts[['article', 'preference_score', 'createdAt', 'time_weight']]
+
+        # Process time spent with enhanced recency weighting
+        time_preference = pd.DataFrame(columns=['article', 'preference_score', 'date', 'time_weight'])
         if not time_spent_df.empty:
             user_time_spent = time_spent_df[
                 (time_spent_df['userId'] == user_id_obj) &
                 (time_spent_df['articleId'].astype(str).isin(recent_article_ids))
             ].copy()
-            # logging.info(f"Number of user time spent records: {len(user_time_spent)}")
 
             if not user_time_spent.empty:
+                # Ensure timezone awareness for date
                 user_time_spent['date'] = pd.to_datetime(user_time_spent['date']).dt.tz_localize(pytz.UTC)
-                user_time_spent['normalized_timeSpent'] = user_time_spent['timeSpent'] / user_time_spent['timeSpent'].max()
-                user_time_spent['preference_score'] = user_time_spent['normalized_timeSpent'] * 2
 
-                user_time_spent.loc[user_time_spent['date'] >= last_7_days, 'preference_score'] *= 1.5
-                user_time_spent.loc[user_time_spent['date'] >= last_3_days, 'preference_score'] *= 2
+                # Calculate days ago
+                user_time_spent['days_ago'] = (current_date - user_time_spent['date']).dt.days
 
-                time_preference = user_time_spent[['articleId', 'preference_score']].rename(columns={'articleId': 'article'})
+                # Apply time weights
+                user_time_spent['time_weight'] = user_time_spent['days_ago'].apply(
+                    lambda x: next((w for d, w in sorted(time_weights.items(), reverse=True) if x <= d), 0.5)
+                )
 
-        # Combine preferences
+                # Normalize time spent on a per-article basis
+                max_time = user_time_spent['timeSpent'].max()
+                user_time_spent['normalized_timeSpent'] = user_time_spent['timeSpent'] / max_time if max_time > 0 else 0
+
+                # Calculate weighted preference score with recency
+                user_time_spent['preference_score'] = (
+                    user_time_spent['normalized_timeSpent'] *
+                    user_time_spent['time_weight'] * 2
+                )
+
+                time_preference = user_time_spent[['articleId', 'preference_score', 'date', 'time_weight']].rename(
+                    columns={'articleId': 'article'}
+                )
+
+        # Combine preferences with weighted averaging
         user_preference_df = pd.concat([quiz_preference, time_preference])
 
         if user_preference_df.empty:
-            # Return empty DataFrame but preserve user categories
-            return pd.DataFrame(columns=['_id', 'category', 'article', 'preference_score']), {
+            return pd.DataFrame(columns=['_id', 'category', 'article', 'preference_score', 'recency_weight']), {
                 cat_info['category']: {
                     'weight': float(cat_info.get('weight', 0)),
                     'isInferred': bool(cat_info.get('isInferred', False))
@@ -170,9 +182,13 @@ def calculate_preference_score(user_id, quiz_attempts_df, time_spent_df, article
                 for cat_info in user_preferred_categories
             }
 
-        user_preference_df = user_preference_df.groupby('article')['preference_score'].sum().reset_index()
-        user_preference_df['article'] = user_preference_df['article'].astype(str)
+        # Group by article and calculate final scores
+        user_preference_df = user_preference_df.groupby('article').agg({
+            'preference_score': 'sum',
+            'time_weight': 'max'
+        }).reset_index()
 
+        # Merge with article data to get categories
         articles_df['_id'] = articles_df['_id'].astype(str)
         user_preference_df = articles_df[['_id', 'category']].merge(
             user_preference_df,
@@ -181,265 +197,587 @@ def calculate_preference_score(user_id, quiz_attempts_df, time_spent_df, article
             how='inner'
         )
 
-        # Calculate category preferences
-        inferred_categories = {}
-        category_scores = user_preference_df.groupby('category')['preference_score'].sum()
-        total_preference = category_scores.sum()
+        # Keep the existing category preference calculation logic
+        category_interactions = user_preference_df.groupby('category').agg({
+            'preference_score': 'sum',
+            '_id': 'count'  # Count of interactions per category
+        }).reset_index()
 
-        if total_preference > 0:
-            inferred_categories = (category_scores / total_preference).to_dict()
+        total_interactions = category_interactions['_id'].sum()
+        total_score = category_interactions['preference_score'].sum()
 
-        # Calculate interaction factors
-        total_interactions = len(quiz_preference) + len(time_preference)
-        interaction_factor = min(total_interactions / 100, 1)
+        # Calculate dynamic weights
+        category_interactions['interaction_weight'] = category_interactions['_id'] / total_interactions
+        category_interactions['score_weight'] = category_interactions['preference_score'] / total_score
 
-        # Process and combine categories
-        combined_categories = {}
-        for category_info in user_preferred_categories:
-            try:
-                category = category_info.get('category', '')
-                weight = float(category_info.get('weight', 0))
-                is_inferred = bool(category_info.get('isInferred', False))
-
-                last_updated_str = category_info.get('lastUpdated')
-                if last_updated_str:
-                    try:
-                        last_updated = datetime.fromisoformat(last_updated_str.replace('Z', '+00:00'))
-                    except (ValueError, TypeError):
-                        last_updated = current_date
-                else:
-                    last_updated = current_date
-
-                days_since_update = (current_date - last_updated).days
-                time_factor = max(0, 1 - (days_since_update * 0.01))
-
-                if is_inferred:
-                    adjusted_weight = weight * (1 + (interaction_factor * 0.5))
-                else:
-                    adjusted_weight = weight * time_factor * (1 - (interaction_factor * 0.5))
-
-                combined_categories[category] = {
-                    'weight': adjusted_weight,
-                    'isInferred': is_inferred
-                }
-            except Exception as e:
-                logging.warning(f"Error processing category info: {str(e)}")
-                continue
-
-        # Add inferred categories
-        for category, score in inferred_categories.items():
-            if category not in combined_categories:
-                combined_categories[category] = {
-                    'weight': score * interaction_factor,
-                    'isInferred': True
-                }
+        # Combine weights with exponential smoothing
+        alpha = 0.7  # Weight for recent behavior vs historical preferences
+        category_interactions['combined_weight'] = (
+            alpha * category_interactions['score_weight'] +
+            (1 - alpha) * category_interactions['interaction_weight']
+        )
 
         # Normalize weights
-        total_weight = sum(cat['weight'] for cat in combined_categories.values())
-        if total_weight > 0:
-            for category in combined_categories:
-                combined_categories[category]['weight'] /= total_weight
+        total_weight = category_interactions['combined_weight'].sum()
+        category_interactions['normalized_weight'] = category_interactions['combined_weight'] / total_weight
 
-        # logging.info(f"Combined categories: {combined_categories}")
+        # Create updated category preferences
+        combined_categories = {}
+
+        # Start with existing preferred categories
+        user_preferred_set = {cat_info['category'] for cat_info in user_preferred_categories}
+
+        for _, row in category_interactions.iterrows():
+            category = row['category']
+            weight = row['normalized_weight']
+            is_user_preferred = category in user_preferred_set
+
+            combined_categories[category] = {
+                'weight': float(weight),
+                'isInferred': not is_user_preferred,
+                'interactionCount': int(row['_id']),
+                'scoreWeight': float(row['score_weight'])
+            }
+
+        # Log category weight changes
+        logging.info("\nCategory Weight Analysis:")
+        for category, info in sorted(combined_categories.items(), key=lambda x: x[1]['weight'], reverse=True):
+            status = "User Preferred" if category in user_preferred_set else "Inferred"
+            logging.info(f"• {category}: Weight={info['weight']:.3f}, Interactions={info['interactionCount']}, Status={status}")
 
         return user_preference_df, combined_categories
 
     except Exception as e:
-        logging.error(f"Error calculating preference score: {str(e)}")
+        logging.error(f"Error calculating preference score: {str(e)}", exc_info=True)
         raise
 
-def calculate_sigmoid_kernel(tfv_matrix):
-    try:
-        tfv_matrix_sparse = csr_matrix(tfv_matrix)
-        return sigmoid_kernel(tfv_matrix_sparse, tfv_matrix_sparse)
-    except Exception as e:
-        logging.error(f"Error calculating sigmoid kernel: {str(e)}")
-        raise
-
-def recommend_articles(user_id, articles_df, sig, quiz_attempts_df, time_spent_df, user_preferred_categories, num_recommendations=270):
+def recommend_articles_with_vector_search(user_id, articles_df, quiz_attempts_df, time_spent_df, user_preferred_categories, num_recommendations=270):
     """
-    Recommend articles with proper handling of empty preference data.
-    Falls back to trending recommendations while preserving category preferences.
+    Recommend articles using balanced category distribution and personalization
     """
     try:
-        user_preference_df, updated_categories = calculate_preference_score(user_id, quiz_attempts_df, time_spent_df, articles_df, user_preferred_categories)
+        start_time = time.time()
+        logging.info(f"\n{'='*50}\nStarting Recommendation Process\n{'='*50}")
 
-        # logging.info(f"User preference df shape: {user_preference_df.shape}")
-        # logging.info(f"User preference df columns: {user_preference_df.columns}")
-        # logging.info(f"User preference df non-zero scores: {len(user_preference_df[user_preference_df['preference_score'] > 0]) if not user_preference_df.empty else 0}")
+        # Constants for category balancing
+        MAX_CATEGORY_PERCENTAGE = 0.30  # Maximum 30% from any category
+        MIN_CATEGORY_PERCENTAGE = 0.05  # Minimum 5% for important categories
+        TRENDING_PERCENTAGE = 0.10      # 10% trending articles
 
-        # Check if we have meaningful preference data
-        if user_preference_df.empty or (not user_preference_df.empty and user_preference_df['preference_score'].sum() == 0):
-            if user_preferred_categories:
-                # logging.warning("No user interactions found. Recommending trending articles with category preferences.")
-                recommendations = recommend_trending_articles(
-                    articles_df,
-                    quiz_attempts_df,
-                    time_spent_df,
-                    user_preferred_categories,
-                    num_recommendations
+        # Calculate base numbers
+        trending_count = int(num_recommendations * TRENDING_PERCENTAGE)
+        remaining_count = num_recommendations - trending_count
+        max_per_category = int(remaining_count * MAX_CATEGORY_PERCENTAGE)
+        min_per_category = int(remaining_count * MIN_CATEGORY_PERCENTAGE)
+
+        # Get user preferences and trending articles
+        user_preference_df, updated_categories = calculate_preference_score(
+            user_id, quiz_attempts_df, time_spent_df, articles_df, user_preferred_categories
+        )
+
+        logging.info(f"User preferences calculated - Found {len(user_preference_df)} interactions")
+
+        client = pymongo.MongoClient(mongo_uri)
+        db = client.get_database("RapidRecap0")
+        articles_collection = db.get_collection("Articles")
+
+        # Get trending articles
+        trending_articles = get_trending_articles(articles_collection, trending_count)
+        logging.info(f"Found {len(trending_articles)} trending articles")
+
+        if not trending_articles:
+            trending_count = 0
+            remaining_count = num_recommendations
+            max_per_category = int(remaining_count * MAX_CATEGORY_PERCENTAGE)
+            min_per_category = int(remaining_count * MIN_CATEGORY_PERCENTAGE)
+
+        # Sort categories by weight and calculate target distribution
+        sorted_categories = sorted(
+            updated_categories.items(),
+            key=lambda x: x[1]['weight'],
+            reverse=True
+        )
+
+        # Calculate initial targets based on weights
+        total_weight = sum(info['weight'] for _, info in sorted_categories)
+        initial_targets = {
+            cat: max(
+                min_per_category,
+                min(
+                    max_per_category,
+                    int(remaining_count * (info['weight'] / total_weight))
                 )
-                # Return recommendations and preserve original category preferences
-                return recommendations, {
-                    cat_info['category']: {
-                        'weight': float(cat_info.get('weight', 0)),
-                        'isInferred': bool(cat_info.get('isInferred', False))
-                    }
-                    for cat_info in user_preferred_categories
-                }
-            else:
-                # logging.warning("No user preferences or interactions found. Recommending general trending articles.")
-                return recommend_trending_articles(articles_df, quiz_attempts_df, time_spent_df, None, num_recommendations), {}
+            )
+            for cat, info in sorted_categories
+            if info['weight'] > 0.01  # Ignore very low-weight categories
+        }
 
-        if not updated_categories and user_preferred_categories:
-            # logging.warning("Using original category preferences for recommendations.")
-            return recommend_trending_articles(articles_df, quiz_attempts_df, time_spent_df, user_preferred_categories, num_recommendations), {
-                cat_info['category']: {
-                    'weight': float(cat_info.get('weight', 0)),
-                    'isInferred': bool(cat_info.get('isInferred', False))
-                }
-                for cat_info in user_preferred_categories
+        # Adjust targets to match remaining_count
+        target_sum = sum(initial_targets.values())
+        if target_sum != remaining_count:
+            adjustment_factor = remaining_count / target_sum
+            category_targets = {
+                cat: max(min_per_category, min(max_per_category, int(count * adjustment_factor)))
+                for cat, count in initial_targets.items()
             }
 
-        # Sort categories by weight and get top 5
-        top_5_categories = sorted(updated_categories.items(), key=lambda x: x[1]['weight'], reverse=True)[:5]
-        top_5_category_names = [cat for cat, _ in top_5_categories]
+            # Distribute any remaining slots
+            remaining_slots = remaining_count - sum(category_targets.values())
+            if remaining_slots > 0:
+                for cat in sorted(category_targets, key=lambda x: category_targets[x]):
+                    if category_targets[cat] < max_per_category:
+                        category_targets[cat] += 1
+                        remaining_slots -= 1
+                    if remaining_slots == 0:
+                        break
+        else:
+            category_targets = initial_targets
 
-        # Calculate recommendation scores
-        now = pd.Timestamp.now(tz='UTC')
-        articles_df['dateTime'] = pd.to_datetime(articles_df['dateTime'], utc=True)
-        days_old = (now - articles_df['dateTime']).dt.days.values
-        time_decay = 1 / (1 + 0.1 * days_old)
+        logging.info("Target distribution:")
+        logging.info(json.dumps(category_targets, indent=2))
 
-        category_boost = articles_df['category'].map(lambda x: updated_categories.get(x, {'weight': 0})['weight']).values
+        # Get recommendations for each category
+        recommended_articles = []
+        for category, target_count in category_targets.items():
+            category_start = time.time()
 
-        sig_subset = sig[:len(articles_df), :len(articles_df)]
-        category_boost_2d = category_boost[:, np.newaxis]
-        weighted_scores = (sig_subset * category_boost_2d).sum(axis=0)
-        weighted_scores *= time_decay
+            # Get user's most engaged articles in this category
+            category_interactions = user_preference_df[
+                user_preference_df['category'] == category
+            ].nlargest(3, 'preference_score')
 
-        articles_df['final_score'] = weighted_scores
+            logging.info(f"Processing {category} - Target: {target_count}")
 
-        # Select recommendations with category diversity
-        main_recommendations = articles_df[articles_df['category'].isin(top_5_category_names)].nlargest(int(num_recommendations * 0.9), 'final_score')
-        other_categories = set(articles_df['category']) - set(top_5_category_names)
-        diverse_recommendations = articles_df[articles_df['category'].isin(other_categories)].nlargest(num_recommendations - len(main_recommendations), 'final_score')
+            category_recommendations = get_category_recommendations(
+                articles_collection,
+                category_interactions,
+                category,
+                target_count,
+                trending_articles,
+                recommended_articles
+            )
 
-        final_recommendations = pd.concat([main_recommendations, diverse_recommendations])
-        final_recommendations = final_recommendations.sample(frac=1).reset_index(drop=True)
+            recommended_articles.extend(category_recommendations)
 
-        return final_recommendations['_id'].astype(str).tolist()[:num_recommendations], updated_categories
+            processing_time = time.time() - category_start
+            if category_recommendations:
+                logging.info(
+                    f"Category {category} processed in {processing_time:.2f}s - "
+                    f"Selected {len(category_recommendations)} articles"
+                )
+
+        # Fill remaining slots with diverse content
+        current_count = len(recommended_articles) + len(trending_articles)
+        if current_count < num_recommendations:
+            remaining = get_diverse_recommendations(
+                articles_collection,
+                num_recommendations - current_count,
+                trending_articles,
+                recommended_articles,
+                category_targets.keys()
+            )
+            recommended_articles.extend(remaining)
+
+        # Combine trending and recommended articles
+        final_recommendations = trending_articles + recommended_articles
+
+        # Log final statistics
+        log_recommendation_statistics(
+            final_recommendations,
+            trending_count,
+            articles_df,
+            start_time
+        )
+
+        # Convert to list of IDs and shuffle
+        recommendations = [str(article['_id']) for article in final_recommendations]
+        random.shuffle(recommendations)
+
+        return recommendations[:num_recommendations], updated_categories
 
     except Exception as e:
-        logging.error(f"Error recommending articles: {str(e)}")
+        logging.error(f"Error recommending articles: {str(e)}", exc_info=True)
         raise
 
-pd.set_option('future.no_silent_downcasting', True)
-def recommend_trending_articles(articles_df, quiz_attempts_df, time_spent_df, user_preferred_categories=None, num_recommendations=270):
+def get_trending_articles(articles_collection, count):
+    """Get trending articles with recency boost and engagement metrics"""
+    try:
+        now = datetime.now(pytz.UTC)
+        pipeline = [
+            {
+                "$match": {
+                    "dateTime": {
+                        "$gte": (now - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    }
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "timespents",
+                    "localField": "_id",
+                    "foreignField": "articleId",
+                    "as": "timeSpentData"
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "quiz_attempts",
+                    "localField": "_id",
+                    "foreignField": "article",
+                    "as": "attempts"
+                }
+            },
+            {
+                "$addFields": {
+                    "totalTimeSpent": {
+                        "$ifNull": [{"$sum": "$timeSpentData.timeSpent"}, 0]
+                    },
+                    "attemptCount": {
+                        "$size": "$attempts"
+                    },
+                    "daysOld": {
+                        "$divide": [
+                            {
+                                "$subtract": [
+                                    now,
+                                    {
+                                        "$dateFromString": {
+                                            "dateString": "$dateTime",
+                                            "onError": now
+                                        }
+                                    }
+                                ]
+                            },
+                            1000 * 60 * 60 * 24
+                        ]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "recencyScore": {
+                        "$switch": {
+                            "branches": [
+                                {
+                                    "case": { "$lte": ["$daysOld", 1] },
+                                    "then": 2.0  # Last 24 hours
+                                },
+                                {
+                                    "case": { "$lte": ["$daysOld", 2] },
+                                    "then": 1.75  # 1-2 days old
+                                },
+                                {
+                                    "case": { "$lte": ["$daysOld", 3] },
+                                    "then": 1.5   # 2-3 days old
+                                },
+                                {
+                                    "case": { "$lte": ["$daysOld", 5] },
+                                    "then": 1.25  # 3-5 days old
+                                }
+                            ],
+                            "default": 1.0
+                        }
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "engagementScore": {
+                        "$min": [
+                            100,  # Cap at 100
+                            {
+                                "$add": [
+                                    {"$multiply": [
+                                        {"$divide": ["$totalTimeSpent", 60]},
+                                        0.7
+                                    ]},
+                                    {"$multiply": ["$attemptCount", 0.3]}
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "trendingScore": {
+                        "$multiply": [
+                            "$engagementScore",
+                            "$recencyScore"
+                        ]
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "$or": [
+                        {"totalTimeSpent": {"$gt": 0}},
+                        {"attemptCount": {"$gt": 0}}
+                    ]
+                }
+            },
+            {
+                "$sort": {"trendingScore": -1}
+            },
+            {
+                "$limit": count
+            },
+            {
+                "$project": {
+                    "_id": 1,
+                    "category": 1,
+                    "dateTime": 1,
+                    "daysOld": 1,
+                    "recencyScore": 1,
+                    "engagementScore": 1,
+                    "trendingScore": 1,
+                    "totalTimeSpent": 1,
+                    "attemptCount": 1
+                }
+            }
+        ]
+
+        trending = list(articles_collection.aggregate(pipeline))
+
+        if trending:
+            logging.info("\nTrending Article Scores:")
+            for article in trending[:5]:
+                logging.info(
+                    f"Article ID: {article['_id']} - "
+                    f"Age: {article['daysOld']:.1f} days - "
+                    f"Recency Score: {article['recencyScore']:.2f} - "
+                    f"Engagement Score: {article['engagementScore']:.2f} - "
+                    f"Total Score: {article['trendingScore']:.2f}"
+                )
+
+        return trending
+
+    except Exception as e:
+        logging.error(f"Error getting trending articles: {str(e)}")
+        return []
+
+def get_category_recommendations(articles_collection, category_interactions, category, target_count, trending_articles, existing_recommendations):
+    """Get recommendations for a specific category using vector similarity, excluding only past interactions"""
+    recommendations = []
+
+    # Get all articles user has interacted with
+    user_interactions = set(category_interactions['_id'].values)  # Previous quiz attempts
+
+    # Only exclude previously interacted articles and already recommended ones
+    # Don't exclude trending articles
+    excluded_ids = [
+        *[ObjectId(id_) for id_ in user_interactions],  # Previously interacted articles
+        *[article['_id'] for article in existing_recommendations]  # Already recommended in this session
+    ]
+
+    for _, article in category_interactions.iterrows():
+        vector = get_article_vector(articles_collection, article['_id'])
+        if not vector:
+            continue
+
+        similar_articles = perform_vector_search(
+            articles_collection,
+            vector,
+            category,
+            excluded_ids,
+            target_count
+        )
+
+        recommendations.extend(similar_articles)
+        excluded_ids.extend([a['_id'] for a in similar_articles])
+
+        if len(recommendations) >= target_count:
+            break
+
+    return recommendations[:target_count]
+
+def get_diverse_recommendations(articles_collection, count, trending_articles, recommended_articles, excluded_categories):
+    """Get diverse recommendations from non-primary categories"""
+    excluded_ids = [
+        article['_id'] for article in trending_articles + recommended_articles
+    ]
+
+    pipeline = [
+        {
+            "$match": {
+                "category": {"$nin": list(excluded_categories)},
+                "_id": {"$nin": excluded_ids}
+            }
+        },
+        {
+            "$sample": {"size": count}
+        }
+    ]
+
+    return list(articles_collection.aggregate(pipeline))
+
+def get_article_vector(articles_collection, article_id):
+    """Get content vector for a single article"""
+    try:
+        result = articles_collection.find_one(
+            {"_id": ObjectId(article_id)},
+            {"contentVector": 1}
+        )
+        return result.get("contentVector") if result else None
+    except Exception as e:
+        logging.error(f"Error getting article vector: {str(e)}")
+        return None
+
+def perform_vector_search(articles_collection, query_vector, category, excluded_ids, limit):
     """
-    Recommend trending articles with category preferences consideration.
-    If user_preferred_categories is provided, trending articles will be biased towards these categories.
+    Perform vector search with time decay
     """
     try:
-        # First handle quiz attempts
-        quiz_attempts_count = pd.DataFrame()
-        if not quiz_attempts_df.empty:
-            quiz_attempts_count = quiz_attempts_df.groupby('article').size().reset_index(name='attempt_count')
-        else:
-            quiz_attempts_count = pd.DataFrame(columns=['article', 'attempt_count'])
+        now = datetime.now(pytz.UTC)
 
-        # Then handle time spent
-        time_spent_sum = pd.DataFrame()
-        if not time_spent_df.empty:
-            time_spent_sum = time_spent_df.groupby('articleId')['timeSpent'].sum().reset_index(name='total_time_spent')
-        else:
-            time_spent_sum = pd.DataFrame(columns=['articleId', 'total_time_spent'])
+        # Simplified time decay pipeline
+        pipeline = [
+            {
+                "$vectorSearch": {
+                    "index": "vector_index",
+                    "path": "contentVector",
+                    "queryVector": query_vector,
+                    "numCandidates": limit * 3,
+                    "limit": limit * 3
+                }
+            },
+            {
+                "$addFields": {
+                    "daysOld": {
+                        "$divide": [
+                            {"$subtract": [now, {"$toDate": "$dateTime"}]},
+                            1000 * 60 * 60 * 24
+                        ]
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "category": category,
+                    "_id": {"$nin": excluded_ids}
+                }
+            },
+            {
+                "$addFields": {
+                    # Simple time decay for older articles
+                    "timeDecay": {
+                        "$divide": [
+                            1,
+                            {"$add": [1, {"$multiply": [0.1, "$daysOld"]}]}
+                        ]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "finalScore": {
+                        "$multiply": [
+                            {"$meta": "vectorSearchScore"},
+                            "$timeDecay"
+                        ]
+                    }
+                }
+            },
+            {"$sort": {"finalScore": -1}},
+            {"$limit": limit},
+            {
+                "$project": {
+                    "_id": 1,
+                    "category": 1,
+                    "dateTime": 1,
+                    "daysOld": 1,
+                    "timeDecay": 1,
+                    "vectorScore": {"$meta": "vectorSearchScore"},
+                    "finalScore": 1
+                }
+            }
+        ]
 
-        # Create trending dataframe
-        trending_df = articles_df.copy()
-
-        # Merge with quiz attempts
-        trending_df = trending_df.merge(
-            quiz_attempts_count,
-            left_on='_id',
-            right_on='article',
-            how='left'
-        )
-
-        # Merge with time spent
-        trending_df = trending_df.merge(
-            time_spent_sum,
-            left_on='_id',
-            right_on='articleId',
-            how='left'
-        )
-
-        # Convert columns to float and fill NaN values
-        # Initialize columns as float type before filling NaN
-        trending_df['attempt_count'] = trending_df['attempt_count'].astype('float64').fillna(0)
-        trending_df['total_time_spent'] = trending_df['total_time_spent'].astype('float64').fillna(0)
-
-        # Calculate normalized scores
-        max_attempts = trending_df['attempt_count'].max()
-        max_time_spent = trending_df['total_time_spent'].max()
-
-        trending_df['normalized_attempts'] = 0 if max_attempts == 0 else trending_df['attempt_count'] / max_attempts
-        trending_df['normalized_time'] = 0 if max_time_spent == 0 else trending_df['total_time_spent'] / max_time_spent
-
-        trending_df['trending_score'] = (trending_df['normalized_attempts'] + trending_df['normalized_time']) / 2
-
-        # Rest of the function remains the same...
-        trending_df['dateTime'] = pd.to_datetime(trending_df['dateTime'])
-        if trending_df['dateTime'].dt.tz is None:
-            trending_df['dateTime'] = trending_df['dateTime'].dt.tz_localize('UTC')
-
-        now = pd.Timestamp.now(tz='UTC')
-        trending_df['days_old'] = (now - trending_df['dateTime']).dt.days
-        trending_df['time_decay'] = 1 / (1 + 0.1 * trending_df['days_old'])
-
-        if user_preferred_categories:
-            category_weights = {cat_info['category']: float(cat_info.get('weight', 0))
-                              for cat_info in user_preferred_categories}
-
-            if category_weights:
-                trending_df['category_boost'] = trending_df['category'].map(
-                    lambda x: category_weights.get(x, 0)
-                )
-                max_boost = trending_df['category_boost'].max()
-                if max_boost > 0:
-                    trending_df['category_boost'] = trending_df['category_boost'] / max_boost
-
-                trending_df['final_score'] = (trending_df['trending_score'] * 0.4 +
-                                            trending_df['category_boost'] * 0.6) * trending_df['time_decay']
-            else:
-                trending_df['final_score'] = trending_df['trending_score'] * trending_df['time_decay']
-        else:
-            trending_df['final_score'] = trending_df['trending_score'] * trending_df['time_decay']
-
-        if user_preferred_categories:
-            preferred_categories = {cat_info['category'] for cat_info in user_preferred_categories}
-            preferred_count = int(num_recommendations * 0.8)
-            other_count = num_recommendations - preferred_count
-
-            preferred_recommendations = trending_df[
-                trending_df['category'].isin(preferred_categories)
-            ].nlargest(preferred_count, 'final_score')
-
-            other_recommendations = trending_df[
-                ~trending_df['category'].isin(preferred_categories)
-            ].nlargest(other_count, 'final_score')
-
-            recommended_articles = pd.concat([preferred_recommendations, other_recommendations])
-        else:
-            recommended_articles = trending_df.nlargest(num_recommendations, 'final_score')
-
-        recommended_articles = recommended_articles.sample(frac=1).reset_index(drop=True)
-
-        return recommended_articles['_id'].astype(str).tolist()
+        results = list(articles_collection.aggregate(pipeline))
+        if results:
+            logging.info(f"Vector search found {len(results)} articles for category {category}")
+            logging.info(f"Score range: {results[0]['finalScore']:.2f} to {results[-1]['finalScore']:.2f}")
+        return results
 
     except Exception as e:
-        logging.error(f"Error recommending trending articles: {str(e)}")
-        raise
+        logging.error(f"Error in vector search: {str(e)}")
+        return []
+
+def get_recommended_candidates(articles_collection, category, excluded_ids, limit):
+    """
+    Get candidate articles for a category when vector search fails
+    """
+    try:
+        now = datetime.now(pytz.UTC)
+        pipeline = [
+            {
+                "$match": {
+                    "category": category,
+                    "_id": {"$nin": excluded_ids},
+                    "dateTime": {"$gte": (now - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")}
+                }
+            },
+            {
+                "$addFields": {
+                    "daysOld": {
+                        "$divide": [
+                            {"$subtract": [now, {"$toDate": "$dateTime"}]},
+                            1000 * 60 * 60 * 24
+                        ]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "timeScore": {
+                        "$divide": [1, {"$add": [1, {"$multiply": [0.1, "$daysOld"]}]}]
+                    }
+                }
+            },
+            {
+                "$sort": {"timeScore": -1}
+            },
+            {
+                "$limit": limit
+            }
+        ]
+
+        return list(articles_collection.aggregate(pipeline))
+
+    except Exception as e:
+        logging.error(f"Error getting candidate articles: {str(e)}")
+        return []
+
+def log_recommendation_statistics(recommendations, trending_count, articles_df, start_time):
+    """Log detailed statistics about recommendations"""
+    total_time = time.time() - start_time
+
+    category_counts = {}
+    for rec in recommendations:
+        category_counts[rec['category']] = category_counts.get(rec['category'], 0) + 1
+
+    logging.info("\nFinal Recommendation Statistics:")
+    logging.info(f"Total articles recommended: {len(recommendations)}")
+    logging.info(f"Including {trending_count} trending articles")
+
+    logging.info("\nCategory Distribution:")
+    total = len(recommendations)
+    for category, count in sorted(category_counts.items(), key=lambda x: x[1], reverse=True):
+        percentage = (count/total) * 100
+        logging.info(f"  {category}: {count} articles ({percentage:.1f}%)")
+        if percentage < 5:
+            logging.warning(f"  ⚠️ Category {category} is underrepresented at {percentage:.1f}%")
+
+    diversity_score = len(category_counts) / len(set(articles_df['category'])) * 100
+    balance_score = 1 - (pd.Series(category_counts).std() / pd.Series(category_counts).mean())
+
+    logging.info(f"\nQuality Metrics:")
+    logging.info(f"• Category Coverage: {len(category_counts)}/{len(set(articles_df['category']))}")
+    logging.info(f"• Diversity Score: {diversity_score:.1f}%")
+    logging.info(f"• Category Balance Score: {balance_score:.2f}")
+    logging.info(f"• Processing Time: {total_time:.2f}s")
+
+pd.set_option('future.no_silent_downcasting', True)
 
 def update_recommendations_in_db(user_id, recommendations, updated_categories, mongo_uri):
     """
@@ -487,7 +825,6 @@ def update_recommendations_in_db(user_id, recommendations, updated_categories, m
                 }
             )
 
-        # logging.info(f"Updated recommendations and preferred categories for user {user_id}")
     except Exception as e:
         logging.error(f"Error updating recommendations in database: {str(e)}")
         raise
@@ -506,19 +843,29 @@ if __name__ == "__main__":
         mongo_uri = os.getenv("DATABASE")
 
         articles_df, quiz_attempts_df, time_spent_df = load_data_from_db(mongo_uri, user_id)
-        # logging.info(f"Loaded data shapes: articles_df={articles_df.shape}, quiz_attempts_df={quiz_attempts_df.shape}, time_spent_df={time_spent_df.shape}")
-        # logging.info(f"Articles df _id dtype: {articles_df['_id'].dtype}")
-        # logging.info(f"Quiz attempts df article dtype: {quiz_attempts_df['article'].dtype}")
-        # logging.info(f"Time spent df articleId dtype: {time_spent_df['articleId'].dtype}")
 
-        tfv, tfv_matrix = load_tfidf()
-        sig = calculate_sigmoid_kernel(tfv_matrix)
+        # Remove articles without content vectors
+        # articles_df = articles_df.dropna(subset=['contentVector'])
 
-        recommendations, updated_categories = recommend_articles(user_id, articles_df, sig, quiz_attempts_df, time_spent_df, user_preferred_categories)
+        if len(articles_df) == 0:
+            print(json.dumps({"status": "error", "message": "No vectorized articles available"}))
+            sys.exit(1)
+
+        recommendations, updated_categories = recommend_articles_with_vector_search(
+            user_id,
+            articles_df,
+            quiz_attempts_df,
+            time_spent_df,
+            user_preferred_categories
+        )
 
         if recommendations:
             update_recommendations_in_db(user_id, recommendations, updated_categories, mongo_uri)
-            print(json.dumps({"status": "success", "message": "Recommendations updated successfully", "count": len(recommendations)}))
+            print(json.dumps({
+                "status": "success",
+                "message": "Recommendations updated successfully",
+                "count": len(recommendations)
+            }))
         else:
             print(json.dumps({"status": "error", "message": "No recommendations generated"}))
 
