@@ -63,17 +63,6 @@ const findDuplicateArticles = async ({ title, mainText, keywords = [] }) => {
       article => article.score >= DUPLICACY_SETTINGS.SIMILARITY_THRESHOLD,
     )
 
-    if (duplicates.length > 0) {
-      console.log(
-        'Duplicate articles found:',
-        duplicates.map(d => ({
-          title: d.title,
-          score: d.score.toFixed(3),
-          date: new Date(d.dateTime).toISOString(),
-        })),
-      )
-    }
-
     return {
       isDuplicate: duplicates.length > 0,
       contentVector,

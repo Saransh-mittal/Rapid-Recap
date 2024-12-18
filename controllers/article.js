@@ -48,6 +48,13 @@ const {
 const {
   processDetailedArticle,
 } = require('../services/articleServicesForEndUsers/articleDetailService')
+const { generateSearchVector } = require('../utils/search.utils')
+const {
+  getSearchResultsFromCache,
+  cacheSearchResults,
+  getVectorFromCache,
+  cacheVector,
+} = require('../utils/searchCache.utils')
 
 async function allArticles(req, res) {
   const {
@@ -505,7 +512,7 @@ const extractNews = async (req, res) => {
   }
 }
 
-// @desc    Search articles with pagination
+// @desc    Search articles with pagination using vector search
 // @route   GET /api/articles/search
 // @access  Protected
 const searchArticles = asyncHandler(async (req, res) => {
@@ -517,17 +524,28 @@ const searchArticles = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Search query is required' })
   }
 
-  const filter = {}
-  if (category) {
-    filter.category = category
-  }
-
   try {
-    const totalArticles = await Article.countDocuments({
-      $text: { $search: query },
-      ...filter,
-      category: { $ne: 'onBoardingArticle' },
+    // Check exact cache match first
+    const exactCacheResults = await getSearchResultsFromCache({
+      query,
+      page: pageNumber,
+      limit: limitNumber,
+      category,
     })
+
+    if (exactCacheResults) {
+      console.log('Exact cache match found')
+      return res.json(exactCacheResults)
+    }
+
+    // Check cache for existing vector
+    let searchVector = await getVectorFromCache(query)
+
+    if (!searchVector) {
+      // Generate and cache vector if not found
+      searchVector = await generateSearchVector({ searchQuery: query })
+      await cacheVector(query, searchVector)
+    }
 
     // Get dates for time-based boosting
     const now = new Date()
@@ -535,104 +553,122 @@ const searchArticles = asyncHandler(async (req, res) => {
     const threeDaysAgo = new Date(now - 3 * 24 * 60 * 60 * 1000)
     const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000)
 
-    const articles = await Article.aggregate([
-      // Initial match to filter articles
+    const pipeline = [
+      {
+        $vectorSearch: {
+          index: 'vector_index',
+          path: 'contentVector',
+          queryVector: searchVector,
+          numCandidates: 2000,
+          limit: 1000,
+        },
+      },
       {
         $match: {
-          $text: { $search: query },
-          ...filter,
+          vectorized: true,
           category: { $ne: 'onBoardingArticle' },
+          ...(category && { category }),
         },
       },
-      // Add text score and parse date
       {
         $addFields: {
-          textScore: { $meta: 'textScore' },
           dateObj: { $dateFromString: { dateString: '$dateTime' } },
-        },
-      },
-      // Calculate time-based boost and final score
-      {
-        $addFields: {
+          similarityScore: { $meta: 'vectorSearchScore' },
           timeBoost: {
             $switch: {
               branches: [
-                // Last 24 hours: 5x boost
                 {
-                  case: { $gte: ['$dateObj', oneDayAgo] },
+                  case: {
+                    $gte: [
+                      { $dateFromString: { dateString: '$dateTime' } },
+                      oneDayAgo,
+                    ],
+                  },
                   then: 5,
                 },
-                // 1-3 days: 3x boost
                 {
-                  case: { $gte: ['$dateObj', threeDaysAgo] },
+                  case: {
+                    $gte: [
+                      { $dateFromString: { dateString: '$dateTime' } },
+                      threeDaysAgo,
+                    ],
+                  },
                   then: 3,
                 },
-                // 3-7 days: 2x boost
                 {
-                  case: { $gte: ['$dateObj', sevenDaysAgo] },
+                  case: {
+                    $gte: [
+                      { $dateFromString: { dateString: '$dateTime' } },
+                      sevenDaysAgo,
+                    ],
+                  },
                   then: 2,
                 },
-                // Older than 7 days: no boost
               ],
               default: 1,
             },
           },
-          // Combine scores: recency (90%) + text relevance (10%)
+        },
+      },
+      {
+        $addFields: {
           finalScore: {
-            $add: [
-              // Time-based score (90% weight)
+            $multiply: [
               {
-                $multiply: [
+                $add: [
+                  { $multiply: ['$similarityScore', 0.8] },
                   {
-                    $divide: [
-                      { $subtract: ['$dateObj', new Date(0)] },
-                      1000 * 60 * 60 * 24, // Convert to days
+                    $multiply: [
+                      {
+                        $divide: [
+                          { $subtract: ['$dateObj', new Date(0)] },
+                          1000 * 60 * 60 * 24,
+                        ],
+                      },
+                      0.2,
                     ],
                   },
-                  0.9,
                 ],
               },
-              // Text relevance score (10% weight)
-              {
-                $multiply: [{ $meta: 'textScore' }, 0.1],
-              },
+              '$timeBoost',
             ],
           },
         },
       },
-      // Multiply final score by time boost
-      {
-        $addFields: {
-          finalScore: { $multiply: ['$finalScore', '$timeBoost'] },
-        },
-      },
-      // Sort by final score
       { $sort: { finalScore: -1 } },
-      // Pagination
-      { $skip: (pageNumber - 1) * limitNumber },
-      { $limit: limitNumber },
-      // Project needed fields
-      {
-        $project: {
-          url: 1,
-          dateTime: 1,
-          author: 1,
-          hindiAuthor: 1,
-          title: 1,
-          hindiTitle: 1,
-          mainText: 1,
-          hindiMainText: 1,
-          imgURL: 1,
-          quiz: 1,
-          userQuizStatus: 1,
-          category: 1,
-          relatedArticles: 1,
-          avgReadTime: 1,
-          quizAttemptCnt: 1,
-          _id: 1,
+    ]
+
+    const [totalResults, articles] = await Promise.all([
+      Article.aggregate([...pipeline, { $count: 'total' }]),
+      Article.aggregate([
+        ...pipeline,
+        { $skip: (pageNumber - 1) * limitNumber },
+        { $limit: limitNumber },
+        {
+          $project: {
+            url: 1,
+            dateTime: 1,
+            author: 1,
+            hindiAuthor: 1,
+            title: 1,
+            hindiTitle: 1,
+            mainText: 1,
+            hindiMainText: 1,
+            imgURL: 1,
+            quiz: 1,
+            userQuizStatus: 1,
+            category: 1,
+            relatedArticles: 1,
+            avgReadTime: 1,
+            quizAttemptCnt: 1,
+            _id: 1,
+          },
         },
-      },
+      ]),
     ])
+
+    const totalArticles = totalResults.length > 0 ? totalResults[0].total : 0
+    const totalPages = Math.ceil(totalArticles / limitNumber)
 
     const processedArticles = await Promise.all(
       articles.map(async article => {
@@ -655,17 +691,35 @@ const searchArticles = asyncHandler(async (req, res) => {
       }),
     )
 
-    const totalPages = Math.ceil(totalArticles / limitNumber)
-
-    res.json({
+    const results = {
       articles: processedArticles,
       currentPage: pageNumber,
       totalPages,
       totalArticles,
       hasMore: pageNumber < totalPages,
+    }
+
+    // Cache the results
+    await cacheSearchResults({
+      query,
+      page: pageNumber,
+      limit: limitNumber,
+      category,
+      results,
     })
+
+    res.json(results)
   } catch (error) {
     console.error('Error in searchArticles:', error)
+    if (error.code === 40602) {
+      return res.status(400).json({
+        message:
+          'Vector search is not properly configured. Please ensure vector index is created.',
+      })
+    }
+    if (error.name === 'VectorSearchError') {
+      return res.status(400).json({ message: 'Invalid search parameters' })
+    }
     res.status(500).json({ message: 'Server error while searching articles' })
   }
 })
