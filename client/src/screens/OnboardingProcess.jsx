@@ -204,7 +204,7 @@ const OnboardingProcess = ({ setIsGuestLoggedin }) => {
         await updateOnboardingProgress(currentStepId, nextStepId, rawData)
         setCurrentStepId(nextStepId)
 
-        if (nextStepId === ONBOARDING_STEPS.CATEGORIES) {
+        if (nextStepId === ONBOARDING_STEPS.QUIZ_QUESTION) {
           axios.get(
             `/api/recommendation?page=${1}&pageSize=18&lang=${i18n.language}`,
           )

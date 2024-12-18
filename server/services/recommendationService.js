@@ -9,6 +9,12 @@ const {
 const path = require('path')
 const { hindiConverter } = require('../utils/article.utils')
 const { formatPreferredCategories } = require('../utils/user.utils')
+const {
+  updateRecommendationCache,
+} = require('../utils/cacheInvalidation.utils')
+const {
+  eliminateArticlesWithLongTimeSpent,
+} = require('../utils/recommendation.utils')
 
 const runPythonScript = (scriptPath, userId, userPreferredCategories) => {
   return new Promise((resolve, reject) => {
@@ -63,7 +69,8 @@ const updateRecommendations = async userId => {
       __dirname,
       '..',
       'scripts',
-      'recommender.py',
+      'recommender',
+      'main.py',
     )
     await runPythonScript(
       pythonScriptPath,
@@ -278,10 +285,104 @@ async function getRecommendationsForNotification(userId, topN = 20) {
   }
 }
 
+const processRecommendationArticleElimination = async (
+  userId,
+  options = {},
+) => {
+  const { eliminationThreshold = 20, logElimination = true } = options
+
+  try {
+    // Get elimination results with new structure
+    const eliminationResult = await eliminateArticlesWithLongTimeSpent({
+      userId,
+      eliminationThreshold,
+    })
+
+    // Initialize cacheUpdateResult outside the if block
+    let cacheUpdateResult = {
+      totalKeysUpdated: 0,
+      removedArticleCount: 0,
+    }
+
+    if (
+      eliminationResult.eliminated > 0 &&
+      eliminationResult.matchingIds?.length > 0
+    ) {
+      // Update cache with matched IDs
+      cacheUpdateResult = updateRecommendationCache(
+        userId,
+        eliminationResult.matchingIds,
+      )
+
+      if (logElimination) {
+        console.log(`\nElimination Results:`)
+        console.log(
+          `- ${eliminationResult.eliminated} articles eliminated for user ${userId}`,
+        )
+        console.log(
+          `- Original count: ${eliminationResult.updateResult.originalCount}`,
+        )
+        console.log(`- Final count: ${eliminationResult.updateResult.newCount}`)
+        console.log(
+          `- Update success: ${eliminationResult.updateResult.success}`,
+        )
+        console.log(`\nCache Update Results:`)
+        console.log(
+          `- Cache keys updated: ${cacheUpdateResult.totalKeysUpdated}`,
+        )
+        console.log(
+          `- Articles removed from cache: ${cacheUpdateResult.removedArticleCount}`,
+        )
+      }
+    } else if (logElimination) {
+      console.log('\nNo articles eliminated - no cache update needed')
+    }
+
+    return {
+      success: eliminationResult.updateResult?.success || false,
+      eliminated: eliminationResult.eliminated || 0,
+      matchingIds: eliminationResult.matchingIds || [],
+      statistics: eliminationResult.updateResult
+        ? {
+            originalCount: eliminationResult.updateResult.originalCount,
+            newCount: eliminationResult.updateResult.newCount,
+            difference: eliminationResult.updateResult.difference || 0,
+          }
+        : {
+            originalCount: 0,
+            newCount: 0,
+            difference: 0,
+          },
+      cacheUpdate: {
+        keysUpdated: cacheUpdateResult.totalKeysUpdated,
+        articlesRemoved: cacheUpdateResult.removedArticleCount,
+      },
+    }
+  } catch (error) {
+    console.error('Error in recommendation article elimination:', error)
+    return {
+      success: false,
+      eliminated: 0,
+      matchingIds: [],
+      statistics: {
+        originalCount: 0,
+        newCount: 0,
+        difference: 0,
+      },
+      cacheUpdate: {
+        keysUpdated: 0,
+        articlesRemoved: 0,
+      },
+      error: error.message,
+    }
+  }
+}
+
 module.exports = {
   getRecommendations,
   updateRecommendations,
   generateRecommendations,
   getRecommendationsForNotification,
   getArticlePageRecommendations,
+  processRecommendationArticleElimination,
 }
