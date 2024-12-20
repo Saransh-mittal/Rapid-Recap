@@ -373,11 +373,11 @@ class BotVerifier {
       ...data,
     }
 
-    // if (process.env.NODE_ENV === 'production') {
-    //   console.log(JSON.stringify(logData))
-    // } else {
-    //   console.log(`[${timestamp}] Bot Verification:`, event, data)
-    // }
+    if (process.env.NODE_ENV === 'production') {
+      console.log(JSON.stringify(logData))
+    } else {
+      console.log(`[${timestamp}] Bot Verification:`, event, data)
+    }
   }
 }
 
