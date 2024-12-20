@@ -92,7 +92,7 @@ class BotVerifier {
         ipRanges: ['199.16.', '199.59.'],
         patterns: ['Twitterbot/'],
       },
-      Seobility: {
+      SeobilityBot: {
         domains: ['.seobility.net'], // Seobility's domain
         ipRanges: [
           '116.202.', // Range for IPs starting with 116.202
