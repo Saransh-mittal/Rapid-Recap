@@ -335,8 +335,8 @@ class BotVerifier {
   static async isLegitimateBot(req) {
     const userAgent = req.headers['user-agent'] || ''
     const ip = this.getRealIP(req)
-    console.log('IP:', ip)
-    console.log('User-Agent:', userAgent)
+    // console.log('IP:', ip)
+    // console.log('User-Agent:', userAgent)
     // Debug logging
     this.log('bot-check-started', {
       detectedIP: ip,
@@ -355,10 +355,10 @@ class BotVerifier {
       }
       return devResult
     }
-    console.log(
-      'has valid useragent or not :',
-      this.hasValidUserAgent(userAgent),
-    )
+    // console.log(
+    //   'has valid useragent or not :',
+    //   this.hasValidUserAgent(userAgent),
+    // )
     // Production checks
     if (!this.hasValidUserAgent(userAgent)) {
       this.log('invalid-user-agent', { userAgent, ip })
