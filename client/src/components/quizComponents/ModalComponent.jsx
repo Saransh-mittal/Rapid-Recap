@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, lazy, Suspense } from 'react'
+import React, { useMemo, useCallback, lazy, Suspense, useEffect } from 'react'
 import {
   Button,
   Modal,
@@ -99,6 +99,28 @@ const ModalComponent = ({
     const action = buttonAction()
     action()
   }
+
+  useEffect(() => {
+    if (isOpen) {
+      // Push a new state when modal opens
+      window.history.pushState({ modal: true }, '', window.location.pathname)
+
+      // Handle back button press
+      const handleBackButton = event => {
+        // Prevent default only if we're handling the modal
+        if (isOpen) {
+          event.preventDefault()
+          onClose()
+        }
+      }
+      window.addEventListener('popstate', handleBackButton)
+
+      // Cleanup
+      return () => {
+        window.removeEventListener('popstate', handleBackButton)
+      }
+    }
+  }, [isOpen])
 
   return (
     <Modal

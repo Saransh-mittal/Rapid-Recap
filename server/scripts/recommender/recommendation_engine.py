@@ -13,6 +13,7 @@ from utils import log_recommendation_statistics
 from trending_articles import get_trending_articles
 from preference_calculator import calculate_preference_score
 from parallel_recommendation import get_recommendations_parallel
+from utils import get_top_weighted_categories
 
 
 # Configure logger
@@ -192,14 +193,7 @@ def recommend_articles_for_new_users(articles_collection, user_preferred_categor
 
     try:
         # Filter categories
-        non_inferred_categories = [
-            cat['category'] for cat in user_preferred_categories
-            if not cat.get('isInferred', False)
-        ]
-
-        if not non_inferred_categories:
-            logger.warning("No non-inferred categories found for new user")
-            return []
+        preferred_categories = get_top_weighted_categories(user_preferred_categories)
 
         # Calculate distribution
         num_preferred = int(num_recommendations * 0.8)
@@ -209,7 +203,7 @@ def recommend_articles_for_new_users(articles_collection, user_preferred_categor
         preferred_start = time.time()
         preferred_articles = get_scored_articles_by_category(
             articles_collection,
-            non_inferred_categories,
+            preferred_categories,
             num_preferred
         )
         process_metrics['preferred_time'] = time.time() - preferred_start
@@ -218,7 +212,7 @@ def recommend_articles_for_new_users(articles_collection, user_preferred_categor
         other_categories = [
             cat for cat in set(articles_collection.find(
                 {}, {"category": 1}).distinct('category')
-            ) if cat not in non_inferred_categories
+            ) if cat not in preferred_categories
         ]
         other_articles = get_scored_articles_by_category(
             articles_collection,
@@ -253,7 +247,7 @@ def recommend_articles_for_new_users(articles_collection, user_preferred_categor
         total_time = time.time() - start_time
         logger.info(f"New user recommendation metrics - "
                    f"Articles: {len(sorted_articles)}, "
-                   f"Categories: {len(non_inferred_categories)}, "
+                   f"Categories: {len(preferred_categories)}, "
                    f"Processing time: {total_time:.2f}s")
 
         return [str(article['_id']) for article in sorted_articles[:num_recommendations]]
@@ -375,7 +369,13 @@ def handle_new_user_recommendations(trending_articles, user_preferred_categories
                 articles_collection,
                 user_preferred_categories,
                 num_recommendations
-            )
+            ),{
+                cat_info['category']: {
+                    'weight': float(cat_info.get('weight', 0)),
+                    'isInferred': bool(cat_info.get('isInferred', False))
+                }
+                for cat_info in user_preferred_categories
+            }
 
         process_time = time.time() - start_time
         logger.info(f"New user recommendations generated in {process_time:.2f}s")

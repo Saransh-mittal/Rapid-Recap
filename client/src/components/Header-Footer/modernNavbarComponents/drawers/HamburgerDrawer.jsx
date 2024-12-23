@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useMemo } from 'react'
+import React, { lazy, Suspense, useCallback, useEffect, useMemo } from 'react'
 import {
   Avatar,
   Badge,
@@ -156,6 +156,28 @@ const HamburgerDrawer = ({
       )
     })
   }, [navItems, notLogined, onClose, navLinkRefs, isAuthenticated, user, t])
+
+  useEffect(() => {
+    if (isOpen) {
+      // Push a new state when modal opens
+      window.history.pushState({ modal: true }, '', window.location.pathname)
+
+      // Handle back button press
+      const handleBackButton = event => {
+        // Prevent default only if we're handling the modal
+        if (isOpen) {
+          event.preventDefault()
+          onClose()
+        }
+      }
+      window.addEventListener('popstate', handleBackButton)
+
+      // Cleanup
+      return () => {
+        window.removeEventListener('popstate', handleBackButton)
+      }
+    }
+  }, [isOpen])
 
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="full">
