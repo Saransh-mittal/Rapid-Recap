@@ -43,6 +43,8 @@ const NotificationModal = React.lazy(() =>
 const UpgradeModal = React.lazy(() =>
   import('./components/homeComponents/UpgradeModal'),
 )
+import { RewardDisplay } from './components/rewards'
+
 import {
   addNoteMessage,
   fetchUnreadNoteMessages,
@@ -514,6 +516,9 @@ const App = () => {
             selectedNotification={getLatestWeeklyReportUpdate()}
           />
         )}
+      </Suspense>
+      <Suspense fallback={null}>
+        <RewardDisplay />
       </Suspense>
     </>
   )
