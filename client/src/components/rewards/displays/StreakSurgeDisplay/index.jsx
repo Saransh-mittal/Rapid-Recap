@@ -45,6 +45,7 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
       type="STREAK_SURGE"
     >
       <VStack
+        key={'streak-surge-display'}
         spacing={8}
         w="full"
         maxW="600px"

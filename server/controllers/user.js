@@ -1297,7 +1297,10 @@ const streakChecker = async (req, res) => {
   }
 }
 
-const quinBoostChecker = async (req, res) => {
+// @desc   Get user streak on every refresh of the page
+// @route  GET /api/user/quinBoostChecker
+// @access Private
+const quinBoostChecker = asyncHandler(async (req, res) => {
   const userId = req.user._id
   try {
     const user = await User.findById(userId).populate({
@@ -1310,20 +1313,31 @@ const quinBoostChecker = async (req, res) => {
 
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)
+
+    // Reset expired boosts
     const quinBoostsToReset = user.quinBoosts.filter(quinBoost => {
       return quinBoost.quinBoost ? quinBoost.quinBoost.createdAt < today : false
     })
 
-    // Set boosted to false for filtered quinBoosts
     for (const quinBoost of quinBoostsToReset) {
       quinBoost.boosted = false
+      quinBoost.claimed = true // Mark expired boosts as claimed
     }
     await user.save()
+
     const quizAttempts = await QuizAttempt.find({
       user: userId,
-      createdAt: { $gte: today }, // Find documents created today or later
+      createdAt: { $gte: today },
     })
+
     const quizLeftToGetQuizBoost = 5 - (quizAttempts.length % 6)
+
+    // Check for unclaimed but active quinBoost
+    const hasUnclaimedBoost = user.quinBoosts.some(
+      boost =>
+        boost.boosted && !boost.claimed && boost.quinBoost?.createdAt >= today,
+    )
+
     const isQuinBoostAvailable =
       quizLeftToGetQuizBoost === 0 && quizAttempts.length > 0
 
@@ -1333,6 +1347,7 @@ const quinBoostChecker = async (req, res) => {
         createdAt: { $gte: today },
         quizCount: quizAttempts.length,
       })
+
       if (!existingQuinBoost) {
         const quinBoost = new QuinBoost({
           user: user._id,
@@ -1340,36 +1355,86 @@ const quinBoostChecker = async (req, res) => {
           createdAt: new Date(),
         })
         await quinBoost.save()
+
         user.quinBoosts.push({
           quinBoost: quinBoost._id,
           boosted: true,
+          claimed: false, // Initialize as unclaimed
         })
         await user.save()
+
         const notificationTitle = 'Quin Boost Activated!'
         const notificationText = quinBoostUnlockTemplate(
           user.todayBoost ? 1.75 : 1.5,
-        ) // Using template for inbox notification
+        )
 
         const newNotification = new ApplicationUpdates({
           userId: user._id,
           title: notificationTitle,
-          mainText: notificationText, // HTML template for the notification
-          img: '', // Optional image if needed
+          mainText: notificationText,
+          img: '',
           read: false,
         })
 
         await newNotification.save()
+        hasUnclaimedBoost = true
       }
     }
+
     res.status(200).json({
       quizLeftToGetQuizBoost,
       isQuinBoostAvailable,
+      hasUnclaimedBoost,
+      multiplier: hasUnclaimedBoost ? (user.todayBoost ? 1.75 : 1.5) : 1,
     })
   } catch (error) {
+    console.error(error)
     res.status(500).json({ error: 'Internal server error' })
-    console.log(error)
   }
-}
+})
+
+// @desc   Claim the quinBoost
+// @route  GET /api/user/claim-quinboost
+// @access Private
+const claimQuinBoost = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId).populate({
+      path: 'quinBoosts.quinBoost',
+      select: 'createdAt',
+    })
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
+
+    // Find the first unclaimed, active boost
+    const boostIndex = user.quinBoosts.findIndex(
+      boost =>
+        boost.boosted && !boost.claimed && boost.quinBoost?.createdAt >= today,
+    )
+
+    if (boostIndex === -1) {
+      return res.status(400).json({ error: 'No unclaimed quinBoost found' })
+    }
+
+    // Mark the boost as claimed
+    user.quinBoosts[boostIndex].claimed = true
+    await user.save()
+
+    res.status(200).json({
+      message: 'QuinBoost claimed successfully',
+      multiplier: user.todayBoost ? 1.75 : 1.5,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
 
 const updateNewSeasonModal = async (req, res) => {
   try {
@@ -1938,4 +2003,5 @@ module.exports = {
   confirmDeleteAccount,
   updateOnboardingProgress,
   getOnboardingProgress,
+  claimQuinBoost,
 }

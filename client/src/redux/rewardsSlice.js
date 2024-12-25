@@ -14,6 +14,9 @@ export const rewardsSlice = createSlice({
   reducers: {
     addReward: (state, action) => {
       // Add id if not provided
+      // dont add if already exists
+      if (state.queue.find(item => item.reward.type === action.payload.type))
+        return
       const reward = {
         ...action.payload,
         id: action.payload.id || uuidv4(),
@@ -48,8 +51,6 @@ export const rewardsSlice = createSlice({
 
     clearCurrentReward: state => {
       state.currentReward = null
-      // If there are more rewards in queue, show next one
-      console.log(state.queue.length)
       if (state.queue.length > 0) {
         const [nextReward, ...remainingQueue] = state.queue
         state.currentReward = nextReward

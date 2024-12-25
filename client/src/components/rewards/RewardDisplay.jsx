@@ -15,8 +15,8 @@ import {
 import { REWARD_TYPES } from './constants/rewardTypes'
 
 // Lazy load components properly
-const RQMBoostDisplay = React.lazy(() =>
-  import('./displays/RQMBoostDisplay/index').then(module => ({
+const QuinBoostDisplay = React.lazy(() =>
+  import('./displays/QuinBoostDisplay/index').then(module => ({
     default: module.default || module,
   })),
 )
@@ -34,7 +34,7 @@ const StreakSurgeDisplay = React.lazy(() =>
 
 // Map of reward types to their components
 const rewardComponents = {
-  [REWARD_TYPES.RQM_BOOST]: RQMBoostDisplay,
+  [REWARD_TYPES.QUIN_BOOST]: QuinBoostDisplay,
   [REWARD_TYPES.IQ_BOOST]: IQBoostDisplay,
   [REWARD_TYPES.STREAK_SURGE]: StreakSurgeDisplay,
 }

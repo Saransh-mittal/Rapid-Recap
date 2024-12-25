@@ -42,6 +42,7 @@ const {
   confirmDeleteAccount,
   updateOnboardingProgress,
   getOnboardingProgress,
+  claimQuinBoost,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -90,6 +91,7 @@ router
   .get(Authenticate, getUserTournamentData)
 // router.route("/mailForQuinBoost").get(mailForQuinBoost);
 router.post('/deleteAccount', Authenticate, deleteAccount)
+router.post('/claim-quinboost', Authenticate, claimQuinBoost)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router

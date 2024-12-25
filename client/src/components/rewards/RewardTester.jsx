@@ -11,7 +11,7 @@ export const RewardTester = () => {
   const showRQMBoost = () => {
     dispatch(
       addReward({
-        type: REWARD_TYPES.RQM_BOOST,
+        type: REWARD_TYPES.QUIN_BOOST,
         title: 'RQM Boost Unlocked!',
         description:
           'Your dedication earned you a bonus! Next quiz score will be multiplied by 1.5x.',
