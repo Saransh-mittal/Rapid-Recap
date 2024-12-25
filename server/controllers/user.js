@@ -1186,30 +1186,32 @@ const longestStreakCalculatorOfAllUsers = async (req, res) => {
 // @desc  Get user streak on every refresh of the page
 // @route GET /api/user/streakChecker
 // @access Private
-const streakChecker = async (req, res) => {
+const streakChecker = asyncHandler(async (req, res) => {
   const userId = req.user._id
   try {
     const user = await User.findById(userId)
 
-    // Check if the latest attempt is from yesterday
     const today = new Date()
-    today.setUTCHours(0, 0, 0, 0) // Set time to start of the day
+    today.setUTCHours(0, 0, 0, 0)
     const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
     const pastStreak = user.streak
     let isRevivalPeriod = false
     let streakBeforeBreak = 0
     let remainingTimeBeforeRevival = null
 
+    // Check and handle revival period
     if (
       user.revivalPeriodEnd &&
       new Date().getTime() > user.revivalPeriodEnd.getTime()
     ) {
-      // Revival period ended without success
       user.revivalPeriodEnd = null
     }
+
     if (user.streakExpiry.getTime() < tomorrow.getTime()) {
       user.todaysQuizCnt = 0
     }
+
+    // Handle streak expiry
     if (today.getTime() > user.streakExpiry.getTime()) {
       if (user.streak >= 5 && user.revivalPeriodEnd === null) {
         user.streakBeforeBreak = user.streak
@@ -1221,16 +1223,18 @@ const streakChecker = async (req, res) => {
         remainingTimeBeforeRevival =
           user.revivalPeriodEnd.getTime() - today.getTime()
         isRevivalPeriod = remainingTimeBeforeRevival <= 0 ? false : true
+
         if (remainingTimeBeforeRevival < 0) {
           user.revivalPeriodEnd = null
           user.streakBeforeBreak = 0
         }
       }
-      // Reset streak
+
       user.streak = 0
       user.streakExpiry = new Date(today.getTime() + 24 * 60 * 60 * 1000)
       user.todayBoost = false
       await user.save()
+
       return res.status(200).json({
         streak: 0,
         pastStreak,
@@ -1247,31 +1251,42 @@ const streakChecker = async (req, res) => {
       isRevivalPeriod = true
       streakBeforeBreak = user.streakBeforeBreak
     }
+
+    // Check for streak surge eligibility
     const isBoosted =
       user.streak > 0 &&
       user.streak % 7 === 0 &&
       user.streakExpiry.getTime() === tomorrow.getTime()
-    user.todayBoost = isBoosted
-    let xpAwarded = 0
-    let seven_day_streak = false
+
+    // // Check if the streak surge is already claimed today
     const checkIfAlreadyAwarded = await Activity.find({
       userId: user._id,
       type: activityTypes.SEVEN_DAY_STREAK.type,
       timestamp: { $gte: today },
     })
 
+    const hasUnclaimedStreakSurge =
+      isBoosted && !user.todayBoost && checkIfAlreadyAwarded.length === 0
+    // user.todayBoost = isBoosted
+
+    // let xpAwarded = 0
+    let seven_day_streak = false
+
+    // Handle rewards and XP
     if (
       isBoosted &&
-      user.todaysQuizCnt === 1 &&
-      checkIfAlreadyAwarded.length === 0
+      user.todaysQuizCnt === 1
+      // && checkIfAlreadyAwarded.length === 0
     ) {
-      xpAwarded = await logActivity({
-        userInGameName: user.inGameName,
-        type: activityTypes.SEVEN_DAY_STREAK.type,
-        date: today,
-      })
+      // xpAwarded = await logActivity({
+      //   userInGameName: user.inGameName,
+      //   type: activityTypes.SEVEN_DAY_STREAK.type,
+      //   date: today,
+      // })
       seven_day_streak = true
     }
+
+    // Update user stats
     if (user.streak > user.longestStreak) {
       user.longestStreak = user.streak
     }
@@ -1280,6 +1295,7 @@ const streakChecker = async (req, res) => {
     }
     await user.save()
 
+    // Send response
     res.status(200).json({
       streak: user.streak,
       longestStreak: user.longestStreak,
@@ -1289,13 +1305,64 @@ const streakChecker = async (req, res) => {
       remainingTimeBeforeRevival,
       todaysQuizAttemptsCount: user.todaysQuizCnt,
       seven_day_streak,
+      // xpAwarded,
+      xpAward: activityTypes.SEVEN_DAY_STREAK.xp,
+      hasUnclaimedStreakSurge,
+      multiplier: isBoosted ? 1.5 : 1,
+    })
+  } catch (error) {
+    console.error('Streak checker error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// @desc   Claim the streak surge
+// @route  GET /api/user/claim-streak-surge
+// @access Private
+const claimStreakSurge = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
+
+    // Verify the streak surge is valid
+    if (!user || !user.streak || user.streak % 7 !== 0) {
+      return res.status(400).json({ error: 'No valid streak surge available' })
+    }
+
+    // Check if already claimed
+    const alreadyClaimed = await Activity.findOne({
+      userId: user._id,
+      type: activityTypes.SEVEN_DAY_STREAK.type,
+      timestamp: { $gte: today },
+    })
+
+    if (alreadyClaimed && user.todayBoost) {
+      return res.status(400).json({ error: 'Streak surge already claimed' })
+    }
+
+    // Award XP and mark as claimed
+    const xpAwarded = await logActivity({
+      userInGameName: user.inGameName,
+      type: activityTypes.SEVEN_DAY_STREAK.type,
+      date: today,
+    })
+
+    // Update user
+    user.todayBoost = true
+    await user.save()
+
+    res.status(200).json({
+      message: 'Streak surge claimed successfully',
       xpAwarded,
     })
   } catch (error) {
+    console.error('Error claiming streak surge:', error)
     res.status(500).json({ error: 'Internal server error' })
-    console.log(error)
   }
-}
+})
 
 // @desc   Get user streak on every refresh of the page
 // @route  GET /api/user/quinBoostChecker
@@ -1333,7 +1400,7 @@ const quinBoostChecker = asyncHandler(async (req, res) => {
     const quizLeftToGetQuizBoost = 5 - (quizAttempts.length % 6)
 
     // Check for unclaimed but active quinBoost
-    const hasUnclaimedBoost = user.quinBoosts.some(
+    let hasUnclaimedBoost = user.quinBoosts.some(
       boost =>
         boost.boosted && !boost.claimed && boost.quinBoost?.createdAt >= today,
     )
@@ -2004,4 +2071,5 @@ module.exports = {
   updateOnboardingProgress,
   getOnboardingProgress,
   claimQuinBoost,
+  claimStreakSurge,
 }

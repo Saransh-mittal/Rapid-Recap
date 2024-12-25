@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import BaseRewardDisplay from '../../common/BaseRewardDisplay'
 import { RewardIcon, RewardCard } from './components'
 import useRewardState from '../../hooks/useRewardState'
+import { claimStreakSurge } from '../../../../utils/quiz.utils'
 
 // Map for dynamic icons based on reward title
 const REWARD_ICONS = {
@@ -41,7 +42,10 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
     <BaseRewardDisplay
       reward={reward}
       claimed={claimed}
-      onClaim={handleClaim}
+      onClaim={() => {
+        claimStreakSurge()
+        handleClaim()
+      }}
       type="STREAK_SURGE"
     >
       <VStack
@@ -128,7 +132,10 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                     transform: 'scale(1.02)',
                     boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)',
                   }}
-                  onClick={handleClaim}
+                  onClick={() => {
+                    claimStreakSurge()
+                    handleClaim()
+                  }}
                   transition="all 0.3s ease"
                 >
                   <Gift size={22} />

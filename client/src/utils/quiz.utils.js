@@ -52,13 +52,21 @@ const claimQuinBoost = async () => {
 }
 
 const dailyStreakCheckerAndUpdater = async dispatch => {
-  console.log('Checking daily streak...')
   try {
     await dispatch(fetchDailyStreak()).unwrap()
-    // Optional: Do something with the result if needed
   } catch (error) {
     console.error('Failed to fetch daily streak:', error)
-    // Optional: Handle the error (e.g., show a notification to the user)
+  }
+}
+
+// Add claim endpoint for streak surge
+const claimStreakSurge = async () => {
+  try {
+    const response = await axios.post('/api/user/claim-streak-surge')
+    return response.data
+  } catch (error) {
+    console.error('Error claiming streak surge:', error)
+    throw error
   }
 }
 
@@ -98,4 +106,5 @@ export {
   dailyStreakCheckerAndUpdater,
   parseQuizData,
   claimQuinBoost,
+  claimStreakSurge,
 }
