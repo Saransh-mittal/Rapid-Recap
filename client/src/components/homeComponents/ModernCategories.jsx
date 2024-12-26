@@ -152,7 +152,7 @@ const ModernCategories = ({
   return (
     <Box
       position="fixed"
-      top={!isAuthenticated ? '75px' : '65px'}
+      top={!isAuthenticated ? '75px' : '75px'}
       left={2}
       zIndex={900}
       maxH="calc(100vh - 80px)"

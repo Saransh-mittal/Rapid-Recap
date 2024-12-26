@@ -1,93 +1,20 @@
 const { spawn } = require('child_process')
-const fs = require('fs').promises
-const mongoose = require('mongoose')
 const User = require('../model/userSchema')
 const Article = require('../model/articleSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
-const TimeSpent = require('../model/timeSpentSchema')
 const {
   Recommendation,
   NotifiedArticles,
 } = require('../model/recommendationSchema')
-const { Parser } = require('json2csv')
 const path = require('path')
 const { hindiConverter } = require('../utils/article.utils')
-const cache = require('memory-cache')
 const { formatPreferredCategories } = require('../utils/user.utils')
-
-async function ensureDirectoryExistence(filePath) {
-  const dirname = path.dirname(filePath)
-  try {
-    await fs.access(dirname)
-  } catch (err) {
-    await fs.mkdir(dirname, { recursive: true })
-  }
-}
-
-function convertToCSV(data) {
-  const json2csvParser = new Parser()
-  return json2csvParser.parse(data)
-}
-
-async function exportDataToCSV() {
-  const articlesPromise = Article.aggregate([
-    {
-      $match: {
-        dateTime: { $gte: '2024-04-01T00:00:00' },
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        author: 1,
-        title: 1,
-        mainText: 1,
-        category: 1,
-        dateTime: 1,
-      },
-    },
-  ])
-
-  const quizAttemptsPromise = QuizAttempt.find(
-    {
-      createdAt: { $gte: '2024-04-01T00:00:00' },
-    },
-    {
-      _id: 1,
-      user: 1,
-      article: 1,
-      RQM_score: 1,
-      userPercentile: 1,
-      createdAt: 1,
-    },
-  ).lean()
-
-  const timeSpentPromise = TimeSpent.find({}).lean()
-
-  const [articles, quizAttempts, timeSpent] = await Promise.all([
-    articlesPromise,
-    quizAttemptsPromise,
-    timeSpentPromise,
-  ])
-
-  const filePaths = [
-    path.join(__dirname, '..', 'data', 'csv', 'articles.csv'),
-    path.join(__dirname, '..', 'data', 'csv', 'quiz_attempts.csv'),
-    path.join(__dirname, '..', 'data', 'csv', 'time_spent.csv'),
-  ]
-
-  await Promise.all(
-    filePaths.map(filePath => ensureDirectoryExistence(filePath)),
-  )
-
-  await Promise.all([
-    fs.writeFile(filePaths[0], convertToCSV(articles)),
-    fs.writeFile(filePaths[1], convertToCSV(quizAttempts)),
-    fs.writeFile(filePaths[2], convertToCSV(timeSpent)),
-  ])
-
-  console.log('CSV files created successfully')
-}
+const {
+  updateRecommendationCache,
+} = require('../utils/cacheInvalidation.utils')
+const {
+  eliminateArticlesWithLongTimeSpent,
+} = require('../utils/recommendation.utils')
 
 const runPythonScript = (scriptPath, userId, userPreferredCategories) => {
   return new Promise((resolve, reject) => {
@@ -142,7 +69,8 @@ const updateRecommendations = async userId => {
       __dirname,
       '..',
       'scripts',
-      'recommender.py',
+      'recommender',
+      'main.py',
     )
     await runPythonScript(
       pythonScriptPath,
@@ -357,11 +285,104 @@ async function getRecommendationsForNotification(userId, topN = 20) {
   }
 }
 
+const processRecommendationArticleElimination = async (
+  userId,
+  options = {},
+) => {
+  const { eliminationThreshold = 20, logElimination = true } = options
+
+  try {
+    // Get elimination results with new structure
+    const eliminationResult = await eliminateArticlesWithLongTimeSpent({
+      userId,
+      eliminationThreshold,
+    })
+
+    // Initialize cacheUpdateResult outside the if block
+    let cacheUpdateResult = {
+      totalKeysUpdated: 0,
+      removedArticleCount: 0,
+    }
+
+    if (
+      eliminationResult.eliminated > 0 &&
+      eliminationResult.matchingIds?.length > 0
+    ) {
+      // Update cache with matched IDs
+      cacheUpdateResult = updateRecommendationCache(
+        userId,
+        eliminationResult.matchingIds,
+      )
+
+      if (logElimination) {
+        console.log(`\nElimination Results:`)
+        console.log(
+          `- ${eliminationResult.eliminated} articles eliminated for user ${userId}`,
+        )
+        console.log(
+          `- Original count: ${eliminationResult.updateResult.originalCount}`,
+        )
+        console.log(`- Final count: ${eliminationResult.updateResult.newCount}`)
+        console.log(
+          `- Update success: ${eliminationResult.updateResult.success}`,
+        )
+        console.log(`\nCache Update Results:`)
+        console.log(
+          `- Cache keys updated: ${cacheUpdateResult.totalKeysUpdated}`,
+        )
+        console.log(
+          `- Articles removed from cache: ${cacheUpdateResult.removedArticleCount}`,
+        )
+      }
+    } else if (logElimination) {
+      console.log('\nNo articles eliminated - no cache update needed')
+    }
+
+    return {
+      success: eliminationResult.updateResult?.success || false,
+      eliminated: eliminationResult.eliminated || 0,
+      matchingIds: eliminationResult.matchingIds || [],
+      statistics: eliminationResult.updateResult
+        ? {
+            originalCount: eliminationResult.updateResult.originalCount,
+            newCount: eliminationResult.updateResult.newCount,
+            difference: eliminationResult.updateResult.difference || 0,
+          }
+        : {
+            originalCount: 0,
+            newCount: 0,
+            difference: 0,
+          },
+      cacheUpdate: {
+        keysUpdated: cacheUpdateResult.totalKeysUpdated,
+        articlesRemoved: cacheUpdateResult.removedArticleCount,
+      },
+    }
+  } catch (error) {
+    console.error('Error in recommendation article elimination:', error)
+    return {
+      success: false,
+      eliminated: 0,
+      matchingIds: [],
+      statistics: {
+        originalCount: 0,
+        newCount: 0,
+        difference: 0,
+      },
+      cacheUpdate: {
+        keysUpdated: 0,
+        articlesRemoved: 0,
+      },
+      error: error.message,
+    }
+  }
+}
+
 module.exports = {
   getRecommendations,
   updateRecommendations,
-  exportDataToCSV,
   generateRecommendations,
   getRecommendationsForNotification,
   getArticlePageRecommendations,
+  processRecommendationArticleElimination,
 }

@@ -210,7 +210,7 @@ const Home = () => {
   }, [hasMoreItems, isSearching, notLoggedIn])
 
   return (
-    <Box marginTop={'4rem'} w={'100%'} overflow={'hidden'} maxH="92vh">
+    <Box marginTop={'4.5rem'} w={'100%'} overflow={'hidden'} maxH="92vh">
       <Helmet>
         <title>{t('title')}</title>
         <meta name="description" content={t('description')} />

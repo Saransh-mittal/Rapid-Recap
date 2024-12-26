@@ -3,6 +3,8 @@ import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
 import { DEFAULT_SOUND_SETTINGS } from '../models/soundSettings'
 import i18n from 'i18next'
+import { addReward } from './rewardsSlice'
+import { REWARD_TYPES } from '../components/rewards'
 
 // Add this thunk to your existing thunks
 export const addNoteMessageIfAllowed = createAsyncThunk(
@@ -62,8 +64,31 @@ export const fetchAppUpdates = createAsyncThunk(
 
 export const fetchDailyStreak = createAsyncThunk(
   'app/fetchDailyStreak',
-  async () => {
+  async (_, { getState, dispatch }) => {
     const response = await axios.get(`/api/user/streakChecker`)
+    // Show streak surge reward if available
+    if (response.data.hasUnclaimedStreakSurge) {
+      dispatch(
+        addReward({
+          type: REWARD_TYPES.STREAK_SURGE,
+          title: 'Streak Surge Activated!',
+          description:
+            'Congratulations on your 7-day streak! Get 1.5x boost on all quizzes today.',
+          rewards: [
+            {
+              title: 'Bonus XP',
+              amount: `+${response.data.xpAward} XP`,
+              color: '#FFB020',
+            },
+            {
+              title: 'RQM Boost',
+              amount: `${response.data.multiplier}x Multiplier`,
+              color: '#14B8A6',
+            },
+          ],
+        }),
+      )
+    }
     return response.data
   },
 )
@@ -257,22 +282,22 @@ export const appSlice = createSlice({
                 : 'ओह नहीं! आपकी स्ट्रीक समाप्त हो गई है।',
             width: '300px',
           })
-        action.payload?.seven_day_streak &&
-          state.noteMessageQueue.push({
-            messageType: 'xpAward',
-            title:
-              i18n.language === 'en'
-                ? 'Congratulations on Your 7-Day Streak!'
-                : 'आपकी 7-दिन की स्ट्रीक पर बधाई!',
-            isMilestone: true,
-            milestoneContent:
-              i18n.language === 'en'
-                ? 'Enjoy a 1.5x score multiplier on all quizzes today!'
-                : 'आज सभी क्विज़ पर 1.5x स्कोर मल्टीप्लायर का आनंद लें!',
-            width: '300px',
-            xpAwarded: action.payload?.xpAwarded,
-            duration: null,
-          })
+        // action.payload?.seven_day_streak &&
+        //   state.noteMessageQueue.push({
+        //     messageType: 'xpAward',
+        //     title:
+        //       i18n.language === 'en'
+        //         ? 'Congratulations on Your 7-Day Streak!'
+        //         : 'आपकी 7-दिन की स्ट्रीक पर बधाई!',
+        //     isMilestone: true,
+        //     milestoneContent:
+        //       i18n.language === 'en'
+        //         ? 'Enjoy a 1.5x score multiplier on all quizzes today!'
+        //         : 'आज सभी क्विज़ पर 1.5x स्कोर मल्टीप्लायर का आनंद लें!',
+        //     width: '300px',
+        //     xpAwarded: action.payload?.xpAwarded,
+        //     duration: null,
+        //   })
         action.payload?.isRevivalPeriod &&
           state.noteMessageQueue.push({
             messageType: 'streak',

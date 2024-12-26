@@ -9,4 +9,4 @@ export const MIN_CARD_WIDTH = 320
 export const GAP = 24
 export const ROW_HEIGHT = 480
 export const SKELETON_COUNT = 18
-export const DEFAULT_IMAGE = '/images/rrlogo_HD.webp'
+export const DEFAULT_IMAGE = '/images/fallback_news_image.webp'

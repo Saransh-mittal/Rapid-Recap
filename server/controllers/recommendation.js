@@ -3,6 +3,7 @@ const QuizAttempt = require('../model/quizAttemptSchema')
 const {
   getRecommendations,
   getArticlePageRecommendations,
+  processRecommendationArticleElimination,
 } = require('../services/recommendationService')
 
 const asyncHandler = require('express-async-handler')
@@ -29,6 +30,13 @@ const userRecommendations = asyncHandler(async (req, res) => {
     Array.isArray(cachedRecommendations) &&
     cachedRecommendations.length > 0
   ) {
+    // Trigger elimination in background without awaiting
+    processRecommendationArticleElimination(userId, {
+      eliminationThreshold: 20, // 30 seconds
+      logElimination: false,
+    }).catch(error => {
+      console.error('Background recommendation elimination failed:', error)
+    })
     return res.send(cachedRecommendations)
   }
 
@@ -92,6 +100,13 @@ const userRecommendations = asyncHandler(async (req, res) => {
 
   // Cache the processed articles for 1 hour (3600000 milliseconds)
   cache.put(cacheKey, processedArticles, 3600000)
+  // Trigger elimination in background without awaiting
+  processRecommendationArticleElimination(userId, {
+    eliminationThreshold: 20, // 20 seconds
+    logElimination: false,
+  }).catch(error => {
+    console.error('Background recommendation elimination failed:', error)
+  })
 
   res.send(processedArticles)
 })

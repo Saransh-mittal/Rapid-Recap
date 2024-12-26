@@ -316,7 +316,7 @@ const ModernNavbar = ({ onNavbarLoad }) => {
         }}
       />
       <Flex
-        bg="rgba(22, 19, 40, 0.85)"
+        bg="rgba(62, 59, 80, 0.65)"
         borderBottom="1px solid rgba(255, 255, 255, 0.08)"
         boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
         backdropFilter="blur(8px)"
