@@ -1257,7 +1257,7 @@ const streakChecker = asyncHandler(async (req, res) => {
       user.streak > 0 &&
       user.streak % 7 === 0 &&
       user.streakExpiry.getTime() === tomorrow.getTime()
-    if (user.streak % 7 !== 0 && user.todayBoost) {
+    if (user.todayBoost && !isBoosted) {
       user.todayBoost = false
       await user.save()
     }
