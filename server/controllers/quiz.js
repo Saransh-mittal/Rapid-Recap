@@ -61,7 +61,7 @@ const getQuiz = async (req, res) => {
 
     requestMap.set(requestKey, cancellationToken)
 
-    if (!articleId) {
+    if (!articleId || articleId === 'undefined') {
       throw new Error('No article provided')
     }
 
@@ -141,7 +141,9 @@ const getQuiz = async (req, res) => {
       session.endSession()
       return res.status(200).json({
         message: 'Existing quiz session found. You can start the quiz.',
-        quizSession,
+        quizSession: {
+          _id: quizSession._id,
+        },
         status: 'ready',
       })
     }
@@ -267,7 +269,9 @@ const getQuiz = async (req, res) => {
 
     return res.status(200).json({
       message: 'New quiz session created successfully',
-      quizSession,
+      quizSession: {
+        _id: quizSession._id,
+      },
       timer,
       status: 'ready',
     })
@@ -315,16 +319,29 @@ const startQuiz = async (req, res) => {
 
     const timer = Math.min(5, quizSession.questions.length) * 10
 
-    if (!onBoarding) {
+    if (!onBoarding || onBoarding === 'false') {
       quizSession.startTime = new Date()
       quizSession.endTime = new Date(Date.now() + timer * 1000)
     }
     await quizSession.save()
+    let resultQuizSession = quizSession.toObject()
+    // remove answers from questions, difficulty and explanation
+    resultQuizSession.questions = quizSession.questions.map(q => ({
+      question: q.question,
+      options: q.options,
+      questionId: q.questionId,
+      _id: q._id,
+    }))
+    // remove ovrealldifficulty, RQM_score, timeTaken, responses
+    resultQuizSession.overAllDifficulty = undefined
+    resultQuizSession.RQM_score = undefined
+    resultQuizSession.timeTaken = undefined
 
     res.status(200).json({
       message: 'Quiz started successfully',
       startTime: quizSession.startTime,
       endTime: quizSession.endTime,
+      quizSession: resultQuizSession,
       timer,
     })
   } catch (error) {

@@ -140,7 +140,7 @@ const Card = React.memo(
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
             variants={variants.image}
-            onError={e => (e.target.src = '/images/rrlogo_HD.webp')}
+            onError={e => (e.target.src = '/images/fallback_news_image.webp')}
             loading="lazy"
           />
         </Box>

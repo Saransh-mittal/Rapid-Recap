@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { fetchDailyStreak } from '../redux/appSlice'
+import { addReward } from '../redux/rewardsSlice'
+import { REWARD_TYPES } from '../components/rewards'
 
 const quinBoostChecker = async ({
   setIsQuinBoostAvailable,
@@ -10,22 +12,61 @@ const quinBoostChecker = async ({
     const response = await axios.get(`/api/user/quinBoostChecker`)
 
     if (response.status === 200) {
-      dispatch(setQuizLeftToGetQuizBoost(response.data.quizLeftToGetQuizBoost))
-      dispatch(setIsQuinBoostAvailable(response.data.isQuinBoostAvailable))
+      const {
+        quizLeftToGetQuizBoost,
+        isQuinBoostAvailable,
+        hasUnclaimedBoost,
+        multiplier,
+      } = response.data
+
+      dispatch(setQuizLeftToGetQuizBoost(quizLeftToGetQuizBoost))
+      dispatch(setIsQuinBoostAvailable(isQuinBoostAvailable))
+
+      // Show reward if there's an unclaimed boost
+      if (hasUnclaimedBoost) {
+        dispatch(
+          addReward({
+            type: REWARD_TYPES.QUIN_BOOST,
+            title: 'RQM Boost Unlocked!',
+            description:
+              'Your dedication earned you a bonus! Next quiz score will be multiplied by 1.5x.',
+            multiplier,
+          }),
+        )
+      }
     }
   } catch (error) {
-    console.log(error)
+    console.error('Error checking quinBoost:', error)
+  }
+}
+
+// Add function to claim quinBoost
+const claimQuinBoost = async () => {
+  try {
+    const response = await axios.post('/api/user/claim-quinboost')
+    return response.data
+  } catch (error) {
+    console.error('Error claiming quinBoost:', error)
+    throw error
   }
 }
 
 const dailyStreakCheckerAndUpdater = async dispatch => {
-  console.log('Checking daily streak...')
   try {
     await dispatch(fetchDailyStreak()).unwrap()
-    // Optional: Do something with the result if needed
   } catch (error) {
     console.error('Failed to fetch daily streak:', error)
-    // Optional: Handle the error (e.g., show a notification to the user)
+  }
+}
+
+// Add claim endpoint for streak surge
+const claimStreakSurge = async () => {
+  try {
+    const response = await axios.post('/api/user/claim-streak-surge')
+    return response.data
+  } catch (error) {
+    console.error('Error claiming streak surge:', error)
+    throw error
   }
 }
 
@@ -60,4 +101,10 @@ const parseQuizData = result => {
   }
 }
 
-export { quinBoostChecker, dailyStreakCheckerAndUpdater, parseQuizData }
+export {
+  quinBoostChecker,
+  dailyStreakCheckerAndUpdater,
+  parseQuizData,
+  claimQuinBoost,
+  claimStreakSurge,
+}

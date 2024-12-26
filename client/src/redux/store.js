@@ -9,6 +9,7 @@ import quizReducer from './quizSlice'
 import tournamentReducer from './tournamentSlice'
 import loadingProgressReducer from './loadingProgressSlice'
 import noteMessageSummaryReducer from './noteMessageSummarySlice'
+import rewardsReducer from './rewardsSlice'
 
 export const store = configureStore({
   reducer: {
@@ -22,5 +23,6 @@ export const store = configureStore({
     tournament: tournamentReducer,
     loadingProgress: loadingProgressReducer,
     noteMessageSummary: noteMessageSummaryReducer,
+    rewards: rewardsReducer,
   },
 })

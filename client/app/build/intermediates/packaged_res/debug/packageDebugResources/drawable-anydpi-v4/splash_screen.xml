@@ -11,4 +11,19 @@
             android:tileMode="disabled" />
     </item>
 
+    <!-- Your logo -->
+    <item android:gravity="center"
+        android:top="-70dp">
+        <bitmap
+            android:src="@drawable/splash"
+            android:gravity="center" />
+    </item>
+
+    <!-- Rapid Recap text -->
+    <item android:gravity="center"
+        android:top="270dp">
+        <bitmap
+            android:src="@drawable/rapid_recap_text"
+            android:gravity="center" />
+    </item>
 </layer-list>

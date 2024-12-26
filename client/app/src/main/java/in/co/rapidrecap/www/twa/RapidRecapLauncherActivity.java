@@ -54,7 +54,8 @@ public class RapidRecapLauncherActivity extends LauncherActivity {
     @Override
     protected Uri getLaunchingUrl() {
         Uri uri = getIntent().getData();
-        if (uri != null && uri.toString().startsWith("https://www.rapidrecap.co.in/article/")) {
+        if (uri != null && (uri.toString().startsWith("https://www.rapidrecap.co.in/article/")
+                || uri.toString().startsWith("https://www.rapidrecap.co.in/tournament"))) {
             return uri;
         }
         return Uri.parse("https://www.rapidrecap.co.in");

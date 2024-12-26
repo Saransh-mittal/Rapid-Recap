@@ -2,6 +2,7 @@
 const cron = require('node-cron')
 const schedules = require('./scheduleConfig')
 const cacheSchedules = require('./cacheScheduleConfig')
+const vectorSchedules = require('./vectorScheduleConfig')
 
 schedules.forEach(schedule => {
   cron.schedule(schedule.cronPattern, schedule.task)
@@ -13,6 +14,12 @@ schedules.forEach(schedule => {
 })
 
 cacheSchedules.forEach(schedule => {
+  cron.schedule(schedule.cronPattern, schedule.task)
+  console.log(`Scheduled ${schedule.name} task`)
+})
+
+// Setup vector maintenance schedules
+vectorSchedules.forEach(schedule => {
   cron.schedule(schedule.cronPattern, schedule.task)
   console.log(`Scheduled ${schedule.name} task`)
 })

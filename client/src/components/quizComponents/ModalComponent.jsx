@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, lazy, Suspense } from 'react'
+import React, { useMemo, useCallback, lazy, Suspense, useEffect } from 'react'
 import {
   Button,
   Modal,
@@ -29,7 +29,7 @@ const ModalComponent = ({
   load,
   showInstruction,
   startQuiz,
-
+  showQuizSummary,
   handleNextQuestion,
   currentQuestionIndex,
   totalQuestions,
@@ -100,6 +100,32 @@ const ModalComponent = ({
     action()
   }
 
+  useEffect(() => {
+    if (isOpen) {
+      // Push a new state when modal opens
+      window.history.pushState({ modal: true }, '', window.location.pathname)
+
+      // Handle back button press
+      const handleBackButton = event => {
+        // Prevent default only if we're handling the modal
+        if (isOpen) {
+          event.preventDefault()
+          onClose()
+        }
+      }
+      const cleanupExtraHistoryOnClose = () => {
+        if (window.history.state?.modal) window.history.back()
+      }
+      window.addEventListener('popstate', handleBackButton)
+
+      // Cleanup
+      return () => {
+        window.removeEventListener('popstate', handleBackButton)
+        cleanupExtraHistoryOnClose()
+      }
+    }
+  }, [isOpen])
+
   return (
     <Modal
       isOpen={isOpen}
@@ -148,7 +174,7 @@ const ModalComponent = ({
             )}
           </SkeletonCircle>
         )}
-        {!showGetSetGo && (
+        {!showGetSetGo && !showQuizSummary && (
           <ModalCloseButton
             zIndex={2}
             backgroundColor={getColor('purple.300', 'rgba(255, 215, 0, 0.8)')}
@@ -184,7 +210,9 @@ const ModalComponent = ({
                 {t('QuizIsGenerating')}
               </Text>
             )}
-            {(totalQuestions || quizStatus === 'in_progress') &&
+            {(totalQuestions ||
+              quizStatus === 'in_progress' ||
+              quizStatus === 'ready') &&
               !showGetSetGo && (
                 <ModalFooter w={'100%'}>
                   <motion.div

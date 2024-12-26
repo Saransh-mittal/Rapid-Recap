@@ -157,16 +157,17 @@ const QuizGivenSummary = ({
                   />
                 </Suspense>
               </Flex>
+              <ModalCloseButton
+                style={{
+                  right: '10px',
+                  transition: 'backgroundColor 0.3s, color 0.3s',
+                }}
+                onMouseEnter={() => setIsCloseButtonHovered(true)}
+                onMouseLeave={() => setIsCloseButtonHovered(false)}
+                bg={getColor('purple.300', 'yellow.300')}
+              />
             </ModalHeader>
-            <ModalCloseButton
-              style={{
-                right: '10px',
-                transition: 'backgroundColor 0.3s, color 0.3s',
-              }}
-              onMouseEnter={() => setIsCloseButtonHovered(true)}
-              onMouseLeave={() => setIsCloseButtonHovered(false)}
-              bg={getColor('purple.300', 'yellow.300')}
-            />
+
             <ModalBody
               display={'flex'}
               flexDirection={'column'}

@@ -29,7 +29,7 @@ import ArticleHeader from '../components/articleComponents/ArticleHeader'
 import TrackTime from '../components/articleComponents/TrackTime'
 import MainArticleContentSkeleton from '../components/articleComponents/loaders/MainArticleContentSkeleton'
 //SSR images
-const rrImage = '/images/rrlogo_HD.webp'
+const fallback_news_image = '/images/fallback_news_image.webp'
 
 const QuinBoostModal = lazy(() =>
   import('../components/articleComponents/QuinBoostModal'),
@@ -479,7 +479,7 @@ const Article = () => {
               <MainArticleContent
                 imgURL={
                   (!blackListedImgUrls.find(url => url === imgURL) && imgURL) ||
-                  rrImage
+                  fallback_news_image
                 }
                 selectedLanguage={selectedLanguage}
                 mainText={mainText}
