@@ -171,7 +171,7 @@ const HamburgerDrawer = ({
         }
       }
       const cleanupExtraHistoryOnClose = () => {
-        window.history.back()
+        if (window.history.state?.modal) window.history.back()
       }
       window.addEventListener('popstate', handleBackButton)
 
