@@ -31,12 +31,20 @@ const StreakSurgeDisplay = React.lazy(() =>
     default: module.default || module,
   })),
 )
+const TournamentWinnerDisplay = React.lazy(() =>
+  import('./displays/TournamentWinnerDisplay/index').then(module => ({
+    default: module.default || module,
+  })),
+)
 
 // Map of reward types to their components
 const rewardComponents = {
   [REWARD_TYPES.QUIN_BOOST]: QuinBoostDisplay,
   [REWARD_TYPES.IQ_BOOST]: IQBoostDisplay,
   [REWARD_TYPES.STREAK_SURGE]: StreakSurgeDisplay,
+  [REWARD_TYPES.TOURNAMENT_ACE]: TournamentWinnerDisplay,
+  [REWARD_TYPES.TOURNAMENT_PRO]: TournamentWinnerDisplay,
+  [REWARD_TYPES.TOURNAMENT_CHAMP]: TournamentWinnerDisplay,
 }
 
 // Loading fallback component

@@ -56,6 +56,67 @@ export const RewardTester = () => {
     )
   }
 
+  const showTournamentWinner = () => {
+    // For ACE PLAYER (1st Rank)
+    dispatch(
+      addReward({
+        type: REWARD_TYPES.TOURNAMENT_ACE,
+        title: 'LEGENDARY ACE',
+        description: 'Champion of {{category}} Category!',
+        category: '{{category}}',
+        rewards: [
+          {
+            icon: 'Shield',
+            title: 'Category Insight Radar',
+            description:
+              'Preview article difficulties in {{category}} category (Mon-Fri).',
+          },
+          {
+            icon: 'Zap',
+            title: "Champion's RQM Amplifier",
+            description:
+              '1.5x RQM boost in {{category}} category quizzes (Mon-Fri).',
+          },
+        ],
+      }),
+    )
+
+    // // For PRO PLAYER (2nd Rank)
+    // dispatch(
+    //   addReward({
+    //     type: REWARD_TYPES.TOURNAMENT_PRO,
+    //     title: 'ELITE VIRTUOSO',
+    //     description: 'Elite Excellence in {{category}} Category!',
+    //     category: '{{category}}',
+    //     rewards: [
+    //       {
+    //         icon: 'Zap',
+    //         title: 'Elite RQM Amplifier',
+    //         description: '1.5x RQM boost in {{category}} category quizzes (Mon-Fri).',
+    //       },
+    //     ],
+    //   }),
+    // )
+
+    // // For CHAMP PLAYER (3rd Rank)
+    // dispatch(
+    //   addReward({
+    //     type: REWARD_TYPES.TOURNAMENT_CHAMP,
+    //     title: 'RISING CHAMPION',
+    //     description: 'Outstanding Achiever in {{category}} Category!',
+    //     category: '{{category}}',
+    //     rewards: [
+    //       {
+    //         icon: 'Shield',
+    //         title: 'Category Insight Radar',
+    //         description:
+    //           'Preview article difficulties in {{category}} category (Mon-Fri).',
+    //       },
+    //     ],
+    //   }),
+    // )
+  }
+
   return (
     <VStack spacing={4} align="stretch" p={4}>
       <Text fontSize="xl" fontWeight="bold">
@@ -63,16 +124,19 @@ export const RewardTester = () => {
       </Text>
 
       <HStack spacing={4}>
-        <Button colorScheme="purple" onClick={showRQMBoost}>
+        {/* <Button colorScheme="purple" onClick={showRQMBoost}>
           Show RQM Boost
-        </Button>
+        </Button> */}
 
         <Button colorScheme="blue" onClick={showIQBoost}>
           Show IQ Boost
         </Button>
-        <Button colorScheme="yellow" onClick={showStreakSurge}>
-          Show Streak Surge
+        <Button colorScheme="blue" onClick={showTournamentWinner}>
+          Tournament Winner
         </Button>
+        {/* <Button colorScheme="yellow" onClick={showStreakSurge}>
+          Show Streak Surge
+        </Button> */}
       </HStack>
     </VStack>
   )
