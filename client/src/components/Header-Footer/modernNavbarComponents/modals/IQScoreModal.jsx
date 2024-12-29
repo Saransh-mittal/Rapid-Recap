@@ -1,4 +1,13 @@
-import React, { useEffect, useCallback, Suspense, useState } from 'react'
+// File path: components/IQScoreModal.jsx
+
+import React, {
+  useEffect,
+  useCallback,
+  useMemo,
+  useState,
+  lazy,
+  Suspense,
+} from 'react'
 import {
   Modal,
   ModalBody,
@@ -9,7 +18,6 @@ import {
   useDisclosure,
   Flex,
   Spinner,
-  Badge,
   Container,
   VStack,
   Stat,
@@ -18,88 +26,58 @@ import {
   StatHelpText,
   Box,
   Icon,
+  useMediaQuery,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import CircleAndSocietyData from '../../../../assets/CircleAndSocietyData'
 import { useSelector } from 'react-redux'
 import { Brain, Crown, TrendingUp } from 'lucide-react'
-import { keyframes } from '@emotion/react'
+
+import CircleAndSocietyData from '../../../../assets/CircleAndSocietyData'
 
 // Lazy load components
-const Heading = React.lazy(() =>
-  import('../../../miscellaneous/HeadingComponent'),
-)
-const EnhancedSocietyCircle = React.lazy(() =>
+const Heading = lazy(() => import('../../../miscellaneous/HeadingComponent'))
+const EnhancedSocietyCircle = lazy(() =>
   import(
     '../../../profileComponents/RightProfileSectionComponents/RankAndSocietySubCompnents/EnhancedSocietyCircle'
   ),
 )
 
-// Animation keyframes
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-`
-
-const pulseGlow = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
-`
-
-const IQScoreModal = ({ setShowIQScoreModal }) => {
+const IQScoreModal = React.memo(({ setShowIQScoreModal }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { user } = useSelector(state => state.auth)
   const { t } = useTranslation('IQScoreModal')
   const [showBrainModal, setShowBrainModal] = useState(false)
   const [showCircleModal, setShowCircleModal] = useState(false)
-  const USER_IQ = user?.IQ_score
-  const USER_RANK = user?.rank
-  const isGuest = user?.role === 'guest'
+  const [prefersReducedMotion] = useMediaQuery(
+    '(prefers-reduced-motion: reduce)',
+  )
 
-  // Memoize the circleAndSociety calculation
-  const circleAndSociety = React.useMemo(() => {
-    const userCircleAndSociety = CircleAndSocietyData.find(
-      data =>
-        data.IQ_Lower <= USER_IQ &&
-        (data.IQ_Upper ? data.IQ_Upper > USER_IQ : true),
-    )
+  const USER_IQ = useMemo(() => user?.IQ_score, [user])
+  const USER_RANK = useMemo(() => user?.rank, [user])
+
+  const circleAndSociety = useMemo(() => {
     return (
-      userCircleAndSociety ||
-      CircleAndSocietyData[CircleAndSocietyData.length - 1]
+      CircleAndSocietyData.find(
+        data =>
+          data.IQ_Lower <= USER_IQ &&
+          (data.IQ_Upper ? data.IQ_Upper > USER_IQ : true),
+      ) || CircleAndSocietyData[CircleAndSocietyData.length - 1]
     )
   }, [USER_IQ])
 
   useEffect(() => {
     onOpen()
-  }, [])
+  }, [onOpen])
 
   const handleClose = useCallback(() => {
     onClose()
     setShowIQScoreModal(false)
   }, [onClose, setShowIQScoreModal])
 
-  const handleBrainClick = useCallback(() => {
-    setShowBrainModal(true)
-  }, [])
+  const handleBrainClick = useCallback(() => setShowBrainModal(true), [])
+  const handleCircleClick = useCallback(() => setShowCircleModal(true), [])
 
-  const handleCircleClick = useCallback(() => {
-    setShowCircleModal(true)
-  }, [])
-
-  const LoadingSpinner = () => (
-    <Flex justify="center" align="center" h="200px">
-      <Spinner
-        thickness="4px"
-        speed="0.65s"
-        emptyColor="gray.700"
-        color="purple.500"
-        size="xl"
-      />
-    </Flex>
-  )
-
-  const StatCard = ({ icon, label, value, helpText }) => (
+  const StatCard = React.memo(({ icon, label, value, helpText }) => (
     <Box
       p={{ base: 2, md: 6 }}
       bg="rgba(45, 42, 71, 0.3)"
@@ -130,7 +108,7 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
         </Stat>
       </Flex>
     </Box>
-  )
+  ))
 
   return (
     <>
@@ -153,7 +131,6 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
             color="white"
             fontFamily="'Roboto', sans-serif"
             border="1px solid rgba(255, 255, 255, 0.1)"
-            animation={`${fadeIn} 0.3s ease-out`}
           >
             <ModalCloseButton
               color="white"
@@ -207,7 +184,7 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
                         size="md"
                         mb={6}
                       />
-                      <Suspense fallback={<LoadingSpinner />}>
+                      <Suspense fallback={<Spinner color="purple.500" />}>
                         <EnhancedSocietyCircle
                           societyData={circleAndSociety}
                           handleBrainClick={handleBrainClick}
@@ -223,15 +200,15 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
                     bg="rgba(124, 58, 237, 0.1)"
                     borderRadius="lg"
                     border="1px solid rgba(124, 58, 237, 0.2)"
-                    animation={`${pulseGlow} 2s infinite`}
+                    animation={
+                      prefersReducedMotion ? undefined : 'pulseGlow 2s infinite'
+                    }
                   >
                     <Flex align="center" gap={3}>
                       <Icon as={TrendingUp} w={5} h={5} color="purple.400" />
                       <Text color="gray.300">
-                        {t('achievementBanner', {
-                          USER_IQ,
-                          USER_RANK,
-                        })}
+                        {t('achievementBanner', { USER_IQ, USER_RANK }) ||
+                          `IQ: ${USER_IQ}, Rank: ${USER_RANK}`}
                       </Text>
                     </Flex>
                   </Box>
@@ -243,6 +220,6 @@ const IQScoreModal = ({ setShowIQScoreModal }) => {
       )}
     </>
   )
-}
+})
 
 export default IQScoreModal
