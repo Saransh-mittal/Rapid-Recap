@@ -113,11 +113,15 @@ const ModalComponent = ({
           onClose()
         }
       }
+      const cleanupExtraHistoryOnClose = () => {
+        if (window.history.state?.modal) window.history.back()
+      }
       window.addEventListener('popstate', handleBackButton)
 
       // Cleanup
       return () => {
         window.removeEventListener('popstate', handleBackButton)
+        cleanupExtraHistoryOnClose()
       }
     }
   }, [isOpen])

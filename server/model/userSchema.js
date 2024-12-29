@@ -186,6 +186,10 @@ const userSchema = new mongoose.Schema(
           type: Boolean,
           default: true,
         },
+        claimed: {
+          type: Boolean,
+          default: false,
+        },
       },
     ],
     xp: {
