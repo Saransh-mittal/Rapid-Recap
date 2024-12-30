@@ -4,172 +4,46 @@ const cache = require('memory-cache')
 const ArticleService = require('../../services/articleService')
 const BotVerifier = require('../../utils/botVerifier')
 const { trackBotVisit } = require('../../utils/botTracker')
-const { generateAndInjectSchemas } = require('../../utils/structuredData')
-const { generateMetaTags } = require('../../utils/seoHelper')
-const { generateMetaAndSchema } = require('../../utils/landingPageSeo')
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
+const SPLASH_CACHE_DURATION = 1 * 60 * 1000 // 1 minute
 
-async function getBotContent(urlType, url, baseUrl) {
+async function getInitialBotContent() {
   try {
-    // Check cache first
-    const cachedContent = cache.get(`bot-content-${url}`)
+    const cachedContent = cache.get('initial-bot-content')
     if (cachedContent) {
       return cachedContent
     }
 
-    let content = {}
+    // Only load minimal required components
+    const [navbarContent, splashContent, footerContent] = await Promise.all([
+      fs.readFile(
+        path.resolve(__dirname, '../../client/dist/bot/components/navbar.html'),
+        'utf-8',
+      ),
+      fs.readFile(
+        path.resolve(__dirname, '../../client/dist/splash.html'),
+        'utf-8',
+      ),
+      fs.readFile(
+        path.resolve(__dirname, '../../client/dist/bot/components/footer.html'),
+        'utf-8',
+      ),
+    ])
 
-    if (urlType === 'get-started') {
-      const [
-        navbarContent,
-        heroContent,
-        benefitsContent,
-        featuresContent,
-        footerContent,
-      ] = await Promise.all([
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/navbar.html',
-          ),
-          'utf-8',
-        ),
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/get-started/hero.html',
-          ),
-          'utf-8',
-        ),
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/get-started/benefits.html',
-          ),
-          'utf-8',
-        ),
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/get-started/features.html',
-          ),
-          'utf-8',
-        ),
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/footer.html',
-          ),
-          'utf-8',
-        ),
-      ])
-
-      content = {
-        navbar: navbarContent,
-        hero: heroContent,
-        benefits: benefitsContent,
-        features: featuresContent,
-        footer: footerContent,
-      }
-    } else if (urlType === '410') {
-      const [navbarContent, errorContent, footerContent] = await Promise.all([
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/navbar.html',
-          ),
-          'utf-8',
-        ),
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/error/410.html',
-          ),
-          'utf-8',
-        ),
-        fs.readFile(
-          path.resolve(
-            __dirname,
-            '../../client/dist/bot/components/footer.html',
-          ),
-          'utf-8',
-        ),
-      ])
-
-      content = {
-        navbar: navbarContent,
-        error: errorContent,
-        footer: footerContent,
-        statusCode: 410,
-      }
-    } else {
-      const [navbarContent, articleTemplateContent, footerContent] =
-        await Promise.all([
-          fs.readFile(
-            path.resolve(
-              __dirname,
-              '../../client/dist/bot/components/navbar.html',
-            ),
-            'utf-8',
-          ),
-          fs.readFile(
-            path.resolve(
-              __dirname,
-              '../../client/dist/bot/components/article/article.html',
-            ),
-            'utf-8',
-          ),
-          fs.readFile(
-            path.resolve(
-              __dirname,
-              '../../client/dist/bot/components/footer.html',
-            ),
-            'utf-8',
-          ),
-        ])
-
-      // Get article content
-      const articleId = ArticleService.extractArticleId(url)
-      let articleData
-      try {
-        articleData = await ArticleService.getArticleContent(articleId)
-      } catch (error) {
-        console.log('Error occured on the url:', url)
-        return getBotContent('410', url, baseUrl)
-      }
-
-      // Replace placeholders in template with actual content
-      const articleContent = ArticleService.replaceArticleContent(
-        articleTemplateContent,
-        articleData,
-      )
-
-      content = {
-        navbar: navbarContent,
-        article: articleContent,
-        footer: footerContent,
-        seoMetaTags: generateMetaTags(articleData, baseUrl, url),
-        articleData,
-      }
+    const content = {
+      navbar: navbarContent,
+      splash: splashContent,
+      footer: footerContent,
     }
 
-    // Store in cache
-    cache.put(`bot-content-${urlType}`, content, CACHE_DURATION)
+    cache.put('initial-bot-content', content, SPLASH_CACHE_DURATION)
     return content
   } catch (error) {
-    console.error('Error reading bot content:', error)
-    return {
-      navbar: '',
-      hero: '',
-      benefits: '',
-      features: '',
-      footer: '',
-      article: '',
-    }
+    console.error('Error reading initial bot content:', error)
+    return { navbar: '', splash: '', footer: '' }
   }
 }
-
 // Function to get splash content with caching
 async function getSplashContent() {
   try {
@@ -196,24 +70,28 @@ async function getSplashContent() {
 function createSSRHandler(vite) {
   return async function (req, res, next) {
     const startTime = Date.now()
-
     const url = req.originalUrl
     const nonce = res.locals.nonce
     const userAgent = req.headers['user-agent'] || ''
-
     const isBot = await shouldHandleAsBot(req)
     let botName = null
     let verified = false
     let statusCode = 200
-    try {
-      // Cache key for the full page template
-      const templateCacheKey = `template-${isBot ? 'bot' : 'user'}-${url}`
 
-      // Check if we have a cached template
+    try {
+      if (!isBot) {
+        const template = await handleClientRendering()
+        res.setHeader('Content-Type', 'text/html; charset=utf-8')
+        res.setHeader('Cache-Control', 'no-store, must-revalidate')
+        return res.status(statusCode).end(template)
+      }
+
+      // For bots, implement progressive loading
+      const templateCacheKey = `template-bot-${url}`
       let template = cache.get(templateCacheKey)
 
       if (!template) {
-        // Read and transform template if not cached
+        // Get initial template with splash screen
         template = await fs.readFile(
           path.resolve(__dirname, '../../client/dist/index.html'),
           'utf-8',
@@ -236,88 +114,50 @@ function createSSRHandler(vite) {
             `window.__IS_BOT__ = ${isBot};`,
           )
           .replace('<html', `<html data-bot="${isBot}"`)
-        if (isBot) {
-          botName =
-            BotVerifier.knownBots.find(bot =>
-              userAgent.toLowerCase().includes(bot.toLowerCase()),
-            ) || 'Unknown Bot'
-          const urlType =
-            url.includes('get-started') || url === '/' || url === '/?bot=true'
-              ? 'get-started'
-              : 'article'
-          const baseUrl = `${req.protocol}://${req.get('host')}`
-          const botContent = await getBotContent(urlType, url, baseUrl)
-          // Set status code if present
-          if (botContent.statusCode) {
-            statusCode = botContent.statusCode
-          }
-          template = handleBotTemplate(
-            template,
-            botContent,
-            botContent?.error ? '410' : urlType,
-            baseUrl,
-          )
-          // Inject structured data
 
-          if (urlType === 'article' && !botContent?.error) {
-            const articleData = botContent?.articleData
-              ? botContent.articleData
-              : await ArticleService.getArticleContent(
-                  ArticleService.extractArticleId(url),
-                )
-            template = generateAndInjectSchemas({
-              template,
-              articleData,
-              url,
-              baseUrl,
-            })
-            // Add script to load related articles
-            template = template.replace(
-              '</body>',
-              `
-            <script nonce="${nonce}">
-              (async function loadRelatedArticles() {
-                try {
-                  const response = await fetch('/api/articles/bot-related/${articleData._id}');
-                  const relatedHTML = await response.text();
-                  const placeholder = document.getElementById('related-articles-placeholder');
-                  if (placeholder) {
-                    placeholder.innerHTML = relatedHTML;
-                  }
-                } catch (error) {
-                  console.error('Error loading related articles:', error);
-                }
-              })();
-            </script>
-            </body>
-          `,
-            )
-          }
-        } else {
-          template = await handleClientRendering()
-        }
+        botName =
+          BotVerifier.knownBots.find(bot =>
+            userAgent.toLowerCase().includes(bot.toLowerCase()),
+          ) || 'Unknown Bot'
 
-        // Store the processed template in cache
+        const urlType =
+          url.includes('get-started') || url === '/' || url === '/?bot=true'
+            ? 'get-started'
+            : 'article'
+
+        const baseUrl = `${req.protocol}://${req.get('host')}`
+
+        // Get initial content with splash screen
+        const initialContent = await getInitialBotContent()
+        template = handleInitialBotTemplate(template, initialContent, urlType)
+
+        // Add progressive loading script
+        template = addProgressiveLoadingScript(template, {
+          urlType,
+          url,
+          baseUrl,
+          nonce,
+          articleId:
+            urlType === 'article' ? ArticleService.extractArticleId(url) : null,
+        })
+
         cache.put(templateCacheKey, template, CACHE_DURATION)
       }
 
+      // Send initial response
       res.setHeader('Content-Type', 'text/html; charset=utf-8')
       res.setHeader('Cache-Control', 'no-store, must-revalidate')
-      if (isBot) {
-        const responseTime = Date.now() - startTime
-        await trackBotVisit({
-          botName,
-          userAgent,
-          url,
-          verified,
-          receivedSSR: true,
-          responseTime,
-        })
-      }
-      if (statusCode == 410) {
-        // delete the cache if the status code is 410
-        cache.del(templateCacheKey)
-      }
+
+      const responseTime = Date.now() - startTime
+      await trackBotVisit({
+        botName,
+        userAgent,
+        url,
+        verified,
+        receivedSSR: true,
+        responseTime,
+      })
+
       res.status(statusCode).end(template)
     } catch (e) {
       console.error('SSR error:', e)
@@ -332,10 +172,209 @@ function createSSRHandler(vite) {
           responseTime,
         })
       }
-
       next(e)
     }
   }
+}
+
+function handleInitialBotTemplate(template, initialContent, urlType) {
+  // First add necessary CSS based on urlType
+  template = addRequiredStyles(template, urlType)
+
+  return template
+    .replace('<div id="root">', '<div id="root" style="display: none;">')
+    .replace(
+      '<div id="splash-screen">',
+      '<div id="splash-screen" style="display: none;">',
+    )
+    .replace('<div id="bot-navbar"></div>', initialContent.navbar)
+    .replace('<div id="bot-hero"></div>', '<div id="bot-hero-content"></div>')
+    .replace(
+      '<div id="bot-benefits"></div>',
+      '<div id="bot-benefits-content"></div>',
+    )
+    .replace(
+      '<div id="bot-features"></div>',
+      '<div id="bot-features-content"></div>',
+    )
+    .replace(
+      '<div id="bot-article"></div>',
+      '<div id="bot-article-content"></div>',
+    )
+    .replace('<div id="bot-footer"></div>', initialContent.footer)
+}
+
+function addRequiredStyles(template, urlType) {
+  const commonStyles = `
+    <link rel="stylesheet" href="/styles/utils/reset.css">
+    <link rel="stylesheet" href="/styles/utils/variables.css">
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/components/css-navigation.css">
+    <link rel="stylesheet" href="/styles/utils/responsive.css">
+  `
+
+  const articleStyles = `
+    <link rel="stylesheet" href="/styles/components/css-article.css">
+    <link rel="stylesheet" href="/styles/components/css-related-articles.css">
+  `
+
+  const getStartedStyles = `
+    <link rel="stylesheet" href="/styles/components/css-hero.css">
+    <link rel="stylesheet" href="/styles/components/css-features.css">
+    <link rel="stylesheet" href="/styles/components/css-benefits.css">
+    <link rel="stylesheet" href="/styles/components/css-sections.css">
+  `
+
+  const errorStyles = `
+    <link rel="stylesheet" href="/styles/components/css-error.css">
+  `
+
+  let styles = commonStyles
+  if (urlType === 'article') {
+    styles += articleStyles
+  } else if (urlType === 'get-started') {
+    styles += getStartedStyles
+  } else if (urlType === '410') {
+    styles += errorStyles
+  }
+
+  styles += `<link rel="stylesheet" href="/styles/components/css-footer.css">`
+
+  return template.replace('<style>', `${styles}<style>`)
+}
+
+function addProgressiveLoadingScript(
+  template,
+  { urlType, url, baseUrl, nonce, articleId },
+) {
+  const loadingScript = `
+    <div id="bot-loading" class="text-center p-4">Loading content...</div>
+    <script nonce="${nonce}">
+      (async function loadFullContent() {
+        try {
+          const response = await fetch('/api/bot-content', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              urlType: '${urlType}',
+              url: '${url}',
+              baseUrl: '${baseUrl}',
+              articleId: '${articleId}'
+            })
+          });
+
+          const { content, metaTags, schemas } = await response.json();
+
+          // Ensure all required styles are loaded
+          const ensureStyles = () => {
+            const requiredStyles = ${JSON.stringify(
+              getRequiredStylesForUrlType(urlType),
+            )};
+            requiredStyles.forEach(style => {
+              if (!document.querySelector(\`link[href="\${style}"]\`)) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = style;
+                document.head.appendChild(link);
+              }
+            });
+          };
+
+          ensureStyles();
+
+          // Update content based on urlType
+          if ('${urlType}' === 'get-started') {
+            const contentParts = content.split('<!-- Benefits Section -->');
+            if (contentParts.length > 1) {
+              const heroPart = contentParts[0];
+              const remainingParts = contentParts[1].split('<!-- Features Section -->');
+
+              document.getElementById('bot-hero-content').innerHTML = heroPart;
+              document.getElementById('bot-benefits-content').innerHTML = remainingParts[0];
+              document.getElementById('bot-features-content').innerHTML = remainingParts[1] || '';
+            } else {
+              document.getElementById('bot-hero-content').innerHTML = content;
+            }
+          } else {
+            document.getElementById('bot-article-content').innerHTML = content;
+          }
+
+          document.getElementById('bot-loading').style.display = 'none';
+
+          // Update meta tags if provided
+          if (metaTags) {
+            const existingMetas = document.head.querySelectorAll('meta:not([charset]):not([name="viewport"])');
+            existingMetas.forEach(meta => meta.remove());
+
+            const metaContainer = document.createElement('div');
+            metaContainer.innerHTML = metaTags;
+            Array.from(metaContainer.children).forEach(meta => document.head.appendChild(meta));
+          }
+
+          // Update schema if provided
+          if (schemas) {
+            const existingSchemas = document.querySelectorAll('script[type="application/ld+json"]');
+            existingSchemas.forEach(schema => schema.remove());
+
+            const script = document.createElement('script');
+            script.type = 'application/ld+json';
+            script.textContent = JSON.stringify(schemas);
+            document.head.appendChild(script);
+          }
+
+          // Load related articles for article pages
+          if ('${urlType}' === 'article' && '${articleId}') {
+            const relatedResponse = await fetch('/api/articles/bot-related/${articleId}');
+            const relatedHTML = await relatedResponse.text();
+            const placeholder = document.getElementById('related-articles-placeholder');
+            if (placeholder) {
+              placeholder.innerHTML = relatedHTML;
+            }
+          }
+        } catch (error) {
+          console.error('Error loading full content:', error);
+          document.getElementById('bot-loading').innerHTML = 'Error loading content. Please refresh the page.';
+        }
+      })();
+    </script>
+  </body>`
+
+  return template.replace('</body>', loadingScript)
+}
+
+function getRequiredStylesForUrlType(urlType) {
+  const commonStyles = [
+    '/styles/utils/reset.css',
+    '/styles/utils/variables.css',
+    '/styles/main.css',
+    '/styles/components/css-navigation.css',
+    '/styles/utils/responsive.css',
+    '/styles/components/css-footer.css',
+  ]
+
+  const articleStyles = [
+    '/styles/components/css-article.css',
+    '/styles/components/css-related-articles.css',
+  ]
+
+  const getStartedStyles = [
+    '/styles/components/css-hero.css',
+    '/styles/components/css-features.css',
+    '/styles/components/css-benefits.css',
+    '/styles/components/css-sections.css',
+  ]
+
+  const errorStyles = ['/styles/components/css-error.css']
+
+  if (urlType === 'article') {
+    return [...commonStyles, ...articleStyles]
+  } else if (urlType === 'get-started') {
+    return [...commonStyles, ...getStartedStyles]
+  } else if (urlType === '410') {
+    return [...commonStyles, ...errorStyles]
+  }
+
+  return commonStyles
 }
 
 async function handleClientRendering() {
@@ -357,118 +396,6 @@ async function handleClientRendering() {
     )
 
   return processedTemplate
-}
-
-function handleBotTemplate(template, botContent, urlType, baseUrl) {
-  // Add status code if present
-  if (botContent.statusCode) {
-    template = template.replace(
-      '<head>',
-      `<head>\n<meta name="robots" content="noindex">`,
-    )
-  }
-  if (urlType === 'get-started') {
-    // First remove existing meta tags and any duplicates
-    template = template.replace(
-      /<meta[^>]*>|<title>.*?<\/title>|<link[^>]*>/g,
-      '',
-    )
-    const { metaTags, schema } = generateMetaAndSchema(baseUrl)
-    // Replace head content and add schema
-    template = template
-      .replace(
-        /<head>.*?<\/head>/s,
-        `<head>\n${metaTags}\n<script type="application/ld+json">${JSON.stringify(
-          schema,
-          null,
-          2,
-        )}</script>\n</head>`,
-      )
-      .replace('<div id="root">', '<div id="root" style="display: none;">')
-      .replace(
-        '<div id="splash-screen">',
-        '<div id="splash-screen" style="display: none;">',
-      )
-
-    // Add content
-    template = template
-      .replace('<div id="bot-navbar"></div>', botContent.navbar)
-      .replace('<div id="bot-hero"></div>', botContent.hero)
-      .replace('<div id="bot-benefits"></div>', botContent.benefits)
-      .replace('<div id="bot-features"></div>', botContent.features)
-      .replace('<div id="bot-footer"></div>', botContent.footer)
-  } else if (urlType === '410') {
-    template = template
-      .replace('<div id="root">', '<div id="root" style="display: none;">')
-      .replace(
-        '<div id="splash-screen">',
-        '<div id="splash-screen" style="display: none;">',
-      )
-      .replace('<div id="bot-navbar"></div>', botContent.navbar)
-      .replace('<div id="bot-article"></div>', botContent.error)
-      .replace(
-        '<style>',
-        `<link rel="stylesheet" href="/styles/utils/reset.css">
-        <link rel="stylesheet" href="/styles/utils/variables.css">
-        <link rel="stylesheet" href="/styles/main.css">
-        <link rel="stylesheet" href="/styles/components/css-navigation.css">
-        <link rel="stylesheet" href="/styles/components/css-error.css">
-        <style>`,
-      )
-      .replace('<div id="bot-footer"></div>', botContent.footer)
-  } else {
-    // Your existing article handling code
-    template = template
-      .replace(/<meta[^>]*>|<title>.*?<\/title>|<link[^>]*>/g, '')
-      .replace(/^\s*[\r\n]/gm, '')
-      .replace(/(\r\n|\n|\r){2,}/gm, '\n')
-      .replace(/<!--[\s\S]*?-->/g, '')
-      .replace(/\s+$/gm, '')
-
-    template = template
-      .replace('<div id="root">', '<div id="root" style="display: none;">')
-      .replace(
-        '<div id="splash-screen">',
-        '<div id="splash-screen" style="display: none;">',
-      )
-      .replace('<div id="bot-navbar"></div>', botContent.navbar)
-
-    if (botContent.seoMetaTags) {
-      template = template.replace(
-        '<head>',
-        `<head>\n    ${botContent.seoMetaTags}`,
-      )
-    }
-
-    template = template
-      .replace('<div id="bot-article"></div>', botContent.article)
-      .replace('<div id="bot-footer"></div>', botContent.footer)
-
-    template = template.replace(
-      '<style>',
-      `<link rel="stylesheet" href="/styles/utils/reset.css">
-      <link rel="stylesheet" href="/styles/utils/variables.css">
-      <link rel="stylesheet" href="/styles/main.css">
-      <link rel="stylesheet" href="/styles/components/css-navigation.css">
-      <link rel="stylesheet" href="/styles/components/css-article.css">
-      <link rel="stylesheet" href="/styles/components/css-hero.css">
-      <link rel="stylesheet" href="/styles/components/css-features.css">
-      <link rel="stylesheet" href="/styles/components/css-benefits.css">
-      <link rel="stylesheet" href="/styles/components/css-sections.css">
-      <link rel="stylesheet" href="/styles/components/css-footer.css">
-      <link rel="stylesheet" href="/styles/components/css-related-articles.css">
-      <link rel="stylesheet" href="/styles/utils/responsive.css">
-      <style>`,
-    )
-  }
-
-  // Clean up any remaining multiple newlines and spaces
-  template = template
-    .replace(/(\r\n|\n|\r){2,}/gm, '\n')
-    .replace(/\s+$/gm, '')
-    .replace(/^\s+/gm, '')
-
-  return template
 }
 
 async function shouldHandleAsBot(req) {

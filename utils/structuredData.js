@@ -186,7 +186,13 @@ const generateBreadcrumbSchema = ({ url, baseUrl }) => {
   }
 }
 
-const generateAndInjectSchemas = ({ template, articleData, url, baseUrl }) => {
+const generateAndInjectSchemas = ({
+  template,
+  articleData,
+  url,
+  baseUrl,
+  templateless,
+}) => {
   const schemas = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -214,7 +220,10 @@ const generateAndInjectSchemas = ({ template, articleData, url, baseUrl }) => {
       },
     ],
   }
-
+  // If templateless flag is true, just return the schemas
+  if (templateless) {
+    return { schemas }
+  }
   if (articleData) {
     schemas['@graph'].push({
       '@type': 'NewsArticle',
