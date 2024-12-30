@@ -1,0 +1,19 @@
+{
+  "rewards": {
+    "bonus_xp": "Bonus XP",
+    "rqm_boost": "RQM Boost"
+  },
+  "buttons": {
+    "claim": "Claim Rewards",
+    "claimed": "Rewards Claimed!"
+  },
+  "tooltips": {
+    "trophy": "Trophy Achievement",
+    "star": "XP Reward",
+    "zap": "Boost Reward"
+  },
+  "messages": {
+    "success": "Rewards Claimed!",
+    "description": "{{description}}"
+  }
+}

@@ -59,6 +59,7 @@ const namespaces = {
     'TournamentQuiz',
     'TournamentBadge',
   ],
+  reward: ['IQBoostDisplay', 'QuinBoostDisplay','StreakSurgeDisplay',],
   quizComponents: [
     'BoostedSubmittedQuizInterface',
     'ConfirmationModal',
@@ -179,6 +180,8 @@ i18n
             return `/locales/${lng}/components/tournamentComponents/${namespace}.json`
           case 'quizComponents':
             return `/locales/${lng}/components/quizComponents/${namespace}.json`
+          case 'reward':
+            return `/locales/${lng}/components/reward/${namespace}.json`
           case 'authComponents':
             return `/locales/${lng}/components/authComponents/${namespace}.json`
           case 'contactComponents':

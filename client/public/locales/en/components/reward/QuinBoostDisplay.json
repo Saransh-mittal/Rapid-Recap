@@ -1,0 +1,12 @@
+{
+  "title": "RQM Boost Ready!",
+  "subtitle": "Supercharge your next quiz performance",
+  "benefits": {
+    "score": "Higher Score",
+    "iq": "Better IQ"
+  },
+  "button": {
+    "activate": "Activate Boost!",
+    "activated": "Boost Activated!"
+  }
+}

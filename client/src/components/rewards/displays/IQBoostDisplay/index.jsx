@@ -10,13 +10,14 @@ import {
   SuccessMessage,
 } from './components'
 import useRewardState from '../../hooks/useRewardState'
+import { useTranslation } from 'react-i18next'
 
 const IQBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
   const { claimed, showSuccess, handleClaim } = useRewardState({
     onClaim,
     initialClaimed,
   })
-
+  const { t } = useTranslation('IQBoostDisplay')
   return (
     <BaseRewardDisplay
       title={reward.title}
@@ -37,9 +38,10 @@ const IQBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                 key={'claim-button'}
                 onClick={handleClaim}
                 disabled={claimed}
+                t={t}
               />
             )}
-            {showSuccess && <SuccessMessage key={'success-message'} />}
+            {showSuccess && <SuccessMessage key={'success-message'} t={t} />}
           </AnimatePresence>
         </Box>
       </React.Fragment>

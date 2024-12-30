@@ -7,6 +7,7 @@ import BaseRewardDisplay from '../../common/BaseRewardDisplay'
 import { RocketAnimation, FloatingParticles } from './components'
 import useRewardState from '../../hooks/useRewardState'
 import { claimQuinBoost } from '../../../../utils/quiz.utils'
+import { useTranslation } from 'react-i18next'
 
 const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
   const [showEffects, setShowEffects] = useState(false)
@@ -19,6 +20,7 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
     const timer = setTimeout(() => setShowEffects(true), 100)
     return () => clearTimeout(timer)
   }, [])
+  const { t } = useTranslation('QuinBoostDisplay')
 
   return (
     <BaseRewardDisplay
@@ -56,7 +58,7 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                 textAlign="center"
                 letterSpacing="wide"
               >
-                RQM Boost Ready!
+                {t('title')}
               </Text>
 
               <Text
@@ -66,7 +68,7 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                 px={4}
                 maxW="sm"
               >
-                Supercharge your next quiz performance
+                {t('subtitle')}
               </Text>
 
               <HStack
@@ -77,11 +79,15 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
               >
                 <HStack spacing={{ base: 2, md: 3 }}>
                   <Target size={20} />
-                  <Text fontSize={{ base: 'md', md: 'lg' }}>Higher Score</Text>
+                  <Text fontSize={{ base: 'md', md: 'lg' }}>
+                    {t('benefits.score')}
+                  </Text>
                 </HStack>
                 <HStack spacing={{ base: 2, md: 3 }}>
                   <Brain size={20} />
-                  <Text fontSize={{ base: 'md', md: 'lg' }}>Better IQ</Text>
+                  <Text fontSize={{ base: 'md', md: 'lg' }}>
+                    {t('benefits.iq')}
+                  </Text>
                 </HStack>
               </HStack>
 
@@ -119,7 +125,7 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                         rightIcon={<Stars size={22} />}
                         transition="all 0.2s"
                       >
-                        Activate Boost!
+                        {t('button.activate')}
                       </Button>
                     </motion.div>
                   ) : (
@@ -132,7 +138,7 @@ const QuinBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                         fontWeight="bold"
                       >
                         <Sparkles size={24} />
-                        <Text>Boost Activated!</Text>
+                        <Text>{t('button.activated')}</Text>
                         <Sparkles size={24} />
                       </HStack>
                     </motion.div>
