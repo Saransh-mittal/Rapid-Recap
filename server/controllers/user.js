@@ -49,6 +49,8 @@ const {
   updateUserWithRetry,
   logActivityWithRetry,
 } = require('../utils/dbOperations.js')
+const moment = require('moment-timezone')
+const { processBadgePrivileges } = require('../utils/tournament.utils.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -202,10 +204,28 @@ const loginUser = async (req, res) => {
         expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         httpOnly: true,
       })
+    let badges = findUser?.badges || []
+    const now = moment().tz('Asia/Kolkata')
 
-    return res
-      .status(201)
-      .json({ message: 'SignIn Successfull', user: findUser, token })
+    // Get unclaimed valid badges
+    let unClaimedValidBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        !badge.claimed,
+    )
+
+    // Process category privileges from badges
+    const categoryPrivileges = processBadgePrivileges(badges)
+    Object.keys(categoryPrivileges).forEach(key => {
+      const cacheKey = `privilege_${findUser._id.toString()}_${key}`
+      cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+    })
+    return res.status(201).json({
+      message: 'SignIn Successfull',
+      user: { ...findUser._doc, unClaimedValidBadges, categoryPrivileges },
+      token,
+    })
   } catch (err) {
     console.log(err)
   }
@@ -240,9 +260,29 @@ const loginCheck = asyncHandler(async (req, res) => {
   // Calculate new login streak
   const newStreakData = calculateLoginStreak(user, today)
 
+  let badges = user?.badges || []
+  const now = moment().tz('Asia/Kolkata')
+
+  // Get unclaimed valid badges
+  let unClaimedValidBadges = badges.filter(
+    badge =>
+      badge.canBeClaimedUntil &&
+      moment(badge.canBeClaimedUntil).isAfter(now) &&
+      !badge.claimed,
+  )
+
+  // Process category privileges from badges
+  const categoryPrivileges = processBadgePrivileges(badges)
+
+  Object.keys(categoryPrivileges).forEach(key => {
+    const cacheKey = `privilege_${req.user._id}_${key}`
+    cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+  })
   // Create optimistically updated user object for immediate response
   const optimisticUser = {
     ...user,
+    unClaimedValidBadges,
+    categoryPrivileges,
     loginStreak: newStreakData.streak,
     lastLogin: today,
   }
@@ -478,7 +518,30 @@ const handleGoogleLogin = async (req, res) => {
       expires: new Date(Date.now() + 2592000000),
       httpOnly: true,
     })
-    res.status(201).json({ message: 'Google Login Successfull', user, token })
+
+    let badges = user?.badges || []
+    const now = moment().tz('Asia/Kolkata')
+
+    // Get unclaimed valid badges
+    let unClaimedValidBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        !badge.claimed,
+    )
+
+    // Process category privileges from badges
+    const categoryPrivileges = processBadgePrivileges(badges)
+
+    Object.keys(categoryPrivileges).forEach(key => {
+      const cacheKey = `privilege_${user._id.toString()}_${key}`
+      cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+    })
+    res.status(201).json({
+      message: 'Google Login Successfull',
+      user: { ...user._doc, unClaimedValidBadges, categoryPrivileges },
+      token,
+    })
   } catch (error) {
     console.log(error)
     res.status(422).json({ error: error })
@@ -2031,6 +2094,40 @@ const getOnboardingProgress = asyncHandler(async (req, res) => {
   }
 })
 
+const claimTournamentBadge = asyncHandler(async (req, res) => {
+  const { tournamentNumber, badgeName } = req.body
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    // Find the badge and mark it as claimed
+    const badgeIndex = user.badges.findIndex(
+      badge =>
+        badge.tournamentNumber === tournamentNumber &&
+        badge.badgeName === badgeName &&
+        !badge.claimed,
+    )
+
+    if (badgeIndex === -1) {
+      return res
+        .status(404)
+        .json({ message: 'Badge not found or already claimed' })
+    }
+
+    user.badges[badgeIndex].claimed = true
+    await user.save()
+
+    res.status(200).json({ message: 'Badge claimed successfully' })
+  } catch (error) {
+    console.error('Error claiming badge:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
 module.exports = {
   registerUser,
   loginUser,
@@ -2075,4 +2172,5 @@ module.exports = {
   getOnboardingProgress,
   claimQuinBoost,
   claimStreakSurge,
+  claimTournamentBadge,
 }

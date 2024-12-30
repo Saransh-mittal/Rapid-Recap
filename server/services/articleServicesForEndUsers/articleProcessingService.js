@@ -5,7 +5,7 @@ const {
   breakArticleIntoParagraphs,
 } = require('../../utils/article.utils')
 
-async function processArticles(articles, lang) {
+async function processArticles(articles, lang, isPrivileged = null) {
   if (!articles) return null
   if (lang === 'hi') {
     for (let article of articles) {
@@ -54,6 +54,9 @@ async function processArticles(articles, lang) {
         _id: article._id,
         dictionary: highlights?.dictionary || [],
         importantSentences: highlights?.importantSentences || [],
+        articleDifficulty: isPrivileged
+          ? article?.articleDifficulty || 0.5
+          : undefined,
       }
     }),
   )

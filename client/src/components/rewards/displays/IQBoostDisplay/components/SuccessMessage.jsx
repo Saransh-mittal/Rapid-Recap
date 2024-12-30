@@ -1,10 +1,15 @@
+// src/components/rewards/displays/IQBoostDisplay/components/SuccessMessage.jsx
 import React, { memo } from 'react'
 import { HStack, Text, useMediaQuery } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Crown, PartyPopper } from 'lucide-react'
 
-const SuccessMessage = () => {
+const SuccessMessage = ({ theme }) => {
   const isScreenSmallerThan768px = useMediaQuery('(max-width: 768px)')[0]
+  const textColor = theme?.textColor || 'blue.400'
+  const glowColor = theme?.glowColor || 'rgba(66,153,225,0.3)'
+  const iconColor = theme?.iconColor || 'blue.400'
+
   return (
     <HStack
       as={motion.div}
@@ -27,19 +32,19 @@ const SuccessMessage = () => {
     >
       <Crown
         size={isScreenSmallerThan768px ? 24 : 36}
-        color="var(--chakra-colors-blue-400)"
+        color={`var(--chakra-colors-${iconColor})`}
       />
       <Text
-        color="blue.400"
+        color={textColor}
         fontSize={{ base: 'lg', md: '3xl' }}
         fontWeight="bold"
-        textShadow="0 0 10px rgba(66,153,225,0.3)"
+        textShadow={`0 0 10px ${glowColor}`}
       >
         Intelligence Amplified!
       </Text>
       <PartyPopper
         size={isScreenSmallerThan768px ? 24 : 36}
-        color="var(--chakra-colors-blue-400)"
+        color={`var(--chakra-colors-${iconColor})`}
       />
     </HStack>
   )

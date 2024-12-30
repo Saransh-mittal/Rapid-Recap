@@ -7,6 +7,8 @@ import { RewardCard, ClaimButton, AchievementIcon } from './components'
 import AnimatedBackground from './components/AnimatedBackground'
 import { REWARD_VARIANTS } from '../../constants/rewardTypes'
 import useRewardState from '../../hooks/useRewardState'
+import { handleTournamentRewardsClaim } from '../../../../utils/tournamentRewards'
+import { useDispatch, useSelector } from 'react-redux'
 
 const TournamentWinnerDisplay = React.memo(
   ({ reward, onClaim, claimed: initialClaimed }) => {
@@ -14,7 +16,8 @@ const TournamentWinnerDisplay = React.memo(
       onClaim,
       initialClaimed,
     })
-
+    const { user } = useSelector(state => state.auth)
+    const dispatch = useDispatch()
     const variant = REWARD_VARIANTS[reward.type]
 
     return (
@@ -124,7 +127,14 @@ const TournamentWinnerDisplay = React.memo(
             {/* Claim Button */}
             <Box w="full" maxW="md" mt={4}>
               <ClaimButton
-                onClick={handleClaim}
+                onClick={() => {
+                  handleTournamentRewardsClaim({
+                    badge: reward.badge,
+                    user,
+                    dispatch,
+                  })
+                  handleClaim()
+                }}
                 claimed={claimed}
                 variant={variant}
               />

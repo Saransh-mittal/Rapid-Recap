@@ -44,6 +44,7 @@ const {
   getOnboardingProgress,
   claimQuinBoost,
   claimStreakSurge,
+  claimTournamentBadge,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -94,6 +95,7 @@ router
 router.post('/deleteAccount', Authenticate, deleteAccount)
 router.post('/claim-quinboost', Authenticate, claimQuinBoost)
 router.post('/claim-streak-surge', Authenticate, claimStreakSurge)
+router.route('/claim-badge').post(Authenticate, claimTournamentBadge)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router

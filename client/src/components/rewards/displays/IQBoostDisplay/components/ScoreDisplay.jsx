@@ -1,12 +1,19 @@
+//src/components/rewards/displays/IQBoostDisplay/components/ScoreDisplay.jsx
 import React, { memo } from 'react'
 import { Box, Text, HStack, useMediaQuery } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { TrendingUp } from 'lucide-react'
 import { useCounter } from '../../../hooks/useCounter'
+import { formatNumber } from '../../../../../utils/helper.utils'
 
-const ScoreDisplay = ({ prevScore, newScore }) => {
+const ScoreDisplay = ({ prevScore, newScore, theme }) => {
   const animatedScore = useCounter(newScore, prevScore)
   const isScreenSmallerThan768px = useMediaQuery('(max-width: 768px)')[0]
+  const glowColor = theme?.glowColor || 'rgba(66,153,225,0.3)'
+  const textGradient =
+    theme?.titleGradient || 'linear(to-r, blue.300, blue.500)'
+  const iconColor = theme?.iconColor || 'blue.400'
+
   return (
     <HStack spacing={8} justify="center" align="center">
       {/* Previous Score */}
@@ -24,8 +31,7 @@ const ScoreDisplay = ({ prevScore, newScore }) => {
             style={{
               position: 'absolute',
               inset: '-20px',
-              background:
-                'radial-gradient(circle, rgba(99, 179, 237, 0.15), transparent 70%)',
+              background: `radial-gradient(circle, ${glowColor}, transparent 70%)`,
               borderRadius: '50%',
               filter: 'blur(10px)',
             }}
@@ -51,16 +57,16 @@ const ScoreDisplay = ({ prevScore, newScore }) => {
             }}
           >
             <Text
-              fontSize={{ base: '5xl', md: '8xl' }}
+              fontSize={{ base: '4xl', md: '7xl' }}
               fontWeight="extrabold"
               color="whiteAlpha.700"
-              textShadow="0 0 20px rgba(255,255,255,0.3)"
+              textShadow={`0 0 20px ${glowColor}`}
               style={{
                 display: 'block',
                 position: 'relative',
               }}
             >
-              {prevScore}
+              {formatNumber(prevScore)}
             </Text>
           </motion.div>
         </Box>
@@ -93,9 +99,9 @@ const ScoreDisplay = ({ prevScore, newScore }) => {
         <motion.div
           animate={{
             filter: [
-              'drop-shadow(0 0 10px rgba(66,153,225,0.4))',
-              'drop-shadow(0 0 20px rgba(66,153,225,0.6))',
-              'drop-shadow(0 0 10px rgba(66,153,225,0.4))',
+              `drop-shadow(0 0 10px ${glowColor})`,
+              `drop-shadow(0 0 20px ${glowColor})`,
+              `drop-shadow(0 0 10px ${glowColor})`,
             ],
           }}
           transition={{
@@ -111,7 +117,7 @@ const ScoreDisplay = ({ prevScore, newScore }) => {
         >
           <TrendingUp
             size={isScreenSmallerThan768px ? 48 : 64}
-            color="var(--chakra-colors-blue-400)"
+            color={`var(--chakra-colors-${iconColor.split('.').join('-')})`}
           />
         </motion.div>
       </motion.div>
@@ -126,12 +132,12 @@ const ScoreDisplay = ({ prevScore, newScore }) => {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <Box position="relative">
+          {/* Primary glow effect */}
           <motion.div
             style={{
               position: 'absolute',
               inset: '-20px',
-              background:
-                'radial-gradient(circle, rgba(66,153,225,0.3), transparent 70%)',
+              background: `radial-gradient(circle, ${glowColor}, transparent 70%)`,
               borderRadius: '50%',
               filter: 'blur(15px)',
             }}
@@ -146,12 +152,12 @@ const ScoreDisplay = ({ prevScore, newScore }) => {
             }}
           />
 
+          {/* Secondary glow effect */}
           <motion.div
             style={{
               position: 'absolute',
               inset: '-15px',
-              background:
-                'radial-gradient(circle, rgba(99,179,237,0.4), transparent 60%)',
+              background: `radial-gradient(circle, ${glowColor}, transparent 60%)`,
               borderRadius: '50%',
               filter: 'blur(10px)',
             }}
@@ -179,17 +185,17 @@ const ScoreDisplay = ({ prevScore, newScore }) => {
             }}
           >
             <Text
-              fontSize={{ base: '5xl', md: '8xl' }}
+              fontSize={{ base: '4xl', md: '7xl' }}
               fontWeight="extrabold"
-              bgGradient="linear(to-r, blue.300, blue.500)"
+              bgGradient={textGradient}
               bgClip="text"
-              textShadow="0 0 30px rgba(66,153,225,0.5)"
+              textShadow={`0 0 30px ${glowColor}`}
               style={{
                 display: 'block',
                 position: 'relative',
               }}
             >
-              {animatedScore}
+              {formatNumber(animatedScore)}
             </Text>
           </motion.div>
         </Box>

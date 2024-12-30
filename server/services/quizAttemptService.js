@@ -21,6 +21,7 @@ const { calculateRealTimeIQ } = require('./iqCalculationService')
 const { streakSurgeTemplate } = require('../data/inboxNotificationsTemplates')
 const i18n = require('i18next')
 const ApplicationUpdates = require('../model/applicationUpdatesSchema')
+const moment = require('moment-timezone')
 
 const hasStreakSurgeNotificationToday = async user => {
   return user.todaysQuizCnt > 0
@@ -52,6 +53,17 @@ const saveQuizAttempt = async (
 
   const localizedI18n = i18n.cloneInstance({ initImmediate: false })
 
+  const validBadges = user.badges.filter(
+    badge =>
+      badge.canBeClaimedUntil &&
+      moment(badge.canBeClaimedUntil).isAfter(now) &&
+      ['ACE', 'PRO', 'CHAMP'].includes(badge.badgeName) &&
+      badge.text === category,
+  )
+  const rqmBoostForCategory = validBadges.some(badge =>
+    ['ACE', 'PRO'].includes(badge.badgeName),
+  )
+
   // Switch to user's language
   await localizedI18n.changeLanguage(
     user?.userLanguage ? user.userLanguage : 'en',
@@ -81,7 +93,14 @@ const saveQuizAttempt = async (
   ) {
     const quinBoost = user.quinBoosts[user.quinBoosts.length - 1]
     if (quinBoost.boosted) {
-      RQM_score = Math.ceil(RQM_score * (user.todayBoost ? 1.75 : 1.5))
+      RQM_score = Math.ceil(
+        RQM_score *
+          (rqmBoostForCategory && user.todayBoost
+            ? 2
+            : rqmBoostForCategory || user.todayBoost
+            ? 1.75
+            : 1.5),
+      )
       quinBoost.boosted = false
       const qBoost = await QuinBoost.findById(quinBoost.quinBoost)
       qBoost.article = article._id
@@ -96,7 +115,7 @@ const saveQuizAttempt = async (
       user.eligibleForTournament = true
     }
   } else if (user.todayBoost) {
-    RQM_score = Math.ceil(RQM_score * 1.5)
+    RQM_score = Math.ceil(RQM_score * (rqmBoostForCategory ? 1.75 : 1.5))
     boosted = true
 
     // Check if notification has already been sent today
@@ -114,6 +133,9 @@ const saveQuizAttempt = async (
       })
       await newNotification.save()
     }
+  } else if (rqmBoostForCategory) {
+    RQM_score = Math.ceil(RQM_score * 1.5)
+    boosted = true
   }
 
   emitProgress('calculateRQM', 100)

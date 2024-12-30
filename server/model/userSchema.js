@@ -330,6 +330,14 @@ const userSchema = new mongoose.Schema(
         tournamentNumber: Number,
         badgeName: String,
         text: String,
+        claimed: {
+          type: Boolean,
+          default: false,
+        },
+        canBeClaimedUntil: {
+          type: Date,
+          default: null,
+        },
       },
     ],
     displayedBadge: {

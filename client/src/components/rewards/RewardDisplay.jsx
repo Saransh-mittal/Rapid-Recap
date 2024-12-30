@@ -78,6 +78,12 @@ const RewardDisplay = () => {
     dispatch(clearCurrentReward())
   }
 
+  // Generate a unique key based on reward data
+  const getRewardKey = reward => {
+    const uniqueIdentifiers = [reward.type, reward.title, reward.description]
+    return uniqueIdentifiers.join('_')
+  }
+
   return (
     <AnimatePresence mode="wait">
       {isDisplaying && (
@@ -110,7 +116,7 @@ const RewardDisplay = () => {
           >
             <Suspense fallback={<LoadingFallback />}>
               <RewardComponent
-                key={'reward-component'}
+                key={getRewardKey(currentReward.reward)}
                 reward={currentReward.reward}
                 onClaim={handleClaim}
                 claimed={currentReward.claimed}

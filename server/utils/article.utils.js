@@ -828,6 +828,70 @@ const getTopThreeRecommendedArticles = async userId => {
   }
 }
 
+/**
+ * Convert article difficulty number to string representation
+ * @param {number} difficulty - Article difficulty value
+ * @returns {string} - Difficulty level as string
+ */
+const getDifficultyString = difficulty => {
+  return difficulty < 0.5
+    ? 'easy'
+    : difficulty >= 0.5 && difficulty < 0.7
+    ? 'medium'
+    : 'hard'
+}
+
+/**
+ * Process articles based on user privileges
+ * Handles both single category and multi-category privilege formats
+ * @param {Array} articles - Array of articles to process
+ * @param {Object} privileges - User privileges object
+ * @returns {Array} - Processed articles with privilege information
+ */
+const processArticlesWithPrivileges = (articles, privileges) => {
+  // No privileges or invalid input
+  if (
+    !privileges ||
+    (!privileges.rqmBoost &&
+      !privileges.radar &&
+      !privileges.privilegesByCategory)
+  ) {
+    return articles
+  }
+
+  return articles.map(article => {
+    let categoryPrivileges
+
+    // Handle multi-category privileges (for recommendations)
+    if (privileges.privilegesByCategory) {
+      categoryPrivileges = privileges.privilegesByCategory[
+        article.category
+      ] || {
+        rqmBoost: false,
+        radar: false,
+      }
+    } else {
+      // Handle single category privileges (for allArticles)
+      categoryPrivileges = {
+        rqmBoost: privileges.rqmBoost,
+        radar: privileges.radar,
+      }
+    }
+
+    const articleDifficulty = article?.articleDifficulty || 0.5
+
+    return {
+      ...article,
+      // Only include articleDifficulty string if radar privilege exists
+      articleDifficulty: categoryPrivileges.radar
+        ? getDifficultyString(articleDifficulty)
+        : undefined,
+      // Include RQM boost availability
+      rqmBoostAvailable: categoryPrivileges.rqmBoost,
+    }
+  })
+}
+
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
@@ -839,4 +903,5 @@ module.exports = {
   getTopArticle,
   getSecondTopArticle,
   getTopThreeRecommendedArticles,
+  processArticlesWithPrivileges,
 }

@@ -1,6 +1,7 @@
 // client/src/entry-client.jsx
 import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
+import { SocketProvider } from './contextAPI/SocketContext.jsx'
 
 // Lazy load all major components
 const BrowserRouter = lazy(() =>
@@ -23,7 +24,7 @@ const HelmetProvider = lazy(() =>
     default: module.HelmetProvider,
   })),
 )
-const ChatProvider = lazy(() => import('./contextAPI/ChatProvider.jsx'))
+// const ChatProvider = lazy(() => import('./contextAPI/ChatProvider.jsx'))
 const I18nextProvider = lazy(() =>
   import('react-i18next').then(module => ({
     default: module.I18nextProvider,
@@ -88,7 +89,8 @@ if (!isBot) {
       <BrowserRouter>
         <ReduxWrapper>
           <Suspense fallback={<LoadingFallback />}>
-            <ChatProvider>
+            {/* <ChatProvider> */}
+            <SocketProvider>
               <I18nWrapper>
                 <Suspense fallback={<LoadingFallback />}>
                   <ChakraProvider>
@@ -102,7 +104,8 @@ if (!isBot) {
                   </ChakraProvider>
                 </Suspense>
               </I18nWrapper>
-            </ChatProvider>
+            </SocketProvider>
+            {/* </ChatProvider> */}
           </Suspense>
         </ReduxWrapper>
       </BrowserRouter>

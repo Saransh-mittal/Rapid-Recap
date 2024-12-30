@@ -1,8 +1,11 @@
+// src/components/rewards/displays/IQBoostDisplay/components/NeuronEffect.jsx
 import React, { memo, useMemo } from 'react'
 import { Box } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 
-const NeuronEffect = () => {
+const NeuronEffect = ({ theme }) => {
+  const particleColor = theme?.particleColor || 'blue.400'
+
   const particles = useMemo(
     () =>
       Array.from({ length: 20 }, () => ({
@@ -32,7 +35,9 @@ const NeuronEffect = () => {
             height: particle.size,
             left: `${particle.x}%`,
             top: `${particle.y}%`,
-            background: 'var(--chakra-colors-blue-400)',
+            background: `var(--chakra-colors-${particleColor
+              .split('.')
+              .join('-')})`,
             borderRadius: '50%',
             filter: 'blur(1px)',
           }}

@@ -22,14 +22,69 @@ export const RewardTester = () => {
   }
 
   const showIQBoost = () => {
+    // dispatch(
+    //   addReward({
+    //     type: REWARD_TYPES.IQ_BOOST,
+    //     title: 'IQ Score Boost!',
+    //     description:
+    //       'Your knowledge is expanding! Your IQ score has increased.',
+    //     prevScore: 105,
+    //     newScore: 110,
+    //   }),
+    // )
     dispatch(
       addReward({
         type: REWARD_TYPES.IQ_BOOST,
-        title: 'IQ Score Boost!',
+        tournamentReward: true,
+        rank: 'RANK_1',
+        title: 'Tournament Champion IQ Boost!',
         description:
-          'Your knowledge is expanding! Your IQ score has increased.',
-        prevScore: 105,
-        newScore: 110,
+          'Your legendary performance has greatly enhanced your Intelligence!',
+        prevScore: 110,
+        newScore: 120,
+      }),
+    )
+    // dispatch(
+    //   addReward({
+    //     type: REWARD_TYPES.IQ_BOOST,
+    //     tournamentReward: true,
+    //     rank: 'RANK_2',
+    //     title: 'Elite Performance IQ Boost!',
+    //     description:
+    //       'Your exceptional skills have significantly boosted your Intelligence!',
+    //     prevScore: 110,
+    //     newScore: 115,
+    //   }),
+    // )
+    // dispatch(
+    //   addReward({
+    //     type: REWARD_TYPES.IQ_BOOST,
+    //     tournamentReward: true,
+    //     rank: 'RANK_3',
+    //     title: 'Rising Star IQ Boost!',
+    //     description:
+    //       'Your outstanding achievement has increased your Intelligence!',
+    //     prevScore: 110.3,
+    //     newScore: 112.8,
+    //   }),
+    // )
+    dispatch(
+      addReward({
+        type: REWARD_TYPES.STREAK_SURGE,
+        title: '7-Day Streak!',
+        description: 'A Week of Excellence',
+        rewards: [
+          {
+            title: 'Bonus XP',
+            amount: '20 XP',
+            color: '#FDB813',
+          },
+          {
+            title: 'RQM Boost',
+            amount: '1.5x Multiplier',
+            color: '#818CF8',
+          },
+        ],
       }),
     )
   }

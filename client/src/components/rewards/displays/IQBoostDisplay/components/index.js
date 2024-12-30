@@ -1,5 +1,7 @@
+// src/components/rewards/displays/IQBoostDisplay/components/index.js
 export { default as BrainIcon } from './BrainIcon'
 export { default as NeuronEffect } from './NeuronEffect'
 export { default as ScoreDisplay } from './ScoreDisplay'
 export { default as ClaimButton } from './ClaimButton'
 export { default as SuccessMessage } from './SuccessMessage'
+export { default as TournamentBadgeIcon } from './TournamentBadgeIcon'
