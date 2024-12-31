@@ -17,6 +17,7 @@ const cache = require('memory-cache')
 const { generateHighlightForArticle } = require('./article.highlight.utils')
 const { generateKeywordsAndDescription } = require('./seoHelper')
 const { findDuplicateArticles } = require('../services/duplicateCheckService')
+const { commonTerms } = require('./commonTerms')
 
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
@@ -485,7 +486,10 @@ const processExtractedNews = async (news, category) => {
             `Error classifying news item titled "${res.title}": ${error.message}`,
           )
         }
-
+      const articleDifficulty = await calculateArticleDifficulty({
+        mainText: res.mainText,
+      })
+      res.articleDifficulty = articleDifficulty
       const newArticle = new Article(res)
       await newArticle.save()
       hindiConverter(newArticle._id.toString())
@@ -892,6 +896,108 @@ const processArticlesWithPrivileges = (articles, privileges) => {
   })
 }
 
+const calculateArticleDifficulty = async ({ mainText }) => {
+  try {
+    // Initialize score components
+    let numericContentScore = 0
+    let lengthScore = 0
+    let complexityScore = 0
+
+    // Check for numeric content with context
+    const numericPattern =
+      /\d+(\.\d+)?(\s*(billion|million|crore|lakh|thousand|USD|Rs|₹|percent|%))/gi
+    const simpleNumericPattern = /\d+/g
+
+    const contextualNumbers = (mainText.match(numericPattern) || []).length
+    const simpleNumbers =
+      (mainText.match(simpleNumericPattern) || []).length - contextualNumbers
+
+    // Weighted numeric score - contextual numbers count more
+    numericContentScore = Math.min(
+      0.25,
+      contextualNumbers * 0.05 + simpleNumbers * 0.02,
+    )
+
+    // Length scoring (calibrated for 800-2000 chars)
+    const wordCount = mainText.split(/\s+/).length
+    if (wordCount < 160) {
+      lengthScore = 0.1
+    } else if (wordCount <= 240) {
+      lengthScore = 0.15 + ((wordCount - 160) / 80) * 0.1
+    } else {
+      lengthScore = 0.25 + Math.min(0.1, ((wordCount - 240) / 160) * 0.1)
+    }
+
+    // Complexity scoring with expanded common terms exclusion
+    const words = mainText.split(/\s+/)
+    const complexWords = words.filter(word => {
+      // Clean the word for checking
+      const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '')
+
+      // Skip if it's in our common terms
+      if (commonTerms.has(cleanWord)) return false
+
+      const syllables = countSyllables(cleanWord)
+      return syllables > 2
+    })
+
+    const complexityRatio = complexWords.length / words.length
+    complexityScore = Math.min(0.3, complexityRatio * 2.5)
+
+    // Sentence structure analysis
+    const sentences = mainText.split(/[.!?]+/).filter(s => s.trim().length > 0)
+    const avgSentenceLength = words.length / sentences.length
+
+    // Technical term detection (considering category-specific terms)
+    const technicalTerms =
+      mainText.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?=\s|$)/g) || []
+    const technicalScore = Math.min(
+      0.15,
+      (technicalTerms.length / sentences.length) * 0.05,
+    )
+
+    // Sentence complexity
+    const sentenceScore = Math.min(
+      0.15,
+      (avgSentenceLength / 20) * 0.15 + technicalScore,
+    )
+
+    // Combine scores with category-specific adjustment
+    let totalDifficulty =
+      numericContentScore + lengthScore + complexityScore + sentenceScore
+
+    // Scale down more aggressively
+    totalDifficulty = totalDifficulty * 0.65
+
+    // Adjusted distribution bands
+    if (totalDifficulty < 0.5) {
+      // Wider easy range
+      totalDifficulty = 0.3 + totalDifficulty * 0.3 // Gentler slope
+    } else if (totalDifficulty < 0.7) {
+      // Medium range (about 30% of articles)
+      totalDifficulty = 0.5 + (totalDifficulty - 0.45) * 0.5
+    } else {
+      // Hard range (about 10% of articles)
+      totalDifficulty = 0.7 + (totalDifficulty - 0.7) * 0.4
+    }
+
+    return Math.min(0.99, Math.max(0.01, Number(totalDifficulty.toFixed(2))))
+  } catch (error) {
+    console.error('Error calculating article difficulty:', error)
+    return 0.35
+  }
+}
+
+// Helper function remains the same
+const countSyllables = word => {
+  word = word.toLowerCase()
+  if (word.length <= 3) return 1
+  word = word.replace(/(?:[^laeiouy]|ed|[^laeiouy]e)$/, '')
+  word = word.replace(/^y/, '')
+  const syllables = word.match(/[aeiouy]{1,2}/g)
+  return syllables ? syllables.length : 1
+}
+
 module.exports = {
   hindiConverter,
   breakArticleIntoParagraphs,
@@ -904,4 +1010,5 @@ module.exports = {
   getSecondTopArticle,
   getTopThreeRecommendedArticles,
   processArticlesWithPrivileges,
+  calculateArticleDifficulty,
 }

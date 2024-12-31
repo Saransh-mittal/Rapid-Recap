@@ -109,9 +109,13 @@ const generateQuestionsForQuiz = async ({
   author,
   mainText,
   articleId,
+  article,
   emitProgress,
   session,
 }) => {
+  if (!article || !article.save || typeof article.save !== 'function') {
+    throw new Error('Invalid article object - must be a Mongoose document')
+  }
   if (!title || !author || !mainText || !articleId) {
     throw new Error('Missing required parameters')
   }
@@ -140,9 +144,7 @@ Instructions:
 7. Ensure all questions are derived from the provided text.
 8. Assign a difficulty level between 0.01 and 0.99 for each question (with two decimal accuracy). This field is mandatory.
 9. If the question requires remembering numerical data, specific dates, names (except author names and short names), or options and question are longer to read under 10 seconds then assign a higher difficulty level between 0.55 to 0.99. Give these things higher priority while assigning difficulty.
-10. Evaluate the article's overall difficulty considering factors such as vocabulary complexity, sentence structure, clarity, coherence, information density, length, and reader engagement. If the article involves a significant amount of numerical or name-based information, assign a higher overall difficulty rating.
-11. Provide an overall difficulty rating between 0.01 and 0.99 (with two decimal accuracy).
-12. Return the response in the following JSON format:
+10. Return the response in the following JSON format:
 
 {
   "title": "Title of the article",
@@ -161,46 +163,20 @@ Instructions:
           "answer": "",
           "explanation": "",
           "difficulty": ""
-        },
-      ],
+        }
+      ]
     },
     {
       "paragraph": 2,
-      "questions": [
-        {
-          "question": "",
-          "options": {
-            "a": "",
-            "b": "",
-            "c": "",
-            "d": ""
-          },
-          "answer": "",
-          "explanation": "",
-          "difficulty": ""
-        },
-      ],
+      "questions": []
     },
     {
       "paragraph": 3,
-      "questions": [
-        {
-          "question": "",
-          "options": {
-            "a": "",
-            "b": "",
-            "c": "",
-            "d": ""
-          },
-          "answer": "",
-          "explanation": "",
-          "difficulty": ""
-        },
-      ],
+      "questions": []
     }
-  ],
-  "overAllDifficulty": ""
+  ]
 }`
+
     emitProgress(40)
     while (attempts-- > 0) {
       try {
@@ -221,10 +197,7 @@ Instructions:
         })
 
         let responseText = result.choices[0].message.content
-
-        // Remove any backticks or invalid characters
         responseText = responseText.replace(/```json|```/g, '').trim()
-
         response = JSON.parse(responseText)
 
         if (
@@ -232,50 +205,59 @@ Instructions:
           response.paragraphs &&
           response.paragraphs.length === 3 &&
           response.paragraphs[0].questions.every(
-            q => q.difficulty !== undefined,
+            q =>
+              q.difficulty !== undefined &&
+              q.question &&
+              q.answer &&
+              q.explanation,
           ) &&
           response.paragraphs[1].questions.every(
-            q => q.difficulty !== undefined,
+            q =>
+              q.difficulty !== undefined &&
+              q.question &&
+              q.answer &&
+              q.explanation,
           ) &&
           response.paragraphs[2].questions.every(
-            q => q.difficulty !== undefined,
-          ) &&
-          response.overAllDifficulty !== undefined
+            q =>
+              q.difficulty !== undefined &&
+              q.question &&
+              q.answer &&
+              q.explanation,
+          )
         ) {
-          break
+          // If response is valid, fetch article and create quiz
+
+          if (!article) {
+            throw new Error('Article not found')
+          }
+
+          const newQuiz = new Quiz({
+            article: articleId,
+            para1: { questions: response.paragraphs[0].questions },
+            para2: { questions: response.paragraphs[1].questions },
+            para3: { questions: response.paragraphs[2].questions },
+            overAllDifficulty: article.articleDifficulty,
+          })
+
+          await newQuiz.save({ session })
+
+          if (!article.quiz) {
+            article.quiz = []
+          }
+          article.quiz.push(newQuiz._id)
+          await article.save({ session })
+          emitProgress(80)
+
+          return newQuiz
+        } else {
+          throw new Error('Invalid response format')
         }
       } catch (err) {
         console.error('Error during OpenAI API call:', err.message)
       }
-
-      console.log(`Retrying... ${attempts} attempts left.`)
     }
-    emitProgress(70)
-    if (!response) {
-      throw new Error('Failed to generate quiz after multiple attempts')
-    }
-
-    const newQuiz = new Quiz({
-      article: articleId,
-      para1: { questions: response.paragraphs[0].questions },
-      para2: { questions: response.paragraphs[1].questions },
-      para3: { questions: response.paragraphs[2].questions },
-      overAllDifficulty: response.overAllDifficulty,
-    })
-    await newQuiz.save({ session })
-
-    const article = await Article.findById(articleId).session(session)
-    if (!article) {
-      throw new Error('Article not found')
-    }
-
-    if (!article.quiz) {
-      article.quiz = []
-    }
-    article.quiz.push(newQuiz._id)
-    await article.save({ session })
-    emitProgress(80)
-    return newQuiz
+    throw new Error('Failed to generate quiz after multiple attempts')
   } catch (error) {
     console.error('Error generating questions for quiz:', error)
     throw error
@@ -287,166 +269,155 @@ const generateQuestionsForHindiQuiz = async ({
   author,
   mainText,
   articleId,
+  article,
   emitProgress,
   session,
 }) => {
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
-  const combinedMainText = mainText.join(' ')
+  if (!article || !article.save || typeof article.save !== 'function') {
+    throw new Error('Invalid article object - must be a Mongoose document')
+  }
+  if (!title || !author || !mainText || !articleId) {
+    throw new Error('Missing required parameters')
+  }
 
-  const prompt = `शीर्षक: ${title}\nलेखक: ${author}\n\nमुख्य पाठ: ${combinedMainText}\n\n`
-  const instructions = `निर्देश:
-1. लेख को 3 अनुच्छेदों में इस तरह विभाजित करें कि प्रत्येक अनुच्छेद से कम से कम 2 प्रश्न बनाए जा सकें। क्विज़ हिंदी भाषा में तैयार की जानी चाहिए क्योंकि लेख हिंदी में होगा और इसे सावधानीपूर्वक तैयार किया जाना चाहिए।
-2. प्रत्येक अनुच्छेद से न्यूनतम 2 और अधिकतम 5 प्रश्न तैयार करें (बहुत महत्वपूर्ण!)।
-3. प्रत्येक प्रश्न के लिए 4 विकल्प प्रदान करें।
-4. प्रत्येक प्रश्न का एक सही विकल्प होना चाहिए।
-5. उत्तर विकल्पों में से एक की कुंजी (a, b, c, d) होनी चाहिए।
-6. प्रत्येक उत्तर के लिए एक व्याख्या प्रदान करें।
-7. दिए गए लेख के बाहर कुछ भी नहीं होना चाहिए (महत्वपूर्ण)।
-8. प्रत्येक प्रश्न अद्वितीय होना चाहिए।
-9. प्रत्येक प्रश्न को 0 से 1 के बीच एक कठिनाई स्तर दें (यह 0 या 1 नहीं हो सकता, यह 0 से 1 के बीच दशमलव में होना चाहिए (दो दशमलव सटीकता के साथ))। **यह फ़ील्ड अनिवार्य है**।
-10. यदि प्रश्न में संख्यात्मक डेटा, विशिष्ट तिथियों, नामों (लेखक के नाम और छोटे नामों को छोड़कर) को याद रखने की आवश्यकता हो, या यदि विकल्प और प्रश्न को पढ़ने में 10 सेकंड से अधिक समय लगता है, तो कठिनाई स्तर को 0.55 से 0.99 के बीच अधिक निर्धारित करें। कठिनाई निर्धारित करते समय इन बातों को उच्च प्राथमिकता दें।
-11. लेख के समग्र कठिनाई स्तर का मूल्यांकन करें, जिसमें शब्दावली की जटिलता, वाक्य संरचना, अवधारणात्मक कठिनाई, विश्लेषण की गहराई, आवश्यक पृष्ठभूमि ज्ञान, स्पष्टता और सुसंगतता, सूचना की सघनता, भाषा शैली, लेख की लंबाई और पाठक की रुचि जैसे कारकों पर विचार करें। प्रत्येक मानदंड का मूल्यांकन करके लेख की कठिनाई रेटिंग 0 से 1 के पैमाने पर निर्धारित करें, जहां 0 कम कठिनाई और 1 उच्च कठिनाई का प्रतिनिधित्व करता है। इन मूल्यांकनों को समेकित करके एक समग्र कठिनाई स्तर निकालें जो लेख की जटिलता और विभिन्न प्रवीणता स्तरों के पाठकों के लिए उपयुक्तता को दर्शाता हो (यह 0 या 1 नहीं हो सकता, यह 0 से 1 के बीच दशमलव में होना चाहिए (दो दशमलव सटीकता के साथ))। **यह फ़ील्ड अनिवार्य है**।
-12. सही उत्तरों को विकल्पों में निम्नलिखित संभावनाओं के साथ वितरित करें:
-    - विकल्प 'd': 40% संभावना
-    - विकल्प 'a', 'b', और 'c': प्रत्येक 20% संभावना
-    सुनिश्चित करें कि यह वितरण क्विज़ के सभी प्रश्नों में लागू हो।
-13. दोहरी जांच करें कि सही उत्तर और व्याख्या एक दूसरे के साथ और लेख की सामग्री के साथ सुसंगत हैं।
-14. प्रतिक्रिया को निम्नलिखित JSON ऑब्जेक्ट प्रारूप में वापस करें:
+  try {
+    const openai = new OpenAI(process.env.OPENAI_API_KEY)
+    let attempts = 5
+    let result
+    let response
+    const combinedMainText = mainText.join(' ')
+
+    const prompt = `शीर्षक: ${title}\nलेखक: ${author}\n\nमुख्य पाठ: ${combinedMainText}\n\nनिर्देश:
+1. लेख को 3 अनुच्छेदों में विभाजित करें।
+2. प्रत्येक अनुच्छेद से 2 से 5 अद्वितीय प्रश्न तैयार करें।
+3. प्रत्येक प्रश्न के लिए 4 विकल्प प्रदान करें, जिनमें से एक सही उत्तर (a, b, c, या d) से चिह्नित हो।
+4. सही उत्तरों को विकल्पों में निम्नलिखित संभावनाओं के साथ वितरित करें:
+   - विकल्प 'd': 40% संभावना
+   - विकल्प 'a', 'b', और 'c': प्रत्येक 20% संभावना
+5. प्रत्येक सही उत्तर के लिए संक्षिप्त व्याख्या प्रदान करें।
+6. दोहरी जांच करें कि सही उत्तर और व्याख्या एक दूसरे के साथ और लेख की सामग्री के साथ सुसंगत हैं।
+7. सभी प्रश्न दिए गए लेख से ही होने चाहिए।
+8. प्रत्येक प्रश्न को 0.01 से 0.99 के बीच एक कठिनाई स्तर दें (दो दशमलव सटीकता के साथ)।
+9. यदि प्रश्न में संख्यात्मक डेटा, विशिष्ट तिथियों, नामों को याद रखने की आवश्यकता हो, या विकल्प और प्रश्न को पढ़ने में 10 सेकंड से अधिक समय लगता है, तो कठिनाई स्तर 0.55 से 0.99 के बीच निर्धारित करें।
+10. प्रतिक्रिया को निम्नलिखित JSON प्रारूप में वापस करें:
+
 {
-  title: "लेख का शीर्षक",
-  para1: {
-    questions: [
-      {
-        question: "",
-        options: {
-          a: "",
-          b: "",
-          c: "",
-          d: ""
-        },
-        answer: "",
-        explanation: "",
-        difficulty: ""
-      },
-    ],
-  },
-  para2: {
-    questions: [
-      {
-        question: "",
-        options: {
-          a: "",
-          b: "",
-          c: "",
-          d: ""
-        },
-        answer: "",
-        explanation: "",
-        difficulty: ""
-      },
-    ],
-  },
-  para3: {
-    questions: [
-      {
-        question: "",
-        options: {
-          a: "",
-          b: "",
-          c: "",
-          d: ""
-        },
-        answer: "",
-        explanation: "",
-        difficulty: ""
-      },
-    ],
-  },
-  overAllDifficulty: ""
+  "title": "लेख का शीर्षक",
+  "paragraphs": [
+    {
+      "paragraph": 1,
+      "questions": [
+        {
+          "question": "",
+          "options": {
+            "a": "",
+            "b": "",
+            "c": "",
+            "d": ""
+          },
+          "answer": "",
+          "explanation": "",
+          "difficulty": ""
+        }
+      ]
+    },
+    {
+      "paragraph": 2,
+      "questions": []
+    },
+    {
+      "paragraph": 3,
+      "questions": []
+    }
+  ]
 }`
-  emitProgress(40)
-  let result = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    response_format: { type: 'json_object' },
-    messages: [
-      {
-        role: 'system',
-        content: `You are a quiz generator bot. You have to generate a quiz for the given article. You
-                    have to follow the given instructions to generate the quiz. You importantly have to give
-                    the overall difficulty of the article and also difficulty of each question. You have to
-                    return the response in the given JSON format. Break the article into 3 paragraphs such that minimum 2 questions can be made from each para.
-                    ${instructions}`,
-      },
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
-  })
-  let response = JSON.parse(result.choices[0].message.content)
-  let cnt = 3
-  while (
-    (!response.para1.questions[0].difficulty ||
-      !response.para2.questions[0].difficulty ||
-      !response.para3.questions[0].difficulty ||
-      !response.overAllDifficulty) &&
-    cnt-- > 0
-  ) {
-    result = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: `Provide the difficulty of each question and overall difficulty of the article.Assess the overall difficulty level of the article by considering factors
-                      such as vocabulary complexity, sentence structure, conceptual difficulty,
-                      depth of analysis, background knowledge required, clarity and coherence,
-                      density of information, language style, length of the article, and reader
-                      engagement. Evaluate each criterion to determine the article's difficulty
-                      rating on a scale from 0 to 1, where 0 represents low difficulty and 1 represents
-                      high difficulty. Aggregate these assessments to derive an overall difficulty level
-                      that reflects the article's complexity and suitability for readers of varying
-                      proficiency levels. ${instructions}`,
-        },
-        {
-          role: 'user',
-          content: JSON.stringify(response),
-        },
-      ],
-    })
-    response = JSON.parse(result.choices[0].message.content)
-  }
-  emitProgress(70)
-  if (
-    !response ||
-    !response.para1 ||
-    !response.para2 ||
-    !response.para3 ||
-    !response.overAllDifficulty
-  ) {
-    throw new Error('Quiz not generated')
-  }
 
-  const newQuiz = new Quiz({
-    article: articleId,
-    para1: response.para1,
-    para2: response.para2,
-    para3: response.para3,
-    overAllDifficulty: response.overAllDifficulty,
-    language: 'hi',
-  })
-  await newQuiz.save({ session })
-  const article = await Article.findById(articleId).session(session)
-  if (!article.quiz) {
-    article.quiz = []
-    await article.save({ session })
+    emitProgress(40)
+    while (attempts-- > 0) {
+      try {
+        result = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          response_format: { type: 'json_object' },
+          messages: [
+            {
+              role: 'system',
+              content:
+                'आप एक शैक्षिक क्विज जनरेटर बॉट हैं। दिए गए लेख के आधार पर निर्देशों का पालन करते हुए क्विज प्रश्न तैयार करें और प्रतिक्रिया को निर्दिष्ट JSON प्रारूप में वापस करें।',
+            },
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+        })
+
+        let responseText = result.choices[0].message.content
+        responseText = responseText.replace(/```json|```/g, '').trim()
+        response = JSON.parse(responseText)
+
+        if (
+          response &&
+          response.paragraphs &&
+          response.paragraphs.length === 3 &&
+          response.paragraphs[0].questions.every(
+            q =>
+              q.difficulty !== undefined &&
+              q.question &&
+              q.answer &&
+              q.explanation,
+          ) &&
+          response.paragraphs[1].questions.every(
+            q =>
+              q.difficulty !== undefined &&
+              q.question &&
+              q.answer &&
+              q.explanation,
+          ) &&
+          response.paragraphs[2].questions.every(
+            q =>
+              q.difficulty !== undefined &&
+              q.question &&
+              q.answer &&
+              q.explanation,
+          )
+        ) {
+          // If response is valid, fetch article and create quiz
+
+          if (!article) {
+            throw new Error('Article not found')
+          }
+
+          const newQuiz = new Quiz({
+            article: articleId,
+            para1: { questions: response.paragraphs[0].questions },
+            para2: { questions: response.paragraphs[1].questions },
+            para3: { questions: response.paragraphs[2].questions },
+            overAllDifficulty: article.articleDifficulty,
+            language: 'hi',
+          })
+
+          await newQuiz.save({ session })
+
+          if (!article.quiz) {
+            article.quiz = []
+          }
+          article.quiz.push(newQuiz._id)
+          await article.save({ session })
+          emitProgress(80)
+
+          return newQuiz
+        } else {
+          throw new Error('Invalid response format')
+        }
+      } catch (err) {
+        console.error('Error during OpenAI API call:', err.message)
+      }
+    }
+    throw new Error('Failed to generate quiz after multiple attempts')
+  } catch (error) {
+    console.error('Error generating Hindi quiz:', error)
+    throw error
   }
-  article.quiz.push(newQuiz._id)
-  await article.save({ session })
-  emitProgress(80)
-  return newQuiz
 }
 
 const updatePercentilesOnQuizDeactivation = async ({ id }) => {
