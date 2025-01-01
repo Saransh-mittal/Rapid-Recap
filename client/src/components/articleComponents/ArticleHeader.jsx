@@ -63,7 +63,7 @@ const ArticleHeader = ({
   const { t } = useTranslation('ArticleHeader')
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
   const dispatchRedux = useDispatch()
-  const { isBoosted } = useSelector(state => state.app)
+  const { isStreakSurgeAvailable } = useSelector(state => state.app)
   const notLoggedIn = !isAuthenticated
   const features = useFeatureDetection()
   const { playClick } = useSafeSound({
@@ -297,13 +297,13 @@ const ArticleHeader = ({
             position={'relative'}
           >
             <BoostSection
-              isQuinBoostAvailable={isQuinBoostAvailable}
+              // isQuinBoostAvailable={true||  isQuinBoostAvailable} // for Quin Boost
               quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
               openModal={openModal}
               playClick={playClick}
               notLoggedIn={notLoggedIn}
               toast={toast}
-              isBoosted={isBoosted}
+              isStreakSurgeAvailable={isStreakSurgeAvailable} // Streak Surge boost
             />
 
             <ShareButton

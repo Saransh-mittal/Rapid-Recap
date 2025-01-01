@@ -1,112 +1,53 @@
 import React from 'react'
-import { Flex, Text, Image, Badge, Box } from '@chakra-ui/react'
-import QuinBoost from '../../quizComponents/QuinBoost'
-import Button from '../../miscellaneous/ButtonComponent'
-import starBoost from '/GIFs/starBoost.gif'
-import { useTranslation } from 'react-i18next'
+import PowerBoostDisplay from './PowerBoostDisplay'
+import { Box } from '@chakra-ui/react'
+import Bubbles from '../../miscellaneous/Bubbles'
 
 const BoostSection = React.memo(
   ({
     isQuinBoostAvailable,
+    isStreakSurgeAvailable,
+    isCategoryBoostAvailable,
     quizLeftToGetQuizBoost,
+    isBoosted,
     openModal,
     playClick,
     notLoggedIn,
     toast,
-    isBoosted,
   }) => {
-    const { t } = useTranslation('BoostSection')
     const handleBoostClick = () => {
       playClick()
       if (notLoggedIn) {
         toast({
-          title: t('loginRequiredTitle'),
-          description: t('loginRequiredDescription'),
+          title: 'Login Required',
+          description: 'Please login to activate boosts',
           status: 'warning',
           duration: 3000,
           isClosable: true,
         })
         return
       }
-
       openModal()
     }
 
     return (
-      <Flex mb={4} flexDirection="column">
-        {isQuinBoostAvailable ? (
-          <QuinBoost
-            isBoosted={isBoosted}
-            handleBoostClick={handleBoostClick}
-          />
-        ) : (
-          !isBoosted && (
-            <Flex flexDirection={'column'}>
-              <Text
-                m={0}
-                p={0}
-                textAlign={'left'}
-                fontSize={'0.8rem'}
-                fontWeight={'bold'}
-              >
-                {t('quinBoostLabel')}
-              </Text>
-              <Flex position="relative">
-                <Button
-                  buttonW="7rem"
-                  textColor={'white'}
-                  onClick={handleBoostClick}
-                >
-                  {quizLeftToGetQuizBoost} {t('quizLeftMessage')}
-                </Button>
-              </Flex>
-            </Flex>
-          )
-        )}
-        {isBoosted && (
-          <Flex
-            alignItems="center"
-            gap={1}
-            cursor="pointer"
-            wordBreak={'break-word'}
-            ml={'-0.9rem'}
-            flexDirection="column"
-          >
-            <Flex alignItems="center">
-              <Image
-                src={starBoost}
-                bg="none"
-                h={['40px', '50px', '60px']}
-                w={['40px', '50px', '60px']}
-              />
-              <Badge
-                fontSize={['sm', 'md', 'lg']}
-                color="yellow"
-                bg="none"
-                wordBreak={'break-word'}
-              >
-                {t('enjoyMultiplier')}
-              </Badge>
-            </Flex>
-
-            <Box
-              mt={-4}
-              px={2}
-              py={1}
-              borderRadius="full"
-              bg="rgba(145, 127, 179, 0.3)"
-              color="white"
-              fontSize="xs"
-              fontWeight="bold"
-              boxShadow="0 2px 4px rgba(0,0,0,0.1)"
-            >
-              {quizLeftToGetQuizBoost} {t('quizLeftText')}
-            </Box>
-          </Flex>
-        )}
-      </Flex>
+      <Box
+        onClick={handleBoostClick}
+        cursor="pointer"
+        transition="transform 0.2s, box-shadow 0.2s"
+        zIndex={100}
+      >
+        <Bubbles />
+        <PowerBoostDisplay
+          quinBoost={isQuinBoostAvailable}
+          streakSurge={isStreakSurgeAvailable}
+          categoryBoost={isCategoryBoostAvailable}
+        />
+      </Box>
     )
   },
 )
+
+BoostSection.displayName = 'BoostSection'
 
 export default BoostSection
