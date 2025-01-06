@@ -1,13 +1,105 @@
 // services/articleProcessor.js
 
 const { makeGPTRequest } = require('../utils/openai')
-const Article = require('../model/articleSchema')
-const ArticleHighlight = require('../model/articleHighlightSchema')
 const { decode } = require('html-entities')
 const asyncHandler = require('express-async-handler')
 
-const processEnglishContent = asyncHandler(async articleData => {
-  const instructions = `You are a professional news analyst and writer.
+// Validation helper functions
+const validateEnglishResult = result => {
+  // Check if all required structures exist
+  if (!result.processedContent || !result.highlights || !result.seo) {
+    throw new Error('Missing required top-level structures in response')
+  }
+
+  // Validate processedContent
+  if (!result.processedContent.title || !result.processedContent.mainText) {
+    throw new Error('Missing required fields in processedContent')
+  }
+
+  // Validate highlights
+  if (
+    !Array.isArray(result.highlights.dictionary) ||
+    !Array.isArray(result.highlights.importantSentences)
+  ) {
+    throw new Error('Invalid highlights structure')
+  }
+
+  if (
+    result.highlights.dictionary.length < 5 ||
+    result.highlights.importantSentences.length < 4
+  ) {
+    throw new Error('Insufficient highlights content')
+  }
+
+  // Validate dictionary entries
+  if (
+    !result.highlights.dictionary.every(entry => entry.word && entry.definition)
+  ) {
+    throw new Error('Invalid dictionary entry structure')
+  }
+
+  // Validate SEO
+  if (!Array.isArray(result.seo.keywords) || !result.seo.description) {
+    throw new Error('Invalid SEO structure')
+  }
+
+  if (result.seo.keywords.length < 5 || result.seo.description.length > 150) {
+    throw new Error('Invalid SEO content')
+  }
+
+  return true
+}
+
+const validateHindiResult = result => {
+  // Check if all required structures exist
+  if (!result.translation || !result.highlights) {
+    throw new Error('Missing required top-level structures in response')
+  }
+
+  // Validate translation
+  if (
+    !result.translation.title ||
+    !result.translation.author ||
+    !Array.isArray(result.translation.paragraphs)
+  ) {
+    throw new Error('Missing required fields in translation')
+  }
+
+  if (result.translation.paragraphs.length !== 3) {
+    throw new Error('Translation must have exactly 3 paragraphs')
+  }
+
+  // Validate highlights
+  if (
+    !Array.isArray(result.highlights.dictionary) ||
+    !Array.isArray(result.highlights.importantSentences)
+  ) {
+    throw new Error('Invalid highlights structure')
+  }
+
+  if (
+    result.highlights.dictionary.length < 5 ||
+    result.highlights.importantSentences.length < 4
+  ) {
+    throw new Error('Insufficient highlights content')
+  }
+
+  // Validate dictionary entries
+  if (
+    !result.highlights.dictionary.every(entry => entry.word && entry.definition)
+  ) {
+    throw new Error('Invalid dictionary entry structure')
+  }
+
+  return true
+}
+
+const processEnglishContent = asyncHandler(
+  async (articleData, retryCount = 0) => {
+    const MAX_RETRIES = 1 // Only retry once
+
+    try {
+      const instructions = `You are a professional news analyst and writer.
 
     Part 1 - Content Processing:
     Key Instructions:
@@ -63,6 +155,12 @@ const processEnglishContent = asyncHandler(async articleData => {
     - 5-8 relevant search keywords
     - Meta description under 150 chars
 
+    ${
+      retryCount > 0
+        ? 'CRITICAL: Previous attempt produced content outside the 800-1800 character limit. Please ensure the content strictly adheres to this requirement.'
+        : ''
+    }
+
     Return JSON: {
       "processedContent": {
         "title": "",
@@ -80,26 +178,61 @@ const processEnglishContent = asyncHandler(async articleData => {
 
     CRITICAL: For highlights, maintain exact case sensitivity and copy text exactly as it appears.`
 
-  const result = await makeGPTRequest({
-    messages: [
-      { role: 'system', content: instructions },
-      {
-        role: 'user',
-        content: JSON.stringify({
-          title: articleData.title,
-          mainText: decode(articleData.mainText),
-          category: articleData.category,
-        }),
-      },
-    ],
-    temperature: 0.3,
-  })
+      const result = await makeGPTRequest({
+        messages: [
+          { role: 'system', content: instructions },
+          {
+            role: 'user',
+            content: JSON.stringify({
+              title: articleData.title,
+              mainText: decode(articleData.mainText),
+              category: articleData.category,
+            }),
+          },
+        ],
+        temperature: retryCount > 0 ? 0.5 : 0.3, // Slightly increase temperature on retry
+      })
+      validateEnglishResult(result)
+      // Validate content length
+      const contentLength = result.processedContent.mainText.length
+      if (contentLength < 800 || contentLength > 2000) {
+        if (retryCount < MAX_RETRIES) {
+          console.log(
+            `Content length (${contentLength}) outside acceptable range. Retrying...`,
+          )
+          // Wait briefly before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          return processEnglishContent(articleData, retryCount + 1)
+        } else {
+          throw new Error(
+            `Failed to generate content within length requirements after ${
+              MAX_RETRIES + 1
+            } attempts`,
+          )
+        }
+      }
 
-  return result
-})
+      return result
+    } catch (error) {
+      if (retryCount < MAX_RETRIES) {
+        console.log(
+          `Error in processEnglishContent: ${error.message}. Retrying...`,
+        )
+        // Wait briefly before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        return processEnglishContent(articleData, retryCount + 1)
+      }
+      throw error
+    }
+  },
+)
 
-const processHindiContent = asyncHandler(async articleData => {
-  const instructions = `You are a professional Hindi translator and news analyst.
+const processHindiContent = asyncHandler(
+  async (articleData, retryCount = 0) => {
+    const MAX_RETRIES = 1
+
+    try {
+      const instructions = `You are a professional Hindi translator and news analyst.
 
     Part 1 - Translation:
     Instructions:
@@ -144,87 +277,89 @@ const processHindiContent = asyncHandler(async articleData => {
       }
     }
 
-    CRITICAL: For highlights, copy text exactly as it appears in the Hindi translation.`
+    CRITICAL: For highlights, copy text exactly as it appears in the Hindi translation.
+    ${
+      retryCount > 0
+        ? 'CRITICAL: Previous attempt failed validation. Please ensure all required fields are present and content is properly structured.'
+        : ''
+    }
+    `
 
-  const result = await makeGPTRequest({
-    messages: [
-      { role: 'system', content: instructions },
-      {
-        role: 'user',
-        content: `Title: ${articleData.processedContent.title}\n Author: ${articleData.author}\n\n MainText: ${articleData.processedContent.mainText}\n\n`,
-      },
-    ],
-    temperature: 0.3,
-  })
+      const result = await makeGPTRequest({
+        messages: [
+          { role: 'system', content: instructions },
+          {
+            role: 'user',
+            content: `Title: ${articleData.processedContent.title}\n Author: ${articleData.author}\n\n MainText: ${articleData.processedContent.mainText}\n\n`,
+          },
+        ],
+        temperature: retryCount > 0 ? 0.5 : 0.3,
+      })
 
-  return result
-})
+      validateHindiResult(result)
 
-const processArticle = asyncHandler(async articleId => {
-  const article = await Article.findById(articleId)
+      return result
+    } catch (error) {
+      if (retryCount < MAX_RETRIES) {
+        console.log(
+          `Error in processHindiContent: ${error.message}. Retrying...`,
+        )
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        return processHindiContent(articleData, retryCount + 1)
+      }
+      throw error
+    }
+  },
+)
 
-  if (!article) throw new Error('Article not found')
-
-  // Skip if already processed
-  if (
-    article.hindiTitle &&
-    article.hindiMainText?.length > 0 &&
-    article.keywords?.length > 0 &&
-    article.description &&
-    (await ArticleHighlight.exists({ articleId, language: 'en' })) &&
-    (await ArticleHighlight.exists({ articleId, language: 'hi' }))
-  ) {
-    return { message: 'Article already processed' }
+const processArticle = asyncHandler(async newsItem => {
+  if (!newsItem || !newsItem.title || !newsItem.text) {
+    throw new Error('Invalid news item structure')
   }
 
-  // Process English content first
-  const englishResult = await processEnglishContent(article)
+  const decodedText = decode(newsItem.text)
+  const decodedTitle = decode(newsItem.title)
+
+  const englishResult = await processEnglishContent({
+    title: decodedTitle,
+    mainText: decodedText,
+    category: newsItem.category,
+  })
 
   // Process Hindi content using English results
   const hindiResult = await processHindiContent({
-    ...article.toObject(),
     processedContent: englishResult.processedContent,
+    author: Array.isArray(newsItem.author)
+      ? newsItem.author[0]
+      : newsItem.author,
   })
 
-  // Save all data in parallel
-  await Promise.all([
-    // Update article with all new data
-    Article.findByIdAndUpdate(articleId, {
-      title: englishResult.processedContent.title || article.title,
-      mainText: englishResult.processedContent.mainText,
-      hindiTitle: hindiResult.translation.title,
-      hindiAuthor: hindiResult.translation.author,
-      hindiMainText: hindiResult.translation.paragraphs,
-      keywords: englishResult.seo.keywords,
-      description: englishResult.seo.description,
-    }),
-
-    // Save English highlights
-    ArticleHighlight.findOneAndUpdate(
-      { articleId, language: 'en' },
-      {
+  // Return processed data
+  return {
+    url: newsItem.url,
+    dateTime: newsItem.publish_date,
+    author: Array.isArray(newsItem.author)
+      ? newsItem.author[0]
+      : newsItem.author,
+    title: englishResult.processedContent.title,
+    mainText: englishResult.processedContent.mainText,
+    hindiTitle: hindiResult.translation.title,
+    hindiAuthor: hindiResult.translation.author,
+    hindiMainText: hindiResult.translation.paragraphs,
+    imgURL: [newsItem.image],
+    category: newsItem.category,
+    keywords: englishResult.seo.keywords,
+    description: englishResult.seo.description,
+    highlights: {
+      en: {
         dictionary: englishResult.highlights.dictionary,
         importantSentences: englishResult.highlights.importantSentences,
-        processingStatus: 'completed',
       },
-      { upsert: true },
-    ),
-
-    // Save Hindi highlights
-    ArticleHighlight.findOneAndUpdate(
-      { articleId, language: 'hi' },
-      {
+      hi: {
         dictionary: hindiResult.highlights.dictionary,
         importantSentences: hindiResult.highlights.importantSentences,
-        processingStatus: 'completed',
       },
-      { upsert: true },
-    ),
-  ])
-
-  return {
-    english: englishResult,
-    hindi: hindiResult,
+    },
   }
 })
 

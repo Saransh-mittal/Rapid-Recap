@@ -12,6 +12,7 @@ const {
 } = require('../model/tournamentRegistrationSchema')
 const TournamentQuestion = require('../model/tournamentQuestionSchema')
 const Tournament = require('../model/tournamentSchema')
+const { calculateArticleDifficulty } = require('./article.utils')
 const genQuiz = async ({ fullQuiz, title, session }) => {
   const selectedQuestions = new Set() // Using a Set to ensure uniqueness
 
@@ -237,7 +238,9 @@ Instructions:
             para1: { questions: response.paragraphs[0].questions },
             para2: { questions: response.paragraphs[1].questions },
             para3: { questions: response.paragraphs[2].questions },
-            overAllDifficulty: article.articleDifficulty,
+            overAllDifficulty:
+              article.articleDifficulty ||
+              calculateArticleDifficulty({ mainText }),
           })
 
           await newQuiz.save({ session })
@@ -392,7 +395,9 @@ const generateQuestionsForHindiQuiz = async ({
             para1: { questions: response.paragraphs[0].questions },
             para2: { questions: response.paragraphs[1].questions },
             para3: { questions: response.paragraphs[2].questions },
-            overAllDifficulty: article.articleDifficulty,
+            overAllDifficulty:
+              article.articleDifficulty ||
+              calculateArticleDifficulty({ mainText: article.mainText }),
             language: 'hi',
           })
 

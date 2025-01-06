@@ -435,7 +435,12 @@ const updateTournamentPerformanceAndBadges = async tournament => {
   }
 }
 
-const checkTournamentEligibility = async (user, RQM_score, session) => {
+const checkTournamentEligibility = async (
+  user,
+  RQM_score,
+  lastQuizAttempt,
+  session,
+) => {
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)
 
@@ -484,10 +489,7 @@ const checkTournamentEligibility = async (user, RQM_score, session) => {
         const timeLeft =
           30 -
           Math.floor(
-            (new Date().getTime() -
-              user.quizAttempts[
-                user.quizAttempts.length - 2
-              ].createdAt.getTime()) /
+            (new Date().getTime() - lastQuizAttempt.createdAt.getTime()) /
               60000,
           )
         messageForTournamentEligibility = t(

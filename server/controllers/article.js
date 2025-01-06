@@ -1028,14 +1028,20 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
 // @access Public
 const getBotRelatedArticles = asyncHandler(async (req, res) => {
   const { articleId } = req.params
-  const relatedArticles = await ArticleService.getRelatedArticles(articleId)
 
-  if (!relatedArticles) {
+  // Try to get trending articles first
+  let articles = await ArticleService.getTrendingArticles()
+
+  // If no trending articles, fallback to regular related articles
+  if (!articles) {
+    articles = await ArticleService.getRelatedArticles(articleId)
+  }
+
+  if (!articles) {
     return res.status(404).send('')
   }
 
-  const relatedHTML =
-    ArticleService.generateRelatedArticlesHTML(relatedArticles)
+  const relatedHTML = ArticleService.generateRelatedArticlesHTML(articles)
   res.send(relatedHTML)
 })
 

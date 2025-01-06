@@ -181,6 +181,7 @@ const saveQuizAttempt = async (
     createdAt: { $gte: currentDate },
   }).session(session)
 
+  const lastQuizAttempt = user.quizAttempts[user.quizAttempts.length - 1]
   await updateUserStats({
     user,
     RQM_score,
@@ -247,7 +248,7 @@ const saveQuizAttempt = async (
   emitProgress('updateStats', 100)
   emitProgress('checkTournament', 50)
   const { messageForTournamentEligibility, userEligibleForTournament } =
-    await checkTournamentEligibility(user, RQM_score, session)
+    await checkTournamentEligibility(user, RQM_score, lastQuizAttempt, session)
 
   const xpAwarded = await logActivity({
     userInGameName: user.inGameName,

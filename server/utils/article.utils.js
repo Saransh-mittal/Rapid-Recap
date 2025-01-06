@@ -18,6 +18,8 @@ const { generateHighlightForArticle } = require('./article.highlight.utils')
 const { generateKeywordsAndDescription } = require('./seoHelper')
 const { findDuplicateArticles } = require('../services/duplicateCheckService')
 const { commonTerms } = require('./commonTerms')
+const { processArticle } = require('../services/articleProcessor')
+const ArticleHighlight = require('../model/articleHighlightSchema')
 
 const breakArticleIntoParagraphs = async mainText => {
   const tokenizer = new natural.SentenceTokenizer()
@@ -312,220 +314,141 @@ const extractNewsFromLink = async (query, apiKey) => {
 }
 
 const processExtractedNews = async (news, category) => {
-  const initialInstructions = `
-   You are a professional news analyst and writer.
-
-    Key Instructions:
-    1. Create original analysis by combining insights from multiple viewpoints:
-       - Local implications
-       - Industry impact
-       - Market trends
-       - Historical context
-       - Future implications
-       - Dont include outdated information or irrelevant information
-
-    2. Content Guidelines:
-       - Use only 1-2 short factual quotes from the source (with attribution)
-       - Focus on broader context and implications
-       - Add relevant statistics or data from public sources
-       - Include industry expert perspectives
-       - Connect to related industry trends
-       - If needed Rewrite a good title according to the content that will also help in SEO
-
-    3. Structure Requirements:
-       - Keep content between 800-1800 characters
-       - Use unique phrasing and structure
-       - Vary sentence patterns
-       - Add subsections with unique angles
-       - If you want to make a phrase or a word bold, use the markdown syntax ** on both sides of the word or phrase without space in between.
-       - If the original content is numbered, then keep the similar numbering in the new content.
-
-    4. Enhancement Guidelines:
-       - Add relevant background information
-       - Connect to broader industry trends
-       - Discuss potential future impacts
-       - Include market analysis where relevant
-       - Connect to local or regional implications
-
-    5. Remove irrelevant content like:
-       - Social media share buttons
-       - Advertisement text
-       - Navigation elements
-       - Website-specific elements
-       - Unnecessary formatting
-       - any irrelevant content or lines from the mainText that are not related to the article or title. This includes sections like "Also read," "Loading...," "Share to Facebook," "Share to Twitter," "Share to LinkedIn," "All rights reserved" "terms of use" "HT" "Any other news websites name or nav items related to those websites" and unanswered questions.
-       - As there is no video content, remove any reference to video content for example remove "Watch, video, etc.
-
-       Critical : The new article length should be same or less than the original article.Ensure that the returned JSON object includes all original fields.
-  `
-
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
-
   const processedOutput = []
 
-  for (let newsItem of news) {
-    try {
-      if (!newsItem || !newsItem.title || !newsItem.text) {
-        throw new Error('Invalid news item structure')
-      }
+  // Step 1: Initial validation and filtering
+  const validNews = news.filter(newsItem => {
+    if (!newsItem || !newsItem.title || !newsItem.text) {
+      console.error('Invalid news item structure')
+      return false
+    }
+    if (newsItem.text.length < 800) {
+      console.error(`Text too short for "${newsItem.title}"`)
+      return false
+    }
+    return true
+  })
 
-      if (newsItem.text.length < 800) throw new Error('Text is too short')
-
-      const decodedText = decode(newsItem.text)
-      const decodedTitle = decode(newsItem.title)
-      const promptPayload = {
-        url: newsItem.url,
-        dateTime: newsItem.publish_date,
-        author: Array.isArray(newsItem.author)
-          ? newsItem.author[0]
-          : newsItem.author,
-        title: decodedTitle,
-        mainText: decodedText,
-        imgURL: [newsItem.image],
-        category: category,
-      }
-      const prompt = JSON.stringify(promptPayload)
-
-      let output = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: initialInstructions },
-          { role: 'user', content: prompt },
-        ],
-      })
-
-      let res = JSON.parse(output.choices[0].message.content)
-
-      res = {
-        url: res.url || newsItem.url,
-        dateTime: res.dateTime || newsItem.publish_date,
-        author:
-          res.author ||
-          (Array.isArray(newsItem.author)
-            ? newsItem.author[0]
-            : newsItem.author),
-        title: res.title || decodedTitle,
-        mainText: res.mainText || decodedText,
-        imgURL: res.imgURL || [newsItem.image],
-        category: res.category || category,
-      }
-
-      if (res.mainText.length > 2000) {
-        let lenOfInitialOutput = res.mainText.length
-        const summarizationInstructions = `
-    You are a summarizer summarize the news between 800 chars to 1800chars. Try to retain all the important information. Right now its ${lenOfInitialOutput} chars
-    if needed - Rewrite a good title according to the content that will also help in SEO
-
-    Critical: Ensure that the returned JSON object includes :
-      {
-        title: "new title",
-        mainText: "new mainText"
-      }
-  `
-        output = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          response_format: { type: 'json_object' },
-          messages: [
-            { role: 'system', content: summarizationInstructions },
-            { role: 'user', content: res.mainText },
-          ],
-        })
-
-        const result = JSON.parse(output.choices[0].message.content)
-
-        res = {
-          url: res.url || newsItem.url,
-          dateTime: res.dateTime || newsItem.publish_date,
-          author:
-            res.author ||
-            (Array.isArray(newsItem.author)
-              ? newsItem.author[0]
-              : newsItem.author),
-          title: result.title || res.title || decodedTitle,
-          mainText: result.mainText || decodedText,
-          imgURL: res.imgURL || [newsItem.image],
-          category: res.category || category,
-        }
-      }
-
-      if (res.mainText.length < 800)
-        throw new Error(`Text is too short : ${res.mainText.length} characters`)
-
-      // Check for duplicates using vector similarity
-      const { isDuplicate, contentVector, duplicateArticles } =
-        await findDuplicateArticles({
-          title: res.title,
-          mainText: res.mainText,
-          keywords: res.keywords || [],
-        })
-
-      if (isDuplicate) {
-        console.log(
-          `Duplicate article found for "${res.title}". Similar articles:`,
-          duplicateArticles.map(a => ({ title: a.title, score: a.score })),
-        )
-        continue
-      }
-
-      // Add the generated vector to the article
-      res.contentVector = contentVector
-      res.vectorized = true
-      const avgReadTime = averageReadTime(res.mainText)
-      res.avgReadTime = avgReadTime
-      if (res.category !== 'top' && res.category !== 'crime')
+  try {
+    // Step 2: Process all articles in parallel
+    const processedArticles = await Promise.all(
+      validNews.map(async newsItem => {
         try {
-          const predictedCategory = await newsClassifierService.classifyNews(
-            res.mainText,
-          )
-          res.category = predictedCategory || res.category
+          return await processArticle({
+            ...newsItem,
+            category,
+          })
         } catch (error) {
           console.error(
-            `Error classifying news item titled "${res.title}": ${error.message}`,
+            `Error processing article "${newsItem.title}": ${error.message}`,
           )
+          return null
         }
-      const articleDifficulty = await calculateArticleDifficulty({
-        mainText: res.mainText,
-      })
-      res.articleDifficulty = articleDifficulty
-      const newArticle = new Article(res)
-      await newArticle.save()
-      hindiConverter(newArticle._id.toString())
-        .then(() => {
-          generateHighlightForArticle({
-            articleId: newArticle._id.toString(),
-            lang: 'hi',
-          }).catch(error => {
-            console.error('Generation failed:', error)
-          })
-          generateKeywordsAndDescription(newArticle._id.toString()).catch(
-            error => console.error('Generation failed:', error),
-          )
-        })
-        .catch(error => {
-          console.error('Hindi conversion failed:', error)
-        })
+      }),
+    )
 
-      generateHighlightForArticle({
-        articleId: newArticle._id.toString(),
-        lang: 'en',
-      }).catch(error => {
-        console.error('Generation failed:', error)
-      })
-      processedOutput.push(newArticle)
-    } catch (error) {
-      console.error(
-        `Error processing news item titled "${newsItem.title}": ${error.message}`,
-      )
+    // Step 3: Filter out failed processes and validate lengths
+    const validProcessedArticles = processedArticles.filter(article => {
+      if (!article) return false
+
+      const isValidLength =
+        article.mainText.length >= 800 && article.mainText.length <= 2000
+      if (!isValidLength) {
+        console.error(
+          `Processed text length (${article.mainText.length}) outside acceptable range for "${article.title}"`,
+        )
+      }
+      return isValidLength
+    })
+
+    // Step 4: Sequential processing for duplicates check and saving
+    for (const processedArticle of validProcessedArticles) {
+      try {
+        // Check for duplicates
+        const { isDuplicate, contentVector, duplicateArticles } =
+          await findDuplicateArticles({
+            title: processedArticle.title,
+            mainText: processedArticle.mainText,
+            keywords: processedArticle.keywords || [],
+          })
+
+        if (isDuplicate) {
+          console.log(
+            `Duplicate article found for "${processedArticle.title}". Similar articles:`,
+            duplicateArticles.map(a => ({ title: a.title, score: a.score })),
+          )
+          continue
+        }
+
+        // Enhance article with additional fields
+        const avgReadTime = averageReadTime(processedArticle.mainText)
+        const enhancedArticle = {
+          ...processedArticle,
+          contentVector,
+          vectorized: true,
+          avgReadTime,
+          articleDifficulty: calculateArticleDifficulty({
+            mainText: processedArticle.mainText,
+          }),
+        }
+
+        // Update category if needed
+        if (
+          enhancedArticle.category !== 'top' &&
+          enhancedArticle.category !== 'crime'
+        ) {
+          try {
+            const predictedCategory = await newsClassifierService.classifyNews(
+              enhancedArticle.mainText,
+            )
+            enhancedArticle.category =
+              predictedCategory || enhancedArticle.category
+          } catch (error) {
+            console.error(
+              `Error classifying news item titled "${enhancedArticle.title}": ${error.message}`,
+            )
+          }
+        }
+
+        // Save article and create highlight documents
+        const newArticle = new Article(enhancedArticle)
+        await newArticle.save()
+
+        // Save highlights in parallel
+        await Promise.all([
+          ArticleHighlight.create({
+            articleId: newArticle._id,
+            language: 'en',
+            dictionary: enhancedArticle.highlights.en.dictionary,
+            importantSentences:
+              enhancedArticle.highlights.en.importantSentences,
+            processingStatus: 'completed',
+          }),
+          ArticleHighlight.create({
+            articleId: newArticle._id,
+            language: 'hi',
+            dictionary: enhancedArticle.highlights.hi.dictionary,
+            importantSentences:
+              enhancedArticle.highlights.hi.importantSentences,
+            processingStatus: 'completed',
+          }),
+        ])
+
+        processedOutput.push(newArticle)
+      } catch (error) {
+        console.error(
+          `Error in final processing for "${processedArticle.title}": ${error.message}`,
+        )
+      }
     }
+  } catch (error) {
+    console.error('Error in batch processing:', error)
   }
 
   return processedOutput
 }
 
-const extractNewsUtilityFunc = async (country = '') => {
+const extractNewsUtilityFunc = async (country = 'in') => {
   // const newsapi = new NewsAPI('fb29cd0efb7e4ed292134d083f457869')
   let apiKeys = [
     '9921240e42464f3589886811e71a3977',
@@ -544,7 +467,7 @@ const extractNewsUtilityFunc = async (country = '') => {
   const newsDataIoCategories = [
     'business',
     'crime',
-    // "domestic",
+    // 'domestic',
     'education',
     'environment',
     'food',
@@ -896,99 +819,101 @@ const processArticlesWithPrivileges = (articles, privileges) => {
   })
 }
 
-const calculateArticleDifficulty = async ({ mainText }) => {
+const calculateArticleDifficulty = ({ mainText }) => {
   try {
-    // Initialize score components
-    let numericContentScore = 0
-    let lengthScore = 0
-    let complexityScore = 0
+    // Calculate raw scores
+    const numericScore = calculateNumericScore(mainText)
+    const lengthScore = calculateLengthScore(mainText)
+    const complexityScore = calculateComplexityScore(mainText)
 
-    // Check for numeric content with context
-    const numericPattern =
-      /\d+(\.\d+)?(\s*(billion|million|crore|lakh|thousand|USD|Rs|₹|percent|%))/gi
-    const simpleNumericPattern = /\d+/g
+    // Base difficulty - maintain relative relationships
+    const baseDifficulty =
+      numericScore * 0.3 + lengthScore * 0.35 + complexityScore * 0.35
 
-    const contextualNumbers = (mainText.match(numericPattern) || []).length
-    const simpleNumbers =
-      (mainText.match(simpleNumericPattern) || []).length - contextualNumbers
+    // Enhanced scaling with better granularity
+    let scaledDifficulty
 
-    // Weighted numeric score - contextual numbers count more
-    numericContentScore = Math.min(
-      0.25,
-      contextualNumbers * 0.05 + simpleNumbers * 0.02,
-    )
-
-    // Length scoring (calibrated for 800-2000 chars)
-    const wordCount = mainText.split(/\s+/).length
-    if (wordCount < 160) {
-      lengthScore = 0.1
-    } else if (wordCount <= 240) {
-      lengthScore = 0.15 + ((wordCount - 160) / 80) * 0.1
+    if (baseDifficulty <= 0.43) {
+      // Easy range (0.35-0.48)
+      scaledDifficulty = 0.35 + (baseDifficulty / 0.43) * 0.13
+    } else if (baseDifficulty <= 0.54) {
+      // Lower-medium range (0.49-0.55)
+      scaledDifficulty = 0.49 + ((baseDifficulty - 0.44) / 0.1) * 0.06
+    } else if (baseDifficulty <= 0.56) {
+      // Mid-medium range (0.55-0.62)
+      scaledDifficulty = 0.55 + ((baseDifficulty - 0.54) / 0.02) * 0.07
+    } else if (baseDifficulty <= 0.58) {
+      // Upper-medium range (0.62-0.69)
+      scaledDifficulty = 0.62 + ((baseDifficulty - 0.56) / 0.02) * 0.07
     } else {
-      lengthScore = 0.25 + Math.min(0.1, ((wordCount - 240) / 160) * 0.1)
+      // Hard range - progressive scaling
+      const range = baseDifficulty - 0.58
+      scaledDifficulty = 0.7 + (1 - Math.exp(-range * 10)) * 0.2
     }
 
-    // Complexity scoring with expanded common terms exclusion
-    const words = mainText.split(/\s+/)
-    const complexWords = words.filter(word => {
-      // Clean the word for checking
-      const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '')
+    // Controlled random variation
+    const baseVariance = 0.05
+    const varianceScale =
+      1 - Math.pow(Math.abs(scaledDifficulty - 0.55) / 0.2, 2)
+    const randomFactor =
+      (Math.random() - 0.5) * baseVariance * Math.max(0, varianceScale)
 
-      // Skip if it's in our common terms
-      if (commonTerms.has(cleanWord)) return false
-
-      const syllables = countSyllables(cleanWord)
-      return syllables > 2
-    })
-
-    const complexityRatio = complexWords.length / words.length
-    complexityScore = Math.min(0.3, complexityRatio * 2.5)
-
-    // Sentence structure analysis
-    const sentences = mainText.split(/[.!?]+/).filter(s => s.trim().length > 0)
-    const avgSentenceLength = words.length / sentences.length
-
-    // Technical term detection (considering category-specific terms)
-    const technicalTerms =
-      mainText.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?=\s|$)/g) || []
-    const technicalScore = Math.min(
-      0.15,
-      (technicalTerms.length / sentences.length) * 0.05,
+    const finalDifficulty = Math.min(
+      0.9,
+      Math.max(0.35, scaledDifficulty + randomFactor),
     )
 
-    // Sentence complexity
-    const sentenceScore = Math.min(
-      0.15,
-      (avgSentenceLength / 20) * 0.15 + technicalScore,
-    )
-
-    // Combine scores with category-specific adjustment
-    let totalDifficulty =
-      numericContentScore + lengthScore + complexityScore + sentenceScore
-
-    // Scale down more aggressively
-    totalDifficulty = totalDifficulty * 0.65
-
-    // Adjusted distribution bands
-    if (totalDifficulty < 0.5) {
-      // Wider easy range
-      totalDifficulty = 0.3 + totalDifficulty * 0.3 // Gentler slope
-    } else if (totalDifficulty < 0.7) {
-      // Medium range (about 30% of articles)
-      totalDifficulty = 0.5 + (totalDifficulty - 0.45) * 0.5
-    } else {
-      // Hard range (about 10% of articles)
-      totalDifficulty = 0.7 + (totalDifficulty - 0.7) * 0.4
-    }
-
-    return Math.min(0.99, Math.max(0.01, Number(totalDifficulty.toFixed(2))))
+    return Number(finalDifficulty.toFixed(2))
   } catch (error) {
     console.error('Error calculating article difficulty:', error)
-    return 0.35
+    return 0.45
   }
 }
 
-// Helper function remains the same
+const calculateNumericScore = mainText => {
+  const numericPattern =
+    /\d+(\.\d+)?(\s*(billion|million|crore|lakh|thousand|USD|Rs|₹|percent|%))/gi
+  const simpleNumericPattern = /\d+/g
+
+  const contextualNumbers = (mainText.match(numericPattern) || []).length
+  const simpleNumbers =
+    (mainText.match(simpleNumericPattern) || []).length - contextualNumbers
+
+  return Math.min(1, contextualNumbers * 0.1 + simpleNumbers * 0.04)
+}
+
+const calculateLengthScore = mainText => {
+  const wordCount = mainText.split(/\s+/).length
+
+  if (wordCount < 150) return 0.3
+  if (wordCount < 200) return 0.3 + ((wordCount - 150) / 50) * 0.1
+  if (wordCount < 300) return 0.4 + ((wordCount - 200) / 100) * 0.15
+  return Math.min(1, 0.55 + ((wordCount - 300) / 200) * 0.15)
+}
+
+const calculateComplexityScore = mainText => {
+  const words = mainText.split(/\s+/)
+  const sentences = mainText.split(/[.!?]+/).filter(s => s.trim().length > 0)
+
+  const complexWords = words.filter(word => {
+    const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '')
+    if (commonTerms.has(cleanWord)) return false
+    return countSyllables(cleanWord) > 2
+  })
+
+  const complexityRatio = complexWords.length / words.length
+  const avgSentenceLength = words.length / sentences.length
+  const technicalTerms =
+    mainText.match(/[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*(?=\\s|$)/g) || []
+
+  return Math.min(
+    1,
+    complexityRatio * 2 +
+      (avgSentenceLength / 20) * 0.2 +
+      (technicalTerms.length / sentences.length) * 0.1,
+  )
+}
+
 const countSyllables = word => {
   word = word.toLowerCase()
   if (word.length <= 3) return 1

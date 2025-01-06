@@ -1,9 +1,6 @@
 // utils/openai.js
 
 const OpenAI = require('openai')
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
 
 const MODEL_NAME = 'gpt-4o-mini'
 
@@ -12,6 +9,9 @@ const makeGPTRequest = async ({
   temperature = 0.7,
   maxRetries = 3,
 }) => {
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
   let retries = 0
 
   while (retries < maxRetries) {
@@ -33,6 +33,5 @@ const makeGPTRequest = async ({
 }
 
 module.exports = {
-  openai,
   makeGPTRequest,
 }
