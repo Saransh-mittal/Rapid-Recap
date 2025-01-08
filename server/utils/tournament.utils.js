@@ -1,5 +1,5 @@
 const BADGE_CONFIG = require('../data/BADGE_CONFIG')
-const { getCategories } = require('../data/categories')
+const { getAllCategories, shouldHaveBadgeText } = require('../data/categories')
 const {
   TournamentRegistration,
   QuizSession,
@@ -9,6 +9,10 @@ const QuizAttempt = require('../model/quizAttemptSchema')
 const i18n = require('i18next')
 const { makeRetryable } = require('./retryUtils')
 const moment = require('moment-timezone')
+const ApplicationUpdates = require('../model/applicationUpdatesSchema')
+const {
+  tournamentWinnerNotificationTemplate,
+} = require('../data/inboxNotificationsTemplates')
 
 const getUserRegistrationDetails = async (userId, tournamentId, session) => {
   try {
@@ -44,7 +48,7 @@ const getUserRegistrationDetails = async (userId, tournamentId, session) => {
 }
 
 async function getCategoryLeaders({ tournamentId }) {
-  const categories = getCategories()
+  const categories = getAllCategories()
   const categoryLeaders = {}
 
   for (const category of categories) {
@@ -158,10 +162,23 @@ const determineBadges = ({
       const categoryRank = categoryLeaders[category]?.findIndex(
         leader => leader.userId.toString() === userId.toString(),
       )
-      if (categoryRank === 0) return { ...BADGE_CONFIG.ACE, text: category }
-      if (categoryRank === 1) return { ...BADGE_CONFIG.PRO, text: category }
-      if (categoryRank === 2) return { ...BADGE_CONFIG.CHAMP, text: category }
-      return null
+
+      // Only assign badge if user is in top 3
+      if (categoryRank > 2 || categoryRank === -1) return null
+
+      // Create badge with optional text based on category
+      const badge = (() => {
+        if (categoryRank === 0) return { ...BADGE_CONFIG.ACE }
+        if (categoryRank === 1) return { ...BADGE_CONFIG.PRO }
+        if (categoryRank === 2) return { ...BADGE_CONFIG.CHAMP }
+      })()
+
+      // Only add category text for regular categories
+      if (badge && shouldHaveBadgeText(category)) {
+        badge.text = category
+      }
+
+      return badge
     })
     .filter(Boolean)
 
@@ -217,6 +234,7 @@ const updateUserBadges = makeRetryable(
     user,
     badges,
     displayedBadge,
+    tournamentId,
     rank,
     tournamentNumber,
     participantCount,
@@ -224,6 +242,39 @@ const updateUserBadges = makeRetryable(
     // Calculate claim deadline
     const claimDeadline = calculateBadgeClaimDeadline()
 
+    // Apply IQ boost first if user is in top 3
+    if (rank <= 3) {
+      try {
+        const {
+          calculateTournamentRankIQBoost,
+        } = require('../services/iqCalculationService')
+        const iqBoostResult = await calculateTournamentRankIQBoost(
+          user,
+          rank,
+          tournamentId,
+          tournamentNumber,
+        )
+
+        if (iqBoostResult) {
+          const iqBoostTemplate = tournamentWinnerNotificationTemplate({
+            tournamentNumber,
+            prevIQ: iqBoostResult.prevIQScore,
+            newIQ: iqBoostResult.newIQScore,
+            boost: iqBoostResult.boost,
+          })
+          // Add notification for IQ boost
+          const notification = new ApplicationUpdates({
+            userId: user._id,
+            title: `Tournament Champion IQ Boost!`,
+            mainText: iqBoostTemplate,
+            read: false,
+          })
+          await notification.save()
+        }
+      } catch (error) {
+        console.error(`Error applying IQ boost for rank ${rank}:`, error)
+      }
+    }
     // Update displayed badge if available
     if (displayedBadge && displayedBadge.name) {
       user.displayedBadge = {
@@ -408,6 +459,7 @@ const updateTournamentPerformanceAndBadges = async tournament => {
           displayedBadge,
           rank,
           tournamentNumber: tournament.tournamentNumber,
+          tournamentId: tournament._id,
           participantCount,
         })
 
@@ -562,4 +614,5 @@ module.exports = {
   getTopLeadersForCategory,
   checkTournamentEligibility,
   processBadgePrivileges,
+  calculateBadgeClaimDeadline,
 }

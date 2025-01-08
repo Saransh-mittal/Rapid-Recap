@@ -45,6 +45,8 @@ const {
   claimQuinBoost,
   claimStreakSurge,
   claimTournamentBadge,
+  getValidCategories,
+  updateBadgeCategory,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -96,6 +98,8 @@ router.post('/deleteAccount', Authenticate, deleteAccount)
 router.post('/claim-quinboost', Authenticate, claimQuinBoost)
 router.post('/claim-streak-surge', Authenticate, claimStreakSurge)
 router.route('/claim-badge').post(Authenticate, claimTournamentBadge)
+router.get('/valid-categories', Authenticate, getValidCategories)
+router.put('/update-category', Authenticate, updateBadgeCategory)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router

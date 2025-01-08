@@ -29,9 +29,22 @@ const IQBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
   return (
     <BaseRewardDisplay reward={reward} type={reward.type} theme={theme}>
       <VStack spacing={6} w="full">
-        {/* Icon */}
+        {/* Tournament Badge & Number */}
         {reward.tournamentReward ? (
-          <TournamentBadgeIcon rank={reward.rank} theme={theme} />
+          <VStack textAlign="center" spacing={4}>
+            <TournamentBadgeIcon rank={reward.rank} theme={theme} />
+            <Text
+              fontSize="lg"
+              bgGradient={
+                theme?.titleGradient || 'linear(to-r, yellow.300, yellow.500)'
+              }
+              bgClip="text"
+              fontWeight="medium"
+            >
+              Tournament #
+              {String(reward.badge.tournamentNumber).padStart(3, '0')}
+            </Text>
+          </VStack>
         ) : (
           <BrainIcon />
         )}
@@ -59,16 +72,30 @@ const IQBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
         />
 
         {/* Description */}
-        <Text
-          fontSize={{ base: 'lg', md: '2xl' }}
-          color="whiteAlpha.900"
-          textAlign="center"
-          opacity={0.9}
-          maxW="lg"
-          mx="auto"
-        >
-          {reward.description}
-        </Text>
+        <VStack spacing={3}>
+          <Text
+            fontSize={{ base: 'lg', md: '2xl' }}
+            color="whiteAlpha.900"
+            textAlign="center"
+            opacity={0.9}
+            maxW="lg"
+            mx="auto"
+          >
+            {reward.description}
+          </Text>
+
+          <Text
+            fontSize={{ base: 'sm', md: 'md' }}
+            color="whiteAlpha.600"
+            textAlign="center"
+            fontStyle="italic"
+            maxW="md"
+            mx="auto"
+          >
+            This final IQ score reflects your achievement at the time of the
+            tournament and may differ from your current IQ score.
+          </Text>
+        </VStack>
 
         <Box w="full" mt={6}>
           <AnimatePresence mode="wait">

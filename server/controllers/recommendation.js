@@ -11,11 +11,15 @@ const {
   hindiConverter,
   breakArticleIntoParagraphs,
   processArticlesWithPrivileges,
+  calculateArticleDifficulty,
 } = require('../utils/article.utils')
 
 const { formatDate } = require('../utils/miscellaneous.utils')
 const cache = require('memory-cache')
 const ArticleHighlight = require('../model/articleHighlightSchema')
+const {
+  batchUpdateArticleDifficulties,
+} = require('../services/articleServicesForEndUsers/articleProcessingService')
 
 // @desc    Get user recommendations
 // @route   GET /api/recommendation
@@ -77,7 +81,7 @@ const userRecommendations = asyncHandler(async (req, res) => {
       }),
     )
   }
-
+  batchUpdateArticleDifficulties(articles)
   let processedArticles = await Promise.all(
     articles
       .filter(article => article.category !== 'onBoardingArticle')
@@ -88,7 +92,12 @@ const userRecommendations = asyncHandler(async (req, res) => {
           processingStatus: 'completed',
           language: lang ? lang : 'en',
         })
-
+        let difficulty = article.articleDifficulty
+        if (!article.articleDifficulty) {
+          difficulty = calculateArticleDifficulty({
+            mainText: article.mainText,
+          })
+        }
         return {
           category: article.category,
           title: article.title,
@@ -105,7 +114,7 @@ const userRecommendations = asyncHandler(async (req, res) => {
           _id: article._id,
           dictionary: highlights?.dictionary || [],
           importantSentences: highlights?.importantSentences || [],
-          articleDifficulty: article?.articleDifficulty || 0.5,
+          articleDifficulty: difficulty || 0.5,
         }
       }),
   )

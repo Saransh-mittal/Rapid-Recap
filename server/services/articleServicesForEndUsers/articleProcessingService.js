@@ -94,4 +94,4 @@ async function processArticles(articles, lang, isPrivileged = null) {
   )
 }
 
-module.exports = { processArticles }
+module.exports = { processArticles, batchUpdateArticleDifficulties }

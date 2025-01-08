@@ -6,6 +6,7 @@ const {
   getScoreStatistics,
   updateSingleUserScore,
 } = require('../utils/memoryCache.utils')
+const { makeRetryable } = require('../utils/retryUtils')
 
 // New utility function to calculate IQ boost based on RQM score
 const calculateIQBoostMultiplier = (RQM_score, user, iqIncrement) => {
@@ -119,4 +120,119 @@ const calculateRealTimeIQ = async (
   return result
 }
 
-module.exports = { calculateRealTimeIQ }
+// Base function implementation
+const calculateTournamentRankIQBoostBase = async (
+  user,
+  rank,
+  tournamentId,
+  tournamentNumber,
+) => {
+  try {
+    // Get global statistics for IQ calculation
+    const { meanScore, standardDeviation } = await getScoreStatistics()
+
+    // Get user
+    if (!user || user.role === 'guest') {
+      return null
+    }
+
+    const prevIQScore = user.IQ_score
+
+    // Define IQ boost based on rank
+    let targetIQIncrease = 0
+    switch (rank) {
+      case 1:
+        targetIQIncrease = 5
+        break
+      case 2:
+        targetIQIncrease = 3
+        break
+      case 3:
+        targetIQIncrease = 2
+        break
+      default:
+        return null
+    }
+
+    // Calculate required score increase to achieve target IQ boost
+    const currentNormalizedScore =
+      (user.userScore - meanScore) / standardDeviation
+    const currentBaseIQ = 100 + 15 * currentNormalizedScore
+    const targetIQ = currentBaseIQ + targetIQIncrease
+
+    // Calculate required user score for target IQ
+    const requiredNormalizedScore = (targetIQ - 100) / 15
+    const requiredUserScore =
+      requiredNormalizedScore * standardDeviation + meanScore
+    const scoreIncrease = requiredUserScore - user.userScore
+
+    // Update user scores immediately
+    user.userScore += scoreIncrease
+    user.baseUserScore += scoreIncrease
+    user.prevIQScore = prevIQScore
+    user.IQ_score = targetIQ.toFixed(1)
+    user.maxIQScore = Math.max(user.maxIQScore, targetIQ)
+
+    // Store the IQ boost record for history
+    const boostRecord = {
+      tournament: tournamentId,
+      tournamentNumber,
+      rank,
+      prevIQ: prevIQScore,
+      boostedIQ: targetIQ.toFixed(1),
+      boost: targetIQIncrease,
+    }
+
+    user.tournamentIQBoosts.push(boostRecord)
+
+    // Handle society/circle upgrades
+    const upgradeResult = await handleSocietyOrCircleUpgrade(
+      user._id,
+      prevIQScore,
+      targetIQ,
+      user.maxIQScore,
+      true,
+    )
+
+    await user.save()
+
+    // // Update cache
+    await updateSingleUserScore(user._id, user.userScore)
+
+    return {
+      boostId: user.tournamentIQBoosts[user.tournamentIQBoosts.length - 1]._id,
+      prevIQScore,
+      newIQScore: targetIQ.toFixed(1),
+      boost: targetIQIncrease,
+      ...upgradeResult,
+    }
+  } catch (error) {
+    console.error('Error applying tournament rank IQ boost:', error)
+    throw error
+  }
+}
+
+// Make functions retryable with specific configurations
+const calculateTournamentRankIQBoost = makeRetryable(
+  calculateTournamentRankIQBoostBase,
+  {
+    operationName: 'CalculateTournamentRankIQBoost',
+    maxRetries: 3,
+    onRetry: (error, attempt) => {
+      console.warn(
+        `Retrying IQ boost calculation, attempt ${attempt}. Error: ${error.message}`,
+      )
+    },
+    // Custom error classifier for this specific operation
+    isRetryable: error => {
+      if (error.message.includes('Transaction')) return true
+      if (error.name === 'MongoError') return true
+      return defaultIsRetryableError(error)
+    },
+  },
+)
+
+module.exports = {
+  calculateRealTimeIQ,
+  calculateTournamentRankIQBoost,
+}

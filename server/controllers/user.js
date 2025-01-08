@@ -51,6 +51,8 @@ const {
 } = require('../utils/dbOperations.js')
 const moment = require('moment-timezone')
 const { processBadgePrivileges } = require('../utils/tournament.utils.js')
+const { getCategories } = require('../data/categories.js')
+const Tournament = require('../model/tournamentSchema.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -2121,9 +2123,115 @@ const claimTournamentBadge = asyncHandler(async (req, res) => {
     user.badges[badgeIndex].claimed = true
     await user.save()
 
+    cache.keys().forEach(key => {
+      if (key.startsWith('privilege_')) {
+        cache.del(key)
+      }
+    })
+
     res.status(200).json({ message: 'Badge claimed successfully' })
   } catch (error) {
     console.error('Error claiming badge:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+const getValidCategories = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    // Get user's current badges for the tournament
+    const user = await User.findById(userId)
+    // get latest completed tournament
+    const latestTournament = await Tournament.findOne({ status: 'completed' })
+      .select('tournamentNumber')
+      .sort({ tournamentNumber: -1 })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    let badges = user?.badges || []
+    const now = moment().tz('Asia/Kolkata')
+    let currentBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        badge.tournamentNumber === latestTournament.tournamentNumber,
+    )
+    // Get all categories that have badges for this tournament
+    const usedCategories = currentBadges.map(badge => badge.text)
+
+    // Get all available categories (you'll need to import or define this)
+    const allCategories = getCategories()
+
+    // Filter out categories that already have badges
+    const validCategories = allCategories.filter(
+      category => !usedCategories.includes(category),
+    )
+
+    res.status(200).json({ validCategories })
+  } catch (error) {
+    console.error('Error getting valid categories:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+const updateBadgeCategory = asyncHandler(async (req, res) => {
+  const { badgeName, selectedCategory } = req.body
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    // get latest completed tournament
+    const latestTournament = await Tournament.findOne({ status: 'completed' })
+      .select('tournamentNumber')
+      .sort({ tournamentNumber: -1 })
+
+    // Find the badge
+    const badgeIndex = user.badges.findIndex(
+      badge =>
+        badge.tournamentNumber === latestTournament.tournamentNumber &&
+        badge.badgeName === badgeName &&
+        !badge.text, // Must be unnamed
+    )
+
+    if (badgeIndex === -1) {
+      return res
+        .status(404)
+        .json({ message: 'Badge not found or already has category' })
+    }
+    const allCategories = getCategories()
+
+    // Validate if category is allowed
+    const usedCategories = user.badges
+      .filter(
+        badge => badge.tournamentNumber === latestTournament.tournamentNumber,
+      )
+      .map(badge => badge.text)
+    // Filter out categories that already have badges
+    const validCategories = allCategories.filter(
+      category => !usedCategories.includes(category),
+    )
+    if (!validCategories.includes(selectedCategory)) {
+      return res.status(400).json({
+        message: 'Category already has a badge for this tournament',
+        invalidCategory: true,
+      })
+    }
+
+    // Update badge
+    user.badges[badgeIndex].text = selectedCategory
+    await user.save()
+
+    res.status(200).json({
+      message: 'Badge category updated successfully',
+      updatedBadge: user.badges[badgeIndex],
+    })
+  } catch (error) {
+    console.error('Error updating badge category:', error)
     res.status(500).json({ message: 'Internal server error' })
   }
 })
@@ -2173,4 +2281,6 @@ module.exports = {
   claimQuinBoost,
   claimStreakSurge,
   claimTournamentBadge,
+  getValidCategories,
+  updateBadgeCategory,
 }

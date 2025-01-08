@@ -68,7 +68,12 @@ const Home = () => {
 
           // Prefetch next page
           if (hasMoreItems) {
-            categoryCache.prefetchCategory(cat, pageNum + 1, i18n.language)
+            categoryCache.prefetchCategory(
+              cat,
+              pageNum + 1,
+              i18n.language,
+              user,
+            )
           }
 
           setLoad(false)
@@ -157,7 +162,7 @@ const Home = () => {
         await fetchData(1, category)
 
         // Prefetch adjacent categories
-        categoryCache.prefetchAdjacentCategories(category, i18n.language)
+        categoryCache.prefetchAdjacentCategories(category, i18n.language, user)
       } else if (page > 1) {
         await fetchData(page, category)
       }

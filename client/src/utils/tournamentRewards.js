@@ -13,8 +13,6 @@ const getRewardConfig = badge => {
       title: 'Tournament Champion IQ Boost!',
       description:
         'Your legendary performance has greatly enhanced your Intelligence!',
-      prevScore: 110,
-      newScore: 120,
       order: 1,
     },
     RANK_2: {
@@ -24,8 +22,6 @@ const getRewardConfig = badge => {
       title: 'Elite Performance IQ Boost!',
       description:
         'Your exceptional skills have significantly boosted your Intelligence!',
-      prevScore: 110,
-      newScore: 115,
       order: 2,
     },
     RANK_3: {
@@ -35,8 +31,6 @@ const getRewardConfig = badge => {
       title: 'Rising Star IQ Boost!',
       description:
         'Your outstanding achievement has increased your Intelligence!',
-      prevScore: 110.3,
-      newScore: 112.8,
       order: 3,
     },
     ACE: {
@@ -92,7 +86,7 @@ const getRewardConfig = badge => {
   return configs[badge.badgeName]
 }
 
-const processReward = ({ reward, badge }) => {
+const processReward = ({ reward, badge, user }) => {
   if (!reward) return null
 
   // Replace category placeholder in strings
@@ -101,6 +95,22 @@ const processReward = ({ reward, badge }) => {
   }
 
   const processedReward = { ...reward, badge }
+
+  // Handle IQ boost rewards (RANK_1, RANK_2, RANK_3)
+  if (reward.type === REWARD_TYPES.IQ_BOOST && user?.tournamentIQBoosts) {
+    // Find matching IQ boost data for this tournament
+    const iqBoostData = user.tournamentIQBoosts.find(
+      boost =>
+        boost.tournamentNumber === badge.tournamentNumber &&
+        getRankString(boost.rank) === badge.badgeName,
+    )
+
+    if (iqBoostData) {
+      processedReward.prevScore = iqBoostData.prevIQ
+      processedReward.newScore = iqBoostData.boostedIQ
+    }
+  }
+
   processedReward.description = replaceCategory(processedReward.description)
 
   if (processedReward.rewards) {
@@ -115,6 +125,20 @@ const processReward = ({ reward, badge }) => {
   }
 
   return processedReward
+}
+
+// Helper function to convert numeric rank to string rank
+const getRankString = rank => {
+  switch (rank) {
+    case 1:
+      return 'RANK_1'
+    case 2:
+      return 'RANK_2'
+    case 3:
+      return 'RANK_3'
+    default:
+      return null
+  }
 }
 
 export const tournamentRewardsClaim = async ({ user, dispatch }) => {
@@ -140,6 +164,7 @@ export const tournamentRewardsClaim = async ({ user, dispatch }) => {
       const processedReward = processReward({
         reward: badge.rewardConfig,
         badge,
+        user,
       })
 
       if (processedReward) {
