@@ -11,6 +11,7 @@ const BoostSection = React.memo(
     quizLeftToGetQuizBoost,
     isBoosted,
     openModal,
+    openStreakSurgeModal,
     playClick,
     notLoggedIn,
     toast,
@@ -32,16 +33,19 @@ const BoostSection = React.memo(
 
     return (
       <Box
-        onClick={handleBoostClick}
+        // onClick={handleBoostClick}
         cursor="pointer"
         transition="transform 0.2s, box-shadow 0.2s"
         zIndex={100}
       >
         <Bubbles />
         <PowerBoostDisplay
+          openModal={openModal}
+          openStreakSurgeModal={openStreakSurgeModal}
           quinBoost={isQuinBoostAvailable}
           streakSurge={isStreakSurgeAvailable}
           categoryBoost={isCategoryBoostAvailable}
+          isBoosted={isBoosted}
         />
       </Box>
     )

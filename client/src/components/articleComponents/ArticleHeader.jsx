@@ -58,6 +58,7 @@ const ArticleHeader = ({
   isQuinBoostAvailable,
   quizLeftToGetQuizBoost,
   openModal,
+  openStreakSurgeModal,
   onThemeChange,
 }) => {
   const { t } = useTranslation('ArticleHeader')
@@ -300,6 +301,7 @@ const ArticleHeader = ({
               // isQuinBoostAvailable={true||  isQuinBoostAvailable} // for Quin Boost
               quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
               openModal={openModal}
+              openStreakSurgeModal={openStreakSurgeModal}
               playClick={playClick}
               notLoggedIn={notLoggedIn}
               toast={toast}
