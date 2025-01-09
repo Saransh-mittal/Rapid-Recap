@@ -63,7 +63,9 @@ const Quiz = () => {
   const { totalUsersGivenQuiz, articleData: article } = useSelector(
     state => state.articles,
   )
-  const { isOpen, isQuinBoostAvailable } = useSelector(state => state.quiz)
+  const { isOpen, isQuinBoostAvailable, quizBoost } = useSelector(
+    state => state.quiz,
+  )
   const { isRegistered, currentTournament } = useSelector(
     state => state.tournament,
   )
@@ -519,14 +521,13 @@ const Quiz = () => {
               quizSession={quizSession}
             />
           </Suspense>
-        ) : isBoosted || isQuinBoostAvailable ? (
+        ) : quizBoost > 1 ? (
           <Suspense fallback={null}>
             <BoostedSubmittedQuizInterface
               isOpen={isOpen}
               score={result?.RQM_score}
               submitLoad={submitLoad}
-              isBoosted={isBoosted}
-              isQuinBoostAvailable={isQuinBoostAvailable}
+              boost={quizBoost}
               onViewReport={() => {
                 playClick()
                 setShowSubmittedInterface(true)

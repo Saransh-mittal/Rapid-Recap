@@ -51,14 +51,19 @@ const saveQuizAttempt = async (
     })
     .session(session)
 
+  const article = await Article.findById(articleId)
+    .select('_id category quizAttemptCnt')
+    .session(session)
+
   const localizedI18n = i18n.cloneInstance({ initImmediate: false })
 
+  const now = moment().tz('Asia/Kolkata')
   const validBadges = user.badges.filter(
     badge =>
       badge.canBeClaimedUntil &&
       moment(badge.canBeClaimedUntil).isAfter(now) &&
       ['ACE', 'PRO', 'CHAMP'].includes(badge.badgeName) &&
-      badge.text === category,
+      badge.text === article.category,
   )
   const rqmBoostForCategory = validBadges.some(badge =>
     ['ACE', 'PRO'].includes(badge.badgeName),
@@ -68,8 +73,6 @@ const saveQuizAttempt = async (
   await localizedI18n.changeLanguage(
     user?.userLanguage ? user.userLanguage : 'en',
   )
-
-  const article = await Article.findById(articleId).session(session)
 
   const existingAttempt = await QuizAttempt.findOne({
     user: userId,
@@ -142,9 +145,13 @@ const saveQuizAttempt = async (
   emitProgress('saveAttempt', 50)
   const articleDifficulty = quizSession.overAllDifficulty[user.userLanguage]
   const boost =
-    quinBoostUtilized && user.todayBoost
+    quinBoostUtilized && user.todayBoost && rqmBoostForCategory
+      ? 2
+      : (quinBoostUtilized && user.todayBoost) ||
+        (quinBoostUtilized && rqmBoostForCategory) ||
+        (user.todayBoost && rqmBoostForCategory)
       ? 1.75
-      : boosted || quinBoostUtilized
+      : quinBoostUtilized || user.todayBoost || rqmBoostForCategory
       ? 1.5
       : 1
   const isBoosted = boosted || quinBoostUtilized

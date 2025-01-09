@@ -4,7 +4,7 @@ import { useToast } from '@chakra-ui/react'
 import useSound from './useSound'
 import { useSocket } from './useSocket'
 import { useDispatch, useSelector } from 'react-redux'
-import { setOnBoardingQuizSubmitted } from '../redux/quizSlice'
+import { setOnBoardingQuizSubmitted, setQuizBoost } from '../redux/quizSlice'
 
 const useSubmitQuiz = ({ articleId, sessionId, setResult, setSubmitError }) => {
   const [submitLoad, setSubmitLoad] = useState(false)
@@ -49,6 +49,9 @@ const useSubmitQuiz = ({ articleId, sessionId, setResult, setSubmitError }) => {
         timeTaken: timeTaken === 0 ? 1 : timeTaken,
         sessionId,
       })
+      if (response.data?.boost > 1) {
+        dispatch(setQuizBoost(response.data.boost))
+      }
       if (user?.needsOnboarding) {
         dispatch(setOnBoardingQuizSubmitted(true))
       }

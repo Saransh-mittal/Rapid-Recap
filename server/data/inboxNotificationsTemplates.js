@@ -793,319 +793,223 @@ const tournamentWinnerNotificationTemplate = ({
   newIQ,
   boost,
 }) => {
-  return `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  // Define colors and common values as variables
+  const colors = {
+    purple: '#8A2BE2',
+    lightPurple: '#9370DB',
+    darkBg: '#0a0a0f',
+    cardBg: '#1a1527',
+    headerBg: '#2c1460',
+  }
+
+  return `
+    <div class="tournament-notification">
+      <div class="header">
+        <span class="trophy-icon">👑</span>
+        <h2>Tournament Champion</h2>
+      </div>
+
+      <div class="content">
+        <div class="boost-details">
+          <p class="tournament-intro">Extraordinary Performance in</p>
+          <div class="tournament-number">Tournament #${tournamentNumber}</div>
+
+          <div class="scores">
+            <div class="score-item">
+              <div class="score-label">Previous IQ</div>
+              <div class="score-value">${prevIQ}</div>
+            </div>
+            <div class="score-item new-score">
+              <div class="score-label">New IQ</div>
+              <div class="score-value">${newIQ}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="message">
+          Your exceptional tournament performance has earned you a
+          <span class="boost-amount">+${boost} IQ</span> boost!
+        </div>
+
+        <p class="footer-message">Continue your reign at the top of the leaderboards!</p>
+      </div>
+
+      <div class="footer">
+        <p>RAPID RECAP</p>
+      </div>
+    </div>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      /* Base Styles - Mobile First */
+      .tournament-notification {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        background: ${colors.cardBg};
+        border-radius: clamp(12px, 3vw, 20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        overflow: hidden;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
 
-        body {
-            margin: 0;
-            padding: 15px;
-            background-color: #0a0a0f;
-            font-family: 'Arial', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+      .header {
+        background: ${colors.headerBg};
+        padding: clamp(1.25rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2rem);
+        text-align: center;
+      }
 
-        .email-container {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background: linear-gradient(145deg, #1a1527, #0f0d15);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
-                        0 0 80px rgba(138, 43, 226, 0.1);
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-        }
+      .trophy-icon {
+        font-size: clamp(2.5rem, 8vw, 3.5rem);
+        display: block;
+        margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+      }
 
-        .email-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg,
-                transparent,
-                rgba(138, 43, 226, 0.5),
-                transparent);
-        }
+      .header h2 {
+        margin: 0;
+        font-size: clamp(1.5rem, 5vw, 2.25rem);
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        line-height: 1.2;
+      }
 
-        .header {
-            background: linear-gradient(135deg, #2c1460, #1a0b3d);
-            padding: clamp(25px, 6vw, 45px) clamp(20px, 5vw, 35px);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
+      .content {
+        padding: clamp(1.25rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2rem);
+      }
 
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at center, rgba(138, 43, 226, 0.2) 0%, transparent 70%);
-            pointer-events: none;
-        }
+      .boost-details {
+        background: rgba(138, 43, 226, 0.05);
+        border-radius: clamp(10px, 2vw, 15px);
+        padding: clamp(1rem, 4vw, 2rem);
+        margin: clamp(1rem, 4vw, 2rem) 0;
+        border: 1px solid rgba(138, 43, 226, 0.2);
+      }
 
-        .header::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0l12.5 25 25 12.5-25 12.5L50 100l-12.5-25-25-12.5 25-12.5z' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");
-            background-size: 50px 50px;
-            opacity: 0.5;
-            pointer-events: none;
-        }
+      .tournament-intro {
+        text-align: center;
+        font-size: clamp(1rem, 3.5vw, 1.125rem);
+        margin-bottom: clamp(0.75rem, 2vw, 1rem);
+      }
 
-        .header h2 {
-            color: #ffffff;
-            margin: 0;
-            font-size: clamp(24px, 4.5vw, 32px);
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
+      .tournament-number {
+        font-size: clamp(1.25rem, 4.5vw, 1.75rem);
+        text-align: center;
+        padding: clamp(0.75rem, 2vw, 1rem) 0;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: ${colors.purple};
+      }
 
-        .content {
-            padding: clamp(25px, 6vw, 45px) clamp(20px, 5vw, 35px);
-            color: #e0e0e0;
-            position: relative;
-        }
+      .scores {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: clamp(0.75rem, 3vw, 1.875rem);
+        margin: clamp(1rem, 4vw, 1.5rem) 0;
+        padding: 0 clamp(0.5rem, 2vw, 1rem);
+      }
 
-        .boost-details {
-            background: rgba(138, 43, 226, 0.05);
-            border-radius: 15px;
-            padding: clamp(20px, 5vw, 30px);
-            margin: clamp(20px, 5vw, 30px) 0;
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2),
-                        inset 0 0 20px rgba(138, 43, 226, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
+      .score-item {
+        text-align: center;
+        padding: clamp(0.75rem, 3vw, 1.25rem);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: clamp(8px, 2vw, 12px);
+        border: 1px solid rgba(138, 43, 226, 0.1);
+      }
 
-        .boost-details::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(to bottom, #9370DB, #8A2BE2);
-            box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
-        }
+      .score-label {
+        font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+        color: ${colors.lightPurple};
+        margin-bottom: clamp(0.375rem, 1.5vw, 0.5rem);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
 
-        .highlight {
-            background: linear-gradient(45deg, #9370DB, #8A2BE2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 700;
-        }
+      .score-value {
+        font-size: clamp(1.5rem, 5vw, 1.75rem);
+        font-weight: 700;
+        line-height: 1.2;
+      }
 
-        .trophy-icon {
-            font-size: clamp(40px, 8vw, 56px);
-            margin-bottom: clamp(20px, 5vw, 30px);
-            text-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
-            position: relative;
-            display: inline-block;
-        }
+      .score-item.new-score {
+        background: rgba(138, 43, 226, 0.1);
+        border: 1px solid rgba(138, 43, 226, 0.2);
+      }
 
-        .trophy-icon::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle, rgba(138, 43, 226, 0.2), transparent 70%);
-            border-radius: 50%;
-            z-index: -1;
-        }
+      .score-item.new-score .score-value {
+        color: ${colors.purple};
+      }
 
-        .tournament-number {
-            font-size: clamp(20px, 5vw, 24px);
-            text-align: center;
-            padding: 15px 0;
-            font-weight: 700;
-            letter-spacing: 1px;
-            background: linear-gradient(45deg, #9370DB, #8A2BE2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      .message {
+        text-align: center;
+        font-size: clamp(1rem, 3.5vw, 1.125rem);
+        line-height: 1.6;
+        margin: clamp(1.25rem, 4vw, 1.5rem) clamp(0.5rem, 2vw, 1rem);
+        word-wrap: break-word;
+      }
+
+      .boost-amount {
+        display: inline-block;
+        padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem);
+        background: rgba(138, 43, 226, 0.1);
+        border-radius: clamp(6px, 1.5vw, 8px);
+        border: 1px solid rgba(138, 43, 226, 0.2);
+        font-weight: 700;
+        color: ${colors.lightPurple};
+        margin: 0 0.25rem;
+      }
+
+      .footer-message {
+        text-align: center;
+        color: #888;
+        font-size: clamp(0.875rem, 3vw, 1rem);
+        padding: 0 clamp(0.5rem, 2vw, 1rem);
+      }
+
+      .footer {
+        background: #0f0d15;
+        padding: clamp(0.75rem, 3vw, 1.25rem);
+        text-align: center;
+        border-top: 1px solid rgba(138, 43, 226, 0.1);
+      }
+
+      .footer p {
+        color: #666;
+        margin: 0;
+        font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+        letter-spacing: 0.05em;
+      }
+
+      /* Tablet Breakpoint */
+      @media screen and (min-width: 768px) {
+        .tournament-notification {
+          max-width: 90%;
         }
 
         .scores {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-            margin: 25px 0;
+          max-width: 500px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
+
+      /* Desktop Breakpoint */
+      @media screen and (min-width: 1024px) {
+        .tournament-notification {
+          max-width: 600px;
         }
 
+        /* Optional: Add hover states for desktop only */
         .score-item {
-            text-align: center;
-            position: relative;
-            padding: 15px 25px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            border: 1px solid rgba(138, 43, 226, 0.1);
+          transition: transform 0.2s ease;
         }
 
-        .score-label {
-            font-size: clamp(12px, 3.5vw, 14px);
-            color: #9370DB;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .score-item:hover {
+          transform: translateY(-2px);
         }
-
-        .score-value {
-            font-size: clamp(22px, 5vw, 28px);
-            font-weight: 700;
-            background: linear-gradient(45deg, #ffffff, #e0e0e0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .score-item.new-score {
-            background: rgba(138, 43, 226, 0.1);
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.1);
-        }
-
-        .score-item.new-score .score-value {
-            background: linear-gradient(45deg, #9370DB, #8A2BE2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .message {
-            text-align: center;
-            font-size: clamp(16px, 4vw, 18px);
-            line-height: 1.6;
-            color: #cccccc;
-            margin: 25px 0;
-        }
-
-        .boost-amount {
-            display: inline-block;
-            padding: 5px 12px;
-            background: rgba(138, 43, 226, 0.1);
-            border-radius: 8px;
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            font-weight: 700;
-            color: #9370DB;
-        }
-
-        .footer {
-            background: #0f0d15;
-            padding: clamp(15px, 4vw, 20px);
-            text-align: center;
-            border-top: 1px solid rgba(138, 43, 226, 0.1);
-        }
-
-        .footer p {
-            color: #666;
-            margin: 0;
-            font-size: clamp(12px, 3.5vw, 14px);
-            letter-spacing: 1px;
-        }
-
-        @media screen and (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-
-            .email-container {
-                border-radius: 15px;
-            }
-
-            .scores {
-                gap: 15px;
-            }
-
-            .score-item {
-                padding: 12px 20px;
-            }
-        }
-
-        @media (hover: hover) {
-            .email-container {
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
-            }
-
-            .email-container:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5),
-                            0 0 100px rgba(138, 43, 226, 0.15);
-            }
-
-            .score-item {
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
-            }
-
-            .score-item:hover {
-                transform: translateY(-2px);
-            }
-
-            .score-item.new-score:hover {
-                box-shadow: 0 0 25px rgba(138, 43, 226, 0.15);
-            }
-        }
+      }
     </style>
-</head>
-<body>
-    <div class="email-container">
-        <div class="header">
-            <div class="trophy-icon">👑</div>
-            <h2>Tournament Champion</h2>
-        </div>
-        <div class="content">
-            <div class="boost-details">
-                <p style="text-align: center; font-size: 18px; margin-bottom: 15px;">Extraordinary Performance in</p>
-                <div class="tournament-number">Tournament #${tournamentNumber}</div>
-                <div class="scores">
-                    <div class="score-item">
-                        <div class="score-label">Previous IQ</div>
-                        <div class="score-value">${prevIQ}</div>
-                    </div>
-                    <div class="score-item new-score">
-                        <div class="score-label">New IQ</div>
-                        <div class="score-value">${newIQ}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="message">
-                Your exceptional tournament performance has earned you a <span class="boost-amount">+${boost} IQ</span> boost!
-            </div>
-            <p style="text-align: center; color: #888; font-size: 16px;">Continue your reign at the top of the leaderboards!</p>
-        </div>
-        <div class="footer">
-            <p>RAPID RECAP</p>
-        </div>
-    </div>
-</body>
-</html>`
+  `
 }
 
 module.exports = {
