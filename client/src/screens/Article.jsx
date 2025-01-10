@@ -31,7 +31,7 @@ import MainArticleContentSkeleton from '../components/articleComponents/loaders/
 import StreakSurgeModal from '../components/articleComponents/StreakSurgeModal'
 //SSR images
 const fallback_news_image = '/images/fallback_news_image.webp'
-//
+
 const QuinBoostModal = lazy(() =>
   import('../components/articleComponents/QuinBoostModal'),
 )
