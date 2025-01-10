@@ -25,7 +25,7 @@ const { Authenticate } = require('../middleware/authenticate')
 const checkPrivileges = require('../middleware/checkPrivileges')
 
 router.route('/').get(checkPrivileges, allArticles)
-router.route('/article/:id').get(getArticle)
+router.route('/article/:id').get(checkPrivileges, getArticle)
 router.route('/genQuiz/:articleId').put(Authenticate, getQuiz)
 router.route('/startQuiz/:articleId').get(Authenticate, startQuiz)
 router.route('/quizStatus/:articleId').get(Authenticate, getArticleQuizStatus)

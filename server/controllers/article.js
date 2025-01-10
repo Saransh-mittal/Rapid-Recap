@@ -154,8 +154,8 @@ async function getArticle(req, res) {
         if (!article) {
           throw new Error('Article not found')
         }
-
-        return processDetailedArticle(article, highlights, lang)
+        const privileges = req.privileges
+        return processDetailedArticle(article, highlights, lang, privileges)
       },
       CACHE_CONFIG.durations.USER_ARTICLE,
     )
