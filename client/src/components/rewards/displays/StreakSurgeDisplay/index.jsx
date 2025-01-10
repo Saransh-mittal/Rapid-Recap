@@ -6,7 +6,6 @@ import BaseRewardDisplay from '../../common/BaseRewardDisplay'
 import { RewardIcon, RewardCard } from './components'
 import useRewardState from '../../hooks/useRewardState'
 import { claimStreakSurge } from '../../../../utils/quiz.utils'
-import { useTranslation } from 'react-i18next'
 
 // Map for dynamic icons based on reward title
 const REWARD_ICONS = {
@@ -38,7 +37,6 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
         `linear-gradient(145deg, ${rewardItem.color}88, ${rewardItem.color}aa)`,
     }
   })
-  const { t } = useTranslation('StreakSurgeDisplay')
 
   return (
     <BaseRewardDisplay
@@ -80,14 +78,14 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
               bgClip="text"
               textShadow="0 2px 4px rgba(0,0,0,0.1)"
             >
-              {t('rewards.bonus_xp')}
+              {reward.title}
             </Text>
             <Text
               color="whiteAlpha.900"
               fontSize={{ base: 'md', md: 'lg' }}
               opacity={0.9}
             >
-              {t('rewards.rqm_boost')}
+              {reward.description}
             </Text>
           </VStack>
         </Box>
@@ -141,7 +139,7 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                   transition="all 0.3s ease"
                 >
                   <Gift size={22} />
-                  {t('buttons.claim')}
+                  Claim Rewards
                   <Sparkles size={22} />
                 </Box>
               </motion.div>
@@ -164,7 +162,7 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                   gap={3}
                 >
                   <Sparkles />
-                  {t('messages.success')}
+                  Rewards Claimed!
                   <Sparkles />
                 </Text>
               </motion.div>

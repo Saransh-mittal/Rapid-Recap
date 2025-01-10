@@ -3,7 +3,7 @@ import { Box } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
 
-const ClaimButton = ({ onClick, disabled, t }) => (
+const ClaimButton = ({ onClick, disabled }) => (
   <Box
     as={motion.button}
     w="full"
@@ -31,7 +31,7 @@ const ClaimButton = ({ onClick, disabled, t }) => (
     }}
   >
     <Sparkles size={28} />
-    <span>{t('claimButton.text')}</span>
+    <span>Claim IQ Boost!</span>
     <Sparkles size={28} />
   </Box>
 )

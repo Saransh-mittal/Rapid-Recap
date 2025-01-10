@@ -3,7 +3,7 @@ import { HStack, Text, useMediaQuery } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Crown, PartyPopper } from 'lucide-react'
 
-const SuccessMessage = ({ t }) => {
+const SuccessMessage = () => {
   const isScreenSmallerThan768px = useMediaQuery('(max-width: 768px)')[0]
   return (
     <HStack
@@ -35,7 +35,7 @@ const SuccessMessage = ({ t }) => {
         fontWeight="bold"
         textShadow="0 0 10px rgba(66,153,225,0.3)"
       >
-        {t('successMessage.text')}
+        Intelligence Amplified!
       </Text>
       <PartyPopper
         size={isScreenSmallerThan768px ? 24 : 36}

@@ -10,7 +10,6 @@ const quinBoostChecker = async ({
 }) => {
   try {
     const response = await axios.get(`/api/user/quinBoostChecker`)
-    console.log(response.data)
 
     if (response.status === 200) {
       const {

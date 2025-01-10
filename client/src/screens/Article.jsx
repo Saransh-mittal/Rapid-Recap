@@ -34,9 +34,6 @@ const fallback_news_image = '/images/fallback_news_image.webp'
 const QuinBoostModal = lazy(() =>
   import('../components/articleComponents/QuinBoostModal'),
 )
-const StreakSurgeModal = lazy(() =>
-  import('../components/articleComponents/StreakSurgeModal'),
-)
 const Article = () => {
   const toast = useToast()
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
@@ -49,7 +46,6 @@ const Article = () => {
   const { quizLeftToGetQuizBoost, isQuinBoostAvailable } = useSelector(
     state => state.quiz,
   )
-  const { isStreakBoosted } = useSelector(state => state.quiz) // Add these from your quiz reducer
   const dispatch = useDispatch()
   const { id } = useParams()
 
@@ -97,7 +93,6 @@ const Article = () => {
   )
 
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
-  const [isStreakSurgeModalOpen, setIsStreakSurgeModalOpen] = useState(false)
   const [isLargerThan821] = useMediaQuery('(min-width: 821px)')
   const [bookmark, setBookmark] = useState(false)
   const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(true)
@@ -107,15 +102,6 @@ const Article = () => {
 
   const openModal = useCallback(() => setIsQuinBoostModalOpen(true), [])
   const closeModal = useCallback(() => setIsQuinBoostModalOpen(false), [])
-
-  const openStreakSurgeModal = useCallback(
-    () => setIsStreakSurgeModalOpen(true),
-    [],
-  )
-  const closeStreakSurgeModal = useCallback(
-    () => setIsStreakSurgeModalOpen(false),
-    [],
-  )
 
   const fetchQuiz = useCallback(async () => {
     try {
@@ -470,7 +456,6 @@ const Article = () => {
                 isQuinBoostAvailable={isQuinBoostAvailable}
                 quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
                 openModal={openModal}
-                openStreakSurgeModal={openStreakSurgeModal}
                 onThemeChange={handleThemeChange}
               />
             </header>
@@ -543,13 +528,6 @@ const Article = () => {
         currentQuizCount={user?.todaysQuizCnt}
         isStateBoosted={isBoosted}
       />
-      {/* Add this before the closing Flex tag */}
-      <StreakSurgeModal
-        isOpen={isStreakSurgeModalOpen}
-        onClose={closeStreakSurgeModal}
-        isStreakBoosted={isBoosted}
-      />
-
       {user && <TrackTime userId={user?._id} articleId={id} />}
     </Flex>
   )
