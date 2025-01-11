@@ -338,7 +338,7 @@ const PowerBoostDisplay = ({
           isActive={isQuinBoostAvailable}
           onClick={openModal}
         />
-        {categoryBoost !== undefined && (
+        {categoryBoost && (
           <BoostCard
             icon={Crown}
             title="Category Boost"
