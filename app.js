@@ -1,6 +1,6 @@
 const dotenv = require('dotenv')
 const bodyParser = require('body-parser')
-const { createSSRMiddleware } = require('./middleware/ssrMiddleware')
+const { createSSRMiddleware } = require('./middleware/normalSSRMiddleware')
 dotenv.config({ path: './config.env' })
 const express = require('express')
 const userRoutes = require('./router/userRoutes')
@@ -69,6 +69,12 @@ if (process.env.NODE_ENV === 'development') {
     next()
   })
 } else {
+  app.use(
+    require('prerender-node').set(
+      'prerenderToken',
+      process.env.PRERENDER_TOKEN,
+    ),
+  )
   // Production configuration
   app.use(
     helmet({
@@ -242,7 +248,7 @@ webpush.setVapidDetails(
 initBotTracking()
 
 // Load scheduler
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
 // require('./scripts/analyzeArticleRelations')
 // Setup routes and SSR
 async function initializeServer() {
