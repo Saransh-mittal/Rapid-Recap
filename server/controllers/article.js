@@ -12,6 +12,7 @@ const {
   fetchNews,
   processNews,
   extractNewsUtilityFunc,
+  processArticlesWithPrivileges,
 } = require('../utils/article.utils')
 const { sendNotification } = require('../services/notificationService')
 const {
@@ -56,7 +57,7 @@ const {
   cacheVector,
 } = require('../utils/searchCache.utils')
 
-async function allArticles(req, res) {
+const allArticles = async (req, res) => {
   const {
     page = 1,
     pageSize = CACHE_CONFIG.defaults.PAGE_SIZE,
@@ -74,7 +75,18 @@ async function allArticles(req, res) {
 
     const processedArticles = await getOrSetCache(cacheKey, async () => {
       const articles = await queryArticles({ category, page, pageSize })
-      return processArticles(articles, lang)
+      const baseProcessed = await processArticles(
+        articles,
+        lang,
+        req.privileges,
+      )
+
+      // Apply privilege-based processing if authenticated
+      if (req.privileges) {
+        return processArticlesWithPrivileges(baseProcessed, req.privileges)
+      }
+
+      return baseProcessed
     })
 
     res.send(processedArticles)
@@ -142,8 +154,8 @@ async function getArticle(req, res) {
         if (!article) {
           throw new Error('Article not found')
         }
-
-        return processDetailedArticle(article, highlights, lang)
+        const privileges = req.privileges
+        return processDetailedArticle(article, highlights, lang, privileges)
       },
       CACHE_CONFIG.durations.USER_ARTICLE,
     )
@@ -1016,14 +1028,20 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
 // @access Public
 const getBotRelatedArticles = asyncHandler(async (req, res) => {
   const { articleId } = req.params
-  const relatedArticles = await ArticleService.getRelatedArticles(articleId)
 
-  if (!relatedArticles) {
+  // Try to get trending articles first
+  let articles = await ArticleService.getTrendingArticles()
+
+  // If no trending articles, fallback to regular related articles
+  if (!articles) {
+    articles = await ArticleService.getRelatedArticles(articleId)
+  }
+
+  if (!articles) {
     return res.status(404).send('')
   }
 
-  const relatedHTML =
-    ArticleService.generateRelatedArticlesHTML(relatedArticles)
+  const relatedHTML = ArticleService.generateRelatedArticlesHTML(articles)
   res.send(relatedHTML)
 })
 

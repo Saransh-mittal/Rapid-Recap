@@ -25,6 +25,7 @@ const {
   simulateBotQuizParticipation,
 } = require('./tasks/dummyUserTournamentTasks')
 const { convertISTtoUTCCron } = require('../utils/miscellaneous.utils')
+const forceReloadAll = require('./tasks/forceReload')
 
 const currentDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
 
@@ -69,6 +70,7 @@ let schedules = [
     '22:25',
     sendRecommendedNewsNotification,
   ),
+  createSchedule('forceReload', '23:00', forceReloadAll),
   createSchedule(
     'recommendedNewsNotification1',
     '00:25',

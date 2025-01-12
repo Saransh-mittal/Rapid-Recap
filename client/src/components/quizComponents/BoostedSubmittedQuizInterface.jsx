@@ -11,9 +11,8 @@ const BoostedSubmittedQuizInterface = ({
   score,
   isOpen,
   submitLoad,
+  boost,
   onViewReport,
-  isBoosted,
-  isQuinBoostAvailable,
 }) => {
   // Added onViewReport prop
   const { t } = useTranslation('BoostedSubmittedQuizInterface')
@@ -154,9 +153,7 @@ const BoostedSubmittedQuizInterface = ({
                     marginBottom={'0.5rem'}
                   >
                     {score !== 0
-                      ? isBoosted && isQuinBoostAvailable
-                        ? `1.75x ${t(`boostedText`)}`
-                        : `1.5x ${t(`boostedText`)}`
+                      ? `${boost}x ${t('boostedText')}`
                       : `"Don't give up! Keep going!"`}
                   </Text>
                 </Flex>

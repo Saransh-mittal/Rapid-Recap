@@ -7,11 +7,19 @@ const {
 } = require('../services/recommendationService')
 
 const asyncHandler = require('express-async-handler')
-const { hindiConverter } = require('../utils/article.utils')
-const { breakArticleIntoParagraphs } = require('../utils/article.utils')
+const {
+  hindiConverter,
+  breakArticleIntoParagraphs,
+  processArticlesWithPrivileges,
+  calculateArticleDifficulty,
+} = require('../utils/article.utils')
+
 const { formatDate } = require('../utils/miscellaneous.utils')
 const cache = require('memory-cache')
 const ArticleHighlight = require('../model/articleHighlightSchema')
+const {
+  batchUpdateArticleDifficulties,
+} = require('../services/articleServicesForEndUsers/articleProcessingService')
 
 // @desc    Get user recommendations
 // @route   GET /api/recommendation
@@ -22,7 +30,9 @@ const userRecommendations = asyncHandler(async (req, res) => {
   const pageSize = parseInt(req.query.pageSize) || 18
   const { lang } = req.query
 
-  const cacheKey = `user_recommendations_${userId}_${lang}_${page}_${pageSize}`
+  // Include privileges in cache key if they exist
+  const privilegeKey = req.privileges?.hasAnyPrivilege ? '_privileged' : ''
+  const cacheKey = `user_recommendations_${userId}_${lang}_${page}_${pageSize}${privilegeKey}`
   const cachedRecommendations = cache.get(cacheKey)
 
   if (
@@ -32,7 +42,7 @@ const userRecommendations = asyncHandler(async (req, res) => {
   ) {
     // Trigger elimination in background without awaiting
     processRecommendationArticleElimination(userId, {
-      eliminationThreshold: 20, // 30 seconds
+      eliminationThreshold: 20,
       logElimination: false,
     }).catch(error => {
       console.error('Background recommendation elimination failed:', error)
@@ -46,28 +56,33 @@ const userRecommendations = asyncHandler(async (req, res) => {
       return await Article.findById(recommendation._id)
     }),
   )
-  if (lang === 'hi')
-    for (let article of articles) {
-      if (
-        !article.hindiTitle ||
-        !article.hindiMainText ||
-        !article.hindiAuthor
-      ) {
-        const response = await hindiConverter(article._id)
-        if (!article.hindiMainText) {
-          article.hindiMainText = []
-        }
-        article.hindiTitle = response.hindiTitle
 
-        for (let key in response.hindiMainText) {
-          if (!response.hindiMainText[key]) continue
-          article.hindiMainText.push(response.hindiMainText[key])
-        }
-        article.hindiAuthor = response.hindiAuthor
-      }
-    }
+  // Process Hindi translations if needed
+  if (lang === 'hi') {
+    await Promise.all(
+      articles.map(async article => {
+        if (
+          !article.hindiTitle ||
+          !article.hindiMainText ||
+          !article.hindiAuthor
+        ) {
+          const response = await hindiConverter(article._id)
+          if (!article.hindiMainText) {
+            article.hindiMainText = []
+          }
+          article.hindiTitle = response.hindiTitle
 
-  const processedArticles = await Promise.all(
+          for (let key in response.hindiMainText) {
+            if (!response.hindiMainText[key]) continue
+            article.hindiMainText.push(response.hindiMainText[key])
+          }
+          article.hindiAuthor = response.hindiAuthor
+        }
+      }),
+    )
+  }
+  batchUpdateArticleDifficulties(articles)
+  let processedArticles = await Promise.all(
     articles
       .filter(article => article.category !== 'onBoardingArticle')
       .map(async article => {
@@ -77,6 +92,12 @@ const userRecommendations = asyncHandler(async (req, res) => {
           processingStatus: 'completed',
           language: lang ? lang : 'en',
         })
+        let difficulty = article.articleDifficulty
+        if (!article.articleDifficulty) {
+          difficulty = calculateArticleDifficulty({
+            mainText: article.mainText,
+          })
+        }
         return {
           category: article.category,
           title: article.title,
@@ -91,18 +112,27 @@ const userRecommendations = asyncHandler(async (req, res) => {
           date: formatDate(article.dateTime),
           dateTime: article.dateTime,
           _id: article._id,
-          // Add highlights if they exist
           dictionary: highlights?.dictionary || [],
           importantSentences: highlights?.importantSentences || [],
+          articleDifficulty: difficulty || 0.5,
         }
       }),
   )
 
-  // Cache the processed articles for 1 hour (3600000 milliseconds)
-  cache.put(cacheKey, processedArticles, 3600000)
-  // Trigger elimination in background without awaiting
+  // Process articles with privileges if available
+  if (req.privileges) {
+    processedArticles = await processArticlesWithPrivileges(
+      processedArticles,
+      req.privileges,
+    )
+  }
+
+  // Cache the processed articles
+  cache.put(cacheKey, processedArticles, 3600000) // 1 hour cache
+
+  // Trigger background elimination
   processRecommendationArticleElimination(userId, {
-    eliminationThreshold: 20, // 20 seconds
+    eliminationThreshold: 20,
     logElimination: false,
   }).catch(error => {
     console.error('Background recommendation elimination failed:', error)

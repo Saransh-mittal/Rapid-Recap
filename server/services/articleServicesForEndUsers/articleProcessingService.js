@@ -3,10 +3,41 @@ const { formatDate } = require('../../utils/miscellaneous.utils')
 const {
   hindiConverter,
   breakArticleIntoParagraphs,
+  calculateArticleDifficulty,
 } = require('../../utils/article.utils')
+const Article = require('../../model/articleSchema')
 
-async function processArticles(articles, lang) {
+async function batchUpdateArticleDifficulties(articles) {
+  const updates = articles
+    .filter(
+      article =>
+        !article.articleDifficulty || article.articleDifficulty === 0.5,
+    )
+    .map(async article => {
+      try {
+        const difficulty = calculateArticleDifficulty({
+          mainText: article.mainText,
+        })
+        await Article.findByIdAndUpdate(article._id, {
+          articleDifficulty: difficulty,
+        })
+      } catch (error) {
+        console.error(
+          `Error in batch update for article ${article._id}:`,
+          error,
+        )
+      }
+    })
+
+  // Run updates in background
+  Promise.all(updates).catch(error => {
+    console.error('Error in batch difficulty updates:', error)
+  })
+}
+
+async function processArticles(articles, lang, isPrivileged = null) {
   if (!articles) return null
+  batchUpdateArticleDifficulties(articles)
   if (lang === 'hi') {
     for (let article of articles) {
       if (
@@ -37,7 +68,10 @@ async function processArticles(articles, lang) {
         processingStatus: 'completed',
         language: lang || 'en',
       })
-
+      let difficulty = article.articleDifficulty
+      if (isPrivileged && !article.articleDifficulty) {
+        difficulty = calculateArticleDifficulty({ mainText: article.mainText })
+      }
       return {
         category: article.category,
         title: article.title,
@@ -54,9 +88,10 @@ async function processArticles(articles, lang) {
         _id: article._id,
         dictionary: highlights?.dictionary || [],
         importantSentences: highlights?.importantSentences || [],
+        articleDifficulty: isPrivileged ? difficulty || 0.5 : undefined,
       }
     }),
   )
 }
 
-module.exports = { processArticles }
+module.exports = { processArticles, batchUpdateArticleDifficulties }

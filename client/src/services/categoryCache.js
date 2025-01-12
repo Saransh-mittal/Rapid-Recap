@@ -1,5 +1,6 @@
 // services/categoryCache.js
 import { categories, findCategoryIndex } from '../assets/Categories'
+import axios from 'axios'
 
 const createCategoryCache = () => {
   const cache = new Map()
@@ -77,7 +78,7 @@ const createCategoryCache = () => {
     return adjacentCategories
   }
 
-  const prefetchCategory = async (category, page = 1, language) => {
+  const prefetchCategory = async (category, page = 1, language, user) => {
     if (!category || get(category, page)?.data) return // Don't prefetch if already cached
 
     try {
@@ -85,9 +86,13 @@ const createCategoryCache = () => {
         category === 'all'
           ? `/api/recommendation?page=${page}&pageSize=18&lang=${language}`
           : `/api/articles?page=${page}&pageSize=18&category=${category}&lang=${language}`
-
-      const response = await fetch(endpoint)
-      const data = await response.json()
+      const headers =
+        user?.categoryPrivileges?.[category] ||
+        (user?.categoryPrivileges && category === 'all')
+          ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          : {}
+      const response = await axios.get(endpoint, { headers })
+      const data = response.data
 
       if (Array.isArray(data)) {
         set(category, page, data)
@@ -97,7 +102,7 @@ const createCategoryCache = () => {
     }
   }
 
-  const prefetchAdjacentCategories = (currentCategory, language) => {
+  const prefetchAdjacentCategories = (currentCategory, language, user) => {
     if (!currentCategory) return
 
     // Delay prefetching to prioritize main content
@@ -107,7 +112,7 @@ const createCategoryCache = () => {
       // Use Promise.all with a delay between each category to avoid overwhelming the server
       adjacentCategories.forEach((category, index) => {
         setTimeout(() => {
-          prefetchCategory(category, 1, language)
+          prefetchCategory(category, 1, language, user)
         }, index * 500) // 500ms delay between each category
       })
     }, PREFETCH_DELAY)

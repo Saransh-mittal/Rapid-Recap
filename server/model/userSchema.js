@@ -325,11 +325,52 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    tournamentIQBoosts: [
+      {
+        tournament: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'TOURNAMENT',
+          required: true,
+        },
+        tournamentNumber: {
+          type: Number,
+          required: true,
+        },
+        rank: {
+          type: Number,
+          required: true,
+        },
+        prevIQ: {
+          type: Number,
+          required: true,
+        },
+        boostedIQ: {
+          type: Number,
+          required: true,
+        },
+        boost: {
+          type: Number,
+          required: true,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     badges: [
       {
         tournamentNumber: Number,
         badgeName: String,
         text: String,
+        claimed: {
+          type: Boolean,
+          default: false,
+        },
+        canBeClaimedUntil: {
+          type: Date,
+          default: null,
+        },
       },
     ],
     displayedBadge: {

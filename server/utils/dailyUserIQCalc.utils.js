@@ -293,7 +293,11 @@ const calculateUserScores = async users => {
           season: parseInt(currSeason, 10),
         }).populate({
           path: 'article',
-          populate: { path: 'quiz' },
+          select: '_id', // Only select the _id field from article
+          populate: {
+            path: 'quiz',
+            select: '_id', // Only select the _id field from quiz
+          },
         })
       })
 

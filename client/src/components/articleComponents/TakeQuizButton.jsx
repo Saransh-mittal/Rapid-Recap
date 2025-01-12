@@ -1,6 +1,6 @@
 import { Box, Button, Text } from '@chakra-ui/react'
 import React from 'react'
-import Bubbles from '../miscellaneous/bubbles'
+import Bubbles from '../miscellaneous/Bubbles'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 

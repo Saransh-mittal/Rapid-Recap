@@ -11,10 +11,8 @@ import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
 import { Box } from '@chakra-ui/react'
 import { useDispatch, useSelector } from 'react-redux'
-import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 
-const Navbar = React.lazy(() => import('./components/Header-Footer/Navbar.jsx'))
 const FixedBackground = React.lazy(() =>
   import('./components/miscellaneous/FixedBackground.jsx'),
 )
@@ -46,7 +44,6 @@ const UpgradeModal = React.lazy(() =>
 import { RewardDisplay } from './components/rewards'
 
 import {
-  addNoteMessage,
   fetchUnreadNoteMessages,
   setIsRegisterOpen,
   setIsSigninOpen,
@@ -56,7 +53,6 @@ import {
   setIsNotifInboxModalOpen,
   addNoteMessageIfAllowed,
 } from './redux/appSlice.js'
-import { setLoginCheckStatus, setUser } from './redux/authSlice.js'
 import i18n from 'i18next'
 import { changeLanguage } from './utils/helper.utils.js'
 import {
@@ -79,6 +75,8 @@ import {
   setQuizLeftToGetQuizBoost,
 } from './redux/quizSlice.js'
 import { quinBoostChecker } from './utils/quiz.utils.js'
+import { tournamentRewardsClaim } from './utils/tournamentRewards.js'
+import { useSocket } from './customHooks/useSocket.js'
 
 const App = () => {
   ReactGA.initialize('G-ES5VQ8NW7Z')
@@ -94,6 +92,7 @@ const App = () => {
   const { isAuthenticated, user, loginCheckStatus } = useSelector(
     state => state.auth,
   )
+  const { getSocket } = useSocket()
   const {
     isRegisterOpen,
     isSigninOpen,
@@ -313,6 +312,8 @@ const App = () => {
         setQuizLeftToGetQuizBoost,
         dispatch,
       })
+      tournamentRewardsClaim({ user, dispatch })
+      getSocket()
     }
     if (isAuthenticated && user?.soundSettings) {
       dispatch(setSoundSettings(user.soundSettings))

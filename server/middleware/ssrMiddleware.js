@@ -1,10 +1,209 @@
 const path = require('path')
 const express = require('express')
-const fs = require('fs')
+const fs = require('fs').promises
 const { createSSRHandler } = require('./ssr/handler')
+const { generateMetaAndSchema } = require('../utils/landingPageSeo')
+const { generateAndInjectSchemas } = require('../utils/structuredData')
+const cache = require('memory-cache')
+const ArticleService = require('../services/articleService')
+const { generateMetaTags } = require('../utils/seoHelper')
+
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
+async function getBotContent(urlType, url, baseUrl) {
+  try {
+    // Check cache first
+    const cachedContent = cache.get(`bot-content-${url}`)
+    if (cachedContent) {
+      return cachedContent
+    }
+
+    let content = {}
+
+    if (urlType === 'get-started') {
+      const [
+        navbarContent,
+        heroContent,
+        benefitsContent,
+        featuresContent,
+        footerContent,
+      ] = await Promise.all([
+        fs.readFile(
+          path.resolve(__dirname, '../client/dist/bot/components/navbar.html'),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../client/dist/bot/components/get-started/hero.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../client/dist/bot/components/get-started/benefits.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../client/dist/bot/components/get-started/features.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(__dirname, '../client/dist/bot/components/footer.html'),
+          'utf-8',
+        ),
+      ])
+
+      content = {
+        navbar: navbarContent,
+        hero: heroContent,
+        benefits: benefitsContent,
+        features: featuresContent,
+        footer: footerContent,
+      }
+    } else if (urlType === '410') {
+      const [navbarContent, errorContent, footerContent] = await Promise.all([
+        fs.readFile(
+          path.resolve(__dirname, '../client/dist/bot/components/navbar.html'),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(
+            __dirname,
+            '../client/dist/bot/components/error/410.html',
+          ),
+          'utf-8',
+        ),
+        fs.readFile(
+          path.resolve(__dirname, '../client/dist/bot/components/footer.html'),
+          'utf-8',
+        ),
+      ])
+
+      content = {
+        navbar: navbarContent,
+        error: errorContent,
+        footer: footerContent,
+        statusCode: 410,
+      }
+    } else {
+      const [navbarContent, articleTemplateContent, footerContent] =
+        await Promise.all([
+          fs.readFile(
+            path.resolve(
+              __dirname,
+              '../client/dist/bot/components/navbar.html',
+            ),
+            'utf-8',
+          ),
+          fs.readFile(
+            path.resolve(
+              __dirname,
+              '../client/dist/bot/components/article/article.html',
+            ),
+            'utf-8',
+          ),
+          fs.readFile(
+            path.resolve(
+              __dirname,
+              '../client/dist/bot/components/footer.html',
+            ),
+            'utf-8',
+          ),
+        ])
+
+      // Get article content
+      const articleId = ArticleService.extractArticleId(url)
+      let articleData
+      try {
+        articleData = await ArticleService.getArticleContent(articleId)
+      } catch (error) {
+        console.log('Error occured on the url:', url)
+        return getBotContent('410', url, baseUrl)
+      }
+
+      // Replace placeholders in template with actual content
+      const articleContent = ArticleService.replaceArticleContent(
+        articleTemplateContent,
+        articleData,
+      )
+
+      content = {
+        navbar: navbarContent,
+        article: articleContent,
+        footer: footerContent,
+        seoMetaTags: generateMetaTags(articleData, baseUrl, url),
+        articleData,
+      }
+    }
+
+    // Store in cache
+    cache.put(`bot-content-${urlType}`, content, CACHE_DURATION)
+    return content
+  } catch (error) {
+    console.error('Error reading bot content:', error)
+    return {
+      navbar: '',
+      hero: '',
+      benefits: '',
+      features: '',
+      footer: '',
+      article: '',
+    }
+  }
+}
 
 async function createSSRMiddleware(app) {
   try {
+    app.post('/api/bot-content', async (req, res) => {
+      try {
+        const { urlType, url, baseUrl, articleId } = req.body
+
+        const botContent = await getBotContent(urlType, url, baseUrl)
+
+        let response = {
+          content: '',
+          metaTags: null,
+          schemas: null,
+        }
+
+        if (urlType === 'get-started') {
+          // Add section comments for content splitting
+          response.content = `
+            <!-- Hero Section -->
+            ${botContent.hero || ''}
+            <!-- Benefits Section -->
+            ${botContent.benefits || ''}
+            <!-- Features Section -->
+            ${botContent.features || ''}
+          `
+          const { metaTags, schema } = generateMetaAndSchema(baseUrl)
+          response.metaTags = metaTags
+          response.schemas = schema
+        } else if (urlType === 'article' && articleId) {
+          response.content = botContent.article || ''
+          response.metaTags = botContent.seoMetaTags
+          if (botContent.articleData) {
+            // Don't pass template here, just generate the schema
+            response.schemas = generateAndInjectSchemas({
+              articleData: botContent.articleData,
+              url,
+              baseUrl,
+              templateless: true, // Add a flag to indicate we don't want template manipulation
+            }).schemas // Only take the schemas part
+          }
+        }
+
+        res.json(response)
+      } catch (error) {
+        console.error('Error serving bot content:', error)
+        res.status(500).json({ error: 'Error loading content' })
+      }
+    })
     // Setup static file handling first
     setupStaticHandling(app)
 

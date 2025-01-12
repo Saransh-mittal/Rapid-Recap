@@ -24,6 +24,7 @@ import {
   Image,
   Divider,
 } from '@chakra-ui/react'
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import {
   Brain,
   Eye,
@@ -41,6 +42,8 @@ import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { setIsSigninOpen } from '../redux/appSlice'
 import { keyframes } from '@emotion/react'
+import { setUser, verifyAdminStatus } from '../redux/authSlice'
+import { dailyStreakCheckerAndUpdater } from '../utils/quiz.utils'
 
 // Lazy loaded components
 const EmailVerify = lazy(() =>
@@ -82,6 +85,7 @@ export default function Register({ isOpen, onClose }) {
   const [picDisplay, setPicDisplay] = useState(
     'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
   )
+  const [showGoogleInGameName, setShowGoogleInGameName] = useState(false)
 
   const {
     isOpen: isEmailVerifyOpen,
@@ -176,6 +180,76 @@ export default function Register({ isOpen, onClose }) {
     }
   }
 
+  const handleGoogleSignup = async (credentialResponse, inGameName = null) => {
+    try {
+      setLoad(true)
+      const response = await axios.post('/api/user/handleGoogleLogin', {
+        credentialResponse,
+        inGameName,
+      })
+
+      if (response.data.EnterInGameName) {
+        setShowGoogleInGameName(true)
+        setData(prev => ({ ...prev, credentialResponse }))
+        toast({
+          title: 'One More Step',
+          description:
+            'Please enter your username/ingamename to complete registration',
+          status: 'info',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+      } else {
+        // Handle successful registration and login
+        localStorage.setItem('token', response.data.token)
+        localStorage.setItem('role', response.data.user.role)
+        dispatch(setUser(response.data.user))
+        dispatch(verifyAdminStatus())
+        dailyStreakCheckerAndUpdater(dispatch)
+
+        toast({
+          title: 'Welcome to Rapid Recap!',
+          description: 'Account created successfully',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+          position: 'top',
+        })
+
+        onClose()
+        location.pathname === '/' && navigate('/home/all')
+      }
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Registration Failed',
+        description: error.response?.data?.error || 'Something went wrong',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+    } finally {
+      setLoad(false)
+    }
+  }
+
+  const handleGoogleInGameNameSubmit = async () => {
+    if (!data.inGameName.trim()) {
+      toast({
+        title: 'Username Required',
+        description: 'Please enter a username to continue',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+        position: 'top',
+      })
+      return
+    }
+    await handleGoogleSignup(data.credentialResponse, data.inGameName)
+  }
+
   useEffect(() => {
     document.title = 'Register - Rapid Recap'
   }, [])
@@ -203,6 +277,7 @@ export default function Register({ isOpen, onClose }) {
         borderColor="whiteAlpha.100"
         boxShadow="0 0 20px rgba(255, 0, 128, 0.2)"
       >
+        {/* Header content remains the same */}
         <Box
           position="absolute"
           top="0"
@@ -231,7 +306,6 @@ export default function Register({ isOpen, onClose }) {
                 Join Rapid Recap
               </Text>
             </HStack>
-
             <Text fontSize="sm" color="whiteAlpha.600" fontStyle="italic">
               "Your journey begins here"
             </Text>
@@ -242,265 +316,346 @@ export default function Register({ isOpen, onClose }) {
 
         <ModalBody pb={6}>
           <VStack spacing={6}>
-            <Box w="full">
-              <Progress
-                value={calculateProgress()}
-                size="sm"
-                colorScheme="pink"
-                hasStripe
-                isAnimated
-                borderRadius="full"
-              />
-            </Box>
-
-            <Flex direction="column" align="center" mb="4">
-              {imageLoading ? (
-                <Spinner size="lg" color="pink.400" />
-              ) : (
-                <Box position="relative">
-                  <Image
-                    src={picDisplay}
-                    alt="Profile Picture"
-                    w="100px"
-                    h="100px"
-                    borderRadius="full"
-                    border="2px solid"
-                    borderColor="pink.400"
+            {showGoogleInGameName ? (
+              <>
+                <InputGroup>
+                  <InputLeftElement>
+                    <Box as={UserPlus} color="pink.400" size={18} />
+                  </InputLeftElement>
+                  <Input
+                    name="inGameName"
+                    placeholder="Choose your username"
+                    value={data.inGameName}
+                    onChange={e =>
+                      setData(prev => ({ ...prev, inGameName: e.target.value }))
+                    }
+                    bg="whiteAlpha.50"
+                    border="1px solid"
+                    borderColor="whiteAlpha.200"
+                    color="white"
+                    _hover={{ borderColor: 'pink.400' }}
+                    _focus={{
+                      borderColor: 'pink.500',
+                      boxShadow: '0 0 0 1px #FF0080',
+                    }}
+                    _placeholder={{ color: 'whiteAlpha.400' }}
                   />
-                  <IconButton
-                    icon={<Camera size={16} />}
+                </InputGroup>
+
+                <Button
+                  w="full"
+                  size="lg"
+                  onClick={handleGoogleInGameNameSubmit}
+                  isLoading={load}
+                  loadingText="Creating Account..."
+                  leftIcon={<UserPlus size={18} />}
+                  bgGradient="linear(to-r, pink.500, purple.500)"
+                  color="white"
+                  _hover={{
+                    bgGradient: 'linear(to-r, pink.600, purple.600)',
+                    transform: 'translateY(-2px)',
+                  }}
+                  _active={{
+                    bgGradient: 'linear(to-r, pink.700, purple.700)',
+                    transform: 'translateY(0)',
+                  }}
+                  transition="all 0.2s"
+                >
+                  Complete Registration
+                </Button>
+              </>
+            ) : (
+              <>
+                {/* Regular registration form content */}
+                <Box w="full">
+                  <Progress
+                    value={calculateProgress()}
                     size="sm"
                     colorScheme="pink"
-                    position="absolute"
-                    bottom="0"
-                    right="0"
+                    hasStripe
+                    isAnimated
                     borderRadius="full"
-                    onClick={() =>
-                      document.getElementById('profile-pic').click()
-                    }
                   />
                 </Box>
-              )}
-              <Input
-                id="profile-pic"
-                type="file"
-                name="pic"
-                accept="image/*"
-                onChange={handleImageChange}
-                display="none"
-              />
-            </Flex>
 
-            <VStack w="full" spacing={4}>
-              <InputGroup>
-                <InputLeftElement>
-                  <Box as={User} color="pink.400" size={18} />
-                </InputLeftElement>
-                <Input
-                  name="name"
-                  placeholder="Full Name"
-                  value={data.name}
-                  onChange={handleInput}
-                  bg="whiteAlpha.50"
-                  border="1px solid"
-                  borderColor="whiteAlpha.200"
-                  color="white"
-                  _hover={{ borderColor: 'pink.400' }}
-                  _focus={{
-                    borderColor: 'pink.500',
-                    boxShadow: '0 0 0 1px #FF0080',
-                  }}
-                  _placeholder={{ color: 'whiteAlpha.400' }}
-                />
-              </InputGroup>
+                <Flex direction="column" align="center" mb="4">
+                  {imageLoading ? (
+                    <Spinner size="lg" color="pink.400" />
+                  ) : (
+                    <Box position="relative">
+                      <Image
+                        src={picDisplay}
+                        alt="Profile Picture"
+                        w="100px"
+                        h="100px"
+                        borderRadius="full"
+                        border="2px solid"
+                        borderColor="pink.400"
+                      />
+                      <IconButton
+                        icon={<Camera size={16} />}
+                        size="sm"
+                        colorScheme="pink"
+                        position="absolute"
+                        bottom="0"
+                        right="0"
+                        borderRadius="full"
+                        onClick={() =>
+                          document.getElementById('profile-pic').click()
+                        }
+                      />
+                    </Box>
+                  )}
+                  <Input
+                    id="profile-pic"
+                    type="file"
+                    name="pic"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    display="none"
+                  />
+                </Flex>
 
-              <InputGroup>
-                <InputLeftElement>
-                  <Box as={UserPlus} color="pink.400" size={18} />
-                </InputLeftElement>
-                <Input
-                  name="inGameName"
-                  placeholder="Username"
-                  value={data.inGameName}
-                  onChange={handleInput}
-                  bg="whiteAlpha.50"
-                  border="1px solid"
-                  borderColor="whiteAlpha.200"
-                  color="white"
-                  _hover={{ borderColor: 'pink.400' }}
-                  _focus={{
-                    borderColor: 'pink.500',
-                    boxShadow: '0 0 0 1px #FF0080',
-                  }}
-                  _placeholder={{ color: 'whiteAlpha.400' }}
-                />
-              </InputGroup>
+                <VStack w="full" spacing={4}>
+                  <InputGroup>
+                    <InputLeftElement>
+                      <Box as={User} color="pink.400" size={18} />
+                    </InputLeftElement>
+                    <Input
+                      name="name"
+                      placeholder="Full Name"
+                      value={data.name}
+                      onChange={handleInput}
+                      bg="whiteAlpha.50"
+                      border="1px solid"
+                      borderColor="whiteAlpha.200"
+                      color="white"
+                      _hover={{ borderColor: 'pink.400' }}
+                      _focus={{
+                        borderColor: 'pink.500',
+                        boxShadow: '0 0 0 1px #FF0080',
+                      }}
+                      _placeholder={{ color: 'whiteAlpha.400' }}
+                    />
+                  </InputGroup>
 
-              <InputGroup>
-                <InputLeftElement>
-                  <Box as={AtSign} color="pink.400" size={18} />
-                </InputLeftElement>
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="Email Address"
-                  value={data.email}
-                  onChange={handleInput}
-                  bg="whiteAlpha.50"
-                  border="1px solid"
-                  borderColor="whiteAlpha.200"
-                  color="white"
-                  _hover={{ borderColor: 'pink.400' }}
-                  _focus={{
-                    borderColor: 'pink.500',
-                    boxShadow: '0 0 0 1px #FF0080',
-                  }}
-                  _placeholder={{ color: 'whiteAlpha.400' }}
-                />
-              </InputGroup>
+                  <InputGroup>
+                    <InputLeftElement>
+                      <Box as={UserPlus} color="pink.400" size={18} />
+                    </InputLeftElement>
+                    <Input
+                      name="inGameName"
+                      placeholder="Username"
+                      value={data.inGameName}
+                      onChange={handleInput}
+                      bg="whiteAlpha.50"
+                      border="1px solid"
+                      borderColor="whiteAlpha.200"
+                      color="white"
+                      _hover={{ borderColor: 'pink.400' }}
+                      _focus={{
+                        borderColor: 'pink.500',
+                        boxShadow: '0 0 0 1px #FF0080',
+                      }}
+                      _placeholder={{ color: 'whiteAlpha.400' }}
+                    />
+                  </InputGroup>
 
-              <InputGroup>
-                <InputLeftElement>
-                  <Box as={KeyRound} color="pink.400" size={18} />
-                </InputLeftElement>
-                <Input
-                  name="password"
-                  type={data.showPassword ? 'text' : 'password'}
-                  placeholder="Password"
-                  value={data.password}
-                  onChange={handleInput}
-                  bg="whiteAlpha.50"
-                  border="1px solid"
-                  borderColor="whiteAlpha.200"
+                  <InputGroup>
+                    <InputLeftElement>
+                      <Box as={AtSign} color="pink.400" size={18} />
+                    </InputLeftElement>
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder="Email Address"
+                      value={data.email}
+                      onChange={handleInput}
+                      bg="whiteAlpha.50"
+                      border="1px solid"
+                      borderColor="whiteAlpha.200"
+                      color="white"
+                      _hover={{ borderColor: 'pink.400' }}
+                      _focus={{
+                        borderColor: 'pink.500',
+                        boxShadow: '0 0 0 1px #FF0080',
+                      }}
+                      _placeholder={{ color: 'whiteAlpha.400' }}
+                    />
+                  </InputGroup>
+
+                  <InputGroup>
+                    <InputLeftElement>
+                      <Box as={KeyRound} color="pink.400" size={18} />
+                    </InputLeftElement>
+                    <Input
+                      name="password"
+                      type={data.showPassword ? 'text' : 'password'}
+                      placeholder="Password"
+                      value={data.password}
+                      onChange={handleInput}
+                      bg="whiteAlpha.50"
+                      border="1px solid"
+                      borderColor="whiteAlpha.200"
+                      color="white"
+                      _hover={{ borderColor: 'pink.400' }}
+                      _focus={{
+                        borderColor: 'pink.500',
+                        boxShadow: '0 0 0 1px #FF0080',
+                      }}
+                      _placeholder={{ color: 'whiteAlpha.400' }}
+                    />
+                    <InputRightElement>
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        color="pink.400"
+                        _hover={{ bg: 'whiteAlpha.100' }}
+                        icon={
+                          data.showPassword ? (
+                            <EyeOff size={16} />
+                          ) : (
+                            <Eye size={16} />
+                          )
+                        }
+                        onClick={() =>
+                          setData(prev => ({
+                            ...prev,
+                            showPassword: !prev.showPassword,
+                          }))
+                        }
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+
+                  <InputGroup>
+                    <InputLeftElement>
+                      <Box as={KeyRound} color="pink.400" size={18} />
+                    </InputLeftElement>
+                    <Input
+                      name="cpassword"
+                      type={data.showCPassword ? 'text' : 'password'}
+                      placeholder="Confirm Password"
+                      value={data.cpassword}
+                      onChange={handleInput}
+                      bg="whiteAlpha.50"
+                      border="1px solid"
+                      borderColor="whiteAlpha.200"
+                      color="white"
+                      _hover={{ borderColor: 'pink.400' }}
+                      _focus={{
+                        borderColor: 'pink.500',
+                        boxShadow: '0 0 0 1px #FF0080',
+                      }}
+                      _placeholder={{ color: 'whiteAlpha.400' }}
+                    />
+                    <InputRightElement>
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        color="pink.400"
+                        _hover={{ bg: 'whiteAlpha.100' }}
+                        icon={
+                          data.showCPassword ? (
+                            <EyeOff size={16} />
+                          ) : (
+                            <Eye size={16} />
+                          )
+                        }
+                        onClick={() =>
+                          setData(prev => ({
+                            ...prev,
+                            showCPassword: !prev.showCPassword,
+                          }))
+                        }
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+                </VStack>
+
+                <Button
+                  w="full"
+                  size="lg"
+                  onClick={handleSubmit}
+                  isLoading={load}
+                  loadingText="Creating Account..."
+                  leftIcon={<UserPlus size={18} />}
+                  bgGradient="linear(to-r, pink.500, purple.500)"
                   color="white"
-                  _hover={{ borderColor: 'pink.400' }}
-                  _focus={{
-                    borderColor: 'pink.500',
-                    boxShadow: '0 0 0 1px #FF0080',
+                  _hover={{
+                    bgGradient: 'linear(to-r, pink.600, purple.600)',
+                    transform: 'translateY(-2px)',
                   }}
-                  _placeholder={{ color: 'whiteAlpha.400' }}
-                />
-                <InputRightElement>
-                  <IconButton
-                    size="sm"
+                  _active={{
+                    bgGradient: 'linear(to-r, pink.700, purple.700)',
+                    transform: 'translateY(0)',
+                  }}
+                  transition="all 0.2s"
+                >
+                  Create Account
+                </Button>
+
+                <Divider borderColor="whiteAlpha.200" />
+
+                <Button
+                  position="relative"
+                  leftIcon={<Mail size={18} />}
+                  w="full"
+                  variant="outline"
+                  borderColor="pink.500"
+                  color="white"
+                  _hover={{ bg: 'whiteAlpha.100' }}
+                >
+                  Sign up with Google
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    opacity={0}
+                  >
+                    <GoogleOAuthProvider clientId="492859619634-m81f6tnro73fg6sflkuj0nemm1g6aecb.apps.googleusercontent.com">
+                      <GoogleLogin
+                        onSuccess={credentialResponse =>
+                          handleGoogleSignup(credentialResponse)
+                        }
+                        onError={() => {
+                          toast({
+                            title: 'Registration Failed',
+                            description: 'Google sign-up was unsuccessful',
+                            status: 'error',
+                            duration: 5000,
+                            isClosable: true,
+                            position: 'top',
+                          })
+                        }}
+                      />
+                    </GoogleOAuthProvider>
+                  </Box>
+                </Button>
+
+                <Flex w="full" justify="center">
+                  <Button
                     variant="ghost"
                     color="pink.400"
-                    _hover={{ bg: 'whiteAlpha.100' }}
-                    icon={
-                      data.showPassword ? (
-                        <EyeOff size={16} />
-                      ) : (
-                        <Eye size={16} />
-                      )
-                    }
-                    onClick={() =>
-                      setData(prev => ({
-                        ...prev,
-                        showPassword: !prev.showPassword,
-                      }))
-                    }
-                  />
-                </InputRightElement>
-              </InputGroup>
-
-              <InputGroup>
-                <InputLeftElement>
-                  <Box as={KeyRound} color="pink.400" size={18} />
-                </InputLeftElement>
-                <Input
-                  name="cpassword"
-                  type={data.showCPassword ? 'text' : 'password'}
-                  placeholder="Confirm Password"
-                  value={data.cpassword}
-                  onChange={handleInput}
-                  bg="whiteAlpha.50"
-                  border="1px solid"
-                  borderColor="whiteAlpha.200"
-                  color="white"
-                  _hover={{ borderColor: 'pink.400' }}
-                  _focus={{
-                    borderColor: 'pink.500',
-                    boxShadow: '0 0 0 1px #FF0080',
-                  }}
-                  _placeholder={{ color: 'whiteAlpha.400' }}
-                />
-                <InputRightElement>
-                  <IconButton
                     size="sm"
-                    variant="ghost"
-                    color="pink.400"
+                    onClick={() => {
+                      onClose()
+                      dispatch(setIsSigninOpen(true))
+                    }}
                     _hover={{ bg: 'whiteAlpha.100' }}
-                    icon={
-                      data.showCPassword ? (
-                        <EyeOff size={16} />
-                      ) : (
-                        <Eye size={16} />
-                      )
-                    }
-                    onClick={() =>
-                      setData(prev => ({
-                        ...prev,
-                        showCPassword: !prev.showCPassword,
-                      }))
-                    }
-                  />
-                </InputRightElement>
-              </InputGroup>
-            </VStack>
-
-            <Button
-              w="full"
-              size="lg"
-              onClick={handleSubmit}
-              isLoading={load}
-              loadingText="Creating Account..."
-              leftIcon={<UserPlus size={18} />}
-              bgGradient="linear(to-r, pink.500, purple.500)"
-              color="white"
-              _hover={{
-                bgGradient: 'linear(to-r, pink.600, purple.600)',
-                transform: 'translateY(-2px)',
-              }}
-              _active={{
-                bgGradient: 'linear(to-r, pink.700, purple.700)',
-                transform: 'translateY(0)',
-              }}
-              transition="all 0.2s"
-            >
-              Create Account
-            </Button>
-
-            <Divider borderColor="whiteAlpha.200" />
-
-            <Button
-              leftIcon={<Mail size={18} />}
-              w="full"
-              variant="outline"
-              borderColor="pink.500"
-              color="white"
-              _hover={{ bg: 'whiteAlpha.100' }}
-            >
-              Sign up with Google
-            </Button>
-
-            <Flex w="full" justify="center">
-              <Button
-                variant="ghost"
-                color="pink.400"
-                size="sm"
-                onClick={() => {
-                  onClose()
-                  dispatch(setIsSigninOpen(true))
-                }}
-                _hover={{ bg: 'whiteAlpha.100' }}
-              >
-                Already have an account? Sign in
-              </Button>
-            </Flex>
+                  >
+                    Already have an account? Sign in
+                  </Button>
+                </Flex>
+              </>
+            )}
           </VStack>
         </ModalBody>
       </ModalContent>
 
+      {/* Email verification modal */}
       <Suspense
         fallback={
           <Flex justify="center" align="center" h="100vh">
