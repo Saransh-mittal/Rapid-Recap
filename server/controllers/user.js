@@ -476,6 +476,18 @@ const handleGoogleLogin = async (req, res) => {
           return res
             .status(422)
             .json({ error: 'In Game Name cannot have spaces' })
+
+        if (isValidEmail(inGameName)) {
+          return res
+            .status(422)
+            .json({ error: 'Email cannot be used as an In-Game Name' })
+        }
+
+        if (inGameName.length > 16) {
+          return res.status(422).json({
+            error: 'In Game Name cannot be greater than 16 characters',
+          })
+        }
         user.inGameName = inGameName
       }
 
@@ -501,6 +513,18 @@ const handleGoogleLogin = async (req, res) => {
         return res
           .status(422)
           .json({ error: 'In Game Name cannot have spaces' })
+
+      if (isValidEmail(inGameName)) {
+        return res
+          .status(422)
+          .json({ error: 'Email cannot be used as an In-Game Name' })
+      }
+
+      if (inGameName.length > 16) {
+        return res.status(422).json({
+          error: 'In Game Name cannot be greater than 16 characters',
+        })
+      }
       // If not, create a new user with Google data
       const name = userInfo.name.split(' ')
       user = new User({

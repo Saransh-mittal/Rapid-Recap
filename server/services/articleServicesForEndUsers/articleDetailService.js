@@ -45,7 +45,7 @@ async function processDetailedArticle(article, highlights, lang, privileges) {
   const paragraphs = await breakArticleIntoParagraphs(article.mainText)
   const relatedArticles = await getRelatedArticles(article.relatedArticles)
   const isArticleCategoryBoosted =
-    privileges.hasAnyPrivilege &&
+    privileges?.hasAnyPrivilege &&
     privileges?.privilegesByCategory?.[article.category]?.rqmBoost
 
   return {
