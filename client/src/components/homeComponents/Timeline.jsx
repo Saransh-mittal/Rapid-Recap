@@ -5,7 +5,7 @@ import ReactGA from 'react-ga4'
 import { useDispatch, useSelector } from 'react-redux'
 import { setCategory } from '../../redux/contentSlice'
 import { useSwipeable } from 'react-swipeable'
-import { categories } from '../../assets/Categories'
+import { getCategories } from '../../assets/Categories'
 import { useNavbar } from '../../contextAPI/NavbarContext'
 import { useTranslation } from 'react-i18next'
 import {
@@ -31,6 +31,10 @@ const Timeline = ({
   const dispatchRedux = useDispatch()
   const [showGetsStarted, setShowGetStarted] = useState(false)
   const { isAuthenticated, user } = useSelector(state => state.auth)
+  const categories = useMemo(
+    () => getCategories({ categoryPrivileges: user?.categoryPrivileges }),
+    [user?.categoryPrivileges],
+  )
   const { searchResults, isSearching, searchLoading, searchTerm } = useSelector(
     state => state.articles,
   )
