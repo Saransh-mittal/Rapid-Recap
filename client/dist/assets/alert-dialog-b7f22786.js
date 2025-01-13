@@ -1,0 +1,1 @@
+import{j as a}from"./index-b38b9dba.js";import{Q as r,n as s,V as n}from"./text-d474496f.js";function f(t){const{leastDestructiveRef:o,...e}=t;return a.jsx(r,{...e,initialFocusRef:o})}const c=s((t,o)=>a.jsx(n,{ref:o,role:"alertdialog",...t}));export{f as A,c as a};
