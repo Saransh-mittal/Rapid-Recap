@@ -16,8 +16,8 @@ const BoostCard = ({ icon: Icon, title, isActive, onClick }) => {
         boxShadow: '0 0 25px rgba(147, 51, 234, 0.4)',
       }}
       position="relative"
-      w={{ base: '65px', sm: '90px' }}
-      h={{ base: '65px', sm: '90px' }}
+      w={{ base: '40px', md: '40px' }}
+      h={{ base: '40px', md: '40px' }}
       borderRadius="xl"
       overflow="hidden"
       bg={
@@ -31,8 +31,8 @@ const BoostCard = ({ icon: Icon, title, isActive, onClick }) => {
         <Box
           as={motion.div}
           position="absolute"
-          inset="2px"
-          borderRadius="lg"
+          inset="0.1px"
+          borderRadius="xl"
           border="2px solid"
           borderColor="rgba(255, 215, 0, 0.6)"
           zIndex={2}
@@ -87,9 +87,9 @@ const BoostCard = ({ icon: Icon, title, isActive, onClick }) => {
             inset={0}
             animate={{
               background: [
-                'radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.2) 0%, transparent 50%)',
-                'radial-gradient(circle at 70% 70%, rgba(255, 215, 0, 0.2) 0%, transparent 50%)',
-                'radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.2) 0%, transparent 50%)',
+                // 'radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.2) 0%, transparent 50%)',
+                // 'radial-gradient(circle at 70% 70%, rgba(255, 215, 0, 0.2) 0%, transparent 50%)',
+                // 'radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.2) 0%, transparent 50%)',
               ],
             }}
             transition={{
@@ -125,9 +125,9 @@ const BoostCard = ({ icon: Icon, title, isActive, onClick }) => {
                   scale: [1, 1.2, 1],
                   rotate: [0, 5, -5, 0],
                   filter: [
-                    'drop-shadow(0 0 10px rgba(255, 215, 0, 0.4))',
-                    'drop-shadow(0 0 15px rgba(255, 215, 0, 0.6))',
-                    'drop-shadow(0 0 10px rgba(255, 215, 0, 0.4))',
+                    // 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.4))',
+                    // 'drop-shadow(0 0 15px rgba(255, 215, 0, 0.6))',
+                    // 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.4))',
                   ],
                 }
               : {}
@@ -207,7 +207,7 @@ const DecorativeFrame = () => {
         position="absolute"
         inset={0}
         border="2px solid"
-        borderColor="rgba(167, 139, 250, 0.3)"
+        // borderColor="rgba(167, 139, 250, 0.3)"
         borderRadius="2xl"
       />
     </Box>
@@ -218,6 +218,7 @@ const PowerBoostDisplay = ({
   categoryBoost,
   openModal,
   openStreakSurgeModal,
+  openCategoryBoostModal,
 }) => {
   const { isBoosted } = useSelector(state => state.app)
   const { isQuinBoostAvailable } = useSelector(state => state.quiz)
@@ -237,11 +238,11 @@ const PowerBoostDisplay = ({
   return (
     <Box
       position="relative"
-      py={6}
-      px={4}
+      py={{ base: 1, md: 3 }}
+      px={{ base: 3, md: 4 }}
       borderRadius="2xl"
-      maxW={{ base: '300px', sm: '400px' }}
-      mx="auto"
+      mb={4}
+      mx={{ base: -0.5, md: 8 }}
       bg="rgba(30, 30, 40, 0.6)"
       backdropFilter="blur(10px)"
       as={motion.div}
@@ -270,7 +271,7 @@ const PowerBoostDisplay = ({
           <Crown size={24} color="#A78BFA" />
         </motion.div>
         <Text
-          fontSize="lg"
+          fontSize={{ base: 'md', md: 'lg' }}
           fontWeight="bold"
           color="whiteAlpha.900"
           letterSpacing="wide"
@@ -288,7 +289,7 @@ const PowerBoostDisplay = ({
             ease: 'easeInOut',
           }}
         >
-          POWER BOOSTS
+          BOOSTS
         </Text>
         {multiplier && (
           <Box
@@ -328,21 +329,22 @@ const PowerBoostDisplay = ({
       <HStack spacing={4} justify="center">
         <BoostCard
           icon={Star}
-          title="Streak Surge"
+          title=""
           isActive={isBoosted}
           onClick={openStreakSurgeModal}
         />
         <BoostCard
           icon={Zap}
-          title="Quin Boost"
+          title=""
           isActive={isQuinBoostAvailable}
           onClick={openModal}
         />
         {categoryBoost && (
           <BoostCard
             icon={Crown}
-            title="Category Boost"
+            title=""
             isActive={categoryBoost}
+            onClick={openCategoryBoostModal}
           />
         )}
       </HStack>

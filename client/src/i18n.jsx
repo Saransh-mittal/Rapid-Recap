@@ -27,6 +27,8 @@ const namespaces = {
     'BoostSection',
     'GivenQuiz',
     'QuinBoostModal',
+    'StreakSurgeModal',
+    'CategoryBoostModal',
     'QuizExpired',
     'RelatedArticlesToggle',
     'ShareButton',

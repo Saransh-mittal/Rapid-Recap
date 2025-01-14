@@ -61,6 +61,7 @@ const ArticleHeader = ({
   openModal,
   onThemeChange,
   openStreakSurgeModal,
+  openCategoryBoostModal,
 }) => {
   const { t } = useTranslation('ArticleHeader')
   const { isAuthenticated, isAdmin } = useSelector(state => state.auth)
@@ -301,6 +302,7 @@ const ArticleHeader = ({
             <BoostSection
               isCategoryBoostAvailable={article?.isArticleCategoryBoosted}
               openStreakSurgeModal={openStreakSurgeModal}
+              openCategoryBoostModal={openCategoryBoostModal}
               isQuinBoostAvailable={isQuinBoostAvailable}
               quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
               openModal={openModal}
