@@ -1015,15 +1015,27 @@ const getRelatedArticles = asyncHandler(async (req, res) => {
 // @route  GET /api/articles/bot-related/:articleId
 // @access Public
 const getBotRelatedArticles = asyncHandler(async (req, res) => {
+  const cachedContent = cache.get('bot-related-articles')
+  if (cachedContent) {
+    return res.send(cachedContent)
+  }
   const { articleId } = req.params
-  const relatedArticles = await ArticleService.getRelatedArticles(articleId)
 
-  if (!relatedArticles) {
+  // Try to get trending articles first
+  let articles = await ArticleService.getTrendingArticles()
+
+  // If no trending articles, fallback to regular related articles
+  if (!articles) {
+    articles = await ArticleService.getRelatedArticles(articleId)
+  }
+
+  if (!articles) {
     return res.status(404).send('')
   }
 
-  const relatedHTML =
-    ArticleService.generateRelatedArticlesHTML(relatedArticles)
+  const relatedHTML = ArticleService.generateRelatedArticlesHTML(articles)
+
+  cache.put('bot-related-articles', relatedHTML, 3600000 * 6)
   res.send(relatedHTML)
 })
 

@@ -533,6 +533,7 @@ const leaderBoard = async (req, res) => {
 
   try {
     const totalDocuments = await User.countDocuments(condition)
+
     const maxUsers = Math.min(totalDocuments, 500)
     const totalPages = Math.ceil(maxUsers / limitNumber)
 
@@ -552,7 +553,11 @@ const leaderBoard = async (req, res) => {
       .lean()
 
     // Step 2: Get paginated users with full details
+
     const paginatedUsers = await User.find(condition)
+      .select(
+        '_id name inGameName IQ_score pic avgRQM maxIQScore level xp displayedBadge',
+      )
       .sort({ IQ_score: -1, avgRQM: -1 })
       .skip(skipNumber)
       .limit(limitNumber)
@@ -560,6 +565,7 @@ const leaderBoard = async (req, res) => {
 
     // Step 3: Fetch quiz attempts for paginated users
     const userIds = paginatedUsers.map(user => user._id)
+
     const quizAttempts = await QuizAttempt.aggregate([
       { $match: { user: { $in: userIds }, season: 2 } },
       { $group: { _id: '$user', count: { $sum: 1 } } },
@@ -585,7 +591,9 @@ const leaderBoard = async (req, res) => {
       },
     }))
 
-    await User.bulkWrite(bulkOps)
+    User.bulkWrite(bulkOps).catch(error => {
+      console.error('Error updating ranks:', error)
+    })
 
     // Step 6: Format result for response
     const result = enrichedUsers.map(user => ({
@@ -606,6 +614,7 @@ const leaderBoard = async (req, res) => {
 
     // Step 7: Get current user data
     let currUserData = {}
+
     if (currUserId) {
       const currUser = await User.findById(currUserId)
         .select('avgRQM quizAttempts rank')

@@ -84,7 +84,7 @@ const Leaderboard = () => {
         clearTimeout(renderTimeoutRef.current)
       }
     }
-  }, [fetchLeaderboard])
+  }, [])
 
   useEffect(() => {
     if (!isLoading && allLeadersRef.current.length > INITIAL_RENDER_COUNT) {

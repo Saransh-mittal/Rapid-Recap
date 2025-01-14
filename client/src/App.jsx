@@ -114,6 +114,7 @@ const App = () => {
   const { updates } = useSelector(state => state.app)
   const USER_IQ = user?.IQ_score ?? null
   const { t: GuestLoginModaltranslation } = useTranslation('GuestLoginModal')
+  const [rendered, setRendered] = useState(false) // Flag to see when rendering is complete
   const handleNotifModalClose = useCallback(() => {
     dispatch(setIsNotifInboxModalOpen(false))
     dispatch(setSelectedNotificationId(null))
@@ -406,9 +407,16 @@ const App = () => {
       setTimeout(() => {
         dispatch(setIsLoading(false))
         setShowLoadingScreen(false)
+        setRendered(true)
       }, 500)
     }
   }, [navbarLoaded, overallProgress, dispatch])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.prerenderReady && rendered) {
+      window.prerenderReady = true
+    }
+  }, [rendered])
 
   return (
     <>
