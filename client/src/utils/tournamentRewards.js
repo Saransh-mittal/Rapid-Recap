@@ -4,79 +4,80 @@ import axios from 'axios'
 import { addReward } from '../redux/rewardsSlice'
 import { setUser } from '../redux/authSlice'
 
-const getRewardConfig = badge => {
+const getRewardConfig = (badge, t) => {
   const configs = {
     RANK_1: {
       type: REWARD_TYPES.IQ_BOOST,
       tournamentReward: true,
       rank: 'RANK_1',
-      title: 'Tournament Champion IQ Boost!',
-      description:
-        'Your legendary performance has greatly enhanced your Intelligence!',
+      title: t('tournamentRewards.ranks.RANK_1.title'),
+      description: t('tournamentRewards.ranks.RANK_1.description'),
       order: 1,
     },
     RANK_2: {
       type: REWARD_TYPES.IQ_BOOST,
       tournamentReward: true,
       rank: 'RANK_2',
-      title: 'Elite Performance IQ Boost!',
-      description:
-        'Your exceptional skills have significantly boosted your Intelligence!',
+      title: t('tournamentRewards.ranks.RANK_2.title'),
+      description: t('tournamentRewards.ranks.RANK_2.description'),
       order: 2,
     },
     RANK_3: {
       type: REWARD_TYPES.IQ_BOOST,
       tournamentReward: true,
       rank: 'RANK_3',
-      title: 'Rising Star IQ Boost!',
-      description:
-        'Your outstanding achievement has increased your Intelligence!',
+      title: t('tournamentRewards.ranks.RANK_3.title'),
+      description: t('tournamentRewards.ranks.RANK_3.description'),
       order: 3,
     },
     ACE: {
       type: REWARD_TYPES.TOURNAMENT_ACE,
-      title: 'LEGENDARY ACE',
-      description: 'Champion of {category} Category!',
+      title: t('tournamentRewards.badges.ACE.title'),
+      description: t('tournamentRewards.badges.ACE.description'),
       rewards: [
         {
           icon: 'Shield',
-          title: 'Category Insight Radar',
-          description:
-            'Preview article difficulties in {category} category (Mon-Fri).',
+          title: t('tournamentRewards.badges.ACE.rewards.insightRadar.title'),
+          description: t(
+            'tournamentRewards.badges.ACE.rewards.insightRadar.description',
+          ),
         },
         {
           icon: 'Zap',
-          title: "Champion's RQM Amplifier",
-          description:
-            '1.5x RQM boost in {category} category quizzes (Mon-Fri).',
+          title: t('tournamentRewards.badges.ACE.rewards.rqmAmplifier.title'),
+          description: t(
+            'tournamentRewards.badges.ACE.rewards.rqmAmplifier.description',
+          ),
         },
       ],
       order: 4,
     },
     PRO: {
       type: REWARD_TYPES.TOURNAMENT_PRO,
-      title: 'ELITE VIRTUOSO',
-      description: 'Elite Excellence in {category} Category!',
+      title: t('tournamentRewards.badges.PRO.title'),
+      description: t('tournamentRewards.badges.PRO.description'),
       rewards: [
         {
           icon: 'Zap',
-          title: 'Elite RQM Amplifier',
-          description:
-            '1.5x RQM boost in {category} category quizzes (Mon-Fri).',
+          title: t('tournamentRewards.badges.PRO.rewards.rqmAmplifier.title'),
+          description: t(
+            'tournamentRewards.badges.PRO.rewards.rqmAmplifier.description',
+          ),
         },
       ],
       order: 5,
     },
     CHAMP: {
       type: REWARD_TYPES.TOURNAMENT_CHAMP,
-      title: 'RISING CHAMPION',
-      description: 'Outstanding Achiever in {category} Category!',
+      title: t('tournamentRewards.badges.CHAMP.title'),
+      description: t('tournamentRewards.badges.CHAMP.description'),
       rewards: [
         {
           icon: 'Shield',
-          title: 'Category Insight Radar',
-          description:
-            'Preview article difficulties in {category} category (Mon-Fri).',
+          title: t('tournamentRewards.badges.CHAMP.rewards.insightRadar.title'),
+          description: t(
+            'tournamentRewards.badges.CHAMP.rewards.insightRadar.description',
+          ),
         },
       ],
       order: 6,
@@ -86,12 +87,15 @@ const getRewardConfig = badge => {
   return configs[badge.badgeName]
 }
 
-const processReward = ({ reward, badge, user }) => {
+const processReward = ({ reward, badge, user, t }) => {
   if (!reward) return null
 
   // Replace category placeholder in strings
   const replaceCategory = text => {
-    return text.replace(/{category}/g, badge.text)
+    return text.replace(
+      /{category}/g,
+      t(`categorySelector.categories.${badge.text.toLocaleLowerCase()}`),
+    )
   }
 
   const processedReward = { ...reward, badge }
@@ -141,7 +145,7 @@ const getRankString = rank => {
   }
 }
 
-export const tournamentRewardsClaim = async ({ user, dispatch }) => {
+export const tournamentRewardsClaim = async ({ user, dispatch, t }) => {
   try {
     if (!user) return
 
@@ -154,7 +158,7 @@ export const tournamentRewardsClaim = async ({ user, dispatch }) => {
     const sortedBadges = tournamentBadges
       .map(badge => ({
         ...badge,
-        rewardConfig: getRewardConfig(badge),
+        rewardConfig: getRewardConfig(badge, t),
       }))
       .filter(badge => badge.rewardConfig)
       .sort((a, b) => a.rewardConfig.order - b.rewardConfig.order)
@@ -165,6 +169,7 @@ export const tournamentRewardsClaim = async ({ user, dispatch }) => {
         reward: badge.rewardConfig,
         badge,
         user,
+        t,
       })
 
       if (processedReward) {

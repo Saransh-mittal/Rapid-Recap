@@ -6,6 +6,7 @@ import BaseRewardDisplay from '../../common/BaseRewardDisplay'
 import { RewardIcon, RewardCard } from './components'
 import useRewardState from '../../hooks/useRewardState'
 import { claimStreakSurge } from '../../../../utils/quiz.utils'
+import { useTranslation } from 'react-i18next'
 
 // Map for dynamic icons based on reward title
 const REWARD_ICONS = {
@@ -24,7 +25,7 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
     onClaim,
     initialClaimed,
   })
-
+  const { t } = useTranslation('rewards')
   const rewardItems = reward.rewards.map(rewardItem => {
     const Icon = REWARD_ICONS[rewardItem.title] || Star // fallback to Star if no icon found
     return {
@@ -139,7 +140,7 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                   transition="all 0.3s ease"
                 >
                   <Gift size={22} />
-                  Claim Rewards
+                  {t('claimButton.claim')}
                   <Sparkles size={22} />
                 </Box>
               </motion.div>
@@ -162,7 +163,7 @@ const StreakSurgeDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
                   gap={3}
                 >
                   <Sparkles />
-                  Rewards Claimed!
+                  {t('claimButton.claimed')}
                   <Sparkles />
                 </Text>
               </motion.div>

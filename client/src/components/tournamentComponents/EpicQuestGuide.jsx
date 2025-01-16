@@ -20,16 +20,25 @@ import {
 import { FaQuestionCircle, FaLightbulb, FaInfoCircle } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
+import ViewRewardsButton from './rewards/ViewRewardsButton'
 
 const MotionButton = motion(Button)
 
 // Lazy load TournamentGuideModal for code splitting
 const TournamentGuideModal = lazy(() => import('./TournamentGuideModal'))
+const TournamentRewardsModal = lazy(() =>
+  import('./rewards/TournamentRewardsModal'),
+)
 
 const EpicQuestGuide = () => {
   const { t } = useTranslation('EpicQuestGuide')
   const theme = useTheme()
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const {
+    isOpen: isOpenRewards,
+    onOpen: onOpenRewards,
+    onClose: onCloseRewards,
+  } = useDisclosure()
 
   // Memoize static styles to avoid re-calculation
   const bgColor = useMemo(() => 'rgba(0, 0, 0, 0.3)', [])
@@ -47,6 +56,8 @@ const EpicQuestGuide = () => {
   // Memoize onOpen and onClose to avoid re-renders of the MotionButton
   const handleOpen = useCallback(onOpen, [])
   const handleClose = useCallback(onClose, [])
+  const handleRewardsClose = useCallback(onCloseRewards, [])
+  const handleRewardsOpen = useCallback(onOpenRewards, [])
 
   // Memoize animation properties for MotionButton
   const buttonAnimationProps = useMemo(
@@ -154,11 +165,18 @@ const EpicQuestGuide = () => {
           >
             {t('knowMore')}
           </MotionButton>
+          <ViewRewardsButton onClick={handleRewardsOpen} />
         </VStack>
       </Container>
 
       <Suspense fallback={<Spinner />}>
         <TournamentGuideModal isOpen={isOpen} onClose={handleClose} />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <TournamentRewardsModal
+          isOpen={isOpenRewards}
+          onClose={handleRewardsClose}
+        />
       </Suspense>
     </Box>
   )

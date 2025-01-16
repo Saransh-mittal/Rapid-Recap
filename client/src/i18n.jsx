@@ -35,6 +35,7 @@ const namespaces = {
     'TotalUserAttempted',
     'TrackTime',
   ],
+  rewards: ['rewards'],
   tournamentComponents: [
     'TournamentLoadingScreen',
     'EpicQuestGuide',
@@ -175,6 +176,8 @@ i18n
             return `/locales/${lng}/utils/${namespace}.json`
           case 'articleComponents':
             return `/locales/${lng}/components/articleComponents/${namespace}.json`
+          case 'rewards':
+            return `/locales/${lng}/components/rewards/${namespace}.json`
           case 'tournamentComponents':
             return `/locales/${lng}/components/tournamentComponents/${namespace}.json`
           case 'quizComponents':

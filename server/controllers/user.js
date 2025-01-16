@@ -53,6 +53,7 @@ const moment = require('moment-timezone')
 const { processBadgePrivileges } = require('../utils/tournament.utils.js')
 const { getCategories } = require('../data/categories.js')
 const Tournament = require('../model/tournamentSchema.js')
+const { REWARDS_MODAL_CONFIG } = require('../config/rewardsModalConfig.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -2260,6 +2261,45 @@ const updateBadgeCategory = asyncHandler(async (req, res) => {
   }
 })
 
+const checkRewardsModalStatus = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // For existing users (created before feature start date)
+    const isExistingUser =
+      user.createdAt < REWARDS_MODAL_CONFIG.FEATURE_START_DATE
+
+    // Check if modal should be shown
+    let shouldShowModal = false
+    if (isExistingUser && !user.hasSeenRewardsModal) {
+      // Set expiry date if not set
+      if (!user.rewardsModalExpiryDate) {
+        user.rewardsModalExpiryDate = REWARDS_MODAL_CONFIG.EXPIRY_DATE
+        await user.save()
+      }
+
+      // Check if within expiry period
+      if (new Date() <= user.rewardsModalExpiryDate) {
+        shouldShowModal = true
+        // Mark as seen
+        user.hasSeenRewardsModal = true
+        await user.save()
+      }
+    }
+
+    res.status(200).json({ shouldShowModal })
+  } catch (error) {
+    console.error('Error checking rewards modal status:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 module.exports = {
   registerUser,
   loginUser,
@@ -2307,4 +2347,5 @@ module.exports = {
   claimTournamentBadge,
   getValidCategories,
   updateBadgeCategory,
+  checkRewardsModalStatus,
 }

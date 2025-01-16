@@ -9,6 +9,7 @@ import {
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load SVG components
 const GlobeAmericas = React.lazy(() =>
@@ -153,6 +154,7 @@ const CategorySelector = ({ badgeName, onCategorySelected, variant }) => {
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const { t } = useTranslation('rewards')
   const toast = useToast()
 
   useEffect(() => {
@@ -166,7 +168,7 @@ const CategorySelector = ({ badgeName, onCategorySelected, variant }) => {
     } catch (error) {
       console.error('Error fetching categories:', error)
       toast({
-        title: 'Error fetching categories',
+        title: t('categorySelector.errors.fetchError'),
         status: 'error',
         duration: 3000,
       })
@@ -176,7 +178,7 @@ const CategorySelector = ({ badgeName, onCategorySelected, variant }) => {
   const handleSubmit = async () => {
     if (!selectedCategory) {
       toast({
-        title: 'Please select a category',
+        title: t('categorySelector.errors.selectCategory'),
         status: 'warning',
         duration: 3000,
       })
@@ -189,11 +191,11 @@ const CategorySelector = ({ badgeName, onCategorySelected, variant }) => {
         badgeName,
         selectedCategory,
       })
-
+      console.log(data)
       if (data.invalidCategory) {
         toast({
-          title: 'Invalid category selected',
-          description: 'Please select a different category',
+          title: t('categorySelector.errors.invalidCategory.title'),
+          description: t('categorySelector.errors.invalidCategory.description'),
           status: 'error',
           duration: 3000,
         })
@@ -202,14 +204,17 @@ const CategorySelector = ({ badgeName, onCategorySelected, variant }) => {
 
       onCategorySelected(data.updatedBadge)
       toast({
-        title: 'Category selected successfully',
+        title: t('categorySelector.success'),
         status: 'success',
         duration: 3000,
       })
     } catch (error) {
+      console.error('Error updating category:', error)
       toast({
-        title: 'Error updating category',
-        description: error.response?.data?.message || 'Please try again',
+        title: t('categorySelector.errors.updateError.title'),
+        description:
+          error.response?.data?.message ||
+          t('categorySelector.errors.updateError.fallback'),
         status: 'error',
         duration: 3000,
       })
@@ -239,7 +244,7 @@ const CategorySelector = ({ badgeName, onCategorySelected, variant }) => {
           bgClip="text"
           letterSpacing="wide"
         >
-          Select Category for Your Badge
+          {t('categorySelector.title')}
         </Text>
 
         {/* Scrollable Category Grid Container */}
@@ -264,7 +269,9 @@ const CategorySelector = ({ badgeName, onCategorySelected, variant }) => {
             {categories.map((category, index) => (
               <CategoryBox
                 key={category}
-                category={category}
+                category={t(
+                  `categorySelector.categories.${category.toLocaleLowerCase()}`,
+                )}
                 isSelected={selectedCategory === category}
                 onClick={() => setSelectedCategory(category)}
                 variant={variant}
@@ -293,7 +300,7 @@ const CategorySelector = ({ badgeName, onCategorySelected, variant }) => {
           }}
           transition="all 0.2s"
         >
-          Confirm Selection
+          {t('categorySelector.confirmButton')}
         </Button>
       </VStack>
     </Box>

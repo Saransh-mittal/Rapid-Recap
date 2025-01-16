@@ -1,0 +1,177 @@
+{
+  "tournamentRewards": {
+    "ranks": {
+      "RANK_1": {
+        "title": "Tournament Champion IQ Boost!",
+        "description": "Your legendary performance has greatly enhanced your Intelligence!"
+      },
+      "RANK_2": {
+        "title": "Elite Performance IQ Boost!",
+        "description": "Your exceptional skills have significantly boosted your Intelligence!"
+      },
+      "RANK_3": {
+        "title": "Rising Star IQ Boost!",
+        "description": "Your outstanding achievement has increased your Intelligence!"
+      }
+    },
+    "badges": {
+      "ACE": {
+        "title": "LEGENDARY ACE",
+        "description": "Champion of {category} Category!",
+        "rewards": {
+          "insightRadar": {
+            "title": "Category Insight Radar",
+            "description": "Preview article difficulties in {category} category (Mon-Fri)."
+          },
+          "rqmAmplifier": {
+            "title": "Champion's RQM Amplifier",
+            "description": "1.5x RQM boost in {category} category quizzes (Mon-Fri)."
+          }
+        }
+      },
+      "PRO": {
+        "title": "ELITE VIRTUOSO",
+        "description": "Elite Excellence in {category} Category!",
+        "rewards": {
+          "rqmAmplifier": {
+            "title": "Elite RQM Amplifier",
+            "description": "1.5x RQM boost in {category} category quizzes (Mon-Fri)."
+          }
+        }
+      },
+      "CHAMP": {
+        "title": "RISING CHAMPION",
+        "description": "Outstanding Achiever in {category} Category!",
+        "rewards": {
+          "insightRadar": {
+            "title": "Category Insight Radar",
+            "description": "Preview article difficulties in {category} category (Mon-Fri)."
+          }
+        }
+      }
+    }
+  },
+  "categorySelector": {
+    "title": "Select Category for Your Badge",
+    "confirmButton": "Confirm Selection",
+    "errors": {
+      "selectCategory": "Please select a category",
+      "fetchError": "Error fetching categories",
+      "invalidCategory": {
+        "title": "Invalid category selected",
+        "description": "Please select a different category"
+      },
+      "updateError": {
+        "title": "Error updating category",
+        "fallback": "Please try again"
+      }
+    },
+    "success": "Category selected successfully",
+    "categories": {
+      "world": "World",
+      "politics": "Politics",
+      "business": "Business",
+      "technology": "Technology",
+      "sports": "Sports",
+      "health": "Health",
+      "science": "Science",
+      "environment": "Environment",
+      "crime": "Crime",
+      "education": "Education",
+      "entertainment": "Entertainment",
+      "food": "Food",
+      "lifestyle": "Lifestyle",
+      "tourism": "Tourism"
+    }
+  },
+  "claimButton": {
+    "claim": "Claim Rewards",
+    "claimed": "Rewards Claimed!"
+  },
+  "rqmBoost": {
+    "title": "RQM Boost Ready!",
+    "subtitle": "Supercharge your next quiz performance",
+    "features": {
+      "score": "Higher Score",
+      "iq": "Better IQ"
+    },
+    "button": {
+      "activate": "Activate Boost!",
+      "activated": "Boost Activated!"
+    }
+  },
+  "iqBoost": {
+    "tournament": {
+      "numberPrefix": "Tournament #"
+    },
+    "title": "Intelligence Amplified!",
+    "disclaimer": "This final IQ score reflects your achievement at the time of the tournament and may differ from your current IQ score.",
+    "button": {
+      "claim": "Claim IQ Boost!"
+    }
+  },
+  "modal": {
+    "title": "Tournament Rewards",
+    "subtitle": "Compete to earn these prestigious rewards and powerful boosts",
+    "sections": {
+      "rankings": "Tournament Rankings",
+      "champions": "Category Champions",
+      "achievements": "Achievement Badges"
+    }
+  },
+  "rankings": {
+    "RANK_1": {
+      "powerup": "Permanent +5 IQ boost to your Intelligence Score"
+    },
+    "RANK_2": {
+      "powerup": "Permanent +3 IQ boost to your Intelligence Score"
+    },
+    "RANK_3": {
+      "powerup": "Permanent +2 IQ boost to your Intelligence Score",
+      "title": "Rising Star IQ Boost!",
+      "description": "Your outstanding achievement has increased your Intelligence!"
+    }
+  },
+  "champions": {
+    "ACE": {
+      "title": "LEGENDARY ACE",
+      "description": "Champion of {category} Category!",
+      "powerups": [
+        "Category Insight Radar - Preview article difficulties (Mon-Fri)",
+        "Champion's RQM Amplifier - 1.5x RQM boost in category quizzes"
+      ]
+    },
+    "PRO": {
+      "title": "ELITE VIRTUOSO",
+      "description": "Elite Excellence in {category} Category!",
+      "powerups": [
+        "Elite RQM Amplifier - 1.5x RQM boost in category quizzes"
+      ]
+    },
+    "CHAMP": {
+      "title": "RISING CHAMPION",
+      "description": "Outstanding Achiever in {category} Category!",
+      "powerups": [
+        "Category Insight Radar - Preview article difficulties (Mon-Fri)"
+      ]
+    }
+  },
+  "achievements": {
+    "TOP_5": {
+      "title": "Top 5% Finisher",
+      "description": "Finished in the top 5 overall"
+    },
+    "TOP_10": {
+      "title": "Top 10% Finisher",
+      "description": "Finished in the top 10 overall"
+    },
+    "TOP_25": {
+      "title": "Top 25% Finisher",
+      "description": "Finished in the top 25 overall"
+    },
+    "QUIZ_WARRIOR": {
+      "title": "Quiz Warrior",
+      "description": "Given atleast one quiz in the tournament"
+    }
+  }
+}

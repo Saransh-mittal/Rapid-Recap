@@ -405,6 +405,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    hasSeenRewardsModal: {
+      type: Boolean,
+      default: false,
+    },
+    rewardsModalExpiryDate: {
+      type: Date,
+      default: null,
+    },
   },
   { collection: 'Users' },
 )
