@@ -517,6 +517,7 @@ const DesktopCategory = React.forwardRef(
             : 'none',
         }}
         zIndex={1}
+        position="relative"
       >
         {category}
       </Text>

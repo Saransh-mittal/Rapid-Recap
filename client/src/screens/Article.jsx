@@ -37,6 +37,7 @@ import TrackTime from '../components/articleComponents/TrackTime'
 import MainArticleContentSkeleton from '../components/articleComponents/loaders/MainArticleContentSkeleton'
 import StreakSurgeModal from '../components/articleComponents/StreakSurgeModal'
 import CategoryBoostModal from '../components/articleComponents/CategoryBoostModal'
+import InstructionModalBody from '../components/quizComponents/customQuizModal/InstructionModal'
 //SSR images
 const fallback_news_image = '/images/fallback_news_image.webp'
 
@@ -556,6 +557,7 @@ const Article = () => {
         currentQuizCount={user?.todaysQuizCnt}
         isStateBoosted={isBoosted}
       />
+
       {user && <TrackTime userId={user?._id} articleId={id} />}
     </Flex>
   )
