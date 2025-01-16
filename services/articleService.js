@@ -15,7 +15,7 @@ class ArticleService {
       if (cachedArticle) return cachedArticle
 
       const query = Article.findById(articleId).select(
-        'title mainText dateTime category imgURL url author keywords description',
+        'title mainText dateTime category imgURL url author tags keywords description',
       )
       if (includeRelated) {
         query.populate({
@@ -53,6 +53,7 @@ class ArticleService {
         displayDate: formattedDate,
         source,
         category: article.category,
+        tags: article.tags,
         avgReadTime: article.avgReadTime || 3,
         imgURL: article.imgURL?.[0] || null,
         url: article.url,

@@ -1,5 +1,5 @@
 const BADGE_CONFIG = require('../data/BADGE_CONFIG')
-const { getCategories } = require('../data/categories')
+const { getAllCategories, shouldHaveBadgeText } = require('../data/categories')
 const {
   TournamentRegistration,
   QuizSession,
@@ -7,6 +7,12 @@ const {
 const User = require('../model/userSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
 const i18n = require('i18next')
+const { makeRetryable } = require('./retryUtils')
+const moment = require('moment-timezone')
+const ApplicationUpdates = require('../model/applicationUpdatesSchema')
+const {
+  tournamentWinnerNotificationTemplate,
+} = require('../data/inboxNotificationsTemplates')
 
 const getUserRegistrationDetails = async (userId, tournamentId, session) => {
   try {
@@ -41,70 +47,276 @@ const getUserRegistrationDetails = async (userId, tournamentId, session) => {
   }
 }
 
-async function getCategoryLeaders(tournamentId) {
-  const categories = getCategories()
+async function getCategoryLeaders({ tournamentId }) {
+  const categories = getAllCategories()
   const categoryLeaders = {}
 
   for (const category of categories) {
-    categoryLeaders[category] = await getTopLeadersForCategory(
+    categoryLeaders[category] = await getTopLeadersForCategory({
       tournamentId,
       category,
-    )
+    })
   }
 
   return categoryLeaders
 }
 
-async function getTopLeadersForCategory(tournamentId, category) {
-  return await QuizSession.aggregate([
-    {
-      $match: {
-        tournament: tournamentId,
-        category: category,
-        completed: true,
+/**
+ * Get top 3 leaders for a specific category in a tournament
+ * @param {Object} params - Function parameters
+ * @param {string} params.tournamentId - Tournament ID
+ * @param {string} params.category - Category name
+ * @returns {Promise<Array>} Array of top 3 leaders with their scores
+ */
+const getTopLeadersForCategory = makeRetryable(
+  async ({ tournamentId, category }) => {
+    const pipeline = [
+      {
+        $match: {
+          tournament: tournamentId,
+          category: category,
+          completed: true,
+        },
       },
-    },
-    {
-      $sort: { RQM_score: -1 },
-    },
-    {
-      $group: {
-        _id: '$user',
-        bestScore: { $first: '$RQM_score' },
-        session: { $first: '$$ROOT' },
+      {
+        $sort: { RQM_score: -1 },
       },
-    },
-    {
-      $sort: { bestScore: -1 },
-    },
-    {
-      $limit: 3,
-    },
-    {
-      $lookup: {
-        from: 'Users',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'userDetails',
+      {
+        $group: {
+          _id: '$user',
+          bestScore: { $first: '$RQM_score' },
+          session: { $first: '$$ROOT' },
+        },
       },
-    },
-    {
-      $unwind: '$userDetails',
-    },
-    {
-      $project: {
-        inGameName: '$userDetails.inGameName',
-        score: '$bestScore',
-        userId: '$_id',
+      {
+        $sort: { bestScore: -1 },
       },
+      {
+        $limit: 3,
+      },
+      {
+        $lookup: {
+          from: 'Users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'userDetails',
+        },
+      },
+      {
+        $unwind: '$userDetails',
+      },
+      {
+        $project: {
+          inGameName: '$userDetails.inGameName',
+          score: '$bestScore',
+          userId: '$_id',
+        },
+      },
+    ]
+
+    return await QuizSession.aggregate(pipeline)
+  },
+  {
+    operationName: 'GetTopLeadersForCategory',
+    maxRetries: 3,
+    onRetry: (error, attempt) => {
+      console.warn(
+        `Retrying getTopLeadersForCategory attempt ${attempt}. Error: ${error.message}`,
+      )
     },
-  ])
+    isRetryable: error => {
+      // Add custom logic for retryable errors if needed
+      return error.name === 'MongoError' || error.name === 'MongoNetworkError'
+    },
+  },
+)
+
+/**
+ * Determines which badges a user should receive based on their tournament performance
+ */
+const determineBadges = ({
+  rank,
+  participantCount,
+  selectedCategories,
+  categoryLeaders,
+  userId,
+  hasParticipated,
+}) => {
+  const top5Threshold = Math.ceil(participantCount * 0.05)
+  const top10Threshold = Math.ceil(participantCount * 0.1)
+  const top25Threshold = Math.ceil(participantCount * 0.25)
+
+  // Determine overall rank badge
+  let overallBadge = null
+  if (rank === 1) overallBadge = BADGE_CONFIG.RANK_1
+  else if (rank === 2) overallBadge = BADGE_CONFIG.RANK_2
+  else if (rank === 3) overallBadge = BADGE_CONFIG.RANK_3
+  else if (rank <= top5Threshold) overallBadge = BADGE_CONFIG.TOP_5
+  else if (rank <= top10Threshold) overallBadge = BADGE_CONFIG.TOP_10
+  else if (rank <= top25Threshold) overallBadge = BADGE_CONFIG.TOP_25
+  else if (hasParticipated) overallBadge = BADGE_CONFIG.QUIZ_WARRIOR
+
+  // Determine category badges
+  const categoryBadges = selectedCategories
+    .map(category => {
+      const categoryRank = categoryLeaders[category]?.findIndex(
+        leader => leader.userId.toString() === userId.toString(),
+      )
+
+      // Only assign badge if user is in top 3
+      if (categoryRank > 2 || categoryRank === -1) return null
+
+      // Create badge with optional text based on category
+      const badge = (() => {
+        if (categoryRank === 0) return { ...BADGE_CONFIG.ACE }
+        if (categoryRank === 1) return { ...BADGE_CONFIG.PRO }
+        if (categoryRank === 2) return { ...BADGE_CONFIG.CHAMP }
+      })()
+
+      // Only add category text for regular categories
+      if (badge && shouldHaveBadgeText(category)) {
+        badge.text = category
+      }
+
+      return badge
+    })
+    .filter(Boolean)
+
+  return { overallBadge, categoryBadges }
 }
 
-async function updateTournamentPerformanceAndBadges(tournament) {
-  try {
+/**
+ * Determines which badge should be displayed for a user
+ */
+const determineDisplayedBadge = ({ overallBadge, categoryBadges }) => {
+  if (
+    overallBadge &&
+    ['RANK_1', 'RANK_2', 'RANK_3'].includes(overallBadge.name)
+  ) {
+    return overallBadge
+  }
+
+  const aceBadge = categoryBadges.find(badge => badge.name === 'ACE')
+  const proBadge = categoryBadges.find(badge => badge.name === 'PRO')
+  const champBadge = categoryBadges.find(badge => badge.name === 'CHAMP')
+
+  return aceBadge || proBadge || champBadge || overallBadge
+}
+
+/**
+ * Calculate badge expiry time (Friday 10:59 PM IST of the ongoing week)
+ */
+const calculateBadgeClaimDeadline = () => {
+  const now = moment().tz('Asia/Kolkata')
+  const friday = now.clone().day(5) // Get this week's Friday
+
+  // If today is Saturday or later, get next Friday
+  if (now.day() > 5) {
+    friday.add(1, 'week')
+  }
+
+  // Set time to 22:59
+  return friday
+    .set({
+      hour: 22,
+      minute: 59,
+      second: 0,
+      millisecond: 0,
+    })
+    .toDate()
+}
+
+/**
+ * Update user's badges and displayed badge
+ */
+const updateUserBadges = makeRetryable(
+  async ({
+    user,
+    badges,
+    displayedBadge,
+    tournamentId,
+    rank,
+    tournamentNumber,
+    participantCount,
+  }) => {
+    // Calculate claim deadline
+    const claimDeadline = calculateBadgeClaimDeadline()
+
+    // Apply IQ boost first if user is in top 3
+    if (rank <= 3) {
+      try {
+        const {
+          calculateTournamentRankIQBoost,
+        } = require('../services/iqCalculationService')
+        const iqBoostResult = await calculateTournamentRankIQBoost(
+          user,
+          rank,
+          tournamentId,
+          tournamentNumber,
+        )
+
+        if (iqBoostResult) {
+          const iqBoostTemplate = tournamentWinnerNotificationTemplate({
+            tournamentNumber,
+            prevIQ: iqBoostResult.prevIQScore,
+            newIQ: iqBoostResult.newIQScore,
+            boost: iqBoostResult.boost,
+          })
+          // Add notification for IQ boost
+          const notification = new ApplicationUpdates({
+            userId: user._id,
+            title: `Tournament Champion IQ Boost!`,
+            mainText: iqBoostTemplate,
+            read: false,
+          })
+          await notification.save()
+        }
+      } catch (error) {
+        console.error(`Error applying IQ boost for rank ${rank}:`, error)
+      }
+    }
+    // Update displayed badge if available
+    if (displayedBadge && displayedBadge.name) {
+      user.displayedBadge = {
+        tournamentNumber,
+        rank,
+        participantCnt: participantCount,
+        badgeName: displayedBadge.name,
+        text: displayedBadge.text,
+      }
+    }
+
+    // Add new badges with claim deadline
+    if (badges && badges.length > 0) {
+      user.badges = [
+        ...user.badges,
+        ...badges.map(badge => ({
+          rank,
+          tournamentNumber,
+          badgeName: badge.name,
+          text: badge.text,
+          participantCnt: participantCount,
+          claimed: false,
+          canBeClaimedUntil: claimDeadline,
+        })),
+      ]
+    }
+
+    await user.save()
+  },
+  {
+    operationName: 'UpdateUserBadges',
+    maxRetries: 3,
+  },
+)
+
+/**
+ * Gets tournament leaderboard data with user details
+ */
+const getTournamentLeaderboard = makeRetryable(
+  async ({ tournamentId }) => {
     const leaderboardData = await TournamentRegistration.aggregate([
-      { $match: { tournament: tournament._id } },
+      { $match: { tournament: tournamentId } },
       {
         $lookup: {
           from: 'Users',
@@ -132,127 +344,155 @@ async function updateTournamentPerformanceAndBadges(tournament) {
       },
     ])
 
-    if (leaderboardData.length === 0) return
+    return leaderboardData[0] || { entries: [], participantCount: 0 }
+  },
+  {
+    operationName: 'GetTournamentLeaderboard',
+    maxRetries: 3,
+  },
+)
 
-    const { entries, participantCount } = leaderboardData[0]
+/**
+ * Checks if a user has participated in tournament quizzes
+ */
+const hasParticipatedInTournament = makeRetryable(
+  async ({ userId, tournamentId }) => {
+    return await QuizSession.exists({
+      user: userId,
+      tournament: tournamentId,
+      completed: true,
+    })
+  },
+  {
+    operationName: 'CheckTournamentParticipation',
+    maxRetries: 3,
+  },
+)
 
-    // Calculate percentile thresholds
-    const top5Threshold = Math.ceil(participantCount * 0.05)
-    const top10Threshold = Math.ceil(participantCount * 0.1)
-    const top25Threshold = Math.ceil(participantCount * 0.25)
+/**
+ * Updates user's tournament performance record
+ */
+const updateUserPerformance = makeRetryable(
+  async ({
+    user,
+    tournamentId,
+    score,
+    rank,
+    endDate,
+    tournamentNumber,
+    participantCount,
+  }) => {
+    user.tournamentPerformance.push({
+      tournament: tournamentId,
+      score,
+      rank,
+      endDate,
+      tournamentNumber,
+      participantCnt: participantCount,
+    })
+    await user.save()
+  },
+  {
+    operationName: 'UpdateUserPerformance',
+    maxRetries: 3,
+  },
+)
+
+/**
+ * Main function to update tournament performance and badges for all participants
+ */
+const updateTournamentPerformanceAndBadges = async tournament => {
+  try {
+    // Get leaderboard data
+    const { entries, participantCount } = await getTournamentLeaderboard({
+      tournamentId: tournament._id,
+    })
+
+    if (!entries.length) {
+      console.log('No entries found for tournament')
+      return
+    }
 
     // Get category leaders
-    const categoryLeaders = await getCategoryLeaders(tournament._id)
+    const categoryLeaders = await getCategoryLeaders({
+      tournamentId: tournament._id,
+    })
 
-    // Update each user's tournament performance and badges
+    // Process each participant
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]
       const rank = i + 1
 
-      let overallBadge = null
-      let categoryBadges = []
-
-      // Determine overall rank badge based on priority
-      if (rank === 1) overallBadge = BADGE_CONFIG.RANK_1
-      else if (rank === 2) overallBadge = BADGE_CONFIG.RANK_2
-      else if (rank === 3) overallBadge = BADGE_CONFIG.RANK_3
-      else if (rank <= top5Threshold) overallBadge = BADGE_CONFIG.TOP_5
-      else if (rank <= top10Threshold) overallBadge = BADGE_CONFIG.TOP_10
-      else if (rank <= top25Threshold) overallBadge = BADGE_CONFIG.TOP_25
-      else {
-        // Check if the user has participated in at least one quiz
-        const hasParticipated = await QuizSession.exists({
-          user: entry.user,
-          tournament: tournament._id,
-          completed: true,
+      try {
+        // Check participation
+        const hasParticipated = await hasParticipatedInTournament({
+          userId: entry.user,
+          tournamentId: tournament._id,
         })
-        if (hasParticipated) overallBadge = BADGE_CONFIG.QUIZ_WARRIOR
-      }
 
-      // Check for category leadership badges
-      for (const category of entry.selectedCategories) {
-        const categoryRank = categoryLeaders[category]?.findIndex(
-          leader => leader.userId.toString() === entry.user.toString(),
-        )
-        if (categoryRank === 0)
-          categoryBadges.push({ ...BADGE_CONFIG.ACE, text: category })
-        else if (categoryRank === 1)
-          categoryBadges.push({ ...BADGE_CONFIG.PRO, text: category })
-        else if (categoryRank === 2)
-          categoryBadges.push({ ...BADGE_CONFIG.CHAMP, text: category })
-      }
+        // Determine badges
+        const { overallBadge, categoryBadges } = determineBadges({
+          rank,
+          participantCount,
+          selectedCategories: entry.selectedCategories,
+          categoryLeaders,
+          userId: entry.user,
+          hasParticipated,
+        })
 
-      // Determine displayed badge
-      let displayedBadge
-      if (
-        overallBadge &&
-        ['RANK_1', 'RANK_2', 'RANK_3'].includes(overallBadge.name)
-      ) {
-        displayedBadge = overallBadge
-      } else {
-        // Prioritize ACE badge
-        const aceBadge = categoryBadges.find(badge => badge.name === 'ACE')
-        const proBadge = categoryBadges.find(badge => badge.name === 'PRO')
-        const champBadge = categoryBadges.find(badge => badge.name === 'CHAMP')
-        if (aceBadge || proBadge || champBadge) {
-          displayedBadge = aceBadge
-            ? aceBadge
-            : proBadge
-            ? proBadge
-            : champBadge
-        } else {
-          // If no category badges, use the overall badge
-          displayedBadge = overallBadge
-        }
-      }
+        // Determine displayed badge
+        const displayedBadge = determineDisplayedBadge({
+          overallBadge,
+          categoryBadges,
+        })
 
-      // Combine overall badge and category badges
-      const allBadges = overallBadge
-        ? [overallBadge, ...categoryBadges]
-        : categoryBadges
-      const user = await User.findOne({
-        _id: entry.user,
-      })
-      if (!user) continue
+        // Get user
+        const user = await User.findOne({ _id: entry.user })
+        if (!user) continue
 
-      if (displayedBadge && displayedBadge.name)
-        user.displayedBadge = {
+        // Update user's badges
+        await updateUserBadges({
+          user,
+          badges: overallBadge
+            ? [overallBadge, ...categoryBadges]
+            : categoryBadges,
+          displayedBadge,
+          rank,
           tournamentNumber: tournament.tournamentNumber,
-          rank: rank,
-          participantCnt: participantCount,
-          badgeName: displayedBadge.name,
-          text: displayedBadge.text,
-        }
+          tournamentId: tournament._id,
+          participantCount,
+        })
 
-      if (allBadges && allBadges.length > 0)
-        user.badges = [
-          ...user.badges,
-          ...allBadges.map(badge => ({
-            rank: rank,
-            tournamentNumber: tournament.tournamentNumber,
-            badgeName: badge.name,
-            text: badge.text,
-            participantCnt: participantCount,
-          })),
-        ]
-      user.tournamentPerformance.push({
-        tournament: tournament._id,
-        score: entry.totalScore,
-        rank: rank,
-        endDate: tournament.endDate,
-        tournamentNumber: tournament.tournamentNumber,
-        participantCnt: participantCount,
-      })
-      await user.save()
+        // // Update user's tournament performance
+        await updateUserPerformance({
+          user,
+          tournamentId: tournament._id,
+          score: entry.totalScore,
+          rank,
+          endDate: tournament.endDate,
+          tournamentNumber: tournament.tournamentNumber,
+          participantCount,
+        })
+      } catch (error) {
+        console.error(`Error processing user ${entry.user}:`, error)
+        // Continue with next user even if one fails
+        continue
+      }
     }
 
     console.log('Tournament performance and badges updated successfully')
   } catch (error) {
     console.error('Error updating tournament performance and badges:', error)
+    throw error
   }
 }
 
-const checkTournamentEligibility = async (user, RQM_score, session) => {
+const checkTournamentEligibility = async (
+  user,
+  RQM_score,
+  lastQuizAttempt,
+  session,
+) => {
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)
 
@@ -301,10 +541,7 @@ const checkTournamentEligibility = async (user, RQM_score, session) => {
         const timeLeft =
           30 -
           Math.floor(
-            (new Date().getTime() -
-              user.quizAttempts[
-                user.quizAttempts.length - 2
-              ].createdAt.getTime()) /
+            (new Date().getTime() - lastQuizAttempt.createdAt.getTime()) /
               60000,
           )
         messageForTournamentEligibility = t(
@@ -324,9 +561,58 @@ const checkTournamentEligibility = async (user, RQM_score, session) => {
     userEligibleForTournament: user.eligibleForTournament,
   }
 }
+
+/**
+ * Process category privileges based on valid tournament badges
+ * @param {Array} badges - User's badges
+ * @returns {Object} Category privileges map
+ */
+const processBadgePrivileges = badges => {
+  const now = moment().tz('Asia/Kolkata')
+  const categoryPrivileges = {}
+
+  // Process only unclaimed and valid badges
+  const validBadges =
+    badges?.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        ['ACE', 'PRO', 'CHAMP'].includes(badge.badgeName),
+    ) || []
+
+  // Map badge types to privileges
+  const privilegeMap = {
+    ACE: ['rqmBoost', 'radar'],
+    PRO: ['rqmBoost'],
+    CHAMP: ['radar'],
+  }
+
+  // Process each valid badge
+  validBadges.forEach(badge => {
+    const category = badge.text
+    const privileges = privilegeMap[badge.badgeName]
+
+    if (!categoryPrivileges[category]) {
+      categoryPrivileges[category] = {
+        rqmBoost: false,
+        radar: false,
+      }
+    }
+
+    // Enable privileges based on badge type
+    privileges.forEach(privilege => {
+      categoryPrivileges[category][privilege] = true
+    })
+  })
+
+  return categoryPrivileges
+}
+
 module.exports = {
   getUserRegistrationDetails,
   updateTournamentPerformanceAndBadges,
   getTopLeadersForCategory,
   checkTournamentEligibility,
+  processBadgePrivileges,
+  calculateBadgeClaimDeadline,
 }

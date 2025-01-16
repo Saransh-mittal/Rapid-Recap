@@ -92,7 +92,7 @@ class BotVerifier {
         ipRanges: ['199.16.', '199.59.'],
         patterns: ['Twitterbot/'],
       },
-      SeobilityBot: {
+      Seobility: {
         domains: ['.seobility.net'], // Seobility's domain
         ipRanges: [
           '116.202.', // Range for IPs starting with 116.202
@@ -335,8 +335,7 @@ class BotVerifier {
   static async isLegitimateBot(req) {
     const userAgent = req.headers['user-agent'] || ''
     const ip = this.getRealIP(req)
-    // console.log('IP:', ip)
-    // console.log('User-Agent:', userAgent)
+
     // Debug logging
     this.log('bot-check-started', {
       detectedIP: ip,
@@ -355,10 +354,7 @@ class BotVerifier {
       }
       return devResult
     }
-    // console.log(
-    //   'has valid useragent or not :',
-    //   this.hasValidUserAgent(userAgent),
-    // )
+
     // Production checks
     if (!this.hasValidUserAgent(userAgent)) {
       this.log('invalid-user-agent', { userAgent, ip })

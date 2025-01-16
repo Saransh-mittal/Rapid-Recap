@@ -1,0 +1,18 @@
+{
+  "title": "स्ट्रीक सर्ज",
+  "keepStreakAlive": "अपनी स्ट्रीक को जारी रखें",
+  "surgeActivated": "सर्ज सक्रिय हो गया!",
+  "streakSurgeActivated": "स्ट्रीक सर्ज सक्रिय है",
+  "streakSurgeInactive": "स्ट्रीक सर्ज निष्क्रिय है",
+  "currentStreak": "वर्तमान स्ट्रीक",
+  "surgeActive": "सर्ज सक्रिय है",
+  "nextSurge": "अगला सर्ज",
+  "surgeActiveMessage": "आपका स्ट्रीक सर्ज अब सक्रिय है!",
+  "daysUntilSurge": "अगले स्ट्रीक सर्ज तक {{count}} दिन",
+  "surgeReady": "सर्ज तैयार है!",
+  "powerUpProgress": "अपनी प्रगति को बढ़ाएं",
+  "powerUpDescription": "शक्तिशाली मल्टीप्लायर और पुरस्कार अनलॉक करने के लिए अपनी दैनिक स्ट्रीक बनाए रखें!",
+  "surgePattern": "सर्ज पैटर्न",
+  "surgePatternDescription": "अपनी स्ट्रीक बनाए रखने के लिए दैनिक गतिविधियां पूरी करें। सर्ज लगातार 7 दिनों की प्रगति पर सक्रिय होता है!",
+  "continue": "जारी रखें"
+}
