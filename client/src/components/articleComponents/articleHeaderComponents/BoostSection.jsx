@@ -12,6 +12,7 @@ const BoostSection = React.memo(
     isBoosted,
     openModal,
     openStreakSurgeModal,
+    openCategoryBoostModal,
     playClick,
     notLoggedIn,
     toast,
@@ -42,6 +43,7 @@ const BoostSection = React.memo(
         <PowerBoostDisplay
           openModal={openModal}
           openStreakSurgeModal={openStreakSurgeModal}
+          openCategoryBoostModal={openCategoryBoostModal}
           quinBoost={isQuinBoostAvailable}
           streakSurge={isStreakSurgeAvailable}
           categoryBoost={isCategoryBoostAvailable}

@@ -1,0 +1,18 @@
+{
+  "title": "Streak Surge",
+  "keepStreakAlive": "Keep Your Streak Alive",
+  "surgeActivated": "Surge Activated!",
+  "streakSurgeActivated": "Streak Surge Activated",
+  "streakSurgeInactive": "Streak Surge Inactive",
+  "currentStreak": "Current Streak",
+  "surgeActive": "Surge Active",
+  "nextSurge": "Next Surge",
+  "surgeActiveMessage": "Your Streak Surge is now active!",
+  "daysUntilSurge": "{{count}} days until next Streak Surge",
+  "surgeReady": "Surge ready!",
+  "powerUpProgress": "Power Up Your Progress",
+  "powerUpDescription": "Maintain your daily streak to unlock powerful multipliers and rewards!",
+  "surgePattern": "Surge Pattern",
+  "surgePatternDescription": "Complete daily activities to maintain your streak. Surge activates every 7 days of consistent progress!",
+  "continue": "Continue"
+}
