@@ -82,6 +82,7 @@ const Card = React.memo(
     multiplier,
   }) => {
     const { t } = useTranslation('Card')
+    const { t: diffTranslation } = useTranslation('DifficultyLegend')
     const cardRef = useRef(null)
     const navigate = useNavigate()
     const controls = useAnimation()
@@ -353,7 +354,7 @@ const Card = React.memo(
           `,
                   }}
                 >
-                  {difficulty}
+                  {diffTranslation(difficulty.toLocaleLowerCase())}
                 </Text>
 
                 {/* Metallic Accent Lines */}

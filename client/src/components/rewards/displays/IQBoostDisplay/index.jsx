@@ -15,12 +15,14 @@ import useRewardState from '../../hooks/useRewardState'
 import { getRankTheme } from './constants/tournamentConstants'
 import { handleTournamentRewardsClaim } from '../../../../utils/tournamentRewards'
 import { useDispatch, useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 
 const IQBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
   const { claimed, showSuccess, handleClaim } = useRewardState({
     onClaim,
     initialClaimed,
   })
+  const { t } = useTranslation('rewards')
   const { user } = useSelector(state => state.auth)
   const dispatch = useDispatch()
   // Get theme if it's a tournament reward
@@ -41,7 +43,7 @@ const IQBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
               bgClip="text"
               fontWeight="medium"
             >
-              Tournament #
+              {t('iqBoost.tournament.numberPrefix')}
               {String(reward.badge.tournamentNumber).padStart(3, '0')}
             </Text>
           </VStack>
@@ -92,8 +94,7 @@ const IQBoostDisplay = ({ reward, onClaim, claimed: initialClaimed }) => {
             maxW="md"
             mx="auto"
           >
-            This final IQ score reflects your achievement at the time of the
-            tournament and may differ from your current IQ score.
+            {t('iqBoost.disclaimer')}
           </Text>
         </VStack>
 

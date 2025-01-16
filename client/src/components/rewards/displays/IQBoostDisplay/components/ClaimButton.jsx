@@ -3,13 +3,14 @@ import React, { memo } from 'react'
 import { Box } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const ClaimButton = ({ onClick, disabled, theme }) => {
   const buttonGradient =
     theme?.buttonGradient || 'linear(to-r, blue.400, blue.600)'
   const glowColor = theme?.glowColor || 'rgba(99, 179, 237, 0.4)'
   const shimmerColor = theme?.shimmerColor || 'rgba(99, 179, 237, 0.15)'
-
+  const { t } = useTranslation('rewards')
   return (
     <Box
       as={motion.button}
@@ -62,7 +63,7 @@ const ClaimButton = ({ onClick, disabled, theme }) => {
       />
 
       <Sparkles size={28} />
-      <span>Claim IQ Boost!</span>
+      <span>{t('iqBoost.button.claim')}</span>
       <Sparkles size={28} />
     </Box>
   )

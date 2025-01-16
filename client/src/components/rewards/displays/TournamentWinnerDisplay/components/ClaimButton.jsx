@@ -10,6 +10,7 @@ import {
   pulseAnimation,
 } from '../constants/animations'
 import { keyframes } from '@emotion/react'
+import { useTranslation } from 'react-i18next'
 const shimmer = keyframes`
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
@@ -24,7 +25,7 @@ const ClaimButton = ({ onClick, claimed, variant }) => {
       })),
     [],
   )
-
+  const { t } = useTranslation('rewards')
   return (
     <AnimatePresence mode="wait">
       {!claimed ? (
@@ -100,7 +101,7 @@ const ClaimButton = ({ onClick, claimed, variant }) => {
                 bgGradient={variant.buttonGradient}
                 bgClip="text"
               >
-                Claim Rewards
+                {t('claimButton.claim')}
               </Text>
               <Sparkles
                 size={24}
@@ -172,7 +173,7 @@ const ClaimButton = ({ onClick, claimed, variant }) => {
               bgGradient={variant.buttonGradient}
               bgClip="text"
             >
-              Reward Claimed!
+              {t('claimButton.claimed')}
             </Text>
             <Sparkles size={24} />
           </HStack>

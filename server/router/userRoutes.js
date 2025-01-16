@@ -47,6 +47,7 @@ const {
   claimTournamentBadge,
   getValidCategories,
   updateBadgeCategory,
+  checkRewardsModalStatus,
 } = require('../controllers/user')
 const { Authenticate } = require('../middleware/authenticate')
 const {
@@ -100,6 +101,7 @@ router.post('/claim-streak-surge', Authenticate, claimStreakSurge)
 router.route('/claim-badge').post(Authenticate, claimTournamentBadge)
 router.get('/valid-categories', Authenticate, getValidCategories)
 router.put('/update-category', Authenticate, updateBadgeCategory)
+router.get('/modal-status', Authenticate, checkRewardsModalStatus)
 
 router.get('/confirmDeleteAccount/:token', confirmDeleteAccount)
 router
