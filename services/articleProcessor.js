@@ -8,7 +8,12 @@ const asyncHandler = require('express-async-handler')
 const validateEnglishResult = result => {
   // Check if all required structures exist
   if (!result.processedContent || !result.highlights || !result.seo) {
-    throw new Error('Missing required top-level structures in response')
+    // specific error message for missing top-level structures
+    throw new Error(`Missing required top-level structures in response :
+    ${!result.processedContent ? 'processedContent' : ''}
+    ${!result.highlights ? 'highlights' : ''}
+    ${!result.seo ? 'seo' : ''}
+      `)
   }
 
   // Validate processedContent
@@ -53,7 +58,11 @@ const validateEnglishResult = result => {
 const validateHindiResult = result => {
   // Check if all required structures exist
   if (!result.translation || !result.highlights) {
-    throw new Error('Missing required top-level structures in response')
+    // specific error message for missing top-level structures
+    throw new Error(`Missing required top-level structures in response :
+      ${!result.translation ? 'translation' : ''}
+      ${!result.highlights ? 'highlights' : ''}
+      `)
   }
 
   // Validate translation
