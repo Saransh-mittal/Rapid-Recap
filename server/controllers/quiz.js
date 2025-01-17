@@ -165,6 +165,7 @@ const getQuiz = async (req, res) => {
               author: hindiAuthor,
               mainText: hindiMainText,
               articleId,
+              article,
               emitProgress,
               session,
             })
@@ -173,6 +174,7 @@ const getQuiz = async (req, res) => {
               author,
               mainText,
               articleId,
+              article,
               emitProgress,
               session,
             })

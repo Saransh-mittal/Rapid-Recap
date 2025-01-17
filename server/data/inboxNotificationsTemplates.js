@@ -787,9 +787,235 @@ const userWeeklyReportInboxTemplate = {
 </html>`,
 }
 
+const tournamentWinnerNotificationTemplate = ({
+  tournamentNumber,
+  prevIQ,
+  newIQ,
+  boost,
+}) => {
+  // Define colors and common values as variables
+  const colors = {
+    purple: '#8A2BE2',
+    lightPurple: '#9370DB',
+    darkBg: '#0a0a0f',
+    cardBg: '#1a1527',
+    headerBg: '#2c1460',
+  }
+
+  return `
+    <div class="tournament-notification">
+      <div class="header">
+        <span class="trophy-icon">👑</span>
+        <h2>Tournament Champion</h2>
+      </div>
+
+      <div class="content">
+        <div class="boost-details">
+          <p class="tournament-intro">Extraordinary Performance in</p>
+          <div class="tournament-number">Tournament #${tournamentNumber}</div>
+
+          <div class="scores">
+            <div class="score-item">
+              <div class="score-label">Previous IQ</div>
+              <div class="score-value">${prevIQ}</div>
+            </div>
+            <div class="score-item new-score">
+              <div class="score-label">New IQ</div>
+              <div class="score-value">${newIQ}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="message">
+          Your exceptional tournament performance has earned you a
+          <span class="boost-amount">+${boost} IQ</span> boost!
+        </div>
+
+        <p class="footer-message">Continue your reign at the top of the leaderboards!</p>
+      </div>
+
+      <div class="footer">
+        <p>RAPID RECAP</p>
+      </div>
+    </div>
+
+    <style>
+      /* Base Styles - Mobile First */
+      .tournament-notification {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        background: ${colors.cardBg};
+        border-radius: clamp(12px, 3vw, 20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        overflow: hidden;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      .header {
+        background: ${colors.headerBg};
+        padding: clamp(1.25rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2rem);
+        text-align: center;
+      }
+
+      .trophy-icon {
+        font-size: clamp(2.5rem, 8vw, 3.5rem);
+        display: block;
+        margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+      }
+
+      .header h2 {
+        margin: 0;
+        font-size: clamp(1.5rem, 5vw, 2.25rem);
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        line-height: 1.2;
+      }
+
+      .content {
+        padding: clamp(1.25rem, 5vw, 2.5rem) clamp(1rem, 3vw, 2rem);
+      }
+
+      .boost-details {
+        background: rgba(138, 43, 226, 0.05);
+        border-radius: clamp(10px, 2vw, 15px);
+        padding: clamp(1rem, 4vw, 2rem);
+        margin: clamp(1rem, 4vw, 2rem) 0;
+        border: 1px solid rgba(138, 43, 226, 0.2);
+      }
+
+      .tournament-intro {
+        text-align: center;
+        font-size: clamp(1rem, 3.5vw, 1.125rem);
+        margin-bottom: clamp(0.75rem, 2vw, 1rem);
+      }
+
+      .tournament-number {
+        font-size: clamp(1.25rem, 4.5vw, 1.75rem);
+        text-align: center;
+        padding: clamp(0.75rem, 2vw, 1rem) 0;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: ${colors.purple};
+      }
+
+      .scores {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: clamp(0.75rem, 3vw, 1.875rem);
+        margin: clamp(1rem, 4vw, 1.5rem) 0;
+        padding: 0 clamp(0.5rem, 2vw, 1rem);
+      }
+
+      .score-item {
+        text-align: center;
+        padding: clamp(0.75rem, 3vw, 1.25rem);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: clamp(8px, 2vw, 12px);
+        border: 1px solid rgba(138, 43, 226, 0.1);
+      }
+
+      .score-label {
+        font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+        color: ${colors.lightPurple};
+        margin-bottom: clamp(0.375rem, 1.5vw, 0.5rem);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .score-value {
+        font-size: clamp(1.5rem, 5vw, 1.75rem);
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .score-item.new-score {
+        background: rgba(138, 43, 226, 0.1);
+        border: 1px solid rgba(138, 43, 226, 0.2);
+      }
+
+      .score-item.new-score .score-value {
+        color: ${colors.purple};
+      }
+
+      .message {
+        text-align: center;
+        font-size: clamp(1rem, 3.5vw, 1.125rem);
+        line-height: 1.6;
+        margin: clamp(1.25rem, 4vw, 1.5rem) clamp(0.5rem, 2vw, 1rem);
+        word-wrap: break-word;
+      }
+
+      .boost-amount {
+        display: inline-block;
+        padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem);
+        background: rgba(138, 43, 226, 0.1);
+        border-radius: clamp(6px, 1.5vw, 8px);
+        border: 1px solid rgba(138, 43, 226, 0.2);
+        font-weight: 700;
+        color: ${colors.lightPurple};
+        margin: 0 0.25rem;
+      }
+
+      .footer-message {
+        text-align: center;
+        color: #888;
+        font-size: clamp(0.875rem, 3vw, 1rem);
+        padding: 0 clamp(0.5rem, 2vw, 1rem);
+      }
+
+      .footer {
+        background: #0f0d15;
+        padding: clamp(0.75rem, 3vw, 1.25rem);
+        text-align: center;
+        border-top: 1px solid rgba(138, 43, 226, 0.1);
+      }
+
+      .footer p {
+        color: #666;
+        margin: 0;
+        font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+        letter-spacing: 0.05em;
+      }
+
+      /* Tablet Breakpoint */
+      @media screen and (min-width: 768px) {
+        .tournament-notification {
+          max-width: 90%;
+        }
+
+        .scores {
+          max-width: 500px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
+
+      /* Desktop Breakpoint */
+      @media screen and (min-width: 1024px) {
+        .tournament-notification {
+          max-width: 600px;
+        }
+
+        /* Optional: Add hover states for desktop only */
+        .score-item {
+          transition: transform 0.2s ease;
+        }
+
+        .score-item:hover {
+          transform: translateY(-2px);
+        }
+      }
+    </style>
+  `
+}
+
 module.exports = {
   societyOrCircleUpgradeTemplate,
   quinBoostUnlockTemplate, // Export the new template
   streakSurgeTemplate,
   userWeeklyReportInboxTemplate,
+  tournamentWinnerNotificationTemplate,
 }

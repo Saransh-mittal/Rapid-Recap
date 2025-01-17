@@ -20,7 +20,9 @@ const WiseWeb = React.lazy(() =>
 
 const Home = () => {
   const { t } = useTranslation('Home')
-  const { isAuthenticated, loginCheckStatus } = useSelector(state => state.auth)
+  const { isAuthenticated, loginCheckStatus, user } = useSelector(
+    state => state.auth,
+  )
   const { unreadFriendRequests } = useSelector(state => state.app)
   const { isSearching } = useSelector(state => state.articles)
   const dispatchRedux = useDispatch()
@@ -66,7 +68,12 @@ const Home = () => {
 
           // Prefetch next page
           if (hasMoreItems) {
-            categoryCache.prefetchCategory(cat, pageNum + 1, i18n.language)
+            categoryCache.prefetchCategory(
+              cat,
+              pageNum + 1,
+              i18n.language,
+              user,
+            )
           }
 
           setLoad(false)
@@ -81,7 +88,13 @@ const Home = () => {
                 notLoggedIn && (cat === 'all' || !cat) ? 'top' : cat
               }&lang=${i18n.language}`
 
-        const response = await axios.get(endpoint)
+        // Add auth header if user has privileges
+        const headers =
+          user?.categoryPrivileges?.[cat] ||
+          (user?.categoryPrivileges && cat === 'all')
+            ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            : {}
+        const response = await axios.get(endpoint, { headers })
 
         if (cat !== currentCategoryRef.current) return
 
@@ -149,7 +162,7 @@ const Home = () => {
         await fetchData(1, category)
 
         // Prefetch adjacent categories
-        categoryCache.prefetchAdjacentCategories(category, i18n.language)
+        categoryCache.prefetchAdjacentCategories(category, i18n.language, user)
       } else if (page > 1) {
         await fetchData(page, category)
       }

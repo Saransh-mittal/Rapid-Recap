@@ -2,7 +2,14 @@
 
 import React, { lazy, useEffect, useRef, useState, useCallback } from 'react'
 import axios from 'axios'
-import { Flex, useToast, Grid, useMediaQuery, Box } from '@chakra-ui/react'
+import {
+  Flex,
+  useToast,
+  Grid,
+  useMediaQuery,
+  Box,
+  Button,
+} from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
 import ReactGA from 'react-ga4'
 import { Helmet } from 'react-helmet'
@@ -28,6 +35,9 @@ import Sidebar from '../components/articleComponents/Sidebar'
 import ArticleHeader from '../components/articleComponents/ArticleHeader'
 import TrackTime from '../components/articleComponents/TrackTime'
 import MainArticleContentSkeleton from '../components/articleComponents/loaders/MainArticleContentSkeleton'
+import StreakSurgeModal from '../components/articleComponents/StreakSurgeModal'
+import CategoryBoostModal from '../components/articleComponents/CategoryBoostModal'
+import InstructionModalBody from '../components/quizComponents/customQuizModal/InstructionModal'
 //SSR images
 const fallback_news_image = '/images/fallback_news_image.webp'
 
@@ -93,6 +103,9 @@ const Article = () => {
   )
 
   const [isQuinBoostModalOpen, setIsQuinBoostModalOpen] = useState(false)
+  const [isStreakSurgeModalOpen, setIsStreakSurgeModalOpen] = useState(false)
+  const [isCategoryBoostModalOpen, setIsCategoryBoostModalOpen] =
+    useState(false)
   const [isLargerThan821] = useMediaQuery('(min-width: 821px)')
   const [bookmark, setBookmark] = useState(false)
   const [isQuizGivenLoading, setIsQuizGivenLoading] = useState(true)
@@ -180,11 +193,16 @@ const Article = () => {
     }
 
     try {
+      const headers =
+        user && isAuthenticated
+          ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          : {}
       // Always fetch fresh data
       const response = await axios.get(
         `/api/articles/article/${id}?lang=${
           user?.userLanguage ? user?.userLanguage : i18n.language
         }`,
+        { headers },
       )
 
       // Cache the full response data
@@ -455,6 +473,8 @@ const Article = () => {
                 article={article}
                 isQuinBoostAvailable={isQuinBoostAvailable}
                 quizLeftToGetQuizBoost={quizLeftToGetQuizBoost}
+                openStreakSurgeModal={() => setIsStreakSurgeModalOpen(true)}
+                openCategoryBoostModal={() => setIsCategoryBoostModalOpen(true)}
                 openModal={openModal}
                 onThemeChange={handleThemeChange}
               />
@@ -521,13 +541,23 @@ const Article = () => {
           <ArticleFooter />
         </article>
       </Flex>
-
+      <StreakSurgeModal
+        isOpen={isStreakSurgeModalOpen}
+        onClose={() => setIsStreakSurgeModalOpen(false)}
+        isStreakBoosted={isBoosted}
+      />
+      <CategoryBoostModal
+        isOpen={isCategoryBoostModalOpen}
+        onClose={() => setIsCategoryBoostModalOpen(false)}
+        isBoostActive={true}
+      />
       <QuinBoostModal
         isOpen={isQuinBoostModalOpen}
         onClose={closeModal}
         currentQuizCount={user?.todaysQuizCnt}
         isStateBoosted={isBoosted}
       />
+
       {user && <TrackTime userId={user?._id} articleId={id} />}
     </Flex>
   )

@@ -3,6 +3,7 @@ const cache = require('memory-cache')
 const CACHE_DURATION = 24 * 60 * 60 * 1000 // 5 minutes
 const slugify = require('slugify')
 const AuthorProfileService = require('./authorProfileService')
+const TimeSpent = require('../model/timeSpentSchema')
 
 class ArticleService {
   static async getArticleContent(articleId, includeRelated = false) {
@@ -190,6 +191,75 @@ class ArticleService {
     }
 
     return content
+  }
+
+  static async getTrendingArticles() {
+    try {
+      // Get the date for a week ago
+      const weekAgo = new Date()
+      weekAgo.setDate(weekAgo.getDate() - 7)
+
+      // Aggregate time spent on articles in the past week
+      const trendingArticleIds = await TimeSpent.aggregate([
+        {
+          $match: {
+            date: { $gte: weekAgo },
+          },
+        },
+        {
+          $group: {
+            _id: '$articleId',
+            totalTimeSpent: { $sum: '$timeSpent' },
+          },
+        },
+        {
+          $sort: { totalTimeSpent: -1 },
+        },
+        {
+          $limit: 50,
+        },
+      ])
+
+      if (!trendingArticleIds.length) {
+        return null
+      }
+
+      // Get the actual article documents
+      const articleIds = trendingArticleIds.map(item => item._id)
+      const articles = await Article.find({
+        _id: { $in: articleIds },
+        dateTime: { $gte: weekAgo.toISOString() },
+      }).select('title description dateTime category imgURL mainText')
+
+      if (!articles.length) {
+        return null
+      }
+
+      // Shuffle and get 10 random articles
+      const shuffled = articles.sort(() => 0.5 - Math.random())
+      const selected = shuffled.slice(0, 10)
+
+      // Format the articles
+      return selected.map(article => ({
+        _id: article._id,
+        title: article.title,
+        description:
+          article.description || article.mainText.substring(0, 155) + '...',
+        dateTime: new Date(article.dateTime)
+          .toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })
+          .toUpperCase(),
+        category: article.category,
+        imgURL: article.imgURL?.[0] || null,
+        slugifiedTitle: slugify(article.title),
+      }))
+    } catch (error) {
+      console.error('Error getting trending articles:', error)
+      return null
+    }
   }
 
   static generateRelatedArticlesHTML(relatedArticles) {

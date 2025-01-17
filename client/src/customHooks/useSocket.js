@@ -1,52 +1,48 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useSelector } from 'react-redux'
 import io from 'socket.io-client'
+import { useSocketContext } from '../contextAPI/SocketContext'
 
 const ENDPOINT =
   process.env.NODE_ENV === 'production'
     ? 'https://www.rapidrecap.co.in'
     : 'http://localhost:3000'
-//https://www.rapidrecap.co.in
-// http://localhost:3000
 
 export const useSocket = () => {
-  const [socketConnected, setSocketConnected] = useState(false)
-  const socketRef = useRef(null)
   const { user } = useSelector(state => state.auth)
+  const { socket, setSocket, isConnected, setIsConnected } = useSocketContext()
 
   const getSocket = useCallback(() => {
-    if (!socketRef.current && user && Object.keys(user).length > 0) {
-      socketRef.current = io(ENDPOINT)
-      socketRef.current.emit('setup', user)
-      socketRef.current.on('connected', () => setSocketConnected(true))
+    if (!socket && user && Object.keys(user).length > 0) {
+      const newSocket = io(ENDPOINT)
+
+      newSocket.emit('setup', user)
+
+      newSocket.on('connected', () => {
+        setIsConnected(true)
+      })
+      newSocket.on('force-reload', () => {
+        console.log('Force reload signal received')
+        window.location.reload()
+      })
+      setSocket(newSocket)
+      return newSocket
     }
-    return socketRef.current
-  }, [user])
+    return socket
+  }, [user, socket, setSocket, setIsConnected])
 
   const disconnectSocket = useCallback(() => {
-    if (socketRef.current) {
-      socketRef.current.emit('user-disconnected', user._id)
-      socketRef.current.disconnect()
-      socketRef.current = null
-      setSocketConnected(false)
+    if (socket) {
+      socket.emit('user-disconnected', user?._id)
+      socket.disconnect()
+      setSocket(null)
+      setIsConnected(false)
     }
-  }, [user])
-
-  useEffect(() => {
-    const socket = getSocket()
-
-    return () => {
-      if (socket) {
-        socket.disconnect()
-        socketRef.current = null
-        setSocketConnected(false)
-      }
-    }
-  }, [getSocket])
+  }, [socket, user, setSocket, setIsConnected])
 
   return {
-    socket: socketRef.current,
-    socketConnected,
+    socket,
+    socketConnected: isConnected,
     getSocket,
     disconnectSocket,
   }

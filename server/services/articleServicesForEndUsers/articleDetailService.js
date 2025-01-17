@@ -30,7 +30,7 @@ async function getRelatedArticles(relatedArticleIds) {
   return relatedArticles.filter(Boolean).sort((a, b) => b.dateTime - a.dateTime)
 }
 
-async function processDetailedArticle(article, highlights, lang) {
+async function processDetailedArticle(article, highlights, lang, privileges) {
   // Handle Hindi conversion if needed
   if (
     lang === 'hi' &&
@@ -44,6 +44,9 @@ async function processDetailedArticle(article, highlights, lang) {
 
   const paragraphs = await breakArticleIntoParagraphs(article.mainText)
   const relatedArticles = await getRelatedArticles(article.relatedArticles)
+  const isArticleCategoryBoosted =
+    privileges?.hasAnyPrivilege &&
+    privileges?.privilegesByCategory?.[article.category]?.rqmBoost
 
   return {
     category: article.category,
@@ -62,6 +65,7 @@ async function processDetailedArticle(article, highlights, lang) {
     _id: article._id,
     dictionary: highlights?.dictionary || [],
     importantSentences: highlights?.importantSentences || [],
+    isArticleCategoryBoosted,
   }
 }
 

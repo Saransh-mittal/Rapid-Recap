@@ -156,3 +156,8 @@ export const handleTournamentFeedback = async (
     console.error('Error submitting tournament feedback:', error)
   }
 }
+
+// Helper function to format number with one decimal place
+export const formatNumber = num => {
+  return Number(num).toFixed(1)
+}

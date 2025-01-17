@@ -9,8 +9,12 @@ const quizSlice = createSlice({
     quizLeftToGetQuizBoost: 5,
     tournamentQuiz: false,
     onBoardingQuizSubmitted: false,
+    quizBoost: 1,
   },
   reducers: {
+    setQuizBoost(state, action) {
+      state.quizBoost = action.payload
+    },
     setIsOpen(state, action) {
       state.isOpen = action.payload
     },
@@ -39,6 +43,7 @@ export const {
   setQuizLeftToGetQuizBoost,
   setTournamentQuiz,
   setOnBoardingQuizSubmitted,
+  setQuizBoost,
 } = quizSlice.actions
 
 export default quizSlice.reducer

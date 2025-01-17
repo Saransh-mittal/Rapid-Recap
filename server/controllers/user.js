@@ -49,6 +49,11 @@ const {
   updateUserWithRetry,
   logActivityWithRetry,
 } = require('../utils/dbOperations.js')
+const moment = require('moment-timezone')
+const { processBadgePrivileges } = require('../utils/tournament.utils.js')
+const { getCategories } = require('../data/categories.js')
+const Tournament = require('../model/tournamentSchema.js')
+const { REWARDS_MODAL_CONFIG } = require('../config/rewardsModalConfig.js')
 
 const registerUser = async (req, res) => {
   const { name, email, pic, password, cpassword, inGameName } = req.body
@@ -202,10 +207,28 @@ const loginUser = async (req, res) => {
         expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         httpOnly: true,
       })
+    let badges = findUser?.badges || []
+    const now = moment().tz('Asia/Kolkata')
 
-    return res
-      .status(201)
-      .json({ message: 'SignIn Successfull', user: findUser, token })
+    // Get unclaimed valid badges
+    let unClaimedValidBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        !badge.claimed,
+    )
+
+    // Process category privileges from badges
+    const categoryPrivileges = processBadgePrivileges(badges)
+    Object.keys(categoryPrivileges).forEach(key => {
+      const cacheKey = `privilege_${findUser._id.toString()}_${key}`
+      cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+    })
+    return res.status(201).json({
+      message: 'SignIn Successfull',
+      user: { ...findUser._doc, unClaimedValidBadges, categoryPrivileges },
+      token,
+    })
   } catch (err) {
     console.log(err)
   }
@@ -240,9 +263,29 @@ const loginCheck = asyncHandler(async (req, res) => {
   // Calculate new login streak
   const newStreakData = calculateLoginStreak(user, today)
 
+  let badges = user?.badges || []
+  const now = moment().tz('Asia/Kolkata')
+
+  // Get unclaimed valid badges
+  let unClaimedValidBadges = badges.filter(
+    badge =>
+      badge.canBeClaimedUntil &&
+      moment(badge.canBeClaimedUntil).isAfter(now) &&
+      !badge.claimed,
+  )
+
+  // Process category privileges from badges
+  const categoryPrivileges = processBadgePrivileges(badges)
+
+  Object.keys(categoryPrivileges).forEach(key => {
+    const cacheKey = `privilege_${req.user._id}_${key}`
+    cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+  })
   // Create optimistically updated user object for immediate response
   const optimisticUser = {
     ...user,
+    unClaimedValidBadges,
+    categoryPrivileges,
     loginStreak: newStreakData.streak,
     lastLogin: today,
   }
@@ -434,6 +477,18 @@ const handleGoogleLogin = async (req, res) => {
           return res
             .status(422)
             .json({ error: 'In Game Name cannot have spaces' })
+
+        if (isValidEmail(inGameName)) {
+          return res
+            .status(422)
+            .json({ error: 'Email cannot be used as an In-Game Name' })
+        }
+
+        if (inGameName.length > 16) {
+          return res.status(422).json({
+            error: 'In Game Name cannot be greater than 16 characters',
+          })
+        }
         user.inGameName = inGameName
       }
 
@@ -459,6 +514,18 @@ const handleGoogleLogin = async (req, res) => {
         return res
           .status(422)
           .json({ error: 'In Game Name cannot have spaces' })
+
+      if (isValidEmail(inGameName)) {
+        return res
+          .status(422)
+          .json({ error: 'Email cannot be used as an In-Game Name' })
+      }
+
+      if (inGameName.length > 16) {
+        return res.status(422).json({
+          error: 'In Game Name cannot be greater than 16 characters',
+        })
+      }
       // If not, create a new user with Google data
       const name = userInfo.name.split(' ')
       user = new User({
@@ -478,7 +545,30 @@ const handleGoogleLogin = async (req, res) => {
       expires: new Date(Date.now() + 2592000000),
       httpOnly: true,
     })
-    res.status(201).json({ message: 'Google Login Successfull', user, token })
+
+    let badges = user?.badges || []
+    const now = moment().tz('Asia/Kolkata')
+
+    // Get unclaimed valid badges
+    let unClaimedValidBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        !badge.claimed,
+    )
+
+    // Process category privileges from badges
+    const categoryPrivileges = processBadgePrivileges(badges)
+
+    Object.keys(categoryPrivileges).forEach(key => {
+      const cacheKey = `privilege_${user._id.toString()}_${key}`
+      cache.put(cacheKey, categoryPrivileges[key], 5 * 60 * 1000)
+    })
+    res.status(201).json({
+      message: 'Google Login Successfull',
+      user: { ...user._doc, unClaimedValidBadges, categoryPrivileges },
+      token,
+    })
   } catch (error) {
     console.log(error)
     res.status(422).json({ error: error })
@@ -1266,7 +1356,10 @@ const streakChecker = asyncHandler(async (req, res) => {
       user.streak > 0 &&
       user.streak % 7 === 0 &&
       user.streakExpiry.getTime() === tomorrow.getTime()
-
+    if (user.todayBoost && !isBoosted) {
+      user.todayBoost = false
+      await user.save()
+    }
     // // Check if the streak surge is already claimed today
     const checkIfAlreadyAwarded = await Activity.find({
       userId: user._id,
@@ -2037,6 +2130,185 @@ const getOnboardingProgress = asyncHandler(async (req, res) => {
   }
 })
 
+const claimTournamentBadge = asyncHandler(async (req, res) => {
+  const { tournamentNumber, badgeName } = req.body
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    // Find the badge and mark it as claimed
+    const badgeIndex = user.badges.findIndex(
+      badge =>
+        badge.tournamentNumber === tournamentNumber &&
+        badge.badgeName === badgeName &&
+        !badge.claimed,
+    )
+
+    if (badgeIndex === -1) {
+      return res
+        .status(404)
+        .json({ message: 'Badge not found or already claimed' })
+    }
+
+    user.badges[badgeIndex].claimed = true
+    await user.save()
+
+    cache.keys().forEach(key => {
+      if (key.startsWith('privilege_')) {
+        cache.del(key)
+      }
+    })
+
+    res.status(200).json({ message: 'Badge claimed successfully' })
+  } catch (error) {
+    console.error('Error claiming badge:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+const getValidCategories = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    // Get user's current badges for the tournament
+    const user = await User.findById(userId)
+    // get latest completed tournament
+    const latestTournament = await Tournament.findOne({ status: 'completed' })
+      .select('tournamentNumber')
+      .sort({ tournamentNumber: -1 })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    let badges = user?.badges || []
+    const now = moment().tz('Asia/Kolkata')
+    let currentBadges = badges.filter(
+      badge =>
+        badge.canBeClaimedUntil &&
+        moment(badge.canBeClaimedUntil).isAfter(now) &&
+        badge.tournamentNumber === latestTournament.tournamentNumber,
+    )
+    // Get all categories that have badges for this tournament
+    const usedCategories = currentBadges.map(badge => badge.text)
+
+    // Get all available categories (you'll need to import or define this)
+    const allCategories = getCategories()
+
+    // Filter out categories that already have badges
+    const validCategories = allCategories.filter(
+      category => !usedCategories.includes(category),
+    )
+
+    res.status(200).json({ validCategories })
+  } catch (error) {
+    console.error('Error getting valid categories:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+const updateBadgeCategory = asyncHandler(async (req, res) => {
+  const { badgeName, selectedCategory } = req.body
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    // get latest completed tournament
+    const latestTournament = await Tournament.findOne({ status: 'completed' })
+      .select('tournamentNumber')
+      .sort({ tournamentNumber: -1 })
+
+    // Find the badge
+    const badgeIndex = user.badges.findIndex(
+      badge =>
+        badge.tournamentNumber === latestTournament.tournamentNumber &&
+        badge.badgeName === badgeName &&
+        !badge.text, // Must be unnamed
+    )
+
+    if (badgeIndex === -1) {
+      return res
+        .status(404)
+        .json({ message: 'Badge not found or already has category' })
+    }
+    const allCategories = getCategories()
+
+    // Validate if category is allowed
+    const usedCategories = user.badges
+      .filter(
+        badge => badge.tournamentNumber === latestTournament.tournamentNumber,
+      )
+      .map(badge => badge.text)
+    // Filter out categories that already have badges
+    const validCategories = allCategories.filter(
+      category => !usedCategories.includes(category),
+    )
+    if (!validCategories.includes(selectedCategory)) {
+      return res.status(400).json({
+        message: 'Category already has a badge for this tournament',
+        invalidCategory: true,
+      })
+    }
+
+    // Update badge
+    user.badges[badgeIndex].text = selectedCategory
+    await user.save()
+
+    res.status(200).json({
+      message: 'Badge category updated successfully',
+      updatedBadge: user.badges[badgeIndex],
+    })
+  } catch (error) {
+    console.error('Error updating badge category:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+const checkRewardsModalStatus = asyncHandler(async (req, res) => {
+  const userId = req.user._id
+
+  try {
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // For existing users (created before feature start date)
+    const isExistingUser =
+      user.createdAt < REWARDS_MODAL_CONFIG.FEATURE_START_DATE
+
+    // Check if modal should be shown
+    let shouldShowModal = false
+    if (isExistingUser && !user.hasSeenRewardsModal) {
+      // Set expiry date if not set
+      if (!user.rewardsModalExpiryDate) {
+        user.rewardsModalExpiryDate = REWARDS_MODAL_CONFIG.EXPIRY_DATE
+        await user.save()
+      }
+
+      // Check if within expiry period
+      if (new Date() <= user.rewardsModalExpiryDate) {
+        shouldShowModal = true
+        // Mark as seen
+        user.hasSeenRewardsModal = true
+        await user.save()
+      }
+    }
+
+    res.status(200).json({ shouldShowModal })
+  } catch (error) {
+    console.error('Error checking rewards modal status:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 module.exports = {
   registerUser,
   loginUser,
@@ -2081,4 +2353,8 @@ module.exports = {
   getOnboardingProgress,
   claimQuinBoost,
   claimStreakSurge,
+  claimTournamentBadge,
+  getValidCategories,
+  updateBadgeCategory,
+  checkRewardsModalStatus,
 }
