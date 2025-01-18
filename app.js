@@ -29,6 +29,7 @@ const searchConsoleMiddleware = require('./middleware/searchConsoleMiddleware')
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 const connectDB = require('./db/conn')
+const connect_s4a = require('connect-s4a')
 
 const app = express()
 const server = http.createServer(app)
@@ -81,6 +82,7 @@ if (process.env.NODE_ENV === 'development') {
     next()
   })
 } else {
+  app.use(connect_s4a(process.env.S4A_SECRET))
   // app.use(
   //   require('prerender-node').set(
   //     'prerenderToken',
