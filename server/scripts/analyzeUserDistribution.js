@@ -154,10 +154,12 @@ const simulateDemotion = async users => {
       standardDeviation: sd,
       zScoreToScore: z => mean + z * sd,
       iqToScore: iq => mean + iqToZScore(iq) * sd,
+      // Add reverse mapping function to calculate IQ from score
+      scoreToIQ: score => 100 + ((score - mean) / sd) * 15,
     }
   }
 
-  const DISTRIBUTION = calculateDistribution(500) // Using 100 as min score
+  const DISTRIBUTION = calculateDistribution(500) // Using 500 as min score
 
   // Step 2: Apply exact IQ demotions
   const demoteIQ = currentIQ => {
@@ -187,6 +189,10 @@ const simulateDemotion = async users => {
   demotedUsers = demotedUsers.map(user => ({
     ...user,
     userScore: DISTRIBUTION.iqToScore(user.IQ_score),
+    // Add recalculated IQ score based on the final user score
+    demotionSimulatedIQScore: Math.round(
+      DISTRIBUTION.scoreToIQ(DISTRIBUTION.iqToScore(user.IQ_score)),
+    ),
   }))
 
   // Function to calculate statistics
@@ -208,6 +214,13 @@ const simulateDemotion = async users => {
         mean: _.meanBy(users, 'IQ_score'),
         highest: _.maxBy(users, 'IQ_score')?.IQ_score,
         lowest: _.minBy(users, 'IQ_score')?.IQ_score,
+      },
+      demotionSimulatedIQScore: {
+        mean: _.meanBy(users, 'demotionSimulatedIQScore'),
+        highest: _.maxBy(users, 'demotionSimulatedIQScore')
+          ?.demotionSimulatedIQScore,
+        lowest: _.minBy(users, 'demotionSimulatedIQScore')
+          ?.demotionSimulatedIQScore,
       },
       demotion: {
         averageIQDrop: _.meanBy(users, u => u.prevIQScore - u.IQ_score),
