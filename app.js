@@ -73,23 +73,41 @@ if (process.env.NODE_ENV === 'development') {
   app.use(connect_s4a(process.env.S4A_SECRET))
 
   // New middleware for handling SEO4Ajax quota exhaustion and fallbacks
-  app.use(async (req, res, next) => {
-    if (
-      res.getHeader('x-powered-by') === 'SEO4Ajax' &&
-      res.statusCode === 503
-    ) {
-      // Handle the fallback logic when SEO4Ajax quota is exhausted
-      try {
-        const ssrMiddleware = await createSSRMiddleware(app)
-        ssrMiddleware(req, res, next)
-      } catch (e) {
-        //If the SSR middleware fails
-        next()
+  const handleS4aError = async (req, res, next) => {
+    const originalSend = res.send
+    res.send = async function (body) {
+      console.log(
+        `Request URL: ${req.url} - Response Status: ${
+          res.statusCode
+        } - x-powered-by: ${res.getHeader('x-powered-by')}`,
+      )
+      if (
+        res.statusCode === 503 &&
+        res.getHeader('x-powered-by') === 'SEO4Ajax'
+      ) {
+        console.log(
+          `SEO4Ajax 503 Error Detected for URL: ${req.url}. Attempting SSR Fallback...`,
+        )
+        try {
+          const ssrMiddleware = await createSSRMiddleware(app)
+          console.log(`SSR Middleware initiated for URL: ${req.url}`)
+          ssrMiddleware(req, res, next)
+        } catch (e) {
+          console.error(`SSR Middleware failed for URL: ${req.url}`, e)
+          res.send = originalSend
+          return originalSend.call(res, body)
+        }
+      } else {
+        res.send = originalSend
+        return originalSend.call(res, body)
       }
-    } else {
-      next() // Continue to the next middleware
     }
-  })
+
+    next()
+  }
+
+  // Use it before the static middleware and before the default app.use middlewares.
+  app.use(handleS4aError)
 
   // Production configuration
   app.use(
