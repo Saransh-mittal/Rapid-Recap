@@ -30,6 +30,7 @@ const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 const connectDB = require('./db/conn')
 const connect_s4a = require('connect-s4a')
+const fs = require('fs')
 
 const app = express()
 const server = http.createServer(app)
@@ -43,6 +44,30 @@ app.use(i18nMiddleware.handle(i18n))
 app.use(bodyParser.json({ limit: '10mb' }))
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }))
 app.use(express.json())
+
+let seo4ajaxConfig
+try {
+  const seo4ajaxConfigData = fs.readFileSync(
+    './config/seo4ajaxConfig.json',
+    'utf-8',
+  )
+  seo4ajaxConfig = JSON.parse(seo4ajaxConfigData)
+} catch (error) {
+  console.error('Failed to load config', error)
+  seo4ajaxConfig = { seo4ajaxUrls: [] }
+}
+
+const shouldUseSEO4Ajax = fullUrl => {
+  return seo4ajaxConfig.seo4ajaxUrls.some(pattern => {
+    try {
+      const regex = new RegExp(pattern)
+      return regex.test(fullUrl)
+    } catch (error) {
+      console.error(`Invalid pattern: ${pattern}`, error)
+      return false
+    }
+  })
+}
 
 if (process.env.NODE_ENV === 'development') {
   // Development config
@@ -70,44 +95,13 @@ if (process.env.NODE_ENV === 'development') {
     next()
   })
 } else {
-  app.use(connect_s4a(process.env.S4A_SECRET))
-
-  // New middleware for handling SEO4Ajax quota exhaustion and fallbacks
-  const handleS4aError = async (req, res, next) => {
-    const originalSend = res.send
-    res.send = async function (body) {
-      console.log(
-        `Request URL: ${req.url} - Response Status: ${
-          res.statusCode
-        } - x-powered-by: ${res.getHeader('x-powered-by')}`,
-      )
-      if (
-        res.statusCode === 503 &&
-        res.getHeader('x-powered-by') === 'SEO4Ajax'
-      ) {
-        console.log(
-          `SEO4Ajax 503 Error Detected for URL: ${req.url}. Attempting SSR Fallback...`,
-        )
-        try {
-          const ssrMiddleware = await createSSRMiddleware(app)
-          console.log(`SSR Middleware initiated for URL: ${req.url}`)
-          ssrMiddleware(req, res, next)
-        } catch (e) {
-          console.error(`SSR Middleware failed for URL: ${req.url}`, e)
-          res.send = originalSend
-          return originalSend.call(res, body)
-        }
-      } else {
-        res.send = originalSend
-        return originalSend.call(res, body)
-      }
+  app.use((req, res, next) => {
+    if (shouldUseSEO4Ajax(req.url)) {
+      connect_s4a(process.env.S4A_SECRET)(req, res, next)
+    } else {
+      next()
     }
-
-    next()
-  }
-
-  // Use it before the static middleware and before the default app.use middlewares.
-  app.use(handleS4aError)
+  })
 
   // Production configuration
   app.use(
@@ -282,7 +276,7 @@ webpush.setVapidDetails(
 initBotTracking()
 
 // Load scheduler
-require('./scheduler/setupCronJobs')
+// require('./scheduler/setupCronJobs')
 // require('./scripts/analyzeArticleRelations')
 // Setup routes and SSR
 async function initializeServer() {
