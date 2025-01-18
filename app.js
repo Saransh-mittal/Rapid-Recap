@@ -45,18 +45,6 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }))
 app.use(express.json())
 
 if (process.env.NODE_ENV === 'development') {
-  // const prerenderNode = require('prerender-node')
-  //   .set(
-  //     'prerenderServiceUrl',
-  //     `http://localhost:${process.env.PRERENDER_PORT || 3000}`,
-  //   )
-  //   .set('protocol', 'http')
-  //   // Wait longer for full page load
-  //   .set('pageLoadTimeout', 20000)
-  //   // Wait for all network requests to finish
-  //   .set('waitAfterLastRequest', 1000)
-
-  // app.use(prerenderNode)
   // Development config
   app.use(
     helmet({
@@ -83,12 +71,26 @@ if (process.env.NODE_ENV === 'development') {
   })
 } else {
   app.use(connect_s4a(process.env.S4A_SECRET))
-  // app.use(
-  //   require('prerender-node').set(
-  //     'prerenderToken',
-  //     process.env.PRERENDER_TOKEN,
-  //   ),
-  // )
+
+  // New middleware for handling SEO4Ajax quota exhaustion and fallbacks
+  app.use(async (req, res, next) => {
+    if (
+      res.getHeader('x-powered-by') === 'SEO4Ajax' &&
+      res.statusCode === 503
+    ) {
+      // Handle the fallback logic when SEO4Ajax quota is exhausted
+      try {
+        const ssrMiddleware = await createSSRMiddleware(app)
+        ssrMiddleware(req, res, next)
+      } catch (e) {
+        //If the SSR middleware fails
+        next()
+      }
+    } else {
+      next() // Continue to the next middleware
+    }
+  })
+
   // Production configuration
   app.use(
     helmet({
