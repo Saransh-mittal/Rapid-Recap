@@ -44,18 +44,18 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }))
 app.use(express.json())
 
 if (process.env.NODE_ENV === 'development') {
-  const prerenderNode = require('prerender-node')
-    .set(
-      'prerenderServiceUrl',
-      `http://localhost:${process.env.PRERENDER_PORT || 3000}`,
-    )
-    .set('protocol', 'http')
-    // Wait longer for full page load
-    .set('pageLoadTimeout', 20000)
-    // Wait for all network requests to finish
-    .set('waitAfterLastRequest', 1000)
+  // const prerenderNode = require('prerender-node')
+  //   .set(
+  //     'prerenderServiceUrl',
+  //     `http://localhost:${process.env.PRERENDER_PORT || 3000}`,
+  //   )
+  //   .set('protocol', 'http')
+  //   // Wait longer for full page load
+  //   .set('pageLoadTimeout', 20000)
+  //   // Wait for all network requests to finish
+  //   .set('waitAfterLastRequest', 1000)
 
-  app.use(prerenderNode)
+  // app.use(prerenderNode)
   // Development config
   app.use(
     helmet({
@@ -81,12 +81,12 @@ if (process.env.NODE_ENV === 'development') {
     next()
   })
 } else {
-  app.use(
-    require('prerender-node').set(
-      'prerenderToken',
-      process.env.PRERENDER_TOKEN,
-    ),
-  )
+  // app.use(
+  //   require('prerender-node').set(
+  //     'prerenderToken',
+  //     process.env.PRERENDER_TOKEN,
+  //   ),
+  // )
   // Production configuration
   app.use(
     helmet({
