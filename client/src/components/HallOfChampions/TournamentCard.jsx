@@ -3,7 +3,6 @@ import {
   Box,
   Flex,
   Text,
-  Avatar,
   VStack,
   HStack,
   Badge,
@@ -58,14 +57,14 @@ const StatItem = ({
   bgColor,
   textShadow,
 }) => (
-  <VStack
-    spacing={1}
+  <Flex
+    direction={{ base: 'column', md: 'row' }}
     align="center"
     bg={bgColor}
-    px={{ base: 2, md: 4 }}
-    py={{ base: 2, md: 3 }}
+    px={{ base: 2, md: 3 }}
+    py={{ base: 2, md: 2 }}
     borderRadius="xl"
-    position="relative"
+    gap={{ md: 2 }}
   >
     <Flex align="center" gap={1}>
       <Icon size={14} style={{ color: 'white', opacity: 0.8 }} />
@@ -75,25 +74,25 @@ const StatItem = ({
         fontWeight="medium"
         textShadow={textShadow}
       >
-        {label}
+        {label}:
       </Text>
     </Flex>
     <Text
-      fontSize={{ base: 'lg', md: '2xl' }}
+      fontSize={{ base: 'lg', md: 'xl' }}
       fontWeight="bold"
       color={isHighlight ? 'pink.300' : 'white'}
       textShadow={textShadow}
     >
       {value}
     </Text>
-  </VStack>
+  </Flex>
 )
 
 const RankBadge = ({ rank, icon: Icon, borderColor, textShadow }) => (
   <Box
     position="relative"
-    w={{ base: '44px', md: '52px' }}
-    h={{ base: '44px', md: '52px' }}
+    w={{ base: '44px', md: '48px' }}
+    h={{ base: '44px', md: '48px' }}
   >
     <Flex
       position="absolute"
@@ -108,7 +107,7 @@ const RankBadge = ({ rank, icon: Icon, borderColor, textShadow }) => (
       border="3px solid"
       borderColor={borderColor}
     >
-      <Icon size={24} style={{ color: 'white' }} />
+      <Icon size={22} style={{ color: 'white' }} />
     </Flex>
     <Flex
       position="absolute"
@@ -151,16 +150,21 @@ const TournamentCard = ({ data, index }) => {
     >
       <Flex
         w="100%"
-        direction="column"
+        minH={{ base: '180px', md: '80px' }}
         bgGradient={style.gradient}
         borderRadius="2xl"
         overflow="hidden"
         position="relative"
         boxShadow={style.glow}
-        p={{ base: 4, md: 6 }}
+        px={{ base: 4, md: 6 }}
+        py={{ base: 4, md: 4 }}
+        direction={{ base: 'column', md: 'row' }}
+        align={{ md: 'center' }}
+        justify={{ md: 'space-between' }}
+        gap={{ md: 4 }}
       >
-        {/* Top Section: Rank, Avatar, and Name */}
-        <Flex align="center" mb={4}>
+        {/* Left Section: Rank and Name */}
+        <Flex align="center" mb={{ base: 4, md: 0 }} flex={{ md: '0 0 auto' }}>
           <RankBadge
             rank={index}
             icon={style.icon}
@@ -170,7 +174,7 @@ const TournamentCard = ({ data, index }) => {
 
           <VStack spacing={0} align="start" ml={4}>
             <Text
-              fontSize={{ base: 'xl', md: '2xl' }}
+              fontSize={{ base: 'xl', md: 'lg' }}
               fontWeight="bold"
               color="white"
               textShadow={style.textShadow}
@@ -178,7 +182,7 @@ const TournamentCard = ({ data, index }) => {
               {data.name}
             </Text>
             <Text
-              fontSize={{ base: 'sm', md: 'md' }}
+              fontSize={{ base: 'sm', md: 'sm' }}
               color="whiteAlpha.900"
               textShadow={style.textShadow}
             >
@@ -187,12 +191,12 @@ const TournamentCard = ({ data, index }) => {
           </VStack>
         </Flex>
 
-        {/* Stats Section */}
+        {/* Center Section: Stats */}
         <Flex
-          justify="space-between"
-          mb={4}
-          wrap={{ base: 'wrap', md: 'nowrap' }}
-          gap={2}
+          justify={{ base: 'space-between', md: 'center' }}
+          mb={{ base: 4, md: 0 }}
+          gap={{ base: 2, md: 4 }}
+          flex={{ md: '0 0 auto' }}
         >
           <StatItem
             label="Total Score"
@@ -218,25 +222,61 @@ const TournamentCard = ({ data, index }) => {
           />
         </Flex>
 
-        {/* Categories Section */}
-        <HStack spacing={2} flexWrap="wrap" gap={2}>
-          {data.categoriesPlayed.map((category, idx) => (
-            <Badge
-              key={idx}
-              px={3}
-              py={1}
-              borderRadius="full"
-              bg={style.statBg}
-              color="white"
-              textShadow={style.textShadow}
-              fontSize="xs"
-            >
-              {category}
-            </Badge>
-          ))}
-        </HStack>
+        {/* Right Section: Categories */}
+        <Flex
+          flex={{ md: '1' }}
+          justify={{ md: 'flex-end' }}
+          maxW={{ md: '300px' }}
+        >
+          <HStack
+            spacing={1}
+            flexWrap="wrap"
+            gap={1}
+            justify={{ md: 'flex-end' }}
+          >
+            {data.categoriesPlayed
+              .slice(0, isMobile ? undefined : 3)
+              .map((category, idx) => (
+                <Badge
+                  key={idx}
+                  px={2}
+                  py={1}
+                  borderRadius="full"
+                  bg={style.statBg}
+                  color="white"
+                  textShadow={style.textShadow}
+                  fontSize="xs"
+                >
+                  {category}
+                </Badge>
+              ))}
+            {!isMobile && data.categoriesPlayed.length > 3 && (
+              <Badge
+                px={2}
+                py={1}
+                borderRadius="full"
+                bg={style.statBg}
+                color="white"
+                textShadow={style.textShadow}
+                fontSize="xs"
+              >
+                +{data.categoriesPlayed.length - 3}
+              </Badge>
+            )}
+          </HStack>
+        </Flex>
 
-        {/* Shimmer Effect for Top 3 */}
+        {/* Visual Effects */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bgGradient="linear(to-b, rgba(255,255,255,0.1), transparent)"
+          pointerEvents="none"
+        />
+
         {isTopThree && (
           <Box
             as={motion.div}

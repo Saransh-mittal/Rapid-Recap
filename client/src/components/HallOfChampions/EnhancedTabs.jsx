@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Box, HStack, Button } from '@chakra-ui/react'
+import { Box, HStack, Button, Flex } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import LeaderboardFilter from './LeaderboardFilter'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -99,15 +100,16 @@ const EnhancedTabs = ({ onTabChange, children }) => {
     onTabChange(index)
   }
 
+  const handleFilterChange = filterId => {
+    // Handle filter change logic here
+    console.log('Filter changed to:', filterId)
+  }
+
   return (
     <Box position="relative" w="full">
-      <MotionBox
-        p={2}
-        borderRadius="full"
-        bg="blackAlpha.400"
-        backdropFilter="blur(12px)"
-        borderWidth="1px"
-        borderColor="whiteAlpha.100"
+      <Flex
+        direction="column"
+        gap={6}
         initial={{ y: -20, opacity: 0 }}
         animate={{
           y: 0,
@@ -116,6 +118,7 @@ const EnhancedTabs = ({ onTabChange, children }) => {
         }}
         mb={8}
       >
+        {/* Tabs */}
         <HStack spacing={4} justify="center">
           <CustomTab
             isSelected={selectedTab === 0}
@@ -130,7 +133,15 @@ const EnhancedTabs = ({ onTabChange, children }) => {
             Tournament
           </CustomTab>
         </HStack>
-      </MotionBox>
+
+        {/* Filter */}
+        <Flex justify="center" px={4}>
+          <LeaderboardFilter
+            type={selectedTab === 0 ? 'champions' : 'tournament'}
+            onFilterChange={handleFilterChange}
+          />
+        </Flex>
+      </Flex>
 
       {/* Tab Panels Container */}
       <Box position="relative" minH="400px">

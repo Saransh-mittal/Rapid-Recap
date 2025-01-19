@@ -51,40 +51,37 @@ const StatItem = ({
   textShadow,
   icon: Icon,
 }) => (
-  <VStack
-    spacing={0}
+  <Flex
+    direction={{ base: 'column', md: 'row' }}
     align="center"
     bg={bgColor}
-    px={{ base: 2, md: 4 }}
-    py={{ base: 2, md: 3 }}
+    px={{ base: 2, md: 3 }}
+    py={{ base: 2, md: 2 }}
     borderRadius="xl"
-    minW={{ base: '80px', md: '110px' }}
-    position="relative"
-    overflow="hidden"
+    minW={{ base: '80px', md: 'auto' }}
+    gap={{ md: 2 }}
   >
-    <Flex direction="column" align="center" gap={{ base: 0.5, md: 1 }}>
-      <Flex align="center" gap={1}>
-        <Icon size={14} style={{ color: 'white', opacity: 0.8 }} />
-        <Text
-          fontSize={{ base: 'xs', md: 'sm' }}
-          color="whiteAlpha.900"
-          fontWeight="medium"
-          textShadow={textShadow}
-        >
-          {label}
-        </Text>
-      </Flex>
+    <Flex align="center" gap={1}>
+      <Icon size={14} style={{ color: 'white', opacity: 0.8 }} />
       <Text
-        fontSize={{ base: 'lg', md: '2xl' }}
-        fontWeight="bold"
-        color={isHighlight ? 'pink.300' : 'white'}
+        fontSize={{ base: 'xs', md: 'sm' }}
+        color="whiteAlpha.900"
+        fontWeight="medium"
         textShadow={textShadow}
-        lineHeight="1"
       >
-        {value}
+        {label}:
       </Text>
     </Flex>
-  </VStack>
+    <Text
+      fontSize={{ base: 'lg', md: 'xl' }}
+      fontWeight="bold"
+      color={isHighlight ? 'pink.300' : 'white'}
+      textShadow={textShadow}
+      lineHeight="1"
+    >
+      {value}
+    </Text>
+  </Flex>
 )
 
 const RankBadge = ({ rank, icon: Icon, borderColor, textShadow }) => (
@@ -150,19 +147,20 @@ const ChampionCard = ({ champion, index }) => {
     >
       <Flex
         w="100%"
-        minH={{ base: '120px', md: '110px' }}
+        minH={{ base: '120px', md: '80px' }}
         bgGradient={style.gradient}
         borderRadius="2xl"
         overflow="hidden"
         position="relative"
         boxShadow={style.glow}
         px={{ base: 4, md: 6 }}
-        py={{ base: 3, md: 5 }}
-        direction="column"
-        justify="space-between"
+        py={{ base: 3, md: 4 }}
+        direction={{ base: 'column', md: 'row' }}
+        align={{ md: 'center' }}
+        justify={{ md: 'space-between' }}
       >
-        {/* Top Section: Rank and Name */}
-        <Flex align="center" mb={{ base: 2, md: 3 }}>
+        {/* Left Section: Rank and Name */}
+        <Flex align="center" mb={{ base: 2, md: 0 }} flex={{ md: '0 0 auto' }}>
           <RankBadge
             rank={rank}
             icon={style.icon}
@@ -172,7 +170,7 @@ const ChampionCard = ({ champion, index }) => {
 
           <VStack spacing={0} align="start" ml={4}>
             <Text
-              fontSize={{ base: 'lg', md: '2xl' }}
+              fontSize={{ base: 'lg', md: 'xl' }}
               fontWeight="bold"
               color="white"
               textShadow={style.textShadow}
@@ -181,7 +179,7 @@ const ChampionCard = ({ champion, index }) => {
               {champion.name}
             </Text>
             <Text
-              fontSize={{ base: 'xs', md: 'md' }}
+              fontSize={{ base: 'xs', md: 'sm' }}
               color="whiteAlpha.900"
               textShadow={style.textShadow}
             >
@@ -190,12 +188,14 @@ const ChampionCard = ({ champion, index }) => {
           </VStack>
         </Flex>
 
-        {/* Stats Section */}
+        {/* Right Section: Stats */}
         <Flex
-          justify="space-between"
-          px={{ base: 1, md: 4 }}
-          mt={{ base: 1, md: 2 }}
+          justify={{ base: 'space-between', md: 'flex-end' }}
+          gap={{ md: 4 }}
+          px={{ base: 1, md: 0 }}
+          mt={{ base: 1, md: 0 }}
           mx={{ base: -1, md: 0 }}
+          flex={{ md: '0 0 auto' }}
         >
           <StatItem
             label="IQ Score"
@@ -221,7 +221,7 @@ const ChampionCard = ({ champion, index }) => {
           />
         </Flex>
 
-        {/* Ambient Light Effect */}
+        {/* Visual Effects */}
         <Box
           position="absolute"
           top={0}
@@ -232,12 +232,11 @@ const ChampionCard = ({ champion, index }) => {
           pointerEvents="none"
         />
 
-        {/* Shimmer Effect */}
         <Box
           as={motion.div}
           position="absolute"
           top={0}
-          left={'-100%'}
+          left="-100%"
           width="50%"
           height="100%"
           background="linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)"
