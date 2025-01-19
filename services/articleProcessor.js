@@ -24,9 +24,9 @@ const validateHindiResult = result => {
   // Validate paragraphs
   if (
     !Array.isArray(result.translation.paragraphs) ||
-    result.translation.paragraphs.length !== 3
+    result.translation.paragraphs.length < 2
   ) {
-    throw new Error('Translation must have exactly 3 paragraphs')
+    throw new Error('Translation must have atleast 2 paragraphs')
   }
 
   // Validate that paragraphs are not empty
@@ -50,36 +50,36 @@ const processEnglishContent = asyncHandler(
 
     try {
       // Step 1: Generate Content First
-      const contentInstructions = `You are a professional news analyst and writer.
+      const contentInstructions = `You are a professional news analyst and writer. Your goal is to create insightful and concise analysis based on the provided news article.
 
-    Content Processing Instructions:
-    1. Create original analysis combining:
-       - Local implications
-       - Industry impact
-       - Market trends
-       - Historical context
-       - Future implications
+    **Content Length:** The final content (within "mainText") MUST be between 800 and 1800 characters. This is a critical requirement.
 
-    2. Content Guidelines:
-       - Use only 1-2 short factual quotes (with attribution)
-       - Focus on broader context and implications
-       - Add relevant statistics/data
-       - Include expert perspectives
-       - Connect to industry trends
+    **Analysis Focus:** Combine the following aspects in your analysis:
+    - How this news impacts the local area or community.
+    - The effects or changes it might bring to the relevant industry.
+    - Any noticeable trends in the market related to this news.
+    - Important historical context that helps understand the news.
+    - What this news might mean for the future.
 
-    3. Structure Requirements:
-       - Keep content between 800-1800 characters
-       - Use unique phrasing
-       - Vary sentence patterns
-       - Add subsections with unique angles
-       - Use ** for bold text
+    **Writing Style:**
+    - Include only one or two short, factual quotes from the original article. Make sure to attribute the quotes properly.
+    - Concentrate on the bigger picture, explaining the broader context and implications.
+    - Include relevant statistics or data points if they strengthen the analysis.
+    - Add insights from experts or informed sources (you can invent these if necessary, but make them sound plausible).
+    - Connect the news to current trends happening in the industry.
+    - Use **bold text** to highlight key terms or ideas.
+    - Write using varied sentence structures and avoid repeating the same phrasing.
+    - Think of adding a few short sections, each exploring a different angle of the analysis.
 
-    Return JSON: {
+    **Output Format:** Return your response as a JSON object with the following structure:
+    \`\`\`json
+    {
       "processedContent": {
-        "title": "Your title here",
-        "mainText": "Your content here"
+        "title": "Your insightful title here",
+        "mainText": "Your well-analyzed content here, between 800 and 1800 characters."
       }
-    }`
+    }
+    \`\`\``
 
       const contentResult = await makeGPTRequest({
         messages: [
@@ -106,8 +106,9 @@ const processEnglishContent = asyncHandler(
 
       const contentLength = contentResult.processedContent.mainText.length
       if (contentLength < 800 || contentLength > 2000) {
+        // Keep the upper bound slightly higher for retries
         throw new Error(
-          `Content length (${contentLength}) outside acceptable range`,
+          `Content length (${contentLength}) outside acceptable range (800-1800)`,
         )
       }
 
@@ -144,20 +145,21 @@ const generateSEO = asyncHandler(async (articleData, retryCount = 0) => {
   console.log('\n🎯 Generating SEO metadata...')
 
   try {
-    const seoInstructions = `You are an SEO expert. Generate SEO metadata for this article.
+    const seoInstructions = `You are an SEO expert. Generate SEO metadata for this article to improve its search engine visibility.
 
-    Requirements:
-    1. Generate 5-8 relevant keywords
-    2. Create a description under 150 characters
-    3. Focus on searchability and relevance
-    4. Include key topics and themes
-    5. Make description compelling and informative
+    **Requirements:**
+    1. Create a list of 5 to 8 relevant keywords that people might use to search for this article.
+    2. Write a concise and engaging description of the article, making sure it's under 150 characters long. This description should encourage people to click on the search result.
+    3. Ensure the keywords and description are directly related to the main topics and themes of the article.
+    4. The description should be informative and accurately represent the article's content.
 
-    Return ONLY this JSON structure:
+    **Output Format:** Return ONLY a JSON structure like this:
+    \`\`\`json
     {
       "keywords": ["keyword1", "keyword2", ...],
-      "description": "Your description here"
-    }`
+      "description": "Your short and informative description here"
+    }
+    \`\`\``
 
     const result = await makeGPTRequest({
       messages: [
@@ -222,23 +224,26 @@ const processHindiContent = asyncHandler(
     )
 
     try {
-      const instructions = `You are a professional Hindi translator.
+      const instructions = `You are a professional Hindi translator. Your task is to translate English news content into Hindi that sounds natural and is easy for daily speakers to understand.
 
-    Translation Instructions:
-    1. Translate to daily speaking Hindi
-    2. Transliterate author name to Hindi
-    3. Break maintext into exactly 3 paragraphs
-    4. Retain all information
-    5. Preserve original meaning
-    6. Translate complete sentences
+    **Translation Guidelines:**
+    1. Translate the provided title and main text into Hindi. The Hindi should sound like everyday spoken language.
+    2. Transliterate the author's name into Hindi.
+    3. Divide the translated main text into exactly 3 distinct paragraphs.
+    4. Ensure that all the information from the original English text is present in the translation.
+    5. Keep the meaning of the original text intact during the translation process.
+    6. Translate complete sentences rather than just individual words or phrases.
 
-    Return JSON: {
+    **Output Format:** Return your translation as a JSON object with the following structure:
+    \`\`\`json
+    {
       "translation": {
-        "title": "hindi title",
-        "author": "hindi author",
-        "paragraphs": ["para1", "para2", "para3"]
+        "title": "Hindi title here",
+        "author": "Hindi author name here",
+        "paragraphs": ["Paragraph 1 in Hindi", "Paragraph 2 in Hindi", "Paragraph 3 in Hindi"]
       }
-    }`
+    }
+    \`\`\``
 
       const result = await makeGPTRequest({
         messages: [
