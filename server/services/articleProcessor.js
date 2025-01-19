@@ -4,192 +4,86 @@ const { makeGPTRequest } = require('../utils/openai')
 const { decode } = require('html-entities')
 const asyncHandler = require('express-async-handler')
 
-// Validation helper functions
-const validateEnglishResult = result => {
-  // Check if all required structures exist
-  if (!result.processedContent || !result.highlights || !result.seo) {
-    // specific error message for missing top-level structures
-    throw new Error(`Missing required top-level structures in response :
-    ${!result.processedContent ? 'processedContent' : ''}
-    ${!result.highlights ? 'highlights' : ''}
-    ${!result.seo ? 'seo' : ''}
-      `)
-  }
-
-  // Validate processedContent
-  if (!result.processedContent.title || !result.processedContent.mainText) {
-    throw new Error('Missing required fields in processedContent')
-  }
-
-  // Validate highlights
-  if (
-    !Array.isArray(result.highlights.dictionary) ||
-    !Array.isArray(result.highlights.importantSentences)
-  ) {
-    throw new Error('Invalid highlights structure')
-  }
-
-  if (
-    result.highlights.dictionary.length < 5 ||
-    result.highlights.importantSentences.length < 4
-  ) {
-    throw new Error('Insufficient highlights content')
-  }
-
-  // Validate dictionary entries
-  if (
-    !result.highlights.dictionary.every(entry => entry.word && entry.definition)
-  ) {
-    throw new Error('Invalid dictionary entry structure')
-  }
-
-  // Validate SEO
-  if (!Array.isArray(result.seo.keywords) || !result.seo.description) {
-    throw new Error('Invalid SEO structure')
-  }
-
-  if (result.seo.keywords.length < 5 || result.seo.description.length > 150) {
-    throw new Error('Invalid SEO content')
-  }
-
-  return true
-}
-
 const validateHindiResult = result => {
-  // Check if all required structures exist
-  if (!result.translation || !result.highlights) {
-    // specific error message for missing top-level structures
-    throw new Error(`Missing required top-level structures in response :
-      ${!result.translation ? 'translation' : ''}
-      ${!result.highlights ? 'highlights' : ''}
-      `)
+  console.log('\n🔍 Validating Hindi result...')
+
+  // Check if translation exists
+  if (!result.translation) {
+    throw new Error('Missing translation structure in response')
   }
 
-  // Validate translation
+  // Validate translation fields
   if (
     !result.translation.title ||
     !result.translation.author ||
-    !Array.isArray(result.translation.paragraphs)
+    !result.translation.paragraphs
   ) {
     throw new Error('Missing required fields in translation')
   }
 
-  if (result.translation.paragraphs.length !== 3) {
-    throw new Error('Translation must have exactly 3 paragraphs')
-  }
-
-  // Validate highlights
+  // Validate paragraphs
   if (
-    !Array.isArray(result.highlights.dictionary) ||
-    !Array.isArray(result.highlights.importantSentences)
+    !Array.isArray(result.translation.paragraphs) ||
+    result.translation.paragraphs.length < 2
   ) {
-    throw new Error('Invalid highlights structure')
+    throw new Error('Translation must have atleast 2 paragraphs')
   }
 
+  // Validate that paragraphs are not empty
   if (
-    result.highlights.dictionary.length < 5 ||
-    result.highlights.importantSentences.length < 4
+    result.translation.paragraphs.some(
+      para => !para || para.trim().length === 0,
+    )
   ) {
-    throw new Error('Insufficient highlights content')
+    throw new Error('Translation paragraphs cannot be empty')
   }
 
-  // Validate dictionary entries
-  if (
-    !result.highlights.dictionary.every(entry => entry.word && entry.definition)
-  ) {
-    throw new Error('Invalid dictionary entry structure')
-  }
-
+  console.log('✅ Hindi validation passed')
   return true
 }
 
 const processEnglishContent = asyncHandler(
   async (articleData, retryCount = 0) => {
-    const MAX_RETRIES = 1 // Only retry once
+    const MAX_RETRIES = 1
+    const startTime = Date.now()
+    console.log(`\n📝 Processing English content for: "${articleData.title}"`)
 
     try {
-      const instructions = `You are a professional news analyst and writer.
+      // Step 1: Generate Content First
+      const contentInstructions = `You are a professional news analyst and writer. Your goal is to create insightful and concise analysis based on the provided news article.
 
-    Part 1 - Content Processing:
-    Key Instructions:
-    1. Create original analysis by combining insights from multiple viewpoints:
-       - Local implications
-       - Industry impact
-       - Market trends
-       - Historical context
-       - Future implications
-       - Dont include outdated information or irrelevant information
+    **Content Length:** The final content (within "mainText") MUST be between 800 and 1800 characters. This is a critical requirement.
 
-    2. Content Guidelines:
-       - Use only 1-2 short factual quotes from the source (with attribution)
-       - Focus on broader context and implications
-       - Add relevant statistics or data from public sources
-       - Include industry expert perspectives
-       - Connect to related industry trends
-       - If needed Rewrite a good title according to the content that will also help in SEO
+    **Analysis Focus:** Combine the following aspects in your analysis:
+    - How this news impacts the local area or community.
+    - The effects or changes it might bring to the relevant industry.
+    - Any noticeable trends in the market related to this news.
+    - Important historical context that helps understand the news.
+    - What this news might mean for the future.
 
-    3. Structure Requirements:
-       - Keep content between 800-1800 characters
-       - Use unique phrasing and structure
-       - Vary sentence patterns
-       - Add subsections with unique angles
-       - If you want to make a phrase or a word bold, use the markdown syntax ** on both sides of the word or phrase without space in between.
-       - If the original content is numbered, then keep the similar numbering in the new content.
+    **Writing Style:**
+    - Include only one or two short, factual quotes from the original article. Make sure to attribute the quotes properly.
+    - Concentrate on the bigger picture, explaining the broader context and implications.
+    - Include relevant statistics or data points if they strengthen the analysis.
+    - Add insights from experts or informed sources (you can invent these if necessary, but make them sound plausible).
+    - Connect the news to current trends happening in the industry.
+    - Use **bold text** to highlight key terms or ideas.
+    - Write using varied sentence structures and avoid repeating the same phrasing.
+    - Think of adding a few short sections, each exploring a different angle of the analysis.
 
-    Part 2 - Highlights Extraction:
-    After processing the content, analyze the processed text to extract:
-
-    1. Important Sentences (4-6):
-       - Copy sentences EXACTLY as they appear in the processed text
-       - Maintain exact capitalization and case
-       - Include key facts, statistics, or significant quotes
-       - Focus on major developments or turning points
-       - Do not modify any part of the sentence
-       - Use exact punctuation and spacing
-       - If any kind of marking is used in the original text, maintain it here also for example if ** is used for bold text, maintain it here also
-
-    2. Dictionary (5-10 terms):
-       - Select terms EXACTLY as they appear in the processed text
-       - Maintain original capitalization
-       - Include technical or domain-specific terms
-       - Include uncommon or specialized vocabulary
-       - Include unique phrases or less known names or terms
-       - Include hard vocabulary terms that may be unfamiliar to readers
-       - Copy phrases exactly as written
-       - Do not modify case or punctuation
-       - Verify each term exists exactly in the text
-
-    Part 3 - SEO:
-    Generate SEO optimization data:
-    - 5-8 relevant search keywords
-    - Meta description under 150 chars
-
-    ${
-      retryCount > 0
-        ? 'CRITICAL: Previous attempt produced content outside the 800-1800 character limit. Please ensure the content strictly adheres to this requirement.'
-        : ''
-    }
-
-    Return JSON: {
+    **Output Format:** Return your response as a JSON object with the following structure:
+    \`\`\`json
+    {
       "processedContent": {
-        "title": "",
-        "mainText": ""
-      },
-      "highlights": {
-        "dictionary": [{ "word": string, "definition": string }],
-        "importantSentences": [string]
-      },
-      "seo": {
-        "keywords": [],
-        "description": ""
+        "title": "Your insightful title here",
+        "mainText": "Your well-analyzed content here, between 800 and 1800 characters."
       }
     }
+    \`\`\``
 
-    CRITICAL: For highlights, maintain exact case sensitivity and copy text exactly as it appears.`
-
-      const result = await makeGPTRequest({
+      const contentResult = await makeGPTRequest({
         messages: [
-          { role: 'system', content: instructions },
+          { role: 'system', content: contentInstructions },
           {
             role: 'user',
             content: JSON.stringify({
@@ -199,100 +93,157 @@ const processEnglishContent = asyncHandler(
             }),
           },
         ],
-        temperature: retryCount > 0 ? 0.5 : 0.3, // Slightly increase temperature on retry
+        temperature: retryCount > 0 ? 0.5 : 0.3,
       })
-      validateEnglishResult(result)
-      // Validate content length
-      const contentLength = result.processedContent.mainText.length
-      if (contentLength < 800 || contentLength > 2000) {
-        if (retryCount < MAX_RETRIES) {
-          console.log(
-            `Content length (${contentLength}) outside acceptable range. Retrying...`,
-          )
-          // Wait briefly before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          return processEnglishContent(articleData, retryCount + 1)
-        } else {
-          throw new Error(
-            `Failed to generate content within length requirements after ${
-              MAX_RETRIES + 1
-            } attempts`,
-          )
-        }
+
+      // Validate content
+      if (
+        !contentResult.processedContent?.title ||
+        !contentResult.processedContent?.mainText
+      ) {
+        throw new Error('Missing required fields in processedContent')
       }
+
+      const contentLength = contentResult.processedContent.mainText.length
+      if (contentLength < 800 || contentLength > 2000) {
+        // Keep the upper bound slightly higher for retries
+        throw new Error(
+          `Content length (${contentLength}) outside acceptable range (800-1800)`,
+        )
+      }
+
+      // Step 2: Generate SEO separately
+      const seoResult = await generateSEO({
+        title: contentResult.processedContent.title,
+        mainText: contentResult.processedContent.mainText,
+        category: articleData.category,
+      })
+
+      const result = {
+        processedContent: contentResult.processedContent,
+        seo: seoResult,
+      }
+
+      const processingTime = ((Date.now() - startTime) / 1000).toFixed(2)
+      console.log(`✅ English processing completed in ${processingTime}s`)
 
       return result
     } catch (error) {
       if (retryCount < MAX_RETRIES) {
-        console.log(
-          `Error in processEnglishContent: ${error.message}. Retrying...`,
-        )
-        // Wait briefly before retrying
+        console.log(`⚠️ Retrying English content processing: ${error.message}`)
         await new Promise(resolve => setTimeout(resolve, 1000))
         return processEnglishContent(articleData, retryCount + 1)
       }
+      console.error('❌ English processing failed:', error.message)
       throw error
     }
   },
 )
 
+const generateSEO = asyncHandler(async (articleData, retryCount = 0) => {
+  const MAX_RETRIES = 2 // More retries for SEO as it's smaller and faster
+  console.log('\n🎯 Generating SEO metadata...')
+
+  try {
+    const seoInstructions = `You are an SEO expert. Generate SEO metadata for this article to improve its search engine visibility.
+
+    **Requirements:**
+    1. Create a list of 5 to 8 relevant keywords that people might use to search for this article.
+    2. Write a concise and engaging description of the article, making sure it's under 150 characters long. This description should encourage people to click on the search result.
+    3. Ensure the keywords and description are directly related to the main topics and themes of the article.
+    4. The description should be informative and accurately represent the article's content.
+
+    **Output Format:** Return ONLY a JSON structure like this:
+    \`\`\`json
+    {
+      "keywords": ["keyword1", "keyword2", ...],
+      "description": "Your short and informative description here"
+    }
+    \`\`\``
+
+    const result = await makeGPTRequest({
+      messages: [
+        { role: 'system', content: seoInstructions },
+        {
+          role: 'user',
+          content: JSON.stringify({
+            title: articleData.title,
+            mainText: articleData.mainText.substring(0, 1000), // Send shorter text for SEO
+            category: articleData.category,
+          }),
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 300, // Smaller context for faster, more focused response
+    })
+
+    // Validate SEO result
+    if (!Array.isArray(result.keywords) || !result.description) {
+      throw new Error('Invalid SEO structure')
+    }
+
+    if (result.keywords.length < 5 || result.keywords.length > 8) {
+      throw new Error('Keywords count must be between 5 and 8')
+    }
+
+    if (result.description.length > 150) {
+      throw new Error('Description length exceeds 150 characters')
+    }
+
+    console.log('✅ SEO generation successful')
+    return result
+  } catch (error) {
+    if (retryCount < MAX_RETRIES) {
+      console.log(`⚠️ Retrying SEO generation: ${error.message}`)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      return generateSEO(articleData, retryCount + 1)
+    }
+
+    // If all retries fail, return a basic SEO structure based on the title
+    console.log('⚠️ Using fallback SEO generation')
+    return {
+      keywords: [
+        articleData.category,
+        ...articleData.title
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(word => word.length > 3)
+          .slice(0, 5),
+      ],
+      description: articleData.title,
+    }
+  }
+})
+
 const processHindiContent = asyncHandler(
   async (articleData, retryCount = 0) => {
     const MAX_RETRIES = 1
+    const startTime = Date.now()
+    console.log(
+      `\n🔄 Processing Hindi translation for: "${articleData.processedContent.title}"`,
+    )
 
     try {
-      const instructions = `You are a professional Hindi translator and news analyst.
+      const instructions = `You are a professional Hindi translator. Your task is to translate English news content into Hindi that sounds natural and is easy for daily speakers to understand.
 
-    Part 1 - Translation:
-    Instructions:
-    1. Translate to daily speaking Hindi used by common Indians
-    2. Author name to be transliterated to Hindi, not translated
-    3. Break maintext into exactly 3 paragraphs
-    4. Ensure all information from original text is retained
-    5. Do not summarize or modify content
-    6. Preserve original meaning perfectly
-    7. Don't cut sentences in between
-    8. Translate complete sentences
+    **Translation Guidelines:**
+    1. Translate the provided title and main text into Hindi. The Hindi should sound like everyday spoken language.
+    2. Transliterate the author's name into Hindi.
+    3. Divide the translated main text into exactly 3 distinct paragraphs.
+    4. Ensure that all the information from the original English text is present in the translation.
+    5. Keep the meaning of the original text intact during the translation process.
+    6. Translate complete sentences rather than just individual words or phrases.
 
-    Part 2 - Hindi Highlights:
-    After translation, analyze the Hindi text to extract:
-
-    1. Important Sentences (4-6):
-       - Copy sentences EXACTLY as they appear in the Hindi text
-       - Maintain exact formatting and punctuation
-       - Include key facts, statistics, or significant quotes
-       - Focus on major developments or turning points
-       - Do not modify the copied text in any way
-       - If any kind of marking is used in the original text, maintain it here also for example if ** is used for bold text, maintain it here also
-
-    2. Dictionary (5-10 terms):
-       - Select terms EXACTLY as they appear in the Hindi text
-       - Include technical or domain-specific terms
-       - Include uncommon or specialized Hindi vocabulary
-       - Include unique phrases or less known terms
-       - Include difficult vocabulary terms
-       - Copy phrases exactly as written
-       - Verify each term exists in the translated text
-
-    Return JSON: {
+    **Output Format:** Return your translation as a JSON object with the following structure:
+    \`\`\`json
+    {
       "translation": {
-        "title": "hindi title",
-        "author": "hindi author",
-        "paragraphs": ["para1", "para2", "para3"]
-      },
-      "highlights": {
-        "dictionary": [{ "word": string, "definition": string }],
-        "importantSentences": [string]
+        "title": "Hindi title here",
+        "author": "Hindi author name here",
+        "paragraphs": ["Paragraph 1 in Hindi", "Paragraph 2 in Hindi", "Paragraph 3 in Hindi"]
       }
     }
-
-    CRITICAL: For highlights, copy text exactly as it appears in the Hindi translation.
-    ${
-      retryCount > 0
-        ? 'CRITICAL: Previous attempt failed validation. Please ensure all required fields are present and content is properly structured.'
-        : ''
-    }
-    `
+    \`\`\``
 
       const result = await makeGPTRequest({
         messages: [
@@ -305,70 +256,87 @@ const processHindiContent = asyncHandler(
         temperature: retryCount > 0 ? 0.5 : 0.3,
       })
 
+      // Validate the result
       validateHindiResult(result)
+
+      const processingTime = ((Date.now() - startTime) / 1000).toFixed(2)
+      console.log(`✅ Hindi translation completed in ${processingTime}s`)
 
       return result
     } catch (error) {
       if (retryCount < MAX_RETRIES) {
-        console.log(
-          `Error in processHindiContent: ${error.message}. Retrying...`,
-        )
+        console.log(`⚠️ Retrying Hindi translation: ${error.message}`)
         await new Promise(resolve => setTimeout(resolve, 1000))
         return processHindiContent(articleData, retryCount + 1)
       }
+      console.error('❌ Hindi translation failed:', error.message)
       throw error
     }
   },
 )
 
 const processArticle = asyncHandler(async newsItem => {
+  const startTime = Date.now()
+  console.log('\n🚀 Starting article processing...')
+  console.log(`📰 Article: "${newsItem.title}"`)
+
+  // Initial validation
   if (!newsItem || !newsItem.title || !newsItem.text) {
     throw new Error('Invalid news item structure')
   }
 
-  const decodedText = decode(newsItem.text)
-  const decodedTitle = decode(newsItem.title)
+  try {
+    // Decode text content
+    const decodedText = decode(newsItem.text)
+    const decodedTitle = decode(newsItem.title)
 
-  const englishResult = await processEnglishContent({
-    title: decodedTitle,
-    mainText: decodedText,
-    category: newsItem.category,
-  })
+    // Process English content
+    const englishResult = await processEnglishContent({
+      title: decodedTitle,
+      mainText: decodedText,
+      category: newsItem.category,
+    })
 
-  // Process Hindi content using English results
-  const hindiResult = await processHindiContent({
-    processedContent: englishResult.processedContent,
-    author: Array.isArray(newsItem.author)
-      ? newsItem.author[0]
-      : newsItem.author,
-  })
+    // Process Hindi content
+    const hindiResult = await processHindiContent({
+      processedContent: englishResult.processedContent,
+      author: Array.isArray(newsItem.author)
+        ? newsItem.author[0]
+        : newsItem.author,
+    })
 
-  // Return processed data
-  return {
-    url: newsItem.url,
-    dateTime: newsItem.publish_date,
-    author: Array.isArray(newsItem.author)
-      ? newsItem.author[0]
-      : newsItem.author,
-    title: englishResult.processedContent.title,
-    mainText: englishResult.processedContent.mainText,
-    hindiTitle: hindiResult.translation.title,
-    hindiAuthor: hindiResult.translation.author,
-    hindiMainText: hindiResult.translation.paragraphs,
-    imgURL: [newsItem.image],
-    category: newsItem.category,
-    keywords: englishResult.seo.keywords,
-    description: englishResult.seo.description,
-    highlights: {
-      en: {
-        dictionary: englishResult.highlights.dictionary,
-        importantSentences: englishResult.highlights.importantSentences,
-      },
-      hi: {
-        dictionary: hindiResult.highlights.dictionary,
-        importantSentences: hindiResult.highlights.importantSentences,
-      },
-    },
+    console.log('\n💾 Saving article to database...')
+
+    // Prepare article data
+    const articleData = {
+      url: newsItem.url,
+      dateTime: newsItem.publish_date,
+      author: Array.isArray(newsItem.author)
+        ? newsItem.author[0]
+        : newsItem.author,
+      title: englishResult.processedContent.title,
+      mainText: englishResult.processedContent.mainText,
+      hindiTitle: hindiResult.translation.title,
+      hindiAuthor: hindiResult.translation.author,
+      hindiMainText: hindiResult.translation.paragraphs,
+      imgURL: [newsItem.image],
+      category: newsItem.category,
+      keywords: englishResult.seo.keywords,
+      description: englishResult.seo.description,
+    }
+    console.log('✅ Article made successfully')
+
+    console.log('\n🔍 Generating highlights asynchronously...')
+
+    const totalTime = ((Date.now() - startTime) / 1000).toFixed(2)
+    console.log(
+      `\n✨ Article processing completed in ${totalTime}s\n${'='.repeat(50)}`,
+    )
+
+    return articleData
+  } catch (error) {
+    console.error(`❌ Error processing article "${newsItem.title}":`, error)
+    throw error
   }
 })
 

@@ -10,12 +10,13 @@ const TournamentWrapper = lazy(() => import('../screens/TournamentWrapper'))
 const Home = lazy(() => import('../screens/Home'))
 const Article = lazy(() => import('../screens/Article'))
 const Profile = lazy(() => import('../screens/Profile'))
-const Leaderboard = lazy(() => import('../screens/Leaderboard'))
+const Leaderboard = lazy(() => import('../screens/LeaderBoard'))
 const GetStarted = lazy(() => import('../screens/GetStarted'))
 const Dashboard = lazy(() => import('../screens/Dashboard'))
 const ContactLayout = lazy(() =>
   import('../components/contactComponents/ContactLayout'),
 )
+const HallOfChampions = lazy(() => import('../screens/HallOfChampions'))
 
 const OnboardingProcess = lazy(() => import('../screens/OnboardingProcess'))
 
@@ -40,7 +41,7 @@ const AppRoutes = ({ isToken, needsOnboarding, setIsGuestLoggedin }) => {
               element={isToken ? <Navigate to="/home" /> : <GetStarted />}
             />
             {/* <Route path="/get-started" element={<GetStarted />} /> */}
-
+            <Route path="/hall-of-champions" element={<HallOfChampions />} />
             <Route path="/contact/feedback" element={<ContactLayout />} />
             <Route path="/home/:category" element={<Home />} />
             <Route path="/home" element={<Home />} />

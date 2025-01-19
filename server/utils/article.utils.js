@@ -410,34 +410,31 @@ const processExtractedNews = async (news, category) => {
           }
         }
 
-        // Save article and create highlight documents
+        // Save article
         const newArticle = new Article(enhancedArticle)
         await newArticle.save()
-
-        // Save highlights in parallel
-        await Promise.all([
-          ArticleHighlight.create({
+        // Generate highlights asynchronously
+        Promise.all([
+          generateHighlightForArticle({
             articleId: newArticle._id,
-            language: 'en',
-            dictionary: enhancedArticle.highlights.en.dictionary,
-            importantSentences:
-              enhancedArticle.highlights.en.importantSentences,
-            processingStatus: 'completed',
+            lang: 'en',
           }),
-          ArticleHighlight.create({
+          generateHighlightForArticle({
             articleId: newArticle._id,
-            language: 'hi',
-            dictionary: enhancedArticle.highlights.hi.dictionary,
-            importantSentences:
-              enhancedArticle.highlights.hi.importantSentences,
-            processingStatus: 'completed',
+            lang: 'hi',
           }),
-        ])
-
+        ]).catch(error => {
+          console.error(
+            `❌ Error generating highlights for "${newArticle.title}":`,
+            error,
+          )
+          // You might want to update the article's processingStatus here if highlight generation fails
+        })
+        console.log(`Saved article "${newArticle.title}"`)
         processedOutput.push(newArticle)
       } catch (error) {
         console.error(
-          `Error in final processing for "${processedArticle.title}": ${error.message}`,
+          `Error in final processing for "${processedArticle.title}": ${error}`,
         )
       }
     }
