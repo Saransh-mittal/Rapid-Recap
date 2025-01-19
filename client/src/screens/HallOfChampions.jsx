@@ -1,24 +1,10 @@
-import React, { useState } from 'react'
-import {
-  Box,
-  VStack,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-  Select,
-} from '@chakra-ui/react'
-import { motion } from 'framer-motion'
+import React from 'react'
+import { Box, VStack } from '@chakra-ui/react'
 import AnimatedBackground from '../components/HallOfChampions/AnimatedBackground'
 import ChampionCard from '../components/HallOfChampions/ChampionCard'
 import TournamentCard from '../components/HallOfChampions/TournamentCard'
 import HallOfChampionsHeader from '../components/HallOfChampions/HallOfChampionsHeader'
 import EnhancedTabs from '../components/HallOfChampions/EnhancedTabs'
-
-const MotionHeading = motion.h1
-const MotionText = motion.p
-const MotionBox = motion(Box)
 
 const HallOfChampions = () => {
   return (
@@ -213,5 +199,46 @@ const tournamentData = [
     bestCategory: { name: 'Science', score: 950 },
     badges: [{ type: 'ACE', category: 'Science' }],
   },
-  // ... more entries
+  {
+    id: 2,
+    name: 'Priya Sharma',
+    username: '@PriyaS',
+    totalScore: 2350,
+    categoriesPlayed: ['History', 'Geography', 'General'],
+    bestCategory: { name: 'History', score: 880 },
+    badges: [
+      { type: 'MVP', category: 'History' },
+      { type: 'STAR', category: 'General' },
+    ],
+  },
+  {
+    id: 3,
+    name: 'Amit Patel',
+    username: '@AmitP123',
+    totalScore: 2100,
+    categoriesPlayed: ['Technology', 'Mathematics', 'Science'],
+    bestCategory: { name: 'Technology', score: 800 },
+    badges: [{ type: 'EXPERT', category: 'Technology' }],
+  },
+  {
+    id: 4,
+    name: 'Divya Kapoor',
+    username: '@DivyaK',
+    totalScore: 2200,
+    categoriesPlayed: ['Literature', 'Arts', 'History'],
+    bestCategory: { name: 'Literature', score: 850 },
+    badges: [
+      { type: 'MASTER', category: 'Literature' },
+      { type: 'ACE', category: 'Arts' },
+    ],
+  },
+  {
+    id: 5,
+    name: 'Rajesh Kumar',
+    username: '@RajeshK',
+    totalScore: 1950,
+    categoriesPlayed: ['General', 'Sports', 'Entertainment'],
+    bestCategory: { name: 'Sports', score: 750 },
+    badges: [{ type: 'STAR', category: 'Sports' }],
+  },
 ]

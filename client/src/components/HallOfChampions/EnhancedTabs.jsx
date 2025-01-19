@@ -21,6 +21,7 @@ const CustomTab = ({ children, isSelected, onClick }) => {
       transition="all 0.3s"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
+      sx={{ WebkitTapHighlightColor: 'transparent' }}
     >
       {children}
       <AnimatePresence>
