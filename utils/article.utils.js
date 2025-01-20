@@ -782,7 +782,6 @@ const processArticlesWithPrivileges = (articles, privileges) => {
   ) {
     return articles
   }
-
   return articles.map(article => {
     let categoryPrivileges
 
@@ -802,13 +801,21 @@ const processArticlesWithPrivileges = (articles, privileges) => {
       }
     }
 
-    const articleDifficulty = article?.articleDifficulty || 0.5
+    const articleDifficulty =
+      article?.articleDifficulty ||
+      calculateArticleDifficulty({
+        mainText: Array.isArray(article.mainText)
+          ? article.mainText.join(' ')
+          : article.mainText,
+      })
 
     return {
       ...article,
       // Only include articleDifficulty string if radar privilege exists
       articleDifficulty: categoryPrivileges.radar
-        ? getDifficultyString(articleDifficulty)
+        ? typeof articleDifficulty === 'string'
+          ? articleDifficulty
+          : getDifficultyString(articleDifficulty)
         : undefined,
       // Include RQM boost availability
       rqmBoostAvailable: categoryPrivileges.rqmBoost,

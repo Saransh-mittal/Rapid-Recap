@@ -40,6 +40,19 @@ const userRecommendations = asyncHandler(async (req, res) => {
     Array.isArray(cachedRecommendations) &&
     cachedRecommendations.length > 0
   ) {
+    let result = cachedRecommendations
+    if (req.privileges) {
+      result = processArticlesWithPrivileges(
+        cachedRecommendations,
+        req.privileges,
+      )
+    } else {
+      // strip off articleDifficulty from the response if there is no privilege
+      result = cachedRecommendations.map(article => {
+        const { articleDifficulty, ...rest } = article
+        return rest
+      })
+    }
     // Trigger elimination in background without awaiting
     processRecommendationArticleElimination(userId, {
       eliminationThreshold: 20,
@@ -47,7 +60,7 @@ const userRecommendations = asyncHandler(async (req, res) => {
     }).catch(error => {
       console.error('Background recommendation elimination failed:', error)
     })
-    return res.send(cachedRecommendations)
+    return res.send(result)
   }
 
   const recommendations = await getRecommendations(userId, page, pageSize)
@@ -121,10 +134,16 @@ const userRecommendations = asyncHandler(async (req, res) => {
 
   // Process articles with privileges if available
   if (req.privileges) {
-    processedArticles = await processArticlesWithPrivileges(
+    processedArticles = processArticlesWithPrivileges(
       processedArticles,
       req.privileges,
     )
+  } else {
+    // strip off articleDifficulty from the response if there is no privilege
+    processedArticles = processedArticles.map(article => {
+      const { articleDifficulty, ...rest } = article
+      return rest
+    })
   }
 
   // Cache the processed articles
