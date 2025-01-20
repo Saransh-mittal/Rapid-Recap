@@ -36,7 +36,7 @@ const MotionCircle = motion(Circle)
 const MotionHeading = motion(Heading)
 
 const getDifficultyColor = difficulty => {
-  switch (difficulty.toLowerCase()) {
+  switch (difficulty?.toLowerCase()) {
     case 'easy':
       return {
         bg: 'green.400',
@@ -197,11 +197,11 @@ const Card = React.memo(
             >
               <Box
                 position="relative"
-                color={DIFF_COLOR[difficulty.toLowerCase()]}
+                color={DIFF_COLOR[difficulty?.toLowerCase()]}
               >
                 {(() => {
                   const IconComponent =
-                    ICONS_ARTICLE_DIFFICULTY[difficulty.toLowerCase()]
+                    ICONS_ARTICLE_DIFFICULTY[difficulty?.toLowerCase()]
                   return <IconComponent size={24} />
                 })()}
                 <Box
@@ -259,9 +259,9 @@ const Card = React.memo(
                 style={{
                   background: '#251C44', // Dark purple background
                   border: `2px solid ${
-                    difficulty.toLowerCase() === 'easy'
+                    difficulty?.toLowerCase() === 'easy'
                       ? '#22c55e'
-                      : difficulty.toLowerCase() === 'medium'
+                      : difficulty?.toLowerCase() === 'medium'
                       ? '#FFB800'
                       : '#ef4444'
                   }`,
@@ -302,9 +302,9 @@ const Card = React.memo(
                       transform="rotate(45deg)"
                       style={{
                         background:
-                          difficulty.toLowerCase() === 'easy'
+                          difficulty?.toLowerCase() === 'easy'
                             ? '#22c55e'
-                            : difficulty.toLowerCase() === 'medium'
+                            : difficulty?.toLowerCase() === 'medium'
                             ? '#FFB800'
                             : '#ef4444',
                         borderRadius: '2px',
@@ -336,25 +336,25 @@ const Card = React.memo(
                   textAlign="center"
                   position="relative"
                   color={
-                    difficulty.toLowerCase() === 'easy'
+                    difficulty?.toLowerCase() === 'easy'
                       ? 'green'
-                      : difficulty.toLowerCase() === 'medium'
+                      : difficulty?.toLowerCase() === 'medium'
                       ? 'yellow'
                       : 'red'
                   }
                   style={{
                     textShadow: `
             0 0 10px ${
-              difficulty.toLowerCase() === 'easy'
+              difficulty?.toLowerCase() === 'easy'
                 ? 'rgba(38, 180, 90, 0.5)'
-                : difficulty.toLowerCase() === 'medium'
+                : difficulty?.toLowerCase() === 'medium'
                 ? 'rgba(201, 152, 30, 0.5)'
                 : 'rgba(177, 45, 45, 0.5)'
             }
           `,
                   }}
                 >
-                  {diffTranslation(difficulty.toLocaleLowerCase())}
+                  {diffTranslation(difficulty?.toLocaleLowerCase())}
                 </Text>
 
                 {/* Metallic Accent Lines */}
@@ -366,9 +366,9 @@ const Card = React.memo(
                   height="1px"
                   style={{
                     background: `linear-gradient(to right, transparent, ${
-                      difficulty.toLowerCase() === 'easy'
+                      difficulty?.toLowerCase() === 'easy'
                         ? '#22c55e'
-                        : difficulty.toLowerCase() === 'medium'
+                        : difficulty?.toLowerCase() === 'medium'
                         ? '#FFB800'
                         : '#ef4444'
                     }40, transparent)`,
@@ -388,9 +388,9 @@ const Card = React.memo(
               filter="blur(8px)"
               style={{
                 background:
-                  difficulty.toLowerCase() === 'easy'
+                  difficulty?.toLowerCase() === 'easy'
                     ? 'rgba(34, 197, 94, 0.2)'
-                    : difficulty.toLowerCase() === 'medium'
+                    : difficulty?.toLowerCase() === 'medium'
                     ? 'rgba(255, 184, 0, 0.2)'
                     : 'rgba(239, 68, 68, 0.2)',
                 zIndex: -1,

@@ -81,15 +81,22 @@ const allArticles = async (req, res) => {
         req.privileges,
       )
 
-      // Apply privilege-based processing if authenticated
-      if (req.privileges) {
-        return processArticlesWithPrivileges(baseProcessed, req.privileges)
-      }
-
       return baseProcessed
     })
 
-    res.send(processedArticles)
+    let result = processedArticles
+    // Apply privilege-based processing if authenticated
+    if (req.privileges) {
+      result = processArticlesWithPrivileges(processedArticles, req.privileges)
+    } else {
+      // strip off articleDifficulty from the response if there is no privilege
+      result = processedArticles.map(article => {
+        const { articleDifficulty, ...rest } = article
+        return rest
+      })
+    }
+
+    res.send(result)
   } catch (error) {
     console.error('Error in allArticles:', error)
     res.status(400).json({ error: error.message || 'Something went wrong' })
