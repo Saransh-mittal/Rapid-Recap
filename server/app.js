@@ -27,6 +27,7 @@ const helmet = require('helmet')
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 const { initBotTracking } = require('./utils/botTracker')
+const maintenanceMiddleware = require('./middleware/maintenanceMiddleware')
 
 const app = express()
 // CORS configuration - only needed in development
@@ -46,7 +47,7 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 // Apply security middleware first
-
+app.use(maintenanceMiddleware)
 app.use(i18nMiddleware.handle(i18n))
 
 app.use(
