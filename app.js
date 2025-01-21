@@ -25,12 +25,12 @@ const http = require('http')
 const compression = require('compression')
 const helmet = require('helmet')
 const { initBotTracking } = require('./utils/botTracker')
-const searchConsoleMiddleware = require('./middleware/searchConsoleMiddleware')
+// const searchConsoleMiddleware = require('./middleware/searchConsoleMiddleware')
 const i18nMiddleware = require('i18next-http-middleware')
 const i18n = require('./i18n')
 const connectDB = require('./db/conn')
 const connect_s4a = require('connect-s4a')
-const fs = require('fs')
+// const fs = require('fs')
 
 const app = express()
 const server = http.createServer(app)
@@ -45,29 +45,29 @@ app.use(bodyParser.json({ limit: '10mb' }))
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }))
 app.use(express.json())
 
-let seo4ajaxConfig
-try {
-  const seo4ajaxConfigData = fs.readFileSync(
-    './config/seo4ajaxConfig.json',
-    'utf-8',
-  )
-  seo4ajaxConfig = JSON.parse(seo4ajaxConfigData)
-} catch (error) {
-  console.error('Failed to load config', error)
-  seo4ajaxConfig = { seo4ajaxUrls: [] }
-}
+// let seo4ajaxConfig
+// try {
+//   const seo4ajaxConfigData = fs.readFileSync(
+//     './config/seo4ajaxConfig.json',
+//     'utf-8',
+//   )
+//   seo4ajaxConfig = JSON.parse(seo4ajaxConfigData)
+// } catch (error) {
+//   console.error('Failed to load config', error)
+//   seo4ajaxConfig = { seo4ajaxUrls: [] }
+// }
 
-const shouldUseSEO4Ajax = fullUrl => {
-  return seo4ajaxConfig.seo4ajaxUrls.some(pattern => {
-    try {
-      const regex = new RegExp(pattern)
-      return regex.test(fullUrl)
-    } catch (error) {
-      console.error(`Invalid pattern: ${pattern}`, error)
-      return false
-    }
-  })
-}
+// const shouldUseSEO4Ajax = fullUrl => {
+//   return seo4ajaxConfig.seo4ajaxUrls.some(pattern => {
+//     try {
+//       const regex = new RegExp(pattern)
+//       return regex.test(fullUrl)
+//     } catch (error) {
+//       console.error(`Invalid pattern: ${pattern}`, error)
+//       return false
+//     }
+//   })
+// }
 
 if (process.env.NODE_ENV === 'development') {
   // Development config
@@ -95,14 +95,14 @@ if (process.env.NODE_ENV === 'development') {
     next()
   })
 } else {
-  app.use((req, res, next) => {
-    if (shouldUseSEO4Ajax(req.url)) {
-      connect_s4a(process.env.S4A_SECRET)(req, res, next)
-    } else {
-      next()
-    }
-  })
-
+  // app.use((req, res, next) => {
+  //   if (shouldUseSEO4Ajax(req.url)) {
+  //     connect_s4a(process.env.S4A_SECRET)(req, res, next)
+  //   } else {
+  //     next()
+  //   }
+  // })
+  app.use(connect_s4a(process.env.S4A_SECRET))
   // Production configuration
   app.use(
     helmet({
