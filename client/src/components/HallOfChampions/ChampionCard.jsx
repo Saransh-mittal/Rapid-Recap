@@ -130,7 +130,7 @@ const RankBadge = ({ rank, icon: Icon, borderColor, textShadow }) => (
   </Box>
 )
 
-const ChampionCard = ({ champion, index }) => {
+const ChampionCard = ({ champion, index, onClick }) => {
   const rank = index + 1
   const style = rankStyles[rank] || rankStyles.default
   const isTopThree = rank <= 3
@@ -144,6 +144,13 @@ const ChampionCard = ({ champion, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
+      onClick={onClick} // Add onClick handler here
+      cursor="pointer" // Add cursor pointer
+      _hover={{
+        // Add hover effect
+        transform: 'scale(1.02)',
+        transition: 'transform 0.2s ease-in-out',
+      }}
     >
       <Flex
         w="100%"
@@ -199,22 +206,22 @@ const ChampionCard = ({ champion, index }) => {
         >
           <StatItem
             label="IQ Score"
-            value={champion.iqScore}
+            value={champion.iqScore.final}
             isHighlight={true}
             bgColor={style.statBg}
             textShadow={style.textShadow}
             icon={Brain}
           />
           <StatItem
-            label="Exp Level"
-            value={champion.expLevel}
+            label="Quizzes Taken"
+            value={champion.submissions}
             bgColor={style.statBg}
             textShadow={style.textShadow}
             icon={Zap}
           />
           <StatItem
-            label="RQM"
-            value={champion.rqm}
+            label="Avg. RQM"
+            value={champion.rqmScore.average}
             bgColor={style.statBg}
             textShadow={style.textShadow}
             icon={Star}
