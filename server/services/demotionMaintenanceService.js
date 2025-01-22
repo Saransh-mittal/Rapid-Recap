@@ -1,4 +1,7 @@
-const { executeMonthlyDemotion } = require('./demotionService')
+const {
+  executeMonthlyDemotion,
+  calculateRanksAfterDemotion,
+} = require('./demotionService')
 const {
   scheduleMaintenance,
   startMaintenance,
@@ -65,6 +68,7 @@ const executeMonthlyDemotionWithMaintenance = async () => {
     })
 
     const demotionResult = await executeMonthlyDemotion()
+    await calculateRanksAfterDemotion()
 
     // Step 3: End maintenance
     console.log('Completing process...')

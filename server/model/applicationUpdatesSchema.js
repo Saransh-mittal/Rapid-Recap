@@ -25,7 +25,7 @@ const applicationUpdatesSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['weeklyReport', 'applicationUpdate'],
+    enum: ['weeklyReport', 'applicationUpdate', 'demotion'],
     default: 'applicationUpdate',
   },
 })

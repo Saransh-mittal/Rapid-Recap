@@ -14,55 +14,70 @@ const saveMonthlyStats = makeRetryable(
     year = moment().year(),
     batchSize = 100,
   } = {}) => {
-    const session = await MonthlyStats.startSession()
     let processedCount = 0
     let errors = []
 
     try {
-      await session.withTransaction(async () => {
-        // First calculate all ranks
-        const rankMap = await calculateMonthlyRanks({ month, year, session })
+      // Calculate all ranks first, outside of user processing transaction
+      const session = await MonthlyStats.startSession()
+      const rankMap = await calculateMonthlyRanks({ month, year, session })
+      session.endSession()
 
-        // Process users in batches
-        const cursor = User.find().cursor()
+      // Get total count of users for progress tracking
+      const totalUsers = await User.countDocuments()
 
-        for (
-          let user = await cursor.next();
-          user != null;
-          user = await cursor.next()
-        ) {
-          try {
-            // Calculate stats for user
-            const stats = await calculateUserMonthlyStats({
-              userId: user._id,
-              month,
-              year,
-              session,
-            })
+      // Process users in smaller batches with separate transactions
+      for (let skip = 0; skip < totalUsers; skip += batchSize) {
+        const batchSession = await MonthlyStats.startSession()
 
-            // Add rank from rankMap
-            stats.finalRank = rankMap.get(user._id.toString())
+        try {
+          await batchSession.withTransaction(async () => {
+            const users = await User.find()
+              .skip(skip)
+              .limit(batchSize)
+              .session(batchSession)
+              .lean()
 
-            // Save stats
-            await MonthlyStats.create([stats], { session })
-            processedCount++
+            for (const user of users) {
+              try {
+                // Calculate stats for user
+                const stats = await calculateUserMonthlyStats({
+                  userId: user._id,
+                  month,
+                  year,
+                  session: batchSession,
+                })
 
-            if (processedCount % batchSize === 0) {
-              console.log(`Processed monthly stats for ${processedCount} users`)
+                // Add rank from rankMap
+                stats.finalRank = rankMap.get(user._id.toString())
+
+                // Save stats
+                await MonthlyStats.create([stats], { session: batchSession })
+                processedCount++
+
+                if (processedCount % 100 === 0) {
+                  console.log(
+                    `Processed monthly stats for ${processedCount} users`,
+                  )
+                }
+              } catch (error) {
+                console.error(
+                  `Error processing monthly stats for user ${user._id}:`,
+                  error,
+                )
+                errors.push({ userId: user._id, error: error.message })
+              }
             }
-          } catch (error) {
-            console.error(
-              `Error processing monthly stats for user ${user._id}:`,
-              error,
-            )
-            errors.push({ userId: user._id, error: error.message })
-          }
+          })
+        } finally {
+          batchSession.endSession()
         }
-      })
+      }
 
       return { processedCount, errors }
-    } finally {
-      session.endSession()
+    } catch (error) {
+      console.error('Error in saveMonthlyStats:', error)
+      throw error
     }
   },
   {

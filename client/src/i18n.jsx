@@ -152,6 +152,7 @@ const namespaces = {
     'LastTournamentRank',
     'TournamentBadgeGallery',
   ],
+  HallOfChampions: ['ChampionDetailsModal'],
   assets: ['Circles', 'Brains', 'CircleAndSocietyData'],
   main: ['App'],
 }
@@ -204,6 +205,9 @@ i18n
             return `/locales/${lng}/components/streakComponents/${namespace}.json`
           case 'profileComponents':
             return `/locales/${lng}/components/profileComponents/${namespace}.json`
+          case 'profileComponents':
+            return `/locales/${lng}/components/HallOfChampions/${namespace}.json`
+
           case 'assets':
             return `/locales/${lng}/assets/${namespace}.json`
           case 'categories':
