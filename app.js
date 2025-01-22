@@ -104,24 +104,21 @@ if (process.env.NODE_ENV === 'development') {
   // })
   // Mobile crawlers configuration (General mobile user agents)
 
-  app.use((req, res, next) => {
-    console.log('User-Agent: ', req.get('User-Agent'))
-    next()
-  })
-
   // Mobile crawlers configuration
   app.use(
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
-        /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*mobile|.*compatible;\s*(Googlebot|Google-InspectionTool)/gi,
+        /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*mobile|.*compatible;\s*(Googlebot|Google-InspectionTool).*Mobile/gi,
+      mobileVersion: true, // Explicitly tell SEO4AJAX to serve mobile version
     }),
   )
 
-  // Mobile crawlers configuration (Specific smartphone user agents)
+  // Smartphone-specific crawlers configuration
   app.use(
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
-        /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*Smartphone|.*compatible;\s*(Googlebot|Google-InspectionTool)/gi,
+        /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*Smartphone|.*compatible;\s*(Googlebot|Google-InspectionTool).*Android/gi,
+      mobileVersion: true, // Explicitly tell SEO4AJAX to serve mobile version
     }),
   )
 
@@ -130,9 +127,27 @@ if (process.env.NODE_ENV === 'development') {
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
         /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool|.*compatible;\s*(Googlebot|Google-InspectionTool))/gi,
-      ignoreUserAgents: /(mobile|Smartphone)/gi,
+      ignoreUserAgents: /(mobile|Mobile|Smartphone|Android|iPhone)/gi,
+      mobileVersion: false, // Explicitly tell SEO4AJAX to serve desktop version
     }),
   )
+
+  // Debug middleware to verify user agent detection
+  app.use((req, res, next) => {
+    const userAgent = req.get('User-Agent')
+    if (userAgent && /(googlebot|Google-InspectionTool)/i.test(userAgent)) {
+      console.log({
+        timestamp: new Date().toISOString(),
+        path: req.path,
+        userAgent,
+        isMobile: /Mobile|Android|iPhone/i.test(userAgent),
+        version: /Mobile|Android|iPhone/i.test(userAgent)
+          ? 'mobile'
+          : 'desktop',
+      })
+    }
+    next()
+  })
 
   // Production configuration
   app.use(
