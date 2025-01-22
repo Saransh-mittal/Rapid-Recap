@@ -102,11 +102,19 @@ if (process.env.NODE_ENV === 'development') {
   //     next()
   //   }
   // })
-  // Mobile crawlers configuration
+  // Mobile crawlers configuration (General mobile user agents)
   app.use(
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
         /(bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*mobile/gi,
+    }),
+  )
+
+  // Mobile crawlers configuration (Specific smartphone user agents)
+  app.use(
+    connect_s4a(process.env.S4A_SECRET, {
+      includeUserAgents:
+        /(bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*Smartphone/gi,
     }),
   )
 
@@ -115,7 +123,7 @@ if (process.env.NODE_ENV === 'development') {
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
         /(bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool)/gi,
-      ignoreUserAgents: /mobile/gi,
+      ignoreUserAgents: /(mobile|Smartphone)/gi,
     }),
   )
 
