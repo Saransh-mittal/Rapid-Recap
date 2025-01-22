@@ -103,6 +103,12 @@ if (process.env.NODE_ENV === 'development') {
   //   }
   // })
   // Mobile crawlers configuration (General mobile user agents)
+
+  app.use((req, res, next) => {
+    console.log('User-Agent: ', req.get('User-Agent'))
+    next()
+  })
+
   app.use(
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
