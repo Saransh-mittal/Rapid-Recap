@@ -102,7 +102,23 @@ if (process.env.NODE_ENV === 'development') {
   //     next()
   //   }
   // })
-  app.use(connect_s4a(process.env.S4A_SECRET))
+  // Mobile crawlers configuration
+  app.use(
+    connect_s4a(process.env.S4A_SECRET, {
+      includeUserAgents:
+        /(bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*mobile/gi,
+    }),
+  )
+
+  // Desktop crawlers configuration
+  app.use(
+    connect_s4a(process.env.S4A_SECRET, {
+      includeUserAgents:
+        /(bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool)/gi,
+      ignoreUserAgents: /mobile/gi,
+    }),
+  )
+
   // Production configuration
   app.use(
     helmet({
