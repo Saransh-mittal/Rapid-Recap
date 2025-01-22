@@ -109,30 +109,21 @@ if (process.env.NODE_ENV === 'development') {
     next()
   })
 
-  // Mobile crawlers configuration
+  // Mobile crawlers
   app.use(
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
-        /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*mobile|.*compatible;\s*(Googlebot|Google-InspectionTool)/gi,
-      mobileVersion: true, // Use this, not emulateMobileDevice
-    }),
-  )
-
-  // Mobile crawlers configuration (Specific smartphone user agents)
-  app.use(
-    connect_s4a(process.env.S4A_SECRET, {
-      includeUserAgents:
-        /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*Smartphone|.*compatible;\s*(Googlebot|Google-InspectionTool)/gi,
+        /(?:Mobile|iPhone|Android).*(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|(?:facebookexternalhit\/.*iPhone)|(?:Twitterbot\/.*Mobile))/i,
       mobileVersion: true,
     }),
   )
 
-  // Desktop crawlers configuration
+  // Desktop crawlers
   app.use(
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
-        /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool|.*compatible;\s*(Googlebot|Google-InspectionTool))/gi,
-      ignoreUserAgents: /(mobile|Mobile|Smartphone|Android|iPhone)/gi,
+        /(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|facebookexternalhit\/|Twitterbot\/|LinkedInBot\/|DuckDuckBot(?:-Https)?\/)/i,
+      ignoreUserAgents: /(?:Mobile|iPhone|Android)/i,
       mobileVersion: false,
     }),
   )
