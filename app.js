@@ -114,7 +114,7 @@ if (process.env.NODE_ENV === 'development') {
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
         /(?:Mobile|iPhone|Android).*(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|(?:facebookexternalhit\/.*iPhone)|(?:Twitterbot\/.*Mobile))/i,
-      mobileVersion: true,
+      emulateMobileDevice: true,
     }),
   )
 
@@ -124,7 +124,7 @@ if (process.env.NODE_ENV === 'development') {
       includeUserAgents:
         /(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|facebookexternalhit\/|Twitterbot\/|LinkedInBot\/|DuckDuckBot(?:-Https)?\/)/i,
       ignoreUserAgents: /(?:Mobile|iPhone|Android)/i,
-      mobileVersion: false,
+      emulateMobileDevice: false,
     }),
   )
 
