@@ -104,27 +104,20 @@ if (process.env.NODE_ENV === 'development') {
   // })
   // Mobile crawlers configuration (General mobile user agents)
 
-  app.use((req, res, next) => {
-    console.log('User-Agent: ', req.get('User-Agent'))
-    next()
-  })
-
   // Mobile crawlers
   app.use(
-    connect_s4a(process.env.S4A_SECRET, {
+    connect_s4a(process.env.S4A_SECRET_MOBILE, {
       includeUserAgents:
         /(?:Mobile|iPhone|Android).*(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|(?:facebookexternalhit\/.*iPhone)|(?:Twitterbot\/.*Mobile))/i,
-      emulateMobileDevice: true,
     }),
   )
 
   // Desktop crawlers
   app.use(
-    connect_s4a(process.env.S4A_SECRET, {
+    connect_s4a(process.env.S4A_SECRET_DESKTOP, {
       includeUserAgents:
         /(?:compatible;\s*(?:(?:Googlebot|Google-InspectionTool|bingbot|YandexBot)\/)|facebookexternalhit\/|Twitterbot\/|LinkedInBot\/|DuckDuckBot(?:-Https)?\/)/i,
       ignoreUserAgents: /(?:Mobile|iPhone|Android)/i,
-      emulateMobileDevice: false,
     }),
   )
 
