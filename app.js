@@ -114,6 +114,7 @@ if (process.env.NODE_ENV === 'development') {
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
         /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*mobile|.*compatible;\s*(Googlebot|Google-InspectionTool)/gi,
+      mobileVersion: true, // Use this, not emulateMobileDevice
     }),
   )
 
@@ -122,6 +123,7 @@ if (process.env.NODE_ENV === 'development') {
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
         /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool).*Smartphone|.*compatible;\s*(Googlebot|Google-InspectionTool)/gi,
+      mobileVersion: true,
     }),
   )
 
@@ -130,7 +132,8 @@ if (process.env.NODE_ENV === 'development') {
     connect_s4a(process.env.S4A_SECRET, {
       includeUserAgents:
         /(googlebot|bot|lighthouse|spider|pinterest|crawler|archiver|flipboard|mediapartners|facebookexternalhit|quora|whatsapp|outbrain|yahoo! slurp|embedly|developers.google.com\/+\/web\/snippet|vkshare|w3c_validator|tumblr|skypeuripreview|nuzzel|qwantify|bitrix link preview|XING-contenttabreceiver|Chrome-Lighthouse|mail\.ru|Google-InspectionTool|.*compatible;\s*(Googlebot|Google-InspectionTool))/gi,
-      ignoreUserAgents: /(mobile|Smartphone)/gi,
+      ignoreUserAgents: /(mobile|Mobile|Smartphone|Android|iPhone)/gi,
+      mobileVersion: false,
     }),
   )
 
