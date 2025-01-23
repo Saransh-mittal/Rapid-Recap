@@ -92,17 +92,16 @@ const TabPanel = ({ children, isSelected }) => (
   </AnimatePresence>
 )
 
-const EnhancedTabs = ({ onTabChange, children }) => {
+const EnhancedTabs = ({ onFilterChange, children }) => {
   const [selectedTab, setSelectedTab] = useState(0)
 
   const handleTabClick = index => {
     setSelectedTab(index)
-    onTabChange(index)
   }
 
   const handleFilterChange = filterId => {
     // Handle filter change logic here
-    console.log('Filter changed to:', filterId)
+    onFilterChange(filterId)
   }
 
   return (

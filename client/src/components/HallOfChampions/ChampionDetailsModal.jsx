@@ -24,6 +24,7 @@ import {
   GridItem,
   Circle,
   Tooltip,
+  Avatar,
 } from '@chakra-ui/react'
 import {
   LineChart,
@@ -398,6 +399,7 @@ const ChampionDetailsModal = ({ isOpen, onClose, champion }) => {
           _hover={{
             transform: 'rotate(90deg)',
           }}
+          sx={{ WebkitTapHighlightColor: 'transparent' }}
         />
 
         {/* Header Section */}
@@ -444,14 +446,12 @@ const ChampionDetailsModal = ({ isOpen, onClose, champion }) => {
                 bgGradient="linear(to-br, whiteAlpha.100, transparent)"
                 opacity={0.5}
               />
-              <Text
-                fontSize={{ base: '3xl', md: '2xl' }}
-                fontWeight="bold"
-                color="white"
+              <Avatar
+                size="full"
+                src={champion.profilePicture}
+                bg="transparent"
                 zIndex={1}
-              >
-                {champion.avatar}
-              </Text>
+              />
             </Flex>
 
             {/* Name and Rank Section */}
@@ -525,13 +525,13 @@ const ChampionDetailsModal = ({ isOpen, onClose, champion }) => {
               <StatCard
                 icon={Zap}
                 label={t('Exp Level')}
-                value={champion.expLevel}
+                value={champion.experienceLevel}
                 delay={0.2}
               />
               <StatCard
                 icon={Target}
                 label={t('Submissions')}
-                value={champion.submissions}
+                value={champion.quizStats.total}
                 delay={0.3}
               />
               <StatCard
@@ -646,37 +646,40 @@ const LeagueInfoCard = ({ champion, t }) => (
         {[
           { icon: Users, label: 'Society', value: champion.society },
           { icon: CircleDot, label: 'Circle', value: champion.circle },
-        ].map((item, index) => (
-          <Box
-            key={index}
-            p={4}
-            bg="rgba(255, 255, 255, 0.05)"
-            borderRadius="xl"
-            transition="all 0.3s"
-            _hover={{
-              transform: 'translateY(-2px)',
-              bg: 'rgba(255, 255, 255, 0.08)',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-            }}
-            style={{
-              animation: `${fadeIn} 0.6s ease-out ${
-                0.6 + index * 0.1
-              }s forwards`,
-            }}
-          >
-            <VStack align="start" spacing={1}>
-              <HStack>
-                <item.icon size={16} color="white" />
-                <Text color="whiteAlpha.700" fontSize="sm">
-                  {item.label}
-                </Text>
-              </HStack>
-              <Text color="white" fontSize="lg" fontWeight="semibold">
-                {item.value}
-              </Text>
-            </VStack>
-          </Box>
-        ))}
+        ].map(
+          (item, index) =>
+            item.value && (
+              <Box
+                key={index}
+                p={4}
+                bg="rgba(255, 255, 255, 0.05)"
+                borderRadius="xl"
+                transition="all 0.3s"
+                _hover={{
+                  transform: 'translateY(-2px)',
+                  bg: 'rgba(255, 255, 255, 0.08)',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                }}
+                style={{
+                  animation: `${fadeIn} 0.6s ease-out ${
+                    0.6 + index * 0.1
+                  }s forwards`,
+                }}
+              >
+                <VStack align="start" spacing={1}>
+                  <HStack>
+                    <item.icon size={16} color="white" />
+                    <Text color="whiteAlpha.700" fontSize="sm">
+                      {item?.label}
+                    </Text>
+                  </HStack>
+                  <Text color="white" fontSize="lg" fontWeight="semibold">
+                    {item?.value}
+                  </Text>
+                </VStack>
+              </Box>
+            ),
+        )}
       </Grid>
     </VStack>
   </Box>
@@ -716,6 +719,8 @@ const AchievementsCard = ({ champion, t }) => {
       color: 'pink',
     },
   ].filter(a => a.condition)
+
+  if (achievements.length === 0 || !achievements) return null
 
   return (
     <Box

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -12,23 +12,25 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, Clock, Trophy } from 'lucide-react'
+import { ChevronDown, Trophy, Clock } from 'lucide-react'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 const MotionMenuList = motion(MenuList)
 
-const seasonData = [
-  { id: 'season3', label: 'Season 3 (Current)', icon: Trophy },
-  { id: 'season2', label: 'Season 2', icon: Clock },
-  { id: 'season1', label: 'Season 1', icon: Clock },
-]
-
-const tournamentData = [
-  { id: 'tournament50', label: 'Tournament #050 (Current)', icon: Trophy },
-  { id: 'tournament49', label: 'Tournament #049', icon: Clock },
-  { id: 'tournament48', label: 'Tournament #048', icon: Clock },
-  { id: 'tournament47', label: 'Tournament #047', icon: Clock },
+const monthNames = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ]
 
 const FilterButton = ({ isOpen, onClick, children, isActive }) => (
@@ -67,16 +69,61 @@ const FilterButton = ({ isOpen, onClick, children, isActive }) => (
 )
 
 const LeaderboardFilter = ({ type = 'champions', onFilterChange }) => {
-  const [selectedFilter, setSelectedFilter] = useState(
-    type === 'champions' ? 'season3' : 'tournament50',
-  )
+  const [availableMonths, setAvailableMonths] = useState([])
+  const [selectedMonth, setSelectedMonth] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleSelect = filterId => {
-    setSelectedFilter(filterId)
-    onFilterChange?.(filterId)
+  useEffect(() => {
+    fetchAvailableMonths()
+  }, [])
+
+  const fetchAvailableMonths = async () => {
+    try {
+      const response = await fetch('/api/leaderboard/available-months')
+      const data = await response.json()
+      if (data.status === 'success') {
+        // Transform the data to match our UI needs
+        const transformedData = data.data.map(item => ({
+          id: `${item.year}-${item.month}`,
+          label: `${monthNames[item.month - 1]} ${item.year}`,
+          month: item.month,
+          year: item.year,
+          icon: isCurrentMonth(item.month, item.year) ? Trophy : Clock,
+        }))
+        setAvailableMonths(transformedData)
+
+        // Select the most recent month by default
+        if (transformedData.length > 0) {
+          setSelectedMonth(transformedData[0])
+          onFilterChange?.({
+            month: transformedData[0].month,
+            year: transformedData[0].year,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching available months:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const data = type === 'champions' ? seasonData : tournamentData
+  const isCurrentMonth = (month, year) => {
+    const now = new Date()
+    return month === now.getMonth() + 1 && year === now.getFullYear()
+  }
+
+  const handleSelect = monthData => {
+    setSelectedMonth(monthData)
+    onFilterChange?.({
+      month: monthData.month,
+      year: monthData.year,
+    })
+  }
+
+  if (isLoading || !selectedMonth) {
+    return null // Or a loading spinner
+  }
 
   return (
     <MotionBox
@@ -91,17 +138,8 @@ const LeaderboardFilter = ({ type = 'champions', onFilterChange }) => {
           <>
             <FilterButton isOpen={isOpen} isActive={true}>
               <HStack spacing={2}>
-                <Icon
-                  as={
-                    data.find(item => item.id === selectedFilter)?.icon ||
-                    Trophy
-                  }
-                  size={16}
-                />
-                <Text>
-                  {data.find(item => item.id === selectedFilter)?.label ||
-                    'Select'}
-                </Text>
+                <Icon as={selectedMonth.icon} size={16} />
+                <Text>{selectedMonth.label}</Text>
               </HStack>
             </FilterButton>
 
@@ -119,11 +157,13 @@ const LeaderboardFilter = ({ type = 'champions', onFilterChange }) => {
                   boxShadow="lg"
                   py={2}
                   zIndex={100}
+                  maxH="300px"
+                  overflowY="auto"
                 >
-                  {data.map(item => (
+                  {availableMonths.map(monthData => (
                     <MenuItem
-                      key={item.id}
-                      onClick={() => handleSelect(item.id)}
+                      key={monthData.id}
+                      onClick={() => handleSelect(monthData)}
                       bg="transparent"
                       _hover={{
                         bg: 'whiteAlpha.200',
@@ -133,10 +173,10 @@ const LeaderboardFilter = ({ type = 'champions', onFilterChange }) => {
                       py={3}
                     >
                       <HStack spacing={3} align="center">
-                        <Icon as={item.icon} size={16} />
+                        <Icon as={monthData.icon} size={16} />
                         <VStack spacing={0} align="start">
-                          <Text fontSize="md">{item.label}</Text>
-                          {item.id === selectedFilter && (
+                          <Text fontSize="md">{monthData.label}</Text>
+                          {monthData.id === selectedMonth.id && (
                             <Text fontSize="xs" color="pink.300">
                               Currently Selected
                             </Text>

@@ -190,7 +190,7 @@ const ChampionCard = ({ champion, index, onClick }) => {
               color="whiteAlpha.900"
               textShadow={style.textShadow}
             >
-              {champion.username}
+              {champion.displayName}
             </Text>
           </VStack>
         </Flex>
@@ -214,7 +214,7 @@ const ChampionCard = ({ champion, index, onClick }) => {
           />
           <StatItem
             label="Quizzes Taken"
-            value={champion.submissions}
+            value={champion.quizStats.total}
             bgColor={style.statBg}
             textShadow={style.textShadow}
             icon={Zap}

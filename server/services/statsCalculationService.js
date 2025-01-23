@@ -45,7 +45,7 @@ const calculateUserMonthlyStats = makeRetryable(
 
     // Get user data at month end
     const user = await User.findById(userId)
-      .select('IQ_score inGameName pic maxIQScore')
+      .select('IQ_score inGameName pic maxIQScore name level')
       .session(session)
 
     // Determine current society and circle based on IQ score
@@ -81,6 +81,8 @@ const calculateUserMonthlyStats = makeRetryable(
       user: userId,
       month,
       year,
+      name: user.name,
+      experienceLevel: user.level,
       displayName: user.inGameName,
       profilePicture: user.pic,
       iqScore: {

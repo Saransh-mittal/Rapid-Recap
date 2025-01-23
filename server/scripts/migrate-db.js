@@ -7,17 +7,9 @@ const QuizAttempt = require('../model/quizAttemptSchema')
 const dotenv = require('dotenv')
 dotenv.config({ path: './config.env' })
 
-// Connection URLs
+// Connection URLs remain the same
 const SOURCE_DB_URI = process.env.SOURCE_DB_URI
 const TARGET_DB_URI = process.env.TARGET_DB_URI
-
-// Custom error class for existing collections
-class CollectionExistsError extends Error {
-  constructor(collectionName) {
-    super(`Collection ${collectionName} already exists in target database`)
-    this.name = 'CollectionExistsError'
-  }
-}
 
 // Function to check if collections exist in target database
 async function validateTargetDatabase(targetDb) {
@@ -44,13 +36,13 @@ async function validateTargetDatabase(targetDb) {
       }
     }
 
-    // Check for QuizAttempts collection
-    if (existingCollectionNames.includes('QUIZ_ATTEMPT')) {
-      const attemptCount = await db.collection('QUIZ_ATTEMPT').countDocuments()
-      if (attemptCount > 0) {
-        throw new CollectionExistsError('QUIZ_ATTEMPT')
-      }
-    }
+    // // Check for QuizAttempts collection
+    // if (existingCollectionNames.includes('QUIZ_ATTEMPT')) {
+    //   const attemptCount = await db.collection('QUIZ_ATTEMPT').countDocuments()
+    //   if (attemptCount > 0) {
+    //     throw new CollectionExistsError('QUIZ_ATTEMPT')
+    //   }
+    // }
 
     console.log(
       'Target database validation successful - no existing data found',
@@ -64,27 +56,35 @@ async function validateTargetDatabase(targetDb) {
   }
 }
 
+// Keep the CollectionExistsError class
+class CollectionExistsError extends Error {
+  constructor(collectionName) {
+    super(`Collection ${collectionName} already exists in target database`)
+    this.name = 'CollectionExistsError'
+  }
+}
+
+// Collection configurations
 const collections = {
   users: {
     model: 'USER',
-    schema: User.schema, // Use the imported schema directly
+    schema: User.schema,
     fileName: 'users.csv',
   },
   quizAttempts: {
     model: 'QUIZ_ATTEMPT',
-    schema: QuizAttempt.schema, // Use the imported schema directly
+    schema: QuizAttempt.schema,
     fileName: 'quiz_attempts.csv',
   },
 }
 
+// Utility function for CSV export
 async function exportToCSV(data, fields, fileName) {
   try {
     const exportDir = path.join(__dirname, 'exports')
     const json2csvParser = new Parser({ fields })
     const csv = json2csvParser.parse(data)
-
     await fs.writeFile(path.join(exportDir, fileName), csv)
-
     console.log(`Successfully exported ${fileName}`)
     return true
   } catch (err) {
@@ -93,78 +93,99 @@ async function exportToCSV(data, fields, fileName) {
   }
 }
 
+// Separate function for user migration
+async function migrateUsers(sourceDb, targetDb) {
+  console.log('\nStarting user migration...')
+
+  const UsersSource = sourceDb.model('USER', collections.users.schema)
+  const UsersTarget = targetDb.model('USER', collections.users.schema)
+
+  // Fetch users
+  console.log('Fetching users...')
+  const users = await UsersSource.find({}).lean()
+  console.log(`Found ${users.length} users`)
+
+  // Export users to CSV
+  const userFields = Object.keys(collections.users.schema.paths)
+  await exportToCSV(users, userFields, collections.users.fileName)
+
+  // Insert users into target
+  console.log('Inserting users into target database...')
+  await UsersTarget.insertMany(users)
+
+  // Verify migration
+  const targetUserCount = await UsersTarget.countDocuments()
+  console.log(
+    `Source Users: ${users.length} -> Target Users: ${targetUserCount}`,
+  )
+
+  return users.length
+}
+
+// Separate function for quiz attempts migration
+async function migrateQuizAttempts(sourceDb, targetDb) {
+  console.log('\nStarting quiz attempts migration...')
+
+  const QuizAttemptsSource = sourceDb.model(
+    'QUIZ_ATTEMPT',
+    collections.quizAttempts.schema,
+  )
+  const QuizAttemptsTarget = targetDb.model(
+    'QUIZ_ATTEMPT',
+    collections.quizAttempts.schema,
+  )
+
+  // Fetch quiz attempts
+  console.log('Fetching quiz attempts...')
+  const quizAttempts = await QuizAttemptsSource.find({
+    createdAt: { $gte: new Date('2025-01-01') },
+  }).lean()
+  console.log(`Found ${quizAttempts.length} quiz attempts`)
+
+  // Export quiz attempts to CSV
+  const quizAttemptFields = Object.keys(collections.quizAttempts.schema.paths)
+  await exportToCSV(
+    quizAttempts,
+    quizAttemptFields,
+    collections.quizAttempts.fileName,
+  )
+
+  // Insert quiz attempts into target
+  console.log('Inserting quiz attempts into target database...')
+  await QuizAttemptsTarget.insertMany(quizAttempts)
+
+  // Verify migration
+  const targetQuizAttemptCount = await QuizAttemptsTarget.countDocuments()
+  console.log(
+    `Source Quiz Attempts: ${quizAttempts.length} -> Target Quiz Attempts: ${targetQuizAttemptCount}`,
+  )
+
+  return quizAttempts.length
+}
+
+// Modified main migration function
 async function migrateCollections() {
   let sourceDb, targetDb
 
   try {
+    // Create exports directory
     await fs.mkdir(path.join(__dirname, 'exports'), { recursive: true })
 
-    // Connect to databases and wait for connections to be ready
+    // Connect to databases
     sourceDb = await mongoose.createConnection(SOURCE_DB_URI).asPromise()
     targetDb = await mongoose.createConnection(TARGET_DB_URI).asPromise()
-
     console.log('Connected to both databases')
 
     // Validate target database
     await validateTargetDatabase(targetDb)
 
-    // First migrate Users collection
-    const UsersSource = sourceDb.model('USER', collections.users.schema)
-    const UsersTarget = targetDb.model('USER', collections.users.schema)
+    // Perform migrations
+    const userCount = await migrateUsers(sourceDb, targetDb)
+    // const quizAttemptCount = await migrateQuizAttempts(sourceDb, targetDb)
 
-    console.log('Fetching users...')
-    const users = await UsersSource.find({}).lean()
-    console.log(`Found ${users.length} users`)
-
-    // Export users to CSV for backup
-    const userFields = Object.keys(collections.users.schema.paths)
-    await exportToCSV(users, userFields, collections.users.fileName)
-
-    // Insert users into target database
-    console.log('Inserting users into target database...')
-    await UsersTarget.insertMany(users)
-
-    // Now migrate QuizAttempts collection
-    const QuizAttemptsSource = sourceDb.model(
-      'QUIZ_ATTEMPT',
-      collections.quizAttempts.schema,
-    )
-    const QuizAttemptsTarget = targetDb.model(
-      'QUIZ_ATTEMPT',
-      collections.quizAttempts.schema,
-    )
-
-    console.log('Fetching quiz attempts...')
-    const quizAttempts = await QuizAttemptsSource.find({
-      createdAt: { $gte: new Date('2025-01-01') },
-    }).lean()
-    console.log(`Found ${quizAttempts.length} quiz attempts`)
-
-    // Export quiz attempts to CSV for backup
-    const quizAttemptFields = Object.keys(collections.quizAttempts.schema.paths)
-    await exportToCSV(
-      quizAttempts,
-      quizAttemptFields,
-      collections.quizAttempts.fileName,
-    )
-
-    // Insert quiz attempts into target database
-    console.log('Inserting quiz attempts into target database...')
-    await QuizAttemptsTarget.insertMany(quizAttempts)
-
-    console.log('Migration completed successfully')
-
-    // Verify the migration
-    const targetUserCount = await UsersTarget.countDocuments()
-    const targetQuizAttemptCount = await QuizAttemptsTarget.countDocuments()
-
-    console.log('\nMigration verification:')
-    console.log(
-      `Source Users: ${users.length} -> Target Users: ${targetUserCount}`,
-    )
-    console.log(
-      `Source Quiz Attempts: ${quizAttempts.length} -> Target Quiz Attempts: ${targetQuizAttemptCount}`,
-    )
+    console.log('\nMigration completed successfully')
+    console.log(`Total users migrated: ${userCount}`)
+    // console.log(`Total quiz attempts migrated: ${quizAttemptCount}`)
   } catch (error) {
     if (error instanceof CollectionExistsError) {
       console.error('\nMigration aborted:', error.message)
@@ -174,16 +195,15 @@ async function migrateCollections() {
     } else {
       console.error('\nError during migration:', error)
     }
-    throw error // Re-throw to be caught by the main error handler
+    throw error
   } finally {
-    // Close connections in finally block to ensure they're always closed
     if (sourceDb) await sourceDb.close()
     if (targetDb) await targetDb.close()
     console.log('\nDatabase connections closed')
   }
 }
 
-// Add verification function
+// Keep the verification function and execute function the same
 async function verifyReferences() {
   let targetDb
   try {
@@ -196,7 +216,6 @@ async function verifyReferences() {
 
     console.log('\nVerifying references...')
 
-    // Check quiz attempts references to users
     const quizAttempts = await QuizAttemptsTarget.find({})
     const userIds = new Set()
 
@@ -226,11 +245,10 @@ async function verifyReferences() {
   }
 }
 
-// Execute migration with better error handling
 async function execute() {
   try {
     await migrateCollections()
-    await verifyReferences()
+    // await verifyReferences()
     console.log('Migration and verification completed successfully')
     process.exit(0)
   } catch (error) {

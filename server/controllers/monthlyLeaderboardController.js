@@ -3,24 +3,33 @@ const {
   getMonthlyLeaderboard,
   getUserMonthlyStats,
   getUserHistoricalStats,
+  getAvailableLeaderboardMonths,
 } = require('../services/monthlyStatsService')
 const moment = require('moment-timezone')
 
-// Get monthly leaderboard
+// API endpoint to get available months
+const getAvailableMonths = asyncHandler(async (req, res) => {
+  const availableMonths = await getAvailableLeaderboardMonths()
+
+  res.json({
+    status: 'success',
+    data: availableMonths,
+  })
+})
+
+// Modified leaderboard endpoint
 const getLeaderboard = asyncHandler(async (req, res) => {
-  const { month, year, page, limit, includeModalStats } = req.query
+  const { month, year, includeModalStats } = req.query
 
   const leaderboardData = await getMonthlyLeaderboard({
-    month: parseInt(month) || moment().month() + 1,
-    year: parseInt(year) || moment().year(),
-    page: parseInt(page) || 1,
-    limit: parseInt(limit) || 100,
+    month: parseInt(month),
+    year: parseInt(year),
     includeModalStats: includeModalStats === 'true',
   })
 
   res.json({
     status: 'success',
-    ...leaderboardData,
+    data: leaderboardData,
   })
 })
 
@@ -68,4 +77,5 @@ module.exports = {
   getLeaderboard,
   getUserMonthlyPerformance,
   getUserHistoricalPerformance,
+  getAvailableMonths,
 }

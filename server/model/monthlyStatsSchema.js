@@ -45,6 +45,14 @@ const monthlyStatsSchema = new mongoose.Schema(
         required: true,
       },
     },
+    name: {
+      type: String,
+      required: true,
+    },
+    experienceLevel: {
+      type: Number,
+      required: true,
+    },
     rqmScore: {
       average: {
         type: Number,

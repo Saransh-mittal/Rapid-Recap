@@ -87,19 +87,15 @@ const saveMonthlyStats = makeRetryable(
   },
 )
 
-// Get leaderboard for a specific month
+// Modified getMonthlyLeaderboard to only fetch top 10
 const getMonthlyLeaderboard = makeRetryable(
-  async ({ month, year, page = 1, limit = 100, includeModalStats = false }) => {
-    const skip = (page - 1) * limit
-
+  async ({ month, year, includeModalStats = false }) => {
     const pipeline = [
       { $match: { month, year } },
       { $sort: { finalRank: 1 } },
-      { $skip: skip },
-      { $limit: limit },
+      { $limit: 10 }, // Only fetch top 10
     ]
 
-    // If modal stats aren't needed, exclude them
     if (!includeModalStats) {
       pipeline.push({
         $project: {
@@ -109,24 +105,44 @@ const getMonthlyLeaderboard = makeRetryable(
           'iqScore.final': 1,
           'rqmScore.average': 1,
           'quizStats.total': 1,
+          username: 1,
+          society: 1,
+          circle: 1,
         },
       })
     }
 
     const leaderboard = await MonthlyStats.aggregate(pipeline)
-    const total = await MonthlyStats.countDocuments({ month, year })
-
-    return {
-      leaderboard,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    }
+    return { leaderboard }
   },
 )
+
+// Get available leaderboard months
+const getAvailableLeaderboardMonths = makeRetryable(async () => {
+  const availableMonths = await MonthlyStats.aggregate([
+    {
+      $group: {
+        _id: { year: '$year', month: '$month' },
+        hasData: { $sum: 1 },
+      },
+    },
+    {
+      $match: { hasData: { $gt: 0 } },
+    },
+    {
+      $sort: { '_id.year': -1, '_id.month': -1 },
+    },
+    {
+      $project: {
+        year: '$_id.year',
+        month: '$_id.month',
+        _id: 0,
+      },
+    },
+  ])
+
+  return availableMonths
+})
 
 // Get monthly stats for a user
 const getUserMonthlyStats = async ({ userId, year, month }) => {
@@ -145,4 +161,5 @@ module.exports = {
   getMonthlyLeaderboard,
   getUserMonthlyStats,
   getUserHistoricalStats,
+  getAvailableLeaderboardMonths,
 }

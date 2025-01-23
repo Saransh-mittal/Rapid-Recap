@@ -55,7 +55,6 @@ const {
   enhancedGuestLogin,
 } = require('../controllers/guestController')
 const {
-  getLeaderboard,
   getUserMonthlyPerformance,
   getUserHistoricalPerformance,
 } = require('../controllers/monthlyLeaderboardController')
@@ -108,7 +107,6 @@ router.route('/claim-badge').post(Authenticate, claimTournamentBadge)
 router.get('/valid-categories', Authenticate, getValidCategories)
 router.put('/update-category', Authenticate, updateBadgeCategory)
 router.get('/modal-status', Authenticate, checkRewardsModalStatus)
-router.get('/leaderboard/monthly', Authenticate, getLeaderboard)
 router.get('/stats/monthly', Authenticate, getUserMonthlyPerformance)
 router.get('/stats/historical', Authenticate, getUserHistoricalPerformance)
 router.get('/maintenance-status', getMaintenanceStatus)
