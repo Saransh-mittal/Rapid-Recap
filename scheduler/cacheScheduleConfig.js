@@ -9,11 +9,6 @@ const refreshArticlesListCache = require('./tasks/refreshArticlesListCache')
 
 const cacheSchedules = [
   {
-    name: 'refreshBotArticles',
-    cronPattern: '0 */2 * * *', // Every 2 hours
-    task: refreshRecentBotArticlesCache,
-  },
-  {
     name: 'refreshUserArticles',
     cronPattern: '20 */2 * * *', // Every 2 hours, 20 minutes offset
     task: refreshRecentUserArticlesCache,

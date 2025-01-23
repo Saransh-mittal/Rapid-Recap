@@ -19,7 +19,10 @@ const {
   updateOnBoardingArticle,
   deleteOnBoardingArticle,
 } = require('../controllers/article')
-const { sendCurrentBotReport } = require('../controllers/mail')
+const {
+  sendCurrentBotReport,
+  sendCacheAnalysisReport,
+} = require('../controllers/mail')
 
 const {
   getAllTournaments,
@@ -202,6 +205,12 @@ router.get(
   Authenticate,
   adminMiddleware,
   sendCurrentBotReport,
+)
+router.get(
+  '/cache-analysis/report',
+  Authenticate,
+  adminMiddleware,
+  sendCacheAnalysisReport,
 )
 
 module.exports = router
