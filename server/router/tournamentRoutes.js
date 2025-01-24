@@ -15,6 +15,7 @@ const {
   getUserStats,
   authorizeUsers,
   getActiveTournamentRegistration,
+  getLatestTournamentLeaders,
 } = require('../controllers/tournamentController')
 
 const { Authenticate, adminMiddleware } = require('../middleware/authenticate')
@@ -56,5 +57,6 @@ router.post('/quiz/submit', Authenticate, submitQuiz)
 router.get('/quiz/summary', Authenticate, getQuizSummary)
 router.get('/user-stats/:tournamentId/:userId', getUserStats)
 router.get('/active-registration', getActiveTournamentRegistration)
+router.get('/latest-leaders', getLatestTournamentLeaders)
 
 module.exports = router

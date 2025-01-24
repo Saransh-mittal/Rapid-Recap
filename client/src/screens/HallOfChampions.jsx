@@ -11,6 +11,7 @@ const HallOfChampions = () => {
   const [selectedChampion, setSelectedChampion] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [championsData, setChampionsData] = useState([])
+  const [tournamentData, setTournamentData] = useState([])
 
   const handleChampionClick = champion => {
     setSelectedChampion(champion)
@@ -34,6 +35,22 @@ const HallOfChampions = () => {
   const handleFilterChange = ({ month, year }) => {
     fetchLeaderboardData(month, year)
   }
+
+  const fetchTournamentLeaderboardData = async () => {
+    try {
+      const response = await fetch('/api/tournament/latest-leaders')
+      const data = await response.json()
+      if (data.status === 'success') {
+        setTournamentData(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching tournament data:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchTournamentLeaderboardData()
+  }, [])
 
   return (
     <Box minH="100vh" position="relative">
@@ -365,56 +382,56 @@ export default HallOfChampions
 //   },
 // ]
 
-const tournamentData = [
-  {
-    id: 1,
-    name: 'Nikhil Varshney',
-    username: '@Nikhil',
-    totalScore: 2500,
-    categoriesPlayed: ['General', 'Science', 'Technology'],
-    bestCategory: { name: 'Science', score: 950 },
-    badges: [{ type: 'ACE', category: 'Science' }],
-  },
-  {
-    id: 2,
-    name: 'Priya Sharma',
-    username: '@PriyaS',
-    totalScore: 2350,
-    categoriesPlayed: ['History', 'Geography', 'General'],
-    bestCategory: { name: 'History', score: 880 },
-    badges: [
-      { type: 'MVP', category: 'History' },
-      { type: 'STAR', category: 'General' },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Amit Patel',
-    username: '@AmitP123',
-    totalScore: 2100,
-    categoriesPlayed: ['Technology', 'Mathematics', 'Science'],
-    bestCategory: { name: 'Technology', score: 800 },
-    badges: [{ type: 'EXPERT', category: 'Technology' }],
-  },
-  {
-    id: 4,
-    name: 'Divya Kapoor',
-    username: '@DivyaK',
-    totalScore: 2200,
-    categoriesPlayed: ['Literature', 'Arts', 'History'],
-    bestCategory: { name: 'Literature', score: 850 },
-    badges: [
-      { type: 'MASTER', category: 'Literature' },
-      { type: 'ACE', category: 'Arts' },
-    ],
-  },
-  {
-    id: 5,
-    name: 'Rajesh Kumar',
-    username: '@RajeshK',
-    totalScore: 1950,
-    categoriesPlayed: ['General', 'Sports', 'Entertainment'],
-    bestCategory: { name: 'Sports', score: 750 },
-    badges: [{ type: 'STAR', category: 'Sports' }],
-  },
-]
+// const tournamentData = [
+//   {
+//     id: 1,
+//     name: 'Nikhil Varshney',
+//     username: '@Nikhil',
+//     totalScore: 2500,
+//     categoriesPlayed: ['General', 'Science', 'Technology'],
+//     bestCategory: { name: 'Science', score: 950 },
+//     badges: [{ type: 'ACE', category: 'Science' }],
+//   },
+//   {
+//     id: 2,
+//     name: 'Priya Sharma',
+//     username: '@PriyaS',
+//     totalScore: 2350,
+//     categoriesPlayed: ['History', 'Geography', 'General'],
+//     bestCategory: { name: 'History', score: 880 },
+//     badges: [
+//       { type: 'MVP', category: 'History' },
+//       { type: 'STAR', category: 'General' },
+//     ],
+//   },
+//   {
+//     id: 3,
+//     name: 'Amit Patel',
+//     username: '@AmitP123',
+//     totalScore: 2100,
+//     categoriesPlayed: ['Technology', 'Mathematics', 'Science'],
+//     bestCategory: { name: 'Technology', score: 800 },
+//     badges: [{ type: 'EXPERT', category: 'Technology' }],
+//   },
+//   {
+//     id: 4,
+//     name: 'Divya Kapoor',
+//     username: '@DivyaK',
+//     totalScore: 2200,
+//     categoriesPlayed: ['Literature', 'Arts', 'History'],
+//     bestCategory: { name: 'Literature', score: 850 },
+//     badges: [
+//       { type: 'MASTER', category: 'Literature' },
+//       { type: 'ACE', category: 'Arts' },
+//     ],
+//   },
+//   {
+//     id: 5,
+//     name: 'Rajesh Kumar',
+//     username: '@RajeshK',
+//     totalScore: 1950,
+//     categoriesPlayed: ['General', 'Sports', 'Entertainment'],
+//     bestCategory: { name: 'Sports', score: 750 },
+//     badges: [{ type: 'STAR', category: 'Sports' }],
+//   },
+// ]

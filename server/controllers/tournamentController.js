@@ -1608,6 +1608,65 @@ const getTournamentParticipants = asyncHandler(async (req, res) => {
   res.json(participants)
 })
 
+const getLatestTournamentLeaders = async (req, res) => {
+  try {
+    // Find the latest tournament that has ended
+    const currentDate = new Date()
+    const latestTournament = await Tournament.findOne({
+      endDate: { $lt: currentDate },
+      status: 'completed',
+    }).sort({ endDate: -1 })
+
+    if (!latestTournament) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'No completed tournaments found',
+      })
+    }
+
+    // Get top 5 registrations for this tournament
+    const topRegistrations = await TournamentRegistration.find({
+      tournament: latestTournament._id,
+    })
+      .sort({ totalScore: -1 })
+      .limit(5)
+      .populate('user', 'name username')
+
+    // Format data according to TournamentCard requirements
+    const leaderboardData = await Promise.all(
+      topRegistrations.map(async reg => {
+        const categoryScores = Array.from(reg.categoryScores.entries())
+        const bestCategory = categoryScores.reduce((best, current) =>
+          current[1] > best[1] ? current : best,
+        )
+
+        return {
+          id: reg.user._id,
+          name: reg.user.name,
+          username: reg.user.username,
+          totalScore: reg.totalScore,
+          categoriesPlayed: reg.selectedCategories,
+          bestCategory: {
+            name: bestCategory[0],
+            score: bestCategory[1],
+          },
+          badges: [], // Can be enhanced with actual badge logic
+        }
+      }),
+    )
+
+    return res.status(200).json({
+      status: 'success',
+      data: leaderboardData,
+    })
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: error.message,
+    })
+  }
+}
+
 module.exports = {
   registerForTournament,
   createTestTournament,
@@ -1633,4 +1692,5 @@ module.exports = {
   editQuestion,
   getTournamentParticipants,
   getLatestTestTournament,
+  getLatestTournamentLeaders,
 }
