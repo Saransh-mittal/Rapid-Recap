@@ -5,44 +5,45 @@ const path = require('path')
 const User = require('../model/userSchema')
 const QuizAttempt = require('../model/quizAttemptSchema')
 const dotenv = require('dotenv')
+const Tournament = require('../model/tournamentSchema')
+const {
+  TournamentRegistration,
+} = require('../model/tournamentRegistrationSchema')
 dotenv.config({ path: './config.env' })
 
 // Connection URLs remain the same
 const SOURCE_DB_URI = process.env.SOURCE_DB_URI
 const TARGET_DB_URI = process.env.TARGET_DB_URI
 
-// Function to check if collections exist in target database
+// Update the validateTargetDatabase function to include new collections
 async function validateTargetDatabase(targetDb) {
   console.log('Validating target database...')
 
   try {
-    // Wait for connection to be ready
     await targetDb.asPromise()
-
-    // Get the native MongoDB connection
     const db = targetDb.getClient().db()
-
-    // List all collections
     const collections = await db.listCollections().toArray()
     const existingCollectionNames = collections.map(col => col.name)
 
     console.log('Found collections:', existingCollectionNames)
 
-    // Check for Users collection
-    if (existingCollectionNames.includes('Users')) {
-      const userCount = await db.collection('Users').countDocuments()
-      if (userCount > 0) {
-        throw new CollectionExistsError('Users')
+    // Add checks for new collections
+    const collectionsToCheck = [
+      // 'Users',
+      // 'QUIZ_ATTEMPT',
+      // 'TOURNAMENT',
+      // 'TOURNAMENT_REGISTRATION',
+      // 'QUIZ_SESSION',
+    ]
+
+    for (const collectionName of collectionsToCheck) {
+      if (existingCollectionNames.includes(collectionName)) {
+        const count = await db.collection(collectionName).countDocuments()
+        if (count > 0) {
+          throw new CollectionExistsError(collectionName)
+        }
       }
     }
-
-    // // Check for QuizAttempts collection
-    // if (existingCollectionNames.includes('QUIZ_ATTEMPT')) {
-    //   const attemptCount = await db.collection('QUIZ_ATTEMPT').countDocuments()
-    //   if (attemptCount > 0) {
-    //     throw new CollectionExistsError('QUIZ_ATTEMPT')
-    //   }
-    // }
 
     console.log(
       'Target database validation successful - no existing data found',
@@ -76,6 +77,16 @@ const collections = {
     schema: QuizAttempt.schema,
     fileName: 'quiz_attempts.csv',
   },
+  tournaments: {
+    model: 'TOURNAMENT',
+    schema: Tournament.schema,
+    fileName: 'tournaments.csv',
+  },
+  tournamentRegistrations: {
+    model: 'TOURNAMENT_REGISTRATION',
+    schema: TournamentRegistration.schema,
+    fileName: 'tournament_registrations.csv',
+  },
 }
 
 // Utility function for CSV export
@@ -91,6 +102,125 @@ async function exportToCSV(data, fields, fileName) {
     console.error(`Error exporting ${fileName}:`, err)
     return false
   }
+}
+
+// Function to migrate tournaments
+async function migrateTournaments(sourceDb, targetDb) {
+  console.log('\nStarting tournament migration...')
+
+  const TournamentsSource = sourceDb.model(
+    'TOURNAMENT',
+    collections.tournaments.schema,
+  )
+  const TournamentsTarget = targetDb.model(
+    'TOURNAMENT',
+    collections.tournaments.schema,
+  )
+
+  // Fetch tournaments
+  console.log('Fetching tournaments...')
+  const tournaments = await TournamentsSource.find({}).lean()
+  console.log(`Found ${tournaments.length} tournaments`)
+
+  // Export tournaments to CSV
+  const tournamentFields = Object.keys(collections.tournaments.schema.paths)
+  await exportToCSV(
+    tournaments,
+    tournamentFields,
+    collections.tournaments.fileName,
+  )
+
+  // Insert tournaments into target
+  console.log('Inserting tournaments into target database...')
+  await TournamentsTarget.insertMany(tournaments)
+
+  // Verify migration
+  const targetTournamentCount = await TournamentsTarget.countDocuments()
+  console.log(
+    `Source Tournaments: ${tournaments.length} -> Target Tournaments: ${targetTournamentCount}`,
+  )
+
+  return tournaments.length
+}
+
+// Function to migrate tournament registrations
+async function migrateTournamentRegistrations(sourceDb, targetDb) {
+  console.log('\nStarting tournament registration migration...')
+
+  const RegistrationsSource = sourceDb.model(
+    'TOURNAMENT_REGISTRATION',
+    collections.tournamentRegistrations.schema,
+  )
+  const RegistrationsTarget = targetDb.model(
+    'TOURNAMENT_REGISTRATION',
+    collections.tournamentRegistrations.schema,
+  )
+
+  // Fetch registrations
+  console.log('Fetching tournament registrations...')
+  const registrations = await RegistrationsSource.find({}).lean()
+  console.log(`Found ${registrations.length} tournament registrations`)
+
+  // Export registrations to CSV
+  const registrationFields = Object.keys(
+    collections.tournamentRegistrations.schema.paths,
+  )
+  await exportToCSV(
+    registrations,
+    registrationFields,
+    collections.tournamentRegistrations.fileName,
+  )
+
+  // Insert registrations into target
+  console.log('Inserting tournament registrations into target database...')
+  await RegistrationsTarget.insertMany(registrations)
+
+  // Verify migration
+  const targetRegistrationCount = await RegistrationsTarget.countDocuments()
+  console.log(
+    `Source Registrations: ${registrations.length} -> Target Registrations: ${targetRegistrationCount}`,
+  )
+
+  return registrations.length
+}
+
+// Function to migrate quiz sessions
+async function migrateQuizSessions(sourceDb, targetDb) {
+  console.log('\nStarting quiz session migration...')
+
+  const QuizSessionsSource = sourceDb.model(
+    'QUIZ_SESSION',
+    collections.quizSessions.schema,
+  )
+  const QuizSessionsTarget = targetDb.model(
+    'QUIZ_SESSION',
+    collections.quizSessions.schema,
+  )
+
+  // Fetch quiz sessions
+  console.log('Fetching quiz sessions...')
+  const quizSessions = await QuizSessionsSource.find({}).lean()
+  console.log(`Found ${quizSessions.length} quiz sessions`)
+
+  // Export quiz sessions to CSV
+  const sessionFields = Object.keys(collections.quizSessions.schema.paths)
+  await exportToCSV(
+    quizSessions,
+    sessionFields,
+    collections.quizSessions.fileName,
+  )
+
+  // Insert quiz sessions into target
+  console.log('Inserting quiz sessions into target database...')
+  await QuizSessionsTarget.insertMany(quizSessions)
+
+  // Verify migration
+  const targetSessionCount = await QuizSessionsTarget.countDocuments()
+  console.log(
+    `Source Quiz Sessions: ${quizSessions.length} -> Target Quiz Sessions: ${targetSessionCount}`,
+  )
+
+  return quizSessions.length
 }
 
 // Separate function for user migration
@@ -163,28 +293,34 @@ async function migrateQuizAttempts(sourceDb, targetDb) {
   return quizAttempts.length
 }
 
-// Modified main migration function
+// Update the main migrateCollections function
 async function migrateCollections() {
   let sourceDb, targetDb
 
   try {
-    // Create exports directory
     await fs.mkdir(path.join(__dirname, 'exports'), { recursive: true })
 
-    // Connect to databases
     sourceDb = await mongoose.createConnection(SOURCE_DB_URI).asPromise()
     targetDb = await mongoose.createConnection(TARGET_DB_URI).asPromise()
     console.log('Connected to both databases')
 
-    // Validate target database
     await validateTargetDatabase(targetDb)
 
-    // Perform migrations
-    const userCount = await migrateUsers(sourceDb, targetDb)
+    // Perform migrations in order (users first, then related collections)
+    // const userCount = await migrateUsers(sourceDb, targetDb)
+    const tournamentCount = await migrateTournaments(sourceDb, targetDb)
+    const registrationCount = await migrateTournamentRegistrations(
+      sourceDb,
+      targetDb,
+    )
+    const sessionCount = await migrateQuizSessions(sourceDb, targetDb)
     // const quizAttemptCount = await migrateQuizAttempts(sourceDb, targetDb)
 
     console.log('\nMigration completed successfully')
-    console.log(`Total users migrated: ${userCount}`)
+    // console.log(`Total users migrated: ${userCount}`)
+    console.log(`Total tournaments migrated: ${tournamentCount}`)
+    console.log(`Total tournament registrations migrated: ${registrationCount}`)
+    console.log(`Total quiz sessions migrated: ${sessionCount}`)
     // console.log(`Total quiz attempts migrated: ${quizAttemptCount}`)
   } catch (error) {
     if (error instanceof CollectionExistsError) {

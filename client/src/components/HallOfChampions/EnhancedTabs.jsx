@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Box, HStack, Button, Flex } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import LeaderboardFilter from './LeaderboardFilter'
+import TournamentFilter from './TournamentFilter'
 
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
@@ -92,16 +93,20 @@ const TabPanel = ({ children, isSelected }) => (
   </AnimatePresence>
 )
 
-const EnhancedTabs = ({ onFilterChange, children }) => {
+const EnhancedTabs = ({
+  onTournamentChange,
+  onLeaderboardFilterChange,
+  children,
+}) => {
   const [selectedTab, setSelectedTab] = useState(0)
 
   const handleTabClick = index => {
     setSelectedTab(index)
   }
 
-  const handleFilterChange = filterId => {
+  const handleLeaderboardFilterChange = filterId => {
     // Handle filter change logic here
-    onFilterChange(filterId)
+    onLeaderboardFilterChange(filterId)
   }
 
   return (
@@ -135,10 +140,14 @@ const EnhancedTabs = ({ onFilterChange, children }) => {
 
         {/* Filter */}
         <Flex justify="center" px={4}>
-          <LeaderboardFilter
-            type={selectedTab === 0 ? 'champions' : 'tournament'}
-            onFilterChange={handleFilterChange}
-          />
+          {selectedTab === 0 ? (
+            <LeaderboardFilter
+              type="champions"
+              onFilterChange={handleLeaderboardFilterChange}
+            />
+          ) : (
+            <TournamentFilter onFilterChange={onTournamentChange} />
+          )}
         </Flex>
       </Flex>
 
