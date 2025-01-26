@@ -24,6 +24,7 @@ import UserStats from '../components/dashboardComponents/UserStats'
 import MergedDataTable from '../components/dashboardComponents/MergedDataTable'
 import ManagementButtons from '../components/dashboardComponents/ManagementButtons'
 import FeedbackButtons from '../components/dashboardComponents/FeedbackButtons'
+import MaintenanceModal from '../components/dashboardComponents/MaintenanceModal'
 
 // Lazy loaded components
 const NotificationStatus = lazy(() =>
@@ -131,6 +132,11 @@ const Dashboard = () => {
     isOpen: isOnboardingArticleOpen,
     onOpen: onOnboardingArticleOpen,
     onClose: onOnboardingArticleClose,
+  } = useDisclosure()
+  const {
+    isOpen: isMaintenanceOpen,
+    onOpen: onMaintenanceOpen,
+    onClose: onMaintenanceClose,
   } = useDisclosure()
 
   // Data fetching functions
@@ -492,6 +498,7 @@ const Dashboard = () => {
                 onCurrentAffairsOpen={onCurrentAffairsOpen}
                 onTestTournamentManagementOpen={onTestTournamentManagementOpen}
                 onOnboardingArticleOpen={onOnboardingArticleOpen}
+                onMaintenanceOpen={onMaintenanceOpen}
               />
             </TabPanel>
 
@@ -552,6 +559,10 @@ const Dashboard = () => {
             setSelectedArticle={setSelectedArticle}
             articles={articles}
             fetchArticles={fetchArticles}
+          />
+          <MaintenanceModal
+            isOpen={isMaintenanceOpen}
+            onClose={onMaintenanceClose}
           />
           <OnboardingArticleAdd
             isOpen={isAddModalOpen}
